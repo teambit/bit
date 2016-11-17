@@ -1,0 +1,19 @@
+{
+  "extends": ["airbnb", "airbnb-flow"],
+  "rules": {
+    "arrow-body-style": [0, "as-needed"],
+    "camelcase": [0],
+    "no-trailing-spaces": [0],
+    "no-param-reassign": [0],
+    "import/no-dynamic-require": [0],
+    "global-require": [0],
+    "prefer-arrow-callback": [0],
+    "comma-dangle": [0, "never"],
+    "no-use-before-define": [0],
+    "func-names": [0]
+  },
+  "env": {
+    "node": true,
+    "mocha": true
+  }
+}
