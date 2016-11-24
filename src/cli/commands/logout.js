@@ -11,4 +11,8 @@ export default class Logout {
     console.log('logged out from bit...');
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
 }

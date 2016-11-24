@@ -11,4 +11,8 @@ export default class Add {
     console.log(`bit ${name} was created...`);
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
 }

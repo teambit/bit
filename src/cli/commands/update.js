@@ -11,4 +11,8 @@ export default class Update {
     console.log('updating bits...');
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
 }

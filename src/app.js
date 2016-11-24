@@ -2,4 +2,9 @@
 import buildRegistrar from './cli/command-registrar-builder';
 
 const registrar = buildRegistrar();
-registrar.run();
+
+try {
+  registrar.run();
+} catch (err) {
+  console.error(err);
+}

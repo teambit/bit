@@ -11,4 +11,8 @@ export default class Remote {
     console.log('see all remotes...');
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
 }

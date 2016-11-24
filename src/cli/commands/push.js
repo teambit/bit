@@ -11,4 +11,8 @@ export default class Push {
     console.log('pulling all bits..');
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
 }

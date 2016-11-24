@@ -29,7 +29,11 @@ export default class CommandRegistrar {
         .command(command.name)
         .description(command.description)
         .alias(command.alias)
-        .action((...args) => command.action(args));
+        .action((...args) => {
+          command.action(args)
+            .then(data => console.log(command.report(data)))
+            .catch(err => console.error(err));
+        });
     }
     
     this.commands.forEach(register);

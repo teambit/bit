@@ -11,4 +11,8 @@ export default class Status {
     console.log('status here...');
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
 }

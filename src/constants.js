@@ -29,6 +29,14 @@ export const BIT_DESCRIPTION = 'bit is a free and open source tool designed for 
  */
 export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
+export const BIT_DIR_NAME = 'bits';
+
+export const BIT_INLINE_DIRNAME = 'inline';
+
+export const BIT_IMPORTED_DIRNAME = 'imported';
+
+export const BIT_JSON = 'bit.json';
+
 /**
  * cache root directory
  */

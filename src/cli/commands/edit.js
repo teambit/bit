@@ -13,4 +13,9 @@ export default class Edit {
       resolve(params);
     });
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
+
 }

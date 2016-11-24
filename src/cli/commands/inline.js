@@ -11,4 +11,9 @@ export default class Inline {
     console.log(`bit ${name} moved to inline...`);
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
+
 }

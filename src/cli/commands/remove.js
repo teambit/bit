@@ -11,4 +11,8 @@ export default class Remove {
     console.log('removed bit...');
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
 }

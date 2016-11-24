@@ -11,4 +11,9 @@ export default class List {
     console.log('list of all bits');
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
+
 }

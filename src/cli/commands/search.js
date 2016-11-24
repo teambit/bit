@@ -11,4 +11,8 @@ export default class Search {
     console.log('searching bit...');
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
 }

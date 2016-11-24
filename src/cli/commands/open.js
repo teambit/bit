@@ -13,4 +13,8 @@ export default class Open {
       resolve(params);
     });
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
 }

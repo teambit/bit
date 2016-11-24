@@ -11,4 +11,9 @@ export default class Login {
     console.log('logging in to bit.');
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
+
 }

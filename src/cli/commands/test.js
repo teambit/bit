@@ -11,4 +11,8 @@ export default class Test {
     console.log('testing bits...');
     return new Promise(resolve => resolve(m));
   }
+
+  report(data: {string: any}): string {
+    return '';
+  }
 }
