@@ -1,7 +1,7 @@
 /** @flow */
 
 export default class Search {
-  name = 'search';
+  name = 'search <query>';
   description = 'search for bits in all configured remotes';
   alias = '';
   opts = [];

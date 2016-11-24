@@ -1,7 +1,7 @@
 /** @flow */
 
 export default class Test {
-  name = 'test';
+  name = 'test [name]';
   description = 'run bit(s) unit tests';
   alias = 't';
   opts = [];

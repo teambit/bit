@@ -1,7 +1,7 @@
 /** @flow */
 
 export default class Update {
-  name = 'update';
+  name = 'update [name]';
   description = 'update bit(s)';
   alias = 'u';
   opts = [];

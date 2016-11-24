@@ -1,7 +1,7 @@
 /** @flow */
 
 export default class Edit {
-  name = 'edit';
+  name = 'edit <name>';
   description = 'edit a bit in your default text editor';
   alias = 'e';
   opts = [];

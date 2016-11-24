@@ -1,7 +1,7 @@
 /** @flow */
 
 export default class Open {
-  name = 'open';
+  name = 'open <name>';
   description = 'open a bit in your default text editor';
   alias = 'o';
   opts = [];
