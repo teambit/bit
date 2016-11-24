@@ -54,3 +54,5 @@ jspm_packages
 
 #output
 dist/
+dist-legacy/
+flow-typed/

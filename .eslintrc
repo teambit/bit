@@ -6,6 +6,7 @@
     "no-trailing-spaces": [0],
     "import/no-unresolved": [0],
     "no-param-reassign": [0],
+    "array-bracket-spacing": [0],
     "import/no-dynamic-require": [0],
     "global-require": [0],
     "prefer-arrow-callback": [0],
