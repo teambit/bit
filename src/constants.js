@@ -19,8 +19,14 @@ function getCacheDirectory(): string {
   return getDirectory('cache');
 }
 
+/**
+ * bit description
+ */
 export const BIT_DESCRIPTION = 'bit is a free and open source tool designed for easy use and management of usable code components.';
 
+/**
+ * bit usage
+ */
 export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
 /**

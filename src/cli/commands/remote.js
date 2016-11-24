@@ -3,7 +3,7 @@
 export default class Remote {
   name = 'remote';
   description = 'manage set of tracked bit repositories';
-  alias = null;
+  alias = '';
   opts = [];
   
   action(): Promise<any> {

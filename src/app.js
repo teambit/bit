@@ -1,5 +1,5 @@
 /** @flow */
-import registerCommands from './cli/command-registrar-builder';
+import buildRegistrar from './cli/command-registrar-builder';
 
-const registrar = registerCommands();
+const registrar = buildRegistrar();
 registrar.run();

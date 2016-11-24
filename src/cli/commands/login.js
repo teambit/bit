@@ -3,7 +3,7 @@
 export default class Login {
   name = 'login';
   description = 'login to bit';
-  alias = null;
+  alias = '';
   opts = [];
   
   action(): Promise<any> {

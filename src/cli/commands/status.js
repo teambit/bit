@@ -3,7 +3,7 @@
 export default class Status {
   name = 'status';
   description = 'show bit modifications status';
-  alias = null;
+  alias = '';
   opts = [];
   
   action(): Promise<any> {

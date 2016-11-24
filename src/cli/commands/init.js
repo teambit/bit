@@ -1,7 +1,7 @@
 /** @flow */
 
 export default class Init {
-  name = 'init';
+  name = 'init [path]';
   description = 'initialize an empty bit repository';
   alias = 'i';
   opts = [];

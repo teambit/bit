@@ -3,7 +3,7 @@
 export default class Logout {
   name = 'logout';
   description = 'logout from bit';
-  alias = null;
+  alias = '';
   opts = [];
   
   action(): Promise<any> {

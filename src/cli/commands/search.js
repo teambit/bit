@@ -3,7 +3,7 @@
 export default class Search {
   name = 'search';
   description = 'search for bits in all configured remotes';
-  alias = null;
+  alias = '';
   opts = [];
   
   action(): Promise<any> {
