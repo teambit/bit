@@ -31,13 +31,24 @@ export default class CommandRegistrar {
         .alias(command.alias)
         .action((...args) => command.action(args));
     }
-
+    
     this.commands.forEach(register);
-  }  
+  } 
+
+  outputHelp() {
+    if (!process.argv.slice(2).length) {
+      commander.help();
+    }
+
+    return this;
+  } 
 
   run() {
     this.registerBaseCommand();
     this.registerCommands();
     commander.parse(process.argv);
+    this.outputHelp();
+
+    return this;
   }
 }
