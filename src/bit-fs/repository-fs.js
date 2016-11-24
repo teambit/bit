@@ -15,6 +15,25 @@ export default class RepositoryFs {
     return path.join(p, BIT_DIR_NAME);
   }
 
+  static composeBitInlinePath(repoPath: string, name: string) {
+    return path.join(repoPath, BIT_DIR_NAME, BIT_INLINE_DIRNAME, name);
+  }
+
+  static composeFileName(name: string) {
+    return `${name}.js`;
+  }
+
+  static createBit(bitName: string, repoPath: string) {
+    const bitPath = this.composeBitInlinePath(repoPath, bitName);
+    mkdirp.sync(bitPath);
+    fs.writeFileSync(path.join(bitPath, this.composeFileName(bitName)), '');
+    return bitPath;
+  }
+
+  static bitExists(bitName: string, repoPath: string) {
+    return fs.existsSync(this.composeBitInlinePath(repoPath, bitName));
+  }
+
   /**
    * @private
    **/
