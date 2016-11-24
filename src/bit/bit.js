@@ -1,5 +1,6 @@
 /** @flow */
 import BitFs from './bit-fs';
+import { Repository } from '../repository';
 
 export default class Bit {
   name: string;
@@ -7,8 +8,8 @@ export default class Bit {
   dependencies: Bit[];
   repository: string;
 
-  static create() {
-    
+  static create(repo: Repository) {
+    BitFs.bitExists();
   }
 
   static edit() {

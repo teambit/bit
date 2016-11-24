@@ -6,12 +6,12 @@ export default class BitFs {
     return RepositoryFs.createRepo(path);
   }
 
-  static locateRepository(absPath: string): string {
+  static locateRepository(absPath: string): ?string {
     return RepositoryFs.locateClosestRepo(absPath);
   }
 
   static addBit() {
-
+    
   }
 
   static moveInline() {

@@ -21,12 +21,15 @@ export default class Repository {
     this.createdNow = createdNow;
   }
 
-  addBit(name: string): Bit {
-
+  addBit(name: string, withTests: boolean = true): Bit {
+    return Bit.create(this, name);
   }
 
   static create(path: string): Repository {
     const created = BitFs.initiateRepository(path);
-    return this.load(path, created); 
+    const repo = this.load(path, created);
+    if (!repo) throw new Error('could not find repo...');
+    
+    return repo; 
   }
 }
