@@ -1,4 +1,5 @@
 /** @flow */
+import { loadRepository } from '../../Repository';
 
 export default class Add {
   name = 'add <name>';
@@ -7,12 +8,16 @@ export default class Add {
   opts = [];
 
   action([name, ]: [string]): Promise<any> {
-    const m = this.alias;
-    console.log(`bit ${name} was created...`);
-    return new Promise(resolve => resolve(m));
+    return new Promise((resolve, reject) => {
+      const repo = loadRepository();
+      if (!repo) return reject('could not find repo...');
+      return resolve({
+        path: repo.path
+      });
+    });
   }
 
   report(data: {string: any}): string {
-    return '';
+    return `found repo in ${data.path}...`;
   }
 }

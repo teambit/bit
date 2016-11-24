@@ -1,11 +1,18 @@
 /** @flow */
-import FsGateway from './fs-gateway';
+import BitFs from '../bit-fs';
+import Bit from '../bit';
 
 export default class Repository {
   path: string;
   createdNow: boolean;
 
-  static load(path: string, created: boolean): Repository {
+  static load(path: string, created: boolean): ?Repository {
+    if (!created) {
+      const repoPath = BitFs.locateRepository(path);
+      if (!repoPath) return null;
+      return new Repository(repoPath, false);
+    }
+
     return new Repository(path, created);
   }
 
@@ -14,8 +21,12 @@ export default class Repository {
     this.createdNow = createdNow;
   }
 
+  addBit(name: string): Bit {
+
+  }
+
   static create(path: string): Repository {
-    const created = FsGateway.createRepoFiles(path);
+    const created = BitFs.initiateRepository(path);
     return this.load(path, created); 
   }
 }

@@ -1,4 +1,8 @@
 /** @flow */
 import Repository from './repository';
+import loadRepository from './repository-loader';
 
-export default Repository;
+export {
+  Repository,
+  loadRepository
+};

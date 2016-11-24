@@ -15,5 +15,5 @@ export default class Inline {
   report(data: {string: any}): string {
     return '';
   }
-
+  
 }

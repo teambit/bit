@@ -1,6 +1,6 @@
 /** @flow */
 import * as pathlib from 'path';
-import Repository from '../../repository';
+import { Repository } from '../../repository';
 
 const chalk = require('chalk');
 
