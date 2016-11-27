@@ -36,7 +36,7 @@ It allows you to design lighter applications with super fast installation and a 
 ```
 
 ## development
-install dependencies using yarn (npm would work too).
+install dependencies using yarn
 ```bash
   $ yarn
 ```
@@ -51,6 +51,10 @@ install type definitions using flow-typed
   got
 ```
 
+you can use npm instead
+```bash
+  $ npm i
+```
 
 install command globally and link
 ```bash

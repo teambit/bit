@@ -57,7 +57,7 @@ function initCache() {
 }
 
 function checkForUpdates() {
-
+  // @TODO
 }
 
 function loadCli() {
