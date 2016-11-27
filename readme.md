@@ -30,39 +30,69 @@ Simply becomes:
 ```
 It allows you to design lighter applications with super fast installation and a duplication-free and easy-to-maintain code base which does not depend on external sources.
 
-## installation (future)
+## install using brew (future)
 ```bash
   brew install bit
 ```
 
-## development
-install dependencies using yarn
+# development
+
+## installation
+
+- install dependencies using yarn
 ```bash
   $ yarn
 ```
 
-make sure you have `flow-typed` installed.
-```bash
-  npm install -g flow-typed
-```
-
-install type definitions using flow-typed
-```bash
-  got
-```
-
-you can use npm instead
+- you can use npm instead
 ```bash
   $ npm i
 ```
 
-install command globally and link
+- install command globally and link (in order to use the "bit" command globaly and always use the latest development build)
 ```bash
   npm install -g
   npm link
 ```
 
-build legacy and modern distributions:
+## Flow
+- install [`flow`](https://flowtype.org/)
+```bash
+npm install --global flow-bin
+```
+
+- make sure you have [`flow-typed`](https://github.com/flowtype/flow-typed) installed.
+```bash
+  npm install -g flow-typed
+```
+
+- install type definitions using flow-typed
+```bash
+  flow-typed install
+```
+
+## build
+
+- build legacy and modern distributions:
 ```bash
   npm run build
+```
+
+- use with watch, to run the build on every code modification
+```bash
+  npm run watch
+```
+
+## test
+
+- run the unit tests
+```bash
+  npm  test
+```
+
+## lint
+
+- run eslint
+```bash
+  npm run lint
 ```
