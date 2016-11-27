@@ -1,5 +1,6 @@
 /** @flow */
 import type Command from './command';   
+import defaultHandleError from './default-error-handler';
 
 const commander = require('commander');
 
@@ -32,7 +33,10 @@ export default class CommandRegistrar {
         .action((...args) => {
           command.action(args)
             .then(data => console.log(command.report(data)))
-            .catch(err => command.handleError(err) || this.handleError(err));
+            .catch((err) => {
+              const errorHandled = command.handleError(err) || defaultHandleError(err);
+              if (!errorHandled) console.error(err);
+            });
         });
     }
     
