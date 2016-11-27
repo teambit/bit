@@ -49,7 +49,6 @@ export default class RepositoryFs {
 
   static createRepo(p: string): boolean {
     if (this.pathHasRepo(p)) return false;
-
     this.createBitJson(p);
     this.createDir(p, BIT_IMPORTED_DIRNAME);
     this.createDir(p, BIT_INLINE_DIRNAME);

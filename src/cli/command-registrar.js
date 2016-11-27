@@ -1,5 +1,5 @@
 /** @flow */
-import type { Command } from './command';   
+import type Command from './command';   
 
 const commander = require('commander');
 
@@ -32,7 +32,7 @@ export default class CommandRegistrar {
         .action((...args) => {
           command.action(args)
             .then(data => console.log(command.report(data)))
-            .catch(err => console.error(err));
+            .catch(err => command.handleError(err) || this.handleError(err));
         });
     }
     
@@ -47,6 +47,10 @@ export default class CommandRegistrar {
     return this;
   } 
 
+  errorHandler(err: Error) {
+    console.error(err);
+  }
+  
   run() {
     this.registerBaseCommand();
     this.registerCommands();

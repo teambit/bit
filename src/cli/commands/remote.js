@@ -1,6 +1,7 @@
 /** @flow */
+import Command from '../command';
 
-export default class Remote {
+export default class Remote extends Command {
   name = 'remote';
   description = 'manage set of tracked bit repositories';
   alias = '';

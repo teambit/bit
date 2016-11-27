@@ -1,6 +1,7 @@
 /** @flow */
+import Command from '../command';
 
-export default class Status {
+export default class Status extends Command {
   name = 'status';
   description = 'show bit modifications status';
   alias = '';
