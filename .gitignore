@@ -47,7 +47,6 @@ jspm_packages
 .yarn-Integrity
 
 # vscode
-.vscode/
 
 # idea
 .idea/
