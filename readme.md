@@ -41,6 +41,17 @@ install dependencies using yarn (npm would work too).
   $ yarn
 ```
 
+make sure you have `flow-typed` installed.
+```bash
+  npm install -g flow-typed
+```
+
+install type definitions using flow-typed
+```bash
+  got
+```
+
+
 install command globally and link
 ```bash
   npm install -g

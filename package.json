@@ -6,6 +6,7 @@
     "lint": "gulp lint && flow check",
     "test": "gulp test",
     "build": "gulp build build-legacy",
+    "watch": "babel watch src specs -d dist --source-maps",
     "build-debug": "babel src specs -d dist --source-maps"
   },
   "bin": {
