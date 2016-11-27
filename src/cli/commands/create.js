@@ -3,10 +3,10 @@ import { loadRepository } from '../../Repository';
 
 const chalk = require('chalk');
 
-export default class Add {
-  name = 'add <name>';
+export default class Create {
+  name = 'create <name>';
   description = 'create a new bit';
-  alias = 'a';
+  alias = 'c';
   opts = [];
 
   action([name, ]: [string]): Promise<any> {

@@ -1,9 +1,9 @@
 /** @flow */
 
-export default class Inline {
-  name = 'inline <name>';
-  description = 'override a bit in inline folder';
-  alias = 'in';
+export default class Modify {
+  name = 'modify <name>';
+  description = 'modify a bit in inline folder';
+  alias = 'm';
   opts = [];
   
   action([name, ]: [string]): Promise<any> {

@@ -2,9 +2,10 @@
 import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
 import Init from './commands/init';
-import Add from './commands/add';
+import Create from './commands/create';
 import List from './commands/list';
-import Inline from './commands/inline';
+import Modify from './commands/modify';
+import Export from './commands/export';
 import Login from './commands/login';
 import Logout from './commands/logout';
 import Pull from './commands/pull';
@@ -22,9 +23,10 @@ import Open from './commands/open';
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
     new Init(),
-    new Add(),
+    new Create(),
     new List(),
-    new Inline(),
+    new Modify(),
+    new Export(),
     new Login(),
     new Logout(),
     new Push(),
