@@ -4,8 +4,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { BIT_DIR_NAME, BIT_IMPORTED_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
 
-const json = require('./resources/bit.template');
-
 export default class RepositoryFs {
 
   /**
@@ -26,7 +24,8 @@ export default class RepositoryFs {
   static createBit(bitName: string, repoPath: string) {
     const bitPath = this.composeBitInlinePath(repoPath, bitName);
     mkdirp.sync(bitPath);
-    fs.writeFileSync(path.join(bitPath, this.composeFileName(bitName)), '');
+    fs.writeFileSync(path.join(bitPath, this.composeFileName(bitName)), fs.readFileSync(path.resolve(__dirname, '../../resources/impl.template.js')));
+    
     return bitPath;
   }
 
@@ -59,7 +58,10 @@ export default class RepositoryFs {
 
   static createBitJson(p: string) {
     if (this.hasBitJson(p)) return false;
-    return fs.writeFileSync(this.composeBitJsonPath(p), JSON.stringify(json));
+    return fs.writeFileSync(
+      this.composeBitJsonPath(p), 
+      JSON.stringify(fs.readFileSync(path.resolve(__dirname, '../../resources/bit.template.json')).toString())
+    );
   }
 
   /**

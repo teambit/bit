@@ -25,6 +25,10 @@ export default class Repository {
     return Bit.create(this, name);
   }
 
+  loadBit(name: string): Bit {
+    return Bit.load(name);
+  }
+
   static create(path: string): Repository {
     const created = BitFs.initiateRepository(path);
     const repo = this.load(path, created);

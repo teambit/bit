@@ -13,6 +13,7 @@ import Remote from './commands/remote';
 import Remove from './commands/remove';
 import Search from './commands/search';
 import Test from './commands/test';
+import Show from './commands/show';
 import Update from './commands/update';
 import Status from './commands/status';
 import Edit from './commands/edit';
@@ -27,6 +28,7 @@ export default function registerCommands(): CommandRegistrar {
     new Login(),
     new Logout(),
     new Push(),
+    new Show(),
     new Status(),
     new Pull(),
     new Remote(),

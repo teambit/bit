@@ -22,7 +22,7 @@ export default class Add {
     });
   }
 
-  report(data: {string: any}): string {
-    return chalk.green(`created bit ${data.name} in repository ${data.path}`);
+  report({ name, path }: any): string {
+    return chalk.green(`created bit "${name}" in "${path}"`);
   }
 }

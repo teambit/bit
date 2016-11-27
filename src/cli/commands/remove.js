@@ -1,4 +1,6 @@
 /** @flow */
+import { loadRepository } from '../../repository';
+import Bit from '../../bit';
 
 export default class Remove {
   name = 'remove <name>';
@@ -7,8 +9,11 @@ export default class Remove {
   opts = [];
   
   action([name, ]: [string]): Promise<any> {
-    return new Promise(resolve => {
-      
+    return new Promise((resolve, reject) => {
+      const repo = loadRepository();
+      if (!repo) return reject('could not find repo.');
+      const bit = Bit.load(name, repo);
+      bit.remove();
     });
   }
 
