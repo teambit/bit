@@ -26,7 +26,7 @@ export default class Repository {
   }
 
   loadBit(name: string): Bit {
-    return Bit.load(name);
+    return Bit.load(this, name);
   }
 
   static create(path: string): Repository {

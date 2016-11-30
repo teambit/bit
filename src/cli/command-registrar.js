@@ -39,6 +39,10 @@ export default class CommandRegistrar {
     this.commands.forEach(register);
   } 
 
+  outputError() {
+    
+  }
+
   outputHelp() {
     if (!process.argv.slice(2).length) {
       commander.help();

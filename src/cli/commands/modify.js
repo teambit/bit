@@ -15,5 +15,4 @@ export default class Modify {
   report(data: {string: any}): string {
     return '';
   }
-  
 }
