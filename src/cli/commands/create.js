@@ -1,5 +1,5 @@
 /** @flow */
-import { loadRepository } from '../../Repository';
+import { loadBox } from '../../box';
 import Command from '../command';
 
 const chalk = require('chalk');
@@ -12,12 +12,12 @@ export default class Create extends Command {
 
   action([name, ]: [string]): Promise<any> {
     return new Promise((resolve, reject) => {
-      const repo = loadRepository();
-      if (!repo) return reject('could not find repo.');
-      const bit = repo.addBit(name);
+      const box = loadBox();
+      if (!box) return reject('could not find repo.');
+      const bit = box.addBit(name);
 
       return resolve({
-        path: repo.path,
+        path: box.path,
         name: bit.name
       });
     });
