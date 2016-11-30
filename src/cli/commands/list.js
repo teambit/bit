@@ -1,6 +1,7 @@
 /** @flow */
+import Command from '../command';
 
-export default class List {
+export default class List extends Command {
   name = 'list';
   description = 'list all repository bits';
   alias = 'ls';

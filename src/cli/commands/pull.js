@@ -1,6 +1,7 @@
 /** @flow */
+import Command from '../command';
 
-export default class Pull {
+export default class Pull extends Command {
   name = 'pull [remote] [name]';
   description = 'pull bit(s) from remote(s)';
   alias = 'p';

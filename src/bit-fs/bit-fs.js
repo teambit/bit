@@ -7,8 +7,8 @@ import RepositoryFs from './repository-fs';
 import { Repository } from '../repository';
 
 export default class BitFs {
-  static initiateRepository(path: string): boolean {
-    return RepositoryFs.createRepo(path);
+  static initiateRepository(repoPath: string): boolean {
+    return RepositoryFs.createRepo(repoPath);
   }
 
   static locateRepository(absPath: string): ?string {

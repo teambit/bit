@@ -1,10 +1,11 @@
 /** @flow */
 import { loadRepository } from '../../repository';
 import Bit from '../../bit';
+import Command from '../command';
 
 const chalk = require('chalk');
 
-export default class Remove {
+export default class Remove extends Command {
   name = 'show <name>';
   description = 'show a bit';
   alias = '';

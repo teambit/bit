@@ -1,6 +1,7 @@
 /** @flow */
+import Command from '../command';
 
-export default class Edit {
+export default class Edit extends Command {
   name = 'edit <name>';
   description = 'edit a bit in your default text editor';
   alias = 'e';

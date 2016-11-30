@@ -1,8 +1,9 @@
 /** @flow */
 import { loadRepository } from '../../repository';
 import Bit from '../../bit';
+import Command from '../command';
 
-export default class Remove {
+export default class Remove extends Command {
   name = 'remove <name>';
   description = 'remove a bit';
   alias = 'rm';

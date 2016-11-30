@@ -1,6 +1,7 @@
 /** @flow */
+import Command from '../command';
 
-export default class Export {
+export default class Export extends Command {
   name = 'export <name>';
   description = 'export a bit';
   alias = 'e';

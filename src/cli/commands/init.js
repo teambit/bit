@@ -1,10 +1,11 @@
 /** @flow */
 import * as pathlib from 'path';
 import { Repository } from '../../repository';
+import Command from '../command';
 
 const chalk = require('chalk');
 
-export default class Init {
+export default class Init extends Command {
   name = 'init [path]';
   description = 'initialize an empty bit repository';
   alias = 'i';

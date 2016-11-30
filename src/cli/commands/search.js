@@ -1,6 +1,7 @@
 /** @flow */
+import Command from '../command';
 
-export default class Search {
+export default class Search extends Command {
   name = 'search <query>';
   description = 'search for bits in all configured remotes';
   alias = '';

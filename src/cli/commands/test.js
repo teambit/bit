@@ -1,6 +1,7 @@
 /** @flow */
+import Command from '../command';
 
-export default class Test {
+export default class Test extends Command {
   name = 'test [name]';
   description = 'run bit(s) unit tests';
   alias = 't';

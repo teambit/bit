@@ -1,9 +1,10 @@
 /** @flow */
 import { loadRepository } from '../../Repository';
+import Command from '../command';
 
 const chalk = require('chalk');
 
-export default class Create {
+export default class Create extends Command {
   name = 'create <name>';
   description = 'create a new bit';
   alias = 'c';

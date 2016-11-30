@@ -1,6 +1,7 @@
 /** @flow */
+import Command from '../command';
 
-export default class Logout {
+export default class Logout extends Command {
   name = 'logout';
   description = 'logout from bit';
   alias = '';

@@ -1,6 +1,7 @@
 /** @flow */
+import Command from '../command';
 
-export default class Modify {
+export default class Modify extends Command {
   name = 'modify <name>';
   description = 'modify a bit in inline folder';
   alias = 'm';

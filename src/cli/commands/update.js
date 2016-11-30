@@ -1,6 +1,7 @@
 /** @flow */
+import Command from '../command';
 
-export default class Update {
+export default class Update extends Command {
   name = 'update [name]';
   description = 'update bit(s)';
   alias = 'u';
