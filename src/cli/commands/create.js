@@ -9,7 +9,7 @@ export default class Create extends Command {
   description = 'create a new bit';
   alias = 'c';
   opts = [];
-
+ 
   action([name, ]: [string]): Promise<any> {
     return new Promise((resolve, reject) => {
       const box = loadBox();

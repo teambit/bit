@@ -19,6 +19,8 @@ function getCacheDirectory(): string {
   return getDirectory('cache');
 }
 
+export const RESOURCES = path.resolve(path.join(__dirname, '../resources'));
+
 /**
  * bit description
  */

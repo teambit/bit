@@ -2,7 +2,7 @@
 import * as mkdirp from 'mkdirp';
 import * as fs from 'fs';
 import * as path from 'path';
-import { BIT_DIR_NAME, BIT_IMPORTED_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
+import { BIT_DIR_NAME, RESOURCES, BIT_IMPORTED_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
 
 export default class BoxFs {
 
@@ -55,11 +55,21 @@ export default class BoxFs {
     return true;
   }
 
+  static readBitJsonTpl() {
+    function resolveTplPath() {
+      return path.resolve(__dirname, path.join(RESOURCES, 'bit.template.json'));
+    }
+
+    return fs
+      .readFileSync(resolveTplPath())
+      .toString();
+  }
+
   static createBitJson(p: string) {
     if (this.hasBitJson(p)) return false;
     return fs.writeFileSync(
       this.composeBitJsonPath(p), 
-      JSON.stringify(fs.readFileSync(path.resolve(__dirname, '../../resources/bit.template.json')).toString())
+      this.readBitJsonTpl()
     );
   }
 
