@@ -2,18 +2,18 @@
 import BitFs from '../bit-fs';
 import Bit from '../bit';
 
-export default class Repository {
+export default class Box {
   path: string;
   createdNow: boolean;
 
-  static load(path: string, created: boolean): ?Repository {
+  static load(path: string, created: boolean): ?Box {
     if (!created) {
-      const repoPath = BitFs.locateRepository(path);
+      const repoPath = BitFs.locateBox(path);
       if (!repoPath) return null;
-      return new Repository(repoPath, false);
+      return new Box(repoPath, false);
     }
 
-    return new Repository(path, created);
+    return new Box(path, created);
   }
 
   constructor(path: string, createdNow: boolean) {
@@ -29,10 +29,10 @@ export default class Repository {
     return Bit.load(this, name);
   }
 
-  static create(path: string): Repository {
-    const created = BitFs.initiateRepository(path);
+  static create(path: string): Box {
+    const created = BitFs.initiateBox(path);
     const repo = this.load(path, created);
-    if (!repo) throw new Error('could not find repo...');
+    if (!repo) throw new Error('could not find box...');
     
     return repo; 
   }

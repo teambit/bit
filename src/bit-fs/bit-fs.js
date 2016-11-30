@@ -3,19 +3,19 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as esprima from 'esprima';
 import * as doctrine from 'doctrine';
-import RepositoryFs from './repository-fs';
-import { Repository } from '../repository';
+import BoxFs from './box-fs';
+import { Box } from '../box';
 
 export default class BitFs {
-  static initiateRepository(repoPath: string): boolean {
-    return RepositoryFs.createRepo(repoPath);
+  static initiateBox(boxPath: string): boolean {
+    return BoxFs.createBox(boxPath);
   }
 
-  static locateRepository(absPath: string): ?string {
-    return RepositoryFs.locateClosestRepo(absPath);
+  static locateBox(absPath: string): ?string {
+    return BoxFs.locateClosestBox(absPath);
   }
 
-  static getBitPath(name, repoPath) {
+  static getBitPath(name, boxPath) {
     
   }
 
@@ -47,22 +47,22 @@ export default class BitFs {
     };
   }
 
-  static loadBit(name: string, repo: Repository) {
-    if (!RepositoryFs.bitExists(name, repo.path)) return null;
+  static loadBit(name: string, repo: Box) {
+    if (!BoxFs.bitExists(name, repo.path)) return null;
     const contents = fs.readFileSync(this.composeBitPath(name, repo.path)).toString();
     return this.loadBitMeta(name, contents);
   }
 
-  static addBit(bitName: string, repo: Repository) {
+  static addBit(bitName: string, repo: Box) {
     if (this.bitExists(bitName, repo)) {
       throw new Error(`bit ${bitName} already exists!`);
     }
 
-    return RepositoryFs.createBit(bitName, repo.path);
+    return BoxFs.createBit(bitName, repo.path);
   }
   
-  static bitExists(bitName: string, repo: Repository) {
-    return RepositoryFs.bitExists(bitName, repo.path);
+  static bitExists(bitName: string, repo: Box) {
+    return BoxFs.bitExists(bitName, repo.path);
   }
 
   static moveInline() {

@@ -4,40 +4,40 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { BIT_DIR_NAME, BIT_IMPORTED_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
 
-export default class RepositoryFs {
+export default class BoxFs {
 
   /**
    * @private
    **/
-  static composeRepoPath(p: string): string {
+  static composeBoxPath(p: string): string {
     return path.join(p, BIT_DIR_NAME);
   }
 
-  static composeBitInlinePath(repoPath: string, name: string) {
-    return path.join(repoPath, BIT_DIR_NAME, BIT_INLINE_DIRNAME, name);
+  static composeBitInlinePath(boxPath: string, name: string) {
+    return path.join(boxPath, BIT_DIR_NAME, BIT_INLINE_DIRNAME, name);
   }
 
   static composeFileName(name: string) {
     return `${name}.js`;
   }
 
-  static createBit(bitName: string, repoPath: string) {
-    const bitPath = this.composeBitInlinePath(repoPath, bitName);
+  static createBit(bitName: string, boxPath: string) {
+    const bitPath = this.composeBitInlinePath(boxPath, bitName);
     mkdirp.sync(bitPath);
     fs.writeFileSync(path.join(bitPath, this.composeFileName(bitName)), fs.readFileSync(path.resolve(__dirname, '../../resources/impl.template.js')));
     
     return bitPath;
   }
 
-  static bitExists(bitName: string, repoPath: string) {
-    return fs.existsSync(this.composeBitInlinePath(repoPath, bitName));
+  static bitExists(bitName: string, boxPath: string) {
+    return fs.existsSync(this.composeBitInlinePath(boxPath, bitName));
   }
 
   /**
    * @private
    **/
   static composePath(p: string, inPath: string) {
-    return path.join(this.composeRepoPath(p), inPath); 
+    return path.join(this.composeBoxPath(p), inPath); 
   }
 
   /**
@@ -47,8 +47,8 @@ export default class RepositoryFs {
     return mkdirp.sync(this.composePath(p, inPath));
   }
 
-  static createRepo(p: string): boolean {
-    if (this.pathHasRepo(p)) return false;
+  static createBox(p: string): boolean {
+    if (this.pathHasBox(p)) return false;
     this.createBitJson(p);
     this.createDir(p, BIT_IMPORTED_DIRNAME);
     this.createDir(p, BIT_INLINE_DIRNAME);
@@ -77,11 +77,11 @@ export default class RepositoryFs {
   /**
    * @private
    **/
-  static pathHasRepo(p: string): boolean {
-    return fs.existsSync(this.composeRepoPath(p));
+  static pathHasBox(p: string): boolean {
+    return fs.existsSync(this.composeBoxPath(p));
   }
 
-  static locateClosestRepo(absPath: string): ?string {
+  static locateClosestBox(absPath: string): ?string {
     function buildPropogationPaths(): string[] {
       const paths: string[] = [];
       const pathParts = absPath.split(path.sep);
@@ -95,8 +95,8 @@ export default class RepositoryFs {
       return paths.reverse();
     }
 
-    if (this.pathHasRepo(absPath)) return absPath;
+    if (this.pathHasBox(absPath)) return absPath;
     const searchPaths = buildPropogationPaths();
-    return searchPaths.find(searchPath => this.pathHasRepo(searchPath));     
+    return searchPaths.find(searchPath => this.pathHasBox(searchPath));     
   }
 }
