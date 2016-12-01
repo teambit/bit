@@ -2,6 +2,7 @@
 import BitFs from '../bit-fs';
 import Bit from '../bit';
 import BoxNotFound from './exceptions/box-not-found';
+import type Opts from '../cli/command-opts-interface';
 
 export default class Box {
   path: string;
@@ -22,8 +23,8 @@ export default class Box {
     this.createdNow = createdNow;
   }
 
-  addBit(name: string, withTests: boolean = true): Bit {
-    return Bit.create(this, name);
+  createBit(name: string, opts: Opts): Bit {
+    return BitFs.createBit(this, name, opts);
   }
 
   removeBit(name: string): Bit {

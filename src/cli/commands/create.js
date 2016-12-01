@@ -10,14 +10,14 @@ export default class Create extends Command {
   alias = 'c';
   opts = [];
 
-  action([name]: [string]): Promise<any> {
+  action([name, force, withTests]: [string, boolean, boolean]): Promise<any> {
     return new Promise((resolve) => {
       const box = loadBox();
-      const bit = box.addBit(name);
-
+      box.createBit(name, {});
+      
       return resolve({
         path: box.path,
-        name: bit.name
+        name,
       });
     });
   }

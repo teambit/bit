@@ -40,7 +40,7 @@ export default class Bit {
   }
 
   static create(box: Box, bitName: string): Bit {
-    const path = BitFs.addBit(bitName, box);
+    const path = BitFs.createBit(bitName, box);
     return new Bit({
       name: bitName,
       box,

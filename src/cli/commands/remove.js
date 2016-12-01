@@ -7,12 +7,15 @@ export default class Remove extends Command {
   name = 'remove <name>';
   description = 'remove a bit';
   alias = 'rm';
-  opts = [];
+  opts = [
+    ['-i, --inline', 'remove inline bit'],
+    ['-e, --external', 'remove external bit']
+  ] ;
   
-  action([name, ]: [string]): Promise<any> {
+  action([name,opts ]: [string]): Promise<any> {
     return new Promise((resolve, reject) => {
-      const box = loadBox();
-      const removedBit = box.removeBit(name);
+      const box = loadBox('/var/www/playground/bit-testing/');
+      const removedBit = box.removeBit(name,);
       
       return resolve({
         path: removedBit.path,
@@ -21,7 +24,7 @@ export default class Remove extends Command {
     });
   }
 
-  resport(data: {string: any}): string {
+  report(data: {string: any}): string {
     return '';
   }
 }
