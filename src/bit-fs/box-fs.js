@@ -4,7 +4,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import glob from 'glob';
 import { BIT_DIR_NAME, RESOURCES, BIT_EXTERNAL_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
-import BitJsonManager from '../box/bit-json-manager';
+import BitJson from '../box/bit-json';
 import type Opts from '../cli/command-opts-interface';
 
 export default class BoxFs {
@@ -97,8 +97,11 @@ export default class BoxFs {
 
   static createBox(p: string): boolean {
     if (this.pathHasBox(p)) return false;
-    BitJsonManager.createBitJson(p);
-    console.log(BitJsonManager.loadBitJson(p))
+    const bitJson = new BitJson(p);
+    bitJson.write();
+
+    // BitJsonManager.createBitJson(p);
+    // console.log(BitJsonManager.loadBitJson(p))
     this.createDir(p, BIT_EXTERNAL_DIRNAME);
     this.createDir(p, BIT_INLINE_DIRNAME);
     return true;
