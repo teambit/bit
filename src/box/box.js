@@ -2,7 +2,7 @@
 import BitFs from '../bit-fs';
 import Bit from '../bit';
 import BoxNotFound from './exceptions/box-not-found';
-import type Opts from '../cli/command-opts-interface';
+import type { Opts } from '../cli/command-opts-interface';
 
 export default class Box {
   path: string;
