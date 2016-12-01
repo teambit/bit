@@ -5,6 +5,7 @@ import * as esprima from 'esprima';
 import * as doctrine from 'doctrine';
 import BoxFs from './box-fs';
 import { Box } from '../box';
+import type Opts from '../cli/command-opts-interface';
 
 export default class BitFs {
   static initiateBox(boxPath: string): boolean {
@@ -64,12 +65,19 @@ export default class BitFs {
     return null;
   }
 
-  static addBit(bitName: string, box: Box) {
+  static createBit(box: Box, bitName: string, { force, withTests }: Opts) {
     if (BoxFs.bitExistsInline(bitName, box.path)) {
       throw new Error(`bit ${bitName} already exists!`);
     }
 
-    return BoxFs.createBit(bitName, box.path);
+    if (!force) {
+      if (BoxFs.bitExistsExternal(bitName, box.path)) {
+        throw new Error(`bit ${bitName} already exists in the external library try "bit modify ${bitName}" to modify the current bit or "bit create -f ${bitName}"!`);
+      }
+    }
+
+    
+    return BoxFs.createBit(bitName, box.path, { withTests });
   }
 
   static removeBit(bitName: string, box: Box) {

@@ -5,6 +5,7 @@ import * as path from 'path';
 import glob from 'glob';
 import { BIT_DIR_NAME, RESOURCES, BIT_EXTERNAL_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
 import BitJsonManager from '../box/bit-json-manager';
+import type Opts from '../cli/command-opts-interface';
 
 export default class BoxFs {
 
@@ -51,7 +52,8 @@ export default class BoxFs {
     .map(fullPath => path.basename(fullPath));
   }
 
-  static createBit(bitName: string, boxPath: string) {
+  static createBit(bitName: string, boxPath: string, { withTests }: Opts) {
+    // @TODO -- add tests on the flag withTests
     const bitPath = this.composeBitInlinePath(boxPath, bitName);
     mkdirp.sync(bitPath);
     fs.writeFileSync(path.join(bitPath, this.composeFileName(bitName)), fs.readFileSync(path.resolve(__dirname, '../../resources/impl.template.js')));
