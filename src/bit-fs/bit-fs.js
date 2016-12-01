@@ -75,8 +75,8 @@ export default class BitFs {
       throw new Error(`bit ${bitName} does not exists in your inline box, please use "bit create ${bitName}" first"`);
     }
     
-    if (BoxFs.bitExistsImported(bitName, box.path)) {
-      throw new Error(`bit ${bitName} already exists in the imported library, please remove it first (TODO)"`);
+    if (BoxFs.bitExistsExternal(bitName, box.path)) {
+      throw new Error(`bit ${bitName} already exists in the external library, please remove it first (TODO)"`);
       // TODO - we need to decide how we do the overriding
     }
 
