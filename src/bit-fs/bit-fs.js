@@ -29,6 +29,7 @@ export default class BitFs {
       tolerant: true,
       attachComment: true
     });
+
     const rawDocs = ast.body[0].leadingComments[0].value;
     const docs = doctrine
       .parse(rawDocs, { unwrap: true })
@@ -48,21 +49,30 @@ export default class BitFs {
   }
 
   static loadBit(name: string, repo: Box) {
-    if (!BoxFs.bitExists(name, repo.path)) return null;
+    if (!BoxFs.bitExistsInline(name, repo.path)) return null;
     const contents = fs.readFileSync(this.composeBitPath(name, repo.path)).toString();
     return this.loadBitMeta(name, contents);
   }
 
   static addBit(bitName: string, repo: Box) {
-    if (this.bitExists(bitName, repo)) {
+    if (BoxFs.bitExistsInline(bitName, repo.path)) {
       throw new Error(`bit ${bitName} already exists!`);
     }
 
     return BoxFs.createBit(bitName, repo.path);
   }
-  
-  static bitExists(bitName: string, repo: Box) {
-    return BoxFs.bitExists(bitName, repo.path);
+
+  static exportBit(bitName: string, repo: Box) {
+    if (!BoxFs.bitExistsInline(bitName, repo.path)) {
+      throw new Error(`bit ${bitName} does not exists in your inline box, please use "bit create ${bitName}" first"`);
+    }
+    
+    if (BoxFs.bitExistsImported(bitName, repo.path)) {
+      throw new Error(`bit ${bitName} already exists in the imported library, please remove it first (TODO)"`);
+      // TODO - we need to decide how we do the overriding
+    }
+
+    return BoxFs.exportBit(bitName, repo.path);
   }
 
   static moveInline() {

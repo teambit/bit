@@ -1,5 +1,5 @@
 /** @flow */
-import { loadRepository } from '../../repository';
+import { loadBox } from '../../box';
 import Bit from '../../bit';
 import Command from '../command';
 
@@ -11,14 +11,17 @@ export default class Remove extends Command {
   
   action([name, ]: [string]): Promise<any> {
     return new Promise((resolve, reject) => {
-      const repo = loadRepository();
-      if (!repo) return reject('could not find repo.');
-      const bit = Bit.load(name, repo);
-      bit.remove();
+      const box = loadBox();
+      const removedBit = box.removeBit(name);
+      
+      return resolve({
+        path: removedBit.path,
+        name
+      });
     });
   }
 
-  report(data: {string: any}): string {
+  resport(data: {string: any}): string {
     return '';
   }
 }

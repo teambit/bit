@@ -9,7 +9,7 @@ export default class Box {
   static load(path: string, created: boolean): ?Box {
     if (!created) {
       const repoPath = BitFs.locateBox(path);
-      if (!repoPath) return null;
+      if (!repoPath) throw new Error('could not find box.');
       return new Box(repoPath, false);
     }
 
@@ -25,8 +25,20 @@ export default class Box {
     return Bit.create(this, name);
   }
 
+  removeBit(name: string): Bit {
+    return Bit.remove(this, name);
+  }
+
   loadBit(name: string): Bit {
     return Bit.load(this, name);
+  }
+
+  exportBit(name: string): Bit {
+    return Bit.export(this, name);
+  }
+
+  listBits(): Bit[] {
+    return Bit.listBits(this);
   }
 
   static create(path: string): Box {

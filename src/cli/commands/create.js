@@ -9,11 +9,10 @@ export default class Create extends Command {
   description = 'create a new bit';
   alias = 'c';
   opts = [];
- 
-  action([name, ]: [string]): Promise<any> {
-    return new Promise((resolve, reject) => {
+
+  action([name]: [string]): Promise<any> {
+    return new Promise((resolve) => {
       const box = loadBox();
-      if (!box) return reject('could not find repo.');
       const bit = box.addBit(name);
 
       return resolve({
