@@ -5,7 +5,8 @@ import * as esprima from 'esprima';
 import * as doctrine from 'doctrine';
 import BoxFs from './box-fs';
 import { Box } from '../box';
-import type Opts from '../cli/command-opts-interface';
+import type { Opts } from '../cli/command-opts-interface';
+import BitAlreadyExistError from '../bit/exceptions/bit-already-exist';
 
 export default class BitFs {
   static initiateBox(boxPath: string): boolean {
@@ -14,10 +15,6 @@ export default class BitFs {
 
   static locateBox(absPath: string): ?string {
     return BoxFs.locateClosestBox(absPath);
-  }
-
-  static getBitPath(name, boxPath) {
-    
   }
 
   static composeBitPath(name, boxPath, loc) {
@@ -67,7 +64,7 @@ export default class BitFs {
 
   static createBit(box: Box, bitName: string, { force, withTests }: Opts) {
     if (BoxFs.bitExistsInline(bitName, box.path)) {
-      throw new Error(`bit ${bitName} already exists!`);
+      throw new BitAlreadyExistError(bitName);
     }
 
     if (!force) {

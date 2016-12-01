@@ -2,6 +2,7 @@
 import BitFs from '../bit-fs';
 import BoxFs from '../bit-fs/box-fs';
 import { Box } from '../box';
+import BitNotFoundException from './exceptions/bit-not-found';
 
 export default class Bit {
   name: string;
@@ -35,7 +36,7 @@ export default class Bit {
 
   static load(name: string, box: Box): Bit {
     const rawBit = BitFs.loadBit(name, box);
-    if (!rawBit) return null;
+    if (!rawBit) throw new BitNotFoundException();
     return new Bit(rawBit);
   }
 
