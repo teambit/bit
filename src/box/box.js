@@ -25,6 +25,10 @@ export default class Box {
     return Bit.create(this, name);
   }
 
+  removeBit(name: string): Bit {
+    return Bit.remove(this, name);
+  }
+
   loadBit(name: string): Bit {
     return Bit.load(this, name);
   }

@@ -29,6 +29,15 @@ export default class BoxFs {
     return `${name}.spec.js`;
   }
 
+
+static removeBit(bitName: string, boxPath: string) {
+    const isInline = this.bitExistsInline(bitName, boxPath);
+    const bitPath = isInline ? this.composeBitInlinePath(boxPath, bitName) : this.composeBitImportedPath(boxPath, bitName);
+    fs.removeSync(bitPath);
+    
+    return bitPath;
+  }
+
   static createBit(bitName: string, boxPath: string) {
     const bitPath = this.composeBitInlinePath(boxPath, bitName);
     mkdirp.sync(bitPath);
@@ -43,6 +52,10 @@ export default class BoxFs {
     
     fs.copySync(sourcePath, destPath);
     fs.removeSync(sourcePath);
+  }
+
+  static bitExists(bitName: string, boxPath: string) {
+    return bitExistsInline(bitName, boxPath) || bitExistsImported(bitName, boxPath);  
   }
 
   static bitExistsInline(bitName: string, boxPath: string) {

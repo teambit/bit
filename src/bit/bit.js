@@ -23,9 +23,13 @@ export default class Bit {
     this.examples = examples;
   }
 
-  remove(name: string) {
-    const result = BitFs.removeBit();
-    return result;
+  remove(box: Box, bitName: string) {
+    const removedBitPath = BitFs.removeBit(bitName, box);
+    return new Bit({
+      name: bitName,
+      box,
+      path: removedBitPath
+    });
   }
 
   static load(name: string, box: Box): ?Bit {
