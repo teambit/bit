@@ -14,7 +14,7 @@ export default class Command {
   name: string;
   description: string;
   alias: string;
-  opts: any[];
+  opts: [string, string, string][];
 
   action(params: Array<any>): Promise<any> {
     const m = this.alias;
@@ -26,7 +26,7 @@ export default class Command {
     return '"report" method not implemented on this command';
   }
 
-  handleError(err: Error): boolean {
-    return false;
+  handleError(err: Error) {
+    return null;
   }
 }

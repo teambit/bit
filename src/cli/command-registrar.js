@@ -25,20 +25,40 @@ export default class CommandRegistrar {
   }
 
   registerCommands() {
+    function createOptStr(alias, name) {
+      return `-${alias}, --${name}`;
+    }
+
+    function getOpts(c, opts: [[string, string, string]]): {[string]: boolean|string} {
+      const options = {};
+
+      opts.forEach(([, name]) => {
+        options[name] = c[name];
+      });
+
+      return options;
+    }
+    
     function register(command: Command) {
-      commander
+      const concrete = commander
         .command(command.name)
         .description(command.description)
-        .alias(command.alias)
-        .action((...args) => {
-          command.action(args)
-            .then(data => console.log(command.report(data)))
-            .catch((err) => {
-              const errorHandled = defaultHandleError(err) || command.handleError(err);
-              if (errorHandled) console.log(errorHandled);
-              else console.error(err);
-            });
-        });
+        .alias(command.alias);
+
+      command.opts.forEach(([alias, name, description]) => {
+        concrete.option(createOptStr(alias, name), description);
+      });
+
+      concrete.action((...args) => {
+        const opts = getOpts(concrete, command.opts);
+        command.action(args.slice(0, args.length - 1), opts)
+          .then(data => console.log(command.report(data)))
+          .catch((err) => {
+            const errorHandled = defaultHandleError(err) || command.handleError(err);
+            if (errorHandled) console.log(errorHandled);
+            else console.error(err);
+          });
+      });
     }
     
     this.commands.forEach(register);
