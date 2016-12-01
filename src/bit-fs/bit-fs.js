@@ -6,7 +6,8 @@ import * as doctrine from 'doctrine';
 import BoxFs from './box-fs';
 import { Box } from '../box';
 import type { Opts } from '../cli/command-opts-interface';
-import BitAlreadyExistError from '../bit/exceptions/bit-already-exist';
+import BitAlreadyExistInternalyError from '../bit/exceptions/bit-already-exist-internaly';
+import BitAlreadyExistExternalyError from '../bit/exceptions/bit-already-exist-externaly';
 
 export default class BitFs {
   static initiateBox(boxPath: string): boolean {
@@ -64,12 +65,12 @@ export default class BitFs {
 
   static createBit(box: Box, bitName: string, { force, withTests }: Opts) {
     if (BoxFs.bitExistsInline(bitName, box.path)) {
-      throw new BitAlreadyExistError(bitName);
+      throw new BitAlreadyExistInternalyError(bitName);
     }
 
     if (!force) {
       if (BoxFs.bitExistsExternal(bitName, box.path)) {
-        throw new Error(`bit ${bitName} already exists in the external library try "bit modify ${bitName}" to modify the current bit or "bit create -f ${bitName}"!`);
+        throw new BitAlreadyExistExternalyError(bitName);
       }
     }
 
