@@ -4,6 +4,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import glob from 'glob';
 import { BIT_DIR_NAME, RESOURCES, BIT_EXTERNAL_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
+import BitJsonManager from '../box/bit-json-manager';
 
 export default class BoxFs {
 
@@ -94,41 +95,13 @@ export default class BoxFs {
 
   static createBox(p: string): boolean {
     if (this.pathHasBox(p)) return false;
-    this.createBitJson(p);
+    BitJsonManager.createBitJson(p);
+    console.log(BitJsonManager.loadBitJson(p))
     this.createDir(p, BIT_EXTERNAL_DIRNAME);
     this.createDir(p, BIT_INLINE_DIRNAME);
     return true;
   }
-
-  static readBitJsonTpl() {
-    function resolveTplPath() {
-      return path.resolve(__dirname, path.join(RESOURCES, 'bit.template.json'));
-    }
-
-    return fs
-      .readFileSync(resolveTplPath())
-      .toString();
-  }
-
-  static createBitJson(p: string) {
-    if (this.hasBitJson(p)) return false;
-    return fs.writeFileSync(
-      this.composeBitJsonPath(p), 
-      this.readBitJsonTpl()
-    );
-  }
-
-  /**
-   * @private
-   **/
-  static composeBitJsonPath(p: string) {
-    return path.join(p, BIT_JSON);
-  }
-
-  static hasBitJson(p: string): boolean {
-    return fs.existsSync(this.composeBitJsonPath(p));
-  }
-
+  
   /**
    * @private
    **/
