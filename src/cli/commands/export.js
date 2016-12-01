@@ -1,5 +1,8 @@
 /** @flow */
+import { loadBox } from '../../box';
 import Command from '../command';
+
+const chalk = require('chalk');
 
 export default class Export extends Command {
   name = 'export <name>';
@@ -7,16 +10,19 @@ export default class Export extends Command {
   alias = 'e';
   opts = [];
 
-  action(params: Object[]): Promise<any> {
-    console.log('editing bit...');
-    this.name = '';
+  action([name]: [string]): Promise<any> {
     return new Promise((resolve) => {
-      resolve(params);
+      const box = loadBox();
+      box.exportBit(name);
+
+      return resolve({
+        name,
+      });
     });
   }
 
-  report(data: {string: any}): string {
-    return '';
+  report({ name }: any): string {
+    return chalk.green(`exported bit "${name}" from inline to imported`);
   }
 
 }

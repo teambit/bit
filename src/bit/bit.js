@@ -43,6 +43,15 @@ export default class Bit {
     });
   }
 
+  static export(repo: Repository, bitName: string): Bit {
+    const exportedPath = BitFs.exportBit(bitName, repo);
+    
+    return new Bit({
+      name: bitName,
+      repo,
+      path: exportedPath
+    });
+  }
   static edit() {
     
   }

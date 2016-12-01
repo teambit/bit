@@ -1,6 +1,6 @@
 /** @flow */
 import * as mkdirp from 'mkdirp';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import { BIT_DIR_NAME, RESOURCES, BIT_IMPORTED_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
 
@@ -17,8 +17,16 @@ export default class BoxFs {
     return path.join(boxPath, BIT_DIR_NAME, BIT_INLINE_DIRNAME, name);
   }
 
+  static composeBitImportedPath(boxPath: string, name: string) {
+    return path.join(boxPath, BIT_DIR_NAME, BIT_IMPORTED_DIRNAME, name);
+  }
+
   static composeFileName(name: string) {
     return `${name}.js`;
+  }
+
+  static composeSpecName(name: string) {
+    return `${name}.spec.js`;
   }
 
   static createBit(bitName: string, boxPath: string) {
@@ -29,8 +37,20 @@ export default class BoxFs {
     return bitPath;
   }
 
-  static bitExists(bitName: string, boxPath: string) {
+  static exportBit(bitName: string, boxPath: string) {
+    const sourcePath = this.composeBitInlinePath(boxPath, bitName);
+    const destPath = this.composeBitImportedPath(boxPath, bitName);
+    
+    fs.copySync(sourcePath, destPath);
+    fs.removeSync(sourcePath);
+  }
+
+  static bitExistsInline(bitName: string, boxPath: string) {
     return fs.existsSync(this.composeBitInlinePath(boxPath, bitName));
+  }
+
+  static bitExistsImported(bitName: string, boxPath: string) {
+    return fs.existsSync(this.composeBitImportedPath(boxPath, bitName));
   }
 
   /**
