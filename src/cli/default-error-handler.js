@@ -6,18 +6,13 @@ import BitAlreadyExist from '../bit/exceptions/bit-already-exist';
 
 const chalk = require('chalk');
 
-export default (err: Error): boolean => {
-  if (err instanceof BoxNotFound) {
-    return chalk.red('box not found. to create a new box, please use `bit init`');
-  }
+const errorsMap = [ 
+  [ BoxNotFound, () => 'box not found. to create a new box, please use `bit init`' ],
+  [ BitNotFound, () => 'bit not found. to create a new bit, please use `bit create {bitName}`' ],
+  [ BitAlreadyExist, err => `bit ${err.bitName} already exists!` ]   
+];
 
-  if (err instanceof BitNotFound) {
-    return chalk.red('bit not found. to create a new bit, please use `bit create {bitName}`');
-  }
-
-  if (err instanceof BitAlreadyExist) {
-    return chalk.red(`bit ${err.bitName} already exists!`);
-  } 
-
-  return null;
+export default (err: Error): ?string => {
+  const [, func] = errorsMap.find(([ErrorType]) => err instanceof ErrorType);
+  return chalk.red(func(err));
 };
