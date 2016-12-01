@@ -62,7 +62,7 @@ export default class BitFs {
   }
 
   static removeBit(bitName: string, box: Box) {
-    if (!BoxFs.bitExist(bitName, box.path)) {
+    if (!BoxFs.bitExists(bitName, box.path)) {
       throw new Error(`no bit named ${bitName} found!`);
     }
 
