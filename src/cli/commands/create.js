@@ -27,8 +27,4 @@ export default class Create extends Command {
   report({ name, path }: any): string {
     return chalk.green(`created bit "${name}" in "${path}"`);
   }
-
-  handleError(err: Error) {
-    if (err instanceof )
-  }
 }

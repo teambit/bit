@@ -8,7 +8,7 @@ export default class Box {
   path: string;
   createdNow: boolean;
 
-  static load(path: string, created: boolean): ?Box {
+  static load(path: string, created: boolean): Box {
     if (!created) {
       const repoPath = BitFs.locateBox(path);
       if (!repoPath) throw new BoxNotFound();
