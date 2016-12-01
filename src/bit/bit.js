@@ -1,24 +1,24 @@
 /** @flow */
 import BitFs from '../bit-fs';
-import { Repository } from '../repository';
+import { Box } from '../box';
 
 export default class Bit {
   name: string;
   version: string; 
   dependencies: Bit[];
-  repository: Repository;
+  box: Box;
   path: string;
   env: string;
   sig: string;
   examples: string;
 
-  constructor({ name, version, env, path, repo, sig, examples, dependencies }: any) {
+  constructor({ name, version, env, path, box, sig, examples, dependencies }: any) {
     this.name = name;
     this.version = version;
     this.env = env;
     this.dependencies = dependencies;
     this.path = path;
-    this.repository = repo;
+    this.box = box;
     this.sig = sig;
     this.examples = examples;
   }
@@ -28,27 +28,27 @@ export default class Bit {
     return result;
   }
 
-  static load(name: string, repo: Repository): ?Bit {
-    const rawBit = BitFs.loadBit(name, repo);
+  static load(name: string, box: Box): ?Bit {
+    const rawBit = BitFs.loadBit(name, box);
     if (!rawBit) return null;
     return new Bit(rawBit);
   }
 
-  static create(repo: Repository, bitName: string): Bit {
-    const path = BitFs.addBit(bitName, repo);
+  static create(box: Box, bitName: string): Bit {
+    const path = BitFs.addBit(bitName, box);
     return new Bit({
       name: bitName,
-      repo,
+      box,
       path
     });
   }
 
-  static export(repo: Repository, bitName: string): Bit {
-    const exportedPath = BitFs.exportBit(bitName, repo);
+  static export(box: Box, bitName: string): Bit {
+    const exportedPath = BitFs.exportBit(bitName, box);
     
     return new Bit({
       name: bitName,
-      repo,
+      box,
       path: exportedPath
     });
   }

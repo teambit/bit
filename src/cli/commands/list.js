@@ -3,7 +3,7 @@ import Command from '../command';
 
 export default class List extends Command {
   name = 'list';
-  description = 'list all repository bits';
+  description = 'list all box bits';
   alias = 'ls';
   opts = [];
   
