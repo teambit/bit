@@ -22,7 +22,7 @@ export default class Export extends Command {
   }
 
   report({ name }: any): string {
-    return chalk.green(`exported bit "${name}" from inline to imported`);
+    return chalk.green(`exported bit "${name}" from inline to external`);
   }
 
 }

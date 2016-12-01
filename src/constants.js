@@ -35,7 +35,7 @@ export const BIT_DIR_NAME = 'bits';
 
 export const BIT_INLINE_DIRNAME = 'inline';
 
-export const BIT_IMPORTED_DIRNAME = 'imported';
+export const BIT_EXTERNAL_DIRNAME = 'external';
 
 export const BIT_JSON = 'bit.json';
 
