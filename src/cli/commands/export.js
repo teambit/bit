@@ -13,8 +13,8 @@ export default class Export extends Command {
   action([name]: [string]): Promise<any> {
     return new Promise((resolve) => {
       const box = loadBox();
-      box.exportBit(name);
-
+      const bit = box.exportBit(name);
+      
       return resolve({
         name,
       });

@@ -19,8 +19,8 @@ export default class BitFs {
     
   }
 
-  static composeBitPath(name, repoPath) {
-    return path.resolve(repoPath, 'bits', 'inline', name, `${name}.js`);
+  static composeBitPath(name, boxPath, loc) {
+    return path.resolve(boxPath, 'bits', loc, name, `${name}.js`);
   }
 
   static loadBitMeta(name: string, bitContents: string) {
@@ -29,7 +29,6 @@ export default class BitFs {
       tolerant: true,
       attachComment: true
     });
-
     const rawDocs = ast.body[0].leadingComments[0].value;
     const docs = doctrine
       .parse(rawDocs, { unwrap: true })
@@ -50,34 +49,49 @@ export default class BitFs {
 
   static loadBit(name: string, repo: Box) {
     function returnBit(loc) {
-      return this.loadBitMeta(
+      return loadMeta(
         name, 
-        fs.readFileSync(this.composeBitPath(name, repo.path)).toString()
+        fs.readFileSync(composePath(name, repo.path, loc)).toString()
       );
     }
 
-    if (BoxFs.bitExistsInline(name, repo.path)) return null;
+    const loadMeta = this.loadBitMeta;
+    const composePath = this.composeBitPath;
+
+    if (BoxFs.bitExistsInline(name, repo.path)) return returnBit('inline');
+    if (BoxFs.bitExistsExternal(name, repo.path)) return returnBit('external');
+    
+    return null;
   }
 
-  static addBit(bitName: string, repo: Box) {
-    if (BoxFs.bitExistsInline(bitName, repo.path)) {
+  static addBit(bitName: string, box: Box) {
+    if (BoxFs.bitExistsInline(bitName, box.path)) {
       throw new Error(`bit ${bitName} already exists!`);
     }
 
-    return BoxFs.createBit(bitName, repo.path);
+    return BoxFs.createBit(bitName, box.path);
   }
 
-  static exportBit(bitName: string, repo: Box) {
-    if (!BoxFs.bitExistsInline(bitName, repo.path)) {
+  static removeBit(bitName: string, box: Box) {
+    if (!BoxFs.bitExist(bitName, box.path)) {
+      throw new Error(`no bit named ${bitName} found!`);
+    }
+
+    return BoxFs.removeBit(bitName, box.path);
+  }
+
+
+  static exportBit(bitName: string, box: Box) {
+    if (!BoxFs.bitExistsInline(bitName, box.path)) {
       throw new Error(`bit ${bitName} does not exists in your inline box, please use "bit create ${bitName}" first"`);
     }
     
-    if (BoxFs.bitExistsImported(bitName, repo.path)) {
-      throw new Error(`bit ${bitName} already exists in the imported library, please remove it first (TODO)"`);
+    if (BoxFs.bitExistsExternal(bitName, box.path)) {
+      throw new Error(`bit ${bitName} already exists in the external library, please remove it first (TODO)"`);
       // TODO - we need to decide how we do the overriding
     }
 
-    return BoxFs.exportBit(bitName, repo.path);
+    return BoxFs.exportBit(bitName, box.path);
   }
 
   static moveInline() {
