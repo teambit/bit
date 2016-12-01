@@ -34,8 +34,9 @@ export default class CommandRegistrar {
           command.action(args)
             .then(data => console.log(command.report(data)))
             .catch((err) => {
-              const errorHandled = command.handleError(err) || defaultHandleError(err);
-              if (!errorHandled) console.error(err);
+              const errorHandled = defaultHandleError(err) || command.handleError(err);
+              if (errorHandled) console.log(errorHandled);
+              else console.error(err);
             });
         });
     }

@@ -27,9 +27,6 @@ export default class Command {
   }
 
   handleError(err: Error): boolean {
-    switch (err) {
-      default:
-        return false;
-    }
+    return false;
   }
 }

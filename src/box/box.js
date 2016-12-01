@@ -1,6 +1,7 @@
 /** @flow */
 import BitFs from '../bit-fs';
 import Bit from '../bit';
+import BoxNotFound from './exceptions/box-not-found';
 
 export default class Box {
   path: string;
@@ -9,7 +10,7 @@ export default class Box {
   static load(path: string, created: boolean): ?Box {
     if (!created) {
       const repoPath = BitFs.locateBox(path);
-      if (!repoPath) throw new Error('could not find box.');
+      if (!repoPath) throw new BoxNotFound();
       return new Box(repoPath, false);
     }
 
@@ -44,7 +45,7 @@ export default class Box {
   static create(path: string): Box {
     const created = BitFs.initiateBox(path);
     const repo = this.load(path, created);
-    if (!repo) throw new Error('could not find box...');
+    if (!repo) throw new BoxNotFound();
     
     return repo; 
   }
