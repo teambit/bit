@@ -3,8 +3,8 @@ import * as mkdirp from 'mkdirp';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import glob from 'glob';
-import { BIT_DIR_NAME, RESOURCES, BIT_EXTERNAL_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
-import BitJson from '../box/bit-json';
+import { BIT_DIR_NAME, BIT_EXTERNAL_DIRNAME, BIT_INLINE_DIRNAME } from '../constants';
+import BitJson from '../box/bit-json/bit-json';
 import type Opts from '../cli/command-opts-interface';
 
 export default class BoxFs {

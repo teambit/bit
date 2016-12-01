@@ -26,7 +26,7 @@ export default class Command {
     return '"report" method not implemented on this command';
   }
 
-  handleError(err: Error) {
+  handleError(): ?string {
     return null;
   }
 }
