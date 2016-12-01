@@ -8,7 +8,7 @@ const chalk = require('chalk');
 export default class Init extends Command {
   name = 'init [path]';
   description = 'initialize an empty bit box';
-  alias = 'i';
+  alias = '';
   opts = [];
 
   action([path, ]: [string, ]): Promise<any> {

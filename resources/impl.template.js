@@ -6,7 +6,7 @@
  * @dependencies []
  * @param {type} name
  * @returns
- * @sig
+ * @sig 
  * @example
  * // example description
  * example.do(); //outputs nothing

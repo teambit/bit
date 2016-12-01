@@ -5,7 +5,7 @@ import Command from '../command';
 const chalk = require('chalk');
 
 export default class Export extends Command {
-  name = 'export <name>';
+  name = 'export <name> [remote]';
   description = 'export a bit';
   alias = 'e';
   opts = [];

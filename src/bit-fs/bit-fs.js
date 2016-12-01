@@ -49,9 +49,14 @@ export default class BitFs {
   }
 
   static loadBit(name: string, repo: Box) {
-    if (!BoxFs.bitExistsInline(name, repo.path)) return null;
-    const contents = fs.readFileSync(this.composeBitPath(name, repo.path)).toString();
-    return this.loadBitMeta(name, contents);
+    function returnBit(loc) {
+      return this.loadBitMeta(
+        name, 
+        fs.readFileSync(this.composeBitPath(name, repo.path)).toString()
+      );
+    }
+
+    if (BoxFs.bitExistsInline(name, repo.path)) return null;
   }
 
   static addBit(bitName: string, repo: Box) {
