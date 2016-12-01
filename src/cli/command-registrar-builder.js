@@ -8,8 +8,7 @@ import Modify from './commands/modify';
 import Export from './commands/export';
 import Login from './commands/login';
 import Logout from './commands/logout';
-import Pull from './commands/pull';
-import Push from './commands/push';
+import Import from './commands/import';
 import Remote from './commands/remote';
 import Remove from './commands/remove';
 import Search from './commands/search';
@@ -29,10 +28,9 @@ export default function registerCommands(): CommandRegistrar {
     new Export(),
     new Login(),
     new Logout(),
-    new Push(),
+    new Import(),
     new Show(),
     new Status(),
-    new Pull(),
     new Remote(),
     new Remove(),
     new Search(),

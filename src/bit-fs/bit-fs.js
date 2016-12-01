@@ -19,8 +19,8 @@ export default class BitFs {
     
   }
 
-  static composeBitPath(name, boxPath) {
-    return path.resolve(boxPath, 'bits', 'inline', name, `${name}.js`);
+  static composeBitPath(name, boxPath, loc) {
+    return path.resolve(boxPath, 'bits', loc, name, `${name}.js`);
   }
 
   static loadBitMeta(name: string, bitContents: string) {
@@ -47,10 +47,21 @@ export default class BitFs {
     };
   }
 
-  static loadBit(name: string, box: Box) {
-    if (!BoxFs.bitExistsInline(name, box.path)) return null;
-    const contents = fs.readFileSync(this.composeBitPath(name, box.path)).toString();
-    return this.loadBitMeta(name, contents);
+  static loadBit(name: string, repo: Box) {
+    function returnBit(loc) {
+      return loadMeta(
+        name, 
+        fs.readFileSync(composePath(name, repo.path, loc)).toString()
+      );
+    }
+
+    const loadMeta = this.loadBitMeta;
+    const composePath = this.composeBitPath;
+
+    if (BoxFs.bitExistsInline(name, repo.path)) return returnBit('inline');
+    if (BoxFs.bitExistsExternal(name, repo.path)) return returnBit('external');
+    
+    return null;
   }
 
   static addBit(bitName: string, box: Box) {
@@ -75,8 +86,8 @@ export default class BitFs {
       throw new Error(`bit ${bitName} does not exists in your inline box, please use "bit create ${bitName}" first"`);
     }
     
-    if (BoxFs.bitExistsImported(bitName, box.path)) {
-      throw new Error(`bit ${bitName} already exists in the imported library, please remove it first (TODO)"`);
+    if (BoxFs.bitExistsExternal(bitName, box.path)) {
+      throw new Error(`bit ${bitName} already exists in the external library, please remove it first (TODO)"`);
       // TODO - we need to decide how we do the overriding
     }
 

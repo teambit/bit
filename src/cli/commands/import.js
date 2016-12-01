@@ -4,19 +4,17 @@ import Command from '../command';
 
 const chalk = require('chalk');
 
-export default class Export extends Command {
-  name = 'export <name> [remote]';
-  description = 'export a bit';
-  alias = 'e';
+export default class Import extends Command {
+  name = 'import <name> [remote]';
+  description = 'import a bit';
+  alias = 'i';
   opts = [];
 
   action([name]: [string]): Promise<any> {
     return new Promise((resolve) => {
       const box = loadBox();
-      const bit = box.exportBit(name);
-      
+
       return resolve({
-        name,
       });
     });
   }
