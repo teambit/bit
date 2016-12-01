@@ -1,5 +1,6 @@
 /** @flow */
 import BitFs from '../bit-fs';
+import BoxFs from '../bit-fs/box-fs';
 import { Box } from '../box';
 
 export default class Bit {
@@ -56,6 +57,12 @@ export default class Bit {
       path: exportedPath
     });
   }
+
+  static listBits(box: Box): Bit[] {
+    const inlineBits = BoxFs.listInlineNames(box.path).map(name => this.load(name, box));
+    return inlineBits;
+  }
+
   static edit() {
     
   }

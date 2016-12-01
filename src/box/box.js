@@ -37,6 +37,10 @@ export default class Box {
     return Bit.export(this, name);
   }
 
+  listBits(): Bit[] {
+    return Bit.listBits(this);
+  }
+
   static create(path: string): Box {
     const created = BitFs.initiateBox(path);
     const repo = this.load(path, created);

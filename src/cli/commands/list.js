@@ -1,4 +1,6 @@
 /** @flow */
+import chalk from 'chalk';
+import { loadBox } from '../../box';
 import Command from '../command';
 
 export default class List extends Command {
@@ -8,13 +10,18 @@ export default class List extends Command {
   opts = [];
   
   action(): Promise<any> {
-    const m = this.alias;
-    console.log('list of all bits');
-    return new Promise(resolve => resolve(m));
+    return new Promise((resolve) => {
+      const box = loadBox();
+      const bits = box.listBits();
+
+      return resolve({
+        bitNames: bits.map(bit => bit.name)
+      });
+    });
   }
 
-  report(data: {string: any}): string {
-    return '';
+  report(data: {bitNames: string[]}): string {
+    return chalk.green(data.bitNames.join('\n'));
   }
 
 }

@@ -2,6 +2,7 @@
 import * as mkdirp from 'mkdirp';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import glob from 'glob';
 import { BIT_DIR_NAME, RESOURCES, BIT_IMPORTED_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
 
 export default class BoxFs {
@@ -29,13 +30,20 @@ export default class BoxFs {
     return `${name}.spec.js`;
   }
 
-
-static removeBit(bitName: string, boxPath: string) {
+  static removeBit(bitName: string, boxPath: string) {
     const isInline = this.bitExistsInline(bitName, boxPath);
     const bitPath = isInline ? this.composeBitInlinePath(boxPath, bitName) : this.composeBitImportedPath(boxPath, bitName);
     fs.removeSync(bitPath);
     
     return bitPath;
+  }
+
+  static listInlineNames(boxPath: string) {
+    return glob.sync(this.composeBitInlinePath(boxPath, '/*')).map(fullPath => path.basename(fullPath));
+  }
+
+  static listImportedNames(boxPath: string) {
+    return glob.sync(this.composeBitImportedPath(boxPath, '/*')).map(fullPath => path.basename(fullPath));
   }
 
   static createBit(bitName: string, boxPath: string) {
@@ -55,7 +63,7 @@ static removeBit(bitName: string, boxPath: string) {
   }
 
   static bitExists(bitName: string, boxPath: string) {
-    return bitExistsInline(bitName, boxPath) || bitExistsImported(bitName, boxPath);  
+    return this.bitExistsInline(bitName, boxPath) || this.bitExistsImported(bitName, boxPath);  
   }
 
   static bitExistsInline(bitName: string, boxPath: string) {

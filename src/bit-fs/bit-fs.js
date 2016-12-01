@@ -29,6 +29,7 @@ export default class BitFs {
       tolerant: true,
       attachComment: true
     });
+
     const rawDocs = ast.body[0].leadingComments[0].value;
     const docs = doctrine
       .parse(rawDocs, { unwrap: true })
