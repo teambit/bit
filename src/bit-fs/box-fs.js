@@ -3,8 +3,8 @@ import * as mkdirp from 'mkdirp';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import glob from 'glob';
-import { BIT_DIR_NAME, BIT_EXTERNAL_DIRNAME, BIT_INLINE_DIRNAME } from '../constants';
-import BitJson from '../box/bit-json/bit-json';
+import { BIT_DIR_NAME, RESOURCES, BIT_EXTERNAL_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
+import BitJsonManager from '../box/bit-json-manager';
 import type Opts from '../cli/command-opts-interface';
 
 export default class BoxFs {
@@ -88,48 +88,13 @@ export default class BoxFs {
     return path.join(this.composeBoxPath(p), inPath); 
   }
 
-  /**
-   * @private
-   **/
-  static createDir(p: string, inPath: string) {
-    return mkdirp.sync(this.composePath(p, inPath));
-  }
-
   static createBox(p: string): boolean {
     if (this.pathHasBox(p)) return false;
-    const bitJson = new BitJson(p);
-    bitJson.write();
-
-    // BitJsonManager.createBitJson(p);
-    // console.log(BitJsonManager.loadBitJson(p))
+    BitJsonManager.createBitJson(p);
+    console.log(BitJsonManager.loadBitJson(p))
     this.createDir(p, BIT_EXTERNAL_DIRNAME);
     this.createDir(p, BIT_INLINE_DIRNAME);
     return true;
   }
   
-  /**
-   * @private
-   **/
-  static pathHasBox(p: string): boolean {
-    return fs.existsSync(this.composeBoxPath(p));
-  }
-
-  static locateClosestBox(absPath: string): ?string {
-    function buildPropogationPaths(): string[] {
-      const paths: string[] = [];
-      const pathParts = absPath.split(path.sep);
-      
-      pathParts.forEach((val, index) => {
-        const part = pathParts.slice(0, index).join('/');
-        if (!part) return;
-        paths.push(part);
-      });
-
-      return paths.reverse();
-    }
-
-    if (this.pathHasBox(absPath)) return absPath;
-    const searchPaths = buildPropogationPaths();
-    return searchPaths.find(searchPath => this.pathHasBox(searchPath));     
-  }
 }

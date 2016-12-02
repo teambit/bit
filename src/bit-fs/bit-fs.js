@@ -23,7 +23,7 @@ export default class BitFs {
 
   static loadBitMeta(name: string, bitContents: string) {
     const ast = esprima.parse(bitContents, {
-      loc: true,
+      loc: true,  
       tolerant: true,
       attachComment: true
     });

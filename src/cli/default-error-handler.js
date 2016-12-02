@@ -13,6 +13,8 @@ const errorsMap = [
 ];
 
 export default (err: Error): ?string => {
-  const [, func] = errorsMap.find(([ErrorType]) => err instanceof ErrorType);
+  const error = errorsMap.find(([ErrorType]) => err instanceof ErrorType);
+  if (!error) return null;
+  const [, func] = error;
   return chalk.red(func(err));
 };

@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import BitJsonAlreadyExists from '../exceptions/bit-json-already-exists';
 import BitJsonNotFound from '../exceptions/bit-json-not-found';
 import { BIT_JSON } from '../../constants';
+import Box from '../box';
 
 function composeWithPath(path: string) {
   return pathlib.join(path, BIT_JSON);
@@ -20,12 +21,12 @@ export default class BitJson {
   dependencies: {[string]: string} = {};
   
   /**
-   * root path
+   * contained box
    */
-  path: string;
+  box: Box;
 
-  constructor(path: string, dependencies: {[string]: string} = {}) {
-    this.path = path;
+  constructor(box: Box, dependencies: {[string]: string} = {}) {
+    this.box = box;
     this.dependencies = dependencies;
   }
 
@@ -33,14 +34,14 @@ export default class BitJson {
    * compose concerete path for bit.json in root path.
    */ 
   composePath() {
-    return composeWithPath(this.path);
+    return composeWithPath(this.box.path);
   }
 
   /**
    * test whether bit.json already exists in root path
    */
   hasExisting(): boolean {
-    return hasExisting(this.path);
+    return hasExisting(this.box.path);
   }
 
   /**
@@ -83,23 +84,31 @@ export default class BitJson {
   /**
    * write to file as json
    */
-  write(override: boolean = false) {
-    if (!override && this.hasExisting(this.path)) {
-      throw new BitJsonAlreadyExists();
-    }
+  write(override: boolean = false): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      if (!override && this.hasExisting(this.box.path)) {
+        throw new BitJsonAlreadyExists();
+      }
 
-    return fs.writeFileSync(
-      this.composePath(),
-      this.toJson()
-    );
+      const repspond = (err, res) => {
+        if (err) return reject(err);
+        return resolve(res);
+      };
+
+      fs.writeFile(
+        this.composePath(),
+        this.toJson(),
+        repspond
+      );
+    });
   }
 
   /**
    * load existing json in root path
    */
-  static load(path: string): BitJson {
-    if (!hasExisting(path)) throw new BitJsonNotFound();
-    const file = JSON.parse(fs.readFileSync(composeWithPath(path)).toString('utf8'));
-    return new BitJson(path, file.dependencies);
+  static load(box: Box): BitJson {
+    if (!hasExisting(box.path)) throw new BitJsonNotFound();
+    const file = JSON.parse(fs.readFileSync(composeWithPath(box.path)).toString('utf8'));
+    return new BitJson(box, file.dependencies);
   }
 }

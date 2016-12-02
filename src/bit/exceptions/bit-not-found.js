@@ -1,2 +1,2 @@
-export default class BoxNotFoundError extends Error {
-}
+/** @flow */
+export default class BoxNotFoundError extends Error {}

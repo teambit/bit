@@ -1,2 +1,2 @@
 /** @flow */
-export default class BitJsonNotFound {}
+export default class BitJsonNotFound extends Error {}

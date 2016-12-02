@@ -11,24 +11,19 @@ export default class Init extends Command {
   alias = '';
   opts = [];
 
-  action([path, ]: [string, ]): Promise<any> {
-    return new Promise((resolve) => {
-      if (path) path = pathlib.resolve(path);
-      const box = Box.create(path || this.currentDir());
-      
-      resolve({ existed: !box.createdNow });        
-    });
+  action([path, ]: [string, ]): Promise<{[string]: any}> {
+    if (path) path = pathlib.resolve(path);
+    return Box.create(path)
+      .write()
+      .then((created) => {
+        return { 
+          created
+        };
+      });
   }
 
-  report({ existed }: any) {
-    if (existed) return `${chalk.grey('successfully reinitialized a bit box.')}`;
+  report({ created }: any) {
+    if (!created) return `${chalk.grey('successfully reinitialized a bit box.')}`;
     return `${chalk.green('successfully initialized an empty bit box.')}`;
-  }
-
-  /**
-   * @private
-   **/
-  currentDir(): string {
-    return process.cwd();
   }
 }

@@ -1,27 +1,39 @@
 /** @flow */
 import BitFs from '../bit-fs';
 import BoxFs from '../bit-fs/box-fs';
+import Example from './example';
 import { Box } from '../box';
 import BitNotFoundException from './exceptions/bit-not-found';
 
+export type BitProps = {
+  name: string,
+  path: string,
+  sig: string,
+  box: Box,
+  version?: number, 
+  dependencies?: Bit[],
+  env?: string,
+  examples?: Example[],
+};
+
 export default class Bit {
   name: string;
-  version: string; 
+  version: number; 
   dependencies: Bit[];
   box: Box;
   path: string;
   env: string;
   sig: string;
-  examples: string;
+  examples: Example[];
 
-  constructor({ name, version, env, path, box, sig, examples, dependencies }: any) {
+  constructor({ name, version = 1, env = 'node', path, box, sig, examples = [], dependencies = [] }: BitProps) {
     this.name = name;
+    this.path = path;
+    this.sig = sig;
     this.version = version;
     this.env = env;
     this.dependencies = dependencies;
-    this.path = path;
     this.box = box;
-    this.sig = sig;
     this.examples = examples;
   }
 

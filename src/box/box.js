@@ -1,53 +1,56 @@
 /** @flow */
-import BitFs from '../bit-fs';
-import Bit from '../bit';
 import BoxNotFound from './exceptions/box-not-found';
-import type { Opts } from '../cli/command-opts-interface';
+import { locateBox, pathHasBox } from './box-locator';
+import { BoxAlreadyExists } from './exceptions';
+import BitJson from './bit-json/bit-json';
+import { External, Inline, BitMap } from './bit-maps';
+
+export type BoxProps = {
+  path: string,
+  created?: boolean,
+  bitJson?: BitJson,
+  external?: External,
+  inline?: Inline
+};
 
 export default class Box {
   path: string;
-  createdNow: boolean;
+  created: boolean;
+  bitJson: BitJson;
+  external: BitMap;
+  inline: BitMap;
+
+  constructor({ path, bitJson, external, inline, created = false }: BoxProps) {
+    this.path = path;
+    this.bitJson = bitJson || new BitJson(this);
+    this.external = external || new External(this);
+    this.inline = inline || new Inline(this);
+    this.created = created;
+  }
+
+  write(): Promise<boolean> {
+    const self = this;
+    const writeInline = () => self.inline.write();
+    const writeExternal = () => self.external.write();
+
+    return this.bitJson
+      .write()
+      .then(writeInline)
+      .then(writeExternal);
+  }
+
+  static create(path: string = process.cwd()): Box {
+    if (pathHasBox(path)) throw new BoxAlreadyExists();
+    return new Box({ path }, true);
+  }
 
   static load(path: string, created: boolean): Box {
     if (!created) {
-      const repoPath = BitFs.locateBox(path);
-      if (!repoPath) throw new BoxNotFound();
-      return new Box(repoPath, false);
+      const boxPath = locateBox(path);
+      if (!boxPath) throw new BoxNotFound();
+      return new Box(boxPath, false);
     }
 
-    return new Box(path, created);
-  }
-
-  constructor(path: string, createdNow: boolean) {
-    this.path = path;
-    this.createdNow = createdNow;
-  }
-
-  createBit(name: string, opts: Opts): Bit {
-    return BitFs.createBit(this, name, opts);
-  }
-
-  removeBit(name: string): Bit {
-    return Bit.remove(this, name);
-  }
-
-  loadBit(name: string): Bit {
-    return Bit.load(this, name);
-  }
-
-  exportBit(name: string): Bit {
-    return Bit.export(this, name);
-  }
-
-  listBits(): Bit[] {
-    return Bit.listBits(this);
-  }
-
-  static create(path: string): Box {
-    const created = BitFs.initiateBox(path);
-    const repo = this.load(path, created);
-    if (!repo) throw new BoxNotFound();
-    
-    return repo; 
+    return new Box({ path }, created);
   }
 }
