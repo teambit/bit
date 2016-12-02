@@ -1,5 +1,5 @@
 /** @flow */
-export default class BitAlreadyExistError extends Error {
+export default class BitAlreadyExistInternalyError extends Error {
   bitName: string;
     
   constructor(bitName : string) {

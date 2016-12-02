@@ -6,7 +6,9 @@ import * as doctrine from 'doctrine';
 import BoxFs from './box-fs';
 import { Box } from '../box';
 import type { Opts } from '../cli/command-opts-interface';
-import BitAlreadyExistError from '../bit/exceptions/bit-already-exist';
+import BitAlreadyExistInternalyError from '../bit/exceptions/bit-already-exist-internaly';
+import BitAlreadyExistExternalyError from '../bit/exceptions/bit-already-exist-externaly';
+import BitNotFound from '../bit/exceptions/bit-not-found';
 
 export default class BitFs {
   static initiateBox(boxPath: string): boolean {
@@ -64,12 +66,12 @@ export default class BitFs {
 
   static createBit(box: Box, bitName: string, { force, withTests }: Opts) {
     if (BoxFs.bitExistsInline(bitName, box.path)) {
-      throw new BitAlreadyExistError(bitName);
+      throw new BitAlreadyExistInternalyError(bitName);
     }
 
     if (!force) {
       if (BoxFs.bitExistsExternal(bitName, box.path)) {
-        throw new Error(`bit ${bitName} already exists in the external library try "bit modify ${bitName}" to modify the current bit or "bit create -f ${bitName}"!`);
+        throw new BitAlreadyExistExternalyError(bitName);
       }
     }
 
@@ -79,7 +81,7 @@ export default class BitFs {
 
   static removeBit(bitName: string, box: Box) {
     if (!BoxFs.bitExists(bitName, box.path)) {
-      throw new Error(`no bit named ${bitName} found!`);
+      throw new BitNotFound();
     }
 
     return BoxFs.removeBit(bitName, box.path);
@@ -88,12 +90,7 @@ export default class BitFs {
 
   static exportBit(bitName: string, box: Box) {
     if (!BoxFs.bitExistsInline(bitName, box.path)) {
-      throw new Error(`bit ${bitName} does not exists in your inline box, please use "bit create ${bitName}" first"`);
-    }
-    
-    if (BoxFs.bitExistsExternal(bitName, box.path)) {
-      throw new Error(`bit ${bitName} already exists in the external library, please remove it first (TODO)"`);
-      // TODO - we need to decide how we do the overriding
+      throw new BitNotFound();
     }
 
     return BoxFs.exportBit(bitName, box.path);
