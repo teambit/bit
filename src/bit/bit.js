@@ -9,7 +9,6 @@ export type BitProps = {
   name: string,
   path: string,
   sig: string,
-  box: Box,
   version?: number, 
   dependencies?: Bit[],
   env?: string,
@@ -20,30 +19,36 @@ export default class Bit {
   name: string;
   version: number; 
   dependencies: Bit[];
-  box: Box;
   path: string;
   env: string;
   sig: string;
   examples: Example[];
 
-  constructor({ name, version = 1, env = 'node', path, box, sig, examples = [], dependencies = [] }: BitProps) {
+  constructor({ name, version = 1, env = 'node', path, sig, examples = [], dependencies = [] }: BitProps) {
     this.name = name;
     this.path = path;
     this.sig = sig;
     this.version = version;
     this.env = env;
     this.dependencies = dependencies;
-    this.box = box;
     this.examples = examples;
   }
 
-  static remove(box: Box, bitName: string): Bit {
-    const removedBitPath = BitFs.removeBit(bitName, box);
-    return new Bit({
-      name: bitName,
-      box,
-      path: removedBitPath
-    });
+  // static remove(box: Box, bitName: string): Bit {
+  //   const removedBitPath = BitFs.removeBit(bitName, box);
+  //   return new Bit({
+  //     name: bitName,
+  //     box,
+  //     path: removedBitPath
+  //   });
+  // }
+
+  remove() {
+
+  }
+
+  write(box: Box): Promise<boolean> {
+    return new Promise();
   }
 
   static load(name: string, box: Box): Bit {
@@ -61,22 +66,15 @@ export default class Bit {
     });
   }
 
-  static export(box: Box, bitName: string): Bit {
-    const exportedPath = BitFs.exportBit(bitName, box);
-    
-    return new Bit({
-      name: bitName,
-      box,
-      path: exportedPath
-    });
-  }
+  // @TODO should be refactored as member instance
 
-  static listBits(box: Box): Bit[] {
-    const inlineBits = BoxFs.listInlineNames(box.path).map(name => this.load(name, box));
-    return inlineBits;
-  }
-
-  static edit() {
+  // static export(box: Box, bitName: string): Bit {
+  //   const exportedPath = BitFs.exportBit(bitName, box);
     
-  }
+  //   return new Bit({
+  //     name: bitName,
+  //     box,
+  //     path: exportedPath
+  //   });
+  // }
 }

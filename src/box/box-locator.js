@@ -10,10 +10,16 @@ export function composeBoxPath(path: string) {
   return pathlib.join(path, BIT_DIR_NAME);
 }
 
+/**
+ * determine whether given path has a box
+ */
 export function pathHasBox(path: string) {
   return fs.existsSync(composeBoxPath(path));
 }
 
+/**
+ * recursively propogate the FS directory structure to find a box.
+ */
 export function locateBox(absPath: string): ?string {
   function buildPropogationPaths(): string[] {
     const paths: string[] = [];

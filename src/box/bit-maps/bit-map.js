@@ -1,5 +1,4 @@
 /** @flow */
-import * as fs from 'fs';
 import * as pathlib from 'path';
 import Bit from '../../bit';
 import Box from '../box';
