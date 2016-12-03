@@ -1,14 +1,18 @@
 /** @flow */
+import * as path from 'path';
 import BitFs from '../bit-fs';
-import BoxFs from '../bit-fs/box-fs';
 import Example from './example';
+import { Impl, Specs } from './sources';
 import { Box } from '../box';
+import { BitMap } from '../box/bit-maps';
+import { mkdirp } from '../utils';
 import BitNotFoundException from './exceptions/bit-not-found';
 
 export type BitProps = {
   name: string,
-  path: string,
   sig: string,
+  impl: Impl,
+  specs?: Specs,
   version?: number, 
   dependencies?: Bit[],
   env?: string,
@@ -17,16 +21,16 @@ export type BitProps = {
 
 export default class Bit {
   name: string;
+  sig: string;
+  impl: Impl;
+  specs: Specs;
   version: number; 
   dependencies: Bit[];
-  path: string;
   env: string;
-  sig: string;
   examples: Example[];
 
-  constructor({ name, version = 1, env = 'node', path, sig, examples = [], dependencies = [] }: BitProps) {
+  constructor({ name, version = 1, env = 'node', sig, examples = [], dependencies = [] }: BitProps) {
     this.name = name;
-    this.path = path;
     this.sig = sig;
     this.version = version;
     this.env = env;
@@ -34,21 +38,18 @@ export default class Bit {
     this.examples = examples;
   }
 
-  // static remove(box: Box, bitName: string): Bit {
-  //   const removedBitPath = BitFs.removeBit(bitName, box);
-  //   return new Bit({
-  //     name: bitName,
-  //     box,
-  //     path: removedBitPath
-  //   });
-  // }
-
+  getPath(bitMap: BitMap) {
+    return path.join(bitMap.getPath(), this.name);
+  }
+  
   remove() {
 
   }
 
-  write(box: Box): Promise<boolean> {
-    return new Promise();
+  write(map: BitMap): Promise<boolean> {
+    return mkdirp(this.getPath(map))
+      .then(this.impl.write)
+      .then(this.specs.write);
   }
 
   static load(name: string, box: Box): Bit {
@@ -56,25 +57,4 @@ export default class Bit {
     if (!rawBit) throw new BitNotFoundException();
     return new Bit(rawBit);
   }
-
-  static create(box: Box, bitName: string): Bit {
-    const path = BitFs.createBit(bitName, box);
-    return new Bit({
-      name: bitName,
-      box,
-      path
-    });
-  }
-
-  // @TODO should be refactored as member instance
-
-  // static export(box: Box, bitName: string): Bit {
-  //   const exportedPath = BitFs.exportBit(bitName, box);
-    
-  //   return new Bit({
-  //     name: bitName,
-  //     box,
-  //     path: exportedPath
-  //   });
-  // }
 }

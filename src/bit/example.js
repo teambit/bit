@@ -1,3 +1,6 @@
-export default class Example {
+/** @flow */
 
+export default class Example {
+  title: string;
+  code: string;
 }
