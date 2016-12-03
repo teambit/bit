@@ -14,7 +14,7 @@ export function pathHasBox(path: string) {
   return fs.existsSync(composeBoxPath(path));
 }
 
-export default function locateBox(absPath: string): ?string {
+export function locateBox(absPath: string): ?string {
   function buildPropogationPaths(): string[] {
     const paths: string[] = [];
     const pathParts = absPath.split(pathlib.sep);

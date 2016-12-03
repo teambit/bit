@@ -44,13 +44,9 @@ export default class Box {
     return new Box({ path }, true);
   }
 
-  static load(path: string, created: boolean): Box {
-    if (!created) {
-      const boxPath = locateBox(path);
-      if (!boxPath) throw new BoxNotFound();
-      return new Box(boxPath, false);
-    }
-
-    return new Box({ path }, created);
+  static load(path: string): Box {
+    const boxPath = locateBox(path);
+    if (!boxPath) throw new BoxNotFound();
+    return new Box(boxPath, false);
   }
 }
