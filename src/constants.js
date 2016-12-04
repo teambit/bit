@@ -65,6 +65,11 @@ export const GLOBAL_BIT_CACHE = path.join(CACHE_ROOT, 'bits');
 export const MODULES_CACHE_FILENAME = path.join(MODULES_CACHE_DIR, '.roadrunner.json'); 
 
 /**
+ * auth cache fileName
+ */
+export const AUTH_CACHE_FILENAME = path.join(CACHE_ROOT, '.auth.json');
+
+/**
  * bit registry default URL.
  */
 export const BIT_REGISTRY = '';
