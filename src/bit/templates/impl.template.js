@@ -1,14 +1,11 @@
 /** @flow */
 import type { BitProps } from '../bit';
 
-export default ({ name, version = 1 }: BitProps) => {
+const camelcase = require('camelcase');
+
+export default ({ name }: BitProps) => {
   return `
   /**
-    * @bit 
-    * @name ${name}
-    * @version ${version}
-    * @env {{env}}
-    * @dependencies []
     * @param {type} name
     * @returns
     * @sig 
@@ -16,7 +13,7 @@ export default ({ name, version = 1 }: BitProps) => {
     * // example description
     * example.do(); //outputs nothing
     */
-    module.exports = function () {
+    module.exports = function ${camelcase(name)}() {
       
     };`;
 };
