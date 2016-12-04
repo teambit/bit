@@ -1,6 +1,7 @@
 /** @flow */
 import * as path from 'path';
 import BitFs from '../bit-fs';
+import fs from 'fs-extra';
 import Example from './example';
 import { Impl, Specs } from './sources';
 import { Box } from '../box';
@@ -54,15 +55,20 @@ export default class Bit {
     // TODO
   }
   
-  remove() {
-    // TODO
-  }
-
   write(map: BitMap): Promise<boolean> {
     const writeImpl = () => this.impl.write(map);
 
     return mkdirp(this.getPath(map))
       .then(writeImpl);
+  }
+
+  erase(map: BitMap): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      fs.remove(this.getPath(map), (err) => {
+        if (err) return reject(err);
+        return resolve(this);
+      });
+    });
   }
 
   static load(name: string, box: Box): Bit {

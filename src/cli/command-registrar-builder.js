@@ -16,8 +16,6 @@ import Test from './commands/test-cmd';
 import Show from './commands/show-cmd';
 import Update from './commands/update-cmd';
 import Status from './commands/status-cmd';
-import Edit from './commands/edit-cmd';
-import Open from './commands/open-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -34,8 +32,6 @@ export default function registerCommands(): CommandRegistrar {
     new Remote(),
     new Remove(),
     new Search(),
-    new Open(),
-    new Edit(),
     new Test(),
     new Update()
   ]);

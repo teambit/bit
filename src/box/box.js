@@ -50,9 +50,14 @@ export default class Box {
     // @TODO implment
   }
 
-  createBit(props: BitProps): Promise<box> {
+  createBit(props: BitProps): Promise<Box> {
     const bit = new Bit(props);
     return this.inline.add(bit);
+  }
+
+  removeBit(props: BitProps): Promise<Box> {
+    const bit = new Bit(props);
+    return this.external.remove(bit);
   }
 
   static create(path: string = process.cwd()): Box {

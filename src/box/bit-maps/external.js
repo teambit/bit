@@ -12,12 +12,4 @@ export default class External extends BitMap {
   getPath() {
     return composePath(super.getPath());
   }
-
-  write(): Promise<boolean> {
-    return mkdirp(this.getPath());
-  }
-
-  static load() {
-    
-  }
 }

@@ -25,6 +25,10 @@ export default class BitMap extends Map<string, Bit> {
     return bit.write(this).then(() => this.set(bit.name, bit));
   }
 
+  remove(bit: Bit) {
+    return bit.erase(this).then(() => this.delete(bit.name));
+  }
+
   ensureDir(): Promise<boolean> {
     return mkdirp(this.getPath());
   }
