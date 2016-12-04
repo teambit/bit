@@ -1,6 +1,7 @@
 /** @flow */
 import { loadBox } from '../../box';
 import Command from '../command';
+import Bit from '../../bit';
 
 const chalk = require('chalk');
 
@@ -14,9 +15,8 @@ export default class Create extends Command {
 
   action([name, ]: [string], opts: {[string]: boolean}): Promise<any> {
     return new Promise((resolve) => {
-      const box = loadBox();
-      console.log(box);
-      // box.createBit(name, opts);
+      const box = loadBox().createBit({ name });
+      box.write();
       
       return resolve({
         path: box.path,

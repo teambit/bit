@@ -14,6 +14,10 @@ export default class Inline extends BitMap {
   }
 
   write(): Promise<boolean> {
+    this.forEach((bit) => {
+      if (!bit.action) return;
+      bit[bit.action](); 
+    });
     return mkdirp(this.getPath());
   }
 }

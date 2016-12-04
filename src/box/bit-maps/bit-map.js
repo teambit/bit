@@ -21,6 +21,11 @@ export default class BitMap extends Map<string, Bit> {
     return composePath(this.box.path);
   }
 
+  add(bit: Bit) {
+    this.set(bit.name, bit);
+    return this;
+  }
+
   write(): Promise<boolean> {
     return mkdirp(this.getPath());
   }

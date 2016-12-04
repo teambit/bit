@@ -1,7 +1,7 @@
 /** @flow */
 import * as pathlib from 'path';
-import { Box } from '../../box';
 import Command from '../command';
+import { init } from '../../api';
 
 const chalk = require('chalk');
 
@@ -13,9 +13,8 @@ export default class Init extends Command {
 
   action([path, ]: [string, ]): Promise<{[string]: any}> {
     if (path) path = pathlib.resolve(path);
-    return Box.create(path)
-      .write()
-      .then((created) => {
+    return init(path)
+      .then(({ created }) => {
         return { 
           created
         };

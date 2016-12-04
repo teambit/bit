@@ -3,7 +3,7 @@ import Command from '../command';
 
 export default class Status extends Command {
   name = 'status';
-  description = 'show bit modifications status';
+  description = 'show modifications status';
   alias = '';
   opts = [];
   

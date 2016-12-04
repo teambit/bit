@@ -16,7 +16,7 @@ export type BitProps = {
   version?: number, 
   dependencies?: Bit[],
   env?: string,
-  examples?: Example[],
+  examples?: Example[]
 };
 
 export default class Bit {
@@ -27,29 +27,42 @@ export default class Bit {
   version: number; 
   dependencies: Bit[];
   env: string;
+  action: string;
   examples: Example[];
 
-  constructor({ name, version = 1, env = 'node', sig, examples = [], dependencies = [] }: BitProps) {
-    this.name = name;
-    this.sig = sig;
-    this.version = version;
-    this.env = env;
-    this.dependencies = dependencies;
-    this.examples = examples;
+  constructor(bitProps: BitProps) {
+    this.name = bitProps.name;
+    this.sig = bitProps.sig || `${bitProps.name}()`;
+    this.version = bitProps.version || 1;
+    this.env = bitProps.env || 'node';
+    this.dependencies = bitProps.dependencies || [];
+    this.examples = bitProps.examples || [];
+    this.impl = bitProps.impl || new Impl({ bit: this });
   }
 
   getPath(bitMap: BitMap) {
     return path.join(bitMap.getPath(), this.name);
   }
-  
-  remove() {
+
+  validate() {
 
   }
 
+
+
+  export() {
+    this.validate();
+    this.push();
+  }
+  
+  remove() {
+  }
+
   write(map: BitMap): Promise<boolean> {
+    const writeImpl = () => this.impl.write(map);
+
     return mkdirp(this.getPath(map))
-      .then(this.impl.write)
-      .then(this.specs.write);
+      .then(writeImpl);
   }
 
   static load(name: string, box: Box): Bit {

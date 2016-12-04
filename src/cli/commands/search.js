@@ -2,8 +2,8 @@
 import Command from '../command';
 
 export default class Search extends Command {
-  name = 'search <query>';
-  description = 'search for bits in all configured remotes';
+  name = 'search <query> [remote]';
+  description = 'search for bits in configured remote(s)';
   alias = '';
   opts = [];
   

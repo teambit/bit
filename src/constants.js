@@ -3,12 +3,12 @@ const userHome = require('user-home');
 const packageFile = require('../package.json');
 const path = require('path');
 
-function getDirectory(category: string): string {
+function getDirectory(): string {
   if (process.platform === 'win32' && process.env.LOCALAPPDATA) {
-    return path.join(process.env.LOCALAPPDATA, 'Bit', category);
+    return path.join(process.env.LOCALAPPDATA, 'Bit');
   }
 
-  return path.join(userHome, `.${category}`, 'bit');
+  return path.join(userHome, '.bit');
 }
 
 function getCacheDirectory(): string {
@@ -16,7 +16,7 @@ function getCacheDirectory(): string {
     return path.join(userHome, 'Library', 'Caches', 'Bit');
   }
 
-  return getDirectory('cache');
+  return getDirectory();
 }
 
 export const RESOURCES = path.resolve(path.join(__dirname, '../resources'));

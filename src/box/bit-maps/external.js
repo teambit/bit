@@ -16,4 +16,8 @@ export default class External extends BitMap {
   write(): Promise<boolean> {
     return mkdirp(this.getPath());
   }
+
+  static load() {
+    
+  }
 }

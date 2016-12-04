@@ -67,5 +67,4 @@ function loadCli() {
 verifyCompatibility();
 ensureDirectories();
 initCache();
-checkForUpdates();
 loadCli();

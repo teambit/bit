@@ -10,9 +10,18 @@ export default class Export extends Command {
   alias = 'e';
   opts = [];
 
-  action([name]: [string]): Promise<any> {
+  action([name, remote]: [string]): Promise<any> {
     return new Promise((resolve) => {
       const box = loadBox();
+      box.exportBit();
+      const bit = box.get(name);
+      bit.export(remote);
+      bit
+        .remove()
+        .then(bit.import);
+      box.import(name, remote);
+
+      box.removeBit();
       
       return resolve({
         name,
