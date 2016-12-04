@@ -22,11 +22,10 @@ export default class BitMap extends Map<string, Bit> {
   }
 
   add(bit: Bit) {
-    this.set(bit.name, bit);
-    return this;
+    return bit.write(this).then(() => this.set(bit.name, bit));
   }
 
-  write(): Promise<boolean> {
+  ensureDir(): Promise<boolean> {
     return mkdirp(this.getPath());
   }
 

@@ -1,23 +1,23 @@
 /** @flow */
 import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
-import Init from './commands/init';
-import Create from './commands/create';
-import List from './commands/list';
-import Modify from './commands/modify';
-import Export from './commands/export';
-import Login from './commands/login';
-import Logout from './commands/logout';
-import Import from './commands/import';
-import Remote from './commands/remote';
-import Remove from './commands/remove';
-import Search from './commands/search';
-import Test from './commands/test';
-import Show from './commands/show';
-import Update from './commands/update';
-import Status from './commands/status';
-import Edit from './commands/edit';
-import Open from './commands/open';
+import Init from './commands/init-cmd';
+import Create from './commands/create-cmd';
+import List from './commands/list-cmd';
+import Modify from './commands/modify-cmd';
+import Export from './commands/export-cmd';
+import Login from './commands/login-cmd';
+import Logout from './commands/logout-cmd';
+import Import from './commands/import-cmd';
+import Remote from './commands/remote-cmd';
+import Remove from './commands/remove-cmd';
+import Search from './commands/search-cmd';
+import Test from './commands/test-cmd';
+import Show from './commands/show-cmd';
+import Update from './commands/update-cmd';
+import Status from './commands/status-cmd';
+import Edit from './commands/edit-cmd';
+import Open from './commands/open-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [

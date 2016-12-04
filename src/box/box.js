@@ -32,14 +32,14 @@ export default class Box {
 
   write(): Promise<boolean> {
     const self = this;
-    const writeInline = () => self.inline.write();
-    const writeExternal = () => self.external.write();
+    const createInlineDir = () => self.inline.ensureDir();
+    const createExternalDir = () => self.external.ensureDir();
     const returnBox = () => this;
 
     return this.bitJson
       .write()
-      .then(writeInline)
-      .then(writeExternal)
+      .then(createInlineDir)
+      .then(createExternalDir)
       .then(returnBox);
   }
 
@@ -50,11 +50,9 @@ export default class Box {
     // @TODO implment
   }
 
-
-  createBit(props: BitProps) {
+  createBit(props: BitProps): Promise<box> {
     const bit = new Bit(props);
-    this.inline.add(bit);
-    return this;
+    return this.inline.add(bit);
   }
 
   static create(path: string = process.cwd()): Box {

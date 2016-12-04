@@ -1,7 +1,7 @@
 /** @flow */
-import { loadBox } from '../../box';
 import Command from '../command';
-import Bit from '../../bit';
+// import { loadBox } from '../../box';
+import { create } from '../../api';
 
 const chalk = require('chalk');
 
@@ -15,17 +15,15 @@ export default class Create extends Command {
 
   action([name, ]: [string], opts: {[string]: boolean}): Promise<any> {
     return new Promise((resolve) => {
-      const box = loadBox().createBit({ name });
-      box.write();
+      create(name);
       
       return resolve({
-        path: box.path,
-        name,
+        name
       });
     });
   }
 
-  report({ name, path }: any): string {
-    return chalk.green(`created bit "${name}" in "${path}"`);
+  report({ name }: any): string {
+    return chalk.green(`created bit "${name}" in inline folder`);
   }
 }
