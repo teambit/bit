@@ -55,9 +55,9 @@ export default class Box {
     return this.inline.add(bit);
   }
 
-  removeBit(props: BitProps): Promise<Box> {
+  removeBit(props: BitProps, { inline }: { inline: boolean }): Promise<Box> {
     const bit = new Bit(props);
-    return this.external.remove(bit);
+    return inline ? this.inline.remove(bit) : this.external.remove(bit);
   }
 
   static create(path: string = process.cwd()): Box {

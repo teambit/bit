@@ -1,6 +1,5 @@
 /** @flow */
 import Command from '../command';
-// import { loadBox } from '../../box';
 import { create } from '../../api';
 
 const chalk = require('chalk');

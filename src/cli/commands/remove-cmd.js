@@ -1,4 +1,5 @@
 /** @flow */
+import chalk from 'chalk';
 import Command from '../command';
 import { remove } from '../../api';
 
@@ -7,21 +8,19 @@ export default class Remove extends Command {
   description = 'remove a bit';
   alias = 'rm';
   opts = [
-    ['i', 'inline', 'remove inline bit'],
-    ['e', 'external', 'remove external bit']
+    ['i', 'inline', 'remove inline bit']
   ];
   
-  action([name]: [string], opts: Array<Array<String>>): Promise<any> {
-    return new Promise((resolve, reject) => {
-      remove(name);
-      console.log(opts);
-      return resolve({
-        name
-      });
-    });
+  action([name]: [string], opts: any): Promise<any> {    
+    return remove(name, opts)
+    .then(() => ({
+      name,
+      inline: opts.inline
+    }));
   }
 
-  report({ name }: any): string {
-    return `removed the bit "${name}"`;
+  report({ name, inline }: any): string {
+    const pathTo: string = inline ? 'inline' : 'external';
+    return chalk.green(`removed the bit "${name}" from the ${pathTo} directory`);
   }
 }

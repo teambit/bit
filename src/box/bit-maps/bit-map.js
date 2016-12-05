@@ -26,7 +26,7 @@ export default class BitMap extends Map<string, Bit> {
   }
 
   remove(bit: Bit) {
-    return bit.erase(this).then(() => this.delete(bit.name));
+    return bit.erase(this).then(() => { this.delete(bit.name); });
   }
 
   ensureDir(): Promise<boolean> {
