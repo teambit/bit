@@ -13,13 +13,7 @@ export default class Create extends Command {
   ];
 
   action([name, ]: [string], opts: {[string]: boolean}): Promise<any> {
-    return new Promise((resolve) => {
-      create(name);
-      
-      return resolve({
-        name
-      });
-    });
+    return create(name).then(() => ({ name }));
   }
 
   report({ name }: any): string {

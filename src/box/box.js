@@ -47,7 +47,14 @@ export default class Box {
    * get a bit
    **/
   get(name: string): Bit {
-    // @TODO implment
+    return Bit.load(name, this);
+  }
+
+  /**
+   * fetch a bit from a remote, put in the bit.json and in the external directory
+   **/
+  import({ name, remote }: { name: string, remote: string }): Bit {
+    // @TODO
   }
 
   createBit(props: BitProps): Promise<Box> {
@@ -58,6 +65,13 @@ export default class Box {
   removeBit(props: BitProps, { inline }: { inline: boolean }): Promise<Box> {
     const bit = new Bit(props);
     return inline ? this.inline.remove(bit) : this.external.remove(bit);
+  }
+  
+  /**
+   * list the bits in the external directory
+   **/
+  list({ inline }: { inline: boolean }): Promise<string[]> {
+    // this.bitJson
   }
 
   static create(path: string = process.cwd()): Box {

@@ -9,6 +9,7 @@ import type { Opts } from '../cli/command-opts-interface';
 import BitAlreadyExistInternalyError from '../bit/exceptions/bit-already-exist-internaly';
 import BitAlreadyExistExternalyError from '../bit/exceptions/bit-already-exist-externaly';
 import BitNotFound from '../bit/exceptions/bit-not-found';
+import { BIT_IMPL_FILE_NAME, BIT_DIR_NAME } from '../constants';
 
 export default class BitFs {
   static initiateBox(boxPath: string): boolean {
@@ -20,7 +21,7 @@ export default class BitFs {
   }
 
   static composeBitPath(name, boxPath, loc) {
-    return path.resolve(boxPath, 'bits', loc, name, `${name}.js`);
+    return path.resolve(boxPath, BIT_DIR_NAME, loc, name, BIT_IMPL_FILE_NAME);
   }
 
   static loadBitMeta(name: string, bitContents: string) {
@@ -29,6 +30,7 @@ export default class BitFs {
       tolerant: true,
       attachComment: true
     });
+    
     const rawDocs = ast.body[0].leadingComments[0].value;
     const docs = doctrine
       .parse(rawDocs, { unwrap: true })

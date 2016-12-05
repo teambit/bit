@@ -48,13 +48,14 @@ export default class Bit {
   validate() {
 
   }
-
+  
   export() {
+    return Promise.resolve();
     // this.validate();
     // this.push();
-    // TODO
+    // @TODO
   }
-  
+
   write(map: BitMap): Promise<boolean> {
     const writeImpl = () => this.impl.write(map);
 

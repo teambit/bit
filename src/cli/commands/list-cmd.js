@@ -1,26 +1,23 @@
 /** @flow */
 import chalk from 'chalk';
-import { loadBox } from '../../box';
 import Command from '../command';
+import { list } from '../../api';
 
 export default class List extends Command {
   name = 'list';
   description = 'list all box bits';
   alias = 'ls';
-  opts = [];
+  opts = [
+    ['i', 'inline', 'remove inline bit']
+  ];
   
-  action(): Promise<any> {
-    return new Promise((resolve) => {
-      const box = loadBox();
-      const bits = box.listBits();
-
-      return resolve({
-        bitNames: bits.map(bit => bit.name)
-      });
-    });
+  action(args: string[], opts: any): Promise<any> {
+    return list(opts).then(bitNames => ({
+      bitNames
+    }));
   }
 
-  report(data: {bitNames: string[]}): string {
+  report(data: any): string {
     return chalk.green(data.bitNames.join('\n'));
   }
 

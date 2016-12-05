@@ -3,7 +3,7 @@ import * as mkdirp from 'mkdirp';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import glob from 'glob';
-import { BIT_DIR_NAME, RESOURCES, BIT_EXTERNAL_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON } from '../constants';
+import { BIT_DIR_NAME, RESOURCES, BIT_EXTERNAL_DIRNAME, BIT_INLINE_DIRNAME, BIT_JSON, BIT_IMPL_FILE_NAME } from '../constants';
 import BitJsonManager from '../box/bit-json-manager';
 import type Opts from '../cli/command-opts-interface';
 
@@ -22,14 +22,6 @@ export default class BoxFs {
 
   static composeBitExternalPath(boxPath: string, name: string) {
     return path.join(boxPath, BIT_DIR_NAME, BIT_EXTERNAL_DIRNAME, name);
-  }
-
-  static composeFileName(name: string) {
-    return `${name}.js`;
-  }
-
-  static composeSpecName(name: string) {
-    return `${name}.spec.js`;
   }
 
   static removeBit(bitName: string, boxPath: string) {
@@ -56,7 +48,7 @@ export default class BoxFs {
     // @TODO -- add tests on the flag withTests
     const bitPath = this.composeBitInlinePath(boxPath, bitName);
     mkdirp.sync(bitPath);
-    fs.writeFileSync(path.join(bitPath, this.composeFileName(bitName)), fs.readFileSync(path.resolve(__dirname, '../../resources/impl.template.js')));
+    fs.writeFileSync(path.join(bitPath, BIT_IMPL_FILE_NAME), fs.readFileSync(path.resolve(__dirname, '../../resources/impl.template.js')));
     
     return bitPath;
   }

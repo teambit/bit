@@ -39,6 +39,10 @@ export const BIT_EXTERNAL_DIRNAME = 'external';
 
 export const BIT_JSON = 'bit.json';
 
+export const BIT_IMPL_FILE_NAME = 'impl.js';
+
+export const BIT_SPEC_FILE_NAME = 'spec.js';
+
 /**
  * cache root directory
  */

@@ -4,10 +4,11 @@ import * as path from 'path';
 import Source from './source';
 import { BitMap } from '../../box';
 import implTpl from '../templates/impl.template';
+import { BIT_IMPL_FILE_NAME } from '../../constants';
 
 function composePath(...paths: Array<string>): string {
   // $FlowFixMe
-  return path.join(...paths, 'impl.js'); 
+  return path.join(...paths, BIT_IMPL_FILE_NAME); 
 }
 
 export default class Impl extends Source {
