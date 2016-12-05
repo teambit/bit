@@ -71,7 +71,7 @@ export default class Box {
    * list the bits in the external directory
    **/
   list({ inline }: { inline: boolean }): Promise<string[]> {
-    // this.bitJson
+    return inline ? this.inline.list() : this.external.list();
   }
 
   static create(path: string = process.cwd()): Box {

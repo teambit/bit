@@ -1,13 +1,14 @@
 /** @flow */
 import * as path from 'path';
-import BitFs from '../bit-fs';
 import fs from 'fs-extra';
+import BitFs from '../bit-fs';
 import Example from './example';
 import { Impl, Specs } from './sources';
 import { Box } from '../box';
 import { BitMap } from '../box/bit-maps';
 import { mkdirp } from '../utils';
 import BitNotFoundException from './exceptions/bit-not-found';
+import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 
 export type BitProps = {
   name: string,
@@ -57,17 +58,24 @@ export default class Bit {
   }
 
   write(map: BitMap): Promise<boolean> {
-    const writeImpl = () => this.impl.write(map);
-
-    return mkdirp(this.getPath(map))
-      .then(writeImpl);
+    return new Promise((resolve, reject) => {
+      return fs.stat(this.getPath(map), (err) => {
+        if (!err) return reject(new BitAlreadyExistsInternalyException(this.name));
+        return mkdirp(this.getPath(map))
+        .then(() => this.impl.write(map))
+        .then(resolve);
+      });
+    });
   }
 
   erase(map: BitMap): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      fs.remove(this.getPath(map), (err) => {
-        if (err) return reject(err);
-        return resolve(this);
+      fs.stat(this.getPath(map), (err) => {
+        if (err) reject(new BitNotFoundException());
+        fs.remove(this.getPath(map), (e) => {
+          if (err) return reject(e);
+          return resolve(this);
+        });
       });
     });
   }

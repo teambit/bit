@@ -1,12 +1,13 @@
 /** @flow */
-import * as pathlib from 'path';
+import * as path from 'path';
+import glob from 'glob';
 import Bit from '../../bit';
 import Box from '../box';
 import { mkdirp } from '../../utils';
 import { BIT_DIR_NAME } from '../../constants';
 
-function composePath(path: string) {
-  return pathlib.join(path, BIT_DIR_NAME);
+function composePath(pathPart: string) {
+  return path.join(pathPart, BIT_DIR_NAME);
 }
 
 export default class BitMap extends Map<string, Bit> {
@@ -23,6 +24,15 @@ export default class BitMap extends Map<string, Bit> {
 
   add(bit: Bit) {
     return bit.write(this).then(() => this.set(bit.name, bit));
+  }
+
+  list() {
+    return new Promise((resolve, reject) =>
+      glob(path.join(this.getPath(), '/*'), (err, files) => {
+        resolve(files.map(fullPath => path.basename(fullPath)));
+        reject(err);
+      })
+    );
   }
 
   remove(bit: Bit) {

@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../command';
 import { list } from '../../api';
@@ -12,13 +13,15 @@ export default class List extends Command {
   ];
   
   action(args: string[], opts: any): Promise<any> {
-    return list(opts).then(bitNames => ({
-      bitNames
-    }));
+    return list(opts);
   }
 
-  report(data: any): string {
-    return chalk.green(data.bitNames.join('\n'));
+  report(bitNames: string[]): string {
+    if (R.isEmpty(bitNames)) {
+      return chalk.red('your external bits directory is empty');  
+    }
+
+    return chalk.green(bitNames.join('\n'));
   }
 
 }
