@@ -11,7 +11,7 @@ function composePath(...paths: Array<string>): string {
   return path.join(...paths, BIT_IMPL_FILE_NAME); 
 }
 
-export default class Impl extends Source {
+export default class Config extends Source {
   write(map: BitMap): Promise<boolean> {
     return new Promise((resolve, reject) => {
       fs.writeFile(composePath(map.getPath(), this.bit.name), this.getTemplate(), (err, res) => {

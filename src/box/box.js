@@ -24,7 +24,7 @@ export default class Box {
 
   constructor({ path, bitJson, external, inline, created = false }: BoxProps) {
     this.path = path;
-    this.bitJson = bitJson || new BitJson(this);
+    this.bitJson = bitJson || new BitJson(this.path);
     this.external = external || new External(this);
     this.inline = inline || new Inline(this);
     this.created = created;

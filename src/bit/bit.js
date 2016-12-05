@@ -1,19 +1,21 @@
 /** @flow */
 import * as path from 'path';
 import fs from 'fs-extra';
-import BitFs from '../bit-fs';
 import Example from './example';
 import { Impl, Specs } from './sources';
+import BitJson from '../box/bit-json';
 import { Box } from '../box';
 import { BitMap } from '../box/bit-maps';
 import { mkdirp } from '../utils';
 import BitNotFoundException from './exceptions/bit-not-found';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
+import { BIT_IMPL_FILE_NAME } from '../constants';
 
 export type BitProps = {
   name: string,
   sig: string,
   impl: Impl,
+  bitJson: BitJson;
   specs?: Specs,
   version?: number, 
   dependencies?: Bit[],
@@ -26,6 +28,7 @@ export default class Bit {
   sig: string;
   impl: Impl;
   specs: Specs;
+  bitJson: BitJson;
   version: number; 
   dependencies: Bit[];
   env: string;
@@ -40,16 +43,24 @@ export default class Bit {
     this.dependencies = bitProps.dependencies || [];
     this.examples = bitProps.examples || [];
     this.impl = bitProps.impl || new Impl({ bit: this });
+    this.bitJson = bitProps.bitJson || new BitJson({ path: this.getPath() }); // TODO  finsih .bit.jsin
   }
 
   getPath(bitMap: BitMap) {
     return path.join(bitMap.getPath(), this.name);
   }
 
+  getMetaData(): Promise<Bit> {
+    return new Promise((resolve, reject) => {
+      // @TODO take meta from bit.json 
+      return resolve(this);
+    });
+  }
+
   validate() {
 
   }
-  
+
   export() {
     return Promise.resolve();
     // this.validate();
@@ -63,6 +74,7 @@ export default class Bit {
         if (!err) return reject(new BitAlreadyExistsInternalyException(this.name));
         return mkdirp(this.getPath(map))
         .then(() => this.impl.write(map))
+        .then(() => this.bitJson.write(map))
         .then(resolve);
       });
     });
@@ -97,7 +109,7 @@ export default class Bit {
   static load(name: string, box: Box): Promise<Bit> {
     function getBitFrom(bitPath) {
       return new Promise((resolve, reject) => {
-        fs.readFile(bitPath, (err, data) => {
+        fs.readFile(path.join(bitPath, name, BIT_IMPL_FILE_NAME), (err, data) => {
           if (err) return reject(err);
           return resolve(data.toString());
         });

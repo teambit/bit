@@ -1,6 +1,5 @@
 /** @flow */
 import { loadBox } from '../../box';
-import Bit from '../../bit';
 import Command from '../command';
 
 const chalk = require('chalk');
@@ -14,10 +13,12 @@ export default class Remove extends Command {
   action([name, ]: [string]): Promise<any> {
     return new Promise((resolve, reject) => {
       const box = loadBox();
-      if (!box) return reject('could not find repo.');
-      const bit = Bit.load(name, box);
-      if (!bit) return console.log(chalk.red(`could not find bit ${name}`));
-      resolve(bit);
+      if (!box) return reject(new Error('could not find box'));
+      return box.get(name)
+         .then((bit) => {
+           if (!bit) return reject(new Error(`could not find bit ${name}`));
+           return resolve(bit);
+         });
     });
   }
 
