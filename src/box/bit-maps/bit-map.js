@@ -1,6 +1,7 @@
 /** @flow */
 import * as path from 'path';
 import glob from 'glob';
+import fs from 'fs';
 import Bit from '../../bit';
 import Box from '../box';
 import { mkdirp } from '../../utils';
@@ -37,6 +38,15 @@ export default class BitMap extends Map<string, Bit> {
 
   remove(bit: Bit) {
     return bit.erase(this).then(() => { this.delete(bit.name); });
+  }
+
+  includes(bitName: string) {
+    return new Promise((resolve) => {
+      return fs.stat(path.join(this.getPath(), bitName), (err) => {
+        if (err) return resolve(false);
+        return resolve(true);
+      });
+    });
   }
 
   ensureDir(): Promise<boolean> {

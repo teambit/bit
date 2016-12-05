@@ -1,6 +1,5 @@
 /** @flow */
 import * as pathlib from 'path';
-import { mkdirp } from '../../utils';
 import { BIT_EXTERNAL_DIRNAME } from '../../constants';
 import BitMap from './bit-map';
 

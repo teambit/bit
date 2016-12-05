@@ -80,9 +80,35 @@ export default class Bit {
     });
   }
 
-  static load(name: string, box: Box): Bit {
-    const rawBit = BitFs.loadBit(name, box);
-    if (!rawBit) throw new BitNotFoundException();
-    return new Bit(rawBit);
+  static resolveBitPath(name: string, box: Box): Promise<string> {
+    return new Promise((resolve, reject) => {
+      box.inline.includes(name)
+        .then((isInline) => {
+          if (isInline) return resolve(box.inline.getPath());
+          return box.external.includes(name)
+            .then((isExternal) => {
+              if (isExternal) return resolve(box.external.getPath());
+              return reject(new Error('bit not found error'));
+            });
+        });
+    });
+  }
+
+  static load(name: string, box: Box): Promise<Bit> {
+    function getBitFrom(bitPath) {
+      return new Promise((resolve, reject) => {
+        fs.readFile(bitPath, (err, data) => {
+          if (err) return reject(err);
+          return resolve(data.toString());
+        });
+      });
+    }
+    
+    return this.resolveBitPath(name, box)
+      .then(getBitFrom)
+      .then((rawBit) => {
+        if (!rawBit) throw new BitNotFoundException();
+        return new Bit(rawBit);
+      });
   }
 }

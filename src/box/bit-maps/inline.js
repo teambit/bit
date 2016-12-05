@@ -2,7 +2,6 @@
 import * as pathlib from 'path';
 import { BIT_INLINE_DIRNAME } from '../../constants';
 import BitMap from './bit-map';
-import Bit from '../../bit';
 
 function composePath(path: string) {
   return pathlib.join(path, BIT_INLINE_DIRNAME);

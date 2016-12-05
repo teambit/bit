@@ -21,6 +21,10 @@ export default class Impl extends Source {
     });
   }
 
+  load(): Promise<Bit> {
+
+  }
+  
   getTemplate(): string {
     return implTpl(this.bit);
   }
