@@ -1,13 +1,13 @@
 import * as pathlib from 'path';
 import * as fs from 'fs';
-import { BIT_DIR_NAME } from '../constants';
+import { BIT_JSON } from '../constants';
 
 export function composePath(path: string, inPath: string) {
   return pathlib.join(composeBoxPath(path), inPath); 
 }
 
 export function composeBoxPath(path: string) {
-  return pathlib.join(path, BIT_DIR_NAME);
+  return pathlib.join(path, BIT_JSON);
 }
 
 /**

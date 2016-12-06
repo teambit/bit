@@ -43,7 +43,7 @@ export default class Bit {
     this.dependencies = bitProps.dependencies || [];
     this.examples = bitProps.examples || [];
     this.impl = bitProps.impl || new Impl({ bit: this });
-    this.bitJson = bitProps.bitJson || new BitJson(); // TODO  finsih .bit
+    this.bitJson = bitProps.bitJson || new BitJson();
   }
 
   getPath(bitMap: BitMap) {
