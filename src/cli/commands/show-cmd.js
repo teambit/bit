@@ -1,6 +1,6 @@
 /** @flow */
-import { loadBox } from '../../box';
 import Command from '../command';
+import { show } from '../../api';
 
 const chalk = require('chalk');
 
@@ -10,16 +10,16 @@ export default class Remove extends Command {
   alias = '';
   opts = [];
   
-  action([name, ]: [string]): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const box = loadBox();
-      if (!box) return reject(new Error('could not find box'));
-      return box.get(name)
-         .then((bit) => {
-           if (!bit) return reject(new Error(`could not find bit ${name}`));
-           return resolve(bit);
-         });
-    });
+  action([name, ]: [string]): Promise<*> {
+    return show({ name })
+    .then(bit => ({
+      name: bit.name,
+      sig: bit.sig,
+      version: bit.bitJson.version,
+      env: bit.bitJson.env,
+      dependencies: bit.bitJson.dependencies,
+      path: bit.getPath()
+    }));
   }
 
   report({ name, version, env, dependencies, path, sig }: any): string {

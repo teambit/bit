@@ -10,8 +10,8 @@ function composePath(bitPath: string, hidden: ?boolean) {
   return path.join(bitPath, hidden ? HIDDEN_BIT_JSON : BIT_JSON);
 }
 
-function hasExisting(bitPath: string): boolean {
-  return fs.existsSync(composePath(bitPath));
+function hasExisting(bitPath: string, hidden): boolean {
+  return fs.existsSync(composePath(bitPath, hidden));
 }
 
 export default class BitJson {
@@ -96,9 +96,15 @@ export default class BitJson {
   /**
    * load existing json in root path
    */
-  static load(dirPath: string, hidden: boolean): BitJson {
-    if (!hasExisting(dirPath)) throw new BitJsonNotFound();
-    const file = JSON.parse(fs.readFileSync(composePath(dirPath, hidden)).toString('utf8'));
-    return new BitJson(file.dependencies, Remotes.load(file.remotes));
+  static load(dirPath: string, hidden: boolean = false): Promise<BitJson> {
+    return new Promise((resolve, reject) => {
+      if (!hasExisting(dirPath, hidden)) return reject(new BitJsonNotFound());
+      return fs.readFile(composePath(dirPath, hidden), (err, data) => {
+        if (err) return reject(err);
+        const file = JSON.parse(data.toString('utf8'));
+        const { dependencies, remotes } = file;
+        return resolve(new BitJson({ dependencies, remotes: new Remotes(remotes), hidden }));
+      });
+    });
   }
 }

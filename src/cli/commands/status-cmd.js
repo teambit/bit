@@ -2,7 +2,7 @@
 import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../command';
-import { list } from '../../api';
+import { status } from '../../api';
 
 export default class Status extends Command {
   name = 'status';
@@ -11,7 +11,7 @@ export default class Status extends Command {
   opts = [];
  
   action(): Promise<any> {
-    return list({ inline: true });
+    return status();
   }
 
   report(bitNames: string[]): string {

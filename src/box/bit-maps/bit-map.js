@@ -24,7 +24,8 @@ export default class BitMap extends Map<string, Bit> {
   }
 
   add(bit: Bit) {
-    return bit.write(this).then(() => this.set(bit.name, bit));
+    return bit.write(this)
+    .then(() => this.set(bit.name, bit));
   }
 
   list() {
@@ -33,6 +34,12 @@ export default class BitMap extends Map<string, Bit> {
         resolve(files.map(fullPath => path.basename(fullPath)));
         reject(err);
       })
+    );
+  }
+  
+  listWithMeta() {
+    return this.list().then(bitList =>
+      bitList.map(bitName => Bit.load(bitName, this.box, { withMeta: true }))
     );
   }
 

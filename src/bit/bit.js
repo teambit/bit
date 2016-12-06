@@ -9,13 +9,14 @@ import { BitMap } from '../box/bit-maps';
 import { mkdirp } from '../utils';
 import BitNotFoundException from './exceptions/bit-not-found';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
-import { BIT_IMPL_FILE_NAME } from '../constants';
+import { HIDDEN_BIT_JSON } from '../constants';
 
 export type BitProps = {
   name: string,
-  sig: string,
-  impl: Impl,
-  bitJson: BitJson;
+  bitMap: BitMap; 
+  sig?: string,
+  impl?: Impl,
+  bitJson?: BitJson;
   specs?: Specs,
   version?: number, 
   dependencies?: Bit[],
@@ -34,6 +35,7 @@ export default class Bit {
   env: string;
   action: string;
   examples: Example[];
+  bitMap: BitMap; 
 
   constructor(bitProps: BitProps) {
     this.name = bitProps.name;
@@ -42,20 +44,25 @@ export default class Bit {
     this.env = bitProps.env || 'node';
     this.dependencies = bitProps.dependencies || [];
     this.examples = bitProps.examples || [];
-    this.impl = bitProps.impl || new Impl({ bit: this });
-    this.bitJson = bitProps.bitJson || new BitJson({ hidden: true });
+    this.impl = bitProps.impl;
+    this.specs = bitProps.specs;
+    this.bitJson = bitProps.bitJson;
+    this.bitMap = bitProps.bitMap;
   }
 
-  getPath(bitMap: BitMap) {
-    return path.join(bitMap.getPath(), this.name);
+  getPath() {
+    return path.join(this.bitMap.getPath(), this.name);
   }
 
-  getMetaData(): Promise<Bit> {
-    return new Promise((resolve, reject) => {
-      // @TODO take meta from bit.json 
-      return resolve(this);
-    });
-  }
+  // getMetaData(bitMap: BitMap): Promise<Bit> {
+  //   return new Promise((resolve, reject) => {
+  //     fs.readFile(path.join(this.getPath(bitMap), HIDDEN_BIT_JSON), (err, data) => {
+  //       if (err) return reject(err);
+  //       return resolve(data.toString());
+  //     });
+  //     return resolve(this);
+  //   });
+  // }
 
   validate() {
 
@@ -75,7 +82,7 @@ export default class Bit {
         const bitPath = this.getPath(map); 
 
         return mkdirp(bitPath)
-        .then(() => this.impl.write(bitPath))
+        .then(() => this.impl.write(bitPath, this))
         .then(() => this.bitJson.write({ dirPath: bitPath }))
         .then(resolve);
       });
@@ -94,35 +101,48 @@ export default class Bit {
     });
   }
 
-  static resolveBitPath(name: string, box: Box): Promise<string> {
+  loadBitJson(): Promise<Bit> {
+    return BitJson.load(this.getPath(), true)
+    .then((bitJson) => {
+      this.bitJson = bitJson;
+      return this;
+    });
+  }
+
+  loadImpl(): Promise<Bit> {
+    return Impl.load(this.getPath())
+    .then((impl) => {
+      this.impl = impl;
+      return this;
+    });
+  }
+
+  loadSpecs(): Promise<Bit> {
+    return Specs.load(this.getPath())
+    .then((specs) => {
+      this.specs = specs;
+      return this;
+    });
+  }
+
+  static resolveBitMap(name: string, box: Box): Promise<BitMap> {
     return new Promise((resolve, reject) => {
       box.inline.includes(name)
         .then((isInline) => {
-          if (isInline) return resolve(box.inline.getPath());
+          if (isInline) return resolve(box.inline);
           return box.external.includes(name)
             .then((isExternal) => {
-              if (isExternal) return resolve(box.external.getPath());
+              if (isExternal) return resolve(box.external);
               return reject(new Error('bit not found error'));
             });
         });
     });
   }
 
-  static load(name: string, box: Box): Promise<Bit> {
-    function getBitFrom(bitPath) {
-      return new Promise((resolve, reject) => {
-        fs.readFile(path.join(bitPath, name, BIT_IMPL_FILE_NAME), (err, data) => {
-          if (err) return reject(err);
-          return resolve(data.toString());
-        });
-      });
-    }
-    
-    return this.resolveBitPath(name, box)
-      .then(getBitFrom)
-      .then((rawBit) => {
-        if (!rawBit) throw new BitNotFoundException();
-        return new Bit(rawBit);
+  static load(name: string, box: Box): Promise<Bit> {  
+    return this.resolveBitMap(name, box)
+      .then((bitMap) => {
+        return new Bit({ name, bitMap });
       });
   }
 }

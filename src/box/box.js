@@ -5,7 +5,6 @@ import { BoxAlreadyExists } from './exceptions';
 import BitJson from './bit-json/bit-json';
 import Bit from '../bit';
 import { External, Inline, BitMap } from './bit-maps';
-import type { BitProps } from '../bit/bit';
 
 export type BoxProps = {
   path: string,
@@ -58,12 +57,12 @@ export default class Box {
   }
 
   createBit(props: { name: string }): Promise<Box> {
-    const bit = new Bit(props);
+    const bit = new Bit({ ...props, bitMap: this.inline });
     return this.inline.add(bit);
   }
 
   removeBit(props: { name: string }, { inline }: { inline: boolean }): Promise<Box> {
-    const bit = new Bit(props);
+    const bit = new Bit({ ...props, bitMap: this.inline });
     return inline ? this.inline.remove(bit) : this.external.remove(bit);
   }
   
@@ -74,18 +73,27 @@ export default class Box {
     return inline ? this.inline.list() : this.external.list();
   }
 
+  /**
+   * give status on inline bits
+   **/
+  status(): Promise<any> {
+    return this.inline.listWithMeta();
+  }
+
   static create(path: string = process.cwd()): Box {
     if (pathHasBox(path)) throw new BoxAlreadyExists();
     return new Box({ path, created: true });
   }
 
-  static load(currentPath: string): Box {
+  static load(currentPath: string): Promise<Box> {
     const path = locateBox(currentPath);
     if (!path) throw new BoxNotFound();
-
-    return new Box({
-      path,
-      bitJson: BitJson.load(path)
-    });
+    return BitJson.load(path)
+    .then(bitJson =>
+      new Box({
+        path,
+        bitJson
+      })
+    );
   }
 }

@@ -12,8 +12,9 @@ export default class Create extends Command {
     ['f', 'force', 'create forcefully']
   ];
 
-  action([name, ]: [string], opts: {[string]: boolean}): Promise<any> {
-    return create(name).then(() => ({ name }));
+  action([name, ]: [string], opts: {[string]: boolean}): Promise<*> {
+    return create(name)
+    .then(() => ({ name }));
   }
 
   report({ name }: any): string {
