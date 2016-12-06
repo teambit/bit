@@ -2,8 +2,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Source from './source';
-import { BitMap } from '../../box';
-import implTpl from '../templates/impl.template';
+import createImpl from '../templates/impl.template';
+
 import { BIT_IMPL_FILE_NAME } from '../../constants';
 
 function composePath(...paths: Array<string>): string {
@@ -12,16 +12,17 @@ function composePath(...paths: Array<string>): string {
 }
 
 export default class Impl extends Source {
-  write(map: BitMap): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      fs.writeFile(composePath(map.getPath(), this.bit.name), this.getTemplate(), (err, res) => {
+
+  write(bitPath: string): Promise<any> {
+    return new Promise((resolve, reject) =>
+      fs.writeFile(composePath(bitPath), this.getTemplate(), (err, res) => {
         if (err) return reject(err);
         return resolve(res);
-      });
-    });
+      })
+    );
   }
   
   getTemplate(): string {
-    return implTpl(this.bit);
+    return createImpl(this.bit);
   }
 }

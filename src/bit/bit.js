@@ -3,7 +3,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import Example from './example';
 import { Impl, Specs } from './sources';
-import BitJson from '../box/bit-json';
+import BitJson from '../box/bit-json/bit-json';
 import { Box } from '../box';
 import { BitMap } from '../box/bit-maps';
 import { mkdirp } from '../utils';
@@ -43,7 +43,7 @@ export default class Bit {
     this.dependencies = bitProps.dependencies || [];
     this.examples = bitProps.examples || [];
     this.impl = bitProps.impl || new Impl({ bit: this });
-    this.bitJson = bitProps.bitJson || new BitJson({ path: this.getPath() }); // TODO  finsih .bit.jsin
+    this.bitJson = bitProps.bitJson || new BitJson(); // TODO  finsih .bit
   }
 
   getPath(bitMap: BitMap) {
@@ -72,9 +72,11 @@ export default class Bit {
     return new Promise((resolve, reject) => {
       return fs.stat(this.getPath(map), (err) => {
         if (!err) return reject(new BitAlreadyExistsInternalyException(this.name));
-        return mkdirp(this.getPath(map))
-        .then(() => this.impl.write(map))
-        .then(() => this.bitJson.write(map))
+        const bitPath = this.getPath(map); 
+
+        return mkdirp(bitPath)
+        .then(() => this.impl.write(bitPath))
+        .then(() => this.bitJson.write(bitPath))
         .then(resolve);
       });
     });

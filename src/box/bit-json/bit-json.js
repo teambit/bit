@@ -1,16 +1,16 @@
 /** @flow */
-import * as pathlib from 'path';
-import * as fs from 'fs';
+import path from 'path';
+import fs from 'fs';
 import BitJsonAlreadyExists from '../exceptions/bit-json-already-exists';
 import BitJsonNotFound from '../exceptions/bit-json-not-found';
 import { BIT_JSON } from '../../constants';
 
-function composeWithPath(path: string) {
-  return pathlib.join(path, BIT_JSON);
+function composePath(bitPath: string) {
+  return path.join(bitPath, BIT_JSON);
 }
 
-function hasExisting(path: string): boolean {
-  return fs.existsSync(composeWithPath(path));
+function hasExisting(bitPath: string): boolean {
+  return fs.existsSync(composePath(bitPath));
 }
 
 export default class BitJson {
@@ -18,29 +18,9 @@ export default class BitJson {
    * dependencies in bit json
    **/
   dependencies: {[string]: string} = {};
-  
-  /**
-   * contained box
-   */
-  path: string;
 
-  constructor(path: string, dependencies: {[string]: string} = {}) {
-    this.path = path;
+  constructor(dependencies: {[string]: string} = {}) {
     this.dependencies = dependencies;
-  }
-
-  /**
-   * compose concerete path for bit.json in root path.
-   */ 
-  composePath() {
-    return composeWithPath(this.path);
-  }
-
-  /**
-   * test whether bit.json already exists in root path
-   */
-  hasExisting(): boolean {
-    return hasExisting(this.path);
   }
 
   /**
@@ -83,9 +63,9 @@ export default class BitJson {
   /**
    * write to file as json
    */
-  write(override: boolean = false): Promise<boolean> {
+  write(bitPath: string, override: boolean = false): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      if (!override && this.hasExisting(this.path)) {
+      if (!override && hasExisting(bitPath)) {
         throw new BitJsonAlreadyExists();
       }
 
@@ -95,7 +75,7 @@ export default class BitJson {
       };
 
       fs.writeFile(
-        this.composePath(),
+        composePath(bitPath),
         this.toJson(),
         repspond
       );
@@ -107,7 +87,7 @@ export default class BitJson {
    */
   static load(bitJsonPath: string): BitJson {
     if (!hasExisting(bitJsonPath)) throw new BitJsonNotFound();
-    const file = JSON.parse(fs.readFileSync(composeWithPath(bitJsonPath)).toString('utf8'));
-    return new BitJson(bitJsonPath, file.dependencies);
+    const file = JSON.parse(fs.readFileSync(composePath(bitJsonPath)).toString('utf8'));
+    return new BitJson(file.dependencies);
   }
 }

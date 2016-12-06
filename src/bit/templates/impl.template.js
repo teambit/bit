@@ -2,7 +2,7 @@
 import camelcase from 'camelcase';
 import type { BitProps } from '../bit';
 
-export default ({ name }: BitProps) => {
+const createImpl = ({ name }: BitProps): string => {
   return `
 /**
  * @param {type} name
@@ -15,3 +15,6 @@ export default ({ name }: BitProps) => {
 module.exports = function ${camelcase(name)}() {
    
 };`;
+};
+
+export default createImpl;
