@@ -4,10 +4,10 @@ import fs from 'fs';
 import BitJsonAlreadyExists from '../exceptions/bit-json-already-exists';
 import BitJsonNotFound from '../exceptions/bit-json-not-found';
 import Remote from './remote';
-import { BIT_JSON } from '../../constants';
+import { BIT_JSON, HIDDEN_BIT_JSON } from '../../constants';
 
-function composePath(bitPath: string) {
-  return path.join(bitPath, BIT_JSON);
+function composePath(bitPath: string, hidden: ?boolean) {
+  return path.join(bitPath, hidden ? HIDDEN_BIT_JSON : BIT_JSON);
 }
 
 function hasExisting(bitPath: string): boolean {
@@ -18,13 +18,17 @@ export default class BitJson {
   /**
    * dependencies in bit json
    **/
-  dependencies: {[string]: string} = {};
-
+  dependencies: {[string]: string};
+  env: string = 'webpack-jasmin-plugin';
+  version: string = '1';
   remote: Remote;
+  hidden: boolean;
 
-  constructor(dependencies: {[string]: string} = {}, remote: ?Remote) {
+  constructor({ dependencies = {}, remote, hidden = false }:
+  { dependencies?: {[string]: string}, remote?: Remote, hidden?: boolean }) {
     this.dependencies = dependencies;
     this.remote = remote || new Remote();
+    this.hidden = hidden;
   }
 
   /**
@@ -53,8 +57,10 @@ export default class BitJson {
    */
   toPlainObject() {
     return {
-      dependencies: this.dependencies,
-      remotes: this.remote.toObject()
+      version: this.version,
+      env: this.env,
+      remotes: this.remote.toObject(),
+      dependencies: this.dependencies
     };
   }
 
@@ -68,9 +74,9 @@ export default class BitJson {
   /**
    * write to file as json
    */
-  write(bitPath: string, override: boolean = false): Promise<boolean> {
+  write({ dirPath, override = false }: { dirPath: string, override?: boolean }): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      if (!override && hasExisting(bitPath)) {
+      if (!override && hasExisting(dirPath)) {
         throw new BitJsonAlreadyExists();
       }
 
@@ -80,7 +86,7 @@ export default class BitJson {
       };
 
       fs.writeFile(
-        composePath(bitPath),
+        composePath(dirPath, this.hidden),
         this.toJson(),
         repspond
       );
@@ -90,9 +96,9 @@ export default class BitJson {
   /**
    * load existing json in root path
    */
-  static load(bitJsonPath: string): BitJson {
-    if (!hasExisting(bitJsonPath)) throw new BitJsonNotFound();
-    const file = JSON.parse(fs.readFileSync(composePath(bitJsonPath)).toString('utf8'));
+  static load(dirPath: string, hidden: boolean): BitJson {
+    if (!hasExisting(dirPath)) throw new BitJsonNotFound();
+    const file = JSON.parse(fs.readFileSync(composePath(dirPath, hidden)).toString('utf8'));
     return new BitJson(file.dependencies, Remote.load(file.remotes));
   }
 }

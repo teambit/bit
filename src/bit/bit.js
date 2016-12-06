@@ -43,7 +43,7 @@ export default class Bit {
     this.dependencies = bitProps.dependencies || [];
     this.examples = bitProps.examples || [];
     this.impl = bitProps.impl || new Impl({ bit: this });
-    this.bitJson = bitProps.bitJson || new BitJson();
+    this.bitJson = bitProps.bitJson || new BitJson({ hidden: true });
   }
 
   getPath(bitMap: BitMap) {
@@ -76,7 +76,7 @@ export default class Bit {
 
         return mkdirp(bitPath)
         .then(() => this.impl.write(bitPath))
-        .then(() => this.bitJson.write(bitPath))
+        .then(() => this.bitJson.write({ dirPath: bitPath }))
         .then(resolve);
       });
     });

@@ -24,7 +24,7 @@ export default class Box {
 
   constructor({ path, bitJson, external, inline, created = false }: BoxProps) {
     this.path = path;
-    this.bitJson = bitJson || new BitJson();
+    this.bitJson = bitJson || new BitJson({ hidden: false });
     this.external = external || new External(this);
     this.inline = inline || new Inline(this);
     this.created = created;
@@ -37,7 +37,7 @@ export default class Box {
     const returnBox = () => this;
 
     return this.bitJson
-      .write(this.path)
+      .write({ dirPath: this.path })
       .then(createInlineDir)
       .then(createExternalDir)
       .then(returnBox);
@@ -85,7 +85,7 @@ export default class Box {
 
     return new Box({
       path,
-      // bitJson: BitJson.load()
+      bitJson: BitJson.load(path)
     });
   }
 }

@@ -38,6 +38,7 @@ export const BIT_INLINE_DIRNAME = 'inline';
 export const BIT_EXTERNAL_DIRNAME = 'external';
 
 export const BIT_JSON = 'bit.json';
+export const HIDDEN_BIT_JSON = '.bit.json';
 
 export const BIT_IMPL_FILE_NAME = 'impl.js';
 
