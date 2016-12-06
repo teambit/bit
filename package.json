@@ -18,6 +18,7 @@
     "commander": "^2.9.0",
     "fs-extra": "^1.0.0",
     "glob": "^7.1.1",
+    "loud-rejection": "^1.6.0",
     "mkdirp": "^0.5.1",
     "ramda": "^0.22.1",
     "requestify": "^0.2.5",
