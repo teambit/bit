@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import BitJsonAlreadyExists from '../exceptions/bit-json-already-exists';
 import BitJsonNotFound from '../exceptions/bit-json-not-found';
-import Remote from './remote';
+import Remotes from './remotes';
 import { BIT_JSON, HIDDEN_BIT_JSON } from '../../constants';
 
 function composePath(bitPath: string, hidden: ?boolean) {
@@ -21,13 +21,13 @@ export default class BitJson {
   dependencies: {[string]: string};
   env: string = 'webpack-jasmin-plugin';
   version: string = '1';
-  remote: Remote;
+  remotes: Remotes;
   hidden: boolean;
 
-  constructor({ dependencies = {}, remote, hidden = false }:
-  { dependencies?: {[string]: string}, remote?: Remote, hidden?: boolean }) {
+  constructor({ dependencies = {}, remotes, hidden = false }:
+  { dependencies?: {[string]: string}, remotes?: Remotes, hidden?: boolean }) {
     this.dependencies = dependencies;
-    this.remote = remote || new Remote();
+    this.remotes = remotes || new Remotes();
     this.hidden = hidden;
   }
 
@@ -59,7 +59,7 @@ export default class BitJson {
     return {
       version: this.version,
       env: this.env,
-      remotes: this.remote.toObject(),
+      remotes: this.remotes.toObject(),
       dependencies: this.dependencies
     };
   }
@@ -99,6 +99,6 @@ export default class BitJson {
   static load(dirPath: string, hidden: boolean): BitJson {
     if (!hasExisting(dirPath)) throw new BitJsonNotFound();
     const file = JSON.parse(fs.readFileSync(composePath(dirPath, hidden)).toString('utf8'));
-    return new BitJson(file.dependencies, Remote.load(file.remotes));
+    return new BitJson(file.dependencies, Remotes.load(file.remotes));
   }
 }

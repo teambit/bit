@@ -57,12 +57,12 @@ export default class Box {
     // @TODO
   }
 
-  createBit(props: BitProps): Promise<Box> {
+  createBit(props: { name: string }): Promise<Box> {
     const bit = new Bit(props);
     return this.inline.add(bit);
   }
 
-  removeBit(props: BitProps, { inline }: { inline: boolean }): Promise<Box> {
+  removeBit(props: { name: string }, { inline }: { inline: boolean }): Promise<Box> {
     const bit = new Bit(props);
     return inline ? this.inline.remove(bit) : this.external.remove(bit);
   }
