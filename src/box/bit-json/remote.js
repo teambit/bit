@@ -23,11 +23,11 @@ function isPrimary(alias: string): boolean {
 }
 
 export default class Remote {
-  primary: [string, string];
+  primary: ?[string, string];
   others: {[string]: string};
 
-  constructor(primary: [string, string], others: {[string]: string} = {}) {
-    this.primary = primary || null;
+  constructor(primary: ?[string, string], others: {[string]: string} = {}) {
+    this.primary = primary;
     this.others = others;
   }
 
@@ -42,11 +42,12 @@ export default class Remote {
   }
   
   toObject(): {[string]: string} {
-    if (!this.primary && !empty(this.others)) throw new PrimaryNotFound();
     const remotes = {};
-    const [primaryAlias, primaryRemote] = this.primary; 
-
-    remotes[prependBang(primaryAlias)] = primaryRemote;
+    if (this.primary) {
+      const [primaryAlias, primaryRemote] = this.primary;
+      remotes[prependBang(primaryAlias)] = primaryRemote;       
+    }
+    
     forEach(this.others, (val, key) => {
       remotes[key] = val;
     });

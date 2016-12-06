@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import BitJsonAlreadyExists from '../exceptions/bit-json-already-exists';
 import BitJsonNotFound from '../exceptions/bit-json-not-found';
+import Remote from './remote';
 import { BIT_JSON } from '../../constants';
 
 function composePath(bitPath: string) {
@@ -19,8 +20,11 @@ export default class BitJson {
    **/
   dependencies: {[string]: string} = {};
 
-  constructor(dependencies: {[string]: string} = {}) {
+  remote: Remote;
+
+  constructor(dependencies: {[string]: string} = {}, remote: ?Remote) {
     this.dependencies = dependencies;
+    this.remote = remote || new Remote();
   }
 
   /**
@@ -49,7 +53,8 @@ export default class BitJson {
    */
   toPlainObject() {
     return {
-      dependencies: this.dependencies
+      dependencies: this.dependencies,
+      remotes: this.remote.toObject()
     };
   }
 
@@ -88,6 +93,6 @@ export default class BitJson {
   static load(bitJsonPath: string): BitJson {
     if (!hasExisting(bitJsonPath)) throw new BitJsonNotFound();
     const file = JSON.parse(fs.readFileSync(composePath(bitJsonPath)).toString('utf8'));
-    return new BitJson(file.dependencies);
+    return new BitJson(file.dependencies, Remote.load(file.remotes));
   }
 }
