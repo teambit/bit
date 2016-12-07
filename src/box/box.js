@@ -4,6 +4,7 @@ import { locateBox, pathHasBox } from './box-locator';
 import { BoxAlreadyExists } from './exceptions';
 import BitJson from './bit-json/bit-json';
 import Bit from '../bit';
+import PartialBit from '../bit/partial-bit';
 import { External, Inline, BitMap } from './bit-maps';
 
 export type BoxProps = {
@@ -29,7 +30,7 @@ export default class Box {
     this.created = created;
   }
 
-  write(): Promise<boolean> {
+  write(): Promise<Box> {
     const self = this;
     const createInlineDir = () => self.inline.ensureDir();
     const createExternalDir = () => self.external.ensureDir();
@@ -45,24 +46,24 @@ export default class Box {
   /**
    * get a bit
    **/
-  get(name: string): Bit {
-    return Bit.load(name, this);
+  get(name: string): Promise<Bit> {
+    return PartialBit.load(name, this);
   }
 
   /**
    * fetch a bit from a remote, put in the bit.json and in the external directory
    **/
-  import({ name, remote }: { name: string, remote: string }): Bit {
+  import({ name, remote }: { name: string, remote: string }): Bit { // eslint-disable-line
     // @TODO
   }
 
-  createBit(props: { name: string }): Promise<Box> {
-    const bit = new Bit({ ...props, bitMap: this.inline });
+  createBit(props: { name: string }): Promise<Bit> {
+    const bit = Bit.create({ ...props, bitMap: this.inline });
     return this.inline.add(bit);
   }
 
-  removeBit(props: { name: string }, { inline }: { inline: boolean }): Promise<Box> {
-    const bit = new Bit({ ...props, bitMap: this.inline });
+  removeBit(props: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
+    const bit = new PartialBit({ ...props, bitMap: this.inline });
     return inline ? this.inline.remove(bit) : this.external.remove(bit);
   }
   

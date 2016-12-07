@@ -6,6 +6,7 @@ import Bit from '../../bit';
 import Box from '../box';
 import { mkdirp } from '../../utils';
 import { BIT_DIR_NAME } from '../../constants';
+import PartialBit from '../../bit/partial-bit';
 
 function composePath(pathPart: string) {
   return path.join(pathPart, BIT_DIR_NAME);
@@ -23,9 +24,12 @@ export default class BitMap extends Map<string, Bit> {
     return composePath(this.box.path);
   }
 
-  add(bit: Bit) {
+  add(bit: Bit): Promise<Bit> {
     return bit.write(this)
-    .then(() => this.set(bit.name, bit));
+    .then(() => {
+      this.set(bit.name, bit);
+      return bit;
+    });
   }
 
   list() {
@@ -37,8 +41,12 @@ export default class BitMap extends Map<string, Bit> {
     );
   }
 
-  remove(bit: Bit) {
-    return bit.erase(this).then(() => { this.delete(bit.name); });
+  remove(bit: PartialBit): Promise<PartialBit> {
+    return bit.erase(this)
+    .then(() => { 
+      this.delete(bit.name);
+      return bit;
+    });
   }
 
   includes(bitName: string) {
