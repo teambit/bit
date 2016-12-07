@@ -1,6 +1,6 @@
 /** @flow */
-import { contains, isBitUrl, cleanBang } from '../../utils';
-import { InvalidRemote } from './exceptions';
+import { contains, isBitUrl, cleanBang } from '../../../utils';
+import { InvalidRemote } from '../exceptions';
 
 /**
  * @ctx bit, primary, remote

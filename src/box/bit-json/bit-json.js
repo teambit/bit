@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import BitJsonAlreadyExists from '../exceptions/bit-json-already-exists';
 import BitJsonNotFound from '../exceptions/bit-json-not-found';
-import Remotes from './remotes';
+import { Remotes } from './remotes';
 import { BIT_JSON, HIDDEN_BIT_JSON } from '../../constants';
 
 function composePath(bitPath: string, hidden: ?boolean) {
