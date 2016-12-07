@@ -16,7 +16,7 @@ export default function status(): Promise<StatusRes[]> {
           .then(partialBit => partialBit.loadFull())
           .then(bit => ({ 
             name: bit.name,
-            valid: bit.validate()
+            valid: !bit.validate()
           }))
         )
       ))

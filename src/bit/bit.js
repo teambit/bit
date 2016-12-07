@@ -31,8 +31,15 @@ export default class Bit extends PartialBit {
     this.impl = bitProps.impl;
   }
 
-  validate(): boolean {
-    return this.bitJson.validate();
+  validate(): ?string {
+    try {
+      this.bitJson.validate();
+    } catch (err) {
+      console.error(err); // TODO - pretty print on the return value of this func
+      return err.message;
+    }
+    
+    return undefined;
   }
 
   export() {

@@ -97,7 +97,7 @@ export default class BitJson {
     return (
       typeof this.version === 'string' &&
       typeof this.env === 'string' &&
-      this.remotes.validate() &&
+      // this.remotes.validate() &&
       typeof this.dependencies === 'object'
     );
   }
