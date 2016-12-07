@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { Impl, Specs } from './sources';
 import BitJson from '../box/bit-json/bit-json';
 import { Box } from '../box';
-import { BitMap } from '../box/bit-maps';
+import { Drawer } from '../box/drawers';
 import { mkdirp } from '../utils';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 import PartialBit from './partial-bit';
@@ -11,7 +11,7 @@ import type { PartialBitProps } from './partial-bit';
 
 export type BitProps = {
   name: string,
-  bitMap: BitMap; 
+  drawer: Drawer; 
   bitJson: BitJson;
   impl: Impl,
   specs?: Specs, 
@@ -19,13 +19,13 @@ export type BitProps = {
 
 export default class Bit extends PartialBit {
   name: string;
-  bitMap: BitMap; 
+  drawer: Drawer; 
   bitJson: BitJson;
   impl: Impl;
   specs: ?Specs;
 
   constructor(bitProps: BitProps) {
-    super({ name: bitProps.name, bitMap: bitProps.bitMap });
+    super({ name: bitProps.name, drawer: bitProps.drawer });
     this.bitJson = bitProps.bitJson;
     this.specs = bitProps.specs;
     this.impl = bitProps.impl;
@@ -39,7 +39,7 @@ export default class Bit extends PartialBit {
       return err.message;
     }
     
-    return undefined;
+    return null;
   }
 
   export() {
@@ -64,18 +64,18 @@ export default class Bit extends PartialBit {
   }
 
   static load(name: string, box: Box): Promise<Bit> {  
-    return this.resolveBitMap(name, box)
-      .then((bitMap) => {
-        return Bit.create({ name, bitMap });
+    return this.resolveDrawer(name, box)
+      .then((drawer) => {
+        return Bit.create({ name, drawer });
       });
   }
 
   static create(props: PartialBitProps) {
-    const { name, bitMap } = props;
+    const { name, drawer } = props;
 
     return new Bit({
       name,
-      bitMap,
+      drawer,
       bitJson: BitJson.create({ hidden: true }),
       impl: Impl.create(this),
       specs: Specs.create(this),

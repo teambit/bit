@@ -5,7 +5,7 @@ import { BoxAlreadyExists } from './exceptions';
 import BitJson from './bit-json/bit-json';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
-import { External, Inline, BitMap } from './bit-maps';
+import { External, Inline } from './drawers';
 
 export type BoxProps = {
   path: string,
@@ -19,8 +19,8 @@ export default class Box {
   path: string;
   created: boolean;
   bitJson: BitJson;
-  external: BitMap;
-  inline: BitMap;
+  external: External;
+  inline: Inline;
 
   constructor({ path, bitJson, external, inline, created = false }: BoxProps) {
     this.path = path;
@@ -66,11 +66,11 @@ export default class Box {
   }
 
   createBit(props: { name: string }): Promise<Bit> {
-    return Bit.create({ ...props, bitMap: this.inline }).write();
+    return Bit.create({ ...props, drawer: this.inline }).write();
   }
 
   removeBit(props: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
-    const bit = new PartialBit({ ...props, bitMap: inline? this.inline: this.external });
+    const bit = new PartialBit({ ...props, drawer: inline ? this.inline: this.external });
     return bit.erase();
   }
   

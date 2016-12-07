@@ -4,26 +4,26 @@ import fs from 'fs-extra';
 import { Impl, Specs } from './sources';
 import BitJson from '../box/bit-json/bit-json';
 import { Box } from '../box';
-import { BitMap } from '../box/bit-maps';
+import { Drawer } from '../box/drawers';
 import BitNotFoundException from './exceptions/bit-not-found';
 import Bit from './bit';
 
 export type PartialBitProps = {
-  name: string,
-  bitMap: BitMap; 
+  name: string;
+  drawer: Drawer; 
 };
 
 export default class PartialBit {
   name: string;
-  bitMap: BitMap; 
+  drawer: Drawer; 
 
   constructor(bitProps: PartialBitProps) {
     this.name = bitProps.name;
-    this.bitMap = bitProps.bitMap;
+    this.drawer = bitProps.drawer;
   }
 
   getPath() {
-    return path.join(this.bitMap.getPath(), this.name);
+    return path.join(this.drawer.getPath(), this.name);
   }
 
   erase(): Promise<PartialBit> {
@@ -32,7 +32,6 @@ export default class PartialBit {
         if (err) reject(new BitNotFoundException());
         return fs.remove(this.getPath(), (e) => {
           if (e) return reject(e);
-          this.bitMap.delete(this.name);
           return resolve(this);
         });
       });
@@ -47,7 +46,7 @@ export default class PartialBit {
     ]).then(([ bitJson, impl, specs ]) => 
       new Bit({
         name: this.name,
-        bitMap: this.bitMap,
+        drawer: this.drawer,
         bitJson,
         impl,
         specs
@@ -55,7 +54,7 @@ export default class PartialBit {
     );
   }
 
-  static resolveBitMap(name: string, box: Box): Promise<BitMap> {
+  static resolveDrawer(name: string, box: Box): Promise<Drawer> {
     return new Promise((resolve, reject) => {
       box.inline.includes(name)
         .then((isInline) => {
@@ -70,9 +69,9 @@ export default class PartialBit {
   }
 
   static load(name: string, box: Box): Promise<PartialBit> {  
-    return this.resolveBitMap(name, box)
-      .then((bitMap) => {
-        return new PartialBit({ name, bitMap });
+    return this.resolveDrawer(name, box)
+      .then((drawer) => {
+        return new PartialBit({ name, drawer });
       });
   }
 }

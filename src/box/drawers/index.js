@@ -1,10 +1,10 @@
 /** @flow */
 import External from './external';
 import Inline from './inline';
-import BitMap from './bit-map';
+import Drawer from './drawer';
 
 export {
   External,
   Inline,
-  BitMap
+  Drawer
 };
