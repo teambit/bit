@@ -27,7 +27,7 @@ export default class BitJson {
   constructor({ dependencies = {}, remotes, hidden = false }:
   { dependencies?: {[string]: string}, remotes?: Remotes, hidden?: boolean }) {
     this.dependencies = dependencies;
-    this.remotes = remotes || new Remotes();
+    this.remotes = remotes;
     this.hidden = hidden;
   }
 
@@ -93,6 +93,14 @@ export default class BitJson {
     });
   }
 
+  validate(): boolean {
+    return (
+      typeof this.version === 'string' &&
+      typeof this.env === 'string' &&
+      this.remotes.validate() &&
+      typeof this.dependencies === 'object'
+    );
+  }
   /**
    * load existing json in root path
    */
@@ -106,5 +114,18 @@ export default class BitJson {
         return resolve(new BitJson({ dependencies, remotes: Remotes.load(remotes), hidden }));
       });
     });
+  }
+
+  static create({ hidden = true }: { hidden: boolean }): BitJson {
+    // @TODO check bit to update default bitJson 
+    return new BitJson(
+      {
+        env: 'webpack-jasmin-plugin',
+        version: '1',
+        remotes: new Remotes(),
+        hidden,
+        dependencies: {}
+      }
+    );
   }
 }

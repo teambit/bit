@@ -64,8 +64,8 @@ export default class Bit {
   //   });
   // }
 
-  validate() {
-
+  validate(): boolean {
+    return this.bitJson.validate();
   }
 
   export() {
@@ -82,8 +82,9 @@ export default class Bit {
         const bitPath = this.getPath(map); 
 
         return mkdirp(bitPath)
-        .then(() => this.impl.write(bitPath, this))
-        .then(() => this.bitJson.write({ dirPath: bitPath }))
+        .then(() => this.impl ? this.impl.write(bitPath, this) : Impl.create(this).write(bitPath, this))
+        .then(() => this.bitJson ? this.bitJson.write.write({ dirPath: bitPath }) : 
+          BitJson.create({ hidden: true }).write({ dirPath: bitPath }))
         .then(resolve);
       });
     });

@@ -1,8 +1,25 @@
 /** @flow */
 import { loadBox } from '../../box';
 
-export default function status(): Promise<*> {
+export type StatusRes = {
+  name: string,
+  valid: boolean,
+}
+
+export default function status(): Promise<StatusRes[]> {
   return loadBox().then(box => 
-    box.status()
+    box.inline.list()
+    .then(bitNameList => Promise.all(
+      bitNameList.map(
+        bitName => 
+          box.get(bitName)
+          .then(bit => bit.loadImpl())
+          .then(bit => bit.loadBitJson())
+          .then(bit => ({ 
+            name: bit.name, 
+            valid: bit.validate()
+          }))
+        )
+      ))
   );
 }

@@ -36,12 +36,6 @@ export default class BitMap extends Map<string, Bit> {
       })
     );
   }
-  
-  listWithMeta() {
-    return this.list().then(bitList =>
-      bitList.map(bitName => Bit.load(bitName, this.box, { withMeta: true }))
-    );
-  }
 
   remove(bit: Bit) {
     return bit.erase(this).then(() => { this.delete(bit.name); });

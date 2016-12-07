@@ -12,10 +12,10 @@ function composePath(...paths: Array<string>): string {
 }
 
 export default class Impl extends Source {
-
-  write(bitPath: string, bit?: Bit): Promise<any> {
+  
+  write(bitPath: string): Promise<any> {
     return new Promise((resolve, reject) =>
-      fs.writeFile(composePath(bitPath), bit ? this.getTemplate(bit): this.src, (err, res) => {
+      fs.writeFile(composePath(bitPath), this.src, (err, res) => {
         if (err) return reject(err);
         return resolve(res);
       })
@@ -26,12 +26,12 @@ export default class Impl extends Source {
     return new Promise((resolve, reject) => 
       fs.readFile(composePath(bitPath), (err, data) => {
         if (err) return reject(err);
-        return resolve(new Impl({ src: data.toString() }));
+        return resolve(new Impl(data.toString()));
       })
     );
   }
 
-  getTemplate(bit: Bit): string {
-    return createImpl(bit);
+  static create(bit: Bit) {
+    return new Impl(createImpl(bit)); 
   }
 }

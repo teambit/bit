@@ -23,7 +23,7 @@ export default class Box {
 
   constructor({ path, bitJson, external, inline, created = false }: BoxProps) {
     this.path = path;
-    this.bitJson = bitJson || new BitJson({ hidden: false });
+    this.bitJson = bitJson || BitJson.create({ hidden: false });
     this.external = external || new External(this);
     this.inline = inline || new Inline(this);
     this.created = created;
@@ -71,13 +71,6 @@ export default class Box {
    **/
   list({ inline }: { inline: boolean }): Promise<string[]> {
     return inline ? this.inline.list() : this.external.list();
-  }
-
-  /**
-   * give status on inline bits
-   **/
-  status(): Promise<any> {
-    return this.inline.listWithMeta();
   }
 
   static create(path: string = process.cwd()): Box {
