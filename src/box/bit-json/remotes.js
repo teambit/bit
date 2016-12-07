@@ -1,63 +1,38 @@
 /** @flow */
-import { filter, contains, empty, cleanBang, forEach, prependBang } from '../../utils';
-import { PrimaryNotFound, PrimaryOverloaded } from './exceptions';
+import Remote from './remote';
+import { forEach, prependBang } from '../../utils';
+import { PrimaryOverloaded } from './exceptions';
 
-// function listOthers(remotes: {[string]: string}): {[string]: string} {
-//   return filter(remotes, (host, alias) => isPrimary(alias));
-// }
-
-// function getPrimary(remotes: {[string]: string}): [string, string] {
-//   let primary = null;
-
-//   forEach(remotes, (host, alias) => {
-//     if (isPrimary(alias) && primary) throw new PrimaryOverloaded();      
-//     else if (isPrimary(alias)) primary = [cleanBang(alias), host];
-//   });
-
-//   if (!primary) throw new PrimaryNotFound();
-//   return primary;
-// }
-
-// function isPrimary(alias: string): boolean {
-//   return contains(alias, '!');
-// }
-
-export default class Remotes {
-  remotes: {[string]: string};
-
-  constructor(remotes: {[string]: string} = {}) {
-    this.remotes = remotes;
+export default class Remotes extends Array<Remote> {
+  constructor(remotes: Remote[] = []) {
+    super(...remotes);
   }
 
-  set(alias: string, host: string): Remotes {
-    // if (primary) this.primary = [alias, host];
-    this.remotes[alias] = host;
-    return this;
+  validate() {
+    const primary = this.filter(remote => remote.primary);
+    if (primary.length > 1) throw new PrimaryOverloaded();
+    return this.forEach(remote => remote.validate());
   }
 
-  get(alias: string): string {
-    return this.remotes[alias];
-  }
-  
-  toObject(): {[string]: string} {
-    const remotes = {};
-    
-    // if (this.primary) {
-    //   const [primaryAlias, primaryRemote] = this.primary;
-    //   remotes[prependBang(primaryAlias)] = primaryRemote;       
-    // }
-    
-    forEach(this.remotes, (val, key) => {
-      remotes[key] = val;
+  toPlainObject() {
+    const object = {};
+
+    this.forEach((remote) => {
+      let alias = remote.alias;
+      if (remote.primary) alias = prependBang(remote.alias); 
+      object[alias] = remote.host;
     });
-    
-    return remotes;
+
+    return object;
   }
 
-  static load(remotes: {[string]: string}) {
-    // const primary = getPrimary(remotes);
-    // const remotes = listOthers(remotes);
+  static load(remotes: {[string]: string}): Remotes {
+    const models = [];
+    
+    forEach(remotes, (host, alias) => {
+      models.push(Remote.load(alias, host));
+    });
 
-    return new Remotes(remotes);    
+    return new Remotes(models);
   }
 }

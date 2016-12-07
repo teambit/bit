@@ -59,7 +59,7 @@ export default class BitJson {
     return {
       version: this.version,
       env: this.env,
-      remotes: this.remotes.toObject(),
+      remotes: this.remotes.toPlainObject(),
       dependencies: this.dependencies
     };
   }
@@ -103,7 +103,7 @@ export default class BitJson {
         if (err) return reject(err);
         const file = JSON.parse(data.toString('utf8'));
         const { dependencies, remotes } = file;
-        return resolve(new BitJson({ dependencies, remotes: new Remotes(remotes), hidden }));
+        return resolve(new BitJson({ dependencies, remotes: Remotes.load(remotes), hidden }));
       });
     });
   }
