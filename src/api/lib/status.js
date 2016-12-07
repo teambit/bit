@@ -13,7 +13,6 @@ export default function status(): Promise<StatusRes[]> {
       bitNameList.map(
         bitName => 
           box.get(bitName)
-          .then(partialBit => partialBit.loadFull())
           .then(bit => ({ 
             name: bit.name,
             valid: !bit.validate()

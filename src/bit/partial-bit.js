@@ -32,6 +32,7 @@ export default class PartialBit {
         if (err) reject(new BitNotFoundException());
         return fs.remove(this.getPath(), (e) => {
           if (e) return reject(e);
+          this.bitMap.delete(this.name);
           return resolve(this);
         });
       });

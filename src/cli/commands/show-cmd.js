@@ -14,7 +14,6 @@ export default class Remove extends Command {
     return show({ name })
     .then(bit => ({
       name: bit.name,
-      sig: bit.sig,
       version: bit.bitJson.version,
       env: bit.bitJson.env,
       dependencies: bit.bitJson.dependencies,
@@ -22,14 +21,13 @@ export default class Remove extends Command {
     }));
   }
 
-  report({ name, version, env, dependencies, path, sig }: any): string {
+  report({ name, version, env, dependencies, path }: any): string {
     return `
-    ${chalk.blue(sig)}
+    ${chalk.blue(name)}
     
-      name -> ${name}
       version -> ${version}
       env -> ${env}
-      dependencies -> ${dependencies}
+      dependencies -> ${Object.keys(dependencies).join(', ')}
       path -> ${path}
     `;
   }

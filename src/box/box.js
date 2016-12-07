@@ -44,10 +44,18 @@ export default class Box {
   }
 
   /**
-   * get a bit
+   * get a bit partialy
+   **/
+  getPartial(name: string): Promise<PartialBit> {
+    return PartialBit.load(name, this);
+  }
+
+  /**
+   * get a bit with all metadata and implemenation
    **/
   get(name: string): Promise<Bit> {
-    return PartialBit.load(name, this);
+    return PartialBit.load(name, this)
+    .then(partial => partial.loadFull());
   }
 
   /**
@@ -58,13 +66,12 @@ export default class Box {
   }
 
   createBit(props: { name: string }): Promise<Bit> {
-    const bit = Bit.create({ ...props, bitMap: this.inline });
-    return this.inline.add(bit);
+    return Bit.create({ ...props, bitMap: this.inline }).write();
   }
 
   removeBit(props: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
-    const bit = new PartialBit({ ...props, bitMap: this.inline });
-    return inline ? this.inline.remove(bit) : this.external.remove(bit);
+    const bit = new PartialBit({ ...props, bitMap: inline? this.inline: this.external });
+    return bit.erase();
   }
   
   /**

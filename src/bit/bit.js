@@ -49,11 +49,11 @@ export default class Bit extends PartialBit {
     // @TODO
   }
 
-  write(map: BitMap): Promise<boolean> {
+  write(): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      return fs.stat(this.getPath(map), (err) => {
+      return fs.stat(this.getPath(), (err) => {
         if (!err) return reject(new BitAlreadyExistsInternalyException(this.name));
-        const bitPath = this.getPath(map); 
+        const bitPath = this.getPath(); 
 
         return mkdirp(bitPath)
         .then(() => this.impl.write(bitPath, this))

@@ -2,7 +2,6 @@
 import * as path from 'path';
 import glob from 'glob';
 import fs from 'fs';
-import Bit from '../../bit';
 import Box from '../box';
 import { mkdirp } from '../../utils';
 import { BIT_DIR_NAME } from '../../constants';
@@ -12,24 +11,16 @@ function composePath(pathPart: string) {
   return path.join(pathPart, BIT_DIR_NAME);
 }
 
-export default class BitMap extends Map<string, Bit> {
+export default class BitMap extends Map<string, PartialBit> {
   box: Box;
 
-  constructor(box: Box, bits: [string, Bit][] = []) {
+  constructor(box: Box, bits: [string, PartialBit][] = []) {
     super(bits);
     this.box = box;
   }
   
   getPath() {
     return composePath(this.box.path);
-  }
-
-  add(bit: Bit): Promise<Bit> {
-    return bit.write(this)
-    .then(() => {
-      this.set(bit.name, bit);
-      return bit;
-    });
   }
 
   list() {
@@ -41,13 +32,13 @@ export default class BitMap extends Map<string, Bit> {
     );
   }
 
-  remove(bit: PartialBit): Promise<PartialBit> {
-    return bit.erase(this)
-    .then(() => { 
-      this.delete(bit.name);
-      return bit;
-    });
-  }
+  // remove(bit: PartialBit): Promise<PartialBit> {
+  //   return bit.erase(this)
+  //   .then(() => { 
+  //     this.delete(bit.name);
+  //     return bit;
+  //   });
+  // }
 
   includes(bitName: string) {
     return new Promise((resolve) => {

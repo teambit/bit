@@ -12,7 +12,6 @@ function composePath(...paths: Array<string>): string {
 }
 
 export default class Impl extends Source {
-  
   write(bitPath: string): Promise<any> {
     return new Promise((resolve, reject) =>
       fs.writeFile(composePath(bitPath), this.src, (err, res) => {
