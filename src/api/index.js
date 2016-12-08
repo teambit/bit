@@ -4,7 +4,7 @@ import remove from './lib/remove';
 import list from './lib/list';
 import exportAction from './lib/export';
 import status from './lib/status';
-import show from './lib/show';
+import getBit from './lib/getBit';
 
 export {
   init,
@@ -13,5 +13,5 @@ export {
   list,
   exportAction,
   status,
-  show
+  getBit
 };

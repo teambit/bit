@@ -1,17 +1,17 @@
 /** @flow */
 import Command from '../command';
-import { show } from '../../api';
+import { getBit } from '../../api';
 
 const chalk = require('chalk');
 
-export default class Remove extends Command {
+export default class Show extends Command {
   name = 'show <name>';
   description = 'show a bit';
   alias = '';
   opts = [];
   
   action([name, ]: [string]): Promise<*> {
-    return show({ name })
+    return getBit({ name })
     .then(bit => ({
       name: bit.name,
       version: bit.bitJson.version,

@@ -24,11 +24,18 @@ export default class BitJson {
   remotes: Remotes;
   hidden: boolean;
 
-  constructor({ dependencies = {}, remotes, hidden = false }:
-  { dependencies?: {[string]: string}, remotes?: Remotes, hidden?: boolean }) {
+  constructor({ dependencies, remotes, env, version, hidden = false }: { 
+    dependencies: {[string]: string},
+    remotes: Object,
+    hidden: boolean,
+    env: string,
+    version: string
+  }) {
     this.dependencies = dependencies;
-    this.remotes = remotes;
+    this.remotes = Remotes.load(remotes);
     this.hidden = hidden;
+    this.env = env;
+    this.version = version;
   }
 
   /**
@@ -101,6 +108,7 @@ export default class BitJson {
       typeof this.dependencies === 'object'
     );
   }
+  
   /**
    * load existing json in root path
    */
@@ -110,8 +118,7 @@ export default class BitJson {
       return fs.readFile(composePath(dirPath, hidden), (err, data) => {
         if (err) return reject(err);
         const file = JSON.parse(data.toString('utf8'));
-        const { dependencies, remotes } = file;
-        return resolve(new BitJson({ dependencies, remotes: Remotes.load(remotes), hidden }));
+        return resolve(new BitJson({ ...file, hidden: true }));
       });
     });
   }

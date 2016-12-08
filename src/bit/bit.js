@@ -42,6 +42,10 @@ export default class Bit extends PartialBit {
     return null;
   }
 
+  build() {
+    console.log(this.bitJson);
+  }
+
   export() {
     return Promise.resolve();
     // this.validate();
