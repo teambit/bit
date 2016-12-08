@@ -45,6 +45,13 @@ export const BIT_IMPL_FILE_NAME = 'impl.js';
 
 export const BIT_SPECS_FILE_NAME = 'spec.js';
 
+export const DEFAULT_TRANSPILER = 'bit-babel';
+
+export const DEFAULT_TESTER = 'bit-jasmin';
+
+export const DEFAULT_BIT_VERSION = '1';
+
+
 /**
  * cache root directory
  */

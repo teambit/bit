@@ -20,6 +20,6 @@ export default class Build extends Command {
   }
 
   report({ name }: any): string {
-    return chalk.bgGreen(`this is build reporting for ${name}`);
+    return chalk.bgBlack(`- finish build cmd`);
   }
 }

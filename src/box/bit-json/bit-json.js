@@ -4,7 +4,7 @@ import fs from 'fs';
 import BitJsonAlreadyExists from '../exceptions/bit-json-already-exists';
 import BitJsonNotFound from '../exceptions/bit-json-not-found';
 import { Remotes } from './remotes';
-import { BIT_JSON, HIDDEN_BIT_JSON } from '../../constants';
+import { BIT_JSON, HIDDEN_BIT_JSON, DEFAULT_TRANSPILER, DEFAULT_TESTER, DEFAULT_BIT_VERSION } from '../../constants';
 
 function composePath(bitPath: string, hidden: ?boolean) {
   return path.join(bitPath, hidden ? HIDDEN_BIT_JSON : BIT_JSON);
@@ -19,22 +19,25 @@ export default class BitJson {
    * dependencies in bit json
    **/
   dependencies: {[string]: string};
-  env: string = 'webpack-jasmin-plugin';
-  version: string = '1';
+  transpiler: string;
+  tester: string;
+  version: string;
   remotes: Remotes;
   hidden: boolean;
 
-  constructor({ dependencies, remotes, env, version, hidden = false }: { 
+  constructor({ dependencies, remotes, transpiler, tester, version, hidden = false }: {
     dependencies: {[string]: string},
     remotes: Object,
     hidden: boolean,
-    env: string,
+    transpiler: string,
+    tester: string,
     version: string
   }) {
     this.dependencies = dependencies;
     this.remotes = Remotes.load(remotes);
     this.hidden = hidden;
-    this.env = env;
+    this.transpiler = transpiler;
+    this.tester = tester;
     this.version = version;
   }
 
@@ -65,7 +68,8 @@ export default class BitJson {
   toPlainObject() {
     return {
       version: this.version,
-      env: this.env,
+      transpiler: this.transpiler,
+      tester: this.tester,
       remotes: this.remotes.toPlainObject(),
       dependencies: this.dependencies
     };
@@ -103,7 +107,7 @@ export default class BitJson {
   validate(): boolean {
     return (
       typeof this.version === 'string' &&
-      typeof this.env === 'string' &&
+      typeof this.transpiler === 'string' &&
       // this.remotes.validate() &&
       typeof this.dependencies === 'object'
     );
@@ -127,8 +131,9 @@ export default class BitJson {
     // @TODO check bit to update default bitJson 
     return new BitJson(
       {
-        env: 'webpack-jasmin-plugin',
-        version: '1',
+        transpiler: DEFAULT_TRANSPILER,
+        tester: DEFAULT_TESTER,
+        version: DEFAULT_BIT_VERSION,
         remotes: new Remotes(),
         hidden,
         dependencies: {}

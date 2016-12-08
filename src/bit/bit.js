@@ -1,5 +1,6 @@
 /** @flow */
 import fs from 'fs-extra';
+import path from 'path';
 import { Impl, Specs } from './sources';
 import BitJson from '../box/bit-json/bit-json';
 import { Box } from '../box';
@@ -8,6 +9,24 @@ import { mkdirp } from '../utils';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 import PartialBit from './partial-bit';
 import type { PartialBitProps } from './partial-bit';
+import loadTranspiler from './environment/load-module';
+
+function saveBuild({ bundle, bitPath }) {  
+  const outputDir = path.join(bitPath, 'dist');
+  const outputFile = path.join(outputDir, 'bundle.js');
+  
+  return new Promise((resolve, reject) => {
+    fs.ensureDir(outputDir, (err) => {
+      if (err) reject(err);
+    });
+
+    fs.writeFile(outputFile, bundle, (err) => {
+      if (err) reject(err);
+    });
+
+    resolve();
+  });
+}
 
 export type BitProps = {
   name: string,
@@ -43,7 +62,14 @@ export default class Bit extends PartialBit {
   }
 
   build() {
-    console.log(this.bitJson);
+    loadTranspiler(this.bitJson.transpiler)
+    .then(({ transpile }) => {
+      const src = this.impl.src;
+    
+      return transpile(src)
+      .then(({ code, map }) => // eslint-disable-line
+        saveBuild({ bundle: code, bitPath: this.getPath() }));
+    });
   }
 
   export() {
