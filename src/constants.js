@@ -80,6 +80,10 @@ export const AUTH_CACHE_FILENAME = path.join(CACHE_ROOT, '.auth.json');
  */
 export const BIT_REGISTRY = '';
 
+export const LATEST = 'latest';
+
+export const LATEST_TESTED_MARK = '*';
+
 /**
  * current bit application version
  */
