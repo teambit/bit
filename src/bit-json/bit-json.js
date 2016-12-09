@@ -1,10 +1,9 @@
 /** @flow */
 import path from 'path';
 import fs from 'fs';
-import BitJsonAlreadyExists from '../exceptions/bit-json-already-exists';
-import BitJsonNotFound from '../exceptions/bit-json-not-found';
-import { Remotes } from './remotes';
-import { BIT_JSON, HIDDEN_BIT_JSON, DEFAULT_TRANSPILER, DEFAULT_TESTER, DEFAULT_BIT_VERSION } from '../../constants';
+import { BitJsonAlreadyExists, BitJsonNotFound } from './exceptions';
+import { Remotes } from '../remotes';
+import { BIT_JSON, HIDDEN_BIT_JSON, DEFAULT_TRANSPILER, DEFAULT_TESTER, DEFAULT_BIT_VERSION } from '../constants';
 
 function composePath(bitPath: string, hidden: ?boolean) {
   return path.join(bitPath, hidden ? HIDDEN_BIT_JSON : BIT_JSON);

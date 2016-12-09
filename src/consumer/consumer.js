@@ -1,13 +1,12 @@
 /** @flow */
-import BoxNotFound from './exceptions/box-not-found';
-import { locateBox, pathHasBox } from './box-locator';
-import { BoxAlreadyExists } from './exceptions';
-import BitJson from './bit-json/bit-json';
+import { locateConsumer, pathHasConsumer } from './consumer-locator';
+import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
+import BitJson from '../bit-json';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
 import { External, Inline } from './drawers';
 
-export type BoxProps = {
+export type ConsumerProps = {
   path: string,
   created?: boolean,
   bitJson?: BitJson,
@@ -15,14 +14,14 @@ export type BoxProps = {
   inline?: Inline
 };
 
-export default class Box {
+export default class Consumer {
   path: string;
   created: boolean;
   bitJson: BitJson;
   external: External;
   inline: Inline;
 
-  constructor({ path, bitJson, external, inline, created = false }: BoxProps) {
+  constructor({ path, bitJson, external, inline, created = false }: ConsumerProps) {
     this.path = path;
     this.bitJson = bitJson || BitJson.create({ hidden: false });
     this.external = external || new External(this);
@@ -30,17 +29,17 @@ export default class Box {
     this.created = created;
   }
 
-  write(): Promise<Box> {
+  write(): Promise<Consumer> {
     const self = this;
     const createInlineDir = () => self.inline.ensureDir();
     const createExternalDir = () => self.external.ensureDir();
-    const returnBox = () => this;
+    const returnConsumer = () => this;
 
     return this.bitJson
       .write({ dirPath: this.path })
       .then(createInlineDir)
       .then(createExternalDir)
-      .then(returnBox);
+      .then(returnConsumer);
   }
 
   /**
@@ -74,8 +73,8 @@ export default class Box {
     return bit.erase();
   }
 
-  createBox(name: string): Promise<Box> {
-    return Box.create(name);
+  createBox(name: string): Promise<Consumer> {
+    // return Box.create(name);
   }
   
   /**
@@ -85,17 +84,17 @@ export default class Box {
     return inline ? this.inline.list() : this.external.list();
   }
 
-  static create(path: string = process.cwd()): Box {
-    if (pathHasBox(path)) throw new BoxAlreadyExists();
-    return new Box({ path, created: true });
+  static create(path: string = process.cwd()): Consumer {
+    if (pathHasConsumer(path)) throw new ConsumerAlreadyExists();
+    return new Consumer({ path, created: true });
   }
 
-  static load(currentPath: string): Promise<Box> {
-    const path = locateBox(currentPath);
-    if (!path) throw new BoxNotFound();
+  static load(currentPath: string): Promise<Consumer> {
+    const path = locateConsumer(currentPath);
+    if (!path) throw new ConsumerNotFound();
     return BitJson.load(path)
     .then(bitJson =>
-      new Box({
+      new Consumer({
         path,
         bitJson
       })

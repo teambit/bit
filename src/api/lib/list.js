@@ -1,8 +1,8 @@
 /** @flow */
-import { loadBox } from '../../box';
+import { loadConsumer } from '../../consumer';
 
 export default function list({ inline }: any): Promise<string[]> {
-  return loadBox().then(box => 
+  return loadConsumer().then(box => 
     box.list({ inline })
   );
 }

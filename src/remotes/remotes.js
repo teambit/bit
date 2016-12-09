@@ -1,7 +1,7 @@
 /** @flow */
 import Remote from './remote';
-import { forEach, prependBang } from '../../../utils';
-import { PrimaryOverloaded } from '../exceptions';
+import { forEach, prependBang } from '../utils';
+import { PrimaryOverloaded } from './exceptions';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {

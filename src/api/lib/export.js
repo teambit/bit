@@ -1,8 +1,8 @@
 /** @flow */
-import { loadBox } from '../../box';
+import { loadConsumer } from '../../consumer';
 
 export default function exportAction({ name, remote }: { name: string, remote: string}) {
-  loadBox().then((box) => {
+  loadConsumer().then((box) => {
     console.log(box);
   });
 }

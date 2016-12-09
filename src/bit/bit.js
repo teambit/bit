@@ -2,9 +2,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { Impl, Specs } from './sources';
-import BitJson from '../box/bit-json/bit-json';
-import { Box } from '../box';
-import { Drawer } from '../box/drawers';
+import BitJson from '../bit-json';
+import { Consumer } from '../consumer';
+import { Drawer } from '../consumer/drawers';
 import { mkdirp } from '../utils';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 import PartialBit from './partial-bit';
@@ -93,8 +93,8 @@ export default class Bit extends PartialBit {
     });
   }
 
-  static load(name: string, box: Box): Promise<Bit> {  
-    return this.resolveDrawer(name, box)
+  static load(name: string, consumer: Consumer): Promise<Bit> {  
+    return this.resolveDrawer(name, consumer)
       .then((drawer) => {
         return Bit.create({ name, drawer });
       });

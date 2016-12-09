@@ -1,9 +1,9 @@
 
 /** @flow */
-import { loadBox } from '../../box';
+import { loadConsumer } from '../../consumer';
 
 export default function remove(name: string, { inline }: { inline: boolean }): Promise<boolean> {
-  return loadBox().then(box =>
+  return loadConsumer().then(box =>
     box.removeBit({ name }, { inline })
   );
 }

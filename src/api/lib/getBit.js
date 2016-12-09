@@ -1,9 +1,9 @@
 /** @flow */
-import { loadBox } from '../../box';
+import { loadConsumer } from '../../consumer';
 import Bit from '../../bit';
 
 export default function getBit({ name }: { name: string }): Promise<Bit> {
-  return loadBox().then(box => 
+  return loadConsumer().then(box => 
     box.get(name)
   );
 }

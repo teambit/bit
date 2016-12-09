@@ -1,5 +1,5 @@
 /** @flow */
-import { loadBox } from '../../box';
+import { loadConsumer } from '../../consumer';
 
 export type StatusRes = {
   name: string,
@@ -7,7 +7,7 @@ export type StatusRes = {
 }
 
 export default function status(): Promise<StatusRes[]> {
-  return loadBox().then(box => 
+  return loadConsumer().then(box => 
     box.inline.list()
     .then(bitNameList => Promise.all(
       bitNameList.map(

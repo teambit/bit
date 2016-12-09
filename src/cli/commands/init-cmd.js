@@ -7,7 +7,7 @@ const chalk = require('chalk');
 
 export default class Init extends Command {
   name = 'init [path]';
-  description = 'initialize an empty bit box';
+  description = 'initialize an empty bit workspace';
   alias = '';
   opts = [];
 
@@ -22,7 +22,7 @@ export default class Init extends Command {
   }
 
   report({ created }: any) {
-    if (!created) return `${chalk.grey('successfully reinitialized a bit box.')}`;
-    return `${chalk.green('successfully initialized an empty bit box.')}`;
+    if (!created) return `${chalk.grey('successfully reinitialized a bit workspace.')}`;
+    return `${chalk.green('successfully initialized an empty bit workspace.')}`;
   }
 }

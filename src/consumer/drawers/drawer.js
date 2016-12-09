@@ -2,7 +2,7 @@
 import * as path from 'path';
 import glob from 'glob';
 import fs from 'fs';
-import Box from '../box';
+import Consumer from '../consumer';
 import { mkdirp } from '../../utils';
 import { BIT_DIR_NAME } from '../../constants';
 
@@ -11,14 +11,14 @@ function composePath(pathPart: string) {
 }
 
 export default class Drawer {
-  box: Box;
+  consumer: Consumer;
 
-  constructor(box: Box) {
-    this.box = box;
+  constructor(consumer: Consumer) {
+    this.consumer = consumer;
   }
   
   getPath() {
-    return composePath(this.box.path);
+    return composePath(this.consumer.path);
   }
 
   list() {

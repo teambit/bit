@@ -2,9 +2,9 @@
 import * as path from 'path';
 import fs from 'fs-extra';
 import { Impl, Specs } from './sources';
-import BitJson from '../box/bit-json/bit-json';
-import { Box } from '../box';
-import { Drawer } from '../box/drawers';
+import BitJson from '../bit-json';
+import { Consumer } from '../consumer';
+import { Drawer } from '../consumer/drawers';
 import BitNotFoundException from './exceptions/bit-not-found';
 import Bit from './bit';
 
@@ -54,22 +54,22 @@ export default class PartialBit {
     );
   }
 
-  static resolveDrawer(name: string, box: Box): Promise<Drawer> {
+  static resolveDrawer(name: string, consumer: Consumer): Promise<Drawer> {
     return new Promise((resolve, reject) => {
-      box.inline.includes(name)
+      consumer.inline.includes(name)
         .then((isInline) => {
-          if (isInline) return resolve(box.inline);
-          return box.external.includes(name)
+          if (isInline) return resolve(consumer.inline);
+          return consumer.external.includes(name)
             .then((isExternal) => {
-              if (isExternal) return resolve(box.external);
+              if (isExternal) return resolve(consumer.external);
               return reject(new Error('bit not found error'));
             });
         });
     });
   }
 
-  static load(name: string, box: Box): Promise<PartialBit> {  
-    return this.resolveDrawer(name, box)
+  static load(name: string, consumer: Consumer): Promise<PartialBit> {  
+    return this.resolveDrawer(name, consumer)
       .then((drawer) => {
         return new PartialBit({ name, drawer });
       });

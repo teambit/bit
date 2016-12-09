@@ -1,6 +1,6 @@
 /** @flow */
-import { Box } from '../../box';
+import { Consumer } from '../../consumer';
 
-export default function init(absPath: string): Promise<Box> {
-  return Box.create(absPath).write();
+export default function init(absPath: string): Promise<Consumer> {
+  return Consumer.create(absPath).write();
 }

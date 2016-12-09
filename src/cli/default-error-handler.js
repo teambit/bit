@@ -1,6 +1,6 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
-import BoxNotFound from '../box/exceptions/box-not-found';
+import ConsumerNotFound from '../consumer/exceptions/consumer-not-found';
 import BitNotFound from '../bit/exceptions/bit-not-found';
 import BitAlreadyExistInternaly from '../bit/exceptions/bit-already-exist-internaly';
 import BitAlreadyExistExternaly from '../bit/exceptions/bit-already-exist-externaly';
@@ -8,7 +8,7 @@ import BitAlreadyExistExternaly from '../bit/exceptions/bit-already-exist-extern
 const chalk = require('chalk');
 
 const errorsMap: [[Error, (err: Error) => string]] = [ 
-  [ BoxNotFound, () => 'box not found. to create a new box, please use `bit init`' ],
+  [ ConsumerNotFound, () => 'box not found. to create a new box, please use `bit init`' ],
   [ BitNotFound, () => 'bit not found. to create a new bit, please use `bit create {bitName}`' ],
   [ BitAlreadyExistInternaly, err => `bit ${err.bitName} already exists!` ],
   [ BitAlreadyExistExternaly, err => `bit ${err.bitName} already exists in the external library try "bit modify ${err.bitName}" to modify the current bit or "bit create -f ${err.bitName}"!`]   

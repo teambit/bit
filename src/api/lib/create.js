@@ -1,8 +1,8 @@
 /** @flow */
-import { loadBox } from '../../box';
+import { loadConsumer } from '../../consumer';
 
 export default function create(name: string): Promise<boolean> {
-  return loadBox().then(box =>  
-    box.createBit({ name })
+  return loadConsumer().then(consumer =>  
+    consumer.createBit({ name })
   );
 }

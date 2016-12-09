@@ -1,11 +1,11 @@
-import BoxNotFound from './box-not-found';
-import BoxAlreadyExists from './box-already-exists';
+import ConsumerNotFound from './consumer-not-found';
+import ConsumerAlreadyExists from './consumer-already-exists';
 import BitJsonAlreadyExists from './bit-json-already-exists';
 import BitJsonNotFound from './bit-json-not-found';
 
 export { 
-  BoxNotFound, 
-  BoxAlreadyExists, 
+  ConsumerNotFound, 
+  ConsumerAlreadyExists, 
   BitJsonNotFound, 
   BitJsonAlreadyExists 
 };
