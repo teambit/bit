@@ -1,4 +1,12 @@
 {
+  "remotes": {
+    "wix": "ssh://bit@bit.wix.com:user"
+  },
+
   "dependencies": {
+    "ranm8/fs/createDirectory": "*1",
+    "@wix/user/getUser": "3",
+    "ranm8/isString": "latest",
+    "wix/foreach": "*2"
   }
 }

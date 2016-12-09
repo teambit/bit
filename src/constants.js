@@ -89,6 +89,8 @@ export const BIT_REGISTRY = '';
 
 export const LATEST = 'latest';
 
+export const DEPENDENCY_DELIMITER = '/';
+
 export const LATEST_TESTED_MARK = '*';
 
 /**

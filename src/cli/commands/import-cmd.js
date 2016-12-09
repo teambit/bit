@@ -8,7 +8,9 @@ export default class Import extends Command {
   name = 'import <name> [remote]';
   description = 'import a bit';
   alias = 'i';
-  opts = [];
+  opts = [
+    ['S', 'save', 'save into bit.json']
+  ];
 
   action([name]: [string]): Promise<any> {
     return new Promise((resolve) => {

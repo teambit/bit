@@ -33,4 +33,13 @@ export default class Version {
   static parse(versionStr: string): Version {
     return versionParser(versionStr);
   }
+
+  static validate(versionStr: string): boolean {
+    try {
+      versionParser(versionStr);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
 }

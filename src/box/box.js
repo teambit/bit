@@ -73,6 +73,10 @@ export default class Box {
     const bit = new PartialBit({ ...props, drawer: inline ? this.inline: this.external });
     return bit.erase();
   }
+
+  createBox(name: string): Promise<Box> {
+    return Box.create(name);
+  }
   
   /**
    * list the bits in the external directory
