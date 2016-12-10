@@ -17,6 +17,16 @@ export default class SSH {
     });
   }
 
+  push(pack: Buffer, path: string) {
+    return new Promise((resolve, reject) => {
+      const writer = this.connection.put(path);
+      writer
+        .on('close', resolve)
+        .on('error', reject)
+        .pipe(pack);
+    });
+  }
+
   close() {
     this.connection.end();
   }

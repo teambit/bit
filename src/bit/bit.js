@@ -1,7 +1,8 @@
 /** @flow */
 import fs from 'fs-extra';
-import { Pack } from 'tar';
 import path from 'path';
+import * as bitCache from '../cache';
+import { pack } from '../tar';
 import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
 import { Consumer } from '../consumer';
@@ -79,8 +80,17 @@ export default class Bit extends PartialBit {
     return remote.push(this);
   }
 
+  composeTarFileName() {
+    return `${this.name}_${this.bitJson.version}.tar`;
+  }
+
   toTar() {
-    Pack();
+    const bitPath = this.getPath();
+    return bitCache.get(this)
+      .catch((err) => {
+        if (err.code !== 'ENOENT') throw err;
+        return bitCache.set(this, pack(bitPath)); 
+      });
   }
 
   write(): Promise<boolean> {
