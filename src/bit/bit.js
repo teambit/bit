@@ -1,5 +1,6 @@
 /** @flow */
 import fs from 'fs-extra';
+import { Pack } from 'tar';
 import path from 'path';
 import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
@@ -8,6 +9,7 @@ import { Drawer } from '../consumer/drawers';
 import { mkdirp } from '../utils';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 import PartialBit from './partial-bit';
+import { Remote } from '../remotes';
 import type { PartialBitProps } from './partial-bit';
 import loadTranspiler from './environment/load-module';
 
@@ -72,11 +74,13 @@ export default class Bit extends PartialBit {
     });
   }
 
-  export() {
-    return Promise.resolve();
-    // this.validate();
-    // this.push();
-    // @TODO
+  export(remote: Remote) {
+    this.validate();
+    return remote.push(this);
+  }
+
+  toTar() {
+    Pack();
   }
 
   write(): Promise<boolean> {
@@ -96,7 +100,10 @@ export default class Bit extends PartialBit {
   static load(name: string, consumer: Consumer): Promise<Bit> {  
     return this.resolveDrawer(name, consumer)
       .then((drawer) => {
-        return Bit.create({ name, drawer });
+        return Bit.create({
+          name,
+          drawer
+        });
       });
   }
 

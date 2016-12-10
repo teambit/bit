@@ -1,6 +1,7 @@
 /** @flow */
 import path from 'path';
 import fs from 'fs';
+import Dependencies from '../dependencies';
 import { BitJsonAlreadyExists, BitJsonNotFound } from './exceptions';
 import { Remotes } from '../remotes';
 import { BIT_JSON, HIDDEN_BIT_JSON, DEFAULT_TRANSPILER, DEFAULT_TESTER, DEFAULT_BIT_VERSION } from '../constants';
@@ -112,6 +113,10 @@ export default class BitJson {
     );
   }
   
+  // getRemote(name: string) {
+    // return this.remotes.get(name);
+  // }
+
   /**
    * load existing json in root path
    */
@@ -121,6 +126,7 @@ export default class BitJson {
       return fs.readFile(composePath(dirPath, hidden), (err, data) => {
         if (err) return reject(err);
         const file = JSON.parse(data.toString('utf8'));
+        if (file.dependencies) file.dependencies = Dependencies.load(file.dependencies); 
         return resolve(new BitJson({ ...file, hidden: true }));
       });
     });

@@ -1,5 +1,7 @@
 /** @flow */
+import Bit from '../bit';
 import { contains, isBitUrl, cleanBang } from '../utils';
+import { connect } from '../network';
 import { InvalidRemote } from './exceptions';
 
 /**
@@ -22,6 +24,14 @@ export default class Remote {
 
   validate() {
     if (!isBitUrl(this.host)) throw new InvalidRemote();
+  }
+
+  connect() {
+  }
+
+  push(bit: Bit) {
+    const network = connect(this.host);
+    network.push(bit.toTar());
   }
 
   static load(alias: string, host: string): Remote {

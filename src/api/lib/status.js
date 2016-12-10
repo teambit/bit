@@ -7,12 +7,12 @@ export type StatusRes = {
 }
 
 export default function status(): Promise<StatusRes[]> {
-  return loadConsumer().then(box => 
-    box.inline.list()
+  return loadConsumer().then(consumer => 
+    consumer.inline.list()
     .then(bitNameList => Promise.all(
       bitNameList.map(
         bitName => 
-          box.get(bitName)
+          consumer.get(bitName)
           .then(bit => ({ 
             name: bit.name,
             valid: !bit.validate()

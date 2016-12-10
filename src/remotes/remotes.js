@@ -1,7 +1,7 @@
 /** @flow */
 import Remote from './remote';
 import { forEach, prependBang } from '../utils';
-import { PrimaryOverloaded } from './exceptions';
+import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -12,6 +12,12 @@ export default class Remotes extends Map<string, Remote> {
     const primary = this.values.filter(remote => remote.primary);
     if (primary.length > 1) throw new PrimaryOverloaded();
     return this.forEach(remote => remote.validate());
+  }
+
+  get(name: string): Remote {
+    const remote = super.get(name);
+    if (!remote) throw new RemoteNotFound();
+    return remote;
   }
 
   toPlainObject() {

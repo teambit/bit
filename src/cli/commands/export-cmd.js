@@ -10,7 +10,7 @@ export default class Export extends Command {
   opts = [];
 
   action([name, remote]: [string]): Promise<any> {
-    return exportAction({ name, remote }).then(() => ({ name }));
+    return exportAction({ name, remote });
   }
 
   report({ name }: any): string {

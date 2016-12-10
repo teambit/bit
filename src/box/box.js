@@ -6,13 +6,12 @@ import Bit from '../bit';
  */
 export default class Box {
   name: string;
-  bits: Bit[];
+
+  get(name: string): Bit {
+
+  }
 
   static create() {
     
-  }
-
-  static load() {
-
   }
 }

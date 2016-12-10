@@ -77,6 +77,13 @@ export default class Consumer {
     // return Box.create(name);
   }
   
+  export(name: string, remoteName: string) {
+    const remote = this.bitJson.remotes.get(remoteName);
+    return this.get(name).then((bit) => {
+      return bit.export(remote);
+    });
+  }
+
   /**
    * list the bits in the external directory
    **/
