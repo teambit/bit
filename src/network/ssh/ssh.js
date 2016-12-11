@@ -32,10 +32,8 @@ export default class SSH {
   }
  
   static connect(host: string): SSH {
-    const con = sequest.connect('ranmizrahi@127.0.0.1', {
-      // publicKey: keyGetter(),
-      username: 'ranmizrahi',
-      password: 'a6710462'
+    const con = sequest.connect(host, {
+      publicKey: keyGetter(),
     });
 
     // con.pipe(process.stdout);

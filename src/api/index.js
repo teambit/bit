@@ -5,6 +5,7 @@ import list from './lib/list';
 import exportAction from './lib/export';
 import status from './lib/status';
 import getBit from './lib/get-bit';
+import validatePush from './lib/validate-push';
 
 export {
   init,
@@ -13,5 +14,6 @@ export {
   list,
   exportAction,
   status,
-  getBit
+  getBit,
+  validatePush
 };

@@ -18,6 +18,7 @@ import Show from './commands/show-cmd';
 import Update from './commands/update-cmd';
 import Status from './commands/status-cmd';
 import Build from './commands/build-cmd';
+import ValidatePush from './commands/validate-push-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -37,6 +38,7 @@ export default function registerCommands(): CommandRegistrar {
     new Search(),
     new Test(),
     new Update(),
-    new Build()
+    new Build(),
+    new ValidatePush()
   ]);
 }
