@@ -9,14 +9,12 @@ function transpile(src) {
     minified: false,
   };
 
-  return new Promise((resolve, reject) => {
-    try {
-      const { code, map } = babel.transform(src, options);
-      resolve({ code, mappings: map.mappings });
-    } catch (e) {
-      reject(e);
-    }
-  });
+  try {
+    const { code, map } = babel.transform(src, options);
+    return { code, mappings: map.mappings };
+  } catch (e) {
+    throw e;
+  }
 }
 
 module.exports = {

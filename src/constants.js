@@ -58,6 +58,16 @@ export const DEFAULT_BIT_VERSION = '1';
 export const CACHE_ROOT = getCacheDirectory();
 
 /**
+ * global transpilers directory
+ */
+export const TRANSPILERS_DIR = path.join(CACHE_ROOT, 'transpilers');
+
+/**
+ * global testers directory
+ */
+export const TESTERS_DIR = path.join(CACHE_ROOT, 'testers');
+
+/**
  * modules cache directory
  */
 export const MODULES_CACHE_DIR = path.join(CACHE_ROOT, 'modules');
