@@ -12,7 +12,7 @@ import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-i
 import PartialBit from './partial-bit';
 import { Remote } from '../remotes';
 import type { PartialBitProps } from './partial-bit';
-import loadTranspiler from './environment/load-module';
+import loadTranspiler from './environment/load-transpiler';
 
 function saveBuild({ bundle, bitPath }) {  
   const outputDir = path.join(bitPath, 'dist');
@@ -65,12 +65,11 @@ export default class Bit extends PartialBit {
   }
 
   build() {
-    loadTranspiler(this.bitJson.transpiler)
+    return loadTranspiler(this.bitJson.transpiler)
     .then(({ transpile }) => {
       const src = this.impl.src;
-      return transpile(src)
-      .then(({ code, map }) => // eslint-disable-line
-        saveBuild({ bundle: code, bitPath: this.getPath() }));
+      const { code, map } = transpile(src); // eslint-disable-line
+      return saveBuild({ bundle: code, bitPath: this.getPath() });
     });
   }
 

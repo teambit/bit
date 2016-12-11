@@ -20,6 +20,7 @@ import Status from './commands/status-cmd';
 import Build from './commands/build-cmd';
 import ValidatePush from './commands/validate-push-cmd';
 import Install from './commands/install-cmd';
+import Uninstall from './commands/uninstall-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -41,6 +42,7 @@ export default function registerCommands(): CommandRegistrar {
     new Update(),
     new Build(),
     new ValidatePush(),
-    new Install()
+    new Install(),
+    new Uninstall()
   ]);
 }
