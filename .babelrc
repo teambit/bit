@@ -1,0 +1,24 @@
+{
+  "only": "*.js",
+  "env": {
+    "pre-node5": {
+      "presets": ["es2015-node4"],
+      "plugins": [
+        ["transform-inline-imports-commonjs"],
+        ["transform-flow-strip-types"]      
+      ]
+    },
+    "test": {
+      "presets": ["es2015-node4"],
+      "plugins": [
+        ["transform-inline-imports-commonjs"],
+        ["transform-flow-strip-types"]
+      ]
+    }
+  },
+  "presets": ["node5", "stage-0"],
+  "plugins": [
+    ["transform-inline-imports-commonjs"],
+    ["transform-flow-strip-types"]
+  ]
+}
