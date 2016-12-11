@@ -68,7 +68,6 @@ export default class Bit extends PartialBit {
     loadTranspiler(this.bitJson.transpiler)
     .then(({ transpile }) => {
       const src = this.impl.src;
-    
       return transpile(src)
       .then(({ code, map }) => // eslint-disable-line
         saveBuild({ bundle: code, bitPath: this.getPath() }));

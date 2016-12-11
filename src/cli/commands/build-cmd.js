@@ -1,6 +1,6 @@
 /** @flow */
 import Command from '../command';
-import { getBit } from '../../api';
+import { build } from '../../api';
 
 const chalk = require('chalk');
 
@@ -12,14 +12,10 @@ export default class Build extends Command {
   opts = [];
   
   action([name, ]: [string]): Promise<*> {
-    return getBit({ name })
-    .then((bit) => {
-      bit.build();
-      return { name: bit.name };
-    });
+    return build({ name });
   }
 
-  report({ name }: any): string {
+  report(): string {
     return chalk.bgBlack(`- finish build cmd`);
   }
 }
