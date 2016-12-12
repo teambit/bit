@@ -15,8 +15,10 @@ import isBitUrl from './is-bit-url';
 import bufferToReadStream from './buffer-to-read-stream';
 import toBase64 from './to-base64';
 import fromBase64 from './from-base64';
+import parseSSHUrl from './parse-ssh-url';
 
 export {
+  parseSSHUrl,
   toBase64,
   fromBase64,
   resolveBoolean,

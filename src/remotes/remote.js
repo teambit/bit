@@ -26,9 +26,6 @@ export default class Remote {
     if (!isBitUrl(this.host)) throw new InvalidRemote();
   }
 
-  connect() {
-  }
-
   push(bit: Bit) {
     const network = connect(this.host);
     return network.push(bit);
