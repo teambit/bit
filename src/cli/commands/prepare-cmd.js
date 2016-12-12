@@ -13,7 +13,7 @@ export default class Prepare extends Command {
   opts = [];
 
   action([name, json]: [string], opts: {[string]: boolean}): Promise<*> {
-    return prepare({ fromBase64(name), fromBase64(json) });
+    return prepare({ name: fromBase64(name), json: fromBase64(json) });
   }
 
   report({ path }: any): string {
