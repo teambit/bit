@@ -7,7 +7,9 @@ export default class Export extends Command {
   name = 'export <name> [remote]';
   description = 'export a bit';
   alias = 'e';
-  opts = [];
+  opts = [
+    ['i', 'identity-file', 'path to identity file']
+  ];
 
   action([name, remote]: [string]): Promise<any> {
     return exportAction({ name, remote });
