@@ -10,7 +10,9 @@ import cleanChar from './clean-char';
 import cleanBang from './clean-bang';
 import filter from './filter';
 import empty from './is-empty';
+import { propogateUntil, pathHas } from './fs-propogate-until'; 
 import isBitUrl from './is-bit-url';
+import bufferToReadStream from './buffer-to-read-stream';
 
 export {
   resolveBoolean,
@@ -24,5 +26,8 @@ export {
   hasOwnProperty,
   contains,
   isBitUrl,
-  mapObject
+  mapObject,
+  propogateUntil,
+  pathHas,
+  bufferToReadStream
 };

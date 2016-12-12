@@ -1,20 +1,25 @@
+/** 
+ * @flow
+ * @deprecated
+ * @TODO deprecated and should be removed from here and use fs-propogate-until instead...
+*/
 import * as pathlib from 'path';
 import * as fs from 'fs';
 import { BIT_JSON } from '../constants';
 
 export function composePath(path: string, inPath: string) {
-  return pathlib.join(composeContainerPath(path), inPath); 
+  return pathlib.join(composeConsumerPath(path), inPath); 
 }
 
-export function composeContainerPath(path: string) {
+export function composeConsumerPath(path: string) {
   return pathlib.join(path, BIT_JSON);
 }
 
 /**
- * determine whether given path has a box
+ * determine whether given path has a consumer
  */
 export function pathHasConsumer(path: string) {
-  return fs.existsSync(composeContainerPath(path));
+  return fs.existsSync(composeConsumerPath(path));
 }
 
 /**

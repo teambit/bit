@@ -31,10 +31,7 @@ export default class Remote {
 
   push(bit: Bit) {
     const network = connect(this.host);
-    network.get('validate-push', bit);
-    return bit.toTar().then((buffer: Buffer) => {
-      return network.push(buffer, network.get());
-    });
+    return network.push(bit);
   }
 
   static load(alias: string, host: string): Remote {

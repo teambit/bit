@@ -1,5 +1,7 @@
 /** @flow */
 import keyGetter from './public-key-getter';
+import Bit from '../../bit';
+import { bufferToReadStream } from '../../utils';
 
 const sequest = require('sequest');
 
@@ -11,19 +13,36 @@ export default class SSH {
     this.connection = connection;
   }
 
-  get(commandName: string): Promise<any> {
+  get(commandName: string, ...args: string[]): Promise<any> {
+    function serialize() {
+      return args.join(' ');
+    }
+
     return new Promise((resolve, reject) => {
-      this.connection('ls', (e, d) => resolve(d));
+      // const cmd = `bit ${commandName} ${serialize()}`;
+      this.connection('/bin/ls', function (err, res, o) {
+        console.log(err, res);
+        if (err) return reject(err);
+        return resolve(res);
+      });
     });
   }
 
-  push(pack: Buffer, path: string) {
+  putFile(path: string, buffer: Buffer) {
     return new Promise((resolve, reject) => {
       const writer = this.connection.put(path);
       writer
         .on('close', resolve)
         .on('error', reject)
-        .pipe(pack);
+        .pipe(bufferToReadStream(buffer));
+    });
+  }
+
+  push(bit: Bit) {
+    return bit.toTar().then((tarBuffer: Buffer) => {
+      return this.get('prepare', bit.name, bit.bitJson.toJson(false))
+        .then(path => this.putFile(path, tarBuffer))
+        .then(() => this.get('process'));
     });
   }
 
@@ -36,7 +55,6 @@ export default class SSH {
       publicKey: keyGetter(),
     });
 
-    // con.pipe(process.stdout);
     return new SSH(con);
   }
 }

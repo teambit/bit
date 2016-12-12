@@ -18,14 +18,16 @@ import Show from './commands/show-cmd';
 import Update from './commands/update-cmd';
 import Status from './commands/status-cmd';
 import Build from './commands/build-cmd';
-import ValidatePush from './commands/validate-push-cmd';
 import Install from './commands/install-cmd';
 import Uninstall from './commands/uninstall-cmd';
+import Prepare from './commands/prepare-cmd';
+import Scope from './commands/scope-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
     new Init(),
     new Box(),
+    new Scope(),
     new Create(),
     new List(),
     new Modify(),
@@ -41,8 +43,8 @@ export default function registerCommands(): CommandRegistrar {
     new Test(),
     new Update(),
     new Build(),
-    new ValidatePush(),
     new Install(),
-    new Uninstall()
+    new Uninstall(),
+    new Prepare()
   ]);
 }

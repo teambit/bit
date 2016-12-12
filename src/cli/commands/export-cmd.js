@@ -13,8 +13,9 @@ export default class Export extends Command {
     return exportAction({ name, remote });
   }
 
-  report({ name }: any): string {
-    return chalk.green(`exported bit "${name}" from inline to external`);
+  report(): string {
+    return 'hi';
+    // return chalk.green(`exported bit "${name}" from inline to external`);
   }
 
 }

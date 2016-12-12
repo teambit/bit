@@ -4,6 +4,16 @@ import defaultHandleError from './default-error-handler';
 
 const commander = require('commander');
 
+function logAndExit(msg: string) {
+  console.log(msg);
+  process.exit();
+}
+
+function logErrAndExit(msg: string) {
+  console.error(msg);
+  process.exit(1);
+}
+
 export default class CommandRegistrar {
   version: string;
   usage: string;
@@ -52,11 +62,11 @@ export default class CommandRegistrar {
       concrete.action((...args) => {
         const opts = getOpts(concrete, command.opts);
         command.action(args.slice(0, args.length - 1), opts)
-          .then(data => console.log(command.report(data)))
+          .then(data => logAndExit(command.report(data)))
           .catch((err) => {
             const errorHandled = defaultHandleError(err) || command.handleError(err);
-            if (errorHandled) console.log(errorHandled);
-            else console.error(err);
+            if (errorHandled) logAndExit(errorHandled);
+            else logErrAndExit(err);
           });
       });
     }

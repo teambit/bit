@@ -82,6 +82,10 @@ export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
  */
 export const GLOBAL_BIT_CACHE = path.join(CACHE_ROOT, 'bits');
 
+export const BIT_HIDDEN_CONTAINER_DIRNAME = '.bit';
+
+export const BIT_CONTAINER_FOLDERS = ['sources'];
+
 /**
  * modules cache filename
  */
@@ -100,6 +104,12 @@ export const BIT_REGISTRY = '';
 export const LATEST = 'latest';
 
 export const DEPENDENCY_DELIMITER = '/';
+
+export const BIT_SOURCES_DIRNAME = 'source';
+
+export const BIT_TMP_DIRNAME = 'tmp';
+
+export const BIT_CACHE_DIRNAME = 'cache';
 
 export const LATEST_TESTED_MARK = '*';
 

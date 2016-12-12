@@ -5,8 +5,9 @@ import list from './lib/list';
 import exportAction from './lib/export';
 import status from './lib/status';
 import getBit from './lib/get-bit';
-import validatePush from './lib/validate-push';
 import build from './lib/build';
+import prepare from './lib/prepare';
+import initScope from './lib/scope-init';
 
 export {
   init,
@@ -16,6 +17,7 @@ export {
   exportAction,
   status,
   getBit,
-  validatePush,
-  build
+  build,
+  prepare,
+  initScope
 };

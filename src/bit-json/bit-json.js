@@ -34,7 +34,7 @@ export default class BitJson {
     version: string
   }) {
     this.dependencies = dependencies;
-    this.remotes = Remotes.load(remotes);
+    this.remotes = remotes;
     this.hidden = hidden;
     this.transpiler = transpiler;
     this.tester = tester;
@@ -78,7 +78,8 @@ export default class BitJson {
   /**
    * convert to json
    */  
-  toJson() {
+  toJson(readable: boolean = true) {
+    if (!readable) return JSON.stringify(this.toPlainObject());
     return JSON.stringify(this.toPlainObject(), null, 4);
   }
 
@@ -117,6 +118,13 @@ export default class BitJson {
     // return this.remotes.get(name);
   // }
 
+  static loadFromString(jsonStr: string) {
+    const json = JSON.parse(jsonStr);
+    if (json.dependencies) json.dependencies = Dependencies.load(json.dependencies);
+    if (json.remotes) json.remotes = Remotes.load(json.remotes); 
+    return new BitJson({ ...json, hidden: true });
+  }
+
   /**
    * load existing json in root path
    */
@@ -126,7 +134,8 @@ export default class BitJson {
       return fs.readFile(composePath(dirPath, hidden), (err, data) => {
         if (err) return reject(err);
         const file = JSON.parse(data.toString('utf8'));
-        if (file.dependencies) file.dependencies = Dependencies.load(file.dependencies); 
+        if (file.dependencies) file.dependencies = Dependencies.load(file.dependencies);
+        if (file.remotes) file.remotes = Remotes.load(file.remotes);  
         return resolve(new BitJson({ ...file, hidden: true }));
       });
     });
