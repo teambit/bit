@@ -1,15 +1,13 @@
-"use strict";
+const path = require('path');
+const { pathHasRepo } = require('./repo-utils');
 
-var path = require("path");
-var pathHasRepo = require("./repo-utils").pathHasRepo;
+const locateRepo = (absPath) => {
+  const buildPropogationPaths = () => {
+    const paths = [];
+    const pathParts = absPath.split(path.sep);
 
-var locateRepo = function (absPath) {
-  var buildPropogationPaths = function () {
-    var paths = [];
-    var pathParts = absPath.split(path.sep);
-
-    pathParts.forEach(function (val, index) {
-      var part = pathParts.slice(0, index).join("/");
+    pathParts.forEach((val, index) => {
+      const part = pathParts.slice(0, index).join('/');
       if (!part) { return; }
       paths.push(part);
     });
@@ -17,9 +15,9 @@ var locateRepo = function (absPath) {
     return paths.reverse();
   };
 
-  if (pathHasRepo(absPath)) { return absPath;}
-  var searchPaths = buildPropogationPaths();
-  return searchPaths.find(function (searchPath) { return pathHasRepo(searchPath); });
+  if (pathHasRepo(absPath)) return absPath;
+  const searchPaths = buildPropogationPaths();
+  return searchPaths.find(searchPath => pathHasRepo(searchPath));
 };
 
 module.exports = locateRepo;

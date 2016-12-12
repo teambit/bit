@@ -1,26 +1,21 @@
-"use strict";
-var path = require("path");
-var constants = require("../constants");
-var loadLocalBitJson = require("../bit/load-local-bit-json");
+const path = require('path');
+const constants = require('../constants');
+const loadLocalBitJson = require('../bit/load-local-bit-json');
 
-var TRANSPILERS_DIR = constants.TRANSPILERS_DIR;
+const TRANSPILERS_DIR = constants.TRANSPILERS_DIR;
 
-var loadBitTranspiler = function (bitPath) {
-  var getBitTranspilerName = function (bitJson) {
-    return bitJson.transpiler;
-  };
+const loadBitTranspiler = (bitPath) => {
+  const getBitTranspilerName = bitJson => bitJson.transpiler;
 
-  var transpilerName = getBitTranspilerName(loadLocalBitJson(bitPath));
+  const transpilerName = getBitTranspilerName(loadLocalBitJson(bitPath));
   if (!transpilerName) {
     return null;
   }
 
   try {
-    return require(path.join(TRANSPILERS_DIR, transpilerName));
+    return require(path.join(TRANSPILERS_DIR, transpilerName)); // eslint-disable-line
   } catch (e) {
-    throw new Error("The transpiler \"" + transpilerName +
-    "\" is not exists, please use \"bit install " + transpilerName +
-    "\" or change the transpiler name in the \".bit.json\" file.");
+    throw new Error(`The transpiler "${transpilerName}" is not exists, please use "bit install ${transpilerName}" or change the transpiler name in the ".bit.json" file.`);
   }
 };
 

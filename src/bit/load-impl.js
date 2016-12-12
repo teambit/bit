@@ -1,36 +1,32 @@
-"use strict";
+const path = require('path');
+const fs = require('fs');
+const loadBitTranspiler = require('../transpilers/load-transpiler');
 
-var path = require("path");
-var fs = require("fs");
-var loadBitTranspiler = require("../transpilers/load-transpiler");
-
-var loadImpl = function (bitPath) {
+const loadImpl = (bitPath) => {
   try {
-    var implPath = path.join(bitPath, "impl.js");
-    var implContent = require(implPath);
+    const implPath = path.join(bitPath, 'impl.js');
+    const implContent = require(implPath); // eslint-disable-line
     return implContent;
   } catch (e) {
     throw e;
   }
 };
 
-var readRawImpl = function (bitPath) {
+const readRawImpl = (bitPath) => {
   try {
-    var implPath = path.join(bitPath, "impl.js");
-    var rawContents = fs.readFileSync(implPath, "utf8");
+    const implPath = path.join(bitPath, 'impl.js');
+    const rawContents = fs.readFileSync(implPath, 'utf8');
     return rawContents;
   } catch (e) {
     throw e;
   }
 };
 
-var getBitImpl = function (bitPath) {
-  var transpiler = loadBitTranspiler(bitPath);
-  if (!transpiler) {
-    return loadImpl(bitPath);
-  }
+const getBitImpl = (bitPath) => {
+  const transpiler = loadBitTranspiler(bitPath);
+  if (!transpiler) return loadImpl(bitPath);
 
-  var rawImpl = readRawImpl(bitPath);
+  const rawImpl = readRawImpl(bitPath);
   return eval(transpiler.transpile(rawImpl).code); //eslint-disable-line
 };
 

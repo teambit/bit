@@ -1,31 +1,27 @@
-"use strict";
+const path = require('path');
+const glob = require('glob');
+const composeRepoPath = require('./repo/repo-utils').composeRepoPath;
+const locateRepo = require('./repo/locate-repo');
+const loadBit = require('./bit/load-bit');
 
-var path = require("path");
-var glob = require("glob");
-var composeRepoPath = require("./repo/repo-utils").composeRepoPath;
-var locateRepo = require("./repo/locate-repo");
-var loadBit = require("./bit/load-bit");
+const composeInlinePath = repoPath => path.join(repoPath, 'inline');
 
-var composeInlinePath = function (repoPath) {
-  return path.join(repoPath, "inline");
-};
-
-var mapBits = function (root) {
-  var inlinePath = composeInlinePath(composeRepoPath(root));
+const mapBits = (root) => {
+  const inlinePath = composeInlinePath(composeRepoPath(root));
   return glob
-    .sync(path.join(inlinePath, "*"))
+    .sync(path.join(inlinePath, '*'))
     .map(loadBit)
-    .reduce(function (previousValue, currentValue) {
+    .reduce((previousValue, currentValue) => {
       if (!currentValue.name) { return previousValue; }
-      previousValue[currentValue.name] = currentValue.ref;
+      previousValue[currentValue.name] = currentValue.ref; // eslint-disable-line
       return previousValue;
     }, {});
 };
 
-var loadBits = function () {
-  var repo = locateRepo(process.cwd());
-  if (!repo) { return {}; }
-  var bits = mapBits(repo);
+const loadBits = () => {
+  const repo = locateRepo(process.cwd());
+  if (!repo) return {};
+  const bits = mapBits(repo);
   return bits;
 };
 

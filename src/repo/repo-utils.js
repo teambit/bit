@@ -1,20 +1,11 @@
-"use strict";
+const fs = require('fs');
+const path = require('path');
+const { BIT_DIR_NAME } = require('../constants');
 
-var fs = require("fs");
-var path = require("path");
-var constants = require("../constants");
-
-var BIT_DIR_NAME = constants.BIT_DIR_NAME;
-
-var composeRepoPath = function (p) {
-  return path.join(p, BIT_DIR_NAME);
-};
-
-var pathHasRepo = function (p) {
-  return fs.existsSync(composeRepoPath(p));
-};
+const composeRepoPath = p => path.join(p, BIT_DIR_NAME);
+const pathHasRepo = p => fs.existsSync(composeRepoPath(p));
 
 module.exports = {
-  pathHasRepo: pathHasRepo,
-  composeRepoPath: composeRepoPath
+  pathHasRepo,
+  composeRepoPath,
 };

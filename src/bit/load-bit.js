@@ -1,21 +1,19 @@
-"use strict";
+const camelcase = require('camelcase');
+const getbitImpl = require('./load-impl');
 
-var camelcase = require("camelcase");
-var getbitImpl = require("./load-impl");
-
-var getName = function (bitPath) {
-  var parts = bitPath.split("/");
+const getName = (bitPath) => {
+  const parts = bitPath.split('/');
   return camelcase(parts[parts.length - 1]);
 };
 
-var loadBit = function (bitPath) {
+const loadBit = (bitPath) => {
   try {
     return {
       name: getName(bitPath),
-      ref: getbitImpl(bitPath)
+      ref: getbitImpl(bitPath),
     };
   } catch (e) {
-    console.error(e);
+    console.error(e); // eslint-disable-line
     return {};
   }
 };
