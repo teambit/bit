@@ -1,45 +1,45 @@
 /** @flow */
+import path from 'path';
+import glob from 'glob';
+import fs from 'fs';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import BitJson from '../bit-json';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
-import { External, Inline } from './drawers';
+import { INLINE_BITS_DIRNAME, BITS_DIRNAME } from '../constants';
 
 export type ConsumerProps = {
-  path: string,
+  projectPath: string,
   created?: boolean,
-  bitJson?: BitJson,
-  external?: External,
-  inline?: Inline
+  bitJson?: BitJson
 };
 
 export default class Consumer {
-  path: string;
+  projectPath: string;
   created: boolean;
   bitJson: BitJson;
-  external: External;
-  inline: Inline;
 
-  constructor({ path, bitJson, external, inline, created = false }: ConsumerProps) {
-    this.path = path;
+  constructor({ projectPath, bitJson, created = false }: ConsumerProps) {
+    this.projectPath = projectPath;
     this.bitJson = bitJson || new BitJson({});
-    this.external = external || new External(this);
-    this.inline = inline || new Inline(this);
     this.created = created;
   }
 
   write(): Promise<Consumer> {
-    const self = this;
-    const createInlineDir = () => self.inline.ensureDir();
-    const createExternalDir = () => self.external.ensureDir();
     const returnConsumer = () => this;
 
     return this.bitJson
-      .write({ bitDir: this.path })
-      .then(createInlineDir)
-      .then(createExternalDir)
+      .write({ bitDir: this.projectPath })
       .then(returnConsumer);
+  }
+
+  getInlineBitsPath(): string {
+    return path.join(this.projectPath, INLINE_BITS_DIRNAME);
+  }
+
+  getBitsPath(): string {
+    return path.join(this.projectPath, BITS_DIRNAME);
   }
 
   /**
@@ -65,12 +65,13 @@ export default class Consumer {
   }
 
   createBit({ name }: { name: string }): Promise<Bit> {
-    return Bit.create({ name, bitDir: this.inline.getPath() }).write();
+    return Bit.create({ name, bitDir: this.getInlineBitsPath() }).write();
   }
 
   removeBit(props: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
     const bit = new PartialBit({
-      ...props, bitDir: inline ? this.inline.getPath() : this.external.getPath()
+      ...props,
+      bitDir: inline ? this.getInlineBitsPath() : this.getBitsPath()
     });
     
     return bit.erase();
@@ -90,22 +91,40 @@ export default class Consumer {
   /**
    * list the bits in the external directory
    **/
-  list({ inline }: { inline: boolean }): Promise<string[]> {
-    return inline ? this.inline.list() : this.external.list();
+  list({ inline }: { inline: ?boolean }): Promise<string[]> {
+    const dirToList = inline ? this.getInlineBitsPath() : this.getBitsPath();
+
+    return new Promise((resolve, reject) =>
+      glob(path.join(dirToList, '/*'), (err, files) => {
+        resolve(files.map(fullPath => path.basename(fullPath)));
+        reject(err);
+      })
+    );
   }
 
-  static create(path: string = process.cwd()): Consumer {
-    if (pathHasConsumer(path)) throw new ConsumerAlreadyExists();
-    return new Consumer({ path, created: true });
+  includes({ inline, bitName }: { inline: ?boolean, bitName: string }): Promise<boolean> {
+    const dirToCheck = inline ? this.getInlineBitsPath() : this.getBitsPath();
+
+    return new Promise((resolve) => {
+      return fs.stat(path.join(dirToCheck, bitName), (err) => {
+        if (err) return resolve(false);
+        return resolve(true);
+      });
+    });
+  }
+
+  static create(projectPath: string = process.cwd()): Consumer {
+    if (pathHasConsumer(projectPath)) throw new ConsumerAlreadyExists();
+    return new Consumer({ projectPath, created: true });
   }
 
   static load(currentPath: string): Promise<Consumer> {
-    const path = locateConsumer(currentPath);
-    if (!path) throw new ConsumerNotFound();
-    return BitJson.load(path)
+    const projectPath = locateConsumer(currentPath);
+    if (!projectPath) throw new ConsumerNotFound();
+    return BitJson.load(projectPath)
     .then(bitJson =>
       new Consumer({
-        path,
+        projectPath,
         bitJson
       })
     );

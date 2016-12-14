@@ -10,8 +10,8 @@ import {
   DEFAULT_TESTER,
   DEFAULT_BIT_VERSION,
   DEFAULT_BOX_NAME,
-  BIT_IMPL_FILE_NAME,
-  BIT_SPEC_FILE_NAME,
+  IMPL_FILE_NAME,
+  SPEC_FILE_NAME,
   DEFAULT_BIT_NAME,
 } from '../constants';
 
@@ -58,8 +58,8 @@ export default class BitJson {
     ) {
     this.name = name || DEFAULT_BIT_NAME;
     this.box = box || DEFAULT_BOX_NAME;
-    this.impl = impl || BIT_IMPL_FILE_NAME;
-    this.spec = spec || BIT_SPEC_FILE_NAME;
+    this.impl = impl || IMPL_FILE_NAME;
+    this.spec = spec || SPEC_FILE_NAME;
     this.transpiler = transpiler || DEFAULT_TRANSPILER;
     this.tester = tester || DEFAULT_TESTER;
     this.version = version || DEFAULT_BIT_VERSION;

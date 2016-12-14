@@ -8,7 +8,7 @@ export type StatusRes = {
 
 export default function status(): Promise<StatusRes[]> {
   return loadConsumer().then(consumer => 
-    consumer.inline.list()
+    consumer.list({ inline: true })
     .then(bitNameList => Promise.all(
       bitNameList.map(
         bitName => 

@@ -31,17 +31,15 @@ export const BIT_DESCRIPTION = 'bit is a free and open source tool designed for 
  */
 export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
-export const BIT_DIR_NAME = 'bits';
+export const BITS_DIRNAME = 'bits';
 
-export const BIT_INLINE_DIRNAME = 'inline';
-
-export const BIT_EXTERNAL_DIRNAME = 'external';
+export const INLINE_BITS_DIRNAME = 'inline_bits';
 
 export const BIT_JSON = 'bit.json';
 
-export const BIT_IMPL_FILE_NAME = 'impl.js';
+export const IMPL_FILE_NAME = 'impl.js';
 
-export const BIT_SPEC_FILE_NAME = 'spec.js';
+export const SPEC_FILE_NAME = 'spec.js';
 
 export const DEFAULT_BIT_NAME = '';
 

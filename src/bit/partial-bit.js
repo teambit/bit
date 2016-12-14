@@ -55,12 +55,12 @@ export default class PartialBit {
 
   static resolveDir(name: string, consumer: Consumer): Promise<string> {
     return new Promise((resolve, reject) => {
-      consumer.inline.includes(name)
+      consumer.includes({ bitName: name, inline: true })
         .then((isInline) => {
-          if (isInline) return resolve(consumer.inline.getPath());
-          return consumer.external.includes(name)
+          if (isInline) return resolve(consumer.getInlineBitsPath());
+          return consumer.includes({ bitName: name, inline: false })
             .then((isExternal) => {
-              if (isExternal) return resolve(consumer.external.getPath());
+              if (isExternal) return resolve(consumer.getBitsPath());
               return reject(new Error('bit not found error'));
             });
         });

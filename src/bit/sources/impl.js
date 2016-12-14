@@ -4,11 +4,11 @@ import * as path from 'path';
 import Source from './source';
 import createImpl from '../templates/impl.template';
 import Bit from '../bit';
-import { BIT_IMPL_FILE_NAME } from '../../constants';
+import { IMPL_FILE_NAME } from '../../constants';
 
 function composePath(...paths: Array<string>): string {
   // $FlowFixMe
-  return path.join(...paths, BIT_IMPL_FILE_NAME); 
+  return path.join(...paths, IMPL_FILE_NAME); 
 }
 
 export default class Impl extends Source {
