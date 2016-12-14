@@ -60,6 +60,7 @@ export default class Scope {
     return getContents(tar)
       .then((files) => {
         const bitJson = BitJson.loadFromString(files[BIT_JSON]);
+        
         const bit = Bit.loadFromMemory(
           name,
           this.sources.getBitPath(name),

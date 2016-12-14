@@ -2,8 +2,8 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { Impl, Specs } from './sources';
-import { Consumer } from '../consumer';
 import { mkdirp } from '../utils';
+import BitJson from '../bit-json';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 import PartialBit from './partial-bit';
 import { Remote } from '../remotes';
@@ -28,15 +28,17 @@ function saveBuild({ bundle, bitPath }) {
 }
 
 export type BitProps = {
-  name: string,
+  name: string;
   bitDir: string; 
-  impl: Impl,
-  specs?: Specs, 
+  bitJson: BitJson;
+  impl: Impl;
+  specs?: Specs; 
 };
 
 export default class Bit extends PartialBit {
   name: string;
-  bitDir: string; 
+  bitDir: string;
+  bitJson: BitJson;
   impl: Impl;
   specs: ?Specs;
 
@@ -85,14 +87,11 @@ export default class Bit extends PartialBit {
     });
   }
 
-  static load(name: string, consumer: Consumer): Promise<Bit> {  
-    return consumer.resolveBitDir(name)
-      .then((bitDir) => {
-        return PartialBit.load(name, bitDir)
-          .then(partialBit => 
-            partialBit.loadFull()
-          );
-      });
+  static load(name: string, bitDir: string): Promise<Bit> {  
+    return PartialBit.load(name, bitDir)
+      .then(partialBit => 
+        partialBit.loadFull()
+      );
   }
 
   static loadFromMemory(name: string, bitDir: string, bitJson: BitJson, impl: Buffer, spec: Buffer) {

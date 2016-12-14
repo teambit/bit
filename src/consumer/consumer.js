@@ -72,12 +72,8 @@ export default class Consumer {
   }
 
   removeBit(props: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
-    const bit = 
-    PartialBit.load({
-      bitDir: inline ? this.getInlineBitsPath() : this.getBitsPath()
-    });
-    
-    return bit.erase();
+    const bitDir = inline ? this.getInlineBitsPath() : this.getBitsPath(); 
+    return PartialBit.load(props.name, bitDir).then(bit => bit.erase());
   }
 
   resolveBitDir(name: string): Promise<string> {
