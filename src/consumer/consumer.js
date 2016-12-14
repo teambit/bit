@@ -64,12 +64,15 @@ export default class Consumer {
     // @TODO
   }
 
-  createBit(props: { name: string }): Promise<Bit> {
-    return Bit.create({ ...props, drawer: this.inline }).write();
+  createBit({ name }: { name: string }): Promise<Bit> {
+    return Bit.create({ name, bitDir: this.inline.getPath() }).write();
   }
 
   removeBit(props: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
-    const bit = new PartialBit({ ...props, drawer: inline ? this.inline: this.external });
+    const bit = new PartialBit({
+      ...props, bitDir: inline ? this.inline.getPath() : this.external.getPath()
+    });
+    
     return bit.erase();
   }
 

@@ -6,7 +6,6 @@ import { pack } from '../tar';
 import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
 import { Consumer } from '../consumer';
-import { Drawer } from '../consumer/drawers';
 import { mkdirp } from '../utils';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 import PartialBit from './partial-bit';
@@ -33,7 +32,7 @@ function saveBuild({ bundle, bitPath }) {
 
 export type BitProps = {
   name: string,
-  drawer: Drawer; 
+  bitDir: string; 
   bitJson: BitJson;
   impl: Impl,
   specs?: Specs, 
@@ -41,13 +40,13 @@ export type BitProps = {
 
 export default class Bit extends PartialBit {
   name: string;
-  drawer: Drawer; 
+  bitDir: string; 
   bitJson: BitJson;
   impl: Impl;
   specs: ?Specs;
 
   constructor(bitProps: BitProps) {
-    super({ name: bitProps.name, drawer: bitProps.drawer });
+    super({ name: bitProps.name, bitDir: bitProps.bitDir });
     this.bitJson = bitProps.bitJson;
     this.specs = bitProps.specs;
     this.impl = bitProps.impl;
@@ -106,21 +105,21 @@ export default class Bit extends PartialBit {
   }
 
   static load(name: string, consumer: Consumer): Promise<Bit> {  
-    return this.resolveDrawer(name, consumer)
-      .then((drawer) => {
+    return this.resolveDir(name, consumer)
+      .then((bitDir) => {
         return Bit.create({
           name,
-          drawer
+          bitDir
         });
       });
   }
 
   static create(props: PartialBitProps) {
-    const { name, drawer } = props;
+    const { name, bitDir } = props;
 
     return new Bit({
       name,
-      drawer,
+      bitDir,
       bitJson: new BitJson({ name }),
       impl: Impl.create({ name }),
       specs: Specs.create({ name }),
