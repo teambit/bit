@@ -78,7 +78,6 @@ export default class Bit extends PartialBit {
       return fs.stat(this.getPath(), (err) => {
         if (!err) return reject(new BitAlreadyExistsInternalyException(this.name));
         const bitPath = this.getPath(); 
-
         return mkdirp(bitPath)
         .then(() => this.impl.write(bitPath, this))
         .then(() => this.bitJson.write({ bitDir: bitPath }))
@@ -94,23 +93,29 @@ export default class Bit extends PartialBit {
       );
   }
 
-  static loadFromMemory(name: string, bitDir: string, bitJson: BitJson, impl: Buffer, spec: Buffer) {
+  static loadFromMemory(
+    name: string,
+    bitDir: string,
+    bitJson: BitJson,
+    impl: Buffer,
+    spec: Buffer
+    ) {
     return new Bit({
       name,
       bitDir,
       bitJson,
       impl: new Impl(impl.toString()),
-      spec: new Specs(spec.toString)
+      spec: new Specs(spec.toString())
     }); 
   }
 
   static create(props: PartialBitProps) {
-    const { name, bitDir, bitJson } = props;
+    const { name, bitDir } = props;
 
     return new Bit({
       name,
       bitDir,
-      bitJson,
+      bitJson: new BitJson(props),
       impl: Impl.create({ name }),
       specs: Specs.create({ name }),
     });

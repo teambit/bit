@@ -80,6 +80,9 @@ export default class PartialBit {
 
   static load(name: string, bitDir: string): Promise<PartialBit> {  
     return BitJson.load(bitDir)
-      .then(bitJson => new PartialBit({ name, bitDir, bitJson }));
+      .then((bitJson) => {
+        console.log(bitJson);
+        return new PartialBit({ name, bitDir, bitJson });
+      });
   }
 }
