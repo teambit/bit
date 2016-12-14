@@ -55,15 +55,15 @@ export default class SSH {
     });
   }
 
-  putBit(bitTar: Buffer) {
-    return this.exec('_upload', bitTar)
+  putBit(name: string, bitTar: Buffer) {
+    return this.exec('_upload', name, bitTar)
       .then(status => console.log(status));
   }
 
   push(bit: Bit) {
     return bit.toTar().then((tarBuffer: Buffer) => {
       return this.exec('_prepare', bit.name, bit.bitJson.toJson(false))
-        .then(() => this.putBit(tarBuffer));
+        .then(() => this.putBit(bit.name, tarBuffer));
     });
   }
 

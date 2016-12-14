@@ -16,7 +16,7 @@ export default class Remotes extends Map<string, Remote> {
 
   get(name: string): Remote {
     const remote = super.get(name);
-    if (!remote) throw new RemoteNotFound();
+    if (!remote) throw new RemoteNotFound(name);
     return remote;
   }
 

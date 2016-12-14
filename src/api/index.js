@@ -8,6 +8,7 @@ import getBit from './lib/get-bit';
 import build from './lib/build';
 import prepare from './lib/prepare';
 import initScope from './lib/scope-init';
+import upload from './lib/upload';
 
 export {
   init,
@@ -19,5 +20,6 @@ export {
   getBit,
   build,
   prepare,
-  initScope
+  initScope,
+  upload
 };

@@ -1,6 +1,8 @@
 /** @flow */
+import { Parse } from 'tar';
 import * as pathlib from 'path';
-import { propogateUntil, pathHas } from '../utils';
+import { propogateUntil, pathHas, bufferToReadStream } from '../utils';
+import { extract, getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME } from '../constants';
 import { ScopeNotFound, ScopeAlreadyExists } from './exceptions';
 import Box from '../box';
@@ -51,6 +53,15 @@ export default class Scope {
       .then(() => self); 
   }
 
+  upload(name: string, tar: Buffer) {
+    return getContents(tar)
+      .then((files) => {
+        console.log(files);
+        mapObject()
+      });
+    // return extract(this.sources.getPath(), bufferToReadStream(tar));
+  }
+
   getPath() {
     return this.path;
   }
@@ -63,6 +74,6 @@ export default class Scope {
   static load(absPath: string) {
     const scopePath = propogateUntil(absPath, pathHasScope);
     if (!scopePath) throw new ScopeNotFound();
-    return new Scope({ path: absPath });
+    return new Scope({ path: scopePath });
   }
 }

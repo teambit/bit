@@ -1,7 +1,8 @@
 /** @flow */
-import { pack, extract } from './tar-lib';
+import { pack, extract, getContents } from './tar-lib';
 
 export {
   pack,
-  extract
+  extract,
+  getContents
 };

@@ -59,7 +59,7 @@ export default class BitJson {
     this.transpiler = transpiler || DEFAULT_TRANSPILER;
     this.tester = tester || DEFAULT_TESTER;
     this.version = version || DEFAULT_BIT_VERSION;
-    this.remotes = Remotes.load(remotes);
+    this.remotes = remotes || Remotes.load(remotes);
     this.dependencies = dependencies || {};
   }
 

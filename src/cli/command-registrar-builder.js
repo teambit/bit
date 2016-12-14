@@ -21,6 +21,7 @@ import Build from './commands/build-cmd';
 import Install from './commands/install-cmd';
 import Uninstall from './commands/uninstall-cmd';
 import Prepare from './commands/prepare-cmd';
+import Upload from './commands/_upload-cmd';
 import Scope from './commands/scope-cmd';
 
 export default function registerCommands(): CommandRegistrar {
@@ -45,6 +46,7 @@ export default function registerCommands(): CommandRegistrar {
     new Build(),
     new Install(),
     new Uninstall(),
-    new Prepare()
+    new Prepare(),
+    new Upload()
   ]);
 }

@@ -1,19 +1,19 @@
 /** @flow */
 import Command from '../command';
-import fromBase64 from '../../utils';
-// import { box } from '../../api';
+import { fromBase64 } from '../../utils';
+import { upload } from '../../api';
 
 export default class Box extends Command {
-  name = '_upload <tar>';
+  name = '_upload <name> <tar>';
+  private = true;
   description = 'upload a bit to a scope';
   alias = '';
-  opts = [
-  ];
+  opts = [];
   
-  action([tar, ]: [string, ]): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const a = fromBase64(tar);
-      resolve(a);
+  action([name, tar, ]: [string, string, ]): Promise<any> {
+    return upload({
+      name: fromBase64(name), 
+      tar: new Buffer(tar, 'base64') 
     });
   }
 
