@@ -13,6 +13,7 @@
     "bit": "bin/bit.js"
   },
   "dependencies": {
+    "archiver": "^1.3.0",
     "camelcase": "^4.0.0",
     "chalk": "^1.1.3",
     "commander": "^2.9.0",

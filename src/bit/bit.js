@@ -81,12 +81,21 @@ export default class Bit extends PartialBit {
     return `${this.name}_${this.bitJson.version}.tar`;
   }
 
-  toTar() {
+  getArchiveFiles() {
     const bitPath = this.getPath();
+
+    return [
+      `${bitPath}/${this.bitJson.impl}`,
+      `${bitPath}/${this.bitJson.spec}`,
+      this.bitJson.getPath(bitPath)
+    ];
+  }
+
+  toTar() {
     return bitCache.get(this)
       .catch((err) => {
         if (err.code !== 'ENOENT') throw err;
-        return bitCache.set(this, pack(bitPath)); 
+        return bitCache.set(this, pack(this.getArchiveFiles())); 
       });
   }
 

@@ -49,6 +49,10 @@ export default class BitJson {
   transpiler: string;
   tester: string;
 
+  getPath(bitPath: string) {
+    return composePath(bitPath);
+  }
+
   constructor(
     { name, box, version, impl, spec, dependencies, remotes, transpiler, tester }: BitJsonProps
     ) {
