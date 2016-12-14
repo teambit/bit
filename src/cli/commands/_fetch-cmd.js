@@ -1,6 +1,6 @@
 /** @flow */
 import Command from '../command';
-import { toBase64 } from '../../utils';
+import { toBase64, fromBase64 } from '../../utils';
 import { fetch } from '../../api';
 
 export default class Fetch extends Command {
@@ -10,8 +10,8 @@ export default class Fetch extends Command {
   alias = '';
   opts = [];
   
-  action([ids, ]: [string, string, ]): Promise<any> {
-    return fetch(ids);
+  action([ids, ]: [string[], string, ]): Promise<any> {
+    return fetch(ids.map(fromBase64));
   }
 
   report(tars: {id: string, contents: Buffer}[]): string {
