@@ -12,7 +12,6 @@ import Import from './commands/import-cmd';
 import Remote from './commands/remote-cmd';
 import Remove from './commands/remove-cmd';
 import Search from './commands/search-cmd';
-import Box from './commands/box-cmd';
 import Test from './commands/test-cmd';
 import Show from './commands/show-cmd';
 import Update from './commands/update-cmd';
@@ -27,7 +26,6 @@ import Scope from './commands/scope-cmd';
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
     new Init(),
-    new Box(),
     new Scope(),
     new Create(),
     new List(),

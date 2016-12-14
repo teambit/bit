@@ -11,6 +11,7 @@ export default class Status extends Command {
   alias = 's';
   opts = [];
  
+  // $FlowFixMe
   action(): Promise<StatusRes[]> {
     return status();
   }

@@ -1,18 +1,17 @@
 /** @flow */
 
-export default class Command {
+export default class Cmd {
   name: string;
   description: string;
   alias: string;
   opts: [string, string, string][];
 
-  action(params: Array<any>, opts: {}): Promise<{[string]: any}> {
-    const m = this.alias;
+  action(params: Array<any>, opts: {}): Promise<{[string]: any}> { // eslint-disable-line
     console.log('"action" method not implemented on this command');
-    return new Promise(resolve => resolve(m));
+    return new Promise(resolve => resolve({}));
   }
 
-  report(data: {string: any}): string {
+  report(data: any): string { // eslint-disable-line
     return '"report" method not implemented on this command';
   }
 

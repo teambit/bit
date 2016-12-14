@@ -1,16 +1,16 @@
 /** @flow */
+import commander from 'commander';
 import type Command from './command';   
 import defaultHandleError from './default-error-handler';
 
-const commander = require('commander');
 
 function logAndExit(msg: string) {
-  console.log(msg);
+  console.log(msg); // eslint-disable-line
   process.exit();
 }
 
 function logErrAndExit(msg: string) {
-  console.error(msg);
+  console.error(msg); // eslint-disable-line
   process.exit(1);
 }
 
@@ -50,6 +50,7 @@ export default class CommandRegistrar {
     }
     
     function register(command: Command) {
+      // $FlowFixMe
       const concrete = commander
         .command(command.name)
         .description(command.description)

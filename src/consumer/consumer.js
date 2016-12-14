@@ -76,9 +76,9 @@ export default class Consumer {
     return bit.erase();
   }
 
-  createBox(name: string): Promise<Consumer> {
+  // createBox(name: string): Promise<Consumer> {
     // return Box.create(name);
-  }
+  // }
   
   export(name: string, remoteName: string) {
     const remote = this.bitJson.remotes.get(remoteName);
