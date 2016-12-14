@@ -6,7 +6,7 @@ import { fromBase64 } from '../../utils';
 const chalk = require('chalk');
 
 export default class Prepare extends Command {
-  name = 'prepare <name> <json>';
+  name = '_prepare <name> <json>';
   description = 'prepare a bit prior to a scope registration';
   private = true;
   alias = '';

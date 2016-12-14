@@ -45,7 +45,7 @@ export default class SSH {
     return cmd; 
   }
 
-  get(commandName: string, ...args: string[]): Promise<any> {
+  exec(commandName: string, ...args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
       const cmd = this.buildCmd(commandName, ...args);
       this.connection(cmd, function (err, res, o) {
@@ -55,22 +55,15 @@ export default class SSH {
     });
   }
 
-  putFile(path: string, buffer: Buffer) {
-    return new Promise((resolve, reject) => {
-      const writer = this.connection.put(path);
-      const readStream = bufferToReadStream(buffer);
-      readStream.pipe(writer);
-      
-      writer.on('close', resolve)
-        .on('error', reject);
-    });
+  putBit(bitTar: Buffer) {
+    return this.exec('_upload', bitTar)
+      .then(status => console.log(status));
   }
 
   push(bit: Bit) {
     return bit.toTar().then((tarBuffer: Buffer) => {
-      return this.get('prepare', bit.name, bit.bitJson.toJson(false))
-        .then(path => this.putFile(path, tarBuffer))
-        .then(() => this.get('process'));
+      return this.exec('_prepare', bit.name, bit.bitJson.toJson(false))
+        .then(() => this.putBit(tarBuffer));
     });
   }
 

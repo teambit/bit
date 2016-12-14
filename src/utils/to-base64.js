@@ -1,5 +1,6 @@
 /** @flow */
 
-export default function toBase64(str: string) {
-  return new Buffer(str).toString('base64'); 
+export default function toBase64(val: string|Buffer) {
+  if (val instanceof Buffer) return val.toString('base64');
+  return new Buffer(val).toString('base64'); 
 }
