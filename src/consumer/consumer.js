@@ -46,14 +46,17 @@ export default class Consumer {
    * get a bit partialy
    **/
   getPartial(name: string): Promise<PartialBit> {
-    return PartialBit.load(name, this);
+    return this.resolveBitDir(name)
+    .then(bitDir => 
+      PartialBit.load(name, bitDir)
+    );
   }
 
   /**
    * get a bit with all metadata and implemenation
    **/
   get(name: string): Promise<Bit> {
-    return PartialBit.load(name, this)
+    return this.getPartial(name)
     .then(partial => partial.loadFull());
   }
 
@@ -69,12 +72,26 @@ export default class Consumer {
   }
 
   removeBit(props: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
-    const bit = new PartialBit({
-      ...props,
+    const bit = 
+    PartialBit.load({
       bitDir: inline ? this.getInlineBitsPath() : this.getBitsPath()
     });
     
     return bit.erase();
+  }
+
+  resolveBitDir(name: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.includes({ bitName: name, inline: true })
+        .then((isInline) => {
+          if (isInline) return resolve(this.getInlineBitsPath());
+          return this.includes({ bitName: name, inline: false })
+            .then((isExternal) => {
+              if (isExternal) return resolve(this.getBitsPath());
+              return reject(new Error('bit not found error'));
+            });
+        });
+    });
   }
 
   // createBox(name: string): Promise<Consumer> {

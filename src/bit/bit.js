@@ -1,10 +1,7 @@
 /** @flow */
 import fs from 'fs-extra';
 import path from 'path';
-import * as bitCache from '../cache';
-import { pack } from '../tar';
 import { Impl, Specs } from './sources';
-import BitJson from '../bit-json';
 import { Consumer } from '../consumer';
 import { mkdirp } from '../utils';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
@@ -33,7 +30,6 @@ function saveBuild({ bundle, bitPath }) {
 export type BitProps = {
   name: string,
   bitDir: string; 
-  bitJson: BitJson;
   impl: Impl,
   specs?: Specs, 
 };
@@ -41,13 +37,11 @@ export type BitProps = {
 export default class Bit extends PartialBit {
   name: string;
   bitDir: string; 
-  bitJson: BitJson;
   impl: Impl;
   specs: ?Specs;
 
   constructor(bitProps: BitProps) {
-    super({ name: bitProps.name, bitDir: bitProps.bitDir });
-    this.bitJson = bitProps.bitJson;
+    super({ name: bitProps.name, bitDir: bitProps.bitDir, bitJson: bitProps.bitJson });
     this.specs = bitProps.specs;
     this.impl = bitProps.impl;
   }
@@ -77,28 +71,6 @@ export default class Bit extends PartialBit {
     return remote.push(this);
   }
 
-  composeTarFileName() {
-    return `${this.name}_${this.bitJson.version}.tar`;
-  }
-
-  getArchiveFiles() {
-    const bitPath = this.getPath();
-
-    return [
-      `${bitPath}/${this.bitJson.impl}`,
-      `${bitPath}/${this.bitJson.spec}`,
-      this.bitJson.getPath(bitPath)
-    ];
-  }
-
-  toTar() {
-    return bitCache.get(this)
-      .catch((err) => {
-        if (err.code !== 'ENOENT') throw err;
-        return bitCache.set(this, pack(this.getArchiveFiles())); 
-      });
-  }
-
   write(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       return fs.stat(this.getPath(), (err) => {
@@ -114,12 +86,12 @@ export default class Bit extends PartialBit {
   }
 
   static load(name: string, consumer: Consumer): Promise<Bit> {  
-    return this.resolveDir(name, consumer)
+    return consumer.resolveBitDir(name)
       .then((bitDir) => {
-        return Bit.create({
-          name,
-          bitDir
-        });
+        return PartialBit.load(name, bitDir)
+          .then(partialBit => 
+            partialBit.loadFull()
+          );
       });
   }
 
@@ -134,12 +106,12 @@ export default class Bit extends PartialBit {
   }
 
   static create(props: PartialBitProps) {
-    const { name, bitDir } = props;
+    const { name, bitDir, bitJson } = props;
 
     return new Bit({
       name,
       bitDir,
-      bitJson: new BitJson({ name }),
+      bitJson,
       impl: Impl.create({ name }),
       specs: Specs.create({ name }),
     });

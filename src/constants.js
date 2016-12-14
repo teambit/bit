@@ -49,7 +49,7 @@ export const DEFAULT_TESTER = 'bit-jasmin';
 
 export const DEFAULT_BIT_VERSION = 1;
 
-export const DEFAULT_BOX_NAME = '';
+export const DEFAULT_BOX_NAME = 'global';
 
 /**
  * cache root directory
