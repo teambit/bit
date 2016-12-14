@@ -1,7 +1,7 @@
 /** @flow */
 import keyGetter from './key-getter';
 import Bit from '../../bit';
-import { bufferToReadStream, toBase64 } from '../../utils';
+import { bufferToReadStream, toBase64, fromBase64 } from '../../utils';
 import type { SSHUrl } from '../../utils/parse-ssh-url';
 
 const sequest = require('sequest');
@@ -68,7 +68,19 @@ export default class SSH {
   }
 
   fetch(bitIds: string[]): Promise<Buffer> {
-    return this.exec('_fetch', ...bitIds);
+    return this.exec('_fetch', ...bitIds)
+      .then((packs) => {
+        return packs
+          .split('\n')
+          .map(pack => pack.split('::').map(
+            ([name, contents]) => {
+              return {
+                name: fromBase64(name),
+                contents: fromBase64(contents)
+              };
+            }
+          ));
+      });
   }
 
   resolveDependencies() {

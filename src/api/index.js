@@ -9,6 +9,7 @@ import build from './lib/build';
 import prepare from './lib/prepare';
 import initScope from './lib/scope-init';
 import upload from './lib/upload';
+import fetch from './lib/fetch';
 
 export {
   init,
@@ -21,5 +22,6 @@ export {
   build,
   prepare,
   initScope,
-  upload
+  upload,
+  fetch
 };

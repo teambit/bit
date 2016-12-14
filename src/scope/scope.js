@@ -56,9 +56,18 @@ export default class Scope {
       .then(() => self); 
   }
   
-  fetch(bitIds: BitId[]): Buffer {
-    return bitIds.map((bitId) => {
-      return this.sources.get(bitId);
+  fetch(bitIds: string[]): Promise<{id: string, contents: Buffer}>[] {
+    return bitIds.map((name) => {
+      return this.sources
+        .getPartial(name)
+        .then((bit) => {
+          return bit.toTar().then((tar) => {
+            return {
+              id: name,
+              contents: tar
+            };
+          });
+        });
     });
   }
 

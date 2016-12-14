@@ -15,7 +15,7 @@ export default class Source extends Repository {
     return path.join(this.getPath(), bitName);
   }  
 
-  getPartial(bitId: BitId): Bit {
-    ParitalBit.load();
+  getPartial(name: string): Promise<ParitalBit> {
+    return ParitalBit.load(name, this.getBitPath(name));
   }
 }

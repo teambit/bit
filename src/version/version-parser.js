@@ -35,6 +35,7 @@ function returnLatest(): Version {
 }
 
 export default function versionParser(versionStr: string): Version {
+  if (!versionStr) return returnLatest();
   if (isLatest(versionStr)) return returnLatest();
   if (isLatestTested(versionStr)) return returnLatestTestedVersion(versionStr);
   if (isRegular(versionStr)) return returnRegular(versionStr);

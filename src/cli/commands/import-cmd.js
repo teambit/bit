@@ -5,7 +5,7 @@ import Command from '../command';
 const chalk = require('chalk');
 
 export default class Import extends Command {
-  name = 'import [id]';
+  name = 'import [ids...]';
   description = 'import a bit';
   alias = 'i';
   opts = [
@@ -13,9 +13,8 @@ export default class Import extends Command {
   ];
 
   action([id]: [string]): Promise<any> {
-    if ()
-    const bitId = BitId.parse();
-    bikId.remote.fetch(bitId);
+    // const bitId = BitId.parse(id);
+    // return bitId.remote.fetch(bitId);
   }
 
   report({ name }: any): string {

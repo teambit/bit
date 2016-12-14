@@ -1,6 +1,6 @@
 /** @flow */
 import Command from '../command';
-import { fromBase64 } from '../../utils';
+import { toBase64 } from '../../utils';
 import { fetch } from '../../api';
 
 export default class Fetch extends Command {
@@ -14,7 +14,7 @@ export default class Fetch extends Command {
     return fetch(ids);
   }
 
-  report(): string {
-    return 'ok';
+  report(tars: {id: string, contents: Buffer}[]): string {
+    return tars.map(tar => `${toBase64(tar.id)}::${tar.contents.toString('base64')}`).join('\n');
   }
 }
