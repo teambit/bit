@@ -68,7 +68,7 @@ export default class Scope {
           files[bitJson.spec]
         );
 
-        bit.write();
+        return bit.write();
       });
   }
 

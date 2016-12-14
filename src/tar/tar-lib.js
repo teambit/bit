@@ -33,7 +33,7 @@ export function extract(path: string, readStream: any): Promise<any> {
   });
 }
 
-export function getContents(tar: Buffer): Promise<{}> {
+export function getContents(tar: Buffer): Promise<{[string]: string}> {
   return new Promise((resolve, reject) => {
     const files = {};
     bufferToReadStream(tar)
