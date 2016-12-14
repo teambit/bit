@@ -11,8 +11,10 @@ export default class Box extends Command {
   ];
   
   action([tar, ]: [string, ]): Promise<any> {
-    const a = fromBase64(tar);
-    console.log(a);
+    return new Promise((resolve, reject) => {
+      const a = fromBase64(tar);
+      return a;
+    });
   }
 
   report(): string {
