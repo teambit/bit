@@ -5,7 +5,7 @@ import { propogateUntil, pathHas, bufferToReadStream } from '../utils';
 import { extract, getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME } from '../constants';
 import { ScopeNotFound, ScopeAlreadyExists } from './exceptions';
-import Box from '../box';
+import BitId from '../bit-id';
 import { Source, Cache, Tmp } from './repositories';
 import BitJson from '../bit-json';
 import Bit from '../bit';
@@ -31,6 +31,7 @@ export default class Scope {
   tmp: Tmp;
   sources: Source;
   path: string;
+  flattenedDependencies: [];
 
   constructor({ path, cache, sources, tmp, created }: ScopeProps) {
     this.path = path;
@@ -55,6 +56,11 @@ export default class Scope {
       .then(() => self); 
   }
   
+  fetch(bitIds: BitId[]): Buffer {
+    return bitIds.map((bitId) => {
+      return this.sources.get(bitId);
+    });
+  }
 
   upload(name: string, tar: Buffer) {
     return getContents(tar)

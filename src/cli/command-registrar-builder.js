@@ -22,6 +22,7 @@ import Uninstall from './commands/uninstall-cmd';
 import Prepare from './commands/prepare-cmd';
 import Upload from './commands/_upload-cmd';
 import Scope from './commands/scope-cmd';
+import Fetch from './commands/_fetch-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -45,6 +46,7 @@ export default function registerCommands(): CommandRegistrar {
     new Install(),
     new Uninstall(),
     new Prepare(),
-    new Upload()
+    new Upload(),
+    new Fetch()
   ]);
 }

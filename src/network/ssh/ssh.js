@@ -67,6 +67,14 @@ export default class SSH {
     });
   }
 
+  fetch(bitIds: string[]): Promise<Buffer> {
+    return this.exec('_fetch', ...bitIds);
+  }
+
+  resolveDependencies() {
+    return this.exec('_resolve');
+  }
+
   close() {
     this.connection.end();
   }

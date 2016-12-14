@@ -29,6 +29,10 @@ export default class Dependency {
 
   }
 
+  resolve() {
+    return this.remote.resolveDependency(this);
+  }
+
   static load(depName: string, version: string) {
     if (!depName) throw new InvalidDependency();
     const { name, box, remote } = parseDepName(depName);

@@ -2,6 +2,9 @@
 import * as path from 'path';
 import Repository from '../repository';
 import { BIT_SOURCES_DIRNAME } from '../../constants';
+import Bit from '../../bit';
+import ParitalBit from '../../bit/partial-bit';
+import BitId from '../../bit-id';
 
 export default class Source extends Repository {
   getPath(): string {
@@ -11,4 +14,8 @@ export default class Source extends Repository {
   getBitPath(bitName: string) {
     return path.join(this.getPath(), bitName);
   }  
+
+  getPartial(bitId: BitId): Bit {
+    ParitalBit.load();
+  }
 }

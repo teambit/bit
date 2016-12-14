@@ -3,6 +3,8 @@ import Bit from '../bit';
 import { contains, isBitUrl, cleanBang } from '../utils';
 import { connect } from '../network';
 import { InvalidRemote } from './exceptions';
+import Dependency from '../dependencies/dependency';
+import BitId from '../bit-id';
 
 /**
  * @ctx bit, primary, remote
@@ -20,6 +22,22 @@ export default class Remote {
     this.alias = alias;
     this.host = host;
     this.primary = primary;
+  }
+
+  connect(): Network {
+    return connect(this.host);
+  }
+
+  fetch(bitIds: BitId[]) {
+    return this
+      .connect()
+      .fetch(
+        bitIds.map(bitId => bitId.toString())
+      );
+  }
+
+  resolveDependency(dependency: Dependency) {
+    this.connect().resolve(); 
   }
 
   validate() {

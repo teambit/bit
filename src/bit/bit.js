@@ -59,6 +59,12 @@ export default class Bit extends PartialBit {
     return null;
   }
 
+  resolveDependencies() {
+    return this.bitJson.dependencies.map((dependency) => {
+      return dependency.resolve();
+    });
+  }
+
   build() {
     return loadTranspiler(this.bitJson.transpiler)
     .then(({ transpile }) => {

@@ -5,20 +5,17 @@ import Command from '../command';
 const chalk = require('chalk');
 
 export default class Import extends Command {
-  name = 'import <name> [remote]';
+  name = 'import [id]';
   description = 'import a bit';
   alias = 'i';
   opts = [
     ['S', 'save', 'save into bit.json']
   ];
 
-  action([name]: [string]): Promise<any> {
-    return new Promise((resolve) => {
-      const box = loadBox();
-
-      return resolve({
-      });
-    });
+  action([id]: [string]): Promise<any> {
+    if ()
+    const bitId = BitId.parse();
+    bikId.remote.fetch(bitId);
   }
 
   report({ name }: any): string {

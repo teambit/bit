@@ -37,6 +37,8 @@ export const INLINE_BITS_DIRNAME = 'inline_bits';
 
 export const BIT_JSON = 'bit.json';
 
+export const REMOTE_ALIAS_SIGN = '@';
+
 export const IMPL_FILE_NAME = 'impl.js';
 
 export const SPEC_FILE_NAME = 'spec.js';

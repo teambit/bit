@@ -3,7 +3,7 @@ import Command from '../command';
 import { fromBase64 } from '../../utils';
 import { upload } from '../../api';
 
-export default class Box extends Command {
+export default class Upload extends Command {
   name = '_upload <name> <tar>';
   private = true;
   description = 'upload a bit to a scope';

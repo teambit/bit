@@ -44,7 +44,7 @@ export default class BitJson {
   version: number;
   impl: string;
   spec: string;
-  dependencies: {[string]: string};
+  dependencies: Dependencies;
   remotes: Remotes;
   transpiler: string;
   tester: string;
