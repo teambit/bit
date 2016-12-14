@@ -36,7 +36,7 @@ export default class Consumer {
     const returnConsumer = () => this;
 
     return this.bitJson
-      .write({ dirPath: this.path })
+      .write({ bitDir: this.path })
       .then(createInlineDir)
       .then(createExternalDir)
       .then(returnConsumer);

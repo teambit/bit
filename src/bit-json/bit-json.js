@@ -112,9 +112,9 @@ export default class BitJson {
   /**
    * write to file as json
    */
-  write({ dirPath, override = false }: { dirPath: string, override?: boolean }): Promise<boolean> {
+  write({ bitDir, override = false }: { bitDir: string, override?: boolean }): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      if (!override && hasExisting(dirPath)) {
+      if (!override && hasExisting(bitDir)) {
         throw new BitJsonAlreadyExists();
       }
 
@@ -124,7 +124,7 @@ export default class BitJson {
       };
 
       fs.writeFile(
-        composePath(dirPath),
+        composePath(bitDir),
         this.toJson(),
         repspond
       );

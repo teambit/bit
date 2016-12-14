@@ -98,7 +98,7 @@ export default class Bit extends PartialBit {
 
         return mkdirp(bitPath)
         .then(() => this.impl.write(bitPath, this))
-        .then(() => this.bitJson.write({ dirPath: bitPath }))
+        .then(() => this.bitJson.write({ bitDir: bitPath }))
         .then(resolve);
       });
     });
