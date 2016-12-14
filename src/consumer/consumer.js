@@ -5,6 +5,7 @@ import fs from 'fs';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import BitJson from '../bit-json';
+import BitId from '../bit-id';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
 import { INLINE_BITS_DIRNAME, BITS_DIRNAME } from '../constants';
@@ -63,8 +64,9 @@ export default class Consumer {
   /**
    * fetch a bit from a remote, put in the bit.json and in the external directory
    **/
-  import({ name, remote }: { name: string, remote: string }): Bit { // eslint-disable-line
-    // @TODO
+  import(rawId: string): Bit { // eslint-disable-line
+    const bitId = BitId.parse(rawId, this.bitJson.remotes);
+    return bitId.scope.fetch([bitId]);
   }
 
   createBit({ name }: { name: string }): Promise<Bit> {

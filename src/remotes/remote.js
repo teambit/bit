@@ -28,7 +28,7 @@ export default class Remote {
     return connect(this.host);
   }
 
-  fetch(bitIds: BitId[]) {
+  fetch(bitIds: BitId[]): {name: string, contents: Buffer}[] {
     return this
       .connect()
       .fetch(

@@ -67,16 +67,17 @@ export default class SSH {
     });
   }
 
-  fetch(bitIds: string[]): Promise<Buffer> {
+  fetch(bitIds: string[]): Promise<{name: string, contents: Buffer}> {
     return this.exec('_fetch', ...bitIds)
       .then((packs) => {
         return packs
           .split('\n')
           .map(pack => pack.split('::').map(
             ([name, contents]) => {
+              console.log(name, contents);
               return {
                 name: fromBase64(name),
-                contents: fromBase64(contents)
+                contents: new Buffer(contents, 'base64')
               };
             }
           ));

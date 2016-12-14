@@ -1,11 +1,12 @@
 /** @flow */
 import { loadBox } from '../../box';
 import Command from '../command';
+import { importAction } from '../../api';
 
 const chalk = require('chalk');
 
 export default class Import extends Command {
-  name = 'import [ids...]';
+  name = 'import [ids]';
   description = 'import a bit';
   alias = 'i';
   opts = [
@@ -13,8 +14,7 @@ export default class Import extends Command {
   ];
 
   action([id]: [string]): Promise<any> {
-    // const bitId = BitId.parse(id);
-    // return bitId.remote.fetch(bitId);
+    return importAction({ bitId: id });
   }
 
   report({ name }: any): string {

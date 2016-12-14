@@ -2,9 +2,8 @@
 import BitId from '../../bit-id';
 import { loadConsumer } from '../../consumer';
 
-export default function importAction({ bitId }: { bitId: string }) {
+export default function importAction({ bitId }: { bitId: string }): Promise<any> {
   return loadConsumer().then((consumer) => {
-    bitId = BitId.parse(bitId, consumer.bitJson.remotes);
-    return bitId.remote.fetch(bitId);
+    return consumer.import(bitId);
   });
 }
