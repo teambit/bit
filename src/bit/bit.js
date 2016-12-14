@@ -123,6 +123,16 @@ export default class Bit extends PartialBit {
       });
   }
 
+  static loadFromMemory(name: string, bitDir: string, bitJson: BitJson, impl: Buffer, spec: Buffer) {
+    return new Bit({
+      name,
+      bitDir,
+      bitJson,
+      impl: new Impl(impl.toString()),
+      spec: new Specs(spec.toString)
+    }); 
+  }
+
   static create(props: PartialBitProps) {
     const { name, bitDir } = props;
 

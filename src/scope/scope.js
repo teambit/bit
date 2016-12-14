@@ -8,6 +8,8 @@ import { ScopeNotFound, ScopeAlreadyExists } from './exceptions';
 import Box from '../box';
 import { Source, Cache, Tmp } from './repositories';
 import BitJson from '../bit-json';
+import Bit from '../bit';
+import { BIT_JSON } from '../constants';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME]);
 
@@ -52,14 +54,22 @@ export default class Scope {
       .then(() => self.tmp.ensureDir())
       .then(() => self); 
   }
+  
 
   upload(name: string, tar: Buffer) {
     return getContents(tar)
       .then((files) => {
-        console.log(files);
-        mapObject()
+        const bitJson = BitJson.loadFromString(files[BIT_JSON]);
+        const bit = Bit.loadFromMemory(
+          name,
+          this.sources.getBitPath(name),
+          bitJson,
+          files[bitJson.impl],
+          files[bitJson.spec]
+        );
+
+        bit.write();
       });
-    // return extract(this.sources.getPath(), bufferToReadStream(tar));
   }
 
   getPath() {

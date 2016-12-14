@@ -8,5 +8,7 @@ export default class Source extends Repository {
     return path.join(super.getPath(), BIT_SOURCES_DIRNAME);
   }
 
-    
+  getBitPath(bitName: string) {
+    return path.join(this.getPath(), bitName);
+  }  
 }
