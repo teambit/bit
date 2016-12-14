@@ -1,5 +1,5 @@
 const path = require('path');
-const { pathHasRepo } = require('./repo-utils');
+const { pathHasRepo, composeRepoPath } = require('./repo-utils');
 
 const locateRepo = (absPath) => {
   const buildPropogationPaths = () => {
@@ -15,9 +15,13 @@ const locateRepo = (absPath) => {
     return paths.reverse();
   };
 
-  if (pathHasRepo(absPath)) return absPath;
+  if (pathHasRepo(absPath)) return composeRepoPath(absPath);
+
   const searchPaths = buildPropogationPaths();
-  return searchPaths.find(searchPath => pathHasRepo(searchPath));
+  const resultPath = searchPaths.find(searchPath => pathHasRepo(searchPath));
+  if (resultPath) composeRepoPath(resultPath);
+
+  throw new Error('could not find a bit repo');
 };
 
 module.exports = locateRepo;

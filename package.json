@@ -6,6 +6,9 @@
   "dependencies": {
     "camelcase": "^4.0.0",
     "glob": "^7.1.1",
+    "ramda": "^0.22.1",
+    "require-from-string": "^1.2.1",
+    "stack-trace": "0.0.9",
     "user-home": "^2.0.0"
   },
   "devDependencies": {

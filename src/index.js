@@ -1,28 +1,32 @@
 const path = require('path');
-const glob = require('glob');
-const composeRepoPath = require('./repo/repo-utils').composeRepoPath;
 const locateRepo = require('./repo/locate-repo');
-const loadBit = require('./bit/load-bit');
+const loadBitFromBitsDir = require('./bit/load-bit');
+const assert = require('assert').ok;
+const R = require('ramda');
+const stackTrace = require('stack-trace');
 
-const composeInlinePath = repoPath => path.join(repoPath, 'inline');
+const BitNotExistsException = require('./exceptions/bit-not-exists');
 
-const mapBits = (root) => {
-  const inlinePath = composeInlinePath(composeRepoPath(root));
-  return glob
-    .sync(path.join(inlinePath, '*'))
-    .map(loadBit)
-    .reduce((previousValue, currentValue) => {
-      if (!currentValue.name) { return previousValue; }
-      previousValue[currentValue.name] = currentValue.ref; // eslint-disable-line
-      return previousValue;
-    }, {});
+const loadBitFromPath = (bitName, dirPath) => {
+  const bitsDir = locateRepo(dirPath);
+  try {
+    return loadBitFromBitsDir(bitName, bitsDir);
+  } catch (e) {
+    if (e instanceof BitNotExistsException) {
+      return loadBitFromPath(bitName, path.join(bitsDir, '../..'));
+    }
+
+    throw e;
+  }
 };
 
-const loadBits = () => {
-  const repo = locateRepo(process.cwd());
-  if (!repo) return {};
-  const bits = mapBits(repo);
-  return bits;
+const load = (bitName) => {
+  assert(bitName, 'missing bit name');
+  assert(R.is(String, bitName), 'bit name must be a string');
+  const bitPath = stackTrace.get()[1].getFileName();
+  console.log('loadFrom: ', path.dirname(bitPath));
+
+  return loadBitFromPath(bitName, path.dirname(bitPath));
 };
 
-module.exports = loadBits();
+module.exports = load;
