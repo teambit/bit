@@ -4,11 +4,11 @@ import * as path from 'path';
 import Source from './source';
 import createSpecs from '../templates/specs.template';
 import Bit from '../bit';
-import { BIT_SPECS_FILE_NAME } from '../../constants';
+import { BIT_SPEC_FILE_NAME } from '../../constants';
 
 function composePath(...paths: Array<string>): string {
   // $FlowFixMe
-  return path.join(...paths, BIT_SPECS_FILE_NAME); 
+  return path.join(...paths, BIT_SPEC_FILE_NAME); 
 }
 
 export default class Specs extends Source {

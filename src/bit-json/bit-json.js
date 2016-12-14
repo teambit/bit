@@ -4,41 +4,63 @@ import fs from 'fs';
 import Dependencies from '../dependencies';
 import { BitJsonAlreadyExists, BitJsonNotFound } from './exceptions';
 import { Remotes } from '../remotes';
-import { BIT_JSON, HIDDEN_BIT_JSON, DEFAULT_TRANSPILER, DEFAULT_TESTER, DEFAULT_BIT_VERSION } from '../constants';
+import { 
+  BIT_JSON,
+  DEFAULT_TRANSPILER,
+  DEFAULT_TESTER,
+  DEFAULT_BIT_VERSION,
+  DEFAULT_BOX_NAME,
+  BIT_IMPL_FILE_NAME,
+  BIT_SPEC_FILE_NAME,
+  DEFAULT_BIT_NAME,
+} from '../constants';
 
-function composePath(bitPath: string, hidden: ?boolean) {
-  return path.join(bitPath, hidden ? HIDDEN_BIT_JSON : BIT_JSON);
+function composePath(bitPath: string) {
+  return path.join(bitPath, BIT_JSON);
 }
 
-function hasExisting(bitPath: string, hidden): boolean {
-  return fs.existsSync(composePath(bitPath, hidden));
+function hasExisting(bitPath: string): boolean {
+  return fs.existsSync(composePath(bitPath));
 }
+
+export type BitJsonProps = {
+  name?: string;
+  box?: string;
+  impl?: string;
+  spec?: string;
+  transpiler?: string;
+  tester?: string;
+  version?: number;
+  remotes?: Object;
+  dependencies?: Object;
+};
 
 export default class BitJson {
   /**
    * dependencies in bit json
    **/
+  name: string;
+  box: string;
+  version: number;
+  impl: string;
+  spec: string;
   dependencies: {[string]: string};
+  remotes: Remotes;
   transpiler: string;
   tester: string;
-  version: string;
-  remotes: Remotes;
-  hidden: boolean;
 
-  constructor({ dependencies, remotes, transpiler, tester, version, hidden = false }: {
-    dependencies: {[string]: string},
-    remotes: Object,
-    hidden: boolean,
-    transpiler: string,
-    tester: string,
-    version: string
-  }) {
-    this.dependencies = dependencies;
-    this.remotes = remotes;
-    this.hidden = hidden;
-    this.transpiler = transpiler;
-    this.tester = tester;
-    this.version = version;
+  constructor(
+    { name, box, version, impl, spec, dependencies, remotes, transpiler, tester }: BitJsonProps
+    ) {
+    this.name = name || DEFAULT_BIT_NAME;
+    this.box = box || DEFAULT_BOX_NAME;
+    this.impl = impl || BIT_IMPL_FILE_NAME;
+    this.spec = spec || BIT_SPEC_FILE_NAME;
+    this.transpiler = transpiler || DEFAULT_TRANSPILER;
+    this.tester = tester || DEFAULT_TESTER;
+    this.version = version || DEFAULT_BIT_VERSION;
+    this.remotes = Remotes.load(remotes);
+    this.dependencies = dependencies || {};
   }
 
   /**
@@ -67,6 +89,10 @@ export default class BitJson {
    */
   toPlainObject() {
     return {
+      name: this.name,
+      box: this.box,
+      impl: this.impl,
+      spec: this.spec,
       version: this.version,
       transpiler: this.transpiler,
       tester: this.tester,
@@ -98,7 +124,7 @@ export default class BitJson {
       };
 
       fs.writeFile(
-        composePath(dirPath, this.hidden),
+        composePath(dirPath),
         this.toJson(),
         repspond
       );
@@ -122,36 +148,22 @@ export default class BitJson {
     const json = JSON.parse(jsonStr);
     if (json.dependencies) json.dependencies = Dependencies.load(json.dependencies);
     if (json.remotes) json.remotes = Remotes.load(json.remotes); 
-    return new BitJson({ ...json, hidden: true });
+    return new BitJson(json);
   }
 
   /**
    * load existing json in root path
    */
-  static load(dirPath: string, hidden: boolean = false): Promise<BitJson> {
+  static load(dirPath: string): Promise<BitJson> {
     return new Promise((resolve, reject) => {
-      if (!hasExisting(dirPath, hidden)) return reject(new BitJsonNotFound());
-      return fs.readFile(composePath(dirPath, hidden), (err, data) => {
+      if (!hasExisting(dirPath)) return reject(new BitJsonNotFound());
+      return fs.readFile(composePath(dirPath), (err, data) => {
         if (err) return reject(err);
         const file = JSON.parse(data.toString('utf8'));
         if (file.dependencies) file.dependencies = Dependencies.load(file.dependencies);
         if (file.remotes) file.remotes = Remotes.load(file.remotes);  
-        return resolve(new BitJson({ ...file, hidden: true }));
+        return resolve(new BitJson(file));
       });
     });
-  }
-
-  static create({ hidden = true }: { hidden: boolean }): BitJson {
-    // @TODO check bit to update default bitJson 
-    return new BitJson(
-      {
-        transpiler: DEFAULT_TRANSPILER,
-        tester: DEFAULT_TESTER,
-        version: DEFAULT_BIT_VERSION,
-        remotes: new Remotes(),
-        hidden,
-        dependencies: {}
-      }
-    );
   }
 }

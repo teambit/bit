@@ -23,7 +23,7 @@ export default class Consumer {
 
   constructor({ path, bitJson, external, inline, created = false }: ConsumerProps) {
     this.path = path;
-    this.bitJson = bitJson || BitJson.create({ hidden: false });
+    this.bitJson = bitJson || new BitJson({});
     this.external = external || new External(this);
     this.inline = inline || new Inline(this);
     this.created = created;

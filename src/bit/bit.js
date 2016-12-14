@@ -121,7 +121,7 @@ export default class Bit extends PartialBit {
     return new Bit({
       name,
       drawer,
-      bitJson: BitJson.create({ hidden: true }),
+      bitJson: new BitJson({ name }),
       impl: Impl.create(this),
       specs: Specs.create(this),
     });
