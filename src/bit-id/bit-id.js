@@ -29,7 +29,7 @@ export default class BitId {
 
   static parse(str: string, remotes: ?Remotes): BitId {
     const splited = str.split('/'); 
-    if (splited.length === 3) {
+    if (splited.length === 3 || splited.length === 2) {
       const [scope, name, version] = splited; 
       return new BitId({
         scope: remoteResolver(scope, remotes),
