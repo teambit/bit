@@ -74,7 +74,6 @@ export default class SSH {
           .split('\n')
           .map(pack => pack.split('::').map(
             ([name, contents]) => {
-              console.log(name, contents);
               return {
                 name: fromBase64(name),
                 contents: new Buffer(contents, 'base64')

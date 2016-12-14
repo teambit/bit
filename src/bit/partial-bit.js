@@ -79,9 +79,8 @@ export default class PartialBit {
   }
 
   static load(name: string, bitDir: string): Promise<PartialBit> {  
-    return BitJson.load(bitDir)
+    return BitJson.load(path.join(bitDir, name))
       .then((bitJson) => {
-        console.log(bitJson);
         return new PartialBit({ name, bitDir, bitJson });
       });
   }
