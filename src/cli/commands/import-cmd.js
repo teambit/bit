@@ -18,6 +18,7 @@ export default class Import extends Command {
   }
 
   report({ name }: any): string {
+    console.dir(arguments, { depth: true });
     return chalk.green(`exported bit "${name}" from inline to external`);
   }
 

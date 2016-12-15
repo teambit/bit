@@ -72,14 +72,13 @@ export default class SSH {
       .then((packs) => {
         return packs
           .split('\n')
-          .map(pack => pack.split('::').map(
-            ([name, contents]) => {
-              return {
-                name: fromBase64(name),
-                contents: new Buffer(contents, 'base64')
-              };
-            }
-          ));
+          .map((pack) => {
+            const [name, contents] = pack.split('::');
+            return {
+              name: fromBase64(name),
+              contents: new Buffer(contents, 'base64')
+            };
+          });
       });
   }
 
