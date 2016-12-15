@@ -28,17 +28,34 @@ export default class BitId {
   }
 
   static parse(str: string, remotes: ?Remotes): BitId {
-    const splited = str.split('/'); 
-    if (splited.length === 3 || splited.length === 2) {
-      const [scope, name, version] = splited; 
-      return new BitId({
-        scope: remoteResolver(scope, remotes),
-        name, 
-        version: Version.parse(version)
-      });
+    let scope;
+    let box;
+    let name;
+    let version;
+    const splited = str.split('/');
+
+    if (splited.length === 2) { 
+      scope = splited[0];
+      name = splited[1];
+    } else if (splited.length === 3) { 
+      scope = splited[0];
+
+      if (Version.validate(splited[2])) {
+        name = splited[1];
+        version = splited[2];
+      } else {
+        box = splited[1];
+        name = splited[2];
+      }
+      // @POTENTIAL BUG
+      // @TODO - name can not be latest because of that feature
+    } else {
+      scope = splited[0];
+      box = splited[1];
+      name = splited[2];
+      version = splited[3];
     }
 
-    const [scope, box, name, version] = splited;
     return new BitId({
       scope: remoteResolver(scope, remotes),
       name,
