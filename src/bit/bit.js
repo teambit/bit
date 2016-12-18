@@ -68,6 +68,10 @@ export default class Bit extends PartialBit {
     });
   }
 
+  composeSourcePath() {
+    return path.join(this.name, this.bitJson.box, this.bitJson.version.toString());
+  }
+
   fetchDependencies(): BitId[] {
     return this.bitJson.dependencies.map((dependency) => {
       return dependency.fetch();

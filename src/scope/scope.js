@@ -23,6 +23,7 @@ export default class Scope {
   // boxes: Box;
   // cache: Cache;
   // scopeJson: ScopeJson;
+  // external: External
   created: boolean = false;
   cache: Cache;
   tmp: Tmp;
@@ -41,6 +42,21 @@ export default class Scope {
   prepareBitRegistration(name: string, bitJson: BitJson) {
     if (!bitJson.validate()) throw new Error('');
     return pathlib.join(this.tmp.getPath(), `${name}_${bitJson.version}.tar`);
+  }
+
+  put(bit: Bit) {
+    bit.validate();
+    bit.bitDir = bit.composeSourcePath();
+    bit.bitJson.dependencies.import();
+    bit.write();
+  }
+
+  import(bitIds: BitId[]) {
+    
+  }
+
+  sync() {
+
   }
 
   ensureDir() {
