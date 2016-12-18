@@ -7,7 +7,6 @@ import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
 import BitNotFoundException from './exceptions/bit-not-found';
 import Bit from './bit';
-import BitId from '../bit-id';
 
 export type PartialBitProps = {
   name: string;
@@ -39,12 +38,10 @@ export default class PartialBit {
   }
 
   getArchiveFiles() {
-    const bitPath = this.bitDir;
-
     return [
-      `${bitPath}/${this.bitJson.impl}`,
-      `${bitPath}/${this.bitJson.spec}`,
-      this.bitJson.getPath(bitPath)
+      path.join(this.bitDir, this.bitJson.impl),
+      path.join(this.bitDir, this.bitJson.spec),
+      this.bitJson.getPath(this.bitDir)
     ];
   }
   
@@ -77,8 +74,6 @@ export default class PartialBit {
 
   static load(name: string, bitDir: string): Promise<PartialBit> {  
     return BitJson.load(bitDir)
-      .then((bitJson) => {
-        return new PartialBit({ name, bitDir, bitJson });
-      });
+      .then(bitJson => new PartialBit({ name, bitDir, bitJson }));
   }
 }

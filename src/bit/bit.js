@@ -6,7 +6,7 @@ import { mkdirp } from '../utils';
 import BitJson from '../bit-json';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 import PartialBit from './partial-bit';
-import { Remote } from '../remotes';
+import BitId from '../bit-id';
 import type { PartialBitProps } from './partial-bit';
 import loadTranspiler from './environment/load-transpiler';
 
@@ -72,11 +72,6 @@ export default class Bit extends PartialBit {
     return this.bitJson.dependencies.map((dependency) => {
       return dependency.fetch();
     });
-  }
-
-  export(remote: Remote) {
-    this.validate();
-    return remote.push(this);
   }
 
   write(): Promise<boolean> {

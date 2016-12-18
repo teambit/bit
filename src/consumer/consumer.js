@@ -14,6 +14,17 @@ import { BitJsonNotFound } from '../bit-json/exceptions';
 import { toBase64 } from '../utils';
 import { Scope } from '../scope';
 
+const getBitDirForConsumerImport = ({
+  bitsDir, name, box, version, remote
+}: {
+  bitsDir: string,
+  name: string,
+  box: string,
+  version: number,
+  remote: string 
+}): string => 
+  path.join(bitsDir, box, name, toBase64(remote), version.toString());
+
 export type ConsumerProps = {
   projectPath: string,
   created?: boolean,
@@ -67,6 +78,30 @@ export default class Consumer {
     .then(partial => partial.loadFull());
   }
 
+  loadBitFromRawContents(contents: Buffer) {
+    return tar.getContents(contents)
+      .then((bitContents) => {
+        if (!bitContents[BIT_JSON]) throw new BitJsonNotFound();
+        
+        const bitJson = JSON.parse(bitContents[BIT_JSON].toString('ascii'));
+
+        const { name, box, version, impl, spec } = bitJson;
+        const remote = 'ssh://ran@104.198.245.134:/home/ranmizrahi/scope';
+
+        const bitDir = getBitDirForConsumerImport({
+          bitsDir: this.getBitsPath(), name, box, version, remote
+        });
+
+        return Bit.loadFromMemory({
+          name,
+          bitDir,
+          bitJson,
+          impl: impl ? bitContents[impl] : undefined,
+          spec: spec ? bitContents[spec] : undefined,
+        });
+      });
+  }
+  
   /**
    * fetch a bit from a remote, put in the bit.json and in the external directory
    **/
@@ -75,51 +110,9 @@ export default class Consumer {
       return this.bitJson.dependencies.import();
     }
 
-    const getBitDirForConsumerImport = ({
-        bitsDir, name, box, version, remote
-      }) => {
-      const base64Remote = toBase64(remote);
-      return path.join(bitsDir, box, name, base64Remote, version.toString());
-    };
-
-    const getBitFromRawContents = ({ contents }) =>
-      tar.getContents(contents)
-      .then((bitContents) => {
-        if (!bitContents[BIT_JSON]) throw new BitJsonNotFound();
-        
-        const bitJson = JSON.parse(
-          bitContents[BIT_JSON].toString('ascii')
-        );
-
-
-        const { name, box, version, impl, spec } = bitJson;
-        const remote = 'ssh://ran@104.198.245.134:/home/ranmizrahi/scope';
-        
-        const implContent = impl ? bitContents[impl] : undefined;
-        const specContent = spec ? bitContents[spec] : undefined;
-
-        const bitDir = getBitDirForConsumerImport({
-          bitsDir: this.getBitsPath(),
-          name,
-          box,
-          version,
-          remote
-        });
-
-        return Bit.loadFromMemory({
-          name,
-          bitDir,
-          bitJson,
-          impl: implContent,
-          spec: specContent,
-        });
-      });
-
     const bitId = BitId.parse(rawId, this.bitJson.remotes);
     return bitId.remote.fetch([bitId])
-      .then(bits =>
-        Promise.all(bits.map(getBitFromRawContents))
-      );
+      .then(bits => Promise.all(bits.map(({ contents }) => this.loadBitFromRawContents(contents))));
   }
 
   createBit({ name }: { name: string }): Promise<Bit> {
@@ -145,16 +138,13 @@ export default class Consumer {
         });
     });
   }
-
-  // createBox(name: string): Promise<Consumer> {
-    // return Box.create(name);
-  // }
   
-  export(name: string, remoteName: string) {
-    const remote = this.bitJson.remotes.get(remoteName);
-    return this.get(name).then((bit) => {
-      return bit.export(remote);
-    });
+  export(name: string) {
+    return this.get(name)
+      // .then(bit => bit.validate())
+    .then(bit => this.scope.put(bit))
+    .then(bitId => this.scope.get(bitId))
+    .then(contents => Bit.loadFromMemory(this.loadBitFromRawContents(contents)));
   }
 
   /**
