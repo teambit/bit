@@ -27,8 +27,9 @@ export default class Dependencies extends Array<BitId> {
       promises.push(res);
     });
 
-    return Promise.all(promises).then((data) => {
-      console.log(data);
-    });
+    return Promise.all(promises)
+      .then((data) => {
+        console.log(data);
+      });
   }
 }

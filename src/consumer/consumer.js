@@ -8,7 +8,7 @@ import BitJson from '../bit-json';
 import BitId from '../bit-id';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
-import { INLINE_BITS_DIRNAME, BITS_DIRNAME, BIT_JSON } from '../constants';
+import { INLINE_BITS_DIRNAME, BITS_DIRNAME, BIT_JSON, BIT_HIDDEN_DIR } from '../constants';
 import * as tar from '../tar';
 import { BitJsonNotFound } from '../bit-json/exceptions';
 import { toBase64 } from '../utils';
@@ -35,11 +35,10 @@ export default class Consumer {
   }
 
   write(): Promise<Consumer> {
-    const returnConsumer = () => this;
-
     return this.bitJson
       .write({ bitDir: this.projectPath })
-      .then(returnConsumer);
+      .then(() => this.scope.ensureDir())
+      .then(() => this);
   }
 
   getInlineBitsPath(): string {
@@ -185,17 +184,20 @@ export default class Consumer {
 
   static create(projectPath: string = process.cwd()): Consumer {
     if (pathHasConsumer(projectPath)) throw new ConsumerAlreadyExists();
-    return new Consumer({ projectPath, created: true });
+    const scope = Scope.create(path.join(projectPath, BIT_HIDDEN_DIR));
+    return new Consumer({ projectPath, created: true, scope });
   }
 
   static load(currentPath: string): Promise<Consumer> {
     const projectPath = locateConsumer(currentPath);
     if (!projectPath) throw new ConsumerNotFound();
+    const scope = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
     return BitJson.load(projectPath)
     .then(bitJson =>
       new Consumer({
         projectPath,
-        bitJson
+        bitJson,
+        scope
       })
     );
   }

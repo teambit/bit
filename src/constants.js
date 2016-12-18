@@ -83,7 +83,7 @@ export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
  */
 export const GLOBAL_BIT_CACHE = path.join(CACHE_ROOT, 'bits');
 
-export const BIT_HIDDEN_CONTAINER_DIRNAME = '.bit';
+export const BIT_HIDDEN_DIR = '.bit';
 
 export const BIT_CONTAINER_FOLDERS = ['sources'];
 
