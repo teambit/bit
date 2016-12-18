@@ -25,15 +25,11 @@ export default class PartialBit {
     this.bitJson = bitProps.bitJson;
   }
 
-  getPath() {
-    return path.join(this.bitDir, this.name);
-  }
-
   erase(): Promise<PartialBit> {
     return new Promise((resolve, reject) => {
-      return fs.stat(this.getPath(), (err) => {
+      return fs.stat(this.bitDir, (err) => {
         if (err) reject(new BitNotFoundException());
-        return fs.remove(this.getPath(), (e) => {
+        return fs.remove(this.bitDir, (e) => {
           if (e) return reject(e);
           return resolve(this);
         });
@@ -42,7 +38,7 @@ export default class PartialBit {
   }
 
   getArchiveFiles() {
-    const bitPath = this.getPath();
+    const bitPath = this.bitDir;
 
     return [
       `${bitPath}/${this.bitJson.impl}`,
@@ -65,8 +61,8 @@ export default class PartialBit {
 
   loadFull(): Promise<Bit> {
     return Promise.all([
-      Impl.load(this.getPath()),
-      Specs.load(this.getPath())
+      Impl.load(this.bitDir),
+      Specs.load(this.bitDir)
     ]).then(([impl, specs ]) => 
       new Bit({
         name: this.name,
@@ -79,7 +75,7 @@ export default class PartialBit {
   }
 
   static load(name: string, bitDir: string): Promise<PartialBit> {  
-    return BitJson.load(path.join(bitDir, name))
+    return BitJson.load(bitDir)
       .then((bitJson) => {
         return new PartialBit({ name, bitDir, bitJson });
       });

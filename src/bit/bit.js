@@ -70,7 +70,7 @@ export default class Bit extends PartialBit {
     .then(({ transpile }) => {
       const src = this.impl.src;
       const { code, map } = transpile(src); // eslint-disable-line
-      return saveBuild({ bundle: code, bitPath: this.getPath() });
+      return saveBuild({ bundle: code, bitPath: this.bitDir });
     });
   }
 
@@ -80,10 +80,11 @@ export default class Bit extends PartialBit {
   }
 
   write(): Promise<boolean> {
+    const bitPath = this.bitDir; 
     return new Promise((resolve, reject) => {
-      return fs.stat(this.getPath(), (err) => {
+      return fs.stat(bitPath, (err) => {
         if (!err) return reject(new BitAlreadyExistsInternalyException(this.name));
-        const bitPath = this.getPath(); 
+        
         return mkdirp(bitPath)
         .then(() => this.impl.write(bitPath, this))
         .then(() => this.bitJson.write({ bitDir: bitPath }))
@@ -99,19 +100,19 @@ export default class Bit extends PartialBit {
       );
   }
 
-  static loadFromMemory(
+  static loadFromMemory({ name, bitDir, bitJson, impl, spec }: {
     name: string,
     bitDir: string,
-    bitJson: BitJson,
+    bitJson: Object,
     impl: Buffer,
     spec: Buffer
-    ) {
+  }) {
     return new Bit({
       name,
       bitDir,
-      bitJson,
-      impl: new Impl(impl.toString()),
-      spec: new Specs(spec.toString())
+      bitJson: BitJson.loadFromRaw(bitJson),
+      impl: impl ? new Impl(impl.toString()) : undefined,
+      spec: spec ? new Specs(spec.toString()) : undefined
     }); 
   }
 

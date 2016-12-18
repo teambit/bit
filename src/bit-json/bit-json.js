@@ -148,10 +148,9 @@ export default class BitJson {
     // return this.remotes.get(name);
   // }
 
-  static loadFromString(jsonStr: string) {
-    const json = JSON.parse(jsonStr);
-    if (json.dependencies) json.dependencies = Dependencies.load(json.dependencies);
-    if (json.remotes) json.remotes = Remotes.load(json.remotes); 
+  static loadFromRaw(json: Object) {
+    json.dependencies = json.dependencies ? Dependencies.load(json.dependencies) : undefined;
+    json.remotes = json.remotes ? Remotes.load(json.remotes) : undefined; 
     return new BitJson(json);
   }
 

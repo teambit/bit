@@ -8,7 +8,10 @@ import BitJson from '../bit-json';
 import BitId from '../bit-id';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
-import { INLINE_BITS_DIRNAME, BITS_DIRNAME } from '../constants';
+import { INLINE_BITS_DIRNAME, BITS_DIRNAME, BIT_JSON } from '../constants';
+import * as tar from '../tar';
+import { BitJsonNotFound } from '../bit-json/exceptions';
+import { toBase64 } from '../utils';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -64,28 +67,72 @@ export default class Consumer {
   /**
    * fetch a bit from a remote, put in the bit.json and in the external directory
    **/
-  import(rawId: string): Bit { // eslint-disable-line
+  import(rawId: string): Bit {
+    const getBitDirForConsumerImport = ({
+        bitsDir, name, box, version, remote
+      }) => {
+      const base64Remote = toBase64(remote);
+      return path.join(bitsDir, box, name, base64Remote, version.toString());
+    };
+
+    const getBitFromRawContents = ({ contents }) =>
+      tar.getContents(contents)
+      .then((bitContents) => {
+        if (!bitContents[BIT_JSON]) throw new BitJsonNotFound();
+        
+        const bitJson = JSON.parse(
+          bitContents[BIT_JSON].toString('ascii')
+        );
+
+
+        const { name, box, version, impl, spec } = bitJson;
+        const remote = 'ssh://ran@104.198.245.134:/home/ranmizrahi/scope';
+        
+        const implContent = impl ? bitContents[impl] : undefined;
+        const specContent = spec ? bitContents[spec] : undefined;
+
+        const bitDir = getBitDirForConsumerImport({
+          bitsDir: this.getBitsPath(),
+          name,
+          box,
+          version,
+          remote
+        });
+
+        return Bit.loadFromMemory({
+          name,
+          bitDir,
+          bitJson,
+          impl: implContent,
+          spec: specContent,
+        });
+      });
+
     const bitId = BitId.parse(rawId, this.bitJson.remotes);
-    return bitId.scope.fetch([bitId]);
+    return bitId.remote.fetch([bitId])
+      .then(bits =>
+        Promise.all(bits.map(getBitFromRawContents))
+      );
   }
 
   createBit({ name }: { name: string }): Promise<Bit> {
-    return Bit.create({ name, bitDir: this.getInlineBitsPath() }).write();
+    return Bit.create({ name, bitDir: path.join(this.getInlineBitsPath(), name) }).write();
   }
 
-  removeBit(props: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
-    const bitDir = inline ? this.getInlineBitsPath() : this.getBitsPath(); 
-    return PartialBit.load(props.name, bitDir).then(bit => bit.erase());
+  removeBit({ name }: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
+    const containingDir = inline ? this.getInlineBitsPath() : this.getBitsPath();
+    const bitDir = path.join(containingDir, name); 
+    return PartialBit.load(name, bitDir).then(bit => bit.erase());
   }
 
   resolveBitDir(name: string): Promise<string> {
     return new Promise((resolve, reject) => {
       this.includes({ bitName: name, inline: true })
         .then((isInline) => {
-          if (isInline) return resolve(this.getInlineBitsPath());
+          if (isInline) return resolve(path.join(this.getInlineBitsPath(), name));
           return this.includes({ bitName: name, inline: false })
             .then((isExternal) => {
-              if (isExternal) return resolve(this.getBitsPath());
+              if (isExternal) return resolve(path.join(this.getBitsPath(), name));
               return reject(new Error('bit not found error'));
             });
         });

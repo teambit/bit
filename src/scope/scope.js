@@ -61,7 +61,8 @@ export default class Scope {
       return this.sources
         .getPartial(name)
         .then((bit) => {
-          return bit.toTar().then((tar) => {
+          return bit.toTar()
+          .then((tar) => {
             return {
               id: name,
               contents: tar
@@ -74,15 +75,15 @@ export default class Scope {
   upload(name: string, tar: Buffer) {
     return getContents(tar)
       .then((files) => {
-        const bitJson = BitJson.loadFromString(files[BIT_JSON]);
+        const bitJson = JSON.parse(files[BIT_JSON]);
         
-        const bit = Bit.loadFromMemory(
+        const bit = Bit.loadFromMemory({
           name,
-          this.sources.getBitPath(name),
-          bitJson,
-          files[bitJson.impl],
-          files[bitJson.spec]
-        );
+          bitDir: this.sources.getBitPath(name),
+          bitJson: files[BIT_JSON],
+          impl: bitJson.impl ? files[bitJson.impl] : undefined,
+          spec: bitJson.spec ? files[bitJson.spec] : undefined
+        });
 
         return bit.write();
       });

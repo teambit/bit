@@ -36,7 +36,7 @@ export function extract(path: string, readStream: any): Promise<any> {
 export function getContents(tar: Buffer): Promise<{[string]: string}> {
   return new Promise((resolve, reject) => {
     const files = {};
-    bufferToReadStream(tar)
+    return bufferToReadStream(tar)
       .pipe(parseFactory())
       .on('entry', (entry) => {
         entry.on('data', (data) => {
