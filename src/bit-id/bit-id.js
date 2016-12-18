@@ -1,66 +1,54 @@
 /** @flow */
 import Version from '../version';
 import { Remote, remoteResolver, Remotes } from '../remotes';
+import { InvalidBitId } from './exceptions';
 
 export type BitIdProps = {
-  remote: Remote;  
+  scope: Remote;  
   box?: string;
   name: string;
   version: Version;
 };
 
 export default class BitId {
-  remote: Remote;
-  box: ?string;
   name: string;
+  box: ?string;
   version: Version;
+  scope: Remote;
 
-  constructor({ remote, box, name, version }: BitIdProps) {
-    this.remote = remote;
+  constructor({ scope, box, name, version }: BitIdProps) {
+    this.scope = scope;
     this.box = box || 'global';
     this.name = name;
     this.version = version;
   }
 
   toString() {
-    const { name, box, version, remote } = this;
-    return [remote, box, name, version].join('/');
+    const { name, box, version, scope } = this;
+    return [scope, box, name, version].join('/');
   }
 
-  static parse(str: string, remotes: ?Remotes): BitId {
-    let remote;
-    let box;
-    let name;
-    let version;
-    const splited = str.split('/');
-
-    if (splited.length === 2) { 
-      remote = splited[0];
-      name = splited[1];
-    } else if (splited.length === 3) { 
-      remote = splited[0];
-
-      if (Version.validate(splited[2])) {
-        name = splited[1];
-        version = splited[2];
-      } else {
-        box = splited[1];
-        name = splited[2];
-      }
-      // @POTENTIAL BUG
-      // @TODO - name can not be latest because of that feature
-    } else {
-      remote = splited[0];
-      box = splited[1];
-      name = splited[2];
-      version = splited[3];
+  static parse(id: string, version: string = 'latest', remotes: ?Remotes): BitId {
+    const splited = id.split('/'); 
+    if (splited.length === 3) {
+      const [scope, box, name] = splited;
+      return new BitId({
+        scope: remoteResolver(scope, remotes),
+        box,
+        name,
+        version: Version.parse(version)
+      });
     }
 
-    return new BitId({
-      remote: remoteResolver(remote, remotes),
-      name,
-      box,
-      version: Version.parse(version)
-    });
+    if (splited.length === 2) {
+      const [scope, name] = splited;
+      return new BitId({
+        scope: remoteResolver(scope, remotes),
+        name,
+        version: Version.parse(version)
+      });
+    }
+
+    throw new InvalidBitId();
   }
 }

@@ -163,8 +163,8 @@ export default class BitJson {
       return fs.readFile(composePath(dirPath), (err, data) => {
         if (err) return reject(err);
         const file = JSON.parse(data.toString('utf8'));
-        if (file.dependencies) file.dependencies = Dependencies.load(file.dependencies);
         if (file.remotes) file.remotes = Remotes.load(file.remotes);  
+        if (file.dependencies) file.dependencies = Dependencies.load(file.dependencies, file.remotes);
         return resolve(new BitJson(file));
       });
     });

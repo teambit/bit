@@ -1,7 +1,7 @@
 /** @flow */
 import keyGetter from './key-getter';
 import Bit from '../../bit';
-import { bufferToReadStream, toBase64, fromBase64 } from '../../utils';
+import { toBase64, fromBase64 } from '../../utils';
 import type { SSHUrl } from '../../utils/parse-ssh-url';
 
 const sequest = require('sequest');

@@ -1,15 +1,12 @@
 /** @flow */
-import { Parse } from 'tar';
 import * as pathlib from 'path';
-import { propogateUntil, pathHas, bufferToReadStream } from '../utils';
-import { extract, getContents } from '../tar';
-import { BIT_SOURCES_DIRNAME } from '../constants';
-import { ScopeNotFound, ScopeAlreadyExists } from './exceptions';
-import BitId from '../bit-id';
+import { propogateUntil, pathHas } from '../utils';
+import { getContents } from '../tar';
+import { BIT_SOURCES_DIRNAME, BIT_JSON } from '../constants';
+import { ScopeNotFound } from './exceptions';
 import { Source, Cache, Tmp } from './repositories';
 import BitJson from '../bit-json';
 import Bit from '../bit';
-import { BIT_JSON } from '../constants';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME]);
 
@@ -55,6 +52,12 @@ export default class Scope {
       .then(() => self.tmp.ensureDir())
       .then(() => self); 
   }
+
+  // resolve(bitId: BitId) {
+  //   return this.sources.getPartial().then((partial) => {
+  //     partial.resolveDependencies();
+  //   });
+  // }
   
   fetch(bitIds: string[]): Promise<{id: string, contents: Buffer}>[] {
     return bitIds.map((name) => {
@@ -84,6 +87,8 @@ export default class Scope {
           impl: bitJson.impl ? files[bitJson.impl] : undefined,
           spec: bitJson.spec ? files[bitJson.spec] : undefined
         });
+
+        bit.resolveDependencies();
 
         return bit.write();
       });

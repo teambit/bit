@@ -7,6 +7,7 @@ import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
 import BitNotFoundException from './exceptions/bit-not-found';
 import Bit from './bit';
+import BitId from '../bit-id';
 
 export type PartialBitProps = {
   name: string;

@@ -1,4 +1,5 @@
 /** @flow */
+import first from './first';
 import resolveBoolean from './resolve-boolean';
 import mapObject from './map-object';
 import mkdirp from './mkdirp';
@@ -35,5 +36,6 @@ export {
   mapObject,
   propogateUntil,
   pathHas,
+  first,
   bufferToReadStream
 };

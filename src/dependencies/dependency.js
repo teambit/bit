@@ -29,8 +29,8 @@ export default class Dependency {
 
   }
 
-  resolve() {
-    return this.remote.resolveDependency(this);
+  fetch() {
+    return this.remote.fetch();
   }
 
   static load(depName: string, version: string) {

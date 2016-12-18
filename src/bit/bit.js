@@ -59,18 +59,18 @@ export default class Bit extends PartialBit {
     return null;
   }
 
-  resolveDependencies() {
-    return this.bitJson.dependencies.map((dependency) => {
-      return dependency.resolve();
-    });
-  }
-
   build() {
     return loadTranspiler(this.bitJson.transpiler)
     .then(({ transpile }) => {
       const src = this.impl.src;
       const { code, map } = transpile(src); // eslint-disable-line
       return saveBuild({ bundle: code, bitPath: this.bitDir });
+    });
+  }
+
+  fetchDependencies(): BitId[] {
+    return this.bitJson.dependencies.map((dependency) => {
+      return dependency.fetch();
     });
   }
 

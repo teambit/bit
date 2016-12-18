@@ -12,22 +12,26 @@ import { INLINE_BITS_DIRNAME, BITS_DIRNAME, BIT_JSON } from '../constants';
 import * as tar from '../tar';
 import { BitJsonNotFound } from '../bit-json/exceptions';
 import { toBase64 } from '../utils';
+import { Scope } from '../scope';
 
 export type ConsumerProps = {
   projectPath: string,
   created?: boolean,
-  bitJson?: BitJson
+  bitJson?: BitJson,
+  scope: Scope
 };
 
 export default class Consumer {
   projectPath: string;
   created: boolean;
   bitJson: BitJson;
+  scope: Scope;
 
-  constructor({ projectPath, bitJson, created = false }: ConsumerProps) {
+  constructor({ projectPath, bitJson, scope, created = false }: ConsumerProps) {
     this.projectPath = projectPath;
     this.bitJson = bitJson || new BitJson({});
     this.created = created;
+    this.scope = scope;
   }
 
   write(): Promise<Consumer> {
@@ -67,7 +71,11 @@ export default class Consumer {
   /**
    * fetch a bit from a remote, put in the bit.json and in the external directory
    **/
-  import(rawId: string): Bit {
+  import(rawId: ?string): Bit {
+    if (!rawId) {
+      return this.bitJson.dependencies.import();
+    }
+
     const getBitDirForConsumerImport = ({
         bitsDir, name, box, version, remote
       }) => {

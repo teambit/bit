@@ -36,10 +36,6 @@ export default class Remote {
       );
   }
 
-  resolveDependency(dependency: Dependency) {
-    this.connect().resolve(); 
-  }
-
   validate() {
     if (!isBitUrl(this.host)) throw new InvalidRemote();
   }
