@@ -49,6 +49,10 @@ export const DEFAULT_TRANSPILER = 'bit-babel';
 
 export const DEFAULT_TESTER = 'bit-jasmin';
 
+export const DEFAULT_DIST_DIRNAME = 'dist';
+
+export const DEFAULT_BUNDLE_FILENAME = 'bundle.js';
+
 export const DEFAULT_BIT_VERSION = '1';
 
 export const LATEST_BIT_VERSION = 'latest';

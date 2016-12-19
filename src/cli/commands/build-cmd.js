@@ -6,16 +6,16 @@ const chalk = require('chalk');
 
 
 export default class Build extends Command {
-  name = 'build <name>';
+  name = 'build <id>';
   description = 'build a bit';
   alias = '';
   opts = [];
   
-  action([name, ]: [string]): Promise<*> {
-    return build({ name });
+  action([id, ]: [string]): Promise<*> {
+    return build({ id });
   }
 
   report(): string {
-    return chalk.bgBlack(`- finish build cmd`);
+    return chalk.bgBlack('-> finish build cmd');
   }
 }

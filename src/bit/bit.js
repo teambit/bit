@@ -8,24 +8,12 @@ import { Remotes } from '../remotes';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 import PartialBit from './partial-bit';
 import { BitId } from '../bit-id';
-import type { PartialBitProps } from './partial-bit';
 import loadTranspiler from './environment/load-transpiler';
+import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
 
-function saveBuild({ bundle, bitPath }) {  
-  const outputDir = path.join(bitPath, 'dist');
-  const outputFile = path.join(outputDir, 'bundle.js');
-  
-  return new Promise((resolve, reject) => {
-    fs.ensureDir(outputDir, (err) => {
-      if (err) reject(err);
-    });
-
-    fs.writeFile(outputFile, bundle, (err) => {
-      if (err) reject(err);
-    });
-
-    resolve();
-  });
+function saveBuildSync({ bundle, bitPath }) {  
+  const outputFile = path.join(bitPath, 'dist', 'bundle.js');
+  fs.outputFileSync(outputFile, bundle);
 }
 
 export type BitProps = {
@@ -54,7 +42,8 @@ export default class Bit extends PartialBit {
     .then(({ transpile }) => {
       const src = this.impl.src;
       const { code, map } = transpile(src); // eslint-disable-line
-      return saveBuild({ bundle: code, bitPath: this.bitDir });
+      const outputFile = path.join(this.bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
+      fs.outputFileSync(outputFile, code);
     });
   }
 
