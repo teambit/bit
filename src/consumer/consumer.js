@@ -138,7 +138,9 @@ export default class Consumer {
     return this.loadBit(id)
       // .then(bit => bit.validate())
     .then(bit => this.scope.put(bit))
-    .then(bits => Promise.all(bits.map(cdAndWrite)));
+    .then(bits => {
+      Promise.all(bits.map(cdAndWrite));
+    });
     // .then(() => this.removeBit(id));
   }
 

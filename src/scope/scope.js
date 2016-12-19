@@ -64,7 +64,7 @@ export default class Scope {
         return this.sources.setSource(bit)
           // .then(() => bit.build())
           .then(() => this.dependencyMap.write())
-          .then(() => bits);
+          .then(() => bits.concat(bit));
           // .catch(err => clear());
       });
   }
