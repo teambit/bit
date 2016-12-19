@@ -6,7 +6,7 @@ import { remove } from '../../api';
 export default class Remove extends Command {
   name = 'rm <name>';
   description = 'remove a bit';
-  alias = 'rm';
+  alias = '';
   opts = [
     ['i', 'inline', 'remove inline bit']
   ];

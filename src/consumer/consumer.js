@@ -67,7 +67,7 @@ export default class Consumer {
 
   loadBit(id: BitInlineId): Promise<Bit> {
     return PartialBit.load(this.getPath(), id)
-    .then(partial => partial.loadFull());
+      .then(partial => partial.loadFull());
   }
 
   loadBitFromRawContents(contents: Buffer) {
