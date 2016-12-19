@@ -53,7 +53,7 @@ export default class Bit extends PartialBit {
     // });
   }
 
-  write(): Promise<boolean> {
+  write(): Promise<Bit> {
     const bitPath = this.bitDir; 
     return new Promise((resolve, reject) => {
       return fs.stat(bitPath, (err) => {
@@ -62,7 +62,7 @@ export default class Bit extends PartialBit {
         return mkdirp(bitPath)
         .then(() => this.impl.write(bitPath, this))
         .then(() => this.bitJson.write({ bitDir: bitPath }))
-        .then(resolve);
+        .then(() => resolve(this));
       });
     });
   }

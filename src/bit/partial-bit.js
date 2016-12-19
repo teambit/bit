@@ -55,6 +55,10 @@ export default class PartialBit {
     return this.bitJson.box;
   }
   
+  getPath() {
+    return this.bitDir;
+  }
+
   getVersion() {
     return this.bitJson.version;
   }

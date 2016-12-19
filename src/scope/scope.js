@@ -65,7 +65,7 @@ export default class Scope {
       .then(() => bit.build());
   }
 
-  get(bitId: BitId) {
+  get(bitId: BitId): Promise<Bit> {
     return this.sources.loadSource(bitId);
   }
 
