@@ -66,7 +66,8 @@ export default class Consumer {
   }
 
   loadBit(id: BitInlineId): Promise<Bit> {
-    return PartialBit.load(this.getPath(), id)
+    const bitDir = id.composeBitPath(this.getPath());
+    return PartialBit.load(bitDir, id.name)
       .then(partial => partial.loadFull());
   }
 
@@ -116,16 +117,14 @@ export default class Consumer {
   }
 
   removeBit(id: BitInlineId): Promise<Bit> {
-    return PartialBit.load(this.getPath(), id)
+    const bitDir = id.composeBitPath(this.getPath());
+    return PartialBit.load(bitDir, id.name)
     .then(bit => bit.erase());
   }
   
   // @TODO change from name to BitID
   export(id: BitInlineId) {
-    return this.loadBit(id)
-      // .then(bit => bit.validate())
-    .then(bit => this.scope.put(bit))
-    .then(bit => 
+    const cdAndWrite = (bit: Bit): Bit => 
       bit.cd(
         getBitDirForConsumerImport({
           bitsDir: this.getBitsPath(),
@@ -134,9 +133,13 @@ export default class Consumer {
           version: bit.getVersion(),
           remote: bit.getScope()
         })
-      ).write()
-    );
-    // .then(() => this.removeBit(id));
+      ).write();
+
+    return this.loadBit(id)
+      // .then(bit => bit.validate())
+    .then(bit => this.scope.put(bit))
+    .then(bits => Promise.all(bits.map(cdAndWrite)))
+    .then(() => this.removeBit(id));
   }
 
   /**

@@ -139,10 +139,8 @@ export default class PartialBit {
     );
   }
 
-  static load(consumerPath: string, id: BitInlineId): Promise<PartialBit> {
-    const bitDir = id.composeBitPath(consumerPath);
-
+  static load(bitDir: string, name: string): Promise<PartialBit> {
     return BitJson.load(bitDir)
-      .then(bitJson => new PartialBit({ name: id.name, bitDir, bitJson }));
+      .then(bitJson => new PartialBit({ name, bitDir, bitJson }));
   }
 }

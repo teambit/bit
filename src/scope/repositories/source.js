@@ -19,7 +19,7 @@ export default class Source extends Repository {
   }  
 
   getPartial(name: string): Promise<ParitalBit> {
-    return ParitalBit.load(name, path.join(this.getPath(), name));
+    return ParitalBit.load(path.join(this.getPath(), name), name);
   }
 
   setSource(bit: Bit): Promise<Bit> {
@@ -39,11 +39,11 @@ export default class Source extends Repository {
   loadSource(id: BitId) {
     try {
       const version = id.getVersion().resolve(this.listVersions(id));
-      return Bit.load(id.name, this.composeSourcePath({
+      return Bit.load(this.composeSourcePath({
         name: id.name,
         box: id.box,
         version
-      }));
+      }), id.name);
     } catch (err) {
       throw new SourceNotFound(id);
     }

@@ -68,7 +68,7 @@ export default class Bit extends PartialBit {
   }
 
   static load(name: string, bitDir: string): Promise<Bit> {  
-    return PartialBit.load(name, bitDir)
+    return PartialBit.load(bitDir, name)
       .then(partialBit => 
         partialBit.loadFull()
       );
