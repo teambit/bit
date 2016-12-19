@@ -3,13 +3,14 @@ import path from 'path';
 import { BitId, BitIds } from '../bit-id';
 import { forEach, writeFile } from '../utils';
 import Scope from './scope';
+import Bit from '../bit';
 import { DEPENDENCY_MAP_FILENAME } from '../constants';
 
 export function getPath(scopePath: string) {
   return path.join(scopePath, DEPENDENCY_MAP_FILENAME);
 }
 
-export default class DependencyMap extends Map<BitId, BitIds> {
+export class DependencyMap extends Map<BitId, BitIds> {
   scope: Scope;
 
   constructor(scope: Scope, dependencyTuples: [BitId, BitId[]][] = []) {
