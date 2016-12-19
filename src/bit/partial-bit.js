@@ -7,6 +7,7 @@ import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
 import BitNotFoundException from './exceptions/bit-not-found';
 import Bit from './bit';
+import BitInlineId from '../bit-inline-id';
 
 export type PartialBitProps = {
   name: string;
@@ -72,8 +73,10 @@ export default class PartialBit {
     );
   }
 
-  static load(name: string, bitDir: string): Promise<PartialBit> {  
+  static load(consumerPath: string, id: BitInlineId): Promise<PartialBit> {
+    const bitDir = id.composeBitPath(consumerPath);
+
     return BitJson.load(bitDir)
-      .then(bitJson => new PartialBit({ name, bitDir, bitJson }));
+      .then(bitJson => new PartialBit({ name: id.name, bitDir, bitJson }));
   }
 }

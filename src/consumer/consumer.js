@@ -13,6 +13,7 @@ import * as tar from '../tar';
 import { BitJsonNotFound } from '../bit-json/exceptions';
 import { toBase64 } from '../utils';
 import { Scope } from '../scope';
+import BitInlineId from '../bit-inline-id';
 
 const getBitDirForConsumerImport = ({
   bitsDir, name, box, version, remote
@@ -60,21 +61,12 @@ export default class Consumer {
     return path.join(this.projectPath, BITS_DIRNAME);
   }
 
-  /**
-   * get a bit partialy
-   **/
-  getPartial(name: string): Promise<PartialBit> {
-    return this.resolveBitDir(name)
-    .then(bitDir => 
-      PartialBit.load(name, bitDir)
-    );
+  getPath(): string {
+    return this.projectPath;
   }
 
-  /**
-   * get a bit with all metadata and implemenation
-   **/
-  get(name: string): Promise<Bit> {
-    return this.getPartial(name)
+  loadBit(id: BitInlineId): Promise<Bit> {
+    return PartialBit.load(this.getPath(), id)
     .then(partial => partial.loadFull());
   }
 
@@ -115,39 +107,23 @@ export default class Consumer {
       .then(bits => Promise.all(bits.map(({ contents }) => this.loadBitFromRawContents(contents))));
   }
 
-  createBit({ id }: { id: string }): Promise<Bit> {
-    const bitId = BitId.parse(`inline/${id}`);
-    const { box, name } = bitId;
+  createBit(id: BitInlineId): Promise<Bit> {
     return Bit.create({ 
-      box,
-      name,
-      bitDir: path.join(this.getInlineBitsPath(), box, name)
+      box: id.box,
+      name: id.name,
+      bitDir: id.composeBitPath(this.getPath())
     }).write();
   }
 
-  removeBit({ name }: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
-    const containingDir = inline ? this.getInlineBitsPath() : this.getBitsPath();
-    const bitDir = path.join(containingDir, name); 
-    return PartialBit.load(name, bitDir).then(bit => bit.erase());
-  }
-
-  resolveBitDir(name: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.includes({ bitName: name, inline: true })
-        .then((isInline) => {
-          if (isInline) return resolve(path.join(this.getInlineBitsPath(), name));
-          return this.includes({ bitName: name, inline: false })
-            .then((isExternal) => {
-              if (isExternal) return resolve(path.join(this.getBitsPath(), name));
-              return reject(new Error('bit not found error'));
-            });
-        });
-    });
-  }
+  // removeBit({ name }: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
+  //   const containingDir = inline ? this.getInlineBitsPath() : this.getBitsPath();
+  //   const bitDir = path.join(containingDir, name); 
+  //   return PartialBit.load(name, bitDir).then(bit => bit.erase());
+  // }
   
   // @TODO change from name to BitID
-  export(name: string) {
-    return this.get(name)
+  export(id: BitInlineId) {
+    return this.loadBit(id)
       // .then(bit => bit.validate())
     .then(bit => this.scope.put(bit))
     .then(bit => 

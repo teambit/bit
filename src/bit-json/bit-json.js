@@ -136,11 +136,11 @@ export default class BitJson {
   }
 
   validate(): boolean {
-    return (
-      typeof this.version === 'number' &&
-      typeof this.transpiler === 'string' &&
+    return (true
+      // typeof this.version === 'number' &&
+      // typeof this.transpiler === 'string' &&
       // this.remotes.validate() &&
-      typeof this.dependencies === 'object'
+      // typeof this.dependencies === 'object'
     );
   }
   

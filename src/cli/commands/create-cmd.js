@@ -8,16 +8,14 @@ export default class Create extends Command {
   name = 'create <id>';
   description = 'create a new bit';
   alias = 'c';
-  opts = [
-    ['f', 'force', 'create forcefully']
-  ];
+  opts = [];
 
-  action([id, ]: [string], opts: {[string]: boolean}): Promise<*> {
+  action([id, ]: [string]): Promise<*> {
     return create(id)
-    .then(() => ({ id }));
+    .then(() => id);
   }
 
-  report({ id }: any): string {
+  report(id: string): string {
     return chalk.green(`created bit "${id}" in inline folder`);
   }
 }
