@@ -165,7 +165,7 @@ export default class BitJson {
         const file = JSON.parse(data.toString('utf8'));
         const { remotes, dependencies } = file;
         if (remotes) file.remotes = Remotes.load(remotes);  
-        if (dependencies) file.dependencies = Dependencies.load(dependencies, remotes);
+        if (dependencies) file.dependencies = Dependencies.load(dependencies, file.remotes);
         return resolve(new BitJson(file));
       });
     });
