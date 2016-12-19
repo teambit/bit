@@ -11,11 +11,6 @@ import { BitId } from '../bit-id';
 import loadTranspiler from './environment/load-transpiler';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
 
-function saveBuildSync({ bundle, bitPath }) {  
-  const outputFile = path.join(bitPath, 'dist', 'bundle.js');
-  fs.outputFileSync(outputFile, bundle);
-}
-
 export type BitProps = {
   name: string;
   bitDir: string; 
@@ -67,7 +62,7 @@ export default class Bit extends PartialBit {
     });
   }
 
-  static load(name: string, bitDir: string): Promise<Bit> {  
+  static load(bitDir: string, name: string): Promise<Bit> {  
     return PartialBit.load(bitDir, name)
       .then(partialBit => 
         partialBit.loadFull()
