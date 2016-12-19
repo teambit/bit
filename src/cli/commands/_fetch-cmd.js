@@ -6,7 +6,7 @@ import { fetch } from '../../api';
 export default class Fetch extends Command {
   name = '_fetch <ids...>';
   private = true;
-  description = 'upload a bit to a scope';
+  description = 'fetch a bit from a scope';
   alias = '';
   opts = [];
   

@@ -49,6 +49,10 @@ export default class Source extends Repository {
     }
   }
 
+  loadSources() {
+    
+  }
+
   composeVersionsPath(name: string, box: string) {
     return path.join(this.getPath(), box, name);
   }

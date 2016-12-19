@@ -5,9 +5,9 @@ import Command from '../command';
 import { list } from '../../api';
 
 export default class List extends Command {
-  name = 'list';
+  name = 'ls';
   description = 'list all box bits';
-  alias = 'ls';
+  alias = '';
   opts = [
     ['i', 'inline', 'remove inline bit']
   ];

@@ -1,9 +1,10 @@
 /** @flow */
 import * as pathlib from 'path';
+import { Remotes } from '../remotes';
 import { propogateUntil, pathHas, readFile } from '../utils';
 import { getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME, BIT_JSON } from '../constants';
-import { ScopeNotFound } from './exceptions';
+import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, External } from './repositories';
 import { DependencyMap, getPath as getDependenyMapPath } from './dependency-map';
 import BitJson from '../bit-json';
@@ -23,10 +24,6 @@ export type ScopeProps = {
 };
 
 export default class Scope {
-  // globals: Global;
-  // boxes: Box;
-  // cache: Cache;
-  // scopeJson: ScopeJson;
   external: External;
   created: boolean = false;
   cache: Cache;
@@ -62,37 +59,42 @@ export default class Scope {
         this.external.store(bits);
         this.dependencyMap.setBit(bit, bits);
         return this.sources.setSource(bit)
-          // .then(() => bit.build())
+          .then(() => bit.build())
           .then(() => this.dependencyMap.write())
-          .then(() => bits.concat(bit));
-          // .catch(err => clear());
+          .then(() => bits.concat(bit))
+          .catch(() => bit.clear());
       });
   }
 
-  get(bitId: BitId): Promise<Bit> {
-    return this.sources.loadSource(bitId);
+  getExternal(bitId: BitId): Promise<Bit[]> {
+    return bitId.fetch();
   }
 
-  sync() {
+  get(bitId: BitId): Promise<Bit[]> {
+    if (!bitId.isLocal()) return this.getExternal(bitId);
+    const dependencyList = this.dependencyMap.get(bitId);
+    if (!dependencyList) throw new BitNotInScope();
+    
+    return dependencyList.fetch(this, new Remotes())
+      .then((bits) => {
+        return this.sources.loadSource(bitId)
+          .then(bit => bits.concat(bit));
+      });
+  }
 
+  push() {
+    
   }
 
   ensureDir() {
-    const self = this;
-
     return this.cache
       .ensureDir()
-      .then(() => self.sources.ensureDir())
-      .then(() => self.tmp.ensureDir())
+      .then(() => this.sources.ensureDir())
+      .then(() => this.external.ensureDir())
+      .then(() => this.tmp.ensureDir())
       .then(() => this.dependencyMap.write())
-      .then(() => self); 
+      .then(() => this); 
   }
-
-  // resolve(bitId: BitId) {
-  //   return this.sources.getPartial().then((partial) => {
-  //     partial.resolveDependencies();
-  //   });
-  // }
   
   fetch(bitIds: string[]): Promise<{id: string, contents: Buffer}>[] {
     return bitIds.map((name) => {

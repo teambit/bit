@@ -4,15 +4,14 @@ import Command from '../command';
 import { exportAction } from '../../api';
 
 export default class Export extends Command {
-  name = 'export <id> [remote]';
-  description = 'export a bit';
+  name = 'export <id>';
+  description = 'export a bit to local scope';
   alias = 'e';
   opts = [
-    ['i', 'identity-file', 'path to identity file']
   ];
 
-  action([id, remote]: [string]): Promise<any> {
-    return exportAction({ id, remote });
+  action([id]: [string]): Promise<any> {
+    return exportAction({ id });
   }
 
   report(): string {

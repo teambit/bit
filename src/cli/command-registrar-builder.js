@@ -3,6 +3,7 @@ import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
 import Init from './commands/init-cmd';
 import Create from './commands/create-cmd';
+import Push from './commands/push-cmd';
 import List from './commands/list-cmd';
 import Modify from './commands/modify-cmd';
 import Export from './commands/export-cmd';
@@ -29,24 +30,25 @@ export default function registerCommands(): CommandRegistrar {
     new Init(),
     new Scope(),
     new Create(),
-    new List(),
-    new Modify(),
     new Export(),
-    new Login(),
-    new Logout(),
     new Import(),
-    new Show(),
+    new Update(),
+    new Push(),
     new Status(),
-    new Remote(),
+    new Modify(),
+    new List(),
+    new Show(),
     new Remove(),
     new Search(),
     new Test(),
-    new Update(),
     new Build(),
     new Install(),
     new Uninstall(),
     new Prepare(),
     new Upload(),
     new Fetch()
+    // new Login(),
+    // new Logout(),
+    // new Remote(),
   ]);
 }

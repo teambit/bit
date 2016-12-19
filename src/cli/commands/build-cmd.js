@@ -4,7 +4,6 @@ import { build } from '../../api';
 
 const chalk = require('chalk');
 
-
 export default class Build extends Command {
   name = 'build <id>';
   description = 'build a bit';

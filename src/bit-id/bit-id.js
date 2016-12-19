@@ -2,7 +2,7 @@
 import Version from '../version';
 import { remoteResolver, Remotes } from '../remotes';
 import { InvalidBitId } from './exceptions';
-import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../constants';
+import { LATEST_BIT_VERSION, VERSION_DELIMITER, LOCAL_SCOPE_NOTATION } from '../constants';
 import { Scope } from '../scope';
 import { contains } from '../utils';
 
@@ -24,6 +24,14 @@ export default class BitId {
     this.box = box || 'global';
     this.name = name;
     this.version = version;
+  }
+
+  isLocal() {
+    return this.scope === LOCAL_SCOPE_NOTATION;
+  }
+
+  toStringWithRemote() {
+    // return this.getRemote();
   }
 
   getVersion() {
