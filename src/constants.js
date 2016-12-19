@@ -59,6 +59,12 @@ export const LATEST_BIT_VERSION = 'latest';
 
 export const DEFAULT_BOX_NAME = 'global';
 
+export const VERSION_DELIMITER = '::';
+
+export const DEPENDENCY_MAP_FILENAME = 'dependencies.json';
+
+export const BIT_EXTERNAL_DIRNAME = 'external';
+
 export const LOCAL_SCOPE_NOTATION = '@this';
 
 /**

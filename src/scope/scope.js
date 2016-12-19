@@ -4,7 +4,8 @@ import { propogateUntil, pathHas } from '../utils';
 import { getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME, BIT_JSON } from '../constants';
 import { ScopeNotFound } from './exceptions';
-import { Source, Cache, Tmp } from './repositories';
+import { Source, Cache, Tmp, External } from './repositories';
+import DependencyMap from './dependency-map';
 import BitJson from '../bit-json';
 import { BitId } from '../bit-id';
 import Bit from '../bit';
@@ -16,7 +17,9 @@ export type ScopeProps = {
   created?: boolean;
   cache?: Cache;
   tmp?: Tmp;
-  sources?: Source
+  sources?: Source,
+  external?: External;
+  dependencyMap?: DependencyMap;
 };
 
 export default class Scope {
@@ -24,20 +27,22 @@ export default class Scope {
   // boxes: Box;
   // cache: Cache;
   // scopeJson: ScopeJson;
-  // external: External
+  external: External;
   created: boolean = false;
   cache: Cache;
   tmp: Tmp;
   sources: Source;
   path: string;
-  flattenedDependencies: [];
+  dependencyMap: DependencyMap;
 
-  constructor({ path, cache, sources, tmp, created }: ScopeProps) {
+  constructor({ path, cache, sources, tmp, created, dependencyMap, external }: ScopeProps) {
     this.path = path;
     this.cache = cache || new Cache(this);
     this.sources = sources || new Source(this);
     this.created = created || false;
     this.tmp = tmp || new Tmp(this);
+    this.external = external || new External(this);
+    this.dependencyMap = dependencyMap || new DependencyMap(this);
   }
 
   prepareBitRegistration(name: string, bitJson: BitJson) {
@@ -53,7 +58,10 @@ export default class Scope {
   put(bit: Bit) {
     bit.validateOrThrow();
     return bit.dependencies().fetch(this, bit.remotes())
-      .then(() => this.sources.setSource(bit));
+      .then(storeExternal)
+      .then(flattenDependencies)
+      .then(() => this.sources.setSource(bit))
+      .then(() => this.dependencyMap.write());
   }
 
   get(bitId: BitId) {
@@ -127,6 +135,12 @@ export default class Scope {
   static load(absPath: string) {
     const scopePath = propogateUntil(absPath, pathHasScope);
     if (!scopePath) throw new ScopeNotFound();
-    return new Scope({ path: scopePath });
+    return DependencyMap.loadFromFile(scopePath)
+      .then((dependencyMap) => {
+        return new Scope({ 
+          path: scopePath,
+          dependencyMap
+        });
+      });
   }
 }

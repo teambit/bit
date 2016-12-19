@@ -13,7 +13,17 @@ export default class BitIds extends Array<BitId> {
     });
 
     return new BitIds(...array);
-  }  
+  }
+
+  serialize(): string[] {
+    return this.map(bitId => bitId.toString());
+  }
+
+  deserialize(array: string[]) {
+    return new BitIds(
+      array.map(id => BitId.parse(id))
+    );
+  }
 
   fetch(origin: Scope, remotes: Remotes) {
     const byRemote = this.reduce((acc, val) => {

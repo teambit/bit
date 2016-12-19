@@ -20,6 +20,8 @@ import parseSSHUrl from './parse-ssh-url';
 import listDirectories from './fs-list-directories';
 import isDirEmptySync from './is-dir-empty-sync';
 import isDirEmpty from './is-dir-empty';
+import writeFile from './fs-write-file';
+import readFile from './fs-read-file';
 
 export {
   parseSSHUrl,
@@ -28,7 +30,9 @@ export {
   resolveBoolean,
   empty,
   filter,
+  readFile,
   cleanChar,
+  writeFile,
   mkdirp,
   cleanBang,
   prependBang,

@@ -2,8 +2,9 @@
 import Version from '../version';
 import { remoteResolver, Remotes } from '../remotes';
 import { InvalidBitId } from './exceptions';
-import { LATEST_BIT_VERSION } from '../constants';
+import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../constants';
 import { Scope } from '../scope';
+import { contains } from '../utils';
 
 export type BitIdProps = {
   scope: string;  
@@ -35,10 +36,16 @@ export default class BitId {
 
   toString() {
     const { name, box, version, scope } = this;
-    return [scope, box, name, version].join('/');
+    return [scope, box, name].join('/').concat(`::${version}`);
   }
 
   static parse(id: string, version: string = LATEST_BIT_VERSION): BitId {
+    if (contains(id, VERSION_DELIMITER)) {
+      const [newId, newVersion] = id.split(VERSION_DELIMITER);
+      id = newId;
+      version = newVersion;
+    }
+
     const splited = id.split('/'); 
     if (splited.length === 3) {
       const [scope, box, name] = splited;
