@@ -124,7 +124,7 @@ export default class Consumer {
   
   // @TODO change from name to BitID
   export(id: BitInlineId) {
-    const cdAndWrite = (bit: Bit): Bit => 
+    const cdAndWrite = (bit: Bit): Promise<Bit> => 
       bit.cd(
         getBitDirForConsumerImport({
           bitsDir: this.getBitsPath(),
@@ -138,10 +138,11 @@ export default class Consumer {
     return this.loadBit(id)
       // .then(bit => bit.validate())
     .then(bit => this.scope.put(bit))
-    .then(bits => {
-      Promise.all(bits.map(cdAndWrite));
-    });
+    .then(bits => Promise.all(bits.map(cdAndWrite)))
     // .then(() => this.removeBit(id));
+    .then(a => console.log(a))
+    .then(bits => Promise.all(bits.map(cdAndWrite)))
+    .then(() => this.removeBit(id));
   }
 
   /**
