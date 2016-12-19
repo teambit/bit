@@ -4,7 +4,7 @@ import Command from '../command';
 import { remove } from '../../api';
 
 export default class Remove extends Command {
-  name = 'remove <name>';
+  name = 'rm <name>';
   description = 'remove a bit';
   alias = 'rm';
   opts = [

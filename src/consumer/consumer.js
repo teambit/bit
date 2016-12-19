@@ -139,12 +139,14 @@ export default class Consumer {
     });
   }
   
+  // @TODO change from name to BitID
   export(name: string) {
     return this.get(name)
       // .then(bit => bit.validate())
     .then(bit => this.scope.put(bit))
-    .then(bitId => this.scope.get(bitId))
-    .then(contents => Bit.loadFromMemory(this.loadBitFromRawContents(contents)));
+    .then(console.log);
+    // .then(bitId => this.scope.get(bitId))
+    // .then(contents => Bit.loadFromMemory(this.loadBitFromRawContents(contents)));
   }
 
   /**

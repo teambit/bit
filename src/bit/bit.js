@@ -59,6 +59,20 @@ export default class Bit extends PartialBit {
     return null;
   }
 
+  // @TODO change to bit id once adding scope to bit 
+  getId() {
+    return {
+      name: this.name,
+      box: this.bitJson.box,
+      version: this.bitJson.version
+    };
+  }
+
+  cd(newDir: string) {
+    this.bitDir = newDir;
+    return this;
+  }
+
   build() {
     return loadTranspiler(this.bitJson.transpiler)
     .then(({ transpile }) => {
@@ -66,10 +80,6 @@ export default class Bit extends PartialBit {
       const { code, map } = transpile(src); // eslint-disable-line
       return saveBuild({ bundle: code, bitPath: this.bitDir });
     });
-  }
-
-  composeSourcePath() {
-    return path.join(this.name, this.bitJson.box, this.bitJson.version.toString());
   }
 
   fetchDependencies(): BitId[] {

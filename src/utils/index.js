@@ -17,6 +17,7 @@ import bufferToReadStream from './buffer-to-read-stream';
 import toBase64 from './to-base64';
 import fromBase64 from './from-base64';
 import parseSSHUrl from './parse-ssh-url';
+import listDirectories from './fs-list-directories';
 
 export {
   parseSSHUrl,
@@ -37,5 +38,6 @@ export {
   propogateUntil,
   pathHas,
   first,
-  bufferToReadStream
+  bufferToReadStream,
+  listDirectories
 };

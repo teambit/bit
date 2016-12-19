@@ -6,6 +6,7 @@ import { BIT_SOURCES_DIRNAME, BIT_JSON } from '../constants';
 import { ScopeNotFound } from './exceptions';
 import { Source, Cache, Tmp } from './repositories';
 import BitJson from '../bit-json';
+import BitId from '../bit-id';
 import Bit from '../bit';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME]);
@@ -45,14 +46,13 @@ export default class Scope {
   }
 
   put(bit: Bit) {
-    bit.validate();
-    bit.bitDir = bit.composeSourcePath();
-    bit.bitJson.dependencies.import();
-    bit.write();
+    // @TODO add build and run tests + flatten dependencies
+    return this.sources.setSource(bit);
   }
 
-  import(bitIds: BitId[]) {
-    
+  get(bitId: BitId) {
+    const version = bitId.version.resolve(this.sources.listVersions());
+    return this.sources.loadSource(bitId, version);
   }
 
   sync() {

@@ -23,6 +23,13 @@ export default class Version {
     return this;
   }
 
+  resolve(availableVersion: number[]) {
+    const getLatest = () => Math.max(...availableVersion);
+
+    if (this.latest) return getLatest();
+    return this.versionNum;
+  }
+
   toString() {
     if (!this.versionNum && this.latest) return 'latest';
     if (this.versionNum && this.latest) return `*${this.versionNum}`;
