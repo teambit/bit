@@ -5,19 +5,19 @@ import { create } from '../../api';
 const chalk = require('chalk');
 
 export default class Create extends Command {
-  name = 'create <name>';
+  name = 'create <id>';
   description = 'create a new bit';
   alias = 'c';
   opts = [
     ['f', 'force', 'create forcefully']
   ];
 
-  action([name, ]: [string], opts: {[string]: boolean}): Promise<*> {
-    return create(name)
-    .then(() => ({ name }));
+  action([id, ]: [string], opts: {[string]: boolean}): Promise<*> {
+    return create(id)
+    .then(() => ({ id }));
   }
 
-  report({ name }: any): string {
-    return chalk.green(`created bit "${name}" in inline folder`);
+  report({ id }: any): string {
+    return chalk.green(`created bit "${id}" in inline folder`);
   }
 }

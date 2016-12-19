@@ -115,8 +115,14 @@ export default class Consumer {
       .then(bits => Promise.all(bits.map(({ contents }) => this.loadBitFromRawContents(contents))));
   }
 
-  createBit({ name }: { name: string }): Promise<Bit> {
-    return Bit.create({ name, bitDir: path.join(this.getInlineBitsPath(), name) }).write();
+  createBit({ id }: { id: string }): Promise<Bit> {
+    const bitId = BitId.parse(`inline/${id}`);
+    const { box, name } = bitId;
+    return Bit.create({ 
+      box,
+      name,
+      bitDir: path.join(this.getInlineBitsPath(), box, name)
+    }).write();
   }
 
   removeBit({ name }: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {

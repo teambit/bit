@@ -2,6 +2,7 @@
 import Version from '../version';
 import { Remote, remoteResolver, Remotes } from '../remotes';
 import { InvalidBitId } from './exceptions';
+import { LATEST_BIT_VERSION } from '../constants';
 
 export type BitIdProps = {
   scope: Remote;  
@@ -28,7 +29,7 @@ export default class BitId {
     return [scope, box, name, version].join('/');
   }
 
-  static parse(id: string, version: string = 'latest', remotes: ?Remotes): BitId {
+  static parse(id: string, version: string = LATEST_BIT_VERSION, remotes: ?Remotes): BitId {
     const splited = id.split('/'); 
     if (splited.length === 3) {
       const [scope, box, name] = splited;

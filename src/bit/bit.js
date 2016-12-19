@@ -7,7 +7,6 @@ import BitJson from '../bit-json';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 import PartialBit from './partial-bit';
 import BitId from '../bit-id';
-import type { PartialBitProps } from './partial-bit';
 import loadTranspiler from './environment/load-transpiler';
 
 function saveBuild({ bundle, bitPath }) {  
@@ -135,13 +134,11 @@ export default class Bit extends PartialBit {
     }); 
   }
 
-  static create(props: PartialBitProps) {
-    const { name, bitDir } = props;
-
+  static create({ box, name, bitDir }: { box: string, name: string, bitDir: string }) {
     return new Bit({
       name,
       bitDir,
-      bitJson: new BitJson({ name }),
+      bitJson: new BitJson({ name, box }),
       impl: Impl.create({ name }),
       specs: Specs.create({ name }),
     });

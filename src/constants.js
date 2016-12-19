@@ -49,7 +49,9 @@ export const DEFAULT_TRANSPILER = 'bit-babel';
 
 export const DEFAULT_TESTER = 'bit-jasmin';
 
-export const DEFAULT_BIT_VERSION = 1;
+export const DEFAULT_BIT_VERSION = '1';
+
+export const LATEST_BIT_VERSION = 'latest';
 
 export const DEFAULT_BOX_NAME = 'global';
 
