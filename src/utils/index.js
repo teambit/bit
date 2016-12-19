@@ -1,5 +1,7 @@
 /** @flow */
 import first from './first';
+import flatMap from './flat-map';
+import flatten from './flatten';
 import resolveBoolean from './resolve-boolean';
 import mapObject from './map-object';
 import mkdirp from './mkdirp';
@@ -47,5 +49,7 @@ export {
   bufferToReadStream,
   listDirectories,
   isDirEmpty,
-  isDirEmptySync
+  isDirEmptySync,
+  flatMap,
+  flatten
 };

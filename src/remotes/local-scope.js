@@ -1,6 +1,7 @@
 /** @flow */
 import { Scope } from '../scope';
 import { BitId } from '../bit-id';
+import { flatMap } from './'
 import Bit from '../bit';
 
 export default class LocalScope {

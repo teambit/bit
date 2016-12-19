@@ -1,6 +1,6 @@
 /** @flow */
 import { BitId } from '../bit-id';
-import { forEach, first } from '../utils';
+import { forEach, first, flatten } from '../utils';
 import { Remotes } from '../remotes';
 import { Scope } from '../scope';
 
@@ -41,6 +41,6 @@ export default class BitIds extends Array<BitId> {
       );
     });
 
-    return Promise.all(promises);
+    return Promise.all(promises).then(array => flatten(array));
   }
 }
