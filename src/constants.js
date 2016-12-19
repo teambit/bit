@@ -53,6 +53,8 @@ export const DEFAULT_BIT_VERSION = 1;
 
 export const DEFAULT_BOX_NAME = 'global';
 
+export const LOCAL_SCOPE_NOTATION = '@this';
+
 /**
  * cache root directory
  */

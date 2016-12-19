@@ -24,7 +24,7 @@ export default class Remote {
     this.primary = primary;
   }
 
-  connect(): Network {
+  connect(): Remote {
     return connect(this.host);
   }
 

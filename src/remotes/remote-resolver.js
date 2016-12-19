@@ -1,5 +1,6 @@
 import Remotes from './remotes';
-import { REMOTE_ALIAS_SIGN } from '../constants';
+import { REMOTE_ALIAS_SIGN, LOCAL_SCOPE_NOTATION } from '../constants';
+import LocalScope from './local-scope';
 
 export function parseRemoteStr(remoteStr: string) {
   if (!remoteStr.startsWith(REMOTE_ALIAS_SIGN)) return null;
@@ -8,6 +9,7 @@ export function parseRemoteStr(remoteStr: string) {
 } 
 
 export function remoteResolver(name, remotes: Remotes) {
+  if (name === LOCAL_SCOPE_NOTATION) return new LocalScope();
   const parsedRemote = parseRemoteStr(name);
   if (parsedRemote) {
     return remotes.get(parsedRemote); 
