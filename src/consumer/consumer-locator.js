@@ -5,13 +5,13 @@
 */
 import * as pathlib from 'path';
 import * as fs from 'fs';
-import { BIT_JSON } from '../constants';
+import { BIT_JSON, BIT_HIDDEN_DIR } from '../constants';
 
-export function composePath(path: string, inPath: string) {
-  return pathlib.join(composeConsumerPath(path), inPath); 
+function composeBitHiddenDirPath(path: string) {
+  return pathlib.join(path, BIT_HIDDEN_DIR);
 }
 
-export function composeConsumerPath(path: string) {
+function composeBitJsonPath(path: string) {
   return pathlib.join(path, BIT_JSON);
 }
 
@@ -19,7 +19,8 @@ export function composeConsumerPath(path: string) {
  * determine whether given path has a consumer
  */
 export function pathHasConsumer(path: string) {
-  return fs.existsSync(composeConsumerPath(path));
+  return fs.existsSync(composeBitHiddenDirPath(path)) &&
+  fs.existsSync(composeBitJsonPath(path));
 }
 
 /**
