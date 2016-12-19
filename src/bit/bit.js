@@ -48,15 +48,25 @@ export default class Bit extends PartialBit {
     this.impl = bitProps.impl;
   }
 
-  validate(): ?string {
-    try {
-      this.bitJson.validate();
-    } catch (err) {
-      console.error(err); // TODO - pretty print on the return value of this func
-      return err.message;
-    }
-    
-    return null;
+  validate(): bool {
+    return this.bitJson.validate();
+  }
+  
+  getName() {
+    return this.name;
+  }
+  
+  getBox() {
+    return this.bitJson.box;
+  }
+  
+  getVersion() {
+    return this.bitJson.version;
+  }
+  
+  getScope() {
+    return 'fake-scope-need-to-implement';
+    // @TODO - implement
   }
 
   // @TODO change to bit id once adding scope to bit 

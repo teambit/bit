@@ -144,9 +144,17 @@ export default class Consumer {
     return this.get(name)
       // .then(bit => bit.validate())
     .then(bit => this.scope.put(bit))
-    .then(console.log);
-    // .then(bitId => this.scope.get(bitId))
-    // .then(contents => Bit.loadFromMemory(this.loadBitFromRawContents(contents)));
+    .then(bit => 
+      bit.cd(
+        getBitDirForConsumerImport({
+          bitsDir: this.getBitsPath(),
+          name: bit.getName(),
+          box: bit.getBox(),
+          version: bit.getVersion(),
+          remote: bit.getScope()
+        })
+      ).write()
+    );
   }
 
   /**

@@ -41,7 +41,12 @@ export default class Scope {
   }
 
   prepareBitRegistration(name: string, bitJson: BitJson) {
-    if (!bitJson.validate()) throw new Error('');
+    try {
+      bitJson.validate();
+    } catch (e) {
+      throw e;
+    }
+    
     return pathlib.join(this.tmp.getPath(), `${name}_${bitJson.version}.tar`);
   }
 

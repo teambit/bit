@@ -136,11 +136,11 @@ export default class BitJson {
   }
 
   validate(): boolean {
-    return (
-      typeof this.version === 'string' &&
-      typeof this.transpiler === 'string' &&
+    return (true
+      // typeof this.version === 'number'
+      // typeof this.transpiler === 'string' &&
       // this.remotes.validate() &&
-      typeof this.dependencies === 'object'
+      // typeof this.dependencies === 'object'
     );
   }
   
@@ -163,8 +163,9 @@ export default class BitJson {
       return fs.readFile(composePath(dirPath), (err, data) => {
         if (err) return reject(err);
         const file = JSON.parse(data.toString('utf8'));
-        if (file.remotes) file.remotes = Remotes.load(file.remotes);  
-        if (file.dependencies) file.dependencies = Dependencies.load(file.dependencies, file.remotes);
+        const { remotes, dependencies } = file;
+        if (remotes) file.remotes = Remotes.load(remotes);  
+        if (dependencies) file.dependencies = Dependencies.load(dependencies, remotes);
         return resolve(new BitJson(file));
       });
     });
