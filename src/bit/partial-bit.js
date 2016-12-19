@@ -6,8 +6,11 @@ import { pack } from '../tar';
 import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
 import BitNotFoundException from './exceptions/bit-not-found';
+import { BitIds } from '../bit-id';
 import Bit from './bit';
+import InvalidBit from './exceptions/invalid-bit';
 import BitInlineId from '../bit-inline-id';
+import { isDirEmptySync } from '../utils';
 
 export type PartialBitProps = {
   name: string;
@@ -26,12 +29,61 @@ export default class PartialBit {
     this.bitJson = bitProps.bitJson;
   }
 
+  validate(): bool {
+    return this.bitJson.validate();
+  }
+  
+  remotes(): BitIds {
+    return this.bitJson.getRemotes();
+  }
+
+  dependencies(): BitIds {
+    return BitIds.loadDependencies(this.bitJson.dependencies);
+  }
+
+  getName() {
+    return this.name;
+  }
+  
+  getBox() {
+    return this.bitJson.box;
+  }
+  
+  getVersion() {
+    return this.bitJson.version;
+  }
+  
+  getScope() {
+    return 'fake-scope-need-to-implement';
+    // @TODO - implement
+  }
+
+  // @TODO change to bit id once adding scope to bit 
+  getId() {
+    return {
+      name: this.name,
+      box: this.bitJson.box,
+      version: this.bitJson.version
+    };
+  }
+
+  cd(newDir: string) {
+    this.bitDir = newDir;
+    return this;
+  }
+
+  validateOrThrow() {
+    if (!this.validate()) throw new InvalidBit();
+  }
+
   erase(): Promise<PartialBit> {
     return new Promise((resolve, reject) => {
       return fs.stat(this.bitDir, (err) => {
         if (err) reject(new BitNotFoundException());
         return fs.remove(this.bitDir, (e) => {
           if (e) return reject(e);
+          const containingDir = path.join(this.bitDir, '..');
+          if (isDirEmptySync(containingDir)) fs.removeSync(containingDir);
           return resolve(this);
         });
       });

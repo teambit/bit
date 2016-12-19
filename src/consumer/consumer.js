@@ -115,11 +115,10 @@ export default class Consumer {
     }).write();
   }
 
-  // removeBit({ name }: { name: string }, { inline }: { inline: boolean }): Promise<Bit> {
-  //   const containingDir = inline ? this.getInlineBitsPath() : this.getBitsPath();
-  //   const bitDir = path.join(containingDir, name); 
-  //   return PartialBit.load(name, bitDir).then(bit => bit.erase());
-  // }
+  removeBit(id: BitInlineId): Promise<Bit> {
+    return PartialBit.load(this.getPath(), id)
+    .then(bit => bit.erase());
+  }
   
   // @TODO change from name to BitID
   export(id: BitInlineId) {
@@ -136,7 +135,8 @@ export default class Consumer {
           remote: bit.getScope()
         })
       ).write()
-    );
+    )
+    .then(() => this.removeBit(id));
   }
 
   /**

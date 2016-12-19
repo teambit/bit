@@ -18,6 +18,8 @@ import toBase64 from './to-base64';
 import fromBase64 from './from-base64';
 import parseSSHUrl from './parse-ssh-url';
 import listDirectories from './fs-list-directories';
+import isDirEmptySync from './is-dir-empty-sync';
+import isDirEmpty from './is-dir-empty';
 
 export {
   parseSSHUrl,
@@ -39,5 +41,7 @@ export {
   pathHas,
   first,
   bufferToReadStream,
-  listDirectories
+  listDirectories,
+  isDirEmpty,
+  isDirEmptySync
 };
