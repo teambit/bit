@@ -58,11 +58,15 @@ export default class Scope {
   put(bit: Bit) {
     bit.validateOrThrow();
     return bit.dependencies().fetch(this, bit.remotes())
-      .then(bits => this.external.store(bits))
-      .then(bits => this.dependencyMap.set(bit, bits))
-      .then(() => this.dependencyMap.write())
+    .then((bits) => {
+      this.external.store(bits);
+      return this.dependencyMap.setBit(bit, bits)
       .then(() => this.sources.setSource(bit))
-      .then(() => bit.build());
+      // .then(() => bit.build())
+      .then(() => this.dependencyMap.write())
+      .then(() => bits);
+      // .catch(err => clear());
+    });
   }
 
   get(bitId: BitId): Promise<Bit> {
@@ -140,9 +144,7 @@ export default class Scope {
     return readFile(getDependenyMapPath(scopePath))
       .then((contents) => {
         const scope = new Scope({ path: scopePath });
-        scope.dependencyMap = DependencyMap.load(
-          JSON.parse(contents.toString('utf8'), scope)
-        );
+        scope.dependencyMap = DependencyMap.load(JSON.parse(contents.toString('utf8')), scope);
         return scope;
       });
   }

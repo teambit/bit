@@ -34,8 +34,8 @@ export class DependencyMap extends Map<BitId, BitIds> {
     return writeFile(this.getPath(), JSON.stringify(this.toObject()));
   }
 
-  setBit(bitId: Bit, bits: Bit) {
-    super.set(bitId.getId(), bits.map(bit => bit.getId()));
+  setBit(bitId: Bit, bits: Bit[]) {
+    super.set(bitId.getId(), new BitIds(...bits.map(bit => bit.getId())));
     return this;
   }
 

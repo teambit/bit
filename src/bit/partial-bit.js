@@ -6,7 +6,7 @@ import { pack } from '../tar';
 import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
 import BitNotFoundException from './exceptions/bit-not-found';
-import { BitIds } from '../bit-id';
+import { BitIds, BitId } from '../bit-id';
 import { remoteResolver, Remotes } from '../remotes';
 import { Scope } from '../scope';
 import Bit from './bit';
@@ -69,11 +69,12 @@ export default class PartialBit {
 
   // @TODO change to bit id once adding scope to bit 
   getId() {
-    return {
+    return new BitId({
+      scope: this.scope,
       name: this.name,
       box: this.bitJson.box,
       version: this.bitJson.version
-    };
+    });
   }
 
   isLocal() {

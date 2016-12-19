@@ -19,7 +19,7 @@ export default class BitIds extends Array<BitId> {
     return this.map(bitId => bitId.toString());
   }
 
-  deserialize(array: string[]) {
+  static deserialize(array: string[]) {
     return new BitIds(
       array.map(id => BitId.parse(id))
     );
