@@ -42,7 +42,7 @@ export class DependencyMap extends Map<BitId, BitIds> {
   static load(json: {[string]: string}, scope: Scope): DependencyMap {
     const matrix = [];
     forEach(json, (val, key) => {
-      matrix.push([BitId.parse(key), BitIds.deserialize()]);
+      matrix.push([BitId.parse(key), BitIds.deserialize(val)]);
     });
 
     return new DependencyMap(scope, matrix);
