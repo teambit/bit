@@ -122,25 +122,24 @@ export default class Consumer {
     .then(bit => bit.erase());
   }
   
-  // @TODO change from name to BitID
   export(id: BitInlineId) {
-    const cdAndWrite = (bit: Bit): Promise<Bit> => 
-      bit.cd(
-        getBitDirForConsumerImport({
-          bitsDir: this.getBitsPath(),
-          name: bit.getName(),
-          box: bit.getBox(),
-          version: bit.getVersion(),
-          remote: bit.getScope()
-        })
-      ).write();
+    const bitsDir = this.getBitsPath();
 
+    const cdAndWrite = (bit: Bit): Promise<Bit> => {
+      const bitDirForConsumerImport = getBitDirForConsumerImport({
+        bitsDir,
+        name: bit.name,
+        box: bit.getBox(),
+        version: bit.getVersion(),
+        remote: bit.scope
+      });
+
+      return bit.cd(bitDirForConsumerImport).write();
+    };
+      
     return this.loadBit(id)
       // .then(bit => bit.validate())
     .then(bit => this.scope.put(bit))
-    .then(bits => Promise.all(bits.map(cdAndWrite)))
-    // .then(() => this.removeBit(id));
-    .then(a => console.log(a))
     .then(bits => Promise.all(bits.map(cdAndWrite)))
     .then(() => this.removeBit(id));
   }

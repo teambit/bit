@@ -30,7 +30,7 @@ export type BitJsonProps = {
   spec?: string;
   transpiler?: string;
   tester?: string;
-  version?: number;
+  version?: string;
   remotes?: Object;
   dependencies?: Object;
 };
@@ -41,7 +41,7 @@ export default class BitJson {
    **/
   name: string;
   box: string;
-  version: number;
+  version: string;
   impl: string;
   spec: string;
   dependencies: {[string]: string};
