@@ -1,11 +1,11 @@
 /** @flow */
 import * as pathlib from 'path';
-import { propogateUntil, pathHas } from '../utils';
+import { propogateUntil, pathHas, readFile } from '../utils';
 import { getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME, BIT_JSON } from '../constants';
 import { ScopeNotFound } from './exceptions';
 import { Source, Cache, Tmp, External } from './repositories';
-import DependencyMap from './dependency-map';
+import { DependencyMap, getPath as getDependenyMapPath } from './dependency-map';
 import BitJson from '../bit-json';
 import { BitId } from '../bit-id';
 import Bit from '../bit';
@@ -58,7 +58,7 @@ export default class Scope {
   put(bit: Bit) {
     bit.validateOrThrow();
     return bit.dependencies().fetch(this, bit.remotes())
-      .then(storeExternal)
+      .then((bits) => this.external.store(bits))
       .then(flattenDependencies)
       .then(() => this.sources.setSource(bit))
       .then(() => this.dependencyMap.write());
@@ -132,15 +132,16 @@ export default class Scope {
     return new Scope({ path, created: true });
   }
 
-  static load(absPath: string) {
+  static load(absPath: string): Promise<Scope> {
     const scopePath = propogateUntil(absPath, pathHasScope);
     if (!scopePath) throw new ScopeNotFound();
-    return DependencyMap.loadFromFile(scopePath)
-      .then((dependencyMap) => {
-        return new Scope({ 
-          path: scopePath,
-          dependencyMap
-        });
+    return readFile(getDependenyMapPath(scopePath))
+      .then((contents) => {
+        const scope = new Scope({ path: scopePath });
+        scope.dependencyMap = DependencyMap.load(
+          JSON.parse(contents.toString('utf8'), scope)
+        );
+        return scope;
       });
   }
 }

@@ -1,6 +1,6 @@
 /** @flow */
 import path from 'path';
-import { BitId } from '../bit-id';
+import { BitId, BitIds } from '../bit-id';
 import { forEach, writeFile, readFile } from '../utils';
 import Scope from './scope';
 import { DEPENDENCY_MAP_FILENAME } from '../constants';
@@ -40,11 +40,5 @@ export default class DependencyMap extends Map<BitId, BitIds> {
     });
 
     return new DependencyMap(scope, matrix);
-  }
-
-  static loadFromFile(scopePath: string): Promise<DependencyMap> {
-    return readFile(getPath(scopePath))
-      .then(contents => DependencyMap.load(JSON.parse(contents.toString('utf8')), scope))
-      .catch(() => new DependencyMap(scope));
   }
 }
