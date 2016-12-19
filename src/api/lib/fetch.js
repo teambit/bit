@@ -1,5 +1,5 @@
 /** @flow */
-import BitId from '../../bit-id';
+import { BitId } from '../../bit-id';
 import { loadScope } from '../../scope';
 
 export default function fetch(ids: string[]) {

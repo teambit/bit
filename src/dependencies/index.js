@@ -1,3 +1,3 @@
-import Dependencies from './dependencies';
+import BitIds from './bit-ids';
 
-export default Dependencies;
+export default BitIds;

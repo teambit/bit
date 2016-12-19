@@ -1,7 +1,7 @@
 /** @flow */
 import path from 'path';
 import fs from 'fs';
-import Dependencies from '../dependencies';
+import { BitIds } from '../bit-id';
 import { BitJsonAlreadyExists, BitJsonNotFound } from './exceptions';
 import { Remotes } from '../remotes';
 import { 
@@ -44,8 +44,8 @@ export default class BitJson {
   version: number;
   impl: string;
   spec: string;
-  dependencies: Dependencies;
-  remotes: Remotes;
+  dependencies: {[string]: string};
+  remotes: {[string]: string};
   transpiler: string;
   tester: string;
 
@@ -63,7 +63,7 @@ export default class BitJson {
     this.transpiler = transpiler || DEFAULT_TRANSPILER;
     this.tester = tester || DEFAULT_TESTER;
     this.version = version || DEFAULT_BIT_VERSION;
-    this.remotes = remotes || Remotes.load(remotes);
+    this.remotes = remotes || {};
     this.dependencies = dependencies || {};
   }
 
@@ -100,9 +100,18 @@ export default class BitJson {
       version: this.version,
       transpiler: this.transpiler,
       tester: this.tester,
-      remotes: this.remotes.toPlainObject(),
+      remotes: this.getRemotes().toPlainObject(),
       dependencies: this.dependencies
     };
+  }
+
+  getRemotes(): Remotes {
+    return Remotes.load(this.remotes);
+  }
+
+  getDependencies(): BitIds {
+    console.log('hi');
+    return BitIds.loadDependencies(this.dependencies);
   }
 
   /**
@@ -135,6 +144,10 @@ export default class BitJson {
     });
   }
 
+  getDependencies() {
+
+  }
+
   validate(): boolean {
     return (true
       // typeof this.version === 'number' &&
@@ -149,8 +162,6 @@ export default class BitJson {
   // }
 
   static loadFromRaw(json: Object) {
-    json.dependencies = json.dependencies ? Dependencies.load(json.dependencies) : undefined;
-    json.remotes = json.remotes ? Remotes.load(json.remotes) : undefined; 
     return new BitJson(json);
   }
 
@@ -163,9 +174,6 @@ export default class BitJson {
       return fs.readFile(composePath(dirPath), (err, data) => {
         if (err) return reject(err);
         const file = JSON.parse(data.toString('utf8'));
-        const { remotes, dependencies } = file;
-        if (remotes) file.remotes = Remotes.load(remotes);  
-        if (dependencies) file.dependencies = Dependencies.load(dependencies, file.remotes);
         return resolve(new BitJson(file));
       });
     });

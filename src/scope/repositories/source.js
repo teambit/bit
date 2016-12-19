@@ -1,11 +1,12 @@
 /** @flow */
 import * as path from 'path';
 import Repository from '../repository';
+import { SourceNotFound } from '../exceptions';
 import { BIT_SOURCES_DIRNAME } from '../../constants';
 import InvalidBit from '../../bit/exceptions/invalid-bit';
 import Bit from '../../bit';
 import ParitalBit from '../../bit/partial-bit';
-import BitId from '../../bit-id';
+import { BitId } from '../../bit-id';
 import { listDirectories } from '../../utils';
 
 export default class Source extends Repository {
@@ -35,12 +36,17 @@ export default class Source extends Repository {
       .map(version => parseInt(version));
   }
 
-  loadSource(id: BitId, version: number) {
-    return Bit.load(id.name, this.composeSourcePath({
-      name: id.name,
-      box: id.box,
-      version
-    }));
+  loadSource(id: BitId) {
+    try {
+      const version = id.getVersion().resolve(this.listVersions(id));
+      return Bit.load(id.name, this.composeSourcePath({
+        name: id.name,
+        box: id.box,
+        version
+      }));
+    } catch (err) {
+      throw new SourceNotFound(id);
+    }
   }
 
   composeVersionsPath(name: string, box: string) {

@@ -1,3 +1,7 @@
 import BitId from './bit-id';
+import BitIds from './bit-ids';
 
-export default BitId;
+export {
+  BitId,
+  BitIds
+};

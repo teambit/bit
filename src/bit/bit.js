@@ -3,10 +3,14 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Impl, Specs } from './sources';
 import { mkdirp } from '../utils';
+import { BitIds } from '../bit-id';
 import BitJson from '../bit-json';
+import { Remotes } from '../remotes';
 import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 import PartialBit from './partial-bit';
-import BitId from '../bit-id';
+import { BitId } from '../bit-id';
+import InvalidBit from './exceptions/invalid-bit';
+import type { PartialBitProps } from './partial-bit';
 import loadTranspiler from './environment/load-transpiler';
 
 function saveBuild({ bundle, bitPath }) {  
@@ -51,6 +55,14 @@ export default class Bit extends PartialBit {
     return this.bitJson.validate();
   }
   
+  remotes(): BitIds {
+    return this.bitJson.getRemotes();
+  }
+
+  dependencies(): BitIds {
+    return BitIds.loadDependencies(this.bitJson.dependencies);
+  }
+
   getName() {
     return this.name;
   }
@@ -82,6 +94,10 @@ export default class Bit extends PartialBit {
     return this;
   }
 
+  validateOrThrow() {
+    if (!this.validate()) throw new InvalidBit();
+  }
+
   build() {
     return loadTranspiler(this.bitJson.transpiler)
     .then(({ transpile }) => {
@@ -92,9 +108,9 @@ export default class Bit extends PartialBit {
   }
 
   fetchDependencies(): BitId[] {
-    return this.bitJson.dependencies.map((dependency) => {
-      return dependency.fetch();
-    });
+    // return this.bitJson.dependencies.map((dependency) => {
+      // return dependency.fetch();
+    // });
   }
 
   write(): Promise<boolean> {

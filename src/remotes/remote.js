@@ -3,8 +3,8 @@ import Bit from '../bit';
 import { contains, isBitUrl, cleanBang } from '../utils';
 import { connect } from '../network';
 import { InvalidRemote } from './exceptions';
-import Dependency from '../dependencies/dependency';
-import BitId from '../bit-id';
+import { BitId } from '../bit-id';
+import { Scope } from '../scope';
 
 /**
  * @ctx bit, primary, remote
@@ -16,12 +16,14 @@ function isPrimary(alias: string): boolean {
 export default class Remote {
   primary: boolean = false;
   host: string;
-  alias: string; 
+  alias: string;
+  origin: Scope;
 
-  constructor(alias: string, host: string, primary: boolean = false) {
+  constructor(alias: string, host: string, primary: boolean = false, origin: Scope) {
     this.alias = alias;
     this.host = host;
     this.primary = primary;
+    this.origin = origin;
   }
 
   connect(): Remote {

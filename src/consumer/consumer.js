@@ -5,7 +5,7 @@ import fs from 'fs';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import BitJson from '../bit-json';
-import BitId from '../bit-id';
+import { BitId } from '../bit-id';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
 import { INLINE_BITS_DIRNAME, BITS_DIRNAME, BIT_JSON, BIT_HIDDEN_DIR } from '../constants';
@@ -102,8 +102,8 @@ export default class Consumer {
       return this.bitJson.dependencies.import();
     }
 
-    const bitId = BitId.parse(rawId, this.bitJson.remotes);
-    return bitId.remote.fetch([bitId])
+    const bitId = BitId.parse(rawId);
+    return bitId.scope.fetch([bitId])
       .then(bits => Promise.all(bits.map(({ contents }) => this.loadBitFromRawContents(contents))));
   }
 

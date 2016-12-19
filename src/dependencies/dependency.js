@@ -9,9 +9,9 @@ export default class Dependency {
   name: string;
   remote: string;
   box: ?string;
-  version: Version;
+  version: string;
 
-  constructor(name: string, box: ?string, remote: string, version: Version) {
+  constructor(name: string, box: ?string, remote: string, version: string) {
     this.name = name;
     this.box = box;
     this.version = version;
@@ -27,10 +27,6 @@ export default class Dependency {
 
   flatten() {
 
-  }
-
-  fetch() {
-    return this.remote.fetch();
   }
 
   static load(depName: string, version: string) {

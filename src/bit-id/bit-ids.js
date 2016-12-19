@@ -1,20 +1,21 @@
 /** @flow */
-import BitId from '../bit-id';
+import { BitId } from '../bit-id';
 import { forEach, first } from '../utils';
 import { Remotes } from '../remotes';
+import { Scope } from '../scope';
 
-export default class Dependencies extends Array<BitId> {
-  static load(dependencies: {[string]: string}, remotes: ?Remotes) {
+export default class BitIds extends Array<BitId> {
+  static loadDependencies(dependencies: {[string]: string}) {
     const array = [];
     
     forEach(dependencies, (version, id) => {
-      array.push(BitId.parse(id, version, remotes));
+      array.push(BitId.parse(id, version));
     });
 
-    return new Dependencies(...array);
+    return new BitIds(...array);
   }  
 
-  import() {
+  fetch(origin: Scope, remotes: Remotes) {
     const byRemote = this.reduce((acc, val) => {
       if (!acc[val.scope.host]) acc[val.scope.host] = [val];
       else acc[val.scope.host].push(val);
@@ -23,8 +24,11 @@ export default class Dependencies extends Array<BitId> {
 
     const promises = [];
     forEach(byRemote, (bitIds) => {
-      const res = first(bitIds).scope.fetch(bitIds);
-      promises.push(res);
+      promises.push(
+        first(bitIds)
+        .getRemote(origin, remotes)
+        .fetch(bitIds)
+      );
     });
 
     return Promise.all(promises)
