@@ -80,6 +80,7 @@ export default class Scope {
       .ensureDir()
       .then(() => self.sources.ensureDir())
       .then(() => self.tmp.ensureDir())
+      .then(() => this.dependencyMap.write())
       .then(() => self); 
   }
 
