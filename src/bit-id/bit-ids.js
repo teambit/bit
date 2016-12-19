@@ -41,9 +41,6 @@ export default class BitIds extends Array<BitId> {
       );
     });
 
-    return Promise.all(promises)
-      .then((data) => {
-        console.log(data);
-      });
+    return Promise.all(promises);
   }
 }

@@ -7,26 +7,32 @@ import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
 import BitNotFoundException from './exceptions/bit-not-found';
 import { BitIds } from '../bit-id';
+import { remoteResolver, Remotes } from '../remotes';
+import { Scope } from '../scope';
 import Bit from './bit';
 import InvalidBit from './exceptions/invalid-bit';
 import BitInlineId from '../bit-inline-id';
 import { isDirEmptySync } from '../utils';
+import { LOCAL_SCOPE_NOTATION } from '../constants';
 
 export type PartialBitProps = {
   name: string;
   bitDir: string;
   bitJson: BitJson;
+  scope?: string;
 };
 
 export default class PartialBit {
   name: string;
   bitDir: string;
   bitJson: BitJson;
+  scope: string;
 
   constructor(bitProps: PartialBitProps) {
     this.name = bitProps.name;
     this.bitDir = bitProps.bitDir;
     this.bitJson = bitProps.bitJson;
+    this.scope = bitProps.scope || LOCAL_SCOPE_NOTATION;
   }
 
   validate(): bool {
@@ -53,9 +59,8 @@ export default class PartialBit {
     return this.bitJson.version;
   }
   
-  getScope() {
-    return 'fake-scope-need-to-implement';
-    // @TODO - implement
+  getScope(localScope: Scope, remotes: Remotes) {
+    return remoteResolver(this.scope, remotes, localScope);
   }
 
   // @TODO change to bit id once adding scope to bit 
@@ -65,6 +70,10 @@ export default class PartialBit {
       box: this.bitJson.box,
       version: this.bitJson.version
     };
+  }
+
+  isLocal() {
+    return this.scope === LOCAL_SCOPE_NOTATION;
   }
 
   cd(newDir: string) {

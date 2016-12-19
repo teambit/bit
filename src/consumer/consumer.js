@@ -135,8 +135,8 @@ export default class Consumer {
           remote: bit.getScope()
         })
       ).write()
-    )
-    .then(() => this.removeBit(id));
+    );
+    // .then(() => this.removeBit(id));
   }
 
   /**

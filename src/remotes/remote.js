@@ -17,13 +17,11 @@ export default class Remote {
   primary: boolean = false;
   host: string;
   alias: string;
-  origin: Scope;
 
-  constructor(alias: string, host: string, primary: boolean = false, origin: Scope) {
+  constructor(alias: string, host: string, primary: boolean = false) {
     this.alias = alias;
     this.host = host;
     this.primary = primary;
-    this.origin = origin;
   }
 
   connect(): Remote {

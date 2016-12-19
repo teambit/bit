@@ -1,7 +1,7 @@
 /** @flow */
 import path from 'path';
 import { BitId, BitIds } from '../bit-id';
-import { forEach, writeFile, readFile } from '../utils';
+import { forEach, writeFile } from '../utils';
 import Scope from './scope';
 import { DEPENDENCY_MAP_FILENAME } from '../constants';
 
@@ -31,6 +31,11 @@ export default class DependencyMap extends Map<BitId, BitIds> {
 
   write() {
     return writeFile(this.getPath(), JSON.stringify(this.toObject()));
+  }
+
+  setBit(bitId: Bit, bits: Bit) {
+    super.set(bitId.getId(), bits.map(bit => bit.getId()));
+    return this;
   }
 
   static load(json: {[string]: string}, scope: Scope): DependencyMap {

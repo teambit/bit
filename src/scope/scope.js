@@ -58,10 +58,11 @@ export default class Scope {
   put(bit: Bit) {
     bit.validateOrThrow();
     return bit.dependencies().fetch(this, bit.remotes())
-      .then((bits) => this.external.store(bits))
-      .then(flattenDependencies)
+      .then(bits => this.external.store(bits))
+      .then(bits => this.dependencyMap.set(bit, bits))
+      .then(() => this.dependencyMap.write())
       .then(() => this.sources.setSource(bit))
-      .then(() => this.dependencyMap.write());
+      .then(() => bit.build());
   }
 
   get(bitId: BitId) {
