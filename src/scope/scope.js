@@ -1,7 +1,7 @@
 /** @flow */
 import * as pathlib from 'path';
 import { Remotes, Remote } from '../remotes';
-import { propogateUntil, pathHas, readFile } from '../utils';
+import { propogateUntil, pathHas, readFile, flatten } from '../utils';
 import { getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME, BIT_JSON } from '../constants';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
@@ -67,12 +67,14 @@ export default class Scope {
       });
   }
 
-  getExternal(bitId: BitId): Promise<Bit[]> {
-    return bitId.fetch();
+  getExternal(bitId: BitId, remotes: Remotes): Promise<Bit[]> {
+    const remote = bitId.getRemote(this, remotes);
+    if (!remote) throw new Error('remote not found.');
+    return remote.fetch([bitId]);
   }
 
-  get(bitId: BitId): Promise<Bit[]> {
-    if (!bitId.isLocal()) return this.getExternal(bitId);
+  get(bitId: BitId, consumerRemotes: Remotes = new Remotes()): Promise<Bit[]> {
+    if (!bitId.isLocal()) return this.getExternal(bitId, consumerRemotes);
     bitId.version = this.sources.resolveVersion(bitId).toString();
     const dependencyList = this.dependencyMap.get(bitId);
     if (!dependencyList) throw new BitNotInScope();
@@ -106,20 +108,23 @@ export default class Scope {
       .then(() => this); 
   }
   
-  fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}>[] {
-    return bitIds.map((bitId) => {
-      
-      return this.sources
-        .getPartial(name)
-        .then((bit) => {
-          return bit.toTar()
+  fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}[]> {
+    const promises = bitIds.map((bitId) => {
+      return this.get(bitId);
+    });
+
+    return Promise.all(promises).then((bits) => {
+      const tars = flatten(bits).map((bit) => {
+        return bit.toTar()
           .then((tar) => {
             return {
-              id: name,
+              id: bit.name,
               contents: tar
             };
           });
-        });
+      });
+
+      return Promise.all(tars);
     });
   }
 

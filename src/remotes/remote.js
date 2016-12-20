@@ -39,7 +39,7 @@ export default class Remote {
     return this
       .connect()
       .fetch(
-        bitIds.map(bitId => bitId.name)
+        bitIds.map(bitId => bitId.toString())
       );
   }
 

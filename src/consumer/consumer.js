@@ -112,7 +112,7 @@ export default class Consumer {
     }
 
     const bitId = BitId.parse(rawId);
-    return this.scope.get(bitId)
+    return this.scope.get(bitId, this.bitJson.getRemotes())
       .then(bits => this.writeToBitsDir(bits));
   }
 
