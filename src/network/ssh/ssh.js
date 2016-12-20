@@ -70,7 +70,7 @@ export default class SSH {
     return this.exec('_fetch', ...bitIds)
       .then((packs) => {
         return packs
-          .split('\n')
+          .split('!!!')
           .map((pack) => {
             const [name, contents] = pack.split('::');
             return {

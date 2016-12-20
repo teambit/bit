@@ -15,6 +15,6 @@ export default class Fetch extends Command {
   }
 
   report(tars: {id: string, contents: Buffer}[]): string {
-    return tars.map(tar => `${toBase64(tar.id)}::${tar.contents.toString('base64')}`).join('\n');
+    return tars.map(tar => `${toBase64(tar.id)}::${tar.contents.toString('base64')}`).join('!!!');
   }
 }
