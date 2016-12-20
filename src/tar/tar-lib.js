@@ -13,6 +13,8 @@ export function pack(sources: string[]) {
     throw err;
   });
 
+  sources = sources.filter(source => fs.existsSync(source));
+
   sources.forEach(filePath => archive.append(fs.createReadStream(filePath), {
     name: path.parse(filePath).base
   }));
