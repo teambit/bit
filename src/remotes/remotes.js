@@ -32,7 +32,7 @@ export default class Remotes extends Map<string, Remote> {
     return object;
   }
 
-  static load(remotes: ?{[string]: string}): Remotes {
+  static load(remotes: {[string]: string}): Remotes {
     const models = [];
     
     if (!remotes) return new Remotes();

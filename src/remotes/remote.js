@@ -28,6 +28,13 @@ export default class Remote {
     return connect(this.host);
   }
 
+  toPlainObject() {
+    return {
+      host: this.host,
+      alias: this.alias
+    };
+  }
+
   fetch(bitIds: BitId[]): {name: string, contents: Buffer}[] {
     return this
       .connect()

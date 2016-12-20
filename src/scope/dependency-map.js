@@ -10,10 +10,20 @@ export function getPath(scopePath: string) {
   return path.join(scopePath, DEPENDENCY_MAP_FILENAME);
 }
 
+export type BitDependency = {
+  id: BitId,
+  remote: BasicRemote
+};
+
+export type BasicRemote = {
+  alias: string,
+  host: string
+};
+
 export class DependencyMap extends Map<BitId, BitIds> {
   scope: Scope;
 
-  constructor(scope: Scope, dependencyTuples: [BitId, BitId[]][] = []) {
+  constructor(scope: Scope, dependencyTuples: [BitId, BitDependency[]][] = []) {
     super(dependencyTuples);
     this.scope = scope;
   }
@@ -21,7 +31,12 @@ export class DependencyMap extends Map<BitId, BitIds> {
   toObject() {
     const obj = {};
     this.forEach((bitIds, bitId) => {
-      obj[bitId.toString()] = bitIds.serialize();
+      obj[bitId.toString()] = bitIds.map((dependency) => {
+        return {
+          id: dependency.id.toString(),
+          scope: dependency.scope
+        };
+      });
     });
     return obj;
   }
@@ -35,14 +50,26 @@ export class DependencyMap extends Map<BitId, BitIds> {
   }
 
   setBit(bitId: Bit, bits: Bit[]) {
-    super.set(bitId.getId(), new BitIds(...bits.map(bit => bit.getId())));
+    super.set(bitId.getId(), new BitIds(...bits.map((bit) => {
+      const id = bit.getId();
+      const remote = id.getRemote(this.scope, bit.remotes());
+      return {
+        id,
+        remote: remote.toPlainObject()
+      };
+    })));
     return this;
   }
 
-  static load(json: {[string]: string}, scope: Scope): DependencyMap {
+  static load(json: {[string]: {id: string, remote: BasicRemote}[]}, scope: Scope): DependencyMap {
     const matrix = [];
     forEach(json, (val, key) => {
-      matrix.push([BitId.parse(key), BitIds.deserialize(val)]);
+      matrix.push([BitId.parse(key), val.map((bitDep) => {
+        return {
+          id: BitId.parse(bitDep.id),
+          remote: bitDep.remote
+        };
+      })]);
     });
 
     return new DependencyMap(scope, matrix);

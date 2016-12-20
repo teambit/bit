@@ -1,6 +1,5 @@
 /** @flow */
 import * as pathlib from 'path';
-import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../command';
 import { initScope } from '../../api';
