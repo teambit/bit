@@ -23,6 +23,20 @@ export type ScopeProps = {
   dependencyMap?: DependencyMap;
 };
 
+function fromTar(name, tar) {
+  return getContents(tar)
+    .then((files) => {
+      const bitJson = JSON.parse(files[BIT_JSON]);
+      return Bit.loadFromMemory({
+        name,
+        bitDir: name,
+        bitJson,
+        impl: bitJson.impl ? files[bitJson.impl] : undefined,
+        spec: bitJson.spec ? files[bitJson.spec] : undefined
+      });
+    });
+}
+
 export default class Scope {
   external: External;
   created: boolean = false;
@@ -69,8 +83,20 @@ export default class Scope {
 
   getExternal(bitId: BitId, remotes: Remotes): Promise<Bit[]> {
     const remote = bitId.getRemote(this, remotes);
-    if (!remote) throw new Error('remote not found.');
-    return remote.fetch([bitId]);
+    return remote.fetch([bitId])
+      .then((tars) => {
+        const bits = tars.map((tar) => {
+          return fromTar(tar.name, tar.contents);
+        });
+
+        return Promise.all(bits);
+      })
+      .then((bits) => {
+        return bits.map((bit) => {
+          bit.scope = remote.alias;
+          return bit;
+        });
+      });
   }
 
   get(bitId: BitId, consumerRemotes: Remotes = new Remotes()): Promise<Bit[]> {
