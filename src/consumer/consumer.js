@@ -15,6 +15,8 @@ import { toBase64 } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
 
+const buildBit = bit => bit.build();
+
 const getBitDirForConsumerImport = ({
   bitsDir, name, box, version, remote
 }: {
@@ -134,7 +136,8 @@ export default class Consumer {
         remote: bit.scope
       });
 
-      return bit.cd(bitDirForConsumerImport).write();
+      return bit.cd(bitDirForConsumerImport).write()
+      .then(buildBit);
     };
       
     return this.loadBit(id)
