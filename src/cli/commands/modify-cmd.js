@@ -1,19 +1,29 @@
 /** @flow */
+import chalk from 'chalk';
 import Command from '../command';
+import { modify } from '../../api';
+import Bit from '../../bit';
 
 export default class Modify extends Command {
-  name = 'modify <name>';
-  description = 'modify a bit in inline folder';
+  name = 'modify <id>';
+  description = 'modify a bit (transfer to the inline folder for modification)';
   alias = 'm';
   opts = [];
   
-  action([name, ]: [string]): Promise<any> {
-    const m = this.alias;
-    console.log(`bit ${name} moved to inline...`);
-    return new Promise(resolve => resolve(m));
+  action([id, ]: [string, ]): Promise<Bit> {
+    return modify(id)
+    .then(bit => ({
+      name: bit.getName(),
+      box: bit.getBox(),
+      path: bit.getPath()
+    }));
   }
 
-  report(data: {string: any}): string {
-    return '';
+  report({ name, box, path }: { name: string, box: string, path: string }): string {
+    return chalk.white('put ') +
+    chalk.magenta(`"${box}/${name}"`) +
+    chalk.white(' in ') +
+    chalk.green(`"${path}"`) + 
+    chalk.white(' for later modification');
   }
 }

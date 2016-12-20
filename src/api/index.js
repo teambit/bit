@@ -10,6 +10,7 @@ import prepare from './lib/prepare';
 import initScope from './lib/scope-init';
 import upload from './lib/upload';
 import fetch from './lib/fetch';
+import modify from './lib/modify';
 import importAction from './lib/import';
 
 export {
@@ -25,5 +26,6 @@ export {
   initScope,
   upload,
   fetch,
+  modify,
   importAction
 };

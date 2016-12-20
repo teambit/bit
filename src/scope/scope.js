@@ -83,6 +83,10 @@ export default class Scope {
       });
   }
 
+  getOne(bitId: BitId): Promise<Bit> {
+    return this.sources.loadSource(bitId);
+  }
+
   push() {
     
   }

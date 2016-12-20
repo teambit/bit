@@ -34,7 +34,7 @@ export default class Init extends Command {
       });
   }
 
-  report({ created, bare }: any) {
+  report({ created, bare }: any): string {
     if (bare) {
       // if (!created) return `${chalk.grey('successfully reinitialized a bare bit scope.')}`;
       // @TODO - a case that you already have a bit scope
