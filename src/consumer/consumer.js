@@ -102,12 +102,13 @@ export default class Consumer {
    **/
   import(rawId: ?string): Bit {
     if (!rawId) {
-      return this.bitJson.dependencies.import();
+      // return this.bitJson.dependencies.import();
     }
 
     const bitId = BitId.parse(rawId);
-    return bitId.scope.fetch([bitId])
-      .then(bits => Promise.all(bits.map(({ contents }) => this.loadBitFromRawContents(contents))));
+    return this.scope.get(bitId)
+      .then(console.log);
+      // .then(bits => Promise.all(bits.map(({ contents }) => this.loadBitFromRawContents(contents))));
   }
 
   createBit(id: BitInlineId): Promise<Bit> {
@@ -143,8 +144,8 @@ export default class Consumer {
     return this.loadBit(id)
       // .then(bit => bit.validate())
     .then(bit => this.scope.put(bit))
-    .then(bits => Promise.all(bits.map(cdAndWrite)))
-    .then(() => this.removeBit(id));
+    .then(bits => Promise.all(bits.map(cdAndWrite)));
+    // .then(() => this.removeBit(id));
   }
 
   /**

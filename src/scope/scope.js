@@ -62,8 +62,8 @@ export default class Scope {
         return this.sources.setSource(bit)
           .then(() => bit.build())
           .then(() => this.dependencyMap.write())
-          .then(() => bits.concat(bit))
-          .catch(() => bit.clear());
+          .then(() => bits.concat(bit));
+          // .catch(() => bit.clear());
       });
   }
 
@@ -73,10 +73,13 @@ export default class Scope {
 
   get(bitId: BitId): Promise<Bit[]> {
     if (!bitId.isLocal()) return this.getExternal(bitId);
+    bitId.version = this.sources.resolveVersion(bitId).toString();
     const dependencyList = this.dependencyMap.get(bitId);
     if (!dependencyList) throw new BitNotInScope();
+    const remotes = this.dependencyMap.getRemotes(dependencyList);
+    const bitIds = this.dependencyMap.getBitIds(dependencyList);
     
-    return dependencyList.fetch(this, new Remotes())
+    return bitIds.fetch(this, remotes)
       .then((bits) => {
         return this.sources.loadSource(bitId)
           .then(bit => bits.concat(bit));

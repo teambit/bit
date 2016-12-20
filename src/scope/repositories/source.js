@@ -36,9 +36,13 @@ export default class Source extends Repository {
       .map(version => parseInt(version));
   }
 
+  resolveVersion(id: BitId) {
+    return id.getVersion().resolve(this.listVersions(id));
+  }
+
   loadSource(id: BitId) {
     try {
-      const version = id.getVersion().resolve(this.listVersions(id));
+      const version = this.resolveVersion(id);
       return Bit.load(this.composeSourcePath({
         name: id.name,
         box: id.box,
@@ -50,7 +54,7 @@ export default class Source extends Repository {
   }
 
   loadSources() {
-    
+
   }
 
   composeVersionsPath(name: string, box: string) {

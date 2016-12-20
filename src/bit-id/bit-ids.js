@@ -26,9 +26,10 @@ export default class BitIds extends Array<BitId> {
   }
 
   fetch(origin: Scope, remotes: Remotes) {
-    const byRemote = this.reduce((acc, val) => {
-      if (!acc[val.scope.host]) acc[val.scope.host] = [val];
-      else acc[val.scope.host].push(val);
+    const byRemote = this.reduce((acc, bitId) => {
+      const remote = bitId.getRemote(origin, remotes);
+      if (!acc[remote.host]) acc[remote.host] = [bitId];
+      else acc[remote.host].push(bitId);
       return acc;
     }, {});
 
@@ -38,9 +39,12 @@ export default class BitIds extends Array<BitId> {
         first(bitIds)
         .getRemote(origin, remotes)
         .fetch(bitIds)
+        .then(bits => flatten(bits))
       );
     });
 
-    return Promise.all(promises).then(array => flatten(array));
+    return Promise.all(promises).then((array) => {
+      return flatten(array);
+    });
   }
 }

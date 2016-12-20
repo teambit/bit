@@ -9,6 +9,7 @@ export default class LocalScope {
 
   constructor(scope: Scope) {
     this.scope = scope;
+    this.host = LOCAL_SCOPE_NOTATION;
   }
 
   fetch(bitIds: BitId[]): Promise<Bit[]> {

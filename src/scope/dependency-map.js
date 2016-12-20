@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import { Remotes } from '../remotes';
 import { BitId, BitIds } from '../bit-id';
 import { forEach, writeFile } from '../utils';
 import Scope from './scope';
@@ -20,12 +21,28 @@ export type BasicRemote = {
   host: string
 };
 
-export class DependencyMap extends Map<BitId, BitIds> {
+export class DependencyMap extends Map<BitId, BitDependency[]> {
   scope: Scope;
 
   constructor(scope: Scope, dependencyTuples: [BitId, BitDependency[]][] = []) {
     super(dependencyTuples);
     this.scope = scope;
+  }
+
+  get(bitId: BitId): BitDependency[] {
+    return super.get(bitId.toString());
+  }
+
+  getBitIds(dependencies: BitDependency[]) {
+    return new BitIds(...dependencies.map(bitDep => bitDep.id));
+  }
+
+  getRemotes(dependencies: BitDependency[]) {
+    const obj = {};
+    dependencies.forEach((bitDep) => {
+      obj[bitDep.remote.alias] = bitDep.remote.host;
+    });
+    return Remotes.load(obj);
   }
 
   toObject() {
@@ -34,7 +51,7 @@ export class DependencyMap extends Map<BitId, BitIds> {
       obj[bitId.toString()] = bitIds.map((dependency) => {
         return {
           id: dependency.id.toString(),
-          scope: dependency.scope
+          remote: dependency.remote
         };
       });
     });
@@ -64,7 +81,7 @@ export class DependencyMap extends Map<BitId, BitIds> {
   static load(json: {[string]: {id: string, remote: BasicRemote}[]}, scope: Scope): DependencyMap {
     const matrix = [];
     forEach(json, (val, key) => {
-      matrix.push([BitId.parse(key), val.map((bitDep) => {
+      matrix.push([key, val.map((bitDep) => {
         return {
           id: BitId.parse(bitDep.id),
           remote: bitDep.remote

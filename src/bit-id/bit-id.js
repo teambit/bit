@@ -34,6 +34,10 @@ export default class BitId {
     // return this.getRemote();
   }
 
+  resolveVersion() {
+    
+  }
+
   getVersion() {
     return Version.parse(this.version);
   }
