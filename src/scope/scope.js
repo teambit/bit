@@ -8,7 +8,7 @@ import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, External } from './repositories';
 import { DependencyMap, getPath as getDependenyMapPath } from './dependency-map';
 import BitJson from '../bit-json';
-import { BitId } from '../bit-id';
+import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME]);
@@ -106,8 +106,9 @@ export default class Scope {
       .then(() => this); 
   }
   
-  fetch(bitIds: string[]): Promise<{id: string, contents: Buffer}>[] {
-    return bitIds.map((name) => {
+  fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}>[] {
+    return bitIds.map((bitId) => {
+      
       return this.sources
         .getPartial(name)
         .then((bit) => {
@@ -129,8 +130,8 @@ export default class Scope {
         
         const bit = Bit.loadFromMemory({
           name,
-          bitDir: this.sources.getBitPath(name),
-          bitJson: files[BIT_JSON],
+          bitDir: name,
+          bitJson,
           impl: bitJson.impl ? files[bitJson.impl] : undefined,
           spec: bitJson.spec ? files[bitJson.spec] : undefined
         });
