@@ -3,28 +3,48 @@ import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../command';
 import { status } from '../../api';
-import type { StatusRes } from '../../api/lib/status';
- 
+import { immutableUnshift } from '../../utils';
+import { formatBit } from '../chalk-box';
+
+type StatusObj = {
+  name: string,
+  box: string,
+  valid: boolean
+};
+
 export default class Status extends Command {
   name = 'status';
   description = 'show modifications status';
   alias = 's';
   opts = [];
  
-  // $FlowFixMe
-  action(): Promise<StatusRes[]> {
-    return status();
+  action(): Promise<{ inline: StatusObj[], source: StatusObj[] }> {
+    const getBitStatus = bit => ({
+      name: bit.name,
+      box: bit.getBox(),
+      valid: bit.validate()
+    });
+
+    return status()
+    .then(({ inline, sources }) => ({
+      inline: inline.map(getBitStatus),
+      sources: sources.map(getBitStatus)
+    }));
   }
 
-  report(results: StatusRes[]): string {
-    if (R.isEmpty(results)) {
-      return chalk.red('your inline bits directory is empty');  
-    }
-
-    const valids = results.filter(r => r.valid);
-    const invalids = results.filter(r => !r.valid);
-
-    return chalk.red(invalids.map(r => r.name).join('\n')) + 
-           chalk.green(valids.map(r => r.name).join('\n')); 
+  report({ inline, sources }: { inline: StatusObj[], sources: StatusObj[] }): string {
+    const inlineBits = immutableUnshift(
+      inline.map(formatBit),
+      inline.length ? chalk.underline.white('inline bits') : chalk.green('your inline_bits directory is empty')
+    ).join('\n');
+    
+    const sourcesBits = immutableUnshift(
+      sources.map(formatBit),
+      sources.length ? chalk.underline.white('sources to push') : chalk.green('you don\'t have any sources to push')
+    ).join('\n');
+      
+    return [inlineBits, sourcesBits].join(
+      chalk.underline('\n                         \n') 
+    + chalk.white('\n'));
   }
 }

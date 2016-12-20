@@ -24,6 +24,7 @@ import isDirEmptySync from './is-dir-empty-sync';
 import isDirEmpty from './is-dir-empty';
 import writeFile from './fs-write-file';
 import readFile from './fs-read-file';
+import immutableUnshift from './immutable-unshift';
 
 export {
   parseSSHUrl,
@@ -51,5 +52,6 @@ export {
   isDirEmpty,
   isDirEmptySync,
   flatMap,
-  flatten
+  flatten,
+  immutableUnshift
 };

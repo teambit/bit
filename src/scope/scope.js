@@ -1,5 +1,6 @@
 /** @flow */
-import * as pathlib from 'path';
+import * as pathLib from 'path';
+import glob from 'glob';
 import { Remotes, Remote } from '../remotes';
 import { propogateUntil, pathHas, readFile, flatten } from '../utils';
 import { getContents } from '../tar';
@@ -63,7 +64,7 @@ export default class Scope {
       throw e;
     }
     
-    return pathlib.join(this.tmp.getPath(), `${name}_${bitJson.version}.tar`);
+    return pathLib.join(this.tmp.getPath(), `${name}_${bitJson.version}.tar`);
   }
 
   put(bit: Bit) {
@@ -134,6 +135,25 @@ export default class Scope {
       .then(() => this); 
   }
   
+  /**
+   * list the bits in the sources directory
+   **/
+  listSources(): Promise<Bit[]> {
+    return new Promise((resolve, reject) =>
+      glob(pathLib.join('*', '*'), { cwd: this.sources.getPath() }, (err, files) => {
+        if (err) reject(err);
+
+        const bitsP = files.map(bitRawId =>
+          this.getOne(BitId.parse(`@this/${bitRawId}`))
+        );
+
+        return Promise.all(bitsP)
+        .then(resolve);
+      })
+    );
+  }
+
+
   fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}[]> {
     const promises = bitIds.map((bitId) => {
       return this.get(bitId);

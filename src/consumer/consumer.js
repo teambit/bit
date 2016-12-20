@@ -164,15 +164,19 @@ export default class Consumer {
   }
 
   /**
-   * list the bits in the external directory
+   * list the bits in the inline directory
    **/
-  list({ inline }: { inline: ?boolean }): Promise<string[]> {
-    const dirToList = inline ? this.getInlineBitsPath() : this.getBitsPath();
-
+  listInline(): Promise<Bit[]> {
     return new Promise((resolve, reject) =>
-      glob(path.join(dirToList, '/*'), (err, files) => {
-        resolve(files.map(fullPath => path.basename(fullPath)));
-        reject(err);
+      glob(path.join('*', '*'), { cwd: this.getInlineBitsPath() }, (err, files) => {
+        if (err) reject(err);
+
+        const bitsP = files.map(bitRawId =>
+          this.loadBit(BitInlineId.parse(bitRawId))
+        );
+
+        return Promise.all(bitsP)
+        .then(resolve);
       })
     );
   }

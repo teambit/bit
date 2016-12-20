@@ -2,10 +2,8 @@
 import chalk from 'chalk';
 import Command from '../command';
 import { importAction } from '../../api';
-
-function immutableUnshift(arr, newEntry) {
-  return [].concat(newEntry, arr);
-}
+import { immutableUnshift } from '../../utils';
+import { formatBit } from '../chalk-box';
 
 export default class Import extends Command {
   name = 'import [ids]';
@@ -28,9 +26,6 @@ export default class Import extends Command {
   }
 
   report(bits: Array<{ scope: string, box: string, name: string }>): string {
-    const formatBit = bit => chalk.white('     > ') +
-    chalk.cyan(`${bit.scope}/${bit.box}/${bit.name}`);
-    
     return immutableUnshift(
       bits.map(formatBit),
       chalk.underline.white('imported the following bits:')

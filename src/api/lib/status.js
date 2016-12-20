@@ -1,24 +1,14 @@
 /** @flow */
 import { loadConsumer } from '../../consumer';
+import Bit from '../../bit';
 
 export type StatusRes = {
   name: string,
   valid: boolean,
 }
 
-export default function status(): Promise<StatusRes[]> {
-  // @TODO - implement
-  // return loadConsumer().then(consumer => 
-  //   consumer.list({ inline: true })
-  //   .then(bitNameList => Promise.all(
-  //     bitNameList.map(
-  //       bitName => 
-  //         consumer.get(bitName)
-  //         .then(bit => ({ 
-  //           name: bit.name,
-  //           valid: bit.validate()
-  //         }))
-  //       )
-  //     ))
-  // );
+export default function status(): Promise<{ inline: Bit[], sources: Bit[]}> {
+  return loadConsumer()
+  .then(consumer => Promise.all([consumer.listInline(), consumer.scope.listSources()]))
+  .then(([inline, sources]) => ({ inline, sources }));
 }
