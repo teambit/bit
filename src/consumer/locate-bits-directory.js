@@ -1,7 +1,7 @@
 const path = require('path');
-const { pathHasRepo, composeRepoPath } = require('./repo-utils');
+const { pathHasBitsDir, composeBitsDirPath } = require('./consumer-utils');
 
-const locateRepo = (absPath) => {
+const locateBitsDirectory = (absPath) => {
   const buildPropogationPaths = () => {
     const paths = [];
     const pathParts = absPath.split(path.sep);
@@ -15,13 +15,12 @@ const locateRepo = (absPath) => {
     return paths.reverse();
   };
 
-  if (pathHasRepo(absPath)) return composeRepoPath(absPath);
-
+  if (pathHasBitsDir(absPath)) return composeBitsDirPath(absPath);
   const searchPaths = buildPropogationPaths();
-  const resultPath = searchPaths.find(searchPath => pathHasRepo(searchPath));
-  if (resultPath) composeRepoPath(resultPath);
+  const resultPath = searchPaths.find(searchPath => pathHasBitsDir(searchPath));
+  if (resultPath) composeBitsDirPath(resultPath);
 
   throw new Error('could not find a bit repo');
 };
 
-module.exports = locateRepo;
+module.exports = locateBitsDirectory;

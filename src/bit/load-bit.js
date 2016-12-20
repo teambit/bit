@@ -28,8 +28,7 @@ const findBitInBitsDir = (bitName, bitDir) => {
   throw new BitNotExistsException();
 };
 
-const loadBit = (bitName, bitDir) => {
-  const bitPath = findBitInBitsDir(bitName, bitDir);
+const loadBit = (bitPath) => {
   try {
     return getbitImpl(bitPath);
   } catch (e) {

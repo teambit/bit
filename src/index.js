@@ -1,32 +1,30 @@
-const path = require('path');
-const locateRepo = require('./repo/locate-repo');
-const loadBitFromBitsDir = require('./bit/load-bit');
+// const path = require('path');
+const locateBitsDir = require('./consumer/locate-bits-directory');
+// const loadBitFromBitsDir = require('./bit/load-bit');
 const assert = require('assert').ok;
 const R = require('ramda');
-const stackTrace = require('stack-trace');
+// const stackTrace = require('stack-trace');
+const parseBitInlineId = require('./bit-id/parse-bit-inline-id');
+// const BitNotExistsException = require('./exceptions/bit-not-exists');
+const locateBitAssumingOnlyOne = require('./bit-locators/assume-only-one-locator');
 
-const BitNotExistsException = require('./exceptions/bit-not-exists');
+const load = (bitId) => {
+  assert(bitId, 'missing bit id');
+  assert(R.is(String, bitId), 'bit id must be a string');
 
-const loadBitFromPath = (bitName, dirPath) => {
-  const bitsDir = locateRepo(dirPath);
+  let bitPath;
+  const { bitName, boxName } = parseBitInlineId(bitId);
   try {
-    return loadBitFromBitsDir(bitName, bitsDir);
+    const bitsDir = locateBitsDir(process.cwd());
+    bitPath = locateBitAssumingOnlyOne(bitsDir, boxName, bitName);
   } catch (e) {
-    if (e instanceof BitNotExistsException) {
-      return loadBitFromPath(bitName, path.join(bitsDir, '../..'));
-    }
-
-    throw e;
+    // in case there are conflicts (e.g. two bits by the same name)
+    // const callerDirectory = stackTrace.get()[1].getFileName();
+    // const bitJson = getBitJson(callerDirectory);
+    // bitPath = locateBitUsingBitJson(bitJson);
   }
-};
 
-const load = (bitName) => {
-  assert(bitName, 'missing bit name');
-  assert(R.is(String, bitName), 'bit name must be a string');
-  const bitPath = stackTrace.get()[1].getFileName();
-  console.log('loadFrom: ', path.dirname(bitPath));
-
-  return loadBitFromPath(bitName, path.dirname(bitPath));
+  return require(bitPath); // eslint-disable-line
 };
 
 module.exports = load;
