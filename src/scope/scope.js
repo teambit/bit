@@ -54,7 +54,8 @@ export default class Scope {
 
   put(bit: Bit) {
     bit.validateOrThrow();
-    return bit.dependencies().fetch(this, bit.remotes())
+    return bit.dependencies()
+      .fetch(this, bit.remotes())
       .then((bits) => {
         this.external.store(bits);
         this.dependencyMap.setBit(bit, bits);
