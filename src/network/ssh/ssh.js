@@ -62,8 +62,7 @@ export default class SSH {
 
   push(bit: Bit) {
     return bit.toTar().then((tarBuffer: Buffer) => {
-      return this.exec('_prepare', bit.name, bit.bitJson.toJson(false))
-        .then(() => this.putBit(bit.name, tarBuffer));
+      return this.putBit(bit.name, tarBuffer);
     });
   }
 

@@ -129,7 +129,7 @@ export default class Scope {
         
         const bit = Bit.loadFromMemory({
           name,
-          bitDir: this.sources.composeSourcePath(name),
+          bitDir: this.sources.getBitPath(name),
           bitJson: files[BIT_JSON],
           impl: bitJson.impl ? files[bitJson.impl] : undefined,
           spec: bitJson.spec ? files[bitJson.spec] : undefined

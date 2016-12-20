@@ -12,9 +12,11 @@ import upload from './lib/upload';
 import fetch from './lib/fetch';
 import modify from './lib/modify';
 import importAction from './lib/import';
+import push from './lib/push';
 
 export {
   init,
+  push,
   create,
   remove,
   list,
