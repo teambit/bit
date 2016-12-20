@@ -28,7 +28,7 @@ import Fetch from './commands/_fetch-cmd';
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
     new Init(),
-    new Scope(),
+    // new Scope(),
     new Create(),
     new Export(),
     new Import(),
