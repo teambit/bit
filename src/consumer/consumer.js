@@ -113,8 +113,7 @@ export default class Consumer {
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
-      .then(console.log);
-      // .then(bits => Promise.all(bits.map(({ contents }) => this.loadBitFromRawContents(contents))));
+      .then(bits => this.writeToBitsDir(bits));
   }
 
   createBit(id: BitInlineId): Promise<Bit> {
@@ -131,7 +130,7 @@ export default class Consumer {
     .then(bit => bit.erase());
   }
   
-  export(id: BitInlineId) {
+  writeToBitsDir(bits: Bit[]): Promise<Bit[]> {
     const bitsDir = this.getBitsPath();
 
     const cdAndWrite = (bit: Bit): Promise<Bit> => {
@@ -146,11 +145,15 @@ export default class Consumer {
       return bit.cd(bitDirForConsumerImport).write()
       .then(buildBit);
     };
-      
+
+    return Promise.all(bits.map(cdAndWrite));
+  }
+
+  export(id: BitInlineId) {  
     return this.loadBit(id)
       // .then(bit => bit.validate())
     .then(bit => this.scope.put(bit))
-    .then(bits => Promise.all(bits.map(cdAndWrite)));
+    .then(bits => this.writeToBitsDir(bits));
     // .then(() => this.removeBit(id));
   }
 

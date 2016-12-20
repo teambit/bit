@@ -5,7 +5,6 @@ import { Impl, Specs } from './sources';
 import { mkdirp } from '../utils';
 import BitJson from '../bit-json';
 import { Remotes } from '../remotes';
-import BitAlreadyExistsInternalyException from './exceptions/bit-already-exist-internaly';
 import PartialBit from './partial-bit';
 import { BitId } from '../bit-id';
 import loadTranspiler from './environment/load-transpiler';
@@ -32,13 +31,14 @@ export default class Bit extends PartialBit {
     this.impl = bitProps.impl;
   }
 
-  build() {
+  build(): Promise<Bit> {
     return loadTranspiler(this.bitJson.transpiler)
     .then(({ transpile }) => {
       const src = this.impl.src;
       const { code, map } = transpile(src); // eslint-disable-line
       const outputFile = path.join(this.bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
       fs.outputFileSync(outputFile, code);
+      return this;
     });
   }
 
@@ -50,16 +50,10 @@ export default class Bit extends PartialBit {
 
   write(): Promise<Bit> {
     const bitPath = this.bitDir; 
-    return new Promise((resolve, reject) => {
-      return fs.stat(bitPath, (err) => {
-        if (!err) return reject(new BitAlreadyExistsInternalyException(this.name));
-        
-        return mkdirp(bitPath)
-        .then(() => this.impl.write(bitPath, this))
-        .then(() => this.bitJson.write({ bitDir: bitPath }))
-        .then(() => resolve(this));
-      });
-    });
+    return mkdirp(bitPath)
+    .then(() => this.impl.write(bitPath, this))
+    .then(() => this.bitJson.write({ bitDir: bitPath }))
+    .then(() => this);
   }
 
   static load(bitDir: string, name: string): Promise<Bit> {  
