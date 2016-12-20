@@ -59,6 +59,7 @@ export default class Source extends Repository {
   }
 
   clean(bitId: BitId) {
+    bitId.version = this.resolveVersion(bitId);
     return fs.rmdirSync(this.composeSourcePath(bitId));
   }
 
