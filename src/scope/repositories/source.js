@@ -1,5 +1,6 @@
 /** @flow */
 import * as path from 'path';
+import fs from 'fs';
 import Repository from '../repository';
 import { SourceNotFound } from '../exceptions';
 import { BIT_SOURCES_DIRNAME } from '../../constants';
@@ -55,6 +56,10 @@ export default class Source extends Repository {
 
   loadSources() {
 
+  }
+
+  clean(bitId: BitId) {
+    return fs.rmdirSync(this.composeSourcePath(bitId));
   }
 
   composeVersionsPath(name: string, box: string) {
