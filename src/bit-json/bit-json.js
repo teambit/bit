@@ -110,7 +110,6 @@ export default class BitJson {
   }
 
   getDependencies(): BitIds {
-    console.log('hi');
     return BitIds.loadDependencies(this.dependencies);
   }
 

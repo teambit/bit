@@ -97,6 +97,12 @@ export default class Consumer {
       });
   }
   
+  push(rawId: string, rawRemote: string) {
+    const bitId = BitId.parse(rawId);
+    const remote = this.bitJson.getRemotes().get(rawRemote);
+    return this.scope.push(bitId, remote);
+  }
+
   /**
    * fetch a bit from a remote, put in the bit.json and in the external directory
    **/

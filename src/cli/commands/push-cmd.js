@@ -13,7 +13,7 @@ export default class Push extends Command {
   ];
   
   action([id, remote]: [string, string]): Promise<*> {
-    return push();
+    return push(id, remote);
   }
 
   report(): string {

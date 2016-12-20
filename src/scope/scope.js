@@ -1,6 +1,6 @@
 /** @flow */
 import * as pathlib from 'path';
-import { Remotes } from '../remotes';
+import { Remotes, Remote } from '../remotes';
 import { propogateUntil, pathHas, readFile } from '../utils';
 import { getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME, BIT_JSON } from '../constants';
@@ -90,8 +90,10 @@ export default class Scope {
     return this.sources.loadSource(bitId);
   }
 
-  push() {
-    
+  push(bitId: BitId, remote: Remote) {
+    return this.sources.loadSource(bitId).then((bit) => {
+      return remote.push(bit);
+    });
   }
 
   ensureDir() {
@@ -127,15 +129,13 @@ export default class Scope {
         
         const bit = Bit.loadFromMemory({
           name,
-          bitDir: this.sources.getBitPath(name),
+          bitDir: this.sources.composeSourcePath(name),
           bitJson: files[BIT_JSON],
           impl: bitJson.impl ? files[bitJson.impl] : undefined,
           spec: bitJson.spec ? files[bitJson.spec] : undefined
         });
 
-        bit.resolveDependencies();
-
-        return bit.write();
+        return this.put(bit);
       });
   }
 
