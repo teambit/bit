@@ -5,13 +5,13 @@ import fs from 'fs';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import BitJson from '../bit-json';
-import { BitId } from '../bit-id';
+import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
 import { INLINE_BITS_DIRNAME, BITS_DIRNAME, BIT_JSON, BIT_HIDDEN_DIR } from '../constants';
 import * as tar from '../tar';
 import { BitJsonNotFound } from '../bit-json/exceptions';
-import { toBase64 } from '../utils';
+import { toBase64, flatten } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
 
@@ -108,7 +108,13 @@ export default class Consumer {
    **/
   import(rawId: ?string): Bit {
     if (!rawId) {
-      // return this.bitJson.dependencies.import();
+      const deps = BitIds.loadDependencies(this.bitJson.dependencies);
+      return Promise.all(deps.map((dep) => {
+        return this.scope.get(dep, this.bitJson.getRemotes());
+      }))
+        .then(bits => {
+          return this.writeToBitsDir(flatten(bits));
+        });
     }
 
     const bitId = BitId.parse(rawId);
