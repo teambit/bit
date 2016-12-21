@@ -163,6 +163,24 @@ export default class Consumer {
     // .then(() => this.removeBit(id));
   }
 
+  testBit(id: BitInlineId): Promise<Bit> {
+    return new Promise((resolve, reject) => {
+      const bitDir = id.composeBitPath(this.getPath());
+      const relativeBitDir = path.relative(process.cwd(), bitDir); // for some reason, Jasmine doesn't accept an absolute path
+      const Jasmine = require('jasmine');
+      const jasmine = new Jasmine();
+      jasmine.loadConfig({
+        spec_dir: relativeBitDir,
+        spec_files: ['spec.js'],
+      });
+      jasmine.configureDefaultReporter({
+        showColors: true
+      });
+      jasmine.onComplete(passed => resolve(passed));
+      jasmine.execute();
+    });
+  }
+
   /**
    * list the bits in the inline directory
    **/

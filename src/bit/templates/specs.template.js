@@ -2,14 +2,14 @@
 import camelcase from 'camelcase';
 import type { BitProps } from '../bit';
 
-const createImpl = ({ name }: BitProps): string => {
-  return `
-/**
- @TODO - write a spec template
- */
-module.exports = function ${camelcase(name)}Spec() {
-   
-};`;
+const createSpec = ({ name }: BitProps): string => {
+  return `const ${camelcase(name)} = require('./impl.js');
+
+describe('${camelcase(name)}', () => {
+    it('', () => {
+        
+    });
+});`;
 };
 
-export default createImpl;
+export default createSpec;

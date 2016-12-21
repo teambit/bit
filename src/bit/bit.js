@@ -52,6 +52,7 @@ export default class Bit extends PartialBit {
     const bitPath = this.bitDir; 
     return mkdirp(bitPath)
     .then(() => this.impl.write(bitPath, this))
+    .then(() => this.specs.write(bitPath, this))
     .then(() => this.bitJson.write({ bitDir: bitPath }))
     .then(() => this);
   }
