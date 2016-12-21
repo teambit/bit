@@ -4,7 +4,7 @@ import * as fs from 'fs';
 const userHome = require('user-home');
 
 function composeDefaultPath() {
-  return `${userHome}/.ssh/google_compute_engine`;
+  return `${userHome}/.ssh/id_rsa.pub`;
 }
 
 export default function keyGetter(keyPath: ?string) {
