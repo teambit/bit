@@ -14,7 +14,7 @@ export default class Upload extends Command {
     return upload({
       name: fromBase64(name), 
       tar: new Buffer(tar, 'base64'),
-      path
+      path: fromBase64(path)
     });
   }
 

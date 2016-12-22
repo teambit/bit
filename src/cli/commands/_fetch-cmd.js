@@ -11,7 +11,7 @@ export default class Fetch extends Command {
   opts = [];
 
   action([path, ids, ]: [string, string[], ]): Promise<any> {
-    return fetch(path, ids.map(fromBase64));
+    return fetch(fromBase64(path), ids.map(fromBase64));
   }
 
   report(tars: {id: string, contents: Buffer}[]): string {
