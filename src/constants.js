@@ -27,6 +27,12 @@ export const CACHE_ROOT = getCacheDirectory();
  */
 export const TRANSPILERS_DIR = path.join(CACHE_ROOT, 'transpilers');
 
-export const BIT_DIR_NAME = 'bits';
+export const BITS_DIRNAME = 'bits';
 
-export const LOCAL_BIT_JSON_NAME = '.bit.json';
+export const INLINE_BITS_DIRNAME = 'inline_bits';
+
+export const BIT_JSON_NAME = 'bit.json';
+
+export const LOCAL_SCOPE_DIRNAME = '.bit';
+
+export const DEPENDENCIES_MAP_NAME = 'dependencies.json';
