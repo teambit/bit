@@ -120,9 +120,9 @@ export default class Scope {
   }
 
   push(bitId: BitId, remote: Remote) {
-    return this.sources.loadSource(bitId).then((bit) => {
-      return remote.push(bit);
-    });
+    return this.sources.loadSource(bitId)
+      .then(bit => remote.push(bit))
+      .then(() => this.sources.clean(bitId));
   }
 
   ensureDir() {

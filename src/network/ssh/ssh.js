@@ -6,6 +6,11 @@ import type { SSHUrl } from '../../utils/parse-ssh-url';
 
 const sequest = require('sequest');
 
+function absolutePath(path: string) {
+  if (!path.startsWith('/')) return `~/${path}`;
+  return path;
+}
+
 function clean(str: string) {
   return str.replace('\n', '');
 }
@@ -38,16 +43,16 @@ export default class SSH {
         .join(' ');
     }
 
-    let path = '';
-    if (this.path) path = `cd ${this.path}; `;
-    const cmd = `${path}bit ${commandName} ${serialize()}`;
+    // let path = '';
+    // if (this.path) path = `cd ${this.path}; `;
+    const cmd = `bit ${commandName} ${serialize()}`;
 
     return cmd; 
   }
 
   exec(commandName: string, ...args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
-      const cmd = this.buildCmd(commandName, ...args);
+      const cmd = this.buildCmd(commandName, absolutePath(this.path), ...args);
       this.connection(cmd, function (err, res, o) {
         if (err) return reject(err);
         return resolve(clean(res));

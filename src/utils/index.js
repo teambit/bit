@@ -25,9 +25,12 @@ import isDirEmpty from './is-dir-empty';
 import writeFile from './fs-write-file';
 import readFile from './fs-read-file';
 import immutableUnshift from './immutable-unshift';
+import rmDir from './fs-rmdir';
+import resolveHomePath from './os-resolve-home-path';
 
 export {
   parseSSHUrl,
+  rmDir,
   toBase64,
   fromBase64,
   resolveBoolean,
@@ -44,6 +47,7 @@ export {
   contains,
   isBitUrl,
   mapObject,
+  resolveHomePath,
   propogateUntil,
   pathHas,
   first,
