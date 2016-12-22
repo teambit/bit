@@ -38,16 +38,16 @@ export default class SSH {
         .join(' ');
     }
 
-    let path = '';
-    if (this.path) path = `cd ${this.path}; `;
-    const cmd = `${path}bit ${commandName} ${serialize()}`;
+    // let path = '';
+    // if (this.path) path = `cd ${this.path}; `;
+    const cmd = `bit ${commandName} ${serialize()}`;
 
     return cmd; 
   }
 
   exec(commandName: string, ...args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
-      const cmd = this.buildCmd(commandName, ...args);
+      const cmd = this.buildCmd(this.path, commandName, ...args);
       this.connection(cmd, function (err, res, o) {
         if (err) return reject(err);
         return resolve(clean(res));

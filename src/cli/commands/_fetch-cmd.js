@@ -4,14 +4,14 @@ import { toBase64, fromBase64 } from '../../utils';
 import { fetch } from '../../api';
 
 export default class Fetch extends Command {
-  name = '_fetch <ids...>';
+  name = '_fetch <path> <ids...>';
   private = true;
   description = 'fetch a bit from a scope';
   alias = '';
   opts = [];
-  
-  action([ids, ]: [string[], string, ]): Promise<any> {
-    return fetch(ids.map(fromBase64));
+
+  action([path, ids, ]: [string, string[], ]): Promise<any> {
+    return fetch(path, ids.map(fromBase64));
   }
 
   report(tars: {id: string, contents: Buffer}[]): string {

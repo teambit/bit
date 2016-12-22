@@ -25,9 +25,11 @@ import isDirEmpty from './is-dir-empty';
 import writeFile from './fs-write-file';
 import readFile from './fs-read-file';
 import immutableUnshift from './immutable-unshift';
+import rmDir from './fs-rmdir';
 
 export {
   parseSSHUrl,
+  rmDir,
   toBase64,
   fromBase64,
   resolveBoolean,

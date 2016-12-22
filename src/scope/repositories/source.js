@@ -8,7 +8,7 @@ import InvalidBit from '../../bit/exceptions/invalid-bit';
 import Bit from '../../bit';
 import ParitalBit from '../../bit/partial-bit';
 import { BitId } from '../../bit-id';
-import { listDirectories } from '../../utils';
+import { listDirectories, rmDir } from '../../utils';
 
 export default class Source extends Repository {
   getPath(): string {
@@ -59,8 +59,8 @@ export default class Source extends Repository {
   }
 
   clean(bitId: BitId) {
-    bitId.version = this.resolveVersion(bitId);
-    return fs.rmdirSync(this.composeSourcePath(bitId));
+    // bitId.version = this.resolveVersion(bitId);
+    // return rmDir(this.composeSourcePath(bitId));
   }
 
   composeVersionsPath(name: string, box: string) {

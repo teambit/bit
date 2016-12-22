@@ -1,6 +1,9 @@
 /** @flow */
 import forEach from './foreach';
 
+/**
+ * filter an arry
+ */
 export default function filter(obj: Object, cb: (val: any, key: any) => boolean) {
   const newObj = {};
 
