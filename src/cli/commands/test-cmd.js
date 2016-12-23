@@ -5,7 +5,7 @@ import { test } from '../../api';
 const chalk = require('chalk');
 
 export default class Test extends Command {
-  name = 'test [name]';
+  name = 'test <id>';
   description = 'run bit(s) unit tests';
   alias = 't';
   opts = [];
