@@ -47,7 +47,7 @@ export const DEFAULT_BIT_NAME = '';
 
 export const DEFAULT_TRANSPILER = 'bit-babel';
 
-export const DEFAULT_TESTER = 'bit-jasmin';
+export const DEFAULT_TESTER = 'bit-jasmine';
 
 export const DEFAULT_DIST_DIRNAME = 'dist';
 

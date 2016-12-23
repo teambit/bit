@@ -14,6 +14,7 @@ import { BitJsonNotFound } from '../bit-json/exceptions';
 import { toBase64, flatten } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
+import loadTranspiler from '../bit/environment/load-transpiler';
 
 const buildBit = bit => bit.build();
 
@@ -164,20 +165,9 @@ export default class Consumer {
   }
 
   testBit(id: BitInlineId): Promise<Bit> {
-    return new Promise((resolve, reject) => {
+    return this.loadBit(id).then((bit) => {
       const bitDir = id.composeBitPath(this.getPath());
-      const relativeBitDir = path.relative(process.cwd(), bitDir); // for some reason, Jasmine doesn't accept an absolute path
-      const Jasmine = require('jasmine');
-      const jasmine = new Jasmine();
-      jasmine.loadConfig({
-        spec_dir: relativeBitDir,
-        spec_files: ['spec.js'],
-      });
-      jasmine.configureDefaultReporter({
-        showColors: true
-      });
-      jasmine.onComplete(passed => resolve(passed));
-      jasmine.execute();
+      return loadTranspiler(bit.bitJson.tester).then(tester => tester.test(bitDir));
     });
   }
 

@@ -1,15 +1,9 @@
 /** @flow */
-import camelcase from 'camelcase';
 import type { BitProps } from '../bit';
+import loadTranspiler from '../environment/load-transpiler';
 
-const createSpec = ({ name }: BitProps): string => {
-  return `const ${camelcase(name)} = require('./impl.js');
-
-describe('${camelcase(name)}', () => {
-    it('', () => {
-        
-    });
-});`;
+const createSpec = ({ name, tester }: BitProps): string => {
+  return loadTranspiler(tester).then(testerModule => testerModule.getTemplate(name));
 };
 
 export default createSpec;
