@@ -199,17 +199,21 @@ export default class Consumer {
   }
 
   static load(currentPath: string): Promise<Consumer> {
-    const projectPath = locateConsumer(currentPath);
-    if (!projectPath) throw new ConsumerNotFound();
-    const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
-    const bitJsonP = BitJson.load(projectPath);
-    return Promise.all([scopeP, bitJsonP])
-    .then(([scope, bitJson]) => 
-      new Consumer({
-        projectPath,
-        bitJson,
-        scope
-      })
-    );
+    return new Promise((resolve, reject) => {
+      const projectPath = locateConsumer(currentPath);
+      if (!projectPath) reject(new ConsumerNotFound());
+      const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
+      const bitJsonP = BitJson.load(projectPath);
+      return Promise.all([scopeP, bitJsonP])
+      .then(([scope, bitJson]) => 
+        resolve(
+          new Consumer({
+            projectPath,
+            bitJson,
+            scope
+          })
+        )
+      );
+    });
   }
 }
