@@ -13,6 +13,7 @@ import fetch from './lib/fetch';
 import modify from './lib/modify';
 import importAction from './lib/import';
 import push from './lib/push';
+import test from './lib/test';
 
 export {
   init,
@@ -29,5 +30,6 @@ export {
   upload,
   fetch,
   modify,
-  importAction
+  importAction,
+  test,
 };

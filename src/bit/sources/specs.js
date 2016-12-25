@@ -5,6 +5,7 @@ import Source from './source';
 import createSpecs from '../templates/specs.template';
 import Bit from '../bit';
 import { SPEC_FILE_NAME } from '../../constants';
+import TranspilerNotFoundException from '../exceptions/transpiler-not-found';
 
 function composePath(...paths: Array<string>): string {
   // $FlowFixMe
@@ -14,12 +15,22 @@ function composePath(...paths: Array<string>): string {
 export default class Specs extends Source {
   
   write(bitPath: string): Promise<any> {
-    return new Promise((resolve, reject) =>
-      fs.writeFile(composePath(bitPath), this.src, (err, res) => {
-        if (err) return reject(err);
-        return resolve(res);
+    return new Promise((resolve, reject) => {
+      this.src
+      .then((template) => {
+        fs.writeFile(composePath(bitPath), template, (err, res) => {
+          if (err) return reject(err);
+          return resolve(res);
+        });
       })
-    );
+      .catch((err) => {
+        if (err instanceof TranspilerNotFoundException) {
+          // TODO: maybe write to a log file "tester had been set in bit.json but not installed"
+          return resolve(); // that's fine, the tester wasn't installed
+        }
+        return reject(err);
+      });
+    });
   }
   
   static load(bitPath: string): Promise<?Specs> {

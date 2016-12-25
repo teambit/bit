@@ -1,0 +1,15 @@
+{
+  "name": "bit-jasmine",
+  "version": "0.1.0",
+  "description": "Jasmine tester for Bit",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "camelcase": "^4.0.0",
+    "jasmine": "^2.5.2"
+  }
+}

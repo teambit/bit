@@ -14,6 +14,7 @@ import { BitJsonNotFound } from '../bit-json/exceptions';
 import { toBase64, flatten } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
+import loadTranspiler from '../bit/environment/load-transpiler';
 
 const buildBit = bit => bit.build();
 
@@ -163,6 +164,13 @@ export default class Consumer {
     .then(bit => this.scope.put(bit))
     .then(bits => this.writeToBitsDir(bits))
     .then(() => this.removeBit(id));
+  }
+
+  testBit(id: BitInlineId): Promise<Bit> {
+    return this.loadBit(id).then((bit) => {
+      const bitDir = id.composeBitPath(this.getPath());
+      return loadTranspiler(bit.bitJson.tester).then(tester => tester.test(bitDir));
+    });
   }
 
   /**
