@@ -26,13 +26,14 @@ A simple code component like this:
 
 Simply becomes:
 ```js
-  bit.padLeft(str, len, ch);
+  const padLeft = bit('pad-left');
+  padLeft(str, len, ch);
 ```
 It allows you to design lighter applications with super fast installation and a duplication-free and easy-to-maintain code base which does not depend on external sources.
 
 ## install
 ```bash
-  npm -g bit-bin
+  npm -g bit-bin (not supported yet)
 ```
 
 # development
@@ -57,13 +58,9 @@ It allows you to design lighter applications with super fast installation and a 
 
 ## Flow
 - install [`flow`](https://flowtype.org/)
+and make sure you have [`flow-typed`](https://github.com/flowtype/flow-typed) installed.
 ```bash
-npm install --global flow-bin
-```
-
-- make sure you have [`flow-typed`](https://github.com/flowtype/flow-typed) installed.
-```bash
-  npm install -g flow-typed
+npm install -g flow-bin flow-typed
 ```
 
 - install type definitions using flow-typed
