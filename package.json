@@ -1,7 +1,10 @@
 {
   "name": "bit-node",
   "version": "0.1.0",
-  "scripts": {},
+  "scripts": {
+    "build": "gulp",
+    "watch": "gulp watch"
+  },
   "main": "dist/index.js",
   "dependencies": {
     "camelcase": "^4.0.0",
