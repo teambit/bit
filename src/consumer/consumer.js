@@ -80,7 +80,9 @@ export default class Consumer {
         
         const bitJson = JSON.parse(bitContents[BIT_JSON].toString('ascii'));
 
-        const { name, box, version, impl, spec } = bitJson;
+        const { name, box, version, sources } = bitJson;
+        const { spec, impl } = sources;
+        
         const remote = 'ssh://ran@104.198.245.134:/home/ranmizrahi/scope';
 
         const bitDir = getBitDirForConsumerImport({

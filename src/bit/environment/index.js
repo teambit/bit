@@ -1,7 +1,7 @@
 import loadModule from './load-module';
-import validateTranspiler from './validate-transpiler';
+import validateCompiler from './validate-compiler';
 
 export default {
   loadModule,
-  validateTranspiler
+  validateCompiler
 };

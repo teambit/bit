@@ -15,19 +15,19 @@ export default class Show extends Command {
     .then(bit => ({
       name: bit.name,
       version: bit.bitJson.version,
-      transpiler: bit.bitJson.transpiler,
+      compiler: bit.bitJson.compiler,
       tester: bit.bitJson.tester,
       dependencies: bit.bitJson.dependencies,
       path: bit.getPath()
     }));
   }
 
-  report({ name, version, transpiler, dependencies, path, tester }: any): string {
+  report({ name, version, compiler, dependencies, path, tester }: any): string {
     return `
     ${chalk.blue(name)}
     
       version -> ${version}
-      transpiler -> ${transpiler}
+      compiler -> ${compiler}
       tester -> ${tester}
       dependencies -> ${Object.keys(dependencies).join(', ')}
       path -> ${path}

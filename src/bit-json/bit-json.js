@@ -6,7 +6,7 @@ import { BitJsonAlreadyExists, BitJsonNotFound } from './exceptions';
 import { Remotes } from '../remotes';
 import { 
   BIT_JSON,
-  DEFAULT_TRANSPILER,
+  DEFAULT_COMPILER,
   DEFAULT_TESTER,
   DEFAULT_BIT_VERSION,
   DEFAULT_BOX_NAME,
@@ -26,10 +26,14 @@ function hasExisting(bitPath: string): boolean {
 export type BitJsonProps = {
   name?: string;
   box?: string;
-  impl?: string;
-  spec?: string;
-  transpiler?: string;
-  tester?: string;
+  sources?: {
+    impl?: string;
+    spec?: string;  
+  };
+  env?: {
+    compiler?: string;
+    tester?: string;
+  };
   version?: string;
   remotes?: Object;
   dependencies?: Object;
@@ -42,26 +46,34 @@ export default class BitJson {
   name: string;
   box: string;
   version: string;
-  impl: string;
-  spec: string;
   dependencies: {[string]: string};
   remotes: {[string]: string};
-  transpiler: string;
-  tester: string;
+  sources: {
+    impl: string;
+    spec: string;  
+  };
+  env: {
+    compiler: string;
+    tester: string;
+  };
 
   getPath(bitPath: string) {
     return composePath(bitPath);
   }
 
   constructor(
-    { name, box, version, impl, spec, dependencies, remotes, transpiler, tester }: BitJsonProps
+    { name, box, version, sources, dependencies, remotes, env }: BitJsonProps
     ) {
     this.name = name || DEFAULT_BIT_NAME;
     this.box = box || DEFAULT_BOX_NAME;
-    this.impl = impl || IMPL_FILE_NAME;
-    this.spec = spec || SPEC_FILE_NAME;
-    this.transpiler = transpiler || DEFAULT_TRANSPILER;
-    this.tester = tester || DEFAULT_TESTER;
+    this.sources = {
+      impl: sources ? sources.impl || IMPL_FILE_NAME : IMPL_FILE_NAME,
+      spec: sources ? sources.spec || SPEC_FILE_NAME : SPEC_FILE_NAME,
+    };
+    this.env = {
+      compiler: env ? env.compiler || DEFAULT_COMPILER : DEFAULT_COMPILER,
+      tester: env ? env.tester || DEFAULT_TESTER : DEFAULT_TESTER,
+    };
     this.version = version || DEFAULT_BIT_VERSION;
     this.remotes = remotes || {};
     this.dependencies = dependencies || {};
@@ -95,14 +107,34 @@ export default class BitJson {
     return {
       name: this.name,
       box: this.box,
-      impl: this.impl,
-      spec: this.spec,
       version: this.version,
-      transpiler: this.transpiler,
-      tester: this.tester,
+      sources: {
+        impl: this.getImplBasename(),
+        spec: this.getSpecBasename(),
+      },
+      env: {
+        compiler: this.getCompilerName(),
+        tester: this.getTesterName(),
+      },
       remotes: this.getRemotes().toPlainObject(),
       dependencies: this.dependencies
     };
+  }
+  
+  getImplBasename(): string { 
+    return this.sources.impl;
+  }
+
+  getSpecBasename(): string { 
+    return this.sources.spec;
+  }
+
+  getCompilerName(): string { 
+    return this.env.compiler;
+  }
+
+  getTesterName(): string { 
+    return this.env.tester;
   }
 
   getRemotes(): Remotes {
@@ -150,7 +182,7 @@ export default class BitJson {
   validate(): boolean {
     return (true
       // typeof this.version === 'number' &&
-      // typeof this.transpiler === 'string' &&
+      // typeof this.compiler === 'string' &&
       // this.remotes.validate() &&
       // typeof this.dependencies === 'object'
     );

@@ -45,13 +45,13 @@ export const SPEC_FILE_NAME = 'spec.js';
 
 export const DEFAULT_BIT_NAME = '';
 
-export const DEFAULT_TRANSPILER = 'bit-babel';
+export const DEFAULT_COMPILER = 'bit-babel';
 
 export const DEFAULT_TESTER = 'bit-jasmin';
 
 export const DEFAULT_DIST_DIRNAME = 'dist';
 
-export const DEFAULT_BUNDLE_FILENAME = 'bundle.js';
+export const DEFAULT_BUNDLE_FILENAME = 'dist.js';
 
 export const DEFAULT_BIT_VERSION = '1';
 
@@ -73,9 +73,9 @@ export const LOCAL_SCOPE_NOTATION = '@this';
 export const CACHE_ROOT = getCacheDirectory();
 
 /**
- * global transpilers directory
+ * global compilers directory
  */
-export const TRANSPILERS_DIR = path.join(CACHE_ROOT, 'transpilers');
+export const COMPILERS_DIR = path.join(CACHE_ROOT, 'compilers');
 
 /**
  * global testers directory

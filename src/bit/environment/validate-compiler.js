@@ -1,5 +1,5 @@
 export default (transpilerName) => {
   console.log(transpilerName);
-  console.log('validating transpiler...');
+  console.log('validating compiler...');
   // @TODO
 };

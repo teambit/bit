@@ -106,8 +106,8 @@ export default class PartialBit {
 
   getArchiveFiles() {
     return [
-      path.join(this.bitDir, this.bitJson.impl),
-      path.join(this.bitDir, this.bitJson.spec),
+      path.join(this.bitDir, this.bitJson.getImplBasename()),
+      path.join(this.bitDir, this.bitJson.getSpecBasename()),
       this.bitJson.getPath(this.bitDir)
     ];
   }

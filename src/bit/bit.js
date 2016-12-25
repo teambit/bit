@@ -7,7 +7,7 @@ import BitJson from '../bit-json';
 import { Remotes } from '../remotes';
 import PartialBit from './partial-bit';
 import { BitId } from '../bit-id';
-import loadTranspiler from './environment/load-transpiler';
+import loadCompiler from './environment/load-compiler';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
 
 export type BitProps = {
@@ -32,7 +32,7 @@ export default class Bit extends PartialBit {
   }
 
   build(): Promise<Bit> {
-    return loadTranspiler(this.bitJson.transpiler)
+    return loadCompiler(this.bitJson.getCompilerName())
     .then(({ transpile }) => {
       const src = this.impl.src;
       const { code, map } = transpile(src); // eslint-disable-line

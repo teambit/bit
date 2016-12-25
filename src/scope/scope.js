@@ -32,8 +32,8 @@ function fromTar(name, tar) {
         name,
         bitDir: name,
         bitJson,
-        impl: bitJson.impl ? files[bitJson.impl] : undefined,
-        spec: bitJson.spec ? files[bitJson.spec] : undefined
+        impl: bitJson.sources && bitJson.sources.impl ? files[bitJson.sources.impl] : undefined,
+        spec: bitJson.sources && bitJson.sources.spec ? files[bitJson.sources.spec] : undefined
       });
     });
 }
@@ -183,8 +183,8 @@ export default class Scope {
           name,
           bitDir: name,
           bitJson,
-          impl: bitJson.impl ? files[bitJson.impl] : undefined,
-          spec: bitJson.spec ? files[bitJson.spec] : undefined
+          impl: bitJson.sources && bitJson.sources.impl ? files[bitJson.sources.impl] : undefined,
+          spec: bitJson.sources && bitJson.sources.spec ? files[bitJson.sources.spec] : undefined
         });
 
         return this.put(bit);
