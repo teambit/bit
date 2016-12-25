@@ -1,9 +1,9 @@
 /** @flow */
 import type { BitProps } from '../bit';
-import loadTranspiler from '../environment/load-transpiler';
+import loadCompiler from '../environment/load-compiler';
 
 const createSpec = ({ name, tester }: BitProps): string => {
-  return loadTranspiler(tester).then(testerModule => testerModule.getTemplate(name));
+  return loadCompiler(tester).then(testerModule => testerModule.getTemplate(name));
 };
 
 export default createSpec;

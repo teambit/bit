@@ -14,7 +14,7 @@ import { BitJsonNotFound } from '../bit-json/exceptions';
 import { toBase64, flatten } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
-import loadTranspiler from '../bit/environment/load-transpiler';
+import loadCompiler from '../bit/environment/load-compiler';
 
 const buildBit = bit => bit.build();
 
@@ -79,10 +79,13 @@ export default class Consumer {
       .then((bitContents) => {
         if (!bitContents[BIT_JSON]) throw new BitJsonNotFound();
         
-        const bitJson = JSON.parse(bitContents[BIT_JSON].toString('ascii'));
+        const bitJson = BitJson.loadFromRaw(
+          JSON.parse(bitContents[BIT_JSON].toString('ascii'))
+        );
 
-        const { name, box, version, sources } = bitJson;
-        const { spec, impl } = sources;
+        const { name, box, version } = bitJson;
+        const impl = bitJson.getImplBasename();
+        const spec = bitJson.getSpecBasename();
         
         const remote = 'ssh://ran@104.198.245.134:/home/ranmizrahi/scope';
 
@@ -169,7 +172,7 @@ export default class Consumer {
   testBit(id: BitInlineId): Promise<Bit> {
     return this.loadBit(id).then((bit) => {
       const bitDir = id.composeBitPath(this.getPath());
-      return loadTranspiler(bit.bitJson.tester).then(tester => tester.test(bitDir));
+      return loadCompiler(bit.bitJson.getTesterName()).then(tester => tester.test(bitDir));
     });
   }
 

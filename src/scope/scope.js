@@ -27,13 +27,13 @@ export type ScopeProps = {
 function fromTar(name, tar) {
   return getContents(tar)
     .then((files) => {
-      const bitJson = JSON.parse(files[BIT_JSON]);
+      const bitJson = BitJson.loadFromRaw(JSON.parse(files[BIT_JSON]));
       return Bit.loadFromMemory({
         name,
         bitDir: name,
         bitJson,
-        impl: bitJson.sources && bitJson.sources.impl ? files[bitJson.sources.impl] : undefined,
-        spec: bitJson.sources && bitJson.sources.spec ? files[bitJson.sources.spec] : undefined
+        impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
+        spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
       });
     });
 }
@@ -177,14 +177,13 @@ export default class Scope {
   upload(name: string, tar: Buffer) {
     return getContents(tar)
       .then((files) => {
-        const bitJson = JSON.parse(files[BIT_JSON]);
-        
+        const bitJson = BitJson.loadFromRaw(JSON.parse(files[BIT_JSON]));
         const bit = Bit.loadFromMemory({
           name,
           bitDir: name,
           bitJson,
-          impl: bitJson.sources && bitJson.sources.impl ? files[bitJson.sources.impl] : undefined,
-          spec: bitJson.sources && bitJson.sources.spec ? files[bitJson.sources.spec] : undefined
+          impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
+          spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
         });
 
         return this.put(bit);

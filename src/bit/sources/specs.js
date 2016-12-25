@@ -5,7 +5,7 @@ import Source from './source';
 import createSpecs from '../templates/specs.template';
 import Bit from '../bit';
 import { SPEC_FILE_NAME } from '../../constants';
-import TranspilerNotFoundException from '../exceptions/transpiler-not-found';
+import CompilerNotFoundException from '../exceptions/compiler-not-found';
 
 function composePath(...paths: Array<string>): string {
   // $FlowFixMe
@@ -24,7 +24,7 @@ export default class Specs extends Source {
         });
       })
       .catch((err) => {
-        if (err instanceof TranspilerNotFoundException) {
+        if (err instanceof CompilerNotFoundException) {
           // TODO: maybe write to a log file "tester had been set in bit.json but not installed"
           return resolve(); // that's fine, the tester wasn't installed
         }

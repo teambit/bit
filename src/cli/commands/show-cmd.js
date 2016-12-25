@@ -15,8 +15,8 @@ export default class Show extends Command {
     .then(bit => ({
       name: bit.name,
       version: bit.bitJson.version,
-      compiler: bit.bitJson.compiler,
-      tester: bit.bitJson.tester,
+      compiler: bit.bitJson.getCompilerName(),
+      tester: bit.bitJson.getTesterName(),
       dependencies: bit.bitJson.dependencies,
       path: bit.getPath()
     }));

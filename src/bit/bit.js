@@ -67,14 +67,14 @@ export default class Bit extends PartialBit {
   static loadFromMemory({ name, bitDir, bitJson, impl, spec }: {
     name: string,
     bitDir: string,
-    bitJson: Object,
+    bitJson: BitJson,
     impl: Buffer,
     spec: Buffer
   }) {
     return new Bit({
       name,
       bitDir,
-      bitJson: BitJson.loadFromRaw(bitJson),
+      bitJson,
       impl: impl ? new Impl(impl.toString()) : undefined,
       spec: spec ? new Specs(spec.toString()) : undefined
     }); 
