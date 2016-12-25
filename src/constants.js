@@ -25,7 +25,7 @@ export const CACHE_ROOT = getCacheDirectory();
 /**
  * global compilers directory
  */
-export const COMPILERS_DIR = path.join(CACHE_ROOT, 'compilers');
+export const COMPILERS_DIR = path.join(CACHE_ROOT, 'plugins');
 
 export const BITS_DIRNAME = 'bits';
 
