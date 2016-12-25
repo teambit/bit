@@ -23,9 +23,9 @@ const getCacheDirectory = () => {
 export const CACHE_ROOT = getCacheDirectory();
 
 /**
- * global transpilers directory
+ * global compilers directory
  */
-export const TRANSPILERS_DIR = path.join(CACHE_ROOT, 'transpilers');
+export const COMPILERS_DIR = path.join(CACHE_ROOT, 'compilers');
 
 export const BITS_DIRNAME = 'bits';
 
@@ -35,6 +35,6 @@ export const BIT_JSON_NAME = 'bit.json';
 
 export const LOCAL_SCOPE_DIRNAME = '.bit';
 
-export const NO_TRANSPILER_TYPE = 'none';
+export const NO_COMPILER_TYPE = 'none';
 
 export const DEPENDENCIES_MAP_NAME = 'dependencies.json';

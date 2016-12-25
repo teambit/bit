@@ -12,7 +12,6 @@ const pathHasBitJson = p => fs.existsSync(composeBitJsonPath(p));
 const pathHasLocalScope = p => fs.existsSync(composeLocalScopePath(p));
 
 const pathHasConsumer = p => pathHasBitJson(p) && pathHasLocalScope(p);
-const readBitJson = p => readJson(composeBitJsonPath(p));
 const readDependenciesMap = p => readJson(composeDependenciesMapPath(p));
 
 module.exports = {
@@ -20,6 +19,5 @@ module.exports = {
   composeBitJsonPath,
   composeLocalScopePath,
   composeDependenciesMapPath,
-  readBitJson,
   readDependenciesMap,
 };

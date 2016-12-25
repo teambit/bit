@@ -1,6 +1,7 @@
 const path = require('path');
-const { readBitJson, readDependenciesMap } = require('./consumer-utils');
+const { readDependenciesMap } = require('./consumer-utils');
 const { INLINE_BITS_DIRNAME, BITS_DIRNAME } = require('../constants.js');
+const BitJson = require('../bit-json');
 
 class Consumer {
   constructor(consumerPath) {
@@ -22,7 +23,7 @@ class Consumer {
   }
 
   populateAndGetBitJson() {
-    this.bitJson = readBitJson(this.consumerPath);
+    this.bitJson = BitJson.load(this.consumerPath);
     return this.bitJson;
   }
 

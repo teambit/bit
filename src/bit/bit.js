@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const loadTranspiler = require('../transpilers/load-transpiler');
-const { readBitJson } = require('../consumer/consumer-utils');
+const loadCompiler = require('../compilers/load-compiler');
 const requireFromString = require('require-from-string');
-const { NO_TRANSPILER_TYPE } = require('../constants');
+const { NO_COMPILER_TYPE } = require('../constants');
+const BitJson = require('../bit-json');
 
 class Bit {
   constructor(bitPath, consumer) {
@@ -23,18 +23,21 @@ class Bit {
   }
 
   populateAndGetBitJson() {
-    this.bitJson = readBitJson(this.bitPath);
+    this.bitJson = BitJson.load(this.bitPath);
     return this.bitJson;
   }
 
   getImpl() {
-    const implFileBasename = this.getBitJson().impl || this.consumer.getBitJson().impl;
-    const implFilePath = path.join(this.getPath(), implFileBasename);
-    const transpilerName = this.getBitJson().transpiler || this.consumer.getBitJson().transpiler;
-    if (transpilerName === NO_TRANSPILER_TYPE) return require(implFilePath); // eslint-disable-line
-    const transpiler = loadTranspiler(transpilerName);
+    const implBasename = this.getBitJson().getImpl() || this.consumer.getBitJson().getImpl();
+    const implFilePath = path.join(this.getPath(), implBasename);
+    const compilerName = this.getBitJson().getCompiler() ||
+    this.consumer.getBitJson().getCompiler();
+
+    if (compilerName === NO_COMPILER_TYPE) return require(implFilePath); // eslint-disable-line
+
+    const compiler = loadCompiler(compilerName);
     const rawImpl = fs.readFileSync(implFilePath, 'utf8');
-    return requireFromString(transpiler.transpile(rawImpl).code, implFilePath);
+    return requireFromString(compiler.transpile(rawImpl).code, implFilePath);
   }
 }
 
