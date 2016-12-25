@@ -1,7 +1,7 @@
-import loadModule from './load-module';
-import validateCompiler from './validate-compiler';
+import loadPlugin from './load-plugin';
+import validatePlugin from './validate-plugin';
 
 export default {
-  loadModule,
-  validateCompiler
+  loadPlugin,
+  validatePlugin
 };

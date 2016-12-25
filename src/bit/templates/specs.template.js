@@ -1,9 +1,10 @@
 /** @flow */
-import type { BitProps } from '../bit';
-import loadCompiler from '../environment/load-compiler';
+import BitJson from '../../bit-json';
+import loadPlugin from '../environment/load-plugin';
 
-const createSpec = ({ name, tester }: BitProps): string => {
-  return loadCompiler(tester).then(testerModule => testerModule.getTemplate(name));
+const createSpec = (bitJson: BitJson): string => {
+  return loadPlugin(bitJson.getTesterName())
+  .then(testerModule => testerModule.getTemplate(bitJson.name));
 };
 
 export default createSpec;

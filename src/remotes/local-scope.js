@@ -6,7 +6,8 @@ import Bit from '../bit';
 
 export default class LocalScope {
   scope: Scope;
-
+  host: string;
+  
   constructor(scope: Scope) {
     this.scope = scope;
     this.host = LOCAL_SCOPE_NOTATION;
@@ -15,6 +16,10 @@ export default class LocalScope {
   fetch(bitIds: BitId[]): Promise<Bit[]> {
     const promises = bitIds.map(bitId => this.scope.get(bitId));
     return Promise.all(promises);
+  }
+
+  getHost() {
+    return this.host;
   }
 
   toPlainObject() {

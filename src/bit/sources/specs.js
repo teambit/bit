@@ -3,9 +3,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import Source from './source';
 import createSpecs from '../templates/specs.template';
-import Bit from '../bit';
+import BitJson from '../../bit-json';
 import { SPEC_FILE_NAME } from '../../constants';
-import CompilerNotFoundException from '../exceptions/compiler-not-found';
+import PluginNotFoundException from '../exceptions/plugin-not-found';
 
 function composePath(...paths: Array<string>): string {
   // $FlowFixMe
@@ -16,7 +16,7 @@ export default class Specs extends Source {
   
   write(bitPath: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.src
+      this.src // @TODO - how do we get the default template
       .then((template) => {
         fs.writeFile(composePath(bitPath), template, (err, res) => {
           if (err) return reject(err);
@@ -24,7 +24,7 @@ export default class Specs extends Source {
         });
       })
       .catch((err) => {
-        if (err instanceof CompilerNotFoundException) {
+        if (err instanceof PluginNotFoundException) {
           // TODO: maybe write to a log file "tester had been set in bit.json but not installed"
           return resolve(); // that's fine, the tester wasn't installed
         }
@@ -42,7 +42,7 @@ export default class Specs extends Source {
     );
   }
 
-  static create(bit: Bit) {
-    return new Specs(createSpecs(bit)); 
+  static create(bitJson: BitJson) {
+    return new Specs(createSpecs(bitJson)); 
   }
 }

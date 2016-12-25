@@ -73,14 +73,9 @@ export const LOCAL_SCOPE_NOTATION = '@this';
 export const CACHE_ROOT = getCacheDirectory();
 
 /**
- * global compilers directory
+ * global plugins directory
  */
-export const COMPILERS_DIR = path.join(CACHE_ROOT, 'compilers');
-
-/**
- * global testers directory
- */
-export const TESTERS_DIR = path.join(CACHE_ROOT, 'testers');
+export const PLUGINS_DIR = path.join(CACHE_ROOT, 'plugins');
 
 /**
  * modules cache directory

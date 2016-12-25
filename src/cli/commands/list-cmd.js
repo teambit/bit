@@ -13,7 +13,7 @@ export default class List extends Command {
   ];
   
   action(args: string[], opts: any): Promise<any> {
-    return list(opts);
+    return list();
   }
 
   report(bitNames: string[]): string {

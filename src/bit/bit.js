@@ -7,7 +7,7 @@ import BitJson from '../bit-json';
 import { Remotes } from '../remotes';
 import PartialBit from './partial-bit';
 import { BitId } from '../bit-id';
-import loadCompiler from './environment/load-compiler';
+import loadPlugin from './environment/load-plugin';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
 
 export type BitProps = {
@@ -32,7 +32,7 @@ export default class Bit extends PartialBit {
   }
 
   build(): Promise<Bit> {
-    return loadCompiler(this.bitJson.getCompilerName())
+    return loadPlugin(this.bitJson.getCompilerName())
     .then(({ transpile }) => {
       const src = this.impl.src;
       const { code, map } = transpile(src); // eslint-disable-line
@@ -42,17 +42,17 @@ export default class Bit extends PartialBit {
     });
   }
 
-  fetchDependencies(): BitId[] {
+  // fetchDependencies(): BitId[] {
     // return this.bitJson.dependencies.map((dependency) => {
       // return dependency.fetch();
     // });
-  }
+  // }
 
   write(): Promise<Bit> {
     const bitPath = this.bitDir; 
     return mkdirp(bitPath)
     .then(() => this.impl.write(bitPath, this))
-    .then(() => this.specs.write(bitPath, this))
+    .then(() => { return this.specs ? this.specs.write(bitPath, this) : undefined; })
     .then(() => this.bitJson.write({ bitDir: bitPath }))
     .then(() => this);
   }

@@ -14,7 +14,7 @@ import { BitJsonNotFound } from '../bit-json/exceptions';
 import { toBase64, flatten } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
-import loadCompiler from '../bit/environment/load-compiler';
+import loadPlugin from '../bit/environment/load-plugin';
 
 const buildBit = bit => bit.build();
 
@@ -170,9 +170,11 @@ export default class Consumer {
   }
 
   testBit(id: BitInlineId): Promise<Bit> {
-    return this.loadBit(id).then((bit) => {
+    return this.loadBit(id)
+    .then((bit) => {
       const bitDir = id.composeBitPath(this.getPath());
-      return loadCompiler(bit.bitJson.getTesterName()).then(tester => tester.test(bitDir));
+      return loadPlugin(bit.bitJson.getTesterName())
+      .then(tester => tester.test(bitDir));
     });
   }
 
@@ -214,7 +216,7 @@ export default class Consumer {
   static load(currentPath: string): Promise<Consumer> {
     return new Promise((resolve, reject) => {
       const projectPath = locateConsumer(currentPath);
-      if (!projectPath) reject(new ConsumerNotFound());
+      if (!projectPath) return reject(new ConsumerNotFound());
       const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
       const bitJsonP = BitJson.load(projectPath);
       return Promise.all([scopeP, bitJsonP])

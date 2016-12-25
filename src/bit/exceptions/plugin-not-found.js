@@ -1,9 +1,9 @@
 /** @flow */
 export default class CompilerNotFoundException extends Error {
-  compiler: string;
+  plugin: string;
     
-  constructor(compiler : string) {
+  constructor(plugin : string) {
     super();
-    this.compiler = compiler;
+    this.plugin = plugin;
   }
 }
