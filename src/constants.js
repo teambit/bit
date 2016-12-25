@@ -35,4 +35,6 @@ export const BIT_JSON_NAME = 'bit.json';
 
 export const LOCAL_SCOPE_DIRNAME = '.bit';
 
+export const NO_TRANSPILER_TYPE = 'none';
+
 export const DEPENDENCIES_MAP_NAME = 'dependencies.json';

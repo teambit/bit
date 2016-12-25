@@ -1,11 +1,7 @@
 const path = require('path');
 const { TRANSPILERS_DIR } = require('../constants');
-const loadLocalBitJson = require('../bit/load-local-bit-json');
 
-const loadBitTranspiler = (bitPath) => {
-  const getBitTranspilerName = bitJson => bitJson.transpiler;
-
-  const transpilerName = getBitTranspilerName(loadLocalBitJson(bitPath));
+const loadBitTranspiler = (transpilerName) => {
   if (!transpilerName) {
     return null;
   }

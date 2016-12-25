@@ -29,7 +29,7 @@ const load = (bitId) => {
     loadBitUsingDependenciesMap,
   ];
 
-  for (let i = 0; i < strategies; i += 1) {
+  for (let i = 0; i < strategies.length; i += 1) {
     const result = strategies[i](consumer, boxName, bitName);
     if (result) {
       loaded = result;
