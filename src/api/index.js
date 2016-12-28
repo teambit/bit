@@ -12,6 +12,7 @@ import fetch from './lib/fetch';
 import modify from './lib/modify';
 import importAction from './lib/import';
 import push from './lib/push';
+import getBit from './lib/get-bit';
 import test from './lib/test';
 
 export {
@@ -29,5 +30,6 @@ export {
   fetch,
   modify,
   importAction,
+  getBit,
   test,
 };

@@ -5,13 +5,13 @@ import { getBit } from '../../api';
 const chalk = require('chalk');
 
 export default class Show extends Command {
-  name = 'show <name>';
+  name = 'show <id>';
   description = 'show a bit';
   alias = '';
   opts = [];
   
-  action([name, ]: [string]): Promise<*> {
-    return getBit({ name })
+  action([id, ]: [string]): Promise<*> {
+    return getBit({ id })
     .then(bit => ({
       name: bit.name,
       version: bit.bitJson.version,

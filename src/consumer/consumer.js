@@ -32,7 +32,7 @@ const getBitDirForConsumerImport = ({
 export type ConsumerProps = {
   projectPath: string,
   created?: boolean,
-  bitJson?: BitJson,
+  bitJson: BitJson,
   scope: Scope
 };
 
@@ -44,7 +44,7 @@ export default class Consumer {
 
   constructor({ projectPath, bitJson, scope, created = false }: ConsumerProps) {
     this.projectPath = projectPath;
-    this.bitJson = bitJson || new BitJson({});
+    this.bitJson = bitJson;
     this.created = created;
     this.scope = scope;
   }
@@ -70,7 +70,7 @@ export default class Consumer {
 
   loadBit(id: BitInlineId): Promise<Bit> {
     const bitDir = id.composeBitPath(this.getPath());
-    return PartialBit.load(bitDir, id.name)
+    return PartialBit.loadFromInline(bitDir, id.name, this.bitJson)
       .then(partial => partial.loadFull());
   }
 
@@ -118,7 +118,7 @@ export default class Consumer {
       return Promise.all(deps.map((dep) => {
         return this.scope.get(dep, this.bitJson.getRemotes());
       }))
-        .then(bits => {
+        .then((bits) => {
           return this.writeToBitsDir(flatten(bits));
         });
     }
@@ -138,7 +138,7 @@ export default class Consumer {
 
   removeBit(id: BitInlineId): Promise<Bit> {
     const bitDir = id.composeBitPath(this.getPath());
-    return PartialBit.load(bitDir, id.name)
+    return PartialBit.loadFromInline(bitDir, id.name, this.bitJson)
     .then(bit => bit.erase());
   }
   
@@ -210,7 +210,7 @@ export default class Consumer {
   static create(projectPath: string = process.cwd()): Consumer {
     if (pathHasConsumer(projectPath)) throw new ConsumerAlreadyExists();
     const scope = Scope.create(path.join(projectPath, BIT_HIDDEN_DIR));
-    return new Consumer({ projectPath, created: true, scope });
+    return new Consumer({ projectPath, created: true, scope, bitJson: BitJson.create() });
   }
 
   static load(currentPath: string): Promise<Consumer> {

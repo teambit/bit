@@ -139,6 +139,13 @@ export default class PartialBit {
     );
   }
 
+  static loadFromInline(
+    bitDir: string, name: string, protoBJ: BitJson
+  ): Promise<PartialBit> {
+    return BitJson.loadWithPrototypeAndAutoDetect(bitDir, protoBJ)
+      .then(bitJson => new PartialBit({ name, bitDir, bitJson }));
+  }
+
   static load(bitDir: string, name: string): Promise<PartialBit> {
     return BitJson.load(bitDir)
       .then(bitJson => new PartialBit({ name, bitDir, bitJson }));

@@ -4,12 +4,12 @@ import * as path from 'path';
 import Source from './source';
 import createSpecs from '../templates/specs.template';
 import BitJson from '../../bit-json';
-import { SPEC_FILE_NAME } from '../../constants';
+import { DEFAULT_SPEC_NAME } from '../../constants';
 import PluginNotFoundException from '../exceptions/plugin-not-found';
 
 function composePath(...paths: Array<string>): string {
   // $FlowFixMe
-  return path.join(...paths, SPEC_FILE_NAME); 
+  return path.join(...paths, DEFAULT_SPEC_NAME); 
 }
 
 export default class Specs extends Source {

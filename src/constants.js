@@ -39,15 +39,15 @@ export const BIT_JSON = 'bit.json';
 
 export const REMOTE_ALIAS_SIGN = '@';
 
-export const IMPL_FILE_NAME = 'impl.js';
+export const DEFAULT_IMPL_NAME = 'impl.js';
 
-export const SPEC_FILE_NAME = 'spec.js';
+export const DEFAULT_SPEC_NAME = 'spec.js';
 
 export const DEFAULT_BIT_NAME = '';
 
-export const DEFAULT_COMPILER = 'bit-babel';
+export const DEFAULT_COMPILER = 'none';
 
-export const DEFAULT_TESTER = 'bit-jasmine';
+export const DEFAULT_TESTER = 'none';
 
 export const DEFAULT_DIST_DIRNAME = 'dist';
 
@@ -66,6 +66,8 @@ export const DEPENDENCY_MAP_FILENAME = 'dependencies.json';
 export const BIT_EXTERNAL_DIRNAME = 'external';
 
 export const LOCAL_SCOPE_NOTATION = '@this';
+
+export const NO_PLUGIN_TYPE = 'none';
 
 /**
  * cache root directory

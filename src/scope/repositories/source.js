@@ -6,7 +6,7 @@ import { SourceNotFound } from '../exceptions';
 import { BIT_SOURCES_DIRNAME } from '../../constants';
 import InvalidBit from '../../bit/exceptions/invalid-bit';
 import Bit from '../../bit';
-import ParitalBit from '../../bit/partial-bit';
+import PartialBit from '../../bit/partial-bit';
 import { BitId } from '../../bit-id';
 import { listDirectories, rmDir } from '../../utils';
 
@@ -19,8 +19,8 @@ export default class Source extends Repository {
     return path.join(this.getPath(), bitName);
   }  
 
-  getPartial(name: string): Promise<ParitalBit> {
-    return ParitalBit.load(path.join(this.getPath(), name), name);
+  getPartial(name: string): Promise<PartialBit> {
+    return PartialBit.load(path.join(this.getPath(), name), name);
   }
 
   setSource(bit: Bit): Promise<Bit> {
