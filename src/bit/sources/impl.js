@@ -2,7 +2,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Source from './source';
-import createImpl from '../templates/impl.template';
+import createImpl from '../templates/impl.default-template';
 import Bit from '../bit';
 import { DEFAULT_IMPL_NAME } from '../../constants';
 

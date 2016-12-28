@@ -49,11 +49,16 @@ export default class Bit extends PartialBit {
   // }
 
   write(): Promise<Bit> {
+    return this.writeWithoutBitJson()
+    .then(() => this.bitJson.write({ bitDir: this.bitDir }))
+    .then(() => this);
+  }
+
+  writeWithoutBitJson(): Promise<Bit> {
     const bitPath = this.bitDir; 
     return mkdirp(bitPath)
     .then(() => this.impl.write(bitPath, this))
-    .then(() => { return this.specs ? this.specs.write(bitPath, this) : undefined; })
-    .then(() => this.bitJson.write({ bitDir: bitPath }))
+    .then(() => { return this.specs ? this.specs.write(bitPath) : undefined; })
     .then(() => this);
   }
 
@@ -80,14 +85,15 @@ export default class Bit extends PartialBit {
     }); 
   }
 
-  static create({ box, name, bitDir }: { box: string, name: string, bitDir: string }) {
+  static create({ box, name, bitDir, withSpecs }:
+  { box: string, name: string, bitDir: string, withSpecs: boolean }) {
     const bitJson = BitJson.create({ name, box });
     return new Bit({
       name,
       bitDir,
       bitJson,
-      impl: Impl.create({ name }),
-      specs: Specs.create(bitJson),
+      impl: Impl.create(bitJson),
+      specs: withSpecs ? Specs.create(bitJson) : undefined,
     });
   }
 }

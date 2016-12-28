@@ -2,10 +2,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Source from './source';
-import createSpecs from '../templates/specs.template';
 import BitJson from '../../bit-json';
+import createTemplate from '../templates/specs.default-template';
 import { DEFAULT_SPEC_NAME } from '../../constants';
-import PluginNotFoundException from '../exceptions/plugin-not-found';
 
 function composePath(...paths: Array<string>): string {
   // $FlowFixMe
@@ -16,19 +15,9 @@ export default class Specs extends Source {
   
   write(bitPath: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.src // @TODO - how do we get the default template
-      .then((template) => {
-        fs.writeFile(composePath(bitPath), template, (err, res) => {
-          if (err) return reject(err);
-          return resolve(res);
-        });
-      })
-      .catch((err) => {
-        if (err instanceof PluginNotFoundException) {
-          // TODO: maybe write to a log file "tester had been set in bit.json but not installed"
-          return resolve(); // that's fine, the tester wasn't installed
-        }
-        return reject(err);
+      fs.writeFile(composePath(bitPath), this.src, (err, res) => {
+        if (err) return reject(err);
+        return resolve(res);
       });
     });
   }
@@ -42,7 +31,14 @@ export default class Specs extends Source {
     );
   }
 
-  static create(bitJson: BitJson) {
-    return new Specs(createSpecs(bitJson)); 
-  }
+  static create(bitJson: BitJson): Promise<any> {
+      function getTemplate() {
+        return new Promise((resolve, reject) => {
+          return loadPlugin(bitJson.getTesterName())
+            .then(testerModule => resolve(testerModule.getTemplate(bitJson.name)))
+            .catch(e => resolve(createTemplate(bitJson)));
+        });
+      }
+
+      return getTemplate().then(template => new Spec(template));
 }

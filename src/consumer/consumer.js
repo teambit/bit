@@ -128,12 +128,13 @@ export default class Consumer {
       .then(bits => this.writeToBitsDir(bits));
   }
 
-  createBit(id: BitInlineId): Promise<Bit> {
+  createBit({ id, withSpecs = false }: { id: BitInlineId, withSpecs: boolean }): Promise<Bit> {
     return Bit.create({ 
       box: id.box,
       name: id.name,
-      bitDir: id.composeBitPath(this.getPath())
-    }).write();
+      bitDir: id.composeBitPath(this.getPath()),
+      withSpecs,
+    }).writeWithoutBitJson();
   }
 
   removeBit(id: BitInlineId): Promise<Bit> {

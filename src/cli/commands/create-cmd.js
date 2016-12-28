@@ -9,10 +9,12 @@ export default class Create extends Command {
   name = 'create <id>';
   description = 'create a new bit';
   alias = 'c';
-  opts = [];
+  opts = [
+    ['s', 'specs', 'create specs file automatically']
+  ];
 
-  action([id, ]: [string]): Promise<*> {
-    return create(id);
+  action([id, ]: [string], { specs }: any): Promise<*> {
+    return create(id, specs);
   }
 
   report(bit: Bit): string {
