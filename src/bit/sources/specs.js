@@ -5,6 +5,7 @@ import Source from './source';
 import BitJson from '../../bit-json';
 import createTemplate from '../templates/specs.default-template';
 import { DEFAULT_SPEC_NAME } from '../../constants';
+import loadPlugin from '../environment/load-plugin';
 
 function composePath(...paths: Array<string>): string {
   // $FlowFixMe
@@ -31,14 +32,16 @@ export default class Specs extends Source {
     );
   }
 
-  static create(bitJson: BitJson): Promise<any> {
-      function getTemplate() {
-        return new Promise((resolve, reject) => {
-          return loadPlugin(bitJson.getTesterName())
-            .then(testerModule => resolve(testerModule.getTemplate(bitJson.name)))
-            .catch(e => resolve(createTemplate(bitJson)));
-        });
+  static create(bitJson: BitJson): Spec {
+    function getTemplate() {
+      console.log(bitJson.getTesterName());
+      try {
+        const testerModule = loadPlugin(bitJson.getTesterName());
+        return testerModule.getTemplate(bitJson.name);
+      } catch (e) {
+        return createTemplate(bitJson);
       }
+    }
 
-      return getTemplate().then(template => new Spec(template));
+    return new Spec(getTemplate());
 }
