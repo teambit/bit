@@ -44,4 +44,5 @@ export default class Specs extends Source {
     }
 
     return new Spec(getTemplate());
+  }
 }
