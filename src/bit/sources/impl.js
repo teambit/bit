@@ -33,7 +33,7 @@ export default class Impl extends Source {
 
   static create(bitJson: BitJson): Impl {
     function getTemplate() {
-      console.log(bitJson.getCompilerName());
+      (bitJson.getCompilerName()); // @TODO make sure it get the template 
       try {
         const testerModule = loadPlugin(bitJson.getCompilerName());
         return testerModule.getTemplate(bitJson.name);

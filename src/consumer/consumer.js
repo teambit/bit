@@ -4,7 +4,8 @@ import glob from 'glob';
 import fs from 'fs';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
-import BitJson from '../bit-json';
+import ConsumerBitJson from '../bit-json/consumer-bit-json';
+import BitJson from '../bit-json/bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
@@ -16,7 +17,7 @@ import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
 
-const buildBit = bit => bit.build();
+const buildBit = (bit) => { if (bit.hasTester()) { console.log('hoeerye'); bit.build(); } };
 
 const getBitDirForConsumerImport = ({
   bitsDir, name, box, version, remote
@@ -24,22 +25,22 @@ const getBitDirForConsumerImport = ({
   bitsDir: string,
   name: string,
   box: string,
-  version: number,
+  version: string,
   remote: string 
 }): string => 
-  path.join(bitsDir, box, name, toBase64(remote), version.toString());
+  path.join(bitsDir, box, name, toBase64(remote), version);
 
 export type ConsumerProps = {
   projectPath: string,
   created?: boolean,
-  bitJson: BitJson,
+  bitJson: ConsumerBitJson,
   scope: Scope
 };
 
 export default class Consumer {
   projectPath: string;
   created: boolean;
-  bitJson: BitJson;
+  bitJson: ConsumerBitJson;
   scope: Scope;
 
   constructor({ projectPath, bitJson, scope, created = false }: ConsumerProps) {
@@ -79,7 +80,7 @@ export default class Consumer {
       .then((bitContents) => {
         if (!bitContents[BIT_JSON]) throw new BitJsonNotFound();
         
-        const bitJson = BitJson.loadFromRaw(
+        const bitJson = BitJson.fromPlainObject(
           JSON.parse(bitContents[BIT_JSON].toString('ascii'))
         );
 
@@ -129,8 +130,9 @@ export default class Consumer {
   }
 
   createBit({ id, withSpecs = false }: { id: BitInlineId, withSpecs: boolean }): Promise<Bit> {
+    const bitJson = BitJson.create({ name: id.name, box: id.box }, this.bitJson);
     return Bit.create({ 
-      box: id.box,
+      bitJson,
       name: id.name,
       bitDir: id.composeBitPath(this.getPath()),
       withSpecs,
@@ -211,7 +213,12 @@ export default class Consumer {
   static create(projectPath: string = process.cwd()): Consumer {
     if (pathHasConsumer(projectPath)) throw new ConsumerAlreadyExists();
     const scope = Scope.create(path.join(projectPath, BIT_HIDDEN_DIR));
-    return new Consumer({ projectPath, created: true, scope, bitJson: BitJson.create() });
+    return new Consumer({
+      projectPath,
+      created: true,
+      scope,
+      bitJson: ConsumerBitJson.create()
+    });
   }
 
   static load(currentPath: string): Promise<Consumer> {
@@ -219,7 +226,7 @@ export default class Consumer {
       const projectPath = locateConsumer(currentPath);
       if (!projectPath) return reject(new ConsumerNotFound());
       const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
-      const bitJsonP = BitJson.load(projectPath);
+      const bitJsonP = ConsumerBitJson.load(projectPath);
       return Promise.all([scopeP, bitJsonP])
       .then(([scope, bitJson]) => 
         resolve(

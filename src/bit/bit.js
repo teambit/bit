@@ -85,9 +85,8 @@ export default class Bit extends PartialBit {
     }); 
   }
 
-  static create({ box, name, bitDir, withSpecs }:
-  { box: string, name: string, bitDir: string, withSpecs: boolean }) {
-    const bitJson = BitJson.create({ name, box });
+  static create({ name, bitDir, bitJson, withSpecs }:
+  { name: string, bitDir: string, bitJson: BitJson, withSpecs: boolean }) {
     return new Bit({
       name,
       bitDir,

@@ -27,7 +27,7 @@ export type ScopeProps = {
 function fromTar(name, tar) {
   return getContents(tar)
     .then((files) => {
-      const bitJson = BitJson.loadFromRaw(JSON.parse(files[BIT_JSON]));
+      const bitJson = BitJson.fromPlainObject(JSON.parse(files[BIT_JSON]));
       return Bit.loadFromMemory({
         name,
         bitDir: name,
@@ -75,7 +75,7 @@ export default class Scope {
         this.external.store(bits);
         this.dependencyMap.setBit(bit, bits);
         return this.sources.setSource(bit)
-          .then(() => bit.build())
+          .then(() => { if (bit.hasCompiler()) bit.build(); })
           .then(() => this.dependencyMap.write())
           .then(() => bits.concat(bit));
           // .catch(() => bit.clear());
@@ -177,7 +177,7 @@ export default class Scope {
   upload(name: string, tar: Buffer) {
     return getContents(tar)
       .then((files) => {
-        const bitJson = BitJson.loadFromRaw(JSON.parse(files[BIT_JSON]));
+        const bitJson = BitJson.fromPlainObject(JSON.parse(files[BIT_JSON]));
         const bit = Bit.loadFromMemory({
           name,
           bitDir: name,

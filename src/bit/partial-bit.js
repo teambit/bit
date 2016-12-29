@@ -5,15 +5,16 @@ import * as bitCache from '../cache';
 import { pack } from '../tar';
 import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
+import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import BitNotFoundException from './exceptions/bit-not-found';
 import { BitIds, BitId } from '../bit-id';
 import { remoteResolver, Remotes } from '../remotes';
 import { Scope } from '../scope';
 import Bit from './bit';
 import InvalidBit from './exceptions/invalid-bit';
-import BitInlineId from '../bit-inline-id';
 import { isDirEmptySync } from '../utils';
 import { LOCAL_SCOPE_NOTATION } from '../constants';
+import { composePath as composeBitJsonPath } from '../bit-json/bit-json';
 
 export type PartialBitProps = {
   name: string;
@@ -63,6 +64,14 @@ export default class PartialBit {
     return this.bitJson.version;
   }
   
+  hasCompiler(): boolean {
+    return this.bitJson.hasCompiler();
+  }
+
+  hasTester(): boolean {
+    return this.bitJson.hasTester();
+  }
+
   getScope(localScope: Scope, remotes: Remotes) {
     return remoteResolver(this.scope, remotes, localScope);
   }
@@ -108,7 +117,7 @@ export default class PartialBit {
     return [
       path.join(this.bitDir, this.bitJson.getImplBasename()),
       path.join(this.bitDir, this.bitJson.getSpecBasename()),
-      this.bitJson.getPath(this.bitDir)
+      composeBitJsonPath(this.bitDir)
     ];
   }
   
@@ -140,9 +149,9 @@ export default class PartialBit {
   }
 
   static loadFromInline(
-    bitDir: string, name: string, protoBJ: BitJson
+    bitDir: string, name: string, protoBJ: ConsumerBitJson
   ): Promise<PartialBit> {
-    return BitJson.loadWithPrototypeAndAutoDetect(bitDir, protoBJ)
+    return BitJson.load(bitDir, protoBJ)
       .then(bitJson => new PartialBit({ name, bitDir, bitJson }));
   }
 

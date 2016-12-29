@@ -34,7 +34,7 @@ export default class Specs extends Source {
 
   static create(bitJson: BitJson): Spec {
     function getTemplate() {
-      console.log(bitJson.getTesterName());
+      console.log(bitJson.getTesterName()); // @TODO make sure it get the template 
       try {
         const testerModule = loadPlugin(bitJson.getTesterName());
         return testerModule.getTemplate(bitJson.name);

@@ -7,6 +7,9 @@ export default function build({ id }: { id: string }): Promise<Bit> {
   return loadConsumer()
     .then((consumer) => {
       return consumer.loadBit(InlineId.parse(id))
-      .then(bit => bit.build());
+      .then((bit) => { 
+        if (bit.hasCompiler()) throw new Error('there is no compiler for bit'); // @TODO - write an named error
+        return bit.build();
+      });
     });
 }

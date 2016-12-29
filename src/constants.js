@@ -43,11 +43,11 @@ export const DEFAULT_IMPL_NAME = 'impl.js';
 
 export const DEFAULT_SPEC_NAME = 'spec.js';
 
-export const DEFAULT_BIT_NAME = '';
+export const NO_PLUGIN_TYPE = 'none';
 
-export const DEFAULT_COMPILER = 'none';
+export const DEFAULT_COMPILER = NO_PLUGIN_TYPE;
 
-export const DEFAULT_TESTER = 'none';
+export const DEFAULT_TESTER = NO_PLUGIN_TYPE;
 
 export const DEFAULT_DIST_DIRNAME = 'dist';
 
@@ -67,7 +67,10 @@ export const BIT_EXTERNAL_DIRNAME = 'external';
 
 export const LOCAL_SCOPE_NOTATION = '@this';
 
-export const NO_PLUGIN_TYPE = 'none';
+export const DEFAULT_REMOTES = {};
+
+export const DEFAULT_DEPENDENCIES = {};
+
 
 /**
  * cache root directory
