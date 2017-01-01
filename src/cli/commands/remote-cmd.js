@@ -1,19 +1,25 @@
 /** @flow */
 import Command from '../command';
+import RemoteAdd from './remote/remote-add-cmd';
+import RemoteRm from './remote/remote-rm-cmd';
 
 export default class Remote extends Command {
   name = 'remote';
-  description = 'manage set of tracked bit boxes';
+  description = 'manage set of tracked bit scope(s)';
   alias = '';
-  opts = [];
+  opts = [
+    ['g', 'global', 'see globally configured remotes']
+  ];
+  commands = [
+    new RemoteAdd(),
+    new RemoteRm()
+  ];
   
   action(): Promise<any> {
-    const m = this.alias;
-    console.log('see all remotes...');
-    return new Promise(resolve => resolve(m));
+    return Promise.resolve('hi');
   }
 
   report(data: {string: any}): string {
-    return '';
+    return data;
   }
 }

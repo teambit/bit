@@ -6,22 +6,23 @@ import { init, initScope } from '../../api';
 const chalk = require('chalk');
 
 export default class Init extends Command {
-  name = 'init [path]';
-  description = 'initialize an empty bit consumer + scope';
+  name = 'init [name]';
+  description = 'initialize an empty bit scope';
   alias = '';
   opts = [
-    ['b', 'bare', 'initialize an empty bit bare scope']
+    ['b', 'bare [name]', 'initialize an empty bit bare scope']
   ];
 
   action([path, ]: [string, ], { bare }: any): Promise<{[string]: any}> {
     if (path) path = pathlib.resolve(path);
     
     if (bare) {
-      return initScope(path)
+      if (typeof bare === 'boolean') bare = '';
+      return initScope(path, bare)
       .then(({ created }) => {
         return {
           created,
-          bare: true
+          bare: true,
         };
       }); 
     }

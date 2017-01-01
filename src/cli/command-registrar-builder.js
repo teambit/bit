@@ -10,7 +10,7 @@ import Export from './commands/export-cmd';
 // import Login from './commands/login-cmd';
 // import Logout from './commands/logout-cmd';
 import Import from './commands/import-cmd';
-// import Remote from './commands/remote-cmd';
+import Remote from './commands/remote-cmd';
 import Remove from './commands/remove-cmd';
 import Search from './commands/search-cmd';
 import Test from './commands/test-cmd';
@@ -37,6 +37,7 @@ export default function registerCommands(): CommandRegistrar {
     new Status(),
     new Modify(),
     new List(),
+    new Remote(),
     new Show(),
     new Remove(),
     new Search(),
@@ -49,6 +50,5 @@ export default function registerCommands(): CommandRegistrar {
     new Fetch()
     // new Login(),
     // new Logout(),
-    // new Remote(),
   ]);
 }

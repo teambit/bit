@@ -128,6 +128,10 @@ export const BIT_CACHE_DIRNAME = 'cache';
 
 export const LATEST_TESTED_MARK = '*';
 
+export const SCOPE_JSON = 'scope.json';
+
+export const DEFAULT_RESOLVER = () => '';
+
 /**
  * current bit application version
  */

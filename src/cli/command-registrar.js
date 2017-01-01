@@ -2,7 +2,7 @@
 import commander from 'commander';
 import type Command from './command';   
 import defaultHandleError from './default-error-handler';
-
+import { empty, first } from '../utils';
 
 function logAndExit(msg: string) {
   console.log(msg); // eslint-disable-line
@@ -12,6 +12,55 @@ function logAndExit(msg: string) {
 function logErrAndExit(msg: string) {
   console.error(msg); // eslint-disable-line
   process.exit(1);
+}
+
+function parseSubcommandFromArgs(args: [any]) {
+  if (typeof first(args) === 'string') return first(args);
+  return null;
+}
+
+function parseCommandName(commandName: string) {
+  if (!commandName) return '';
+  return first(commandName.split(' '));
+}
+
+function getOpts(c, opts: [[string, string, string]]): {[string]: boolean|string} {
+  const options = {};
+
+  opts.forEach(([, name]) => {
+    name = parseCommandName(name);
+    options[name] = c[name];
+  });
+
+  return options;
+}
+
+function execAction(command, concrete, args) {
+  const opts = getOpts(concrete, command.opts);
+  command.action(args.slice(0, args.length - 1), opts)
+    .then(data => logAndExit(command.report(data)))
+    .catch((err) => {
+      const errorHandled = defaultHandleError(err) || command.handleError(err);
+      if (errorHandled) logAndExit(errorHandled);
+      else logErrAndExit(err);
+    });
+}
+
+// @TODO add help for subcommands
+function registerAction(command: Command, concrete) {
+  concrete.action((...args) => {
+    if (!empty(command.commands)) {
+      const subcommandName = parseSubcommandFromArgs(args);
+      const subcommand = command.commands.find((cmd) => {
+        return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
+      });
+
+      args.shift();
+      if (subcommand) return execAction(subcommand, concrete, args);
+    }
+
+    return execAction(command, concrete, args);
+  });
 }
 
 export default class CommandRegistrar {
@@ -38,20 +87,10 @@ export default class CommandRegistrar {
     function createOptStr(alias, name) {
       return `-${alias}, --${name}`;
     }
-
-    function getOpts(c, opts: [[string, string, string]]): {[string]: boolean|string} {
-      const options = {};
-
-      opts.forEach(([, name]) => {
-        options[name] = c[name];
-      });
-
-      return options;
-    }
     
-    function register(command: Command) {
+    function register(command: Command, commanderCmd) {
       // $FlowFixMe
-      const concrete = commander
+      const concrete = commanderCmd
         .command(command.name)
         .description(command.description)
         .alias(command.alias);
@@ -59,20 +98,15 @@ export default class CommandRegistrar {
       command.opts.forEach(([alias, name, description]) => {
         concrete.option(createOptStr(alias, name), description);
       });
-
-      concrete.action((...args) => {
-        const opts = getOpts(concrete, command.opts);
-        command.action(args.slice(0, args.length - 1), opts)
-          .then(data => logAndExit(command.report(data)))
-          .catch((err) => {
-            const errorHandled = defaultHandleError(err) || command.handleError(err);
-            if (errorHandled) logAndExit(errorHandled);
-            else logErrAndExit(err);
-          });
+      
+      command.commands.forEach((nestedCmd) => {
+        register(nestedCmd, concrete);
       });
+
+      return registerAction(command, concrete);
     }
     
-    this.commands.forEach(register);
+    this.commands.forEach(cmd => register(cmd, commander));
   } 
 
   outputHelp() {

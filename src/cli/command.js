@@ -5,6 +5,7 @@ export default class Cmd {
   description: string;
   alias: string;
   opts: [string, string, string][];
+  commands: Cmd[] = [];
 
   action(params: Array<any>, opts: {}): Promise<{[string]: any}> { // eslint-disable-line
     console.log('"action" method not implemented on this command');

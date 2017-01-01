@@ -27,6 +27,7 @@ import readFile from './fs-read-file';
 import immutableUnshift from './immutable-unshift';
 import rmDir from './fs-rmdir';
 import resolveHomePath from './os-resolve-home-path';
+import currentDirName from './current-dir-name';
 
 export {
   parseSSHUrl,
@@ -57,5 +58,6 @@ export {
   isDirEmptySync,
   flatMap,
   flatten,
+  currentDirName,
   immutableUnshift
 };

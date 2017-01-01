@@ -2,9 +2,10 @@
 import * as pathLib from 'path';
 import glob from 'glob';
 import { Remotes, Remote } from '../remotes';
-import { propogateUntil, pathHas, readFile, flatten } from '../utils';
+import { propogateUntil, currentDirName, pathHas, readFile, flatten } from '../utils';
 import { getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME, BIT_JSON } from '../constants';
+import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, External } from './repositories';
 import { DependencyMap, getPath as getDependenyMapPath } from './dependency-map';
@@ -22,6 +23,7 @@ export type ScopeProps = {
   sources?: Source,
   external?: External;
   dependencyMap?: DependencyMap;
+  scopeJson?: ScopeJson;
 };
 
 function fromTar(name, tar) {
@@ -47,14 +49,19 @@ export default class Scope {
   path: string;
   dependencyMap: DependencyMap;
 
-  constructor({ path, cache, sources, tmp, created, dependencyMap, external }: ScopeProps) {
-    this.path = path;
-    this.cache = cache || new Cache(this);
-    this.sources = sources || new Source(this);
-    this.created = created || false;
-    this.tmp = tmp || new Tmp(this);
-    this.external = external || new External(this);
-    this.dependencyMap = dependencyMap || new DependencyMap(this);
+  constructor(scopeProps: ScopeProps) {
+    this.path = scopeProps.path;
+    this.scopeJson = scopeProps.scopeJson || new ScopeJson();
+    this.cache = scopeProps.cache || new Cache(this);
+    this.sources = scopeProps.sources || new Source(this);
+    this.created = scopeProps.created || false;
+    this.tmp = scopeProps.tmp || new Tmp(this);
+    this.external = scopeProps.external || new External(this);
+    this.dependencyMap = scopeProps.dependencyMap || new DependencyMap(this);
+  }
+
+  name() {
+    return this.scopeJson.name;
   }
 
   prepareBitRegistration(name: string, bitJson: BitJson) {
@@ -132,6 +139,7 @@ export default class Scope {
       .then(() => this.external.ensureDir())
       .then(() => this.tmp.ensureDir())
       .then(() => this.dependencyMap.write())
+      .then(() => this.scopeJson.write(this.getPath()))
       .then(() => this); 
   }
   
@@ -194,18 +202,24 @@ export default class Scope {
     return this.path;
   }
 
-  static create(path: string = process.cwd()) {
+  static create(path: string = process.cwd(), name: ?string) {
     if (pathHasScope(path)) return this.load(path);
-    return new Scope({ path, created: true });
+    if (!name) name = currentDirName(); 
+    const scopeJson = new ScopeJson({ name });
+    return Promise.resolve(new Scope({ path, created: true, scopeJson }));
   }
 
   static load(absPath: string): Promise<Scope> {
     const scopePath = propogateUntil(absPath, pathHasScope);
     if (!scopePath) throw new ScopeNotFound();
-    return readFile(getDependenyMapPath(scopePath))
-      .then((contents) => {
-        const scope = new Scope({ path: scopePath });
-        scope.dependencyMap = DependencyMap.load(JSON.parse(contents.toString('utf8')), scope);
+    return Promise.all([
+      readFile(getDependenyMapPath(scopePath)), 
+      readFile(getScopeJsonPath(scopePath))
+    ])
+      .then(([rawDependencyMap, rawScopeJson]) => {
+        const scopeJson = ScopeJson.loadFromJson(rawScopeJson.toString('utf8'));
+        const scope = new Scope({ path: scopePath, scopeJson });
+        scope.dependencyMap = DependencyMap.load(JSON.parse(rawDependencyMap.toString('utf8')), scope);
         return scope;
       });
   }
