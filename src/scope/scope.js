@@ -146,7 +146,7 @@ export default class Scope {
         const bitsP = files.map(bitRawId =>
           this.getOne(BitId.parse(`@this/${bitRawId}`))
         );
-
+        
         return Promise.all(bitsP)
         .then(resolve);
       })

@@ -28,7 +28,7 @@ export default class Source extends Repository {
 
     return bit
       .cd(this.composeSourcePath(bit.getId()))
-      .write()
+      .write(true)
       .then(() => bit);
   }
 
@@ -41,7 +41,7 @@ export default class Source extends Repository {
     return id.getVersion().resolve(this.listVersions(id));
   }
 
-  loadSource(id: BitId) {
+  loadSource(id: BitId): Promise<Bit> {
     try {
       const version = this.resolveVersion(id);
       return Bit.load(this.composeSourcePath({
