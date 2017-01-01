@@ -1,8 +1,7 @@
 /** @flow */
 import Command from '../command';
 import { getBit } from '../../api';
-
-const chalk = require('chalk');
+import { paintBitProp, paintHeader } from '../chalk-box';
 
 export default class Show extends Command {
   name = 'show <id>';
@@ -13,24 +12,34 @@ export default class Show extends Command {
   action([id, ]: [string]): Promise<*> {
     return getBit({ id })
     .then(bit => ({
-      name: bit.name,
-      version: bit.bitJson.version,
+      name: bit.getName(),
+      box: bit.getBox(),
+      version: bit.getVersion(),
       compiler: bit.bitJson.getCompilerName(),
       tester: bit.bitJson.getTesterName(),
-      dependencies: bit.bitJson.dependencies,
+      dependencies: bit.bitJson.getDependencies(),
+      packageDependencies: bit.bitJson.getPackageDependencies(),
       path: bit.getPath()
     }));
   }
 
-  report({ name, version, compiler, dependencies, path, tester }: any): string {
-    return `
-    ${chalk.blue(name)}
-    
-      version -> ${version}
-      compiler -> ${compiler}
-      tester -> ${tester}
-      dependencies -> ${Object.keys(dependencies).join(', ')}
-      path -> ${path}
-    `;
+  report({ 
+    name,
+    box,
+    version,
+    compiler,
+    dependencies,
+    path,
+    tester,
+    packageDependencies,
+  }: any): string {
+    return paintHeader(`${box}/${name}`) +  
+      paintBitProp('version', version) +
+      paintBitProp('compiler', compiler === 'none' ? '' : compiler) +
+      paintBitProp('tester', tester === 'none' ? '' : tester) +
+      paintBitProp('dependencies', Object.keys(dependencies).join(', ')) +
+      paintBitProp('packageDependencies', Object.keys(packageDependencies).join(', ')) +
+      paintBitProp('path', path)
+    ;
   }
 }

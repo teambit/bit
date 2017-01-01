@@ -25,6 +25,7 @@ export type BitJsonProps = {
   tester?: string;
   remotes?: Object;
   dependencies?: Object;
+  packageDependencies?: Object;
 };
 
 export default class BitJson extends AbstractBitJson {
@@ -37,14 +38,16 @@ export default class BitJson extends AbstractBitJson {
   tester: string;
   remotes: {[string]: string};
   dependencies: {[string]: string};
+  packageDependencies: {[string]: string};
 
   constructor({ 
-    name, box, version, impl, spec, compiler, tester, dependencies, remotes
+    name, box, version, impl, spec, compiler, tester, remotes, dependencies, packageDependencies
   }: BitJsonProps) {
     super({ impl, spec, compiler, tester, remotes, dependencies });
     this.name = name;
     this.box = box;
     this.version = version;
+    this.packageDependencies = packageDependencies || {};
   }
 
   toPlainObject() {
@@ -52,7 +55,8 @@ export default class BitJson extends AbstractBitJson {
     return R.merge(superObject, {
       name: this.name,
       box: this.box,
-      version: this.version
+      version: this.version,
+      packageDependencies: this.getPackageDependencies()
     });
   }
 
@@ -67,6 +71,11 @@ export default class BitJson extends AbstractBitJson {
   getBitname(): string { 
     return this.name;
   }
+
+  getPackageDependencies(): Object {
+    return this.packageDependencies;
+  }
+
   toJson(readable: boolean = true) {
     if (!readable) return JSON.stringify(this.toPlainObject());
     return JSON.stringify(this.toPlainObject(), null, 4);
@@ -105,7 +114,7 @@ export default class BitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object): BitJson {
-    const { name, box, version, sources, env, remotes, dependencies } = object;
+    const { name, box, version, sources, env, remotes, dependencies, packageDependencies } = object;
     return new BitJson({
       name,
       box,
@@ -116,6 +125,7 @@ export default class BitJson extends AbstractBitJson {
       tester: R.prop('tester', env),
       remotes,
       dependencies,
+      packageDependencies,
     });
   }
 
