@@ -213,15 +213,18 @@ export default class Consumer {
     });
   }
 
-  static create(projectPath: string = process.cwd()): Consumer {
+  static create(projectPath: string = process.cwd()): Promise<Consumer> {
     if (pathHasConsumer(projectPath)) throw new ConsumerAlreadyExists();
-    const scope = Scope.create(path.join(projectPath, BIT_HIDDEN_DIR));
-    return new Consumer({
-      projectPath,
-      created: true,
-      scope,
-      bitJson: ConsumerBitJson.create()
-    });
+    const scopeP = Scope.create(path.join(projectPath, BIT_HIDDEN_DIR));
+
+    return scopeP.then(scope => 
+      new Consumer({
+        projectPath,
+        created: true,
+        scope,
+        bitJson: ConsumerBitJson.create()
+      })
+    );
   }
 
   static load(currentPath: string): Promise<Consumer> {
