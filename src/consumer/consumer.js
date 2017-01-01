@@ -138,7 +138,7 @@ export default class Consumer {
       name: id.name,
       bitDir: id.composeBitPath(this.getPath()),
       withSpecs,
-    }).write({ withBitJson });
+    }).write(withBitJson);
   }
 
   removeBit(id: BitInlineId): Promise<Bit> {

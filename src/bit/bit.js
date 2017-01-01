@@ -32,13 +32,15 @@ export default class Bit extends PartialBit {
   }
 
   build(): Promise<Bit> {
-    return loadPlugin(this.bitJson.getCompilerName())
-    .then(({ transpile }) => {
-      const src = this.impl.src;
-      const { code, map } = transpile(src); // eslint-disable-line
-      const outputFile = path.join(this.bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
-      fs.outputFileSync(outputFile, code);
-      return this;
+    return new Promise((resolve, reject) => {
+      try {
+        const { transpile } = loadPlugin(this.bitJson.getCompilerName());
+        const src = this.impl.src;
+        const { code, map } = transpile(src); // eslint-disable-line
+        const outputFile = path.join(this.bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
+        fs.outputFileSync(outputFile, code);
+        return resolve(this);
+      } catch (e) { return reject(e); }
     });
   }
 
@@ -48,7 +50,7 @@ export default class Bit extends PartialBit {
     // });
   // }
 
-  write({ withBitJson }: { withBitJson: boolean }): Promise<Bit> {
+  write(withBitJson: boolean): Promise<Bit> {
     return this.writeWithoutBitJson()
     .then(() => { if (withBitJson) return this.bitJson.write({ bitDir: this.bitDir }); }) // eslint-disable-line
     .then(() => this);
