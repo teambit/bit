@@ -107,6 +107,6 @@ export default class SSH {
       privateKey: keyGetter(key)
     });
 
-    return this;
+    return Promise.resolve(this);
   }
 }

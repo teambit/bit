@@ -23,7 +23,7 @@ export default class Remote {
     this.primary = primary;
   }
 
-  connect(): Remote {
+  connect(): Promise<Remote> {
     return connect(this.host);
   }
 
@@ -42,10 +42,11 @@ export default class Remote {
 
   fetch(bitIds: BitId[]): {name: string, contents: Buffer}[] {
     return this
-      .connect()
-      .fetch(
-        bitIds.map(bitId => bitId.toString())
-      );
+      .connect().then((network) => {
+        return network.fetch(
+          bitIds.map(bitId => bitId.toString())
+        );
+      });
   }
 
   validate() {
@@ -53,8 +54,9 @@ export default class Remote {
   }
 
   push(bit: Bit) {
-    const network = connect(this.host);
-    return network.push(bit);
+    connect(this.host).then((network) => {
+      return network.push(bit);
+    });
   }
 
   static load(name: string, host: string): Remote {
