@@ -196,7 +196,8 @@ export default class Consumer {
         );
 
         return Promise.all(bitsP)
-        .then(resolve);
+        .then(resolve)
+        .catch(reject);
       })
     );
   }

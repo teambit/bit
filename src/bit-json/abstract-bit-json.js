@@ -123,13 +123,4 @@ export default class AbstractBitJson {
     if (!readable) return JSON.stringify(this.toPlainObject());
     return JSON.stringify(this.toPlainObject(), null, 4);
   }
-
-  validate(): boolean {
-    return (true
-      // typeof this.version === 'number' &&
-      // typeof this.compiler === 'string' &&
-      // this.remotes.validate() &&
-      // typeof this.dependencies === 'object'
-    );
-  }
 }

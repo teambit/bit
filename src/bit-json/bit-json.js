@@ -3,7 +3,7 @@ import R from 'ramda';
 import path from 'path';
 import fs from 'fs';
 import { BIT_JSON, DEFAULT_BIT_VERSION } from '../constants';
-import { BitJsonAlreadyExists } from './exceptions';
+import { BitJsonAlreadyExists, InvalidBitJson } from './exceptions';
 import AbstractBitJson from './abstract-bit-json';
 import ConsumerBitJson from './consumer-bit-json';
 
@@ -55,7 +55,18 @@ export default class BitJson extends AbstractBitJson {
       version: this.version
     });
   }
- 
+
+  getVersion(): string { 
+    return this.version;
+  }
+
+  getBoxname(): string { 
+    return this.box;
+  }
+
+  getBitname(): string { 
+    return this.name;
+  }
   toJson(readable: boolean = true) {
     if (!readable) return JSON.stringify(this.toPlainObject());
     return JSON.stringify(this.toPlainObject(), null, 4);
@@ -78,6 +89,19 @@ export default class BitJson extends AbstractBitJson {
         repspond
       );
     });
+  }
+
+  validate() {
+    if (
+      typeof this.getBoxname() !== 'string' ||
+      typeof this.getBitname() !== 'string' ||
+      typeof this.getVersion() !== 'string' ||
+      typeof this.getImplBasename() !== 'string' ||
+      typeof this.getCompilerName() !== 'string' ||
+      typeof this.getTesterName() !== 'string' ||
+      typeof this.getDependencies() !== 'object' ||
+      typeof this.getRemotes() !== 'object'
+    ) throw new InvalidBitJson();
   }
 
   static fromPlainObject(object: Object): BitJson {
@@ -109,8 +133,7 @@ export default class BitJson extends AbstractBitJson {
       if (!R.prop('name', thisBJ)) thisBJ.name = path.basename(dirPath);
       if (!R.prop('box', thisBJ)) thisBJ.box = path.basename(path.dirname(dirPath));
       if (!R.prop('version', thisBJ)) thisBJ.version = DEFAULT_BIT_VERSION;
-      const mergedBJ = R.merge(thisBJ, protoBJ ? protoBJ.toPlainObject() : {});
-      
+      const mergedBJ = R.merge(protoBJ ? protoBJ.toPlainObject() : {}, thisBJ);
       return resolve(BitJson.fromPlainObject(mergedBJ));
     });
   }

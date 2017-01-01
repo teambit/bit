@@ -1,10 +1,9 @@
 /** @flow */
-import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../command';
 import { status } from '../../api';
 import { immutableUnshift } from '../../utils';
-import { formatBit } from '../chalk-box';
+import { formatBit, formatInlineBit } from '../chalk-box';
 
 type StatusObj = {
   name: string,
@@ -22,7 +21,8 @@ export default class Status extends Command {
     const getBitStatus = bit => ({
       name: bit.name,
       box: bit.getBox(),
-      valid: bit.validate()
+      valid: bit.validate(),
+      version: bit.getVersion()
     });
 
     return status()
@@ -34,7 +34,7 @@ export default class Status extends Command {
 
   report({ inline, sources }: { inline: StatusObj[], sources: StatusObj[] }): string {
     const inlineBits = immutableUnshift(
-      inline.map(formatBit),
+      inline.map(formatInlineBit),
       inline.length ? chalk.underline.white('inline bits') : chalk.green('your inline_bits directory is empty')
     ).join('\n');
     

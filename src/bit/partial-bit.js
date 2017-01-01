@@ -1,6 +1,7 @@
 /** @flow */
 import fs from 'fs-extra';
 import path from 'path';
+import R from 'ramda';
 import * as bitCache from '../cache';
 import { pack } from '../tar';
 import { Impl, Specs } from './sources';
@@ -15,6 +16,7 @@ import InvalidBit from './exceptions/invalid-bit';
 import { isDirEmptySync } from '../utils';
 import { LOCAL_SCOPE_NOTATION } from '../constants';
 import { composePath as composeBitJsonPath } from '../bit-json/bit-json';
+import validations from './validations';
 
 export type PartialBitProps = {
   name: string;
@@ -36,10 +38,22 @@ export default class PartialBit {
     this.scope = bitProps.scope || LOCAL_SCOPE_NOTATION;
   }
 
-  validate(): bool {
-    return this.bitJson.validate();
+  validate(): boolean {
+    try {
+      this.validateOrThrow();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
-  
+
+  validateOrThrow() {
+    const bit = this;
+    function runValidation(func) { return func(bit); }
+    R.values(validations).forEach(runValidation);
+    return true;
+  }
+
   remotes(): BitIds {
     return this.bitJson.getRemotes();
   }
@@ -93,10 +107,6 @@ export default class PartialBit {
   cd(newDir: string) {
     this.bitDir = newDir;
     return this;
-  }
-
-  validateOrThrow() {
-    if (!this.validate()) throw new InvalidBit();
   }
 
   erase(): Promise<PartialBit> {

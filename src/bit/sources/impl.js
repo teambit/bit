@@ -5,6 +5,8 @@ import Source from './source';
 import createTemplate from '../templates/impl.default-template';
 import BitJson from '../../bit-json';
 import loadPlugin from '../environment/load-plugin';
+import InvalidImpl from '../exceptions/invalid-impl';
+import MissingImpl from '../exceptions/missing-impl';
 
 export default class Impl extends Source {
   write(bitPath: string, fileName: string): Promise<any> {
@@ -16,10 +18,18 @@ export default class Impl extends Source {
     );
   }
   
+  validate() {
+    if (typeof this.src !== 'string') throw new InvalidImpl();
+  }
+
   static load(bitPath: string, fileName: string): Promise<Impl> {
+    const implPath = path.join(bitPath, fileName);
     return new Promise((resolve, reject) => 
-      fs.readFile(path.join(bitPath, fileName), (err, data) => {
-        if (err) return reject(err);
+      fs.readFile(implPath, (err, data) => {
+        if (err) {
+          if (err.code === 'ENOENT') { reject(new MissingImpl(implPath)); }
+          return reject(err);
+        }
         return resolve(new Impl(data.toString()));
       })
     );
