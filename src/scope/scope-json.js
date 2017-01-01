@@ -38,6 +38,11 @@ export class ScopeJson {
     return this;
   }
 
+  rmRemote(name: string) {
+    delete this.remotes[name];
+    return this;
+  }
+
   write(path: string) {
     return writeFile(pathlib.join(path, SCOPE_JSON), this.toJson());
   }

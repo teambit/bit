@@ -19,12 +19,19 @@ export function add(url: string) {
   });  
 }
 
-export function remove() {
-
+export function remove(name: string) {
+  return loadScope().then((scope) => {
+    return scope.scopeJson
+      .rmRemote(name)
+      .write(scope.getPath())
+      .then(() => name);
+  });
 }
 
 export function list() {
-
+  return loadScope().then((scope) => {
+    return scope.remotes();
+  });
 }
 
 export function refresh() {

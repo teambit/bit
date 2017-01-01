@@ -65,7 +65,7 @@ export default class Scope {
   }
 
   remotes() {
-
+    return this.scopeJson.remotes;
   }
 
   prepareBitRegistration(name: string, bitJson: BitJson) {

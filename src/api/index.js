@@ -15,7 +15,7 @@ import push from './lib/push';
 import getBit from './lib/get-bit';
 import test from './lib/test';
 import describeScope from './lib/describe-scope';
-import { add as remoteAdd } from './lib/remote';
+import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 
 export {
   init,
@@ -35,5 +35,7 @@ export {
   importAction,
   getBit,
   test,
-  remoteAdd
+  remoteAdd,
+  remoteList,
+  remoteRm
 };

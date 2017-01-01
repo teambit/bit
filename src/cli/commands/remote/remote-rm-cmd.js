@@ -1,19 +1,22 @@
 /** @flow */
 import Command from '../../command';
+import { remoteRm } from '../../../api';
+
+const chalk = require('chalk');
 
 export default class RemoteRm extends Command {
-  name = 'remove <url>';
+  name = 'remove <name>';
   description = 'remove a tracked bit remote';
   alias = 'rm';
   opts = [
     ['g', 'global', 'remove a global configured remote scope']
   ];
   
-  action([url, ]: [string, ]): Promise<any> {
-    return Promise.resolve(url);
+  action([name, ]: [string, ]): Promise<any> {
+    return remoteRm(name);
   }
 
-  report(data: {string: any}): string {
-    return data;
+  report(name: string): string {
+    return chalk.green(`successfully removed remote ${chalk.bold(name)}`);
   }
 }
