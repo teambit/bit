@@ -14,11 +14,14 @@ import importAction from './lib/import';
 import push from './lib/push';
 import getBit from './lib/get-bit';
 import test from './lib/test';
+import describeScope from './lib/describe-scope';
+import { add as remoteAdd } from './lib/remote';
 
 export {
   init,
   push,
   create,
+  describeScope,
   remove,
   list,
   exportAction,
@@ -32,4 +35,5 @@ export {
   importAction,
   getBit,
   test,
+  remoteAdd
 };

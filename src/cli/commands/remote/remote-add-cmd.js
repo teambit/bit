@@ -1,5 +1,8 @@
 /** @flow */
 import Command from '../../command';
+import { remoteAdd } from '../../../api';
+
+const chalk = require('chalk');
 
 export default class RemoteAdd extends Command {
   name = 'add <url>';
@@ -10,10 +13,10 @@ export default class RemoteAdd extends Command {
   ];
   
   action([url, ]: [string, ]): Promise<any> {
-    return Promise.resolve(url);
+    return remoteAdd(url);
   }
 
-  report(data: {string: any}): string {
-    return data;
+  report({ name, host }: { name: string, host: string }): string {
+    return chalk.green(`added remote name '${chalk.bold(name)}' with host '${chalk.bold(host)}'`);
   }
 }

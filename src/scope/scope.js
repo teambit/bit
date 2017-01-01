@@ -64,6 +64,10 @@ export default class Scope {
     return this.scopeJson.name;
   }
 
+  remotes() {
+
+  }
+
   prepareBitRegistration(name: string, bitJson: BitJson) {
     try {
       bitJson.validate();
@@ -72,6 +76,12 @@ export default class Scope {
     }
     
     return pathLib.join(this.tmp.getPath(), `${name}_${bitJson.version}.tar`);
+  }
+
+  describe() {
+    return {
+      name: this.name()
+    };
   }
 
   put(bit: Bit) {

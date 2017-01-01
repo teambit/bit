@@ -9,7 +9,7 @@ export function getPath(scopePath: string): string {
 
 export type ScopeJsonProps = {
   name: string,
-  remotes?: string[];
+  remotes?: { name: string, url: string };
 };
 
 export class ScopeJson {
@@ -18,7 +18,7 @@ export class ScopeJson {
 
   constructor({ name, remotes }: ScopeJsonProps) {
     this.name = name;
-    this.remotes = remotes || [];
+    this.remotes = remotes || {};
   }
 
   toPlainObject() {
@@ -31,6 +31,11 @@ export class ScopeJson {
   toJson(readable: boolean = true) {
     if (!readable) return JSON.stringify(this.toPlainObject());
     return JSON.stringify(this.toPlainObject(), null, 4);
+  }
+
+  addRemote(remote: Remote) {
+    this.remotes[remote.name] = remote.host;
+    return this;
   }
 
   write(path: string) {

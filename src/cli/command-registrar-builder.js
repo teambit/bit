@@ -21,6 +21,7 @@ import Build from './commands/build-cmd';
 import Install from './commands/install-cmd';
 import Uninstall from './commands/uninstall-cmd';
 import Prepare from './commands/_prepare-cmd';
+import DescribeScope from './commands/_scope-cmd';
 import Upload from './commands/_upload-cmd';
 // import Scope from './commands/scope-cmd';
 import Fetch from './commands/_fetch-cmd';
@@ -47,7 +48,8 @@ export default function registerCommands(): CommandRegistrar {
     new Uninstall(),
     new Prepare(),
     new Upload(),
-    new Fetch()
+    new Fetch(),
+    new DescribeScope()
     // new Login(),
     // new Logout(),
   ]);

@@ -4,7 +4,6 @@ import { contains, isBitUrl, cleanBang } from '../utils';
 import { connect } from '../network';
 import { InvalidRemote } from './exceptions';
 import { BitId } from '../bit-id';
-import { Scope } from '../scope';
 
 /**
  * @ctx bit, primary, remote
@@ -16,10 +15,10 @@ function isPrimary(alias: string): boolean {
 export default class Remote {
   primary: boolean = false;
   host: string;
-  alias: string;
+  name: ?string;
 
-  constructor(alias: string, host: string, primary: boolean = false) {
-    this.alias = alias;
+  constructor(host: string, name: string, primary: boolean = false) {
+    this.name = name || null;
     this.host = host;
     this.primary = primary;
   }
@@ -31,8 +30,14 @@ export default class Remote {
   toPlainObject() {
     return {
       host: this.host,
-      alias: this.alias
+      name: this.name
     };
+  }
+
+  scope(): Promise<{ name: string }> {
+    return this.connect().then((network) => {
+      return network.describeScope();
+    });
   }
 
   fetch(bitIds: BitId[]): {name: string, contents: Buffer}[] {
@@ -52,10 +57,10 @@ export default class Remote {
     return network.push(bit);
   }
 
-  static load(alias: string, host: string): Remote {
-    const primary = isPrimary(alias);
-    if (primary) alias = cleanBang(alias);
+  static load(name: string, host: string): Remote {
+    const primary = isPrimary(name);
+    if (primary) name = cleanBang(name);
 
-    return new Remote(alias, host, primary); 
+    return new Remote(name, host, primary); 
   }
 }

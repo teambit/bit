@@ -71,6 +71,13 @@ export default class SSH {
     });
   }
 
+  describeScope() {
+    return this.exec('_scope')
+      .then((data) => {
+        return JSON.parse(fromBase64(data));
+      });
+  }
+
   fetch(bitIds: string[]): Promise<{name: string, contents: Buffer}[]> {
     return this.exec('_fetch', ...bitIds)
       .then((packs) => {
@@ -86,12 +93,9 @@ export default class SSH {
       });
   }
 
-  resolveDependencies() {
-    return this.exec('_resolve');
-  }
-
   close() {
     this.connection.end();
+    return this;
   }
 
   composeConnectionUrl() {
