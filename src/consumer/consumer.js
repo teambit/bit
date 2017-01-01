@@ -89,6 +89,7 @@ export default class Consumer {
         const spec = bitJson.getSpecBasename();
         
         const remote = 'ssh://ran@104.198.245.134:/home/ranmizrahi/scope';
+        // @TODO - replace mock with real remote
 
         const bitDir = getBitDirForConsumerImport({
           bitsDir: this.getBitsPath(), name, box, version, remote
@@ -129,14 +130,15 @@ export default class Consumer {
       .then(bits => this.writeToBitsDir(bits));
   }
 
-  createBit({ id, withSpecs = false }: { id: BitInlineId, withSpecs: boolean }): Promise<Bit> {
+  createBit({ id, withSpecs = false, withBitJson = false }: {
+    id: BitInlineId, withSpecs: boolean, withBitJson: boolean }): Promise<Bit> {
     const bitJson = BitJson.create({ name: id.name, box: id.box }, this.bitJson);
     return Bit.create({ 
       bitJson,
       name: id.name,
       bitDir: id.composeBitPath(this.getPath()),
       withSpecs,
-    }).writeWithoutBitJson();
+    }).write({ withBitJson });
   }
 
   removeBit(id: BitInlineId): Promise<Bit> {

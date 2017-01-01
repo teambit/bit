@@ -4,35 +4,29 @@ import * as path from 'path';
 import Source from './source';
 import BitJson from '../../bit-json';
 import createTemplate from '../templates/specs.default-template';
-import { DEFAULT_SPEC_NAME } from '../../constants';
 import loadPlugin from '../environment/load-plugin';
-
-function composePath(...paths: Array<string>): string {
-  // $FlowFixMe
-  return path.join(...paths, DEFAULT_SPEC_NAME); 
-}
 
 export default class Specs extends Source {
   
-  write(bitPath: string): Promise<any> {
+  write(bitPath: string, fileName: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      fs.writeFile(composePath(bitPath), this.src, (err, res) => {
+      fs.writeFile(path.join(bitPath, fileName), this.src, (err, res) => {
         if (err) return reject(err);
         return resolve(res);
       });
     });
   }
   
-  static load(bitPath: string): Promise<?Specs> {
+  static load(bitPath: string, fileName: string): Promise<?Specs> {
     return new Promise(resolve => 
-      fs.readFile(composePath(bitPath), (err, data) => {
+      fs.readFile(path.join(bitPath, fileName), (err, data) => {
         if (err) return resolve(); // when cant load specs it's ok, just return undefined';
         return resolve(new Specs(data.toString()));
       })
     );
   }
 
-  static create(bitJson: BitJson): Spec {
+  static create(bitJson: BitJson): Specs {
     function getTemplate() {
       console.log(bitJson.getTesterName()); // @TODO make sure it get the template 
       try {
@@ -43,6 +37,6 @@ export default class Specs extends Source {
       }
     }
 
-    return new Spec(getTemplate());
+    return new Specs(getTemplate());
   }
 }

@@ -48,17 +48,17 @@ export default class Bit extends PartialBit {
     // });
   // }
 
-  write(): Promise<Bit> {
+  write({ withBitJson }: { withBitJson: boolean }): Promise<Bit> {
     return this.writeWithoutBitJson()
-    .then(() => this.bitJson.write({ bitDir: this.bitDir }))
+    .then(() => { if (withBitJson) return this.bitJson.write({ bitDir: this.bitDir }); }) // eslint-disable-line
     .then(() => this);
   }
 
   writeWithoutBitJson(): Promise<Bit> {
     const bitPath = this.bitDir; 
     return mkdirp(bitPath)
-    .then(() => this.impl.write(bitPath, this))
-    .then(() => { return this.specs ? this.specs.write(bitPath) : undefined; })
+    .then(() => this.impl.write(bitPath, this.bitJson.getImplBasename()))
+    .then(() => { if (this.specs) return this.specs.write(bitPath, this.bitJson.getSpecBasename()); }) // eslint-disable-line
     .then(() => this);
   }
 
