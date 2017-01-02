@@ -18,6 +18,14 @@ export default class Fs {
     return this.scope.describe();
   }
 
+  push(bit: Bit) {
+    return this.scope.put(bit);
+  }
+
+  fetch() {
+    
+  }
+
   connect() {
     return loadScope(this.scopePath).then((scope) => {
       this.scope = scope;

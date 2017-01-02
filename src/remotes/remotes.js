@@ -24,9 +24,9 @@ export default class Remotes extends Map<string, Remote> {
     const object = {};
 
     this.forEach((remote) => {
-      let alias = remote.alias;
-      if (remote.primary) alias = prependBang(remote.alias); 
-      object[alias] = remote.host;
+      let name = remote.name;
+      if (remote.primary) name = prependBang(remote.name); 
+      object[name] = remote.host;
     });
 
     return object;
@@ -37,9 +37,9 @@ export default class Remotes extends Map<string, Remote> {
     
     if (!remotes) return new Remotes();
 
-    forEach(remotes, (host, alias) => {
-      const remote = Remote.load(alias, host); 
-      models.push([remote.alias, remote]);
+    forEach(remotes, (host, name) => {
+      const remote = Remote.load(name, host); 
+      models.push([remote.name, remote]);
     });
 
     return new Remotes(models);

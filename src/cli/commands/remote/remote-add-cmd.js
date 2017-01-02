@@ -12,8 +12,8 @@ export default class RemoteAdd extends Command {
     ['g', 'global', 'configure a remote bit scope']
   ];
   
-  action([url, ]: [string, ]): Promise<any> {
-    return remoteAdd(url);
+  action([url, ]: [string, ], { global }: { global: boolean }): Promise<any> {
+    return remoteAdd(url, global);
   }
 
   report({ name, host }: { name: string, host: string }): string {

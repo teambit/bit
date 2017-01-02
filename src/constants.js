@@ -93,6 +93,13 @@ export const MODULES_CACHE_DIR = path.join(CACHE_ROOT, 'modules');
 export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
 
 /**
+ * glboal config directorye
+ */
+export const GLOBAL_CONFIG = path.join(CACHE_ROOT, 'config');
+
+export const GLOBAL_REMOTES = 'global-remotes.json';
+
+/**
  * bits cache directory 
  */
 export const GLOBAL_BIT_CACHE = path.join(CACHE_ROOT, 'bits');

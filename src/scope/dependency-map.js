@@ -88,7 +88,7 @@ export class DependencyMap extends Map<BitId, BitDependency[]> {
         };
       })]);
     });
-
+    
     return new DependencyMap(scope, matrix);
   }
 }
