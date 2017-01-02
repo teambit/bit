@@ -6,12 +6,8 @@ export default function importAction({ bitId }: { bitId: string }): Promise<Bit[
   return loadConsumer()
     .then((consumer) => {
       return consumer.import(bitId)
-        .then((bits) => {
-          // @TODO  - verify that import from @this is working
-          console.log(bits);
-          return Promise.all(
-            bits.map(bit => bit.write()
-          ));
-        });
+        .then(bits =>
+          Promise.all(bits.map(bit => bit.write())
+        ));
     });
 }

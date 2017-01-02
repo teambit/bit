@@ -17,7 +17,10 @@ import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
 
-const buildBit = (bit) => { if (bit.hasCompiler()) { return bit.build(); } };
+const buildBit = (bit: Bit): Promise<Bit> => {
+  if (bit.hasCompiler()) return bit.build();
+  return Promise.resolve(bit);
+};
 
 const getBitDirForConsumerImport = ({
   bitsDir, name, box, version, remote
@@ -127,9 +130,7 @@ export default class Consumer {
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
-      .then(bits => {
-        return this.writeToBitsDir(bits);
-      });
+      .then(bits => this.writeToBitsDir(bits));
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {
