@@ -1,12 +1,13 @@
 /** @flow */
 import * as pathLib from 'path';
+import fs from 'fs';
 import glob from 'glob';
 import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import { Remotes, Remote } from '../remotes';
 import { propogateUntil, currentDirName, pathHas, readFile, flatten } from '../utils';
 import { getContents } from '../tar';
-import { BIT_SOURCES_DIRNAME, BIT_JSON } from '../constants';
+import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, External } from './repositories';
@@ -15,7 +16,7 @@ import BitJson from '../bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
 
-const pathHasScope = pathHas([BIT_SOURCES_DIRNAME]);
+const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
 
 export type ScopeProps = {
   path: string,
@@ -229,8 +230,12 @@ export default class Scope {
   }
 
   static load(absPath: string): Promise<Scope> {
-    const scopePath = propogateUntil(absPath, pathHasScope);
+    let scopePath = propogateUntil(absPath, pathHasScope);
     if (!scopePath) throw new ScopeNotFound();
+    if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
+      scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
+    }
+
     return Promise.all([
       readFile(getDependenyMapPath(scopePath)), 
       readFile(getScopeJsonPath(scopePath))
