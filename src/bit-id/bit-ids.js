@@ -38,7 +38,7 @@ export default class BitIds extends Array<BitId> {
       promises.push(
         first(bitIds)
         .getRemote(origin, remotes)
-        .fetch(bitIds)
+        .fetch(bitIds, this.scope)
         .then(bits => flatten(bits))
       );
     });

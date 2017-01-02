@@ -110,8 +110,7 @@ export default class Consumer {
   
   push(rawId: string, rawRemote: string) {
     const bitId = BitId.parse(rawId);
-    // @TODO -- get the remote from somewhere :)
-    return this.scope.push(bitId, remote);
+    return this.scope.push(bitId, rawRemote);
   }
 
   /**
@@ -173,8 +172,8 @@ export default class Consumer {
     return this.loadBit(id)
       // .then(bit => bit.validate())
     .then(bit => this.scope.put(bit))
-    .then(bits => this.writeToBitsDir(bits))
-    .then(() => this.removeBit(id));
+    .then(bits => this.writeToBitsDir(bits));
+    // .then(() => this.removeBit(id));
   }
 
   testBit(id: BitInlineId): Promise<Bit> {

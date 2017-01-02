@@ -96,7 +96,6 @@ export default class Scope {
 
   put(bit: Bit) {
     bit.validateOrThrow();
-
     return this.remotes().then((remotes) => {
       return bit.dependencies()
         .fetch(this, remotes)
@@ -154,10 +153,13 @@ export default class Scope {
     return this.sources.loadSource(bitId);
   }
 
-  push(bitId: BitId, remote: Remote) {
-    return this.sources.loadSource(bitId)
-      .then(bit => remote.push(bit))
-      .then(() => this.sources.clean(bitId));
+  push(bitId: BitId, remoteName: string) {
+    return this.remotes().then((remotes) => {
+      const remote = remotes.get(remoteName);
+      return this.sources.loadSource(bitId)
+        .then(bit => remote.push(bit))
+        .then(() => this.sources.clean(bitId));
+    });
   }
 
   ensureDir() {
@@ -189,13 +191,14 @@ export default class Scope {
     );
   }
 
-
-  fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}[]> {
-    const promises = bitIds.map((bitId) => {
+  getMany(bitIds: BitIds) {
+    return bitIds.map((bitId) => {
       return this.get(bitId);
     });
+  }
 
-    return Promise.all(promises).then((bits) => {
+  fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}[]> {
+    return Promise.all(this.getMany(bitIds)).then((bits) => {
       const tars = flatten(bits).map((bit) => {
         return bit.toTar()
           .then((tar) => {

@@ -42,11 +42,8 @@ export default class Remote {
 
   fetch(bitIds: BitId[]): {name: string, contents: Buffer}[] {
     return this
-      .connect().then((network) => {
-        return network.fetch(
-          bitIds.map(bitId => bitId.toString())
-        );
-      });
+      .connect()
+      .then(network => network.fetch(bitIds));
   }
 
   validate() {

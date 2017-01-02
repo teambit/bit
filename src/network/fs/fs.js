@@ -1,5 +1,6 @@
 /** @flow */
 import { loadScope, Scope } from '../../scope';
+import { BitIds } from '../../bit-id';
 
 export default class Fs {
   scopePath: string;
@@ -22,8 +23,8 @@ export default class Fs {
     return this.scope.put(bit);
   }
 
-  fetch() {
-    
+  fetch(bitIds: BitIds) {
+    return this.scope.getMany(bitIds);
   }
 
   connect() {
