@@ -127,8 +127,11 @@ export default class Scope {
       });
   }
 
-  get(bitId: BitId, consumerRemotes: Remotes = new Remotes()): Promise<Bit[]> {
-    if (!bitId.isLocal()) return this.getExternal(bitId, consumerRemotes);
+  get(bitId: BitId): Promise<Bit[]> {
+    if (!bitId.isLocal()) {
+      return this.remotes().then(remotes => this.getExternal(bitId, remotes));
+    }
+    
     bitId.version = this.sources.resolveVersion(bitId).toString();
     const dependencyList = this.dependencyMap.get(bitId);
     if (!dependencyList) throw new BitNotInScope();
@@ -138,7 +141,9 @@ export default class Scope {
     return bitIds.fetch(this, remotes)
       .then((bits) => {
         return this.sources.loadSource(bitId)
-          .then(bit => bits.concat(bit));
+          .then(bit => {
+            return bits.concat(bit);
+          });
       });
   }
 

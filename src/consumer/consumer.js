@@ -17,7 +17,7 @@ import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
 
-const buildBit = (bit) => { if (bit.hasTester()) { console.log('hoeerye'); bit.build(); } };
+const buildBit = (bit) => { if (bit.hasCompiler()) { return bit.build(); } };
 
 const getBitDirForConsumerImport = ({
   bitsDir, name, box, version, remote
@@ -118,7 +118,7 @@ export default class Consumer {
     if (!rawId) {
       const deps = BitIds.loadDependencies(this.bitJson.dependencies);
       return Promise.all(deps.map((dep) => {
-        return this.scope.get(dep, this.bitJson.getRemotes());
+        return this.scope.get(dep);
       }))
         .then((bits) => {
           return this.writeToBitsDir(flatten(bits));
@@ -126,8 +126,10 @@ export default class Consumer {
     }
 
     const bitId = BitId.parse(rawId);
-    return this.scope.get(bitId, this.bitJson.getRemotes())
-      .then(bits => this.writeToBitsDir(bits));
+    return this.scope.get(bitId)
+      .then(bits => {
+        return this.writeToBitsDir(bits);
+      });
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {
