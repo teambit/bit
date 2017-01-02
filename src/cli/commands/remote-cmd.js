@@ -17,13 +17,13 @@ export default class Remote extends Command {
     new RemoteRm()
   ];
   
-  action(): Promise<any> {
-    return remoteList();
+  action(args: string[], { global }: { glboal: boolean }): Promise<any> {
+    return remoteList(global);
   }
 
   report(remotes: {[string]: string}): string {
     const resArr = ['scope name | host'];
-    forEach(remotes, (host, name) => {
+    forEach(remotes, (name, host) => {
       resArr.push(`${name} | ${host}`);
     });
     return resArr.join('\n');

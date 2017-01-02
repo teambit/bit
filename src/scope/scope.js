@@ -1,6 +1,8 @@
 /** @flow */
 import * as pathLib from 'path';
 import glob from 'glob';
+import { merge } from 'ramda';
+import { GlobalRemotes } from '../global-config';
 import { Remotes, Remote } from '../remotes';
 import { propogateUntil, currentDirName, pathHas, readFile, flatten } from '../utils';
 import { getContents } from '../tar';
@@ -64,8 +66,15 @@ export default class Scope {
     return this.scopeJson.name;
   }
 
-  remotes() {
-    return this.scopeJson.remotes;
+  remotes(): Promise<Remotes> {
+    const self = this;
+    function mergeRemotes(globalRemotes: GlobalRemotes) {
+      const globalObj = globalRemotes.toPlainObject();
+      return Remotes.load(merge(globalObj, self.scopeJson.remotes));
+    }
+
+    return GlobalRemotes.load()
+      .then(mergeRemotes);
   }
 
   prepareBitRegistration(name: string, bitJson: BitJson) {
