@@ -26,8 +26,10 @@ export default class BitId {
     this.version = version;
   }
 
-  isLocal() {
-    return this.scope === LOCAL_SCOPE_NOTATION;
+  isLocal(scopeName: string) {
+    scopeName = `@${scopeName}`;
+    return this.scope === LOCAL_SCOPE_NOTATION
+     || scopeName === this.scope;
   }
 
   toStringWithRemote() {

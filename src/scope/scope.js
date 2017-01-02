@@ -7,7 +7,7 @@ import { GlobalRemotes } from '../global-config';
 import { Remotes, Remote } from '../remotes';
 import { propogateUntil, currentDirName, pathHas, readFile, flatten } from '../utils';
 import { getContents } from '../tar';
-import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON } from '../constants';
+import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON, LOCAL_SCOPE_NOTATION } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, External } from './repositories';
@@ -114,27 +114,28 @@ export default class Scope {
   getExternal(bitId: BitId, remotes: Remotes): Promise<Bit[]> {
     const remote = bitId.getRemote(this, remotes);
     return remote.fetch([bitId])
-      .then((tars) => {
-        const bits = tars.map((tar) => {
-          return fromTar(tar.name, tar.contents);
-        });
+      // .then((tars) => {
+      //   const bits = tars.map((tar) => {
+      //     return fromTar(tar.name, tar.contents);
+      //   });
 
-        return Promise.all(bits);
-      })
+      //   return Promise.all(bits);
+      // })
       .then((bits) => {
         return bits.map((bit) => {
-          bit.scope = remote.alias;
+          bit.scope = remote.name;
           return bit;
         });
       });
   }
 
   get(bitId: BitId): Promise<Bit[]> {
-    if (!bitId.isLocal()) {
+    if (!bitId.isLocal(this.name())) {
       return this.remotes().then(remotes => this.getExternal(bitId, remotes));
     }
     
     bitId.version = this.sources.resolveVersion(bitId).toString();
+    bitId.scope = LOCAL_SCOPE_NOTATION;
     const dependencyList = this.dependencyMap.get(bitId);
     if (!dependencyList) throw new BitNotInScope();
     const remotes = this.dependencyMap.getRemotes(dependencyList);
@@ -143,9 +144,7 @@ export default class Scope {
     return bitIds.fetch(this, remotes)
       .then((bits) => {
         return this.sources.loadSource(bitId)
-          .then(bit => {
-            return bits.concat(bit);
-          });
+          .then(bit => bits.concat(bit));
       });
   }
 
@@ -192,9 +191,9 @@ export default class Scope {
   }
 
   getMany(bitIds: BitIds) {
-    return bitIds.map((bitId) => {
+    return Promise.all(bitIds.map((bitId) => {
       return this.get(bitId);
-    });
+    }));
   }
 
   fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}[]> {
