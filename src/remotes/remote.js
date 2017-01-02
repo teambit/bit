@@ -51,7 +51,7 @@ export default class Remote {
   }
 
   push(bit: Bit) {
-    connect(this.host).then((network) => {
+    return connect(this.host).then((network) => {
       return network.push(bit);
     });
   }
