@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import Command from '../command';
 import { importAction } from '../../api';
 import { immutableUnshift } from '../../utils';
-import { formatBit } from '../chalk-box';
+import { formatBit, paintHeader } from '../chalk-box';
 
 export default class Import extends Command {
   name = 'import [ids]';
@@ -20,15 +20,16 @@ export default class Import extends Command {
         bits.map(bit => ({
           scope: bit.scope,
           box: bit.getBox(),
-          name: bit.getName()
+          name: bit.getName(),
+          version: bit.getVersion()
         }))
       );
   }
 
-  report(bits: Array<{ scope: string, box: string, name: string }>): string {
+  report(bits: any): string {
     return immutableUnshift(
       bits.map(formatBit),
-      chalk.underline.white('imported the following bits:')
+      paintHeader('imported the following bits:')
     ).join('\n');
   }
 }

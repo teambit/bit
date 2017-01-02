@@ -12,7 +12,7 @@ import PartialBit from '../bit/partial-bit';
 import { INLINE_BITS_DIRNAME, BITS_DIRNAME, BIT_JSON, BIT_HIDDEN_DIR } from '../constants';
 import * as tar from '../tar';
 import { BitJsonNotFound } from '../bit-json/exceptions';
-import { toBase64, flatten } from '../utils';
+import { flatten } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
@@ -23,15 +23,15 @@ const buildBit = (bit: Bit): Promise<Bit> => {
 };
 
 const getBitDirForConsumerImport = ({
-  bitsDir, name, box, version, remote
+  bitsDir, name, box, version, scope
 }: {
   bitsDir: string,
   name: string,
   box: string,
   version: string,
-  remote: string 
+  scope: string 
 }): string => 
-  path.join(bitsDir, box, name, toBase64(remote), version);
+  path.join(bitsDir, box, name, scope, version);
 
 export type ConsumerProps = {
   projectPath: string,
@@ -91,11 +91,10 @@ export default class Consumer {
         const impl = bitJson.getImplBasename();
         const spec = bitJson.getSpecBasename();
         
-        const remote = 'ssh://ran@104.198.245.134:/home/ranmizrahi/scope';
-        // @TODO - replace mock with real remote
+        const scope = ''; // TODO - fetch real scope name from bit.scope
 
         const bitDir = getBitDirForConsumerImport({
-          bitsDir: this.getBitsPath(), name, box, version, remote
+          bitsDir: this.getBitsPath(), name, box, version, scope
         });
 
         return Bit.loadFromMemory({
@@ -158,7 +157,7 @@ export default class Consumer {
         name: bit.name,
         box: bit.getBox(),
         version: bit.getVersion(),
-        remote: bit.scope
+        scope: bit.scope
       });
 
       return bit.cd(bitDirForConsumerImport).write()
