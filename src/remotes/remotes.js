@@ -37,7 +37,7 @@ export default class Remotes extends Map<string, Remote> {
     
     if (!remotes) return new Remotes();
 
-    forEach(remotes, (host, name) => {
+    forEach(remotes, (name, host) => {
       const remote = Remote.load(name, host); 
       models.push([remote.name, remote]);
     });

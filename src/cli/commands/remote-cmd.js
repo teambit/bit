@@ -23,7 +23,7 @@ export default class Remote extends Command {
 
   report(remotes: {[string]: string}): string {
     const resArr = ['scope name | host'];
-    forEach(remotes, (name, host) => {
+    forEach(remotes, (host, name) => {
       resArr.push(`${name} | ${host}`);
     });
     return resArr.join('\n');
