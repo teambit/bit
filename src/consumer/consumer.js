@@ -110,7 +110,7 @@ export default class Consumer {
   
   push(rawId: string, rawRemote: string) {
     const bitId = BitId.parse(rawId);
-    const remote = this.bitJson.getRemotes().get(rawRemote);
+    // @TODO -- get the remote from somewhere :)
     return this.scope.push(bitId, remote);
   }
 

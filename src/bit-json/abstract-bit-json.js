@@ -1,13 +1,11 @@
 /** @flow */
 import R from 'ramda';
 import { BitIds } from '../bit-id';
-import { Remotes } from '../remotes';
 import { 
   DEFAULT_COMPILER,
   DEFAULT_TESTER,
   DEFAULT_IMPL_NAME,
   DEFAULT_SPEC_NAME,
-  DEFAULT_REMOTES,
   DEFAULT_DEPENDENCIES,
   NO_PLUGIN_TYPE,
 } from '../constants';
@@ -17,7 +15,6 @@ export type AbstractBitJsonProps = {
   spec?: string;  
   compiler?: string;
   tester?: string;
-  remotes?: Object;
   dependencies?: Object;
 };
 
@@ -26,15 +23,13 @@ export default class AbstractBitJson {
   spec: string; 
   compiler: string;
   tester: string;
-  remotes: {[string]: string};
   dependencies: {[string]: string};
   
-  constructor({ impl, spec, compiler, tester, dependencies, remotes }: AbstractBitJsonProps) {
+  constructor({ impl, spec, compiler, tester, dependencies }: AbstractBitJsonProps) {
     this.impl = impl || DEFAULT_IMPL_NAME;
     this.spec = spec || DEFAULT_SPEC_NAME; 
     this.compiler = compiler || DEFAULT_COMPILER;
     this.tester = tester || DEFAULT_TESTER;
-    this.remotes = remotes || DEFAULT_REMOTES;
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
   }
 
@@ -84,10 +79,6 @@ export default class AbstractBitJson {
     return !!this.tester && this.tester !== NO_PLUGIN_TYPE;
   }
 
-  getRemotes(): Remotes {
-    return Remotes.load(this.remotes);
-  }
-
   getDependencies(): BitIds {
     return BitIds.loadDependencies(this.dependencies);
   }
@@ -102,19 +93,17 @@ export default class AbstractBitJson {
         compiler: this.getCompilerName(),
         tester: this.getTesterName(),
       },
-      remotes: this.getRemotes().toPlainObject(),
       dependencies: this.dependencies
     };
   }
 
   static fromPlainObject(object: Object) {
-    const { sources, env, remotes, dependencies } = object;
+    const { sources, env, dependencies } = object;
     return new this({
       impl: R.prop('impl', sources),
       spec: R.prop('spec', sources),
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
-      remotes,
       dependencies,
     });
   }

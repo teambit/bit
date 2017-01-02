@@ -23,7 +23,6 @@ export type BitJsonProps = {
   spec?: string;  
   compiler?: string;
   tester?: string;
-  remotes?: Object;
   dependencies?: Object;
   packageDependencies?: Object;
 };
@@ -36,14 +35,13 @@ export default class BitJson extends AbstractBitJson {
   spec: string; 
   compiler: string;
   tester: string;
-  remotes: {[string]: string};
   dependencies: {[string]: string};
   packageDependencies: {[string]: string};
 
   constructor({ 
-    name, box, version, impl, spec, compiler, tester, remotes, dependencies, packageDependencies
+    name, box, version, impl, spec, compiler, tester, dependencies, packageDependencies
   }: BitJsonProps) {
-    super({ impl, spec, compiler, tester, remotes, dependencies });
+    super({ impl, spec, compiler, tester, dependencies });
     this.name = name;
     this.box = box;
     this.version = version;
@@ -108,13 +106,12 @@ export default class BitJson extends AbstractBitJson {
       typeof this.getImplBasename() !== 'string' ||
       typeof this.getCompilerName() !== 'string' ||
       typeof this.getTesterName() !== 'string' ||
-      typeof this.getDependencies() !== 'object' ||
-      typeof this.getRemotes() !== 'object'
+      typeof this.getDependencies() !== 'object'
     ) throw new InvalidBitJson();
   }
 
   static fromPlainObject(object: Object): BitJson {
-    const { name, box, version, sources, env, remotes, dependencies, packageDependencies } = object;
+    const { name, box, version, sources, env, dependencies, packageDependencies } = object;
     return new BitJson({
       name,
       box,
@@ -123,7 +120,6 @@ export default class BitJson extends AbstractBitJson {
       spec: R.prop('spec', sources),
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
-      remotes,
       dependencies,
       packageDependencies,
     });

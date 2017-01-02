@@ -54,10 +54,6 @@ export default class PartialBit {
     return true;
   }
 
-  remotes(): BitIds {
-    return this.bitJson.getRemotes();
-  }
-
   dependencies(): BitIds {
     return BitIds.loadDependencies(this.bitJson.dependencies);
   }
