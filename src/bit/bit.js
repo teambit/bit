@@ -4,6 +4,7 @@ import path from 'path';
 import { Impl, Specs } from './sources';
 import { mkdirp } from '../utils';
 import BitJson from '../bit-json';
+import Scope from '../scope';
 import { Remotes } from '../remotes';
 import PartialBit from './partial-bit';
 import { BitId } from '../bit-id';
@@ -31,16 +32,19 @@ export default class Bit extends PartialBit {
     this.impl = bitProps.impl;
   }
 
-  build(): Promise<Bit> {
+  build(scope: Scope): Promise<Bit> {
     return new Promise((resolve, reject) => {
       if (!this.hasCompiler()) { return resolve(this); }
       try {
-        const { transpile } = loadPlugin(this.bitJson.getCompilerName());
-        const src = this.impl.src;
-        const { code, map } = transpile(src); // eslint-disable-line
-        const outputFile = path.join(this.bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
-        fs.outputFileSync(outputFile, code);
-        return resolve(this);
+        const compilerName = this.bitJson.getCompilerName();
+        return scope.loadEnvBit(BitId.parse(compilerName))
+        .then(({ compile }) => {
+          const src = this.impl.src;
+          const { code, map } = compile(src); // eslint-disable-line
+          const outputFile = path.join(this.bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
+          fs.outputFileSync(outputFile, code);
+          return resolve(this);
+        });
       } catch (e) { return reject(e); }
     });
   }

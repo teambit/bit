@@ -11,7 +11,13 @@ import BitJson from '../bit-json/bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
-import { INLINE_BITS_DIRNAME, BITS_DIRNAME, BIT_JSON, BIT_HIDDEN_DIR, ENV_BITS_DIRNAME } from '../constants';
+import { 
+  INLINE_BITS_DIRNAME,
+  BITS_DIRNAME,
+  BIT_JSON,
+  BIT_HIDDEN_DIR,
+  ENV_BITS_DIRNAME
+ } from '../constants';
 import * as tar from '../tar';
 import { BitJsonNotFound } from '../bit-json/exceptions';
 import { flatten } from '../utils';
@@ -20,7 +26,7 @@ import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
 import npmInstall from '../npm';
 
-const buildBit = (bit: Bit): Promise<Bit> => bit.build();
+const buildBit = (bit: Bit, scope: Scope): Promise<Bit> => bit.build(scope);
 
 const getBitDirForConsumerImport = ({
   bitsDir, name, box, version, scope
@@ -32,19 +38,6 @@ const getBitDirForConsumerImport = ({
   scope: string 
 }): string => 
   path.join(bitsDir, box, name, scope, version);
-
-const cdAndWrite = (bit: Bit, bitsDir: string): Promise<Bit> => {
-  const bitDirForConsumerImport = getBitDirForConsumerImport({
-    bitsDir,
-    name: bit.name,
-    box: bit.getBox(),
-    version: bit.getVersion(),
-    scope: bit.scope
-  });
-
-  return bit.cd(bitDirForConsumerImport).write()
-    .then(buildBit);
-};
 
 export type ConsumerProps = {
   projectPath: string,
@@ -71,6 +64,19 @@ export default class Consumer {
       .write({ bitDir: this.projectPath })
       .then(() => this.scope.ensureDir())
       .then(() => this);
+  }
+
+  cdAndWrite(bit: Bit, bitsDir: string): Promise<Bit> {
+    const bitDirForConsumerImport = getBitDirForConsumerImport({
+      bitsDir,
+      name: bit.name,
+      box: bit.getBox(),
+      version: bit.getVersion(),
+      scope: bit.scope
+    });
+
+    return bit.cd(bitDirForConsumerImport).write(true)
+      .then(b => buildBit(b, this.scope));
   }
 
   getInlineBitsPath(): string {
@@ -170,12 +176,7 @@ export default class Consumer {
     const compilerId = bitJson.hasCompiler() ? BitId.parse(bitJson.getCompilerName()) : undefined;
     
     const rejectNils = R.reject(R.isNil);
-    
-    const envs = rejectNils([
-      testerId,
-      compilerId
-    ]);
-
+    const envs = rejectNils([ testerId, compilerId ]);
     
     const ensureEnv = (env: BitId): Promise<any> => {
       if (this.scope.hasEnvBit(env)) return Promise.resolve();
@@ -203,7 +204,7 @@ export default class Consumer {
 
     return Promise.all(
       bits.map(bit => 
-        cdAndWrite(bit, bitsDir)
+        this.cdAndWrite(bit, bitsDir)
         .then(installPacakgeDependencies)
       )
     );
@@ -212,7 +213,7 @@ export default class Consumer {
   writeToBitsDir(bits: Bit[]): Promise<Bit[]> {
     const bitsDir = this.getBitsPath();
 
-    return Promise.all(bits.map(bit => cdAndWrite(bit, bitsDir)));
+    return Promise.all(bits.map(bit => this.cdAndWrite(bit, bitsDir)));
   }
 
   export(id: BitInlineId) {  

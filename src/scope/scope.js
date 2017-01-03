@@ -15,6 +15,7 @@ import { DependencyMap, getPath as getDependenyMapPath } from './dependency-map'
 import BitJson from '../bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
+import resolveBit from '../bit-resolver';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
 
@@ -103,7 +104,7 @@ export default class Scope {
           this.external.store(bits);
           this.dependencyMap.setBit(bit, bits);
           return this.sources.setSource(bit)
-            .then(() => bit.build())
+            .then(() => bit.build(this))
             .then(() => this.dependencyMap.write())
             .then(() => bits.concat(bit));
             // .catch(() => bit.clear());
@@ -236,10 +237,14 @@ export default class Scope {
   hasEnvBit(bitId: BitId) {
     const box = bitId.box;
     const name = bitId.name;
-    // const version = bitId.getVersion(); // @TODO - also involve the version
-    // const scope = bitId.getRemote(); // @TODO - also involve the scope
-    const bitPath = pathLib.join(this.getPath(), ENV_BITS_DIRNAME, box, name);
+    const scope = bitId.scope;
+    // @TODO - add the version
+    const bitPath = pathLib.join(this.getPath(), ENV_BITS_DIRNAME, box, name, scope);
     return fs.existsSync(bitPath);
+  }
+
+  loadEnvBit(bitId: BitId): Promise<any> {
+    return resolveBit(pathLib.join(this.getPath(), ENV_BITS_DIRNAME), bitId);
   }
 
   static create(path: string = process.cwd(), name: ?string) {

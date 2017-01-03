@@ -29,7 +29,7 @@ export default class Import extends Command {
   }
 
   report(bits: any): string {
-    if (R.isEmpty(bits)) { return 'there is nothing needs to be import'; }
+    if (R.isEmpty(bits)) { return 'done'; }
     return immutableUnshift(
       bits.map(formatBit),
       paintHeader('imported the following bits:')
