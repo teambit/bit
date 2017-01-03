@@ -11,6 +11,6 @@ umask 0022
 cd ..
 #set package json with corret packeing type
 packageDest=$(cd $(dirname "$1") && pwd -P)/$(basename "package.json")
-node ./scripts/set-installation-method.js $packageDest $1
+node ./scripts/set-installation-method.js $packageDest tar
 tar --exclude='./Jenkinsfile' --exclude='./scripts/' -zcvf ${tarName} * 
 shasum -a 256 $tarName
