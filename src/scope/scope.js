@@ -7,7 +7,7 @@ import { GlobalRemotes } from '../global-config';
 import { Remotes, Remote } from '../remotes';
 import { propogateUntil, currentDirName, pathHas, readFile, flatten } from '../utils';
 import { getContents } from '../tar';
-import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON } from '../constants';
+import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON, ENV_BITS_DIRNAME } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, External } from './repositories';
@@ -231,6 +231,15 @@ export default class Scope {
 
   getPath() {
     return this.path;
+  }
+
+  hasEnvBit(bitId: BitId) {
+    const box = bitId.box;
+    const name = bitId.name;
+    // const version = bitId.getVersion(); // @TODO - also involve the version
+    // const scope = bitId.getRemote(); // @TODO - also involve the scope
+    const bitPath = pathLib.join(this.getPath(), ENV_BITS_DIRNAME, box, name);
+    return fs.existsSync(bitPath);
   }
 
   static create(path: string = process.cwd(), name: ?string) {

@@ -6,6 +6,7 @@ import R from 'ramda';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
+import AbstractBitJson from '../bit-json/abstract-bit-json';
 import BitJson from '../bit-json/bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
@@ -19,9 +20,7 @@ import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
 import npmInstall from '../npm';
 
-const buildBit = (bit: Bit): Promise<Bit> => {
-  return bit.build();
-};
+const buildBit = (bit: Bit): Promise<Bit> => bit.build();
 
 const getBitDirForConsumerImport = ({
   bitsDir, name, box, version, scope
@@ -131,24 +130,20 @@ export default class Consumer {
   }
 
   import(rawId: ?string, envBit: bool): Bit {
-    if (!rawId) {
+    if (!rawId) { // if no arguments inserted, install according to bitJson dependencies
       const deps = BitIds.loadDependencies(this.bitJson.dependencies);
-      // const envs = BitIds // @TODO - load the compiler and tester if there are
-      return Promise.all(deps.map((dep) => {
-        return this.scope.get(dep);
-      })).then((bits) => {
-        return this.writeToBitsDir(flatten(bits));
-      });
+      
+      return this.ensureEnvBits(this.bitJson)
+      .then(() =>
+        Promise.all(deps.map(dep => this.scope.get(dep)))
+        .then(bits => this.writeToBitsDir(flatten(bits)))
+      );
     }
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
       .then((bits) => {
-        if (envBit) {
-          return this.writeToEnvBitsDir(bits);
-          // @TODO implement to write in the special env dir
-        }
-
+        if (envBit) return this.writeToEnvBitsDir(bits);
         return this.writeToBitsDir(bits);
       });
   }
@@ -170,6 +165,28 @@ export default class Consumer {
     .then(bit => bit.erase());
   }
   
+  ensureEnvBits(bitJson: AbstractBitJson): Promise<any> {
+    const testerId = bitJson.hasTester() ? BitId.parse(bitJson.getTesterName()) : undefined;
+    const compilerId = bitJson.hasCompiler() ? BitId.parse(bitJson.getCompilerName()) : undefined;
+    
+    const rejectNils = R.reject(R.isNil);
+    
+    const envs = rejectNils([
+      testerId,
+      compilerId
+    ]);
+
+    
+    const ensureEnv = (env: BitId): Promise<any> => {
+      if (this.scope.hasEnvBit(env)) return Promise.resolve();
+
+      return this.scope.get(env)
+        .then(bits => this.writeToEnvBitsDir(bits));
+    };
+
+    return Promise.all(R.map(ensureEnv, envs));
+  }
+
   writeToEnvBitsDir(bits: Bit[]): Promise<Bit[]> {
     const bitsDir = this.getEnvBitsPath();
     

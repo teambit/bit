@@ -1,5 +1,6 @@
 /** @flow */
 import { BitId } from '../bit-id';
+import BitJson from '../bit-json';
 import { forEach, first, flatten } from '../utils';
 import { Remotes } from '../remotes';
 import { Scope } from '../scope';

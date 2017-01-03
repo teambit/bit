@@ -7,5 +7,9 @@ export default function create(id: string, withSpecs: boolean, withBitJson: bool
   return loadConsumer()
     .then(consumer =>
       consumer.createBit({ id: InlineId.parse(id), withSpecs, withBitJson })
+      .then(bit =>
+        consumer.ensureEnvBits(bit.bitJson)
+        .then(() => bit)
+      )
     );
 }

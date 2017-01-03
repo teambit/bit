@@ -1,5 +1,6 @@
 /** @flow */
 import chalk from 'chalk';
+import R from 'ramda';
 import Command from '../command';
 import { importAction } from '../../api';
 import { immutableUnshift } from '../../utils';
@@ -28,6 +29,7 @@ export default class Import extends Command {
   }
 
   report(bits: any): string {
+    if (R.isEmpty(bits)) { return 'there is nothing needs to be import'; }
     return immutableUnshift(
       bits.map(formatBit),
       paintHeader('imported the following bits:')
