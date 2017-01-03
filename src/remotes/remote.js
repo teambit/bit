@@ -4,6 +4,7 @@ import { contains, isBitUrl, cleanBang } from '../utils';
 import { connect } from '../network';
 import { InvalidRemote } from './exceptions';
 import { BitId } from '../bit-id';
+import type { BitDependencies } from '../scope/scope';
 
 /**
  * @ctx bit, primary, remote
@@ -40,10 +41,16 @@ export default class Remote {
     });
   }
 
-  fetch(bitIds: BitId[]): {name: string, contents: Buffer}[] {
+  fetch(bitIds: BitId[]): BitDependencies[] {
     return this
       .connect()
       .then(network => network.fetch(bitIds));
+  }
+
+  fetchOnes(bitIds: BitId[]): Bit[] {
+    return this
+      .connect()
+      .then(network => network.fetchOnes(bitIds));
   }
 
   validate() {

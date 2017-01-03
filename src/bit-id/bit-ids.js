@@ -5,6 +5,13 @@ import { forEach } from '../utils';
 import { Remotes } from '../remotes';
 import { Scope } from '../scope';
 
+function byRemote(origin: Scope) {
+  return groupBy((id) => {
+    if (id.isLocal(origin.name())) return 'inner';
+    return 'outer';
+  });
+}
+
 export default class BitIds extends Array<BitId> {
   static loadDependencies(dependencies: {[string]: string}) {
     const array = [];
@@ -25,20 +32,20 @@ export default class BitIds extends Array<BitId> {
       ...array.map(id => BitId.parse(id))
     );
   }
+  
+  fetchOnes(origin: Scope, remotes: Remotes) {
+    const { inner = [], outer = [] } = byRemote(origin)(this);
+    return origin.manyOnes(inner).then((innerBits) => {
+      return remotes.fetch(outer, true)
+        .then(remoteBits => remoteBits.concat(innerBits));
+    });
+  }
 
   fetch(origin: Scope, remotes: Remotes) {
-    const { inner, outer } = groupBy((id) => {
-      if (id.isLocal(origin.scope.name())) return 'inner';
-      return 'outer';
-    })(this);
-
+    const { inner = [], outer = [] } = byRemote(origin)(this);
     return origin.getMany(inner).then((innerBits) => {
-      return origin.external.getMany(outer)
-        .then(({ bits, missingIds }) => {
-          return remotes.fetch(missingIds)
-            .then(remoteBits => origin.external.storeMany(remoteBits))
-            .then(remoteBits => remoteBits.concat(bits, innerBits));
-        });
+      return remotes.fetch(outer)
+        .then(remoteBits => remoteBits.concat(innerBits));
     });
   }
 }

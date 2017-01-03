@@ -22,7 +22,7 @@ export type PartialBitProps = {
   name: string;
   bitDir: string;
   bitJson: BitJson;
-  scope?: string;
+  scope: string;
 };
 
 export default class PartialBit {
@@ -35,7 +35,7 @@ export default class PartialBit {
     this.name = bitProps.name;
     this.bitDir = bitProps.bitDir;
     this.bitJson = bitProps.bitJson;
-    this.scope = bitProps.scope || LOCAL_SCOPE_NOTATION;
+    this.scope = bitProps.scope;
   }
 
   validate(): boolean {
@@ -96,8 +96,8 @@ export default class PartialBit {
     });
   }
 
-  isLocal() {
-    return this.scope === LOCAL_SCOPE_NOTATION;
+  isLocal(scope: Scope) {
+    return this.getId().isLocal(scope);
   }
 
   cd(newDir: string) {
@@ -146,6 +146,7 @@ export default class PartialBit {
     ]).then(([impl, specs ]) => 
       new Bit({
         name: this.name,
+        scope: this.scope,
         bitDir: this.bitDir,
         bitJson: this.bitJson,
         impl,
@@ -161,8 +162,8 @@ export default class PartialBit {
       .then(bitJson => new PartialBit({ name, bitDir, bitJson }));
   }
 
-  static load(bitDir: string, name: string): Promise<PartialBit> {
+  static load(bitDir: string, name: string, scope: string): Promise<PartialBit> {
     return BitJson.load(bitDir)
-      .then(bitJson => new PartialBit({ name, bitDir, bitJson }));
+      .then(bitJson => new PartialBit({ name, bitDir, bitJson, scope }));
   }
 }

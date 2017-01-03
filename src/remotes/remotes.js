@@ -3,6 +3,7 @@ import { groupBy, prop } from 'ramda';
 import Remote from './remote';
 import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
+import type { BitDependencies } from '../scope/scope';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -21,11 +22,17 @@ export default class Remotes extends Map<string, Remote> {
     return remote;
   }
 
-  fetch(ids: BitId[]): Promise<{bitId: BitId, bits: Bit[]}> {
+  resolve(scopeName: string) {
+    // @TODO impelment scope resolver
+    return this.get(scopeName.replace('@', ''));
+  }
+
+  fetch(ids: BitId[], withoutDeps: boolean = false): Promise<BitDependencies> {
     const byScope = groupBy(prop('scope'));
     const promises = [];
     forEach(byScope(ids), (scopeIds, scopeName) => {
-      promises.push(this.get(scopeName).fetch());
+      if (!withoutDeps) promises.push(this.resolve(scopeName).fetch(scopeIds));
+      else promises.push(this.resolve(scopeName).fetchOnes(scopeIds));
     });
 
     return Promise.all(promises)

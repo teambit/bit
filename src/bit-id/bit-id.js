@@ -26,11 +26,14 @@ export default class BitId {
     this.version = version;
   }
 
+  getScopeName() {
+    return this.scope.replace('@', ''); 
+  }
+
   isLocal(scopeName: string) {
-    // @TODO fix this asapbit sta
-    scopeName = `@${scopeName}`;
+    // @TODO fix this asapbit status
     return this.scope === LOCAL_SCOPE_NOTATION
-     || scopeName === this.scope;
+     || scopeName === this.getScopeName();
   }
 
   toStringWithRemote() {
@@ -49,8 +52,9 @@ export default class BitId {
     return remoteResolver(this.scope, remotes, localScope);
   }
 
-  toString() {
+  toString(ignoreScope: boolean = false) {
     const { name, box, version, scope } = this;
+    if (ignoreScope) return [box, name].join('/').concat(`::${version}`);
     return [scope, box, name].join('/').concat(`::${version}`);
   }
 

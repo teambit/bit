@@ -30,10 +30,12 @@ import rmDir from './fs-rmdir';
 import resolveHomePath from './os-resolve-home-path';
 import currentDirName from './current-dir-name';
 import allSettled from './promise-all-settled';
+import values from './object-values';
 
 export {
   parseSSHUrl,
   rmDir,
+  values,
   toBase64,
   fromBase64,
   resolveBoolean,

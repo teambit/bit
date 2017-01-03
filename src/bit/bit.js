@@ -26,7 +26,7 @@ export default class Bit extends PartialBit {
   specs: ?Specs;
 
   constructor(bitProps: BitProps) {
-    super({ name: bitProps.name, bitDir: bitProps.bitDir, bitJson: bitProps.bitJson });
+    super(bitProps);
     this.specs = bitProps.specs;
     this.impl = bitProps.impl;
   }
@@ -64,8 +64,8 @@ export default class Bit extends PartialBit {
     .then(() => this);
   }
 
-  static load(bitDir: string, name: string): Promise<Bit> {  
-    return PartialBit.load(bitDir, name)
+  static load(bitDir: string, name: string, scopeName: string): Promise<Bit> {  
+    return PartialBit.load(bitDir, name, scopeName)
       .then(partialBit => partialBit.loadFull());
   }
 

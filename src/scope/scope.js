@@ -4,19 +4,25 @@ import fs from 'fs';
 import glob from 'glob';
 import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
-import { Remotes, Remote } from '../remotes';
+import flattenDependencies from './flatten-dependencies';
+import { Remotes } from '../remotes';
 import { propogateUntil, currentDirName, pathHas, readFile, flatten } from '../utils';
 import { getContents } from '../tar';
-import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON, LOCAL_SCOPE_NOTATION } from '../constants';
+import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, External } from './repositories';
-import { DependencyMap, getPath as getDependenyMapPath } from './dependency-map';
+import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
 import BitJson from '../bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
+
+export type BitDependencies = {
+  bit: Bit,
+  dependencies: Bit[]
+};
 
 export type ScopeProps = {
   path: string,
@@ -25,7 +31,7 @@ export type ScopeProps = {
   tmp?: Tmp;
   sources?: Source,
   external?: External;
-  dependencyMap?: DependencyMap;
+  sourcesMap?: SourcesMap;
   scopeJson?: ScopeJson;
 };
 
@@ -50,7 +56,7 @@ export default class Scope {
   tmp: Tmp;
   sources: Source;
   path: string;
-  dependencyMap: DependencyMap;
+  sourcesMap: SourcesMap;
 
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
@@ -60,7 +66,7 @@ export default class Scope {
     this.created = scopeProps.created || false;
     this.tmp = scopeProps.tmp || new Tmp(this);
     this.external = scopeProps.external || new External(this);
-    this.dependencyMap = scopeProps.dependencyMap || new DependencyMap(this);
+    this.sourcesMap = scopeProps.sourcesMap || new SourcesMap(this);
   }
 
   name() {
@@ -94,80 +100,58 @@ export default class Scope {
     };
   }
 
-  // put(bit: Bit) {
-  //   bit.validateOrThrow();
-  //   return this.remotes().then((remotes) => {
-  //     const dependencies = bit.dependencies();
-  //     const [inner, outer] = dependencies.reduce(([inScope, outScope], id) => {
-  //       id.isLocal(this.name()) ? inScope.push(id) : outScope.push(id);
-  //       return [inScope, outScope];
-  //     }, [new BitIds(), new BitIds()]);
-
-  //     outer.fetch(this, remotes)
-  //       .then(storeExternals)
-        
-  //     inner.fetch();
-
-  //     return this.sources.setSource();
-  //   });
-  // }
-
-  put(bit: Bit) {
+  put(bit: Bit): Promise<BitDependencies> {
+    bit.scope = this.name();
     bit.validateOrThrow();
     return this.remotes().then((remotes) => {
       return bit.dependencies()
         .fetch(this, remotes)
-        .then((bits) => {
-          this.dependencyMap.setBit(bit, bits);
-          return this.sources.setSource(bit)
+        .then((dependencies) => {
+          dependencies = flattenDependencies(dependencies);
+          return this.sources.setSource(bit, dependencies)
             .then(() => { if (bit.hasCompiler()) bit.build(); })
-            .then(() => this.external.store(bits))
-            .then(() => this.dependencyMap.write())
-            .then(() => bits.concat(bit));
-            // .catch(() => bit.clear());
+            .then(() => this.sourcesMap.write())
+            .then(() => {
+              return { bit, dependencies };
+            });
         });
     });
   }
 
-  getExternal(bitId: BitId, remotes: Remotes): Promise<Bit[]> {
-    const remote = bitId.getRemote(this, remotes);
-    return remote.fetch([bitId])
-      // .then((tars) => {
-      //   const bits = tars.map((tar) => {
-      //     return fromTar(tar.name, tar.contents);
-      //   });
-
-      //   return Promise.all(bits);
-      // })
-      .then((bits) => {
-        return bits.map((bit) => {  
-          bit.scope = remote.name;
-          return bit;
-        });
-      });
+  getExternal(bitId: BitId, remotes: Remotes): Promise<BitDependencies> {
+    return remotes.fetch([bitId]);
   }
 
-  get(bitId: BitId): Promise<Bit[]> {
+  get(bitId: BitId): Promise<BitDependencies> {
     if (!bitId.isLocal(this.name())) {
       return this.remotes().then(remotes => this.getExternal(bitId, remotes));
     }
     
     bitId.version = this.sources.resolveVersion(bitId).toString();
-    bitId.scope = `@${this.name()}`;
-    const dependencyList = this.dependencyMap.get(bitId);
+    const dependencyList = this.sourcesMap.get(bitId);
     if (!dependencyList) throw new BitNotInScope();
-    const remotes = this.dependencyMap.getRemotes(dependencyList);
-    const bitIds = this.dependencyMap.getBitIds(dependencyList);
+    const bitIds = this.sourcesMap.getBitIds(dependencyList);
     
-    return bitIds.fetch(this, remotes)
-      .then((bits) => {
-        return this.sources.loadSource(bitId)
-          .then(bit => bits.concat(bit));
-      });
+    return this.remotes().then((remotes) => {
+      return bitIds.fetchOnes(this, remotes)
+        .then((bits) => {
+          return this.sources.loadSource(bitId)
+            .then((bit) => {
+              return {
+                bit,
+                dependencies: bits
+              };
+            });
+        });
+    });
   }
 
   getOne(bitId: BitId): Promise<Bit> {
     return this.sources.loadSource(bitId);
+  }
+
+  manyOnes(bitIds: BitId[]): Promise<Bit> {
+    return Promise.all(bitIds.map(bitId => this.getOne(bitId)));
   }
 
   push(bitId: BitId, remoteName: string) {
@@ -185,7 +169,7 @@ export default class Scope {
       .then(() => this.sources.ensureDir())
       .then(() => this.external.ensureDir())
       .then(() => this.tmp.ensureDir())
-      .then(() => this.dependencyMap.write())
+      .then(() => this.sourcesMap.write())
       .then(() => this.scopeJson.write(this.getPath()))
       .then(() => this); 
   }
@@ -271,7 +255,7 @@ export default class Scope {
       .then(([rawDependencyMap, rawScopeJson]) => {
         const scopeJson = ScopeJson.loadFromJson(rawScopeJson.toString('utf8'));
         const scope = new Scope({ path: scopePath, scopeJson });
-        scope.dependencyMap = DependencyMap.load(JSON.parse(rawDependencyMap.toString('utf8')), scope);
+        scope.sourcesMap = SourcesMap.load(JSON.parse(rawDependencyMap.toString('utf8')), scope);
         return scope;
       });
   }

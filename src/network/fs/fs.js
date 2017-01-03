@@ -29,6 +29,10 @@ export default class Fs {
       .then(bitsMatrix => flatten(bitsMatrix));
   }
 
+  fetchOnes(bitIds: BitIds): Bit[] {
+    return this.scope.manyOnes(bitIds);
+  }
+
   connect() {
     return loadScope(this.scopePath).then((scope) => {
       this.scope = scope;

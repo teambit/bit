@@ -2,6 +2,7 @@
 import path from 'path';
 import glob from 'glob';
 import fs from 'fs';
+import flattenDependencies from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -16,6 +17,7 @@ import { toBase64, flatten } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
+import type { BitDependencies } from '../scope/scope';
 
 const buildBit = (bit: Bit): Promise<Bit> => {
   if (bit.hasCompiler()) return bit.build();
@@ -31,7 +33,7 @@ const getBitDirForConsumerImport = ({
   version: string,
   remote: string 
 }): string => 
-  path.join(bitsDir, box, name, toBase64(remote), version);
+  path.join(bitsDir, box, name, remote, version);
 
 export type ConsumerProps = {
   projectPath: string,
@@ -149,9 +151,10 @@ export default class Consumer {
     .then(bit => bit.erase());
   }
   
-  writeToBitsDir(bits: Bit[]): Promise<Bit[]> {
+  writeToBitsDir(bitDependencies: BitDependencies[]): Promise<Bit[]> {
     const bitsDir = this.getBitsPath();
-
+    const bits = flattenDependencies(bitDependencies);
+    
     const cdAndWrite = (bit: Bit): Promise<Bit> => {
       const bitDirForConsumerImport = getBitDirForConsumerImport({
         bitsDir,
@@ -172,7 +175,7 @@ export default class Consumer {
     return this.loadBit(id)
       // .then(bit => bit.validate())
     .then(bit => this.scope.put(bit))
-    .then(bits => this.writeToBitsDir(bits));
+    .then(bits => this.writeToBitsDir([bits]));
     // .then(() => this.removeBit(id));
   }
 
