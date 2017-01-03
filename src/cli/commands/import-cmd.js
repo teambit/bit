@@ -10,12 +10,13 @@ export default class Import extends Command {
   description = 'import a bit';
   alias = 'i';
   opts = [
-    ['S', 'save', 'save into bit.json']
+    ['s', 'save', 'save into bit.json'],
+    ['e', 'env', 'import an environment bit (compiler/tester)']
   ];
 
-  action([id, ]: [string, ]): Promise<any> {
+  action([id, ]: [string, ], { save, env }: any): Promise<any> {
     // @TODO - import should support multiple bits
-    return importAction({ bitId: id })
+    return importAction({ bitId: id, save, env })
       .then(bits => 
         bits.map(bit => ({
           scope: bit.scope,

@@ -33,6 +33,8 @@ export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
 export const BITS_DIRNAME = 'bits';
 
+export const ENV_BITS_DIRNAME = 'env_bits';
+
 export const INLINE_BITS_DIRNAME = 'inline_bits';
 
 export const BIT_JSON = 'bit.json';

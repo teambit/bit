@@ -2,6 +2,7 @@
 import path from 'path';
 import glob from 'glob';
 import fs from 'fs';
+import R from 'ramda';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -9,13 +10,14 @@ import BitJson from '../bit-json/bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
-import { INLINE_BITS_DIRNAME, BITS_DIRNAME, BIT_JSON, BIT_HIDDEN_DIR } from '../constants';
+import { INLINE_BITS_DIRNAME, BITS_DIRNAME, BIT_JSON, BIT_HIDDEN_DIR, ENV_BITS_DIRNAME } from '../constants';
 import * as tar from '../tar';
 import { BitJsonNotFound } from '../bit-json/exceptions';
 import { flatten } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
+import npmInstall from '../npm';
 
 const buildBit = (bit: Bit): Promise<Bit> => {
   if (bit.hasCompiler()) return bit.build();
@@ -32,6 +34,19 @@ const getBitDirForConsumerImport = ({
   scope: string 
 }): string => 
   path.join(bitsDir, box, name, scope, version);
+
+const cdAndWrite = (bit: Bit, bitsDir: string): Promise<Bit> => {
+  const bitDirForConsumerImport = getBitDirForConsumerImport({
+    bitsDir,
+    name: bit.name,
+    box: bit.getBox(),
+    version: bit.getVersion(),
+    scope: bit.scope
+  });
+
+  return bit.cd(bitDirForConsumerImport).write()
+    .then(buildBit);
+};
 
 export type ConsumerProps = {
   projectPath: string,
@@ -66,6 +81,10 @@ export default class Consumer {
 
   getBitsPath(): string {
     return path.join(this.projectPath, BITS_DIRNAME);
+  }
+
+  getEnvBitsPath(): string {
+    return path.join(this.scope.getPath(), ENV_BITS_DIRNAME);
   }
 
   getPath(): string {
@@ -112,23 +131,27 @@ export default class Consumer {
     return this.scope.push(bitId, rawRemote);
   }
 
-  /**
-   * fetch a bit from a remote, put in the bit.json and in the external directory
-   **/
-  import(rawId: ?string): Bit {
+  import(rawId: ?string, envBit: bool): Bit {
     if (!rawId) {
       const deps = BitIds.loadDependencies(this.bitJson.dependencies);
+      // const envs = BitIds // @TODO - load the compiler and tester if there are
       return Promise.all(deps.map((dep) => {
         return this.scope.get(dep);
-      }))
-        .then((bits) => {
-          return this.writeToBitsDir(flatten(bits));
-        });
+      })).then((bits) => {
+        return this.writeToBitsDir(flatten(bits));
+      });
     }
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
-      .then(bits => this.writeToBitsDir(bits));
+      .then((bits) => {
+        if (envBit) {
+          return this.writeToEnvBitsDir(bits);
+          // @TODO implement to write in the special env dir
+        }
+
+        return this.writeToBitsDir(bits);
+      });
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {
@@ -148,23 +171,32 @@ export default class Consumer {
     .then(bit => bit.erase());
   }
   
+  writeToEnvBitsDir(bits: Bit[]): Promise<Bit[]> {
+    const bitsDir = this.getEnvBitsPath();
+    
+    const installPacakgeDependencies = (bit) => {
+      const deps = bit.bitJson.getPackageDependencies();
+      return Promise.all(
+        R.values(
+          R.mapObjIndexed(
+            (value, key) => npmInstall({ name: key, version: value, dir: bit.getPath() })
+          , deps)
+        )
+      ).then(() => bit);
+    };
+
+    return Promise.all(
+      bits.map(bit => 
+        cdAndWrite(bit, bitsDir)
+        .then(installPacakgeDependencies)
+      )
+    );
+  }
+
   writeToBitsDir(bits: Bit[]): Promise<Bit[]> {
     const bitsDir = this.getBitsPath();
 
-    const cdAndWrite = (bit: Bit): Promise<Bit> => {
-      const bitDirForConsumerImport = getBitDirForConsumerImport({
-        bitsDir,
-        name: bit.name,
-        box: bit.getBox(),
-        version: bit.getVersion(),
-        scope: bit.scope
-      });
-
-      return bit.cd(bitDirForConsumerImport).write()
-      .then(buildBit);
-    };
-
-    return Promise.all(bits.map(cdAndWrite));
+    return Promise.all(bits.map(bit => cdAndWrite(bit, bitsDir)));
   }
 
   export(id: BitInlineId) {  
