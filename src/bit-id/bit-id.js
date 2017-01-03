@@ -27,6 +27,7 @@ export default class BitId {
   }
 
   isLocal(scopeName: string) {
+    // @TODO fix this asapbit sta
     scopeName = `@${scopeName}`;
     return this.scope === LOCAL_SCOPE_NOTATION
      || scopeName === this.scope;

@@ -1,6 +1,7 @@
 /** @flow */
+import { groupBy } from 'ramda';
 import { BitId } from '../bit-id';
-import { forEach, first, flatten } from '../utils';
+import { forEach } from '../utils';
 import { Remotes } from '../remotes';
 import { Scope } from '../scope';
 
@@ -26,25 +27,18 @@ export default class BitIds extends Array<BitId> {
   }
 
   fetch(origin: Scope, remotes: Remotes) {
-    const byRemote = this.reduce((acc, bitId) => {
-      const remote = bitId.getRemote(origin, remotes);
-      if (!acc[remote.host]) acc[remote.host] = [bitId];
-      else acc[remote.host].push(bitId);
-      return acc;
-    }, {});
+    const { inner, outer } = groupBy((id) => {
+      if (id.isLocal(origin.scope.name())) return 'inner';
+      return 'outer';
+    })(this);
 
-    const promises = [];
-    forEach(byRemote, (bitIds) => {
-      promises.push(
-        first(bitIds)
-        .getRemote(origin, remotes)
-        .fetch(bitIds, this.scope)
-        .then(bits => flatten(bits))
-      );
-    });
-
-    return Promise.all(promises).then((array) => {
-      return flatten(array);
+    return origin.getMany(inner).then((innerBits) => {
+      return origin.external.getMany(outer)
+        .then(({ bits, missingIds }) => {
+          return remotes.fetch(missingIds)
+            .then(remoteBits => origin.external.storeMany(remoteBits))
+            .then(remoteBits => remoteBits.concat(bits, innerBits));
+        });
     });
   }
 }

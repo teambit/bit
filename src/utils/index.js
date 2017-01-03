@@ -12,6 +12,7 @@ import prependBang from './prepend-bang';
 import cleanChar from './clean-char';
 import cleanBang from './clean-bang';
 import filter from './filter';
+import toResultObject from './promise-to-result-object';
 import empty from './is-empty';
 import { propogateUntil, pathHas } from './fs-propogate-until'; 
 import isBitUrl from './is-bit-url';
@@ -28,6 +29,7 @@ import immutableUnshift from './immutable-unshift';
 import rmDir from './fs-rmdir';
 import resolveHomePath from './os-resolve-home-path';
 import currentDirName from './current-dir-name';
+import allSettled from './promise-all-settled';
 
 export {
   parseSSHUrl,
@@ -59,5 +61,7 @@ export {
   flatMap,
   flatten,
   currentDirName,
-  immutableUnshift
+  immutableUnshift,
+  toResultObject,
+  allSettled
 };

@@ -1,6 +1,7 @@
 /** @flow */
+import { groupBy, prop } from 'ramda';
 import Remote from './remote';
-import { forEach, prependBang } from '../utils';
+import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
 
 export default class Remotes extends Map<string, Remote> {
@@ -18,6 +19,17 @@ export default class Remotes extends Map<string, Remote> {
     const remote = super.get(name);
     if (!remote) throw new RemoteNotFound(name);
     return remote;
+  }
+
+  fetch(ids: BitId[]): Promise<{bitId: BitId, bits: Bit[]}> {
+    const byScope = groupBy(prop('scope'));
+    const promises = [];
+    forEach(byScope(ids), (scopeIds, scopeName) => {
+      promises.push(this.get(scopeName).fetch());
+    });
+
+    return Promise.all(promises)
+      .then(bits => flatten(bits));
   }
 
   toPlainObject() {

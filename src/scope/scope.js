@@ -94,16 +94,34 @@ export default class Scope {
     };
   }
 
+  // put(bit: Bit) {
+  //   bit.validateOrThrow();
+  //   return this.remotes().then((remotes) => {
+  //     const dependencies = bit.dependencies();
+  //     const [inner, outer] = dependencies.reduce(([inScope, outScope], id) => {
+  //       id.isLocal(this.name()) ? inScope.push(id) : outScope.push(id);
+  //       return [inScope, outScope];
+  //     }, [new BitIds(), new BitIds()]);
+
+  //     outer.fetch(this, remotes)
+  //       .then(storeExternals)
+        
+  //     inner.fetch();
+
+  //     return this.sources.setSource();
+  //   });
+  // }
+
   put(bit: Bit) {
     bit.validateOrThrow();
     return this.remotes().then((remotes) => {
       return bit.dependencies()
         .fetch(this, remotes)
         .then((bits) => {
-          this.external.store(bits);
           this.dependencyMap.setBit(bit, bits);
           return this.sources.setSource(bit)
             .then(() => { if (bit.hasCompiler()) bit.build(); })
+            .then(() => this.external.store(bits))
             .then(() => this.dependencyMap.write())
             .then(() => bits.concat(bit));
             // .catch(() => bit.clear());
@@ -122,7 +140,7 @@ export default class Scope {
       //   return Promise.all(bits);
       // })
       .then((bits) => {
-        return bits.map((bit) => {
+        return bits.map((bit) => {  
           bit.scope = remote.name;
           return bit;
         });
@@ -135,7 +153,7 @@ export default class Scope {
     }
     
     bitId.version = this.sources.resolveVersion(bitId).toString();
-    bitId.scope = LOCAL_SCOPE_NOTATION;
+    bitId.scope = `@${this.name()}`;
     const dependencyList = this.dependencyMap.get(bitId);
     if (!dependencyList) throw new BitNotInScope();
     const remotes = this.dependencyMap.getRemotes(dependencyList);
