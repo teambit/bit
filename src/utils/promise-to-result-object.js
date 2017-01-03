@@ -2,7 +2,7 @@
 export default function toResultObject() { 
   return (promise) => {
     return promise
-      .then(result => ({ success: true, result }))
-      .catch(error => ({ success: false, error }));
+      .then(val => ({ success: true, val }))
+      .catch(error => ({ success: false, error, val: null }));
   };
 }

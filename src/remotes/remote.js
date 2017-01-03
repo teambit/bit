@@ -1,10 +1,29 @@
 /** @flow */
 import Bit from '../bit';
-import { contains, isBitUrl, cleanBang } from '../utils';
+import { contains, isBitUrl, cleanBang, allSettled } from '../utils';
 import { connect } from '../network';
 import { InvalidRemote } from './exceptions';
 import { BitId } from '../bit-id';
+import { getContents } from '../tar';
+import BitJson from '../bit-json';
+import { get as getCache } from '../cache';
 import type { BitDependencies } from '../scope/scope';
+import { BIT_JSON } from '../constants';
+
+function fromTar({ tarball, id }) {
+  return getContents(tarball)
+    .then((files) => {
+      const bitJson = BitJson.fromPlainObject(JSON.parse(files[BIT_JSON]));
+      return Bit.loadFromMemory({
+        name: id.name,
+        bitDir: bitJson.name,
+        scope: id.scope,
+        bitJson,
+        impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
+        spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
+      });
+    });
+}
 
 /**
  * @ctx bit, primary, remote
@@ -48,9 +67,22 @@ export default class Remote {
   }
 
   fetchOnes(bitIds: BitId[]): Bit[] {
-    return this
-      .connect()
-      .then(network => network.fetchOnes(bitIds));
+    return allSettled(bitIds.map(id => getCache(id)))
+      .then((values) => {
+        const cached = Promise.all(values
+          .filter(res => res.success)
+          .map(res => fromTar(res.val)));
+
+        const rest = values
+          .filter(res => !res.success && res.error.bitId)
+          .map(res => res.error.bitId);
+
+        return this
+          .connect()
+          .then(network => network.fetchOnes(rest))
+          .then(bits => Promise.all(bits.map(bit => bit.cache())))
+          .then(bits => cached.then(cachedBits => cachedBits.concat(bits)));
+      });
   }
 
   validate() {

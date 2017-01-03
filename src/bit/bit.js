@@ -44,12 +44,6 @@ export default class Bit extends PartialBit {
     });
   }
 
-  // fetchDependencies(): BitId[] {
-    // return this.bitJson.dependencies.map((dependency) => {
-      // return dependency.fetch();
-    // });
-  // }
-
   write(withBitJson: boolean): Promise<Bit> {
     return this.writeWithoutBitJson()
     .then(() => { if (withBitJson) return this.bitJson.write({ bitDir: this.bitDir }); }) // eslint-disable-line
@@ -69,8 +63,9 @@ export default class Bit extends PartialBit {
       .then(partialBit => partialBit.loadFull());
   }
 
-  static loadFromMemory({ name, bitDir, bitJson, impl, spec }: {
+  static loadFromMemory({ name, bitDir, bitJson, impl, spec, scope }: {
     name: string,
+    scope: string,
     bitDir: string,
     bitJson: BitJson,
     impl: Buffer,
@@ -78,6 +73,7 @@ export default class Bit extends PartialBit {
   }) {
     return new Bit({
       name,
+      scope,
       bitDir,
       bitJson,
       impl: impl ? new Impl(impl.toString()) : undefined,

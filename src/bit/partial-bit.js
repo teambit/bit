@@ -127,16 +127,25 @@ export default class PartialBit {
     ];
   }
   
+  /**
+   * @deprecated
+   */
   composeTarFileName() {
-    return `${this.name}_${this.bitJson.version}.tar`;
+    return `${this.scope}_${this.box}_${this.name}_${this.bitJson.version}.tar`;
   }
 
   toTar() {
-    return bitCache.get(this)
+    return bitCache.get(this.getId())
       .catch((err) => {
         if (err.code !== 'ENOENT') throw err;
-        return bitCache.set(this, pack(this.getArchiveFiles())); 
+        return bitCache.set(this.getId(), pack(this.getArchiveFiles())); 
       });
+  }
+
+  cache() {
+    return bitCache
+      .set(this.getId(), pack(this.getArchiveFiles()))
+      .then(() => this); 
   }
 
   loadFull(): Promise<Bit> {

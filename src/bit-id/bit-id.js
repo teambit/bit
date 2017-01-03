@@ -30,6 +30,11 @@ export default class BitId {
     return this.scope.replace('@', ''); 
   }
 
+  composeTarFileName() {
+    return `${this.scope}_${this.box}_${this.name}_${this.version}.tar`;
+  }
+
+
   isLocal(scopeName: string) {
     // @TODO fix this asapbit status
     return this.scope === LOCAL_SCOPE_NOTATION

@@ -7,7 +7,6 @@ import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import { Remotes } from '../remotes';
 import { propogateUntil, currentDirName, pathHas, readFile, flatten } from '../utils';
-import { getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
@@ -34,20 +33,6 @@ export type ScopeProps = {
   sourcesMap?: SourcesMap;
   scopeJson?: ScopeJson;
 };
-
-function fromTar(name, tar) {
-  return getContents(tar)
-    .then((files) => {
-      const bitJson = BitJson.fromPlainObject(JSON.parse(files[BIT_JSON]));
-      return Bit.loadFromMemory({
-        name,
-        bitDir: name,
-        bitJson,
-        impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
-        spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
-      });
-    });
-}
 
 export default class Scope {
   external: External;
