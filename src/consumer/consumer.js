@@ -20,8 +20,7 @@ import loadPlugin from '../bit/environment/load-plugin';
 import npmInstall from '../npm';
 
 const buildBit = (bit: Bit): Promise<Bit> => {
-  if (bit.hasCompiler()) return bit.build();
-  return Promise.resolve(bit);
+  return bit.build();
 };
 
 const getBitDirForConsumerImport = ({

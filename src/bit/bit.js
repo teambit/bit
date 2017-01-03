@@ -33,6 +33,7 @@ export default class Bit extends PartialBit {
 
   build(): Promise<Bit> {
     return new Promise((resolve, reject) => {
+      if (!this.hasCompiler()) { return resolve(this); }
       try {
         const { transpile } = loadPlugin(this.bitJson.getCompilerName());
         const src = this.impl.src;

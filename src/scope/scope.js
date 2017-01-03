@@ -103,7 +103,7 @@ export default class Scope {
           this.external.store(bits);
           this.dependencyMap.setBit(bit, bits);
           return this.sources.setSource(bit)
-            .then(() => { if (bit.hasCompiler()) bit.build(); })
+            .then(() => bit.build())
             .then(() => this.dependencyMap.write())
             .then(() => bits.concat(bit));
             // .catch(() => bit.clear());
