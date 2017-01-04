@@ -1,6 +1,6 @@
 import java.text.SimpleDateFormat
 node  {
-    properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
+    
 
     checkout scm
 	def env = "${environment}"
