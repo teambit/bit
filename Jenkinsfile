@@ -30,18 +30,15 @@ node  {
      notifyReleaseServer(currentVersion,releaseServer)
 
 }
-import groovy.json.JsonBuilder
-
+import groovy.json.JsonOutput
 def notifyReleaseServer(version,url) {
-    def json = new JsonBuilder()
-    def payload = json {
-            version version
-            brew: "bit_${version}_brew.tar.gz"
-            deb: "bit_${version}_deb.deb"
-    }
+    def payload = JsonOutput.toJson([version : version,
+                                 brew: "bit_${version}_brew.tar.gz",
+                                 deb: "bit_${version}_deb.deb"])
 
-    print(json)
-    def post = "curl -d '${json.toString()}' -H 'Content-Type: application/json' ${url}"
+    print(payload)
+
+    def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${url}"
     print ("${post}")
     sh ("${post}")
 }
