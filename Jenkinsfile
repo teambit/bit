@@ -9,7 +9,7 @@ node  {
 	currentVersion = currentVersion.replaceAll("\\s","")
 	def bundleName="bit_${currentVersion}"
     def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
-    def releaseServer = env.MARVIN_STAGE_SERVER
+    def releaseServer = "${env.BIT_STAGE_SERVER}"
 
     stage 'remove old zip files '
     sh("rm -rf *.tar.gz  && rm -rf ./distribution")
