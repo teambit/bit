@@ -1,4 +1,5 @@
 node  {
+    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'b0cc61f6-f63c-44ce-b004-c7ce63415d3f', url: 'git@git.cocycles.io:core/bit.git']]])
 	def releaseServer = "${env.BIT_STAGE_SERVER}"
 	print releaseServer
 	def env = "${environment}"
