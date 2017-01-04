@@ -1,8 +1,4 @@
-import java.text.SimpleDateFormat
 node  {
-    
-
-
 	def env = "${environment}"
 	def app = "bit"
 	def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
@@ -43,7 +39,6 @@ def notifyReleaseServer(version,url) {
     }
 
     print(json)
-
     def post = "curl -d '${json.toString()}' -H 'Content-Type: application/json' ${url}"
     print ("${post}")
     sh ("${post}")
