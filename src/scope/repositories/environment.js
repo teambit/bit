@@ -10,7 +10,7 @@ import { BIT_ENVIRONMENT_DIRNAME } from '../../constants';
 import npmInstall from '../../npm';
 import resolveBit from '../../bit-node-resolver';
 
-const installPacakgeDependencies = (bit) => {
+const installPackageDependencies = (bit) => {
   const deps = bit.bitJson.getPackageDependencies();
   return Promise.all(
     R.values(
@@ -34,7 +34,7 @@ export default class Cache extends Repository {
     return bit
       .cd(this.composePath(bit.getId()))
       .write(true)
-      .then(installPacakgeDependencies);
+      .then(installPackageDependencies);
   }
 
   get(bitId: BitId) {
@@ -62,7 +62,7 @@ export default class Cache extends Repository {
       if (this.hasSync(env)) return Promise.resolve();
 
       return this.scope.get(env) // @HACKALERT - replace with getOne
-        .then(bits => this.store(bits[0].bit)); 
+        .then(bitDependencies => this.store(bitDependencies.bit)); 
     };
 
     return Promise.all(R.map(ensureEnv, envs));
@@ -73,7 +73,7 @@ export default class Cache extends Repository {
   //   return Promise.all(
   //     bits.map(bit => 
   //       this.cdAndWrite(bit, this.getPath())
-  //       .then(installPacakgeDependencies)
+  //       .then(installPackageDependencies)
   //     )
   //   );
   // }

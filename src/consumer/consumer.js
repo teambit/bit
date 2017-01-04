@@ -142,15 +142,15 @@ export default class Consumer {
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
-      .then(bit => this.writeToBitsDir(bit));
+      .then(bitDependencies => this.writeToBitsDir([bitDependencies]));
   }
 
   importEnvironment(rawId: ?string) {
-    if (!rawId) { throw new Error('you must specify bit id for importing'); }
+    if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
-    .then(bits => this.scope.writeToEnvironmentsDir(bits[0].bit)); // @HACKALERT - replace with getOne
+    .then(bitDependencies => this.scope.writeToEnvironmentsDir(bitDependencies.bit)); // @HACKALERT - replace with getOne
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {

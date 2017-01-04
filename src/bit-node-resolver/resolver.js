@@ -9,16 +9,16 @@ export default (bitPath: string): Promise<any> => {
   return new Promise((resolve, reject) => {
     if (!fs.existsSync(bitPath)) return reject(new EnvBitNotExist());
 
+    const distFile = path.join(bitPath, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
+    if (fs.existsSync(distFile)) {
+      try {
+        // $FlowFixMe
+        return resolve(require(distFile));
+      } catch (e) { return reject(e); }
+    }
+      
     return BitJson.load(bitPath)
     .then((bitJson) => {
-      const distFile = path.join(bitPath, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
-      if (fs.existsSync(distFile)) {
-        try {
-          // $FlowFixMe
-          return resolve(require(distFile));
-        } catch (e) { return reject(e); }
-      }
-      
       const implFile = path.join(bitPath, bitJson.getImplBasename());
       try {
         // $FlowFixMe
