@@ -8,8 +8,8 @@ export default function build({ id }: { id: string }): Promise<Bit> {
     .then((consumer) => {
       return consumer.loadBit(InlineId.parse(id))
       .then((bit) => { 
-        if (bit.hasCompiler()) throw new Error('there is no compiler for bit'); // @TODO - write an named error
-        return bit.build();
+        if (!bit.hasCompiler()) throw new Error('there is no compiler for bit'); // @TODO - write an named error
+        return bit.build(consumer.scope);
       });
     });
 }

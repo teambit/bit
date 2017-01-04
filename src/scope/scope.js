@@ -7,7 +7,8 @@ import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import { Remotes } from '../remotes';
 import { propogateUntil, currentDirName, pathHas, readFile, flatten } from '../utils';
-import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON } from '../constants';
+import { getContents } from '../tar';
+import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON, ENV_BITS_DIRNAME } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, External } from './repositories';
@@ -15,6 +16,7 @@ import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
 import BitJson from '../bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
+import resolveBit from '../bit-resolver';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
 
@@ -217,6 +219,19 @@ export default class Scope {
 
   getPath() {
     return this.path;
+  }
+
+  hasEnvBit(bitId: BitId) {
+    const box = bitId.box;
+    const name = bitId.name;
+    const scope = bitId.scope;
+    // @TODO - add the version
+    const bitPath = pathLib.join(this.getPath(), ENV_BITS_DIRNAME, box, name, scope);
+    return fs.existsSync(bitPath);
+  }
+
+  loadEnvBit(bitId: BitId): Promise<any> {
+    return resolveBit(pathLib.join(this.getPath(), ENV_BITS_DIRNAME), bitId);
   }
 
   static create(path: string = process.cwd(), name: ?string) {
