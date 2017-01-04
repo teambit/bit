@@ -2,15 +2,14 @@ import java.text.SimpleDateFormat
 node  {
     properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
 
-    git credentialsId: 'b0cc61f6-f63c-44ce-b004-c7ce63415d3f', url: 'git@git.cocycles.io:core/bit.git'
+    checkout scm
 	def env = "${environment}"
 	def app = "bit"
 	def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
 	currentVersion = currentVersion.replaceAll("\\s","")
 	def bundleName="bit_${currentVersion}"
-
     def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
-    def releaseServer = "${env.BIT_STAGE_SERVER}"
+    def releaseServer = env.MARVIN_STAGE_SERVER
 
     stage 'remove old zip files '
     sh("rm -rf *.tar.gz  && rm -rf ./distribution")
