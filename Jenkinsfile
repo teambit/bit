@@ -25,6 +25,9 @@ node  {
     stage 'export to google storage'
     sh("gsutil -m cp -a public-read ./distribution/brew_pkg/${bundleName}_brew.tar.gz ${uploadfolder}")
     sh("gsutil -m cp -a public-read ./distribution/debian_pkg/${bundleName}_deb.deb ${uploadfolder}")
+    
+        stage 'notify release server'
+     notifyReleaseServer(currentVersion,releaseServer)
 
 }
 import groovy.json.JsonBuilder
