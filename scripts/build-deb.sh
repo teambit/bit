@@ -14,8 +14,8 @@ ensureAvailable fakeroot
 PACKAGE_TMPDIR=../distribution/debian_pkg
 VERSION=$(cat ../package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs echo -n)
 TARBALL_NAME=../bit-$VERSION.tar.gz
-DEB_PACKAGE_NAME=yarn_$VERSION'_all.deb'
-
+DEB_PACKAGE_NAME=bit_$VERSION'_all.deb'
+BIT_PACKAGE_NAME=bit_$VERSION'_deb.deb'
 if [ ! -e $TARBALL_NAME ]; then
   echo "Hey! Listen! You need to run build-dist.sh first."
   exit 1
@@ -38,9 +38,11 @@ rm -rf $PACKAGE_TMPDIR/bit
 # Common FPM parameters for all packages we'll build using FPM
 FPM="fpm --input-type dir --chdir . --name bit --version $VERSION "`
   `"--vendor 'Bit Contributors <team@cocycles.com>' --maintainer 'Bit Contributors <team@cocycles.com>' "`
-  `"--url https://bitsrc.io/ --license BSD --description jaja --after-install ../../postInstall.sh"
+  `"--url https://bitsrc.io/ --license BSD --description jaja --after-install ../../scripts/linux/postInstall.sh"
 
 #### Build DEB (Debian, Ubuntu) package
 node ./set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/usr/share/bit/package.json deb
 cd $PACKAGE_TMPDIR_ABSOLUTE
 eval "$FPM --output-type deb  --architecture noarch --depends nodejs --category 'Development/Languages' ."
+mv $DEB_PACKAGE_NAME $BIT_PACKAGE_NAME
+rm -rf ./usr

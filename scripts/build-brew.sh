@@ -6,13 +6,12 @@ set -ex
 PACKAGE_TMPDIR=../distribution/brew_pkg
 VERSION=$(cat ../package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs echo -n)
 TARBALL_NAME=../bit-$VERSION.tar.gz
-tarName="bit-${VERSION}.tar.gz"
+tarName="bit_${VERSION}_brew.tar.gz"
 
 if [ ! -e $TARBALL_NAME ]; then
   echo "Hey! Listen! You need to run build-dist.sh first."
   exit 1
 fi;
-
 
 
 # Extract to a temporary directory
@@ -29,3 +28,5 @@ cd $PACKAGE_TMPDIR_ABSOLUTE
 #eval "$FPM --output-type tar  --architecture noarch --depends nodejs --category 'Development/Languages' ."
 eval tar --exclude='./Jenkinsfile' --exclude='./scripts/' -zcvf ${tarName}  *
 mv ${tarName} ../
+
+rm -rf ../bit
