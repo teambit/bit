@@ -10,8 +10,9 @@ import { propogateUntil, currentDirName, pathHas, readFile, flatten, first } fro
 import { getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON, ENV_BITS_DIRNAME } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
+import AbstractBitJson from '../bit-json/abstract-bit-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
-import { Source, Cache, Tmp, External } from './repositories';
+import { Source, Cache, Tmp, External, Environment } from './repositories';
 import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
 import BitJson from '../bit-json';
 import { BitId, BitIds } from '../bit-id';
@@ -30,6 +31,7 @@ export type ScopeProps = {
   created?: boolean;
   cache?: Cache;
   tmp?: Tmp;
+  environment?: Environment;
   sources?: Source,
   external?: External;
   sourcesMap?: SourcesMap;
@@ -42,6 +44,7 @@ export default class Scope {
   cache: Cache;
   scopeJson: ScopeJson;
   tmp: Tmp;
+  environment: Environment;
   sources: Source;
   path: string;
   sourcesMap: SourcesMap;
@@ -53,6 +56,7 @@ export default class Scope {
     this.sources = scopeProps.sources || new Source(this);
     this.created = scopeProps.created || false;
     this.tmp = scopeProps.tmp || new Tmp(this);
+    this.environment = scopeProps.environment || new Environment(this);
     this.external = scopeProps.external || new External(this);
     this.sourcesMap = scopeProps.sourcesMap || new SourcesMap(this);
   }
@@ -97,7 +101,9 @@ export default class Scope {
         .then((dependencies) => {
           dependencies = flattenDependencies(dependencies);
           return this.sources.setSource(bit, dependencies)
-            .then(() => { if (bit.hasCompiler()) bit.build(); })
+          // @TODO make the scope install the required env
+            .then(() => this.ensureEnvironment(bit.bitJson))
+            .then(() => bit.build(this))
             .then(() => this.sourcesMap.write())
             .then(() => {
               return { bit, dependencies };
@@ -158,6 +164,7 @@ export default class Scope {
       .then(() => this.sources.ensureDir())
       .then(() => this.external.ensureDir())
       .then(() => this.tmp.ensureDir())
+      .then(() => this.environment.ensureDir())
       .then(() => this.sourcesMap.write())
       .then(() => this.scopeJson.write(this.getPath()))
       .then(() => this); 
@@ -223,17 +230,19 @@ export default class Scope {
     return this.path;
   }
 
-  hasEnvBit(bitId: BitId) {
-    const box = bitId.box;
-    const name = bitId.name;
-    const scope = bitId.scope;
-    // @TODO - add the version
-    const bitPath = pathLib.join(this.getPath(), ENV_BITS_DIRNAME, box, name, scope);
-    return fs.existsSync(bitPath);
+  loadEnvironment(bitId: BitId): Promise<any> {
+    return this.environment.get(bitId);
   }
 
-  loadEnvBit(bitId: BitId): Promise<any> {
-    return resolveBit(pathLib.join(this.getPath(), ENV_BITS_DIRNAME), bitId);
+  writeToEnvironmentsDir(bit: Bit) {
+    return this.environment.store(bit);
+  }
+  
+  /**
+   * check a bitJson compiler and tester, returns an empty promise and import environments if needed
+   */
+  ensureEnvironment(bitJson: AbstractBitJson): Promise<any> {
+    return this.environment.ensureEnvironment(bitJson);
   }
 
   static create(path: string = process.cwd(), name: ?string) {

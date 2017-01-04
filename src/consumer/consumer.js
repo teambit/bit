@@ -2,12 +2,10 @@
 import path from 'path';
 import glob from 'glob';
 import fs from 'fs';
-import R from 'ramda';
 import flattenDependencies from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
-import AbstractBitJson from '../bit-json/abstract-bit-json';
 import BitJson from '../bit-json/bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
@@ -17,7 +15,6 @@ import {
   BITS_DIRNAME,
   BIT_JSON,
   BIT_HIDDEN_DIR,
-  ENV_BITS_DIRNAME
  } from '../constants';
 import * as tar from '../tar';
 import { BitJsonNotFound } from '../bit-json/exceptions';
@@ -26,7 +23,6 @@ import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
 import type { BitDependencies } from '../scope/scope';
-import npmInstall from '../npm';
 
 const buildBit = (bit: Bit, scope: Scope): Promise<Bit> => bit.build(scope);
 
@@ -89,10 +85,6 @@ export default class Consumer {
     return path.join(this.projectPath, BITS_DIRNAME);
   }
 
-  getEnvBitsPath(): string {
-    return path.join(this.scope.getPath(), ENV_BITS_DIRNAME);
-  }
-
   getPath(): string {
     return this.projectPath;
   }
@@ -137,11 +129,11 @@ export default class Consumer {
     return this.scope.push(bitId, rawRemote);
   }
 
-  import(rawId: ?string, envBit: bool): Bit {
+  import(rawId: ?string): Bit {
     if (!rawId) { // if no arguments inserted, install according to bitJson dependencies
       const deps = BitIds.loadDependencies(this.bitJson.dependencies);
       
-      return this.ensureEnvBits(this.bitJson)
+      return this.scope.ensureEnvironment(this.bitJson)
       .then(() =>
         Promise.all(deps.map(dep => this.scope.get(dep)))
         .then(bits => this.writeToBitsDir(flatten(bits)))
@@ -150,10 +142,15 @@ export default class Consumer {
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
-      .then((bits) => {
-        if (envBit) return this.writeToEnvBitsDir(bits);
-        return this.writeToBitsDir([bits]);
-      });
+      .then(bit => this.writeToBitsDir(bit));
+  }
+
+  importEnvironment(rawId: ?string) {
+    if (!rawId) { throw new Error('you must specify bit id for importing'); }
+
+    const bitId = BitId.parse(rawId);
+    return this.scope.get(bitId)
+    .then(bits => this.scope.writeToEnvironmentsDir(bits[0].bit)); // @HACKALERT - replace with getOne
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {
@@ -171,45 +168,6 @@ export default class Consumer {
     const bitDir = id.composeBitPath(this.getPath());
     return PartialBit.loadFromInline(bitDir, id.name, this.bitJson)
     .then(bit => bit.erase());
-  }
-  
-  ensureEnvBits(bitJson: AbstractBitJson): Promise<any> {
-    const testerId = bitJson.hasTester() ? BitId.parse(bitJson.getTesterName()) : undefined;
-    const compilerId = bitJson.hasCompiler() ? BitId.parse(bitJson.getCompilerName()) : undefined;
-    
-    const rejectNils = R.reject(R.isNil);
-    const envs = rejectNils([ testerId, compilerId ]);
-    
-    const ensureEnv = (env: BitId): Promise<any> => {
-      if (this.scope.hasEnvBit(env)) return Promise.resolve();
-
-      return this.scope.get(env)
-        .then(bits => this.writeToEnvBitsDir(bits));
-    };
-
-    return Promise.all(R.map(ensureEnv, envs));
-  }
-
-  writeToEnvBitsDir(bits: Bit[]): Promise<Bit[]> {
-    const bitsDir = this.getEnvBitsPath();
-    
-    const installPacakgeDependencies = (bit) => {
-      const deps = bit.bitJson.getPackageDependencies();
-      return Promise.all(
-        R.values(
-          R.mapObjIndexed(
-            (value, key) => npmInstall({ name: key, version: value, dir: bit.getPath() })
-          , deps)
-        )
-      ).then(() => bit);
-    };
-
-    return Promise.all(
-      bits.map(bit => 
-        this.cdAndWrite(bit, bitsDir)
-        .then(installPacakgeDependencies)
-      )
-    );
   }
 
   writeToBitsDir(bitDependencies: BitDependencies[]): Promise<Bit[]> {

@@ -9,7 +9,7 @@ export default function exportAction({ id }: { id: string, remote: string }) {
       // .then(bits =>
       //   Promise.all(
       //     bits.map(bit =>
-      //       consumer.ensureEnvBits(bit.bitJson)
+      //       consumer.scope.ensureEnvironment(bit.bitJson)
       //       .then(() => bit)
       //     )
       //   )

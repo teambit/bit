@@ -11,7 +11,7 @@ export default function modify(rawId: string) {
         const inlinePath = pathLib.join(consumer.getInlineBitsPath(), bit.getBox(), bit.getName());
         return bit.cd(inlinePath).write()
         .then((b) => {
-          consumer.ensureEnvBits(b.bitJson)
+          consumer.scope.ensureEnvironment(b.bitJson)
           .then(() => b);
         });
       })

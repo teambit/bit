@@ -8,7 +8,7 @@ export default function create(id: string, withSpecs: boolean, withBitJson: bool
     .then(consumer =>
       consumer.createBit({ id: InlineId.parse(id), withSpecs, withBitJson })
       .then(bit =>
-        consumer.ensureEnvBits(bit.bitJson)
+        consumer.scope.ensureEnvironment(bit.bitJson)
         .then(() => bit)
       )
     );

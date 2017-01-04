@@ -37,7 +37,7 @@ export default class Bit extends PartialBit {
       if (!this.hasCompiler()) { return resolve(this); }
       try {
         const compilerName = this.bitJson.getCompilerName();
-        return scope.loadEnvBit(BitId.parse(compilerName))
+        return scope.loadEnvironment(BitId.parse(compilerName))
         .then(({ compile }) => {
           const src = this.impl.src;
           const { code, map } = compile(src); // eslint-disable-line
