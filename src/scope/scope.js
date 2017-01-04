@@ -6,7 +6,7 @@ import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import { Remotes } from '../remotes';
-import { propogateUntil, currentDirName, pathHas, readFile, flatten } from '../utils';
+import { propogateUntil, currentDirName, pathHas, readFile, flatten, first } from '../utils';
 import { getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON, ENV_BITS_DIRNAME } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
@@ -40,6 +40,7 @@ export default class Scope {
   external: External;
   created: boolean = false;
   cache: Cache;
+  scopeJson: ScopeJson;
   tmp: Tmp;
   sources: Source;
   path: string;
@@ -106,7 +107,8 @@ export default class Scope {
   }
 
   getExternal(bitId: BitId, remotes: Remotes): Promise<BitDependencies> {
-    return remotes.fetch([bitId]);
+    return remotes.fetch([bitId])
+      .then(bitDeps => first(bitDeps));
   }
 
   get(bitId: BitId): Promise<BitDependencies> {

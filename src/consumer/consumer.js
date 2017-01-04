@@ -2,8 +2,8 @@
 import path from 'path';
 import glob from 'glob';
 import fs from 'fs';
-import flattenDependencies from '../scope/flatten-dependencies';
 import R from 'ramda';
+import flattenDependencies from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -152,7 +152,7 @@ export default class Consumer {
     return this.scope.get(bitId)
       .then((bits) => {
         if (envBit) return this.writeToEnvBitsDir(bits);
-        return this.writeToBitsDir(bits);
+        return this.writeToBitsDir([bits]);
       });
   }
 
