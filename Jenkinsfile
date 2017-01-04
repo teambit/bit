@@ -27,3 +27,18 @@ node  {
     sh("gsutil -m cp -a public-read ./distribution/debian_pkg/${bundleName}_deb.deb ${uploadfolder}")
 
 }
+import groovy.json.JsonBuilder
+
+def notifyReleaseServer(version,url) {
+    def json = new JsonBuilder()
+    def payload = json {
+            version version
+            brew: "bit_${version}_brew.tar.gz"
+            deb: "bit_${version}_deb.deb"
+    }
+
+    print(json)
+    def post = "curl -d '${json.toString()}' -H 'Content-Type: application/json' ${url}"
+    print ("${post}")
+    sh ("${post}")
+}
