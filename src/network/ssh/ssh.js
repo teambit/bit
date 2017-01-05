@@ -61,7 +61,7 @@ export default class SSH {
   }
 
   putBit(name: string, bitTar: Buffer) {
-    return this.exec('_put', name, bitTar);
+    return this.exec('_put', name, bitTar.tarball);
   }
 
   push(bit: Bit) {

@@ -2,8 +2,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-import * as bitCache from '../cache';
 import { pack } from '../tar';
+import * as bitCache from '../cache';
+import { CacheNotFound } from '../cache/exceptions';
 import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -135,7 +136,7 @@ export default class PartialBit {
   toTar() {
     return bitCache.get(this.getId())
       .catch((err) => {
-        if (err.code !== 'ENOENT') throw err;
+        if (!(err instanceof CacheNotFound)) throw err;
         return bitCache.set(this.getId(), pack(this.getArchiveFiles())); 
       });
   }

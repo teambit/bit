@@ -58,8 +58,8 @@ export default class Source extends Repository {
   }
 
   clean(bitId: BitId) {
-    bitId.version = this.resolveVersion(bitId);
-    return rmDir(this.composeSourcePath(bitId));
+    // bitId.version = this.resolveVersion(bitId);
+    // return rmDir(this.composeSourcePath(bitId));
   }
 
   composeVersionsPath(name: string, box: string) {

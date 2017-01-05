@@ -20,6 +20,7 @@ import Bit from '../bit';
 import BitDependencies from './bit-dependencies';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
+const chalk = require('chalk');
 
 export type ScopeDescriptor = {
   name: string
@@ -209,21 +210,21 @@ export default class Scope {
   //   });
   // }
 
-  // upload(name: string, tar: Buffer) {
-  //   return getContents(tar)
-  //     .then((files) => {
-  //       const bitJson = BitJson.fromPlainObject(JSON.parse(files[BIT_JSON]));
-  //       const bit = Bit.loadFromMemory({
-  //         name,
-  //         bitDir: name,
-  //         bitJson,
-  //         impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
-  //         spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
-  //       });
+  upload(name: string, tar: Buffer) {
+    return getContents(tar)
+      .then((files) => {
+        const bitJson = BitJson.fromPlainObject(JSON.parse(files[BIT_JSON]));
+        const bit = Bit.loadFromMemory({
+          name,
+          bitDir: name,
+          bitJson,
+          impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
+          spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
+        });
 
-  //       return this.put(bit);
-  //     });
-  // }
+        return this.put(bit);
+      });
+  }
 
   getPath() {
     return this.path;
