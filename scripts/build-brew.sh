@@ -2,7 +2,6 @@
 
 set -ex
 
-pushd .
 PACKAGE_TMPDIR=../distribution/brew_pkg
 VERSION=$(cat ../package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs echo -n)
 TARBALL_NAME=../bit-$VERSION.tar.gz
@@ -30,7 +29,4 @@ eval tar --exclude='./Jenkinsfile' --exclude='./scripts/' -zcvf ${tarName}  *
 shasum -a 256 ${tarName}
 mv ${tarName} ../
 rm -rf ../bit
-SHA=$( curl -s $1 |shasum -b -a 256| cut -d ' ' -f 1 )
-popd
-sed -i.bak 's#sha256 ""#sha256 "'${SHA}'"#' ./bit.rb
-sed -i.bak 's#url ""#url "'$1'"#' ./bit.rb
+
