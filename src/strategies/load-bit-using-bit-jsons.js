@@ -6,7 +6,7 @@ const resolveBit = require('../bit-resolver');
 const stackTrace = require('stack-trace');
 const BitJson = require('../bit-json');
 
-module.exports = (consumer, boxName, bitName) => {
+module.exports = (consumer, boxName, bitName) => { // eslint-disable-line
   let dependencyMap = null;
   const callerDirectory = path.dirname(stackTrace.get()[2].getFileName());
   const localBitJsonPath = path.join(callerDirectory, BIT_JSON_NAME);

@@ -1,7 +1,3 @@
-// const path = require('path');
-// const BitNotExistsException = require('./exceptions/bit-not-exists');
-// const loadBitFromBitsDir = require('./bit/load-bit');
-
 const R = require('ramda');
 const locateConsumer = require('./consumer/locate-consumer');
 const assert = require('assert').ok;
@@ -12,7 +8,7 @@ const {
   loadBitInline,
   loadBitAssumingOnlyOne,
   loadBitUsingBitJsons,
-  loadBitUsingDependenciesMap,
+  // loadBitUsingDependenciesMap, @TODO - write strategy
 } = require('./strategies');
 
 const load = (bitId) => {
