@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const loadCompiler = require('../compilers/load-compiler');
 const requireFromString = require('require-from-string');
-const { NO_COMPILER_TYPE } = require('../constants');
+const { NO_PLUGIN_TYPE } = require('../constants');
 const BitJson = require('../bit-json');
 
 class Bit {
@@ -31,13 +31,13 @@ class Bit {
     const implBasename = this.getBitJson().getImpl() || this.consumer.getBitJson().getImpl();
     const implFilePath = path.join(this.getPath(), implBasename);
     const compilerName = this.getBitJson().getCompiler() ||
-    this.consumer.getBitJson().getCompiler();
+    this.consumer.getBitJson().getCompiler() || NO_PLUGIN_TYPE;
 
-    if (compilerName === NO_COMPILER_TYPE) return require(implFilePath); // eslint-disable-line
+    if (compilerName === NO_PLUGIN_TYPE) return require(implFilePath); // eslint-disable-line
 
-    const compiler = loadCompiler(compilerName);
+    const compiler = loadCompiler(compilerName, this.consumer);
     const rawImpl = fs.readFileSync(implFilePath, 'utf8');
-    return requireFromString(compiler.transpile(rawImpl).code, implFilePath);
+    return requireFromString(compiler.compile(rawImpl).code, implFilePath);
   }
 }
 

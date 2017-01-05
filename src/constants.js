@@ -25,7 +25,7 @@ export const CACHE_ROOT = getCacheDirectory();
 /**
  * global compilers directory
  */
-export const COMPILERS_DIR = path.join(CACHE_ROOT, 'plugins');
+export const ENVIRONEMT_DIRNAME = 'environment';
 
 export const BITS_DIRNAME = 'bits';
 
@@ -35,6 +35,16 @@ export const BIT_JSON_NAME = 'bit.json';
 
 export const LOCAL_SCOPE_DIRNAME = '.bit';
 
-export const NO_COMPILER_TYPE = 'none';
+export const DEFAULT_BOXNAME = 'global';
+
+export const VERSION_DELIMITER = '::';
+
+export const ID_DELIMITER = '/';
+
+export const NO_PLUGIN_TYPE = 'none';
+
+export const DEFAULT_BUNDLE_FILENAME = 'dist.js';
+
+export const DEFAULT_DIST_DIRNAME = 'dist';
 
 export const DEPENDENCIES_MAP_NAME = 'dependencies.json';
