@@ -7,6 +7,14 @@ import { bufferToReadStream } from '../utils';
 
 const archiver = require('archiver');
 
+function toBuffer(ab) {
+  const buf = new Buffer(ab.byteLength);
+  const view = new Uint8Array(ab);
+  for (let i = 0; i < buf.length; ++i) {
+    buf[i] = view[i];
+  }
+  return buf;
+}
 export function pack(sources: string[]) {
   const archive = archiver('tar', { store: true });
   archive.on('error', (err) => {
@@ -42,10 +50,13 @@ export function getContents(tar: Buffer): Promise<{[string]: string}> {
       .pipe(parseFactory())
       .on('entry', (entry) => {
         entry.on('data', (data) => {
-          files[entry.path] = data;
+          if (!files[entry.path]) files[entry.path] = data;
+          files[entry.path] = Buffer.concat([files[entry.path], data]);
         });
       })
-      .on('end', () => resolve(files))
+      .on('end', () => {
+        return resolve(files);
+      })
       .on('error', reject);
   });
 }
