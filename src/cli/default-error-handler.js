@@ -6,7 +6,7 @@ import BitAlreadyExistExternaly from '../bit/exceptions/bit-already-exist-extern
 import PluginNotFound from '../bit/exceptions/plugin-not-found';
 import MissingImpl from '../bit/exceptions/missing-impl';
 import { ScopeNotFound } from '../scope/exceptions';
-import { ProtocolNotSupported } from '../network/exceptions';
+import { ProtocolNotSupported, RemoteScopeNotFound } from '../network/exceptions';
 
 const chalk = require('chalk');
 
@@ -17,6 +17,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ PluginNotFound, err => `The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`],
   [ MissingImpl, err => `The impl file in path "${err.implPath}" does not exist, please check the bit.json or implementation file`],
   [ ProtocolNotSupported, () => 'remote scope protocol is not suppoerted, please use: `ssh://`, `file://` or `bit://`'],
+  [ RemoteScopeNotFound, () => 'remote scope not found. to create a new scope, please use `bit init` in the remote destination'],
   [ ScopeNotFound, () => 'scope not found. to create a new scope, please use `bit init`']
 ];
 

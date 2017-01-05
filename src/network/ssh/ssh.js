@@ -70,10 +70,6 @@ export default class SSH {
     });
   }
 
-  // putMany(bits: Bit[]) {
-
-  // }
-
   describeScope(): Promise<ScopeDescriptor> {
     return this.exec('_scope')
       .then((data) => {

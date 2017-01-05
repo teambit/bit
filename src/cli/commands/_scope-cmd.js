@@ -1,7 +1,7 @@
 /** @flow */
 import Command from '../command';
 import { describeScope } from '../../api';
-import { fromBase64, toBase64 } from '../../utils';
+import { fromBase64, toBase64, empty } from '../../utils';
 
 export default class Prepare extends Command {
   name = '_scope <path>';
@@ -15,6 +15,7 @@ export default class Prepare extends Command {
   }
 
   report(scopeObj: any): string {
+    if (empty(scopeObj)) return '';
     return toBase64(JSON.stringify(scopeObj)); 
   }
 }
