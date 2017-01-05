@@ -7,7 +7,7 @@ var constants = require('../dist-legacy/constants');
 var ONE_DAY = 1000 * 60 * 60 * 24;
 var url = [constants.RELEASE_SERVER,constants.BIT_INSTALL_METHOD,constants.BIT_VERSION].join('/');
 var db = new Store(constants.CACHE_ROOT + '/cache.json');
-
+console.log('constants.BIT_INSTALL_METHOD', constants.BIT_INSTALL_METHOD);
 function _getCache(key) {
   var val = db.getSync(key);
   return (val.message === 'could not load data') ? undefined : val;
@@ -52,6 +52,7 @@ function checkUpdate(cb) {
   if (lastUpdateCheck && Date.now() - lastUpdateCheck < ONE_DAY) cb();
   needle.get(url, function(err, res) {
     _setCache('lastUpdateCheck', Date.now());
+    console.log(res.statusCode,url);
     if (res.statusCode !== 200) cb();
     cb(getUpdateCommand());
   })

@@ -151,6 +151,6 @@ export const DEFAULT_RESOLVER = () => '';
  */
 export const BIT_VERSION = packageFile.version;
 
-export const BIT_INSTALL_METHOD = packageFile.installMethod;
+export const BIT_INSTALL_METHOD = packageFile.installationMethod;
 
 export const RELEASE_SERVER = 'https://api-stg.bitsrc.io/release';

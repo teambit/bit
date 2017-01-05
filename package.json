@@ -1,6 +1,6 @@
 {
   "name": "bit",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "gulp lint && flow check",
