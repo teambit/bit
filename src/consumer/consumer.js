@@ -92,35 +92,6 @@ export default class Consumer {
       .then(partial => partial.loadFull());
   }
 
-  // loadBitFromRawContents(contents: Buffer) {
-  //   return tar.getContents(contents)
-  //     .then((bitContents) => {
-  //       if (!bitContents[BIT_JSON]) throw new BitJsonNotFound();
-        
-  //       const bitJson = BitJson.fromPlainObject(
-  //         JSON.parse(bitContents[BIT_JSON].toString('ascii'))
-  //       );
-
-  //       const { name, box, version } = bitJson;
-  //       const impl = bitJson.getImplBasename();
-  //       const spec = bitJson.getSpecBasename();
-        
-  //       const scope = ''; // TODO - fetch real scope name from bit.scope
-
-  //       const bitDir = getBitDirForConsumerImport({
-  //         bitsDir: this.getBitsPath(), name, box, version, scope
-  //       });
-
-  //       return Bit.loadFromMemory({
-  //         name,
-  //         bitDir,
-  //         bitJson,
-  //         impl: impl ? bitContents[impl] : undefined,
-  //         spec: spec ? bitContents[spec] : undefined,
-  //       });
-  //     });
-  // }
-  
   push(rawId: string, rawRemote: string) {
     const bitId = BitId.parse(rawId);
     return this.scope.push(bitId, rawRemote);
@@ -178,7 +149,6 @@ export default class Consumer {
 
   export(id: BitInlineId) {  
     return this.loadBit(id)
-      .then(bit => bit.validateOrThrow())
       .then(bit => this.scope.put(bit))
       .then(bits => this.writeToBitsDir([bits]))
       .then(() => this.removeBit(id));

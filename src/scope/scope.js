@@ -74,16 +74,6 @@ export default class Scope {
       .then(mergeRemotes);
   }
 
-  prepareBitRegistration(name: string, bitJson: BitJson) {
-    try {
-      bitJson.validate();
-    } catch (e) {
-      throw e;
-    }
-    
-    return pathLib.join(this.tmp.getPath(), `${name}_${bitJson.version}.tar`);
-  }
-
   describe(): ScopeDescriptor {
     return {
       name: this.name()
