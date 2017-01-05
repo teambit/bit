@@ -7,8 +7,7 @@ import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import { Remotes } from '../remotes';
 import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
-import { getContents } from '../tar';
-import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON } from '../constants';
+import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import AbstractBitJson from '../bit-json/abstract-bit-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
@@ -20,7 +19,6 @@ import Bit from '../bit';
 import BitDependencies from './bit-dependencies';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
-const chalk = require('chalk');
 
 export type ScopeDescriptor = {
   name: string
@@ -192,38 +190,6 @@ export default class Scope {
     return Promise.all(bitIds.map((bitId) => {
       return this.get(bitId);
     }));
-  }
-
-  // fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}[]> {
-  //   return this.getMany(bitIds).then((bits) => {
-  //     const tars = flatten(bits).map((bit) => {
-  //       return bit.toTar()
-  //         .then((tar) => {
-  //           return {
-  //             id: bit.name,
-  //             contents: tar
-  //           };
-  //         });
-  //     });
-
-  //     return Promise.all(tars);
-  //   });
-  // }
-
-  upload(name: string, tar: Buffer) {
-    return getContents(tar)
-      .then((files) => {
-        const bitJson = BitJson.fromPlainObject(JSON.parse(files[BIT_JSON]));
-        const bit = Bit.loadFromMemory({
-          name,
-          bitDir: name,
-          bitJson,
-          impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
-          spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
-        });
-        
-        return this.put(bit);
-      });
   }
 
   getPath() {
