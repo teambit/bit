@@ -35,7 +35,7 @@ export default class Status extends Command {
   report({ inline, sources }: { inline: StatusObj[], sources: StatusObj[] }): string {
     const inlineBits = immutableUnshift(
       inline.map(formatInlineBit),
-      inline.length ? chalk.underline.white('inline bits') : chalk.green('your inline_bits directory is empty')
+      inline.length ? chalk.underline.white('inline bit components') : chalk.green('your inline_bits directory is empty')
     ).join('\n');
     
     const sourcesBits = immutableUnshift(
