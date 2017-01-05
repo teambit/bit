@@ -24,12 +24,13 @@ export default class BitDependencies {
     });
   }
 
-  static deserialize(str: string): BitDependencies {
+  static deserialize(str: string, scope: ?string): BitDependencies {
     const json = JSON.parse(fromBase64(str));
-    return new BitDependencies({
-      bit: Bit.fromTar(fromBase64(json.bit)),
-      dependencies: json.dependencies.map(Bit.fromTar(fromBase64(json.bit)))
-    });
+    return Promise.all([
+      Bit.fromTar({ tarball: fromBase64(json.bit), scope }), 
+      Promise.all(json.dependencies.map(dep => Bit.fromTar({ tarball: fromBase64(dep), scope })))
+    ])
+    .then(([bit, dependencies]) => new BitDependencies({ bit, dependencies }));
   }
 
 }

@@ -15,7 +15,7 @@ export default class Fetch extends Command {
     return fetch(fromBase64(path), ids.map(fromBase64));
   }
 
-  report(bitDependencies: string[]): string {
-    return bitDependencies.map(bit => toBase64(bit)).join('!!!');
+  report([bitDependencies, scopeName]: [string[], string]): string {
+    return [bitDependencies.map(bit => toBase64(bit)).join('!!!'), scopeName].join(' ');
   }
 }

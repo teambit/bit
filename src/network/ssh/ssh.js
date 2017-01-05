@@ -81,12 +81,13 @@ export default class SSH {
   }
 
   fetch(bitIds: BitIds): Promise<BitDependencies[]> {
-    bitIds = bitIds.map(bitIds.map(bitId => bitId.toString()));
+    bitIds = bitIds.map(bitId => bitId.toString());
     return this.exec('_fetch', ...bitIds)
       .then((packs) => {
-        return packs
+        const [scope, objects] = packs.split(' ');
+        return objects
           .split('!!!')
-          .map(pack => BitDependencies.deserialize(pack));
+          .map(pack => BitDependencies.deserialize(pack, scope));
       });
   }
 
