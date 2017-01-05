@@ -28,10 +28,26 @@ class Bit {
   }
 
   getImpl() {
-    const implBasename = this.getBitJson().getImpl() || this.consumer.getBitJson().getImpl();
+    let implBasename;
+    let compilerName;
+
+    try {
+      implBasename = this.getBitJson().getImpl();
+    } catch (e) {
+      implBasename = this.consumer.getBitJson().getImpl();
+    }
+
     const implFilePath = path.join(this.getPath(), implBasename);
-    const compilerName = this.getBitJson().getCompiler() ||
-    this.consumer.getBitJson().getCompiler() || NO_PLUGIN_TYPE;
+
+    try {
+      compilerName = this.getBitJson().getCompiler();
+    } catch (e) {
+      try {
+        compilerName = this.consumer.getBitJson().getCompiler();
+      } catch (err) {
+        compilerName = NO_PLUGIN_TYPE;
+      }
+    }
 
     if (compilerName === NO_PLUGIN_TYPE) return require(implFilePath); // eslint-disable-line
 
