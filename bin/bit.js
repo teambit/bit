@@ -72,4 +72,5 @@ function loadCli() {
 verifyCompatibility();
 ensureDirectories();
 initCache();
-checkForUpdates(updateOrLaunch);
+loadCli();
+// checkForUpdates(updateOrLaunch);

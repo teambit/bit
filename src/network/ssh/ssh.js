@@ -1,6 +1,7 @@
 /** @flow */
 import keyGetter from './key-getter';
 import Bit from '../../bit';
+import { RemoteScopeNotFound } from '../exceptions';
 import { BitId, BitIds } from '../../bit-id';
 import { toBase64, fromBase64 } from '../../utils';
 import { BitDependencies } from '../../scope';
@@ -51,7 +52,7 @@ export default class SSH {
 
   exec(commandName: string, ...args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
-      const cmd = this.buildCmd(commandName, absolutePath(this.path), ...args);
+      const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
       this.connection(cmd, function (err, res, o) {
         if (err) return reject(err);
         return resolve(clean(res));
@@ -77,6 +78,9 @@ export default class SSH {
     return this.exec('_scope')
       .then((data) => {
         return JSON.parse(fromBase64(data));
+      })
+      .catch(() => {
+        throw new RemoteScopeNotFound();
       });
   }
 
