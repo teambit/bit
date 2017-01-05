@@ -7,7 +7,7 @@ import InvalidBit from '../../bit/exceptions/invalid-bit';
 import Bit from '../../bit';
 import PartialBit from '../../bit/partial-bit';
 import { BitId } from '../../bit-id';
-import { listDirectories, rmDir } from '../../utils';
+import { listDirectories, rmDir, empty } from '../../utils';
 
 export default class Source extends Repository {
   getPath(): string {
@@ -53,13 +53,25 @@ export default class Source extends Repository {
     }
   }
 
-  loadSources() {
+  isBoxEmpty(box: string) {
+    return empty(listDirectories(this.composeBoxPath(box)));
+  }
 
+  composeBoxPath(box: string) {
+    return path.join(this.getPath(), box);
   }
 
   clean(bitId: BitId) {
-    // bitId.version = this.resolveVersion(bitId);
-    // return rmDir(this.composeSourcePath(bitId));
+    bitId.version = this.resolveVersion(bitId);
+    rmDir(this.composeSourcePath(bitId));
+
+    if (empty(this.listVersions(bitId).length)) {
+      rmDir(this.composeVersionsPath(bitId.name, bitId.box));
+    }
+
+    if (this.isBoxEmpty(bitId.box)) {
+      rmDir(this.composeBoxPath(bitId.box));
+    }
   }
 
   composeVersionsPath(name: string, box: string) {

@@ -22,6 +22,11 @@ export class SourcesMap extends Map<string, BitIds> {
     return super.get(bitId.toString(true));
   }
 
+  delete(bitId: BitId): SourcesMap {
+    super.delete(bitId.toString(true));
+    return this;
+  }
+
   getBitIds(dependencies: BitId[]) {
     return new BitIds(...dependencies);
   }

@@ -152,7 +152,7 @@ export default class Scope {
       const remote = remotes.get(remoteName);
       return this.sources.loadSource(bitId)
         .then(bit => remote.push(bit))
-        .then(() => this.sources.clean(bitId));
+        .then(() => this.clean(bitId));
     });
   }
 
@@ -184,6 +184,12 @@ export default class Scope {
         .then(resolve);
       })
     );
+  }
+
+  clean(bitId: BitId) {
+    this.sources.clean(bitId);
+    this.sourcesMap.delete(bitId);
+    return this.sourcesMap.write();
   }
 
   getMany(bitIds: BitIds) {
