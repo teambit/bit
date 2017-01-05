@@ -8,7 +8,6 @@ import Bit from '../../bit';
 import PartialBit from '../../bit/partial-bit';
 import { BitId } from '../../bit-id';
 import { listDirectories, rmDir } from '../../utils';
-import type { BitDependencies } from '../scope';
 
 export default class Source extends Repository {
   getPath(): string {

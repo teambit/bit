@@ -6,7 +6,7 @@ import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import { Remotes } from '../remotes';
-import { propogateUntil, currentDirName, pathHas, readFile, flatten, first } from '../utils';
+import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
 import { getContents } from '../tar';
 import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
@@ -17,16 +17,12 @@ import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
 import BitJson from '../bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
+import BitDependencies from './bit-dependencies';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
 
 export type ScopeDescriptor = {
   name: string
-};
-
-export type BitDependencies = {
-  bit: Bit,
-  dependencies: Bit[]
 };
 
 export type ScopeProps = {
@@ -109,7 +105,7 @@ export default class Scope {
             .then(() => bit.build(this))
             .then(() => this.sourcesMap.write())
             .then(() => {
-              return { bit, dependencies };
+              return new BitDependencies({ bit, dependencies });
             });
         });
     });
@@ -135,10 +131,10 @@ export default class Scope {
         .then((bits) => {
           return this.sources.loadSource(bitId)
             .then((bit) => {
-              return {
+              return new BitDependencies({
                 bit,
                 dependencies: bits
-              };
+              });
             });
         });
     });

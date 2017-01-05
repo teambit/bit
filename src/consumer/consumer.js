@@ -22,7 +22,7 @@ import { flatten } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
-import type { BitDependencies } from '../scope/scope';
+import { BitDependencies } from '../scope';
 
 const buildBit = (bit: Bit, scope: Scope): Promise<Bit> => bit.build(scope);
 
@@ -150,7 +150,8 @@ export default class Consumer {
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
-    .then(bitDependencies => this.scope.writeToEnvironmentsDir(bitDependencies.bit)); // @HACKALERT - replace with getOne
+    .then(bitDependencies => 
+      this.scope.writeToEnvironmentsDir(bitDependencies.bit)); // @HACKALERT - replace with getOne
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {

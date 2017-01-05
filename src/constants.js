@@ -73,7 +73,6 @@ export const DEFAULT_REMOTES = {};
 
 export const DEFAULT_DEPENDENCIES = {};
 
-
 /**
  * cache root directory
  */

@@ -1,8 +1,11 @@
 /** @flow */
 import keyGetter from './key-getter';
 import Bit from '../../bit';
+import { BitId, BitIds } from '../../bit-id';
 import { toBase64, fromBase64 } from '../../utils';
+import { BitDependencies } from '../../scope';
 import type { SSHUrl } from '../../utils/parse-ssh-url';
+import type { ScopeDescriptor } from '../../scope/scope';
 
 const sequest = require('sequest');
 
@@ -43,11 +46,7 @@ export default class SSH {
         .join(' ');
     }
 
-    // let path = '';
-    // if (this.path) path = `cd ${this.path}; `;
-    const cmd = `bit ${commandName} ${serialize()}`;
-
-    return cmd; 
+    return `bit ${commandName} ${serialize()}`;
   }
 
   exec(commandName: string, ...args: any[]): Promise<any> {
@@ -61,8 +60,7 @@ export default class SSH {
   }
 
   putBit(name: string, bitTar: Buffer) {
-    return this.exec('_upload', name, bitTar)
-      .then(status => console.log(status));
+    return this.exec('_put', name, bitTar);
   }
 
   push(bit: Bit) {
@@ -71,25 +69,25 @@ export default class SSH {
     });
   }
 
-  describeScope() {
+  // putMany(bits: Bit[]) {
+
+  // }
+
+  describeScope(): Promise<ScopeDescriptor> {
     return this.exec('_scope')
       .then((data) => {
         return JSON.parse(fromBase64(data));
       });
   }
 
-  fetch(bitIds: BitId[]): Promise<BitDependencies[]> {
+  fetch(bitIds: BitIds): Promise<BitDependencies[]> {
     bitIds = bitIds.map(bitIds.map(bitId => bitId.toString()));
     return this.exec('_fetch', ...bitIds)
       .then((packs) => {
         return packs
           .split('!!!')
           .map((pack) => {
-            const [name, contents] = pack.split('::');
-            return {
-              name: fromBase64(name),
-              contents: new Buffer(contents, 'base64')
-            };
+            return 
           });
       });
   }

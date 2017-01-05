@@ -2,11 +2,12 @@
 import Command from '../command';
 import { toBase64, fromBase64 } from '../../utils';
 import { fetch } from '../../api';
+import { BitDependencies } from '../../scope';
 
 export default class Fetch extends Command {
   name = '_fetch <path> <ids...>';
   private = true;
-  description = 'fetch a bit from a scope';
+  description = 'fetch bit components(s) from a scope';
   alias = '';
   opts = [];
 
@@ -14,7 +15,12 @@ export default class Fetch extends Command {
     return fetch(fromBase64(path), ids.map(fromBase64));
   }
 
-  report(tars: {id: string, contents: Buffer}[]): string {
-    return tars.map(tar => `${toBase64(tar.id)}::${tar.contents.toString('base64')}`).join('!!!');
+  report(bitDependencies: BitDependencies[]): string {
+    return bitDependencies.map((bitDep) => {
+      return toBase64(JSON.stringify({
+        bit: bitDep.bit.toTar(),
+        dependencies: bitDep.dependencies.map(bit => bit.toTar()) 
+      }));
+    }).join('!!!');
   }
 }

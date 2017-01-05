@@ -4,7 +4,7 @@ import { BitId } from '../bit-id';
 import Remote from './remote';
 import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
-import type { BitDependencies } from '../scope/scope';
+import { BitDependencies } from '../scope';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {

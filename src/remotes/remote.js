@@ -7,7 +7,7 @@ import { BitId, BitIds } from '../bit-id';
 import { getContents } from '../tar';
 import BitJson from '../bit-json';
 import { get as getCache } from '../cache';
-import type { BitDependencies } from '../scope/scope';
+import { BitDependencies } from '../scope';
 import type { Network } from '../network/network';
 import { BIT_JSON } from '../constants';
 import { CacheNotFound } from '../cache/exceptions';

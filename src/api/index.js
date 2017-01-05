@@ -7,7 +7,7 @@ import status from './lib/status';
 import build from './lib/build';
 import prepare from './lib/prepare';
 import initScope from './lib/scope-init';
-import upload from './lib/upload';
+import put from './lib/put';
 import fetch from './lib/fetch';
 import modify from './lib/modify';
 import importAction from './lib/import';
@@ -29,7 +29,7 @@ export {
   build,
   prepare,
   initScope,
-  upload,
+  put,
   fetch,
   modify,
   importAction,
