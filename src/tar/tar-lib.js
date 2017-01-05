@@ -49,9 +49,12 @@ export function getContents(tar: Buffer): Promise<{[string]: string}> {
     return bufferToReadStream(tar)
       .pipe(parseFactory())
       .on('entry', (entry) => {
-        entry.on('data', (data) => {
-          if (!files[entry.path]) files[entry.path] = data;
-          files[entry.path] = Buffer.concat([files[entry.path], data]);
+        entry.on('data', (chunk) => {
+          if (!files[entry.path]) {
+            files[entry.path] = chunk;
+            return;
+          }
+          files[entry.path] = Buffer.concat([files[entry.path], chunk]);
         });
       })
       .on('end', () => {
