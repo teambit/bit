@@ -16,4 +16,4 @@ cd ..
 packageDest=$(cd $(dirname "$1") && pwd -P)/$(basename "package.json")
 node ./scripts/set-installation-method.js $packageDest tar
 tar --exclude='./Jenkinsfile' --exclude='./distribution/' --exclude='./scripts/' -zcvf ${tarName} *
-shasum -a 256 $tarName
+shasum -a 256 -b $tarName
