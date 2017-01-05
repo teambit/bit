@@ -17,7 +17,6 @@ node  {
 
     stage 'Running brew'
     sh("cd ./scripts && ./build-brew.sh ")
-    sh("cd ./scripts && ./generate-formula.sh ${releaseServer}/${currentVersion}/${bundleName}_brew.tar.gz")
 
 
     stage 'Running deb'
@@ -32,6 +31,11 @@ node  {
     
      stage 'notify release server'
      notifyReleaseServer(currentVersion,releaseServer+"/update")
+
+
+    stage 'generate formula for brew'
+    sh("cd ./scripts && ./generate-formula.sh ${releaseServer}/${currentVersion}/${bundleName}_brew.tar.gz")
+
 
 }
 import groovy.json.JsonOutput
