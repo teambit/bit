@@ -4,28 +4,10 @@ import { contains, isBitUrl, cleanBang, allSettled } from '../utils';
 import { connect } from '../network';
 import { InvalidRemote } from './exceptions';
 import { BitId, BitIds } from '../bit-id';
-import { getContents } from '../tar';
-import BitJson from '../bit-json';
 import { get as getCache } from '../cache';
 import { BitDependencies } from '../scope';
 import type { Network } from '../network/network';
-import { BIT_JSON } from '../constants';
 import { CacheNotFound } from '../cache/exceptions';
-
-function fromTar({ tarball, id }) {
-  return getContents(tarball)
-    .then((files) => {
-      const bitJson = BitJson.fromPlainObject(JSON.parse(files[BIT_JSON]));
-      return Bit.loadFromMemory({
-        name: id.name,
-        bitDir: bitJson.name,
-        scope: id.scope,
-        bitJson,
-        impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
-        spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
-      });
-    });
-}
 
 /**
  * @ctx bit, primary, remote
@@ -73,7 +55,7 @@ export default class Remote {
       .then((values: {success: boolean, val: Bit, error: CacheNotFound}[]) => {
         const cached = Promise.all(values
           .filter(res => res.success)
-          .map(res => fromTar(res.val)));
+          .map(res => Bit.fromTar({ tarball: res.val.tarball, scope: res.val.id.scope })));
 
         const rest = values
           .filter(res => !res.success && res.error.bitId)

@@ -6,6 +6,8 @@ import { mkdirp } from '../utils';
 import BitJson from '../bit-json';
 import { Scope } from '../scope';
 import PartialBit from './partial-bit';
+import { getContents } from '../tar';
+import { BIT_JSON } from '../constants';
 import { BitId } from '../bit-id';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
 
@@ -93,5 +95,20 @@ export default class Bit extends PartialBit {
       impl: Impl.create(bitJson),
       specs: withSpecs ? Specs.create(bitJson) : undefined,
     });
+  }
+
+  static fromTar({ tarball, scope }) {
+    return getContents(tarball)
+      .then((files) => {
+        const bitJson = BitJson.fromPlainObject(JSON.parse(files[BIT_JSON]));
+        return Bit.loadFromMemory({
+          name: bitJson.name,
+          bitDir: bitJson.name,
+          scope,
+          bitJson,
+          impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
+          spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
+        });
+      });
   }
 }

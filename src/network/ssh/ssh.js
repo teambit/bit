@@ -86,9 +86,7 @@ export default class SSH {
       .then((packs) => {
         return packs
           .split('!!!')
-          .map((pack) => {
-            return 
-          });
+          .map(pack => BitDependencies.deserialize(pack));
       });
   }
 

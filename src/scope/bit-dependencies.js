@@ -1,5 +1,6 @@
 /** @flow */
 import Bit from '../bit';
+import { fromBase64 } from '../utils';
 
 export default class BitDependencies {
   bit: Bit;
@@ -17,9 +18,18 @@ export default class BitDependencies {
     )
     .then(([bit, dependencies]) => {
       return JSON.stringify({
-        bit: bit.toString(),
-        dependencies: dependencies.toString
+        bit: bit.tarball.toString('base64'),
+        dependencies: dependencies.map(dep => dep.tarball.toString('base64'))
       });
     });
   }
+
+  static deserialize(str: string): BitDependencies {
+    const json = JSON.parse(fromBase64(str));
+    return new BitDependencies({
+      bit: Bit.fromTar(fromBase64(json.bit)),
+      dependencies: json.dependencies.map(Bit.fromTar(fromBase64(json.bit)))
+    });
+  }
+
 }

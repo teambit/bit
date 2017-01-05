@@ -8,5 +8,6 @@ export default function fetch(path: string, ids: string[]) {
     .then((scope) => {
       return scope.getMany(BitIds.deserialize(ids));
     })
-    .then(bitsMatrix => flatten(bitsMatrix));
+    .then(bitsMatrix => flatten(bitsMatrix))
+    .then(bitDeps => Promise.all(bitDeps.map(bitDep => bitDep.serialize())));
 }
