@@ -17,7 +17,7 @@ node  {
 
     stage 'Running brew'
     sh("cd ./scripts && ./build-brew.sh ")
-    sh("cd ./scripts && ./generate-formula.sh ${releaseServer}/${currentVersion}/${bundleName}_brew.tar.gz"
+    sh("cd ./scripts && ./generate-formula.sh ${releaseServer}/${currentVersion}/${bundleName}_brew.tar.gz")
 
 
     stage 'Running deb'
