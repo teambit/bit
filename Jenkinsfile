@@ -16,7 +16,8 @@ node  {
     sh('cd ./scripts && ./build-tar.sh tar')
 
     stage 'Running brew'
-    sh('cd ./scripts && ./build-brew.sh')
+    sh("cd ./scripts && ./build-brew.sh ${releaseServer}")
+
 
     stage 'Running deb'
     sh('cd ./scripts && ./build-deb.sh')
