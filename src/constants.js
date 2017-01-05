@@ -136,3 +136,7 @@ export const DEFAULT_RESOLVER = () => '';
  * current bit application version
  */
 export const BIT_VERSION = packageFile.version;
+
+export const BIT_INSTALL_METHOD = packageFile.installMethod;
+
+export const RELEASE_SERVER = 'https://api-stg.bitsrc.io/release';

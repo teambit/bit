@@ -6,7 +6,7 @@
     "lint": "gulp lint && flow check",
     "test": "gulp test",
     "build": "gulp build build-legacy",
-    "watch": "babel watch src specs -d dist --source-maps",
+    "watch": "babel watch bin src specs -d dist --source-maps",
     "build-debug": "babel src specs -d dist --source-maps"
   },
   "bin": {
@@ -20,8 +20,10 @@
     "fs-extra": "^1.0.0",
     "fstream": "^1.0.10",
     "glob": "^7.1.1",
+    "jfs": "^0.2.6",
     "loud-rejection": "^1.6.0",
     "mkdirp": "^0.5.1",
+    "needle": "^1.4.3",
     "ramda": "^0.22.1",
     "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",

@@ -6,7 +6,7 @@ var semver = require('semver');
 var mkdirp = require('mkdirp');
 var constants = require('../dist-legacy/constants');
 var roadRunner = require('roadrunner');
-
+var bitUpdates = require('./bit-updates')
 var nodeVersion = process.versions.node.split('-')[0]; 
 var compatibilityStatus = getCompatibilityStatus();
 
@@ -56,8 +56,12 @@ function initCache() {
   roadRunner.setup(constants.MODULES_CACHE_FILENAME);
 }
 
-function checkForUpdates() {
-  // @TODO
+function checkForUpdates(cb) {
+  return bitUpdates.checkUpdate(cb);
+}
+
+function updateOrLaunch(updateCommand) {
+  (updateCommand) ? bitUpdates.runUpdate(updateCommand) : loadCli();
 }
 
 function loadCli() {
@@ -67,4 +71,4 @@ function loadCli() {
 verifyCompatibility();
 ensureDirectories();
 initCache();
-loadCli();
+checkForUpdates(updateOrLaunch);
