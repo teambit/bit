@@ -1,5 +1,6 @@
 /** @flow */
 import fs from 'fs';
+import R from 'ramda';
 import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
 import { BitJsonNotFound, BitJsonAlreadyExists } from './exceptions';
@@ -41,6 +42,17 @@ export default class ConsumerBitJson extends AbstractBitJson {
 
   static create(): ConsumerBitJson {
     return new ConsumerBitJson({});
+  }
+
+  static fromPlainObject(object: Object) {
+    const { sources, env, dependencies } = object;
+    return new ConsumerBitJson({
+      impl: R.prop('impl', sources),
+      spec: R.prop('spec', sources),
+      compiler: R.prop('compiler', env),
+      tester: R.prop('tester', env),
+      dependencies,
+    });
   }
 
   static load(dirPath: string): Promise<ConsumerBitJson> {

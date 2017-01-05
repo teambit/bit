@@ -53,7 +53,7 @@ export default class SSH {
   exec(commandName: string, ...args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
       const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
-      this.connection(cmd, function (err, res, o) {
+      this.connection(cmd, function (err, res) {
         if (err) return reject(err);
         return resolve(clean(res));
       });
@@ -103,7 +103,7 @@ export default class SSH {
     return `${this.username}@${this.host}:${this.port}`;
   }
  
-  connect(sshUrl: SSHUrl, key: ?string): SSH {
+  connect(sshUrl: SSHUrl, key: ?string): Promise<SSH> {
     this.connection = sequest.connect(this.composeConnectionUrl(), {
       privateKey: keyGetter(key)
     });

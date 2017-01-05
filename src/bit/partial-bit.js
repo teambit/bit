@@ -17,10 +17,10 @@ import { composePath as composeBitJsonPath } from '../bit-json/bit-json';
 import validations from './validations';
 
 export type PartialBitProps = {
-  scope: string;
   name: string;
   bitDir: string;
   bitJson: BitJson;
+  scope: string;
 };
 
 export default class PartialBit {
@@ -163,10 +163,10 @@ export default class PartialBit {
   }
 
   static loadFromInline(
-    bitDir: string, name: string, protoBJ: ConsumerBitJson
+    bitDir: string, name: string, protoBJ: ConsumerBitJson, scope: string
   ): Promise<PartialBit> {
     return BitJson.load(bitDir, protoBJ)
-      .then(bitJson => new PartialBit({ name, bitDir, bitJson }));
+      .then(bitJson => new PartialBit({ name, bitDir, bitJson, scope }));
   }
 
   static load(bitDir: string, name: string, scope: string): Promise<PartialBit> {

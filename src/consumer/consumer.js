@@ -91,38 +91,38 @@ export default class Consumer {
 
   loadBit(id: BitInlineId): Promise<Bit> {
     const bitDir = id.composeBitPath(this.getPath());
-    return PartialBit.loadFromInline(bitDir, id.name, this.bitJson)
+    return PartialBit.loadFromInline(bitDir, id.name, this.bitJson, this.scope.name())
       .then(partial => partial.loadFull());
   }
 
-  loadBitFromRawContents(contents: Buffer) {
-    return tar.getContents(contents)
-      .then((bitContents) => {
-        if (!bitContents[BIT_JSON]) throw new BitJsonNotFound();
+  // loadBitFromRawContents(contents: Buffer) {
+  //   return tar.getContents(contents)
+  //     .then((bitContents) => {
+  //       if (!bitContents[BIT_JSON]) throw new BitJsonNotFound();
         
-        const bitJson = BitJson.fromPlainObject(
-          JSON.parse(bitContents[BIT_JSON].toString('ascii'))
-        );
+  //       const bitJson = BitJson.fromPlainObject(
+  //         JSON.parse(bitContents[BIT_JSON].toString('ascii'))
+  //       );
 
-        const { name, box, version } = bitJson;
-        const impl = bitJson.getImplBasename();
-        const spec = bitJson.getSpecBasename();
+  //       const { name, box, version } = bitJson;
+  //       const impl = bitJson.getImplBasename();
+  //       const spec = bitJson.getSpecBasename();
         
-        const scope = ''; // TODO - fetch real scope name from bit.scope
+  //       const scope = ''; // TODO - fetch real scope name from bit.scope
 
-        const bitDir = getBitDirForConsumerImport({
-          bitsDir: this.getBitsPath(), name, box, version, scope
-        });
+  //       const bitDir = getBitDirForConsumerImport({
+  //         bitsDir: this.getBitsPath(), name, box, version, scope
+  //       });
 
-        return Bit.loadFromMemory({
-          name,
-          bitDir,
-          bitJson,
-          impl: impl ? bitContents[impl] : undefined,
-          spec: spec ? bitContents[spec] : undefined,
-        });
-      });
-  }
+  //       return Bit.loadFromMemory({
+  //         name,
+  //         bitDir,
+  //         bitJson,
+  //         impl: impl ? bitContents[impl] : undefined,
+  //         spec: spec ? bitContents[spec] : undefined,
+  //       });
+  //     });
+  // }
   
   push(rawId: string, rawRemote: string) {
     const bitId = BitId.parse(rawId);
@@ -158,6 +158,7 @@ export default class Consumer {
     id: BitInlineId, withSpecs: boolean, withBitJson: boolean }): Promise<Bit> {
     const bitJson = BitJson.create({ name: id.name, box: id.box }, this.bitJson);
     return Bit.create({ 
+      scope: this.scope,
       bitJson,
       name: id.name,
       bitDir: id.composeBitPath(this.getPath()),
@@ -167,7 +168,7 @@ export default class Consumer {
 
   removeBit(id: BitInlineId): Promise<Bit> {
     const bitDir = id.composeBitPath(this.getPath());
-    return PartialBit.loadFromInline(bitDir, id.name, this.bitJson)
+    return PartialBit.loadFromInline(bitDir, id.name, this.bitJson, this.scope.name())
     .then(bit => bit.erase());
   }
 

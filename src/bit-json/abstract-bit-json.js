@@ -97,17 +97,6 @@ export default class AbstractBitJson {
     };
   }
 
-  static fromPlainObject(object: Object) {
-    const { sources, env, dependencies } = object;
-    return new this({
-      impl: R.prop('impl', sources),
-      spec: R.prop('spec', sources),
-      compiler: R.prop('compiler', env),
-      tester: R.prop('tester', env),
-      dependencies,
-    });
-  }
-
   toJson(readable: boolean = true) {
     if (!readable) return JSON.stringify(this.toPlainObject());
     return JSON.stringify(this.toPlainObject(), null, 4);

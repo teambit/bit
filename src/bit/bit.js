@@ -13,6 +13,7 @@ import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
 
 export type BitProps = {
   name: string;
+  scope: string;
   bitDir: string; 
   bitJson: BitJson;
   impl: Impl;
@@ -21,6 +22,7 @@ export type BitProps = {
 
 export default class Bit extends PartialBit {
   name: string;
+  scope: string;
   bitDir: string;
   bitJson: BitJson;
   impl: Impl;
@@ -73,8 +75,8 @@ export default class Bit extends PartialBit {
     scope: string,
     bitDir: string,
     bitJson: BitJson,
-    impl: Buffer,
-    spec: Buffer
+    impl: ?Buffer|string,
+    spec: ?Buffer|string
   }) {
     return new Bit({
       name,
@@ -86,10 +88,11 @@ export default class Bit extends PartialBit {
     }); 
   }
 
-  static create({ name, bitDir, bitJson, withSpecs }:
-  { name: string, bitDir: string, bitJson: BitJson, withSpecs: boolean }) {
+  static create({ scope, name, bitDir, bitJson, withSpecs }:
+  { scope: string, name: string, bitDir: string, bitJson: BitJson, withSpecs: boolean }) {
     return new Bit({
       name,
+      scope,
       bitDir,
       bitJson,
       impl: Impl.create(bitJson),
