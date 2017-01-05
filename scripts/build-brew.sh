@@ -27,6 +27,6 @@ node ./set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/package.json homebrew
 cd $PACKAGE_TMPDIR_ABSOLUTE
 #eval "$FPM --output-type tar  --architecture noarch --depends nodejs --category 'Development/Languages' ."
 eval tar --exclude='./Jenkinsfile' --exclude='./scripts/' -zcvf ${tarName}  *
+shasum -a 256 ${tarName}
 mv ${tarName} ../
-
 rm -rf ../bit
