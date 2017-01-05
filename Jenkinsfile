@@ -16,7 +16,7 @@ node  {
     sh('cd ./scripts && ./build-tar.sh tar')
 
     stage 'Running brew'
-    sh("cd ./scripts && ./build-brew.sh ${releaseServer}")
+    sh("cd ./scripts && ./build-brew.sh ${releaseServer}/${currentVersion}/${bundleName}_brew.tar.gz")
 
 
     stage 'Running deb'
@@ -26,12 +26,11 @@ node  {
     stage 'export to google storage'
     sh("gsutil -m cp -a public-read ./distribution/brew_pkg/${bundleName}_brew.tar.gz ${uploadfolder}")
     sh("gsutil -m cp -a public-read ./distribution/debian_pkg/${bundleName}_deb.deb ${uploadfolder}")
-
-    sh("gsutil -m cp -a  ./scripts/bit.rb ${uploadfolder}")
+    sh("gsutil -m cp  ./scripts/bit.rb ${uploadfolder}")
 
     
      stage 'notify release server'
-     notifyReleaseServer(currentVersion,releaseServer)
+     notifyReleaseServer(currentVersion,releaseServer+"/update")
 
 }
 import groovy.json.JsonOutput
