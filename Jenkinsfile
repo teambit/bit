@@ -32,7 +32,6 @@ node  {
      stage 'notify release server'
      notifyReleaseServer(currentVersion,releaseServer+"/update")
 
-
     stage 'generate formula for brew'
     sh("cd ./scripts && ./generate-formula.sh ${releaseServer}/${currentVersion}/${bundleName}_brew.tar.gz")
     sh("gsutil -m cp  ./scripts/bit.rb ${uploadfolder}")
