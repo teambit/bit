@@ -53,8 +53,8 @@ export default class SSH {
   exec(commandName: string, ...args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
       const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
-      this.connection(cmd, function (err, res) {
-        if (err) return reject(err);
+      this.connection(cmd, function (err, res, o) {
+        if (err && o.code && o.code !== 0) return reject(err);
         return resolve(clean(res));
       });
     });
@@ -84,7 +84,7 @@ export default class SSH {
     bitIds = bitIds.map(bitId => bitId.toString());
     return this.exec('_fetch', ...bitIds)
       .then((packs) => {
-        const [scope, objects] = packs.split(' ');
+        const [objects, scope] = packs.split(' ');
         return objects
           .split('!!!')
           .map(pack => BitDependencies.deserialize(pack, scope));
