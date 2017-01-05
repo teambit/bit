@@ -27,7 +27,7 @@ node  {
     sh("gsutil -m cp -a public-read ./distribution/brew_pkg/${bundleName}_brew.tar.gz ${uploadfolder}")
     sh("gsutil -m cp -a public-read ./distribution/debian_pkg/${bundleName}_deb.deb ${uploadfolder}")
 
-    sh(gsutil -m cp -a  ./scripts/bit.rb ${uploadfolder})
+    sh("gsutil -m cp -a  ./scripts/bit.rb ${uploadfolder}")
 
     
      stage 'notify release server'
