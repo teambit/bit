@@ -1,71 +1,82 @@
 /** @flow */
 import * as pathLib from 'path';
+import fs from 'fs';
 import glob from 'glob';
-import { Remotes, Remote } from '../remotes';
-import { propogateUntil, currentDirName, pathHas, readFile, flatten } from '../utils';
+import { merge } from 'ramda';
+import { GlobalRemotes } from '../global-config';
+import flattenDependencies from './flatten-dependencies';
+import { Remotes } from '../remotes';
+import { propogateUntil, currentDirName, pathHas, readFile, flatten, first } from '../utils';
 import { getContents } from '../tar';
-import { BIT_SOURCES_DIRNAME, BIT_JSON } from '../constants';
+import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
+import AbstractBitJson from '../bit-json/abstract-bit-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
-import { Source, Cache, Tmp, External } from './repositories';
-import { DependencyMap, getPath as getDependenyMapPath } from './dependency-map';
+import { Source, Cache, Tmp, External, Environment } from './repositories';
+import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
 import BitJson from '../bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
 
-const pathHasScope = pathHas([BIT_SOURCES_DIRNAME]);
+const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
+
+export type ScopeDescriptor = {
+  name: string
+};
+
+export type BitDependencies = {
+  bit: Bit,
+  dependencies: Bit[]
+};
 
 export type ScopeProps = {
   path: string,
+  scopeJson: ScopeJson;
   created?: boolean;
   cache?: Cache;
   tmp?: Tmp;
+  environment?: Environment;
   sources?: Source,
   external?: External;
-  dependencyMap?: DependencyMap;
-  scopeJson?: ScopeJson;
+  sourcesMap?: SourcesMap;
 };
-
-function fromTar(name, tar) {
-  return getContents(tar)
-    .then((files) => {
-      const bitJson = BitJson.fromPlainObject(JSON.parse(files[BIT_JSON]));
-      return Bit.loadFromMemory({
-        name,
-        bitDir: name,
-        bitJson,
-        impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
-        spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
-      });
-    });
-}
 
 export default class Scope {
   external: External;
   created: boolean = false;
   cache: Cache;
+  scopeJson: ScopeJson;
   tmp: Tmp;
+  environment: Environment;
   sources: Source;
   path: string;
-  dependencyMap: DependencyMap;
+  sourcesMap: SourcesMap;
 
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
-    this.scopeJson = scopeProps.scopeJson || new ScopeJson();
+    this.scopeJson = scopeProps.scopeJson;
     this.cache = scopeProps.cache || new Cache(this);
     this.sources = scopeProps.sources || new Source(this);
     this.created = scopeProps.created || false;
     this.tmp = scopeProps.tmp || new Tmp(this);
+    this.environment = scopeProps.environment || new Environment(this);
     this.external = scopeProps.external || new External(this);
-    this.dependencyMap = scopeProps.dependencyMap || new DependencyMap(this);
+    this.sourcesMap = scopeProps.sourcesMap || new SourcesMap(this);
   }
 
   name() {
     return this.scopeJson.name;
   }
 
-  remotes() {
-    return this.scopeJson.remotes;
+  remotes(): Promise<Remotes> {
+    const self = this;
+    function mergeRemotes(globalRemotes: GlobalRemotes) {
+      const globalObj = globalRemotes.toPlainObject();
+      return Remotes.load(merge(globalObj, self.scopeJson.remotes));
+    }
+
+    return GlobalRemotes.load()
+      .then(mergeRemotes);
   }
 
   prepareBitRegistration(name: string, bitJson: BitJson) {
@@ -78,68 +89,76 @@ export default class Scope {
     return pathLib.join(this.tmp.getPath(), `${name}_${bitJson.version}.tar`);
   }
 
-  describe() {
+  describe(): ScopeDescriptor {
     return {
       name: this.name()
     };
   }
 
-  put(bit: Bit) {
+  put(bit: Bit): Promise<BitDependencies> {
+    bit.scope = this.name();
     bit.validateOrThrow();
-    return bit.dependencies()
-      .fetch(this, bit.remotes())
-      .then((bits) => {
-        this.external.store(bits);
-        this.dependencyMap.setBit(bit, bits);
-        return this.sources.setSource(bit)
-          .then(() => { if (bit.hasCompiler()) bit.build(); })
-          .then(() => this.dependencyMap.write())
-          .then(() => bits.concat(bit));
-          // .catch(() => bit.clear());
-      });
+    return this.remotes().then((remotes) => {
+      return bit.dependencies()
+        .fetch(this, remotes)
+        .then((dependencies) => {
+          dependencies = flattenDependencies(dependencies);
+          return this.sources.setSource(bit, dependencies)
+          // @TODO make the scope install the required env
+            .then(() => this.ensureEnvironment(bit.bitJson))
+            .then(() => bit.build(this))
+            .then(() => this.sourcesMap.write())
+            .then(() => {
+              return { bit, dependencies };
+            });
+        });
+    });
   }
 
-  getExternal(bitId: BitId, remotes: Remotes): Promise<Bit[]> {
-    const remote = bitId.getRemote(this, remotes);
-    return remote.fetch([bitId])
-      .then((tars) => {
-        const bits = tars.map((tar) => {
-          return fromTar(tar.name, tar.contents);
-        });
-
-        return Promise.all(bits);
-      })
-      .then((bits) => {
-        return bits.map((bit) => {
-          bit.scope = remote.alias;
-          return bit;
-        });
-      });
+  getExternal(bitId: BitId, remotes: Remotes): Promise<BitDependencies> {
+    return remotes.fetch([bitId])
+      .then(bitDeps => first(bitDeps));
   }
 
-  get(bitId: BitId, consumerRemotes: Remotes = new Remotes()): Promise<Bit[]> {
-    if (!bitId.isLocal()) return this.getExternal(bitId, consumerRemotes);
-    bitId.version = this.sources.resolveVersion(bitId).toString();
-    const dependencyList = this.dependencyMap.get(bitId);
-    if (!dependencyList) throw new BitNotInScope();
-    const remotes = this.dependencyMap.getRemotes(dependencyList);
-    const bitIds = this.dependencyMap.getBitIds(dependencyList);
+  get(bitId: BitId): Promise<BitDependencies> {
+    if (!bitId.isLocal(this.name())) {
+      return this.remotes().then(remotes => this.getExternal(bitId, remotes));
+    }
     
-    return bitIds.fetch(this, remotes)
-      .then((bits) => {
-        return this.sources.loadSource(bitId)
-          .then(bit => bits.concat(bit));
-      });
+    bitId.version = this.sources.resolveVersion(bitId).toString();
+    const dependencyList = this.sourcesMap.get(bitId);
+    if (!dependencyList) throw new BitNotInScope();
+    const bitIds = this.sourcesMap.getBitIds(dependencyList);
+    
+    return this.remotes().then((remotes) => {
+      return bitIds.fetchOnes(this, remotes)
+        .then((bits) => {
+          return this.sources.loadSource(bitId)
+            .then((bit) => {
+              return {
+                bit,
+                dependencies: bits
+              };
+            });
+        });
+    });
   }
 
   getOne(bitId: BitId): Promise<Bit> {
     return this.sources.loadSource(bitId);
   }
 
-  push(bitId: BitId, remote: Remote) {
-    return this.sources.loadSource(bitId)
-      .then(bit => remote.push(bit))
-      .then(() => this.sources.clean(bitId));
+  manyOnes(bitIds: BitId[]): Promise<Bit[]> {
+    return Promise.all(bitIds.map(bitId => this.getOne(bitId)));
+  }
+
+  push(bitId: BitId, remoteName: string) {
+    return this.remotes().then((remotes) => {
+      const remote = remotes.get(remoteName);
+      return this.sources.loadSource(bitId)
+        .then(bit => remote.push(bit))
+        .then(() => this.sources.clean(bitId));
+    });
   }
 
   ensureDir() {
@@ -148,7 +167,8 @@ export default class Scope {
       .then(() => this.sources.ensureDir())
       .then(() => this.external.ensureDir())
       .then(() => this.tmp.ensureDir())
-      .then(() => this.dependencyMap.write())
+      .then(() => this.environment.ensureDir())
+      .then(() => this.sourcesMap.write())
       .then(() => this.scopeJson.write(this.getPath()))
       .then(() => this); 
   }
@@ -171,26 +191,27 @@ export default class Scope {
     );
   }
 
-
-  fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}[]> {
-    const promises = bitIds.map((bitId) => {
+  getMany(bitIds: BitIds) {
+    return Promise.all(bitIds.map((bitId) => {
       return this.get(bitId);
-    });
-
-    return Promise.all(promises).then((bits) => {
-      const tars = flatten(bits).map((bit) => {
-        return bit.toTar()
-          .then((tar) => {
-            return {
-              id: bit.name,
-              contents: tar
-            };
-          });
-      });
-
-      return Promise.all(tars);
-    });
+    }));
   }
+
+  // fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}[]> {
+  //   return this.getMany(bitIds).then((bits) => {
+  //     const tars = flatten(bits).map((bit) => {
+  //       return bit.toTar()
+  //         .then((tar) => {
+  //           return {
+  //             id: bit.name,
+  //             contents: tar
+  //           };
+  //         });
+  //     });
+
+  //     return Promise.all(tars);
+  //   });
+  // }
 
   upload(name: string, tar: Buffer) {
     return getContents(tar)
@@ -212,6 +233,21 @@ export default class Scope {
     return this.path;
   }
 
+  loadEnvironment(bitId: BitId): Promise<any> {
+    return this.environment.get(bitId);
+  }
+
+  writeToEnvironmentsDir(bit: Bit) {
+    return this.environment.store(bit);
+  }
+  
+  /**
+   * check a bitJson compiler and tester, returns an empty promise and import environments if needed
+   */
+  ensureEnvironment(bitJson: AbstractBitJson): Promise<any> {
+    return this.environment.ensureEnvironment(bitJson);
+  }
+
   static create(path: string = process.cwd(), name: ?string) {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName(); 
@@ -220,16 +256,21 @@ export default class Scope {
   }
 
   static load(absPath: string): Promise<Scope> {
-    const scopePath = propogateUntil(absPath, pathHasScope);
+    let scopePath = propogateUntil(absPath, pathHasScope);
     if (!scopePath) throw new ScopeNotFound();
+    if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
+      scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
+    }
+    const path = scopePath;
+
     return Promise.all([
       readFile(getDependenyMapPath(scopePath)), 
       readFile(getScopeJsonPath(scopePath))
     ])
       .then(([rawDependencyMap, rawScopeJson]) => {
         const scopeJson = ScopeJson.loadFromJson(rawScopeJson.toString('utf8'));
-        const scope = new Scope({ path: scopePath, scopeJson });
-        scope.dependencyMap = DependencyMap.load(JSON.parse(rawDependencyMap.toString('utf8')), scope);
+        const scope = new Scope({ path, scopeJson }); 
+        scope.sourcesMap = SourcesMap.load(JSON.parse(rawDependencyMap.toString('utf8')), scope);
         return scope;
       });
   }

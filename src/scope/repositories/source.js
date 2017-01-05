@@ -1,6 +1,5 @@
 /** @flow */
 import * as path from 'path';
-import fs from 'fs';
 import Repository from '../repository';
 import { SourceNotFound } from '../exceptions';
 import { BIT_SOURCES_DIRNAME } from '../../constants';
@@ -9,6 +8,7 @@ import Bit from '../../bit';
 import PartialBit from '../../bit/partial-bit';
 import { BitId } from '../../bit-id';
 import { listDirectories, rmDir } from '../../utils';
+import type { BitDependencies } from '../scope';
 
 export default class Source extends Repository {
   getPath(): string {
@@ -20,15 +20,15 @@ export default class Source extends Repository {
   }  
 
   getPartial(name: string): Promise<PartialBit> {
-    return PartialBit.load(path.join(this.getPath(), name), name);
+    return PartialBit.load(path.join(this.getPath(), name), name, this.scope.name());
   }
 
-  setSource(bit: Bit): Promise<Bit> {
+  setSource(bit: Bit, dependencies: Bit[]): Promise<Bit> {
     if (!bit.validate()) throw new InvalidBit();
-
     return bit
       .cd(this.composeSourcePath(bit.getId()))
       .write(true)
+      .then(() => this.scope.sourcesMap.setBit(bit.getId(), dependencies))
       .then(() => bit);
   }
 
@@ -48,7 +48,7 @@ export default class Source extends Repository {
         name: id.name,
         box: id.box,
         version
-      }), id.name);
+      }), id.name, this.scope.name());
     } catch (err) {
       throw new SourceNotFound(id);
     }
@@ -59,8 +59,8 @@ export default class Source extends Repository {
   }
 
   clean(bitId: BitId) {
-    // bitId.version = this.resolveVersion(bitId);
-    // return rmDir(this.composeSourcePath(bitId));
+    bitId.version = this.resolveVersion(bitId);
+    return rmDir(this.composeSourcePath(bitId));
   }
 
   composeVersionsPath(name: string, box: string) {

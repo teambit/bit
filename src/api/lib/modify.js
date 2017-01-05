@@ -9,7 +9,11 @@ export default function modify(rawId: string) {
     .then(consumer => consumer.scope.getOne(bitId)
       .then((bit) => {
         const inlinePath = pathLib.join(consumer.getInlineBitsPath(), bit.getBox(), bit.getName());
-        return bit.cd(inlinePath).write();
+        return bit.cd(inlinePath).write()
+        .then((b) => {
+          consumer.scope.ensureEnvironment(b.bitJson)
+          .then(() => b);
+        });
       })
     );
 }

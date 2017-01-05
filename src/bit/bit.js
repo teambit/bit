@@ -4,10 +4,9 @@ import path from 'path';
 import { Impl, Specs } from './sources';
 import { mkdirp } from '../utils';
 import BitJson from '../bit-json';
-import { Remotes } from '../remotes';
+import { Scope } from '../scope';
 import PartialBit from './partial-bit';
 import { BitId } from '../bit-id';
-import loadPlugin from './environment/load-plugin';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
 
 export type BitProps = {
@@ -26,29 +25,27 @@ export default class Bit extends PartialBit {
   specs: ?Specs;
 
   constructor(bitProps: BitProps) {
-    super({ name: bitProps.name, bitDir: bitProps.bitDir, bitJson: bitProps.bitJson });
+    super(bitProps);
     this.specs = bitProps.specs;
     this.impl = bitProps.impl;
   }
 
-  build(): Promise<Bit> {
+  build(scope: Scope): Promise<Bit> {
     return new Promise((resolve, reject) => {
+      if (!this.hasCompiler()) { return resolve(this); }
       try {
-        const { transpile } = loadPlugin(this.bitJson.getCompilerName());
-        const src = this.impl.src;
-        const { code, map } = transpile(src); // eslint-disable-line
-        const outputFile = path.join(this.bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
-        fs.outputFileSync(outputFile, code);
-        return resolve(this);
+        const compilerName = this.bitJson.getCompilerName();
+        return scope.loadEnvironment(BitId.parse(compilerName))
+        .then(({ compile }) => {
+          const src = this.impl.src;
+          const { code, map } = compile(src); // eslint-disable-line
+          const outputFile = path.join(this.bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
+          fs.outputFileSync(outputFile, code);
+          return resolve(this);
+        });
       } catch (e) { return reject(e); }
     });
   }
-
-  // fetchDependencies(): BitId[] {
-    // return this.bitJson.dependencies.map((dependency) => {
-      // return dependency.fetch();
-    // });
-  // }
 
   write(withBitJson: boolean): Promise<Bit> {
     return this.writeWithoutBitJson()
@@ -64,13 +61,14 @@ export default class Bit extends PartialBit {
     .then(() => this);
   }
 
-  static load(bitDir: string, name: string): Promise<Bit> {  
-    return PartialBit.load(bitDir, name)
+  static load(bitDir: string, name: string, scopeName: string): Promise<Bit> {  
+    return PartialBit.load(bitDir, name, scopeName)
       .then(partialBit => partialBit.loadFull());
   }
 
-  static loadFromMemory({ name, bitDir, bitJson, impl, spec }: {
+  static loadFromMemory({ name, bitDir, bitJson, impl, spec, scope }: {
     name: string,
+    scope: string,
     bitDir: string,
     bitJson: BitJson,
     impl: Buffer,
@@ -78,6 +76,7 @@ export default class Bit extends PartialBit {
   }) {
     return new Bit({
       name,
+      scope,
       bitDir,
       bitJson,
       impl: impl ? new Impl(impl.toString()) : undefined,

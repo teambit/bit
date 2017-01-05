@@ -1,8 +1,16 @@
 /** @flow */
+import { groupBy } from 'ramda';
 import { BitId } from '../bit-id';
-import { forEach, first, flatten } from '../utils';
+import { forEach } from '../utils';
 import { Remotes } from '../remotes';
 import { Scope } from '../scope';
+
+function byRemote(origin: Scope) {
+  return groupBy((id) => {
+    if (id.isLocal(origin.name())) return 'inner';
+    return 'outer';
+  });
+}
 
 export default class BitIds extends Array<BitId> {
   static loadDependencies(dependencies: {[string]: string}) {
@@ -24,27 +32,20 @@ export default class BitIds extends Array<BitId> {
       ...array.map(id => BitId.parse(id))
     );
   }
+  
+  fetchOnes(origin: Scope, remotes: Remotes) {
+    const { inner = [], outer = [] } = byRemote(origin)(this);
+    return origin.manyOnes(inner).then((innerBits) => {
+      return remotes.fetch(outer, true)
+        .then(remoteBits => remoteBits.concat(innerBits));
+    });
+  }
 
   fetch(origin: Scope, remotes: Remotes) {
-    const byRemote = this.reduce((acc, bitId) => {
-      const remote = bitId.getRemote(origin, remotes);
-      if (!acc[remote.host]) acc[remote.host] = [bitId];
-      else acc[remote.host].push(bitId);
-      return acc;
-    }, {});
-
-    const promises = [];
-    forEach(byRemote, (bitIds) => {
-      promises.push(
-        first(bitIds)
-        .getRemote(origin, remotes)
-        .fetch(bitIds)
-        .then(bits => flatten(bits))
-      );
-    });
-
-    return Promise.all(promises).then((array) => {
-      return flatten(array);
+    const { inner = [], outer = [] } = byRemote(origin)(this);
+    return origin.getMany(inner).then((innerBits) => {
+      return remotes.fetch(outer)
+        .then(remoteBits => remoteBits.concat(innerBits));
     });
   }
 }

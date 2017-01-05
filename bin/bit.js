@@ -22,6 +22,7 @@ function getBuildDir() {
 function ensureDirectories() {
   mkdirp.sync(constants.MODULES_CACHE_DIR);
   mkdirp.sync(constants.GLOBAL_BIT_CACHE);
+  mkdirp.sync(constants.GLOBAL_CONFIG);
 }
 
 function verifyCompatibility() {

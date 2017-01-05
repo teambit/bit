@@ -2,6 +2,7 @@
 import path from 'path';
 import glob from 'glob';
 import fs from 'fs';
+import flattenDependencies from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -9,26 +10,32 @@ import BitJson from '../bit-json/bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
 import PartialBit from '../bit/partial-bit';
-import { INLINE_BITS_DIRNAME, BITS_DIRNAME, BIT_JSON, BIT_HIDDEN_DIR } from '../constants';
+import { 
+  INLINE_BITS_DIRNAME,
+  BITS_DIRNAME,
+  BIT_JSON,
+  BIT_HIDDEN_DIR,
+ } from '../constants';
 import * as tar from '../tar';
 import { BitJsonNotFound } from '../bit-json/exceptions';
-import { toBase64, flatten } from '../utils';
+import { flatten } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
+import type { BitDependencies } from '../scope/scope';
 
-const buildBit = (bit) => { if (bit.hasTester()) { console.log('hoeerye'); bit.build(); } };
+const buildBit = (bit: Bit, scope: Scope): Promise<Bit> => bit.build(scope);
 
 const getBitDirForConsumerImport = ({
-  bitsDir, name, box, version, remote
+  bitsDir, name, box, version, scope
 }: {
   bitsDir: string,
   name: string,
   box: string,
   version: string,
-  remote: string 
+  scope: string 
 }): string => 
-  path.join(bitsDir, box, name, toBase64(remote), version);
+  path.join(bitsDir, box, name, scope, version);
 
 export type ConsumerProps = {
   projectPath: string,
@@ -55,6 +62,19 @@ export default class Consumer {
       .write({ bitDir: this.projectPath })
       .then(() => this.scope.ensureDir())
       .then(() => this);
+  }
+
+  cdAndWrite(bit: Bit, bitsDir: string): Promise<Bit> {
+    const bitDirForConsumerImport = getBitDirForConsumerImport({
+      bitsDir,
+      name: bit.name,
+      box: bit.getBox(),
+      version: bit.getVersion(),
+      scope: bit.scope
+    });
+
+    return bit.cd(bitDirForConsumerImport).write(true)
+      .then(b => buildBit(b, this.scope));
   }
 
   getInlineBitsPath(): string {
@@ -88,11 +108,10 @@ export default class Consumer {
         const impl = bitJson.getImplBasename();
         const spec = bitJson.getSpecBasename();
         
-        const remote = 'ssh://ran@104.198.245.134:/home/ranmizrahi/scope';
-        // @TODO - replace mock with real remote
+        const scope = ''; // TODO - fetch real scope name from bit.scope
 
         const bitDir = getBitDirForConsumerImport({
-          bitsDir: this.getBitsPath(), name, box, version, remote
+          bitsDir: this.getBitsPath(), name, box, version, scope
         });
 
         return Bit.loadFromMemory({
@@ -107,27 +126,31 @@ export default class Consumer {
   
   push(rawId: string, rawRemote: string) {
     const bitId = BitId.parse(rawId);
-    const remote = this.bitJson.getRemotes().get(rawRemote);
-    return this.scope.push(bitId, remote);
+    return this.scope.push(bitId, rawRemote);
   }
 
-  /**
-   * fetch a bit from a remote, put in the bit.json and in the external directory
-   **/
   import(rawId: ?string): Bit {
-    if (!rawId) {
+    if (!rawId) { // if no arguments inserted, install according to bitJson dependencies
       const deps = BitIds.loadDependencies(this.bitJson.dependencies);
-      return Promise.all(deps.map((dep) => {
-        return this.scope.get(dep, this.bitJson.getRemotes());
-      }))
-        .then((bits) => {
-          return this.writeToBitsDir(flatten(bits));
-        });
+      
+      return this.scope.ensureEnvironment(this.bitJson)
+      .then(() =>
+        Promise.all(deps.map(dep => this.scope.get(dep)))
+        .then(bits => this.writeToBitsDir(flatten(bits)))
+      );
     }
 
     const bitId = BitId.parse(rawId);
-    return this.scope.get(bitId, this.bitJson.getRemotes())
-      .then(bits => this.writeToBitsDir(bits));
+    return this.scope.get(bitId)
+      .then(bitDependencies => this.writeToBitsDir([bitDependencies]));
+  }
+
+  importEnvironment(rawId: ?string) {
+    if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
+
+    const bitId = BitId.parse(rawId);
+    return this.scope.get(bitId)
+    .then(bitDependencies => this.scope.writeToEnvironmentsDir(bitDependencies.bit)); // @HACKALERT - replace with getOne
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {
@@ -146,32 +169,20 @@ export default class Consumer {
     return PartialBit.loadFromInline(bitDir, id.name, this.bitJson)
     .then(bit => bit.erase());
   }
-  
-  writeToBitsDir(bits: Bit[]): Promise<Bit[]> {
+
+  writeToBitsDir(bitDependencies: BitDependencies[]): Promise<Bit[]> {
     const bitsDir = this.getBitsPath();
+    const bits = flattenDependencies(bitDependencies);
 
-    const cdAndWrite = (bit: Bit): Promise<Bit> => {
-      const bitDirForConsumerImport = getBitDirForConsumerImport({
-        bitsDir,
-        name: bit.name,
-        box: bit.getBox(),
-        version: bit.getVersion(),
-        remote: bit.scope
-      });
-
-      return bit.cd(bitDirForConsumerImport).write()
-      .then(buildBit);
-    };
-
-    return Promise.all(bits.map(cdAndWrite));
+    return Promise.all(bits.map(bit => this.cdAndWrite(bit, bitsDir)));
   }
 
   export(id: BitInlineId) {  
     return this.loadBit(id)
       // .then(bit => bit.validate())
     .then(bit => this.scope.put(bit))
-    .then(bits => this.writeToBitsDir(bits))
-    .then(() => this.removeBit(id));
+    .then(bits => this.writeToBitsDir([bits]));
+    // .then(() => this.removeBit(id));
   }
 
   testBit(id: BitInlineId): Promise<Bit> {

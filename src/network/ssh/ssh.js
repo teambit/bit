@@ -78,7 +78,8 @@ export default class SSH {
       });
   }
 
-  fetch(bitIds: string[]): Promise<{name: string, contents: Buffer}[]> {
+  fetch(bitIds: BitId[]): Promise<BitDependencies[]> {
+    bitIds = bitIds.map(bitIds.map(bitId => bitId.toString()));
     return this.exec('_fetch', ...bitIds)
       .then((packs) => {
         return packs
@@ -107,6 +108,6 @@ export default class SSH {
       privateKey: keyGetter(key)
     });
 
-    return this;
+    return Promise.resolve(this);
   }
 }

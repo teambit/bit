@@ -15,7 +15,7 @@ export type BitIdProps = {
 
 export default class BitId {
   name: string;
-  box: ?string;
+  box: string;
   version: string;
   scope: string;
 
@@ -26,8 +26,19 @@ export default class BitId {
     this.version = version;
   }
 
-  isLocal() {
-    return this.scope === LOCAL_SCOPE_NOTATION;
+  getScopeName() {
+    return this.scope.replace('@', ''); 
+  }
+
+  composeTarFileName() {
+    return `${this.scope}_${this.box}_${this.name}_${this.version}.tar`;
+  }
+
+
+  isLocal(scopeName: string) {
+    // @TODO fix this asapbit status
+    return this.scope === LOCAL_SCOPE_NOTATION
+     || scopeName === this.getScopeName();
   }
 
   toStringWithRemote() {
@@ -46,8 +57,9 @@ export default class BitId {
     return remoteResolver(this.scope, remotes, localScope);
   }
 
-  toString() {
+  toString(ignoreScope: boolean = false): string {
     const { name, box, version, scope } = this;
+    if (ignoreScope) return [box, name].join('/').concat(`::${version}`);
     return [scope, box, name].join('/').concat(`::${version}`);
   }
 

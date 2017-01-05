@@ -18,7 +18,6 @@ export default class ConsumerBitJson extends AbstractBitJson {
   spec: string; 
   compiler: string;
   tester: string;
-  remotes: {[string]: string};
   dependencies: {[string]: string};
   
   write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {

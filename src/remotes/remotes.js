@@ -1,7 +1,10 @@
 /** @flow */
+import { groupBy, prop } from 'ramda';
+import { BitId } from '../bit-id';
 import Remote from './remote';
-import { forEach, prependBang } from '../utils';
+import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
+import type { BitDependencies } from '../scope/scope';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -20,13 +23,30 @@ export default class Remotes extends Map<string, Remote> {
     return remote;
   }
 
+  resolve(scopeName: string) {
+    // @TODO impelment scope resolver
+    return this.get(scopeName.replace('@', ''));
+  }
+
+  fetch(ids: BitId[], withoutDeps: boolean = false): Promise<BitDependencies[]> {
+    const byScope = groupBy(prop('scope'));
+    const promises = [];
+    forEach(byScope(ids), (scopeIds, scopeName) => {
+      if (!withoutDeps) promises.push(this.resolve(scopeName).fetch(scopeIds));
+      else promises.push(this.resolve(scopeName).fetchOnes(scopeIds));
+    });
+
+    return Promise.all(promises)
+      .then(bits => flatten(bits));
+  }
+
   toPlainObject() {
     const object = {};
 
     this.forEach((remote) => {
-      let alias = remote.alias;
-      if (remote.primary) alias = prependBang(remote.alias); 
-      object[alias] = remote.host;
+      let name = remote.name;
+      if (remote.primary) name = prependBang(remote.name); 
+      object[name] = remote.host;
     });
 
     return object;
@@ -37,9 +57,9 @@ export default class Remotes extends Map<string, Remote> {
     
     if (!remotes) return new Remotes();
 
-    forEach(remotes, (host, alias) => {
-      const remote = Remote.load(alias, host); 
-      models.push([remote.alias, remote]);
+    forEach(remotes, (name, host) => {
+      const remote = Remote.load(name, host); 
+      models.push([remote.name, remote]);
     });
 
     return new Remotes(models);

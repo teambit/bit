@@ -5,6 +5,7 @@
 <PROJECT_ROOT>/node_modules
 <PROJECT_ROOT>/plugins
 node_modules/
+private/tmp
 
 [include]
 
@@ -15,4 +16,4 @@ suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
 unsafe.enable_getters_and_setters=true
 
 [version]
-0.37.4
+0.36.0

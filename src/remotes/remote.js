@@ -1,9 +1,31 @@
 /** @flow */
 import Bit from '../bit';
-import { contains, isBitUrl, cleanBang } from '../utils';
+import { contains, isBitUrl, cleanBang, allSettled } from '../utils';
 import { connect } from '../network';
 import { InvalidRemote } from './exceptions';
-import { BitId } from '../bit-id';
+import { BitId, BitIds } from '../bit-id';
+import { getContents } from '../tar';
+import BitJson from '../bit-json';
+import { get as getCache } from '../cache';
+import type { BitDependencies } from '../scope/scope';
+import type { Network } from '../network/network';
+import { BIT_JSON } from '../constants';
+import { CacheNotFound } from '../cache/exceptions';
+
+function fromTar({ tarball, id }) {
+  return getContents(tarball)
+    .then((files) => {
+      const bitJson = BitJson.fromPlainObject(JSON.parse(files[BIT_JSON]));
+      return Bit.loadFromMemory({
+        name: id.name,
+        bitDir: bitJson.name,
+        scope: id.scope,
+        bitJson,
+        impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
+        spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
+      });
+    });
+}
 
 /**
  * @ctx bit, primary, remote
@@ -15,15 +37,15 @@ function isPrimary(alias: string): boolean {
 export default class Remote {
   primary: boolean = false;
   host: string;
-  name: ?string;
+  name: string;
 
-  constructor(host: string, name: string, primary: boolean = false) {
-    this.name = name || null;
+  constructor(host: string, name: ?string, primary: boolean = false) {
+    this.name = name || '';
     this.host = host;
     this.primary = primary;
   }
 
-  connect(): Remote {
+  connect(): Promise<Network> {
     return connect(this.host);
   }
 
@@ -40,12 +62,29 @@ export default class Remote {
     });
   }
 
-  fetch(bitIds: BitId[]): {name: string, contents: Buffer}[] {
+  fetch(bitIds: BitId[]): Promise<BitDependencies[]> {
     return this
       .connect()
-      .fetch(
-        bitIds.map(bitId => bitId.toString())
-      );
+      .then(network => network.fetch(bitIds));
+  }
+
+  fetchOnes(bitIds: BitIds): Promise<Bit[]> {
+    return allSettled(bitIds.map(id => getCache(id)))
+      .then((values: {success: boolean, val: Bit, error: CacheNotFound}[]) => {
+        const cached = Promise.all(values
+          .filter(res => res.success)
+          .map(res => fromTar(res.val)));
+
+        const rest = values
+          .filter(res => !res.success && res.error.bitId)
+          .map(res => res.error.bitId);
+
+        return this
+          .connect()
+          .then(network => network.fetchOnes(rest))
+          .then(bits => Promise.all(bits.map(bit => bit.cache())))
+          .then(bits => cached.then(cachedBits => cachedBits.concat(bits)));
+      });
   }
 
   validate() {
@@ -53,8 +92,9 @@ export default class Remote {
   }
 
   push(bit: Bit) {
-    const network = connect(this.host);
-    return network.push(bit);
+    return connect(this.host).then((network) => {
+      return network.push(bit);
+    });
   }
 
   static load(name: string, host: string): Remote {
