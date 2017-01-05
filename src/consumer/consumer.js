@@ -178,10 +178,10 @@ export default class Consumer {
 
   export(id: BitInlineId) {  
     return this.loadBit(id)
-      // .then(bit => bit.validate())
-    .then(bit => this.scope.put(bit))
-    .then(bits => this.writeToBitsDir([bits]));
-    // .then(() => this.removeBit(id));
+      .then(bit => bit.validateOrThrow())
+      .then(bit => this.scope.put(bit))
+      .then(bits => this.writeToBitsDir([bits]))
+      .then(() => this.removeBit(id));
   }
 
   testBit(id: BitInlineId): Promise<Bit> {

@@ -129,12 +129,7 @@ export default class Scope {
       return bitIds.fetchOnes(this, remotes)
         .then((bits) => {
           return this.sources.loadSource(bitId)
-            .then((bit) => {
-              return new BitDependencies({
-                bit,
-                dependencies: bits
-              });
-            });
+            .then(bit => new BitDependencies({ bit, dependencies: bits }));
         });
     });
   }
