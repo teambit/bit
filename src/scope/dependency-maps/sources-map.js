@@ -1,7 +1,8 @@
 /** @flow */
 import path from 'path';
-import { BitIds } from '../../bit-id';
-import DependencyMap from './dependency-map';
+import { BitIds, BitId } from '../../bit-id';
+import Bit from '../../bit';
+import { DependencyMap } from './dependency-map';
 import { SOURCES_MAP } from '../../constants';
 
 export default class SourcesDependencyMap extends DependencyMap {

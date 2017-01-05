@@ -15,7 +15,7 @@ export type BitIdProps = {
 
 export default class BitId {
   name: string;
-  box: ?string;
+  box: string;
   version: string;
   scope: string;
 
@@ -57,7 +57,7 @@ export default class BitId {
     return remoteResolver(this.scope, remotes, localScope);
   }
 
-  toString(ignoreScope: boolean = false) {
+  toString(ignoreScope: boolean = false): string {
     const { name, box, version, scope } = this;
     if (ignoreScope) return [box, name].join('/').concat(`::${version}`);
     return [scope, box, name].join('/').concat(`::${version}`);

@@ -1,7 +1,9 @@
 /** @flow */
 import { flatten, values } from '../utils';
+import type { BitDependencies } from './scope';
+import Bit from '../bit';
 
-export default function flattenDependencies(bitDependencies: BitDependencies[]) {
+export default function flattenDependencies(bitDependencies: BitDependencies[]): Bit[] {
   return values(flatten(bitDependencies
     .map(dep => dep.dependencies.concat(dep.bit)))
     .reduce((bits, bit) => {

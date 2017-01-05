@@ -8,7 +8,7 @@ import flattenDependencies from './flatten-dependencies';
 import { Remotes } from '../remotes';
 import { propogateUntil, currentDirName, pathHas, readFile, flatten, first } from '../utils';
 import { getContents } from '../tar';
-import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON, ENV_BITS_DIRNAME } from '../constants';
+import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, BIT_JSON } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import AbstractBitJson from '../bit-json/abstract-bit-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
@@ -17,9 +17,12 @@ import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
 import BitJson from '../bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from '../bit';
-import resolveBit from '../bit-resolver';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
+
+export type ScopeDescriptor = {
+  name: string
+};
 
 export type BitDependencies = {
   bit: Bit,
@@ -28,6 +31,7 @@ export type BitDependencies = {
 
 export type ScopeProps = {
   path: string,
+  scopeJson: ScopeJson;
   created?: boolean;
   cache?: Cache;
   tmp?: Tmp;
@@ -35,7 +39,6 @@ export type ScopeProps = {
   sources?: Source,
   external?: External;
   sourcesMap?: SourcesMap;
-  scopeJson?: ScopeJson;
 };
 
 export default class Scope {
@@ -51,7 +54,7 @@ export default class Scope {
 
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
-    this.scopeJson = scopeProps.scopeJson || new ScopeJson();
+    this.scopeJson = scopeProps.scopeJson;
     this.cache = scopeProps.cache || new Cache(this);
     this.sources = scopeProps.sources || new Source(this);
     this.created = scopeProps.created || false;
@@ -86,7 +89,7 @@ export default class Scope {
     return pathLib.join(this.tmp.getPath(), `${name}_${bitJson.version}.tar`);
   }
 
-  describe() {
+  describe(): ScopeDescriptor {
     return {
       name: this.name()
     };
@@ -145,7 +148,7 @@ export default class Scope {
     return this.sources.loadSource(bitId);
   }
 
-  manyOnes(bitIds: BitId[]): Promise<Bit> {
+  manyOnes(bitIds: BitId[]): Promise<Bit[]> {
     return Promise.all(bitIds.map(bitId => this.getOne(bitId)));
   }
 
@@ -194,21 +197,21 @@ export default class Scope {
     }));
   }
 
-  fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}[]> {
-    return Promise.all(this.getMany(bitIds)).then((bits) => {
-      const tars = flatten(bits).map((bit) => {
-        return bit.toTar()
-          .then((tar) => {
-            return {
-              id: bit.name,
-              contents: tar
-            };
-          });
-      });
+  // fetch(bitIds: BitIds): Promise<{id: string, contents: Buffer}[]> {
+  //   return this.getMany(bitIds).then((bits) => {
+  //     const tars = flatten(bits).map((bit) => {
+  //       return bit.toTar()
+  //         .then((tar) => {
+  //           return {
+  //             id: bit.name,
+  //             contents: tar
+  //           };
+  //         });
+  //     });
 
-      return Promise.all(tars);
-    });
-  }
+  //     return Promise.all(tars);
+  //   });
+  // }
 
   upload(name: string, tar: Buffer) {
     return getContents(tar)
@@ -258,6 +261,7 @@ export default class Scope {
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
     }
+    const path = scopePath;
 
     return Promise.all([
       readFile(getDependenyMapPath(scopePath)), 
@@ -265,7 +269,7 @@ export default class Scope {
     ])
       .then(([rawDependencyMap, rawScopeJson]) => {
         const scopeJson = ScopeJson.loadFromJson(rawScopeJson.toString('utf8'));
-        const scope = new Scope({ path: scopePath, scopeJson });
+        const scope = new Scope({ path, scopeJson }); 
         scope.sourcesMap = SourcesMap.load(JSON.parse(rawDependencyMap.toString('utf8')), scope);
         return scope;
       });

@@ -1,6 +1,7 @@
 /** @flow */
 import pathlib from 'path';
 import { writeFile } from '../utils';
+import { Remote } from '../remotes';
 import { SCOPE_JSON } from '../constants';
 
 export function getPath(scopePath: string): string {
@@ -14,7 +15,7 @@ export type ScopeJsonProps = {
 
 export class ScopeJson {
   name: string;
-  remotes: string[];
+  remotes: {[string]: string};
 
   constructor({ name, remotes }: ScopeJsonProps) {
     this.name = name;

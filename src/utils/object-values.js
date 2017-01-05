@@ -1,8 +1,9 @@
 /** @flow */
 import forEach from './foreach';
 
-export default function values(object: {}) {
+export default function values(object: {[any]: any}): any[] {
   const objValues = [];
-  forEach(object, val => objValues.push(val));
+  // $FlowFixMe
+  forEach(object, val => objValues.push(val)); 
   return objValues;
 }

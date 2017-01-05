@@ -4,11 +4,9 @@ import path from 'path';
 import { Impl, Specs } from './sources';
 import { mkdirp } from '../utils';
 import BitJson from '../bit-json';
-import Scope from '../scope';
-import { Remotes } from '../remotes';
+import { Scope } from '../scope';
 import PartialBit from './partial-bit';
 import { BitId } from '../bit-id';
-import loadPlugin from './environment/load-plugin';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
 
 export type BitProps = {

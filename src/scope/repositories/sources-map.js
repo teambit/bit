@@ -2,13 +2,13 @@
 import path from 'path';
 import { writeFile, forEach } from '../../utils';
 import { SOURCES_JSON } from '../../constants';
-import { Sources } from '.';
+import { Source } from './index';
 import { BitIds, BitId } from '../../bit-id';
 
 export default class SourcesJson extends Map<BitId, BitIds> {
-  sources: Sources;
+  sources: Source;
 
-  constructor(sourcesTuples: [string, BitIds], sources: Sources) {
+  constructor(sourcesTuples: [string, BitIds][], sources: Source) {
     super(sourcesTuples);
     this.sources = sources;
   }
@@ -35,7 +35,7 @@ export default class SourcesJson extends Map<BitId, BitIds> {
     return writeFile(this.getPath(), this.toJson());
   }
 
-  static load(json: {[string]: string[]}, sources: Sources) {
+  static load(json: {[string]: string[]}, sources: Source) {
     const tuples = [];
 
     forEach(json, (bitIds, bitId) => {

@@ -17,6 +17,6 @@ export default class RemoteAdd extends Command {
   }
 
   report({ name, host }: { name: string, host: string }): string {
-    return chalk.green(`added remote name '${chalk.bold(name)}' with host '${chalk.bold(host)}'`);
+    return chalk.green(`added remote scope '${chalk.bold(name)}' with host '${chalk.bold(host)}'`);
   }
 }

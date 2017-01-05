@@ -5,6 +5,7 @@
 <PROJECT_ROOT>/node_modules
 <PROJECT_ROOT>/plugins
 node_modules/
+private/tmp
 
 [include]
 

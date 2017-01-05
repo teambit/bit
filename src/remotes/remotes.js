@@ -1,5 +1,6 @@
 /** @flow */
 import { groupBy, prop } from 'ramda';
+import { BitId } from '../bit-id';
 import Remote from './remote';
 import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
@@ -27,7 +28,7 @@ export default class Remotes extends Map<string, Remote> {
     return this.get(scopeName.replace('@', ''));
   }
 
-  fetch(ids: BitId[], withoutDeps: boolean = false): Promise<BitDependencies> {
+  fetch(ids: BitId[], withoutDeps: boolean = false): Promise<BitDependencies[]> {
     const byScope = groupBy(prop('scope'));
     const promises = [];
     forEach(byScope(ids), (scopeIds, scopeName) => {

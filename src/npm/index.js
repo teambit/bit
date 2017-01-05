@@ -1,6 +1,5 @@
 /** @flow */
 const npmi = require('npmi');
-const path = require('path');
 
 export default ({ name, version, dir }: { name: string, version: string, dir: string }) => {
   const options = {

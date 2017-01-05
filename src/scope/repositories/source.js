@@ -20,10 +20,10 @@ export default class Source extends Repository {
   }  
 
   getPartial(name: string): Promise<PartialBit> {
-    return PartialBit.load(path.join(this.getPath(), name), name);
+    return PartialBit.load(path.join(this.getPath(), name), name, this.scope.name());
   }
 
-  setSource(bit: Bit, dependencies: BitDependencies): Promise<Bit> {
+  setSource(bit: Bit, dependencies: Bit[]): Promise<Bit> {
     if (!bit.validate()) throw new InvalidBit();
     return bit
       .cd(this.composeSourcePath(bit.getId()))
@@ -59,8 +59,8 @@ export default class Source extends Repository {
   }
 
   clean(bitId: BitId) {
-    // bitId.version = this.resolveVersion(bitId);
-    // return rmDir(this.composeSourcePath(bitId));
+    bitId.version = this.resolveVersion(bitId);
+    return rmDir(this.composeSourcePath(bitId));
   }
 
   composeVersionsPath(name: string, box: string) {

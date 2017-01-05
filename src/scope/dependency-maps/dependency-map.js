@@ -1,7 +1,7 @@
 /** @flow */
 import path from 'path';
 import { BitId, BitIds } from '../../bit-id';
-import { Repository } from '../repository';
+import Repository from '../repository';
 import { forEach, writeFile } from '../../utils';
 import Scope from '../scope';
 import Bit from '../../bit';
@@ -19,7 +19,7 @@ export class DependencyMap extends Map<string, BitIds> {
     this.repository = repository;
   }
 
-  get(bitId: BitId): BitId[] {
+  get(bitId: BitId): BitIds {
     return super.get(bitId.toString());
   }
 
@@ -36,7 +36,7 @@ export class DependencyMap extends Map<string, BitIds> {
   }
 
   getPath(): string {
-    return path.join(this.scope.getPath(), DEPENDENCY_MAP_FILENAME);
+    return path.join(this.repository.getPath(), DEPENDENCY_MAP_FILENAME);
   }
 
   write() {
@@ -48,12 +48,12 @@ export class DependencyMap extends Map<string, BitIds> {
     return this;
   }
 
-  static load(json: {[string]: {id: string, remote: BasicRemote}[]}, scope: Scope): DependencyMap {
+  static load(json: {[string]: string[]}, repository: Repository): DependencyMap {
     const matrix = [];
     forEach(json, (val, key) => {
       matrix.push([key, val.map(bitDep => BitId.parse(bitDep.id))]);
     });
     
-    return new DependencyMap(scope, matrix);
+    return new DependencyMap(repository, matrix);
   }
 }

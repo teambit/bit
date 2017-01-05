@@ -3,8 +3,9 @@ import path from 'path';
 import { BIT_EXTERNAL_DIRNAME } from '../../constants';
 import { BitId } from '../../bit-id';
 import Repository from '../repository';
+import Scope from '../scope';
 import Bit from '../../bit';
-import { ExternalDependencyMap } from '../depdency-maps';
+import { ExternalDependencyMap } from '../dependency-maps';
 
 export default class External extends Repository {
   externalMap: ExternalDependencyMap;
@@ -46,13 +47,5 @@ export default class External extends Repository {
 
   write() {
     return this.externalMap.write();
-  }
-
-  getMany(bitIds: BitId[]): Promise<Bit[]> {
-    return Promise.all(bitIds.map(id => this.get(id)))
-      .then(values => values.reduce((result, value) => {
-        value.success ? result.bits.push(value.bit) : result.missingIds.push(value.id); //eslint-disable-line
-        return result;
-      }, { bits: [], missingIds: [] }));
   }
 }

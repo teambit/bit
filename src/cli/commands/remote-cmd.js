@@ -3,7 +3,9 @@ import Command from '../command';
 import RemoteAdd from './remote/remote-add-cmd';
 import RemoteRm from './remote/remote-rm-cmd';
 import { remoteList } from '../../api';
-import { forEach } from '../../utils';
+import { forEach, empty } from '../../utils';
+
+const chalk = require('chalk');
 
 export default class Remote extends Command {
   name = 'remote';
@@ -17,11 +19,13 @@ export default class Remote extends Command {
     new RemoteRm()
   ];
   
+  // $FlowFixMe
   action(args: string[], { global }: { glboal: boolean }): Promise<any> {
     return remoteList(global);
   }
 
   report(remotes: {[string]: string}): string {
+    if (empty(remotes)) return chalk.red('no configured remotes found in scope');
     const resArr = ['scope name | host'];
     forEach(remotes, (host, name) => {
       resArr.push(`${name} | ${host}`);

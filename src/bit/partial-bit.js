@@ -12,17 +12,15 @@ import { BitIds, BitId } from '../bit-id';
 import { remoteResolver, Remotes } from '../remotes';
 import { Scope } from '../scope';
 import Bit from './bit';
-import InvalidBit from './exceptions/invalid-bit';
 import { isDirEmptySync } from '../utils';
-import { LOCAL_SCOPE_NOTATION } from '../constants';
 import { composePath as composeBitJsonPath } from '../bit-json/bit-json';
 import validations from './validations';
 
 export type PartialBitProps = {
+  scope: string;
   name: string;
   bitDir: string;
   bitJson: BitJson;
-  scope: string;
 };
 
 export default class PartialBit {
@@ -131,7 +129,7 @@ export default class PartialBit {
    * @deprecated
    */
   composeTarFileName() {
-    return `${this.scope}_${this.box}_${this.name}_${this.bitJson.version}.tar`;
+    return `${this.scope}_${this.getBox()}_${this.name}_${this.bitJson.version}.tar`;
   }
 
   toTar() {

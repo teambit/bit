@@ -18,7 +18,7 @@ export class SourcesMap extends Map<string, BitIds> {
     this.scope = scope;
   }
 
-  get(bitId: BitId): BitId[] {
+  get(bitId: BitId): BitIds {
     return super.get(bitId.toString(true));
   }
 
@@ -47,7 +47,7 @@ export class SourcesMap extends Map<string, BitIds> {
     return writeFile(this.getPath(), JSON.stringify(this.toObject()));
   }
 
-  static load(json: {[string]: {id: string, remote: BasicRemote}[]}, scope: Scope): DependencyMap {
+  static load(json: {[string]: string[]}, scope: Scope): SourcesMap {
     const matrix = [];
     forEach(json, (val, key) => {
       matrix.push([key, val.map(bitDep => BitId.parse(bitDep))]);
