@@ -26,7 +26,7 @@ node  {
     stage 'export to google storage'
     sh("gsutil -m cp -a public-read ./distribution/brew_pkg/${bundleName}_brew.tar.gz ${uploadfolder}")
     sh("gsutil -m cp -a public-read ./distribution/debian_pkg/${bundleName}_deb.deb ${uploadfolder}")
-    sh("gsutil -m cp  ./scripts/bit.rb ${uploadfolder}")
+
 
     
      stage 'notify release server'
@@ -35,7 +35,7 @@ node  {
 
     stage 'generate formula for brew'
     sh("cd ./scripts && ./generate-formula.sh ${releaseServer}/${currentVersion}/${bundleName}_brew.tar.gz")
-
+    sh("gsutil -m cp  ./scripts/bit.rb ${uploadfolder}")
 
 }
 import groovy.json.JsonOutput
