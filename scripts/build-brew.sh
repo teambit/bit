@@ -30,7 +30,7 @@ eval tar --exclude='./Jenkinsfile' --exclude='./scripts/' -zcvf ${tarName}  *
 shasum -a 256 ${tarName}
 mv ${tarName} ../
 rm -rf ../bit
-SHA=$(shasum -a 256 -b ../${tarName} | cut -d ' ' -f 1 )
+SHA=$( curl -s $1 |shasum -b -a 256| cut -d ' ' -f 1 )
 popd
 sed -i.bak 's#sha256 ""#sha256 "'${SHA}'"#' ./bit.rb
 sed -i.bak 's#url ""#url "'$1'"#' ./bit.rb

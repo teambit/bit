@@ -3,7 +3,7 @@ class Bit < Formula
   desc ""
   homepage ""
   url ""
-  sha256 "7835b9b9464ee3011ca02d03983cdee234a1d768578bba25ddfd6552e78b773b"
+  sha256 ""
 
     depends_on "node"
 
