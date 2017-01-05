@@ -18,8 +18,8 @@ export default class BitDependencies {
     )
     .then(([bit, dependencies]) => {
       return JSON.stringify({
-        bit: bit.tarball.toString('base64'),
-        dependencies: dependencies.map(dep => dep.tarball.toString('base64'))
+        bit: bit.tarball.toString('ascii'),
+        dependencies: dependencies.map(dep => dep.tarball.toString('ascii'))
       });
     });
   }
@@ -27,8 +27,8 @@ export default class BitDependencies {
   static deserialize(str: string, scope: ?string): BitDependencies {
     const json = JSON.parse(fromBase64(str));
     return Promise.all([
-      Bit.fromTar({ tarball: fromBase64(json.bit), scope }), 
-      Promise.all(json.dependencies.map(dep => Bit.fromTar({ tarball: fromBase64(dep), scope })))
+      Bit.fromTar({ tarball: new Buffer(json.bit, 'ascii'), scope }), 
+      Promise.all(json.dependencies.map(dep => Bit.fromTar({ tarball: new Buffer(dep, 'ascii'), scope })))
     ])
     .then(([bit, dependencies]) => new BitDependencies({ bit, dependencies }));
   }
