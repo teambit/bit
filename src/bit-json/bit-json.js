@@ -2,6 +2,7 @@ const R = require('ramda');
 const fs = require('fs');
 const path = require('path');
 const { BIT_JSON_NAME } = require('../constants');
+const DependencyMap = require('../dependency-map');
 
 class BitJson {
   constructor(bitJson) {
@@ -14,6 +15,7 @@ class BitJson {
     this.tester = R.path(['env', 'tester'], bitJson);
     this.remotes = R.prop('remotes', bitJson);
     this.dependencies = R.prop('dependencies', bitJson);
+    this.dependencyMap = null;
   }
 
   getName() {
@@ -50,6 +52,18 @@ class BitJson {
 
   getDependencies() {
     return this.dependencies;
+  }
+
+  populateDependencyMap() {
+    this.dependencyMap = DependencyMap.load(this.dependencies);
+  }
+
+  getDependencyMap() {
+    if (!this.dependencyMap) {
+      this.populateDependencyMap();
+    }
+
+    return this.dependencyMap.getDependencies();
   }
 
   static load(bitPath) {

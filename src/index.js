@@ -11,6 +11,7 @@ const Consumer = require('./consumer/consumer');
 const {
   loadBitInline,
   loadBitAssumingOnlyOne,
+  loadBitUsingBitJsons,
   loadBitUsingDependenciesMap,
 } = require('./strategies');
 
@@ -26,7 +27,8 @@ const load = (bitId) => {
   const strategies = [
     loadBitInline,
     loadBitAssumingOnlyOne,
-    loadBitUsingDependenciesMap,
+    loadBitUsingBitJsons,
+    // loadBitUsingDependenciesMap,
   ];
 
   for (let i = 0; i < strategies.length; i += 1) {
@@ -36,15 +38,6 @@ const load = (bitId) => {
       break;
     }
   }
-
-  // const locateBitAssumingOnlyOne = require('./bit-locators/assume-only-one-locator');
-  // const stackTrace = require('stack-trace');
-  // try {
-  //   bitPath = locateBitAssumingOnlyOne(bitsDir, boxName, bitName);
-  // } catch (e) {
-  //   // in case there are conflicts (e.g. two bits by the same name)
-  //   const callerDirectory = stackTrace.get()[1].getFileName();
-  // }
 
   if (loaded) return loaded;
   throw new Error(`could not find the required Bit - ${bitId}`);
