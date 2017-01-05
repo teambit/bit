@@ -13,11 +13,8 @@ import PartialBit from '../bit/partial-bit';
 import { 
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
-  BIT_JSON,
   BIT_HIDDEN_DIR,
  } from '../constants';
-import * as tar from '../tar';
-import { BitJsonNotFound } from '../bit-json/exceptions';
 import { flatten } from '../utils';
 import { Scope } from '../scope';
 import BitInlineId from '../bit-inline-id';

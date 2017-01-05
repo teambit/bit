@@ -221,7 +221,7 @@ export default class Scope {
           impl: bitJson.getImplBasename() ? files[bitJson.getImplBasename()] : undefined,
           spec: bitJson.getSpecBasename() ? files[bitJson.getSpecBasename()] : undefined
         });
-
+        
         return this.put(bit);
       });
   }
