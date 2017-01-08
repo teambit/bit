@@ -37,6 +37,9 @@ node  {
     stage 'generate formula for brew'
     sh("cd ./scripts && ./generate-formula.sh ${assets}/${currentVersion}/${bundleName}_brew.tar.gz")
     sh("gsutil -m cp  ../distribution/bit.rb ${uploadfolder}")
+    
+    sh("curl -X PURGE http://assets.bitsrc.io/release/${currentVersion}/bit_${currentVersion}_brew.tar.gz")
+    
 
 }
 import groovy.json.JsonOutput
