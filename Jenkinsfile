@@ -11,17 +11,13 @@ node  {
     def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
     
     stage 'remove old zip files '
-    sh("rm -rf *.tar.gz  && rm -rf ./distribution  && rm -rf ./node_modules")
+    sh("rm -rf *.tar.gz  && rm -rf ./distribution ")
 
     stage 'Running tar'
     sh('cd ./scripts && ./build-tar.sh tar')
 
     stage 'Running brew'
     sh("cd ./scripts && ./build-brew.sh ")
-
-
-    stage 'Running deb'
-    sh('cd ./scripts && ./build-deb.sh')
 
 
     stage 'export to google storage'
