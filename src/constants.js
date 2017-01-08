@@ -59,6 +59,12 @@ export const DEFAULT_BIT_VERSION = '1';
 
 export const LATEST_BIT_VERSION = 'latest';
 
+export const OBJECTS_DIR = 'objects';
+
+export const NULL_BYTE = '\0';
+
+export const SPACE_DELIMITER = ' ';
+
 export const DEFAULT_BOX_NAME = 'global';
 
 export const VERSION_DELIMITER = '::';

@@ -31,13 +31,19 @@ import resolveHomePath from './os-resolve-home-path';
 import currentDirName from './current-dir-name';
 import allSettled from './promise-all-settled';
 import values from './object-values';
+import glob from './glob';
+import inflate from './zlib-inflate';
+import deflate from './zlib-deflate';
 
 export {
   parseSSHUrl,
   rmDir,
+  inflate,
+  deflate,
   values,
   toBase64,
   fromBase64,
+  glob,
   resolveBoolean,
   empty,
   filter,

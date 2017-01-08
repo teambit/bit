@@ -5,11 +5,11 @@ import Command from '../command';
 import { list } from '../../api';
 
 export default class List extends Command {
-  name = 'ls';
+  name = 'list';
   description = 'list all box bits';
-  alias = '';
+  alias = 'ls';
   opts = [
-    ['i', 'inline', 'remove inline bit']
+    ['i', 'inline', 'in inline bit']
   ];
   
   action(args: string[], opts: any): Promise<any> {

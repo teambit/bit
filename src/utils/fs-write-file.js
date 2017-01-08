@@ -1,9 +1,9 @@
 /** @flow */
-import fs from 'fs';
+import fs from 'fs-extra';
 
-export default function writeFile(filename: string, contents: string): Promise<boolean> {
+export default function writeFile(filepath: string, contents: string|Buffer): Promise<boolean> {
   return new Promise((resolve, reject) => {
-    fs.writeFile(filename, contents, (err, res) => {
+    fs.outputFile(filepath, contents, (err, res) => {
       if (err) return reject(err);
       return resolve(res);
     });

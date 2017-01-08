@@ -11,7 +11,7 @@ export default class Init extends Command {
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
-    ['s', 'shared', 'add group write permissions to a repository properly']
+    ['s', 'shared <groupname>', 'add group write permissions to a repository properly']
   ];
 
   action([path, ]: [string, ], { bare }: any): Promise<{[string]: any}> {

@@ -80,6 +80,10 @@ export default class Scope {
     };
   }
 
+  ls() {
+    return this.sources.list();
+  }
+
   put(bit: Bit): Promise<BitDependencies> {
     bit.scope = this.name();
     bit.validateOrThrow();
