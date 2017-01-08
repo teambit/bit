@@ -34,9 +34,11 @@ import values from './object-values';
 import glob from './glob';
 import inflate from './zlib-inflate';
 import deflate from './zlib-deflate';
+import sha1 from './sha1';
 
 export {
   parseSSHUrl,
+  sha1,
   rmDir,
   inflate,
   deflate,

@@ -7,8 +7,17 @@ import { mkdirp, writeFile, allSettled, readFile } from '../utils';
 import { Scope } from '../scope';
 
 export default class Repository {
-  objects: BitObject[];
+  objects: BitObject[] = [];
   scope: Scope;
+  types: {[string]: Function};
+
+  constructor(scope: Scope, objectTypes: Function[] = []) {
+    this.scope = scope;
+    this.types = objectTypes.reduce((map, objectType) => {
+      map[objectType.name] = objectType;
+      return map;
+    }, {});
+  }
 
   ensureDir() {
     return mkdirp(this.getPath());
@@ -38,8 +47,10 @@ export default class Repository {
   }
 
   persistOne(object: BitObject): Promise<> {
-    return Promise.all([object.hash(), object.compress()])
-      .then(([hash, contents]) => writeFile(this.objectPath(hash), contents)); 
+    return object.compress()
+      .then((contents) => {
+        return writeFile(this.objectPath(object.hash()), contents);
+      }); 
   }
 }
 
