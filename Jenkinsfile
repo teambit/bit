@@ -31,8 +31,7 @@ node  {
 
     stage 'generate formula for brew'
     sh("cd ./scripts && ./generate-formula.sh ${assets}/${currentVersion}/${bundleName}_brew.tar.gz")
-    sh("cd ../distribution")
-    sh("gsutil -m cp bit.rb ${uploadfolder}")
+    sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
 
 }
 import groovy.json.JsonOutput
