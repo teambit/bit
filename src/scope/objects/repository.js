@@ -33,7 +33,7 @@ export default class Repository {
 
   load(ref: Ref): Promise<BitObject> {
     return readFile(this.objectPath(ref.hash))
-      .then(fileContents => BitObject.parse(fileContents, this.types));
+      .then(fileContents => BitObject.parseObject(fileContents, this.types));
   }
 
   add(object: BitObject): Repository {

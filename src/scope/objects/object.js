@@ -20,7 +20,7 @@ export default class BitObject {
     return Buffer.concat([new Buffer(header), contents]);
   }
 
-  static parse(fileContents: Buffer, types: {[string]: Function}): Promise<BitObject> {
+  static parseObject(fileContents: Buffer, types: {[string]: Function}): Promise<BitObject> {
     return inflate(fileContents)
       .then((buffer) => {
         const [headers, contents] = buffer.toString().split(NULL_BYTE);

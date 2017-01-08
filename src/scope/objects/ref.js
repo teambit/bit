@@ -6,4 +6,8 @@ export default class Ref {
   constructor(hash: string) {
     this.hash = hash;
   }
+
+  toString() {
+    return this.hash;
+  }
 }
