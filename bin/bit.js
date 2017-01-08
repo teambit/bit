@@ -73,4 +73,4 @@ verifyCompatibility();
 ensureDirectories();
 initCache();
 loadCli();
-// checkForUpdates(updateOrLaunch);
+checkForUpdates(updateOrLaunch);
