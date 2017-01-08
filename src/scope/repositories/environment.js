@@ -7,7 +7,7 @@ import AbstractBitJson from '../../bit-json/abstract-bit-json';
 import { BitId } from '../../bit-id';
 import Bit from '../../bit';
 import { BIT_ENVIRONMENT_DIRNAME } from '../../constants';
-import npmInstall from '../../npm';
+import npmInstall from '../../utils/npm';
 import resolveBit from '../../bit-node-resolver';
 
 const installPackageDependencies = (bit) => {

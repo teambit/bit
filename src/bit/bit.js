@@ -6,7 +6,7 @@ import { mkdirp } from '../utils';
 import BitJson from '../bit-json';
 import { Scope } from '../scope';
 import PartialBit from './partial-bit';
-import { getContents } from '../tar';
+import { getContents } from '../utils/tar';
 import { BitId } from '../bit-id';
 import { DEFAULT_DIST_DIRNAME, BIT_JSON, DEFAULT_BUNDLE_FILENAME } from '../constants';
 

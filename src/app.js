@@ -1,6 +1,6 @@
 /** @flow */
-import buildRegistrar from './cli/command-registrar-builder';
 import loudRejection from 'loud-rejection';
+import buildRegistrar from './cli/command-registrar-builder';
 
 loudRejection();
 
