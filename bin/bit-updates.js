@@ -58,7 +58,7 @@ function checkUpdate(cb) {
 }
 
 function getUpdateCommand() {
-  if (constants.BIT_INSTALL_METHOD === 'brew') return 'brew upgrade bit';
+  if (constants.BIT_INSTALL_METHOD === 'brew') return 'brew upgrade /Users/eyal/Downloads/release-0.1.1-bit.rb';
   if (constants.BIT_INSTALL_METHOD === 'deb') return 'sudo apt-get update && sudo apt-get install bit';
   if (constants.BIT_INSTALL_METHOD === 'npm') return 'npm upgrade --global bit';
   if (constants.BIT_INSTALL_METHOD === 'choco') return 'choco upgrade bit';
