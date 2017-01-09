@@ -22,7 +22,7 @@ PACKAGE_TMPDIR_ABSOLUTE=$(cd $(dirname ".") && pwd -P)/$PACKAGE_TMPDIR/bit/
 
 
 #### Build DEB (Debian, Ubuntu) package
-node ./set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/package.json homebrew
+node ./set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/package.json brew
 cd $PACKAGE_TMPDIR_ABSOLUTE
 #eval "$FPM --output-type tar  --architecture noarch --depends nodejs --category 'Development/Languages' ."
 eval tar --exclude='./Jenkinsfile' --exclude='./scripts/' -zcvf ${tarName}  *
