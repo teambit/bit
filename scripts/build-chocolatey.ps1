@@ -26,17 +26,17 @@ rm artifacts/*.nupkg
 # Download the installer so we can compute its hash
 # Keep this in sync with chocolateyInstall.ps1.in
 # This is intentionally not using /latest.msi to ensure the URL used by the Chocolatey package is valid.
-$url = "http://assets.bitsrc.io/release/$latest_version/bit-$latest_version.msi"
+$url = "http://assets.bitsrc.io/release/$latest_version/bit_$latest_version.msi"
 $installer_file = [IO.Path]::GetTempFileName()
 Invoke-WebRequest -Uri $url -OutFile $installer_file
 
 $hash = (Get-FileHash -Path $installer_file -Algorithm SHA256).Hash
 
 # Replace placeholders in chocolateyInstall.ps1
-(Get-Content $PSScriptRoot\..\resources\win-chocolatey\tools\chocolateyinstall.ps1.in) `
+(Get-Content ..\resources\win-chocolatey\tools\chocolateyinstall.ps1.in) `
   -replace '{VERSION}', $latest_version `
   -replace '{CHECKSUM}', $hash |
-  Set-Content $PSScriptRoot\..\resources\win-chocolatey\tools\chocolateyinstall.ps1
+  Set-Content ..\resources\win-chocolatey\tools\chocolateyinstall.ps1
 
 choco pack $PSScriptRoot\..\resources\win-chocolatey\bit.nuspec --version $latest_version
 mv *.nupkg artifacts

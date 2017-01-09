@@ -4,7 +4,7 @@
 		<id>bit</id>
 		<title>Bit (Install)</title>
 		<!-- Version number inserted in build-chocolatey.ps1 -->
-		<version>0.0.0</version>
+		<version>0.1.1</version>
 		<authors>Bit Maintainers</authors>
 		<owners>Eyal Segal</owners>
 		<tags>bit node nodejs npm javascript packages bower admin</tags>
@@ -31,9 +31,7 @@ scoping mechanism to easily find and reuse components created by you or by other
 		<docsUrl>https://bitsrc.io/en/docs/</docsUrl>
 		<bugTrackerUrl>https://github.com/cocycles/bit/issues</bugTrackerUrl>
 		<releaseNotes>https://github.com/cocycles/bit/releases/tag/v$version$</releaseNotes>
-		<dependencies>
-			<dependency id="nodejs.install" version="6.0" />
-		</dependencies>
+		
 	</metadata>
 
 	<files>
