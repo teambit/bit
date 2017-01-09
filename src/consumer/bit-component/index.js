@@ -1,3 +1,3 @@
-import Bit from './bit-component';
+import BitComponent from './bit-component';
 
-export default Bit;
+export default BitComponent;

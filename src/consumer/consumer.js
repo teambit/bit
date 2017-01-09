@@ -6,11 +6,8 @@ import flattenDependencies from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
-import BitJson from './bit-json/bit-json';
 import { BitId, BitIds } from '../bit-id';
-import Bit from './bit-component';
-import Component from './component/component';
-import PartialBit from './bit-component/partial-bit';
+import Component from './bit-component';
 import { 
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
@@ -19,20 +16,13 @@ import {
 import { flatten } from '../utils';
 import { Scope, BitDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
-import loadPlugin from './bit/environment/load-plugin';
+import loadPlugin from './bit-component/environment/load-plugin';
 
-const buildBit = (bit: Bit, scope: Scope): Promise<Bit> => bit.build(scope);
-
-const getBitDirForConsumerImport = ({
-  bitsDir, name, box, version, scope
-}: {
-  bitsDir: string,
-  name: string,
-  box: string,
-  version: string,
-  scope: string 
-}): string => 
-  path.join(bitsDir, box, name, scope, version);
+const buildAndSave = (component: Component, scope: Scope, bitDir: string): Promise<Component> =>
+  component.build(scope)
+  .then(({ code }) => {
+    
+  });
 
 export type ConsumerProps = {
   projectPath: string,
@@ -61,24 +51,11 @@ export default class Consumer {
       .then(() => this);
   }
 
-  cdAndWrite(bit: Bit, bitsDir: string): Promise<Bit> {
-    const bitDirForConsumerImport = getBitDirForConsumerImport({
-      bitsDir,
-      name: bit.name,
-      box: bit.getBox(),
-      version: bit.getVersion(),
-      scope: bit.scope
-    });
-
-    return bit.cd(bitDirForConsumerImport).write(true)
-      .then(b => buildBit(b, this.scope));
-  }
-
   getInlineBitsPath(): string {
     return path.join(this.projectPath, INLINE_BITS_DIRNAME);
   }
 
-  getBitsPath(): string {
+  getComponentsPath(): string {
     return path.join(this.projectPath, BITS_DIRNAME);
   }
 
@@ -105,13 +82,13 @@ export default class Consumer {
         testerId: this.getTesterName(), compilerId: this.getCompilerName()
       }).then(() =>
         Promise.all(deps.map(dep => this.scope.get(dep)))
-        .then(bits => this.writeToBitsDir(flatten(bits)))
+        .then(bits => this.writeToComponentsDir(flatten(bits)))
       );
     }
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
-      .then(bitDependencies => this.writeToBitsDir([bitDependencies]));
+      .then(bitDependencies => this.writeToComponentsDir([bitDependencies]));
   }
 
   importEnvironment(rawId: ?string) {
@@ -145,17 +122,29 @@ export default class Consumer {
     });
   }
 
-  writeToBitsDir(bitDependencies: BitDependencies[]): Promise<Bit[]> {
-    const bitsDir = this.getBitsPath();
-    const bits = flattenDependencies(bitDependencies);
+  writeToComponentsDir(bitDependencies: BitDependencies[]): Promise<Bit[]> {
+    const componentsDir = this.getComponentsPath();
+    const components = flattenDependencies(bitDependencies);
 
-    return Promise.all(bits.map(bit => this.cdAndWrite(bit, bitsDir)));
+    const bitDirForConsumerImport = (component: Component) => path.join(
+      componentsDir,
+      component.box,
+      component.name,
+      component.scope,
+      component.version,
+    );
+
+    return Promise.all(components.map((component) => {
+      const bitPath = bitDirForConsumerImport(component);
+      return component.write(bitPath, true)
+      .then(() => buildAndSave(component, this.scope, bitPath));
+    }));
   }
 
   export(id: BitInlineId) {  
     return this.loadBit(id)
       .then(bit => this.scope.put(bit))
-      .then(bits => this.writeToBitsDir([bits]))
+      .then(bits => this.writeToComponentsDir([bits]))
       .then(() => this.removeFromInline(id));
   }
 
@@ -185,7 +174,7 @@ export default class Consumer {
   }
 
   includes({ inline, bitName }: { inline: ?boolean, bitName: string }): Promise<boolean> {
-    const dirToCheck = inline ? this.getInlineBitsPath() : this.getBitsPath();
+    const dirToCheck = inline ? this.getInlineBitsPath() : this.getComponentsPath();
 
     return new Promise((resolve) => {
       return fs.stat(path.join(dirToCheck, bitName), (err) => {
