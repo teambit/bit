@@ -1,8 +1,7 @@
 node  {
     properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
-
-    checkout scm
-    def releaseServer = "${env.BIT_STAGE_SERVER}"
+    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'b0cc61f6-f63c-44ce-b004-c7ce63415d3f', url: 'git@git.cocycles.io:core/bit.git']]])
+	def releaseServer = "${env.BIT_STAGE_SERVER}"
 	def assets = "${env.BIT_ASSETS}"
 	print releaseServer
 	def env = "${environment}"
@@ -13,7 +12,7 @@ node  {
     def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
     
     stage 'remove old zip files '
-    sh("rm -rf *.tar.gz  && rm -rf ./distribution ")
+    sh("rm -rf *.tar.gz  && rm -rf ./distribution  && rm -rf ./node_modules")
 
     stage 'Running tar'
     sh('cd ./scripts && ./build-tar.sh tar')
@@ -22,9 +21,13 @@ node  {
     sh("cd ./scripts && ./build-brew.sh ")
 
 
+    stage 'Running deb'
+    sh('cd ./scripts && ./build-deb.sh')
+
+
     stage 'export to google storage'
     sh("gsutil -m cp -a public-read ./distribution/brew_pkg/${bundleName}_brew.tar.gz ${uploadfolder}")
-    //sh("gsutil -m cp -a public-read ./distribution/debian_pkg/${bundleName}_deb.deb ${uploadfolder}")
+    sh("gsutil -m cp -a public-read ./distribution/debian_pkg/${bundleName}_deb.deb ${uploadfolder}")
 
 
     
@@ -34,6 +37,9 @@ node  {
     stage 'generate formula for brew'
     sh("cd ./scripts && ./generate-formula.sh ${assets}/${currentVersion}/${bundleName}_brew.tar.gz")
     sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
+
+    sh("curl -X PURGE http://assets.bitsrc.io/release/${currentVersion}/bit_${currentVersion}_brew.tar.gz")
+
 
 }
 import groovy.json.JsonOutput

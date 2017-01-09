@@ -6,8 +6,8 @@ import { BIT_SOURCES_DIRNAME } from '../../constants';
 import InvalidBit from '../../bit/exceptions/invalid-bit';
 import Bit from '../../bit';
 import PartialBit from '../../bit/partial-bit';
-import { BitId } from '../../bit-id';
-import { listDirectories, rmDir, empty } from '../../utils';
+import { BitId, BitIds } from '../../bit-id';
+import { listDirectories, rmDir, empty, glob } from '../../utils';
 
 export default class Source extends Repository {
   getPath(): string {
@@ -38,6 +38,34 @@ export default class Source extends Repository {
 
   resolveVersion(id: BitId) {
     return id.getVersion().resolve(this.listVersions(id));
+  }
+
+  list(): BitIds {
+    // function listComponents(components: string[]) {
+    //   return components.map((component) => {
+    //     return {
+    //       name: component,
+    //       version: this.resolveVersion('latest')
+    //     };
+    //   });
+    // }
+
+    // return listDirectories(this.getPath())
+    //   .map((box) => {
+    //     return {
+    //       box,
+    //       components: listComponents.bind(this,
+    //         listDirectories(this.composeBoxPath(box))
+    //       ),
+    //     };
+    //   });
+    return glob(path.join(this.getPath(), '*', '*', '*'))
+      .then(matches => 
+        matches.map((match) => {
+          const bitId = path.parse(match);
+          return PartialBit.load(match, '', this.scope.name());
+        })
+      );
   }
 
   loadSource(id: BitId): Promise<Bit> {

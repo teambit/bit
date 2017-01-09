@@ -2,7 +2,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-import { pack } from '../tar';
+import { pack } from '../utils/tar';
 import * as bitCache from '../cache';
 import { CacheNotFound } from '../cache/exceptions';
 import { Impl, Specs } from './sources';

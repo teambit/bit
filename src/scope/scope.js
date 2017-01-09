@@ -6,6 +6,7 @@ import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import { Remotes } from '../remotes';
+import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
 import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
@@ -13,8 +14,9 @@ import AbstractBitJson from '../bit-json/abstract-bit-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, External, Environment } from './repositories';
 import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
-import BitJson from '../bit-json';
+import SourceObject from './models/source';
 import { BitId, BitIds } from '../bit-id';
+import { Repository, Ref } from '../objects';
 import Bit from '../bit';
 import BitDependencies from './bit-dependencies';
 
@@ -34,6 +36,7 @@ export type ScopeProps = {
   sources?: Source,
   external?: External;
   sourcesMap?: SourcesMap;
+  objectsRepository?: Repository;
 };
 
 export default class Scope {
@@ -45,6 +48,7 @@ export default class Scope {
   environment: Environment;
   sources: Source;
   path: string;
+  objectsRepository: Repository;
   sourcesMap: SourcesMap;
 
   constructor(scopeProps: ScopeProps) {
@@ -54,6 +58,7 @@ export default class Scope {
     this.sources = scopeProps.sources || new Source(this);
     this.created = scopeProps.created || false;
     this.tmp = scopeProps.tmp || new Tmp(this);
+    this.objectsRepository = scopeProps.objectsRepository || new Repository(this, types());
     this.environment = scopeProps.environment || new Environment(this);
     this.external = scopeProps.external || new External(this);
     this.sourcesMap = scopeProps.sourcesMap || new SourcesMap(this);
@@ -80,24 +85,43 @@ export default class Scope {
     };
   }
 
-  put(bit: Bit): Promise<BitDependencies> {
-    bit.scope = this.name();
-    bit.validateOrThrow();
-    return this.remotes().then((remotes) => {
-      return bit.dependencies()
-        .fetch(this, remotes)
-        .then((dependencies) => {
-          dependencies = flattenDependencies(dependencies);
-          return this.sources.setSource(bit, dependencies)
-          // @TODO make the scope install the required env
-            .then(() => this.ensureEnvironment(bit.bitJson))
-            .then(() => bit.build(this))
-            .then(() => this.sourcesMap.write())
-            .then(() => {
-              return new BitDependencies({ bit, dependencies });
-            });
+  ls() {
+    return this.sources.list();
+  }
+
+  // put(bit: Bit): Promise<BitDependencies> {
+  //   bit.scope = this.name();
+  //   bit.validateOrThrow();
+  //   return this.remotes().then((remotes) => {
+  //     return bit.dependencies()
+  //       .fetch(this, remotes)
+  //       .then((dependencies) => {
+  //         dependencies = flattenDependencies(dependencies);
+  //         return this.sources.setSource(bit, dependencies)
+  //         // @TODO make the scope install the required env
+  //           .then(() => this.ensureEnvironment(bit.bitJson))
+  //           .then(() => bit.build(this))
+  //           .then(() => this.sourcesMap.write())
+  //           .then(() => {
+  //             return new BitDependencies({ bit, dependencies });
+  //           });
+  //       });
+  //   });
+  // }
+
+  put(): Promise<any> {
+    const source = new SourceObject(new Buffer('module.exports = function(){ console.log() };'));
+    this.objectsRepository.add(source);
+    return this.objectsRepository.persist()
+      .catch((err) => {
+        console.log(err);
+      })
+      .then((res) => {
+        return this.objectsRepository.load(new Ref('c1d44ff03aff1372856c281854f454e2e1d15b7c'))
+        .then(a => {
+          console.log(a);
         });
-    });
+      });
   }
 
   getExternal(bitId: BitId, remotes: Remotes): Promise<BitDependencies> {
@@ -150,6 +174,7 @@ export default class Scope {
       .then(() => this.environment.ensureDir())
       .then(() => this.sourcesMap.write())
       .then(() => this.scopeJson.write(this.getPath()))
+      .then(() => this.objectsRepository.ensureDir())
       .then(() => this); 
   }
   

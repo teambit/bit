@@ -16,10 +16,9 @@ import {
   BIT_HIDDEN_DIR,
  } from '../constants';
 import { flatten } from '../utils';
-import { Scope } from '../scope';
+import { Scope, BitDependencies } from '../scope';
 import BitInlineId from '../bit-inline-id';
 import loadPlugin from '../bit/environment/load-plugin';
-import { BitDependencies } from '../scope';
 
 const buildBit = (bit: Bit, scope: Scope): Promise<Bit> => bit.build(scope);
 
