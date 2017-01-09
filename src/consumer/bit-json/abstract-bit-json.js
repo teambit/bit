@@ -2,10 +2,10 @@
 import R from 'ramda';
 import { BitIds } from '../../bit-id';
 import { 
-  DEFAULT_COMPILER,
-  DEFAULT_TESTER,
+  DEFAULT_COMPILER_ID,
+  DEFAULT_TESTER_ID,
   DEFAULT_IMPL_NAME,
-  DEFAULT_SPEC_NAME,
+  DEFAULT_SPECS_NAME,
   DEFAULT_DEPENDENCIES,
   NO_PLUGIN_TYPE,
 } from '../../constants';
@@ -27,9 +27,9 @@ export default class AbstractBitJson {
   
   constructor({ impl, spec, compiler, tester, dependencies }: AbstractBitJsonProps) {
     this.impl = impl || DEFAULT_IMPL_NAME;
-    this.spec = spec || DEFAULT_SPEC_NAME; 
-    this.compiler = compiler || DEFAULT_COMPILER;
-    this.tester = tester || DEFAULT_TESTER;
+    this.spec = spec || DEFAULT_SPECS_NAME; 
+    this.compiler = compiler || DEFAULT_COMPILER_ID;
+    this.tester = tester || DEFAULT_TESTER_ID;
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
   }
 

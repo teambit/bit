@@ -1,7 +1,7 @@
 /** @flow */
 import path from 'path';
 import glob from 'glob';
-import fs from 'fs';
+import fs from 'fs-extra';
 import flattenDependencies from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
@@ -9,6 +9,7 @@ import ConsumerBitJson from './bit-json/consumer-bit-json';
 import BitJson from './bit-json/bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Bit from './bit-component';
+import Component from './component/component';
 import PartialBit from './bit-component/partial-bit';
 import { 
   INLINE_BITS_DIRNAME,
@@ -87,11 +88,11 @@ export default class Consumer {
 
   loadBit(id: BitInlineId): Promise<Bit> {
     const bitDir = id.composeBitPath(this.getPath());
-    return PartialBit.loadFromInline(bitDir, id.name, this.bitJson, this.scope.name())
-      .then(partial => partial.loadFull());
+    return Component.loadFromInline(bitDir, this.bitJson);
   }
 
-  push(rawId: string, rawRemote: string) {
+  push(rawId: string, rawRemote: string) { 
+    // @TODO - move this method to api, not related to consumer
     const bitId = BitId.parse(rawId);
     return this.scope.push(bitId, rawRemote);
   }
@@ -100,8 +101,9 @@ export default class Consumer {
     if (!rawId) { // if no arguments inserted, install according to bitJson dependencies
       const deps = BitIds.loadDependencies(this.bitJson.dependencies);
       
-      return this.scope.ensureEnvironment(this.bitJson)
-      .then(() =>
+      return this.scope.ensureEnvironment({
+        testerId: this.getTesterName(), compilerId: this.getCompilerName()
+      }).then(() =>
         Promise.all(deps.map(dep => this.scope.get(dep)))
         .then(bits => this.writeToBitsDir(flatten(bits)))
       );
@@ -122,21 +124,25 @@ export default class Consumer {
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {
-    id: BitInlineId, withSpecs: boolean, withBitJson: boolean }): Promise<Bit> {
-    const bitJson = BitJson.create({ name: id.name, box: id.box }, this.bitJson);
-    return Bit.create({ 
-      scope: this.scope,
-      bitJson,
+    id: BitInlineId, withSpecs: boolean, withBitJson: boolean }): Promise<Component> {
+    const inlineBitPath = id.composeBitPath(this.getPath());
+
+    return Component.create({ 
       name: id.name,
-      bitDir: id.composeBitPath(this.getPath()),
+      box: id.box,
       withSpecs,
-    }).write(withBitJson);
+      consumerBitJson: this.bitJson,
+    }).write(inlineBitPath, withBitJson);
   }
 
-  removeBit(id: BitInlineId): Promise<Bit> {
+  removeFromInline(id: BitInlineId): Promise<any> {
     const bitDir = id.composeBitPath(this.getPath());
-    return PartialBit.loadFromInline(bitDir, id.name, this.bitJson, this.scope.name())
-    .then(bit => bit.erase());
+    return new Promise((resolve, reject) => {
+      return fs.remove(bitDir, (err) => {
+        if (err) return reject(err);
+        return resolve();
+      });
+    });
   }
 
   writeToBitsDir(bitDependencies: BitDependencies[]): Promise<Bit[]> {
@@ -150,7 +156,7 @@ export default class Consumer {
     return this.loadBit(id)
       .then(bit => this.scope.put(bit))
       .then(bits => this.writeToBitsDir([bits]))
-      .then(() => this.removeBit(id));
+      .then(() => this.removeFromInline(id));
   }
 
   testBit(id: BitInlineId): Promise<Bit> {
@@ -162,9 +168,6 @@ export default class Consumer {
     });
   }
 
-  /**
-   * list the bits in the inline directory
-   **/
   listInline(): Promise<Bit[]> {
     return new Promise((resolve, reject) =>
       glob(path.join('*', '*'), { cwd: this.getInlineBitsPath() }, (err, files) => {

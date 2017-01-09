@@ -18,11 +18,10 @@ export default class Create extends Command {
     return create(id, specs, json);
   }
 
-  report(bit: Bit): string {
-    const name = bit.getName();
-    const box = bit.getBox();
-    const bitPath = bit.getPath();
+  report(component: Component): string {
+    const name = component.name;
+    const box = component.box;
 
-    return chalk.green(`created bit "${name}" in box "${box}" at "${bitPath}"`);
+    return chalk.green(`created bit "${name}" in box "${box}"`);
   }
 }

@@ -21,14 +21,8 @@ function getCacheDirectory(): string {
 
 export const RESOURCES = path.resolve(path.join(__dirname, '../resources'));
 
-/**
- * bit description
- */
 export const BIT_DESCRIPTION = 'bit is a free and open source tool designed for easy use and management of usable code components.';
 
-/**
- * bit usage
- */
 export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
 export const BITS_DIRNAME = 'bits';
@@ -43,13 +37,13 @@ export const REMOTE_ALIAS_SIGN = '@';
 
 export const DEFAULT_IMPL_NAME = 'impl.js';
 
-export const DEFAULT_SPEC_NAME = 'spec.js';
+export const DEFAULT_SPECS_NAME = 'spec.js';
 
 export const NO_PLUGIN_TYPE = 'none';
 
-export const DEFAULT_COMPILER = NO_PLUGIN_TYPE;
+export const DEFAULT_COMPILER_ID = NO_PLUGIN_TYPE;
 
-export const DEFAULT_TESTER = NO_PLUGIN_TYPE;
+export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_DIST_DIRNAME = 'dist';
 

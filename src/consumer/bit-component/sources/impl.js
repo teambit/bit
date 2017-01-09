@@ -22,27 +22,24 @@ export default class Impl extends Source {
     if (typeof this.src !== 'string') throw new InvalidImpl();
   }
 
-  static load(bitPath: string, fileName: string): Promise<Impl> {
+  static load(bitPath: string, fileName: string): Impl {
     const implPath = path.join(bitPath, fileName);
-    return new Promise((resolve, reject) => 
-      fs.readFile(implPath, (err, data) => {
-        if (err) {
-          if (err.code === 'ENOENT') { reject(new MissingImpl(implPath)); }
-          return reject(err);
-        }
-        return resolve(new Impl(data.toString()));
-      })
-    );
+    try {
+      const data = fs.readFileSync(implPath);
+      return new Impl(data.toString());
+    } catch (err) {
+      if (err.code === 'ENOENT') { throw new MissingImpl(implPath); }
+      throw err;
+    }
   }
 
-  static create(bitJson: BitJson): Impl {
+  static create(name, compilerId): Impl {
     function getTemplate() {
-      (bitJson.getCompilerName()); // @TODO make sure it get the template 
       try {
-        const testerModule = loadPlugin(bitJson.getCompilerName());
-        return testerModule.getTemplate(bitJson.name);
+        const testerModule = loadPlugin(compilerId);
+        return testerModule.getTemplate(name);
       } catch (e) {
-        return createTemplate(bitJson);
+        return createTemplate({ name });
       }
     }
 

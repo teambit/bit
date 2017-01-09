@@ -148,10 +148,9 @@ export default class PartialBit {
   }
 
   loadFull(): Promise<Bit> {
-    return Promise.all([
-      Impl.load(this.bitDir, this.bitJson.getImplBasename()),
-      Specs.load(this.bitDir, this.bitJson.getSpecBasename())
-    ]).then(([impl, specs ]) => 
+    const impl = Impl.load(this.bitDir, this.bitJson.getImplBasename());
+    const specs = Specs.load(this.bitDir, this.bitJson.getSpecBasename());
+    return Promise.resolve(
       new Bit({
         name: this.name,
         scope: this.scope,

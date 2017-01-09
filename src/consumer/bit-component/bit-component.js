@@ -94,8 +94,8 @@ export default class Bit extends PartialBit {
       scope,
       bitDir,
       bitJson,
-      impl: Impl.create(bitJson),
-      specs: withSpecs ? Specs.create(bitJson) : undefined,
+      impl: Impl.create(bitJson.getImplBasename(), bitJson.getCompilerName()),
+      specs: withSpecs ? Specs.create(bitJson.getSpecBasename(), bitJson.getTesterName()) : undefined,
     });
   }
 

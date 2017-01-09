@@ -18,17 +18,24 @@ export default class Status extends Command {
   opts = [];
  
   action(): Promise<{ inline: StatusObj[], source: StatusObj[] }> {
-    const getBitStatus = bit => ({
+    const getBitStatusForInline = bit => ({
       name: bit.name,
-      box: bit.getBox(),
-      valid: bit.validate(),
-      version: bit.getVersion()
+      box: bit.box,
+      // valid: bit.validate(),
+      // version: bit.version
+    });
+
+    const getBitStatusForSources = bit => ({
+      name: bit.name,
+      box: bit.box,
+      // valid: bit.validate(),
+      version: bit.version
     });
 
     return status()
     .then(({ inline, sources }) => ({
-      inline: inline.map(getBitStatus),
-      sources: sources.map(getBitStatus)
+      inline: inline.map(getBitStatusForInline),
+      sources: sources.map(getBitStatusForSources)
     }));
   }
 

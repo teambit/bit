@@ -51,12 +51,12 @@ export default class Cache extends Repository {
     return fs.existsSync(bitPath);
   }
 
-  ensureEnvironment(bitJson: AbstractBitJson): Promise<any> {
-    const testerId = bitJson.hasTester() ? BitId.parse(bitJson.getTesterName()) : undefined;
-    const compilerId = bitJson.hasCompiler() ? BitId.parse(bitJson.getCompilerName()) : undefined;
+  ensureEnvironment({ testerId, compilerId }): Promise<any> {
+    const parsedTesterId = testerId ? BitId.parse(testerId) : undefined;
+    const parsedCompilerId = compilerId ? BitId.parse(compilerId) : undefined;
     
     const rejectNils = R.reject(R.isNil);
-    const envs = rejectNils([ testerId, compilerId ]);
+    const envs = rejectNils([ parsedTesterId, parsedCompilerId ]);
     
     const ensureEnv = (env: BitId): Promise<any> => {
       if (this.hasSync(env)) return Promise.resolve();

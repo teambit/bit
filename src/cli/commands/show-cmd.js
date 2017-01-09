@@ -11,35 +11,28 @@ export default class Show extends Command {
   
   action([id, ]: [string]): Promise<*> {
     return getBit({ id })
-    .then(bit => ({
-      name: bit.getName(),
-      box: bit.getBox(),
-      version: bit.getVersion(),
-      compiler: bit.bitJson.getCompilerName(),
-      tester: bit.bitJson.getTesterName(),
-      dependencies: bit.bitJson.getDependencies(),
-      packageDependencies: bit.bitJson.getPackageDependencies(),
-      path: bit.getPath()
+    .then(component => ({
+      name: component.name,
+      box: component.box,
+      compiler: component.compilerId,
+      tester: component.testerId,
+      dependencies: component.dependencies,
+      packageDependencies: component.packageDependencies,
     }));
   }
 
   report({ 
     name,
     box,
-    version,
     compiler,
     dependencies,
-    path,
     tester,
     packageDependencies,
   }: any): string {
     return paintHeader(`${box}/${name}`) +  
-      paintBitProp('version', version) +
       paintBitProp('compiler', compiler === 'none' ? '' : compiler) +
       paintBitProp('tester', tester === 'none' ? '' : tester) +
       paintBitProp('dependencies', Object.keys(dependencies).join(', ')) +
-      paintBitProp('packageDependencies', Object.keys(packageDependencies).join(', ')) +
-      paintBitProp('path', path)
-    ;
+      paintBitProp('packageDependencies', Object.keys(packageDependencies).join(', '));
   }
 }

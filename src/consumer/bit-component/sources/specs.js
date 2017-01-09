@@ -7,7 +7,6 @@ import createTemplate from '../templates/specs.default-template';
 import loadPlugin from '../environment/load-plugin';
 
 export default class Specs extends Source {
-  
   write(bitPath: string, fileName: string): Promise<any> {
     return new Promise((resolve, reject) => {
       fs.writeFile(path.join(bitPath, fileName), this.src, (err, res) => {
@@ -17,23 +16,22 @@ export default class Specs extends Source {
     });
   }
   
-  static load(bitPath: string, fileName: string): Promise<?Specs> {
-    return new Promise(resolve => 
-      fs.readFile(path.join(bitPath, fileName), (err, data) => {
-        if (err) return resolve(); // when cant load specs it's ok, just return undefined';
-        return resolve(new Specs(data.toString()));
-      })
-    );
+  static load(bitPath: string, fileName: string): Specs {
+    try {
+      const data = fs.readFileSync(path.join(bitPath, fileName));
+      return new Specs(data.toString());
+    } catch (err) {
+      return undefined; // when cant load specs it's ok, just return undefined';
+    }
   }
 
-  static create(bitJson: BitJson): Specs {
+  static create(name, testerId): Specs {
     function getTemplate() {
-      console.log(bitJson.getTesterName()); // @TODO make sure it get the template 
       try {
-        const testerModule = loadPlugin(bitJson.getTesterName());
-        return testerModule.getTemplate(bitJson.name);
+        const testerModule = loadPlugin(testerId);
+        return testerModule.getTemplate(name);
       } catch (e) {
-        return createTemplate(bitJson);
+        return createTemplate({ name });
       }
     }
 
