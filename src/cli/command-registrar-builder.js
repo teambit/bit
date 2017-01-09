@@ -17,9 +17,10 @@ import Test from './commands/test-cmd';
 import Show from './commands/show-cmd';
 import Update from './commands/update-cmd';
 import Status from './commands/status-cmd';
+import CatObject from './commands/cat-object-cmd';
 import Build from './commands/build-cmd';
-import Install from './commands/install-cmd';
-import Uninstall from './commands/uninstall-cmd';
+// import Install from './commands/install-cmd';
+// import Uninstall from './commands/uninstall-cmd';
 import Prepare from './commands/_prepare-cmd';
 import DescribeScope from './commands/_scope-cmd';
 import Put from './commands/_put-cmd';
@@ -39,6 +40,7 @@ export default function registerCommands(): CommandRegistrar {
     new Modify(),
     new List(),
     new Remote(),
+    new CatObject(),
     new Show(),
     // new Remove(),
     new Search(),

@@ -40,34 +40,6 @@ export default class Source extends Repository {
     return id.getVersion().resolve(this.listVersions(id));
   }
 
-  list(): BitIds {
-    // function listComponents(components: string[]) {
-    //   return components.map((component) => {
-    //     return {
-    //       name: component,
-    //       version: this.resolveVersion('latest')
-    //     };
-    //   });
-    // }
-
-    // return listDirectories(this.getPath())
-    //   .map((box) => {
-    //     return {
-    //       box,
-    //       components: listComponents.bind(this,
-    //         listDirectories(this.composeBoxPath(box))
-    //       ),
-    //     };
-    //   });
-    return glob(path.join(this.getPath(), '*', '*', '*'))
-      .then(matches => 
-        matches.map((match) => {
-          const bitId = path.parse(match);
-          return PartialBit.load(match, '', this.scope.name());
-        })
-      );
-  }
-
   loadSource(id: BitId): Promise<Bit> {
     try {
       const version = this.resolveVersion(id);

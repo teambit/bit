@@ -55,7 +55,7 @@ export const LATEST_BIT_VERSION = 'latest';
 
 export const OBJECTS_DIR = 'objects';
 
-export const NULL_BYTE = '/0';
+export const NULL_BYTE = '\u0000';
 
 export const SPACE_DELIMITER = ' ';
 

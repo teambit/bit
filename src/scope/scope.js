@@ -12,13 +12,13 @@ import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import AbstractBitJson from '../consumer/bit-json/abstract-bit-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
-import { Source, Cache, Tmp, External, Environment } from './repositories';
+import { Source, Cache, Tmp, Environment } from './repositories';
 import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
-import SourceObject from './models/source';
 import { BitId, BitIds } from '../bit-id';
-import { Repository, Ref } from './objects';
 import Bit from '../consumer/bit-component';
+import { Repository, Ref, BitObject } from './objects';
 import BitDependencies from './bit-dependencies';
+import SourcesRepository from './repositories/sources';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
 
@@ -34,13 +34,12 @@ export type ScopeProps = {
   tmp?: Tmp;
   environment?: Environment;
   sources?: Source,
-  external?: External;
+  sourcesRepository?: SourcesRepository;
   sourcesMap?: SourcesMap;
   objectsRepository?: Repository;
 };
 
 export default class Scope {
-  external: External;
   created: boolean = false;
   cache: Cache;
   scopeJson: ScopeJson;
@@ -48,6 +47,7 @@ export default class Scope {
   environment: Environment;
   sources: Source;
   path: string;
+  sourcesRepository: SourcesRepository;
   objectsRepository: Repository;
   sourcesMap: SourcesMap;
 
@@ -58,9 +58,9 @@ export default class Scope {
     this.sources = scopeProps.sources || new Source(this);
     this.created = scopeProps.created || false;
     this.tmp = scopeProps.tmp || new Tmp(this);
+    this.sourcesRepository = scopeProps.sourcesRepository || new SourcesRepository(this);
     this.objectsRepository = scopeProps.objectsRepository || new Repository(this, types());
     this.environment = scopeProps.environment || new Environment(this);
-    this.external = scopeProps.external || new External(this);
     this.sourcesMap = scopeProps.sourcesMap || new SourcesMap(this);
   }
 
@@ -86,42 +86,41 @@ export default class Scope {
   }
 
   ls() {
-    return this.sources.list();
+    // return this.sources.list();
   }
 
-  // put(bit: Bit): Promise<BitDependencies> {
-  //   bit.scope = this.name();
-  //   bit.validateOrThrow();
-  //   return this.remotes().then((remotes) => {
-  //     return bit.dependencies()
-  //       .fetch(this, remotes)
-  //       .then((dependencies) => {
-  //         dependencies = flattenDependencies(dependencies);
-  //         return this.sources.setSource(bit, dependencies)
-  //         // @TODO make the scope install the required env
-  //           .then(() => this.ensureEnvironment(bit.bitJson))
-  //           .then(() => bit.build(this))
-  //           .then(() => this.sourcesMap.write())
-  //           .then(() => {
-  //             return new BitDependencies({ bit, dependencies });
-  //           });
-  //       });
-  //   });
-  // }
-
-  put(): Promise<any> {
-    const source = new SourceObject(new Buffer('module.exports = function(){ console.log() };'));
-    this.objectsRepository.add(source);
-    return this.objectsRepository.persist()
-      .catch((err) => {
-        console.log(err);
-      })
-      .then((res) => {
-        return this.objectsRepository.load(new Ref('c1d44ff03aff1372856c281854f454e2e1d15b7c'))
-        .then(a => {
-          console.log(a);
+  put(bit: Bit): Promise<BitDependencies> {
+    // create component model V
+    // check if component already exists V
+    // if exists get create latest version object otherwise create initial version V
+    // create files with refs and attach to version ?
+    // flatten and set dependencies ?
+    // load enrionment (tester and compiler and get hash) ?
+    // build + report build ?
+    // test + report test ?
+    // persist models (version, component, files)
+    
+    bit.scope = this.name();
+    bit.validateOrThrow();
+    return this.remotes().then((remotes) => {
+      return bit.dependencies()
+        .fetch(this, remotes)
+        .then((dependencies) => {
+          dependencies = flattenDependencies(dependencies);
+          return this.sourcesRepository.addSource(bit)
+          // // @TODO make the scope install the required env
+            .then(() => this.ensureEnvironment(bit.bitJson))
+            .then(() => bit.build(this))
+            .then(() => this.objectsRepository.persist())
+            .then(() => {
+              return new BitDependencies({ bit, dependencies });
+            });
         });
-      });
+    });
+  }
+
+  getObject(hash: string): Promise<BitObject> {
+    return this.objectsRepository.findOne(new Ref(hash));
   }
 
   getExternal(bitId: BitId, remotes: Remotes): Promise<BitDependencies> {
@@ -169,7 +168,6 @@ export default class Scope {
     return this.cache
       .ensureDir()
       .then(() => this.sources.ensureDir())
-      .then(() => this.external.ensureDir())
       .then(() => this.tmp.ensureDir())
       .then(() => this.environment.ensureDir())
       .then(() => this.sourcesMap.write())

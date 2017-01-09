@@ -1,9 +1,10 @@
 /** @flow */
-import { Ref, BitObject } from '../../objects';
-import { forEach } from '../../utils';
+import { Ref, BitObject } from '../objects';
+import { forEach, empty } from '../../utils';
+import Version from './version';
 
 export type ComponentProps = {
-  box: string;
+  box?: string;
   name: string;
   versions?: {[number]: Ref};
 };
@@ -16,17 +17,29 @@ export default class Component extends BitObject {
   constructor(props: ComponentProps) {
     super();
     this.name = props.name;
-    this.box = props.box;
+    this.box = props.box || 'global';
     this.versions = props.versions || {};
   }
 
-  latest() {
+  latest(): number {
+    if (empty(this.versions)) return 0;
     return Math.max(...Object.keys(this.versions)
       .map(parseInt)
     );
   }
 
-  id() {
+  addVersion(version: Version) {
+    this.versions[this.version()] = version.hash();
+    return this;
+  }
+
+  version() {
+    const latest = this.latest();
+    if (latest) return latest + 1;
+    return 1;
+  }
+
+  id(): string {
     return [this.box, this.name].join('/');   
   }
 
@@ -42,7 +55,7 @@ export default class Component extends BitObject {
     return {
       box: this.box,
       name: this.name,
-      version: versions(this.versions)
+      versions: versions(this.versions)
     };
   }
 

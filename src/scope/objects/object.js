@@ -1,13 +1,14 @@
 /** @flow */
-import { deflate, inflate, sha1 } from '../utils';
-import { NULL_BYTE, SPACE_DELIMITER } from '../constants';
+import { deflate, inflate, sha1 } from '../../utils';
+import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
+import Ref from './ref';
 
 export default class BitObject {
   /**
    * indexing method
    */
-  hash(): string {
-    return sha1(this.id());
+  hash(): Ref {
+    return new Ref(sha1(this.id()));
   }
 
   compress(): Promise<Buffer> {
@@ -16,7 +17,7 @@ export default class BitObject {
 
   serialize(): Buffer {
     const contents = this.toBuffer();
-    const header = `${this.constructor.name} ${contents.toString().length}${NULL_BYTE}$`;
+    const header = `${this.constructor.name} ${contents.toString().length}${NULL_BYTE}`;
     return Buffer.concat([new Buffer(header), contents]);
   }
 

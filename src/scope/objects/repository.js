@@ -4,7 +4,7 @@ import BitObject from './object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
 import { mkdirp, writeFile, allSettled, readFile } from '../../utils';
-import { Scope } from '../scope';
+import { Scope } from '../../scope';
 
 export default class Repository {
   objects: BitObject[] = [];
@@ -27,18 +27,31 @@ export default class Repository {
     return path.join(this.scope.getPath(), OBJECTS_DIR);
   }
 
-  objectPath(hash: string): string {
+  objectPath(ref: Ref): string {
+    const hash = ref.toString();
     return path.join(this.getPath(), hash.slice(0, 2), hash.slice(2));
   }
 
   load(ref: Ref): Promise<BitObject> {
-    return readFile(this.objectPath(ref.hash))
-      .then(fileContents => BitObject.parseObject(fileContents, this.types));
+    return readFile(this.objectPath(ref))
+      .then(fileContents => BitObject.parseObject(fileContents, this.types))
+      .catch(() => null);
   }
 
   add(object: BitObject): Repository {
     this.objects.push(object);
     return this;
+  }
+
+  /**
+   * alias to `load`
+   */
+  findOne(ref: Ref): Promise<BitObject> {
+    return this.load(ref);
+  }
+
+  findMany(refs: Ref[]): Promise<BitObject[]> {
+    return Promise.all(refs.map(ref => this.load(ref)));
   }
 
   persist(): Promise<> {
