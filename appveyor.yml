@@ -3,12 +3,17 @@ environment:
     - node_version: "6"
     - node_version: "4"
 
+branches:
+  only:
+  - update
+  - /v[0-9]+(\.[0-9]+)*/
+
 install:
   - ps: Install-Product node $env:node_version
-  - npm install
+  - cmd: npm install
 
 build_script:
-  - npm run build
+  - cmd: npm run build
   - ps: ./scripts/build-dist.ps1
   - ps: ./scripts/build-windows-installer.bat
 
