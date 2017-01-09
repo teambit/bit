@@ -1,6 +1,6 @@
 /** @flow */
 import R from 'ramda';
-import { BitIds } from '../bit-id';
+import { BitIds } from '../../bit-id';
 import { 
   DEFAULT_COMPILER,
   DEFAULT_TESTER,
@@ -8,7 +8,7 @@ import {
   DEFAULT_SPEC_NAME,
   DEFAULT_DEPENDENCIES,
   NO_PLUGIN_TYPE,
-} from '../constants';
+} from '../../constants';
 
 export type AbstractBitJsonProps = {
   impl?: string;

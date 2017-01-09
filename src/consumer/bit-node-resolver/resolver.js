@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs';
 import BitJson from '../bit-json';
-import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
+import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../../constants';
 import EnvBitNotExist from './exceptions/env-bit-not-exists';
 
 export default (bitPath: string): Promise<any> => {

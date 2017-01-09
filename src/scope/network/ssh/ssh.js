@@ -1,12 +1,12 @@
 /** @flow */
 import keyGetter from './key-getter';
-import Bit from '../../bit';
+import Bit from '../../../consumer/bit';
 import { RemoteScopeNotFound } from '../exceptions';
-import { BitId, BitIds } from '../../bit-id';
-import { toBase64, fromBase64 } from '../../utils';
+import { BitId, BitIds } from '../../../bit-id';
+import { toBase64, fromBase64 } from '../../../utils';
 import { BitDependencies } from '../../scope';
-import type { SSHUrl } from '../../utils/parse-ssh-url';
-import type { ScopeDescriptor } from '../../scope/scope';
+import type { SSHUrl } from '../../../utils/parse-ssh-url';
+import type { ScopeDescriptor } from '../../scope';
 
 const sequest = require('sequest');
 

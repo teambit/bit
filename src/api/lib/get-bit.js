@@ -1,6 +1,6 @@
 /** @flow */
 import { loadConsumer } from '../../consumer';
-import InlineId from '../../bit-inline-id';
+import InlineId from '../../consumer/bit-inline-id';
 
 export default function getBit({ id }: { id: string }) {
   return loadConsumer()

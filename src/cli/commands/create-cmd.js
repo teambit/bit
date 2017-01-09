@@ -1,7 +1,7 @@
 /** @flow */
 import Command from '../command';
 import { create } from '../../api';
-import Bit from '../../bit';
+import Bit from '../../consumer/bit';
 
 const chalk = require('chalk');
 

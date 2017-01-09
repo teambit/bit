@@ -1,12 +1,12 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import ConsumerNotFound from '../consumer/exceptions/consumer-not-found';
-import BitNotFound from '../bit/exceptions/bit-not-found';
-import BitAlreadyExistExternaly from '../bit/exceptions/bit-already-exist-externaly';
-import PluginNotFound from '../bit/exceptions/plugin-not-found';
-import MissingImpl from '../bit/exceptions/missing-impl';
+import BitNotFound from '../consumer/bit/exceptions/bit-not-found';
+import BitAlreadyExistExternaly from '../consumer/bit/exceptions/bit-already-exist-externaly';
+import PluginNotFound from '../consumer/bit/exceptions/plugin-not-found';
+import MissingImpl from '../consumer/bit/exceptions/missing-impl';
 import { ScopeNotFound } from '../scope/exceptions';
-import { ProtocolNotSupported, RemoteScopeNotFound } from '../network/exceptions';
+import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
 
 const chalk = require('chalk');
 

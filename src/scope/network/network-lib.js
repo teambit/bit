@@ -2,7 +2,7 @@
 import SSH from './ssh';
 import Fs from './fs';
 import { ProtocolNotSupported } from './exceptions';
-import { isBitUrl, parseSSHUrl } from '../utils';
+import { isBitUrl, parseSSHUrl } from '../../utils';
 
 export default function connect(host: string) {
   if (host.startsWith('ssh://') || host.startsWith('bit://')) {

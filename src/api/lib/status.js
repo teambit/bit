@@ -1,6 +1,6 @@
 /** @flow */
 import { loadConsumer } from '../../consumer';
-import Bit from '../../bit';
+import Bit from '../../consumer/bit';
 
 export type StatusRes = {
   name: string,

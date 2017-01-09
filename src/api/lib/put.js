@@ -1,5 +1,5 @@
 import { loadScope } from '../../scope';
-import Bit from '../../bit';
+import Bit from '../../consumer/bit';
 
 export default function put({ tar, path }: { name: string, tar: Buffer }): Promise<any> {
   return loadScope(path).then((scope) => {

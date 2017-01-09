@@ -3,12 +3,12 @@ import * as path from 'path';
 import fs from 'fs';
 import R from 'ramda';
 import Repository from '../repository';
-import AbstractBitJson from '../../bit-json/abstract-bit-json';
+import AbstractBitJson from '../../consumer/bit-json/abstract-bit-json';
 import { BitId } from '../../bit-id';
-import Bit from '../../bit';
+import Bit from '../../consumer/bit';
 import { BIT_ENVIRONMENT_DIRNAME } from '../../constants';
 import npmInstall from '../../utils/npm';
-import resolveBit from '../../bit-node-resolver';
+import resolveBit from '../../consumer/bit-node-resolver';
 
 const installPackageDependencies = (bit) => {
   const deps = bit.bitJson.getPackageDependencies();

@@ -10,14 +10,14 @@ import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
 import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import AbstractBitJson from '../bit-json/abstract-bit-json';
+import AbstractBitJson from '../consumer/bit-json/abstract-bit-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, External, Environment } from './repositories';
 import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
 import SourceObject from './models/source';
 import { BitId, BitIds } from '../bit-id';
-import { Repository, Ref } from '../objects';
-import Bit from '../bit';
+import { Repository, Ref } from './objects';
+import Bit from '../consumer/bit';
 import BitDependencies from './bit-dependencies';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);

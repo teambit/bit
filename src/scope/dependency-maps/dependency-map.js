@@ -4,7 +4,7 @@ import { BitId, BitIds } from '../../bit-id';
 import Repository from '../repository';
 import { forEach, writeFile } from '../../utils';
 import Scope from '../scope';
-import Bit from '../../bit';
+import Bit from '../../consumer/bit';
 import { DEPENDENCY_MAP_FILENAME } from '../../constants';
 
 export function getPath(repositoryPath: string) {

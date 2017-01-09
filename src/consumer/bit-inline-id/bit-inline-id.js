@@ -1,7 +1,7 @@
 /** @flow */
 import path from 'path';
 import InvalidBitInlineId from './exceptions';
-import { INLINE_BITS_DIRNAME } from '../constants';
+import { INLINE_BITS_DIRNAME } from '../../constants';
 
 export type BitInlineIdProps = {
   box?: string;

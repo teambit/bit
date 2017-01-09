@@ -1,6 +1,6 @@
 /** @flow */
 import { loadConsumer } from '../../consumer';
-import Bit from '../../bit';
+import Bit from '../../consumer/bit';
 
 export default function importAction(
   { bitId, save, env }: { bitId: string, save: bool, env: bool }): Promise<Bit[]> {

@@ -1,7 +1,7 @@
 /** @flow */
 import path from 'path';
 import { BitIds, BitId } from '../../bit-id';
-import Bit from '../../bit';
+import Bit from '../../consumer/bit';
 import { DependencyMap } from './dependency-map';
 import { SOURCES_MAP } from '../../constants';
 

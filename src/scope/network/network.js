@@ -1,8 +1,8 @@
 /** @flow */
-import { BitIds } from '../bit-id';
-import Bit from '../bit';
-import { BitDependencies } from '../scope';
-import type { ScopeDescriptor } from '../scope/scope';
+import { BitIds } from '../../bit-id';
+import Bit from '../../consumer/bit';
+import { BitDependencies } from '../../scope';
+import type { ScopeDescriptor } from '../scope';
 
 export interface Network {
   connect(host: string): Network;

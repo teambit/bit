@@ -2,18 +2,18 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-import { pack } from '../utils/tar';
-import * as bitCache from '../cache';
-import { CacheNotFound } from '../cache/exceptions';
+import { pack } from '../../utils/tar';
+import * as bitCache from '../../cache';
+import { CacheNotFound } from '../../cache/exceptions';
 import { Impl, Specs } from './sources';
 import BitJson from '../bit-json';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import BitNotFoundException from './exceptions/bit-not-found';
-import { BitIds, BitId } from '../bit-id';
-import { remoteResolver, Remotes } from '../remotes';
-import { Scope } from '../scope';
+import { BitIds, BitId } from '../../bit-id';
+import { remoteResolver, Remotes } from '../../remotes';
+import { Scope } from '../../scope';
 import Bit from './bit';
-import { isDirEmptySync } from '../utils';
+import { isDirEmptySync } from '../../utils';
 import { composePath as composeBitJsonPath } from '../bit-json/bit-json';
 import validations from './validations';
 

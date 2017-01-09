@@ -1,10 +1,10 @@
 /** @flow */
 import { loadScope, Scope, BitDependencies } from '../../scope';
-import { BitIds } from '../../bit-id';
-import Bit from '../../bit';
+import { BitIds } from '../../../bit-id';
+import Bit from '../../../consumer/bit';
 import { FsScopeNotLoaded } from '../exceptions';
-import { flatten } from '../../utils';
-import type { ScopeDescriptor } from '../../scope/scope';
+import { flatten } from '../../../utils';
+import type { ScopeDescriptor } from '../../scope';
 
 export default class Fs {
   scopePath: string;

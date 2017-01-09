@@ -1,7 +1,7 @@
 /** @flow */
 import { loadConsumer } from '../../consumer';
-import Bit from '../../bit';
-import InlineId from '../../bit-inline-id';
+import Bit from '../../consumer/bit';
+import InlineId from '../../consumer/bit-inline-id';
 
 export default function build({ id }: { id: string }): Promise<Bit> {
   return loadConsumer()

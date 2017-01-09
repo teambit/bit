@@ -2,8 +2,8 @@
 import path from 'path';
 import BitObject from './object';
 import Ref from './ref';
-import { OBJECTS_DIR } from '../constants';
-import { mkdirp, writeFile, allSettled, readFile } from '../utils';
+import { OBJECTS_DIR } from '../../constants';
+import { mkdirp, writeFile, allSettled, readFile } from '../../utils';
 import { Scope } from '../scope';
 
 export default class Repository {

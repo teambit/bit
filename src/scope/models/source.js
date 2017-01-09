@@ -1,4 +1,4 @@
-import { BitObject } from '../../objects';
+import { BitObject } from '../objects';
 
 export default class Source extends BitObject {
   contents: Buffer;  
