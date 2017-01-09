@@ -1,7 +1,7 @@
 /** @flow */
 import { loadScope, Scope, BitDependencies } from '../../scope';
 import { BitIds } from '../../../bit-id';
-import Bit from '../../../consumer/bit';
+import Bit from '../../../consumer/bit-component';
 import { FsScopeNotLoaded } from '../exceptions';
 import { flatten } from '../../../utils';
 import type { ScopeDescriptor } from '../../scope';

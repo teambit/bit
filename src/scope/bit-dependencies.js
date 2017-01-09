@@ -1,5 +1,5 @@
 /** @flow */
-import Bit from '../consumer/bit';
+import Bit from '../consumer/bit-component';
 import { fromBase64 } from '../utils';
 
 export default class BitDependencies {

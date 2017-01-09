@@ -1,6 +1,6 @@
 /** @flow */
 import { BitIds } from '../../bit-id';
-import Bit from '../../consumer/bit';
+import Bit from '../../consumer/bit-component';
 import { BitDependencies } from '../../scope';
 import type { ScopeDescriptor } from '../scope';
 

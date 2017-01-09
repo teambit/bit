@@ -1,5 +1,5 @@
 /** @flow */
-import Bit from '../consumer/bit';
+import Bit from '../consumer/bit-component';
 import { contains, isBitUrl, cleanBang, allSettled } from '../utils';
 import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';

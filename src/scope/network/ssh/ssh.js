@@ -1,6 +1,6 @@
 /** @flow */
 import keyGetter from './key-getter';
-import Bit from '../../../consumer/bit';
+import Bit from '../../../consumer/bit-component';
 import { RemoteScopeNotFound } from '../exceptions';
 import { BitId, BitIds } from '../../../bit-id';
 import { toBase64, fromBase64 } from '../../../utils';

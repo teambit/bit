@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import Command from '../command';
 import { modify } from '../../api';
-import Bit from '../../consumer/bit';
+import Bit from '../../consumer/bit-component';
 
 export default class Modify extends Command {
   name = 'modify <id>';

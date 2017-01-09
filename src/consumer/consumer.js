@@ -8,8 +8,8 @@ import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import BitJson from './bit-json/bit-json';
 import { BitId, BitIds } from '../bit-id';
-import Bit from './bit';
-import PartialBit from './bit/partial-bit';
+import Bit from './bit-component';
+import PartialBit from './bit-component/partial-bit';
 import { 
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,

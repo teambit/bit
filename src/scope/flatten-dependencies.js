@@ -1,7 +1,7 @@
 /** @flow */
 import { flatten, values } from '../utils';
 import { BitDependencies } from '../scope';
-import Bit from '../consumer/bit';
+import Bit from '../consumer/bit-component';
 
 export default function flattenDependencies(bitDependencies: BitDependencies[]): Bit[] {
   return values(flatten(bitDependencies

@@ -3,9 +3,9 @@ import * as path from 'path';
 import Repository from '../repository';
 import { SourceNotFound } from '../exceptions';
 import { BIT_SOURCES_DIRNAME } from '../../constants';
-import InvalidBit from '../../consumer/bit/exceptions/invalid-bit';
-import Bit from '../../consumer/bit';
-import PartialBit from '../../consumer/bit/partial-bit';
+import InvalidBit from '../../consumer/bit-component/exceptions/invalid-bit';
+import Bit from '../../consumer/bit-component';
+import PartialBit from '../../consumer/bit-component/partial-bit';
 import { BitId, BitIds } from '../../bit-id';
 import { listDirectories, rmDir, empty, glob } from '../../utils';
 

@@ -12,7 +12,7 @@ import BitNotFoundException from './exceptions/bit-not-found';
 import { BitIds, BitId } from '../../bit-id';
 import { remoteResolver, Remotes } from '../../remotes';
 import { Scope } from '../../scope';
-import Bit from './bit';
+import Bit from './bit-component';
 import { isDirEmptySync } from '../../utils';
 import { composePath as composeBitJsonPath } from '../bit-json/bit-json';
 import validations from './validations';

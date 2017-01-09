@@ -17,7 +17,7 @@ import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
 import SourceObject from './models/source';
 import { BitId, BitIds } from '../bit-id';
 import { Repository, Ref } from './objects';
-import Bit from '../consumer/bit';
+import Bit from '../consumer/bit-component';
 import BitDependencies from './bit-dependencies';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
