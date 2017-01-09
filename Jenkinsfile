@@ -46,7 +46,8 @@ import groovy.json.JsonOutput
 def notifyReleaseServer(version,url) {
     def payload = JsonOutput.toJson([version : version,
                                  brew: "bit_${version}_brew.tar.gz",
-                                 deb: "bit_${version}_deb.deb"])
+                                 deb: "bit_${version}_deb.deb",
+                                 msi:"bit_${version}.msi])
 
     print(payload)
 
