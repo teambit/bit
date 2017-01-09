@@ -35,11 +35,13 @@ import glob from './glob';
 import inflate from './zlib-inflate';
 import deflate from './zlib-deflate';
 import sha1 from './sha1';
+import isString from './is-string';
 
 export {
   parseSSHUrl,
   sha1,
   rmDir,
+  isString,
   inflate,
   deflate,
   values,

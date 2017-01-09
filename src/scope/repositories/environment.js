@@ -51,7 +51,7 @@ export default class Cache extends Repository {
     return fs.existsSync(bitPath);
   }
 
-  ensureEnvironment({ testerId, compilerId }): Promise<any> {
+  ensureEnvironment({ testerId, compilerId }: any): Promise<any> {
     const parsedTesterId = testerId ? BitId.parse(testerId) : undefined;
     const parsedCompilerId = compilerId ? BitId.parse(compilerId) : undefined;
     

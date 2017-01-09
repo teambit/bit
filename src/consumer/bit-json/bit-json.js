@@ -18,7 +18,6 @@ export function hasExisting(bitPath: string): boolean {
 export type BitJsonProps = {
   name: string;
   box: string;
-  version: string;
   impl?: string;
   spec?: string;  
   compiler?: string;
@@ -30,7 +29,6 @@ export type BitJsonProps = {
 export default class BitJson extends AbstractBitJson {
   name: string;
   box: string;
-  version: string;
   impl: string;
   spec: string; 
   compiler: string;
@@ -39,12 +37,11 @@ export default class BitJson extends AbstractBitJson {
   packageDependencies: {[string]: string};
 
   constructor({ 
-    name, box, version, impl, spec, compiler, tester, dependencies, packageDependencies
+    name, box, impl, spec, compiler, tester, dependencies, packageDependencies
   }: BitJsonProps) {
     super({ impl, spec, compiler, tester, dependencies });
     this.name = name;
     this.box = box;
-    this.version = version;
     this.packageDependencies = packageDependencies || {};
   }
 
@@ -53,13 +50,8 @@ export default class BitJson extends AbstractBitJson {
     return R.merge(superObject, {
       name: this.name,
       box: this.box,
-      version: this.version,
       packageDependencies: this.getPackageDependencies()
     });
-  }
-
-  getVersion(): string { 
-    return this.version;
   }
 
   getBoxname(): string { 
@@ -102,7 +94,6 @@ export default class BitJson extends AbstractBitJson {
     if (
       typeof this.getBoxname() !== 'string' ||
       typeof this.getBitname() !== 'string' ||
-      typeof this.getVersion() !== 'string' ||
       typeof this.getImplBasename() !== 'string' ||
       typeof this.getCompilerName() !== 'string' ||
       typeof this.getTesterName() !== 'string' ||
@@ -111,11 +102,10 @@ export default class BitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object): BitJson {
-    const { name, box, version, sources, env, dependencies, packageDependencies } = object;
+    const { name, box, sources, env, dependencies, packageDependencies } = object;
     return new BitJson({
       name,
       box,
-      version,
       impl: R.prop('impl', sources),
       spec: R.prop('spec', sources),
       compiler: R.prop('compiler', env),
@@ -138,7 +128,6 @@ export default class BitJson extends AbstractBitJson {
       
       if (!R.prop('name', thisBJ)) thisBJ.name = path.basename(dirPath);
       if (!R.prop('box', thisBJ)) thisBJ.box = path.basename(path.dirname(dirPath));
-      if (!R.prop('version', thisBJ)) thisBJ.version = DEFAULT_BIT_VERSION;
       const mergedBJ = R.merge(protoBJ ? protoBJ.toPlainObject() : {}, thisBJ);
       return resolve(BitJson.fromPlainObject(mergedBJ));
     });

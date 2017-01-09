@@ -1,5 +1,6 @@
 /** @flow */
-import { mkdirp } from '../../utils';
+import path from 'path';
+import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
 import Impl from '../bit-component/sources/impl';
 import Specs from '../bit-component/sources/specs';
@@ -26,8 +27,8 @@ export type ComponentProps = {
   testerId: ?string,
   dependencies?: ?Object,
   packageDependencies?: ?Object,
-  impl: ?Impl,
-  specs: ?Specs,
+  impl: ?Impl|string,
+  specs: ?Specs|string,
 }
 
 export default class Component {
@@ -41,20 +42,30 @@ export default class Component {
   testerId: string;
   dependencies: Object;
   packageDependencies: Object;
-  _impl: ?Impl;
-  _specs: ?Specs;
+  _impl: Impl|string;
+  _specs: ?Specs|string;
 
   set impl(val: Impl) { this._impl = val; }
 
   get impl(): Impl {
-    if (!this._impl) { this._impl = Impl.load(this.name, this.compilerId); }
+    if (isString(this._impl)) {
+      // $FlowFixMe
+      this._impl = Impl.load(this._impl, this.compilerId);
+    }
+    // $FlowFixMe
     return this._impl;
   }
   
   set specs(val: Specs) { this._specs = val; }
 
-  get specs(): Specs {
-    if (!this._specs) { this._specs = Specs.load(this.name, this.testerId); }
+  get specs(): ?Specs {
+    if (!this._specs) { return null; }
+    
+    if (isString(this._specs)) {
+      // $FlowFixMe
+      this._specs = Specs.load(this._specs, this.testerId);
+    }
+    // $FlowFixMe
     return this._specs;
   }
 
@@ -117,7 +128,7 @@ export default class Component {
     return new Promise((resolve, reject) => {
       if (!this.hasCompiler()) { return resolve(this); }
       try {
-        const compilerName = this.bitJson.getCompilerName();
+        const compilerName = this.compilerId;
         return scope.loadEnvironment(BitId.parse(compilerName))
         .then(({ compile }) => {
           const src = this.impl.src;
@@ -139,7 +150,9 @@ export default class Component {
         implFile: bitJson.getImplBasename(),
         specsFile: bitJson.getSpecBasename(), 
         compilerId: bitJson.getCompilerName(),
-        testerId: bitJson.getTesterName(),  
+        testerId: bitJson.getTesterName(),
+        impl: path.join(bitDir, bitJson.getImplBasename()),
+        specs: path.join(bitDir, bitJson.getSpecBasename()),
       });
     });
   }

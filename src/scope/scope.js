@@ -109,7 +109,7 @@ export default class Scope {
           dependencies = flattenDependencies(dependencies);
           return this.sourcesRepository.addSource(bit)
           // // @TODO make the scope install the required env
-            .then(() => this.ensureEnvironment(bit.bitJson))
+            // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
             .then(() => bit.build(this))
             .then(() => this.objectsRepository.persist())
             .then(() => {
@@ -221,8 +221,8 @@ export default class Scope {
   /**
    * check a bitJson compiler and tester, returns an empty promise and import environments if needed
    */
-  ensureEnvironment(bitJson: AbstractBitJson): Promise<any> {
-    return this.environment.ensureEnvironment(bitJson);
+  ensureEnvironment({ testerId, compilerId }: any): Promise<any> {
+    return this.environment.ensureEnvironment({ testerId, compilerId });
   }
 
   static create(path: string = process.cwd(), name: ?string) {

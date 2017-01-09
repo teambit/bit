@@ -12,6 +12,8 @@ import {
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
+  DEFAULT_DIST_DIRNAME,
+  DEFAULT_BUNDLE_FILENAME,
  } from '../constants';
 import { flatten } from '../utils';
 import { Scope, BitDependencies } from '../scope';
@@ -21,7 +23,10 @@ import loadPlugin from './bit-component/environment/load-plugin';
 const buildAndSave = (component: Component, scope: Scope, bitDir: string): Promise<Component> =>
   component.build(scope)
   .then(({ code }) => {
-    
+    return fs.outputFileSync(
+      path.join(bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME),
+      code,
+    );
   });
 
 export type ConsumerProps = {
@@ -63,7 +68,7 @@ export default class Consumer {
     return this.projectPath;
   }
 
-  loadBit(id: BitInlineId): Promise<Bit> {
+  loadComponent(id: BitInlineId): Promise<Component> {
     const bitDir = id.composeBitPath(this.getPath());
     return Component.loadFromInline(bitDir, this.bitJson);
   }
@@ -74,12 +79,13 @@ export default class Consumer {
     return this.scope.push(bitId, rawRemote);
   }
 
-  import(rawId: ?string): Bit {
+  import(rawId: ?string): Component {
     if (!rawId) { // if no arguments inserted, install according to bitJson dependencies
       const deps = BitIds.loadDependencies(this.bitJson.dependencies);
       
       return this.scope.ensureEnvironment({
-        testerId: this.getTesterName(), compilerId: this.getCompilerName()
+        testerId: this.bitJson.getTesterName(),
+        compilerId: this.bitJson.getCompilerName()
       }).then(() =>
         Promise.all(deps.map(dep => this.scope.get(dep)))
         .then(bits => this.writeToComponentsDir(flatten(bits)))
@@ -142,14 +148,14 @@ export default class Consumer {
   }
 
   export(id: BitInlineId) {  
-    return this.loadBit(id)
+    return this.loadComponent(id)
       .then(bit => this.scope.put(bit))
       .then(bits => this.writeToComponentsDir([bits]))
       .then(() => this.removeFromInline(id));
   }
 
   testBit(id: BitInlineId): Promise<Bit> {
-    return this.loadBit(id)
+    return this.loadComponent(id)
     .then((bit) => {
       const bitDir = id.composeBitPath(this.getPath());
       return loadPlugin(bit.bitJson.getTesterName())
@@ -163,7 +169,7 @@ export default class Consumer {
         if (err) reject(err);
 
         const bitsP = files.map(bitRawId =>
-          this.loadBit(BitInlineId.parse(bitRawId))
+          this.loadComponent(BitInlineId.parse(bitRawId))
         );
 
         return Promise.all(bitsP)
