@@ -1,5 +1,5 @@
 /** @flow */
-import { DEPENDENCY_DELIMITER } from '../constants';
+import { DEPENDENCY_DELIMITER } from '../../constants';
 
 export type DepNameProps = {
   name: string,

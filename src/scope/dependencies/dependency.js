@@ -1,5 +1,5 @@
 /** @flow */
-import Version from '../version';
+import Version from '../../version';
 // import { DEPENDENCY_DELIMITER } from '../constants';
 import { InvalidDependency } from './exceptions';
 import parseDepName from './name-parser';
