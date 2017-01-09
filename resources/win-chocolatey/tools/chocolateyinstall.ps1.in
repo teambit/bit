@@ -1,0 +1,28 @@
+﻿﻿$ErrorActionPreference = 'Stop'; # stop on all errors
+$packageName = 'bit'
+$packageArgs = @{
+  packageName = $packageName
+  softwareName = 'Bit*'
+  fileType = 'msi'
+  silentArgs = "/qn /norestart /l*v `"$env:TEMP\chocolatey\$($packageName)\$($packageName).MsiInstall.log`""
+  validExitCodes = @(0, 3010, 1641)
+  checksumType = 'sha256'
+
+  url = 'http://assets.bitsrc.io/release/{VERSION}/yarn-{VERSION}.msi'
+  checksum = '{CHECKSUM}'
+}
+
+Install-ChocolateyPackage @packageArgs
+
+# Update Yarn's package.json file so it can tell that it was installed via Chocolatey.
+if (Test-Path "${env:ProgramFiles(x86)}\Bit\package.json") {
+  $path = "${env:ProgramFiles(x86)}\Bit\package.json"
+} else {
+  $path = "$env:ProgramFiles\Bit\package.json"
+}
+$script = @"
+  (Get-Content -Path '$path') ``
+    -replace 'installationMethod":.+', 'installationMethod": "choco",' ``
+    | Set-Content '$path'
+"@
+Start-ChocolateyProcessAsAdmin -Statements $script

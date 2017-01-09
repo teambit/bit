@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+	<metadata>
+		<id>bit</id>
+		<title>Bit (Install)</title>
+		<!-- Version number inserted in build-chocolatey.ps1 -->
+		<version>0.0.0</version>
+		<authors>Bit Maintainers</authors>
+		<owners>Eyal Segal</owners>
+		<tags>bit node nodejs npm javascript packages bower admin</tags>
+		<summary>Bit - Distributed Code Component Manager</summary>
+		<description>
+Bit is a distributed code component manager.
+
+**Increase reusability:** Designed for fast and easy extraction and reuse of code
+components without creating duplications or publishing packages..
+
+**Simply and predictable:** Bit uses features such as simple inline editing,
+strict minor versioning and test based updating to make modifying and maintaining
+is super simple.
+
+**Discoverable:** Bit uses a functionality-based search and a simple yet smart
+scoping mechanism to easily find and reuse components created by you or by others.
+		</description>
+		<projectUrl>https://bitsrc.io/</projectUrl>
+		<packageSourceUrl>https://github.com/cocycles/bit/tree/master/resources/win-chocolatey</packageSourceUrl>
+		<projectSourceUrl>https://github.com/cocycles/bit</projectSourceUrl>
+		<licenseUrl>https://github.com/cocycles/bit/raw/master/LICENSE</licenseUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<iconUrl>https://cdn.rawgit.com/cocycles/assets/master/icon.png</iconUrl>
+		<docsUrl>https://bitsrc.io/en/docs/</docsUrl>
+		<bugTrackerUrl>https://github.com/cocycles/bit/issues</bugTrackerUrl>
+		<releaseNotes>https://github.com/cocycles/bit/releases/tag/v$version$</releaseNotes>
+		<dependencies>
+			<dependency id="nodejs.install" version="6.0" />
+		</dependencies>
+	</metadata>
+
+	<files>
+		<file src="tools\chocolateyinstall.ps1" target="tools" />
+	</files>
+</package>
