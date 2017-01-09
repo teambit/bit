@@ -63,4 +63,5 @@ flow-typed/
 
 #distrubution
 distrubution/
+artifacts/
 bit-*.tar.gz

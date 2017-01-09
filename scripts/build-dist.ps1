@@ -1,11 +1,6 @@
 $ErrorActionPreference = 'Stop'
-
-
-
-cd dist
-tar -xzf pack.tgz --strip 1
-rm pack.tgz
-# Change this to "yarn install --production" once #1115 is fixed
+npm install
+npm run build
+rm -r .\node_modules
 npm install --production
-../scripts/clean-node-modules.ps1
-cd ..
+#tar --exclude='./Jenkinsfile' --exclude='./distribution/' --exclude='./scripts/' -zcvf  pack.tgz *
