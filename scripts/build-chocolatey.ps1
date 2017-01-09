@@ -7,7 +7,7 @@ param(
 
 $ErrorActionPreference = 'Stop'; # stop on all errors
 
-$latest_version = [String](Invoke-WebRequest -Uri https://api.bitsrc.io/release/latest)
+$latest_version = [String](Invoke-WebRequest -Uri https://api-stg.bitsrc.io/release/latest)
 $latest_chocolatey_version = (Find-Package -Name Bit).Version
 
 if ([Version]$latest_chocolatey_version -ge [Version]$latest_version) {
@@ -26,7 +26,7 @@ rm artifacts/*.nupkg
 # Download the installer so we can compute its hash
 # Keep this in sync with chocolateyInstall.ps1.in
 # This is intentionally not using /latest.msi to ensure the URL used by the Chocolatey package is valid.
-$url = "http://assets.bitsrc.io/release/$latest_version/yarn-$latest_version.msi"
+$url = "http://assets.bitsrc.io/release/$latest_version/bit-$latest_version.msi"
 $installer_file = [IO.Path]::GetTempFileName()
 Invoke-WebRequest -Uri $url -OutFile $installer_file
 
