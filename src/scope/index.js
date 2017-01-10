@@ -1,10 +1,10 @@
 /** @flow */
 import loadScope from './scope-loader';
 import Scope from './scope';
-import BitDependencies from './bit-dependencies';
+import ComponentDependencies from './component-dependencies';
 
 export {
   loadScope,
   Scope,
-  BitDependencies
+  ComponentDependencies
 };

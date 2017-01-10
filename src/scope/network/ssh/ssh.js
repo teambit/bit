@@ -4,7 +4,7 @@ import Bit from '../../../consumer/bit-component';
 import { RemoteScopeNotFound } from '../exceptions';
 import { BitId, BitIds } from '../../../bit-id';
 import { toBase64, fromBase64 } from '../../../utils';
-import { BitDependencies } from '../../scope';
+import { ComponentDependencies } from '../../index';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
 
@@ -80,14 +80,14 @@ export default class SSH {
       });
   }
 
-  fetch(bitIds: BitIds): Promise<BitDependencies[]> {
+  fetch(bitIds: BitIds): Promise<ComponentDependencies[]> {
     bitIds = bitIds.map(bitId => bitId.toString());
     return this.exec('_fetch', ...bitIds)
       .then((packs) => {
         const [objects, scope] = packs.split(' ');
         return objects
           .split('!!!')
-          .map(pack => BitDependencies.deserialize(pack, scope));
+          .map(pack => ComponentDependencies.deserialize(pack, scope));
       });
   }
 

@@ -2,7 +2,7 @@
 import Command from '../command';
 import { toBase64, fromBase64 } from '../../utils';
 import { fetch } from '../../api';
-import { BitDependencies } from '../../scope';
+import { ComponentDependencies } from '../../scope';
 
 export default class Fetch extends Command {
   name = '_fetch <path> <ids...>';

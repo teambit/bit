@@ -30,7 +30,7 @@ export default class ComponentDependencies {
   //     Component.fromTar({ tarball: new Buffer(json.bit, 'utf8'), scope }), 
   //     Promise.all(json.dependencies.map(dep => Bit.fromTar({ tarball: new Buffer(dep, 'utf8'), scope })))
   //   ])
-  //   .then(([bit, dependencies]) => new BitDependencies({ bit, dependencies }));
+  //   .then(([bit, dependencies]) => new ComponentDependencies({ bit, dependencies }));
   // }
 
 }

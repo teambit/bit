@@ -41,7 +41,7 @@ export default class Component {
   specsFile: string; 
   compilerId: ?BitId;
   testerId: ?BitId;
-  dependencies: Object;
+  dependencies: BitIds;
   packageDependencies: Object;
   _impl: ?Impl|string;
   _specs: ?Specs|string;
@@ -101,7 +101,7 @@ export default class Component {
     this.specsFile = specsFile || DEFAULT_SPECS_NAME;
     this.compilerId = compilerId;
     this.testerId = testerId;
-    this.dependencies = dependencies || {};
+    this.dependencies = dependencies || new BitIds();
     this.packageDependencies = packageDependencies || {}; 
     this._specs = specs;
     this._impl = impl;

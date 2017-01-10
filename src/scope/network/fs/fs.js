@@ -1,5 +1,5 @@
 /** @flow */
-import { loadScope, Scope, BitDependencies } from '../../scope';
+import { loadScope, Scope, ComponentDependencies } from '../../scope';
 import { BitIds } from '../../../bit-id';
 import Bit from '../../../consumer/bit-component';
 import { FsScopeNotLoaded } from '../exceptions';
@@ -31,7 +31,7 @@ export default class Fs {
     return this.getScope().put(bit);
   }
 
-  fetch(bitIds: BitIds): Promise<BitDependencies[]> {
+  fetch(bitIds: BitIds): Promise<ComponentDependencies[]> {
     return this.getScope().getMany(bitIds)
       .then(bitsMatrix => flatten(bitsMatrix));
   }

@@ -68,7 +68,7 @@ export default class Cache extends Repository {
     return Promise.all(R.map(ensureEnv, envs));
   }
 
-  // writeToEnvBitsDir(bitDependencies: BitDependencies[]): Promise<Bit[]> {
+  // writeToEnvBitsDir(bitDependencies: ComponentDependencies[]): Promise<Bit[]> {
   //   const bits = flattenDependencies(bitDependencies);
   //   return Promise.all(
   //     bits.map(bit => 

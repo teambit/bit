@@ -5,7 +5,7 @@ import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';
 import { BitId, BitIds } from '../bit-id';
 import { get as getCache } from '../cache';
-import { BitDependencies } from '../scope';
+import { ComponentDependencies } from '../scope';
 import type { Network } from '../scope/network/network';
 import { CacheNotFound } from '../cache/exceptions';
 
@@ -44,7 +44,7 @@ export default class Remote {
     });
   }
 
-  fetch(bitIds: BitId[]): Promise<BitDependencies[]> {
+  fetch(bitIds: BitId[]): Promise<ComponentDependencies[]> {
     return this
       .connect()
       .then(network => network.fetch(bitIds));

@@ -16,7 +16,7 @@ import {
   DEFAULT_BUNDLE_FILENAME,
  } from '../constants';
 import { flatten } from '../utils';
-import { Scope, BitDependencies } from '../scope';
+import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
 import loadPlugin from './bit-component/environment/load-plugin';
 
@@ -94,7 +94,7 @@ export default class Consumer {
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
-      .then(bitDependencies => this.writeToComponentsDir([bitDependencies]));
+      .then(componentDependencies => this.writeToComponentsDir([componentDependencies]));
   }
 
   importEnvironment(rawId: ?string) {
@@ -102,8 +102,8 @@ export default class Consumer {
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
-    .then(bitDependencies => 
-      this.scope.writeToEnvironmentsDir(bitDependencies.bit)); // @HACKALERT - replace with getOne
+    .then(componentDependencies => 
+      this.scope.writeToEnvironmentsDir(componentDependencies.component)); // @HACKALERT - replace with getOne
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {
@@ -128,9 +128,9 @@ export default class Consumer {
     });
   }
 
-  writeToComponentsDir(bitDependencies: BitDependencies[]): Promise<Component[]> {
+  writeToComponentsDir(componentDependencies: ComponentDependencies[]): Promise<Component[]> {
     const componentsDir = this.getComponentsPath();
-    const components = flattenDependencies(bitDependencies);
+    const components = flattenDependencies(componentDependencies);
 
     const bitDirForConsumerImport = (component: Component) => path.join(
       componentsDir,
