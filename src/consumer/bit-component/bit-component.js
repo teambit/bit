@@ -13,8 +13,6 @@ import {
   DEFAULT_BOX_NAME,
   DEFAULT_IMPL_NAME,
   DEFAULT_SPECS_NAME,
-  DEFAULT_COMPILER_ID,
-  DEFAULT_TESTER_ID,
   DEFAULT_BIT_VERSION,
   NO_PLUGIN_TYPE,
 } from '../../constants';
@@ -41,8 +39,8 @@ export default class Component {
   scope: ?string;
   implFile: string;
   specsFile: string; 
-  compilerId: BitId;
-  testerId: BitId;
+  compilerId: ?BitId;
+  testerId: ?BitId;
   dependencies: Object;
   packageDependencies: Object;
   _impl: ?Impl|string;
@@ -117,8 +115,8 @@ export default class Component {
       scope: this.scope,
       impl: this.implFile,
       spec: this.specsFile,
-      compiler: this.compilerId,
-      tester: this.testerId,
+      compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
+      tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this.dependencies,
       packageDependencies: this.packageDependencies
     }).write({ bitDir });
@@ -140,8 +138,7 @@ export default class Component {
     return new Promise((resolve, reject) => {
       if (!this.compilerId) { return resolve(null); }
       try {
-        const compilerName = this.compilerId;
-        return scope.loadEnvironment(BitId.parse(compilerName))
+        return scope.loadEnvironment(this.compilerId)
         .then(({ compile }) => {
           const src = this.impl.src;
           const { code, map } = compile(src); // eslint-disable-line
