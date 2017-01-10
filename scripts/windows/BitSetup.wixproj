@@ -50,7 +50,7 @@
       <Output TaskParameter="ConsoleOutput" PropertyName="BitVersion" />
     </Exec>
        <Exec
-          Command="node -p &quot;require('../../../package.json').version.replace(/\-(.+)$/, '')&quot;"
+          Command="node -p &quot;require('../../package.json').version.replace(/\-(.+)$/, '')&quot;"
           ConsoleToMSBuild="true"
           WorkingDirectory="$(BitDistPath)\..">
           <Output TaskParameter="ConsoleOutput" PropertyName="BitShortVersion" />
