@@ -47,5 +47,12 @@
 				/>
 			</Component>
 		</DirectoryRef>
+			<Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+        		<WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+        		<UIRef Id="WixUI_InstallDir" />
+        		<WixVariable Id="WixUIBannerBmp" Value="bit-banner.png" />
+        		<WixVariable Id="WixUIDialogBmp" Value="bit-dialog.bmp" />
+        		<Icon Id="BitIcon" SourceFile="bit.ico" />
+        		<Property Id="ARPPRODUCTICON" Value="BitIcon" />
 	</Product>
 </Wix>
