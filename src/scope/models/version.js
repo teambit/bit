@@ -22,9 +22,14 @@ export type VersionProps = {
 }
 
 export default class Version extends BitObject {
-  version: number;
-  impl: Ref;
-  specs: ?Ref;
+  impl: {
+    name: string,
+    file: Ref
+  };
+  specs: {
+    name: string,
+    file: Ref
+  };
   compiler: ?Ref;
   tester: ?Ref;
   dependencies: BitId[];
@@ -35,7 +40,6 @@ export default class Version extends BitObject {
 
   constructor(props: VersionProps) {
     super();
-    this.version = props.version;
     this.impl = props.impl;
     this.specs = props.specs;
     this.compiler = props.compiler;
@@ -53,8 +57,14 @@ export default class Version extends BitObject {
 
   toObject() {
     return {
-      impl: this.impl.toString(),
-      specs: this.specs ? this.specs.toString(): '',
+      impl: {
+        file: this.impl.file.toString(),
+        name: this.impl.name
+      },
+      specs: {
+        file: this.specs.file.toString(),
+        name: this.specs.name        
+      },
       compiler: this.compiler ? this.compiler.toString(): '',
       tester: this.tester ? this.tester.toString(): '',
       dependencies: this.dependencies.map(dep => dep.toString()),
@@ -70,22 +80,38 @@ export default class Version extends BitObject {
   }
 
   static parse(contents) {
-    return new Version(JSON.parse(contents));
-  }
-
-  static fromComponent(component: Component) {
+    const props = JSON.parse(contents);
     return new Version({
       impl: {
-        file: Source.from('function foo(){}').hash(),
+        file: Ref.from(props.impl.file),
+        name: props.impl.name
+      },
+      specs: props.specs ? {
+        file: Ref.from(props.specs.file),
+        name: props.specs.name        
+      } : {},
+      compiler: props.compiler ? Ref.from(this.compiler): null,
+      tester: props.tester ? Ref.from(this.tester): null,
+      dependencies: props.dependencies.map(dep => dep.toString()),
+      packageDependencies: props.packageDependencies,
+      buildStatus: props.buildStatus,
+      testStatus: props.testStatus
+    });
+  }
+
+  static fromComponent(component: Component, impl: Source, specs: Source) {
+    return new Version({
+      impl: {
+        file: impl.hash(),
         name: component.implFile
       },
       specs: {
-        file: Source.from('describe()').hash(),
+        file: specs.hash(),
         name: component.specsFile
       },
-      dist: component.build(),
-      compiler: Component.fromBitId(component.compilerId).hash(),
-      tester: Component.fromBitId(component.testerId).hash(),
+      // dist: component.build(),
+      // compiler: Component.fromBitId('').hash(),
+      // tester: Component.fromBitId('').hash(),
       packageDependencies: component.packageDependencies,
       dependencies: []
     });    

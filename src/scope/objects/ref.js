@@ -1,4 +1,5 @@
 /** @flow */
+import Repository from './repository';
 
 export default class Ref {
   hash: string;
@@ -9,5 +10,13 @@ export default class Ref {
 
   toString() {
     return this.hash;
+  }
+
+  load(repository: Repository) {
+    return repository.findOne(this);
+  }
+
+  static from(hash: string) {
+    return new Ref(hash);
   }
 }

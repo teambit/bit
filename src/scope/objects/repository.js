@@ -54,12 +54,12 @@ export default class Repository {
     return Promise.all(refs.map(ref => this.load(ref)));
   }
 
-  persist(): Promise<> {
+  persist(): Promise<[]> {
     // @TODO handle failures
     return allSettled(this.objects.map(object => this.persistOne(object)));
   }
 
-  persistOne(object: BitObject): Promise<> {
+  persistOne(object: BitObject): Promise<boolean> {
     return object.compress()
       .then((contents) => {
         return writeFile(this.objectPath(object.hash()), contents);

@@ -36,12 +36,16 @@ export default class SourceRepository {
     const objectRepo = this.objects();
     return this.findOrAddComponent(source)
       .then((component) => {
-        const version = Version.fromComponent(source, component.version());
+        const impl = Source.from(new Buffer('function foo(){}'));
+        const specs = Source.from(new Buffer('describe();'));
+        const version = Version.fromComponent(source, impl, specs);
         component.addVersion(version);
         
         objectRepo
           .add(version)
-          .add(component);
+          .add(component)
+          .add(impl)
+          .add(specs);
       });
   }
 }

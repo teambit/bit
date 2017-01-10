@@ -9,7 +9,7 @@ export default class Source extends BitObject {
   }
 
   id() {
-    return this.toString();
+    return this.contents.toString();
   }
 
   toBuffer() {

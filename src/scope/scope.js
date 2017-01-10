@@ -100,7 +100,6 @@ export default class Scope {
     // persist models (version, component, files)
     
     component.scope = this.name();
-    // component.validateOrThrow();
     return this.remotes().then((remotes) => {
       return BitIds.loadDependencies(component.dependencies)
         .fetch(this, remotes)
@@ -109,12 +108,9 @@ export default class Scope {
           return this.sourcesRepository.addSource(component)
           // // @TODO make the scope install the required env
             // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
-            .then(() => component.build(this))
-            .then(() => component.build(this))
+            // .then(() => component.build(this))
             .then(() => this.objectsRepository.persist())
-            .then(() => {
-              return new BitDependencies({ component, dependencies });
-            });
+            .then(() => new BitDependencies({ component, dependencies }));
         });
     });
   }
