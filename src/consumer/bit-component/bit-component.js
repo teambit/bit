@@ -20,7 +20,7 @@ import {
 export type ComponentProps = {
   name: string,
   box: string,
-  version?: ?string,
+  version?: ?number,
   scope?: ?string,
   implFile?: ?string,
   specsFile?: ?string,
@@ -35,7 +35,7 @@ export type ComponentProps = {
 export default class Component {
   name: string;
   box: string;
-  version: ?string;
+  version: ?number;
   scope: ?string;
   implFile: string;
   specsFile: string; 

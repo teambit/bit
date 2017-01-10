@@ -49,7 +49,7 @@ export const DEFAULT_DIST_DIRNAME = 'dist';
 
 export const DEFAULT_BUNDLE_FILENAME = 'dist.js';
 
-export const DEFAULT_BIT_VERSION = '1';
+export const DEFAULT_BIT_VERSION = 1;
 
 export const LATEST_BIT_VERSION = 'latest';
 

@@ -2,7 +2,7 @@
 import R from 'ramda';
 import path from 'path';
 import fs from 'fs';
-import { BIT_JSON, DEFAULT_BIT_VERSION } from '../../constants';
+import { BIT_JSON } from '../../constants';
 import { BitJsonAlreadyExists, InvalidBitJson } from './exceptions';
 import AbstractBitJson from './abstract-bit-json';
 import ConsumerBitJson from './consumer-bit-json';
