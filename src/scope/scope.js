@@ -1,7 +1,6 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs';
-import glob from 'glob';
 import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
@@ -10,9 +9,8 @@ import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
 import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, LATEST } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import { ScopeNotFound, BitNotInScope } from './exceptions';
-import { Source, Cache, Tmp, Environment } from './repositories';
-import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
+import { ScopeNotFound } from './exceptions';
+import { Tmp, Environment } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import Component from '../consumer/bit-component';
 import { Repository, Ref, BitObject } from './objects';
@@ -29,38 +27,29 @@ export type ScopeProps = {
   path: string,
   scopeJson: ScopeJson;
   created?: boolean;
-  cache?: Cache;
   tmp?: Tmp;
   environment?: Environment;
-  sources?: Source,
-  sourcesRepository?: SourcesRepository;
-  sourcesMap?: SourcesMap;
-  objectsRepository?: Repository;
+  sources?: SourcesRepository;
+  objects?: Repository;
 };
 
 export default class Scope {
   created: boolean = false;
-  cache: Cache;
   scopeJson: ScopeJson;
   tmp: Tmp;
   environment: Environment;
-  sources: Source;
   path: string;
-  sourcesRepository: SourcesRepository;
-  objectsRepository: Repository;
-  sourcesMap: SourcesMap;
+  sources: SourcesRepository;
+  objects: Repository;
 
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
     this.scopeJson = scopeProps.scopeJson;
-    this.cache = scopeProps.cache || new Cache(this);
-    this.sources = scopeProps.sources || new Source(this);
     this.created = scopeProps.created || false;
     this.tmp = scopeProps.tmp || new Tmp(this);
-    this.sourcesRepository = scopeProps.sourcesRepository || new SourcesRepository(this);
-    this.objectsRepository = scopeProps.objectsRepository || new Repository(this, types());
+    this.sources = scopeProps.sources || new SourcesRepository(this);
+    this.objects = scopeProps.objects || new Repository(this, types());
     this.environment = scopeProps.environment || new Environment(this);
-    this.sourcesMap = scopeProps.sourcesMap || new SourcesMap(this);
   }
 
   name() {
@@ -104,11 +93,11 @@ export default class Scope {
         .fetch(this, remotes)
         .then((dependencies) => {
           // dependencies = flattenDependencies(dependencies);
-          return this.sourcesRepository.addSource(consumerComponent)
+          return this.sources.addSource(consumerComponent)
           // // @TODO make the scope install the required env
             // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
             .then((component) => {
-              return this.objectsRepository.persist()
+              return this.objects.persist()
                 .then(() => component.toConsumerComponent(LATEST, this.objectsRepository))
                 .then(consumerComp => new ComponentDependencies({ 
                   component: consumerComp,
@@ -120,7 +109,7 @@ export default class Scope {
   }
 
   getObject(hash: string): Promise<BitObject> {
-    return this.objectsRepository.findOne(new Ref(hash));
+    return this.objects.findOne(new Ref(hash));
   }
 
   getExternal(bitId: BitId, remotes: Remotes): Promise<ComponentDependencies> {
@@ -133,9 +122,9 @@ export default class Scope {
       return this.remotes().then(remotes => this.getExternal(bitId, remotes));
     }
     
-    return this.sourcesRepository.get(bitId)
+    return this.sources.get(bitId)
       .then(component => 
-        component.toConsumerComponent(bitId.version, this.objectsRepository))
+        component.toConsumerComponent(bitId.version, this.objects))
       .then((consumerComponent) => {
         return new ComponentDependencies({ 
           component: consumerComponent, 
@@ -174,14 +163,11 @@ export default class Scope {
   }
 
   ensureDir() {
-    return this.cache
+    return this.tmp
       .ensureDir()
-      .then(() => this.sources.ensureDir())
-      .then(() => this.tmp.ensureDir())
       .then(() => this.environment.ensureDir())
-      .then(() => this.sourcesMap.write())
       .then(() => this.scopeJson.write(this.getPath()))
-      .then(() => this.objectsRepository.ensureDir())
+      .then(() => this.objects.ensureDir())
       .then(() => this); 
   }
   
@@ -189,24 +175,12 @@ export default class Scope {
    * list the bits in the sources directory
    **/
   listSources(): Promise<Component[]> {
-    return new Promise((resolve, reject) =>
-      glob(pathLib.join('*', '*'), { cwd: this.sources.getPath() }, (err, files) => {
-        if (err) reject(err);
-
-        const bitsP = files.map(bitRawId =>
-          this.getOne(BitId.parse(`@this/${bitRawId}`))
-        );
-        
-        return Promise.all(bitsP)
-        .then(resolve);
-      })
-    );
   }
 
   clean(bitId: BitId) {
-    this.sources.clean(bitId);
-    this.sourcesMap.delete(bitId);
-    return this.sourcesMap.write();
+    return this.sources.clean(bitId);
+    // this.sourcesMap.delete(bitId);
+    // return this.sourcesMap.write();
   }
 
   getMany(bitIds: BitIds) {
@@ -249,14 +223,10 @@ export default class Scope {
     }
     const path = scopePath;
 
-    return Promise.all([
-      readFile(getDependenyMapPath(scopePath)), 
-      readFile(getScopeJsonPath(scopePath))
-    ])
-      .then(([rawDependencyMap, rawScopeJson]) => {
-        const scopeJson = ScopeJson.loadFromJson(rawScopeJson.toString('utf8'));
+    return readFile(getScopeJsonPath(scopePath))      
+      .then((rawScopeJson) => {
+        const scopeJson = ScopeJson.loadFromJson(rawScopeJson.toString());
         const scope = new Scope({ path, scopeJson }); 
-        scope.sourcesMap = SourcesMap.load(JSON.parse(rawDependencyMap.toString('utf8')), scope);
         return scope;
       });
   }
