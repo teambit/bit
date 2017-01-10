@@ -22,8 +22,7 @@ export default class Impl extends Source {
     if (typeof this.src !== 'string') throw new InvalidImpl();
   }
 
-  static load(bitPath: string, fileName: string): Impl {
-    const implPath = path.join(bitPath, fileName);
+  static load(implPath: string): Impl {
     try {
       const data = fs.readFileSync(implPath);
       return new Impl(data.toString());

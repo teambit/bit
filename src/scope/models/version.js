@@ -1,13 +1,16 @@
 /** @flow */
 import { Ref, BitObject } from '../objects';
 import Source from './source';
+import consumerComponent from '../../consumer/bit-component';
+import Component from './component';
+import BitId from '../../bit-id/bit-id';
 
 export type VersionProps = {
   impl: {
     name: string,
     file: Ref
   };
-  specs?: {
+  specs?: ?{
     name: string,
     file: Ref
   };
@@ -105,13 +108,13 @@ export default class Version extends BitObject {
         file: impl.hash(),
         name: component.implFile
       },
-      specs: {
+      specs: specs ? {
         file: specs.hash(),
         name: component.specsFile
-      },
-      // dist: component.build(),
-      // compiler: Component.fromBitId('').hash(),
-      // tester: Component.fromBitId('').hash(),
+      }: {},
+      dist: component.build().code,
+      compiler: component.compilerId ? Component.fromBitId(component.compilerId).hash() : null,
+      tester: component.testerId ? Component.fromBitId(component.testerId).hash() : null,
       packageDependencies: component.packageDependencies,
       dependencies: []
     });    

@@ -2,7 +2,7 @@
 import Version from '../version';
 import { remoteResolver, Remotes } from '../remotes';
 import { InvalidBitId } from './exceptions';
-import { LATEST_BIT_VERSION, VERSION_DELIMITER, LOCAL_SCOPE_NOTATION } from '../constants';
+import { LATEST_BIT_VERSION, VERSION_DELIMITER, LOCAL_SCOPE_NOTATION, NO_PLUGIN_TYPE } from '../constants';
 import { Scope } from '../scope';
 import { contains } from '../utils';
 
@@ -63,7 +63,8 @@ export default class BitId {
     return [scope, box, name].join('/').concat(`::${version}`);
   }
 
-  static parse(id: string, version: string = LATEST_BIT_VERSION): BitId {
+  static parse(id: string|null, version: string = LATEST_BIT_VERSION): BitId|null {
+    if (!id || id === NO_PLUGIN_TYPE) { return null; }
     if (contains(id, VERSION_DELIMITER)) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
       id = newId;

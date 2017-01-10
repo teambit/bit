@@ -5,30 +5,31 @@ import BitJson from '../bit-json';
 import Impl from '../bit-component/sources/impl';
 import Specs from '../bit-component/sources/specs';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
-import BitId from '../../bit-id';
+import BitId from '../../bit-id/bit-id';
+import Scope from '../../scope/scope';
+import BitIds from '../../bit-id/bit-ids';
 
 import { 
   DEFAULT_BOX_NAME,
   DEFAULT_IMPL_NAME,
   DEFAULT_SPECS_NAME,
-  DEFAULT_COMPILER_ID,
-  DEFAULT_TESTER_ID,
   DEFAULT_BIT_VERSION,
+  NO_PLUGIN_TYPE,
 } from '../../constants';
 
 export type ComponentProps = {
   name: string,
   box: string,
-  version: ?string,
-  scope: ?string,
-  implFile: ?string,
-  specsFile: ?string,
-  compilerId: ?string,
-  testerId: ?string,
+  version?: ?string,
+  scope?: ?string,
+  implFile?: ?string,
+  specsFile?: ?string,
+  compilerId?: ?BitId,
+  testerId?: ?BitId,
   dependencies?: ?Object,
   packageDependencies?: ?Object,
-  impl: ?Impl|string,
-  specs: ?Specs|string,
+  impl?: ?Impl|string,
+  specs?: ?Specs|string,
 }
 
 export default class Component {
@@ -38,11 +39,11 @@ export default class Component {
   scope: ?string;
   implFile: string;
   specsFile: string; 
-  compilerId: string;
-  testerId: string;
+  compilerId: ?BitId;
+  testerId: ?BitId;
   dependencies: Object;
   packageDependencies: Object;
-  _impl: Impl|string;
+  _impl: ?Impl|string;
   _specs: ?Specs|string;
 
   set impl(val: Impl) { this._impl = val; }
@@ -50,7 +51,7 @@ export default class Component {
   get impl(): Impl {
     if (isString(this._impl)) {
       // $FlowFixMe
-      this._impl = Impl.load(this._impl, this.compilerId);
+      this._impl = Impl.load(this._impl);
     }
     // $FlowFixMe
     return this._impl;
@@ -63,11 +64,20 @@ export default class Component {
     
     if (isString(this._specs)) {
       // $FlowFixMe
-      this._specs = Specs.load(this._specs, this.testerId);
+      this._specs = Specs.load(this._specs);
     }
     // $FlowFixMe
     return this._specs;
   }
+
+  // get id(): BitId {
+  //   return new BitId({
+  //     scope,
+  //     box,
+  //     name,
+  //     version,
+  //   });
+  // }
 
   constructor({ 
     name,
@@ -89,8 +99,8 @@ export default class Component {
     this.scope = scope;
     this.implFile = implFile || DEFAULT_IMPL_NAME;
     this.specsFile = specsFile || DEFAULT_SPECS_NAME;
-    this.compilerId = compilerId || DEFAULT_COMPILER_ID;
-    this.testerId = testerId || DEFAULT_TESTER_ID;
+    this.compilerId = compilerId;
+    this.testerId = testerId;
     this.dependencies = dependencies || {};
     this.packageDependencies = packageDependencies || {}; 
     this._specs = specs;
@@ -105,8 +115,8 @@ export default class Component {
       scope: this.scope,
       impl: this.implFile,
       spec: this.specsFile,
-      compiler: this.compilerId,
-      tester: this.testerId,
+      compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
+      tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this.dependencies,
       packageDependencies: this.packageDependencies
     }).write({ bitDir });
@@ -119,17 +129,16 @@ export default class Component {
   write(bitDir: string, withBitJson: boolean): Promise<Component> {
     return mkdirp(bitDir)
     .then(() => this.impl.write(bitDir, this.implFile))
-    .then(() => { return this._specs ? this.specs.write(bitDir, this.specsFile) : undefined; })
+    .then(() => { return this.specs ? this.specs.write(bitDir, this.specsFile) : undefined; })
     .then(() => { return withBitJson ? this.writeBitJson(bitDir): undefined; })
     .then(() => this);
   }
 
-  build(scope: Scope): Promise<{code: string, map: Object}> { // @TODO - write SourceMapType
+  build(scope: Scope): Promise<{code: string, map: Object}|null> { // @TODO - write SourceMapType
     return new Promise((resolve, reject) => {
-      if (!this.hasCompiler()) { return resolve(this); }
+      if (!this.compilerId) { return resolve(null); }
       try {
-        const compilerName = this.compilerId;
-        return scope.loadEnvironment(BitId.parse(compilerName))
+        return scope.loadEnvironment(this.compilerId)
         .then(({ compile }) => {
           const src = this.impl.src;
           const { code, map } = compile(src); // eslint-disable-line
@@ -149,8 +158,8 @@ export default class Component {
         box: bitJson.box,
         implFile: bitJson.getImplBasename(),
         specsFile: bitJson.getSpecBasename(), 
-        compilerId: bitJson.getCompilerName(),
-        testerId: bitJson.getTesterName(),
+        compilerId: BitId.parse(bitJson.getCompilerName()),
+        testerId: BitId.parse(bitJson.getTesterName()),
         impl: path.join(bitDir, bitJson.getImplBasename()),
         specs: path.join(bitDir, bitJson.getSpecBasename()),
       });
@@ -166,8 +175,8 @@ export default class Component {
   }) {
     const implFile = consumerBitJson.getImplBasename();
     const specsFile = consumerBitJson.getSpecBasename();
-    const compilerId = consumerBitJson.getCompilerName();
-    const testerId = consumerBitJson.getTesterName();
+    const compilerId = BitId.parse(consumerBitJson.getCompilerName());
+    const testerId = BitId.parse(consumerBitJson.getTesterName());
 
     return new Component({
       name,
