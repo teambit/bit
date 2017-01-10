@@ -15,7 +15,7 @@ PACKAGE_TMPDIR=../distribution/debian_pkg
 VERSION=$(cat ../package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs echo -n)
 TARBALL_NAME=../bit-$VERSION.tar.gz
 DEB_PACKAGE_NAME=bit_$VERSION'_all.deb'
-BIT_PACKAGE_NAME=bit_$VERSION'_deb.deb'
+BIT_PACKAGE_NAME=bit_$VERSION'.deb'
 if [ ! -e $TARBALL_NAME ]; then
   echo "Hey! Listen! You need to run build-tar.sh first."
   exit 1
