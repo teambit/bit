@@ -38,7 +38,7 @@ export default class Repository {
       .catch(() => null);
   }
 
-  add(object: BitObject): Repository {
+  add(object: ?BitObject): Repository {
     if (!object) return this;
     this.objects.push(object);
     return this;

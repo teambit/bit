@@ -5,8 +5,8 @@ export default function mapObject(obj: Object, iteratee: Iteratee) {
   const keys = Object.keys(obj);
   const mappedObject = {};
 
-  keys.forEach((val, key) => {
-    mappedObject[key] = iteratee(val, key);
+  keys.forEach((key) => {
+    mappedObject[key] = iteratee(obj[key], key);
   });
 
   return mappedObject;

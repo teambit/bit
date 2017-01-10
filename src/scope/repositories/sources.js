@@ -32,7 +32,7 @@ export default class SourceRepository {
       });
   }
 
-  addSource(source: any): Promise<any> {
+  addSource(source: any): Promise<Component> {
     const objectRepo = this.objects();
     return this.findOrAddComponent(source)
       .then((component) => {
@@ -46,6 +46,8 @@ export default class SourceRepository {
           .add(component)
           .add(impl)
           .add(specs);
+        
+        return component;
       });
   }
 }

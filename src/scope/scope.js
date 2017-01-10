@@ -88,7 +88,7 @@ export default class Scope {
     // return this.sources.list();
   }
 
-  put(component: Component): Promise<BitDependencies> {
+  put(consumerComponent: Component): Promise<BitDependencies> {
     // create component model V
     // check if component already exists V
     // if exists get create latest version object otherwise create initial version V
@@ -98,17 +98,23 @@ export default class Scope {
     // build + report build ?
     // test + report test ?
     // persist models (version, component, files)
-    component.scope = this.name();
+    consumerComponent.scope = this.name();
     return this.remotes().then((remotes) => {
-      return BitIds.loadDependencies(component.dependencies)
+      return BitIds.loadDependencies(consumerComponent.dependencies)
         .fetch(this, remotes)
         .then((dependencies) => {
           // dependencies = flattenDependencies(dependencies);
-          return this.sourcesRepository.addSource(component)
+          return this.sourcesRepository.addSource(consumerComponent)
           // // @TODO make the scope install the required env
             // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
-            .then(() => this.objectsRepository.persist())
-            .then(() => new BitDependencies({ component, dependencies }));
+            .then((component) => {
+              return this.objectsRepository.persist()
+                .then(() => component.toConsumerComponent('latest', this.objectsRepository))
+                .then(consumerComp => new BitDependencies({ 
+                  bit: consumerComp,
+                  dependencies 
+                }));
+            });
         });
     });
   }

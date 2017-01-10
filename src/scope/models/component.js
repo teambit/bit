@@ -1,7 +1,7 @@
 /** @flow */
 import { Ref, BitObject } from '../objects';
 import { VersionNotFound } from '../exceptions';
-import { forEach, empty } from '../../utils';
+import { forEach, empty, mapObject } from '../../utils';
 import Version from './version';
 import { DEFAULT_BOX_NAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';
@@ -65,7 +65,7 @@ export default class Component extends BitObject {
   }
 
   listVersions(): number[] {
-    return Object.keys(this.versions).map(parseInt);
+    return Object.keys(this.versions).map(versionStr => parseInt(versionStr));
   }
 
   loadVersion(version: number, repository: Repository): Promise<Version> {
@@ -83,7 +83,7 @@ export default class Component extends BitObject {
       .parse(versionStr)
       .resolve(this.listVersions());
 
-    this.loadVersion(versionNum, repository)
+    return this.loadVersion(versionNum, repository)
       .then((version) => {
         const implP = version.impl.file.load(repository);
         const specsP = version.specs ? version.specs.file.load(repository) : null;
@@ -113,7 +113,12 @@ export default class Component extends BitObject {
   }
 
   static parse(contents: string): Component {
-    return new Component(JSON.parse(contents));
+    const rawComponent = JSON.parse(contents);
+    return Component.from({
+      name: rawComponent.name,
+      box: rawComponent.box,
+      versions: mapObject(rawComponent.versions, val => Ref.from(val))
+    });
   }
 
   static from(props: ComponentProps): Component {
