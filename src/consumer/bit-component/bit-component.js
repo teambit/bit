@@ -26,7 +26,7 @@ export type ComponentProps = {
   specsFile?: ?string,
   compilerId?: ?BitId,
   testerId?: ?BitId,
-  dependencies?: ?Object,
+  dependencies?: ?BitIds,
   packageDependencies?: ?Object,
   impl?: ?Impl|string,
   specs?: ?Specs|string,
@@ -68,11 +68,6 @@ export default class Component {
     }
     // $FlowFixMe
     return this._specs;
-  }
-
-  get Dependencies(): BitIds {
-    // TODO - memoize for cache
-    return BitIds.loadDependencies(this.dependencies);
   }
   
   // get id(): BitId {
@@ -165,6 +160,8 @@ export default class Component {
         specsFile: bitJson.getSpecBasename(), 
         compilerId: BitId.parse(bitJson.getCompilerName()),
         testerId: BitId.parse(bitJson.getTesterName()),
+        Dependencies: BitIds.loadDependencies(bitJson.dependencies),
+        packageDependencies: bitJson.packageDependencies,
         impl: path.join(bitDir, bitJson.getImplBasename()),
         specs: path.join(bitDir, bitJson.getSpecBasename()),
       });
