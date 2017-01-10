@@ -2,7 +2,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Source from './source';
-import BitJson from '../../bit-json';
 import createTemplate from '../templates/specs.default-template';
 import loadPlugin from '../environment/load-plugin';
 
@@ -16,12 +15,12 @@ export default class Specs extends Source {
     });
   }
   
-  static load(bitPath: string, fileName: string): Specs {
+  static load(specsPath: string): Specs|null {
     try {
-      const data = fs.readFileSync(path.join(bitPath, fileName));
+      const data = fs.readFileSync(specsPath);
       return new Specs(data.toString());
     } catch (err) {
-      return undefined; // when cant load specs it's ok, just return undefined';
+      return null; // when cant load specs it's ok, just return undefined';
     }
   }
 

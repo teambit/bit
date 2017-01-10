@@ -110,7 +110,6 @@ export default class Scope {
           // // @TODO make the scope install the required env
             // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
             .then(() => component.build(this))
-            .then(() => component.build(this))
             .then(() => this.objectsRepository.persist())
             .then(() => {
               return new BitDependencies({ component, dependencies });
