@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>3.10</ProductVersion>
-    <ProjectGuid>{DC153BD2-1987-4DF1-A02B-F01963887B0D}</ProjectGuid>
+    <ProjectGuid>fe1c2574-72c2-4f4a-80d6-dc3aa428bb00</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
     <OutputName>Bit</OutputName>
     <OutputType>Package</OutputType>

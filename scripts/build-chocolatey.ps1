@@ -38,7 +38,7 @@ $hash = (Get-FileHash -Path $installer_file -Algorithm SHA256).Hash
   -replace '{CHECKSUM}', $hash |
   Set-Content ..\resources\win-chocolatey\tools\chocolateyinstall.ps1
 
-choco pack $PSScriptRoot\..\resources\win-chocolatey\bit.nuspec --version $latest_version
+choco pack ..\resources\win-chocolatey\bit.nuspec --version $latest_version
 mv *.nupkg artifacts
 
 if (!$Publish) {
