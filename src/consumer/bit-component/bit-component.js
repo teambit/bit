@@ -70,6 +70,11 @@ export default class Component {
     return this._specs;
   }
 
+  get Dependencies(): BitIds {
+    // TODO - memoize for cache
+    return BitIds.loadDependencies(this.dependencies);
+  }
+  
   // get id(): BitId {
   //   return new BitId({
   //     scope,
@@ -149,7 +154,7 @@ export default class Component {
       } catch (e) { return reject(e); }
     });
   }
-
+  
   static loadFromInline(bitDir, consumerBitJson): Promise<Component> {
     return BitJson.load(bitDir, consumerBitJson)
     .then((bitJson) => {
