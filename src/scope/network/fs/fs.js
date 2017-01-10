@@ -1,5 +1,7 @@
 /** @flow */
-import { loadScope, Scope, ComponentDependencies } from '../../scope';
+import loadScope from '../../scope-loader';
+import Scope from '../../scope';
+import ComponentDependencies from '../../component-dependencies';
 import { BitIds } from '../../../bit-id';
 import Bit from '../../../consumer/bit-component';
 import { FsScopeNotLoaded } from '../exceptions';

@@ -7,7 +7,7 @@ import flattenDependencies from './flatten-dependencies';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
-import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, LATEST } from '../constants';
+import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound } from './exceptions';
 import { Tmp, Environment } from './repositories';
@@ -17,7 +17,7 @@ import { Repository, Ref, BitObject } from './objects';
 import ComponentDependencies from './component-dependencies';
 import SourcesRepository from './repositories/sources';
 
-const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
+const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
 
 export type ScopeDescriptor = {
   name: string
@@ -98,7 +98,7 @@ export default class Scope {
             // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
             .then((component) => {
               return this.objects.persist()
-                .then(() => component.toConsumerComponent(LATEST, this.objectsRepository))
+                .then(() => component.toConsumerComponent(LATEST, this.objects))
                 .then(consumerComp => new ComponentDependencies({ 
                   component: consumerComp,
                   dependencies 
