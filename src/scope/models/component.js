@@ -4,6 +4,7 @@ import { forEach, empty } from '../../utils';
 import Version from './version';
 import { DEFAULT_BOX_NAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';
+import BitComponent from '../../consumer/bit-component';
 
 export type ComponentProps = {
   box?: string;
@@ -59,6 +60,10 @@ export default class Component extends BitObject {
       name: this.name,
       versions: versions(this.versions)
     };
+  }
+
+  toComponent() {
+    return new BitComponent(this);
   }
 
   toBuffer() {

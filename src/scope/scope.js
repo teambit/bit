@@ -98,7 +98,6 @@ export default class Scope {
     // build + report build ?
     // test + report test ?
     // persist models (version, component, files)
-    
     component.scope = this.name();
     return this.remotes().then((remotes) => {
       return BitIds.loadDependencies(component.dependencies)

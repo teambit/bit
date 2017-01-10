@@ -39,6 +39,7 @@ export default class Repository {
   }
 
   add(object: BitObject): Repository {
+    if (!object) return this;
     this.objects.push(object);
     return this;
   }

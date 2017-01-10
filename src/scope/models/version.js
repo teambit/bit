@@ -1,7 +1,7 @@
 /** @flow */
 import { Ref, BitObject } from '../objects';
 import Source from './source';
-import consumerComponent from '../../consumer/bit-component';
+import ConsumerComponent from '../../consumer/bit-component';
 import Component from './component';
 import BitId from '../../bit-id/bit-id';
 
@@ -17,7 +17,7 @@ export type VersionProps = {
   dist: ?Ref;
   compiler?: ?Ref;
   tester?: ?Ref;
-  dependencies?: Ref[];
+  dependencies?: BitId[];
   flattenedDepepdencies?: Ref[];
   packageDependencies?: {[string]: string}; 
   buildStatus?: boolean;
@@ -29,7 +29,7 @@ export default class Version extends BitObject {
     name: string,
     file: Ref
   };
-  specs: {
+  specs: ?{
     name: string,
     file: Ref
   };
@@ -39,6 +39,7 @@ export default class Version extends BitObject {
   flattenedDepepdencies: Ref[];
   packageDependencies: {[string]: string};
   buildStatus: ?boolean;
+  dist: ?Ref;
   testStatus: ?boolean;
 
   constructor(props: VersionProps) {
@@ -48,8 +49,9 @@ export default class Version extends BitObject {
     this.compiler = props.compiler;
     this.tester = props.tester;
     this.dependencies = props.dependencies || [];
+    this.dist = props.dist;
     this.flattenedDepepdencies = props.flattenedDepepdencies || [];
-    this.packageDependencies = props.packageDependencies || [];
+    this.packageDependencies = props.packageDependencies || {};
     this.buildStatus = props.buildStatus;
     this.testStatus = props.testStatus;
   }
@@ -64,12 +66,13 @@ export default class Version extends BitObject {
         file: this.impl.file.toString(),
         name: this.impl.name
       },
-      specs: {
+      specs: this.specs ? {
         file: this.specs.file.toString(),
+        // $FlowFixMe
         name: this.specs.name        
-      },
-      compiler: this.compiler ? this.compiler.toString(): '',
-      tester: this.tester ? this.tester.toString(): '',
+      }: null,
+      compiler: this.compiler ? this.compiler.toString(): null,
+      tester: this.tester ? this.tester.toString(): null,
       dependencies: this.dependencies.map(dep => dep.toString()),
       packageDependencies: this.packageDependencies,
       buildStatus: this.buildStatus,
@@ -92,9 +95,10 @@ export default class Version extends BitObject {
       specs: props.specs ? {
         file: Ref.from(props.specs.file),
         name: props.specs.name        
-      } : {},
-      compiler: props.compiler ? Ref.from(this.compiler): null,
-      tester: props.tester ? Ref.from(this.tester): null,
+      } : null,
+      dist: props.dist ? Ref.from(props.dist): null,
+      compiler: props.compiler ? Ref.from(props.compiler): null,
+      tester: props.tester ? Ref.from(props.tester): null,
       dependencies: props.dependencies.map(dep => dep.toString()),
       packageDependencies: props.packageDependencies,
       buildStatus: props.buildStatus,
@@ -102,7 +106,7 @@ export default class Version extends BitObject {
     });
   }
 
-  static fromComponent(component: Component, impl: Source, specs: Source) {
+  static fromComponent(component: ConsumerComponent, impl: Source, specs: Source) {
     return new Version({
       impl: {
         file: impl.hash(),
@@ -111,7 +115,7 @@ export default class Version extends BitObject {
       specs: specs ? {
         file: specs.hash(),
         name: component.specsFile
-      }: {},
+      }: null,
       dist: component.build().code,
       compiler: component.compilerId ? Component.fromBitId(component.compilerId).hash() : null,
       tester: component.testerId ? Component.fromBitId(component.testerId).hash() : null,

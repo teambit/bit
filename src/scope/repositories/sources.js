@@ -36,8 +36,8 @@ export default class SourceRepository {
     const objectRepo = this.objects();
     return this.findOrAddComponent(source)
       .then((component) => {
-        const impl = Source.from(new Buffer('function foo(){}'));
-        const specs = Source.from(new Buffer('describe();'));
+        const impl = Source.from(Buffer.from(source.impl.src));
+        const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
         const version = Version.fromComponent(source, impl, specs);
         component.addVersion(version);
         
