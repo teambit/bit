@@ -22,11 +22,16 @@ import loadPlugin from './bit-component/environment/load-plugin';
 
 const buildAndSave = (component: Component, scope: Scope, bitDir: string): Promise<Component> =>
   component.build(scope)
-  .then(({ code }) => {
-    return fs.outputFileSync(
+  .then((val) => {
+    if (!val) return component;
+
+    const { code } = val;
+    fs.outputFileSync(
       path.join(bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME),
       code,
     );
+
+    return component;
   });
 
 export type ConsumerProps = {
@@ -130,14 +135,15 @@ export default class Consumer {
 
   writeToComponentsDir(componentDependencies: ComponentDependencies[]): Promise<Component[]> {
     const componentsDir = this.getComponentsPath();
-    const components = flattenDependencies(componentDependencies);
+    // const components = flattenDependencies(componentDependencies);
+    const components = [componentDependencies[0].component]; // HACKALERT - replace when dependencies work
 
     const bitDirForConsumerImport = (component: Component) => path.join(
       componentsDir,
       component.box,
       component.name,
       component.scope,
-      component.version,
+      component.version.toString(),
     );
 
     return Promise.all(components.map((component) => {
