@@ -1,7 +1,6 @@
 /** @flow */
 import { Ref, BitObject } from '../objects';
 import { forEach, empty } from '../../utils';
-import
 import Version from './version';
 
 export type ComponentProps = {

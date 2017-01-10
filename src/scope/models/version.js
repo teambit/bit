@@ -1,8 +1,8 @@
 /** @flow */
 import { Ref, BitObject } from '../objects';
+import Source from './source';
 
 export type VersionProps = {
-  version: number;
   impl: {
     name: string,
     file: Ref
@@ -11,6 +11,7 @@ export type VersionProps = {
     name: string,
     file: Ref
   };
+  dist: ?Ref;
   compiler?: ?Ref;
   tester?: ?Ref;
   dependencies?: Ref[];
@@ -26,7 +27,7 @@ export default class Version extends BitObject {
   specs: ?Ref;
   compiler: ?Ref;
   tester: ?Ref;
-  dependencies: Ref[];
+  dependencies: BitId[];
   flattenedDepepdencies: Ref[];
   packageDependencies: {[string]: string};
   buildStatus: ?boolean;
@@ -41,7 +42,7 @@ export default class Version extends BitObject {
     this.tester = props.tester;
     this.dependencies = props.dependencies || [];
     this.flattenedDepepdencies = props.flattenedDepepdencies || [];
-    this.packageDependencies = props.packageDependencies || {};
+    this.packageDependencies = props.packageDependencies || [];
     this.buildStatus = props.buildStatus;
     this.testStatus = props.testStatus;
   }
@@ -52,7 +53,6 @@ export default class Version extends BitObject {
 
   toObject() {
     return {
-      version: this.version.toString(),
       impl: this.impl.toString(),
       specs: this.specs ? this.specs.toString(): '',
       compiler: this.compiler ? this.compiler.toString(): '',
@@ -74,6 +74,20 @@ export default class Version extends BitObject {
   }
 
   static fromComponent(component: Component) {
-    
+    return new Version({
+      impl: {
+        file: Source.from('function foo(){}').hash(),
+        name: component.implFile
+      },
+      specs: {
+        file: Source.from('describe()').hash(),
+        name: component.specsFile
+      },
+      dist: component.build(),
+      compiler: Component.fromBitId(component.compilerId).hash(),
+      tester: Component.fromBitId(component.testerId).hash(),
+      packageDependencies: component.packageDependencies,
+      dependencies: []
+    });    
   }
 }

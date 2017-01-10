@@ -105,7 +105,7 @@ export default class Scope {
       return BitIds.loadDependencies(component.dependencies)
         .fetch(this, remotes)
         .then((dependencies) => {
-          dependencies = flattenDependencies(dependencies);
+          // dependencies = flattenDependencies(dependencies);
           return this.sourcesRepository.addSource(component)
           // // @TODO make the scope install the required env
             // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
