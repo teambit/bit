@@ -8,30 +8,30 @@ import { formatBit, paintHeader } from '../chalk-box';
 
 export default class Import extends Command {
   name = 'import [ids]';
-  description = 'import a bit';
+  description = 'import a bit-component';
   alias = 'i';
   opts = [
     ['s', 'save', 'save into bit.json'],
-    ['e', 'env', 'import an environment bit (compiler/tester)']
+    ['e', 'env', 'import an environment bit-component (compiler/tester)']
   ];
 
   action([id, ]: [string, ], { save, env }: any): Promise<any> {
-    // @TODO - import should support multiple bits
+    // @TODO - import should support multiple components
     return importAction({ bitId: id, save, env })
-      .then(bits => 
-        bits.map(bit => ({
-          scope: bit.scope,
-          box: bit.getBox(),
-          name: bit.getName(),
-          version: bit.getVersion()
+      .then(components => 
+        components.map(component => ({
+          scope: component.scope,
+          box: component.box,
+          name: component.name,
+          version: component.version.toString()
         }))
       );
   }
 
-  report(bits: any): string {
-    if (R.isEmpty(bits)) { return 'done'; }
+  report(components: any): string {
+    if (R.isEmpty(components)) { return 'done'; }
     return immutableUnshift(
-      bits.map(formatBit),
+      components.map(formatBit),
       paintHeader('imported the following bits:')
     ).join('\n');
   }
