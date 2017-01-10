@@ -3,8 +3,14 @@ import { Ref, BitObject } from '../objects';
 
 export type VersionProps = {
   version: number;
-  impl: Ref;
-  specs?: Ref;
+  impl: {
+    name: string,
+    file: Ref
+  };
+  specs?: {
+    name: string,
+    file: Ref
+  };
   compiler?: ?Ref;
   tester?: ?Ref;
   dependencies?: Ref[];
@@ -65,5 +71,9 @@ export default class Version extends BitObject {
 
   static parse(contents) {
     return new Version(JSON.parse(contents));
+  }
+
+  static fromComponent(component: Component) {
+    
   }
 }

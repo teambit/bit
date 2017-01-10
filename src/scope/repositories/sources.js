@@ -29,12 +29,21 @@ export default class SourceRepository {
   }
 
   buildVersion(versionProps: any, version: number) {
-    versionProps.impl = new Source(versionProps.impl.src).hash();
-    versionProps.specs = '';
-    versionProps.version = version;
-    versionProps.dependencies = [];
-
-    return new Version(versionProps);
+    return new Version({
+      impl: {
+        file: Source.from('').hash(),
+        name: versionProps.implFile
+      },
+      specs: {
+        file: Source.from('').hash(),
+        name: versionProps.specsFile
+      },
+      version,
+      compiler: Component.fromBitId().hash(),
+      tester: Component.fromBitId().hash(),
+      packageDependencies: versionProps.packageDependencies,
+      dependencies: []
+    });
   }
 
   findOrAddComponent(props: ComponentProps): Promise<Component> {

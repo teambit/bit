@@ -10,12 +10,11 @@ import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
 import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import AbstractBitJson from '../consumer/bit-json/abstract-bit-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, Environment } from './repositories';
 import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
 import { BitId, BitIds } from '../bit-id';
-import Bit from '../consumer/bit-component';
+import Component from '../consumer/bit-component';
 import { Repository, Ref, BitObject } from './objects';
 import BitDependencies from './bit-dependencies';
 import SourcesRepository from './repositories/sources';
@@ -89,7 +88,7 @@ export default class Scope {
     // return this.sources.list();
   }
 
-  put(bit: Bit): Promise<BitDependencies> {
+  put(component: Component): Promise<BitDependencies> {
     // create component model V
     // check if component already exists V
     // if exists get create latest version object otherwise create initial version V
@@ -100,20 +99,21 @@ export default class Scope {
     // test + report test ?
     // persist models (version, component, files)
     
-    bit.scope = this.name();
-    bit.validateOrThrow();
+    component.scope = this.name();
+    // component.validateOrThrow();
     return this.remotes().then((remotes) => {
-      return bit.dependencies()
+      return BitIds.loadDependencies(component.dependencies)
         .fetch(this, remotes)
         .then((dependencies) => {
           dependencies = flattenDependencies(dependencies);
-          return this.sourcesRepository.addSource(bit)
+          return this.sourcesRepository.addSource(component)
           // // @TODO make the scope install the required env
             // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
-            .then(() => bit.build(this))
+            .then(() => component.build(this))
+            .then(() => component.build(this))
             .then(() => this.objectsRepository.persist())
             .then(() => {
-              return new BitDependencies({ bit, dependencies });
+              return new BitDependencies({ component, dependencies });
             });
         });
     });

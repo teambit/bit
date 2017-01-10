@@ -1,6 +1,7 @@
 /** @flow */
 import { Ref, BitObject } from '../objects';
 import { forEach, empty } from '../../utils';
+import
 import Version from './version';
 
 export type ComponentProps = {
@@ -65,5 +66,13 @@ export default class Component extends BitObject {
 
   static parse(contents: string): Component {
     return new Component(JSON.parse(contents));
+  }
+
+  static from(props: ComponentProps): Component {
+    return new Component(props);
+  }
+
+  static fromBitId(bitId: BitId): Component {
+    return new Component({ name: bitId.name, box: bitId.box });
   }
 }

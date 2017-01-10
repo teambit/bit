@@ -19,4 +19,8 @@ export default class Source extends BitObject {
   static parse(contents: string): Source {
     return new Source(new Buffer(contents));
   }
+
+  static from(str: string): Source {
+    return new Source(str);
+  }
 }
