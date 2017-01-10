@@ -4,6 +4,7 @@ import Scope from '../scope';
 import Component from '../models/component';
 import Version from '../models/version';
 import Source from '../models/source';
+import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
 
 export default class SourceRepository {
@@ -21,6 +22,10 @@ export default class SourceRepository {
     return this.objects()
       .findOne(component.hash())
       .catch(() => null);
+  }
+
+  get(bitId: BitId): Promise<Component> {
+    return this.findComponent(Component.fromBitId(bitId));
   }
 
   findOrAddComponent(props: ComponentProps): Promise<Component> {

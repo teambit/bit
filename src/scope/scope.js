@@ -133,18 +133,27 @@ export default class Scope {
       return this.remotes().then(remotes => this.getExternal(bitId, remotes));
     }
     
-    bitId.version = this.sources.resolveVersion(bitId).toString();
-    const dependencyList = this.sourcesMap.get(bitId);
-    if (!dependencyList) throw new BitNotInScope();
-    const bitIds = this.sourcesMap.getBitIds(dependencyList);
+    return this.sourcesRepository.get(bitId)
+      .then(component => 
+        component.toConsumerComponent(bitId.version, this.objectsRepository))
+      .then((consumerComponent) => {
+        return new ComponentDependencies({ 
+          component: consumerComponent, 
+          dependencies: [] });
+      });
     
-    return this.remotes().then((remotes) => {
-      return bitIds.fetchOnes(this, remotes)
-        .then((bits) => {
-          return this.sources.loadSource(bitId)
-            .then(bit => new ComponentDependencies({ bit, dependencies: bits }));
-        });
-    });
+    // bitId.version = this.sources.resolveVersion(bitId).toString();
+    // const dependencyList = this.sourcesMap.get(bitId);
+    // if (!dependencyList) throw new BitNotInScope();
+    // const bitIds = this.sourcesMap.getBitIds(dependencyList);
+    
+    // return this.remotes().then((remotes) => {
+    //   return bitIds.fetchOnes(this, remotes)
+    //     .then((bits) => {
+    //       return this.sources.loadSource(bitId)
+    //         .then(bit => new ComponentDependencies({ bit, dependencies: bits }));
+    //     });
+    // });
   }
 
   getOne(bitId: BitId): Promise<Component> {
