@@ -1,10 +1,14 @@
 /** @flow */
 import { Ref, BitObject } from '../objects';
+import { VersionNotFound } from '../exceptions';
 import { forEach, empty } from '../../utils';
 import Version from './version';
 import { DEFAULT_BOX_NAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';
-import BitComponent from '../../consumer/bit-component';
+import VersionParser from '../../version';
+import ConsumerComponent from '../../consumer/bit-component';
+import Repository from '../objects/repository';
+import { Impl, Specs } from '../../consumer/bit-component/sources';
 
 export type ComponentProps = {
   box?: string;
@@ -26,9 +30,7 @@ export default class Component extends BitObject {
 
   latest(): number {
     if (empty(this.versions)) return 0;
-    return Math.max(...Object.keys(this.versions)
-      .map(parseInt)
-    );
+    return Math.max(...this.listVersions());
   }
 
   addVersion(version: Version) {
@@ -62,8 +64,48 @@ export default class Component extends BitObject {
     };
   }
 
-  toComponent() {
-    return new BitComponent(this);
+  listVersions(): number[] {
+    return Object.keys(this.versions).map(parseInt);
+  }
+
+  loadVersion(version: number, repository: Repository): Promise<Version> {
+    const versionRef = this.versions[version];
+    if (!versionRef) throw new VersionNotFound();
+    return versionRef.load(repository);
+  }
+
+  toId() {
+    return new BitId();
+  }
+
+  toConsumerComponent(versionStr: string, repository: Repository) {
+    const versionNum = VersionParser
+      .parse(versionStr)
+      .resolve(this.listVersions());
+
+    this.loadVersion(versionNum, repository)
+      .then((version) => {
+        const implP = version.impl.file.load(repository);
+        const specsP = version.specs ? version.specs.file.load(repository) : null;
+        const compilerP = version.compiler ? version.compiler.load(repository) : null;
+        const testerP = version.tester ? version.tester.load(repository): null;
+        return Promise.all([implP, specsP, compilerP, testerP])
+        .then(([impl, specs, compiler, tester]) => {
+          return new ConsumerComponent({
+            name: this.name,
+            box: this.box,
+            scope: '',
+            version: versionNum,
+            implFile: version.impl.name,
+            specsFile: version.specs ? version.specs.name : null,
+            compilerId: compiler ? compiler.toId() : null,
+            testerId: tester ? tester.toId() : null,
+            packageDependencies: version.packageDependencies,
+            impl: new Impl(impl.toString()),
+            specs: specs ? new Specs(specs.toString()): null
+          });
+        });
+      });
   }
 
   toBuffer() {

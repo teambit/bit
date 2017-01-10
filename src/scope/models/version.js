@@ -4,6 +4,7 @@ import Source from './source';
 import ConsumerComponent from '../../consumer/bit-component';
 import Component from './component';
 import BitId from '../../bit-id/bit-id';
+import BitIds from '../../bit-id/bit-ids';
 
 export type VersionProps = {
   impl: {
@@ -17,7 +18,7 @@ export type VersionProps = {
   dist: ?Ref;
   compiler?: ?Ref;
   tester?: ?Ref;
-  dependencies?: BitId[];
+  dependencies?: BitIds;
   flattenedDepepdencies?: Ref[];
   packageDependencies?: {[string]: string}; 
   buildStatus?: boolean;
@@ -35,7 +36,7 @@ export default class Version extends BitObject {
   };
   compiler: ?Ref;
   tester: ?Ref;
-  dependencies: BitId[];
+  dependencies: BitIds;
   flattenedDepepdencies: Ref[];
   packageDependencies: {[string]: string};
   buildStatus: ?boolean;
@@ -48,7 +49,7 @@ export default class Version extends BitObject {
     this.specs = props.specs;
     this.compiler = props.compiler;
     this.tester = props.tester;
-    this.dependencies = props.dependencies || [];
+    this.dependencies = props.dependencies || new BitIds();
     this.dist = props.dist;
     this.flattenedDepepdencies = props.flattenedDepepdencies || [];
     this.packageDependencies = props.packageDependencies || {};
@@ -99,7 +100,7 @@ export default class Version extends BitObject {
       dist: props.dist ? Ref.from(props.dist): null,
       compiler: props.compiler ? Ref.from(props.compiler): null,
       tester: props.tester ? Ref.from(props.tester): null,
-      dependencies: props.dependencies.map(dep => dep.toString()),
+      dependencies: BitIds.deserialize(props.dependencies),
       packageDependencies: props.packageDependencies,
       buildStatus: props.buildStatus,
       testStatus: props.testStatus
@@ -120,7 +121,7 @@ export default class Version extends BitObject {
       compiler: component.compilerId ? Component.fromBitId(component.compilerId).hash() : null,
       tester: component.testerId ? Component.fromBitId(component.testerId).hash() : null,
       packageDependencies: component.packageDependencies,
-      dependencies: []
+      dependencies: new BitIds()
     });    
   }
 }

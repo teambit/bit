@@ -16,6 +16,10 @@ export default class Source extends BitObject {
     return this.contents;
   }
 
+  toString() {
+    return this.contents.toString();
+  }
+
   static parse(contents: string): Source {
     return new Source(new Buffer(contents));
   }

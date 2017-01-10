@@ -4,6 +4,14 @@ import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import Ref from './ref';
 
 export default class BitObject {
+  id() {
+    throw new Error('id() was not implmented...');
+  }
+
+  toBuffer() {
+    throw new Error('toBuffer() was not implmented...');
+  }
+
   /**
    * indexing method
    */
