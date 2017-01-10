@@ -33,6 +33,10 @@
       <Name>WixUIExtension</Name>
     </WixExtension>
   </ItemGroup>
+    <ItemGroup>
+      <Content Include="license.rtf" />
+      <Content Include="yarn-dialog.bmp" />
+    </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <Target Name="BeforeBuild">
 

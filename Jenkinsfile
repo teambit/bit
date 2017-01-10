@@ -31,8 +31,8 @@ node  {
 
 
     
-     stage 'notify release server'
-     notifyReleaseServer(currentVersion,releaseServer+"/update")
+     //stage 'notify release server'
+     //notifyReleaseServer(currentVersion,releaseServer+"/update")
 
     stage 'generate formula for brew'
     sh("cd ./scripts && ./generate-formula.sh ${assets}/${currentVersion}/${bundleName}_brew.tar.gz")
