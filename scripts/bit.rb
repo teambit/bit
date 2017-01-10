@@ -1,15 +1,15 @@
 require "language/node"
 class Bit < Formula
-  desc ""
-  homepage ""
+  desc "Bit - Distributed Code Component Manager"
+  homepage "www.bitsrc.io"
   url ""
   sha256 ""
 
-    depends_on "node"
+  depends_on "node"
 
   def install
     system "npm", "install" ,"-g" ,*Language::Node.std_npm_install_args(libexec)
-    bin.install_symlink Dir["#{libexec}/bin/*"]# if this fails, try separate make/make install steps
+    bin.install_symlink Dir["#{libexec}/bin/*"]
   end
 
 end
