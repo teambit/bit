@@ -128,7 +128,7 @@ export default class Consumer {
     });
   }
 
-  writeToComponentsDir(bitDependencies: BitDependencies[]): Promise<Bit[]> {
+  writeToComponentsDir(bitDependencies: BitDependencies[]): Promise<Component[]> {
     const componentsDir = this.getComponentsPath();
     const components = flattenDependencies(bitDependencies);
 
@@ -154,7 +154,7 @@ export default class Consumer {
       .then(() => this.removeFromInline(id));
   }
 
-  testBit(id: BitInlineId): Promise<Bit> {
+  testBit(id: BitInlineId): Promise<Component> {
     return this.loadComponent(id)
     .then((bit) => {
       const bitDir = id.composeBitPath(this.getPath());
@@ -163,7 +163,7 @@ export default class Consumer {
     });
   }
 
-  listInline(): Promise<Bit[]> {
+  listInline(): Promise<Component[]> {
     return new Promise((resolve, reject) =>
       glob(path.join('*', '*'), { cwd: this.getInlineBitsPath() }, (err, files) => {
         if (err) reject(err);
