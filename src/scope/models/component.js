@@ -11,6 +11,7 @@ import Repository from '../objects/repository';
 import { Impl, Specs } from '../../consumer/bit-component/sources';
 
 export type ComponentProps = {
+  scope?: string;
   box?: string;
   name: string;
   versions?: {[number]: Ref};
@@ -106,6 +107,12 @@ export default class Component extends BitObject {
           });
         });
       });
+  }
+
+  loadVersions(repo: Repository) {
+    return mapObject(this.versions, (ref) => {
+      return ref.load(repo);
+    });
   }
 
   toBuffer() {

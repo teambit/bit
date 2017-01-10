@@ -28,6 +28,16 @@ export default class SourceRepository {
     return this.findComponent(Component.fromBitId(bitId));
   }
 
+  getObjects(id: BitId) {
+    return this.get(id).then((component) => {
+      return {
+        component,
+        files: component.loadFiles(),
+        versions: component.loadVersions()
+      };
+    });
+  }
+
   findOrAddComponent(props: ComponentProps): Promise<Component> {
     const comp = Component.from(props);
     return this.findComponent(comp)
