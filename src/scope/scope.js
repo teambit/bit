@@ -8,7 +8,7 @@ import flattenDependencies from './flatten-dependencies';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
-import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR } from '../constants';
+import { BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR, LATEST } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, BitNotInScope } from './exceptions';
 import { Source, Cache, Tmp, Environment } from './repositories';
@@ -16,7 +16,7 @@ import { SourcesMap, getPath as getDependenyMapPath } from './sources-map';
 import { BitId, BitIds } from '../bit-id';
 import Component from '../consumer/bit-component';
 import { Repository, Ref, BitObject } from './objects';
-import BitDependencies from './bit-dependencies';
+import ComponentDependencies from './bit-dependencies';
 import SourcesRepository from './repositories/sources';
 
 const pathHasScope = pathHas([BIT_SOURCES_DIRNAME, BIT_HIDDEN_DIR]);
@@ -88,7 +88,7 @@ export default class Scope {
     // return this.sources.list();
   }
 
-  put(consumerComponent: Component): Promise<BitDependencies> {
+  put(consumerComponent: Component): Promise<ComponentDependencies> {
     // create component model V
     // check if component already exists V
     // if exists get create latest version object otherwise create initial version V
@@ -109,9 +109,9 @@ export default class Scope {
             // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
             .then((component) => {
               return this.objectsRepository.persist()
-                .then(() => component.toConsumerComponent('latest', this.objectsRepository))
-                .then(consumerComp => new BitDependencies({ 
-                  bit: consumerComp,
+                .then(() => component.toConsumerComponent(LATEST, this.objectsRepository))
+                .then(consumerComp => new ComponentDependencies({ 
+                  component: consumerComp,
                   dependencies 
                 }));
             });
@@ -123,12 +123,12 @@ export default class Scope {
     return this.objectsRepository.findOne(new Ref(hash));
   }
 
-  getExternal(bitId: BitId, remotes: Remotes): Promise<BitDependencies> {
+  getExternal(bitId: BitId, remotes: Remotes): Promise<ComponentDependencies> {
     return remotes.fetch([bitId])
       .then(bitDeps => first(bitDeps));
   }
 
-  get(bitId: BitId): Promise<BitDependencies> {
+  get(bitId: BitId): Promise<ComponentDependencies> {
     if (!bitId.isLocal(this.name())) {
       return this.remotes().then(remotes => this.getExternal(bitId, remotes));
     }
@@ -142,16 +142,16 @@ export default class Scope {
       return bitIds.fetchOnes(this, remotes)
         .then((bits) => {
           return this.sources.loadSource(bitId)
-            .then(bit => new BitDependencies({ bit, dependencies: bits }));
+            .then(bit => new ComponentDependencies({ bit, dependencies: bits }));
         });
     });
   }
 
-  getOne(bitId: BitId): Promise<Bit> {
+  getOne(bitId: BitId): Promise<Component> {
     return this.sources.loadSource(bitId);
   }
 
-  manyOnes(bitIds: BitId[]): Promise<Bit[]> {
+  manyOnes(bitIds: BitId[]): Promise<ComponentDependencies[]> {
     return Promise.all(bitIds.map(bitId => this.getOne(bitId)));
   }
 
@@ -179,7 +179,7 @@ export default class Scope {
   /**
    * list the bits in the sources directory
    **/
-  listSources(): Promise<Bit[]> {
+  listSources(): Promise<Component[]> {
     return new Promise((resolve, reject) =>
       glob(pathLib.join('*', '*'), { cwd: this.sources.getPath() }, (err, files) => {
         if (err) reject(err);
@@ -214,7 +214,7 @@ export default class Scope {
     return this.environment.get(bitId);
   }
 
-  writeToEnvironmentsDir(bit: Bit) {
+  writeToEnvironmentsDir(bit: Component) {
     return this.environment.store(bit);
   }
   

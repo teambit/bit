@@ -1,36 +1,36 @@
 /** @flow */
-import Bit from '../consumer/bit-component';
+import Component from '../consumer/bit-component';
 import { fromBase64 } from '../utils';
 
-export default class BitDependencies {
-  bit: Bit;
-  dependencies: Bit[];
+export default class ComponentDependencies {
+  component: Component;
+  dependencies: Component[];
 
-  constructor(props: { bit: Bit, dependencies: Bit[] }) {
-    this.bit = props.bit;
+  constructor(props: { component: Component, dependencies: Component[] }) {
+    this.component = props.component;
     this.dependencies = props.dependencies || [];
   }
 
-  serialize(): Promise<string> {
-    return Promise.all([
-      this.bit.toTar(), 
-      Promise.all(this.dependencies.map(bit => bit.toTar()))]
-    )
-    .then(([bit, dependencies]) => {
-      return JSON.stringify({
-        bit: bit.tarball.toString('ascii'),
-        dependencies: dependencies.map(dep => dep.tarball.toString('ascii'))
-      });
-    });
-  }
+  // serialize(): Promise<string> {
+  //   return Promise.all([
+  //     this.component.toTar(), 
+  //     Promise.all(this.dependencies.map(bit => bit.toTar()))]
+  //   )
+  //   .then(([bit, dependencies]) => {
+  //     return JSON.stringify({
+  //       component: bit.tarball.toString('ascii'),
+  //       dependencies: dependencies.map(dep => dep.tarball.toString('ascii'))
+  //     });
+  //   });
+  // }
 
-  static deserialize(str: string, scope: ?string): BitDependencies {
-    const json = JSON.parse(fromBase64(str));
-    return Promise.all([
-      Bit.fromTar({ tarball: new Buffer(json.bit, 'utf8'), scope }), 
-      Promise.all(json.dependencies.map(dep => Bit.fromTar({ tarball: new Buffer(dep, 'utf8'), scope })))
-    ])
-    .then(([bit, dependencies]) => new BitDependencies({ bit, dependencies }));
-  }
+  // static deserialize(str: string, scope: ?string): ComponentDependencies {
+  //   const json = JSON.parse(fromBase64(str));
+  //   return Promise.all([
+  //     Component.fromTar({ tarball: new Buffer(json.bit, 'utf8'), scope }), 
+  //     Promise.all(json.dependencies.map(dep => Bit.fromTar({ tarball: new Buffer(dep, 'utf8'), scope })))
+  //   ])
+  //   .then(([bit, dependencies]) => new BitDependencies({ bit, dependencies }));
+  // }
 
 }
