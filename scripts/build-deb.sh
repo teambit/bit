@@ -37,8 +37,8 @@ mv $PACKAGE_TMPDIR/bit/* $PACKAGE_TMPDIR/usr/share/bit
 rm -rf $PACKAGE_TMPDIR/bit
 # Common FPM parameters for all packages we'll build using FPM
 FPM="fpm --input-type dir --chdir . --name bit --version $VERSION "`
-  `"--vendor 'Bit Contributors <team@cocycles.com>' --maintainer 'Bit Contributors <team@cocycles.com>' "`
-  `"--url https://bitsrc.io/ --license BSD --description jaja --after-install ../../scripts/linux/postInstall.sh"
+  `"--vendor 'Cocycles, LTD <team@cocycles.com>' --maintainer 'Cocycles, LTD <team@cocycles.com>' "`
+  `"--url https://www.bitsrc.io  --description 'Bit - Distributed Code Component Manager' --after-install ../../scripts/linux/postInstall.sh"`
 
 #### Build DEB (Debian, Ubuntu) package
 node ./set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/usr/share/bit/package.json deb
