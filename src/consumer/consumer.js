@@ -164,10 +164,8 @@ export default class Consumer {
 
   testBit(id: BitInlineId): Promise<Component> {
     return this.loadComponent(id)
-    .then((bit) => {
-      const bitDir = id.composeBitPath(this.getPath());
-      return loadPlugin(bit.bitJson.getTesterName())
-      .then(tester => tester.test(bitDir));
+    .then((component) => {
+      component.test(this.scope);
     });
   }
 

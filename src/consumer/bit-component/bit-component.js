@@ -139,7 +139,49 @@ export default class Component {
     .then(() => this);
   }
 
-  build(scope: Scope): Promise<{code: string, map: Object}|null> { // @TODO - write SourceMapType
+  test(scope: Scope): Promise<any|null> { // TODO - create TestResults Type
+    function compileIfNeeded(src) {
+      return new Promise((resolve, reject) => {
+        if (this.compilerId) { 
+          return scope.loadEnvironment(this.compilerId)
+          .then(({ compile }) => {
+            try {
+              const { code } = compile(src);
+              return resolve(code);
+            } catch (e) { return reject(e); }
+          }).catch(reject);
+        }
+
+        return resolve(src);
+      });
+    }
+
+    return new Promise((resolve, reject) => {
+      if (!this.specs) { return resolve(null); }
+      try {
+        return scope.loadEnvironment(this.testerId)
+        .then((tester) => {
+          tester = {
+            test: (p) => {
+              console.log(p);
+              return { t: 'is-awesome' };
+            }
+          };
+
+          // $FlowFixMe
+          return compileIfNeeded(this.specs.src)
+          .then(specsSrc => scope.tmp.save(specsSrc))
+          .then((specsPath) => {
+            const results = tester.test(specsPath);
+            return scope.tmp.remove(specsPath)
+            .then(() => resolve(results));
+          });
+        });
+      } catch (e) { return reject(e); }
+    });
+  }
+
+  build(scope: Scope): Promise<{code: string, map: Object}|null> { // @TODO - write SourceMap Type
     return new Promise((resolve, reject) => {
       if (!this.compilerId) { return resolve(null); }
       try {
@@ -165,7 +207,7 @@ export default class Component {
         specsFile: bitJson.getSpecBasename(), 
         compilerId: BitId.parse(bitJson.getCompilerName()),
         testerId: BitId.parse(bitJson.getTesterName()),
-        Dependencies: BitIds.loadDependencies(bitJson.dependencies),
+        dependencies: BitIds.loadDependencies(bitJson.dependencies),
         packageDependencies: bitJson.packageDependencies,
         impl: path.join(bitDir, bitJson.getImplBasename()),
         specs: path.join(bitDir, bitJson.getSpecBasename()),
