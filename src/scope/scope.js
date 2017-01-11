@@ -4,6 +4,7 @@ import fs from 'fs';
 import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
+import ComponentObjects from './component-objects';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
@@ -87,7 +88,6 @@ export default class Scope {
     // build + report build ?
     // test + report test ?
     // persist models (version, component, files)
-    consumerComponent.scope = this.name();
     return this.remotes().then((remotes) => {
       return BitIds.loadDependencies(consumerComponent.dependencies)
         .fetch(this, remotes)
@@ -98,7 +98,7 @@ export default class Scope {
             // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
             .then((component) => {
               return this.objects.persist()
-                .then(() => component.toConsumerComponent(LATEST, this.objects))
+                .then(() => component.toConsumerComponent(LATEST, this))
                 .then(consumerComp => new ComponentDependencies({ 
                   component: consumerComp,
                   dependencies 
@@ -106,6 +106,12 @@ export default class Scope {
             });
         });
     });
+  }
+
+  putObjects(componentObjects: ComponentObjects) {
+    const objects = componentObjects.toObjects(this.objects);
+    
+    console.log(objects);
   }
 
   getObject(hash: string): Promise<BitObject> {
@@ -124,7 +130,7 @@ export default class Scope {
     
     return this.sources.get(bitId)
       .then(component => 
-        component.toConsumerComponent(bitId.version, this.objects))
+        component.toConsumerComponent(bitId.version, this))
       .then((consumerComponent) => {
         return new ComponentDependencies({ 
           component: consumerComponent, 

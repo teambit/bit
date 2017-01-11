@@ -61,6 +61,14 @@ export default class Version extends BitObject {
     return JSON.stringify(this.toObject());
   }
 
+  refs(): Ref[] {
+    return [
+      this.impl.file,
+      this.specs ? this.specs.file : null,
+      this.dist,
+    ].filter(ref => ref);
+  }
+
   toObject() {
     return {
       impl: {

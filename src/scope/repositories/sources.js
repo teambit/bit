@@ -1,5 +1,6 @@
 /** @flow */
 import { Repository, BitObject } from '../objects';
+import ComponentObjects from '../component-objects';
 import Scope from '../scope';
 import Component from '../models/component';
 import Version from '../models/version';
@@ -15,7 +16,7 @@ export default class SourceRepository {
   }
 
   objects() {
-    return this.scope.objectsRepository;
+    return this.scope.objects;
   }
 
   findComponent(component: Component): Promise<Component> {
@@ -28,13 +29,14 @@ export default class SourceRepository {
     return this.findComponent(Component.fromBitId(bitId));
   }
 
-  getObjects(id: BitId) {
+  getObjects(id: BitId): ComponentObjects {
+    const repo = this.objects();
     return this.get(id).then((component) => {
-      return {
-        component,
-        files: component.loadFiles(),
-        versions: component.loadVersions()
-      };
+      return Promise.all([component.asRaw(repo), component.collectRaw(repo)])
+        .then(([rawComponent, objects]) => new ComponentObjects(
+          rawComponent,
+          objects
+        ));
     });
   }
 

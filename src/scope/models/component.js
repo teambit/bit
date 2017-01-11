@@ -1,7 +1,7 @@
 /** @flow */
 import { Ref, BitObject } from '../objects';
 import { VersionNotFound } from '../exceptions';
-import { forEach, empty, mapObject } from '../../utils';
+import { forEach, empty, mapObject, values } from '../../utils';
 import Version from './version';
 import { DEFAULT_BOX_NAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';
@@ -9,9 +9,9 @@ import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/bit-component';
 import Repository from '../objects/repository';
 import { Impl, Specs } from '../../consumer/bit-component/sources';
+import Scope from '../scope';
 
 export type ComponentProps = {
-  scope?: string;
   box?: string;
   name: string;
   versions?: {[number]: Ref};
@@ -79,7 +79,8 @@ export default class Component extends BitObject {
     return new BitId();
   }
 
-  toConsumerComponent(versionStr: string, repository: Repository) {
+  toConsumerComponent(versionStr: string, scope: Scope) {
+    const repository = scope.objects;
     const versionNum = VersionParser
       .parse(versionStr)
       .resolve(this.listVersions());
@@ -95,7 +96,7 @@ export default class Component extends BitObject {
           return new ConsumerComponent({
             name: this.name,
             box: this.box,
-            scope: '',
+            scope: scope.name(),
             version: versionNum,
             implFile: version.impl.name,
             specsFile: version.specs ? version.specs.name : null,
@@ -109,10 +110,8 @@ export default class Component extends BitObject {
       });
   }
 
-  loadVersions(repo: Repository) {
-    return mapObject(this.versions, (ref) => {
-      return ref.load(repo);
-    });
+  refs(): Ref[] {
+    return values(this.versions);
   }
 
   toBuffer() {

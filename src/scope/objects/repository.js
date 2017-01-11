@@ -1,4 +1,5 @@
 /** @flow */
+import fs from 'fs';
 import path from 'path';
 import BitObject from './object';
 import Ref from './ref';
@@ -36,6 +37,14 @@ export default class Repository {
     return readFile(this.objectPath(ref))
       .then(fileContents => BitObject.parseObject(fileContents, this.types))
       .catch(() => null);
+  }
+
+  loadRaw(ref: Ref): Promise<Buffer> {
+    return readFile(this.objectPath(ref));
+  }
+
+  loadSync(ref: Ref): BitObject {
+    return BitObject.parseSync(fs.readFileSync(this.objectPath(ref)), this.types);
   }
 
   add(object: ?BitObject): Repository {

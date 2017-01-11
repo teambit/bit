@@ -1,6 +1,7 @@
 /** @flow */
 import Bit from '../consumer/bit-component';
 import { contains, isBitUrl, cleanBang, allSettled } from '../utils';
+import ComponentObjects from '../scope/component-objects';
 import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';
 import { BitId, BitIds } from '../bit-id';
@@ -73,10 +74,8 @@ export default class Remote {
     if (!isBitUrl(this.host)) throw new InvalidRemote();
   }
 
-  push(bit: Bit) {
-    return connect(this.host).then((network) => {
-      return network.push(bit);
-    });
+  push(componentObjects: ComponentObjects) {
+    return connect(this.host).then(network => network.push(componentObjects));
   }
 
   static load(name: string, host: string): Remote {
