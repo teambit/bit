@@ -1,63 +1,83 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0" DefaultTargets="Build">
-   <PropertyGroup>
-      <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-      <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-      <ProductVersion>3.10</ProductVersion>
-      <ProjectGuid>fe1c2574-72c2-4f4a-80d6-dc3aa428bb00</ProjectGuid>
-      <SchemaVersion>2.0</SchemaVersion>
-      <OutputName>Bit</OutputName>
-      <OutputType>Package</OutputType>
-      <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
-      <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
-      <BitDistPath>..\..\</BitDistPath>
-      <DefineSolutionProperties>false</DefineSolutionProperties>
-   </PropertyGroup>
-   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-      <OutputPath>$(BitDistPath)distribution\winMsi\bin\$(Configuration)\</OutputPath>
-      <IntermediateOutputPath>$(BitDistPath)distribution\winMsi\obj\$(Configuration)\</IntermediateOutputPath>
-      <DefineConstants>Debug</DefineConstants>
-   </PropertyGroup>
-   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-      <OutputPath>$(BitDistPath)distribution\winMsibin\$(Configuration)\</OutputPath>
-      <IntermediateOutputPath>$(BitDistPath)distribution\winMsiobj\$(Configuration)\</IntermediateOutputPath>
-      <DefineConstants />
-   </PropertyGroup>
-   <ItemGroup>
-      <Compile Include="generated.wxs" />
-      <Compile Include="Bit.wxs" />
-   </ItemGroup>
-   <ItemGroup>
-      <WixExtension Include="WixUIExtension">
-         <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
-         <Name>WixUIExtension</Name>
-      </WixExtension>
-   </ItemGroup>
-   <ItemGroup>
-      <Content Include="license.rtf" />
-      <Content Include="bit-banner.bmp" />
-      <Content Include="bit-dialog.bmp" />
-      <Content Include="bit.ico" />
-   </ItemGroup>
-   <Import Project="$(WixTargetsPath)" />
-   <Target Name="BeforeBuild">
-      <Exec Command="node $(BitDistPath)scripts\set-installation-method.js $([System.IO.Path]::GetFullPath($(BitDistPath)))/package.json msi" />
-      <!-- Get Bit version -->
-      <Exec Command="node $(BitDistPath)\bin\bit.js --version" ConsoleToMSBuild="true">
-         <Output TaskParameter="ConsoleOutput" PropertyName="BitVersion" />
-      </Exec>
-      <Exec Command="node -p &amp;quot;require('../package.json').version.replace(/\-(.+)$/, '')&amp;quot;" ConsoleToMSBuild="true" WorkingDirectory="$(BitDistPath)\..">
-         <Output TaskParameter="ConsoleOutput" PropertyName="BitShortVersion" />
-      </Exec>
-      <!-- WiX doesn't allow extra stuff in the version number, so we omit the
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>3.10</ProductVersion>
+    <ProjectGuid>fe1c2574-72c2-4f4a-80d6-dc3aa428bb00</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>Bit</OutputName>
+    <OutputType>Package</OutputType>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <BitDistPath>..\..\</BitDistPath>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <OutputPath>$(BitDistPath)distribution\winMsi\bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>$(BitDistPath)distribution\winMsi\obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>Debug</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>$(BitDistPath)distribution\winMsibin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>$(BitDistPath)distribution\winMsiobj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants></DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="generated.wxs" />
+    <Compile Include="Bit.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="license.rtf" />
+    <Content Include="bit-banner.bmp" />
+    <Content Include="bit-dialog.bmp" />
+    <Content Include="bit.ico" />
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" />
+  <Target Name="BeforeBuild">
+
+
+    <Exec Command="node $(BitDistPath)scripts\set-installation-method.js $([System.IO.Path]::GetFullPath($(BitDistPath)))/package.json msi" />
+
+     <!-- Get Bit version -->
+    <Exec Command="node $(BitDistPath)\bin\bit.js --version" ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="BitVersion" />
+    </Exec>
+       <Exec
+          Command="node -p &quot;require('../package.json').version.replace(/\-(.+)$/, '')&quot;"
+          ConsoleToMSBuild="true"
+          WorkingDirectory="$(BitDistPath)\..">
+          <Output TaskParameter="ConsoleOutput" PropertyName="BitShortVersion" />
+        </Exec>
+    <!-- WiX doesn't allow extra stuff in the version number, so we omit the
          date/time for nightly builds here -->
-      <PropertyGroup>
-         <DefineConstants>$(DefineConstants);BitDistPath=$(BitDistPath);BitVersion=$(BitShortVersion)</DefineConstants>
-      </PropertyGroup>
-      <HeatDirectory AutogenerateGuids="true" ComponentGroupName="BitFiles" Directory="$(BitDistPath)" DirectoryRefId="INSTALLDIR" OutputFile="generated.wxs" PreprocessorVariable="var.BitDistPath" SuppressRootDirectory="true" ToolPath="$(WixToolPath)" />
-   </Target>
-   <Target Name="AfterBuild">
-      <!-- Rename installer to bit-[version]-unsigned.msi -->
-      <Copy SourceFiles="$(OutputPath)\Bit.msi" DestinationFiles="$(BitDistPath)\artifacts\bit-$(BitVersion)-unsigned.msi" />
-   </Target>
+ 
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);BitDistPath=$(BitDistPath);BitVersion=$(BitShortVersion)</DefineConstants>
+    </PropertyGroup>
+
+    <HeatDirectory
+      AutogenerateGuids="true"
+      ComponentGroupName="BitFiles"
+      Directory="$(BitDistPath)"
+      DirectoryRefId="INSTALLDIR"
+      OutputFile="generated.wxs"
+      PreprocessorVariable="var.BitDistPath"
+      SuppressRootDirectory="true"
+      ToolPath="$(WixToolPath)"
+    />
+  </Target>
+  <Target Name="AfterBuild">
+    <!-- Rename installer to bit-[version]-unsigned.msi -->
+    <Copy
+      SourceFiles="$(OutputPath)\Bit.msi"
+      DestinationFiles="$(BitDistPath)\artifacts\bit-$(BitVersion)-unsigned.msi"
+    />
+  </Target>
 </Project>
