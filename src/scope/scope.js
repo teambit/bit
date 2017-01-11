@@ -207,8 +207,8 @@ export default class Scope {
     return this.environment.get(bitId);
   }
 
-  writeToEnvironmentsDir(bit: Component) {
-    return this.environment.store(bit);
+  writeToEnvironmentsDir(component: Component) {
+    return this.environment.store(component);
   }
   
   /**

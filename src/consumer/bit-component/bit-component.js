@@ -70,14 +70,19 @@ export default class Component {
     return this._specs;
   }
   
-  // get id(): BitId {
-  //   return new BitId({
-  //     scope,
-  //     box,
-  //     name,
-  //     version,
-  //   });
-  // }
+  get id(): BitId {
+    if (!this.scope || !this.version) {
+      console.error(this);
+      throw new Error('cant produce id because scope or version are missing');
+    }
+
+    return new BitId({
+      scope: this.scope,
+      box: this.box,
+      name: this.name,
+      version: this.version.toString(),
+    });
+  }
 
   constructor({ 
     name,

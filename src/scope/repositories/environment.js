@@ -3,22 +3,21 @@ import * as path from 'path';
 import fs from 'fs';
 import R from 'ramda';
 import Repository from '../repository';
-import AbstractBitJson from '../../consumer/bit-json/abstract-bit-json';
 import { BitId } from '../../bit-id';
-import Bit from '../../consumer/bit-component';
+import Component from '../../consumer/bit-component';
 import { BIT_ENVIRONMENT_DIRNAME } from '../../constants';
 import npmInstall from '../../utils/npm';
 import resolveBit from '../../consumer/bit-node-resolver';
 
-const installPackageDependencies = (bit) => {
-  const deps = bit.bitJson.getPackageDependencies();
+const installPackageDependencies = (component: Component, dir: string) => {
+  const deps = component.packageDependencies;
   return Promise.all(
     R.values(
       R.mapObjIndexed(
-        (value, key) => npmInstall({ name: key, version: value, dir: bit.getPath() })
+        (value, key) => npmInstall({ name: key, version: value, dir })
       , deps)
     )
-  ).then(() => bit);
+  ).then(() => component);
 };
 
 export default class Cache extends Repository {
@@ -30,11 +29,11 @@ export default class Cache extends Repository {
     return path.join(this.getPath(), bitId.box, bitId.name, bitId.getScopeName(), bitId.version);
   }
 
-  store(bit: Bit) {
-    return bit
-      .cd(this.composePath(bit.getId()))
-      .write(true)
-      .then(installPackageDependencies);
+  store(component: Component) {
+    const componentPath = this.composePath(component.id);
+    return component
+      .write(componentPath, true)
+      .then(() => installPackageDependencies(component, componentPath));
   }
 
   get(bitId: BitId) {
@@ -62,7 +61,7 @@ export default class Cache extends Repository {
       if (this.hasSync(env)) return Promise.resolve();
 
       return this.scope.get(env) // @HACKALERT - replace with getOne
-        .then(bitDependencies => this.store(bitDependencies.bit)); 
+        .then(bitDependencies => this.store(bitDependencies.component)); 
     };
 
     return Promise.all(R.map(ensureEnv, envs));
