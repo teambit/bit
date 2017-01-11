@@ -14,5 +14,6 @@ npm install
 npm run build
 rm -r node_modules
 npm install --production
+mv scripts/windows/bit.cmd bin/
 ./scripts/build-windows-installer.bat
 
