@@ -4,6 +4,8 @@ import Source from './source';
 import ConsumerComponent from '../../consumer/bit-component';
 import Component from './component';
 import BitId from '../../bit-id/bit-id';
+import Scope from '../scope';
+import { Remotes } from '../../remotes';
 import BitIds from '../../bit-id/bit-ids';
 
 export type VersionProps = {
@@ -55,6 +57,10 @@ export default class Version extends BitObject {
     this.packageDependencies = props.packageDependencies || {};
     this.buildStatus = props.buildStatus;
     this.testStatus = props.testStatus;
+  }
+
+  flattenDependencies(scope: Scope, remotes: Remotes) {
+    this.dependencies.fetch(scope, remotes);
   }
 
   id() {

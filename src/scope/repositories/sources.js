@@ -2,11 +2,17 @@
 import { Repository, BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
+import { MergeConflict } from '../exceptions';
 import Component from '../models/component';
 import Version from '../models/version';
 import Source from '../models/source';
 import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
+
+export type ComponentTree = {
+  component: Component;
+  objects: BitObject[];
+};
 
 export default class SourceRepository {
   scope: Scope;  
@@ -62,7 +68,7 @@ export default class SourceRepository {
       });
   }
 
-  put({ component, objects }) {
+  put({ component, objects }: ComponentTree) {
     const repo = this.objects();
     repo.add(component);
     objects.forEach(obj => repo.add(obj));
@@ -74,13 +80,13 @@ export default class SourceRepository {
       .then(component => component.remove(this.objects()));
   }
 
-  merge({ component, objects }): Promise<?Component> {
+  merge({ component, objects }: ComponentTree): Promise<Component> {
     return this.findComponent(component).then((existingComponent) => {
       if (!existingComponent || component.compare(existingComponent)) {
         return this.put({ component, objects });
       }
       
-      return null;
+      throw new MergeConflict();
     });
   }
 }

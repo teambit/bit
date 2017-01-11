@@ -31,7 +31,7 @@ export default class Component extends BitObject {
     this.versions = props.versions || {};
   }
 
-  get versionArray() {
+  get versionArray(): Ref[] {
     return values(this.versions);
   }
 
@@ -42,6 +42,10 @@ export default class Component extends BitObject {
   latest(): number {
     if (empty(this.versions)) return 0;
     return Math.max(...this.listVersions());
+  }
+
+  collectVersions(repo: Repository) {
+    return repo.findMany(this.versionArray);
   }
 
   addVersion(version: Version) {
@@ -152,6 +156,10 @@ export default class Component extends BitObject {
 
   static from(props: ComponentProps): Component {
     return new Component(props);
+  }
+
+  flattenDependencies() {
+    
   }
 
   static fromBitId(bitId: BitId): Component {
