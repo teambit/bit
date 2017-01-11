@@ -1,4 +1,3 @@
-$ErrorActionPreference = 'Stop'
 npm pack
 if (Test-Path distribution/windows) {
   rm distribution/windows -Recurse
