@@ -2,8 +2,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Source from './source';
+import BitId from '../../../bit-id';
 import createTemplate from '../templates/specs.default-template';
-import loadPlugin from '../environment/load-plugin';
+import Environment from '../../../scope/repositories/environment';
 
 export default class Specs extends Source {
   write(bitPath: string, fileName: string): Promise<any> {
@@ -24,10 +25,10 @@ export default class Specs extends Source {
     }
   }
 
-  static create(name, testerId): Specs {
+  static create(name: string, testerId: BitId, environment: Environment): Specs {
     function getTemplate() {
       try {
-        const testerModule = loadPlugin(testerId);
+        const testerModule = environment.get(testerId);
         return testerModule.getTemplate(name);
       } catch (e) {
         return createTemplate({ name });

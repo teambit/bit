@@ -7,9 +7,11 @@ export default function build({ id }: { id: string }): Promise<Bit> {
   return loadConsumer()
     .then((consumer) => {
       return consumer.loadComponent(InlineId.parse(id))
-      .then((bit) => { 
-        if (!bit.hasCompiler()) throw new Error('there is no compiler for bit'); // @TODO - write an named error
-        return bit.build(consumer.scope);
+      .then((component) => { 
+        return component.build(consumer.scope).then((val) => {
+          if (val) console.log(val.code);
+          else console.error('build has failed, probably no compiler');
+        });
       });
     });
 }

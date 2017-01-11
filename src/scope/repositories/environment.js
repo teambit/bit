@@ -2,10 +2,11 @@
 import * as path from 'path';
 import fs from 'fs';
 import R from 'ramda';
+import glob from 'glob';
 import Repository from '../repository';
 import { BitId } from '../../bit-id';
 import Component from '../../consumer/bit-component';
-import { BIT_ENVIRONMENT_DIRNAME } from '../../constants';
+import { BIT_ENVIRONMENT_DIRNAME, LATEST } from '../../constants';
 import npmInstall from '../../utils/npm';
 import resolveBit from '../../consumer/bit-node-resolver';
 
@@ -35,8 +36,22 @@ export default class Cache extends Repository {
       .write(componentPath, true)
       .then(() => installPackageDependencies(component, componentPath));
   }
+  
+  findLatestVersion(bitId: BitId): string {
+    const dirToLookIn = path.join(this.getPath(), bitId.box, bitId.name, bitId.getScopeName());
+    const files = glob.sync(path.join(dirToLookIn, '*'));
+    const versions = files.map((file: string): number => {
+      return parseInt(path.basename(file));
+    });
+
+    return Math.max(...versions).toString();
+  }
 
   get(bitId: BitId) {
+    if (bitId.version === LATEST) {
+      bitId.version = this.findLatestVersion(bitId);
+    }
+    
     return resolveBit(this.composePath(bitId));
   }
 
