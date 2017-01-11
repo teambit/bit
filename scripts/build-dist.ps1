@@ -1,5 +1,4 @@
 $ErrorActionPreference = 'Stop'
-Install-Product node $env:6
 npm pack
 if (Test-Path distribution/windows) {
   rm distribution/windows -Recurse
