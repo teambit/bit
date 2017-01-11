@@ -93,7 +93,7 @@ export default class Scope {
     // test + report test ?
     // persist models (version, component, files)
     return this.remotes().then((remotes) => {
-      return BitIds.loadDependencies(consumerComponent.dependencies)
+      return consumerComponent.dependencies
         .fetch(this, remotes)
         .then((dependencies) => {
           // dependencies = flattenDependencies(dependencies);
@@ -132,7 +132,10 @@ export default class Scope {
   get(bitId: BitId): Promise<ComponentDependencies> {
     if (!bitId.isLocal(this.name())) {
       return this.remotes()
-        .then(remotes => this.getExternal(bitId, remotes));
+        .then(remotes => this.getExternal(bitId, remotes))
+        .then(componentDependencies => {
+          console.log(componentDependencies);
+        });
     }
     
     return this.sources.get(bitId)
