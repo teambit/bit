@@ -31,7 +31,7 @@ export default class Fs {
   }
 
   push(componentObjects: ComponentObjects) {
-    return this.getScope().putObjects(componentObjects);
+    return this.getScope().export(componentObjects);
   }
 
   fetch(bitIds: BitIds): Promise<ComponentDependencies[]> {

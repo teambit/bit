@@ -53,6 +53,10 @@ export default class Scope {
     this.environment = scopeProps.environment || new Environment(this);
   }
 
+  hash() {
+    return this.name();
+  }
+
   name() {
     return this.scopeJson.name;
   }
@@ -108,10 +112,12 @@ export default class Scope {
     });
   }
 
-  putObjects(componentObjects: ComponentObjects) {
-    const objects = componentObjects.toObjects(this.objects);
-    
-    console.log(objects);
+  export(componentObjects: ComponentObjects) {
+    return this.sources.merge(componentObjects.toObjects(this.objects))
+      .then((component) => {
+        return this.objects.persist()
+          .then(() => component.collectObjects(this.objects));
+      });
   }
 
   getObject(hash: string): Promise<BitObject> {
@@ -125,7 +131,8 @@ export default class Scope {
 
   get(bitId: BitId): Promise<ComponentDependencies> {
     if (!bitId.isLocal(this.name())) {
-      return this.remotes().then(remotes => this.getExternal(bitId, remotes));
+      return this.remotes()
+        .then(remotes => this.getExternal(bitId, remotes));
     }
     
     return this.sources.get(bitId)
@@ -189,8 +196,6 @@ export default class Scope {
 
   clean(bitId: BitId) {
     return this.sources.clean(bitId);
-    // this.sourcesMap.delete(bitId);
-    // return this.sourcesMap.write();
   }
 
   getMany(bitIds: BitIds) {

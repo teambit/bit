@@ -4,11 +4,12 @@ import path from 'path';
 import BitObject from './object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
-import { mkdirp, writeFile, allSettled, readFile } from '../../utils';
+import { mkdirp, writeFile, removeFile, allSettled, readFile } from '../../utils';
 import { Scope } from '../../scope';
 
 export default class Repository {
   objects: BitObject[] = [];
+  _cache: {[string]: BitObject} = {};
   scope: Scope;
   types: {[string]: Function};
 
@@ -34,9 +35,18 @@ export default class Repository {
   }
 
   load(ref: Ref): Promise<BitObject> {
+    if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
     return readFile(this.objectPath(ref))
       .then(fileContents => BitObject.parseObject(fileContents, this.types))
       .catch(() => null);
+  }
+
+  remove(ref: Ref) {
+    return removeFile(this.objectPath(ref), true);
+  }
+
+  removeMany(refs: Ref[]) {
+    return Promise.all(refs.map(ref => this.remove(ref)));
   }
 
   loadRaw(ref: Ref): Promise<Buffer> {
@@ -47,9 +57,19 @@ export default class Repository {
     return BitObject.parseSync(fs.readFileSync(this.objectPath(ref)), this.types);
   }
 
+  setCache(object: BitObject) {
+    this._cache[object.hash().toString()] = object;
+    return this;
+  }
+
+  getCache(ref: Ref) {
+    return this._cache[ref.toString()];
+  }
+
   add(object: ?BitObject): Repository {
     if (!object) return this;
     this.objects.push(object);
+    this.setCache(object);
     return this;
   }
 

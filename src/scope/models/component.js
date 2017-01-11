@@ -1,4 +1,5 @@
 /** @flow */
+import { equals } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import { VersionNotFound } from '../exceptions';
 import { forEach, empty, mapObject, values } from '../../utils';
@@ -10,6 +11,7 @@ import ConsumerComponent from '../../consumer/bit-component';
 import Repository from '../objects/repository';
 import { Impl, Specs } from '../../consumer/bit-component/sources';
 import Scope from '../scope';
+import ComponentObjects from '../component-objects';
 
 export type ComponentProps = {
   box?: string;
@@ -27,6 +29,14 @@ export default class Component extends BitObject {
     this.name = props.name;
     this.box = props.box || DEFAULT_BOX_NAME;
     this.versions = props.versions || {};
+  }
+
+  get versionArray() {
+    return values(this.versions);
+  }
+
+  compare(component: Component) {
+    return equals(component.versions, this.versions);
   }
 
   latest(): number {
@@ -77,6 +87,19 @@ export default class Component extends BitObject {
 
   toId() {
     return new BitId();
+  }
+
+  collectObjects(repo: Repository) {
+    return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
+      .then(([rawComponent, objects]) => new ComponentObjects(
+        rawComponent,
+        objects
+      ));
+  }
+
+  remove(repo: Repository) {
+    const objectRefs = this.versionArray;
+    return repo.removeMany(objectRefs.concat([this.hash()]));
   }
 
   toConsumerComponent(versionStr: string, scope: Scope) {

@@ -29,6 +29,7 @@ import immutableUnshift from './immutable-unshift';
 import rmDir from './fs-rmdir';
 import resolveHomePath from './os-resolve-home-path';
 import currentDirName from './current-dir-name';
+import removeFile from './fs-remove-file';
 import allSettled from './promise-all-settled';
 import values from './object-values';
 import glob from './glob';
@@ -69,6 +70,7 @@ export {
   bufferToReadStream,
   listDirectories,
   isDirEmpty,
+  removeFile,
   isDirEmptySync,
   flatMap,
   flatten,

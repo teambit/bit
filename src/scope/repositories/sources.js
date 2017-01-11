@@ -31,13 +31,7 @@ export default class SourceRepository {
 
   getObjects(id: BitId): ComponentObjects {
     const repo = this.objects();
-    return this.get(id).then((component) => {
-      return Promise.all([component.asRaw(repo), component.collectRaw(repo)])
-        .then(([rawComponent, objects]) => new ComponentObjects(
-          rawComponent,
-          objects
-        ));
-    });
+    return this.get(id).then((component) => component.collectObjects(repo));
   }
 
   findOrAddComponent(props: ComponentProps): Promise<Component> {
@@ -66,5 +60,27 @@ export default class SourceRepository {
         
         return component;
       });
+  }
+
+  put({ component, objects }) {
+    const repo = this.objects();
+    repo.add(component);
+    objects.forEach(obj => repo.add(obj));
+    return component;
+  }
+
+  clean(bitId: BitId) {
+    return this.get(bitId)
+      .then(component => component.remove(this.objects()));
+  }
+
+  merge({ component, objects }): Promise<?Component> {
+    return this.findComponent(component).then((existingComponent) => {
+      if (!existingComponent || component.compare(existingComponent)) {
+        return this.put({ component, objects });
+      }
+      
+      return null;
+    });
   }
 }
