@@ -33,12 +33,14 @@ export default class ComponentVersion {
 
   toVersionDependencies(scope: Scope): Promise<VersionDependencies> {
     return this.getVersion(scope.objects)
-      .then(version => version.collectDependencies(scope))
+      .then(version => {
+        return version.collectDependencies(scope);
+      })
       .then(dependencies => new VersionDependencies(this, dependencies));
   }
 
   toConsumer(repo: Repository) {
-    return this.component.toConsumerComponent(this.version.toString(), scopeName, repo);
+    return this.component.toConsumerComponent(this.version.toString(), this.scopeName, repo);
   }
 
   toObjects(repo: Repository): Promise<ComponentObjects> {

@@ -14,18 +14,21 @@ import { Impl, Specs } from '../../consumer/bit-component/sources';
 import ComponentObjects from '../component-objects';
 
 export type ComponentProps = {
+  scope: string;
   box?: string;
   name: string;
   versions?: {[number]: Ref};
 };
 
 export default class Component extends BitObject {
+  scope: string;
   name: string;
   box: string;
   versions: {[number]: Ref};
 
   constructor(props: ComponentProps) {
     super();
+    this.scope = props.scope;
     this.name = props.name;
     this.box = props.box || DEFAULT_BOX_NAME;
     this.versions = props.versions || {};
@@ -48,10 +51,6 @@ export default class Component extends BitObject {
     return repo.findMany(this.versionArray);
   }
 
-  collectVersions(repo: Repository) {
-    return repo.findMany(this.versionArray);
-  }
-
   addVersion(version: Version) {
     this.versions[this.version()] = version.hash();
     return this;
@@ -64,7 +63,7 @@ export default class Component extends BitObject {
   }
 
   id(): string {
-    return [this.box, this.name].join('/');   
+    return [this.scope, this.box, this.name].join('/');   
   }
 
   toObject() {
@@ -79,6 +78,7 @@ export default class Component extends BitObject {
     return {
       box: this.box,
       name: this.name,
+      scope: this.scope,
       versions: versions(this.versions)
     };
   }
@@ -132,7 +132,7 @@ export default class Component extends BitObject {
             name: this.name,
             box: this.box,
             version: versionNum,
-            scope: scopeName,
+            scope: this.scope,
             implFile: version.impl.name,
             specsFile: version.specs ? version.specs.name : null,
             compilerId: compiler ? compiler.toId() : null,
@@ -158,6 +158,7 @@ export default class Component extends BitObject {
     return Component.from({
       name: rawComponent.name,
       box: rawComponent.box,
+      scope: rawComponent.scope,
       versions: mapObject(rawComponent.versions, val => Ref.from(val))
     });
   }
@@ -166,11 +167,11 @@ export default class Component extends BitObject {
     return new Component(props);
   }
 
-  flattenDependencies() {
-    
-  }
-
-  static fromBitId(bitId: BitId): Component {
-    return new Component({ name: bitId.name, box: bitId.box });
+  static fromBitId(bitId: BitId, scopeName: string): Component {
+    return new Component({ 
+      name: bitId.name, 
+      box: bitId.box, 
+      scope: bitId.getScopeName(scopeName) 
+    });
   }
 }

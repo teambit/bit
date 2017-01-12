@@ -37,7 +37,9 @@ export default class Repository {
   load(ref: Ref): Promise<BitObject> {
     if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
     return readFile(this.objectPath(ref))
-      .then(fileContents => BitObject.parseObject(fileContents, this.types))
+      .then(fileContents => {
+        return BitObject.parseObject(fileContents, this.types);
+      })
       .catch(() => null);
   }
 

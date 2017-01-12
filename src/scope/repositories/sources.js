@@ -2,15 +2,13 @@
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { allSettled } from '../../utils';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import Component from '../models/component';
 import ComponentVersion from '../component-version';
 import Version from '../models/version';
 import Source from '../models/source';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
-import type { ResultObject } from '../../utils/promise-to-result-object';
 
 export type ComponentTree = {
   component: Component;
@@ -49,11 +47,7 @@ export default class SourceRepository {
   }
   
   get(bitId: BitId): Promise<Component> {
-    return this.findComponent(Component.fromBitId(bitId));
-  }
-
-  getMany(ids: BitIds): Promise<ResultObject[]> {
-    return allSettled(ids.map(id => this.get(id)));
+    return this.findComponent(Component.fromBitId(bitId, this.scope.name()));
   }
 
   getObjects(id: BitId): Promise<ComponentObjects> {
@@ -105,6 +99,7 @@ export default class SourceRepository {
   }
 
   merge({ component, objects }: ComponentTree): Promise<Component> {
+    component.scope = this.scope.name();
     return this.findComponent(component).then((existingComponent) => {
       if (!existingComponent || component.compare(existingComponent)) {
         return this.put({ component, objects });

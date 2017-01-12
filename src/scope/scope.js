@@ -95,6 +95,7 @@ export default class Scope {
     // test + report test ?
     // persist models (version, component, files)
     return this.remotes().then((remotes) => {
+      consumerComponent.scope = this.name();
       return consumerComponent.dependencies
         .fetch(this, remotes)
         .then((dependencies) => {
@@ -122,7 +123,7 @@ export default class Scope {
       });
   }
 
-  getExternal(bitId: BitId, remotes: Remotes): Promise<ComponentDependencies> {
+  getExternal(bitId: BitId, remotes: Remotes): Promise<VersionDependencies> {
     return remotes.fetch([bitId])
       .then(bitDeps => first(bitDeps));
   }

@@ -26,7 +26,8 @@ export default class BitId {
     this.version = version;
   }
 
-  getScopeName() {
+  getScopeName(scopeName: string) {
+    if (this.scope === LOCAL_SCOPE_NOTATION) return scopeName;
     return this.scope.replace('@', ''); 
   }
 

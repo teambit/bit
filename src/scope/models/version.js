@@ -5,7 +5,7 @@ import Source from './source';
 import ConsumerComponent from '../../consumer/bit-component';
 import Component from './component';
 import { Remotes } from '../../remotes';
-import BitIds from '../../bit-id/bit-ids';
+import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
 
 export type VersionProps = {
