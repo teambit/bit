@@ -1,12 +1,12 @@
 /** @flow */
 import { Ref, BitObject } from '../objects';
+import Scope from '../scope';
 import Source from './source';
 import ConsumerComponent from '../../consumer/bit-component';
 import Component from './component';
-import BitId from '../../bit-id/bit-id';
-import Scope from '../scope';
 import { Remotes } from '../../remotes';
 import BitIds from '../../bit-id/bit-ids';
+import ComponentVersion from '../component-version';
 
 export type VersionProps = {
   impl: {
@@ -21,7 +21,7 @@ export type VersionProps = {
   compiler?: ?Ref;
   tester?: ?Ref;
   dependencies?: BitIds;
-  flattenedDepepdencies?: Ref[];
+  flattenedDepepdencies?: BitIds;
   packageDependencies?: {[string]: string}; 
   buildStatus?: boolean;
   testStatus?: boolean;
@@ -39,7 +39,7 @@ export default class Version extends BitObject {
   compiler: ?Ref;
   tester: ?Ref;
   dependencies: BitIds;
-  flattenedDepepdencies: Ref[];
+  flattenedDepepdencies: BitIds;
   packageDependencies: {[string]: string};
   buildStatus: ?boolean;
   dist: ?Ref;
@@ -53,7 +53,7 @@ export default class Version extends BitObject {
     this.tester = props.tester;
     this.dependencies = props.dependencies || new BitIds();
     this.dist = props.dist;
-    this.flattenedDepepdencies = props.flattenedDepepdencies || [];
+    this.flattenedDepepdencies = props.flattenedDepepdencies || new BitIds();
     this.packageDependencies = props.packageDependencies || {};
     this.buildStatus = props.buildStatus;
     this.testStatus = props.testStatus;
@@ -65,6 +65,12 @@ export default class Version extends BitObject {
 
   id() {
     return JSON.stringify(this.toObject());
+  }
+
+  collectDependencies(scope: Scope): Promise<ComponentVersion[]> {
+    return scope.remotes().then((remotes) => {
+      return this.flattenedDepepdencies.fetchOnes(scope, remotes);
+    });
   }
 
   refs(): Ref[] {
@@ -89,6 +95,7 @@ export default class Version extends BitObject {
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
       dependencies: this.dependencies.map(dep => dep.toString()),
+      flattenedDepepdencies: this.flattenedDepepdencies.map(dep => dep.toString()),
       packageDependencies: this.packageDependencies,
       buildStatus: this.buildStatus,
       testStatus: this.testStatus
@@ -115,13 +122,14 @@ export default class Version extends BitObject {
       compiler: props.compiler ? Ref.from(props.compiler): null,
       tester: props.tester ? Ref.from(props.tester): null,
       dependencies: BitIds.deserialize(props.dependencies),
+      flattenedDependencies: BitIds.deserialize(props.flattenedDependencies),
       packageDependencies: props.packageDependencies,
       buildStatus: props.buildStatus,
       testStatus: props.testStatus
     });
   }
 
-  static fromComponent(component: ConsumerComponent, impl: Source, specs: Source) {
+  static fromComponent(component: ConsumerComponent, impl: Source, specs: Source, flattenedDeps: BitId[]) {
     return new Version({
       impl: {
         file: impl.hash(),
@@ -135,7 +143,8 @@ export default class Version extends BitObject {
       compiler: component.compilerId ? Component.fromBitId(component.compilerId).hash() : null,
       tester: component.testerId ? Component.fromBitId(component.testerId).hash() : null,
       packageDependencies: component.packageDependencies,
-      dependencies: new BitIds()
+      flattenedDepepdencies: flattenedDeps,
+      dependencies: component.dependencies
     });    
   }
 }

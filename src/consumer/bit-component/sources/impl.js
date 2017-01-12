@@ -3,10 +3,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import Source from './source';
 import createTemplate from '../templates/impl.default-template';
-import BitJson from '../../bit-json';
-import loadPlugin from '../environment/load-plugin';
+import BitId from '../../../bit-id';
 import InvalidImpl from '../exceptions/invalid-impl';
 import MissingImpl from '../exceptions/missing-impl';
+import Environment from '../../../scope/repositories/environment';
 
 export default class Impl extends Source {
   write(bitPath: string, fileName: string): Promise<any> {
@@ -32,10 +32,10 @@ export default class Impl extends Source {
     }
   }
 
-  static create(name, compilerId): Impl {
+  static create(name: string, compilerId: BitId, environment: Environment): Impl {
     function getTemplate() {
       try {
-        const testerModule = loadPlugin(compilerId);
+        const testerModule = environment.get(compilerId);
         return testerModule.getTemplate(name);
       } catch (e) {
         return createTemplate({ name });

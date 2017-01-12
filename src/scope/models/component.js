@@ -9,8 +9,8 @@ import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/bit-component';
 import Repository from '../objects/repository';
+import ComponentVersion from '../component-version';
 import { Impl, Specs } from '../../consumer/bit-component/sources';
-import Scope from '../scope';
 import ComponentObjects from '../component-objects';
 
 export type ComponentProps = {
@@ -42,6 +42,10 @@ export default class Component extends BitObject {
   latest(): number {
     if (empty(this.versions)) return 0;
     return Math.max(...this.listVersions());
+  }
+  
+  collectVersions(repo: Repository) {
+    return repo.findMany(this.versionArray);
   }
 
   collectVersions(repo: Repository) {
@@ -89,10 +93,6 @@ export default class Component extends BitObject {
     return versionRef.load(repository);
   }
 
-  toId() {
-    return new BitId();
-  }
-
   collectObjects(repo: Repository) {
     return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
       .then(([rawComponent, objects]) => new ComponentObjects(
@@ -106,8 +106,16 @@ export default class Component extends BitObject {
     return repo.removeMany(objectRefs.concat([this.hash()]));
   }
 
-  toConsumerComponent(versionStr: string, scope: Scope) {
-    const repository = scope.objects;
+  toComponentVersion(versionStr: string, scopeName: string): ComponentVersion {
+    const versionNum = VersionParser
+      .parse(versionStr)
+      .resolve(this.listVersions());
+
+    if (!this.versions[versionNum]) throw new Error();
+    return new ComponentVersion(this, versionNum, scopeName);
+  }
+
+  toConsumerComponent(versionStr: string, repository: Repository) {
     const versionNum = VersionParser
       .parse(versionStr)
       .resolve(this.listVersions());
@@ -123,7 +131,6 @@ export default class Component extends BitObject {
           return new ConsumerComponent({
             name: this.name,
             box: this.box,
-            scope: scope.name(),
             version: versionNum,
             implFile: version.impl.name,
             specsFile: version.specs ? version.specs.name : null,

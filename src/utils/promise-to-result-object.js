@@ -1,12 +1,12 @@
 /** @flow */
-export type ResultObject = {
+export type ResultObject<T> = {
   success: boolean,
-  val: any,
+  val: ?T,
   error: Error
 };
 
-export default function toResultObject() { 
-  return (promise: Promise<any>): Promise<ResultObject> => {
+export default function toResultObject<T>() { 
+  return (promise: Promise<any>): Promise<ResultObject<T>> => {
     return promise
       .then(val => ({ success: true, val }))
       .catch(error => ({ success: false, error, val: null }));

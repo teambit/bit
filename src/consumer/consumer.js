@@ -121,7 +121,7 @@ export default class Consumer {
       box: id.box,
       withSpecs,
       consumerBitJson: this.bitJson,
-    }).write(inlineBitPath, withBitJson);
+    }, this.scope.environment).write(inlineBitPath, withBitJson);
   }
 
   removeFromInline(id: BitInlineId): Promise<any> {

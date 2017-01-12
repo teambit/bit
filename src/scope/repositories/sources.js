@@ -1,13 +1,16 @@
 /** @flow */
-import { Repository, BitObject } from '../objects';
+import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { MergeConflict } from '../exceptions';
+import { allSettled } from '../../utils';
+import { MergeConflict, ComponentNotFound } from '../exceptions';
 import Component from '../models/component';
+import ComponentVersion from '../component-version';
 import Version from '../models/version';
 import Source from '../models/source';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
+import type { ResultObject } from '../../utils/promise-to-result-object';
 
 export type ComponentTree = {
   component: Component;
@@ -31,13 +34,30 @@ export default class SourceRepository {
       .catch(() => null);
   }
 
+
+  getComponent(bitId: BitId): Promise<ComponentVersion> {
+    return this.get(bitId).then((component) => {
+      if (!component) throw new ComponentNotFound();
+      const versionNum = bitId.getVersion().resolve(component.listVersions());
+      return component.loadVersion(versionNum, this.objects())
+        .then(() => new ComponentVersion(
+          component,
+          versionNum,
+          this.scope.name()
+        ));
+    });
+  }
+  
   get(bitId: BitId): Promise<Component> {
     return this.findComponent(Component.fromBitId(bitId));
   }
 
-  getObjects(id: BitId): ComponentObjects {
-    const repo = this.objects();
-    return this.get(id).then((component) => component.collectObjects(repo));
+  getMany(ids: BitIds): Promise<ResultObject[]> {
+    return allSettled(ids.map(id => this.get(id)));
+  }
+
+  getObjects(id: BitId): Promise<ComponentObjects> {
+    return this.get(id).then(component => component.collectObjects(this.objects()));
   }
 
   findOrAddComponent(props: ComponentProps): Promise<Component> {
@@ -49,13 +69,14 @@ export default class SourceRepository {
       });
   }
 
-  addSource(source: any): Promise<Component> {
+  addSource(source: any, dependencies: ComponentVersion[]): Promise<Component> {
+    dependencies = dependencies.map(dep => dep.toId());
     const objectRepo = this.objects();
     return this.findOrAddComponent(source)
       .then((component) => {
         const impl = Source.from(Buffer.from(source.impl.src));
         const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
-        const version = Version.fromComponent(source, impl, specs);
+        const version = Version.fromComponent(source, impl, specs, dependencies);
         component.addVersion(version);
         
         objectRepo

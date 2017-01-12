@@ -8,6 +8,7 @@ import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
+import Environment from '../../scope/repositories/environment';
 
 import { 
   DEFAULT_BOX_NAME,
@@ -221,7 +222,7 @@ export default class Component {
     box: string,
     scope?: ?string,
     withSpecs?: ?boolean,
-  }) {
+  }, environment: Environment) {
     const implFile = consumerBitJson.getImplBasename();
     const specsFile = consumerBitJson.getSpecBasename();
     const compilerId = BitId.parse(consumerBitJson.getCompilerName());
@@ -236,8 +237,8 @@ export default class Component {
       specsFile, 
       compilerId,
       testerId,
-      impl: Impl.create(name, compilerId),
-      specs: withSpecs ? Specs.create(name, testerId) : undefined,
+      impl: Impl.create(name, compilerId, environment),
+      specs: withSpecs ? Specs.create(name, testerId, environment) : undefined,
     });
   }
 }

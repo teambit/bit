@@ -4,6 +4,7 @@ import { BitId } from '../bit-id';
 import { forEach } from '../utils';
 import { Remotes } from '../remotes';
 import { Scope } from '../scope';
+import VersionDependencies from '../scope/version-dependencies';
 
 function byRemote(origin: Scope) {
   return groupBy((id) => {
@@ -27,7 +28,7 @@ export default class BitIds extends Array<BitId> {
     return this.map(bitId => bitId.toString());
   }
 
-  static deserialize(array: string[]) {
+  static deserialize(array: string[] = []) {
     return new BitIds(
       ...array.map(id => BitId.parse(id))
     );
@@ -41,7 +42,7 @@ export default class BitIds extends Array<BitId> {
     });
   }
 
-  fetch(origin: Scope, remotes: Remotes) {
+  fetch(origin: Scope, remotes: Remotes): Promise<VersionDependencies[]> {
     const { inner = [], outer = [] } = byRemote(origin)(this);
     return origin.getMany(inner).then((innerBits) => {
       return remotes.fetch(outer)
