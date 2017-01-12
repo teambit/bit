@@ -5,6 +5,7 @@ import { catObject } from '../../api';
 export default class CatObject extends Command {
   name = 'cat-object [hash]';
   description = 'cat a bit object by hash';
+  private = true;
   alias = '';
   opts = [];
 

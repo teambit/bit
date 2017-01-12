@@ -16,6 +16,7 @@ import { BitId, BitIds } from '../bit-id';
 import Component from '../consumer/bit-component';
 import { Repository, Ref, BitObject } from './objects';
 import ComponentDependencies from './component-dependencies';
+import ObjectComponentDependencies from './models/object-component-dependencies';
 import SourcesRepository from './repositories/sources';
 
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -93,16 +94,17 @@ export default class Scope {
     // test + report test ?
     // persist models (version, component, files)
     return this.remotes().then((remotes) => {
+      consumerComponent.scope = this.name();
       return consumerComponent.dependencies
         .fetch(this, remotes)
         .then((dependencies) => {
-          // dependencies = flattenDependencies(dependencies);
-          return this.sources.addSource(consumerComponent)
+          dependencies = flattenDependencies(dependencies);
+          return this.sources.addSource(consumerComponent, dependencies)
           // // @TODO make the scope install the required env
             // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
             .then((component) => {
               return this.objects.persist()
-                .then(() => component.toConsumerComponent(LATEST, this))
+                .then(() => component.toConsumerComponent(LATEST, this.objects))
                 .then(consumerComp => new ComponentDependencies({ 
                   component: consumerComp,
                   dependencies 
@@ -129,22 +131,38 @@ export default class Scope {
       .then(bitDeps => first(bitDeps));
   }
 
-  get(bitId: BitId): Promise<ComponentDependencies> {
+  // pull(ids: BitIds) {
+  //   return this.remotes().then((remotes) => {
+  //     return this.sources.getMany(ids)
+  //       .then((results) => {
+  //         const left = results
+  //           .filter(res => !res.success)
+  //           .map(res => res.error.id);
+
+  //         return remotes.fetch(left)
+  //           .then(components => 
+  //             // @TODO handle merging better
+  //             Promise.all(components.map(comp => this.sources.merge(comp)))
+  //               .then(() => this.objects.persist())
+  //               .then(() => components.concat)
+  //             );
+  //       });
+  //   });    
+  // }
+ 
+  get(bitId: BitId): Promise<ObjectComponentDependencies> {
     if (!bitId.isLocal(this.name())) {
       return this.remotes()
-        .then(remotes => this.getExternal(bitId, remotes))
-        .then(componentDependencies => {
-          console.log(componentDependencies);
-        });
+        .then(remotes => this.getExternal(bitId, remotes));
     }
     
-    return this.sources.get(bitId)
-      .then(component => 
-        component.toConsumerComponent(bitId.version, this))
+    return this.sources.getComponent(bitId)
+      .then(component => component.toConsumerComponent(bitId.version, this.objects))
       .then((consumerComponent) => {
-        return new ComponentDependencies({ 
+        return new ObjectComponentDependencies({ 
           component: consumerComponent, 
-          dependencies: [] });
+          dependencies: []
+        });
       });
     
     // bitId.version = this.sources.resolveVersion(bitId).toString();
@@ -169,10 +187,6 @@ export default class Scope {
     return Promise.all(bitIds.map(bitId => this.getOne(bitId)));
   }
 
-  setObjects() {
-    
-  }
-
   push(bitId: BitId, remoteName: string) {
     return this.remotes().then((remotes) => {
       const remote = remotes.get(remoteName);
@@ -194,8 +208,8 @@ export default class Scope {
   /**
    * list the bits in the sources directory
    **/
-  listSources(): Promise<Component[]> {
-  }
+  // listSources(): Promise<Component[]> {
+  // }
 
   clean(bitId: BitId) {
     return this.sources.clean(bitId);

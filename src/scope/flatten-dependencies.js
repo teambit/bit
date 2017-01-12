@@ -1,13 +1,12 @@
 /** @flow */
 import { flatten, values } from '../utils';
-import ComponentDependencies from '../scope/component-dependencies';
-import Bit from '../consumer/bit-component';
+import type { ComponentTree } from './repositories/sources';
 
-export default function flattenDependencies(componentDependencies: ComponentDependencies[]): Bit[] {
-  return values(flatten(componentDependencies
+export default function flattenDependencies(dependencies: ComponentTree[]) {
+  return values(flatten(dependencies
     .map(dep => dep.dependencies.concat(dep.component)))
-    .reduce((bits, bit) => {
-      bits[bit.id.toString()] = bit;
-      return bits;
+    .reduce((components, component) => {
+      components[component.hash()] = component;
+      return components;
     }, {}));
 }

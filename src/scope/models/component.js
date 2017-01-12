@@ -14,12 +14,14 @@ import Scope from '../scope';
 import ComponentObjects from '../component-objects';
 
 export type ComponentProps = {
+  scope: string;
   box?: string;
   name: string;
   versions?: {[number]: Ref};
 };
 
 export default class Component extends BitObject {
+  scope: string;
   name: string;
   box: string;
   versions: {[number]: Ref};
@@ -27,6 +29,7 @@ export default class Component extends BitObject {
   constructor(props: ComponentProps) {
     super();
     this.name = props.name;
+    this.scope = props.scope;
     this.box = props.box || DEFAULT_BOX_NAME;
     this.versions = props.versions || {};
   }
@@ -43,7 +46,7 @@ export default class Component extends BitObject {
     if (empty(this.versions)) return 0;
     return Math.max(...this.listVersions());
   }
-
+  
   collectVersions(repo: Repository) {
     return repo.findMany(this.versionArray);
   }
@@ -57,6 +60,10 @@ export default class Component extends BitObject {
     const latest = this.latest();
     if (latest) return latest + 1;
     return 1;
+  }
+
+  collectVersion(repo: Repository, version: number, withDependencies: boolean = false) {
+    
   }
 
   id(): string {
@@ -74,6 +81,7 @@ export default class Component extends BitObject {
 
     return {
       box: this.box,
+      scope: this.scope,
       name: this.name,
       versions: versions(this.versions)
     };
@@ -89,8 +97,11 @@ export default class Component extends BitObject {
     return versionRef.load(repository);
   }
 
-  toId() {
-    return new BitId();
+  collectVersionDependencies(version: number, repo: Repository) {
+    return this.loadVersion(version, repo)
+      .then((versionModel) => {
+        
+      });
   }
 
   collectObjects(repo: Repository) {
@@ -106,8 +117,7 @@ export default class Component extends BitObject {
     return repo.removeMany(objectRefs.concat([this.hash()]));
   }
 
-  toConsumerComponent(versionStr: string, scope: Scope) {
-    const repository = scope.objects;
+  toConsumerComponent(versionStr: string, repository: Repository) {
     const versionNum = VersionParser
       .parse(versionStr)
       .resolve(this.listVersions());
@@ -123,7 +133,7 @@ export default class Component extends BitObject {
           return new ConsumerComponent({
             name: this.name,
             box: this.box,
-            scope: scope.name(),
+            scope: this.scope,
             version: versionNum,
             implFile: version.impl.name,
             specsFile: version.specs ? version.specs.name : null,
@@ -150,6 +160,7 @@ export default class Component extends BitObject {
     return Component.from({
       name: rawComponent.name,
       box: rawComponent.box,
+      scope: rawComponent.scope,
       versions: mapObject(rawComponent.versions, val => Ref.from(val))
     });
   }
@@ -158,11 +169,7 @@ export default class Component extends BitObject {
     return new Component(props);
   }
 
-  flattenDependencies() {
-    
-  }
-
   static fromBitId(bitId: BitId): Component {
-    return new Component({ name: bitId.name, box: bitId.box });
+    return new Component({ scope: bitId.getScopeName(), name: bitId.name, box: bitId.box });
   }
 }

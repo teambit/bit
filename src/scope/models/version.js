@@ -3,9 +3,6 @@ import { Ref, BitObject } from '../objects';
 import Source from './source';
 import ConsumerComponent from '../../consumer/bit-component';
 import Component from './component';
-import BitId from '../../bit-id/bit-id';
-import Scope from '../scope';
-import { Remotes } from '../../remotes';
 import BitIds from '../../bit-id/bit-ids';
 
 export type VersionProps = {
@@ -21,7 +18,7 @@ export type VersionProps = {
   compiler?: ?Ref;
   tester?: ?Ref;
   dependencies?: BitIds;
-  flattenedDepepdencies?: Ref[];
+  flattenedDepepdencies?: BitIds;
   packageDependencies?: {[string]: string}; 
   buildStatus?: boolean;
   testStatus?: boolean;
@@ -39,7 +36,7 @@ export default class Version extends BitObject {
   compiler: ?Ref;
   tester: ?Ref;
   dependencies: BitIds;
-  flattenedDepepdencies: Ref[];
+  flattenedDepepdencies: BitIds;
   packageDependencies: {[string]: string};
   buildStatus: ?boolean;
   dist: ?Ref;
@@ -59,12 +56,12 @@ export default class Version extends BitObject {
     this.testStatus = props.testStatus;
   }
 
-  flattenDependencies(scope: Scope, remotes: Remotes) {
-    this.dependencies.fetch(scope, remotes);
-  }
-
   id() {
     return JSON.stringify(this.toObject());
+  }
+
+  collect() {
+    
   }
 
   refs(): Ref[] {
@@ -89,6 +86,7 @@ export default class Version extends BitObject {
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
       dependencies: this.dependencies.map(dep => dep.toString()),
+      flattenedDepepdencies: this.flattenedDepepdencies.map(dep => dep.toString()),
       packageDependencies: this.packageDependencies,
       buildStatus: this.buildStatus,
       testStatus: this.testStatus
@@ -115,6 +113,7 @@ export default class Version extends BitObject {
       compiler: props.compiler ? Ref.from(props.compiler): null,
       tester: props.tester ? Ref.from(props.tester): null,
       dependencies: BitIds.deserialize(props.dependencies),
+      flattenedDependencies: BitIds.deserialize(props.flattenedDependencies),
       packageDependencies: props.packageDependencies,
       buildStatus: props.buildStatus,
       testStatus: props.testStatus
