@@ -57,7 +57,10 @@ export default class SourceRepository {
   }
 
   getObjects(id: BitId): Promise<ComponentObjects> {
-    return this.get(id).then(component => component.collectObjects(this.objects()));
+    return this.get(id).then((component) => {
+      if (!component) throw new ComponentNotFound();
+      return component.collectObjects(this.objects());
+    });
   }
 
   findOrAddComponent(props: ComponentProps): Promise<Component> {

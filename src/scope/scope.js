@@ -117,8 +117,8 @@ export default class Scope {
   export(componentObjects: ComponentObjects) {
     return this.sources.merge(componentObjects.toObjects(this.objects))
       .then((component) => {
-        return this.objects.persist()
-          .then(() => component.collectObjects(this.objects));
+        return this.objects.persist();
+          // .then(() => component.collectObjects(this.objects));
       });
   }
 
