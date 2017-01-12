@@ -12,7 +12,7 @@ export default class ComponentObjects {
   }
 
   toString(): string {
-
+    
   }
 
   toObjects(repo: Repository) {

@@ -7,16 +7,17 @@ import flattenDependencies from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
+import { propogateUntil, currentDirName, allSettled, pathHas, readFile, first } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound } from './exceptions';
 import { Tmp, Environment } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import Component from '../consumer/bit-component';
+import ComponentVersion from './component-version';
 import { Repository, Ref, BitObject } from './objects';
 import ComponentDependencies from './component-dependencies';
-import ObjectComponentDependencies from './models/object-component-dependencies';
+import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
 
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -122,10 +123,6 @@ export default class Scope {
       });
   }
 
-  getObject(hash: string): Promise<BitObject> {
-    return this.objects.findOne(new Ref(hash));
-  }
-
   getExternal(bitId: BitId, remotes: Remotes): Promise<ComponentDependencies> {
     return remotes.fetch([bitId])
       .then(bitDeps => first(bitDeps));
@@ -149,38 +146,36 @@ export default class Scope {
   //       });
   //   });    
   // }
- 
-  get(bitId: BitId): Promise<ObjectComponentDependencies> {
-    if (!bitId.isLocal(this.name())) {
-      return this.remotes()
-        .then(remotes => this.getExternal(bitId, remotes));
-    }
-    
-    return this.sources.getComponent(bitId)
-      .then(component => component.toConsumerComponent(bitId.version, this.objects))
-      .then((consumerComponent) => {
-        return new ObjectComponentDependencies({ 
-          component: consumerComponent, 
-          dependencies: []
-        });
-      });
-    
-    // bitId.version = this.sources.resolveVersion(bitId).toString();
-    // const dependencyList = this.sourcesMap.get(bitId);
-    // if (!dependencyList) throw new BitNotInScope();
-    // const bitIds = this.sourcesMap.getBitIds(dependencyList);
-    
-    // return this.remotes().then((remotes) => {
-    //   return bitIds.fetchOnes(this, remotes)
-    //     .then((bits) => {
-    //       return this.sources.loadSource(bitId)
-    //         .then(bit => new ComponentDependencies({ bit, dependencies: bits }));
-    //     });
-    // });
+
+  getObjects(id: BitId): Promise<ComponentObjects> {
+    return this.import(id)
+      .then(versionDeps => versionDeps.toObjects(this.objects));
   }
 
-  getOne(bitId: BitId): Promise<Component> {
-    return this.sources.loadSource(bitId);
+
+  getObject(hash: string): BitObject {
+    return new Ref(hash).load(this.objects);
+  }
+
+  import(id: BitId): Promise<VersionDependencies> {
+    if (!id.isLocal(this.name())) {
+      return this.remotes()
+        .then(remotes => this.getExternal(id, remotes));
+    }
+    
+    return this.sources.get(id)
+      .then(component => component.toComponentVersion(id.version, this.name()))
+      .then(version => version.toVersionDependencies(this));
+  }
+ 
+  get(id: BitId): Promise<ComponentDependencies> {
+    return this.import(id)
+      .then(versionDependencies => versionDependencies.toConsumer(this.objects));
+  }
+
+  getOne(id: BitId): Promise<ComponentVersion> {
+    return this.sources.get(id)
+      .then(component => component.toComponentVersion(id.version));
   }
 
   manyOnes(bitIds: BitId[]): Promise<ComponentDependencies[]> {
@@ -215,9 +210,13 @@ export default class Scope {
     return this.sources.clean(bitId);
   }
 
-  getMany(bitIds: BitIds) {
+  getManyObjects(ids: BitIds) {
+    return Promise.all(ids.map(id => this.getObjects(id)));
+  }
+
+  getMany(bitIds: BitIds): Promise<VersionDependencies[]> {
     return Promise.all(bitIds.map((bitId) => {
-      return this.get(bitId);
+      return this.import(bitId);
     }));
   }
 

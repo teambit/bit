@@ -1,13 +1,14 @@
 /** @flow */
 import { Repository, BitObject } from '../objects';
-import ComponentDependencies from '../models/object-component-dependencies';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
 import { allSettled } from '../../utils';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import flattenDependencies from '../flatten-dependencies';
 import Component from '../models/component';
+import ComponentVersion from '../component-version';
 import Version from '../models/version';
+import VersionDependencies from '../version-dependencies';
 import Source from '../models/source';
 import { BitId, BitIds } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
@@ -36,22 +37,19 @@ export default class SourceRepository {
   }
 
 
-  getComponent(bitId: BitId) {
+  getComponent(bitId: BitId): Promise<ComponentVersion> {
     return this.get(bitId).then((component) => {
       if (!component) throw new ComponentNotFound();
-      return component.loadVersion(
-        bitId.getVersion().resolve(component.listVersions()), 
-        this.objects()
-      )
-      .then(version => new ComponentDependencies({
-        component,
-        version,
-        objects: 
-      }));
+      const versionNum = bitId.getVersion().resolve(component.listVersions());
+      return component.loadVersion(versionNum, this.objects())
+        .then(() => new ComponentVersion(
+          component,
+          versionNum,
+          this.scope.name()
+        ));
     });
   }
   
-
   get(bitId: BitId): Promise<Component> {
     return this.findComponent(Component.fromBitId(bitId));
   }
@@ -73,13 +71,14 @@ export default class SourceRepository {
       });
   }
 
-  addSource(source: any, dependencies: ComponentTree[]): Promise<Component> {
+  addSource(source: any, dependencies: ComponentVersion[]): Promise<Component> {
+    dependencies = dependencies.map(dep => dep.toId());
     const objectRepo = this.objects();
     return this.findOrAddComponent(source)
       .then((component) => {
         const impl = Source.from(Buffer.from(source.impl.src));
         const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
-        const version = Version.fromComponent(source, impl, specs, flattenDependencies(dependencies));
+        const version = Version.fromComponent(source, impl, specs, dependencies);
         component.addVersion(version);
         
         objectRepo
