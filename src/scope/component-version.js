@@ -38,7 +38,7 @@ export default class ComponentVersion {
   }
 
   toConsumer(repo: Repository) {
-    return this.component.toConsumerComponent(this.version.toString(), repo);
+    return this.component.toConsumerComponent(this.version.toString(), scopeName, repo);
   }
 
   toObjects(repo: Repository): Promise<ComponentObjects> {

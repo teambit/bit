@@ -115,7 +115,7 @@ export default class Component extends BitObject {
     return new ComponentVersion(this, versionNum, scopeName);
   }
 
-  toConsumerComponent(versionStr: string, repository: Repository) {
+  toConsumerComponent(versionStr: string, scopeName: string, repository: Repository) {
     const versionNum = VersionParser
       .parse(versionStr)
       .resolve(this.listVersions());
@@ -132,6 +132,7 @@ export default class Component extends BitObject {
             name: this.name,
             box: this.box,
             version: versionNum,
+            scope: scopeName,
             implFile: version.impl.name,
             specsFile: version.specs ? version.specs.name : null,
             compilerId: compiler ? compiler.toId() : null,
