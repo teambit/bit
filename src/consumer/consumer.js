@@ -160,9 +160,12 @@ export default class Consumer {
 
   commit(id: BitInlineId) {  
     return this.loadComponent(id)
-      .then(bit => this.scope.put(bit))
-      .then(bits => this.writeToComponentsDir([bits]))
-      .then(() => this.removeFromInline(id));
+      .then(bit => 
+        this.scope.put(bit)
+        .then(bits => this.writeToComponentsDir([bits]))
+        .then(() => this.removeFromInline(id))
+        .then(() => bit)
+      );
   }
 
   testBit(id: BitInlineId): Promise<Component> {
