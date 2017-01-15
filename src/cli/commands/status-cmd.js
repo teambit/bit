@@ -33,10 +33,12 @@ export default class Status extends Command {
     });
 
     return status()
-    .then(({ inline, sources }) => ({
-      inline: inline.map(getBitStatusForInline),
-      sources: sources.map(getBitStatusForSources)
-    }));
+    .then(({ inline, sources }) => {
+      return ({
+        inline: inline.map(getBitStatusForInline),
+        sources: sources.map(getBitStatusForSources)
+      });
+    });
   }
 
   report({ inline, sources }: { inline: StatusObj[], sources: StatusObj[] }): string {
