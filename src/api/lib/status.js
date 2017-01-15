@@ -9,6 +9,6 @@ export type StatusRes = {
 
 export default function status(): Promise<{ inline: Bit[], sources: Bit[]}> {
   return loadConsumer()
-  .then(consumer => Promise.all([consumer.listInline(), consumer.scope.list()]))
+  .then(consumer => Promise.all([consumer.listInline(), consumer.scope.listStage()]))
   .then(([inline, sources]) => ({ inline, sources }));
 }

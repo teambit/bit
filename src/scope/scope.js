@@ -5,6 +5,7 @@ import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import ComponentObjects from './component-objects';
+import ComponentModel from './models/component';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, readFile } from '../utils';
@@ -80,8 +81,22 @@ export default class Scope {
     };
   }
 
+  toConsumerComponents(components: ComponentModel[]): Component {
+    return Promise.all(components.map(c =>
+      c.toConsumerComponent(c.latest().toString(), this.name(), this.objects))
+    );
+  }
+
   list() {
-    return this.objects.list();
+    return this.objects.list()
+    .then(components => this.toConsumerComponents(components));
+  }
+
+  listStage() {
+    return this.objects.list()
+    .then(components => this.toConsumerComponents(
+      components.filter(c => c.scope === this.name())
+    ));
   }
 
   put(consumerComponent: Component): Promise<ComponentDependencies> {

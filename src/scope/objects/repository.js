@@ -45,25 +45,18 @@ export default class Repository {
       .catch(() => null);
   }
 
-  list():Promise<Bit[]> {
+  list():Promise<[]> {
     // @TODO - write
-    const filterComponentsFromLocalScope = refs =>
-      refs.filter(ref => 
-        ref instanceof Component &&
-        ref.scope === this.scope.name()
-      );
+    const filterComponents = refs =>
+      refs.filter(ref => ref instanceof Component);
 
     return new Promise((resolve, reject) => {
       return glob(path.join('*', '*'), { cwd: this.getPath() }, (err, matches) => {
         if (err) reject(err);
         const refs = matches.map(str => str.replace(path.sep, ''));
         Promise.all(refs.map(ref => this.load(ref)))
-        .then(filterComponentsFromLocalScope)
-        .then(components =>
-          Promise.all(components.map(c =>
-            c.toConsumerComponent(c.latest().toString(), this.scope.name(), this))
-          ).then(resolve)
-        );
+        .then(filterComponents)
+        .then(resolve);
       });
     });
   }

@@ -3,6 +3,8 @@ import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../command';
 import { list } from '../../api';
+import Component from '../../consumer/bit-component';
+import { formatBit, paintHeader } from '../chalk-box';
 
 export default class List extends Command {
   name = 'list';
@@ -16,12 +18,15 @@ export default class List extends Command {
     return list();
   }
 
-  report(bitNames: string[]): string {
-    if (R.isEmpty(bitNames)) {
-      return chalk.red('your external bits directory is empty');  
+  report(components: Component[]): string {
+    if (R.isEmpty(components)) {
+      return chalk.red('your scope is empty');  
     }
 
-    return chalk.green(bitNames.join('\n'));
+    return R.prepend(
+      paintHeader('local scope components'),
+      components.map(formatBit)
+    ).join('\n');
   }
 
 }
