@@ -21,7 +21,7 @@ export type VersionProps = {
   compiler?: ?Ref;
   tester?: ?Ref;
   dependencies?: BitIds;
-  flattenedDepepdencies?: BitIds;
+  flattenedDependencies?: BitIds;
   packageDependencies?: {[string]: string}; 
   buildStatus?: boolean;
   testStatus?: boolean;
@@ -39,7 +39,7 @@ export default class Version extends BitObject {
   compiler: ?Ref;
   tester: ?Ref;
   dependencies: BitIds;
-  flattenedDepepdencies: BitIds;
+  flattenedDependencies: BitIds;
   packageDependencies: {[string]: string};
   buildStatus: ?boolean;
   dist: ?Ref;
@@ -53,7 +53,7 @@ export default class Version extends BitObject {
     this.tester = props.tester;
     this.dependencies = props.dependencies || new BitIds();
     this.dist = props.dist;
-    this.flattenedDepepdencies = props.flattenedDepepdencies || new BitIds();
+    this.flattenedDependencies = props.flattenedDependencies || new BitIds();
     this.packageDependencies = props.packageDependencies || {};
     this.buildStatus = props.buildStatus;
     this.testStatus = props.testStatus;
@@ -68,7 +68,7 @@ export default class Version extends BitObject {
   }
 
   collectDependencies(scope: Scope): Promise<ComponentVersion[]> {
-    return scope.manyOnes(this.flattenedDepepdencies);
+    return scope.manyOnes(this.flattenedDependencies);
   }
 
   refs(): Ref[] {
@@ -93,7 +93,7 @@ export default class Version extends BitObject {
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
       dependencies: this.dependencies.map(dep => dep.toString()),
-      flattenedDepepdencies: this.flattenedDepepdencies.map(dep => dep.toString()),
+      flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
       packageDependencies: this.packageDependencies,
       buildStatus: this.buildStatus,
       testStatus: this.testStatus
@@ -141,7 +141,7 @@ export default class Version extends BitObject {
       compiler: component.compilerId ? Component.fromBitId(component.compilerId).hash() : null,
       tester: component.testerId ? Component.fromBitId(component.testerId).hash() : null,
       packageDependencies: component.packageDependencies,
-      flattenedDepepdencies: flattenedDeps,
+      flattenedDependencies: flattenedDeps,
       dependencies: component.dependencies
     });    
   }

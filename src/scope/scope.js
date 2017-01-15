@@ -7,7 +7,7 @@ import flattenDependencies from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
+import { propogateUntil, currentDirName, pathHas, readFile } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
@@ -85,33 +85,22 @@ export default class Scope {
   }
 
   put(consumerComponent: Component): Promise<ComponentDependencies> {
-    // create component model V
-    // check if component already exists V
-    // if exists get create latest version object otherwise create initial version V
-    // create files with refs and attach to version V
-    // flatten and set dependencies V
-    // load enrionment (tester and compiler and get hash) ?
-    // build + report build ?
-    // test + report test ?
-    // persist models (version, component, files) V
-    return this.remotes().then((remotes) => {
-      consumerComponent.scope = this.name();
-      return this.importMany(consumerComponent.dependencies)
-        .then((dependencies) => {
-          dependencies = flattenDependencies(dependencies);
-          return this.sources.addSource(consumerComponent, dependencies)
-          // // @TODO make the scope install the required env
-            // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
-            .then((component) => {
-              return this.objects.persist()
-                .then(() => component.toConsumerComponent(LATEST, this.name(), this.objects))
-                .then(consumerComp => new ComponentDependencies({ 
-                  component: consumerComp,
-                  dependencies 
-                }));
-            });
-        });
-    });
+    consumerComponent.scope = this.name();
+    return this.importMany(consumerComponent.dependencies)
+      .then((dependencies) => {
+        dependencies = flattenDependencies(dependencies);
+        return this.sources.addSource(consumerComponent, dependencies)
+        // // @TODO make the scope install the required env
+          // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
+          .then((component) => {
+            return this.objects.persist()
+              .then(() => component.toConsumerComponent(LATEST, this.name(), this.objects))
+              .then(consumerComp => new ComponentDependencies({ 
+                component: consumerComp,
+                dependencies 
+              }));
+          });
+      });
   }
 
   importSrc(componentObjects: ComponentObjects) {
@@ -156,6 +145,11 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
+  modify(id: BitId) {
+    // return this.import(id)
+    //   .then(component => this.export(component));
+  }
+
   import(id: BitId): Promise<VersionDependencies> {
     if (!id.isLocal(this.name())) {
       return this.remotes()
@@ -163,12 +157,17 @@ export default class Scope {
     }
     
     return this.sources.get(id)
-      .then(component => component.toVersionDependencies(id.version, this));
+      .then((component) => {
+        if (!component) throw new ComponentNotFound();
+        return component.toVersionDependencies(id.version, this);
+      });
   }
  
   get(id: BitId): Promise<ComponentDependencies> {
     return this.import(id)
-      .then(versionDependencies => versionDependencies.toConsumer(this.objects));
+      .then((versionDependencies) => {
+        return versionDependencies.toConsumer(this.objects);
+      });
   }
 
   getOne(id: BitId): Promise<ComponentVersion> {

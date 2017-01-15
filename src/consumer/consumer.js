@@ -99,7 +99,9 @@ export default class Consumer {
 
     const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
-      .then(componentDependencies => this.writeToComponentsDir([componentDependencies]));
+      .then((componentDependencies) => {
+        return this.writeToComponentsDir([componentDependencies]);
+      });
   }
 
   importEnvironment(rawId: ?string) {

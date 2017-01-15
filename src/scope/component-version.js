@@ -10,12 +10,10 @@ import ComponentObjects from './component-objects';
 export default class ComponentVersion {
   component: Component;
   version: number;
-  scopeName: string;
 
-  constructor(component: Component, version: number, scopeName: string) {
+  constructor(component: Component, version: number) {
     this.component = component;
     this.version = version;
-    this.scopeName = scopeName;
   }
 
   getVersion(repository: Repository): Promise<Version> {
@@ -24,7 +22,7 @@ export default class ComponentVersion {
 
   toId() {
     return new BitId({
-      scope: this.scopeName,
+      scope: this.component.scope,
       box: this.component.box,
       name: this.component.name,
       version: this.version.toString()
@@ -40,7 +38,7 @@ export default class ComponentVersion {
   }
 
   toConsumer(repo: Repository) {
-    return this.component.toConsumerComponent(this.version.toString(), this.scopeName, repo);
+    return this.component.toConsumerComponent(this.version.toString(), this.component.scope, repo);
   }
 
   toObjects(repo: Repository): Promise<ComponentObjects> {
