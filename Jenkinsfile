@@ -27,7 +27,8 @@ node  {
 
     stage 'export to google storage'
     sh("gsutil -m cp -a public-read ./distribution/brew_pkg/${bundleName}_brew.tar.gz ${uploadfolder}")
-    sh("gsutil -m cp -a public-read ./distribution/debian_pkg/${bundleName}.deb ${uploadfolder}")
+    sh("gsutil -m cp -a public-read ./distribution/*.deb ${uploadfolder}")
+    sh("gsutil -m cp -a public-read ./distribution/*.rpm ${uploadfolder}")
 
 
     
@@ -45,9 +46,10 @@ node  {
 import groovy.json.JsonOutput
 def notifyReleaseServer(version,url) {
     def payload = JsonOutput.toJson([version : version,
-                                 brew: "bit_${version}_brew.tar.gz",
-                                 deb: "bit_${version}_deb.deb",
-                                 msi:"bit_${version}.msi"])
+                                 brew: "bit-${version}_brew.tar.gz",
+                                 deb: "bit-${version}_deb.deb",
+                                 rpm: "bit-${version}_deb.deb",
+                                 msi:"bit-${version}.msi"])
 
     print(payload)
 
