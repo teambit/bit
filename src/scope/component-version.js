@@ -28,6 +28,10 @@ export default class ComponentVersion {
       version: this.version.toString()
     });
   }
+  
+  get id(): BitId {
+    return this.toId();
+  }
 
   get id(): BitId {
     return this.toId();

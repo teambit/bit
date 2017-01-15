@@ -80,8 +80,8 @@ export default class Scope {
     };
   }
 
-  ls() {
-    // return this.sources.list();
+  list() {
+    return this.objects.list();
   }
 
   put(consumerComponent: Component): Promise<ComponentDependencies> {
@@ -207,12 +207,6 @@ export default class Scope {
       .then(() => this.objects.ensureDir())
       .then(() => this); 
   }
-  
-  /**
-   * list the bits in the sources directory
-   **/
-  // listSources(): Promise<Component[]> {
-  // }
 
   clean(bitId: BitId) {
     return this.sources.clean(bitId);

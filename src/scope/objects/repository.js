@@ -1,6 +1,7 @@
 /** @flow */
 import fs from 'fs';
 import path from 'path';
+import glob from 'glob';
 import BitObject from './object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
@@ -41,6 +42,15 @@ export default class Repository {
         return BitObject.parseObject(fileContents, this.types);
       })
       .catch(() => null);
+  }
+
+  list():Promise<Bit[]> {
+    // @TODO - write
+    return new Promise((resolve, reject) => {
+      // glob(path.join(this.getPath(), ), (err, matches) => {
+        // if(err) reject();
+      // });
+    });
   }
 
   remove(ref: Ref) {

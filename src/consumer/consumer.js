@@ -14,6 +14,7 @@ import {
   BIT_HIDDEN_DIR,
   DEFAULT_DIST_DIRNAME,
   DEFAULT_BUNDLE_FILENAME,
+  LOCAL_SCOPE_NOTATION,
  } from '../constants';
 import { flatten, isEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
