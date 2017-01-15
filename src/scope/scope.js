@@ -94,11 +94,8 @@ export default class Scope {
           // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
           .then((component) => {
             return this.objects.persist()
-              .then(() => component.toConsumerComponent(LATEST, this.name(), this.objects))
-              .then(consumerComp => new ComponentDependencies({ 
-                component: consumerComp,
-                dependencies 
-              }));
+              .then(() => component.toVersionDependencies(LATEST, this))
+              .then(deps => deps.toConsumer(this.objects));
           });
       });
   }

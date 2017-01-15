@@ -6,7 +6,7 @@ export default function flattenDependencies(dependencies: VersionDependencies[])
   return values(flatten(dependencies
     .map(dep => dep.dependencies.concat(dep.component)))
     .reduce((components, component) => {
-      components[component.toId().toString()] = component;
+      components[component.id.toString()] = component;
       return components;
     }, {}));
 }

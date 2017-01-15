@@ -29,6 +29,10 @@ export default class ComponentVersion {
     });
   }
 
+  get id(): BitId {
+    return this.toId();
+  }
+
   toVersionDependencies(scope: Scope): Promise<VersionDependencies> {
     return this.getVersion(scope.objects)
       .then((version) => {

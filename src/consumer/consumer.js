@@ -138,17 +138,17 @@ export default class Consumer {
 
   writeToComponentsDir(componentDependencies: ComponentDependencies[]): Promise<Component[]> {
     const componentsDir = this.getComponentsPath();
-    // const components = flattenDependencies(componentDependencies);
-    if (!componentDependencies || componentDependencies.length === 0) { return Promise.resolve([]); } // HACKALERT - replace when dependencies work
-    const components = [componentDependencies[0].component]; // HACKALERT - replace when dependencies work
+    const components = flattenDependencies(componentDependencies);
 
-    const bitDirForConsumerImport = (component: Component) => path.join(
-      componentsDir,
-      component.box,
-      component.name,
-      component.scope,
-      component.version.toString(),
-    );
+    const bitDirForConsumerImport = (component: Component) => {
+      return path.join(
+        componentsDir,
+        component.box,
+        component.name,
+        component.scope,
+        component.version.toString(),
+      );
+    };
 
     return Promise.all(components.map((component) => {
       const bitPath = bitDirForConsumerImport(component);
