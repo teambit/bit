@@ -11,7 +11,7 @@ import put from './lib/put';
 import fetch from './lib/fetch';
 import modify from './lib/modify';
 import importAction from './lib/import';
-import push from './lib/push';
+import exportAction from './lib/export';
 import getBit from './lib/get-bit';
 import test from './lib/test';
 import describeScope from './lib/describe-scope';
@@ -20,7 +20,7 @@ import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/
 
 export {
   init,
-  push,
+  exportAction,
   create,
   catObject,
   describeScope,

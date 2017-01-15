@@ -3,7 +3,7 @@ import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
 import Init from './commands/init-cmd';
 import Create from './commands/create-cmd';
-import Push from './commands/push-cmd';
+import Export from './commands/export-cmd';
 import List from './commands/list-cmd';
 import Modify from './commands/modify-cmd';
 import Commit from './commands/commit-cmd';
@@ -35,7 +35,7 @@ export default function registerCommands(): CommandRegistrar {
     new Commit(),
     new Import(),
     new Update(),
-    new Push(),
+    new Export(),
     new Status(),
     new Modify(),
     new List(),

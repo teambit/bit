@@ -190,12 +190,15 @@ export default class Scope {
     return Promise.all(bitIds.map(bitId => this.getOne(bitId)));
   }
 
-  push(bitId: BitId, remoteName: string) {
+  exportAction(bitId: BitId, remoteName: string) {
     return this.remotes().then((remotes) => {
       const remote = remotes.get(remoteName);
       return this.sources.getObjects(bitId)
-        .then(component => remote.push(component))
-        .then(() => this.clean(bitId));
+        .then(component => 
+          remote.push(component)
+          .then(() => this.clean(bitId))
+          .then(() => component)
+        );
     });
   }
 

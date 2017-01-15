@@ -1,6 +1,5 @@
 /** @flow */
 import path from 'path';
-import R from 'ramda';
 import glob from 'glob';
 import fs from 'fs-extra';
 import flattenDependencies from '../scope/flatten-dependencies';
@@ -78,10 +77,10 @@ export default class Consumer {
     return Component.loadFromInline(bitDir, this.bitJson);
   }
 
-  push(rawId: string, rawRemote: string) { 
+  exportAction(rawId: string, rawRemote: string) { 
     // @TODO - move this method to api, not related to consumer
     const bitId = BitId.parse(rawId);
-    return this.scope.push(bitId, rawRemote);
+    return this.scope.exportAction(bitId, rawRemote);
   }
 
   import(rawId: ?string): Component {

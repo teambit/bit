@@ -1,8 +1,8 @@
 /** @flow */
 import { loadConsumer } from '../../consumer';
 
-export default function push(id: string, remote: string) {
+export default function exportAction(id: string, remote: string) {
   return loadConsumer().then((consumer) => {
-    return consumer.push(id, remote);
+    return consumer.exportAction(id, remote);
   });
 } 
