@@ -2,7 +2,7 @@ import init from './lib/init';
 import create from './lib/create';
 import remove from './lib/remove';
 import list from './lib/list';
-import exportAction from './lib/export';
+import commitAction from './lib/commit';
 import status from './lib/status';
 import build from './lib/build';
 import prepare from './lib/prepare';
@@ -26,7 +26,7 @@ export {
   describeScope,
   remove,
   list,
-  exportAction,
+  commitAction,
   status,
   build,
   prepare,

@@ -1,21 +1,20 @@
 /** @flow */
-import chalk from 'chalk';
 import Command from '../command';
-import { exportAction } from '../../api';
+import { commitAction } from '../../api';
 
 export default class Export extends Command {
-  name = 'export <id>';
-  description = 'export a bit to local scope';
-  alias = 'e';
+  name = 'commit <id>';
+  description = 'commit a bit to the local scope';
+  alias = 'c';
   opts = [
   ];
 
   action([id]: [string]): Promise<any> {
-    return exportAction({ id });
+    return commitAction({ id });
   }
 
   report(): string {
-    return 'finish export command';
+    return 'bit commited succesfully';
     // return chalk.green(`exported bit "${name}" from inline to external`);
   }
 

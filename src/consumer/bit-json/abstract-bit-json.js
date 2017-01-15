@@ -1,5 +1,4 @@
 /** @flow */
-import R from 'ramda';
 import { BitIds } from '../../bit-id';
 import { 
   DEFAULT_COMPILER_ID,

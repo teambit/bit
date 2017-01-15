@@ -14,12 +14,10 @@ import {
   BIT_HIDDEN_DIR,
   DEFAULT_DIST_DIRNAME,
   DEFAULT_BUNDLE_FILENAME,
-  LOCAL_SCOPE_NOTATION,
  } from '../constants';
-import { flatten, isEmpty } from '../utils';
+import { flatten } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
-import loadPlugin from './bit-component/environment/load-plugin';
 
 const buildAndSave = (component: Component, scope: Scope, bitDir: string): Promise<Component> =>
   component.build(scope)
@@ -158,7 +156,7 @@ export default class Consumer {
     }));
   }
 
-  export(id: BitInlineId) {  
+  commit(id: BitInlineId) {  
     return this.loadComponent(id)
       .then(bit => this.scope.put(bit))
       .then(bits => this.writeToComponentsDir([bits]))

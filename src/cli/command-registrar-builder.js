@@ -6,7 +6,7 @@ import Create from './commands/create-cmd';
 import Push from './commands/push-cmd';
 import List from './commands/list-cmd';
 import Modify from './commands/modify-cmd';
-import Export from './commands/export-cmd';
+import Commit from './commands/commit-cmd';
 // import Login from './commands/login-cmd';
 // import Logout from './commands/logout-cmd';
 import Import from './commands/import-cmd';
@@ -32,7 +32,7 @@ export default function registerCommands(): CommandRegistrar {
     new Init(),
     // new Scope(),
     new Create(),
-    new Export(),
+    new Commit(),
     new Import(),
     new Update(),
     new Push(),
