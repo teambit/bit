@@ -49,7 +49,7 @@ function runUpdate(updateCommand){
  */
 function checkUpdate(cb) {
   var lastUpdateCheck = _getCache('lastUpdateCheck')
-  if (lastUpdateCheck && Date.now() - lastUpdateCheck < ONE_DAY) cb();
+  if (lastUpdateCheck && Date.now() - lastUpdateCheck < ONE_DAY) return cb();
   needle.get(url, function(err, res) {
     _setCache('lastUpdateCheck', Date.now());
     if (!lastUpdateCheck) {
