@@ -31,6 +31,11 @@ export default class BitId {
     return this.scope.replace('@', ''); 
   }
 
+  changeScope(newScope: string) {
+    this.scope = newScope;
+    return this;
+  }
+
   composeTarFileName() {
     return `${this.scope}_${this.box}_${this.name}_${this.version}.tar`;
   }

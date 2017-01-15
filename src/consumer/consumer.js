@@ -80,7 +80,17 @@ export default class Consumer {
   exportAction(rawId: string, rawRemote: string) { 
     // @TODO - move this method to api, not related to consumer
     const bitId = BitId.parse(rawId);
-    return this.scope.exportAction(bitId, rawRemote);
+    
+    return this.scope.exportAction(bitId, rawRemote)
+    .then(() =>
+      this.scope.get(bitId.changeScope(`@${rawRemote}`)) // @HACKALERT
+      .then(componentDependencies =>
+        this.writeToComponentsDir([componentDependencies])
+      )
+    )
+    .then(() =>
+      this.removeFromComponents(bitId.changeScope(this.scope.name)) // @HACKALERT
+    );
   }
 
   import(rawId: ?string): Component {
@@ -134,6 +144,27 @@ export default class Consumer {
           .then(resolve);
       });
     });
+  }
+
+  removeFromComponents(id: BitId): Promise<any> {
+    // @TODO - write this function
+    
+    // const componentsDir = this.getComponentsPath();
+    // const componentDir = path.join(
+    //   componentsDir,
+    //   id.box,
+    //   id.name,
+    //   id.scope,
+    //   id.getVersion(),
+    // );
+
+    // return new Promise((resolve, reject) => {
+    //   return fs.remove(componentDir, (err) => {
+    //     if (err) return reject(err);
+    //     return removeContainingDirIfEmpty(componentDir)
+    //       .then(resolve);
+    //   });
+    // });
   }
 
   writeToComponentsDir(componentDependencies: ComponentDependencies[]): Promise<Component[]> {
