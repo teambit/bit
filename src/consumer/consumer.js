@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import R from 'ramda';
 import glob from 'glob';
 import fs from 'fs-extra';
 import flattenDependencies from '../scope/flatten-dependencies';
@@ -15,7 +16,7 @@ import {
   DEFAULT_DIST_DIRNAME,
   DEFAULT_BUNDLE_FILENAME,
  } from '../constants';
-import { flatten } from '../utils';
+import { flatten, removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
 
@@ -126,11 +127,12 @@ export default class Consumer {
   }
 
   removeFromInline(id: BitInlineId): Promise<any> {
-    const bitDir = id.composeBitPath(this.getPath());
+    const componentDir = id.composeBitPath(this.getPath());
     return new Promise((resolve, reject) => {
-      return fs.remove(bitDir, (err) => {
+      return fs.remove(componentDir, (err) => {
         if (err) return reject(err);
-        return resolve();
+        return removeContainingDirIfEmpty(componentDir)
+          .then(resolve);
       });
     });
   }

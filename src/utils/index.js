@@ -37,6 +37,7 @@ import inflate from './zlib-inflate';
 import deflate from './zlib-deflate';
 import sha1 from './sha1';
 import isString from './is-string';
+import removeContainingDirIfEmpty from './remove-containing-dir-if-empty';
 
 export {
   parseSSHUrl,
@@ -61,6 +62,7 @@ export {
   forEach,
   hasOwnProperty,
   contains,
+  removeContainingDirIfEmpty,
   isBitUrl,
   mapObject,
   resolveHomePath,
