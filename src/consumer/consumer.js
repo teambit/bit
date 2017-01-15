@@ -89,7 +89,7 @@ export default class Consumer {
       )
     )
     .then(() =>
-      this.removeFromComponents(bitId.changeScope(this.scope.name)) // @HACKALERT
+      this.removeFromComponents(bitId.changeScope(this.scope.name())) // @HACKALERT
     );
   }
 
@@ -147,24 +147,23 @@ export default class Consumer {
   }
 
   removeFromComponents(id: BitId): Promise<any> {
-    // @TODO - write this function
+    // @TODO - also consider
+    // @HACKALERT - also consider version when removing a directory from components
     
-    // const componentsDir = this.getComponentsPath();
-    // const componentDir = path.join(
-    //   componentsDir,
-    //   id.box,
-    //   id.name,
-    //   id.scope,
-    //   id.getVersion(),
-    // );
+    const componentsDir = this.getComponentsPath();
+    const componentDir = path.join(
+      componentsDir,
+      id.box,
+      id.name,
+      id.getScopeName()
+    );
 
-    // return new Promise((resolve, reject) => {
-    //   return fs.remove(componentDir, (err) => {
-    //     if (err) return reject(err);
-    //     return removeContainingDirIfEmpty(componentDir)
-    //       .then(resolve);
-    //   });
-    // });
+    return new Promise((resolve, reject) => {
+      return fs.remove(componentDir, (err) => {
+        if (err) return reject(err);
+        return resolve();
+      });
+    });
   }
 
   writeToComponentsDir(componentDependencies: ComponentDependencies[]): Promise<Component[]> {
