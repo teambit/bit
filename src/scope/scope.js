@@ -10,7 +10,7 @@ import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import { ScopeNotFound } from './exceptions';
+import { ScopeNotFound, ComponentNotFound } from './exceptions';
 import { Tmp, Environment } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import Component from '../consumer/bit-component';
@@ -88,16 +88,15 @@ export default class Scope {
     // create component model V
     // check if component already exists V
     // if exists get create latest version object otherwise create initial version V
-    // create files with refs and attach to version ?
-    // flatten and set dependencies ?
+    // create files with refs and attach to version V
+    // flatten and set dependencies V
     // load enrionment (tester and compiler and get hash) ?
     // build + report build ?
     // test + report test ?
-    // persist models (version, component, files)
+    // persist models (version, component, files) V
     return this.remotes().then((remotes) => {
       consumerComponent.scope = this.name();
-      return consumerComponent.dependencies
-        .fetch(this, remotes)
+      return this.importMany(consumerComponent.dependencies)
         .then((dependencies) => {
           dependencies = flattenDependencies(dependencies);
           return this.sources.addSource(consumerComponent, dependencies)
@@ -115,43 +114,43 @@ export default class Scope {
     });
   }
 
-  export(componentObjects: ComponentObjects) {
+  importSrc(componentObjects: ComponentObjects) {
     return this.sources.merge(componentObjects.toObjects(this.objects))
+      .then(() => this.objects.persist());
+  }
+
+  export(componentObjects: ComponentObjects) {
+    return this.sources.merge(componentObjects.toObjects(this.objects), true)
+      .then(() => this.objects.persist());
+  }
+
+  getExternal(id: BitId, remotes: Remotes): Promise<VersionDependencies> {
+    return this.sources.get(id)
       .then((component) => {
-        return this.objects.persist();
-          // .then(() => component.collectObjects(this.objects));
+        if (component) return component.toVersionDependencies(id.version, this);
+        return remotes
+          .fetch([id])
+          .then(([componentObjects, ]) => {
+            return this.importSrc(componentObjects);
+          })
+          .then(() => this.getExternal(id, remotes));
       });
   }
 
-  getExternal(bitId: BitId, remotes: Remotes): Promise<VersionDependencies> {
-    return remotes.fetch([bitId])
-      .then(bitDeps => first(bitDeps));
+  getExternalOne(id: BitId, remotes: Remotes) {
+    return this.sources.get(id)
+      .then((component) => {
+        if (component) return component.toComponentVersion(id.version, this.name());
+        return remotes.fetch([id], true)
+          .then(([componentObjects, ]) => this.importSrc(componentObjects))
+          .then(() => this.getExternal(id, remotes));
+      });
   }
-
-  // pull(ids: BitIds) {
-  //   return this.remotes().then((remotes) => {
-  //     return this.sources.getMany(ids)
-  //       .then((results) => {
-  //         const left = results
-  //           .filter(res => !res.success)
-  //           .map(res => res.error.id);
-
-  //         return remotes.fetch(left)
-  //           .then(components => 
-  //             // @TODO handle merging better
-  //             Promise.all(components.map(comp => this.sources.merge(comp)))
-  //               .then(() => this.objects.persist())
-  //               .then(() => components.concat)
-  //             );
-  //       });
-  //   });    
-  // }
 
   getObjects(id: BitId): Promise<ComponentObjects> {
     return this.import(id)
       .then(versionDeps => versionDeps.toObjects(this.objects));
   }
-
 
   getObject(hash: string): BitObject {
     return new Ref(hash).load(this.objects);
@@ -164,8 +163,7 @@ export default class Scope {
     }
     
     return this.sources.get(id)
-      .then(component => component.toComponentVersion(id.version, this.name()))
-      .then(version => version.toVersionDependencies(this));
+      .then(component => component.toVersionDependencies(id.version, this));
   }
  
   get(id: BitId): Promise<ComponentDependencies> {
@@ -174,11 +172,25 @@ export default class Scope {
   }
 
   getOne(id: BitId): Promise<ComponentVersion> {
+    if (!id.isLocal(this.name())) {
+      return this.remotes()
+        .then(remotes => this.getExternalOne(id, remotes));
+    }
+    
     return this.sources.get(id)
-      .then(component => component.toComponentVersion(id.version));
+      .then(component => component.toComponentVersion(id.version, this.name()));
   }
 
-  manyOnes(bitIds: BitId[]): Promise<ComponentDependencies[]> {
+  getOneObject(id: BitId): Promise<ComponentObjects> {
+    return this.getOne(id)
+      .then(component => component.toObjects(this.objects));
+  }
+
+  manyOneObjects(ids: BitId[]): Promise<ComponentObjects[]> {
+    return Promise.all(ids.map(id => this.getOneObject(id)));
+  }
+
+  manyOnes(bitIds: BitId[]): Promise<ComponentVersion[]> {
     return Promise.all(bitIds.map(bitId => this.getOne(bitId)));
   }
 
@@ -214,10 +226,8 @@ export default class Scope {
     return Promise.all(ids.map(id => this.getObjects(id)));
   }
 
-  getMany(bitIds: BitIds): Promise<VersionDependencies[]> {
-    return Promise.all(bitIds.map((bitId) => {
-      return this.import(bitId);
-    }));
+  importMany(ids: BitIds): Promise<VersionDependencies[]> {
+    return Promise.all(ids.map(bitId => this.import(bitId)));
   }
 
   getPath() {

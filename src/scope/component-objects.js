@@ -23,6 +23,6 @@ export default class ComponentObjects {
   }
 
   fromString(str: string) {
-
+    
   }
 }

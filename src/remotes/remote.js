@@ -45,29 +45,16 @@ export default class Remote {
     });
   }
 
-  fetch(bitIds: BitId[]): Promise<VersionDependencies[]> {
+  fetch(bitIds: BitId[]): Promise<ComponentObjects[]> {
     return this
       .connect()
       .then(network => network.fetch(bitIds));
   }
 
-  fetchOnes(bitIds: BitIds): Promise<Bit[]> {
-    return allSettled(bitIds.map(id => getCache(id)))
-      .then((values: {success: boolean, val: Bit, error: CacheNotFound}[]) => {
-        const cached = Promise.all(values
-          .filter(res => res.success)
-          .map(res => Bit.fromTar({ tarball: res.val.tarball, scope: res.val.id.scope })));
-
-        const rest = values
-          .filter(res => !res.success && res.error.bitId)
-          .map(res => res.error.bitId);
-
-        return this
-          .connect()
-          .then(network => network.fetchOnes(rest))
-          .then(bits => Promise.all(bits.map(bit => bit.cache())))
-          .then(bits => cached.then(cachedBits => cachedBits.concat(bits)));
-      });
+  fetchOnes(ids: BitIds): Promise<ComponentObjects[]> {
+    return this
+      .connect()
+      .then(network => network.fetchOnes(ids));
   }
 
   validate() {

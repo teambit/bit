@@ -33,7 +33,7 @@ export default class ComponentVersion {
 
   toVersionDependencies(scope: Scope): Promise<VersionDependencies> {
     return this.getVersion(scope.objects)
-      .then(version => {
+      .then((version) => {
         return version.collectDependencies(scope);
       })
       .then(dependencies => new VersionDependencies(this, dependencies));
@@ -45,10 +45,14 @@ export default class ComponentVersion {
 
   toObjects(repo: Repository): Promise<ComponentObjects> {
     return this.getVersion(repo)
-      .then(version => Promise.all([this.component.asRaw(repo), version.collectRaw(repo)]))
-      .then(([compObject, objects]) => new ComponentObjects(
+      .then(version => Promise.all([
+        this.component.asRaw(repo), 
+        version.collectRaw(repo),
+        version.asRaw(repo)
+      ]))
+      .then(([compObject, objects, version]) => new ComponentObjects(
         compObject,
-        objects
+        objects.concat([version])
       ));
   }
 }

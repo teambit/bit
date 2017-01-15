@@ -8,6 +8,7 @@ import { DEFAULT_BOX_NAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/bit-component';
+import Scope from '../scope';
 import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
 import { Impl, Specs } from '../../consumer/bit-component/sources';
@@ -151,6 +152,11 @@ export default class Component extends BitObject {
 
   toBuffer() {
     return new Buffer(JSON.stringify(this.toObject()));
+  }
+
+  toVersionDependencies(version: string, scope: Scope) {
+    const versionComp = this.toComponentVersion(version, scope.name());
+    return versionComp.toVersionDependencies(scope);
   }
 
   static parse(contents: string): Component {

@@ -36,7 +36,7 @@ export default class BitIds extends Array<BitId> {
   
   fetchOnes(origin: Scope, remotes: Remotes) {
     const { inner = [], outer = [] } = byRemote(origin)(this);
-    return origin.manyOnes(this).then((innerBits) => {
+    return origin.manyOnes(inner).then((innerBits) => {
       return remotes.fetch(outer, true)
         .then(remoteBits => remoteBits.concat(innerBits));
     });

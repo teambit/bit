@@ -34,13 +34,13 @@ export default class Fs {
     return this.getScope().export(componentObjects);
   }
 
-  fetch(bitIds: BitIds): Promise<VersionDependencies[]> {
-    return this.getScope().getMany(bitIds)
+  fetch(bitIds: BitIds): Promise<ComponentObjects[]> {
+    return this.getScope().getManyObjects(bitIds)
       .then(bitsMatrix => flatten(bitsMatrix));
   }
 
-  fetchOnes(bitIds: BitIds): Promise<Bit[]> {
-    return this.getScope().manyOnes(bitIds);
+  fetchOnes(bitIds: BitIds): Promise<ComponentObjects[]> {
+    return this.getScope().manyOneObjects(bitIds);
   }
 
   connect() {

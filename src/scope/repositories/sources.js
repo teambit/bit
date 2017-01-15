@@ -1,5 +1,5 @@
-/** @flow */
 import { BitObject } from '../objects';
+/** @flow */
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
@@ -31,7 +31,6 @@ export default class SourceRepository {
       .findOne(component.hash())
       .catch(() => null);
   }
-
 
   getComponent(bitId: BitId): Promise<ComponentVersion> {
     return this.get(bitId).then((component) => {
@@ -98,8 +97,8 @@ export default class SourceRepository {
       .then(component => component.remove(this.objects()));
   }
 
-  merge({ component, objects }: ComponentTree): Promise<Component> {
-    component.scope = this.scope.name();
+  merge({ component, objects }: ComponentTree, inScope: boolean = false): Promise<Component> {
+    if (inScope) component.scope = this.scope.name();
     return this.findComponent(component).then((existingComponent) => {
       if (!existingComponent || component.compare(existingComponent)) {
         return this.put({ component, objects });
