@@ -1,5 +1,6 @@
 /** @flow */
 import keyGetter from './key-getter';
+import ComponentObjects from '../../component-objects';
 import Bit from '../../../consumer/bit-component';
 import { RemoteScopeNotFound } from '../exceptions';
 import { BitId, BitIds } from '../../../bit-id';
@@ -80,7 +81,7 @@ export default class SSH {
       });
   }
 
-  fetch(bitIds: BitIds): Promise<ComponentDependencies[]> {
+  fetch(bitIds: BitIds): Promise<ComponentObjects[]> {
     bitIds = bitIds.map(bitId => bitId.toString());
     return this.exec('_fetch', ...bitIds)
       .then((packs) => {

@@ -2,9 +2,7 @@
 import loadScope from '../../scope-loader';
 import Scope from '../../scope';
 import ComponentObjects from '../../component-objects';
-import VersionDependencies from '../../version-dependencies';
 import { BitIds } from '../../../bit-id';
-import Bit from '../../../consumer/bit-component';
 import { FsScopeNotLoaded } from '../exceptions';
 import { flatten } from '../../../utils';
 import type { ScopeDescriptor } from '../../scope';

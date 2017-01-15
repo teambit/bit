@@ -12,7 +12,24 @@ export default class ComponentObjects {
   }
 
   toString(): string {
-    
+    const componentStr = this.component.toString();
+    const objectsStr = this.objects
+      .map(obj => obj.toString())
+      .join(':::');
+
+    return [componentStr, objectsStr].join('+++');
+  }
+
+  fromString(str: string): ComponentObjects {
+    const [componentStr, objectsStr] = str.split('+++');
+    const objects = objectsStr
+      .split(':::')
+      .map(objStr => Buffer.from(objStr));
+
+    return new ComponentObjects(
+      Buffer.from(componentStr), 
+      objects
+    );
   }
 
   toObjects(repo: Repository) {
@@ -20,9 +37,5 @@ export default class ComponentObjects {
       component: BitObject.parseSync(this.component, repo.types),
       objects: this.objects.map(obj => BitObject.parseSync(obj, repo.types))
     };
-  }
-
-  fromString(str: string) {
-    
   }
 }
