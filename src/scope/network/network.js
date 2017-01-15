@@ -10,5 +10,6 @@ export interface Network {
   get(commandName: string): Promise<any>;
   describeScope(): Promise<ScopeDescriptor>;
   fetch(bitIds: BitIds): Promise<ComponentObjects[]>;
+  list(): Promise<ComponentObjects[]>;
   fetchOnes(bitIds: BitIds): Promise<ComponentObjects[]>;
 }

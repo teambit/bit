@@ -87,7 +87,15 @@ export default class Scope {
     );
   }
 
-  list() {
+  list(scopeName: ?string) {
+    if (scopeName) {
+      return this.remotes()
+      .then((remotes) => {
+        // $FlowFixMe
+        return remotes.resolve(scopeName).list();
+      });
+    }
+
     return this.objects.list()
     .then(components => this.toConsumerComponents(components));
   }

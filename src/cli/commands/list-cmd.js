@@ -7,15 +7,15 @@ import Component from '../../consumer/bit-component';
 import { formatBit, paintHeader } from '../chalk-box';
 
 export default class List extends Command {
-  name = 'list';
-  description = 'list all box bits';
+  name = 'list [scope]';
+  description = 'list all scope components';
   alias = 'ls';
   opts = [
-    ['i', 'inline', 'in inline bit']
+    // ['i', 'inline', 'in inline bit'] @TODO
   ];
   
-  action(args: string[], opts: any): Promise<any> {
-    return list();
+  action([scope]: string[], opts: any): Promise<any> {
+    return list(scope);
   }
 
   report(components: Component[]): string {

@@ -40,6 +40,10 @@ export default class Fs {
   fetchOnes(bitIds: BitIds): Promise<ComponentObjects[]> {
     return this.getScope().manyOneObjects(bitIds);
   }
+  
+  list(): Promise<ComponentObjects[]> {
+    return this.getScope().list();
+  }
 
   connect() {
     return loadScope(this.scopePath).then((scope) => {

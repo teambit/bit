@@ -23,7 +23,7 @@ export default class Remotes extends Map<string, Remote> {
     return remote;
   }
 
-  resolve(scopeName: string) {
+  resolve(scopeName: string): Remote {
     // @TODO impelment scope resolver
     return this.get(scopeName.replace('@', ''));
   }
