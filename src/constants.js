@@ -27,9 +27,9 @@ export const CACHE_ROOT = getCacheDirectory();
  */
 export const ENVIRONEMT_DIRNAME = 'environment';
 
-export const BITS_DIRNAME = 'bits';
+export const BITS_DIRNAME = 'components';
 
-export const INLINE_BITS_DIRNAME = 'inline_bits';
+export const INLINE_BITS_DIRNAME = 'inline_components';
 
 export const BIT_JSON_NAME = 'bit.json';
 
