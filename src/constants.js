@@ -25,11 +25,11 @@ export const BIT_DESCRIPTION = 'bit is a free and open source tool designed for 
 
 export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
-export const BITS_DIRNAME = 'bits';
+export const BITS_DIRNAME = 'components';
 
 export const BIT_ENVIRONMENT_DIRNAME = 'environment';
 
-export const INLINE_BITS_DIRNAME = 'inline_bits';
+export const INLINE_BITS_DIRNAME = 'inline_components';
 
 export const BIT_JSON = 'bit.json';
 
