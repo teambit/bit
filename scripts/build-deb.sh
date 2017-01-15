@@ -15,9 +15,9 @@ PACKAGE_TMPDIR=../distribution/debian_pkg
 VERSION=$(cat ../package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs echo -n)
 TARBALL_NAME=../bit-$VERSION.tar.gz
 DEB_PACKAGE_NAME=bit_$VERSION'_all.deb'
-BIT_PACKAGE_NAME=bit_$VERSION'_deb.deb'
+BIT_PACKAGE_NAME=bit_$VERSION'.deb'
 if [ ! -e $TARBALL_NAME ]; then
-  echo "Hey! Listen! You need to run build-dist.sh first."
+  echo "Hey! Listen! You need to run build-tar.sh first."
   exit 1
 fi;
 
@@ -37,8 +37,8 @@ mv $PACKAGE_TMPDIR/bit/* $PACKAGE_TMPDIR/usr/share/bit
 rm -rf $PACKAGE_TMPDIR/bit
 # Common FPM parameters for all packages we'll build using FPM
 FPM="fpm --input-type dir --chdir . --name bit --version $VERSION "`
-  `"--vendor 'Bit Contributors <team@cocycles.com>' --maintainer 'Bit Contributors <team@cocycles.com>' "`
-  `"--url https://bitsrc.io/ --license BSD --description jaja --after-install ../../scripts/linux/postInstall.sh"
+  `"--vendor 'Cocycles, LTD <team@cocycles.com>' --maintainer 'Cocycles, LTD <team@cocycles.com>' "`
+  `"--url https://www.bitsrc.io  --description 'Bit - Distributed Code Component Manager' --after-install ../../scripts/linux/postInstall.sh "
 
 #### Build DEB (Debian, Ubuntu) package
 node ./set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/usr/share/bit/package.json deb

@@ -9,6 +9,8 @@ tarName="bit-${ver}.tar.gz"
 
 npm install  --prefix ../ 
 npm run build  --prefix ../
+rm -rf ../node_modules
+npm install --production --prefix ../
 
 umask 0022
 cd ..

@@ -1,6 +1,6 @@
 node  {
     properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
-    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'b0cc61f6-f63c-44ce-b004-c7ce63415d3f', url: 'git@git.cocycles.io:core/bit.git']]])
+    checkout scm
 	def releaseServer = "${env.BIT_STAGE_SERVER}"
 	def assets = "${env.BIT_ASSETS}"
 	print releaseServer
@@ -27,12 +27,12 @@ node  {
 
     stage 'export to google storage'
     sh("gsutil -m cp -a public-read ./distribution/brew_pkg/${bundleName}_brew.tar.gz ${uploadfolder}")
-    sh("gsutil -m cp -a public-read ./distribution/debian_pkg/${bundleName}_deb.deb ${uploadfolder}")
+    sh("gsutil -m cp -a public-read ./distribution/debian_pkg/${bundleName}.deb ${uploadfolder}")
 
 
     
-     stage 'notify release server'
-     notifyReleaseServer(currentVersion,releaseServer+"/update")
+     //stage 'notify release server'
+     //notifyReleaseServer(currentVersion,releaseServer+"/update")
 
     stage 'generate formula for brew'
     sh("cd ./scripts && ./generate-formula.sh ${assets}/${currentVersion}/${bundleName}_brew.tar.gz")
@@ -46,7 +46,8 @@ import groovy.json.JsonOutput
 def notifyReleaseServer(version,url) {
     def payload = JsonOutput.toJson([version : version,
                                  brew: "bit_${version}_brew.tar.gz",
-                                 deb: "bit_${version}_deb.deb"])
+                                 deb: "bit_${version}_deb.deb",
+                                 msi:"bit_${version}.msi"])
 
     print(payload)
 

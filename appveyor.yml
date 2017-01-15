@@ -1,0 +1,28 @@
+environment:
+  matrix:
+    - node_version: "6"
+    - node_version: "4"
+
+branches:
+  only:
+  - update
+  - /v[0-9]+(\.[0-9]+)*/
+
+install:
+  - ps: Install-Product node $env:node_version
+  - cmd: npm install
+
+build_script:
+  - cmd: npm run build
+  - ps: ./scripts/build-dist.ps1
+  - ps: ./scripts/build-windows-installer.bat
+
+artifacts:
+  - path: artifacts/*.msi
+    name: Installer
+
+cache:
+ - node_modules
+ - "%LOCALAPPDATA%/Bit"
+
+
