@@ -1,0 +1,42 @@
+node  {
+    properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
+    checkout scm
+	def releaseServer = "${env.BIT_STAGE_SERVER}"
+	def assets = "${env.BIT_ASSETS}"
+	print releaseServer
+	def env = "${environment}"
+	def app = "bit"
+	def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
+	currentVersion = currentVersion.replaceAll("\\s","")
+	def bundleName = "bit_${currentVersion}"
+    def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
+
+    stage 'remove old zip files '
+    sh("rm -rf *.tar.gz  && rm -rf ./distribution")
+    sh("rm -rf ./node_modules")
+
+    stage 'Running tar'
+    sh('cd ./scripts && ./build-tar.sh tar')
+
+
+    stage 'Running DEB & RPM'
+    sh('cd ./scripts && ./build-deb.sh')
+
+
+    deployToArtifactory("deb","bit-deb",currentVersion)
+    deployToArtifactory("rpm","bit-yum","${currentVersion}-1.noarch")
+
+}
+
+def deployToArtifactory(artifactSuffix,repo,version){
+     def server = Artifactory.server 'Bitsrc-artifactory'
+      def uploadSpec = """{
+        "files": [
+          {
+            "pattern": "distribution/bit-${version}.${artifactSuffix}",
+            "target": "${repo}/bit/"
+          }
+       ]
+      }"""
+      server.upload(uploadSpec)
+}
