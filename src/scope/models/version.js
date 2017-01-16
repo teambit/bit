@@ -20,6 +20,10 @@ export type VersionProps = {
   dist: ?Ref;
   compiler?: ?Ref;
   tester?: ?Ref;
+  log: {
+    message: string,
+    date: string
+  };
   dependencies?: BitIds;
   flattenedDependencies?: BitIds;
   packageDependencies?: {[string]: string}; 
@@ -38,6 +42,10 @@ export default class Version extends BitObject {
   };
   compiler: ?Ref;
   tester: ?Ref;
+  log: {
+    message: string,
+    date: string
+  };
   dependencies: BitIds;
   flattenedDependencies: BitIds;
   packageDependencies: {[string]: string};
@@ -51,6 +59,7 @@ export default class Version extends BitObject {
     this.specs = props.specs;
     this.compiler = props.compiler;
     this.tester = props.tester;
+    this.log = props.log;
     this.dependencies = props.dependencies || new BitIds();
     this.dist = props.dist;
     this.flattenedDependencies = props.flattenedDependencies || new BitIds();
@@ -92,6 +101,10 @@ export default class Version extends BitObject {
       }: null,
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
+      log: {
+        message: this.log.message,
+        date: this.log.date,
+      },
       dependencies: this.dependencies.map(dep => dep.toString()),
       flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
       packageDependencies: this.packageDependencies,
@@ -119,6 +132,10 @@ export default class Version extends BitObject {
       dist: props.dist ? Ref.from(props.dist): null,
       compiler: props.compiler ? Ref.from(props.compiler): null,
       tester: props.tester ? Ref.from(props.tester): null,
+      log: {
+        message: props.log.message,
+        date: props.log.date,
+      },
       dependencies: BitIds.deserialize(props.dependencies),
       flattenedDependencies: BitIds.deserialize(props.flattenedDependencies),
       packageDependencies: props.packageDependencies,
@@ -127,7 +144,13 @@ export default class Version extends BitObject {
     });
   }
 
-  static fromComponent(component: ConsumerComponent, impl: Source, specs: Source, flattenedDeps: BitId[]) {
+  static fromComponent(
+    component: ConsumerComponent,
+    impl: Source,
+    specs: Source,
+    flattenedDeps: BitId[],
+    message: string
+  ) {
     return new Version({
       impl: {
         file: impl.hash(),
@@ -140,6 +163,10 @@ export default class Version extends BitObject {
       dist: component.build().code,
       compiler: component.compilerId ? Component.fromBitId(component.compilerId).hash() : null,
       tester: component.testerId ? Component.fromBitId(component.testerId).hash() : null,
+      log: {
+        message,
+        date: Date.now().toString(),
+      },
       packageDependencies: component.packageDependencies,
       flattenedDependencies: flattenedDeps,
       dependencies: component.dependencies

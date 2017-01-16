@@ -65,14 +65,14 @@ export default class SourceRepository {
       });
   }
 
-  addSource(source: any, dependencies: ComponentVersion[]): Promise<Component> {
+  addSource(source: any, dependencies: ComponentVersion[], message: string): Promise<Component> {
     dependencies = dependencies.map(dep => dep.toId());
     const objectRepo = this.objects();
     return this.findOrAddComponent(source)
       .then((component) => {
         const impl = Source.from(Buffer.from(source.impl.src));
         const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
-        const version = Version.fromComponent(source, impl, specs, dependencies);
+        const version = Version.fromComponent(source, impl, specs, dependencies, message);
         component.addVersion(version);
         
         objectRepo

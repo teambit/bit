@@ -16,3 +16,7 @@ export const paintHeader = (value: string): string => {
   if (!value) return '';
   return `${c.underline(value)}\n`;
 };
+
+export const paintLog = ({ message, date, hash }: any): string => {
+  return c.yellow(`commit ${hash}\n`) + c.white(`Date: ${date}\n`) + c.white(`\n      ${message}\n`);
+};

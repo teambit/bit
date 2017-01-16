@@ -1,5 +1,5 @@
 /** @flow */
-import { equals } from 'ramda';
+import { equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import { VersionNotFound } from '../exceptions';
 import { forEach, empty, mapObject, values } from '../../utils';
@@ -48,8 +48,14 @@ export default class Component extends BitObject {
     return Math.max(...this.listVersions());
   }
   
-  collectVersions(repo: Repository) {
-    return repo.findMany(this.versionArray);
+  collectVersions(repo: Repository):
+  Promise<{[number]: {message: string, date: string, hash: string}}> {
+    return repo.findMany(this.versionArray)
+    .then((versions) => {
+      const indexedLogs = fromPairs(zip(keys(this.versions), map(prop('log'), versions)));
+      const indexedHashes = mapObjIndexed(ref => objOf('hash', ref.toString()), this.versions);
+      return mergeWith(merge, indexedLogs, indexedHashes);
+    });
   }
 
   addVersion(version: Version) {

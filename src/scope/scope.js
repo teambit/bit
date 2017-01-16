@@ -1,7 +1,7 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs';
-import { merge } from 'ramda';
+import { merge, prop } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import ComponentObjects from './component-objects';
@@ -107,12 +107,12 @@ export default class Scope {
     ));
   }
 
-  put(consumerComponent: Component): Promise<ComponentDependencies> {
+  put(consumerComponent: Component, message: string): Promise<ComponentDependencies> {
     consumerComponent.scope = this.name();
     return this.importMany(consumerComponent.dependencies)
       .then((dependencies) => {
         dependencies = flattenDependencies(dependencies);
-        return this.sources.addSource(consumerComponent, dependencies)
+        return this.sources.addSource(consumerComponent, dependencies, message)
         // // @TODO make the scope install the required env
           // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
           .then((component) => {
@@ -196,6 +196,11 @@ export default class Scope {
     
     return this.sources.get(id)
       .then(component => component.toConsumerComponent(id.version, this.name(), this.objects));
+  }
+
+  loadComponentLogs(id: BitId) {
+    return this.sources.get(id)
+    .then(componentModel => componentModel.collectVersions(this.objects));
   }
 
   getOne(id: BitId): Promise<ComponentVersion> {

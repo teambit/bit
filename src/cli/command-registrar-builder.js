@@ -26,6 +26,7 @@ import DescribeScope from './commands/_scope-cmd';
 import Put from './commands/_put-cmd';
 // import Scope from './commands/scope-cmd';
 import Fetch from './commands/_fetch-cmd';
+import Log from './commands/log-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -42,6 +43,7 @@ export default function registerCommands(): CommandRegistrar {
     new Remote(),
     new CatObject(),
     new Show(),
+    new Log(),
     // new Remove(),
     new Search(),
     new Test(),

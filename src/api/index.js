@@ -18,6 +18,8 @@ import getScopeBit from './lib/get-scope-bit';
 import test from './lib/test';
 import describeScope from './lib/describe-scope';
 import catObject from './lib/cat-object';
+import getComponentLogs from './lib/get-component-logs';
+
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 
 export {
@@ -40,6 +42,7 @@ export {
   importAction,
   getInlineBit,
   getScopeBit,
+  getComponentLogs,
   test,
   remoteAdd,
   remoteList,
