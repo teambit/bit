@@ -2,7 +2,7 @@
 import Command from '../command';
 import { toBase64, fromBase64 } from '../../utils';
 import { fetch } from '../../api';
-import { ComponentDependencies } from '../../scope';
+import ComponentObjects from '../../scope/component-objects';
 
 export default class Fetch extends Command {
   name = '_fetch <path> <ids...>';
@@ -15,7 +15,7 @@ export default class Fetch extends Command {
     return fetch(fromBase64(path), ids.map(fromBase64));
   }
 
-  report([bitDependencies, scopeName]: [string[], string]): string {
-    return [bitDependencies.map(bit => toBase64(bit)).join('!!!'), scopeName].join(' ');
+  report(componentObjects: ComponentObjects[]): string {
+    return toBase64(componentObjects.map(obj => obj.toString()).join('+++'));
   }
 }

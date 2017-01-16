@@ -80,10 +80,13 @@ export default class SSH {
     });
   }
 
-  fetch(ids: BitIds): Promise<ComponentObjects> {
+  fetch(ids: BitIds): Promise<ComponentObjects[]> {
     ids = ids.map(bitId => bitId.toString());
     return this.exec('_fetch', ...ids)
-      .then(str => ComponentObjects.fromString(str));
+      .then((str: string) => {
+        const components = str.split('+++');
+        return components.map(raw => ComponentObjects.fromString(raw));
+      });
   }
 
   close() {
