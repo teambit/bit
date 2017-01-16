@@ -44,7 +44,7 @@ node  {
     //sh("curl -X PURGE http://assets.bitsrc.io/release/${currentVersion}/bit_${currentVersion}_brew.tar.gz")
 
     deployToArtifactory("deb","bit-deb",currentVersion)
-    deployToArtifactory("rpm","bit-yum","${currentVersion}-1")
+    deployToArtifactory("rpm","bit-yum","${currentVersion}-1.noarch")
 
 }
 
