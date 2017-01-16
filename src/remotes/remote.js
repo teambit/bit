@@ -44,11 +44,15 @@ export default class Remote {
       return network.describeScope();
     });
   }
-
-  list(): Promise<ComponentObjects[]> {
+  
+  list(): Promise<[]> {
     return this
       .connect()
       .then(network => network.list());
+  }
+
+  show(): Promise<> {
+
   }
 
   fetch(bitIds: BitId[]): Promise<ComponentObjects[]> {

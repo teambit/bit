@@ -41,7 +41,7 @@ export default class Fs {
     return this.getScope().manyOneObjects(bitIds);
   }
   
-  list(): Promise<ComponentObjects[]> {
+  list(): Promise<[]> {
     return this.getScope().list();
   }
 

@@ -72,6 +72,13 @@ export default class SSH {
         throw new RemoteScopeNotFound();
       });
   }
+  
+  list() {
+    return this.exec('list')
+    .then(a => {
+      console.log(a);
+    });
+  }
 
   fetch(ids: BitIds): Promise<ComponentObjects> {
     ids = ids.map(bitId => bitId.toString());

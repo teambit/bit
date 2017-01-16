@@ -2,7 +2,7 @@
 import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../command';
-import { list } from '../../api';
+import { listInline, listScope } from '../../api';
 import Component from '../../consumer/bit-component';
 import { formatBit, paintHeader } from '../chalk-box';
 
@@ -11,20 +11,39 @@ export default class List extends Command {
   description = 'list all scope components';
   alias = 'ls';
   opts = [
-    // ['i', 'inline', 'in inline bit'] @TODO
+    ['i', 'inline', 'in inline bit']
   ];
   
-  action([scope]: string[], opts: any): Promise<any> {
-    return list(scope);
+  action([scope]: string[], { inline }: { inline: ?bool }): Promise<any> {
+    function list() {
+      if (inline) return listInline();
+      return listScope(scope);
+    }
+
+    return list().then(components => ({
+      components,
+      scope,
+      inline
+    }));
   }
 
-  report(components: Component[]): string {
+  report({ components, scope, inline }: {
+    components: Component[],
+    scope: ?string,
+    inline: ?bool
+  }): string {
+    function decideHeaderSentence() {
+      if (inline) return 'inline_components directory';
+      if (!scope) return 'local scope';
+      return `the scope ${scope}`;
+    }
+
     if (R.isEmpty(components)) {
-      return chalk.red('your scope is empty');  
+      return chalk.red(`${decideHeaderSentence()} is empty`);  
     }
 
     return R.prepend(
-      paintHeader('local scope components'),
+      paintHeader(decideHeaderSentence()),
       components.map(formatBit)
     ).join('\n');
   }

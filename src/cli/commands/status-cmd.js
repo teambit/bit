@@ -49,7 +49,7 @@ export default class Status extends Command {
     
     const sourcesBits = immutableUnshift(
       sources.map(formatBit),
-      sources.length ? chalk.underline.white('sources to push') : chalk.green('you don\'t have any sources to push')
+      sources.length ? chalk.underline.white('sources waiting for export') : chalk.green('you don\'t have any sources to export')
     ).join('\n');
       
     return [inlineBits, sourcesBits].join(

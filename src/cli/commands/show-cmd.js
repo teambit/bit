@@ -1,16 +1,23 @@
 /** @flow */
 import Command from '../command';
-import { getBit } from '../../api';
+import { getInlineBit, getScopeBit } from '../../api';
 import { paintBitProp, paintHeader } from '../chalk-box';
 
 export default class Show extends Command {
   name = 'show <id>';
   description = 'show a bit';
   alias = '';
-  opts = [];
+  opts = [
+    ['i', 'inline', 'show inline bit']
+  ];
   
-  action([id, ]: [string]): Promise<*> {
-    return getBit({ id })
+  action([id, ]: [string], { inline }: { inline: ?bool}): Promise<*> {
+    function getBitComponent() {
+      if (inline) return getInlineBit({ id });
+      return getScopeBit({ id });
+    }
+    
+    return getBitComponent()
     .then(component => ({
       name: component.name,
       box: component.box,

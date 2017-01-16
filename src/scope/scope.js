@@ -8,7 +8,7 @@ import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHas, readFile } from '../utils';
+import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
@@ -90,10 +90,10 @@ export default class Scope {
   list(scopeName: ?string) {
     if (scopeName) {
       return this.remotes()
-      .then((remotes) => {
+      .then(remotes =>
         // $FlowFixMe
-        return remotes.resolve(scopeName).list();
-      });
+        remotes.resolve(scopeName).list()
+      );
     }
 
     return this.objects.list()
@@ -165,11 +165,6 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
-  modify(id: BitId) {
-    // return this.import(id)
-    //   .then(component => this.export(component));
-  }
-
   import(id: BitId): Promise<VersionDependencies> {
     if (!id.isLocal(this.name())) {
       return this.remotes()
@@ -188,6 +183,19 @@ export default class Scope {
       .then((versionDependencies) => {
         return versionDependencies.toConsumer(this.objects);
       });
+  }
+
+  loadComponent(id: BitId) {
+    if (!id.isLocal(this.name())) {
+      return this.remotes()
+        .then((remotes) => {
+          return remotes.resolve(id.getScopeName()).show();
+          // @TODO - remote get
+        });
+    }
+    
+    return this.sources.get(id)
+      .then(component => component.toConsumerComponent(id.version, this.name(), this.objects));
   }
 
   getOne(id: BitId): Promise<ComponentVersion> {

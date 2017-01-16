@@ -6,24 +6,23 @@ import Bit from '../../consumer/bit-component';
 
 export default class Modify extends Command {
   name = 'modify <id>';
-  description = 'modify a bit (transfer to the inline folder for modification)';
+  description = 'modify a bit (transfer to the inline directory for modification)';
   alias = 'm';
   opts = [];
   
   action([id, ]: [string, ]): Promise<Bit> {
     return modify(id)
-    .then(bit => ({
-      name: bit.getName(),
-      box: bit.getBox(),
-      path: bit.getPath()
-    }));
+    .then((component) => {
+      return {
+        name: component.name,
+        box: component.box
+      };
+    });
   }
 
-  report({ name, box, path }: { name: string, box: string, path: string }): string {
+  report({ name, box }: { name: string, box: string, path: string }): string {
     return chalk.white('put ') +
     chalk.magenta(`"${box}/${name}"`) +
-    chalk.white(' in ') +
-    chalk.green(`"${path}"`) + 
-    chalk.white(' for later modification');
+    chalk.white(' in inline_components directory for later modification');
   }
 }

@@ -1,7 +1,8 @@
 import init from './lib/init';
 import create from './lib/create';
 import remove from './lib/remove';
-import list from './lib/list';
+import listInline from './lib/list-inline';
+import listScope from './lib/list-scope';
 import commitAction from './lib/commit';
 import status from './lib/status';
 import build from './lib/build';
@@ -12,7 +13,8 @@ import fetch from './lib/fetch';
 import modify from './lib/modify';
 import importAction from './lib/import';
 import exportAction from './lib/export';
-import getBit from './lib/get-bit';
+import getInlineBit from './lib/get-inline-bit';
+import getScopeBit from './lib/get-scope-bit';
 import test from './lib/test';
 import describeScope from './lib/describe-scope';
 import catObject from './lib/cat-object';
@@ -25,7 +27,8 @@ export {
   catObject,
   describeScope,
   remove,
-  list,
+  listInline,
+  listScope,
   commitAction,
   status,
   build,
@@ -35,7 +38,8 @@ export {
   fetch,
   modify,
   importAction,
-  getBit,
+  getInlineBit,
+  getScopeBit,
   test,
   remoteAdd,
   remoteList,
