@@ -43,17 +43,17 @@ node  {
 
     //sh("curl -X PURGE http://assets.bitsrc.io/release/${currentVersion}/bit_${currentVersion}_brew.tar.gz")
 
-    deployToArtifactory("deb","bit-deb")
-    deployToArtifactory("rpm","bit-yum")
+    deployToArtifactory("deb","bit-deb",currentVersion)
+    deployToArtifactory("rpm","bit-yum","${currentVersion}-*")
 
 }
 
-def deployToArtifactory(artifactSuffix,repo){
+def deployToArtifactory(artifactSuffix,repo,version){
      def server = Artifactory.server 'Bitsrc-artifactory'
       def uploadSpec = """{
         "files": [
           {
-            "pattern": "./distribution/*.${artifactSuffix}",
+            "pattern": "./distribution/bit-${version}.${artifactSuffix}",
             "target": "${repo}/bit/"
           }
        ]
