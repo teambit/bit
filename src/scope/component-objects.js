@@ -11,24 +11,21 @@ export default class ComponentObjects {
     this.objects = objects;
   }
 
+  // @TODO opitimize ASAP.
   toString(): string {
-    const componentStr = this.component.toString();
-    const objectsStr = this.objects
-      .map(obj => obj.toString())
-      .join(':::');
-
-    return [componentStr, objectsStr].join('+++');
+    return JSON.stringify({
+      component: this.component,
+      objects: this.objects
+    });
   }
 
+  // @TODO opitimize ASAP.
   static fromString(str: string): ComponentObjects {
-    const [componentStr, objectsStr] = str.split('+++');
-    const objects = objectsStr
-      .split(':::')
-      .map(objStr => Buffer.from(objStr));
+    const { component, objects } = JSON.parse(str);
 
     return new ComponentObjects(
-      Buffer.from(componentStr), 
-      objects
+      new Buffer(component), 
+      objects.map(obj => new Buffer(obj))
     );
   }
 
