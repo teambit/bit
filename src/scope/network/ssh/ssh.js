@@ -84,8 +84,10 @@ export default class SSH {
     ids = ids.map(bitId => bitId.toString());
     return this.exec('_fetch', ...ids)
       .then((str: string) => {
-        const components = str.split('+++');
-        return components.map(raw => ComponentObjects.fromString(raw));
+        const components = fromBase64(str).split('+++');
+        return components.map((raw) => {
+          return ComponentObjects.fromString(raw);
+        });
       });
   }
 
