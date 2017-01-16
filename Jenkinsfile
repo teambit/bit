@@ -12,18 +12,18 @@ node  {
     def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
     
     stage 'remove old zip files '
-    sh("rm -rf *.tar.gz  && rm -rf ./distribution")
+   // sh("rm -rf *.tar.gz  && rm -rf ./distribution")
     //sh("rm -rf ./node_modules")
 
     stage 'Running tar'
-    sh('cd ./scripts && ./build-tar.sh tar')
+    //sh('cd ./scripts && ./build-tar.sh tar')
 
     stage 'Running brew'
-    sh("cd ./scripts && ./build-brew.sh ")
+    //sh("cd ./scripts && ./build-brew.sh ")
 
 
     stage 'Running deb'
-    sh('cd ./scripts && ./build-deb.sh')
+    //sh('cd ./scripts && ./build-deb.sh')
 
 
     //stage 'export to google storage'
@@ -38,13 +38,13 @@ node  {
 
 
     stage 'generate formula for brew'
-    sh("cd ./scripts && ./generate-formula.sh ${assets}/${currentVersion}/${bundleName}_brew.tar.gz")
+    //sh("cd ./scripts && ./generate-formula.sh ${assets}/${currentVersion}/${bundleName}_brew.tar.gz")
    // sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
 
     //sh("curl -X PURGE http://assets.bitsrc.io/release/${currentVersion}/bit_${currentVersion}_brew.tar.gz")
 
     deployToArtifactory("deb","bit-deb",currentVersion)
-    deployToArtifactory("rpm","bit-yum","${currentVersion}-*")
+    deployToArtifactory("rpm","bit-yum","${currentVersion}-1")
 
 }
 
@@ -53,7 +53,7 @@ def deployToArtifactory(artifactSuffix,repo,version){
       def uploadSpec = """{
         "files": [
           {
-            "pattern": "./distribution/bit-${version}.${artifactSuffix}",
+            "pattern": "distribution/bit-${version}.${artifactSuffix}",
             "target": "${repo}/bit/"
           }
        ]
