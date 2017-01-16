@@ -25,6 +25,14 @@ export default class Remotes extends Map<string, Remote> {
 
   resolve(scopeName: string): Remote {
     // @TODO impelment scope resolver
+    function composeCommunityUrl(name: string) {
+      return `ssh://bit.bitsrc.io/${name}`;
+    }
+
+    if (!scopeName.startsWith('@')) {
+      return new Remote(composeCommunityUrl(scopeName), scopeName);
+    }
+
     return this.get(scopeName.replace('@', ''));
   }
 

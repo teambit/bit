@@ -47,20 +47,8 @@ export default class BitId {
      || scopeName === this.getScopeName();
   }
 
-  toStringWithRemote() {
-    // return this.getRemote();
-  }
-
-  resolveVersion() {
-    
-  }
-
   getVersion() {
     return Version.parse(this.version);
-  }
-
-  getRemote(localScope: Scope, remotes: Remotes) {
-    return remoteResolver(this.scope, remotes, localScope);
   }
 
   toString(ignoreScope: boolean = false): string {
