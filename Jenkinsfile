@@ -25,23 +25,42 @@ node  {
     sh('cd ./scripts && ./build-deb.sh')
 
 
-    stage 'export to google storage'
-    sh("gsutil -m cp -a public-read ./distribution/brew_pkg/${bundleName}_brew.tar.gz ${uploadfolder}")
-    sh("gsutil -m cp -a public-read ./distribution/*.deb ${uploadfolder}")
-    sh("gsutil -m cp -a public-read ./distribution/*.rpm ${uploadfolder}")
+    //stage 'export to google storage'
+    //sh("gsutil -m cp -a public-read ./distribution/brew_pkg/${bundleName}_brew.tar.gz ${uploadfolder}")
+    //sh("gsutil -m cp -a public-read ./distribution/*.deb ${uploadfolder}")
+    //sh("gsutil -m cp -a public-read ./distribution/*.rpm ${uploadfolder}")
 
 
     
      //stage 'notify release server'
      //notifyReleaseServer(currentVersion,releaseServer+"/update")
 
+    stage 'deploy to artifactory'
+
+
+    def server = Artifactory.server 'my-server-id'
     stage 'generate formula for brew'
     sh("cd ./scripts && ./generate-formula.sh ${assets}/${currentVersion}/${bundleName}_brew.tar.gz")
     sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
 
-    sh("curl -X PURGE http://assets.bitsrc.io/release/${currentVersion}/bit_${currentVersion}_brew.tar.gz")
+    //sh("curl -X PURGE http://assets.bitsrc.io/release/${currentVersion}/bit_${currentVersion}_brew.tar.gz")
 
+    deployToArtifactory("deb","bit-deb")
+    deployToArtifactory("rpm","bit-yum")
 
+}
+
+def deployToArtifactory(artifactSuffix,repo){
+     def server = Artifactory.server 'Bitsrc-artifactory'
+      def uploadSpec = """{
+        "files": [
+          {
+            "pattern": "./distribution/*.${artifactSuffix}",
+            "target": "${repo}/bit/"
+          }
+       ]
+      }"""
+      server.upload(uploadSpec)
 }
 import groovy.json.JsonOutput
 def notifyReleaseServer(version,url) {
