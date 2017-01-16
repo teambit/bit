@@ -35,13 +35,10 @@ node  {
      //stage 'notify release server'
      //notifyReleaseServer(currentVersion,releaseServer+"/update")
 
-    stage 'deploy to artifactory'
 
-
-    def server = Artifactory.server 'my-server-id'
     stage 'generate formula for brew'
     sh("cd ./scripts && ./generate-formula.sh ${assets}/${currentVersion}/${bundleName}_brew.tar.gz")
-    sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
+   // sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
 
     //sh("curl -X PURGE http://assets.bitsrc.io/release/${currentVersion}/bit_${currentVersion}_brew.tar.gz")
 
