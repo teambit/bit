@@ -59,12 +59,8 @@ export default class SSH {
     });
   }
 
-  putBit(name: string, bitTar: Buffer) {
-    return this.exec('_put', name, bitTar.tarball);
-  }
-
   push(componentObjects: ComponentObjects) {
-    return this.exec('_put');
+    return this.exec('_put', componentObjects.toString());
   }
 
   describeScope(): Promise<ScopeDescriptor> {
@@ -77,9 +73,9 @@ export default class SSH {
       });
   }
 
-  fetch(bitIds: BitIds): Promise<ComponentObjects> {
-    bitIds = bitIds.map(bitId => bitId.toString());
-    return this.exec('_fetch', ...bitIds)
+  fetch(ids: BitIds): Promise<ComponentObjects> {
+    ids = ids.map(bitId => bitId.toString());
+    return this.exec('_fetch', ...ids)
       .then(str => ComponentObjects.fromString(str));
   }
 

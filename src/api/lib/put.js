@@ -1,9 +1,11 @@
 import { loadScope } from '../../scope';
-import Bit from '../../consumer/bit-component';
+import ComponentObjects from '../../scope/component-objects';
 
-export default function put({ tar, path }: { name: string, tar: Buffer }): Promise<any> {
-  return loadScope(path).then((scope) => {
-    return Bit.fromTar({ tarball: tar, scope: scope.name() })
-      .then(bit => scope.put(bit));
-  });
+export type ComponentObjectsInput = {
+  path: string;
+  componentObjects: ComponentObjects
+}
+
+export default function put({ path, componentObjects }: ComponentObjectsInput): Promise<any> {
+  return loadScope(path).then(scope => scope.export(ComponentObjects.fromString(componentObjects)));
 }
