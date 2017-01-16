@@ -20,7 +20,7 @@ export default class ComponentObjects {
     return [componentStr, objectsStr].join('+++');
   }
 
-  fromString(str: string): ComponentObjects {
+  static fromString(str: string): ComponentObjects {
     const [componentStr, objectsStr] = str.split('+++');
     const objects = objectsStr
       .split(':::')

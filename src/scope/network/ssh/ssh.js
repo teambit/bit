@@ -1,11 +1,9 @@
 /** @flow */
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
-import Bit from '../../../consumer/bit-component';
 import { RemoteScopeNotFound } from '../exceptions';
-import { BitId, BitIds } from '../../../bit-id';
+import { BitIds } from '../../../bit-id';
 import { toBase64, fromBase64 } from '../../../utils';
-import { ComponentDependencies } from '../../index';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
 
@@ -65,10 +63,8 @@ export default class SSH {
     return this.exec('_put', name, bitTar.tarball);
   }
 
-  push(bit: Bit) {
-    return bit.toTar().then((tarBuffer: Buffer) => {
-      return this.putBit(bit.name, tarBuffer);
-    });
+  push(componentObjects: ComponentObjects) {
+    return this.exec('_put');
   }
 
   describeScope(): Promise<ScopeDescriptor> {
@@ -81,15 +77,10 @@ export default class SSH {
       });
   }
 
-  fetch(bitIds: BitIds): Promise<ComponentObjects[]> {
+  fetch(bitIds: BitIds): Promise<ComponentObjects> {
     bitIds = bitIds.map(bitId => bitId.toString());
     return this.exec('_fetch', ...bitIds)
-      .then((packs) => {
-        const [objects, scope] = packs.split(' ');
-        return objects
-          .split('!!!')
-          .map(pack => ComponentDependencies.deserialize(pack, scope));
-      });
+      .then(str => ComponentObjects.fromString(str));
   }
 
   close() {

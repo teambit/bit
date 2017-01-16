@@ -21,7 +21,7 @@ function getCacheDirectory(): string {
 
 export const RESOURCES = path.resolve(path.join(__dirname, '../resources'));
 
-export const BIT_DESCRIPTION = 'bit is a free and open source tool designed for easy use and management of usable code components.';
+export const BIT_DESCRIPTION = 'bit is a free and open source tool designed for easy use, maintainance and discovery of code components.';
 
 export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
