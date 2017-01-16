@@ -60,7 +60,7 @@ FPM="fpm --input-type dir --chdir ./usr --name bit --version $VERSION "`
 #### Build DEB (Debian, Ubuntu) package
 node ../../scripts/set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/usr/share/bit/package.json deb
 eval "$FPM --output-type rpm  --architecture noarch --depends nodejs -p $PACKAGE_DIST --category 'Development/Languages' ."
-mv $PACKAGE_DIST/*.rpm $PACKAGE_DIST/
+#mv $PACKAGE_DIST/*.rpm $PACKAGE_DIST/
 
 
 rm -rf $PACKAGE_TMPDIR_ABSOLUTE/
