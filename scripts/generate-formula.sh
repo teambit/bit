@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+set -ex
+
 
 rm -rf ./distribution/bit.rb
 mkdir -p ./distribution

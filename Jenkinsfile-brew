@@ -26,7 +26,7 @@ node  {
           def uploadSpec = """{
             "files": [
               {
-                "pattern": "distribution/brew_pkg/bit-${currentVersion}.-brew.tar.gz",
+                "pattern": "distribution/brew_pkg/bit-${currentVersion}-brew.tar.gz",
                 "target": "bit-brew/bit/"
               }
            ]
@@ -43,8 +43,8 @@ node  {
      //notifyReleaseServer(currentVersion,releaseServer+"/update")
 
     stage 'generate formula for brew'
-    sh("./scripts/generate-formula.sh ${ArtifactRepo}/bit-brew/tarName")
-    sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
+    sh("./scripts/generate-formula.sh ${ArtifactRepo}/bit-brew/${tarName}")
+  //  sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
 
    // sh("curl -X PURGE http://assets.bitsrc.io/release/${currentVersion}/bit_${currentVersion}_brew.tar.gz")
 }
