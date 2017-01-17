@@ -6,6 +6,8 @@ import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
 import ComponentObjects from '../scope/component-objects';
 import { REMOTE_ALIAS_SIGN } from '../constants';
+import remotesResolver from './remote-resolver';
+import Scope from '../scope/scope';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -24,25 +26,35 @@ export default class Remotes extends Map<string, Remote> {
     return remote;
   }
 
-  resolve(scopeName: string): Remote {
-    // @TODO impelment scope resolver
-    function composeCommunityUrl(name: string) {
-      return `ssh://bit.bitsrc.io/${name}`;
+  resolve(scopeName: string, thisScope: Scope): Promise<Remote> {
+    if (scopeName.startsWith(REMOTE_ALIAS_SIGN)) {
+      return Promise.resolve(
+        this.get(scopeName.replace(REMOTE_ALIAS_SIGN, ''))
+      );
     }
-
-    if (!scopeName.startsWith(REMOTE_ALIAS_SIGN)) {
-      return new Remote(composeCommunityUrl(scopeName), scopeName);
-    }
-
-    return this.get(scopeName.replace(REMOTE_ALIAS_SIGN, ''));
+    
+    return remotesResolver(scopeName, thisScope)
+    .then((scopeHost) => {
+      return new Remote(scopeHost, scopeName); 
+    });
   }
 
-  fetch(ids: BitId[], withoutDeps: boolean = false): Promise<ComponentObjects[]> {
+  fetch(ids: BitId[], thisScope: Scope, withoutDeps: boolean = false):
+  Promise<ComponentObjects[]> {
     const byScope = groupBy(prop('scope'));
     const promises = [];
     forEach(byScope(ids), (scopeIds, scopeName) => {
-      if (!withoutDeps) promises.push(this.resolve(scopeName).fetch(scopeIds));
-      else promises.push(this.resolve(scopeName).fetchOnes(scopeIds));
+      if (!withoutDeps) { 
+        promises.push(
+          this.resolve(scopeName, thisScope)
+          .then(remote => remote.fetch(scopeIds))
+        );
+      } else {
+        promises.push(
+          this.resolve(scopeName, thisScope)
+          .then(remote => remote.fetchOnes(scopeIds))
+          );
+      }
     });
 
     return Promise.all(promises)

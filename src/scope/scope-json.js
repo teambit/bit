@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import pathlib from 'path';
 import { writeFile } from '../utils';
 import { Remote } from '../remotes';
@@ -10,23 +11,29 @@ export function getPath(scopePath: string): string {
 
 export type ScopeJsonProps = {
   name: string,
+  resolverPath?: string,
   remotes?: { name: string, url: string };
 };
 
 export class ScopeJson {
   name: string;
+  resolverPath: ?string;
   remotes: {[string]: string};
 
-  constructor({ name, remotes }: ScopeJsonProps) {
+  constructor({ name, remotes, resolverPath }: ScopeJsonProps) {
     this.name = name;
+    this.resolverPath = resolverPath;
     this.remotes = remotes || {};
   }
 
   toPlainObject() {
-    return {
-      name: this.name,
-      remotes: this.remotes
-    };
+    return R.merge(
+      {
+        name: this.name,
+        remotes: this.remotes
+      },
+      this.resolverPath ? { resolverPath: this.resolverPath } : {}
+    );
   }
 
   toJson(readable: boolean = true) {

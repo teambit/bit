@@ -11,10 +11,11 @@ export default class Init extends Command {
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
-    ['s', 'shared <groupname>', 'add group write permissions to a repository properly']
+    ['s', 'shared <groupname>', 'add group write permissions to a repository properly'],
+    ['r', 'resolver <path>', 'add a custom remote resolver by giving a full path to the file']
   ];
 
-  action([path, ]: [string, ], { bare }: any): Promise<{[string]: any}> {
+  action([path, ]: [string, ], { bare, shared, resolver }: any): Promise<{[string]: any}> {
     if (path) path = pathlib.resolve(path);
     
     if (bare) {

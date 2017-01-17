@@ -92,7 +92,8 @@ export default class Scope {
       return this.remotes()
       .then(remotes =>
         // $FlowFixMe
-        remotes.resolve(scopeName).list()
+        remotes.resolve(scopeName, this.name())
+        .then(remote => remote.list())
       );
     }
 
@@ -138,7 +139,7 @@ export default class Scope {
       .then((component) => {
         if (component) return component.toVersionDependencies(id.version, this);
         return remotes
-          .fetch([id])
+          .fetch([id], this)
           .then(([componentObjects, ]) => {
             return this.importSrc(componentObjects);
           })
@@ -150,7 +151,7 @@ export default class Scope {
     return this.sources.get(id)
       .then((component) => {
         if (component) return component.toComponentVersion(id.version, this.name());
-        return remotes.fetch([id], true)
+        return remotes.fetch([id], this, true)
           .then(([componentObjects, ]) => this.importSrc(componentObjects))
           .then(() => this.getExternal(id, remotes));
       });
@@ -189,7 +190,8 @@ export default class Scope {
     if (!id.isLocal(this.name())) {
       return this.remotes()
         .then((remotes) => {
-          return remotes.resolve(id.getScopeName()).show();
+          return remotes.resolve(id.getScopeName(), this.name())
+          .then(remote => remote.show());
           // @TODO - remote get
         });
     }
