@@ -26,7 +26,7 @@ node  {
           def uploadSpec = """{
             "files": [
               {
-                "pattern": "distribution/brew_pkg/bit-${version}.-brew.tar.gz",
+                "pattern": "distribution/brew_pkg/bit-${currentVersion}.-brew.tar.gz",
                 "target": "bit-brew/bit/"
               }
            ]
