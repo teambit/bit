@@ -98,8 +98,8 @@ export default class Consumer {
       const deps = BitIds.loadDependencies(this.bitJson.dependencies);
       
       return this.scope.ensureEnvironment({
-        testerId: this.bitJson.getTesterName(),
-        compilerId: this.bitJson.getCompilerName()
+        testerId: this.bitJson.testerId,
+        compilerId: this.bitJson.compilerId
       }).then(() =>
         Promise.all(deps.map(dep => this.scope.get(dep)))
         .then(bits => this.writeToComponentsDir(flatten(bits)))

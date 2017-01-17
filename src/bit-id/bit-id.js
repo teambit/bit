@@ -32,8 +32,8 @@ export default class BitId {
     this.version = version;
   }
 
-  getScopeName(scopeName: string) {
-    if (this.scope === LOCAL_SCOPE_NOTATION) return scopeName;
+  getScopeName() {
+    if (this.scope === LOCAL_SCOPE_NOTATION) return this.scope;
     return this.scope.replace(REMOTE_ALIAS_SIGN, ''); 
   }
 
@@ -61,6 +61,13 @@ export default class BitId {
     const { name, box, version, scope } = this;
     if (ignoreScope) return [box, name].join('/').concat(`::${version}`);
     return [scope, box, name].join('/').concat(`::${version}`);
+  }
+
+  toObject() {
+    const key = [this.scope, this.box, this.name].join('/');
+    const value = this.version;
+
+    return { [key]: value };
   }
 
   static parse(id: string|null, version: string = LATEST_BIT_VERSION): BitId|null {

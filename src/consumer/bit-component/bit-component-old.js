@@ -41,7 +41,7 @@
 //     return new Promise((resolve, reject) => {
 //       if (!this.hasCompiler()) { return resolve(this); }
 //       try {
-//         const compilerName = this.bitJson.getCompilerName();
+//         const compilerName = this.bitJson.compilerId;
 //         return scope.loadEnvironment(BitId.parse(compilerName))
 //         .then(({ compile }) => {
 //           const src = this.impl.src;
@@ -98,8 +98,8 @@
 //       scope,
 //       bitDir,
 //       bitJson,
-//       impl: Impl.create(bitJson.getImplBasename(), bitJson.getCompilerName()),
-//       specs: withSpecs ? Specs.create(bitJson.getSpecBasename(), bitJson.getTesterName()) : undefined,
+//       impl: Impl.create(bitJson.getImplBasename(), bitJson.compilerId),
+//       specs: withSpecs ? Specs.create(bitJson.getSpecBasename(), bitJson.testerId) : undefined,
 //     });
 //   }
 

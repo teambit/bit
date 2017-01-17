@@ -1,5 +1,6 @@
 /** @flow */
-import { BitIds } from '../../bit-id';
+import R from 'ramda';
+import { BitIds, BitId } from '../../bit-id';
 import { 
   DEFAULT_COMPILER_ID,
   DEFAULT_TESTER_ID,
@@ -32,16 +33,25 @@ export default class AbstractBitJson {
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
   }
 
-  addDependency(name: string, version: string) {
-    this.dependencies[name] = version;
+  get compilerId(): string {
+    return this.compiler;
   }
 
-  removeDependency(name: string) {
-    delete this.dependencies[name];
-  } 
+  set compilerId(compilerId: string) {
+    this.compiler = compilerId;
+  }
 
-  hasDependency(name: string) {
-    return !!this.dependencies[name];
+  get testerId(): string {
+    return this.tester;
+  }
+
+  set testerId(testerId: string) {
+    this.tester = testerId;
+  }
+
+  addDependency(bitId: BitId): this {
+    this.dependencies = R.merge(this.dependencies, bitId.toObject());
+    return this;
   }
 
   getImplBasename(): string { 
@@ -62,16 +72,8 @@ export default class AbstractBitJson {
     return this;
   }
 
-  getCompilerName(): string { 
-    return this.compiler;
-  }
-
   hasCompiler(): boolean {
     return !!this.compiler && this.compiler !== NO_PLUGIN_TYPE;
-  }
-
-  getTesterName(): string { 
-    return this.tester;
   }
 
   hasTester(): boolean {
@@ -89,8 +91,8 @@ export default class AbstractBitJson {
         spec: this.getSpecBasename(),
       },
       env: {
-        compiler: this.getCompilerName(),
-        tester: this.getTesterName(),
+        compiler: this.compilerId,
+        tester: this.testerId,
       },
       dependencies: this.dependencies
     };

@@ -12,12 +12,17 @@ export default class Import extends Command {
   alias = 'i';
   opts = [
     ['s', 'save', 'save into bit.json'],
-    ['e', 'env', 'import an environment bit-component (compiler/tester)']
+    ['t', 'tester', 'import a tester environment bit-component'],
+    ['c', 'compiler', 'import a compiler environment bit-component']
   ];
 
-  action([id, ]: [string, ], { save, env }: any): Promise<any> {
+  action([id, ]: [string, ], { save, tester, compiler }: any): Promise<any> {
     // @TODO - import should support multiple components
-    return importAction({ bitId: id, save, env })
+    if (tester && compiler) {
+      throw new Error('you cant use tester and compiler flags combined');
+    }
+    
+    return importAction({ bitId: id, save, tester, compiler })
       .then(components => 
         components.map(component => ({
           scope: component.scope,

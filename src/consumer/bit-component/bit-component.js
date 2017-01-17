@@ -206,8 +206,8 @@ export default class Component {
         box: bitJson.box,
         implFile: bitJson.getImplBasename(),
         specsFile: bitJson.getSpecBasename(), 
-        compilerId: BitId.parse(bitJson.getCompilerName()),
-        testerId: BitId.parse(bitJson.getTesterName()),
+        compilerId: BitId.parse(bitJson.compilerId),
+        testerId: BitId.parse(bitJson.testerId),
         dependencies: BitIds.loadDependencies(bitJson.dependencies),
         packageDependencies: bitJson.packageDependencies,
         impl: path.join(bitDir, bitJson.getImplBasename()),
@@ -225,8 +225,8 @@ export default class Component {
   }, environment: Environment) {
     const implFile = consumerBitJson.getImplBasename();
     const specsFile = consumerBitJson.getSpecBasename();
-    const compilerId = BitId.parse(consumerBitJson.getCompilerName());
-    const testerId = BitId.parse(consumerBitJson.getTesterName());
+    const compilerId = BitId.parse(consumerBitJson.compilerId);
+    const testerId = BitId.parse(consumerBitJson.testerId);
 
     return new Component({
       name,
