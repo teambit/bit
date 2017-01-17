@@ -36,7 +36,7 @@ export default class Show extends Command {
     tester,
     packageDependencies,
   }: any): string {
-    return paintHeader(`${box}/${name}`) +  
+    return paintHeader(`${box}/${name}`) +
       paintBitProp('compiler', compiler === 'none' ? '' : compiler) +
       paintBitProp('tester', tester === 'none' ? '' : tester) +
       paintBitProp('dependencies', Object.keys(dependencies).join(', ')) +

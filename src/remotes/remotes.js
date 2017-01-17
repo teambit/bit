@@ -5,6 +5,7 @@ import Remote from './remote';
 import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
 import ComponentObjects from '../scope/component-objects';
+import { REMOTE_ALIAS_SIGN } from '../constants';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -29,11 +30,11 @@ export default class Remotes extends Map<string, Remote> {
       return `ssh://bit.bitsrc.io/${name}`;
     }
 
-    if (!scopeName.startsWith('@')) {
+    if (!scopeName.startsWith(REMOTE_ALIAS_SIGN)) {
       return new Remote(composeCommunityUrl(scopeName), scopeName);
     }
 
-    return this.get(scopeName.replace('@', ''));
+    return this.get(scopeName.replace(REMOTE_ALIAS_SIGN, ''));
   }
 
   fetch(ids: BitId[], withoutDeps: boolean = false): Promise<ComponentObjects[]> {

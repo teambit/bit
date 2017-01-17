@@ -91,7 +91,7 @@ export default class CommandRegistrar {
     function register(command: Command, commanderCmd) {
       // $FlowFixMe
       const concrete = commanderCmd
-        .command(command.name)
+        .command(command.name, null, { noHelp: command.private })
         .description(command.description)
         .alias(command.alias);
 

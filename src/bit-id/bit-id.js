@@ -2,7 +2,13 @@
 import Version from '../version';
 import { remoteResolver, Remotes } from '../remotes';
 import { InvalidBitId } from './exceptions';
-import { LATEST_BIT_VERSION, VERSION_DELIMITER, LOCAL_SCOPE_NOTATION, NO_PLUGIN_TYPE } from '../constants';
+import { 
+  LATEST_BIT_VERSION,
+  VERSION_DELIMITER,
+  LOCAL_SCOPE_NOTATION,
+  NO_PLUGIN_TYPE,
+  REMOTE_ALIAS_SIGN
+} from '../constants';
 import { Scope } from '../scope';
 import { contains } from '../utils';
 
@@ -28,7 +34,7 @@ export default class BitId {
 
   getScopeName(scopeName: string) {
     if (this.scope === LOCAL_SCOPE_NOTATION) return scopeName;
-    return this.scope.replace('@', ''); 
+    return this.scope.replace(REMOTE_ALIAS_SIGN, ''); 
   }
 
   changeScope(newScope: string) {
