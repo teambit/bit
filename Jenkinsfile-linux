@@ -34,7 +34,7 @@ def deployToArtifactory(artifactSuffix,repo,version){
         "files": [
           {
             "pattern": "distribution/bit-${version}.${artifactSuffix}",
-            "target": "${repo}/bit/"
+            "target": "${repo}/"
           }
        ]
       }"""
