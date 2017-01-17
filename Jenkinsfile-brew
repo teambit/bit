@@ -19,7 +19,7 @@ node  {
     sh('./scripts/build-tar.sh tar')
 
     stage 'Running brew'
-    sh("cd ./scripts && ./build-brew.sh ")
+    sh("./scripts/build-brew.sh ")
 
 
     def server = Artifactory.server 'Bitsrc-artifactory'
