@@ -16,11 +16,11 @@ node  {
     sh("rm -rf ./node_modules")
 
     stage 'Running tar'
-    sh('cd ./scripts && ./build-tar.sh tar')
+    sh('./scripts/build-tar.sh')
 
 
     stage 'Running DEB & RPM'
-    sh('cd ./scripts && ./build-deb.sh')
+    sh('./scripts/build-deb.sh')
 
 
     deployToArtifactory("deb","bit-deb",currentVersion)

@@ -11,10 +11,10 @@ ensureAvailable fpm
 ensureAvailable fakeroot
 ensureAvailable rpmbuild
 
-PACKAGE_DIST=$(cd $(dirname "$1") && pwd -P)/../distribution
-PACKAGE_TMPDIR=../tmp/linux
-VERSION=$(cat ../package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs echo -n)
-TARBALL_NAME=../bit-$VERSION.tar.gz
+PACKAGE_DIST=$(cd $(dirname "$1") && pwd -P)/distribution
+PACKAGE_TMPDIR=./tmp/linux
+VERSION=$(cat ./package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs echo -n)
+TARBALL_NAME=./bit-$VERSION.tar.gz
 BIT_PACKAGE_NAME=bit-$VERSION
 if [ ! -e $TARBALL_NAME ]; then
   echo "Hey! Listen! You need to run build-tar.sh first."
@@ -26,7 +26,7 @@ fi;
 # Extract to a temporary directory
 rm -rf $PACKAGE_TMPDIR
 rm -rf $PACKAGE_DIST
-mkdir ../distribution
+mkdir ./distribution
 mkdir -p $PACKAGE_TMPDIR/bit
 umask 0022 # Ensure permissions are correct (0755 for dirs, 0644 for files)
 tar zxf $TARBALL_NAME -C $PACKAGE_TMPDIR/bit
