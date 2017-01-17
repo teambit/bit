@@ -1,6 +1,5 @@
 /** @flow */
 import Version from '../version';
-import { remoteResolver, Remotes } from '../remotes';
 import { InvalidBitId } from './exceptions';
 import { 
   LATEST_BIT_VERSION,
@@ -9,7 +8,6 @@ import {
   NO_PLUGIN_TYPE,
   REMOTE_ALIAS_SIGN
 } from '../constants';
-import { Scope } from '../scope';
 import { contains } from '../utils';
 
 export type BitIdProps = {

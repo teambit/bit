@@ -3,8 +3,8 @@ import * as path from 'path';
 import Repository from '../repository';
 import { SourceNotFound } from '../exceptions';
 import { BIT_SOURCES_DIRNAME } from '../../constants';
-import InvalidBit from '../../consumer/bit-component/exceptions/invalid-bit';
-import Bit from '../../consumer/bit-component';
+import InvalidBit from '../../consumer/component/exceptions/invalid-bit';
+import Bit from '../../consumer/component';
 import { BitId, BitIds } from '../../bit-id';
 import { listDirectories, rmDir, empty, glob } from '../../utils';
 

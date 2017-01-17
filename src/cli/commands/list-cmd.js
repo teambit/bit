@@ -3,7 +3,7 @@ import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../command';
 import { listInline, listScope } from '../../api';
-import Component from '../../consumer/bit-component';
+import Component from '../../consumer/component';
 import { formatBit, paintHeader } from '../chalk-box';
 
 export default class List extends Command {

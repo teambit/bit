@@ -14,7 +14,7 @@ import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
 import { Tmp, Environment } from './repositories';
 import { BitId, BitIds } from '../bit-id';
-import Component from '../consumer/bit-component';
+import Component from '../consumer/component';
 import ComponentVersion from './component-version';
 import { Repository, Ref, BitObject } from './objects';
 import ComponentDependencies from './component-dependencies';

@@ -2,7 +2,7 @@
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
-import ConsumerComponent from '../../consumer/bit-component';
+import ConsumerComponent from '../../consumer/component';
 import Component from './component';
 import { Remotes } from '../../remotes';
 import { BitIds, BitId } from '../../bit-id';

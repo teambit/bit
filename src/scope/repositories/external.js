@@ -4,7 +4,7 @@ import { BIT_EXTERNAL_DIRNAME } from '../../constants';
 import { BitId } from '../../bit-id';
 import Repository from '../repository';
 import Scope from '../scope';
-import Bit from '../../consumer/bit-component';
+import Bit from '../../consumer/component';
 import { ExternalDependencyMap } from '../dependency-maps';
 
 export default class External extends Repository {

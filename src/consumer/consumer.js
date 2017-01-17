@@ -7,7 +7,7 @@ import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
-import Component from './bit-component';
+import Component from './component';
 import { 
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,

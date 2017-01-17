@@ -1,7 +1,7 @@
 /** @flow */
 import { BitId } from '../../bit-id';
 import { loadConsumer } from '../../consumer';
-import Bit from '../../consumer/bit-component';
+import Bit from '../../consumer/component';
 
 export default function importAction(
   { bitId, save, tester, compiler }: {

@@ -1,5 +1,5 @@
 /** @flow */
-import Bit from '../../bit-component';
+import Bit from '../../component';
 
 export default class Source {
   src: string;

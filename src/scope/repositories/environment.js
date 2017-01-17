@@ -5,7 +5,7 @@ import R from 'ramda';
 import glob from 'glob';
 import Repository from '../repository';
 import { BitId } from '../../bit-id';
-import Component from '../../consumer/bit-component';
+import Component from '../../consumer/component';
 import { BIT_ENVIRONMENT_DIRNAME, LATEST } from '../../constants';
 import npmInstall from '../../utils/npm';
 import resolveBit from '../../consumer/bit-node-resolver';

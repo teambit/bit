@@ -1,7 +1,7 @@
 /** @flow */
 import Command from '../command';
 import { commitAction } from '../../api';
-import Component from '../../consumer/bit-component';
+import Component from '../../consumer/component';
 
 export default class Export extends Command {
   name = 'commit <id> <message>';

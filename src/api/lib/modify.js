@@ -3,7 +3,7 @@ import * as pathLib from 'path';
 import { loadConsumer } from '../../consumer';
 import { BitId } from '../../bit-id';
 import InlineId from '../../consumer/bit-inline-id';
-import ConsumerComponent from '../../consumer/bit-component';
+import ConsumerComponent from '../../consumer/component';
 import { ComponentDependencies } from '../../scope';
 
 export default function modify(rawId: string) {

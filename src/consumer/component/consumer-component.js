@@ -2,8 +2,8 @@
 import path from 'path';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
-import Impl from '../bit-component/sources/impl';
-import Specs from '../bit-component/sources/specs';
+import Impl from '../component/sources/impl';
+import Specs from '../component/sources/specs';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
