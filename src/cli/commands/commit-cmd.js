@@ -15,7 +15,6 @@ export default class Export extends Command {
   }
 
   report(c: Component): string {
-    return `bit ${c.box}/${c.name} commited succesfully`;
-    // return chalk.green(`exported bit "${name}" from inline to external`);
+    return `component ${c.box}/${c.name} commited succesfully`;
   }
 }
