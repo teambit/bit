@@ -5,7 +5,7 @@ import { getResolver, setResolver, resetResolver } from '../../api';
 
 class ResolverSet extends Command {
   name = 'set <resolverPath>';
-  description = 'set remote resolver to scope';
+  description = 'set remote resolver to scope (use from scope directory)';
   alias = 's';
   opts = [];
   

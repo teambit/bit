@@ -183,7 +183,7 @@ export default class Component extends BitObject {
     return new Component({ 
       name: bitId.name, 
       box: bitId.box, 
-      scope: bitId.getScopeName(scopeName) 
+      scope: bitId.getCleanName(scopeName) 
     });
   }
 }

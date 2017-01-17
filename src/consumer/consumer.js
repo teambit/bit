@@ -155,7 +155,7 @@ export default class Consumer {
       componentsDir,
       id.box,
       id.name,
-      id.getScopeName()
+      id.getCleanName()
     );
 
     return new Promise((resolve, reject) => {

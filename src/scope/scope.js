@@ -190,7 +190,7 @@ export default class Scope {
     if (!id.isLocal(this.name())) {
       return this.remotes()
         .then((remotes) => {
-          return remotes.resolve(id.getScopeName(), this.name())
+          return remotes.resolve(id.scope, this)
           .then(remote => remote.show());
           // @TODO - remote get
         });

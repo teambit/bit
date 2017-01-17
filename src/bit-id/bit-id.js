@@ -30,11 +30,6 @@ export default class BitId {
     this.version = version;
   }
 
-  getScopeName() {
-    if (this.scope === LOCAL_SCOPE_NOTATION) return this.scope;
-    return this.scope.replace(REMOTE_ALIAS_SIGN, ''); 
-  }
-
   changeScope(newScope: string) {
     this.scope = newScope;
     return this;
@@ -48,7 +43,7 @@ export default class BitId {
   isLocal(scopeName: string) {
     // @TODO fix this asapbit status
     return this.scope === LOCAL_SCOPE_NOTATION
-     || scopeName === this.getScopeName();
+     || scopeName === this.scope;
   }
 
   getVersion() {
@@ -56,7 +51,9 @@ export default class BitId {
   }
 
   toString(ignoreScope: boolean = false): string {
-    const { name, box, version, scope } = this;
+    const { name, box, version } = this;
+    const scope = this.scope;
+
     if (ignoreScope) return [box, name].join('/').concat(`::${version}`);
     return [scope, box, name].join('/').concat(`::${version}`);
   }
