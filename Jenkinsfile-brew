@@ -27,7 +27,7 @@ node  {
             "files": [
               {
                 "pattern": "distribution/brew_pkg/bit-${currentVersion}-brew.tar.gz",
-                "target": "bit-brew/bit/"
+                "target": "bit-brew/"
               }
            ]
           }"""
