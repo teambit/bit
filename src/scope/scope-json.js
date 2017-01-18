@@ -1,6 +1,7 @@
 /** @flow */
+import R from 'ramda';
 import pathlib from 'path';
-import { writeFile } from '../utils';
+import { writeFile, cleanObject } from '../utils';
 import { Remote } from '../remotes';
 import { SCOPE_JSON } from '../constants';
 
@@ -10,23 +11,31 @@ export function getPath(scopePath: string): string {
 
 export type ScopeJsonProps = {
   name: string,
+  resolverPath?: string,
+  groupName: ?string;
   remotes?: { name: string, url: string };
 };
 
 export class ScopeJson {
   name: string;
+  resolverPath: ?string;
   remotes: {[string]: string};
+  groupName: string;
 
-  constructor({ name, remotes }: ScopeJsonProps) {
+  constructor({ name, remotes, resolverPath, groupName }: ScopeJsonProps) {
     this.name = name;
+    this.resolverPath = resolverPath;
     this.remotes = remotes || {};
+    this.groupName = groupName || '';
   }
 
   toPlainObject() {
-    return {
+    return cleanObject({
       name: this.name,
-      remotes: this.remotes
-    };
+      remotes: this.remotes,
+      resolverPath: this.resolverPath,
+      groupName: this.groupName
+    });
   }
 
   toJson(readable: boolean = true) {

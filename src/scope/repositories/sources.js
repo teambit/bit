@@ -29,7 +29,9 @@ export default class SourceRepository {
   findComponent(component: Component): Promise<Component> {
     return this.objects()
       .findOne(component.hash())
-      .catch(() => null);
+      .catch((e) => {
+        return null;
+      });
   }
 
   getComponent(bitId: BitId): Promise<ComponentVersion> {
@@ -46,7 +48,8 @@ export default class SourceRepository {
   }
   
   get(bitId: BitId): Promise<Component> {
-    return this.findComponent(Component.fromBitId(bitId, this.scope.name()));
+    const component = Component.fromBitId(bitId);
+    return this.findComponent(component);
   }
 
   getObjects(id: BitId): Promise<ComponentObjects> {

@@ -1,6 +1,6 @@
 /** @flow */
 import { BitIds } from '../../bit-id';
-import Bit from '../../consumer/bit-component';
+import Bit from '../../consumer/component';
 import ComponentObjects from '../../scope/component-objects';
 import type { ScopeDescriptor } from '../scope';
 

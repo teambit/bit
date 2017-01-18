@@ -1,5 +1,5 @@
 /** @flow */
-import Bit from '../consumer/bit-component';
+import Bit from '../consumer/component';
 import { contains, isBitUrl, cleanBang, allSettled } from '../utils';
 import ComponentObjects from '../scope/component-objects';
 import { connect } from '../scope/network';
@@ -72,7 +72,8 @@ export default class Remote {
   }
 
   push(componentObjects: ComponentObjects) {
-    return connect(this.host).then(network => network.push(componentObjects));
+    return connect(this.host)
+    .then(network => network.push(componentObjects));
   }
 
   static load(name: string, host: string): Remote {

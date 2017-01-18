@@ -95,8 +95,8 @@ export default class BitJson extends AbstractBitJson {
       typeof this.getBoxname() !== 'string' ||
       typeof this.getBitname() !== 'string' ||
       typeof this.getImplBasename() !== 'string' ||
-      typeof this.getCompilerName() !== 'string' ||
-      typeof this.getTesterName() !== 'string' ||
+      typeof this.compilerId !== 'string' ||
+      typeof this.testerId !== 'string' ||
       typeof this.getDependencies() !== 'object'
     ) throw new InvalidBitJson();
   }

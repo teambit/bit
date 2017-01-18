@@ -7,11 +7,11 @@ import Version from './version';
 import { DEFAULT_BOX_NAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
-import ConsumerComponent from '../../consumer/bit-component';
+import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
 import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
-import { Impl, Specs } from '../../consumer/bit-component/sources';
+import { Impl, Specs } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 
 export type ComponentProps = {
@@ -179,11 +179,11 @@ export default class Component extends BitObject {
     return new Component(props);
   }
 
-  static fromBitId(bitId: BitId, scopeName: string): Component {
+  static fromBitId(bitId: BitId): Component {
     return new Component({ 
       name: bitId.name, 
       box: bitId.box, 
-      scope: bitId.getScopeName(scopeName) 
+      scope: bitId.getScopeWithoutRemoteAnnotaion()
     });
   }
 }

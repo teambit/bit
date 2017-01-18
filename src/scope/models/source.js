@@ -28,3 +28,4 @@ export default class Source extends BitObject {
     return new Source(str);
   }
 }
+  

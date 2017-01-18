@@ -5,7 +5,7 @@ import R from 'ramda';
 import glob from 'glob';
 import Repository from '../repository';
 import { BitId } from '../../bit-id';
-import Component from '../../consumer/bit-component';
+import Component from '../../consumer/component';
 import { BIT_ENVIRONMENT_DIRNAME, LATEST } from '../../constants';
 import npmInstall from '../../utils/npm';
 import resolveBit from '../../consumer/bit-node-resolver';
@@ -27,7 +27,7 @@ export default class Cache extends Repository {
   }
 
   composePath(bitId: BitId) {
-    return path.join(this.getPath(), bitId.box, bitId.name, bitId.getScopeName(), bitId.version);
+    return path.join(this.getPath(), bitId.box, bitId.name, bitId.scope, bitId.version);
   }
 
   store(component: Component) {
@@ -38,7 +38,7 @@ export default class Cache extends Repository {
   }
   
   findLatestVersion(bitId: BitId): string {
-    const dirToLookIn = path.join(this.getPath(), bitId.box, bitId.name, bitId.getScopeName());
+    const dirToLookIn = path.join(this.getPath(), bitId.box, bitId.name, bitId.scope);
     const files = glob.sync(path.join(dirToLookIn, '*'));
     const versions = files.map((file: string): number => {
       return parseInt(path.basename(file));
@@ -58,7 +58,7 @@ export default class Cache extends Repository {
   hasSync(bitId: BitId) {
     const box = bitId.box;
     const name = bitId.name;
-    const scope = bitId.getScopeName();
+    const scope = bitId.scope;
     // @TODO - add the version
     // @TODO - maybe check for node_modules
     const bitPath = path.join(this.getPath(), box, name, scope);
@@ -66,8 +66,8 @@ export default class Cache extends Repository {
   }
 
   ensureEnvironment({ testerId, compilerId }: any): Promise<any> {
-    const parsedTesterId = testerId ? BitId.parse(testerId) : undefined;
-    const parsedCompilerId = compilerId ? BitId.parse(compilerId) : undefined;
+    const parsedTesterId = testerId ? BitId.parse(testerId, this.scope.name()) : undefined;
+    const parsedCompilerId = compilerId ? BitId.parse(compilerId, this.scope.name()) : undefined;
     
     const rejectNils = R.reject(R.isNil);
     const envs = rejectNils([ parsedTesterId, parsedCompilerId ]);

@@ -18,7 +18,7 @@ export default class BitIds extends Array<BitId> {
     const array = [];
     
     forEach(dependencies, (version, id) => {
-      array.push(BitId.parse(id, version));
+      array.push(BitId.parse(id, null, version));
     });
 
     return new BitIds(...array);
@@ -37,7 +37,7 @@ export default class BitIds extends Array<BitId> {
   fetchOnes(origin: Scope, remotes: Remotes) {
     const { inner = [], outer = [] } = byRemote(origin)(this);
     return origin.manyOnes(inner).then((innerBits) => {
-      return remotes.fetch(outer, true)
+      return remotes.fetch(outer, origin, true)
         .then(remoteBits => remoteBits.concat(innerBits));
     });
   }
@@ -45,7 +45,7 @@ export default class BitIds extends Array<BitId> {
   fetch(origin: Scope, remotes: Remotes): Promise<VersionDependencies[]> {
     const { inner = [], outer = [] } = byRemote(origin)(this);
     return origin.getMany(inner).then((innerBits) => {
-      return remotes.fetch(outer)
+      return remotes.fetch(outer, origin)
         .then(remoteBits => remoteBits.concat(innerBits));
     });
   }

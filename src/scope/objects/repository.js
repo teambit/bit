@@ -5,7 +5,7 @@ import glob from 'glob';
 import BitObject from './object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
-import { mkdirp, writeFile, removeFile, allSettled, readFile } from '../../utils';
+import { resolveGroupId, mkdirp, writeFile, removeFile, allSettled, readFile } from '../../utils';
 import { Scope } from '../../scope';
 import Component from '../models/component';
 
@@ -39,7 +39,7 @@ export default class Repository {
   load(ref: Ref): Promise<BitObject> {
     if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
     return readFile(this.objectPath(ref))
-      .then(fileContents => {
+      .then((fileContents) => {
         return BitObject.parseObject(fileContents, this.types);
       })
       .catch(() => null);
@@ -112,7 +112,9 @@ export default class Repository {
   persistOne(object: BitObject): Promise<boolean> {
     return object.compress()
       .then((contents) => {
-        return writeFile(this.objectPath(object.hash()), contents);
+        const options = {};
+        if (this.scope.groupName) options.groupName = resolveGroupId(this.scope.groupName);
+        return writeFile(this.objectPath(object.hash()), contents, options);
       }); 
   }
 }

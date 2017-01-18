@@ -28,6 +28,7 @@
     "mkdirp": "^0.5.1",
     "needle": "^1.4.3",
     "npmi": "^2.0.1",
+    "posix": "^4.1.1",
     "ramda": "^0.23.0",
     "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",

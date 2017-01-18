@@ -94,7 +94,7 @@ export const MODULES_CACHE_DIR = path.join(CACHE_ROOT, 'modules');
 export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
 
 /**
- * glboal config directorye
+ * glboal config directories
  */
 export const GLOBAL_CONFIG = path.join(CACHE_ROOT, 'config');
 

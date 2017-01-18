@@ -1,20 +1,20 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs';
-import { merge, prop } from 'ramda';
+import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
+import { propogateUntil, currentDirName, pathHas, readFile } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
 import { Tmp, Environment } from './repositories';
 import { BitId, BitIds } from '../bit-id';
-import Component from '../consumer/bit-component';
+import Component from '../consumer/component';
 import ComponentVersion from './component-version';
 import { Repository, Ref, BitObject } from './objects';
 import ComponentDependencies from './component-dependencies';
@@ -56,6 +56,11 @@ export default class Scope {
     this.environment = scopeProps.environment || new Environment(this);
   }
 
+  get groupName(): ?string {
+    if (this.scopeJson.groupName) return null;
+    return this.scopeJson.groupName;
+  }
+
   hash() {
     return this.name();
   }
@@ -92,7 +97,8 @@ export default class Scope {
       return this.remotes()
       .then(remotes =>
         // $FlowFixMe
-        remotes.resolve(scopeName).list()
+        remotes.resolve(scopeName, this.name())
+        .then(remote => remote.list())
       );
     }
 
@@ -128,19 +134,26 @@ export default class Scope {
       .then(() => this.objects.persist());
   }
 
-  export(componentObjects: ComponentObjects) {
+  export(componentObjects: ComponentObjects): Promise<any> {
     return this.sources.merge(componentObjects.toObjects(this.objects), true)
       .then(() => this.objects.persist());
   }
 
-  getExternal(id: BitId, remotes: Remotes): Promise<VersionDependencies> {
+  getExternal(id: BitId, remotes: Remotes, preserveScope: ?bool): Promise<VersionDependencies> {    
     return this.sources.get(id)
       .then((component) => {
+        // TODO - a case when the component is local and preserveScope flag is flase
         if (component) return component.toVersionDependencies(id.version, this);
         return remotes
-          .fetch([id])
+          .fetch([id], this)
           .then(([componentObjects, ]) => {
-            return this.importSrc(componentObjects);
+            const preserveScopeIfNeeded = preserveScope ?
+            Promise.resolve() : this.export(componentObjects);
+
+            return preserveScopeIfNeeded
+            .then(() => {
+              return this.importSrc(componentObjects);
+            });
           })
           .then(() => this.getExternal(id, remotes));
       });
@@ -150,7 +163,7 @@ export default class Scope {
     return this.sources.get(id)
       .then((component) => {
         if (component) return component.toComponentVersion(id.version, this.name());
-        return remotes.fetch([id], true)
+        return remotes.fetch([id], this, true)
           .then(([componentObjects, ]) => this.importSrc(componentObjects))
           .then(() => this.getExternal(id, remotes));
       });
@@ -165,10 +178,10 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
-  import(id: BitId): Promise<VersionDependencies> {
+  import(id: BitId, preserveScope: ?bool): Promise<VersionDependencies> {
     if (!id.isLocal(this.name())) {
       return this.remotes()
-        .then(remotes => this.getExternal(id, remotes));
+        .then(remotes => this.getExternal(id, remotes, preserveScope));
     }
     
     return this.sources.get(id)
@@ -178,8 +191,8 @@ export default class Scope {
       });
   }
  
-  get(id: BitId): Promise<ComponentDependencies> {
-    return this.import(id)
+  get(id: BitId, preserveScope: bool = true): Promise<ComponentDependencies> {
+    return this.import(id, preserveScope)
       .then((versionDependencies) => {
         return versionDependencies.toConsumer(this.objects);
       });
@@ -189,7 +202,8 @@ export default class Scope {
     if (!id.isLocal(this.name())) {
       return this.remotes()
         .then((remotes) => {
-          return remotes.resolve(id.getScopeName()).show();
+          return remotes.resolve(id.scope, this)
+          .then(remote => remote.show());
           // @TODO - remote get
         });
     }
@@ -228,13 +242,17 @@ export default class Scope {
 
   exportAction(bitId: BitId, remoteName: string) {
     return this.remotes().then((remotes) => {
-      const remote = remotes.get(remoteName);
-      return this.sources.getObjects(bitId)
+      return remotes.resolve(remoteName, this).then((remote) => {
+        return this.sources.getObjects(bitId)
         .then(component => 
           remote.push(component)
-          .then(() => this.clean(bitId))
-          .then(() => component)
+          .then((results: { success: bool, val: any }[]) => {
+            // @TODO - verify results from push
+            return this.clean(bitId)
+            .then(() => component);
+          })
         );
+      });
     });
   }
 
@@ -278,10 +296,10 @@ export default class Scope {
     return this.environment.ensureEnvironment({ testerId, compilerId });
   }
 
-  static create(path: string = process.cwd(), name: ?string) {
+  static create(path: string = process.cwd(), name: ?string, groupName: ?string) {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName(); 
-    const scopeJson = new ScopeJson({ name });
+    const scopeJson = new ScopeJson({ name, groupName });
     return Promise.resolve(new Scope({ path, created: true, scopeJson }));
   }
 

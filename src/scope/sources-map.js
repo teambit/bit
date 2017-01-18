@@ -3,7 +3,7 @@ import path from 'path';
 import { BitId, BitIds } from '../bit-id';
 import { forEach, writeFile } from '../utils';
 import Scope from './scope';
-import Bit from '../consumer/bit-component'; 
+import Bit from '../consumer/component'; 
 import { SOURCES_MAP } from '../constants';
 
 export function getPath(scopePath: string) {

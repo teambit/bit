@@ -2,7 +2,7 @@
 import { Scope } from '../scope';
 import { BitId } from '../bit-id';
 import { LOCAL_SCOPE_NOTATION } from '../constants';
-import Bit from '../consumer/bit-component';
+import Bit from '../consumer/component';
 
 export default class LocalScope {
   scope: Scope;

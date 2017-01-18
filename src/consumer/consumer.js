@@ -7,7 +7,7 @@ import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
-import Component from './bit-component';
+import Component from './component';
 import { 
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
@@ -79,11 +79,11 @@ export default class Consumer {
 
   exportAction(rawId: string, rawRemote: string) { 
     // @TODO - move this method to api, not related to consumer
-    const bitId = BitId.parse(rawId);
+    const bitId = BitId.parse(rawId, this.scope.name());
     
     return this.scope.exportAction(bitId, rawRemote)
     .then(() =>
-      this.scope.get(bitId.changeScope(`@${rawRemote}`)) // @HACKALERT
+      this.scope.get(bitId.changeScope(rawRemote))
       .then(componentDependencies =>
         this.writeToComponentsDir([componentDependencies])
       )
@@ -98,15 +98,15 @@ export default class Consumer {
       const deps = BitIds.loadDependencies(this.bitJson.dependencies);
       
       return this.scope.ensureEnvironment({
-        testerId: this.bitJson.getTesterName(),
-        compilerId: this.bitJson.getCompilerName()
+        testerId: this.bitJson.testerId,
+        compilerId: this.bitJson.compilerId
       }).then(() =>
         Promise.all(deps.map(dep => this.scope.get(dep)))
         .then(bits => this.writeToComponentsDir(flatten(bits)))
       );
     }
 
-    const bitId = BitId.parse(rawId);
+    const bitId = BitId.parse(rawId, this.scope.name());
     return this.scope.get(bitId)
       .then((componentDependencies) => {
         return this.writeToComponentsDir([componentDependencies]);
@@ -116,7 +116,7 @@ export default class Consumer {
   importEnvironment(rawId: ?string) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
 
-    const bitId = BitId.parse(rawId);
+    const bitId = BitId.parse(rawId, this.scope.name());
     return this.scope.get(bitId)
     .then((componentDependencies) => {
       return this.scope.writeToEnvironmentsDir(componentDependencies.component); // @HACKALERT - replace with getOne
@@ -155,7 +155,7 @@ export default class Consumer {
       componentsDir,
       id.box,
       id.name,
-      id.getScopeName()
+      id.scope
     );
 
     return new Promise((resolve, reject) => {
