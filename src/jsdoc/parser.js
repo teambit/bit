@@ -3,25 +3,21 @@ import esprima from 'esprima';
 import doctrine from 'doctrine';
 import walk from 'esprima-walk';
 
-type FunctionInfo = {
+type DataInfo = {
+    type: string,
     name: string,
     description: string,
-    params: Array,
-    returns: Object,
+    params?: Array,
+    returns?: Object,
 };
 
-const parsedData: Array<FunctionInfo> = [];
+const parsedData: Array<DataInfo> = [];
 
 function getFunctionName(node: Object): string {
   if (node.type === 'FunctionDeclaration') return node.id.name;
   if (node.type === 'ExpressionStatement') return node.expression.right.id.name;
+  if (node.type === 'MethodDefinition') return node.key.name;
   throw new Error('The node is not recognized');
-}
-
-function isFunctionType(node: Object): boolean {
-  if (node.type === 'FunctionDeclaration') return true;
-  if (node.type === 'ExpressionStatement' && node.expression.right.type === 'FunctionExpression') return true;
-  return false;
 }
 
 function formatTag(tag) {
@@ -32,46 +28,83 @@ function formatTag(tag) {
   return tag;
 }
 
-function extractData(node) {
-  if (node && node.type && isFunctionType(node)) {
-    const params = [];
-    let description = '';
-    let returns = {};
+function getCommentsAST(node) {
+  const comment = node.leadingComments[node.leadingComments.length-1].value;
+  return doctrine.parse(comment, { unwrap: true });
+}
 
-    if (node.leadingComments && node.leadingComments.length) {
-      const comment = node.leadingComments[node.leadingComments.length-1].value;
-      const commentsAst = doctrine.parse(comment, { unwrap: true });
-      description = commentsAst.description;
+function handleFunctionType(node) {
+  if (node.type === 'ExpressionStatement' 
+  && (!node.expression.right || node.expression.right.type !== 'FunctionExpression')) return;
 
-      for (const tag of commentsAst.tags) {
-        if (tag.title === 'param') {
-          params.push(formatTag(tag));
-        }
-        if (tag.title === 'returns') {
-          returns = formatTag(tag);
-        }
+  const params = [];
+  let description = '';
+  let returns = {};
+  if (node.leadingComments && node.leadingComments.length) {
+    const commentsAst = getCommentsAST(node);
+    description = commentsAst.description;
+
+    for (const tag of commentsAst.tags) {
+      if (tag.title === 'param') {
+        params.push(formatTag(tag));
+      }
+      if (tag.title === 'returns') {
+        returns = formatTag(tag);
       }
     }
+  }
 
-    const name = getFunctionName(node);
-    const item = {
-      name,
-      description,
-      params,
-      returns,
-    };
-    parsedData.push(postProcess(item));
+  const name = getFunctionName(node);
+  const item = {
+    type: node.type,
+    name,
+    description,
+    params,
+    returns,
+  };
+  parsedData.push(postProcess(item));
+}
+
+
+
+function handleClassType(node) {
+  let description = '';
+  if (node.leadingComments && node.leadingComments.length) {
+    const commentsAst = getCommentsAST(node);
+    description = commentsAst.description;
+  }
+  const item = {
+    type: node.type,
+    name: node.id.name,
+    description
+  };
+  parsedData.push(postProcess(item));
+}
+
+function extractData(node) {
+  if (!node || !node.type) return;
+  switch (node.type) {
+    case 'FunctionDeclaration':
+    case 'ExpressionStatement':
+    case 'MethodDefinition':
+      handleFunctionType(node);
+      break;
+    case 'ClassDeclaration':
+      handleClassType(node);
+      break;
+    default:
+      break;  
   }
 }
 
-function postProcess(doc: FunctionInfo): string {
+function postProcess(doc: DataInfo): string {
   let params;
   let returns = '';
-  let formattedDoc = `name: ${doc.name}`;
+  let formattedDoc = `type: ${doc.type}, name: ${doc.name}`;
   if (doc.description) {
     formattedDoc += `, description: ${doc.description}`;
   }
-  if (doc.params.length) {
+  if (doc.params && doc.params.length) {
     params = doc.params.map((param) => {
       let formattedParam = `${param.name}`;
       if (param.type) {
@@ -81,14 +114,16 @@ function postProcess(doc: FunctionInfo): string {
     }).join(', ');
     formattedDoc += `, params: ${params}`;
   }
-  if (doc.returns.description) {
-    returns = `${doc.returns.description} `;
-  }
-  if (doc.returns.type) {
-    returns += `(${doc.returns.type})`;
-  }
-  if (returns) {
-    formattedDoc += `, returns: ${returns}`;
+  if (doc.returns) {
+    if (doc.returns.description) {
+      returns = `${doc.returns.description} `;
+    }
+    if (doc.returns.type) {
+      returns += `(${doc.returns.type})`;
+    }
+    if (returns) {
+      formattedDoc += `, returns: ${returns}`;
+    }
   }
   
   return formattedDoc;
