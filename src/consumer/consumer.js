@@ -83,7 +83,7 @@ export default class Consumer {
     
     return this.scope.exportAction(bitId, rawRemote)
     .then(() =>
-      this.scope.get(bitId.changeScope(`@${rawRemote}`)) // @HACKALERT
+      this.scope.get(bitId)
       .then(componentDependencies =>
         this.writeToComponentsDir([componentDependencies])
       )

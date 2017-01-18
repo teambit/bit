@@ -129,19 +129,24 @@ export default class Scope {
       .then(() => this.objects.persist());
   }
 
-  export(componentObjects: ComponentObjects) {
+  export(componentObjects: ComponentObjects): Promise<any> {
     return this.sources.merge(componentObjects.toObjects(this.objects), true)
       .then(() => this.objects.persist());
   }
 
-  getExternal(id: BitId, remotes: Remotes): Promise<VersionDependencies> {
+  getExternal(id: BitId, remotes: Remotes, preserveScope: ?bool): Promise<VersionDependencies> {    
     return this.sources.get(id)
       .then((component) => {
+        // TODO - a case when the component is local and preserveScope flag is flase
         if (component) return component.toVersionDependencies(id.version, this);
         return remotes
           .fetch([id], this)
           .then(([componentObjects, ]) => {
-            return this.importSrc(componentObjects);
+            const preserveScopeIfNeeded = preserveScope ?
+            Promise.resolve() : this.export(componentObjects);
+
+            return preserveScopeIfNeeded
+            .then(() => this.importSrc(componentObjects));
           })
           .then(() => this.getExternal(id, remotes));
       });
@@ -166,21 +171,21 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
-  import(id: BitId): Promise<VersionDependencies> {
+  import(id: BitId, preserveScope: ?bool): Promise<VersionDependencies> {
     if (!id.isLocal(this.name())) {
       return this.remotes()
-        .then(remotes => this.getExternal(id, remotes));
+        .then(remotes => this.getExternal(id, remotes, preserveScope));
     }
     
     return this.sources.get(id)
-      .then((component) => {
+      .then((component) => { // TODO also apply preserve scope from local scope (for external) ...
         if (!component) throw new ComponentNotFound();
         return component.toVersionDependencies(id.version, this);
       });
   }
  
   get(id: BitId, preserveScope: bool = true): Promise<ComponentDependencies> {
-    return this.import(id)
+    return this.import(id, preserveScope)
       .then((versionDependencies) => {
         return versionDependencies.toConsumer(this.objects);
       });

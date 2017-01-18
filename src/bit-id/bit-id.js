@@ -6,7 +6,7 @@ import {
   VERSION_DELIMITER,
   LOCAL_SCOPE_NOTATION,
   NO_PLUGIN_TYPE,
-  REMOTE_ALIAS_SIGN
+  REMOTE_ALIAS_SIGN,
 } from '../constants';
 import { contains } from '../utils';
 
@@ -39,11 +39,14 @@ export default class BitId {
     return `${this.scope}_${this.box}_${this.name}_${this.version}.tar`;
   }
 
+  getScopeWithoutRemoteAnnotaion() {
+    return this.scope.replace(REMOTE_ALIAS_SIGN, '');
+  }
 
   isLocal(scopeName: string) {
     // @TODO fix this asapbit status
     return this.scope === LOCAL_SCOPE_NOTATION
-     || scopeName === this.scope;
+     || scopeName === this.getScopeWithoutRemoteAnnotaion();
   }
 
   getVersion() {
