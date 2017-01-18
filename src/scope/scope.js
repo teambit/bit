@@ -57,7 +57,7 @@ export default class Scope {
   }
 
   get groupName(): ?string {
-    if (this.scopeJson.groupName) return null;
+    if (!this.scopeJson.groupName) return null;
     return this.scopeJson.groupName;
   }
 

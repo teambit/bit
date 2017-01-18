@@ -36,6 +36,8 @@ import allSettled from './promise-all-settled';
 import values from './object-values';
 import glob from './glob';
 import inflate from './zlib-inflate';
+import mapToObject from './map-to-object';
+import objectToTupleArray from './object-to-tuple-array';
 import deflate from './zlib-deflate';
 import sha1 from './sha1';
 import isString from './is-string';
@@ -44,7 +46,9 @@ import removeContainingDirIfEmpty from './remove-containing-dir-if-empty';
 export {
   parseSSHUrl,
   sha1,
+  objectToTupleArray,
   resolveGroupId,
+  mapToObject,
   rmDir,
   isString,
   inflate,

@@ -2,12 +2,14 @@
 import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
 import Init from './commands/other-cmds/init-cmd';
+import ScopeList from './commands/scope-cmds/_list-cmd';
 import Create from './commands/consumer-cmds/create-cmd';
 import Export from './commands/consumer-cmds/export-cmd';
 import List from './commands/consumer-cmds/list-cmd';
 import Modify from './commands/consumer-cmds/modify-cmd';
 import Commit from './commands/consumer-cmds/commit-cmd';
 import Import from './commands/consumer-cmds/import-cmd';
+import Config from './commands/consumer-cmds/config-cmd';
 import Remote from './commands/consumer-cmds/remote-cmd';
 import Search from './commands/consumer-cmds/search-cmd';
 import Test from './commands/consumer-cmds/test-cmd';
@@ -31,6 +33,7 @@ export default function registerCommands(): CommandRegistrar {
     new Status(),
     new Modify(),
     new List(),
+    new Config(),
     new Remote(),
     new CatObject(),
     new Show(),
@@ -40,6 +43,7 @@ export default function registerCommands(): CommandRegistrar {
     new Test(),
     new Prepare(),
     new Put(),
+    new ScopeList(),
     new Fetch(),
     new DescribeScope()
   ]);

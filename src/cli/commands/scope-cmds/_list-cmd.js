@@ -1,6 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import { fromBase64 } from '../../../utils';
+import { pack } from '../../cli-utils';
 import { scopeList } from '../../../api/scope';
 
 export default class List extends Command {
@@ -11,12 +12,11 @@ export default class List extends Command {
   opts = [];
   
   action([path]: [string]): Promise<any> {
-    return scopeList({
-      path: fromBase64(path)
-    });
+    console.log(fromBase64(path));
+    return scopeList(fromBase64(path));
   }
 
-  report(): string {
-    return 'ok';
+  report(str: string): string {
+    return pack(str);
   }
 }

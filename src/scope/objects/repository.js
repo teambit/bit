@@ -113,7 +113,7 @@ export default class Repository {
     return object.compress()
       .then((contents) => {
         const options = {};
-        if (this.scope.groupName) options.groupName = resolveGroupId(this.scope.groupName);
+        if (this.scope.groupName) options.gid = resolveGroupId(this.scope.groupName);
         return writeFile(this.objectPath(object.hash()), contents, options);
       }); 
   }

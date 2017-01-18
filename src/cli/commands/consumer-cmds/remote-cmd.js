@@ -4,7 +4,6 @@ import Command from '../../command';
 import { remoteList, remoteAdd, remoteRm } from '../../../api/consumer';
 import { forEach, empty } from '../../../utils';
 
-
 export default class Remote extends Command {
   name = 'remote';
   description = 'manage set of tracked bit scope(s)';

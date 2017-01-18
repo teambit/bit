@@ -14,9 +14,11 @@ import getScopeBit from './lib/get-scope-bit';
 import test from './lib/test';
 import getComponentLogs from './lib/get-component-logs';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
+import config from './lib/global-config';
 
 export {
   init,
+  config,
   exportAction,
   create,
   remove,

@@ -98,6 +98,8 @@ export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
  */
 export const GLOBAL_CONFIG = path.join(CACHE_ROOT, 'config');
 
+export const GLOBAL_CONFIG_FILE = 'config.json';
+
 export const SOURCES_JSON = 'sources.json';
 
 export const EXTERNAL_MAP = 'externals.json';

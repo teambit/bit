@@ -22,6 +22,14 @@ export default class Impl extends Source {
     if (typeof this.src !== 'string') throw new InvalidImpl();
   }
 
+  serialize() {
+    return this.src;
+  }
+
+  static deserialize(str: string) {
+    return new Impl(str);
+  }
+
   static load(implPath: string): Impl {
     try {
       const data = fs.readFileSync(implPath);

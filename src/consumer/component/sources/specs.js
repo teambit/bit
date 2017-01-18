@@ -16,6 +16,14 @@ export default class Specs extends Source {
     });
   }
   
+  serialize() {
+    return this.src;
+  }
+
+  static deserialize(str: string) {
+    return new Specs(str);
+  }
+
   static load(specsPath: string): Specs|null {
     try {
       const data = fs.readFileSync(specsPath);
