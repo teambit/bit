@@ -2,6 +2,7 @@ node  {
     properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
     checkout scm
 	def releaseServer = "${env.BIT_STAGE_SERVER}"
+	def repo = "${env.INTERNAL_REPO}"
 	def assets = "${env.BIT_ASSETS}"
 	print releaseServer
 	def env = "${environment}"
@@ -24,7 +25,7 @@ node  {
 
 
     //deployToArtifactory("deb","bit-deb",currentVersion)
-    sh("cd ./distribution && curl -uadmin:password -T bit_${currentVersion}_all.deb  ${env.INTERNAL_REPO}/bit-deb/bit_${currentVersion}_all.deb;deb.distribution=trusty;deb.component=main;deb.architecture=amd64")
+    sh("cd ./distribution && curl -uadmin:password -T bit_${currentVersion}_all.deb  ${repo}/bit-deb/bit_${currentVersion}_all.deb;deb.distribution=trusty;deb.component=main;deb.architecture=amd64")
 
     deployToArtifactory("rpm","bit-yum","${currentVersion}-1.noarch")
 
