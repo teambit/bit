@@ -25,15 +25,21 @@ export default class Show extends Command {
       component = componentResult;
       return parser.parse(component._impl.src);
     })
-    .then(doc => ({
+    .then(docs => ({
       name: component.name,
       box: component.box,
       compiler: component.compilerId,
       tester: component.testerId,
       dependencies: component.dependencies,
       packageDependencies: component.packageDependencies,
-      doc
+      docs
     }));
+  }
+
+  formatDoc(doc) {
+    const params = doc.params.map(param => `${param.name} (${param.type})`).join(', ');
+    const returns = `${doc.returns.description} (${doc.returns.type})`;
+    return `name: ${doc.name}, description: ${doc.description}, params: ${params}, returns: ${returns}`;
   }
 
   report({ 
@@ -43,13 +49,13 @@ export default class Show extends Command {
     dependencies,
     tester,
     packageDependencies,
-    doc,
+    docs,
   }: any): string {
     return paintHeader(`${box}/${name}`) +
       paintBitProp('compiler', compiler === 'none' ? '' : compiler) +
       paintBitProp('tester', tester === 'none' ? '' : tester) +
       paintBitProp('dependencies', Object.keys(dependencies).join(', ')) +
       paintBitProp('packageDependencies', Object.keys(packageDependencies).join(', ')) +
-      paintBitProp('doc', JSON.stringify(doc));
+      paintBitProp('doc', docs.map(this.formatDoc).join('\n'));
   }
 }

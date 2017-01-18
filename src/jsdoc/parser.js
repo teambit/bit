@@ -1,7 +1,7 @@
 /** @Flow */
-const esprima = require('esprima');
-const doctrine = require('doctrine');
-const walk = require('esprima-walk');
+import esprima from 'esprima';
+import doctrine from 'doctrine';
+import walk from 'esprima-walk';
 
 type FunctionInfo = {
     name: string,
@@ -24,6 +24,21 @@ function isFunctionType(node: Object): boolean {
   return false;
 }
 
+function formatParam(param) {
+  delete param.title;
+  if (param.type.type && param.type.name && param.type.type === 'NameExpression') {
+    param.type = param.type.name;
+  }
+  return param;
+}
+
+function formatReturns(tag) {
+  delete tag.title;
+  if (!tag.type) return tag;
+  if (tag.type.type) tag.type = tag.type.type;
+  return tag;
+}
+
 function extractData(node) {
   if (node && node.type && isFunctionType(node)) {
     const params = [];
@@ -37,12 +52,10 @@ function extractData(node) {
 
       for (const tag of commentsAst.tags) {
         if (tag.title === 'param') {
-          delete tag.title;
-          params.push(tag);
+          params.push(formatParam(tag));
         }
         if (tag.title === 'returns') {
-          delete tag.title;
-          returns = tag;
+          returns = formatReturns(tag);
         }
       }
     }
