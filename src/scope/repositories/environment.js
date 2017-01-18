@@ -27,7 +27,7 @@ export default class Cache extends Repository {
   }
 
   composePath(bitId: BitId) {
-    return path.join(this.getPath(), bitId.box, bitId.name, bitId.getCleanName(), bitId.version);
+    return path.join(this.getPath(), bitId.box, bitId.name, bitId.scope, bitId.version);
   }
 
   store(component: Component) {
@@ -38,7 +38,7 @@ export default class Cache extends Repository {
   }
   
   findLatestVersion(bitId: BitId): string {
-    const dirToLookIn = path.join(this.getPath(), bitId.box, bitId.name, bitId.getCleanName());
+    const dirToLookIn = path.join(this.getPath(), bitId.box, bitId.name, bitId.scope);
     const files = glob.sync(path.join(dirToLookIn, '*'));
     const versions = files.map((file: string): number => {
       return parseInt(path.basename(file));
@@ -58,7 +58,7 @@ export default class Cache extends Repository {
   hasSync(bitId: BitId) {
     const box = bitId.box;
     const name = bitId.name;
-    const scope = bitId.getCleanName();
+    const scope = bitId.scope;
     // @TODO - add the version
     // @TODO - maybe check for node_modules
     const bitPath = path.join(this.getPath(), box, name, scope);

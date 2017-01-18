@@ -166,7 +166,7 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
-  import(id: BitId): Promise<VersionDependencies> {
+  import(id: BitId, preserveScope: bool = true): Promise<VersionDependencies> {
     if (!id.isLocal(this.name())) {
       return this.remotes()
         .then(remotes => this.getExternal(id, remotes));
