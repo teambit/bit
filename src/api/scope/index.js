@@ -4,6 +4,7 @@ import put from './lib/put';
 import fetch from './lib/fetch';
 import describeScope from './lib/describe-scope';
 import catObject from './lib/cat-object';
+import scopeList from './lib/scope-list';
 import { getResolver, setResolver, resetResolver } from './lib/resolver';
 
 export {
@@ -15,5 +16,6 @@ export {
   prepare,
   initScope,
   put,
+  scopeList,
   fetch
 };

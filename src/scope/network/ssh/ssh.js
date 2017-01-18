@@ -6,6 +6,8 @@ import { BitIds } from '../../../bit-id';
 import { toBase64, fromBase64 } from '../../../utils';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
+import { unpack } from '../../../cli/cli-utils';
+import ConsumerComponent from '../../../consumer/component';
 
 const sequest = require('sequest');
 
@@ -74,9 +76,13 @@ export default class SSH {
   }
   
   list() {
-    return this.exec('list')
-    .then(a => {
-      console.log(a);
+    return this.exec('_list')
+    .then((str: string) => {
+      str = 'eyJuYW1lIjoiYSIsImJveCI6Imdsb2JhbCIsInZlcnNpb24iOiIxIiwic2NvcGUiOiJzY29weSIsImltcGxGaWxlIjoiaW1wbC5qcyIsInNwZWNzRmlsZSI6InNwZWMuanMiLCJjb21waWxlcklkIjpudWxsLCJ0ZXN0ZXJJZCI6bnVsbCwiZGVwZW5kZW5jaWVzIjpbXSwicGFja2FnZURlcGVuZGVuY2llcyI6Int9Iiwic3BlY3MiOm51bGwsImltcGwiOiJcbi8qKlxuICoge2Rlc2NyaXB0aW9ufVxuICogQHBhcmFtIHt0eXBlfSBuYW1lXG4gKiBAcmV0dXJuc1xuICogXG4gKi9cbm1vZHVsZS5leHBvcnRzID0gZnVuY3Rpb24gYSgpIHtcbiAgIFxufTsifQ==';
+      const components = unpack(str);
+      return components.map((c) => {
+        return ConsumerComponent.fromString(c);
+      });
     });
   }
 
@@ -84,7 +90,7 @@ export default class SSH {
     ids = ids.map(bitId => bitId.toString());
     return this.exec('_fetch', ...ids)
       .then((str: string) => {
-        const components = fromBase64(str).split('+++');
+        const components = unpack(str);
         return components.map((raw) => {
           return ComponentObjects.fromString(raw);
         });

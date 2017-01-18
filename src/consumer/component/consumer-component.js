@@ -197,7 +197,56 @@ export default class Component {
       } catch (e) { return reject(e); }
     });
   }
-  
+
+  toString(): string {
+    return JSON.stringify({
+      name: this.name,
+      box: this.box,
+      version: this.version ? this.version.toString() : null,
+      scope: this.scope,
+      implFile: this.implFile,
+      specsFile: this.specsFile,
+      compilerId: this.compilerId ? this.compilerId.toString() : null,
+      testerId: this.testerId ? this.testerId.toString() : null,
+      dependencies: this.dependencies.serialize(),
+      packageDependencies: JSON.stringify(this.packageDependencies),
+      specs: this.specs ? this.specs.serialize() : null,
+      impl: this.impl.serialize(),
+    });
+  }
+
+  static fromString(str: string): Component {
+    const { 
+      name, 
+      box, 
+      version, 
+      scope, 
+      implFile,
+      specsFile,
+      compilerId,
+      testerId,
+      dependencies,
+      packageDependencies,
+      impl,
+      specs
+    } = JSON.parse(str);
+    
+    return new Component({
+      name,
+      box,
+      version: parseInt(version),
+      scope,
+      implFile,
+      specsFile,
+      compilerId: compilerId ? BitId.parse(compilerId) : null,
+      testerId: testerId ? BitId.parse(testerId) : null,
+      dependencies: BitIds.deserialize(dependencies),
+      packageDependencies: JSON.parse(packageDependencies),
+      impl: Impl.deserialize(impl),
+      specs: specs ? Specs.deserialize(specs) : null,
+    });
+  }
+
   static loadFromInline(bitDir, consumerBitJson): Promise<Component> {
     return BitJson.load(bitDir, consumerBitJson)
     .then((bitJson) => {

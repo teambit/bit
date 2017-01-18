@@ -1,8 +1,9 @@
 /** @flow */
 import Command from '../../command';
-import { toBase64, fromBase64 } from '../../../utils';
+import { fromBase64 } from '../../../utils';
 import { fetch } from '../../../api/scope';
 import ComponentObjects from '../../../scope/component-objects';
+import { pack } from '../../cli-utils';
 
 export default class Fetch extends Command {
   name = '_fetch <path> <ids...>';
@@ -16,6 +17,6 @@ export default class Fetch extends Command {
   }
 
   report(componentObjects: ComponentObjects[]): string {
-    return toBase64(componentObjects.map(obj => obj.toString()).join('+++'));
+    return pack(componentObjects.map(obj => obj.toString()));
   }
 }
