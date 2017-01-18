@@ -166,7 +166,7 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
-  import(id: BitId, preserveScope: bool = true): Promise<VersionDependencies> {
+  import(id: BitId): Promise<VersionDependencies> {
     if (!id.isLocal(this.name())) {
       return this.remotes()
         .then(remotes => this.getExternal(id, remotes));
@@ -179,7 +179,7 @@ export default class Scope {
       });
   }
  
-  get(id: BitId): Promise<ComponentDependencies> {
+  get(id: BitId, preserveScope: bool = true): Promise<ComponentDependencies> {
     return this.import(id)
       .then((versionDependencies) => {
         return versionDependencies.toConsumer(this.objects);
@@ -230,13 +230,14 @@ export default class Scope {
 
   exportAction(bitId: BitId, remoteName: string) {
     return this.remotes().then((remotes) => {
-      const remote = remotes.get(remoteName);
-      return this.sources.getObjects(bitId)
+      return remotes.resolve(remoteName, this).then((remote) => {
+        return this.sources.getObjects(bitId)
         .then(component => 
           remote.push(component)
           .then(() => this.clean(bitId))
           .then(() => component)
         );
+      });
     });
   }
 

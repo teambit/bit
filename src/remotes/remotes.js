@@ -6,7 +6,7 @@ import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
 import ComponentObjects from '../scope/component-objects';
 import { REMOTE_ALIAS_SIGN } from '../constants';
-import remotesResolver from './remote-resolver';
+import remotesResolver from './remote-resolver/remote-resolver';
 import Scope from '../scope/scope';
 
 export default class Remotes extends Map<string, Remote> {
