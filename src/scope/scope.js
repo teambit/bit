@@ -1,14 +1,14 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs';
-import { merge, prop } from 'ramda';
+import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHas, readFile, first } from '../utils';
+import { propogateUntil, currentDirName, pathHas, readFile } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
@@ -146,7 +146,9 @@ export default class Scope {
             Promise.resolve() : this.export(componentObjects);
 
             return preserveScopeIfNeeded
-            .then(() => this.importSrc(componentObjects));
+            .then(() => {
+              return this.importSrc(componentObjects);
+            });
           })
           .then(() => this.getExternal(id, remotes));
       });
@@ -239,8 +241,11 @@ export default class Scope {
         return this.sources.getObjects(bitId)
         .then(component => 
           remote.push(component)
-          .then(() => this.clean(bitId))
-          .then(() => component)
+          .then((results: { success: bool, val: any }[]) => {
+            // @TODO - verify results from push
+            return this.clean(bitId)
+            .then(() => component);
+          })
         );
       });
     });

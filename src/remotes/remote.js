@@ -72,7 +72,8 @@ export default class Remote {
   }
 
   push(componentObjects: ComponentObjects) {
-    return connect(this.host).then(network => network.push(componentObjects));
+    return connect(this.host)
+    .then(network => network.push(componentObjects));
   }
 
   static load(name: string, host: string): Remote {

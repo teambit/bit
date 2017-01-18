@@ -83,7 +83,7 @@ export default class Consumer {
     
     return this.scope.exportAction(bitId, rawRemote)
     .then(() =>
-      this.scope.get(bitId)
+      this.scope.get(bitId.changeScope(rawRemote))
       .then(componentDependencies =>
         this.writeToComponentsDir([componentDependencies])
       )
