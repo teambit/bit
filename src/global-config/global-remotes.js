@@ -10,7 +10,7 @@ export default class GlobalRemotes {
   constructor(remotes: {[string]: string}) {
     this.remotes = remotes;
   }
-
+  
   addRemote(remote: Remote) {
     this.remotes[remote.name] = remote.host;
     return this;
