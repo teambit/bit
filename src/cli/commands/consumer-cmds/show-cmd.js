@@ -36,12 +36,6 @@ export default class Show extends Command {
     }));
   }
 
-  formatDoc(doc) {
-    const params = doc.params.map(param => `${param.name} (${param.type})`).join(', ');
-    const returns = `${doc.returns.description} (${doc.returns.type})`;
-    return `name: ${doc.name}, description: ${doc.description}, params: ${params}, returns: ${returns}`;
-  }
-
   report({ 
     name,
     box,
@@ -56,6 +50,6 @@ export default class Show extends Command {
       paintBitProp('tester', tester === 'none' ? '' : tester) +
       paintBitProp('dependencies', Object.keys(dependencies).join(', ')) +
       paintBitProp('packageDependencies', Object.keys(packageDependencies).join(', ')) +
-      paintBitProp('doc', docs.map(this.formatDoc).join('\n'));
+      paintBitProp('docs', docs.join('\n'));
   }
 }

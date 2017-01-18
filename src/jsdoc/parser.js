@@ -24,18 +24,11 @@ function isFunctionType(node: Object): boolean {
   return false;
 }
 
-function formatParam(param) {
-  delete param.title;
-  if (param.type.type && param.type.name && param.type.type === 'NameExpression') {
-    param.type = param.type.name;
-  }
-  return param;
-}
-
-function formatReturns(tag) {
+function formatTag(tag) {
   delete tag.title;
   if (!tag.type) return tag;
-  if (tag.type.type) tag.type = tag.type.type;
+  if (tag.type.name) tag.type = tag.type.name;
+  else if (tag.type.type) tag.type = tag.type.type;
   return tag;
 }
 
@@ -52,10 +45,10 @@ function extractData(node) {
 
       for (const tag of commentsAst.tags) {
         if (tag.title === 'param') {
-          params.push(formatParam(tag));
+          params.push(formatTag(tag));
         }
         if (tag.title === 'returns') {
-          returns = formatReturns(tag);
+          returns = formatTag(tag);
         }
       }
     }
@@ -67,8 +60,38 @@ function extractData(node) {
       params,
       returns,
     };
-    parsedData.push(item);
+    parsedData.push(postProcess(item));
   }
+}
+
+function postProcess(doc: FunctionInfo): string {
+  let params;
+  let returns = '';
+  let formattedDoc = `name: ${doc.name}`;
+  if (doc.description) {
+    formattedDoc += `, description: ${doc.description}`;
+  }
+  if (doc.params.length) {
+    params = doc.params.map((param) => {
+      let formattedParam = `${param.name}`;
+      if (param.type) {
+        formattedParam += ` (${param.type})`;
+      }
+      return formattedParam;
+    }).join(', ');
+    formattedDoc += `, params: ${params}`;
+  }
+  if (doc.returns.description) {
+    returns = `${doc.returns.description} `;
+  }
+  if (doc.returns.type) {
+    returns += `(${doc.returns.type})`;
+  }
+  if (returns) {
+    formattedDoc += `, returns: ${returns}`;
+  }
+  
+  return formattedDoc;
 }
 
 function parse(data) {
