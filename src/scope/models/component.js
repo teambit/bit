@@ -179,11 +179,11 @@ export default class Component extends BitObject {
     return new Component(props);
   }
 
-  static fromBitId(bitId: BitId, thisScopeName: ?string): Component {
+  static fromBitId(bitId: BitId): Component {
     return new Component({ 
       name: bitId.name, 
       box: bitId.box, 
-      scope: thisScopeName || bitId.scope // @TODO - understand why dont use the scope in the scopeId and use "this" scope nme eslint-disable-line
+      scope: bitId.getScopeWithoutRemoteAnnotaion()
     });
   }
 }

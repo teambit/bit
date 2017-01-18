@@ -44,9 +44,7 @@ export default class BitId {
   }
 
   isLocal(scopeName: string) {
-    // @TODO fix this asapbit status
-    return this.scope === LOCAL_SCOPE_NOTATION
-     || scopeName === this.getScopeWithoutRemoteAnnotaion();
+    return scopeName === this.getScopeWithoutRemoteAnnotaion();
   }
 
   getVersion() {
@@ -68,7 +66,7 @@ export default class BitId {
     return { [key]: value };
   }
 
-  static parse(id: string|null, version: string = LATEST_BIT_VERSION): BitId|null {
+  static parse(id: string|null, realScopeName: ?string, version: string = LATEST_BIT_VERSION): BitId|null {
     if (!id || id === NO_PLUGIN_TYPE) { return null; }
     if (contains(id, VERSION_DELIMITER)) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
@@ -79,8 +77,12 @@ export default class BitId {
     const splited = id.split('/'); 
     if (splited.length === 3) {
       const [scope, box, name] = splited;
+      if (scope === LOCAL_SCOPE_NOTATION && !realScopeName) {
+        throw new Error('real scope name is required in bitId.parse with @this notation');
+      }
       return new BitId({
-        scope,
+      // $FlowFixMe
+        scope: scope === LOCAL_SCOPE_NOTATION ? realScopeName : scope,
         box,
         name,
         version
@@ -89,8 +91,13 @@ export default class BitId {
 
     if (splited.length === 2) {
       const [scope, name] = splited;
+      if (scope === LOCAL_SCOPE_NOTATION && !realScopeName) {
+        throw new Error('real scope name is required in bitId.parse with @this notation');
+      }
+
       return new BitId({
-        scope,
+        // $FlowFixMe
+        scope: scope === LOCAL_SCOPE_NOTATION ? realScopeName : scope,
         name,
         version
       });

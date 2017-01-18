@@ -66,8 +66,8 @@ export default class Cache extends Repository {
   }
 
   ensureEnvironment({ testerId, compilerId }: any): Promise<any> {
-    const parsedTesterId = testerId ? BitId.parse(testerId) : undefined;
-    const parsedCompilerId = compilerId ? BitId.parse(compilerId) : undefined;
+    const parsedTesterId = testerId ? BitId.parse(testerId, this.scope.name()) : undefined;
+    const parsedCompilerId = compilerId ? BitId.parse(compilerId, this.scope.name()) : undefined;
     
     const rejectNils = R.reject(R.isNil);
     const envs = rejectNils([ parsedTesterId, parsedCompilerId ]);

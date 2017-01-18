@@ -185,7 +185,7 @@ export default class Scope {
     }
     
     return this.sources.get(id)
-      .then((component) => { // TODO also apply preserve scope from local scope (for external) ...
+      .then((component) => {
         if (!component) throw new ComponentNotFound();
         return component.toVersionDependencies(id.version, this);
       });

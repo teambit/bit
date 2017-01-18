@@ -18,7 +18,7 @@ export default class BitIds extends Array<BitId> {
     const array = [];
     
     forEach(dependencies, (version, id) => {
-      array.push(BitId.parse(id, version));
+      array.push(BitId.parse(id, null, version));
     });
 
     return new BitIds(...array);
