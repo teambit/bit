@@ -23,7 +23,9 @@ node  {
     sh('./scripts/build-deb.sh')
 
 
-    deployToArtifactory("deb","bit-deb",currentVersion)
+    //deployToArtifactory("deb","bit-deb",currentVersion)
+    sh("cd ./distribution && curl -uadmin:password -T bit_${currentVersion}_all.deb  http://104.154.76.155:8081/artifactory/bit-deb/bit_${currentVersion}_all.deb;deb.distribution=trusty;deb.component=main;deb.architecture=amd64")
+
     deployToArtifactory("rpm","bit-yum","${currentVersion}-1.noarch")
 
 }
