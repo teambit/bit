@@ -56,6 +56,11 @@ export default class Scope {
     this.environment = scopeProps.environment || new Environment(this);
   }
 
+  get groupName(): ?string {
+    if (this.scopeJson.groupName) return null;
+    return this.scopeJson.groupName;
+  }
+
   hash() {
     return this.name();
   }
@@ -291,10 +296,10 @@ export default class Scope {
     return this.environment.ensureEnvironment({ testerId, compilerId });
   }
 
-  static create(path: string = process.cwd(), name: ?string) {
+  static create(path: string = process.cwd(), name: ?string, groupName: ?string) {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName(); 
-    const scopeJson = new ScopeJson({ name });
+    const scopeJson = new ScopeJson({ name, groupName });
     return Promise.resolve(new Scope({ path, created: true, scopeJson }));
   }
 

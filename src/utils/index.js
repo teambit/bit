@@ -8,10 +8,12 @@ import mkdirp from './mkdirp';
 import forEach from './foreach';
 import hasOwnProperty from './has-own-property';
 import contains from './contains';
+import cleanObject from './object-clean';
 import prependBang from './prepend-bang';
 import cleanChar from './clean-char';
 import cleanBang from './clean-bang';
 import filter from './filter';
+import resolveGroupId from './os-resolve-group-id';
 import toResultObject from './promise-to-result-object';
 import empty from './is-empty';
 import { propogateUntil, pathHas } from './fs-propogate-until'; 
@@ -42,6 +44,7 @@ import removeContainingDirIfEmpty from './remove-containing-dir-if-empty';
 export {
   parseSSHUrl,
   sha1,
+  resolveGroupId,
   rmDir,
   isString,
   inflate,
@@ -57,6 +60,7 @@ export {
   cleanChar,
   writeFile,
   mkdirp,
+  cleanObject,
   cleanBang,
   prependBang,
   forEach,

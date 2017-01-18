@@ -15,12 +15,12 @@ export default class Init extends Command {
     ['s', 'shared <groupname>', 'add group write permissions to a repository properly']
   ];
 
-  action([path, ]: [string, ], { bare }: any): Promise<{[string]: any}> {
+  action([path, ]: [string, ], { bare, shared }: any): Promise<{[string]: any}> {
     if (path) path = pathlib.resolve(path);
     
     if (bare) {
       if (typeof bare === 'boolean') bare = '';
-      return initScope(path, bare)
+      return initScope(path, bare, shared)
       .then(({ created }) => {
         return {
           created,
