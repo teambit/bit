@@ -27,7 +27,7 @@ node  {
     //deployToArtifactory("deb","bit-deb",currentVersion)
     def fullUrl = "${repo}/bit-deb/bit_${currentVersion}_all.deb;deb.distribution=trusty;deb.component=main;deb.architecture=amd64"
     print (fullUrl)
-    sh("curl -uadmin:password -T ./distribution/bit_${currentVersion}_all.deb  ${fullUrl}")
+    sh("curl -uadmin:password -T ./distribution/bit_${currentVersion}_all.deb -XPUT ${fullUrl}")
 
     deployToArtifactory("rpm","bit-yum","${currentVersion}-1.noarch")
 
