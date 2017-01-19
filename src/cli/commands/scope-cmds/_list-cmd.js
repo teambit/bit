@@ -12,7 +12,6 @@ export default class List extends Command {
   opts = [];
   
   action([path]: [string]): Promise<any> {
-    console.log(fromBase64(path));
     return scopeList(fromBase64(path));
   }
 

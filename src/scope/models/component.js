@@ -100,7 +100,7 @@ export default class Component extends BitObject {
     return versionRef.load(repository);
   }
 
-  collectObjects(repo: Repository) {
+  collectObjects(repo: Repository): Promise<ComponentObjects> {
     return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
       .then(([rawComponent, objects]) => new ComponentObjects(
         rawComponent,

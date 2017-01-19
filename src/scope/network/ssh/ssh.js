@@ -78,7 +78,9 @@ export default class SSH {
   list() {
     return this.exec('_list')
     .then((str: string) => {
-      str = 'eyJuYW1lIjoiYSIsImJveCI6Imdsb2JhbCIsInZlcnNpb24iOiIxIiwic2NvcGUiOiJzY29weSIsImltcGxGaWxlIjoiaW1wbC5qcyIsInNwZWNzRmlsZSI6InNwZWMuanMiLCJjb21waWxlcklkIjpudWxsLCJ0ZXN0ZXJJZCI6bnVsbCwiZGVwZW5kZW5jaWVzIjpbXSwicGFja2FnZURlcGVuZGVuY2llcyI6Int9Iiwic3BlY3MiOm51bGwsImltcGwiOiJcbi8qKlxuICoge2Rlc2NyaXB0aW9ufVxuICogQHBhcmFtIHt0eXBlfSBuYW1lXG4gKiBAcmV0dXJuc1xuICogXG4gKi9cbm1vZHVsZS5leHBvcnRzID0gZnVuY3Rpb24gYSgpIHtcbiAgIFxufTsifQ==';
+      // TODO bug with the ~/check  
+      // OMGMOGMGOM WHY ?>!>!?!
+      str="eyJuYW1lIjoiaXMtc3RyaW5nIiwiYm94IjoiZ2xvYmFsIiwidmVyc2lvbiI6IjIiLCJzY29wZSI6ImNoZWNrIiwiaW1wbEZpbGUiOiJpbXBsLmpzIiwic3BlY3NGaWxlIjoic3BlYy5qcyIsImNvbXBpbGVySWQiOm51bGwsInRlc3RlcklkIjpudWxsLCJkZXBlbmRlbmNpZXMiOltdLCJwYWNrYWdlRGVwZW5kZW5jaWVzIjoie30iLCJzcGVjcyI6bnVsbCwiaW1wbCI6IlxuLyoqXG4gKiB7ZGVzY3JpcHRpb259XG4gKiBAcGFyYW0ge3R5cGV9IG5hbWVcbiAqIEByZXR1cm5zXG4gKiBcbiAqL1xubW9kdWxlLmV4cG9ydHMgPSBmdW5jdGlvbiBpc1N0cmluZygpIHtcbiAgIFxufTsifQ==";
       const components = unpack(str);
       return components.map((c) => {
         return ConsumerComponent.fromString(c);
