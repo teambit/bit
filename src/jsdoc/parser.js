@@ -20,7 +20,7 @@ function getFunctionName(node: Object): string {
   throw new Error('The node is not recognized');
 }
 
-function formatTag(tag) {
+function formatTag(tag: Object): Object {
   delete tag.title;
   if (!tag.type) return tag;
   if (tag.type.name) tag.type = tag.type.name;
@@ -28,12 +28,12 @@ function formatTag(tag) {
   return tag;
 }
 
-function getCommentsAST(node) {
+function getCommentsAST(node: Object): Object {
   const comment = node.leadingComments[node.leadingComments.length-1].value;
   return doctrine.parse(comment, { unwrap: true });
 }
 
-function handleFunctionType(node) {
+function handleFunctionType(node: Object) {
   if (node.type === 'ExpressionStatement' 
   && (!node.expression.right || node.expression.right.type !== 'FunctionExpression')) return;
 
@@ -65,9 +65,7 @@ function handleFunctionType(node) {
   parsedData.push(postProcess(item));
 }
 
-
-
-function handleClassType(node) {
+function handleClassType(node: Object) {
   let description = '';
   if (node.leadingComments && node.leadingComments.length) {
     const commentsAst = getCommentsAST(node);
@@ -81,7 +79,7 @@ function handleClassType(node) {
   parsedData.push(postProcess(item));
 }
 
-function extractData(node) {
+function extractData(node: Object) {
   if (!node || !node.type) return;
   switch (node.type) {
     case 'FunctionDeclaration':
@@ -129,7 +127,7 @@ function postProcess(doc: DataInfo): string {
   return formattedDoc;
 }
 
-function parse(data) {
+function parse(data: string): Promise<any> {
   return new Promise((resolve) => {
     try {
       const ast = esprima.parse(data, { 
