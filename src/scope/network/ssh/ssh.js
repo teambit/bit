@@ -78,9 +78,6 @@ export default class SSH {
   list() {
     return this.exec('_list')
     .then((str: string) => {
-      // TODO bug with the ~/check  
-      // OMGMOGMGOM WHY ?>!>!?!
-      str="eyJuYW1lIjoiaXMtc3RyaW5nIiwiYm94IjoiZ2xvYmFsIiwidmVyc2lvbiI6IjIiLCJzY29wZSI6ImNoZWNrIiwiaW1wbEZpbGUiOiJpbXBsLmpzIiwic3BlY3NGaWxlIjoic3BlYy5qcyIsImNvbXBpbGVySWQiOm51bGwsInRlc3RlcklkIjpudWxsLCJkZXBlbmRlbmNpZXMiOltdLCJwYWNrYWdlRGVwZW5kZW5jaWVzIjoie30iLCJzcGVjcyI6bnVsbCwiaW1wbCI6IlxuLyoqXG4gKiB7ZGVzY3JpcHRpb259XG4gKiBAcGFyYW0ge3R5cGV9IG5hbWVcbiAqIEByZXR1cm5zXG4gKiBcbiAqL1xubW9kdWxlLmV4cG9ydHMgPSBmdW5jdGlvbiBpc1N0cmluZygpIHtcbiAgIFxufTsifQ==";
       const components = unpack(str);
       return components.map((c) => {
         return ConsumerComponent.fromString(c);
