@@ -6,11 +6,13 @@ import BitNotInScope from './bit-not-in-scope';
 import MergeConflict from './merge-conflict';
 import ComponentNotFound from './component-not-found';
 import VersionNotFound from './version-not-found';
+import HashNotFound from './hash-not-found';
 
 export {
   ScopeNotFound,
   ComponentNotFound,
   SourceNotFound,
+  HashNotFound,
   MergeConflict,
   VersionNotFound,
   ScopeAlreadyExists,

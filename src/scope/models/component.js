@@ -2,7 +2,7 @@
 import { equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import { VersionNotFound } from '../exceptions';
-import { forEach, empty, mapObject, values } from '../../utils';
+import { forEach, empty, mapObject, values, diff, filterObject, contains } from '../../utils';
 import Version from './version';
 import { DEFAULT_BOX_NAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';
@@ -39,8 +39,11 @@ export default class Component extends BitObject {
     return values(this.versions);
   }
 
-  compare(component: Component) {
-    return equals(component.versions, this.versions);
+  compatibleWith(component: Component) {
+    const keys = Object.keys;
+    const differnece = diff(keys(this.versions), keys(component.versions));
+    const comparableObject = filterObject(this.versions, (val, key) => !differnece.includes(key));
+    return equals(component.versions, comparableObject);
   }
 
   latest(): number {
@@ -160,9 +163,9 @@ export default class Component extends BitObject {
     return new Buffer(JSON.stringify(this.toObject()));
   }
 
-  toVersionDependencies(version: string, scope: Scope) {
+  toVersionDependencies(version: string, scope: Scope, source: string) {
     const versionComp = this.toComponentVersion(version, scope.name());
-    return versionComp.toVersionDependencies(scope);
+    return versionComp.toVersionDependencies(scope, source);
   }
 
   static parse(contents: string): Component {

@@ -29,7 +29,7 @@ export default class SourceRepository {
   findComponent(component: Component): Promise<Component> {
     return this.objects()
       .findOne(component.hash())
-      .catch((e) => {
+      .catch(() => {
         return null;
       });
   }
@@ -103,7 +103,7 @@ export default class SourceRepository {
   merge({ component, objects }: ComponentTree, inScope: boolean = false): Promise<Component> {
     if (inScope) component.scope = this.scope.name();
     return this.findComponent(component).then((existingComponent) => {
-      if (!existingComponent || component.compare(existingComponent)) {
+      if (!existingComponent || component.compatibleWith(existingComponent)) {
         return this.put({ component, objects });
       }
       

@@ -139,10 +139,12 @@ export default class Scope {
       .then(() => this.objects.persist());
   }
 
-  getExternal(id: BitId, remotes: Remotes): Promise<VersionDependencies> {    
+  getExternal(id: BitId, remotes: Remotes, localFetch: bool = true): Promise<VersionDependencies> {    
     return this.sources.get(id)
       .then((component) => {
-        if (component) return component.toVersionDependencies(id.version, this);
+        if (component && localFetch) {
+          return component.toVersionDependencies(id.version, this, id.scope);
+        }
         return remotes
           .fetch([id], this)
           .then(([componentObjects, ]) => {
@@ -247,8 +249,7 @@ export default class Scope {
     return this.remotes().then((remotes) => {
       return remotes.resolve(remoteName, this).then((remote) => {
         return this.sources.getObjects(bitId)
-        .then(component => 
-          remote.push(component)
+        .then(component => remote.push(component)
           .then((results: { success: bool, val: any }[]) => {
             // @TODO - verify results from push
             return this.clean(bitId)

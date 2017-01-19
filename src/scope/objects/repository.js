@@ -5,6 +5,7 @@ import glob from 'glob';
 import BitObject from './object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
+import { HashNotFound } from '../exceptions';
 import { resolveGroupId, mkdirp, writeFile, removeFile, allSettled, readFile } from '../../utils';
 import { Scope } from '../../scope';
 import Component from '../models/component';
@@ -74,7 +75,11 @@ export default class Repository {
   }
 
   loadSync(ref: Ref): BitObject {
-    return BitObject.parseSync(fs.readFileSync(this.objectPath(ref)), this.types);
+    try {
+      return BitObject.parseSync(fs.readFileSync(this.objectPath(ref)), this.types);
+    } catch (err) {
+      throw new HashNotFound(ref.toString());
+    }
   }
 
   setCache(object: BitObject) {

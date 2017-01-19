@@ -41,6 +41,8 @@ import objectToTupleArray from './object-to-tuple-array';
 import deflate from './zlib-deflate';
 import sha1 from './sha1';
 import isString from './is-string';
+import diff from './array-diff';
+import filterObject from './filter-object';
 import removeContainingDirIfEmpty from './remove-containing-dir-if-empty';
 
 export {
@@ -50,8 +52,10 @@ export {
   resolveGroupId,
   mapToObject,
   rmDir,
+  filterObject,
   isString,
   inflate,
+  diff,
   deflate,
   values,
   toBase64,
