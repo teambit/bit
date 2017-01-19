@@ -1,5 +1,6 @@
 /** @flow */
 import c from 'chalk';
+import { parser } from '../jsdoc';
 
 export const formatInlineBit = ({ box, name, version }: any): string => 
 c.white('     > ') + c.cyan(`${box}/${name} - ${version}`);
@@ -19,4 +20,9 @@ export const paintHeader = (value: string): string => {
 
 export const paintLog = ({ message, date, hash }: any): string => {
   return c.yellow(`commit ${hash}\n`) + c.white(`Date: ${date}\n`) + c.white(`\n      ${message}\n`);
+};
+
+export const paintDoc = (value): string => {
+  if (!value) return '';
+  return parser.toString(value);
 };

@@ -62,7 +62,7 @@ function handleFunctionType(node: Object) {
     params,
     returns,
   };
-  parsedData.push(postProcess(item));
+  parsedData.push(item);
 }
 
 function handleClassType(node: Object) {
@@ -76,7 +76,7 @@ function handleClassType(node: Object) {
     name: node.id.name,
     description
   };
-  parsedData.push(postProcess(item));
+  parsedData.push(item);
 }
 
 function extractData(node: Object) {
@@ -95,7 +95,7 @@ function extractData(node: Object) {
   }
 }
 
-function postProcess(doc: DataInfo): string {
+function toString(doc: DataInfo): string {
   let params;
   let returns = '';
   let formattedDoc = `type: ${doc.type}, name: ${doc.name}`;
@@ -143,5 +143,6 @@ function parse(data: string): Promise<any> {
 }
 
 module.exports = {
-  parse
+  parse,
+  toString
 };

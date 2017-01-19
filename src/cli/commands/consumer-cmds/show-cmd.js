@@ -1,7 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import { getInlineBit, getScopeBit } from '../../../api/consumer';
-import { paintBitProp, paintHeader } from '../../chalk-box';
+import { paintBitProp, paintHeader, paintDoc } from '../../chalk-box';
 import { parser } from '../../../jsdoc';
 
 export default class Show extends Command {
@@ -50,6 +50,6 @@ export default class Show extends Command {
       paintBitProp('tester', tester === 'none' ? '' : tester) +
       paintBitProp('dependencies', Object.keys(dependencies).join(', ')) +
       paintBitProp('packageDependencies', Object.keys(packageDependencies).join(', ')) +
-      paintBitProp('docs', docs.join('\n'));
+      paintBitProp('docs', docs.map(paintDoc).join('\n'));
   }
 }
