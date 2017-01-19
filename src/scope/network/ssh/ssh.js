@@ -78,7 +78,6 @@ export default class SSH {
   list() {
     return this.exec('_list')
     .then((str: string) => {
-      str = 'eyJuYW1lIjoiYSIsImJveCI6Imdsb2JhbCIsInZlcnNpb24iOiIxIiwic2NvcGUiOiJzY29weSIsImltcGxGaWxlIjoiaW1wbC5qcyIsInNwZWNzRmlsZSI6InNwZWMuanMiLCJjb21waWxlcklkIjpudWxsLCJ0ZXN0ZXJJZCI6bnVsbCwiZGVwZW5kZW5jaWVzIjpbXSwicGFja2FnZURlcGVuZGVuY2llcyI6Int9Iiwic3BlY3MiOm51bGwsImltcGwiOiJcbi8qKlxuICoge2Rlc2NyaXB0aW9ufVxuICogQHBhcmFtIHt0eXBlfSBuYW1lXG4gKiBAcmV0dXJuc1xuICogXG4gKi9cbm1vZHVsZS5leHBvcnRzID0gZnVuY3Rpb24gYSgpIHtcbiAgIFxufTsifQ==';
       const components = unpack(str);
       return components.map((c) => {
         return ConsumerComponent.fromString(c);

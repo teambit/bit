@@ -1,7 +1,7 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs';
-import { merge } from 'ramda';
+import { merge, tap } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import ComponentObjects from './component-objects';
@@ -139,21 +139,14 @@ export default class Scope {
       .then(() => this.objects.persist());
   }
 
-  getExternal(id: BitId, remotes: Remotes, preserveScope: ?bool): Promise<VersionDependencies> {    
+  getExternal(id: BitId, remotes: Remotes): Promise<VersionDependencies> {    
     return this.sources.get(id)
       .then((component) => {
-        // TODO - a case when the component is local and preserveScope flag is flase
         if (component) return component.toVersionDependencies(id.version, this);
         return remotes
           .fetch([id], this)
           .then(([componentObjects, ]) => {
-            const preserveScopeIfNeeded = preserveScope ?
-            Promise.resolve() : this.export(componentObjects);
-
-            return preserveScopeIfNeeded
-            .then(() => {
-              return this.importSrc(componentObjects);
-            });
+            return this.importSrc(componentObjects);
           })
           .then(() => this.getExternal(id, remotes));
       });
@@ -178,10 +171,10 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
-  import(id: BitId, preserveScope: ?bool): Promise<VersionDependencies> {
+  import(id: BitId): Promise<VersionDependencies> {
     if (!id.isLocal(this.name())) {
       return this.remotes()
-        .then(remotes => this.getExternal(id, remotes, preserveScope));
+        .then(remotes => this.getExternal(id, remotes));
     }
     
     return this.sources.get(id)
@@ -191,10 +184,20 @@ export default class Scope {
       });
   }
  
-  get(id: BitId, preserveScope: bool = true): Promise<ComponentDependencies> {
-    return this.import(id, preserveScope)
+  get(id: BitId): Promise<ComponentDependencies> {
+    return this.import(id)
       .then((versionDependencies) => {
         return versionDependencies.toConsumer(this.objects);
+      });
+  }
+
+  modify(id: BitId): Promise<ComponentDependencies> {
+    return this.import(id, true)
+      .then(versionDependencies => versionDependencies.toObjects(this.objects))
+      .then(componentObjects => this.export(componentObjects)) 
+      .then(() => {
+        id.scope = this.name();
+        return this.get(id);
       });
   }
 

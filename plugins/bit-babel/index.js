@@ -1,7 +1,7 @@
 const babel = require('babel-core');
 const path = require('path');
 
-function transpile(src) {
+function compile(src) {
   const options = {
     presets: [path.join(__dirname, 'node_modules', 'babel-preset-latest')],
     sourceMaps: true,
@@ -18,5 +18,5 @@ function transpile(src) {
 }
 
 module.exports = {
-  transpile
+  compile
 };
