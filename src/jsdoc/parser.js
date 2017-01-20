@@ -17,6 +17,7 @@ function getFunctionName(node: Object): string {
   if (node.type === 'FunctionDeclaration') return node.id.name;
   if (node.type === 'ExpressionStatement') return node.expression.right.id.name;
   if (node.type === 'MethodDefinition') return node.key.name;
+  if (node.type === 'VariableDeclaration') return node.declarations[0].id.name;
   throw new Error('The node is not recognized');
 }
 
@@ -33,9 +34,20 @@ function getCommentsAST(node: Object): Object {
   return doctrine.parse(comment, { unwrap: true });
 }
 
+function isVariableDeclarationRelevant(node) {
+  return (node.declarations
+    && node.declarations.length
+    && node.leadingComments
+    && node.declarations[0].init
+    && node.declarations[0].init.type
+    && (node.declarations[0].init.type == 'FunctionExpression' || node.declarations[0].init.type == 'CallExpression')
+  )
+}
+
 function handleFunctionType(node: Object) {
-  if (node.type === 'ExpressionStatement' 
-  && (!node.expression.right || node.expression.right.type !== 'FunctionExpression')) return;
+  if (node.type === 'ExpressionStatement'
+    && (!node.expression.right || node.expression.right.type !== 'FunctionExpression')) return;
+  if (node.type === 'VariableDeclaration' && !isVariableDeclarationRelevant(node)) return;
 
   const params = [];
   let description = '';
@@ -82,16 +94,17 @@ function handleClassType(node: Object) {
 function extractData(node: Object) {
   if (!node || !node.type) return;
   switch (node.type) {
-    case 'FunctionDeclaration':
-    case 'ExpressionStatement':
-    case 'MethodDefinition':
+    case 'FunctionDeclaration': // like: "function foo() {}"
+    case 'VariableDeclaration': // like: "var foo = function(){}"
+    case 'ExpressionStatement': // like: "module.exports = function foo() {}"
+    case 'MethodDefinition':    // like: "foo(){}"
       handleFunctionType(node);
       break;
-    case 'ClassDeclaration':
+    case 'ClassDeclaration':    // like: "class Foo {}"
       handleClassType(node);
       break;
     default:
-      break;  
+      break;
   }
 }
 
@@ -123,16 +136,16 @@ function toString(doc: DataInfo): string {
       formattedDoc += `, returns: ${returns}`;
     }
   }
-  
+
   return formattedDoc;
 }
 
 function parse(data: string): Promise<any> {
   return new Promise((resolve) => {
     try {
-      const ast = esprima.parse(data, { 
-        attachComment: true, 
-        sourceType: 'module' 
+      const ast = esprima.parse(data, {
+        attachComment: true,
+        sourceType: 'module'
       });
       walk(ast, extractData);
       resolve(parsedData);
