@@ -82,15 +82,8 @@ export default class Consumer {
     const bitId = BitId.parse(rawId, this.scope.name());
     
     return this.scope.exportAction(bitId, rawRemote)
-    .then(() =>
-      this.scope.get(bitId.changeScope(rawRemote))
-      .then(componentDependencies =>
-        this.writeToComponentsDir([componentDependencies])
-      )
-    )
-    .then(() =>
-      this.removeFromComponents(bitId.changeScope(this.scope.name())) // @HACKALERT
-    );
+      .then(componentDependencies => this.writeToComponentsDir([componentDependencies]))
+      .then(() => this.removeFromComponents(bitId.changeScope(this.scope.name()))); // @HACKALERT
   }
 
   import(rawId: ?string): Component {
