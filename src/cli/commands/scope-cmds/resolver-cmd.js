@@ -48,7 +48,8 @@ export default class Resolver extends Command {
     new ResolverSet(),
     new ResolverReset()
   ];
-  
+  private = true;
+
   action(): Promise<any> {
     return getResolver(process.cwd());
   }
