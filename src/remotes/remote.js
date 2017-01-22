@@ -71,7 +71,7 @@ export default class Remote {
     if (!isBitUrl(this.host)) throw new InvalidRemote();
   }
 
-  push(componentObjects: ComponentObjects) {
+  push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
     return connect(this.host)
     .then(network => network.push(componentObjects));
   }

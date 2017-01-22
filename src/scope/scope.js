@@ -139,7 +139,7 @@ export default class Scope {
     const { component } = objects;
     return this.sources.merge(objects, true)
       .then(() => this.objects.persist())
-      .then(() => this.getObjects(component.toComponentVersion(LATEST, this.name())));
+      .then(() => this.getObjects(component.toComponentVersion(LATEST, this.name()).id));
   }
 
   getExternal(id: BitId, remotes: Remotes, localFetch: bool = true): Promise<VersionDependencies> {    
@@ -253,12 +253,11 @@ export default class Scope {
       return remotes.resolve(remoteName, this).then((remote) => {
         return this.sources.getObjects(bitId)
         .then(component => remote.push(component)
-          .then((results: { success: bool, val: any }[]) => {
-            // @TODO - verify results from push
-            return this.clean(bitId)
-            .then(() => component);
-          })
-        );
+        .then(objects => this.importSrc(objects))
+        .then(() => {
+          bitId.scope = remoteName;
+          return this.get(bitId);
+        }));
       });
     });
   }

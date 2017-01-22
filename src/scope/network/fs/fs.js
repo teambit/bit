@@ -28,7 +28,7 @@ export default class Fs {
     return Promise.resolve(this.getScope().describe());
   }
 
-  push(componentObjects: ComponentObjects) {
+  push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
     return this.getScope().export(componentObjects);
   }
 
