@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import fs from 'fs';
 import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '../constants';
 import { mapToObject, objectToTupleArray, writeFile, readFile } from '../utils';
 
@@ -18,6 +19,22 @@ export default class Config extends Map<string, string> {
 
   write() {
     return writeFile(getPath(), this.toJson());
+  }
+
+  writeSync() {
+    return fs.writeFileSync(getPath(), this.toJson());
+  }
+
+  static loadSync(): Config {
+    try {
+      const contents = fs.readFileSync(getPath());
+      return new Config(objectToTupleArray(JSON.parse(contents.toString())));
+    } catch (err) {
+      if (err.code !== 'ENOENT') return err;
+      const config = new Config([]);
+      config.writeSync();
+      return config;
+    }
   }
 
   static load(): Promise<Config> {
