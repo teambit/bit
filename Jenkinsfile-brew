@@ -43,7 +43,7 @@ node  {
 
 import groovy.json.JsonOutput
 def notifyReleaseServer(version,url,tarName) {
-    def payload = JsonOutput.toJson([version : version,
+    def payload = JsonOutput.toJson(version : version,
                                  brew: "${ArtifactRepo}/bit-brew/${tarName}")
     print(payload)
 
