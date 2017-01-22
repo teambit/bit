@@ -2,7 +2,7 @@ node  {
     properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
     checkout scm
 	def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
-	def repo = "${env.INTERNAL_REPO}"
+	def repo = "${env.EXTERNAL_REPO}"
 	def assets = "${env.BIT_ASSETS}"
 	print releaseServer
 	def env = "${environment}"
