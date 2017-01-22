@@ -2,7 +2,6 @@ node  {
     properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
     checkout scm
 	def releaseServer = "${env.BIT_STAGE_SERVER}"
-	def assets = "${env.BIT_ASSETS}"
 	print releaseServer
 	def env = "${environment}"
 	def app = "bit"
@@ -31,22 +30,24 @@ node  {
               }
            ]
           }"""
-    server.upload(uploadSpec)
-    //stage 'export to google storage'
-    //sh("gsutil -m cp -a public-read ./distribution/brew_pkg/${bundleName}_brew.tar.gz ${uploadfolder}")
-    //sh("gsutil -m cp -a public-read ./distribution/*.deb ${uploadfolder}")
-    //sh("gsutil -m cp -a public-read ./distribution/*.rpm ${uploadfolder}")
 
-
-    
-     //stage 'notify release server'
-     //notifyReleaseServer(currentVersion,releaseServer+"/update")
+     stage 'notify release server'
+     notifyReleaseServer(currentVersion,releaseServer+"/update",tarName)
 
     stage 'generate formula for brew'
     sh("./scripts/generate-formula.sh ${ArtifactRepo}/bit-brew/${tarName}")
     sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
 
-   // sh("curl -X PURGE http://assets.bitsrc.io/release/${currentVersion}/bit_${currentVersion}_brew.tar.gz")
 }
 
 
+import groovy.json.JsonOutput
+def notifyReleaseServer(version,url,tarName) {
+    def payload = JsonOutput.toJson([version : version,
+                                 brew: "${ArtifactRepo}/bit-brew/${tarName}")
+    print(payload)
+
+    def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${url}"
+    print ("${post}")
+    sh ("${post}")
+}
