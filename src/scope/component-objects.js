@@ -29,7 +29,7 @@ export default class ComponentObjects {
     );
   }
 
-  toObjects(repo: Repository): { component: Component, objects: BitObject[] } {
+  toObjects(repo: Repository): { component: BitObject, objects: BitObject[] } {
     return {
       component: BitObject.parseSync(this.component, repo.types),
       objects: this.objects.map(obj => BitObject.parseSync(obj, repo.types))

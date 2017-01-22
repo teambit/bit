@@ -10,18 +10,20 @@ export default function importAction(
     .then((consumer) => {
       if (tester || compiler) { 
         return consumer.importEnvironment(bitId)
-        .then(() => {
+        .then((component) => {
           if (save && compiler) {
             consumer.bitJson.compilerId = bitId;
             return consumer.bitJson.write({ bitDir: consumer.getPath() });
           }
+
           if (save && tester) {
             consumer.bitJson.testerId = bitId;
             return consumer.bitJson.write({ bitDir: consumer.getPath() });
           }
-          return Promise.resolve();
+
+          return Promise.resolve(component);
         })
-        .then(bit => [bit]);
+        .then(component => [component]);
       }
       
       return consumer.import(bitId)
