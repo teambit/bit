@@ -5,7 +5,7 @@ import client from './http-client/client';
 
 const createHook = (hookNameKey: string, methodName: string) => {
   methodName = R.toUpper(methodName);
-  return (data: ?object|string): Promise<?any> => {
+  return (data: ?Object|string): Promise<?any> => {
     return new Promise((resolve) => {
       return get(hookNameKey)
         .then((destUrl) => {

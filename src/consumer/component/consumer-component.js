@@ -198,7 +198,7 @@ export default class Component {
     });
   }
   
-  toObject(): object {
+  toObject(): Object {
     return {
       name: this.name,
       box: this.box,
@@ -219,7 +219,7 @@ export default class Component {
     return JSON.stringify(this.toObject());
   }
 
-  static fromObject(object: object): Component {
+  static fromObject(object: Object): Component {
     const { 
       name, 
       box, 
