@@ -20,6 +20,7 @@ import { Repository, Ref, BitObject } from './objects';
 import ComponentDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
+import { postExportHook } from '../hooks';
 
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
 
@@ -139,7 +140,16 @@ export default class Scope {
     const { component } = objects;
     return this.sources.merge(objects, true)
       .then(() => this.objects.persist())
-      .then(() => this.getObjects(component.toComponentVersion(LATEST, this.name()).id));
+      .then(() => component.toComponentVersion(LATEST, this.name()))
+      .then((compVersion: ComponentVersion) => 
+        this.getObjects(compVersion.id)
+        .then((objs) => {
+          return compVersion.toConsumer(this.objects)
+          .then(consumerComponent =>
+            postExportHook(consumerComponent.toString())
+          ).then(() => objs);
+        })
+      );
   }
 
   getExternal(id: BitId, remotes: Remotes, localFetch: bool = true): Promise<VersionDependencies> {
