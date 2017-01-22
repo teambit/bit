@@ -9,6 +9,7 @@ import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
 import Environment from '../../scope/repositories/environment';
+import docsParser, { ParsedDocs } from '../../jsdoc/parser';
 
 import { 
   DEFAULT_BOX_NAME,
@@ -31,6 +32,7 @@ export type ComponentProps = {
   packageDependencies?: ?Object,
   impl?: ?Impl|string,
   specs?: ?Specs|string,
+  docs?: ?ParsedDocs[]
 }
 
 export default class Component {
@@ -46,6 +48,7 @@ export default class Component {
   packageDependencies: Object;
   _impl: ?Impl|string;
   _specs: ?Specs|string;
+  _docs: ?ParsedDocs[];
 
   set impl(val: Impl) { this._impl = val; }
 
@@ -61,7 +64,7 @@ export default class Component {
   set specs(val: Specs) { this._specs = val; }
 
   get specs(): ?Specs {
-    if (!this._specs) { return null; }
+    if (!this._specs) return null;
     
     if (isString(this._specs)) {
       // $FlowFixMe
@@ -85,6 +88,11 @@ export default class Component {
     });
   }
 
+  get docs(): ?ParsedDocs[] {
+    if (!this._docs) this._docs = docsParser.parse(this.impl.src);
+    return this._docs;
+  }
+
   constructor({ 
     name,
     box,
@@ -98,6 +106,7 @@ export default class Component {
     packageDependencies,
     impl,
     specs,
+    docs,
   }: ComponentProps) {
     this.name = name;
     this.box = box || DEFAULT_BOX_NAME;
@@ -111,6 +120,7 @@ export default class Component {
     this.packageDependencies = packageDependencies || {}; 
     this._specs = specs;
     this._impl = impl;
+    this._docs = docs;
   }
 
   writeBitJson(bitDir: string): Promise<Component> {
@@ -212,6 +222,7 @@ export default class Component {
       packageDependencies: JSON.stringify(this.packageDependencies),
       specs: this.specs ? this.specs.serialize() : null,
       impl: this.impl.serialize(),
+      docs: this.docs,
     };
   }
 
@@ -232,7 +243,8 @@ export default class Component {
       dependencies,
       packageDependencies,
       impl,
-      specs
+      specs,
+      docs,
     } = object;
     
     return new Component({
@@ -248,6 +260,7 @@ export default class Component {
       packageDependencies: JSON.parse(packageDependencies),
       impl: Impl.deserialize(impl),
       specs: specs ? Specs.deserialize(specs) : null,
+      docs,
     });
   }
 

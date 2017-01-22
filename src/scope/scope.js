@@ -120,7 +120,7 @@ export default class Scope {
       .then((dependencies) => {
         dependencies = flattenDependencies(dependencies);
         return this.sources.addSource(consumerComponent, dependencies, message)
-        // // @TODO make the scope install the required env
+        // @TODO make the scope install the required env
           // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
           .then((component) => {
             return this.objects.persist()

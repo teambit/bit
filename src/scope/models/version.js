@@ -7,6 +7,7 @@ import Component from './component';
 import { Remotes } from '../../remotes';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
+import type { ParsedDocs } from '../../jsdoc/parser';
 
 export type VersionProps = {
   impl: {
@@ -24,6 +25,7 @@ export type VersionProps = {
     message: string,
     date: string
   };
+  docs?: ParsedDocs[],
   dependencies?: BitIds;
   flattenedDependencies?: BitIds;
   packageDependencies?: {[string]: string}; 
@@ -46,6 +48,7 @@ export default class Version extends BitObject {
     message: string,
     date: string
   };
+  docs: ?ParsedDocs[];
   dependencies: BitIds;
   flattenedDependencies: BitIds;
   packageDependencies: {[string]: string};
@@ -62,6 +65,7 @@ export default class Version extends BitObject {
     this.log = props.log;
     this.dependencies = props.dependencies || new BitIds();
     this.dist = props.dist;
+    this.docs = props.docs;
     this.flattenedDependencies = props.flattenedDependencies || new BitIds();
     this.packageDependencies = props.packageDependencies || {};
     this.buildStatus = props.buildStatus;
@@ -105,6 +109,7 @@ export default class Version extends BitObject {
         message: this.log.message,
         date: this.log.date,
       },
+      docs: this.docs,
       dependencies: this.dependencies.map(dep => dep.toString()),
       flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
       packageDependencies: this.packageDependencies,
@@ -136,6 +141,7 @@ export default class Version extends BitObject {
         message: props.log.message,
         date: props.log.date,
       },
+      docs: props.docs,
       dependencies: BitIds.deserialize(props.dependencies),
       flattenedDependencies: BitIds.deserialize(props.flattenedDependencies),
       packageDependencies: props.packageDependencies,
@@ -167,6 +173,7 @@ export default class Version extends BitObject {
         message,
         date: Date.now().toString(),
       },
+      docs: component.docs,
       packageDependencies: component.packageDependencies,
       flattenedDependencies: flattenedDeps,
       dependencies: component.dependencies

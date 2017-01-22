@@ -153,10 +153,11 @@ export default class Component extends BitObject {
               testerId: tester ? tester.toId() : null,
               packageDependencies: version.packageDependencies,
               impl: new Impl(impl.toString()),
-              specs: specs ? new Specs(specs.toString()): null
+              specs: specs ? new Specs(specs.toString()): null,
+              docs: version.docs
             });
           });
-      });
+        });
   }
 
   refs(): Ref[] {
