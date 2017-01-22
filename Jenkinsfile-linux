@@ -31,7 +31,9 @@ node  {
 
     deployToArtifactory("rpm","bit-yum","${currentVersion}-1.noarch")
 
-
+   stage 'notify release server'
+    notifyReleaseServer(currentVersion,releaseServer+"/update",deb,bit_${currentVersion}_all.deb,deb)
+    notifyReleaseServer(currentVersion,releaseServer+"/update",yum,bit-${currentVersion}-1.noarch.rpm,yum)
 }
 
 def deployToArtifactory(artifactSuffix,repo,version){
@@ -45,4 +47,15 @@ def deployToArtifactory(artifactSuffix,repo,version){
        ]
       }"""
       server.upload(uploadSpec)
+}
+
+import groovy.json.JsonOutput
+def notifyReleaseServer(version,url,packageName,method,packageRepo) {
+    def payload = JsonOutput.toJson([version : version,
+                                 ${method}: "${ArtifactRepo}/bit-${packageRepo}/${packageName}")
+    print(payload)
+
+    def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${url}"
+    print ("${post}")
+    sh ("${post}")
 }
