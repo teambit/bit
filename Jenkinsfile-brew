@@ -34,7 +34,7 @@ node  {
      server.upload(uploadSpec)
 
      stage 'notify release server'
-     notifyReleaseServer(currentVersion,releaseServer+"/update",${ArtifactRepo}/bit-brew/${tarName},"brew")
+     notifyReleaseServer(currentVersion,releaseServer+"/update","${ArtifactRepo}/bit-brew/${tarName}","brew")
 
     stage 'generate formula for brew'
     sh("./scripts/generate-formula.sh ${ArtifactRepo}/bit-brew/${tarName}")
