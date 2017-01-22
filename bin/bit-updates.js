@@ -48,17 +48,12 @@ function runUpdate(updateCommand){
  * Check for updates every day and output a nag message if there's a newer version.
  */
 function checkUpdate(cb) {
-  var lastUpdateCheck = _getCache('lastUpdateCheck')
-  if (lastUpdateCheck && Date.now() - lastUpdateCheck < ONE_DAY) return cb();
-  needle.get(url, function(err, res) {
+  var lastUpdateCheck = _getCache('lastUpdateCheck');
+  if (lastUpdateCheck && Date.now() - lastUpdateCheck < ONE_DAY) cb();
+  else { needle.get(url, function(err, res) {
     _setCache('lastUpdateCheck', Date.now());
-    if (!lastUpdateCheck) {
-      cb();
-      return;
-    }
-    if (res.statusCode !== 200) cb();
-    cb(getUpdateCommand());
-  })
+    (res.statusCode === 200) ?  cb(getUpdateCommand()) : cb()
+  })}
 }
 
 function getUpdateCommand() {
