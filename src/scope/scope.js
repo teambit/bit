@@ -146,7 +146,7 @@ export default class Scope {
         .then((objs) => {
           return compVersion.toConsumer(this.objects)
           .then(consumerComponent =>
-            postExportHook(consumerComponent.toString())
+            postExportHook(consumerComponent.toObject())
           ).then(() => objs);
         })
       );

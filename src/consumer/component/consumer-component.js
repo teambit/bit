@@ -197,9 +197,9 @@ export default class Component {
       } catch (e) { return reject(e); }
     });
   }
-
-  toString(): string {
-    return JSON.stringify({
+  
+  toObject(): object {
+    return {
       name: this.name,
       box: this.box,
       version: this.version ? this.version.toString() : null,
@@ -212,10 +212,14 @@ export default class Component {
       packageDependencies: JSON.stringify(this.packageDependencies),
       specs: this.specs ? this.specs.serialize() : null,
       impl: this.impl.serialize(),
-    });
+    };
   }
 
-  static fromString(str: string): Component {
+  toString(): string {
+    return JSON.stringify(this.toObject());
+  }
+
+  static fromObject(object: object): Component {
     const { 
       name, 
       box, 
@@ -229,7 +233,7 @@ export default class Component {
       packageDependencies,
       impl,
       specs
-    } = JSON.parse(str);
+    } = object;
     
     return new Component({
       name,
@@ -245,6 +249,11 @@ export default class Component {
       impl: Impl.deserialize(impl),
       specs: specs ? Specs.deserialize(specs) : null,
     });
+  }
+
+  static fromString(str: string): Component {
+    const object = JSON.parse(str);
+    return this.fromObject(object);
   }
 
   static loadFromInline(bitDir, consumerBitJson): Promise<Component> {
