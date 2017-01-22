@@ -1,7 +1,7 @@
 node  {
     properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
     checkout scm
-	def releaseServer = "${env.BIT_STAGE_SERVER}"
+	def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
 	def repo = "${env.INTERNAL_REPO}"
 	def assets = "${env.BIT_ASSETS}"
 	print releaseServer
@@ -32,8 +32,8 @@ node  {
     deployToArtifactory("rpm","bit-yum","${currentVersion}-1.noarch")
 
    stage 'notify release server'
-    notifyReleaseServer(currentVersion,releaseServer+"/update","deb","bit_${currentVersion}_all.deb","deb")
-    notifyReleaseServer(currentVersion,releaseServer+"/update","yum","bit-${currentVersion}-1.noarch.rpm","yum")
+    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/bit_${currentVersion}_all.deb","deb")
+    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/bit-${currentVersion}-1.noarch.rpm","yum")
 }
 
 def deployToArtifactory(artifactSuffix,repo,version){
@@ -50,9 +50,10 @@ def deployToArtifactory(artifactSuffix,repo,version){
 }
 
 import groovy.json.JsonOutput
-def notifyReleaseServer(version,url,packageName,method,packageRepo) {
+def notifyReleaseServer(version,url,packageUrl,method) {
     def payload = JsonOutput.toJson(version : version,
-                                 "${method}": "${packageName}")
+                                 method: "${method}",
+                                 file: "${packageUrl}")
     print(payload)
 
     def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${url}"
