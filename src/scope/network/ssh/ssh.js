@@ -63,7 +63,7 @@ export default class SSH {
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
     return this.exec('_put', componentObjects.toString())
-      .then((str: string) => ComponentObjects.fromString(str));
+      .then((str: string) => ComponentObjects.fromString(fromBase64(str)));
   }
 
   describeScope(): Promise<ScopeDescriptor> {
