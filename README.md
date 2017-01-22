@@ -1,40 +1,31 @@
 # bit - the reusable code component manager
-Today, finding small code components means searching the web (e.g. googling stack overflow...) and copy-pasting them across multiple repositories.
-We all do it, and we all know it's bad: it creates an unmaintainable, hard to update code base with an ever growing technological debt.
 
-The alternative, treating few lines of code as entire packages, means creating a heavy dependency tree while relying on external sources. 
-We all remember the left pad story. We also know that a bigger dependency tree equals a slower build and a heavier app.
+Bit is a distributed code component manager.
 
-Bit is a distributed code component manager that saves the need to copy-paste code components or to install entire packages for a few lines of code. 
-Each code component can be easily published, found or injected into your code in seconds and without effort.
+Bit helps us build larger things out of smaller reusable components.
 
-A simple code component like this: 
-```js
-  function padLeft (str, len, ch) {
-    str = String(str);
-    var i = -1;
-    if (!ch && ch !== 0) ch = ' ';
-    len = len - str.length;
-    while (++i < len) {
-      str = ch + str;
-    }
-    return str;
-  }
-  
-  module.exports = padLeft;
-```
+Bit lets you write code components once, and use them anywhere without creating code duplications or seating to publish endless micro-packages.
 
-Simply becomes:
-```js
-  const padLeft = bit('pad-left');
-  padLeft(str, len, ch);
-```
-It allows you to design lighter applications with super fast installation and a duplication-free and easy-to-maintain code base which does not depend on external sources.
+**Write once, use anywhere:** Bit is an open source tool for fast and easy extraction and reuse of code components. Exporting a component to your local (/team / community) scope can be done in mere seconds. Bit makes is easy to write code once, and use it anywhere. 
 
-## install
-```bash
-  npm -g bit-bin (not supported yet)
-```
+**Easy to maintain:** Bit makes component maintenance super easy. Features like isolated component environment, simple minor versioning and more to make maintenance much, much easier.
+
+**Simple to find:** Bit uses a functional search and a simple yet smart scoping mechanism to easily find components created by you, your team or the community. Thanks to the component isolated environment, components can be built and run anywhere.
+
+**Collaborate:** Bit was built to easily create, share and use components for a developer team. You can use the bitsrc servers to host your team’s scopes for both open source (free) and private code, or host your own Bit server.
+
+**Bit currently supports JavaScript, but we plan to add drivers for more languages soon enough. Want to add your own drive for any language? We love that, feel free to contribute a driver. If you like to we can even do it together.**
+
+## Features
+
+* Export components is seconds using only two files: implementation and tests. This is possible thanks to Bit’s isolated component environment.
+* Reuse components across repositories (anywhere) without duplications
+* Publish reusable components to remote scopes to collaborate with your team / community
+* Simple maintenance with a simplified minor component versioning, isolated component environment and more
+* Easily find components using a smart functional search (CLI / WEB) to find and use any component 
+* On-export dependency resolution: better performance and predictability 
+* Only use the code you actually need - applications become lighter and faster
+* Bit is distributed
 
 # development
 
