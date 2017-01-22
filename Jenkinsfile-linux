@@ -52,7 +52,7 @@ def deployToArtifactory(artifactSuffix,repo,version){
 import groovy.json.JsonOutput
 def notifyReleaseServer(version,url,packageName,method,packageRepo) {
     def payload = JsonOutput.toJson(version : version,
-                                 "${method}": "${ArtifactRepo}/bit-${packageRepo}/${packageName}")
+                                 "${method}": "${env.INTERNAL_REPO}/bit-${packageRepo}/${packageName}")
     print(payload)
 
     def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${url}"
