@@ -39,6 +39,10 @@ export default class Component extends BitObject {
     return values(this.versions);
   }
 
+  listVersions(): number[] {
+    return Object.keys(this.versions);
+  }
+
   compatibleWith(component: Component) {
     const differnece = diff(
       Object.keys(this.versions), 

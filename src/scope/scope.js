@@ -167,10 +167,10 @@ export default class Scope {
       });
   }
 
-  getExternalOne(id: BitId, remotes: Remotes) {
+  getExternalOne(id: BitId, remotes: Remotes, localFetch: bool = true) {
     return this.sources.get(id)
       .then((component) => {
-        if (component) return component.toComponentVersion(id.version, this.name());
+        if (component && localFetch) return component.toComponentVersion(id.version, this.name());
         return remotes.fetch([id], this, true)
           .then(([componentObjects, ]) => this.importSrc(componentObjects))
           .then(() => this.getExternal(id, remotes));
@@ -209,15 +209,29 @@ export default class Scope {
         return versionDependencies.toConsumer(this.objects);
       });
   }
-
+  
+  // @TODO optimize ASAP
   modify(id: BitId): Promise<ComponentDependencies> {
-    return this.import(id, true)
-      .then(versionDependencies => versionDependencies.toObjects(this.objects))
-      .then(componentObjects => this.export(componentObjects)) 
-      .then(() => {
-        id.scope = this.name();
-        return this.get(id);
-      });
+    return this.remotes().then((remotes) => {
+      return this.import(id, true)
+        .then((versionDependencies) => {
+          const versions = versionDependencies.component.component.listVersions();
+          const versionsP = Promise.all(versions.map((version) => {
+            const versionId = BitId.parse(id.toString());
+            versionId.version = version.toString();
+            return this.getExternalOne(versionId, remotes, false);
+          }));
+
+          return Promise.all([versionDependencies.toObjects(this.objects), versionsP]);
+        })
+        .then(([componentObjects, ]) => {
+          return this.export(componentObjects);
+        }) 
+        .then(() => {
+          id.scope = this.name();
+          return this.get(id);
+        });
+    });
   }
 
   loadComponent(id: BitId) {
