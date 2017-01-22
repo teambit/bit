@@ -19,7 +19,7 @@ export default class Put extends Command {
     });
   }
 
-  report(componentObjects: ComponentObjects[]): string {
-    return pack(componentObjects.map(obj => obj.toString()));
+  report(componentObjects: ComponentObjects): string {
+    return pack(componentObjects.toString());
   }
 }
