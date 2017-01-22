@@ -1,5 +1,5 @@
 /** @flow */
-import { groupBy } from 'ramda';
+import { groupBy, mergeAll } from 'ramda';
 import { BitId } from '../bit-id';
 import { forEach } from '../utils';
 import { Remotes } from '../remotes';
@@ -14,7 +14,23 @@ function byRemote(origin: Scope) {
 }
 
 export default class BitIds extends Array<BitId> {
-  static loadDependencies(dependencies: {[string]: string}) {
+  serialize(): string[] {
+    return this.map(bitId => bitId.toString());
+  }
+  
+  toObject(): Object {
+    return mergeAll(
+      this.map(bitId => bitId.toObject())
+    );
+  }
+
+  static deserialize(array: string[] = []) {
+    return new BitIds(
+      ...array.map(id => BitId.parse(id))
+    );
+  }
+  
+  static fromObject(dependencies: {[string]: string}) {
     const array = [];
     
     forEach(dependencies, (version, id) => {
@@ -22,16 +38,6 @@ export default class BitIds extends Array<BitId> {
     });
 
     return new BitIds(...array);
-  }
-
-  serialize(): string[] {
-    return this.map(bitId => bitId.toString());
-  }
-
-  static deserialize(array: string[] = []) {
-    return new BitIds(
-      ...array.map(id => BitId.parse(id))
-    );
   }
   
   fetchOnes(origin: Scope, remotes: Remotes) {

@@ -88,7 +88,7 @@ export default class Consumer {
 
   import(rawId: ?string): Component {
     if (!rawId) { // if no arguments inserted, install according to bitJson dependencies
-      const deps = BitIds.loadDependencies(this.bitJson.dependencies);
+      const deps = BitIds.fromObject(this.bitJson.dependencies);
       
       return this.scope.ensureEnvironment({
         testerId: this.bitJson.testerId,

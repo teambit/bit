@@ -123,13 +123,13 @@ export default class Component {
       spec: this.specsFile,
       compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
-      dependencies: this.dependencies,
+      dependencies: this.dependencies.toObject(),
       packageDependencies: this.packageDependencies
     }).write({ bitDir });
   }
 
   dependencies(): BitIds {
-    return BitIds.loadDependencies(this.dependencies);
+    return BitIds.fromObject(this.dependencies);
   }
 
   write(bitDir: string, withBitJson: boolean): Promise<Component> {
@@ -208,7 +208,7 @@ export default class Component {
       specsFile: this.specsFile,
       compilerId: this.compilerId ? this.compilerId.toString() : null,
       testerId: this.testerId ? this.testerId.toString() : null,
-      dependencies: this.dependencies.serialize(),
+      dependencies: this.dependencies.toObject(),
       packageDependencies: JSON.stringify(this.packageDependencies),
       specs: this.specs ? this.specs.serialize() : null,
       impl: this.impl.serialize(),
@@ -244,7 +244,7 @@ export default class Component {
       specsFile,
       compilerId: compilerId ? BitId.parse(compilerId) : null,
       testerId: testerId ? BitId.parse(testerId) : null,
-      dependencies: BitIds.deserialize(dependencies),
+      dependencies: BitIds.fromObject(dependencies),
       packageDependencies: JSON.parse(packageDependencies),
       impl: Impl.deserialize(impl),
       specs: specs ? Specs.deserialize(specs) : null,
@@ -266,7 +266,7 @@ export default class Component {
         specsFile: bitJson.getSpecBasename(), 
         compilerId: BitId.parse(bitJson.compilerId),
         testerId: BitId.parse(bitJson.testerId),
-        dependencies: BitIds.loadDependencies(bitJson.dependencies),
+        dependencies: BitIds.fromObject(bitJson.dependencies),
         packageDependencies: bitJson.packageDependencies,
         impl: path.join(bitDir, bitJson.getImplBasename()),
         specs: path.join(bitDir, bitJson.getSpecBasename()),
