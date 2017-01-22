@@ -7,5 +7,7 @@ export type ComponentObjectsInput = {
 }
 
 export default function put({ path, componentObjects }: ComponentObjectsInput): Promise<any> {
-  return loadScope(path).then(scope => scope.export(ComponentObjects.fromString(componentObjects)));
+  return loadScope(path).then((scope) => {
+    return scope.export(ComponentObjects.fromString(componentObjects));
+  });
 }

@@ -37,6 +37,10 @@ export default class Fs {
       .then(bitsMatrix => flatten(bitsMatrix));
   }
 
+  fetchAll(ids: BitIds): Promise<ComponentObjects[]> {
+    return this.getScope().getManyObjects(ids);
+  }
+
   fetchOnes(bitIds: BitIds): Promise<ComponentObjects[]> {
     return this.getScope().manyOneObjects(bitIds);
   }

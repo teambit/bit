@@ -135,8 +135,11 @@ export default class Scope {
   }
 
   export(componentObjects: ComponentObjects): Promise<any> {
-    return this.sources.merge(componentObjects.toObjects(this.objects), true)
-      .then(() => this.objects.persist());
+    const objects = componentObjects.toObjects(this.objects);
+    const { component } = objects;
+    return this.sources.merge(objects, true)
+      .then(() => this.objects.persist())
+      .then(() => this.getObjects(component.toComponentVersion(LATEST, this.name())));
   }
 
   getExternal(id: BitId, remotes: Remotes, localFetch: bool = true): Promise<VersionDependencies> {    

@@ -40,8 +40,10 @@ export default class Component extends BitObject {
   }
 
   compatibleWith(component: Component) {
-    const keys = Object.keys;
-    const differnece = diff(keys(this.versions), keys(component.versions));
+    const differnece = diff(
+      Object.keys(this.versions), 
+      Object.keys(component.versions
+    ));
     const comparableObject = filterObject(this.versions, (val, key) => !differnece.includes(key));
     return equals(component.versions, comparableObject);
   }
@@ -126,32 +128,30 @@ export default class Component extends BitObject {
   }
 
   toConsumerComponent(versionStr: string, scopeName: string, repository: Repository) {
-    const versionNum = VersionParser
-      .parse(versionStr)
-      .resolve(this.listVersions());
-
-    return this.loadVersion(versionNum, repository)
-      .then((version) => {
-        const implP = version.impl.file.load(repository);
-        const specsP = version.specs ? version.specs.file.load(repository) : null;
-        const compilerP = version.compiler ? version.compiler.load(repository) : null;
-        const testerP = version.tester ? version.tester.load(repository): null;
-        return Promise.all([implP, specsP, compilerP, testerP])
-        .then(([impl, specs, compiler, tester]) => {
-          return new ConsumerComponent({
-            name: this.name,
-            box: this.box,
-            version: versionNum,
-            scope: this.scope,
-            implFile: version.impl.name,
-            specsFile: version.specs ? version.specs.name : null,
-            compilerId: compiler ? compiler.toId() : null,
-            testerId: tester ? tester.toId() : null,
-            packageDependencies: version.packageDependencies,
-            impl: new Impl(impl.toString()),
-            specs: specs ? new Specs(specs.toString()): null
+    const componentVersion = this.toComponentVersion(versionStr, scopeName);
+    return componentVersion
+      .getVersion(repository)
+        .then((version) => {
+          const implP = version.impl.file.load(repository);
+          const specsP = version.specs ? version.specs.file.load(repository) : null;
+          const compilerP = version.compiler ? version.compiler.load(repository) : null;
+          const testerP = version.tester ? version.tester.load(repository): null;
+          return Promise.all([implP, specsP, compilerP, testerP])
+          .then(([impl, specs, compiler, tester]) => {
+            return new ConsumerComponent({
+              name: this.name,
+              box: this.box,
+              version: componentVersion.version,
+              scope: this.scope,
+              implFile: version.impl.name,
+              specsFile: version.specs ? version.specs.name : null,
+              compilerId: compiler ? compiler.toId() : null,
+              testerId: tester ? tester.toId() : null,
+              packageDependencies: version.packageDependencies,
+              impl: new Impl(impl.toString()),
+              specs: specs ? new Specs(specs.toString()): null
+            });
           });
-        });
       });
   }
 

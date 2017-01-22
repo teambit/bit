@@ -1,5 +1,7 @@
 /** @flow */
 import Command from '../../command';
+import { pack } from '../../cli-utils';
+import ComponentObjects from '../../../scope/component-objects';
 import { fromBase64 } from '../../../utils';
 import { put } from '../../../api/scope';
 
@@ -17,7 +19,7 @@ export default class Put extends Command {
     });
   }
 
-  report(): string {
-    return 'ok';
+  report(componentObjects: ComponentObjects[]): string {
+    return pack(componentObjects.map(obj => obj.toString()));
   }
 }
