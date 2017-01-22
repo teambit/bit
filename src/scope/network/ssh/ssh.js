@@ -61,8 +61,9 @@ export default class SSH {
     });
   }
 
-  push(componentObjects: ComponentObjects) {
-    return this.exec('_put', componentObjects.toString());
+  push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
+    return this.exec('_put', componentObjects.toString())
+      .then((str: string) => ComponentObjects.fromString(str));
   }
 
   describeScope(): Promise<ScopeDescriptor> {
