@@ -25,7 +25,7 @@ node  {
 
 
     //deployToArtifactory("deb","bit-deb",currentVersion)
-    def fullUrl = "${repo}/bit-deb/bit_${currentVersion}_all.deb;deb.distribution=trusty;deb.component=main;deb.architecture=amd64"
+    def fullUrl = "${repo}/bit-deb/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=main;deb.architecture=amd64"
     print (fullUrl)
     sh("curl -uadmin:password -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${fullUrl}'")
 
@@ -34,6 +34,9 @@ node  {
    stage 'notify release server'
     notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/bit_${currentVersion}_all.deb","deb")
     notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/bit-${currentVersion}-1.noarch.rpm","yum")
+
+   stage ("upload repo scripts")
+   sh("gsutil -m cp repos/* ${uploadfolder}")
 }
 
 def deployToArtifactory(artifactSuffix,repo,version){

@@ -1,0 +1,6 @@
+[Bitsrc]
+name=Bitsrc
+baseurl=http://104.154.76.155:8081/artifactory/bit-yum/
+enabled=1
+gpgkey=http://104.154.76.155:8081/artifactory/bit-yum/repodata/repomd.xml.key
+repo_gpgcheck=1
