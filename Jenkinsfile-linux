@@ -36,7 +36,7 @@ node  {
     notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/bit-${currentVersion}-1.noarch.rpm","yum")
 
    stage ("upload repo scripts")
-   sh("gsutil -m cp repos/* ${uploadfolder}")
+   sh("gsutil -m cp -a public-read repos/*  gs://bit-assets/")
 }
 
 def deployToArtifactory(artifactSuffix,repo,version){
