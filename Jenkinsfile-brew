@@ -20,7 +20,7 @@ node  {
     stage 'Running brew'
     sh("./scripts/build-brew.sh ")
 
-
+    stage 'upload to repo'
     def server = Artifactory.server 'Bitsrc-artifactory'
           def uploadSpec = """{
             "files": [
@@ -30,6 +30,8 @@ node  {
               }
            ]
           }"""
+
+     server.upload(uploadSpec)
 
      stage 'notify release server'
      notifyReleaseServer(currentVersion,releaseServer+"/update",tarName)
