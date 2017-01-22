@@ -32,8 +32,8 @@ node  {
     deployToArtifactory("rpm","bit-yum","${currentVersion}-1.noarch")
 
    stage 'notify release server'
-    notifyReleaseServer(currentVersion,releaseServer+"/update",deb,bit_${currentVersion}_all.deb,deb)
-    notifyReleaseServer(currentVersion,releaseServer+"/update",yum,bit-${currentVersion}-1.noarch.rpm,yum)
+    notifyReleaseServer(currentVersion,releaseServer+"/update",deb,"bit_${currentVersion}_all.deb",deb)
+    notifyReleaseServer(currentVersion,releaseServer+"/update",yum,"bit-${currentVersion}-1.noarch.rpm",yum)
 }
 
 def deployToArtifactory(artifactSuffix,repo,version){
