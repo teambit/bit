@@ -1,7 +1,7 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs';
-import { merge, tap } from 'ramda';
+import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import ComponentObjects from './component-objects';
@@ -142,7 +142,7 @@ export default class Scope {
       .then(() => this.getObjects(component.toComponentVersion(LATEST, this.name()).id));
   }
 
-  getExternal(id: BitId, remotes: Remotes, localFetch: bool = true): Promise<VersionDependencies> {    
+  getExternal(id: BitId, remotes: Remotes, localFetch: bool = true): Promise<VersionDependencies> {
     return this.sources.get(id)
       .then((component) => {
         if (component && localFetch) {
@@ -176,6 +176,10 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
+  getComponentObjects(id: BitId): Promise<ComponentObjects> {
+    return this.sources.getObjects(id);
+  }
+
   import(id: BitId): Promise<VersionDependencies> {
     if (!id.isLocal(this.name())) {
       return this.remotes()
@@ -188,7 +192,7 @@ export default class Scope {
         return component.toVersionDependencies(id.version, this);
       });
   }
- 
+
   get(id: BitId): Promise<ComponentDependencies> {
     return this.import(id)
       .then((versionDependencies) => {

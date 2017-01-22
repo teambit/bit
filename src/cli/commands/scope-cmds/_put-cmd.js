@@ -20,6 +20,6 @@ export default class Put extends Command {
   }
 
   report(componentObjects: ComponentObjects): string {
-    return pack(componentObjects.toString());
+    return componentObjects.toString();
   }
 }
