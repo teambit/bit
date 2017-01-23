@@ -8,14 +8,14 @@ param(
 #$ErrorActionPreference = 'Stop'; # stop on all errors
 
 $latest_version = $(node -p -e "require('../package.json').version")
-$latest_chocolatey_version = (Find-Package -Name Bit).Version
+#$latest_chocolatey_version = (Find-Package -Name Bit).Version
 
-if ([Version]$latest_chocolatey_version -ge [Version]$latest_version) {
-  Write-Output ('Current version ({0}) is the latest' -f $latest_chocolatey_version)
-  Exit
-}
+#if ([Version]$latest_chocolatey_version -ge [Version]$latest_version) {
+#  Write-Output ('Current version ({0}) is the latest' -f $latest_chocolatey_version)
+#  Exit
+#}
 
-Write-Output ('Latest version is {0}, version on Chocolatey is {1}. Updating...' -f $latest_version, $latest_chocolatey_version)
+#Write-Output ('Latest version is {0}, version on Chocolatey is {1}. Updating...' -f $latest_version, $latest_chocolatey_version)
 
 if (-Not (Test-Path artifacts)) {
   mkdir artifacts
