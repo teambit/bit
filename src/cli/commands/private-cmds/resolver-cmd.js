@@ -7,6 +7,7 @@ class ResolverSet extends Command {
   name = 'set <resolverPath>';
   description = 'set remote resolver to scope (use from scope directory)';
   alias = 's';
+  private = true;
   opts = [];
   
   action([resolverPath, ]: [string, ]): Promise<any> {
