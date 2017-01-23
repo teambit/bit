@@ -37,7 +37,7 @@ $content = [System.IO.File]::ReadAllText("$PSScriptRoot\..\resources\win-chocola
 [System.IO.File]::WriteAllText("$PSScriptRoot\..\resources\win-chocolatey\tools\chocolateyinstall.ps1", $content)
 
 
-choco pack ..\resources\win-chocolatey\bit.nuspec --version $latest_version
+choco pack $PSScriptRoot\..\resources\win-chocolatey\bit.nuspec --version $latest_version
 mv *.nupkg artifacts
 
 if (!$Publish) {
