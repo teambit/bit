@@ -23,14 +23,14 @@ is super simple.
 scoping mechanism to easily find and reuse components created by you or by others.
 		</description>
 		<projectUrl>https://bitsrc.io/</projectUrl>
-		<packageSourceUrl>https://github.com/cocycles/bit/tree/master/resources/win-chocolatey</packageSourceUrl>
-		<projectSourceUrl>https://github.com/cocycles/bit</projectSourceUrl>
-		<licenseUrl>https://github.com/cocycles/bit/raw/master/LICENSE</licenseUrl>
+		<packageSourceUrl>https://github.com/teambit/bit/tree/master/resources/win-chocolatey</packageSourceUrl>
+		<projectSourceUrl>https://github.com/teambit/bit</projectSourceUrl>
+		<licenseUrl>https://raw.githubusercontent.com/teambit/bit/master/LICENSE</licenseUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<iconUrl>https://cdn.rawgit.com/cocycles/assets/master/icon.png</iconUrl>
+		<iconUrl>http://assets.bitsrc.io/bit-og.jpg</iconUrl>
 		<docsUrl>https://bitsrc.io/en/docs/</docsUrl>
-		<bugTrackerUrl>https://github.com/cocycles/bit/issues</bugTrackerUrl>
-		<releaseNotes>https://github.com/cocycles/bit/releases/tag/v$version$</releaseNotes>
+		<bugTrackerUrl>https://github.com/teambit/bit/issues</bugTrackerUrl>
+		<releaseNotes>https://github.com/teambit/bit/tags</releaseNotes>
 		
 	</metadata>
 
