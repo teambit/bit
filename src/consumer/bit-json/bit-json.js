@@ -132,4 +132,16 @@ export default class BitJson extends AbstractBitJson {
       return resolve(BitJson.fromPlainObject(mergedBJ));
     });
   }
+
+  static loadSync(dirPath: string, protoBJ?: ConsumerBitJson) {
+    let thisBJ = {};
+    try {
+      thisBJ = JSON.parse(fs.readFileSync(composePath(dirPath)).toString('utf8'));
+    } catch (e) {} // eslint-disable-line
+    
+    if (!R.prop('name', thisBJ)) thisBJ.name = path.basename(dirPath);
+    if (!R.prop('box', thisBJ)) thisBJ.box = path.basename(path.dirname(dirPath));
+    const mergedBJ = R.merge(protoBJ ? protoBJ.toPlainObject() : {}, thisBJ);
+    return BitJson.fromPlainObject(mergedBJ);
+  }
 }

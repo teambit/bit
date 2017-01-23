@@ -27,7 +27,13 @@ export default class Cache extends Repository {
   }
 
   composePath(bitId: BitId) {
-    return path.join(this.getPath(), bitId.box, bitId.name, bitId.scope, bitId.version);
+    return path.join(
+      this.getPath(),
+      bitId.box,
+      bitId.name,
+      bitId.getScopeWithoutRemoteAnnotaion(),
+      bitId.version
+    );
   }
 
   store(component: Component) {

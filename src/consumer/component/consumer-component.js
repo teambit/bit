@@ -32,7 +32,8 @@ export type ComponentProps = {
   packageDependencies?: ?Object,
   impl?: ?Impl|string,
   specs?: ?Specs|string,
-  docs?: ?ParsedDocs[]
+  docs?: ?ParsedDocs[],
+  dist?: ?string,
 }
 
 export default class Component {
@@ -49,6 +50,7 @@ export default class Component {
   _impl: ?Impl|string;
   _specs: ?Specs|string;
   _docs: ?ParsedDocs[];
+  _dist: ?string;
 
   set impl(val: Impl) { this._impl = val; }
 
@@ -93,6 +95,11 @@ export default class Component {
     return this._docs;
   }
 
+  get dist(): ?string {
+    if (!this._dist) return null;
+    return this._dist;
+  }
+
   constructor({ 
     name,
     box,
@@ -107,6 +114,7 @@ export default class Component {
     impl,
     specs,
     docs,
+    dist,
   }: ComponentProps) {
     this.name = name;
     this.box = box || DEFAULT_BOX_NAME;
@@ -121,6 +129,7 @@ export default class Component {
     this._specs = specs;
     this._impl = impl;
     this._docs = docs;
+    this._dist = dist;
   }
 
   writeBitJson(bitDir: string): Promise<Component> {
@@ -150,62 +159,54 @@ export default class Component {
     .then(() => this);
   }
 
-  test(scope: Scope): Promise<any|null> { // TODO - create TestResults Type
-    function compileIfNeeded(src) {
-      return new Promise((resolve, reject) => {
-        if (this.compilerId) { 
-          return scope.loadEnvironment(this.compilerId)
-          .then(({ compile }) => {
-            try {
-              const { code } = compile(src);
-              return resolve(code);
-            } catch (e) { return reject(e); }
-          }).catch(reject);
-        }
+  // test(scope: Scope): Promise<any|null> { // TODO - create TestResults Type
+    // function compileIfNeeded(src) {
+    //   return new Promise((resolve, reject) => {
+    //     if (this.compilerId) { 
+    //       const compiler = scope.loadEnvironment(this.compilerId);
+    //       try {
+    //         const { code } = compiler.compile(src);
+    //         return resolve(code);
+    //       } catch (e) { return reject(e); }
+    //     }
 
-        return resolve(src);
-      });
+    //     return resolve(src);
+    //   });
+    // }
+    //
+    // return new Promise((resolve, reject) => {
+    //   if (!this.specs) { return resolve(null); }
+    //   try {
+    //     const tester = scope.loadEnvironment(this.testerId)
+    //       tester = {
+    //         test: (p) => {
+    //           console.log(p);
+    //           return { t: 'is-awesome' };
+    //         }
+    //       };
+    //       return compileIfNeeded(this.specs.src)
+    //       .then(specsSrc => scope.tmp.save(specsSrc))
+    //       .then((specsPath) => {
+    //         const results = tester.test(specsPath);
+    //         return scope.tmp.remove(specsPath)
+    //         .then(() => resolve(results));
+    //       });
+    //     });
+    //   } catch (e) { return reject(e); }
+    // });
+  // }
+
+  build(scope: Scope): {code: string, map: Object}|null { // @TODO - write SourceMap Type
+    if (!this.compilerId) return null;
+    try {
+      const compiler = scope.loadEnvironment(this.compilerId);
+      const src = this.impl.src;
+      const { code, map } = compiler.compile(src); // eslint-disable-line
+      this._dist = code;
+      return code;
+    } catch (e) {
+      return e;
     }
-
-    return new Promise((resolve, reject) => {
-      if (!this.specs) { return resolve(null); }
-      try {
-        return scope.loadEnvironment(this.testerId)
-        .then((tester) => {
-          tester = {
-            test: (p) => {
-              console.log(p);
-              return { t: 'is-awesome' };
-            }
-          };
-
-          // $FlowFixMe
-          return compileIfNeeded(this.specs.src)
-          .then(specsSrc => scope.tmp.save(specsSrc))
-          .then((specsPath) => {
-            const results = tester.test(specsPath);
-            return scope.tmp.remove(specsPath)
-            .then(() => resolve(results));
-          });
-        });
-      } catch (e) { return reject(e); }
-    });
-  }
-
-  build(scope: Scope): Promise<{code: string, map: Object}|null> { // @TODO - write SourceMap Type
-    return new Promise((resolve, reject) => {
-      if (!this.compilerId) { return resolve(null); }
-      try {
-        return scope.loadEnvironment(this.compilerId)
-        .then(({ compile }) => {
-          const src = this.impl.src;
-          const { code, map } = compile(src); // eslint-disable-line
-          // const outputFile = path.join(this.bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
-          // fs.outputFileSync(outputFile, code);
-          return resolve({ code, map });
-        });
-      } catch (e) { return reject(e); }
-    });
   }
   
   toObject(): Object {
@@ -223,6 +224,7 @@ export default class Component {
       specs: this.specs ? this.specs.serialize() : null,
       impl: this.impl.serialize(),
       docs: this.docs,
+      dist: this._dist,
     };
   }
 
@@ -245,6 +247,7 @@ export default class Component {
       impl,
       specs,
       docs,
+      dist,
     } = object;
     
     return new Component({
@@ -261,6 +264,7 @@ export default class Component {
       impl: Impl.deserialize(impl),
       specs: specs ? Specs.deserialize(specs) : null,
       docs,
+      dist,
     });
   }
 

@@ -19,19 +19,18 @@ import { flatten, removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
 
-const buildAndSave = (component: Component, scope: Scope, bitDir: string): Promise<Component> =>
-  component.build(scope)
-  .then((val) => {
-    if (!val) return component;
+const buildAndSave = (component: Component, scope: Scope, bitDir: string): Component => {
+  const val = component.build(scope);
+  if (!val) return component;
 
-    const { code } = val;
-    fs.outputFileSync(
-      path.join(bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME),
-      code,
-    );
+  const { code } = val;
+  fs.outputFileSync(
+    path.join(bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME),
+    code,
+  );
 
-    return component;
-  });
+  return component;
+};
 
 export type ConsumerProps = {
   projectPath: string,

@@ -316,7 +316,7 @@ export default class Scope {
     return this.path;
   }
 
-  loadEnvironment(bitId: BitId): Promise<any> {
+  loadEnvironment(bitId: BitId) {
     return this.environment.get(bitId);
   }
 

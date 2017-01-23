@@ -8,6 +8,7 @@ import { Remotes } from '../../remotes';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
 import type { ParsedDocs } from '../../jsdoc/parser';
+import { DEFAULT_BUNDLE_FILENAME } from '../../constants';
 
 export type VersionProps = {
   impl: {
@@ -18,7 +19,10 @@ export type VersionProps = {
     name: string,
     file: Ref
   };
-  dist: ?Ref;
+  dist?: ?{
+    name: string,
+    file: Ref
+  };
   compiler?: ?Ref;
   tester?: ?Ref;
   log: {
@@ -42,6 +46,10 @@ export default class Version extends BitObject {
     name: string,
     file: Ref
   };
+  dist: ?{
+    name: string,
+    file: Ref
+  };
   compiler: ?Ref;
   tester: ?Ref;
   log: {
@@ -53,18 +61,17 @@ export default class Version extends BitObject {
   flattenedDependencies: BitIds;
   packageDependencies: {[string]: string};
   buildStatus: ?boolean;
-  dist: ?Ref;
   testStatus: ?boolean;
 
   constructor(props: VersionProps) {
     super();
     this.impl = props.impl;
     this.specs = props.specs;
+    this.dist = props.dist;
     this.compiler = props.compiler;
     this.tester = props.tester;
     this.log = props.log;
     this.dependencies = props.dependencies || new BitIds();
-    this.dist = props.dist;
     this.docs = props.docs;
     this.flattenedDependencies = props.flattenedDependencies || new BitIds();
     this.packageDependencies = props.packageDependencies || {};
@@ -87,8 +94,10 @@ export default class Version extends BitObject {
   refs(): Ref[] {
     return [
       this.impl.file,
+      // $FlowFixMe
       this.specs ? this.specs.file : null,
-      this.dist,
+      // $FlowFixMe (after filtering the nulls there is no problem)
+      this.dist ? this.dist.file : null,
     ].filter(ref => ref);
   }
 
@@ -102,6 +111,11 @@ export default class Version extends BitObject {
         file: this.specs.file.toString(),
         // $FlowFixMe
         name: this.specs.name        
+      }: null,
+      dist: this.dist ? {
+        file: this.dist.file.toString(),
+        // $FlowFixMe
+        name: this.dist.name        
       }: null,
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
@@ -134,7 +148,10 @@ export default class Version extends BitObject {
         file: Ref.from(props.specs.file),
         name: props.specs.name        
       } : null,
-      dist: props.dist ? Ref.from(props.dist): null,
+      dist: props.dist ? {
+        file: Ref.from(props.dist.file),
+        name: props.dist.name        
+      } : null,
       compiler: props.compiler ? Ref.from(props.compiler): null,
       tester: props.tester ? Ref.from(props.tester): null,
       log: {
@@ -150,13 +167,14 @@ export default class Version extends BitObject {
     });
   }
 
-  static fromComponent(
+  static fromComponent({ component, impl, specs, dist, flattenedDeps, message }: {
     component: ConsumerComponent,
     impl: Source,
     specs: Source,
     flattenedDeps: BitId[],
-    message: string
-  ) {
+    message: string,
+    dist: Source
+  }) {
     return new Version({
       impl: {
         file: impl.hash(),
@@ -166,7 +184,10 @@ export default class Version extends BitObject {
         file: specs.hash(),
         name: component.specsFile
       }: null,
-      dist: component.build().code,
+      dist: dist ? {
+        file: dist.hash(),
+        name: DEFAULT_BUNDLE_FILENAME,
+      }: null,
       compiler: component.compilerId ? Component.fromBitId(component.compilerId).hash() : null,
       tester: component.testerId ? Component.fromBitId(component.testerId).hash() : null,
       log: {
