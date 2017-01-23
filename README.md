@@ -33,60 +33,8 @@ Bit lets you write code components once, and use them anywhere without creating 
 * Only use the code you actually need - applications become lighter and faster
 * Bit is distributed
 
-# development
+## Contributing to Bit
 
-## installation
+Contributions are always welcome, no matter how large or small. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
 
-- install dependencies using yarn
-```bash
-  $ yarn
-```
-
-- you can use npm instead
-```bash
-  $ npm i
-```
-
-- install command globally and link (in order to use the "bit" command globaly and always use the latest development build)
-```bash
-  npm install -g
-  npm link
-```
-
-## Flow
-- install [`flow`](https://flowtype.org/)
-and make sure you have [`flow-typed`](https://github.com/flowtype/flow-typed) installed.
-```bash
-npm install -g flow-bin flow-typed
-```
-
-- install type definitions using flow-typed
-```bash
-  flow-typed install
-```
-
-## build
-
-- build legacy and modern distributions:
-```bash
-  npm run build
-```
-
-- use with watch, to run the build on every code modification
-```bash
-  npm run watch
-```
-
-## test
-
-- run the unit tests
-```bash
-  npm  test
-```
-
-## lint
-
-- run eslint
-```bash
-  npm run lint
-```
+See [Contributing](CONTRIBUTING.md).
