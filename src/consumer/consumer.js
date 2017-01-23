@@ -19,19 +19,18 @@ import { flatten, removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
 
-const buildAndSave = (component: Component, scope: Scope, bitDir: string): Promise<Component> =>
-  component.build(scope)
-  .then((val) => {
-    if (!val) return component;
+const buildAndSave = (component: Component, scope: Scope, bitDir: string): Component => {
+  const val = component.build(scope);
+  if (!val) return component;
 
-    const { code } = val;
-    fs.outputFileSync(
-      path.join(bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME),
-      code,
-    );
+  const { code } = val;
+  fs.outputFileSync(
+    path.join(bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME),
+    code,
+  );
 
-    return component;
-  });
+  return component;
+};
 
 export type ConsumerProps = {
   projectPath: string,
@@ -79,23 +78,16 @@ export default class Consumer {
 
   exportAction(rawId: string, rawRemote: string) { 
     // @TODO - move this method to api, not related to consumer
-    const bitId = BitId.parse(rawId, this.scope.name());
+    const bitId = BitId.parse(rawId, this.scope.name);
     
     return this.scope.exportAction(bitId, rawRemote)
-    .then(() =>
-      this.scope.get(bitId.changeScope(rawRemote))
-      .then(componentDependencies =>
-        this.writeToComponentsDir([componentDependencies])
-      )
-    )
-    .then(() =>
-      this.removeFromComponents(bitId.changeScope(this.scope.name())) // @HACKALERT
-    );
+      .then(componentDependencies => this.writeToComponentsDir([componentDependencies]))
+      .then(() => this.removeFromComponents(bitId.changeScope(this.scope.name))); // @HACKALERT
   }
 
   import(rawId: ?string): Component {
     if (!rawId) { // if no arguments inserted, install according to bitJson dependencies
-      const deps = BitIds.loadDependencies(this.bitJson.dependencies);
+      const deps = BitIds.fromObject(this.bitJson.dependencies);
       
       return this.scope.ensureEnvironment({
         testerId: this.bitJson.testerId,
@@ -106,7 +98,7 @@ export default class Consumer {
       );
     }
 
-    const bitId = BitId.parse(rawId, this.scope.name());
+    const bitId = BitId.parse(rawId, this.scope.name);
     return this.scope.get(bitId)
       .then((componentDependencies) => {
         return this.writeToComponentsDir([componentDependencies]);
@@ -116,7 +108,7 @@ export default class Consumer {
   importEnvironment(rawId: ?string) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
 
-    const bitId = BitId.parse(rawId, this.scope.name());
+    const bitId = BitId.parse(rawId, this.scope.name);
     return this.scope.get(bitId)
     .then((componentDependencies) => {
       return this.scope.writeToEnvironmentsDir(componentDependencies.component); // @HACKALERT - replace with getOne

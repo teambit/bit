@@ -1,95 +1,40 @@
-# bit - the reusable code component manager
-Today, finding small code components means searching the web (e.g. googling stack overflow...) and copy-pasting them across multiple repositories.
-We all do it, and we all know it's bad: it creates an unmaintainable, hard to update code base with an ever growing technological debt.
+<p align="center">
+  <a href="https://bitsrc.io/">
+    <img alt="Bit" src="https://s29.postimg.org/q9flqqoif/cover_github_1.png" width="500">
+  </a>
+</p>
 
-The alternative, treating few lines of code as entire packages, means creating a heavy dependency tree while relying on external sources. 
-We all remember the left pad story. We also know that a bigger dependency tree equals a slower build and a heavier app.
+<p align="center">
+<b>Distributed code component manager</b>
+</p>
+---
+Bit helps us build larger things out of smaller reusable components.
 
-Bit is a distributed code component manager that saves the need to copy-paste code components or to install entire packages for a few lines of code. 
-Each code component can be easily published, found or injected into your code in seconds and without effort.
+Bit lets you write code components once, and use them anywhere without creating code duplications or seating to publish endless micro-packages.
 
-A simple code component like this: 
-```js
-  function padLeft (str, len, ch) {
-    str = String(str);
-    var i = -1;
-    if (!ch && ch !== 0) ch = ' ';
-    len = len - str.length;
-    while (++i < len) {
-      str = ch + str;
-    }
-    return str;
-  }
-  
-  module.exports = padLeft;
-```
+**Write once, use anywhere:** Bit is an open source tool for fast and easy extraction and reuse of code components. Exporting a component to your local (/team / community) scope can be done in mere seconds. Bit makes is easy to write code once, and use it anywhere. 
 
-Simply becomes:
-```js
-  const padLeft = bit('pad-left');
-  padLeft(str, len, ch);
-```
-It allows you to design lighter applications with super fast installation and a duplication-free and easy-to-maintain code base which does not depend on external sources.
+**Easy to maintain:** Bit makes component maintenance super easy. Features like isolated component environment, simple minor versioning and more to make maintenance much, much easier.
 
-## install
-```bash
-  npm -g bit-bin (not supported yet)
-```
+**Simple to find:** Bit uses a functional search and a simple yet smart scoping mechanism to easily find components created by you and your team. Thanks to the component isolated environment, components can be built and run anywhere.
 
-# development
+**Collaborate:** Bit was built to easily create, share and use components for a developer team. You can host your own Bit server.
 
-## installation
+**Bit currently supports JavaScript, but we plan to add drivers for more languages soon enough. Want to add your own drive for any language? We love that, feel free to contribute a driver. If you like to we can even do it together.**
 
-- install dependencies using yarn
-```bash
-  $ yarn
-```
+## Features
 
-- you can use npm instead
-```bash
-  $ npm i
-```
+* Export components is seconds using only two files: implementation and tests. This is possible thanks to Bit’s isolated component environment.
+* Reuse components across repositories (anywhere) without duplications
+* Publish reusable components to remote scopes to collaborate with your team
+* Simple maintenance with a simplified minor component versioning, isolated component environment and more
+* Easily find components using a smart functional search to find and use any component 
+* On-export dependency resolution: better performance and predictability 
+* Only use the code you actually need - applications become lighter and faster
+* Bit is distributed
 
-- install command globally and link (in order to use the "bit" command globaly and always use the latest development build)
-```bash
-  npm install -g
-  npm link
-```
+## Contributing to Bit
 
-## Flow
-- install [`flow`](https://flowtype.org/)
-and make sure you have [`flow-typed`](https://github.com/flowtype/flow-typed) installed.
-```bash
-npm install -g flow-bin flow-typed
-```
+Contributions are always welcome, no matter how large or small. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
 
-- install type definitions using flow-typed
-```bash
-  flow-typed install
-```
-
-## build
-
-- build legacy and modern distributions:
-```bash
-  npm run build
-```
-
-- use with watch, to run the build on every code modification
-```bash
-  npm run watch
-```
-
-## test
-
-- run the unit tests
-```bash
-  npm  test
-```
-
-## lint
-
-- run eslint
-```bash
-  npm run lint
-```
+See [Contributing](CONTRIBUTING.md).

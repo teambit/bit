@@ -1,27 +1,28 @@
 /** @flow */
 import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
-import Init from './commands/other-cmds/init-cmd';
-import ScopeList from './commands/scope-cmds/_list-cmd';
-import Create from './commands/consumer-cmds/create-cmd';
-import Export from './commands/consumer-cmds/export-cmd';
-import List from './commands/consumer-cmds/list-cmd';
-import Modify from './commands/consumer-cmds/modify-cmd';
-import Commit from './commands/consumer-cmds/commit-cmd';
-import Import from './commands/consumer-cmds/import-cmd';
-import Config from './commands/consumer-cmds/config-cmd';
-import Remote from './commands/consumer-cmds/remote-cmd';
-import Search from './commands/consumer-cmds/search-cmd';
-import Test from './commands/consumer-cmds/test-cmd';
-import Show from './commands/consumer-cmds/show-cmd';
-import Status from './commands/consumer-cmds/status-cmd';
-import CatObject from './commands/scope-cmds/cat-object-cmd';
-import Resolver from './commands/scope-cmds/resolver-cmd';
-import Prepare from './commands/scope-cmds/_prepare-cmd';
-import DescribeScope from './commands/scope-cmds/_scope-cmd';
-import Put from './commands/scope-cmds/_put-cmd';
-import Fetch from './commands/scope-cmds/_fetch-cmd';
-import Log from './commands/consumer-cmds/log-cmd';
+import Init from './commands/public-cmds/init-cmd';
+import ScopeList from './commands/private-cmds/_list-cmd';
+import Create from './commands/public-cmds/create-cmd';
+import Export from './commands/public-cmds/export-cmd';
+import List from './commands/public-cmds/list-cmd';
+import Modify from './commands/public-cmds/modify-cmd';
+import Commit from './commands/public-cmds/commit-cmd';
+import Import from './commands/public-cmds/import-cmd';
+import Config from './commands/public-cmds/config-cmd';
+import Remote from './commands/public-cmds/remote-cmd';
+import Search from './commands/public-cmds/search-cmd';
+import Test from './commands/public-cmds/test-cmd';
+import Show from './commands/public-cmds/show-cmd';
+import Status from './commands/public-cmds/status-cmd';
+import CatObject from './commands/private-cmds/cat-object-cmd';
+import Resolver from './commands/private-cmds/resolver-cmd';
+import Prepare from './commands/private-cmds/_prepare-cmd';
+import DescribeScope from './commands/private-cmds/_scope-cmd';
+import Put from './commands/private-cmds/_put-cmd';
+import Fetch from './commands/private-cmds/_fetch-cmd';
+import Log from './commands/public-cmds/log-cmd';
+import Build from './commands/public-cmds/build-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -45,6 +46,7 @@ export default function registerCommands(): CommandRegistrar {
     new Put(),
     new ScopeList(),
     new Fetch(),
+    new Build(),
     new DescribeScope()
   ]);
 }

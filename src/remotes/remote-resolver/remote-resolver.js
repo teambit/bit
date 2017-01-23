@@ -13,7 +13,7 @@ const remoteResolver = (scopeName: string, thisScope: Scope): Promise<string> =>
   // $FlowFixMe
   else resolverFunction = require(resolverPath);
 
-  return resolverFunction(scopeName, thisScope.name());
+  return resolverFunction(scopeName, thisScope.name);
 };
 
 export default remoteResolver;

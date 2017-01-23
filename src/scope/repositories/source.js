@@ -4,7 +4,7 @@ import Repository from '../repository';
 import { SourceNotFound } from '../exceptions';
 import { BIT_SOURCES_DIRNAME } from '../../constants';
 import InvalidBit from '../../consumer/component/exceptions/invalid-bit';
-import Bit from '../../consumer/component';
+import Bit from '../../consumer/s';
 import { BitId, BitIds } from '../../bit-id';
 import { listDirectories, rmDir, empty, glob } from '../../utils';
 
@@ -19,7 +19,7 @@ export default class Source extends Repository {
 
   getPartial(name: string) {
     // @TODO - partial bit does not exist anymore, implement something else to load bits in the sources dir
-    // return PartialBit.load(path.join(this.getPath(), name), name, this.scope.name());
+    // return PartialBit.load(path.join(this.getPath(), name), name, this.scope.name);
   }
 
   setSource(bit: Bit, dependencies: Bit[]): Promise<Bit> {
@@ -47,7 +47,7 @@ export default class Source extends Repository {
         name: id.name,
         box: id.box,
         version
-      }), id.name, this.scope.name());
+      }), id.name, this.scope.name);
     } catch (err) {
       throw new SourceNotFound(id);
     }

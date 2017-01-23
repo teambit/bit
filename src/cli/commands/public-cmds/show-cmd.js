@@ -2,7 +2,6 @@
 import Command from '../../command';
 import { getInlineBit, getScopeBit } from '../../../api/consumer';
 import { paintBitProp, paintHeader, paintDoc } from '../../chalk-box';
-import { parser } from '../../../jsdoc';
 
 export default class Show extends Command {
   name = 'show <id>';
@@ -17,23 +16,19 @@ export default class Show extends Command {
       if (inline) return getInlineBit({ id });
       return getScopeBit({ id });
     }
-
-    let component = {};
     
     return getBitComponent()
-    .then((componentResult) => {
-      component = componentResult;
-      return parser.parse(component._impl.src);
-    })
-    .then(docs => ({
-      name: component.name,
-      box: component.box,
-      compiler: component.compilerId,
-      tester: component.testerId,
-      dependencies: component.dependencies,
-      packageDependencies: component.packageDependencies,
-      docs
-    }));
+    .then((component) => {
+      return ({
+        name: component.name,
+        box: component.box,
+        compiler: component.compilerId,
+        tester: component.testerId,
+        dependencies: component.dependencies,
+        packageDependencies: component.packageDependencies,
+        docs: component.docs
+      });
+    });
   }
 
   report({ 

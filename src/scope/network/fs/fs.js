@@ -28,13 +28,17 @@ export default class Fs {
     return Promise.resolve(this.getScope().describe());
   }
 
-  push(componentObjects: ComponentObjects) {
+  push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
     return this.getScope().export(componentObjects);
   }
 
   fetch(bitIds: BitIds): Promise<ComponentObjects[]> {
     return this.getScope().getManyObjects(bitIds)
       .then(bitsMatrix => flatten(bitsMatrix));
+  }
+
+  fetchAll(ids: BitIds): Promise<ComponentObjects[]> {
+    return this.getScope().getManyObjects(ids);
   }
 
   fetchOnes(bitIds: BitIds): Promise<ComponentObjects[]> {

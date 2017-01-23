@@ -1,7 +1,7 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs';
-import { merge, tap } from 'ramda';
+import { merge } from 'ramda';
 import { GlobalRemotes } from '../global-config';
 import flattenDependencies from './flatten-dependencies';
 import ComponentObjects from './component-objects';
@@ -14,12 +14,13 @@ import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
 import { Tmp, Environment } from './repositories';
 import { BitId, BitIds } from '../bit-id';
-import Component from '../consumer/component';
+import ConsumerComponent from '../consumer/component';
 import ComponentVersion from './component-version';
 import { Repository, Ref, BitObject } from './objects';
 import ComponentDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
+import { postExportHook } from '../hooks';
 
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
 
@@ -61,12 +62,16 @@ export default class Scope {
     return this.scopeJson.groupName;
   }
 
-  hash() {
-    return this.name();
+  get name(): string {
+    return this.scopeJson.name;
   }
 
-  name() {
-    return this.scopeJson.name;
+  hash() {
+    return this.name;
+  }
+
+  getPath() {
+    return this.path;
   }
 
   remotes(): Promise<Remotes> {
@@ -82,13 +87,13 @@ export default class Scope {
 
   describe(): ScopeDescriptor {
     return {
-      name: this.name()
+      name: this.name
     };
   }
 
-  toConsumerComponents(components: ComponentModel[]): Component {
+  toConsumerComponents(components: ComponentModel[]): Promise<ConsumerComponent[]> {
     return Promise.all(components.map(c =>
-      c.toConsumerComponent(c.latest().toString(), this.name(), this.objects))
+      c.toConsumerComponent(c.latest().toString(), this.name, this.objects))
     );
   }
 
@@ -97,7 +102,7 @@ export default class Scope {
       return this.remotes()
       .then(remotes =>
         // $FlowFixMe
-        remotes.resolve(scopeName, this.name())
+        remotes.resolve(scopeName, this.name)
         .then(remote => remote.list())
       );
     }
@@ -109,17 +114,17 @@ export default class Scope {
   listStage() {
     return this.objects.list()
     .then(components => this.toConsumerComponents(
-      components.filter(c => c.scope === this.name())
+      components.filter(c => c.scope === this.name)
     ));
   }
 
-  put(consumerComponent: Component, message: string): Promise<ComponentDependencies> {
-    consumerComponent.scope = this.name();
+  put(consumerComponent: ConsumerComponent, message: string): Promise<ComponentDependencies> {
+    consumerComponent.scope = this.name;
     return this.importMany(consumerComponent.dependencies)
       .then((dependencies) => {
         dependencies = flattenDependencies(dependencies);
         return this.sources.addSource(consumerComponent, dependencies, message)
-        // // @TODO make the scope install the required env
+        // @TODO make the scope install the required env
           // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
           .then((component) => {
             return this.objects.persist()
@@ -135,14 +140,28 @@ export default class Scope {
   }
 
   export(componentObjects: ComponentObjects): Promise<any> {
-    return this.sources.merge(componentObjects.toObjects(this.objects), true)
-      .then(() => this.objects.persist());
+    const objects = componentObjects.toObjects(this.objects);
+    const { component } = objects;
+    return this.sources.merge(objects, true)
+      .then(() => this.objects.persist())
+      .then(() => component.toComponentVersion(LATEST, this.name))
+      .then((compVersion: ComponentVersion) => 
+        this.getObjects(compVersion.id)
+        .then((objs) => {
+          return compVersion.toConsumer(this.objects)
+          .then(consumerComponent =>
+            postExportHook(consumerComponent.toObject())
+          ).then(() => objs);
+        })
+      );
   }
 
-  getExternal(id: BitId, remotes: Remotes): Promise<VersionDependencies> {    
+  getExternal(id: BitId, remotes: Remotes, localFetch: bool = true): Promise<VersionDependencies> {
     return this.sources.get(id)
       .then((component) => {
-        if (component) return component.toVersionDependencies(id.version, this);
+        if (component && localFetch) {
+          return component.toVersionDependencies(id.version, this, id.scope);
+        }
         return remotes
           .fetch([id], this)
           .then(([componentObjects, ]) => {
@@ -152,10 +171,10 @@ export default class Scope {
       });
   }
 
-  getExternalOne(id: BitId, remotes: Remotes) {
+  getExternalOne(id: BitId, remotes: Remotes, localFetch: bool = true) {
     return this.sources.get(id)
       .then((component) => {
-        if (component) return component.toComponentVersion(id.version, this.name());
+        if (component && localFetch) return component.toComponentVersion(id.version, this.name);
         return remotes.fetch([id], this, true)
           .then(([componentObjects, ]) => this.importSrc(componentObjects))
           .then(() => this.getExternal(id, remotes));
@@ -171,8 +190,12 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
+  getComponentObjects(id: BitId): Promise<ComponentObjects> {
+    return this.sources.getObjects(id);
+  }
+
   import(id: BitId): Promise<VersionDependencies> {
-    if (!id.isLocal(this.name())) {
+    if (!id.isLocal(this.name)) {
       return this.remotes()
         .then(remotes => this.getExternal(id, remotes));
     }
@@ -183,26 +206,40 @@ export default class Scope {
         return component.toVersionDependencies(id.version, this);
       });
   }
- 
+
   get(id: BitId): Promise<ComponentDependencies> {
     return this.import(id)
       .then((versionDependencies) => {
         return versionDependencies.toConsumer(this.objects);
       });
   }
-
+  
+  // @TODO optimize ASAP
   modify(id: BitId): Promise<ComponentDependencies> {
-    return this.import(id, true)
-      .then(versionDependencies => versionDependencies.toObjects(this.objects))
-      .then(componentObjects => this.export(componentObjects)) 
-      .then(() => {
-        id.scope = this.name();
-        return this.get(id);
-      });
+    return this.remotes().then((remotes) => {
+      return this.import(id, true)
+        .then((versionDependencies) => {
+          const versions = versionDependencies.component.component.listVersions();
+          const versionsP = Promise.all(versions.map((version) => {
+            const versionId = BitId.parse(id.toString());
+            versionId.version = version.toString();
+            return this.getExternalOne(versionId, remotes, false);
+          }));
+
+          return Promise.all([versionDependencies.toObjects(this.objects), versionsP]);
+        })
+        .then(([componentObjects, ]) => {
+          return this.export(componentObjects);
+        }) 
+        .then(() => {
+          id.scope = this.name;
+          return this.get(id);
+        });
+    });
   }
 
-  loadComponent(id: BitId) {
-    if (!id.isLocal(this.name())) {
+  loadComponent(id: BitId): ConsumerComponent {
+    if (!id.isLocal(this.name)) {
       return this.remotes()
         .then((remotes) => {
           return remotes.resolve(id.scope, this)
@@ -212,7 +249,7 @@ export default class Scope {
     }
     
     return this.sources.get(id)
-      .then(component => component.toConsumerComponent(id.version, this.name(), this.objects));
+      .then(component => component.toConsumerComponent(id.version, this.name, this.objects));
   }
 
   loadComponentLogs(id: BitId) {
@@ -221,13 +258,13 @@ export default class Scope {
   }
 
   getOne(id: BitId): Promise<ComponentVersion> {
-    if (!id.isLocal(this.name())) {
+    if (!id.isLocal(this.name)) {
       return this.remotes()
         .then(remotes => this.getExternalOne(id, remotes));
     }
     
     return this.sources.get(id)
-      .then(component => component.toComponentVersion(id.version, this.name()));
+      .then(component => component.toComponentVersion(id.version, this.name));
   }
 
   getOneObject(id: BitId): Promise<ComponentObjects> {
@@ -247,14 +284,13 @@ export default class Scope {
     return this.remotes().then((remotes) => {
       return remotes.resolve(remoteName, this).then((remote) => {
         return this.sources.getObjects(bitId)
-        .then(component => 
-          remote.push(component)
-          .then((results: { success: bool, val: any }[]) => {
-            // @TODO - verify results from push
-            return this.clean(bitId)
-            .then(() => component);
-          })
-        );
+        .then(component => remote.push(component)
+        .then(objects => this.importSrc(objects))
+        .then(() => this.clean(bitId))
+        .then(() => {
+          bitId.scope = remoteName;
+          return this.get(bitId);
+        }));
       });
     });
   }
@@ -280,15 +316,11 @@ export default class Scope {
     return Promise.all(ids.map(bitId => this.import(bitId)));
   }
 
-  getPath() {
-    return this.path;
-  }
-
-  loadEnvironment(bitId: BitId): Promise<any> {
+  loadEnvironment(bitId: BitId) {
     return this.environment.get(bitId);
   }
 
-  writeToEnvironmentsDir(component: Component) {
+  writeToEnvironmentsDir(component: ConsumerComponent) {
     return this.environment.store(component);
   }
   
@@ -297,6 +329,12 @@ export default class Scope {
    */
   ensureEnvironment({ testerId, compilerId }: any): Promise<any> {
     return this.environment.ensureEnvironment({ testerId, compilerId });
+  }
+
+  build(bitId: BitId): Promise<string> {
+    return this.loadComponent(bitId).then((component) => {
+      return component.build(this);
+    });
   }
 
   static create(path: string = process.cwd(), name: ?string, groupName: ?string) {

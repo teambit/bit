@@ -9,6 +9,7 @@ import Version from '../models/version';
 import Source from '../models/source';
 import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
+import consumerComponent from '../../consumer/component/consumer-component';
 
 export type ComponentTree = {
   component: Component;
@@ -29,7 +30,7 @@ export default class SourceRepository {
   findComponent(component: Component): Promise<Component> {
     return this.objects()
       .findOne(component.hash())
-      .catch((e) => {
+      .catch(() => {
         return null;
       });
   }
@@ -42,7 +43,7 @@ export default class SourceRepository {
         .then(() => new ComponentVersion(
           component,
           versionNum,
-          this.scope.name()
+          this.scope.name
         ));
     });
   }
@@ -68,21 +69,26 @@ export default class SourceRepository {
       });
   }
 
-  addSource(source: any, dependencies: ComponentVersion[], message: string): Promise<Component> {
-    dependencies = dependencies.map(dep => dep.toId());
+  addSource(source: consumerComponent, dependencies: ComponentVersion[], message: string): Promise<Component> {
+    const flattenedDeps = dependencies.map(dep => dep.id);
     const objectRepo = this.objects();
     return this.findOrAddComponent(source)
       .then((component) => {
         const impl = Source.from(Buffer.from(source.impl.src));
+        const dist = source.build(this.scope) ? Source.from(Buffer.from(source.dist)): null;
         const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
-        const version = Version.fromComponent(source, impl, specs, dependencies, message);
+
+        const version = Version.fromComponent({
+          component: source, impl, specs, dist, flattenedDeps, message
+        });
         component.addVersion(version);
         
         objectRepo
           .add(version)
           .add(component)
           .add(impl)
-          .add(specs);
+          .add(specs)
+          .add(dist);
         
         return component;
       });
@@ -101,9 +107,9 @@ export default class SourceRepository {
   }
 
   merge({ component, objects }: ComponentTree, inScope: boolean = false): Promise<Component> {
-    if (inScope) component.scope = this.scope.name();
+    if (inScope) component.scope = this.scope.name;
     return this.findComponent(component).then((existingComponent) => {
-      if (!existingComponent || component.compare(existingComponent)) {
+      if (!existingComponent || component.compatibleWith(existingComponent)) {
         return this.put({ component, objects });
       }
       

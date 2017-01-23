@@ -33,12 +33,21 @@ export default class ComponentVersion {
     return this.toId();
   }
 
-  toVersionDependencies(scope: Scope): Promise<VersionDependencies> {
+  toVersionDependencies(scope: Scope, source: string): Promise<VersionDependencies> {
     return this.getVersion(scope.objects)
       .then((version) => {
-        return version.collectDependencies(scope);
-      })
-      .then(dependencies => new VersionDependencies(this, dependencies));
+        if (!version) {
+          return scope.remotes()
+            .then((remotes) => {
+              const src = this.id;
+              src.scope = source;
+              return scope.getExternal(src, remotes, false);
+            });
+        }
+        
+        return version.collectDependencies(scope)
+          .then(dependencies => new VersionDependencies(this, dependencies));
+      });
   }
 
   toConsumer(repo: Repository) {

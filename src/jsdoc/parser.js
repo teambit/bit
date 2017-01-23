@@ -3,7 +3,7 @@ import esprima from 'esprima';
 import doctrine from 'doctrine';
 import walk from 'esprima-walk';
 
-type DataInfo = {
+export type ParsedDocs = {
     type: string,
     name: string,
     description: string,
@@ -11,7 +11,7 @@ type DataInfo = {
     returns?: Object,
 };
 
-const parsedData: Array<DataInfo> = [];
+const parsedData: Array<ParsedDocs> = [];
 
 function getFunctionName(node: Object): string {
   if (node.type === 'FunctionDeclaration') return node.id.name;
@@ -108,13 +108,15 @@ function extractData(node: Object) {
   }
 }
 
-function toString(doc: DataInfo): string {
+function toString(doc: ParsedDocs): string {
   let params;
   let returns = '';
-  let formattedDoc = `type: ${doc.type}, name: ${doc.name}`;
+  let formattedDoc = `\ntype: ${doc.type}\nname: ${doc.name} \n`;
+
   if (doc.description) {
-    formattedDoc += `, description: ${doc.description}`;
+    formattedDoc += `description: ${doc.description}\n`;
   }
+
   if (doc.params && doc.params.length) {
     params = doc.params.map((param) => {
       let formattedParam = `${param.name}`;
@@ -123,36 +125,36 @@ function toString(doc: DataInfo): string {
       }
       return formattedParam;
     }).join(', ');
-    formattedDoc += `, params: ${params}`;
+    formattedDoc += `params: ${params}\n`;
   }
   if (doc.returns) {
     if (doc.returns.description) {
       returns = `${doc.returns.description} `;
     }
+
     if (doc.returns.type) {
       returns += `(${doc.returns.type})`;
     }
+
     if (returns) {
-      formattedDoc += `, returns: ${returns}`;
+      formattedDoc += `returns: ${returns}\n`;
     }
   }
 
   return formattedDoc;
 }
 
-function parse(data: string): Promise<any> {
-  return new Promise((resolve) => {
-    try {
-      const ast = esprima.parse(data, {
-        attachComment: true,
-        sourceType: 'module'
-      });
-      walk(ast, extractData);
-      resolve(parsedData);
-    } catch (e) { // never mind, ignore the doc of this source
-      resolve();
-    }
-  });
+function parse(data: string): ParsedDocs|[] {
+  try {
+    const ast = esprima.parse(data, {
+      attachComment: true,
+      sourceType: 'module'
+    });
+    walk(ast, extractData);
+    return parsedData;
+  } catch (e) { // never mind, ignore the doc of this source
+    return parsedData;
+  }
 }
 
 module.exports = {

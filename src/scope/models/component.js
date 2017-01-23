@@ -2,7 +2,7 @@
 import { equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import { VersionNotFound } from '../exceptions';
-import { forEach, empty, mapObject, values } from '../../utils';
+import { forEach, empty, mapObject, values, diff, filterObject, contains } from '../../utils';
 import Version from './version';
 import { DEFAULT_BOX_NAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';
@@ -39,8 +39,17 @@ export default class Component extends BitObject {
     return values(this.versions);
   }
 
-  compare(component: Component) {
-    return equals(component.versions, this.versions);
+  listVersions(): number[] {
+    return Object.keys(this.versions).map(versionStr => parseInt(versionStr));
+  }
+
+  compatibleWith(component: Component) {
+    const differnece = diff(
+      Object.keys(this.versions), 
+      Object.keys(component.versions
+    ));
+    const comparableObject = filterObject(this.versions, (val, key) => !differnece.includes(key));
+    return equals(component.versions, comparableObject);
   }
 
   latest(): number {
@@ -90,10 +99,6 @@ export default class Component extends BitObject {
     };
   }
 
-  listVersions(): number[] {
-    return Object.keys(this.versions).map(versionStr => parseInt(versionStr));
-  }
-
   loadVersion(version: number, repository: Repository): Promise<Version> {
     const versionRef = this.versions[version];
     if (!versionRef) throw new VersionNotFound();
@@ -123,33 +128,30 @@ export default class Component extends BitObject {
   }
 
   toConsumerComponent(versionStr: string, scopeName: string, repository: Repository) {
-    const versionNum = VersionParser
-      .parse(versionStr)
-      .resolve(this.listVersions());
-
-    return this.loadVersion(versionNum, repository)
-      .then((version) => {
-        const implP = version.impl.file.load(repository);
-        const specsP = version.specs ? version.specs.file.load(repository) : null;
-        const compilerP = version.compiler ? version.compiler.load(repository) : null;
-        const testerP = version.tester ? version.tester.load(repository): null;
-        return Promise.all([implP, specsP, compilerP, testerP])
-        .then(([impl, specs, compiler, tester]) => {
-          return new ConsumerComponent({
-            name: this.name,
-            box: this.box,
-            version: versionNum,
-            scope: this.scope,
-            implFile: version.impl.name,
-            specsFile: version.specs ? version.specs.name : null,
-            compilerId: compiler ? compiler.toId() : null,
-            testerId: tester ? tester.toId() : null,
-            packageDependencies: version.packageDependencies,
-            impl: new Impl(impl.toString()),
-            specs: specs ? new Specs(specs.toString()): null
+    const componentVersion = this.toComponentVersion(versionStr, scopeName);
+    return componentVersion
+      .getVersion(repository)
+        .then((version) => {
+          const implP = version.impl.file.load(repository);
+          const specsP = version.specs ? version.specs.file.load(repository) : null;
+          return Promise.all([implP, specsP])
+          .then(([impl, specs]) => {
+            return new ConsumerComponent({
+              name: this.name,
+              box: this.box,
+              version: componentVersion.version,
+              scope: this.scope,
+              implFile: version.impl.name,
+              specsFile: version.specs ? version.specs.name : null,
+              compilerId: version.compiler,
+              testerId: version.tester,
+              packageDependencies: version.packageDependencies,
+              impl: new Impl(impl.toString()),
+              specs: specs ? new Specs(specs.toString()): null,
+              docs: version.docs
+            });
           });
         });
-      });
   }
 
   refs(): Ref[] {
@@ -160,9 +162,9 @@ export default class Component extends BitObject {
     return new Buffer(JSON.stringify(this.toObject()));
   }
 
-  toVersionDependencies(version: string, scope: Scope) {
-    const versionComp = this.toComponentVersion(version, scope.name());
-    return versionComp.toVersionDependencies(scope);
+  toVersionDependencies(version: string, scope: Scope, source: string) {
+    const versionComp = this.toComponentVersion(version, scope.name);
+    return versionComp.toVersionDependencies(scope, source);
   }
 
   static parse(contents: string): Component {

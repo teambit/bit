@@ -81,7 +81,7 @@ export default class AbstractBitJson {
   }
 
   getDependencies(): BitIds {
-    return BitIds.loadDependencies(this.dependencies);
+    return BitIds.fromObject(this.dependencies);
   }
 
   toPlainObject(): Object {

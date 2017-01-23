@@ -80,8 +80,9 @@ export default class BitId {
       if (scope === LOCAL_SCOPE_NOTATION && !realScopeName) {
         throw new Error('real scope name is required in bitId.parse with @this notation');
       }
+      
+      // $FlowFixMe (in this case the realScopeName is not null)
       return new BitId({
-      // $FlowFixMe
         scope: scope === LOCAL_SCOPE_NOTATION ? realScopeName : scope,
         box,
         name,
@@ -94,9 +95,9 @@ export default class BitId {
       if (scope === LOCAL_SCOPE_NOTATION && !realScopeName) {
         throw new Error('real scope name is required in bitId.parse with @this notation');
       }
-
+      
+      // $FlowFixMe (in this case the realScopeName is not null)
       return new BitId({
-        // $FlowFixMe
         scope: scope === LOCAL_SCOPE_NOTATION ? realScopeName : scope,
         name,
         version

@@ -7,6 +7,8 @@ import Component from './component';
 import { Remotes } from '../../remotes';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
+import type { ParsedDocs } from '../../jsdoc/parser';
+import { DEFAULT_BUNDLE_FILENAME } from '../../constants';
 
 export type VersionProps = {
   impl: {
@@ -17,18 +19,20 @@ export type VersionProps = {
     name: string,
     file: Ref
   };
-  dist: ?Ref;
-  compiler?: ?Ref;
-  tester?: ?Ref;
+  dist?: ?{
+    name: string,
+    file: Ref
+  };
+  compiler?: ?BitId;
+  tester?: ?BitId;
   log: {
     message: string,
     date: string
   };
+  docs?: ParsedDocs[],
   dependencies?: BitIds;
   flattenedDependencies?: BitIds;
-  packageDependencies?: {[string]: string}; 
-  buildStatus?: boolean;
-  testStatus?: boolean;
+  packageDependencies?: {[string]: string};
 }
 
 export default class Version extends BitObject {
@@ -40,36 +44,37 @@ export default class Version extends BitObject {
     name: string,
     file: Ref
   };
-  compiler: ?Ref;
-  tester: ?Ref;
+  dist: ?{
+    name: string,
+    file: Ref
+  };
+  compiler: ?BitId;
+  tester: ?BitId;
   log: {
     message: string,
     date: string
   };
+  docs: ?ParsedDocs[];
   dependencies: BitIds;
   flattenedDependencies: BitIds;
   packageDependencies: {[string]: string};
-  buildStatus: ?boolean;
-  dist: ?Ref;
-  testStatus: ?boolean;
 
   constructor(props: VersionProps) {
     super();
     this.impl = props.impl;
     this.specs = props.specs;
+    this.dist = props.dist;
     this.compiler = props.compiler;
     this.tester = props.tester;
     this.log = props.log;
     this.dependencies = props.dependencies || new BitIds();
-    this.dist = props.dist;
+    this.docs = props.docs;
     this.flattenedDependencies = props.flattenedDependencies || new BitIds();
     this.packageDependencies = props.packageDependencies || {};
-    this.buildStatus = props.buildStatus;
-    this.testStatus = props.testStatus;
   }
 
   flattenDependencies(scope: Scope, remotes: Remotes) {
-    this.dependencies.fetch(scope, remotes);
+    return this.dependencies.fetch(scope, remotes);
   }
 
   id() {
@@ -83,8 +88,10 @@ export default class Version extends BitObject {
   refs(): Ref[] {
     return [
       this.impl.file,
+      // $FlowFixMe
       this.specs ? this.specs.file : null,
-      this.dist,
+      // $FlowFixMe (after filtering the nulls there is no problem)
+      this.dist ? this.dist.file : null,
     ].filter(ref => ref);
   }
 
@@ -99,17 +106,21 @@ export default class Version extends BitObject {
         // $FlowFixMe
         name: this.specs.name        
       }: null,
+      dist: this.dist ? {
+        file: this.dist.file.toString(),
+        // $FlowFixMe
+        name: this.dist.name        
+      }: null,
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
       log: {
         message: this.log.message,
         date: this.log.date,
       },
+      docs: this.docs,
       dependencies: this.dependencies.map(dep => dep.toString()),
       flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
-      packageDependencies: this.packageDependencies,
-      buildStatus: this.buildStatus,
-      testStatus: this.testStatus
+      packageDependencies: this.packageDependencies
     };
   }
 
@@ -119,38 +130,53 @@ export default class Version extends BitObject {
   }
 
   static parse(contents) {
-    const props = JSON.parse(contents);
+    const {
+      impl,
+      specs,
+      dist,
+      compiler,
+      tester,
+      log,
+      docs,
+      dependencies,
+      flattenedDependencies,
+      packageDependencies
+    } = JSON.parse(contents);
+
     return new Version({
       impl: {
-        file: Ref.from(props.impl.file),
-        name: props.impl.name
+        file: Ref.from(impl.file),
+        name: impl.name
       },
-      specs: props.specs ? {
-        file: Ref.from(props.specs.file),
-        name: props.specs.name        
+      specs: specs ? {
+        file: Ref.from(specs.file),
+        name: specs.name        
       } : null,
-      dist: props.dist ? Ref.from(props.dist): null,
-      compiler: props.compiler ? Ref.from(props.compiler): null,
-      tester: props.tester ? Ref.from(props.tester): null,
+      dist: dist ? {
+        file: Ref.from(dist.file),
+        name: dist.name        
+      } : null,
+      compiler: compiler ? BitId.parse(compiler) : null,
+      tester: tester ? BitId.parse(tester) : null,
       log: {
-        message: props.log.message,
-        date: props.log.date,
+        message: log.message,
+        date: log.date,
       },
-      dependencies: BitIds.deserialize(props.dependencies),
-      flattenedDependencies: BitIds.deserialize(props.flattenedDependencies),
-      packageDependencies: props.packageDependencies,
-      buildStatus: props.buildStatus,
-      testStatus: props.testStatus
+      docs,
+      dependencies: BitIds.deserialize(dependencies),
+      flattenedDependencies: BitIds.deserialize(flattenedDependencies),
+      packageDependencies,
     });
   }
 
-  static fromComponent(
+  static fromComponent({ component, impl, specs, dist, flattenedDeps, message }: {
     component: ConsumerComponent,
     impl: Source,
     specs: Source,
     flattenedDeps: BitId[],
-    message: string
-  ) {
+    message: string,
+    dist: Source
+  }) {
     return new Version({
       impl: {
         file: impl.hash(),
@@ -160,13 +186,17 @@ export default class Version extends BitObject {
         file: specs.hash(),
         name: component.specsFile
       }: null,
-      dist: component.build().code,
-      compiler: component.compilerId ? Component.fromBitId(component.compilerId).hash() : null,
-      tester: component.testerId ? Component.fromBitId(component.testerId).hash() : null,
+      dist: dist ? {
+        file: dist.hash(),
+        name: DEFAULT_BUNDLE_FILENAME,
+      }: null,
+      compiler: component.compilerId,
+      tester: component.testerId,
       log: {
         message,
         date: Date.now().toString(),
       },
+      docs: component.docs,
       packageDependencies: component.packageDependencies,
       flattenedDependencies: flattenedDeps,
       dependencies: component.dependencies
