@@ -8,7 +8,7 @@ $packageArgs = @{
   validExitCodes = @(0, 3010, 1641)
   checksumType = 'sha256'
 
-  url = 'http://104.154.76.155:8081/artifactory/bit-msi/bit/bit-$latest_version-unsigned.msi'
+  url = 'http://104.154.76.155:8081/artifactory/bit-msi/bit-$latest_version-unsigned.msi'
   checksum = '{CHECKSUM}'
 }
 
