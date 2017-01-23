@@ -10,17 +10,17 @@
     <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
-    <BitDistPath>..\..\</BitDistPath>
+    <BitDistPath>..\..</BitDistPath>
     <DefineSolutionProperties>false</DefineSolutionProperties>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <OutputPath>$(BitDistPath)distribution\winMsi\bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>$(BitDistPath)distribution\winMsi\obj\$(Configuration)\</IntermediateOutputPath>
+    <OutputPath>$(BitDistPath)\distribution\winMsi\bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>$(BitDistPath)\distribution\winMsi\obj\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>Debug</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>$(BitDistPath)distribution\winMsibin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>$(BitDistPath)distribution\winMsiobj\$(Configuration)\</IntermediateOutputPath>
+    <OutputPath>$(BitDistPath)\distribution\winMsibin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>$(BitDistPath)\distribution\winMsiobj\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants></DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -43,16 +43,16 @@
   <Target Name="BeforeBuild">
 
 
-    <Exec Command="node $(BitDistPath)scripts\set-installation-method.js $([System.IO.Path]::GetFullPath($(BitDistPath)))/package.json msi" />
+    <Exec Command="node $(BitDistPath)\scripts\set-installation-method.js $([System.IO.Path]::GetFullPath($(BitDistPath)))/package.json msi" />
 
      <!-- Get Bit version -->
     <Exec Command="node $(BitDistPath)\bin\bit.js --version" ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="BitVersion" />
     </Exec>
        <Exec
-          Command="node -p &quot;require('../package.json').version.replace(/\-(.+)$/, '')&quot;"
+          Command="node -p &quot;require('./package.json').version.replace(/\-(.+)$/, '')&quot;"
           ConsoleToMSBuild="true"
-          WorkingDirectory="$(BitDistPath)\..">
+          WorkingDirectory="$(BitDistPath)">
           <Output TaskParameter="ConsoleOutput" PropertyName="BitShortVersion" />
         </Exec>
     <!-- WiX doesn't allow extra stuff in the version number, so we omit the

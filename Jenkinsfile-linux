@@ -1,0 +1,65 @@
+node  {
+    properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
+    checkout scm
+	def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
+	def repo = "${env.EXTERNAL_REPO}"
+	def assets = "${env.BIT_ASSETS}"
+	print releaseServer
+	def env = "${environment}"
+	def app = "bit"
+	def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
+	currentVersion = currentVersion.replaceAll("\\s","")
+	def bundleName = "bit_${currentVersion}"
+    def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
+
+    stage 'remove old zip files '
+    sh("rm -rf *.tar.gz  && rm -rf ./distribution")
+    sh("rm -rf ./node_modules")
+
+    stage 'Running tar'
+    sh('./scripts/build-tar.sh')
+
+
+    stage 'Running DEB & RPM'
+    sh('./scripts/build-deb.sh')
+
+
+    //deployToArtifactory("deb","bit-deb",currentVersion)
+    def fullUrl = "${repo}/bit-deb/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=main;deb.architecture=amd64"
+    print (fullUrl)
+    sh("curl -uadmin:password -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${fullUrl}'")
+
+    deployToArtifactory("rpm","bit-yum","${currentVersion}-1.noarch")
+
+   stage 'notify release server'
+    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/bit_${currentVersion}_all.deb","deb")
+    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/bit-${currentVersion}-1.noarch.rpm","yum")
+
+   stage ("upload repo scripts")
+   sh("gsutil -m cp -a public-read repos/bitsrc.repo  gs://bit-assets/")
+}
+
+def deployToArtifactory(artifactSuffix,repo,version){
+     def server = Artifactory.server 'Bitsrc-artifactory'
+      def uploadSpec = """{
+        "files": [
+          {
+            "pattern": "distribution/bit-${version}.${artifactSuffix}",
+            "target": "${repo}/"
+          }
+       ]
+      }"""
+      server.upload(uploadSpec)
+}
+
+import groovy.json.JsonOutput
+def notifyReleaseServer(version,url,packageUrl,method) {
+    def payload = JsonOutput.toJson(version : version,
+                                 method: "${method}",
+                                 file: "${packageUrl}")
+    print(payload)
+
+    def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${url} -u ${releaseServerToken} "
+    print ("${post}")
+    sh ("${post}")
+}

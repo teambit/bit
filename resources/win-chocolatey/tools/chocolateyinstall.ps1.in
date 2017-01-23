@@ -8,13 +8,13 @@ $packageArgs = @{
   validExitCodes = @(0, 3010, 1641)
   checksumType = 'sha256'
 
-  url = 'http://assets.bitsrc.io/release/{VERSION}/yarn-{VERSION}.msi'
+  url = 'http://104.154.76.155:8081/artifactory/bit-msi/bit-{VERSION}-unsigned.msi'
   checksum = '{CHECKSUM}'
 }
 
 Install-ChocolateyPackage @packageArgs
 
-# Update Yarn's package.json file so it can tell that it was installed via Chocolatey.
+# Update Bit package.json file so it can tell that it was installed via Chocolatey.
 if (Test-Path "${env:ProgramFiles(x86)}\Bit\package.json") {
   $path = "${env:ProgramFiles(x86)}\Bit\package.json"
 } else {
@@ -22,7 +22,7 @@ if (Test-Path "${env:ProgramFiles(x86)}\Bit\package.json") {
 }
 $script = @"
   (Get-Content -Path '$path') ``
-    -replace 'installationMethod":.+', 'installationMethod": "choco",' ``
+    -replace 'installationMethod":.+', 'installationMethod": "choco"' ``
     | Set-Content '$path'
 "@
 Start-ChocolateyProcessAsAdmin -Statements $script

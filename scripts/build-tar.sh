@@ -2,18 +2,17 @@
 set -ex
 
 
-rm -rf ../*.tar.gz
-rm -rf ../distribution
-ver=$(cat ../package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs echo -n)
+rm -rf ./*.tar.gz
+rm -rf ./distribution
+ver=$(cat ./package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs echo -n)
 tarName="bit-${ver}.tar.gz"
 
-npm install  --prefix ../ 
-npm run build  --prefix ../
-rm -rf ../node_modules
-npm install --production --prefix ../
+npm install
+npm run build
+rm -rf ./node_modules
+npm install --production
 
 umask 0022
-cd ..
 #set package json with corret packeing type
 packageDest=$(cd $(dirname "$1") && pwd -P)/$(basename "package.json")
 node ./scripts/set-installation-method.js $packageDest tar

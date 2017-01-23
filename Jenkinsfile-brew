@@ -1,0 +1,56 @@
+node  {
+    properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
+    checkout scm
+	def releaseServer = "${env.BIT_STAGE_SERVER}"
+	print releaseServer
+	def env = "${environment}"
+	def app = "bit"
+	def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
+	currentVersion = currentVersion.replaceAll("\\s","")
+	def tarName ="bit-${currentVersion}-brew.tar.gz"
+    def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
+    
+    stage 'remove old zip files '
+    sh("rm -rf *.tar.gz  && rm -rf ./distribution")
+    sh("rm -rf ./node_modules")
+
+    stage 'Running tar'
+    sh('./scripts/build-tar.sh tar')
+
+    stage 'Running brew'
+    sh("./scripts/build-brew.sh ")
+
+    stage 'upload to repo'
+    def server = Artifactory.server 'Bitsrc-artifactory'
+          def uploadSpec = """{
+            "files": [
+              {
+                "pattern": "distribution/brew_pkg/bit-${currentVersion}-brew.tar.gz",
+                "target": "bit-brew/"
+              }
+           ]
+          }"""
+
+     server.upload(uploadSpec)
+
+     stage 'notify release server'
+     notifyReleaseServer(currentVersion,releaseServer+"/update","${ArtifactRepo}/bit-brew/${tarName}","brew")
+
+    stage 'generate formula for brew'
+    sh("./scripts/generate-formula.sh ${ArtifactRepo}/bit-brew/${tarName}")
+    sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
+
+}
+
+import groovy.json.JsonOutput
+def notifyReleaseServer(version,url,packageUrl,method) {
+
+    def payload = JsonOutput.toJson(version : version,
+                  method: "${method}",
+                  file: "${packageUrl}")
+    print(payload)
+
+    def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${url} -u ${releaseServerToken}"
+    print ("${post}")
+    sh ("${post}")
+}
