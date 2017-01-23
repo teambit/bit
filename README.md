@@ -1,6 +1,12 @@
-# bit - the reusable code component manager
+<p align="center">
+  <a href="https://bitsrc.io/">
+    <img alt="Yarn" src="https://s29.postimg.org/q9flqqoif/cover_github_1.png" width="500">
+  </a>
+</p>
 
-Bit is a distributed code component manager.
+<p align="center">
+  Distributed code component manager.
+</p>
 
 Bit helps us build larger things out of smaller reusable components.
 
