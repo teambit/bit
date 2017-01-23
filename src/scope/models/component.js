@@ -40,7 +40,7 @@ export default class Component extends BitObject {
   }
 
   listVersions(): number[] {
-    return Object.keys(this.versions);
+    return Object.keys(this.versions).map(versionStr => parseInt(versionStr));
   }
 
   compatibleWith(component: Component) {
@@ -99,10 +99,6 @@ export default class Component extends BitObject {
     };
   }
 
-  listVersions(): number[] {
-    return Object.keys(this.versions).map(versionStr => parseInt(versionStr));
-  }
-
   loadVersion(version: number, repository: Repository): Promise<Version> {
     const versionRef = this.versions[version];
     if (!versionRef) throw new VersionNotFound();
@@ -138,10 +134,8 @@ export default class Component extends BitObject {
         .then((version) => {
           const implP = version.impl.file.load(repository);
           const specsP = version.specs ? version.specs.file.load(repository) : null;
-          const compilerP = version.compiler ? version.compiler.load(repository) : null;
-          const testerP = version.tester ? version.tester.load(repository): null;
-          return Promise.all([implP, specsP, compilerP, testerP])
-          .then(([impl, specs, compiler, tester]) => {
+          return Promise.all([implP, specsP])
+          .then(([impl, specs]) => {
             return new ConsumerComponent({
               name: this.name,
               box: this.box,
@@ -149,8 +143,8 @@ export default class Component extends BitObject {
               scope: this.scope,
               implFile: version.impl.name,
               specsFile: version.specs ? version.specs.name : null,
-              compilerId: compiler ? compiler.id : null,
-              testerId: tester ? tester.id : null,
+              compilerId: version.compiler,
+              testerId: version.tester,
               packageDependencies: version.packageDependencies,
               impl: new Impl(impl.toString()),
               specs: specs ? new Specs(specs.toString()): null,
@@ -169,7 +163,7 @@ export default class Component extends BitObject {
   }
 
   toVersionDependencies(version: string, scope: Scope, source: string) {
-    const versionComp = this.toComponentVersion(version, scope.name());
+    const versionComp = this.toComponentVersion(version, scope.name);
     return versionComp.toVersionDependencies(scope, source);
   }
 

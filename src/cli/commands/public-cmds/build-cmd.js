@@ -1,6 +1,7 @@
 /** @flow */
 import Command from '../../command';
-import { buildInline, buildInScope } from '../../../api/consumer';
+import { buildInline } from '../../../api/consumer';
+import { buildInScope } from '../../../api/scope';
 
 const chalk = require('chalk');
 
@@ -13,12 +14,20 @@ export default class Build extends Command {
   ];
   
   action([id]: string[], { inline }: { inline: ?bool }): Promise<any> {
-    if (inline) return buildInline(id);
-    return buildInScope(id);
+    function build() {
+      if (inline) return buildInline(id);
+      return buildInScope(id);
+    }
+    
+    return build().then(res => ({
+      res,
+      inline,
+    }));
   }
 
-  report(response): string {
-    console.log(response);
-    return chalk.bgBlack('-> finish build cmd');
+  report({ res, inline }: { res: ?string, inline: ?bool }): string {
+    if (!res) return chalk.red('there is no compiler to that component');
+    if (inline) { return chalk.cyan(res); }
+    return res;
   }
 }

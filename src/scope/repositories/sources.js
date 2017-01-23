@@ -43,7 +43,7 @@ export default class SourceRepository {
         .then(() => new ComponentVersion(
           component,
           versionNum,
-          this.scope.name()
+          this.scope.name
         ));
     });
   }
@@ -77,6 +77,7 @@ export default class SourceRepository {
         const impl = Source.from(Buffer.from(source.impl.src));
         const dist = source.build(this.scope) ? Source.from(Buffer.from(source.dist)): null;
         const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
+
         const version = Version.fromComponent({
           component: source, impl, specs, dist, flattenedDeps, message
         });
@@ -106,7 +107,7 @@ export default class SourceRepository {
   }
 
   merge({ component, objects }: ComponentTree, inScope: boolean = false): Promise<Component> {
-    if (inScope) component.scope = this.scope.name();
+    if (inScope) component.scope = this.scope.name;
     return this.findComponent(component).then((existingComponent) => {
       if (!existingComponent || component.compatibleWith(existingComponent)) {
         return this.put({ component, objects });

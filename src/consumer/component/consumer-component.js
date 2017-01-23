@@ -159,7 +159,7 @@ export default class Component {
       const distPath = path.join(bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
       return fs.outputFile(distPath, this._dist, (err) => {
         if (err) return reject(err);
-        return resolve();
+        return resolve(distPath);
       });
     });
   }

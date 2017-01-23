@@ -78,11 +78,11 @@ export default class Consumer {
 
   exportAction(rawId: string, rawRemote: string) { 
     // @TODO - move this method to api, not related to consumer
-    const bitId = BitId.parse(rawId, this.scope.name());
+    const bitId = BitId.parse(rawId, this.scope.name);
     
     return this.scope.exportAction(bitId, rawRemote)
       .then(componentDependencies => this.writeToComponentsDir([componentDependencies]))
-      .then(() => this.removeFromComponents(bitId.changeScope(this.scope.name()))); // @HACKALERT
+      .then(() => this.removeFromComponents(bitId.changeScope(this.scope.name))); // @HACKALERT
   }
 
   import(rawId: ?string): Component {
@@ -98,7 +98,7 @@ export default class Consumer {
       );
     }
 
-    const bitId = BitId.parse(rawId, this.scope.name());
+    const bitId = BitId.parse(rawId, this.scope.name);
     return this.scope.get(bitId)
       .then((componentDependencies) => {
         return this.writeToComponentsDir([componentDependencies]);
@@ -108,7 +108,7 @@ export default class Consumer {
   importEnvironment(rawId: ?string) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
 
-    const bitId = BitId.parse(rawId, this.scope.name());
+    const bitId = BitId.parse(rawId, this.scope.name);
     return this.scope.get(bitId)
     .then((componentDependencies) => {
       return this.scope.writeToEnvironmentsDir(componentDependencies.component); // @HACKALERT - replace with getOne

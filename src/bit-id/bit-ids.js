@@ -8,7 +8,7 @@ import VersionDependencies from '../scope/version-dependencies';
 
 function byRemote(origin: Scope) {
   return groupBy((id) => {
-    if (id.isLocal(origin.name())) return 'inner';
+    if (id.isLocal(origin.name)) return 'inner';
     return 'outer';
   });
 }

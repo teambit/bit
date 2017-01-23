@@ -29,7 +29,7 @@ export default function importAction(
       return consumer.import(bitId)
         .then((bits) => {
           if (save) {
-            const parseId = BitId.parse(bitId, consumer.scope.name());
+            const parseId = BitId.parse(bitId, consumer.scope.name);
             return consumer.bitJson.addDependency(parseId).write({ bitDir: consumer.getPath() })
             .then(() => bits);
           }

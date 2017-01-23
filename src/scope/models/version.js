@@ -23,8 +23,8 @@ export type VersionProps = {
     name: string,
     file: Ref
   };
-  compiler?: ?Ref;
-  tester?: ?Ref;
+  compiler?: ?BitId;
+  tester?: ?BitId;
   log: {
     message: string,
     date: string
@@ -32,9 +32,7 @@ export type VersionProps = {
   docs?: ParsedDocs[],
   dependencies?: BitIds;
   flattenedDependencies?: BitIds;
-  packageDependencies?: {[string]: string}; 
-  buildStatus?: boolean;
-  testStatus?: boolean;
+  packageDependencies?: {[string]: string};
 }
 
 export default class Version extends BitObject {
@@ -50,8 +48,8 @@ export default class Version extends BitObject {
     name: string,
     file: Ref
   };
-  compiler: ?Ref;
-  tester: ?Ref;
+  compiler: ?BitId;
+  tester: ?BitId;
   log: {
     message: string,
     date: string
@@ -60,8 +58,6 @@ export default class Version extends BitObject {
   dependencies: BitIds;
   flattenedDependencies: BitIds;
   packageDependencies: {[string]: string};
-  buildStatus: ?boolean;
-  testStatus: ?boolean;
 
   constructor(props: VersionProps) {
     super();
@@ -75,12 +71,10 @@ export default class Version extends BitObject {
     this.docs = props.docs;
     this.flattenedDependencies = props.flattenedDependencies || new BitIds();
     this.packageDependencies = props.packageDependencies || {};
-    this.buildStatus = props.buildStatus;
-    this.testStatus = props.testStatus;
   }
 
   flattenDependencies(scope: Scope, remotes: Remotes) {
-    this.dependencies.fetch(scope, remotes);
+    return this.dependencies.fetch(scope, remotes);
   }
 
   id() {
@@ -126,9 +120,7 @@ export default class Version extends BitObject {
       docs: this.docs,
       dependencies: this.dependencies.map(dep => dep.toString()),
       flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
-      packageDependencies: this.packageDependencies,
-      buildStatus: this.buildStatus,
-      testStatus: this.testStatus
+      packageDependencies: this.packageDependencies
     };
   }
 
@@ -138,32 +130,42 @@ export default class Version extends BitObject {
   }
 
   static parse(contents) {
-    const props = JSON.parse(contents);
+    const {
+      impl,
+      specs,
+      dist,
+      compiler,
+      tester,
+      log,
+      docs,
+      dependencies,
+      flattenedDependencies,
+      packageDependencies
+    } = JSON.parse(contents);
+
     return new Version({
       impl: {
-        file: Ref.from(props.impl.file),
-        name: props.impl.name
+        file: Ref.from(impl.file),
+        name: impl.name
       },
-      specs: props.specs ? {
-        file: Ref.from(props.specs.file),
-        name: props.specs.name        
+      specs: specs ? {
+        file: Ref.from(specs.file),
+        name: specs.name        
       } : null,
-      dist: props.dist ? {
-        file: Ref.from(props.dist.file),
-        name: props.dist.name        
+      dist: dist ? {
+        file: Ref.from(dist.file),
+        name: dist.name        
       } : null,
-      compiler: props.compiler ? Ref.from(props.compiler): null,
-      tester: props.tester ? Ref.from(props.tester): null,
+      compiler: compiler ? BitId.parse(compiler) : null,
+      tester: tester ? BitId.parse(tester) : null,
       log: {
-        message: props.log.message,
-        date: props.log.date,
+        message: log.message,
+        date: log.date,
       },
-      docs: props.docs,
-      dependencies: BitIds.deserialize(props.dependencies),
-      flattenedDependencies: BitIds.deserialize(props.flattenedDependencies),
-      packageDependencies: props.packageDependencies,
-      buildStatus: props.buildStatus,
-      testStatus: props.testStatus
+      docs,
+      dependencies: BitIds.deserialize(dependencies),
+      flattenedDependencies: BitIds.deserialize(flattenedDependencies),
+      packageDependencies,
     });
   }
 
@@ -188,8 +190,8 @@ export default class Version extends BitObject {
         file: dist.hash(),
         name: DEFAULT_BUNDLE_FILENAME,
       }: null,
-      compiler: component.compilerId ? Component.fromBitId(component.compilerId).hash() : null,
-      tester: component.testerId ? Component.fromBitId(component.testerId).hash() : null,
+      compiler: component.compilerId,
+      tester: component.testerId,
       log: {
         message,
         date: Date.now().toString(),
