@@ -4,10 +4,9 @@ import doctrine from 'doctrine';
 import walk from 'esprima-walk';
 
 export type ParsedDocs = {
-    type: string,
     name: string,
     description: string,
-    params?: Array,
+    args?: Array,
     returns?: Object,
 };
 
@@ -49,7 +48,7 @@ function handleFunctionType(node: Object) {
     && (!node.expression.right || node.expression.right.type !== 'FunctionExpression')) return;
   if (node.type === 'VariableDeclaration' && !isVariableDeclarationRelevant(node)) return;
 
-  const params = [];
+  const args = [];
   let description = '';
   let returns = {};
   if (node.leadingComments && node.leadingComments.length) {
@@ -58,7 +57,7 @@ function handleFunctionType(node: Object) {
 
     for (const tag of commentsAst.tags) {
       if (tag.title === 'param') {
-        params.push(formatTag(tag));
+        args.push(formatTag(tag));
       }
       if (tag.title === 'returns') {
         returns = formatTag(tag);
@@ -68,10 +67,9 @@ function handleFunctionType(node: Object) {
 
   const name = getFunctionName(node);
   const item = {
-    type: node.type,
     name,
     description,
-    params,
+    args,
     returns,
   };
   parsedData.push(item);
@@ -84,7 +82,6 @@ function handleClassType(node: Object) {
     description = commentsAst.description;
   }
   const item = {
-    type: node.type,
     name: node.id.name,
     description
   };
@@ -109,23 +106,23 @@ function extractData(node: Object) {
 }
 
 function toString(doc: ParsedDocs): string {
-  let params;
+  let args;
   let returns = '';
-  let formattedDoc = `\ntype: ${doc.type}\nname: ${doc.name} \n`;
+  let formattedDoc = `\nname: ${doc.name} \n`;
 
   if (doc.description) {
     formattedDoc += `description: ${doc.description}\n`;
   }
 
-  if (doc.params && doc.params.length) {
-    params = doc.params.map((param) => {
-      let formattedParam = `${param.name}`;
-      if (param.type) {
-        formattedParam += ` (${param.type})`;
+  if (doc.args && doc.args.length) {
+    args = doc.args.map((arg) => {
+      let formattedParam = `${arg.name}`;
+      if (arg.type) {
+        formattedParam += ` (${arg.type})`;
       }
       return formattedParam;
     }).join(', ');
-    formattedDoc += `params: ${params}\n`;
+    formattedDoc += `args: ${args}\n`;
   }
   if (doc.returns) {
     if (doc.returns.description) {
