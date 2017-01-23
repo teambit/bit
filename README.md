@@ -5,9 +5,9 @@
 </p>
 
 <p align="center">
-  Distributed code component manager.
+<b>Distributed code component manager.</b>
 </p>
-
+---
 Bit helps us build larger things out of smaller reusable components.
 
 Bit lets you write code components once, and use them anywhere without creating code duplications or seating to publish endless micro-packages.
