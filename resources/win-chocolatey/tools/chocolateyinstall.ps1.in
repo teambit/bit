@@ -22,7 +22,7 @@ if (Test-Path "${env:ProgramFiles(x86)}\Bit\package.json") {
 }
 $script = @"
   (Get-Content -Path '$path') ``
-    -replace 'installationMethod":.+', 'installationMethod": "choco",' ``
+    -replace 'installationMethod":.+', 'installationMethod": "choco"' ``
     | Set-Content '$path'
 "@
 Start-ChocolateyProcessAsAdmin -Statements $script
