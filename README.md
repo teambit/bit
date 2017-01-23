@@ -12,7 +12,7 @@ Bit helps us build larger things out of smaller reusable components.
 
 Bit lets you write code components once, and use them anywhere without creating code duplications or seating to publish endless micro-packages.
 
-**Write once, use anywhere:** Bit is an open source tool for fast and easy extraction and reuse of code components. Exporting a component to your local (/team / community) scope can be done in mere seconds. Bit makes is easy to write code once, and use it anywhere. 
+**Write once, use anywhere:** Bit is an open source tool for fast and easy extraction and reuse of code components. Exporting a component to your local (/team / community) scope can be done in mere seconds. Bit makes it easy to write code once, and use it anywhere. 
 
 **Easy to maintain:** Bit makes component maintenance super easy. Features like isolated component environment, simple minor versioning and more to make maintenance much, much easier.
 
@@ -20,11 +20,11 @@ Bit lets you write code components once, and use them anywhere without creating 
 
 **Collaborate:** Bit was built to easily create, share and use components for a developer team. You can host your own Bit server.
 
-**Bit currently supports JavaScript, but we plan to add drivers for more languages soon enough. Want to add your own drive for any language? We love that, feel free to contribute a driver. If you like to we can even do it together.**
+**Bit currently supports JavaScript, but we plan to add drivers for more languages soon enough. Want to add your own driver for any language? We love that, feel free to contribute a driver. If you like to we can even do it together.**
 
 ## Features
 
-* Export components is seconds using only two files: implementation and tests. This is possible thanks to Bit’s isolated component environment.
+* Export components in seconds using only two files: implementation and tests. This is possible thanks to Bit’s isolated component environment.
 * Reuse components across repositories (anywhere) without duplications
 * Publish reusable components to remote scopes to collaborate with your team
 * Simple maintenance with a simplified minor component versioning, isolated component environment and more
