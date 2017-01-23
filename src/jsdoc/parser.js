@@ -2,6 +2,7 @@
 import esprima from 'esprima';
 import doctrine from 'doctrine';
 import walk from 'esprima-walk';
+import exampleTagParser from './example-tag-parser';
 
 export type ParsedDocs = {
   name: string,
@@ -80,7 +81,7 @@ function handleFunctionType(node: Object) {
           access = tag.access;
           break;
         case 'example':
-          examples.push(tag.description);
+          examples.push(exampleTagParser(tag.description));
           break;
       }
     }
