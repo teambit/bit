@@ -5,6 +5,7 @@ import fetch from './lib/fetch';
 import describeScope from './lib/describe-scope';
 import catObject from './lib/cat-object';
 import scopeList from './lib/scope-list';
+import buildInScope from './lib/build-in-scope';
 import { getResolver, setResolver, resetResolver } from './lib/resolver';
 
 export {
@@ -15,6 +16,7 @@ export {
   describeScope,
   prepare,
   initScope,
+  buildInScope,
   put,
   scopeList,
   fetch

@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import fs from 'fs-extra';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
 import Impl from '../component/sources/impl';
@@ -10,13 +11,14 @@ import Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
 import Environment from '../../scope/repositories/environment';
 import docsParser, { ParsedDocs } from '../../jsdoc/parser';
-
 import { 
   DEFAULT_BOX_NAME,
   DEFAULT_IMPL_NAME,
   DEFAULT_SPECS_NAME,
   DEFAULT_BIT_VERSION,
   NO_PLUGIN_TYPE,
+  DEFAULT_DIST_DIRNAME,
+  DEFAULT_BUNDLE_FILENAME
 } from '../../constants';
 
 export type ComponentProps = {
@@ -149,6 +151,17 @@ export default class Component {
 
   dependencies(): BitIds {
     return BitIds.fromObject(this.dependencies);
+  }
+
+  writeBuild(bitDir: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (!this._dist) return reject(new Error('dist file not exist, please use build first'));
+      const distPath = path.join(bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
+      return fs.outputFile(distPath, this._dist, (err) => {
+        if (err) return reject(err);
+        return resolve();
+      });
+    });
   }
 
   write(bitDir: string, withBitJson: boolean): Promise<Component> {

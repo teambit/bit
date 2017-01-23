@@ -5,7 +5,7 @@ import listInline from './lib/list-inline';
 import listScope from './lib/list-scope';
 import commitAction from './lib/commit';
 import status from './lib/status';
-import build from './lib/build';
+import buildInline from './lib/build-inline';
 import modify from './lib/modify';
 import importAction from './lib/import';
 import exportAction from './lib/export';
@@ -26,7 +26,7 @@ export {
   listScope,
   commitAction,
   status,
-  build,
+  buildInline,
   modify,
   importAction,
   getInlineBit,
