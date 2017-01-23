@@ -7,7 +7,7 @@ param(
 
 $ErrorActionPreference = 'Stop'; # stop on all errors
 
-$latest_version = [String](Invoke-WebRequest -Uri https://api-stg.bitsrc.io/release/latest)
+$latest_version = $(node -p -e "require('../package.json').version")
 $latest_chocolatey_version = (Find-Package -Name Bit).Version
 
 if ([Version]$latest_chocolatey_version -ge [Version]$latest_version) {
@@ -26,17 +26,16 @@ rm artifacts/*.nupkg
 # Download the installer so we can compute its hash
 # Keep this in sync with chocolateyInstall.ps1.in
 # This is intentionally not using /latest.msi to ensure the URL used by the Chocolatey package is valid.
-$url = "http://assets.bitsrc.io/release/$latest_version/bit_$latest_version.msi"
+$url = "http://104.154.76.155:8081/artifactory/bit-msi/bit/bit-$latest_version-unsigned.msi"
 $installer_file = [IO.Path]::GetTempFileName()
 Invoke-WebRequest -Uri $url -OutFile $installer_file
 
 $hash = (Get-FileHash -Path $installer_file -Algorithm SHA256).Hash
 
 # Replace placeholders in chocolateyInstall.ps1
-(Get-Content ..\resources\win-chocolatey\tools\chocolateyinstall.ps1.in) `
-  -replace '{VERSION}', $latest_version `
-  -replace '{CHECKSUM}', $hash |
-  Set-Content ..\resources\win-chocolatey\tools\chocolateyinstall.ps1
+$content = [System.IO.File]::ReadAllText("$PSScriptRoot\..\resources\win-chocolatey\tools\chocolateyinstall.ps1.in").Replace("{VERSION}",$latest_version).Replace("{CHECKSUM}",$hash)
+[System.IO.File]::WriteAllText("$PSScriptRoot\..\resources\win-chocolatey\tools\chocolateyinstall.ps1", $content)
+
 
 choco pack ..\resources\win-chocolatey\bit.nuspec --version $latest_version
 mv *.nupkg artifacts
