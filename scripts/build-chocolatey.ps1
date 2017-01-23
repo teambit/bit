@@ -5,7 +5,7 @@ param(
   [switch] $Publish = $false
 )
 
-$ErrorActionPreference = 'Stop'; # stop on all errors
+#$ErrorActionPreference = 'Stop'; # stop on all errors
 
 $latest_version = $(node -p -e "require('../package.json').version")
 $latest_chocolatey_version = (Find-Package -Name Bit).Version
