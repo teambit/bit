@@ -1,11 +1,11 @@
 <p align="center">
   <a href="https://bitsrc.io/">
-    <img alt="Yarn" src="https://s29.postimg.org/q9flqqoif/cover_github_1.png" width="500">
+    <img alt="Bit" src="https://s29.postimg.org/q9flqqoif/cover_github_1.png" width="500">
   </a>
 </p>
 
 <p align="center">
-<b>Distributed code component manager.</b>
+<b>Distributed code component manager</b>
 </p>
 ---
 Bit helps us build larger things out of smaller reusable components.
