@@ -218,7 +218,8 @@ export default class Component {
       this._dist = code;
       return code;
     } catch (e) {
-      return e;
+      throw e;
+      // return null;
     }
   }
   

@@ -76,9 +76,12 @@ export default class SourceRepository {
     return this.findOrAddComponent(source)
       .then((component) => {
         const impl = Source.from(Buffer.from(source.impl.src));
-        /* we make sure that there is a build in the source.build command so calling to
-        source.dist is legal thing to do -> $FlowFixMe */
-        const dist = source.build(this.scope) ? Source.from(Buffer.from(source.dist)): null;
+        try { 
+          source.build(this.scope);
+        } catch (e) {
+          throw e;
+        }
+        const dist = source.dist ? Source.from(Buffer.from(source.dist)): null;
         const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
 
         const version = Version.fromComponent({

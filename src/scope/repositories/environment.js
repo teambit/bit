@@ -64,19 +64,17 @@ export default class Cache extends Repository {
   hasSync(bitId: BitId) {
     const box = bitId.box;
     const name = bitId.name;
-    const scope = bitId.scope;
+    const scope = bitId.getScopeWithoutRemoteAnnotaion();
     // @TODO - add the version
     // @TODO - maybe check for node_modules
     const bitPath = path.join(this.getPath(), box, name, scope);
     return fs.existsSync(bitPath);
   }
 
-  ensureEnvironment({ testerId, compilerId }: any): Promise<any> {
-    const parsedTesterId = testerId ? BitId.parse(testerId, this.scope.name) : undefined;
-    const parsedCompilerId = compilerId ? BitId.parse(compilerId, this.scope.name) : undefined;
-    
+  ensureEnvironment({ testerId, compilerId }: { testerId: BitId, compilerId: BitId }):
+  Promise<any> {
     const rejectNils = R.reject(R.isNil);
-    const envs = rejectNils([ parsedTesterId, parsedCompilerId ]);
+    const envs = rejectNils([ testerId, compilerId ]);
     
     const ensureEnv = (env: BitId): Promise<any> => {
       if (this.hasSync(env)) return Promise.resolve();

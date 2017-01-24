@@ -120,12 +120,16 @@ export default class Scope {
 
   put(consumerComponent: ConsumerComponent, message: string): Promise<ComponentDependencies> {
     consumerComponent.scope = this.name;
-    return this.importMany(consumerComponent.dependencies)
-      .then((dependencies) => {
+    const dependenciesP = this.importMany(consumerComponent.dependencies);
+    const ensureEnvironmentP = this.ensureEnvironment({
+      testerId: consumerComponent.testerId,
+      compilerId: consumerComponent.compilerId
+    });
+
+    return Promise.all([dependenciesP, ensureEnvironmentP])
+      .then(([dependencies, ]) => {
         const FlattenDeps = flattenDependencies(dependencies);
         return this.sources.addSource(consumerComponent, FlattenDeps, message)
-        // @TODO make the scope install the required env
-          // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
           .then((component) => {
             return this.objects.persist()
               .then(() => component.toVersionDependencies(LATEST, this))
@@ -282,7 +286,8 @@ export default class Scope {
 
   exportAction(bitId: BitId, remoteName: string) {
     return this.remotes().then((remotes) => {
-      return remotes.resolve(remoteName, this).then((remote) => {
+      return remotes.resolve(remoteName, this)
+      .then((remote) => {
         return this.sources.getObjects(bitId)
         .then(component => remote.push(component)
         .then(objects => this.importSrc(objects))
@@ -327,13 +332,16 @@ export default class Scope {
   /**
    * check a bitJson compiler and tester, returns an empty promise and import environments if needed
    */
-  ensureEnvironment({ testerId, compilerId }: any): Promise<any> {
+  ensureEnvironment({ testerId, compilerId }:
+  { testerId: BitId, compilerId: BitId }): Promise<any> {
     return this.environment.ensureEnvironment({ testerId, compilerId });
   }
 
   build(bitId: BitId): Promise<string> {
-    return this.loadComponent(bitId).then((component) => {
-      return component.build(this);
+    return this.loadComponent(bitId)
+    .then((component) => {
+      return this.ensureEnvironment({ testerId: component.testerId, compilerId: component.compilerId })
+      .then(() => component.build(this));
     });
   }
 
