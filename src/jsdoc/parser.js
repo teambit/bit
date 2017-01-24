@@ -2,12 +2,16 @@
 import esprima from 'esprima';
 import doctrine from 'doctrine';
 import walk from 'esprima-walk';
+import exampleTagParser from './example-tag-parser';
 
 export type ParsedDocs = {
-    name: string,
-    description: string,
-    args?: Array,
-    returns?: Object,
+  name: string,
+  description: string,
+  args?: Array,
+  returns?: Object,
+  access?: string,
+  examples?: Array,
+  static?: Boolean
 };
 
 const parsedData: Array<ParsedDocs> = [];
@@ -51,16 +55,34 @@ function handleFunctionType(node: Object) {
   const args = [];
   let description = '';
   let returns = {};
+  let isStatic = false;
+  let access = 'public';
+  let examples = [];
   if (node.leadingComments && node.leadingComments.length) {
     const commentsAst = getCommentsAST(node);
     description = commentsAst.description;
 
     for (const tag of commentsAst.tags) {
-      if (tag.title === 'param') {
-        args.push(formatTag(tag));
-      }
-      if (tag.title === 'returns') {
-        returns = formatTag(tag);
+      switch (tag.title) {
+        case 'param':
+          args.push(formatTag(tag));
+          break;
+        case 'returns'  :
+          returns = formatTag(tag);
+          break;
+        case 'static':
+          isStatic = true;
+          break;
+        case 'private':
+        case 'protected':
+          access = tag.title;
+          break;
+        case 'access':
+          access = tag.access;
+          break;
+        case 'example':
+          examples.push(exampleTagParser(tag.description));
+          break;
       }
     }
   }
@@ -71,6 +93,9 @@ function handleFunctionType(node: Object) {
     description,
     args,
     returns,
+    access,
+    examples,
+    static: isStatic,
   };
   parsedData.push(item);
 }
