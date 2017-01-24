@@ -1,19 +1,29 @@
 /** @flow */
+import chalk from 'chalk';
 import Command from '../../command';
+import { searcher } from '../../../search';
 
 export default class Search extends Command {
-  name = 'search <query> [remote]';
+  name = 'search [query...]';
   description = 'search for bits in configured remote(s)';
   alias = '';
-  opts = [];
+  opts = [
+    ['s', 'scope <scopename>', 'search in scope'],
+    ['r', 'reindex', 're-index all components']
+  ];
   
-  action(): Promise<any> {
-    const m = this.alias;
-    console.log('searching bit...');
-    return new Promise(resolve => resolve(m));
+  action([query, ], { scope, reindex }) {
+    const queryStr = query.join(' ');
+    console.log(`searching bits in ${scope ? scope : 'local scope'} for "${queryStr}"`);
+    const results = searcher.search(queryStr, scope, reindex);
+    return new Promise(resolve => resolve(results));
   }
 
-  report(data: {string: any}): string {
-    return '';
+  report(searchResults: string): string {
+    const parsedResults = JSON.parse(searchResults);
+    if (!parsedResults.length) {
+      return chalk.red('No Results');
+    }
+    return chalk.green(parsedResults.join('\n'));
   }
 }
