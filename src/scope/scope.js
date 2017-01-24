@@ -321,7 +321,10 @@ export default class Scope {
     return Promise.all(ids.map(bitId => this.import(bitId)));
   }
 
-  loadEnvironment(bitId: BitId) {
+  loadEnvironment(bitId: BitId, opts: ?{ pathOnly: ?bool }) {
+    if (opts && opts.pathOnly) {
+      return this.environment.getPathTo(bitId);
+    }
     return this.environment.get(bitId);
   }
 

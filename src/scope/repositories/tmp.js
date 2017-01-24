@@ -14,23 +14,39 @@ export default class Tmp extends Repository {
     return path.join(this.getPath(), p);
   }
 
-  save(data: string): Promise<string> {
+  save(data: string, ext: string = '.js'): Promise<string> {
     return new Promise((resolve, reject) => {
       const fileName = v4();
-      fs.outputFile(this.composePath(`${fileName}.js`), data, (err) => {
+      const filePath = this.composePath(`${fileName}${ext}`);
+      fs.outputFile(filePath, data, (err) => {
         if (err) return reject(err);
-        return resolve(fileName);
+        return resolve(filePath);
       });
     });
   }
 
-  remove(fileName: string): Promise<any> {
+  saveSync(data: string, ext: string = '.js'): string {
+    const fileName = v4();
+    const filePath = this.composePath(`${fileName}${ext}`);
+    fs.outputFileSync(filePath, data);
+    return filePath;
+  }
+
+  remove(fileNameOrPath: string, ext: string = '.js'): Promise<any> {
     return new Promise((resolve, reject) => {
-      fs.remove(this.composePath(`${fileName}.js`), (err) => {
+      const fileName = path.parse(fileNameOrPath).name;
+      const filePath = this.composePath(`${fileName}${ext}`);
+      fs.remove(filePath, (err) => {
         if (err) return reject(err);
         return resolve();
       });
     });
+  }
+
+  removeSync(fileNameOrPath: string, ext: string = '.js'): any {
+    const fileName = path.parse(fileNameOrPath).name;
+    const filePath = this.composePath(`${fileName}${ext}`);
+    return fs.removeSync(filePath);
   }
 
   clear(): Promise<any> {
@@ -40,5 +56,9 @@ export default class Tmp extends Repository {
         return resolve();
       });
     });
+  }
+
+  clearSync(): any {
+    return fs.rmdirSync(this.getPath());
   }
 }

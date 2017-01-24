@@ -201,11 +201,11 @@ export default class Consumer {
       );
   }
 
-  testBit(id: BitInlineId): Promise<Component> {
+  runComponentSpecs(id: BitInlineId): Promise<Object> { // @TODO - write results object
     return this.loadComponent(id)
-    .then((component) => {
-      component.test(this.scope);
-    });
+      .then((component) => {
+        return component.runSpecs(this.scope);
+      });
   }
 
   listInline(): Promise<Component[]> {

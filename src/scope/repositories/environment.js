@@ -44,7 +44,12 @@ export default class Cache extends Repository {
   }
   
   findLatestVersion(bitId: BitId): string {
-    const dirToLookIn = path.join(this.getPath(), bitId.box, bitId.name, bitId.scope);
+    const dirToLookIn = path.join(
+      this.getPath(),
+      bitId.box,
+      bitId.name,
+      bitId.getScopeWithoutRemoteAnnotaion()
+    );
     const files = glob.sync(path.join(dirToLookIn, '*'));
     const versions = files.map((file: string): number => {
       return parseInt(path.basename(file));
@@ -59,6 +64,14 @@ export default class Cache extends Repository {
     }
     
     return resolveBit(this.composePath(bitId));
+  }
+
+  getPathTo(bitId: BitId) {
+    if (bitId.version === LATEST) {
+      bitId.version = this.findLatestVersion(bitId);
+    }
+    
+    return resolveBit(this.composePath(bitId), { onlyPath: true });
   }
 
   hasSync(bitId: BitId) {

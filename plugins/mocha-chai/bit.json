@@ -1,0 +1,12 @@
+{
+    "sources": {
+        "impl": "impl.js",
+        "spec": "spec.js"
+    },
+    "name": "mocha-chai",
+    "box": "testers",
+    "packageDependencies": {
+        "mocha": "^3.2.0",
+        "chai": "^3.5.0"
+    }
+}

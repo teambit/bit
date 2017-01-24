@@ -1,21 +1,34 @@
 /** @flow */
 import Command from '../../command';
-import { test } from '../../../api/consumer';
-
-const chalk = require('chalk');
+import { testInline } from '../../../api/consumer';
 
 export default class Test extends Command {
   name = 'test <id>';
   description = 'run bit(s) unit tests';
   alias = 't';
-  opts = [];
+  opts = [
+    ['i', 'inline', 'test an inline bit specs']
+  ];
 
-  action([id, ]: [string, ]): Promise<any> {
-    console.log('testing bits...');
-    return test(id);
+  action([id, ]: [string, ], { inline }: { inline: ?bool }): Promise<any> {
+    function build() {
+      if (inline) return testInline(id);
+      throw new Error('TODO - need implement from scope'); // TODO - need implemetn
+      // return testInScope(id);
+    }
+    
+    return build().then(res => ({
+      res,
+      inline,
+    }));
   }
 
-  report(pass: {string: any}): string {
-    return pass ? chalk.green('All specs have passed') : chalk.red('At least one spec has failed');
+  report(results: {string: any}): string {
+    if (results) {
+      console.log(results);
+      return 'tests pass';
+    }
+
+    return 'no results...';
   }
 }
