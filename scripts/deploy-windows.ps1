@@ -22,4 +22,4 @@ $AF_PWD = ConvertTo-SecureString "$env:releasePassword" -AsPlainText -Force
 $CREDS = New-Object System.Management.Automation.PSCredential ($AF_USER, $AF_PWD)  
 
 $json = $body | ConvertTo-Json
-Invoke-RestMethod 'https://api-stg.bitsrc.io/release/update' -Method Put -Body $json -ContentType 'application/json' -Credential $CREDS
+Invoke-RestMethod 'https://api-stg.bitsrc.io/release/update' -Method Post -Body $json -ContentType 'application/json' -Credential $CREDS
