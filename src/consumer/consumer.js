@@ -179,7 +179,7 @@ export default class Consumer {
     }));
   }
 
-  commit(id: BitInlineId, message: string) {  
+  commit(id: BitInlineId, message: string) {
     return this.loadComponent(id)
       .then(bit => 
         this.scope.put(bit, message)

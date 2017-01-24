@@ -1,5 +1,5 @@
-import { BitObject } from '../objects';
 /** @flow */
+import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
@@ -69,18 +69,22 @@ export default class SourceRepository {
       });
   }
 
-  addSource(source: consumerComponent, dependencies: ComponentVersion[], message: string): Promise<Component> {
+  addSource(source: consumerComponent, dependencies: ComponentVersion[], message: string):
+  Promise<Component> {
     const flattenedDeps = dependencies.map(dep => dep.id);
     const objectRepo = this.objects();
     return this.findOrAddComponent(source)
       .then((component) => {
         const impl = Source.from(Buffer.from(source.impl.src));
+        /* we make sure that there is a build in the source.build command so calling to
+        source.dist is legal thing to do -> $FlowFixMe */
         const dist = source.build(this.scope) ? Source.from(Buffer.from(source.dist)): null;
         const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
 
         const version = Version.fromComponent({
           component: source, impl, specs, dist, flattenedDeps, message
         });
+        
         component.addVersion(version);
         
         objectRepo

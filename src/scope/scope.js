@@ -122,8 +122,8 @@ export default class Scope {
     consumerComponent.scope = this.name;
     return this.importMany(consumerComponent.dependencies)
       .then((dependencies) => {
-        dependencies = flattenDependencies(dependencies);
-        return this.sources.addSource(consumerComponent, dependencies, message)
+        const FlattenDeps = flattenDependencies(dependencies);
+        return this.sources.addSource(consumerComponent, FlattenDeps, message)
         // @TODO make the scope install the required env
           // .then(() => this.ensureEnvironment({ testerId: , compilerId }))
           .then((component) => {

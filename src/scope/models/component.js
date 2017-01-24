@@ -145,6 +145,7 @@ export default class Component extends BitObject {
               specsFile: version.specs ? version.specs.name : null,
               compilerId: version.compiler,
               testerId: version.tester,
+              dependencies: version.dependencies,
               packageDependencies: version.packageDependencies,
               impl: new Impl(impl.toString()),
               specs: specs ? new Specs(specs.toString()): null,
