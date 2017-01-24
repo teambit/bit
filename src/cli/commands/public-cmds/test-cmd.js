@@ -10,7 +10,7 @@ export default class Test extends Command {
   alias = 't';
   opts = [];
 
-  action([id, ]: [string]): Promise<any> {
+  action([id, ]: [string, ]): Promise<any> {
     console.log('testing bits...');
     return test(id);
   }

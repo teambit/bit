@@ -36,6 +36,7 @@ function getOpts(c, opts: [[string, string, string]]): {[string]: boolean|string
 }
 
 function execAction(command, concrete, args) {
+  // $FlowFixMe
   const opts = getOpts(concrete, command.opts);
   command.action(args.slice(0, args.length - 1), opts)
     .then(data => logAndExit(command.report(data)))
@@ -50,6 +51,7 @@ function execAction(command, concrete, args) {
 function registerAction(command: Command, concrete) {
   concrete.action((...args) => {
     if (!empty(command.commands)) {
+      // $FlowFixMe
       const subcommandName = parseSubcommandFromArgs(args);
       const subcommand = command.commands.find((cmd) => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
