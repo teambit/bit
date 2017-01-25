@@ -3,6 +3,8 @@ const locateConsumer = require('./consumer/locate-consumer');
 const assert = require('assert').ok;
 const parseBitInlineId = require('./bit-id/parse-bit-inline-id');
 const Consumer = require('./consumer/consumer');
+const mock = require('mock-require');
+const { DEFAULT_BOXNAME } = require('./constants');
 
 const {
   loadBitInline,
@@ -11,9 +13,13 @@ const {
   // loadBitUsingDependenciesMap, @TODO - write strategy
 } = require('./strategies');
 
+const mockComponents = {};
+
 const load = (bitId) => {
   assert(bitId, 'missing bit id');
   assert(R.is(String, bitId), 'bit id must be a string');
+
+  if (mockComponents[bitId]) return mockComponents[bitId];
 
   let loaded;
   const { bitName, boxName } = parseBitInlineId(bitId);
@@ -37,6 +43,24 @@ const load = (bitId) => {
 
   if (loaded) return loaded;
   throw new Error(`could not find the required Bit - ${bitId}`);
+};
+
+load.mockComponents = (components) => {
+  for (const id in components) { // eslint-disable-line
+    const { bitName, boxName } = parseBitInlineId(id);
+    if (boxName === DEFAULT_BOXNAME) {
+      mockComponents[bitName] = components[id];
+      mockComponents[`${boxName}/${bitName}`] = components[id];
+    } else {
+      mockComponents[id] = components[id];
+    }
+  }
+};
+
+load.mockModules = (modules) => {
+  for (const m in modules) { // eslint-disable-line
+    mock(m, modules[m]);
+  }
 };
 
 module.exports = load;
