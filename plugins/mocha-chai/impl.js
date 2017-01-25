@@ -1,5 +1,6 @@
 const Mocha = require('mocha');
 const chai = require('chai');
+const bit = require('bit-node');
 
 const isEmptyObject = obj => Object.keys(obj).length === 0;
 
@@ -48,8 +49,10 @@ module.exports = {
   run,
   globals: {
     chai,
+    bit,
   },
   modules: {
-    chai
+    chai,
+    'bit-node': bit,
   },
 };

@@ -1,6 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import { testInline } from '../../../api/consumer';
+import { testInScope } from '../../../api/scope';
 import type { Results } from '../../../specs-runner/specs-runner';
 
 export default class Test extends Command {
@@ -14,8 +15,7 @@ export default class Test extends Command {
   action([id, ]: [string, ], { inline }: { inline: ?bool }): Promise<any> {
     function build() {
       if (inline) return testInline(id);
-      throw new Error('TODO - need implement from scope'); // TODO - need implemetn
-      // return testInScope(id);
+      return testInScope(id);
     }
     
     return build().then(res => ({
@@ -25,7 +25,7 @@ export default class Test extends Command {
   }
 
   report({ res, inline }: { res: Results, inline: ?bool }): string {
-    if (res && inline) {
+    if (res) {
       console.log(res);
       return 'tests pass';
     }

@@ -12,6 +12,7 @@ import BitIds from '../../bit-id/bit-ids';
 import Environment from '../../scope/repositories/environment';
 import docsParser, { ParsedDocs } from '../../jsdoc/parser';
 import specsRunner from '../../specs-runner';
+import type { Results } from '../../specs-runner/specs-runner';
 
 import { 
   DEFAULT_BOX_NAME,
@@ -174,7 +175,7 @@ export default class Component {
     .then(() => this);
   }
 
-  runSpecs(scope: Scope): ?Promise<Object> { // @TODO - write results type
+  runSpecs(scope: Scope): Promise<?Results> {
     function compileIfNeeded(
       condition: bool,
       compiler: ?{ compile?: (string) => string },
@@ -183,7 +184,7 @@ export default class Component {
       return compiler.compile(src);
     }
 
-    if (!this.testerId || !this.specs || !this.specs.src) return null;
+    if (!this.testerId || !this.specs || !this.specs.src) return Promise.resolve(null);
     try {
       const testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
       const compiler = this.compilerId ? scope.loadEnvironment(this.compilerId) : null;
@@ -191,9 +192,7 @@ export default class Component {
       // $FlowFixMe
       const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
       return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc });
-    } catch (e) {
-      return Promise.reject(e);
-    }
+    } catch (e) { return Promise.reject(e); }
   }
 
   build(scope: Scope): {code: string, map: Object}|null { // @TODO - write SourceMap Type

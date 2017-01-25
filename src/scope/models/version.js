@@ -3,12 +3,12 @@ import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
 import ConsumerComponent from '../../consumer/component';
-import Component from './component';
 import { Remotes } from '../../remotes';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
 import type { ParsedDocs } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME } from '../../constants';
+import type { Results } from '../../specs-runner/specs-runner';
 
 export type VersionProps = {
   impl: {
@@ -29,6 +29,7 @@ export type VersionProps = {
     message: string,
     date: string
   };
+  specsResults?: ?Results;
   docs?: ParsedDocs[],
   dependencies?: BitIds;
   flattenedDependencies?: BitIds;
@@ -54,23 +55,37 @@ export default class Version extends BitObject {
     message: string,
     date: string
   };
+  specsResults: ?Results;
   docs: ?ParsedDocs[];
   dependencies: BitIds;
   flattenedDependencies: BitIds;
   packageDependencies: {[string]: string};
 
-  constructor(props: VersionProps) {
+  constructor({
+    impl,
+    specs,
+    dist,
+    compiler,
+    tester,
+    log,
+    dependencies,
+    docs,
+    specsResults,
+    flattenedDependencies,
+    packageDependencies
+  }: VersionProps) {
     super();
-    this.impl = props.impl;
-    this.specs = props.specs;
-    this.dist = props.dist;
-    this.compiler = props.compiler;
-    this.tester = props.tester;
-    this.log = props.log;
-    this.dependencies = props.dependencies || new BitIds();
-    this.docs = props.docs;
-    this.flattenedDependencies = props.flattenedDependencies || new BitIds();
-    this.packageDependencies = props.packageDependencies || {};
+    this.impl = impl;
+    this.specs = specs;
+    this.dist = dist;
+    this.compiler = compiler;
+    this.tester = tester;
+    this.log = log;
+    this.dependencies = dependencies || new BitIds();
+    this.docs = docs;
+    this.specsResults = specsResults;
+    this.flattenedDependencies = flattenedDependencies || new BitIds();
+    this.packageDependencies = packageDependencies || {};
   }
 
   id() {
@@ -113,6 +128,7 @@ export default class Version extends BitObject {
         message: this.log.message,
         date: this.log.date,
       },
+      specsResults: this.specsResults,
       docs: this.docs,
       dependencies: this.dependencies.map(dep => dep.toString()),
       flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
@@ -134,6 +150,7 @@ export default class Version extends BitObject {
       tester,
       log,
       docs,
+      specsResults,
       dependencies,
       flattenedDependencies,
       packageDependencies
@@ -158,6 +175,7 @@ export default class Version extends BitObject {
         message: log.message,
         date: log.date,
       },
+      specsResults,
       docs,
       dependencies: BitIds.deserialize(dependencies),
       flattenedDependencies: BitIds.deserialize(flattenedDependencies),
@@ -165,13 +183,14 @@ export default class Version extends BitObject {
     });
   }
 
-  static fromComponent({ component, impl, specs, dist, flattenedDeps, message }: {
+  static fromComponent({ component, impl, specs, dist, flattenedDeps, message, specsResults }: {
     component: ConsumerComponent,
     impl: Source,
     specs: Source,
     flattenedDeps: BitId[],
     message: string,
-    dist: Source
+    dist: Source,
+    specsResults: ?Results
   }) {
     return new Version({
       impl: {
@@ -192,6 +211,7 @@ export default class Version extends BitObject {
         message,
         date: Date.now().toString(),
       },
+      specsResults,
       docs: component.docs,
       packageDependencies: component.packageDependencies,
       flattenedDependencies: flattenedDeps,

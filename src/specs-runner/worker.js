@@ -1,14 +1,14 @@
 const serializeError = require('serialize-error');
 
-const implFilePath = process.env.___impl___;
-const specsFilePath = process.env.___specs___;
-const testerFilePath = process.env.___tester___;
+const implFilePath = process.env.__impl__;
+const specsFilePath = process.env.__specs__;
+const testerFilePath = process.env.__tester__;
 
 const tester = require(testerFilePath);
 const mock = require('mock-require');
 
-// define the ___impl___ global
-global.___impl___ = implFilePath;
+// define the __impl__ global
+global.__impl__ = implFilePath;
 
 // register globals
 if (tester.globals) {

@@ -45,9 +45,9 @@ function run({ scope, testerFilePath, implSrc, specsSrc }:
       // execArgv: ['--debug=26304'],
       stdio: [null, null, 2, 'ipc'],
       env: {
-        ___impl___: implFilePath,
-        ___specs___: specsFilePath,
-        ___tester___: testerFilePath
+        __impl__: implFilePath,
+        __specs__: specsFilePath,
+        __tester__: testerFilePath
       }
     });
 

@@ -21,6 +21,7 @@ import ComponentDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
 import { postExportHook } from '../hooks';
+import type { Results } from '../specs-runner/specs-runner';
 
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
 
@@ -183,7 +184,8 @@ export default class Scope {
       });   
   }
 
-  getExternalMany(ids: BitId[], remotes: Remotes, localFetch: bool = true): Promise<VersionDependencies[]> {
+  getExternalMany(ids: BitId[], remotes: Remotes, localFetch: bool = true):
+  Promise<VersionDependencies[]> {
     return this.sources.getMany(ids)
       .then((defs) => {
         const left = defs.filter(def => !def.component && localFetch);
@@ -390,10 +392,20 @@ export default class Scope {
     return this.environment.ensureEnvironment({ testerId, compilerId });
   }
 
+  runComponentSpecs(id: BitId): Promise<?Results> {
+    return this.loadComponent(id)
+      .then((component) => {
+        return component.runSpecs(this);
+      });
+  }
+
   build(bitId: BitId): Promise<string> {
     return this.loadComponent(bitId)
     .then((component) => {
-      return this.ensureEnvironment({ testerId: component.testerId, compilerId: component.compilerId })
+      return this.ensureEnvironment({
+        testerId: component.testerId,
+        compilerId: component.compilerId
+      })
       .then(() => component.build(this));
     });
   }
