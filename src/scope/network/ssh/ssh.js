@@ -86,15 +86,22 @@ export default class SSH {
     });
   }
 
-  fetch(ids: BitIds): Promise<ComponentObjects[]> {
+  fetch(ids: BitIds, noDeps: bool = false): Promise<ComponentObjects[]> {
+    let options = '';
     ids = ids.map(bitId => bitId.toString());
-    return this.exec('_fetch', ...ids)
+    if (noDeps) options = '-n';
+    return this.exec(`_fetch ${options}`, ...ids)
       .then((str: string) => {
         const components = unpack(str);
         return components.map((raw) => {
           return ComponentObjects.fromString(raw);
         });
       });
+  }
+
+  fetch(ids: BitIds): Promise<ComponentObjects[]> {
+    ids = ids.map(bitId => bitId.toString());
+    return this.exec('_fetch', ...ids);
   }
 
   close() {
