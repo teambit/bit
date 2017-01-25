@@ -20,9 +20,11 @@ export default class ComponentVersion {
     return this.component.loadVersion(this.version, repository);
   }
 
-  flattnedDependencies(repository: Repository): Promise<BitId[]> {
+  flattenedDependencies(repository: Repository): Promise<BitId[]> {
     return this.getVersion(repository)
-      .then(version => version.flattenedDependencies);
+      .then(version => {
+        return version.flattenedDependencies;
+      });
   }
 
   toId() {

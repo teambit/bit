@@ -17,10 +17,8 @@ export function flattenDependencyIds(dependencies: VersionDependencies[], repo: 
   return Promise.all(dependencies.map((dep) => {
     const depCompId = dep.component.id;
     depCompId.scope = dep.sourceScope;
-    return Promise.all(dep.dependencies.map(dependency => 
-      dependency.flattnedDependencies(repo))
-    )
-    .then(flattnedDeps => flattnedDeps.concat(depCompId));
+    return dep.component.flattenedDependencies(repo)
+      .then(flattnedDeps => flattnedDeps.concat(depCompId));
   }))
     .then((idMatrix) => {
       const ids = flatten(idMatrix);
