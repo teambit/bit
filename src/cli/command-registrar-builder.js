@@ -3,6 +3,7 @@ import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
 import Init from './commands/public-cmds/init-cmd';
 import ScopeList from './commands/private-cmds/_list-cmd';
+import ScopeSearch from './commands/private-cmds/_search-cmd';
 import Create from './commands/public-cmds/create-cmd';
 import Export from './commands/public-cmds/export-cmd';
 import List from './commands/public-cmds/list-cmd';
@@ -43,6 +44,7 @@ export default function registerCommands(): CommandRegistrar {
     new Test(),
     new Put(),
     new ScopeList(),
+    new ScopeSearch(),
     new Fetch(),
     new Build(),
     new DescribeScope()

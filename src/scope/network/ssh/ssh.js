@@ -75,7 +75,7 @@ export default class SSH {
         throw new RemoteScopeNotFound();
       });
   }
-  
+
   list() {
     return this.exec('_list')
     .then((str: string) => {
@@ -84,6 +84,10 @@ export default class SSH {
         return ConsumerComponent.fromString(c);
       });
     });
+  }
+
+  search(query: string, reindex: boolean) {
+    return this.exec('_search', query, reindex.toString());
   }
 
   fetch(ids: BitIds): Promise<ComponentObjects[]> {
@@ -105,7 +109,7 @@ export default class SSH {
   composeConnectionUrl() {
     return `${this.username}@${this.host}:${this.port}`;
   }
- 
+
   connect(sshUrl: SSHUrl, key: ?string): Promise<SSH> {
     this.connection = sequest.connect(this.composeConnectionUrl(), {
       privateKey: keyGetter(key)

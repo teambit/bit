@@ -44,11 +44,17 @@ export default class Remote {
       return network.describeScope();
     });
   }
-  
+
   list(): Promise<[]> {
     return this
       .connect()
       .then(network => network.list());
+  }
+
+  search(query: string, reindex: boolean): Promise<any> {
+    return this
+      .connect()
+      .then(network => network.search(query, reindex));
   }
 
   show(): Promise<> {
@@ -80,6 +86,6 @@ export default class Remote {
     const primary = isPrimary(name);
     if (primary) name = cleanBang(name);
 
-    return new Remote(name, host, primary); 
+    return new Remote(name, host, primary);
   }
 }

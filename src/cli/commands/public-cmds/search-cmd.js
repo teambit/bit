@@ -1,22 +1,24 @@
 /** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
-import { searcher } from '../../../search';
+import { searchAdapter } from '../../../search';
 
 export default class Search extends Command {
   name = 'search [query...]';
-  description = 'search for bits in configured remote(s)';
+  description = 'search for bits';
   alias = '';
   opts = [
     ['s', 'scope <scopename>', 'search in scope'],
     ['r', 'reindex', 're-index all components']
   ];
   
-  action([query, ], { scope, reindex }) {
+  action([query, ]: [string[], ], { scope, reindex }) {
     const queryStr = query.join(' ');
     console.log(`searching bits in ${scope ? scope : 'local scope'} for "${queryStr}"`);
-    const results = searcher.search(queryStr, scope, reindex);
-    return new Promise(resolve => resolve(results));
+    if (scope) {
+      return searchAdapter.searchRemotely(queryStr, scope, reindex);
+    }
+    return searchAdapter.searchLocally(queryStr, reindex);
   }
 
   report(searchResults: string): string {

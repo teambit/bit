@@ -1,7 +1,6 @@
 /** @flow */
 import serverlessIndex from './serverless-index';
 import indexer from './indexer';
-import { loadConsumer } from '../consumer';
 
 let localIndex;
 
@@ -64,25 +63,18 @@ function buildQuery(queryStr: string) {
   return query;
 }
 
-function search(queryStr: string, scope: string = '', reindex: boolean = false) {
+function search(queryStr: string, path: string) {
   return new Promise((resolve, reject) => {
-    const promise = reindex ? indexer.indexAll(scope) : Promise.resolve();
-    promise.then(() => {
-      return loadConsumer()
-        .then(consumer => {
-          localIndex = serverlessIndex.initializeIndex(consumer.scope.path);
-          const searchResults = [];
-          const query = buildQuery(queryStr);
-          return localIndex.then((indexInstance) => {
-            indexInstance.search({
-              query,
-            }).on('data', function (data) {
-              searchResults.push(formatSearchResult(data));
-            })
-              .on('end', function () {
-                return resolve(JSON.stringify(searchResults));
-              });
-          });
+    localIndex = serverlessIndex.initializeIndex(path);
+    const searchResults = [];
+    const query = buildQuery(queryStr);
+    return localIndex.then((indexInstance) => {
+      indexInstance.search({
+        query,
+      }).on('data', function (data) {
+        searchResults.push(formatSearchResult(data));
+      }).on('end', function () {
+          return resolve(JSON.stringify(searchResults));
         });
     });
   });

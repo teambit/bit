@@ -2,9 +2,7 @@
 import path from 'path';
 import { Readable } from 'stream';
 import { parser } from '../jsdoc';
-import { loadConsumer } from '../consumer';
 import Component from '../consumer/component';
-
 import serverlessIndex from './serverless-index';
 
 let localIndex;
@@ -54,23 +52,13 @@ function index(component: Component, scopePath: string) {
   return addToLocalIndex(component);
 }
 
-function indexAll(scope: string = ''): Promise<any> {
+function indexAll(path: string, components: Component[]): Promise<any> {
   return new Promise((resolve, reject) => {
-    if (scope) {
-      reject('not implemented yet'); // FIXME
-    }
-    else {
-      return loadConsumer()
-        .then(consumer => {
-          localIndex = serverlessIndex.initializeIndex(consumer.scope.path);
-          return consumer.scope.list(scope);
-        })
-        .then(components => {
-          if (!components) return reject('The local scope is empty');
-          const results = components.map(component => addToLocalIndex(component));
-          return resolve(Promise.all(results));
-        });
-    }
+    if (!components) return reject('The scope is empty');
+    serverlessIndex.deleteDb(path);
+    localIndex = serverlessIndex.initializeIndex(path);
+    const results = components.map(component => addToLocalIndex(component));
+    return resolve(Promise.all(results));
   });
 }
 
