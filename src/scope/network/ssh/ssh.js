@@ -99,11 +99,6 @@ export default class SSH {
       });
   }
 
-  fetch(ids: BitIds): Promise<ComponentObjects[]> {
-    ids = ids.map(bitId => bitId.toString());
-    return this.exec('_fetch', ...ids);
-  }
-
   close() {
     this.connection.end();
     return this;
