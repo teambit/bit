@@ -43,7 +43,7 @@ function run({ scope, testerFilePath, implSrc, specsSrc }:
   return new Promise((resolve, reject) => {
     const child = fork(path.join(__dirname, 'worker.js'), {
       // execArgv: ['--debug=26304'],
-      silent: true,
+      stdio: [null, null, 2, 'ipc'],
       env: {
         ___impl___: implFilePath,
         ___specs___: specsFilePath,
@@ -56,7 +56,7 @@ function run({ scope, testerFilePath, implSrc, specsSrc }:
       if (type === 'error') return reject(payload);
       return resolve(payload);
     });
-      
+
     child.on('error', (e) => {
       removeTmpFiles();
       reject(e);
