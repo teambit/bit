@@ -73,10 +73,6 @@ export default class Version extends BitObject {
     this.packageDependencies = props.packageDependencies || {};
   }
 
-  flattenDependencies(scope: Scope, remotes: Remotes) {
-    return this.dependencies.fetch(scope, remotes);
-  }
-
   id() {
     return JSON.stringify(this.toObject());
   }

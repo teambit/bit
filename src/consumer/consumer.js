@@ -2,7 +2,7 @@
 import path from 'path';
 import glob from 'glob';
 import fs from 'fs-extra';
-import flattenDependencies from '../scope/flatten-dependencies';
+import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from './bit-json/consumer-bit-json';

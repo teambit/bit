@@ -72,9 +72,8 @@ export default class SourceRepository {
       });
   }
 
-  addSource(source: consumerComponent, dependencies: ComponentVersion[], message: string):
+  addSource(source: consumerComponent, flattenedDeps: BitId[], message: string):
   Promise<Component> {
-    const flattenedDeps = dependencies.map(dep => dep.id);
     const objectRepo = this.objects();
     return this.findOrAddComponent(source)
       .then((component) => {

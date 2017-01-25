@@ -1,7 +1,4 @@
 /** @flow */
-import Component from './models/component';
-import Version from './models/version';
-import Scope from '../scope';
 import ComponentDependencies from './component-dependencies';
 import ComponentVersion from './component-version';
 import ComponentObjects from './component-objects';
@@ -10,10 +7,12 @@ import Repository from './objects/repository';
 export default class VersionDependencies {
   component: ComponentVersion;
   dependencies: ComponentVersion[];
+  sourceScope: ?string;
 
-  constructor(component: ComponentVersion, dependencies: ComponentVersion[]) {
+  constructor(component: ComponentVersion, dependencies: ComponentVersion[], sourceScope: string) {
     this.component = component;
     this.dependencies = dependencies;
+    this.sourceScope = sourceScope;
   }
 
   toConsumer(repo: Repository): Promise<ComponentDependencies> {

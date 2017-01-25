@@ -3,7 +3,7 @@ import * as pathLib from 'path';
 import fs from 'fs';
 import { merge, splitWhen } from 'ramda';
 import { GlobalRemotes } from '../global-config';
-import flattenDependencies from './flatten-dependencies';
+import { flattenDependencyIds } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
 import { Remotes } from '../remotes';
@@ -114,6 +114,10 @@ export default class Scope {
     ));
   }
 
+  getDependencies() {
+    
+  }
+
   put(consumerComponent: ConsumerComponent, message: string): Promise<ComponentDependencies> {
     consumerComponent.scope = this.name;
     const dependenciesP = this.importMany(consumerComponent.dependencies);
@@ -124,12 +128,14 @@ export default class Scope {
 
     return Promise.all([dependenciesP, ensureEnvironmentP])
       .then(([dependencies, ]) => {
-        const FlattenDeps = flattenDependencies(dependencies);
-        return this.sources.addSource(consumerComponent, FlattenDeps, message)
-          .then((component) => {
-            return this.objects.persist()
-              .then(() => component.toVersionDependencies(LATEST, this))
-              .then(deps => deps.toConsumer(this.objects));
+        return flattenDependencyIds(dependencies, this.objects)
+          .then((depIds) => {
+            return this.sources.addSource(consumerComponent, depIds, message)
+              .then((component) => {
+                return this.objects.persist()
+                  .then(() => component.toVersionDependencies(LATEST, this, this.name))
+                  .then(deps => deps.toConsumer(this.objects));
+              }); 
           });
       });
   }
@@ -323,7 +329,7 @@ export default class Scope {
         }))
         .then((versionDeps) => {
           return this.remotes()
-            .then(remotes => this.getExternalMany(externals, remotes))
+            .then(remotes => this.getExternalOnes(externals, remotes))
             .then(externalDeps => versionDeps.concat(externalDeps));
         });
       });    
