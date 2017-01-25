@@ -82,7 +82,7 @@ export default class Version extends BitObject {
   }
 
   collectDependencies(scope: Scope): Promise<ComponentVersion[]> {
-    return scope.manyOnes(this.flattenedDependencies);
+    return scope.importManyOnes(this.flattenedDependencies);
   }
 
   refs(): Ref[] {

@@ -16,6 +16,11 @@ export type ComponentTree = {
   objects: BitObject[];
 };
 
+export type ComponentDef = {
+  id: BitId;
+  component: Component;
+};
+
 export default class SourceRepository {
   scope: Scope;  
 
@@ -35,17 +40,15 @@ export default class SourceRepository {
       });
   }
 
-  getComponent(bitId: BitId): Promise<ComponentVersion> {
-    return this.get(bitId).then((component) => {
-      if (!component) throw new ComponentNotFound();
-      const versionNum = bitId.getVersion().resolve(component.listVersions());
-      return component.loadVersion(versionNum, this.objects())
-        .then(() => new ComponentVersion(
-          component,
-          versionNum,
-          this.scope.name
-        ));
-    });
+  getMany(ids: BitId[]): Promise<ComponentDef[]> {
+    return Promise.all(ids.map((id) => {
+      return this.get(id).then((component) => {
+        return {
+          id,
+          component
+        };
+      });
+    }));
   }
   
   get(bitId: BitId): Promise<Component> {

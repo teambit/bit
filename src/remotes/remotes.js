@@ -52,8 +52,7 @@ export default class Remotes extends Map<string, Remote> {
       } else {
         promises.push(
           this.resolve(scopeName, thisScope)
-          .then(remote => remote.fetchOnes(scopeIds))
-          );
+          .then(remote => remote.fetchOnes(scopeIds)));
       }
     });
 
