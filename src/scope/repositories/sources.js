@@ -16,6 +16,11 @@ export type ComponentTree = {
   objects: BitObject[];
 };
 
+export type ComponentDef = {
+  id: BitId;
+  component: Component;
+};
+
 export default class SourceRepository {
   scope: Scope;  
 
@@ -35,17 +40,15 @@ export default class SourceRepository {
       });
   }
 
-  getComponent(bitId: BitId): Promise<ComponentVersion> {
-    return this.get(bitId).then((component) => {
-      if (!component) throw new ComponentNotFound();
-      const versionNum = bitId.getVersion().resolve(component.listVersions());
-      return component.loadVersion(versionNum, this.objects())
-        .then(() => new ComponentVersion(
-          component,
-          versionNum,
-          this.scope.name
-        ));
-    });
+  getMany(ids: BitId[]): Promise<ComponentDef[]> {
+    return Promise.all(ids.map((id) => {
+      return this.get(id).then((component) => {
+        return {
+          id,
+          component
+        };
+      });
+    }));
   }
   
   get(bitId: BitId): Promise<Component> {
@@ -69,10 +72,10 @@ export default class SourceRepository {
       });
   }
 
-  addSource(source: consumerComponent, dependencies: ComponentVersion[], message: string):
+  addSource(source: consumerComponent, flattenedDeps: BitId[], message: string):
   Promise<Component> {
-    const flattenedDeps = dependencies.map(dep => dep.id);
     const objectRepo = this.objects();
+
     return this.findOrAddComponent(source)
       .then((component) => {
         const impl = Source.from(Buffer.from(source.impl.src));
@@ -81,23 +84,27 @@ export default class SourceRepository {
         } catch (e) {
           throw e;
         }
+        
         const dist = source.dist ? Source.from(Buffer.from(source.dist)): null;
         const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
 
-        const version = Version.fromComponent({
-          component: source, impl, specs, dist, flattenedDeps, message
+        return source.runSpecs(this.scope)
+        .then((specsResults) => {
+          const version = Version.fromComponent({
+            component: source, impl, specs, dist, flattenedDeps, message, specsResults
+          });
+          
+          component.addVersion(version);
+          
+          objectRepo
+            .add(version)
+            .add(component)
+            .add(impl)
+            .add(specs)
+            .add(dist);
+          
+          return component;
         });
-        
-        component.addVersion(version);
-        
-        objectRepo
-          .add(version)
-          .add(component)
-          .add(impl)
-          .add(specs)
-          .add(dist);
-        
-        return component;
       });
   }
 

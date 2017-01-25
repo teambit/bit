@@ -1,17 +1,7 @@
 /** @flow */
-import { groupBy, mergeAll } from 'ramda';
+import { mergeAll } from 'ramda';
 import { BitId } from '../bit-id';
 import { forEach } from '../utils';
-import { Remotes } from '../remotes';
-import { Scope } from '../scope';
-import VersionDependencies from '../scope/version-dependencies';
-
-function byRemote(origin: Scope) {
-  return groupBy((id) => {
-    if (id.isLocal(origin.name)) return 'inner';
-    return 'outer';
-  });
-}
 
 export default class BitIds extends Array<BitId> {
   serialize(): string[] {
@@ -38,21 +28,5 @@ export default class BitIds extends Array<BitId> {
     });
 
     return new BitIds(...array);
-  }
-  
-  fetchOnes(origin: Scope, remotes: Remotes) {
-    const { inner = [], outer = [] } = byRemote(origin)(this);
-    return origin.manyOnes(inner).then((innerBits) => {
-      return remotes.fetch(outer, origin, true)
-        .then(remoteBits => remoteBits.concat(innerBits));
-    });
-  }
-
-  fetch(origin: Scope, remotes: Remotes): Promise<VersionDependencies[]> {
-    const { inner = [], outer = [] } = byRemote(origin)(this);
-    return origin.getMany(inner).then((innerBits) => {
-      return remotes.fetch(outer, origin)
-        .then(remoteBits => remoteBits.concat(innerBits));
-    });
   }
 }

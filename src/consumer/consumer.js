@@ -2,7 +2,7 @@
 import path from 'path';
 import glob from 'glob';
 import fs from 'fs-extra';
-import flattenDependencies from '../scope/flatten-dependencies';
+import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
@@ -18,6 +18,7 @@ import {
 import { flatten, removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
+import type { Results } from '../specs-runner/specs-runner';
 
 const buildAndSave = (component: Component, scope: Scope, bitDir: string): Component => {
   const val = component.build(scope);
@@ -201,7 +202,7 @@ export default class Consumer {
       );
   }
 
-  runComponentSpecs(id: BitInlineId): Promise<Object> { // @TODO - write results object
+  runComponentSpecs(id: BitInlineId): Promise<?Results> {
     return this.loadComponent(id)
       .then((component) => {
         return component.runSpecs(this.scope);

@@ -3,10 +3,16 @@
         "impl": "impl.js",
         "spec": "spec.js"
     },
+    "env": {
+        "compiler": "@local_env/compilers/babel::1",
+        "tester": "none"
+    },
+    "dependencies": {},
     "name": "mocha-chai",
     "box": "testers",
     "packageDependencies": {
         "mocha": "^3.2.0",
-        "chai": "^3.5.0"
+        "chai": "^3.5.0",
+        "bit-node":"^0.1.1"
     }
 }

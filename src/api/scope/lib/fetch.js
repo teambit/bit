@@ -2,7 +2,11 @@
 import { loadScope } from '../../../scope';
 import { BitIds } from '../../../bit-id';
 
-export default function fetch(path: string, ids: string[]) {
+export default function fetch(path: string, ids: string[], noDependencies: bool = false) {
   return loadScope(path)
-    .then(scope => scope.getManyObjects(BitIds.deserialize(ids)));
+    .then((scope) => {
+      const bitIds = BitIds.deserialize(ids);
+      if (noDependencies) return scope.manyOneObjects(bitIds);
+      return scope.getObjects(bitIds);
+    });
 }

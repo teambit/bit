@@ -1,4 +1,5 @@
 /* @flow */
+import R from 'ramda';
 import Scope from '../../scope/scope';
 
 const hubResolver = (scopeName) => {
@@ -7,7 +8,7 @@ const hubResolver = (scopeName) => {
 };
 
 const remoteResolver = (scopeName: string, thisScope: Scope): Promise<string> => {
-  const resolverPath = thisScope.scopeJson.resolverPath;
+  const resolverPath = R.path(['scopeJson', 'resolverPath'], thisScope);
   let resolverFunction;
   if (!resolverPath) resolverFunction = hubResolver;
   // $FlowFixMe
