@@ -1,4 +1,3 @@
-import prepare from './lib/prepare';
 import initScope from './lib/scope-init';
 import put from './lib/put';
 import fetch from './lib/fetch';
@@ -14,7 +13,6 @@ export {
   setResolver,
   resetResolver,
   describeScope,
-  prepare,
   initScope,
   buildInScope,
   put,

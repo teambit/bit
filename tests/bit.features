@@ -1,0 +1,13 @@
+Feature: Run commands
+
+  There are several steps to run commands with `aruba`.
+
+  Scenario: Run command bit
+    When I run `bit`
+    Then the features should all pass
+  Scenario: Run command bit init
+    When I run `bit init`
+    Then the features should all pass
+  Scenario: Run command bit create test
+    When I run `bit create test`
+    Then the features should all pass

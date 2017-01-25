@@ -52,6 +52,14 @@ export default class Consumer {
     this.scope = scope;
   }
 
+  get testerId(): ?BitId {
+    return BitId.parse(this.bitJson.testerId, this.scope);
+  }
+
+  get compilerId(): ?BitId {
+    return BitId.parse(this.bitJson.compilerId, this.scope);
+  }
+
   write(): Promise<Consumer> {
     return this.bitJson
       .write({ bitDir: this.projectPath })
@@ -86,32 +94,36 @@ export default class Consumer {
   }
 
   import(rawId: ?string): Component {
-    if (!rawId) { // if no arguments inserted, install according to bitJson dependencies
-      const deps = BitIds.fromObject(this.bitJson.dependencies);
-      
+    const importAccordingToConsumerBitJson = () => {
+      const dependencies = BitIds.fromObject(this.bitJson.dependencies);
       return this.scope.ensureEnvironment({
-        testerId: this.bitJson.testerId,
-        compilerId: this.bitJson.compilerId
+        testerId: this.testerId,
+        compilerId: this.compilerId
       }).then(() =>
-        Promise.all(deps.map(dep => this.scope.get(dep)))
+        Promise.all(dependencies.map(dep => this.scope.get(dep)))
         .then(bits => this.writeToComponentsDir(flatten(bits)))
       );
-    }
+    };
 
-    const bitId = BitId.parse(rawId, this.scope.name);
-    return this.scope.get(bitId)
+    const importSpecificComponent = () => {
+      const bitId = BitId.parse(rawId, this.scope.name);
+      return this.scope.get(bitId)
       .then((componentDependencies) => {
         return this.writeToComponentsDir([componentDependencies]);
       });
+    };
+
+    if (!rawId) return importAccordingToConsumerBitJson();
+    return importSpecificComponent();
   }
 
   importEnvironment(rawId: ?string) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
 
     const bitId = BitId.parse(rawId, this.scope.name);
-    return this.scope.get(bitId)
+    return this.scope.get(bitId) // @HACKALERT - replace with getOne
     .then((componentDependencies) => {
-      return this.scope.writeToEnvironmentsDir(componentDependencies.component); // @HACKALERT - replace with getOne
+      return this.scope.writeToEnvironmentsDir(componentDependencies.component);
     });
   }
 
@@ -179,7 +191,7 @@ export default class Consumer {
     }));
   }
 
-  commit(id: BitInlineId, message: string) {  
+  commit(id: BitInlineId, message: string) {
     return this.loadComponent(id)
       .then(bit => 
         this.scope.put(bit, message)
@@ -189,11 +201,11 @@ export default class Consumer {
       );
   }
 
-  testBit(id: BitInlineId): Promise<Component> {
+  runComponentSpecs(id: BitInlineId): Promise<Object> { // @TODO - write results object
     return this.loadComponent(id)
-    .then((component) => {
-      component.test(this.scope);
-    });
+      .then((component) => {
+        return component.runSpecs(this.scope);
+      });
   }
 
   listInline(): Promise<Component[]> {

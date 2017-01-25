@@ -10,7 +10,7 @@ export default class Prepare extends Command {
   alias = '';
   opts = [];
 
-  action([path, ]: [string]): Promise<*> {
+  action([path, ]: [string, ]): Promise<*> {
     return describeScope(fromBase64(path));
   }
 

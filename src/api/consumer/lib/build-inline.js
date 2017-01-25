@@ -9,10 +9,13 @@ export default function build(id: string): Promise<Bit> {
     .then((consumer) => {
       return consumer.loadComponent(inlineId)
       .then((component) => { 
-        component.build(consumer.scope);
-        return component.writeBuild(
-          inlineId.composeBitPath(consumer.getPath())
-        );
+        return component.ensureEnvironment(consumer.scope)
+        .then(() => {
+          component.build(consumer.scope);
+          return component.writeBuild(
+            inlineId.composeBitPath(consumer.getPath())
+          );
+        });
       });
     });
 }

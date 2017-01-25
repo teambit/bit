@@ -11,6 +11,8 @@ import Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
 import Environment from '../../scope/repositories/environment';
 import docsParser, { ParsedDocs } from '../../jsdoc/parser';
+import specsRunner from '../../specs-runner';
+
 import { 
   DEFAULT_BOX_NAME,
   DEFAULT_IMPL_NAME,
@@ -172,42 +174,27 @@ export default class Component {
     .then(() => this);
   }
 
-  // test(scope: Scope): Promise<any|null> { // TODO - create TestResults Type
-    // function compileIfNeeded(src) {
-    //   return new Promise((resolve, reject) => {
-    //     if (this.compilerId) { 
-    //       const compiler = scope.loadEnvironment(this.compilerId);
-    //       try {
-    //         const { code } = compiler.compile(src);
-    //         return resolve(code);
-    //       } catch (e) { return reject(e); }
-    //     }
+  runSpecs(scope: Scope): ?Promise<Object> { // @TODO - write results type
+    function compileIfNeeded(
+      cond: bool,
+      compiler: ?{ compile?: (string) => string },
+      src: string): ?string {
+      if (!cond || !compiler || !compiler.compile) return src;
+      return compiler.compile(src);
+    }
 
-    //     return resolve(src);
-    //   });
-    // }
-    //
-    // return new Promise((resolve, reject) => {
-    //   if (!this.specs) { return resolve(null); }
-    //   try {
-    //     const tester = scope.loadEnvironment(this.testerId)
-    //       tester = {
-    //         test: (p) => {
-    //           console.log(p);
-    //           return { t: 'is-awesome' };
-    //         }
-    //       };
-    //       return compileIfNeeded(this.specs.src)
-    //       .then(specsSrc => scope.tmp.save(specsSrc))
-    //       .then((specsPath) => {
-    //         const results = tester.test(specsPath);
-    //         return scope.tmp.remove(specsPath)
-    //         .then(() => resolve(results));
-    //       });
-    //     });
-    //   } catch (e) { return reject(e); }
-    // });
-  // }
+    if (!this.testerId || !this.specs || !this.specs.src) return null;
+    try {
+      const testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
+      const compiler = this.compilerId ? scope.loadEnvironment(this.compilerId) : null;
+      const implSrc = compileIfNeeded(!!this.compilerId, compiler, this.impl.src);
+      // $FlowFixMe
+      const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
+      return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc });
+    } catch (e) {
+      console.log(e);
+    }
+  }
 
   build(scope: Scope): {code: string, map: Object}|null { // @TODO - write SourceMap Type
     if (!this.compilerId) return null;
@@ -218,7 +205,8 @@ export default class Component {
       this._dist = code;
       return code;
     } catch (e) {
-      return e;
+      throw e;
+      // return null;
     }
   }
   
