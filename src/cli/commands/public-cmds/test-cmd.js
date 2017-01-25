@@ -1,6 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import { testInline } from '../../../api/consumer';
+import type { Results } from '../../../specs-runner/specs-runner';
 
 export default class Test extends Command {
   name = 'test <id>';
@@ -23,9 +24,9 @@ export default class Test extends Command {
     }));
   }
 
-  report(results: {string: any}): string {
-    if (results) {
-      console.log(results);
+  report({ res, inline }: { res: Results, inline: ?bool }): string {
+    if (res && inline) {
+      console.log(res);
       return 'tests pass';
     }
 

@@ -1,3 +1,5 @@
+const serializeError = require('serialize-error');
+
 const implFilePath = process.env.___impl___;
 const specsFilePath = process.env.___specs___;
 const testerFilePath = process.env.___tester___;
@@ -24,10 +26,8 @@ if (tester.modules) {
 
 tester.run(specsFilePath)
 .then((results) => {
-  console.log(results);
-  return process.send(results);
+  return process.send({ type: 'results', payload: results });
 })
 .catch((err) => {
-  console.error('\n ohhh an error:', err); // TODO - remove when verified
-  throw err;
+  return process.send({ type: 'error', payload: serializeError(err) });
 });

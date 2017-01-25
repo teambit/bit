@@ -3,11 +3,28 @@ import path from 'path';
 import { fork } from 'child_process';
 import Scope from '../scope/scope';
 
-type Results = { // TODO - write
- 
+export type ErrorObj = {
+  message: string,
+  stack: string,
 }
 
-type Tester = {
+export type Test = {
+  title: string,
+  pass: bool,
+  err: ?ErrorObj
+}
+
+export type Stats = {
+  start: string,
+  end: string
+}
+
+export type Results = {
+ tests: Test[],
+ stats: Stats
+}
+
+export type Tester = {
   run: (filePath: string) => Promise<Results>;
   globals: Object;
   modules: Object;
@@ -15,8 +32,8 @@ type Tester = {
 
 function run({ scope, testerFilePath, implSrc, specsSrc }:
 { scope: Scope, testerFilePath: string, implSrc: string, specsSrc: string }) {
-  const implFilePath = scope.tmp.saveSync(implSrc); // TODO - implement
-  const specsFilePath = scope.tmp.saveSync(specsSrc); // TODO - implement
+  const implFilePath = scope.tmp.saveSync(implSrc);
+  const specsFilePath = scope.tmp.saveSync(specsSrc);
 
   const removeTmpFiles = () => {
     scope.tmp.removeSync(implFilePath);
@@ -26,7 +43,7 @@ function run({ scope, testerFilePath, implSrc, specsSrc }:
   return new Promise((resolve, reject) => {
     const child = fork(path.join(__dirname, 'worker.js'), {
       // execArgv: ['--debug=26304'],
-      silent: true, // TODO - change to true when working
+      silent: true,
       env: {
         ___impl___: implFilePath,
         ___specs___: specsFilePath,
@@ -34,19 +51,18 @@ function run({ scope, testerFilePath, implSrc, specsSrc }:
       }
     });
 
-    child.on('message', (results) => {
-      // console.log('the results are: \n', results);
+    child.on('message', ({ type, payload }: { type: string, payload: Object }) => {
       removeTmpFiles();
-      resolve(results);
+      if (type === 'error') return reject(payload);
+      return resolve(payload);
     });
-     
-    child.on('error behold:', (e) => {
-      console.error(e);
+      
+    child.on('error', (e) => {
       removeTmpFiles();
       reject(e);
     });
 
-    // TODO - take care of more cases then error & message
+    // TODO - take care of more cases then error & messages
   });
 }
 

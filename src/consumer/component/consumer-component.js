@@ -176,10 +176,10 @@ export default class Component {
 
   runSpecs(scope: Scope): ?Promise<Object> { // @TODO - write results type
     function compileIfNeeded(
-      cond: bool,
+      condition: bool,
       compiler: ?{ compile?: (string) => string },
       src: string): ?string {
-      if (!cond || !compiler || !compiler.compile) return src;
+      if (!condition || !compiler || !compiler.compile) return src;
       return compiler.compile(src);
     }
 
@@ -192,7 +192,7 @@ export default class Component {
       const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
       return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc });
     } catch (e) {
-      console.log(e);
+      return Promise.reject(e);
     }
   }
 
