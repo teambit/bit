@@ -1,5 +1,5 @@
 {
-  "name": "bit",
+  "name": "bit-cli",
   "version": "0.1.1",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
