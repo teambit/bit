@@ -5,6 +5,19 @@
     "build": "gulp",
     "watch": "gulp watch"
   },
+  "homepage": "https://github.com/teambit/bit-node",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/teambit/bit-node"
+  },
+  "keywords": [
+    "bit",
+    "node",
+    "components",
+    "bit-node",
+    "bit-component",
+    "bit-components"
+  ],
   "main": "dist/index.js",
   "dependencies": {
     "camelcase": "^4.0.0",
