@@ -23,20 +23,21 @@ node  {
     stage 'Running DEB & RPM'
     sh('./scripts/build-deb.sh')
 
+    stage 'Run test'
+    sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests --rm -it gcr.io/cocycles-963/containers/bit-testing-centos:latest")
+    sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests --rm -it gcr.io/cocycles-963/containers/bit-testing-ubuntu:latest")
 
-    //deployToArtifactory("deb","bit-deb",currentVersion)
+    stage 'deploy to repository'
     def fullUrl = "${repo}/bit-deb/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=main;deb.architecture=amd64"
-    print (fullUrl)
     sh("curl -uadmin:password -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${fullUrl}'")
-
     deployToArtifactory("rpm","bit-yum","${currentVersion}-1.noarch")
 
-   stage 'notify release server'
+    stage 'notify release server'
     notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/bit_${currentVersion}_all.deb","deb")
     notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/bit-${currentVersion}-1.noarch.rpm","yum")
 
-   stage ("upload repo scripts")
-   sh("gsutil -m cp -a public-read repos/bitsrc.repo  gs://bit-assets/")
+    stage ("upload repo scripts")
+    sh("gsutil -m cp -a public-read repos/bitsrc.repo  gs://bit-assets/")
 }
 
 def deployToArtifactory(artifactSuffix,repo,version){
