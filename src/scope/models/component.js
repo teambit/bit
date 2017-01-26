@@ -2,7 +2,7 @@
 import { equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import { VersionNotFound } from '../exceptions';
-import { forEach, empty, mapObject, values, diff, filterObject, contains } from '../../utils';
+import { forEach, empty, mapObject, values, diff, filterObject } from '../../utils';
 import Version from './version';
 import { DEFAULT_BOX_NAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';

@@ -51,8 +51,10 @@ export default class Remote {
       .then(network => network.list());
   }
 
-  show(): Promise<> {
-
+  show(bitId: BitId): Promise<> {
+    return this
+      .connect()
+      .then(network => network.show(bitId));
   }
 
   fetch(bitIds: BitId[]): Promise<ComponentObjects[]> {

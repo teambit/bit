@@ -300,14 +300,24 @@ export default class Scope {
       });
   }
 
-  loadComponent(id: BitId): ConsumerComponent {
+  loadComponent(id: BitId): Promise<ConsumerComponent> {
+    if (!id.isLocal(this.name)) {
+      throw new Error('cannot load bit from remote scope, please import first');
+    }
+
     return this.getOne(id)
-      .then(component => component.toConsumer(this.objects));
+      .then((component) => {
+        if (!component) throw new ComponentNotFound(id);
+        return component.toConsumer(this.objects);
+      });
   }
 
-  loadComponentLogs(id: BitId) {
+  loadComponentLogs(id: BitId): Promise<{[number]: {message: string, date: string, hash: string}}> {
     return this.sources.get(id)
-    .then(componentModel => componentModel.collectVersions(this.objects));
+    .then((componentModel) => {
+      if (!componentModel) throw new ComponentNotFound(id);
+      return componentModel.collectVersions(this.objects);
+    });
   }
 
   getOne(id: BitId): Promise<ComponentVersion> {
@@ -317,7 +327,10 @@ export default class Scope {
     }
     
     return this.sources.get(id)
-      .then(component => component.toComponentVersion(id.version, this.name));
+      .then((component) => {
+        if (!component) throw new ComponentNotFound(id);
+        return component.toComponentVersion(id.version, this.name);
+      });
   }
 
   importManyOnes(ids: BitId[]): Promise<ComponentVersion[]> {
@@ -377,6 +390,7 @@ export default class Scope {
     if (opts && opts.pathOnly) {
       return this.environment.getPathTo(bitId);
     }
+
     return this.environment.get(bitId);
   }
 
@@ -393,6 +407,10 @@ export default class Scope {
   }
 
   runComponentSpecs(id: BitId): Promise<?Results> {
+    if (!id.isLocal(this.name)) {
+      throw new Error('cannot run specs on remote scopes');
+    }
+
     return this.loadComponent(id)
       .then((component) => {
         return component.runSpecs(this);

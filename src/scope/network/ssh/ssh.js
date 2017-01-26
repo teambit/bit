@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
 import { RemoteScopeNotFound } from '../exceptions';
@@ -9,6 +10,7 @@ import type { ScopeDescriptor } from '../../scope';
 import { unpack } from '../../../cli/cli-utils';
 import ConsumerComponent from '../../../consumer/component';
 
+const rejectNils = R.reject(R.isNil);
 const sequest = require('sequest');
 
 function absolutePath(path: string) {
@@ -80,9 +82,17 @@ export default class SSH {
     return this.exec('_list')
     .then((str: string) => {
       const components = unpack(str);
-      return components.map((c) => {
-        return ConsumerComponent.fromString(c);
-      });
+      return rejectNils(components.map((c) => {
+        return c ? ConsumerComponent.fromString(c) : null;
+      }));
+    });
+  }
+
+  show() {
+    return this.exec('_show')
+    .then((str: string) => {
+      const component = unpack(str);
+      return component ? ConsumerComponent.fromString(component) : null;
     });
   }
 

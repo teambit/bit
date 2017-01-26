@@ -1,6 +1,6 @@
 /** @flow */
 import { BitIds } from '../../bit-id';
-import Bit from '../../consumer/component';
+import ConsumerComponent from '../../consumer/component';
 import ComponentObjects from '../../scope/component-objects';
 import type { ScopeDescriptor } from '../scope';
 
@@ -11,5 +11,6 @@ export interface Network {
   describeScope(): Promise<ScopeDescriptor>;
   fetch(bitIds: BitIds): Promise<ComponentObjects[]>;
   list(): Promise<ComponentObjects[]>;
+  show(bitId): Promise<>;
   fetchOnes(bitIds: BitIds): Promise<ComponentObjects[]>;
 }
