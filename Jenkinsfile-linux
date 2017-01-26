@@ -24,8 +24,8 @@ node  {
     sh('./scripts/build-deb.sh')
 
     stage 'Run test'
-    sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests --rm -it gcr.io/cocycles-963/containers/bit-testing-centos:latest")
-    sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests --rm -it gcr.io/cocycles-963/containers/bit-testing-ubuntu:latest")
+    sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-centos:latest")
+    sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-ubuntu:latest")
 
     stage 'deploy to repository'
     def fullUrl = "${repo}/bit-deb/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=main;deb.architecture=amd64"
