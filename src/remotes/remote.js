@@ -1,14 +1,12 @@
 /** @flow */
 import Bit from '../consumer/component';
-import { contains, isBitUrl, cleanBang, allSettled } from '../utils';
+import { contains, isBitUrl, cleanBang } from '../utils';
 import ComponentObjects from '../scope/component-objects';
 import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';
 import { BitId, BitIds } from '../bit-id';
-import { get as getCache } from '../cache';
 import VersionDependencies from '../scope/version-dependencies';
 import type { Network } from '../scope/network/network';
-import { CacheNotFound } from '../cache/exceptions';
 
 /**
  * @ctx bit, primary, remote

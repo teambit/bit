@@ -35,10 +35,6 @@ export default class BitId {
     return this;
   }
 
-  composeTarFileName() {
-    return `${this.scope}_${this.box}_${this.name}_${this.version}.tar`;
-  }
-
   getScopeWithoutRemoteAnnotaion() {
     return this.scope.replace(REMOTE_ALIAS_SIGN, '');
   }
