@@ -12,7 +12,7 @@ export default class Search extends Command {
     ['r', 'reindex', 're-index all components']
   ];
   
-  action([query, ]: [string[], ], { scope, reindex }) {
+  action([query, ]: [string[], ], { scope, reindex }: { scope: string, reindex: boolean }) {
     const queryStr = query.join(' ');
     console.log(`searching bits in ${scope ? scope : 'local scope'} for "${queryStr}"`);
     if (scope) {

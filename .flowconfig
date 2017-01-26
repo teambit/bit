@@ -14,6 +14,7 @@ private/tmp
 [options]
 suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
 unsafe.enable_getters_and_setters=true
+module.system.node.resolve_dirname=<PROJECT_ROOT>/node_modules
 
 [version]
 0.38.0
