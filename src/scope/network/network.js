@@ -11,6 +11,7 @@ export interface Network {
   describeScope(): Promise<ScopeDescriptor>;
   fetch(bitIds: BitIds): Promise<ComponentObjects[]>;
   list(): Promise<ComponentObjects[]>;
+  search(query: string, reindex: boolean): Promise<string>;
   show(bitId: BitId): Promise<>;
   fetchOnes(bitIds: BitIds): Promise<ComponentObjects[]>;
 }

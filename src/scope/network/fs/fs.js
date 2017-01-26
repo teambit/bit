@@ -44,9 +44,13 @@ export default class Fs {
   fetchOnes(bitIds: BitIds): Promise<ComponentObjects[]> {
     return this.getScope().manyOneObjects(bitIds);
   }
-  
+
   list(): Promise<[]> {
     return this.getScope().list();
+  }
+
+  search(): Promise<[]> {
+    throw new Error('not implemented yet');
   }
 
   show(bitId: BitId): Promise<> {
