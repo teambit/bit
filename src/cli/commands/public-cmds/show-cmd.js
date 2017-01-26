@@ -28,7 +28,7 @@ export default class Show extends Command {
     return paintHeader(`${box}/${name}`) +
       paintBitProp('compiler', compilerId === 'none' ? '' : compilerId) +
       paintBitProp('tester', testerId === 'none' ? '' : testerId) +
-      paintBitProp('dependencies', Object.keys(dependencies).join(', ')) +
+      paintBitProp('dependencies', dependencies.map(id => id.toString()).join(', ')) +
       paintBitProp('packageDependencies', Object.keys(packageDependencies).join(', ')) +
       paintBitProp('docs', docs.map(paintDoc).join('\n'));
   }
