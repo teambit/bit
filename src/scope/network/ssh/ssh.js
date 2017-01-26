@@ -2,7 +2,7 @@
 import R from 'ramda';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
-import { RemoteScopeNotFound } from '../exceptions';
+import { RemoteScopeNotFound, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
 import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, fromBase64 } from '../../../utils';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
@@ -25,9 +25,11 @@ function clean(str: string) {
 function errorHandler(err) {
   switch (err.code) {
     default:
-      return err;
+      return new UnexpectedNetworkError();
     case 127:
       return new RemoteScopeNotFound();
+    case 130:
+      return new PermissionDenied();
   }
 }
 
@@ -66,6 +68,7 @@ export default class SSH {
     return new Promise((resolve, reject) => {
       const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
       this.connection(cmd, function (err, res, o) {
+        if (!o) reject(new UnexpectedNetworkError());
         if (err && o.code && o.code !== 0) return reject(errorHandler(err));
         return resolve(clean(res));
       });

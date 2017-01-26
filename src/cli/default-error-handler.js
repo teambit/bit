@@ -6,6 +6,8 @@ import InvalidBitId from '../bit-id/exceptions/invalid-bit-id';
 import BitAlreadyExistExternaly from '../consumer/component/exceptions/bit-already-exist-externaly';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import ComponentNotFound from '../scope/exceptions/component-not-found';
+import PermissionDenied from '../scope/network/exceptions/permission-denied';
+import UnexpectedNetworkError from '../scope/network/exceptions/unexpected-network-error';
 import MissingImpl from '../consumer/component/exceptions/missing-impl';
 import { ScopeNotFound } from '../scope/exceptions';
 import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
@@ -22,6 +24,8 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ RemoteScopeNotFound, () => 'fatal: remote scope not found. to create a new scope, please use `bit init --bare` in the remote destination'],
   [ InvalidBitId, () => 'fatal: bit component ID is invalid, please use the following format: <scope>/[box]/<name>'],
   [ ComponentNotFound, err => `fatal: component with id ${chalk.bold(err.id.toString())} was not found`],
+  [ PermissionDenied, () => 'fatal: permission to scope was denied'],
+  [ UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
   [ ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`']
 ];
 

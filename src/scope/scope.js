@@ -363,8 +363,8 @@ export default class Scope {
       .then((remote) => {
         return this.sources.getObjects(bitId)
         .then(component => remote.push(component)
+        .then(objects => this.clean(bitId).then(() => objects))
         .then(objects => this.importSrc(objects))
-        .then(() => this.clean(bitId))
         .then(() => {
           bitId.scope = remoteName;
           return this.get(bitId);
