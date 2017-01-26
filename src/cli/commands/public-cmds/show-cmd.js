@@ -2,6 +2,7 @@
 import Command from '../../command';
 import { getInlineBit, getScopeBit } from '../../../api/consumer';
 import { paintBitProp, paintHeader, paintDoc } from '../../chalk-box';
+import ConsumerComponent from '../../../consumer/component';
 
 export default class Show extends Command {
   name = 'show <id>';
@@ -17,32 +18,16 @@ export default class Show extends Command {
       return getScopeBit({ id });
     }
     
-    return getBitComponent()
-    .then((component) => {
-      return ({
-        name: component.name,
-        box: component.box,
-        compiler: component.compilerId,
-        tester: component.testerId,
-        dependencies: component.dependencies,
-        packageDependencies: component.packageDependencies,
-        docs: component.docs
-      });
-    });
+    return getBitComponent();
   }
 
-  report({ 
-    name,
-    box,
-    compiler,
-    dependencies,
-    tester,
-    packageDependencies,
-    docs,
-  }: any): string {
+  report(component: ?ConsumerComponent): string {
+    if (!component) return 'could not find the requested bit';
+    const { name, box, compilerId, testerId, dependencies, packageDependencies, docs } = component;
+
     return paintHeader(`${box}/${name}`) +
-      paintBitProp('compiler', compiler === 'none' ? '' : compiler) +
-      paintBitProp('tester', tester === 'none' ? '' : tester) +
+      paintBitProp('compiler', compilerId === 'none' ? '' : compilerId) +
+      paintBitProp('tester', testerId === 'none' ? '' : testerId) +
       paintBitProp('dependencies', Object.keys(dependencies).join(', ')) +
       paintBitProp('packageDependencies', Object.keys(packageDependencies).join(', ')) +
       paintBitProp('docs', docs.map(paintDoc).join('\n'));

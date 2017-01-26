@@ -1,6 +1,6 @@
 /** @flow */
-import { BitIds } from '../../bit-id';
-import Bit from '../../consumer/component';
+import { BitIds, BitId } from '../../bit-id';
+import ConsumerComponent from '../../consumer/component';
 import ComponentObjects from '../../scope/component-objects';
 import type { ScopeDescriptor } from '../scope';
 
@@ -12,5 +12,6 @@ export interface Network {
   fetch(bitIds: BitIds): Promise<ComponentObjects[]>;
   list(): Promise<ComponentObjects[]>;
   search(query: string, reindex: boolean): Promise<string>;
+  show(bitId: BitId): Promise<>;
   fetchOnes(bitIds: BitIds): Promise<ComponentObjects[]>;
 }

@@ -6,7 +6,7 @@ import BitObject from './object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound } from '../exceptions';
-import { resolveGroupId, mkdirp, writeFile, removeFile, allSettled, readFile } from '../../utils';
+import { resolveGroupId, mkdirp, writeFile, removeFile, allSettled, readFile, inflate } from '../../utils';
 import { Scope } from '../../scope';
 import Component from '../models/component';
 

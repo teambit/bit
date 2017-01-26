@@ -2,7 +2,7 @@
 import loadScope from '../../scope-loader';
 import Scope from '../../scope';
 import ComponentObjects from '../../component-objects';
-import { BitIds } from '../../../bit-id';
+import { BitIds, BitId } from '../../../bit-id';
 import { FsScopeNotLoaded } from '../exceptions';
 import { flatten } from '../../../utils';
 import type { ScopeDescriptor } from '../../scope';
@@ -51,6 +51,11 @@ export default class Fs {
 
   search(): Promise<[]> {
     throw new Error('not implemented yet');
+  }
+
+  show(bitId: BitId): Promise<> {
+    return this.getScope()
+    .loadComponent(bitId);
   }
 
   connect() {

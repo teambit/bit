@@ -35,10 +35,6 @@ export default class BitId {
     return this;
   }
 
-  composeTarFileName() {
-    return `${this.scope}_${this.box}_${this.name}_${this.version}.tar`;
-  }
-
   getScopeWithoutRemoteAnnotaion() {
     return this.scope.replace(REMOTE_ALIAS_SIGN, '');
   }
@@ -66,7 +62,7 @@ export default class BitId {
     return { [key]: value };
   }
 
-  static parse(id: string|null, realScopeName: ?string, version: string = LATEST_BIT_VERSION): BitId|null {
+  static parse(id: ?string, realScopeName: ?string, version: string = LATEST_BIT_VERSION): ?BitId {
     if (!id || id === NO_PLUGIN_TYPE) { return null; }
     if (contains(id, VERSION_DELIMITER)) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
