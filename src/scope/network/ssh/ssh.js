@@ -22,6 +22,15 @@ function clean(str: string) {
   return str.replace('\n', '');
 }
 
+function errorHandler(err) {
+  switch (err.code) {
+    default:
+      return err;
+    case 127:
+      return new RemoteScopeNotFound();
+  }
+}
+
 export type SSHProps = {
   path: string,
   username: string,
@@ -57,7 +66,7 @@ export default class SSH {
     return new Promise((resolve, reject) => {
       const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
       this.connection(cmd, function (err, res, o) {
-        if (err && o.code && o.code !== 0) return reject(err);
+        if (err && o.code && o.code !== 0) return reject(errorHandler(err));
         return resolve(clean(res));
       });
     });

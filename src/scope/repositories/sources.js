@@ -58,7 +58,7 @@ export default class SourceRepository {
 
   getObjects(id: BitId): Promise<ComponentObjects> {
     return this.get(id).then((component) => {
-      if (!component) throw new ComponentNotFound();
+      if (!component) throw new ComponentNotFound(id);
       return component.collectObjects(this.objects());
     });
   }
