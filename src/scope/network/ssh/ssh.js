@@ -3,7 +3,7 @@ import R from 'ramda';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
 import { RemoteScopeNotFound } from '../exceptions';
-import { BitIds } from '../../../bit-id';
+import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, fromBase64 } from '../../../utils';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
@@ -88,11 +88,11 @@ export default class SSH {
     });
   }
 
-  show() {
-    return this.exec('_show')
+  show(id: BitId) {
+    return this.exec('_show', id.toString())
     .then((str: string) => {
       const component = unpack(str);
-      return component ? ConsumerComponent.fromString(component) : null;
+      return str ? ConsumerComponent.fromString(component) : null;
     });
   }
 

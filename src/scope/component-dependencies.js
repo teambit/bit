@@ -1,6 +1,5 @@
 /** @flow */
 import Component from '../consumer/component';
-import { fromBase64 } from '../utils';
 
 export default class ComponentDependencies {
   component: Component;

@@ -1,11 +1,9 @@
 /** @flow */
-import Bit from '../consumer/component';
 import { contains, isBitUrl, cleanBang } from '../utils';
 import ComponentObjects from '../scope/component-objects';
 import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';
 import { BitId, BitIds } from '../bit-id';
-import VersionDependencies from '../scope/version-dependencies';
 import type { Network } from '../scope/network/network';
 
 /**
