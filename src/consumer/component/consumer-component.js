@@ -10,7 +10,7 @@ import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
 import Environment from '../../scope/repositories/environment';
-import docsParser, { ParsedDocs } from '../../jsdoc/parser';
+import docsParser, { Doclet } from '../../jsdoc/parser';
 import specsRunner from '../../specs-runner';
 import type { Results } from '../../specs-runner/specs-runner';
 
@@ -37,7 +37,7 @@ export type ComponentProps = {
   packageDependencies?: ?Object,
   impl?: ?Impl|string,
   specs?: ?Specs|string,
-  docs?: ?ParsedDocs[],
+  docs?: ?Doclet[],
   dist?: ?string,
 }
 
@@ -54,7 +54,7 @@ export default class Component {
   packageDependencies: Object;
   _impl: ?Impl|string;
   _specs: ?Specs|string;
-  _docs: ?ParsedDocs[];
+  _docs: ?Doclet[];
   _dist: ?string;
 
   set impl(val: Impl) { this._impl = val; }
@@ -95,8 +95,8 @@ export default class Component {
     });
   }
 
-  get docs(): ?ParsedDocs[] {
-    if (!this._docs) this._docs = docsParser.parse(this.impl.src);
+  get docs(): ?Doclet[] {
+    if (!this._docs) this._docs = docsParser(this.impl.src);
     return this._docs;
   }
 

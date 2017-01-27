@@ -6,7 +6,7 @@ import ConsumerComponent from '../../consumer/component';
 import { Remotes } from '../../remotes';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
-import type { ParsedDocs } from '../../jsdoc/parser';
+import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
 
@@ -30,7 +30,7 @@ export type VersionProps = {
     date: string
   };
   specsResults?: ?Results;
-  docs?: ParsedDocs[],
+  docs?: Doclet[],
   dependencies?: BitIds;
   flattenedDependencies?: BitIds;
   packageDependencies?: {[string]: string};
@@ -56,7 +56,7 @@ export default class Version extends BitObject {
     date: string
   };
   specsResults: ?Results;
-  docs: ?ParsedDocs[];
+  docs: ?Doclet[];
   dependencies: BitIds;
   flattenedDependencies: BitIds;
   packageDependencies: {[string]: string};

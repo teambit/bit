@@ -4,7 +4,7 @@ import doctrine from 'doctrine';
 import walk from 'esprima-walk';
 import exampleTagParser from './example-tag-parser';
 
-export type ParsedDocs = {
+export type Doclet = {
   name: string,
   description: string,
   args?: Array,
@@ -14,7 +14,7 @@ export type ParsedDocs = {
   static?: Boolean
 };
 
-const parsedData: Array<ParsedDocs> = [];
+const parsedData: Array<Doclet> = [];
 
 function getFunctionName(node: Object): string {
   if (node.type === 'FunctionDeclaration') return node.id.name;
@@ -130,43 +130,7 @@ function extractData(node: Object) {
   }
 }
 
-function toString(doc: ParsedDocs): string {
-  let args;
-  let returns = '';
-  let formattedDoc = `\nname: ${doc.name} \n`;
-
-  if (doc.description) {
-    formattedDoc += `description: ${doc.description}\n`;
-  }
-
-  if (doc.args && doc.args.length) {
-    args = doc.args.map((arg) => {
-      let formattedParam = `${arg.name}`;
-      if (arg.type) {
-        formattedParam += ` (${arg.type})`;
-      }
-      return formattedParam;
-    }).join(', ');
-    formattedDoc += `args: ${args}\n`;
-  }
-  if (doc.returns) {
-    if (doc.returns.description) {
-      returns = `${doc.returns.description} `;
-    }
-
-    if (doc.returns.type) {
-      returns += `(${doc.returns.type})`;
-    }
-
-    if (returns) {
-      formattedDoc += `returns: ${returns}\n`;
-    }
-  }
-
-  return formattedDoc;
-}
-
-function parse(data: string): ParsedDocs|[] {
+export default function parse(data: string): Doclet|[] {
   try {
     const ast = esprima.parse(data, {
       attachComment: true,
@@ -178,8 +142,3 @@ function parse(data: string): ParsedDocs|[] {
     return parsedData;
   }
 }
-
-module.exports = {
-  parse,
-  toString
-};
