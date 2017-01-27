@@ -14,8 +14,6 @@ export type Doclet = {
   static?: Boolean
 };
 
-const parsedData: Array<Doclet> = [];
-
 function getFunctionName(node: Object): string {
   if (node.type === 'FunctionDeclaration') return node.id.name;
   if (node.type === 'ExpressionStatement') return node.expression.right.id.name;
@@ -47,7 +45,7 @@ function isVariableDeclarationRelevant(node) {
   )
 }
 
-function handleFunctionType(node: Object) {
+function handleFunctionType(node: Object): Doclet|null {
   if (node.type === 'ExpressionStatement'
     && (!node.expression.right || node.expression.right.type !== 'FunctionExpression')) return;
   if (node.type === 'VariableDeclaration' && !isVariableDeclarationRelevant(node)) return;
@@ -67,7 +65,7 @@ function handleFunctionType(node: Object) {
         case 'param':
           args.push(formatTag(tag));
           break;
-        case 'returns'  :
+        case 'returns':
           returns = formatTag(tag);
           break;
         case 'static':
@@ -88,7 +86,7 @@ function handleFunctionType(node: Object) {
   }
 
   const name = getFunctionName(node);
-  const item = {
+  return {
     name,
     description,
     args,
@@ -97,48 +95,49 @@ function handleFunctionType(node: Object) {
     examples,
     static: isStatic,
   };
-  parsedData.push(item);
 }
 
-function handleClassType(node: Object) {
+function handleClassType(node: Object): Doclet {
   let description = '';
   if (node.leadingComments && node.leadingComments.length) {
     const commentsAst = getCommentsAST(node);
     description = commentsAst.description;
   }
-  const item = {
+  return {
     name: node.id.name,
     description
   };
-  parsedData.push(item);
 }
 
-function extractData(node: Object) {
+function extractData(node: Object, doclets: Array<Doclet>) {
   if (!node || !node.type) return;
+  let doclet: Doclet;
   switch (node.type) {
     case 'FunctionDeclaration': // like: "function foo() {}"
     case 'VariableDeclaration': // like: "var foo = function(){}"
     case 'ExpressionStatement': // like: "module.exports = function foo() {}"
     case 'MethodDefinition':    // like: "foo(){}"
-      handleFunctionType(node);
+      doclet = handleFunctionType(node);
       break;
     case 'ClassDeclaration':    // like: "class Foo {}"
-      handleClassType(node);
+      doclet = handleClassType(node);
       break;
     default:
       break;
   }
+  if (doclet) doclets.push(doclet);
 }
 
 export default function parse(data: string): Doclet|[] {
+  const doclets: Array<Doclet> = [];
   try {
     const ast = esprima.parse(data, {
       attachComment: true,
       sourceType: 'module'
     });
-    walk(ast, extractData);
-    return parsedData;
-  } catch (e) { // never mind, ignore the doc of this source
-    return parsedData;
+    walk(ast, node => extractData(node, doclets));
+  } catch (e) {
+    // never mind, ignore the doc of this source
   }
+  return doclets;
 }

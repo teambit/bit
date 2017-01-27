@@ -50,6 +50,13 @@ describe('JSDoc Parser', () => {
         expect(doclet.static).to.be.true;
       });
     });
+    describe('Invalid code', () => {
+      it('should returns an empty array', () => {
+        const doclets = parser('this is an invalid code');
+        expect(doclets).to.be.a('array');
+        expect(doclets).to.have.lengthOf(0);
+      });
+    });
   });
 });
 
