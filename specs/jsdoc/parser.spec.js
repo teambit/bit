@@ -50,11 +50,74 @@ describe('JSDoc Parser', () => {
         expect(doclet.static).to.be.true;
       });
     });
+    
     describe('Invalid code', () => {
       it('should returns an empty array', () => {
         const doclets = parser('this is an invalid code');
         expect(doclets).to.be.a('array');
         expect(doclets).to.have.lengthOf(0);
+      });
+    });
+    
+    describe('Method Declaration and Class Declaration', () => {
+      let doclets;
+      before(function() {
+        const methodDeclarationFile = path.join(__dirname, 'fixtures', 'methodDeclaration.js');
+        const methodDeclaration = fs.readFileSync(methodDeclarationFile).toString();
+        doclets = parser(methodDeclaration);
+      });
+      it('should be a populated array', () => {
+        expect(doclets).to.be.an('array');
+        expect(doclets).to.have.length.of.at.least(2);
+      });
+      it('should recognize the Class Declaration first', () => {
+        const doclet = doclets[0];
+        expect(doclet).to.have.all.keys('name', 'description');
+        expect(doclet.name).to.equal('Point');
+        expect(doclet.description).to.equal('Class representing a point.');
+      });
+      it('should recognize the constructor as the second doclet', () => {
+        const doclet = doclets[1];
+        expect(doclet).to.have.property('name').that.equals('constructor');
+        expect(doclet).to.have.property('description').that.equals('Create a point.');
+        expect(doclet).to.have.property('access').that.equals('public');
+        expect(doclet).to.have.property('static').that.is.false;
+        expect(doclet).to.have.property('returns').that.is.an('object').that.is.empty;
+        expect(doclet).to.have.property('examples').that.is.an('array').that.is.empty;
+      });
+      it('should extract the constructor\'s args correctly', () => {
+        const doclet = doclets[1];
+        expect(doclet).to.have.property('args').that.is.an('array').with.lengthOf(2);
+        const args = doclet.args;
+        for (const arg of args) {
+          expect(arg).to.include.keys('name', 'type', 'description');
+          expect(arg.type).to.equal('number');
+        }
+        expect(args[0].name).to.equal('x');
+        expect(args[1].name).to.equal('y');
+        expect(args[0].description).to.equal('The x value.');
+        expect(args[1].description).to.equal('The y value.');
+      });
+      it('should recognize the getX method as the third doclet', () => {
+        const doclet = doclets[2];
+        expect(doclet).to.have.property('name').that.equals('getX');
+        expect(doclet).to.have.property('description').that.equals('Get the x value.');
+        expect(doclet).to.have.property('access').that.equals('public');
+        expect(doclet).to.have.property('static').that.is.false;
+        expect(doclet).to.have.property('returns').that.is.an('object').that.is.empty;
+        expect(doclet).to.have.property('examples').that.is.an('array').that.is.empty;
+        expect(doclet).to.have.property('args').that.is.an('array').that.is.empty;
+      });
+      it('should recognize the getY method as the forth doclet', () => {
+        const doclet = doclets[3];
+        expect(doclet).to.have.property('name').that.equals('getY');
+        expect(doclet).to.have.property('description').that.equals('Get the y value.');
+      });
+      it('should recognize the fromString method as the last doclet', () => {
+        const doclet = doclets[doclets.length-1];
+        expect(doclet).to.have.property('name').that.equals('fromString');
+        expect(doclet).to.have.property('description')
+          .that.equals('Convert a string containing two comma-separated numbers into a point.');
       });
     });
   });
