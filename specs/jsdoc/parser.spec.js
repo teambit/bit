@@ -120,6 +120,28 @@ describe('JSDoc Parser', () => {
           .that.equals('Convert a string containing two comma-separated numbers into a point.');
       });
     });
+
+    describe('Variable Declaration', () => {
+      let doclets;
+      before(function() {
+        const variableDeclarationFile = path.join(__dirname, 'fixtures', 'variableDeclaration.js');
+        const variableDeclaration = fs.readFileSync(variableDeclarationFile).toString();
+        doclets = parser(variableDeclaration);
+      });
+      it('should be an array of one Doclet', () => {
+        expect(doclets).to.be.an('array').and.to.have.lengthOf(1);
+      });
+      it('should parse the doc correctly', () => {
+        const doclet = doclets[0];
+        expect(doclet).to.have.property('name').that.equals('add');
+        expect(doclet).to.have.property('description').that.equals('Adds two numbers.');
+        expect(doclet).to.have.property('access').that.equals('public');
+        expect(doclet).to.have.property('static').that.is.false;
+        expect(doclet).to.have.property('returns').that.is.an('object').that.is.not.empty;
+        expect(doclet).to.have.property('examples').that.is.an('array').that.is.not.empty;
+        expect(doclet).to.have.property('args').that.is.an('array').that.have.lengthOf(2);
+      });
+    });
   });
 });
 
