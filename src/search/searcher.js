@@ -1,12 +1,11 @@
 /** @flow */
 import serverlessIndex from './serverless-index';
 import indexer from './indexer';
+import type Doc from './indexer';
 
-let localIndex;
-
-function totalHits(query: string) {
+function totalHits(index: Promise<any>, query: string) {
   return new Promise((resolve, reject) => {
-    return localIndex.then((indexInstance) => {
+    return index.then((indexInstance) => {
       indexInstance.totalHits({
         query: buildQuery(query)
       }, (err, count) => {
@@ -17,9 +16,9 @@ function totalHits(query: string) {
   });
 }
 
-function countDocs() {
+function countDocs(index: Promise<any>) {
   return new Promise((resolve, reject) => {
-    return localIndex.then((indexInstance) => {
+    return index.then((indexInstance) => {
       indexInstance.countDocs((err, info) => {
         if (err) reject(err);
         resolve(info);
@@ -28,9 +27,9 @@ function countDocs() {
   });
 }
 
-function getDoc(docIds: string[]) {
+function getDoc(index: Promise<any>, docIds: string[]) {
   return new Promise((resolve, reject) => {
-    return localIndex.then((indexInstance) => {
+    return index.then((indexInstance) => {
       indexInstance.get(docIds).on('data', function (doc) {
         console.log(doc);
       });
@@ -38,8 +37,7 @@ function getDoc(docIds: string[]) {
   });
 }
 
-function formatSearchResult(searchResult: Object): string {
-  const doc = searchResult.document;
+function formatSearchResult(doc: Doc): string {
   return `> ${doc.box}/${doc.name}`;
 }
 
@@ -63,16 +61,16 @@ function buildQuery(queryStr: string) {
   return query;
 }
 
-function search(queryStr: string, path: string) {
+function search(queryStr: string, path: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    localIndex = serverlessIndex.initializeIndex(path);
+    const index = serverlessIndex.initializeIndex(path);
     const searchResults = [];
     const query = buildQuery(queryStr);
-    return localIndex.then((indexInstance) => {
+    return index.then((indexInstance) => {
       indexInstance.search({
         query,
       }).on('data', function (data) {
-        searchResults.push(formatSearchResult(data));
+        searchResults.push(formatSearchResult(data.document));
       }).on('end', function () {
           return resolve(JSON.stringify(searchResults));
         });

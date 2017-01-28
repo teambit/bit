@@ -5,13 +5,24 @@ import { parser } from '../jsdoc';
 import Component from '../consumer/component';
 import serverlessIndex from './serverless-index';
 
+export type Doc = {
+  id: string,
+  name: string,
+  tokenizedName: string,
+  box: string,
+  tokenizedBox: string,
+  functionNames: string,
+  tokenizedFunctionNames: string,
+  description: string
+};
+
 let localIndex;
 
-function tokenizeStr(str: string) {
+function tokenizeStr(str: string): string {
   return str.trim().split(/(?=[A-Z])/).join(' ').toLowerCase().split(/ |_|-/).join(' ');
 }
 
-function prepareDoc(docs: Object, component: Component): Object {
+function prepareDoc(docs: Object, component: Component): Doc {
   const name = component.name;
   const box = component.box;
   const functionNames = docs.map(doc => doc.name).join(' ');
@@ -27,7 +38,7 @@ function prepareDoc(docs: Object, component: Component): Object {
   };
 }
 
-function addToLocalIndex(component: Component): Promise<any> {
+function addToLocalIndex(component: Component): Promise<string> {
   return new Promise((resolve, reject) => {
     const doc = prepareDoc(component.docs, component);
     localIndex.then((indexInstance) => {
@@ -47,7 +58,7 @@ function addToLocalIndex(component: Component): Promise<any> {
   });
 }
 
-function index(component: Component, scopePath: string) {
+function index(component: Component, scopePath: string): Promise<string> {
   localIndex = serverlessIndex.initializeIndex(scopePath);
   return addToLocalIndex(component);
 }

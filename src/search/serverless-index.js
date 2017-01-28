@@ -1,8 +1,7 @@
 /** @flow */
 import path from 'path';
+import fs from 'fs-extra';
 import searchIndex from 'search-index';
-import { loadConsumer } from '../consumer';
-const fs = require('fs-extra');
 
 const indexName = 'search_index';
 const logLevel = 'error';
