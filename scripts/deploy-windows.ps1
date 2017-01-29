@@ -7,6 +7,7 @@ param(
   [string] $ReleaseServer = ""
   [string] $Method = ""
  )
+
 $VERSION= $(node -p -e "require('./package.json').version")
 $repoUrl = "http://104.154.76.155:8081/artifactory"
 
