@@ -14,6 +14,7 @@ export default class Import extends Command {
     ['t', 'tester', 'import a tester environment bit-component'],
     ['c', 'compiler', 'import a compiler environment bit-component']
   ];
+  loader = { text: 'Exporting component' };
 
   action([id, ]: [string, ], { save, tester, compiler }: any): Promise<any> {
     // @TODO - import should support multiple components

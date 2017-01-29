@@ -1,5 +1,7 @@
 /** @flow */
+import ora from 'ora';
 import commander from 'commander';
+import { SPINNER_TYPE } from '../constants';
 import type Command from './command';   
 import defaultHandleError from './default-error-handler';
 import { empty, first } from '../utils';
@@ -40,10 +42,22 @@ function getOpts(c, opts: [[string, string, string]]): {[string]: boolean|string
 function execAction(command, concrete, args) {
   // $FlowFixMe
   const opts = getOpts(concrete, command.opts);
+  if (command.loader) {
+    const autoStart = command.loader.autoStart || true;
+    command.loader = ora({ spinner: SPINNER_TYPE, text: command.loader.text });
+    if (autoStart) { command.loader.start(); }
+  }
+
   command.action(args.slice(0, args.length - 1), opts)
-    .then(data => logAndExit(command.report(data)))
+    .then((data) => {
+      if (command.loader) { command.loader.stop(); }
+      return logAndExit(command.report(data));
+    })
     .catch((err) => {
-      const errorHandled = defaultHandleError(err) || command.handleError(err);
+      if (command.loader) { command.loader.stop(); }
+      const errorHandled = defaultHandleError(err)
+      || command.handleError(err);
+      
       if (errorHandled) logAndExit(errorHandled);
       else logErrAndExit(err);
     });

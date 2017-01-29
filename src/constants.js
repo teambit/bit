@@ -1,4 +1,5 @@
 /** @flow */
+import cliSpinners from 'cli-spinners';
 const userHome = require('user-home');
 const packageFile = require('../package.json');
 const path = require('path');
@@ -77,6 +78,7 @@ export const USER_EMAIL_KEY = 'user.email';
 
 export const USER_NAME_KEY = 'user.name';
 
+export const SPINNER_TYPE = cliSpinners.dots12;
 
 /**
  * cache root directory

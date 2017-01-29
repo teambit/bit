@@ -13,16 +13,19 @@ export default class List extends Command {
   opts = [
     ['i', 'inline', 'in inline bit']
   ];
-  
-  action([scope]: string[], { inline }: { inline: ?bool }): Promise<any> {
+  loader = { autoStart: false, text: 'fetching remoted component' };
+
+  action([scopeName]: string[], { inline }: { inline: ?bool }): Promise<any> {
+    const loader = this.loader;
+
     function list() {
       if (inline) return listInline();
-      return listScope(scope);
+      return listScope({ scopeName, loader });
     }
 
     return list().then(components => ({
       components,
-      scope,
+      scope: scopeName,
       inline
     }));
   }

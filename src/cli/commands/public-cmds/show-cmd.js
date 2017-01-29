@@ -11,11 +11,14 @@ export default class Show extends Command {
   opts = [
     ['i', 'inline', 'show inline bit']
   ];
-  
+  loader = { autoStart: false, text: 'fetching remoted component' };
+
   action([id, ]: [string], { inline }: { inline: ?bool}): Promise<*> {
+    const loader = this.loader;
+    
     function getBitComponent() {
       if (inline) return getInlineBit({ id });
-      return getScopeBit({ id });
+      return getScopeBit({ id, loader });
     }
     
     return getBitComponent();

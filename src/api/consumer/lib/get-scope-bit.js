@@ -2,7 +2,7 @@
 import { loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 
-export default function getScopeBit({ id }: { id: string }) {
+export default function getScopeBit({ id, loader }: { id: string, loader: any }) {
   return loadConsumer()
     .then((consumer) => {
       const localScopeName = consumer.scope.name;
@@ -12,7 +12,10 @@ export default function getScopeBit({ id }: { id: string }) {
         return consumer.scope.remotes()
         .then(remotes => 
           remotes.resolve(bitId.scope, consumer.scope)
-          .then(remote => remote.show(bitId))
+          .then((remote) => {
+            loader.start();
+            return remote.show(bitId);
+          })
         );
       }
       
