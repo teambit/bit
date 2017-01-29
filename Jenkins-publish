@@ -1,0 +1,29 @@
+node {
+    tarName = "bit-${VERSION}-brew.tar.gz"
+    debpkg="bit_${VERSION}_all.deb"
+    rpm="bit-${VERSION}-1.noarch.rpm" 
+    msi="bit-${VERSION}-unsigned.msi"
+        parallel (
+        "deb" : { 
+           sh("wget bit-deb/development/bit/${VERSION}/${debpkg} ")
+           def fullUrl = "${repo}/bit-deb/stable/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=stable;deb.architecture=amd64"
+           sh("curl -u${REPO_TOKEN} -T ${debpkg} -XPUT '${fullUrl}'")
+        },
+        "rpm" : { 
+            publishToRepo("bit-yum/development/bit/${VERSION}/${rpm}","bit-yum/stable/bit/${VERSION}/${rpm}")
+            },
+        "windows" : { 
+            publishToRepo("bit-msi/development/bit/${VERSION}/${msi}","bit-msi/stable/bit/${VERSION}/${msi}")
+            },
+        "brew" : { 
+            publishToRepo("bit-brew/development/bit/${VERSION}/${tarName}","bit-brew/stable/bit/${VERSION}/${tarName}")
+            stage 'generate formula for brew'
+            sh("./scripts/generate-formula.sh ${ArtifactRepo}/bit-brew/stable/bit/${currentVersion}/${tarName}")
+            sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
+         }
+    )
+}
+def publishToRepo(from,to){
+    def fullUrl = "/api/copy/${from}?to=${to}"
+    sh("curl -u${REPO_TOKEN} -XPOST '${fullUrl}'")
+}
