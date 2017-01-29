@@ -1,7 +1,6 @@
 /** @flow */
 import path from 'path';
 import { Readable } from 'stream';
-import { parser } from '../jsdoc';
 import Component from '../consumer/component';
 import serverlessIndex from './serverless-index';
 
