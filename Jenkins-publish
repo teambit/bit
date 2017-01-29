@@ -4,7 +4,7 @@ node {
     debpkg="bit_${VERSION}_all.deb"
     rpm="bit-${VERSION}-1.noarch.rpm" 
     msi="bit-${VERSION}-unsigned.msi"
-    def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
+    def uploadfolder = "gs://bit-assets/release/${VERSION}/"
         parallel (
         "deb" : { 
            sh("wget ${env.EXTERNAL_REPO}/bit-deb/development/bit/${VERSION}/${debpkg} ")
