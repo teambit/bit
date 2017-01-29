@@ -23,7 +23,7 @@ Invoke-WebRequest -Uri $URI -InFile $SOURCE -Method Put -Credential $CREDS
 
 $body = @{
     version="$VERSION"
-    method='msi'
+    method="$Method"
     file="$repoUrl/$Repo/$ENVIRONMENT/bit/${VERSION}/$File"
 }
 $AF_USER = "$env:releaseUser"  
