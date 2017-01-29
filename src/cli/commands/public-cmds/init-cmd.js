@@ -7,7 +7,7 @@ import { init } from '../../../api/consumer';
 
 
 export default class Init extends Command {
-  name = 'init [name]';
+  name = 'init [path]';
   description = 'initialize an empty bit scope';
   alias = '';
   opts = [

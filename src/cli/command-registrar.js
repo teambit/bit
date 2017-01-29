@@ -4,6 +4,8 @@ import type Command from './command';
 import defaultHandleError from './default-error-handler';
 import { empty, first } from '../utils';
 
+const chalk = require('chalk');
+
 function logAndExit(msg: string) {
   console.log(msg); // eslint-disable-line
   process.exit();
@@ -112,8 +114,21 @@ export default class CommandRegistrar {
   } 
 
   outputHelp() {
-    if (!process.argv.slice(2).length) {
+    const args = process.argv.slice(2);
+    if (!args.length) {
       commander.help();
+      return this;
+    }
+
+    const subcommand = args[0];
+    const cmdList = this.commands.map(cmd => first(cmd.name.split(' ')));
+
+    if (cmdList.indexOf(subcommand) === -1) {
+      console.log(
+        chalk.yellow(
+          `warning: no command named '${chalk.bold(subcommand)}' was found...\nsee 'bit --help' for additional information.`)
+      );
+      return this;
     }
 
     return this;
