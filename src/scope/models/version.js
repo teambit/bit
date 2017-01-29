@@ -2,6 +2,7 @@
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
+import { empty, filterObject } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
 import { Remotes } from '../../remotes';
 import { BitIds, BitId } from '../../bit-id';
@@ -107,7 +108,7 @@ export default class Version extends BitObject {
   }
 
   toObject() {
-    return {
+    return filterObject({
       impl: {
         file: this.impl.file.toString(),
         name: this.impl.name
@@ -133,7 +134,7 @@ export default class Version extends BitObject {
       dependencies: this.dependencies.map(dep => dep.toString()),
       flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
       packageDependencies: this.packageDependencies
-    };
+    }, val => empty(val));
   }
 
   toBuffer(): Buffer {
