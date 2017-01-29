@@ -22,10 +22,18 @@ node  {
 
     stage 'Running DEB & RPM'
     sh('./scripts/build-deb.sh')
-
     stage 'Run test'
-    sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-centos:latest")
-    sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-ubuntu:latest")
+    parallel (
+        "stream 1" : { 
+            sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-centos:latest")
+        },
+        "stream 2" : { 
+            sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-ubuntu:latest")
+            }
+    )
+
+    
+  
 
     stage 'deploy to repository'
     def fullUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
@@ -38,6 +46,8 @@ node  {
 
     stage ("upload repo scripts")
     sh("gsutil -m cp -a public-read repos/bitsrc.repo  gs://bit-assets/")
+
+    
 }
 
 def deployToArtifactory(artifactSuffix,repo,version){
