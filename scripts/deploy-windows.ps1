@@ -1,10 +1,10 @@
 param(
-  [switch] $Publish = $false
-  [string] $Repo = ""
-  [string] $File = ""
-  [string] $Source = ""
-  [string] $ENVIRONMENT = ""
-  [string] $ReleaseServer = ""
+  [switch] $Publish = $false,
+  [string] $Repo = "",
+  [string] $File = "",
+  [string] $Source = "",
+  [string] $ENVIRONMENT = "",
+  [string] $ReleaseServer = "",
   [string] $Method = ""
  )
 
