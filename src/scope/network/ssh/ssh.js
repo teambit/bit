@@ -100,6 +100,10 @@ export default class SSH {
     });
   }
 
+  search(query: string, reindex: boolean) {
+    return this.exec('_search', query, reindex.toString());
+  }
+
   show(id: BitId) {
     return this.exec('_show', id.toString())
     .then((str: string) => {
