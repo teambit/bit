@@ -4,11 +4,11 @@ $AF_USER = $env:repoUser
 $AF_PWD = ConvertTo-SecureString "$env:repoPassword" -AsPlainText -Force  
 $CREDS = New-Object System.Management.Automation.PSCredential ($AF_USER, $AF_PWD)  
 
-$URI = New-Object System.Uri("${repoUrl}/bit-msi/bit-${VERSION}-unsigned.msi")  
+$URI = New-Object System.Uri("${repoUrl}/bit-msi/development/bit/${VERSION}/bit-${VERSION}-unsigned.msi")  
 $SOURCE = "artifacts\bit-${VERSION}-unsigned.msi"  
 Invoke-WebRequest -Uri $URI -InFile $SOURCE -Method Put -Credential $CREDS
 
-$URI = New-Object System.Uri("${repoUrl}/bit-nuget/bit.${VERSION}.nupkg")  
+$URI = New-Object System.Uri("${repoUrl}/bit-nuget/development/bit/${VERSION}/bit.${VERSION}.nupkg")  
 $SOURCE = "artifacts\bit.${VERSION}.nupkg"  
 Invoke-WebRequest -Uri $URI -InFile $SOURCE -Method Put -Credential $CREDS
 
