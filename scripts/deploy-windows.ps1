@@ -16,7 +16,7 @@ $AF_USER = $env:repoUser
 $AF_PWD = ConvertTo-SecureString "$env:repoPassword" -AsPlainText -Force  
 $CREDS = New-Object System.Management.Automation.PSCredential ($AF_USER, $AF_PWD)  
 
-$URI = New-Object System.Uri("${repoUrl}/$Repo/$ENVIRONMENT/bit/${VERSION}/$File)  
+$URI = New-Object System.Uri("${repoUrl}/$Repo/$ENVIRONMENT/bit/${VERSION}/$File")  
 $SOURCE = "$Source"  
 Invoke-WebRequest -Uri $URI -InFile $SOURCE -Method Put -Credential $CREDS
 
