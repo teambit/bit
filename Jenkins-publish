@@ -10,19 +10,40 @@ node {
            sh("wget ${env.EXTERNAL_REPO}/bit-deb/development/bit/${VERSION}/${debpkg} ")
            def fullUrl = "${env.EXTERNAL_REPO}/bit-deb/stable/bit/${VERSION}/bit_${VERSION}_all.deb;deb.distribution=all;deb.component=stable;deb.architecture=amd64"
            sh("curl -u${REPO_TOKEN} -T ${debpkg} -XPUT '${fullUrl}'")
+           notifyReleaseServer("${VERSION}",releaseServer,"${env.EXTERNAL_REPO}/bit-deb/stable/bit/${VERSION}/bit_${VERSION}_all.deb","deb")
         },
         "rpm" : { 
             publishToRepo("bit-yum/development/bit/${VERSION}/${rpm}","bit-yum/stable/bit/${VERSION}/${rpm}")
+            notifyReleaseServer("${VERSION}",releaseServer,"${env.EXTERNAL_REPO}/bit-yum/stable/bit/${VERSION}/bit-${VERSION}-1.noarch.rpm","yum")
             },
-
+        "msi" : { 
+            publishToRepo("bit-msi/development/bit/${VERSION}/${msi}","bit-msi/stable/bit/${VERSION}/${msi}")
+            },
         "brew" : { 
             publishToRepo("bit-brew/development/bit/${VERSION}/${tarName}","bit-brew/stable/bit/${VERSION}/${tarName}")
             sh("./scripts/generate-formula.sh ${env.EXTERNAL_REPO}/bit-brew/stable/bit/${VERSION}/${tarName}")
             sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
+            def sha = sh returnStdout: true, script: '$( curl -s "${env.EXTERNAL_REPO}/bit-brew/stable/bit/${VERSION}/${tarName}" |shasum -b -a 256| cut -d \' \' -f 1 )'
+            
+            //sh("brew bump-formula-pr --url=${env.EXTERNAL_REPO}/bit-brew/stable/bit/${VERSION}/${tarName} --sha256=${sha}")
+
          }
     )
 }
 def publishToRepo(from,to){
     def fullUrl = "${env.EXTERNAL_REPO}/api/copy/${from}?to=${to}"
     sh("curl -u${REPO_TOKEN} -XPOST '${fullUrl}'")
+}
+
+import groovy.json.JsonOutput
+def notifyReleaseServer(version,packageUrl,method) {
+
+    def payload = JsonOutput.toJson(version : version,
+                  method: "${method}",
+                  file: "${packageUrl}")
+    print(payload)
+
+    def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${env.BIT_PROD_SERVER} -u ${releaseServerToken}"
+    print ("${post}")
+    sh ("${post}")
 }
