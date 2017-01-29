@@ -14,15 +14,16 @@ export default class Import extends Command {
     ['t', 'tester', 'import a tester environment bit-component'],
     ['c', 'compiler', 'import a compiler environment bit-component']
   ];
-  loader = { text: 'Exporting component' };
+  loader = { autoStart: false, text: 'Importing components' };
 
   action([id, ]: [string, ], { save, tester, compiler }: any): Promise<any> {
+    const loader = this.loader;
     // @TODO - import should support multiple components
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
     }
     
-    return importAction({ bitId: id, save, tester, compiler })
+    return importAction({ bitId: id, save, tester, compiler, loader })
       .then(components => 
         components.map(component => ({
           scope: component.scope,

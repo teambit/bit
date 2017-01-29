@@ -10,7 +10,7 @@ const chai = require('chai');
 //     'is-number': isNumberMock
 // });
 
-const isString = require(___impl___); // eslint-disable-line
+const isString = require(__impl__); // eslint-disable-line
 
 describe('isString function', () => {
   it('should return true if inserted a string', () => {

@@ -4,7 +4,7 @@
         "spec": "spec.js"
     },
     "env": {
-        "compiler": "@local_env/compilers/babel::1",
+        "compiler": "none",
         "tester": "none"
     },
     "dependencies": {},
@@ -13,6 +13,6 @@
     "packageDependencies": {
         "mocha": "^3.2.0",
         "chai": "^3.5.0",
-        "bit-node":"^0.1.1"
+        "bit-node":"^0.1.2"
     }
 }

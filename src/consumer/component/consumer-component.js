@@ -181,7 +181,7 @@ export default class Component {
       compiler: ?{ compile?: (string) => string },
       src: string): ?string {
       if (!condition || !compiler || !compiler.compile) return src;
-      return compiler.compile(src);
+      return compiler.compile(src).code;
     }
 
     if (!this.testerId || !this.specs || !this.specs.src) return Promise.resolve(null);

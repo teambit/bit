@@ -4,11 +4,14 @@ import { loadConsumer } from '../../../consumer';
 import Bit from '../../../consumer/component';
 
 export default function importAction(
-  { bitId, save, tester, compiler }: {
-    bitId: string, save: ?bool, tester: ?bool, compiler: ?bool }): Promise<Bit[]> {
+  { bitId, save, tester, compiler, loader }: {
+    bitId: string, save: ?bool, tester: ?bool, compiler: ?bool, loader: any }): Promise<Bit[]> {
   return loadConsumer()
     .then((consumer) => {
       if (tester || compiler) { 
+        loader.text = 'importing Environment component';
+        loader.start();
+
         return consumer.importEnvironment(bitId)
         .then((component) => {
           if (save && compiler) {
@@ -26,6 +29,7 @@ export default function importAction(
         .then(component => [component]);
       }
       
+      loader.start();
       return consumer.import(bitId)
         .then((bits) => {
           if (save) {
@@ -36,6 +40,5 @@ export default function importAction(
 
           return Promise.resolve(bits);
         });
-      // @TODO - write bitId on bitJson if the variabel "save" is true
     });
 }

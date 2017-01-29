@@ -45,6 +45,19 @@ const run = (specFile) => {
   });
 };
 
+const getTemplate = (name) => {
+  return `
+const chai = require('chai');
+const component = require(__impl__);
+
+describe('${name}', () => {
+  it('the component should exist', () => {
+    return chai.should.exist(component);
+  });
+});
+`;
+};
+
 module.exports = {
   run,
   globals: {
@@ -55,4 +68,5 @@ module.exports = {
     chai,
     'bit-node': bit,
   },
+  getTemplate,
 };
