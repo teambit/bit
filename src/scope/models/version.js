@@ -28,7 +28,9 @@ export type VersionProps = {
   tester?: ?BitId;
   log: {
     message: string,
-    date: string
+    date: string,
+    username: ?string,
+    email: ?string,
   };
   specsResults?: ?Results;
   docs?: Doclet[],
@@ -54,7 +56,9 @@ export default class Version extends BitObject {
   tester: ?BitId;
   log: {
     message: string,
-    date: string
+    date: string,
+    username: ?string,
+    email: ?string,
   };
   specsResults: ?Results;
   docs: ?Doclet[];
@@ -128,13 +132,15 @@ export default class Version extends BitObject {
       log: {
         message: this.log.message,
         date: this.log.date,
+        username: this.log.username,
+        email: this.log.email,
       },
       specsResults: this.specsResults,
       docs: this.docs,
       dependencies: this.dependencies.map(dep => dep.toString()),
       flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
       packageDependencies: this.packageDependencies
-    }, val => empty(val));
+    }, val => !!val);
   }
 
   toBuffer(): Buffer {
@@ -175,6 +181,8 @@ export default class Version extends BitObject {
       log: {
         message: log.message,
         date: log.date,
+        username: log.username,
+        email: log.email,
       },
       specsResults,
       docs,
@@ -184,14 +192,26 @@ export default class Version extends BitObject {
     });
   }
 
-  static fromComponent({ component, impl, specs, dist, flattenedDeps, message, specsResults }: {
+  static fromComponent({ 
+    component, 
+    impl,
+    specs,
+    dist,
+    flattenedDeps,
+    message,
+    specsResults,
+    username,
+    email,
+  }: {
     component: ConsumerComponent,
     impl: Source,
-    specs: Source,
+    specs: ?Source,
     flattenedDeps: BitId[],
     message: string,
-    dist: Source,
-    specsResults: ?Results
+    dist: ?Source,
+    specsResults: ?Results,
+    username: ?string,
+    email: ?string,
   }) {
     return new Version({
       impl: {
@@ -210,6 +230,8 @@ export default class Version extends BitObject {
       tester: component.testerId,
       log: {
         message,
+        username,
+        email,
         date: Date.now().toString(),
       },
       specsResults,

@@ -34,14 +34,14 @@ export function delSync(key: string): Config {
   return config;
 }
 
-export function get(key: string): Promise<string> {
+export function get(key: string): Promise<?string> {
   return GlobalConfig.load()
     .then((config) => {
       return config.get(key);
     });
 }
 
-export function getSync(key: string): string {
+export function getSync(key: string): ?string {
   const config = GlobalConfig.loadSync();
   return config.get(key);
 }

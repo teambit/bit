@@ -18,8 +18,24 @@ export const paintHeader = (value: string): string => {
   return `${c.underline(value)}\n`;
 };
 
-export const paintLog = ({ message, date, hash }: any): string => {
-  return c.yellow(`commit ${hash}\n`) + c.white(`Date: ${date}\n`) + c.white(`\n      ${message}\n`);
+const paintAuthor = (email: ?string, username: ?string): string => {
+  if (email && username) {
+    return c.white(`Author: ${username} <${email}>\n`);
+  } else if (email && !username) {
+    return c.white(`Author: <${email}>\n`);
+  } else if (!email && username) {
+    return c.white(`Author: ${username}\n`);
+  }
+  
+  return '';
+};
+
+export const paintLog = ({ message, date, hash, username, email }:
+{ message: string, hash: string, date: string, username: ?string, email: ?string }): string => {
+  return c.yellow(`commit ${hash}\n`) +
+  paintAuthor(email, username) +
+  c.white(`Date: ${date}\n`) +
+  c.white(`\n      ${message}\n`);
 };
 
 export const paintDoc = (value: string): string => {

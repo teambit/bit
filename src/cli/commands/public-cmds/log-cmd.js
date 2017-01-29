@@ -22,7 +22,13 @@ export default class Show extends Command {
     );
   }
 
-  report(logs: Array<{ message: string, hash: string, date: string }>): string {
+  report(logs: Array<{
+    message: string,
+    hash: string,
+    date: string,
+    username: ?string,
+    email: ?string
+  }>): string {
     return logs.map(paintLog).join('\n');
   }
 }

@@ -10,6 +10,7 @@ import Source from '../models/source';
 import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
 import consumerComponent from '../../consumer/component/consumer-component';
+import * as globalConfig from '../../api/consumer/lib/global-config';
 
 export type ComponentTree = {
   component: Component;
@@ -88,10 +89,21 @@ export default class SourceRepository {
         const dist = source.dist ? Source.from(Buffer.from(source.dist)): null;
         const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
 
+        const username = globalConfig.getSync('user.name');
+        const email = globalConfig.getSync('user.email');
+
         return source.runSpecs(this.scope)
         .then((specsResults) => {
           const version = Version.fromComponent({
-            component: source, impl, specs, dist, flattenedDeps, message, specsResults
+            component: source,
+            impl,
+            specs,
+            dist,
+            flattenedDeps,
+            specsResults,
+            message,
+            username,
+            email,
           });
           
           component.addVersion(version);
