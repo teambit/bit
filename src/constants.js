@@ -73,6 +73,11 @@ export const DEFAULT_REMOTES = {};
 
 export const DEFAULT_DEPENDENCIES = {};
 
+export const USER_EMAIL_KEY = 'user.email';
+
+export const USER_NAME_KEY = 'user.name';
+
+
 /**
  * cache root directory
  */

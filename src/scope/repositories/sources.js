@@ -2,6 +2,7 @@
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
+import { USER_NAME_KEY, USER_EMAIL_KEY } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import Component from '../models/component';
 import ComponentVersion from '../component-version';
@@ -89,8 +90,8 @@ export default class SourceRepository {
         const dist = source.dist ? Source.from(Buffer.from(source.dist)): null;
         const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
 
-        const username = globalConfig.getSync('user.name');
-        const email = globalConfig.getSync('user.email');
+        const username = globalConfig.getSync(USER_NAME_KEY);
+        const email = globalConfig.getSync(USER_EMAIL_KEY);
 
         return source.runSpecs(this.scope)
         .then((specsResults) => {
