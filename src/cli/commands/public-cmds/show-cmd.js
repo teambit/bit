@@ -11,7 +11,7 @@ export default class Show extends Command {
   opts = [
     ['i', 'inline', 'show inline bit']
   ];
-  loader = { autoStart: false, text: 'fetching remoted component' };
+  loader = { autoStart: false, text: 'fetching remote component' };
 
   action([id, ]: [string], { inline }: { inline: ?bool}): Promise<*> {
     const loader = this.loader;

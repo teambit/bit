@@ -13,7 +13,7 @@ export default class List extends Command {
   opts = [
     ['i', 'inline', 'in inline bit']
   ];
-  loader = { autoStart: false, text: 'fetching remoted component' };
+  loader = { autoStart: false, text: 'fetching remote component' };
 
   action([scopeName]: string[], { inline }: { inline: ?bool }): Promise<any> {
     const loader = this.loader;

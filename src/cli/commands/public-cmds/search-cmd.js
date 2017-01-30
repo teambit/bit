@@ -11,13 +11,19 @@ export default class Search extends Command {
     ['s', 'scope <scopename>', 'search in scope'],
     ['r', 'reindex', 're-index all components']
   ];
-  
+  loader = { autoStart: false };
+
   action([query, ]: [string[], ], { scope, reindex }: { scope: string, reindex: boolean }) {
     const queryStr = query.join(' ');
-    console.log(`searching bits in ${scope ? scope : 'local scope'} for "${queryStr}"`);
     if (scope) {
+      // $FlowFixMe
+      this.loader.text = `searching remote scope <${scope}> for '${queryStr}'`;
+      // $FlowFixMe
+      this.loader.start();
       return searchAdapter.searchRemotely(queryStr, scope, reindex);
     }
+    
+    console.log(`searching bits in ${scope ? scope : 'local scope'} for "${queryStr}"`);
     return searchAdapter.searchLocally(queryStr, reindex);
   }
 

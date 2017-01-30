@@ -44,7 +44,7 @@ function execAction(command, concrete, args) {
   const opts = getOpts(concrete, command.opts);
   if (command.loader) {
     const autoStart = command.loader.autoStart || true;
-    command.loader = ora({ spinner: SPINNER_TYPE, text: command.loader.text });
+    command.loader = ora({ spinner: SPINNER_TYPE, text: command.loader.text || '' });
     if (autoStart) { command.loader.start(); }
   }
 
