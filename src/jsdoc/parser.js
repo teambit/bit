@@ -128,14 +128,64 @@ function extractData(node: Object, doclets: Array<Doclet>) {
   if (doclet) doclets.push(doclet);
 }
 
+function extractDataRegex(doc: string, doclets: Array<Doclet>) {
+  const commentsAst = doctrine.parse(doc, { unwrap: true });
+  if (!commentsAst) return;
+
+  const args = [];
+  const description = commentsAst.description;
+  let returns = {};
+  let isStatic = false;
+  let access = 'public';
+  let examples = [];
+
+  for (const tag of commentsAst.tags) {
+    switch (tag.title) {
+      case 'param':
+        args.push(formatTag(tag));
+        break;
+      case 'returns':
+        returns = formatTag(tag);
+        break;
+      case 'static':
+        isStatic = true;
+        break;
+      case 'private':
+      case 'protected':
+        access = tag.title;
+        break;
+      case 'access':
+        access = tag.access;
+        break;
+      case 'example':
+        examples.push(exampleTagParser(tag.description));
+        break;
+    }
+  }
+
+  const doclet = {
+    name: '', // todo: find the function/method name 
+    description,
+    args,
+    returns,
+    access,
+    examples,
+    static: isStatic,
+  };
+  doclets.push(doclet);
+}
+
 export default function parse(data: string): Doclet|[] {
   const doclets: Array<Doclet> = [];
   try {
-    const ast = esprima.parse(data, {
-      attachComment: true,
-      sourceType: 'module'
-    });
-    walk(ast, node => extractData(node, doclets));
+    const jsdocRegex = /[ \t]*\/\*\*\s*\n([^*]*(\*[^/])?)*\*\//g;
+    const docs = data.match(jsdocRegex);
+    docs.map(doc => extractDataRegex(doc, doclets));
+    // const ast = esprima.parse(data, {
+    //   attachComment: true,
+    //   sourceType: 'module'
+    // });
+    // walk(ast, node => extractData(node, doclets));
   } catch (e) {
     // never mind, ignore the doc of this source
   }
