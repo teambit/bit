@@ -8,9 +8,9 @@ export default class Dist extends Source {
   write(bitPath: string): Promise<any> {
     const filePath = path.join(bitPath, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
     return new Promise((resolve, reject) =>
-      fs.outputFile(filePath, this.src, (err, res) => {
+      fs.outputFile(filePath, this.src, (err) => {
         if (err) return reject(err);
-        return resolve(res);
+        return resolve(filePath);
       })
     );
   }

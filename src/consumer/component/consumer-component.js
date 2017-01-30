@@ -152,17 +152,6 @@ export default class Component {
     return BitIds.fromObject(this.dependencies);
   }
 
-  writeBuild(bitDir: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      if (!this.dist) return reject(new Error('dist file not exist, please use build first'));
-      const distPath = path.join(bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
-      return fs.outputFile(distPath, this.dist, (err) => {
-        if (err) return reject(err);
-        return resolve(distPath);
-      });
-    });
-  }
-
   write(bitDir: string, withBitJson: boolean): Promise<Component> {
     return mkdirp(bitDir)
     .then(() => this.impl.write(bitDir, this.implFile))
