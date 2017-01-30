@@ -4,7 +4,7 @@
         "spec": "spec.js"
     },
     "env": {
-        "compiler": "bit.envs/compilers/babel",
+        "compiler": "bit.envs/compilers/flow",
         "tester": "bit.envs/testers/mocha-chai"
     },
     "dependencies": {}

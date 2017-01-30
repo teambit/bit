@@ -193,5 +193,6 @@ export default function parse(data: string): Doclet|[] {
   } catch (e) {
     // never mind, ignore the doc of this source
   }
+  
   return doclets;
 }
