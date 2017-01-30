@@ -53,7 +53,7 @@ import groovy.json.JsonOutput
 def notifyAppveyor(){
     
     def payload = JsonOutput.toJson(accountName : 'TeamBit',
-                  projectSlug: "bit-publish",
+                  projectSlug: "bit-mr045",
                   branch: "master")
     print(payload)
 
