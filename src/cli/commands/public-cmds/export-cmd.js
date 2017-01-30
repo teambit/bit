@@ -2,6 +2,8 @@
 import Command from '../../command';
 import { exportAction } from '../../../api/consumer';
 
+const chalk = require('chalk');
+
 export default class Export extends Command {
   name = 'export <id> <remote>';
   description = 'export local scope refs to a remote scope.';
@@ -16,6 +18,6 @@ export default class Export extends Command {
   }
 
   report({ id, remote }: { id: string, remote: string }): string {
-    return `component ${id} pushed succesfully to scope ${remote}`;
+    return chalk.green(`component ${id} pushed succesfully to scope ${remote}`);
   }
 }

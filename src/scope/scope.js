@@ -155,11 +155,11 @@ export default class Scope {
       );
   }
 
-  getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: bool = true) {
+  getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: bool = false) {
     return this.sources.getMany(ids)
       .then((defs) => {
         const left = defs.filter(def => !def.component && localFetch);
-        if (left.length === 0) {
+        if (left.length === 0 && localFetch) {
           return Promise.all(defs.map(def => def.component.toComponentVersion(
             def.id.version, 
             this.name
