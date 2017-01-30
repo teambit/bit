@@ -67,3 +67,8 @@ distribution/
 artifacts/
 bit-*.tar.gz
 tmp/
+
+# bit directories
+.bit
+components
+inline-components
