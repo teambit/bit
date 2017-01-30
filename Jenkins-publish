@@ -49,6 +49,7 @@ def notifyReleaseServer(version,packageUrl,method) {
     print ("${post}")
     sh ("${post}")
 }
+import groovy.json.JsonOutput
 def notifyAppveyor(){
     
     def payload = JsonOutput.toJson(accountName : 'TeamBit',
