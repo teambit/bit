@@ -52,7 +52,7 @@ function checkUpdate(cb) {
   if (lastUpdateCheck && Date.now() - lastUpdateCheck < ONE_DAY) cb();
   else { needle.get(url, function(err, res) {
     _setCache('lastUpdateCheck', Date.now());
-    (res.statusCode === 200) ?  cb(getUpdateCommand()) : cb()
+    (err || res.statusCode !== 200) ? cb() : cb(getUpdateCommand())
   })}
 }
 
