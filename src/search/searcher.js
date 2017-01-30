@@ -57,7 +57,7 @@ function buildQuery(queryStr: string) {
   query.push(queryItem('tokenizedName', tokenizedQuery, 3));
   query.push(queryItem('functionNames', queryStr, 3));
   query.push(queryItem('tokenizedFunctionNames', tokenizedQuery, 2));
-  query.push(queryItem('description', queryStr));
+  query.push(queryItem('min_description', queryStr));
   return query;
 }
 
