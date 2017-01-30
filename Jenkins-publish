@@ -14,10 +14,12 @@ node {
         },
         "rpm" : { 
             publishToRepo("bit-yum/development/bit/${VERSION}/${rpm}","bit-yum/stable/bit/${VERSION}/${rpm}")
-            notifyReleaseServer("${VERSION}","${env.EXTERNAL_REPO}/bit-yum/stable/bit/${VERSION}/bit-${VERSION}-1.noarch.rpm","yum")
+            notifyReleaseServer("${VERSION}","${env.EXTERNAL_REPO}/bit-yum/stable/bit/${VERSION}/${rpm}","yum")
             },
         "msi" : { 
             publishToRepo("bit-msi/development/bit/${VERSION}/${msi}","bit-msi/stable/bit/${VERSION}/${msi}")
+            notifyReleaseServer("${VERSION}","${env.EXTERNAL_REPO}/bit-msi/stable/bit/${VERSION}/${msi}","msi")
+            notifyAppveyor()
             },
         "brew" : { 
             publishToRepo("bit-brew/development/bit/${VERSION}/${tarName}","bit-brew/stable/bit/${VERSION}/${tarName}")
@@ -30,6 +32,7 @@ node {
          }
     )
 }
+
 def publishToRepo(from,to){
     def fullUrl = "${env.EXTERNAL_REPO}/api/copy/${from}?to=${to}"
     sh("curl -u${REPO_TOKEN} -XPOST '${fullUrl}'")
@@ -44,6 +47,17 @@ def notifyReleaseServer(version,packageUrl,method) {
     print(payload)
 
     def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${env.BIT_PROD_SERVER} -u ${releaseServerToken}"
+    print ("${post}")
+    sh ("${post}")
+}
+def notifyAppveyor(){
+    
+    def payload = JsonOutput.toJson(accountName : 'TeamBit,
+                  projectSlug: "bit-publish",
+                  branch: "master")
+    print(payload)
+
+    def post = "curl  -X POST  -d '${payload.toString()}' -H 'Content-Type: application/json'  -H 'Authorization: Bearer "${env.APPVEYOR_TOKEN}" ' ${env.APPVEYOR_CI}"
     print ("${post}")
     sh ("${post}")
 }
