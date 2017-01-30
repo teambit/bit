@@ -7,5 +7,8 @@
         "compiler": "bit.envs/compilers/flow",
         "tester": "bit.envs/testers/mocha-chai"
     },
-    "dependencies": {}
+    "dependencies": {
+        "bit.utils/array/first": "1",
+        "bit.utils/array/diff": "1"
+    }
 }

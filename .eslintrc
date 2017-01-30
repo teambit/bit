@@ -16,10 +16,15 @@
     "import/no-extraneous-dependencies": [0],
     "comma-dangle": [0, "never"],
     "no-use-before-define": [0],
-    "func-names": [0]
+    "func-names": [0],
   },
   "env": {
     "node": true,
     "mocha": true
+  },
+  "globals": {
+    "__impl__": true,
+    "describe": true,
+    "it": true
   }
 }

@@ -111,7 +111,7 @@ export default class Repository {
 
   persist(): Promise<[]> {
     // @TODO handle failures
-    return allSettled(this.objects.map(object => this.persistOne(object)));
+    return Promise.all(this.objects.map(object => this.persistOne(object)));
   }
 
   persistOne(object: BitObject): Promise<boolean> {

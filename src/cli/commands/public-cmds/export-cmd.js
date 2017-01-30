@@ -11,7 +11,7 @@ export default class Export extends Command {
   opts = [
     ['i', 'identity-file', 'path to identity file']
   ];
-  loader = { text: 'Exporting component' };
+  loader = { text: 'exporting component' };
 
   action([id, remote]: [string, string]): Promise<*> {
     return exportAction(id, remote).then(() => ({ id, remote }));
