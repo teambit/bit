@@ -57,7 +57,7 @@ def notifyAppveyor(){
                   branch: "master")
     print(payload)
 
-    def post = "curl  -X POST  -d '${payload.toString()}' -H 'Content-Type: application/json'  -H 'Authorization: Bearer "${env.APPVEYOR_TOKEN}" ' ${env.APPVEYOR_CI}"
-    print ("${post}")
+    def post = "curl  -X POST  -d '${payload.toString()}' -H 'Content-Type: application/json'  -H 'Authorization: Bearer ${env.APPVEYOR_TOKEN} ' ${env.APPVEYOR_CI}"
+    print (post)
     sh ("${post}")
 }
