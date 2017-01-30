@@ -87,7 +87,7 @@ export default class SourceRepository {
           throw e;
         }
         
-        const dist = source.dist ? Source.from(Buffer.from(source.dist)): null;
+        const dist = source.dist ? Source.from(Buffer.from(source.dist.src)): null;
         const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
 
         const username = globalConfig.getSync(USER_NAME_KEY);

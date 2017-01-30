@@ -11,7 +11,7 @@ import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
 import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
-import { Impl, Specs } from '../../consumer/component/sources';
+import { Impl, Specs, Dist } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 
 export type ComponentProps = {
@@ -134,8 +134,9 @@ export default class Component extends BitObject {
         .then((version) => {
           const implP = version.impl.file.load(repository);
           const specsP = version.specs ? version.specs.file.load(repository) : null;
-          return Promise.all([implP, specsP])
-          .then(([impl, specs]) => {
+          const distP = version.dist ? version.dist.file.load(repository) : null;
+          return Promise.all([implP, specsP, distP])
+          .then(([impl, specs, dist]) => {
             return new ConsumerComponent({
               name: this.name,
               box: this.box,
@@ -148,8 +149,9 @@ export default class Component extends BitObject {
               dependencies: version.dependencies,
               packageDependencies: version.packageDependencies,
               impl: new Impl(impl.toString()),
-              specs: specs ? new Specs(specs.toString()): null,
-              docs: version.docs
+              specs: specs ? new Specs(specs.toString()) : null,
+              docs: version.docs,
+              dist: dist ? new Dist(dist.toString()) : null
             });
           });
         });

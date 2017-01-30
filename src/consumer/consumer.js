@@ -11,27 +11,12 @@ import Component from './component';
 import { 
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
-  BIT_HIDDEN_DIR,
-  DEFAULT_DIST_DIRNAME,
-  DEFAULT_BUNDLE_FILENAME,
+  BIT_HIDDEN_DIR
  } from '../constants';
 import { flatten, removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
 import type { Results } from '../specs-runner/specs-runner';
-
-const buildAndSave = (component: Component, scope: Scope, bitDir: string): Component => {
-  const val = component.build(scope);
-  if (!val) return component;
-
-  const { code } = val;
-  fs.outputFileSync(
-    path.join(bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME),
-    code,
-  );
-
-  return component;
-};
 
 export type ConsumerProps = {
   projectPath: string,
@@ -187,8 +172,7 @@ export default class Consumer {
 
     return Promise.all(components.map((component) => {
       const bitPath = bitDirForConsumerImport(component);
-      return component.write(bitPath, true)
-      .then(() => buildAndSave(component, this.scope, bitPath));
+      return component.write(bitPath, true);
     }));
   }
 

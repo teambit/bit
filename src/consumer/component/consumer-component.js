@@ -5,6 +5,7 @@ import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
 import Impl from '../component/sources/impl';
 import Specs from '../component/sources/specs';
+import Dist from '../component/sources/dist';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
@@ -38,7 +39,7 @@ export type ComponentProps = {
   impl?: ?Impl|string,
   specs?: ?Specs|string,
   docs?: ?Doclet[],
-  dist?: ?string,
+  dist?: ?Dist,
 }
 
 export default class Component {
@@ -55,7 +56,7 @@ export default class Component {
   _impl: ?Impl|string;
   _specs: ?Specs|string;
   _docs: ?Doclet[];
-  _dist: ?string;
+  dist: ?Dist;
 
   set impl(val: Impl) { this._impl = val; }
 
@@ -100,11 +101,6 @@ export default class Component {
     return this._docs;
   }
 
-  get dist(): ?string {
-    if (!this._dist) return null;
-    return this._dist;
-  }
-
   constructor({ 
     name,
     box,
@@ -134,7 +130,7 @@ export default class Component {
     this._specs = specs;
     this._impl = impl;
     this._docs = docs;
-    this._dist = dist;
+    this.dist = dist;
   }
 
   writeBitJson(bitDir: string): Promise<Component> {
@@ -158,9 +154,9 @@ export default class Component {
 
   writeBuild(bitDir: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      if (!this._dist) return reject(new Error('dist file not exist, please use build first'));
+      if (!this.dist) return reject(new Error('dist file not exist, please use build first'));
       const distPath = path.join(bitDir, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
-      return fs.outputFile(distPath, this._dist, (err) => {
+      return fs.outputFile(distPath, this.dist, (err) => {
         if (err) return reject(err);
         return resolve(distPath);
       });
@@ -171,6 +167,7 @@ export default class Component {
     return mkdirp(bitDir)
     .then(() => this.impl.write(bitDir, this.implFile))
     .then(() => { return this.specs ? this.specs.write(bitDir, this.specsFile) : undefined; })
+    .then(() => { return this.dist ? this.dist.write(bitDir) : undefined; })
     .then(() => { return withBitJson ? this.writeBitJson(bitDir): undefined; })
     .then(() => this);
   }
@@ -201,7 +198,7 @@ export default class Component {
       const compiler = scope.loadEnvironment(this.compilerId);
       const src = this.impl.src;
       const { code, map } = compiler.compile(src); // eslint-disable-line
-      this._dist = code;
+      this.dist = new Dist(code);
       return code;
     } catch (e) {
       throw e;
@@ -224,7 +221,7 @@ export default class Component {
       specs: this.specs ? this.specs.serialize() : null,
       impl: this.impl.serialize(),
       docs: this.docs,
-      dist: this._dist,
+      dist: this.dist ? this.dist.serialize() : null,
     };
   }
 
@@ -264,7 +261,7 @@ export default class Component {
       impl: Impl.deserialize(impl),
       specs: specs ? Specs.deserialize(specs) : null,
       docs,
-      dist,
+      dist: dist ? Dist.deserialize(dist) : null,
     });
   }
 
