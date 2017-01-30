@@ -5,7 +5,7 @@ import Component from '../../../consumer/component';
 
 export default class Export extends Command {
   name = 'commit <id> <message>';
-  description = 'commit a bit to the local scope and add a log message';
+  description = 'commit a component to the local scope and add a log message';
   alias = 'c';
   opts = [];
 

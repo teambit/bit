@@ -6,10 +6,10 @@ import type { Results } from '../../../specs-runner/specs-runner';
 
 export default class Test extends Command {
   name = 'test <id>';
-  description = 'run bit(s) unit tests';
+  description = 'run component(s) unit tests';
   alias = 't';
   opts = [
-    ['i', 'inline', 'test an inline bit specs']
+    ['i', 'inline', 'test an inline component specs']
   ];
 
   action([id, ]: [string, ], { inline }: { inline: ?bool }): Promise<any> {

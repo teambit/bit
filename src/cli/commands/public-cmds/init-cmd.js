@@ -12,7 +12,7 @@ export default class Init extends Command {
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
-    ['s', 'shared <groupname>', 'add group write permissions to a repository properly']
+    ['s', 'shared <groupname>', 'add group write permissions to a scope properly']
   ];
 
   action([path, ]: [string, ], { bare, shared }: any): Promise<{[string]: any}> {

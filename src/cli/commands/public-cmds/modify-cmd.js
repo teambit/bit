@@ -6,7 +6,7 @@ import Bit from '../../../consumer/component';
 
 export default class Modify extends Command {
   name = 'modify <id>';
-  description = 'modify a bit (transfer to the inline directory for modification)';
+  description = 'modify a component (transfer to the inline directory for modification)';
   alias = 'm';
   opts = [];
   
