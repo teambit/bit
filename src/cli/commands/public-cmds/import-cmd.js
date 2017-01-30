@@ -14,7 +14,7 @@ export default class Import extends Command {
     ['t', 'tester', 'import a tester environment bit-component'],
     ['c', 'compiler', 'import a compiler environment bit-component']
   ];
-  loader = { autoStart: false, text: 'Importing components' };
+  loader = { autoStart: false, text: 'importing components' };
 
   action([id, ]: [string, ], { save, tester, compiler }: any): Promise<any> {
     const loader = this.loader;

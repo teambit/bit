@@ -71,4 +71,4 @@ tmp/
 # bit directories
 .bit
 components
-inline-components
+inline_components
