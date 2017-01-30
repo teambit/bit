@@ -138,9 +138,13 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
   let isStatic = false;
   let access = 'public';
   let examples = [];
+  let name = '';
 
   for (const tag of commentsAst.tags) {
     switch (tag.title) {
+      case 'name':
+        name = tag.name;
+        break;
       case 'param':
         args.push(formatTag(tag));
         break;
@@ -164,7 +168,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
   }
 
   const doclet = {
-    name: '', // todo: find the function/method name 
+    name, // todo: find the function/method name by regex 
     description,
     args,
     returns,
