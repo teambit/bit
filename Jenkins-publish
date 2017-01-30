@@ -52,7 +52,7 @@ def notifyReleaseServer(version,packageUrl,method) {
 }
 def notifyAppveyor(){
     
-    def payload = JsonOutput.toJson(accountName : 'TeamBit,
+    def payload = JsonOutput.toJson(accountName : 'TeamBit',
                   projectSlug: "bit-publish",
                   branch: "master")
     print(payload)
