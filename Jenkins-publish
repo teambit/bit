@@ -10,14 +10,15 @@ node {
            sh("wget ${env.EXTERNAL_REPO}/bit-deb/development/bit/${VERSION}/${debpkg} ")
            def fullUrl = "${env.EXTERNAL_REPO}/bit-deb/stable/bit/${VERSION}/bit_${VERSION}_all.deb;deb.distribution=all;deb.component=stable;deb.architecture=amd64"
            sh("curl -u${REPO_TOKEN} -T ${debpkg} -XPUT '${fullUrl}'")
-           notifyReleaseServer("${VERSION}",releaseServer,"${env.EXTERNAL_REPO}/bit-deb/stable/bit/${VERSION}/bit_${VERSION}_all.deb","deb")
+           notifyReleaseServer("${VERSION}","${env.BIT_STAGE_SERVER}","${env.EXTERNAL_REPO}/bit-deb/stable/bit/${VERSION}/bit_${VERSION}_all.deb","deb")
         },
         "rpm" : { 
             publishToRepo("bit-yum/development/bit/${VERSION}/${rpm}","bit-yum/stable/bit/${VERSION}/${rpm}")
-            notifyReleaseServer("${VERSION}",releaseServer,"${env.EXTERNAL_REPO}/bit-yum/stable/bit/${VERSION}/bit-${VERSION}-1.noarch.rpm","yum")
+            notifyReleaseServer("${VERSION}","${env.BIT_STAGE_SERVER}","${env.EXTERNAL_REPO}/bit-yum/stable/bit/${VERSION}/bit-${VERSION}-1.noarch.rpm","yum")
             },
         "msi" : { 
             publishToRepo("bit-msi/development/bit/${VERSION}/${msi}","bit-msi/stable/bit/${VERSION}/${msi}")
+
             },
         "brew" : { 
             publishToRepo("bit-brew/development/bit/${VERSION}/${tarName}","bit-brew/stable/bit/${VERSION}/${tarName}")

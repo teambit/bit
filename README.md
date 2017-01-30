@@ -7,7 +7,9 @@
 <p align="center">
 <b>Distributed code component manager</b>
 </p>
-
+<p align="center">
+  <a href="https://ci.appveyor.com/project/TeamBit/bit"><img alt="Appveyor Status" src="https://ci.appveyor.com/api/projects/status/pr2caxu6awb387lr?svg=true"></a>
+</p>
 ---
 
 Bit is a distributed, language-agnostic and fast code component manager designed for easy use, maintainance and discovery of code components.
