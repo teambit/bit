@@ -22,11 +22,32 @@ function getFunctionName(node: Object): string {
   throw new Error('The node is not recognized');
 }
 
+const typeMap = {
+  ArrayType: 'Array',
+  AllLiteral: 'any',
+  NullLiteral: 'null'
+};
+
+function getType(type) {
+  let finalType;
+  if (type.name) finalType = type.name;
+  else if (type.type) finalType = type.type;
+  if (typeMap[finalType]) finalType = typeMap[finalType];
+  
+  return finalType;
+}
+
 function formatTag(tag: Object): Object {
   delete tag.title;
   if (!tag.type) return tag;
-  if (tag.type.name) tag.type = tag.type.name;
-  else if (tag.type.type) tag.type = tag.type.type;
+
+  if (tag.type.type === 'UnionType') {
+    tag.type = tag.type.elements.map(getType).join('|');
+  }
+  else {
+    tag.type = getType(tag.type);  
+  }
+  
   return tag;
 }
 
