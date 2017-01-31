@@ -39,7 +39,6 @@ function prepareDoc(docs: Object, component: Component): Doc {
     id: `${box}_${name}`,
     name,
     box,
-    tokenizedNameExtra: tokenizeStr(name), // TODO: remove it when possible
     tokenizedName: tokenizeStr(name),
     tokenizedBox: tokenizeStr(box),
     functionNames,
@@ -47,6 +46,26 @@ function prepareDoc(docs: Object, component: Component): Doc {
     description: docs.map(doc => doc.description).join(' '),
     minDescription: docs.map(doc => minimizeDescription(doc.description)).join(' ')
   };
+}
+
+function addAllToLocalIndex(components: Array<Component>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const docs = components.map(component => prepareDoc(component.docs, component));
+    localIndex.then((indexInstance) => {
+      const docStream = new Readable({ objectMode: true });
+      docs.map(doc => docStream.push(doc));
+      docStream.push(null);
+      docStream
+        .pipe(indexInstance.defaultPipeline())
+        .pipe(indexInstance.add())
+        .on('data', (d) => {
+          // this function needs to be called if you want to listen for the end event
+        })
+        .on('end', () => {
+          resolve('The indexing has been completed');
+        });
+    });
+  });
 }
 
 function addToLocalIndex(component: Component): Promise<string> {
@@ -79,8 +98,8 @@ function indexAll(path: string, components: Component[]): Promise<any> {
     if (!components) return reject('The scope is empty');
     serverlessIndex.deleteDb(path);
     localIndex = serverlessIndex.initializeIndex(path);
-    const results = components.map(component => addToLocalIndex(component));
-    return resolve(Promise.all(results));
+    const results = addAllToLocalIndex(components);
+    return resolve(results);
   });
 }
 
