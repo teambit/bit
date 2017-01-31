@@ -9,6 +9,6 @@
     },
     "dependencies": {
         "bit.utils/array/first": "1",
-        "bit.utils/array/diff": "1"
+        "bit.utils/array/diff": "4"
     }
 }
