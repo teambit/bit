@@ -1,26 +1,26 @@
 /** @flow */
-const npmi = require('npmi');
+import { fork } from 'child_process';
+import path from 'path';
 
-export default ({ name, version, dir }: { name: string, version: string, dir: string }) => {
-  const options = {
-    name,    // your module name
-    version,             // expected version [default: 'latest']
-    path: dir,    // installation path [default: '.']
-    forceInstall: false, // force install if set to true (it will do a reinstall) [default: false]
-    npmLoad: {           // npm.load(options, callback): this is the "options" given to npm.load()
-      loglevel: 'silent' // [default: {loglevel: 'silent'}]
-    }
-  };
-
+export default ({ name, version, dir, silent = true }:
+{ name: string, version: string, dir: string, silent?: bool }) => {
   return new Promise((resolve, reject) => {
-    npmi(options, (err, result) => { // eslint-disable-line
-      if (err) {
-        if (err.code === npmi.LOAD_ERR) console.log('npm load error');
-        else if (err.code === npmi.INSTALL_ERR) console.log('npm install error');
-        return reject(err);
+    const child = fork(path.join(__dirname, 'npm-worker.js'), {
+      silent,
+      env: {
+        __name__: name,
+        __version__: version,
+        __dir__: dir,
       }
-      // installed
-      resolve(result);
+    });
+
+    child.on('message', ({ type, payload }: { type: string, payload: Object }) => {
+      if (type === 'error') return reject(payload);
+      return resolve(payload);
+    });
+
+    child.on('error', (e) => {
+      reject(e);
     });
   });
 };
