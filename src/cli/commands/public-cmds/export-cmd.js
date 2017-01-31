@@ -9,12 +9,12 @@ export default class Export extends Command {
   description = 'export local scope refs to a remote scope.';
   alias = 'e';
   opts = [
-    ['i', 'identity-file', 'path to identity file']
+    ['s', 'save', 'save into bit.json']
   ];
   loader = { text: 'exporting component' };
 
-  action([id, remote]: [string, string]): Promise<*> {
-    return exportAction(id, remote).then(() => ({ id, remote }));
+  action([id, remote]: [string, string], { save }: any): Promise<*> {
+    return exportAction(id, remote, save).then(() => ({ id, remote }));
   }
 
   report({ id, remote }: { id: string, remote: string }): string {
