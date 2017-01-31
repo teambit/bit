@@ -1,9 +1,7 @@
 node  {
-    properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
+    //properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
     checkout scm
 	def releaseServer = "${env.BIT_STAGE_SERVER}"
-	print releaseServer
-	def env = "${environment}"
 	def app = "bit"
 	def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
 	currentVersion = currentVersion.replaceAll("\\s","")
@@ -46,9 +44,8 @@ def notifyReleaseServer(version,url,packageUrl,method) {
     def payload = JsonOutput.toJson(version : version,
                   method: "${method}",
                   file: "${packageUrl}")
-    print(payload)
 
     def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${url} -u ${releaseServerToken}"
-    print ("${post}")
+
     sh ("${post}")
 }
