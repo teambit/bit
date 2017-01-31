@@ -13,7 +13,7 @@ export type Doc = {
   functionNames: string,
   tokenizedFunctionNames: string,
   description: string,
-  min_description: string
+  minDescription: string
 };
 
 let localIndex;
@@ -38,13 +38,14 @@ function prepareDoc(docs: Object, component: Component): Doc {
   return {
     id: `${box}_${name}`,
     name,
-    tokenizedName: tokenizeStr(name),
     box,
+    tokenizedNameExtra: tokenizeStr(name), // TODO: remove it when possible
+    tokenizedName: tokenizeStr(name),
     tokenizedBox: tokenizeStr(box),
     functionNames,
     tokenizedFunctionNames: tokenizeStr(functionNames),
     description: docs.map(doc => doc.description).join(' '),
-    min_description: docs.map(doc => minimizeDescription(doc.description)).join(' ')
+    minDescription: docs.map(doc => minimizeDescription(doc.description)).join(' ')
   };
 }
 
