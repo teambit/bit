@@ -26,7 +26,7 @@ rm artifacts/*.nupkg
 # Download the installer so we can compute its hash
 # Keep this in sync with chocolateyInstall.ps1.in
 # This is intentionally not using /latest.msi to ensure the URL used by the Chocolatey package is valid.
-$url = "http://104.154.76.155:8081/artifactory/bit-msi/$env:ENVIRONMENT/bit/$latest_version/bit-$latest_version-unsigned.msi"
+$url = "https://bitsrc.jfrog.io/bitsrc/bit-msi/$env:ENVIRONMENT/bit/$latest_version/bit-$latest_version-unsigned.msi"
 $installer_file = [IO.Path]::GetTempFileName()
 Invoke-WebRequest -Uri $url -OutFile $installer_file
 

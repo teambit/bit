@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 #add gpg key
-curl http://104.154.76.155:8081/artifactory/api/gpg/key/public | sudo apt-key add -
+curl https://bitsrc.jfrog.io/bitsrc/api/gpg/key/public | sudo apt-key add -
 
 #add source
-sudo sh -c "echo 'deb http://104.154.76.155:8081/artifactory/bit-deb all main' >> /etc/apt/sources.list"
+sudo sh -c "echo 'deb https://bitsrc.jfrog.io/bitsrc/bit-deb all main' >> /etc/apt/sources.list"
 
