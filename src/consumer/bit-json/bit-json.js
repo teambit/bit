@@ -100,7 +100,7 @@ export default class BitJson extends AbstractBitJson {
     delete plainProtoBJ.dependencies;
 
     return BitJson.fromPlainObject(
-      R.merge(json, plainProtoBJ)
+      R.merge(plainProtoBJ, json)
     );
   }
 
