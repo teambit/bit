@@ -170,6 +170,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
         args.push(formatTag(tag));
         break;
       case 'returns':
+      case 'return':
         returns = formatTag(tag);
         break;
       case 'static':

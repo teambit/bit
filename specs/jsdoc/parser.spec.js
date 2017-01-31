@@ -104,7 +104,7 @@ describe('JSDoc Parser', () => {
         expect(doclet).to.have.property('description').that.equals('Get the x value.');
         expect(doclet).to.have.property('access').that.equals('public');
         expect(doclet).to.have.property('static').that.is.false;
-        expect(doclet).to.have.property('returns').that.is.an('object').that.is.empty;
+        expect(doclet).to.have.property('returns').that.is.an('object').that.is.not.empty;
         expect(doclet).to.have.property('examples').that.is.an('array').that.is.empty;
         expect(doclet).to.have.property('args').that.is.an('array').that.is.empty;
       });
