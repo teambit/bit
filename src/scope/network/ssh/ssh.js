@@ -68,7 +68,7 @@ export default class SSH {
     return new Promise((resolve, reject) => {
       const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
       this.connection(cmd, function (err, res, o) {
-        if (!o) reject(new UnexpectedNetworkError());
+        if (!o) return reject(new UnexpectedNetworkError());
         if (err && o.code && o.code !== 0) return reject(errorHandler(err));
         return resolve(clean(res));
       });
