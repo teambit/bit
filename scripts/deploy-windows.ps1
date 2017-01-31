@@ -9,7 +9,7 @@ param(
  )
 
 $VERSION= $(node -p -e "require('./package.json').version")
-$repoUrl = "https://bitsrc.jfrog.io/bitsrc/"
+$repoUrl = "https://bitsrc.jfrog.io/bitsrc"
 
 
 $AF_USER = $env:repoUser 
