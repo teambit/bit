@@ -2,8 +2,8 @@
 import c from 'chalk';
 import { formatter } from '../jsdoc';
 
-export const formatInlineBit = ({ box, name, version }: any): string => 
-c.white('     > ') + c.cyan(`${box}/${name} - ${version}`);
+export const formatInlineBit = ({ box, name }: any): string => 
+c.white('     > ') + c.cyan(`${box}/${name}`);
 
 export const formatBit = ({ scope = '@this', box, name, version }: any): string => 
 c.white('     > ') + c.cyan(`${scope}/${box}/${name} - ${version}`);
