@@ -1,6 +1,7 @@
 /**
  * Adds two numbers.
  *
+ * @name add
  * @static
  * @public
  * @param {number} a The first number in an addition.
