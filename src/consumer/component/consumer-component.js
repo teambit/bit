@@ -135,8 +135,6 @@ export default class Component {
 
   writeBitJson(bitDir: string): Promise<Component> {
     return new BitJson({
-      name: this.name,
-      box: this.box,
       version: this.version,
       scope: this.scope,
       impl: this.implFile,
@@ -263,8 +261,8 @@ export default class Component {
     return BitJson.load(bitDir, consumerBitJson)
     .then((bitJson) => {
       return new Component({
-        name: bitJson.name,
-        box: bitJson.box,
+        name: path.basename(bitDir),
+        box: path.basename(path.dirname(bitDir)),
         implFile: bitJson.getImplBasename(),
         specsFile: bitJson.getSpecBasename(), 
         compilerId: BitId.parse(bitJson.compilerId),

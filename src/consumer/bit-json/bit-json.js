@@ -16,8 +16,6 @@ export function hasExisting(bitPath: string): boolean {
 }
 
 export type BitJsonProps = {
-  name: string;
-  box: string;
   impl?: string;
   spec?: string;  
   compiler?: string;
@@ -27,8 +25,6 @@ export type BitJsonProps = {
 };
 
 export default class BitJson extends AbstractBitJson {
-  name: string;
-  box: string;
   impl: string;
   spec: string; 
   compiler: string;
@@ -37,29 +33,17 @@ export default class BitJson extends AbstractBitJson {
   packageDependencies: {[string]: string};
 
   constructor({ 
-    name, box, impl, spec, compiler, tester, dependencies, packageDependencies
+    impl, spec, compiler, tester, dependencies, packageDependencies
   }: BitJsonProps) {
     super({ impl, spec, compiler, tester, dependencies });
-    this.name = name;
-    this.box = box;
     this.packageDependencies = packageDependencies || {};
   }
 
   toPlainObject() {
     const superObject = super.toPlainObject();
     return R.merge(superObject, {
-      name: this.name,
-      box: this.box,
       packageDependencies: this.getPackageDependencies()
     });
-  }
-
-  getBoxname(): string { 
-    return this.box;
-  }
-
-  getBitname(): string { 
-    return this.name;
   }
 
   getPackageDependencies(): Object {
@@ -92,8 +76,6 @@ export default class BitJson extends AbstractBitJson {
 
   validate() {
     if (
-      typeof this.getBoxname() !== 'string' ||
-      typeof this.getBitname() !== 'string' ||
       typeof this.getImplBasename() !== 'string' ||
       typeof this.compilerId !== 'string' ||
       typeof this.testerId !== 'string' ||
@@ -102,10 +84,8 @@ export default class BitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object): BitJson {
-    const { name, box, sources, env, dependencies, packageDependencies } = object;
+    const { sources, env, dependencies, packageDependencies } = object;
     return new BitJson({
-      name,
-      box,
       impl: R.prop('impl', sources),
       spec: R.prop('spec', sources),
       compiler: R.prop('compiler', env),
@@ -135,8 +115,6 @@ export default class BitJson extends AbstractBitJson {
         thisBJ = JSON.parse(fs.readFileSync(composePath(dirPath)).toString('utf8'));
       } catch (e) {} // eslint-disable-line
       
-      if (!R.prop('name', thisBJ)) thisBJ.name = path.basename(dirPath);
-      if (!R.prop('box', thisBJ)) thisBJ.box = path.basename(path.dirname(dirPath));
       const mergedBJ = this.mergeWithProto(thisBJ, protoBJ);
       return resolve(mergedBJ);
     });
@@ -148,9 +126,6 @@ export default class BitJson extends AbstractBitJson {
       thisBJ = JSON.parse(fs.readFileSync(composePath(dirPath)).toString('utf8'));
     } catch (e) {} // eslint-disable-line
     
-    if (!R.prop('name', thisBJ)) thisBJ.name = path.basename(dirPath);
-    if (!R.prop('box', thisBJ)) thisBJ.box = path.basename(path.dirname(dirPath));
-    const mergedBJ = this.mergeWithProto(thisBJ, protoBJ);
-    return mergedBJ;
+    return this.mergeWithProto(thisBJ, protoBJ);
   }
 }
