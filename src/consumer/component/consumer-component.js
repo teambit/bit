@@ -1,6 +1,5 @@
 /** @flow */
 import path from 'path';
-import fs from 'fs-extra';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
 import Impl from '../component/sources/impl';
@@ -13,6 +12,7 @@ import BitIds from '../../bit-id/bit-ids';
 import Environment from '../../scope/repositories/environment';
 import docsParser, { Doclet } from '../../jsdoc/parser';
 import specsRunner from '../../specs-runner';
+import SpecsResults from '../specs-results';
 import type { Results } from '../../specs-runner/specs-runner';
 
 import { 
@@ -21,8 +21,6 @@ import {
   DEFAULT_SPECS_NAME,
   DEFAULT_BIT_VERSION,
   NO_PLUGIN_TYPE,
-  DEFAULT_DIST_DIRNAME,
-  DEFAULT_BUNDLE_FILENAME
 } from '../../constants';
 
 export type ComponentProps = {
@@ -40,6 +38,7 @@ export type ComponentProps = {
   specs?: ?Specs|string,
   docs?: ?Doclet[],
   dist?: ?Dist,
+  specsResults?: ?SpecsResults,
 }
 
 export default class Component {
@@ -57,6 +56,7 @@ export default class Component {
   _specs: ?Specs|string;
   _docs: ?Doclet[];
   dist: ?Dist;
+  specsResults: ?SpecsResults;
 
   set impl(val: Impl) { this._impl = val; }
 
@@ -116,6 +116,7 @@ export default class Component {
     specs,
     docs,
     dist,
+    specsResults
   }: ComponentProps) {
     this.name = name;
     this.box = box || DEFAULT_BOX_NAME;
@@ -131,6 +132,7 @@ export default class Component {
     this._impl = impl;
     this._docs = docs;
     this.dist = dist;
+    this.specsResults = specsResults;
   }
 
   writeBitJson(bitDir: string): Promise<Component> {
@@ -162,7 +164,7 @@ export default class Component {
   runSpecs(scope: Scope): Promise<?Results> {
     function compileIfNeeded(
       condition: bool,
-      compiler: ?{ compile?: (string) => string },
+      compiler: ?{ compile?: (string) => { code: string } },
       src: string): ?string {
       if (!condition || !compiler || !compiler.compile) return src;
       return compiler.compile(src).code;
@@ -175,7 +177,11 @@ export default class Component {
       const implSrc = compileIfNeeded(!!this.compilerId, compiler, this.impl.src);
       // $FlowFixMe
       const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
-      return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc });
+      return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc })
+      .then((specsResults) => {
+        this.specsResults = SpecsResults.serialize(specsResults);
+        return specsResults;
+      });
     } catch (e) { return Promise.reject(e); }
   }
 
@@ -204,11 +210,12 @@ export default class Component {
       compilerId: this.compilerId ? this.compilerId.toString() : null,
       testerId: this.testerId ? this.testerId.toString() : null,
       dependencies: this.dependencies.toObject(),
-      packageDependencies: JSON.stringify(this.packageDependencies),
+      packageDependencies: this.packageDependencies,
       specs: this.specs ? this.specs.serialize() : null,
       impl: this.impl.serialize(),
       docs: this.docs,
       dist: this.dist ? this.dist.serialize() : null,
+      specsResults: this.specsResults ? this.specsResults.serialize() : null
     };
   }
 
@@ -232,6 +239,7 @@ export default class Component {
       specs,
       docs,
       dist,
+      specsResults
     } = object;
     
     return new Component({
@@ -244,11 +252,12 @@ export default class Component {
       compilerId: compilerId ? BitId.parse(compilerId) : null,
       testerId: testerId ? BitId.parse(testerId) : null,
       dependencies: BitIds.fromObject(dependencies),
-      packageDependencies: JSON.parse(packageDependencies),
+      packageDependencies,
       impl: Impl.deserialize(impl),
       specs: specs ? Specs.deserialize(specs) : null,
       docs,
       dist: dist ? Dist.deserialize(dist) : null,
+      specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null
     });
   }
 

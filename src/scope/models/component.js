@@ -13,6 +13,7 @@ import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
 import { Impl, Specs, Dist } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
+import SpecsResults from '../../consumer/specs-results';
 
 export type ComponentProps = {
   scope: string;
@@ -151,7 +152,9 @@ export default class Component extends BitObject {
               impl: new Impl(impl.toString()),
               specs: specs ? new Specs(specs.toString()) : null,
               docs: version.docs,
-              dist: dist ? new Dist(dist.toString()) : null
+              dist: dist ? new Dist(dist.toString()) : null,
+              specsResults: 
+                version.specsResults ? SpecsResults.deserialize(version.specsResults) : null, 
             });
           });
         });

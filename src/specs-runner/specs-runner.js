@@ -2,27 +2,7 @@
 import path from 'path';
 import { fork } from 'child_process';
 import Scope from '../scope/scope';
-
-export type ErrorObj = {
-  message: string,
-  stack: string,
-}
-
-export type Test = {
-  title: string,
-  pass: bool,
-  err: ?ErrorObj
-}
-
-export type Stats = {
-  start: string,
-  end: string
-}
-
-export type Results = {
- tests: Test[],
- stats: Stats
-}
+import { Results } from '../consumer/specs-results';
 
 export type Tester = {
   run: (filePath: string) => Promise<Results>;
@@ -61,8 +41,6 @@ function run({ scope, testerFilePath, implSrc, specsSrc }:
       removeTmpFiles();
       reject(e);
     });
-
-    // TODO - take care of more cases then error & messages
   });
 }
 
