@@ -1,28 +1,58 @@
+version: 1.0.{build}
+image: Visual Studio 2015
 environment:
+  token:
+    secure: 0a4USjGKxWeE8xz4tO5MnQ==
+  releaseUser:
+    secure: 0a4USjGKxWeE8xz4tO5MnQ==
+  releasePassword:
+    secure: tR01IIjMw35fBOFhTQd9jw==
+  repoUser:
+    secure: B5rIxIs4O8RRe0ml9e87+A==
+  repoPassword:
+    secure: ajxoh+tY0Qm/CVa6u66nmw==
+  ruby_version:
+    secure: k41GeNhYWLfPG/Fir8TGhA==
+  ENVIRONMENT:
+    secure: 0MX/69qK7Z1yjELPC8wOCw==
+  ReleaseServerDevelopment:
+    secure: UHrmNjH6IaU79OhRU9ina1f5jPX1EXBlsm9w+QfqWA/jNLPx4t+XMottVjJHZVtr
+  ReleaseServerStable:
+    secure: y7mz8E9mkcwCaCVvFs9WX+5k8jg+t8HwFpZhMYlYEfZhdnFH1U7gWCJTi+zVLiT9
   matrix:
-    - node_version: "6"
-    - node_version: "4"
-
-branches:
-  only:
-  - update
-  - /v[0-9]+(\.[0-9]+)*/
-
+  - ruby_version: Ruby23-x64
 install:
-  - ps: Install-Product node $env:node_version
-  - cmd: npm install
+- ps: >-
+    Install-Product node $env:6
 
+    $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
 build_script:
-  - cmd: npm run build
-  - ps: ./scripts/build-dist.ps1
-  - ps: ./scripts/build-windows-installer.bat
+- ps: >-
+    mv .\package.json .\package.json.bak
 
+    Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Set-Content package.json
+
+    .\scripts\build-dist.ps1
+
+    .\scripts\build-windows-installer.bat
+test_script:
+- ps: >-
+    npm install -g
+
+    bit init
+
+    bit create test
 artifacts:
-  - path: artifacts/*.msi
-    name: Installer
+- path: distribution/windows/artifacts/*.msi
+  name: Installer
+- path: artifacts\bit.${VERSION}.nupkg
+  name: nupkg
+deploy_script:
+- ps: >-
+    $VERSION= $(node -p -e "require('./package.json').version")
 
-cache:
- - node_modules
- - "%LOCALAPPDATA%/Bit"
+    .\scripts\deploy-windows.ps1 -Repo bit-msi -File bit-${VERSION}-unsigned.msi -Source artifacts\bit-${VERSION}-unsigned.msi -ENVIRONMENT development -ReleaseServer $env:ReleaseServerDevelopment -Method msi
 
+    .\scripts\build-chocolatey.ps1
 
+    .\scripts\deploy-windows.ps1 -Repo bit-nuget -File bit.${VERSION}.nupkg -Source artifacts\bit.${VERSION}.nupkg -ENVIRONMENT development -ReleaseServer $env:ReleaseServerDevelopment -Method nupkg
