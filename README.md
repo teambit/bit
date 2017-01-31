@@ -12,7 +12,7 @@
 </p>
 ---
 
-Bit is a distributed, language-agnostic and fast code component manager designed for easy use, maintenance and discovery of code components.
+Bit is a distributed, fast and language-agnostic code component manager designed for easy use, maintenance and discovery of code components.
 
 **Easily reuse code components:** Bit is an open source tool for fast and easy extraction and reuse of code components. No more code duplications, no more micro-packages.
 
