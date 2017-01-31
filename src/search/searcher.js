@@ -3,6 +3,16 @@ import serverlessIndex from './serverless-index';
 import indexer from './indexer';
 import type Doc from './indexer';
 
+const boost = {
+  box: 3,
+  tokenizedBox: 2,
+  name: 5,
+  tokenizedName: 4,
+  functionNames: 2,
+  tokenizedFunctionNames: 2,
+  minDescription: 1
+};
+
 function totalHits(index: Promise<any>, query: string) {
   return new Promise((resolve, reject) => {
     return index.then((indexInstance) => {
@@ -41,23 +51,26 @@ function formatSearchResult(doc: Doc): string {
   return `> ${doc.box}/${doc.name}`;
 }
 
-function queryItem(field, query, boost = 1) {
-  return {
-    AND: { [field]: query.toLowerCase().split(' ') },
-    BOOST: boost
+function queryItem(field, queryStr): Object {
+  const query = {
+    AND: { [field]: queryStr.toLowerCase().split(' ') },
+    BOOST: boost[field],
+    NOT: {}
   };
+  
+  return query;
 }
 
-function buildQuery(queryStr: string) {
+function buildQuery(queryStr: string): Array<Object> {
   const tokenizedQuery = indexer.tokenizeStr(queryStr);
   const query = [];
-  query.push(queryItem('box', queryStr, 4));
-  query.push(queryItem('tokenizedBox', queryStr, 3));
-  query.push(queryItem('name', queryStr, 4));
-  query.push(queryItem('tokenizedName', tokenizedQuery, 3));
-  query.push(queryItem('functionNames', queryStr, 3));
-  query.push(queryItem('tokenizedFunctionNames', tokenizedQuery, 2));
-  query.push(queryItem('description', queryStr));
+  query.push(queryItem('box', queryStr));
+  query.push(queryItem('tokenizedBox', queryStr));
+  query.push(queryItem('name', queryStr));
+  query.push(queryItem('tokenizedName', tokenizedQuery));
+  query.push(queryItem('functionNames', queryStr));
+  query.push(queryItem('tokenizedFunctionNames', tokenizedQuery));
+  query.push(queryItem('minDescription', queryStr));
   return query;
 }
 

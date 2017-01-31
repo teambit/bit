@@ -12,13 +12,23 @@ export type Doc = {
   tokenizedBox: string,
   functionNames: string,
   tokenizedFunctionNames: string,
-  description: string
+  description: string,
+  minDescription: string
 };
 
 let localIndex;
 
 function tokenizeStr(str: string): string {
   return str.trim().split(/(?=[A-Z])/).join(' ').toLowerCase().split(/ |_|-/).join(' ');
+}
+
+/**
+ * returns the first sentence of the description. 
+ * @param {string} desc
+ * @return {string}
+ */
+function minimizeDescription(desc: string = ''): string {
+  return desc.split(/\.|;/)[0]; // split by a dot or a semicolon
 }
 
 function prepareDoc(docs: Object, component: Component): Doc {
@@ -28,12 +38,14 @@ function prepareDoc(docs: Object, component: Component): Doc {
   return {
     id: `${box}_${name}`,
     name,
-    tokenizedName: tokenizeStr(name),
     box,
+    tokenizedNameExtra: tokenizeStr(name), // TODO: remove it when possible
+    tokenizedName: tokenizeStr(name),
     tokenizedBox: tokenizeStr(box),
     functionNames,
     tokenizedFunctionNames: tokenizeStr(functionNames),
-    description: docs.map(doc => doc.description).join(' ')
+    description: docs.map(doc => doc.description).join(' '),
+    minDescription: docs.map(doc => minimizeDescription(doc.description)).join(' ')
   };
 }
 

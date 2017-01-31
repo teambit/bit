@@ -19,7 +19,8 @@ function deleteDb(scopePath: string) {
 function initializeIndex(scopePath: string): Promise<any> {
   const indexOptions = {
     indexPath: getIndexPath(scopePath),
-    logLevel
+    logLevel,
+    stopwords: []
   };
 
   if (!initializeIndex.index) { // static var to make sure the index is not instantiated twice
