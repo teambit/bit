@@ -47,7 +47,7 @@ FPM="fpm --input-type dir --chdir . --name bit --version $VERSION "`
 
 #### Build DEB (Debian, Ubuntu) package
 node ../../scripts/set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/usr/share/bit/package.json deb
-eval "$FPM --output-type deb  --architecture noarch -p ../../distribution/ --depends nodejs --category 'Development/Languages' ."
+eval "$FPM --output-type deb  --architecture noarch -p ../../distribution/ --depends nodejs  --depends gcc --depends make --category 'Development/Languages' ."
 #mv $PACKAGE_DIST/$BIT_PACKAGE_NAME $PACKAGE_DIST/
 
 
@@ -59,7 +59,7 @@ FPM="fpm --input-type dir --chdir . --name bit --version $VERSION "`
 
 #### Build RPM (Debian, Ubuntu) package
 node ../../scripts/set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/usr/share/bit/package.json deb
-eval "$FPM --output-type rpm  --architecture noarch -p ../../distribution/ --depends nodejs  --category 'Development/Languages' ."
+eval "$FPM --output-type rpm  --architecture noarch -p ../../distribution/ --depends nodejs   --depends gcc --depends make --category 'Development/Languages' ."
 #mv $PACKAGE_DIST/*.rpm $PACKAGE_DIST/
 
 

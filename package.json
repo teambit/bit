@@ -69,5 +69,5 @@
     "gulp-sourcemaps": "^2.2.0",
     "gulp-sync": "^0.1.4"
   },
-  "installationMethod": "npm"
+  "installationMethod": "tar"
 }
