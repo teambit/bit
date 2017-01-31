@@ -115,8 +115,17 @@ export default class BitJson extends AbstractBitJson {
     });
   }
 
+  static mergeWithProto(json, protoBJ: ?ConsumerBitJson): BitJson {
+    const plainProtoBJ = protoBJ ? protoBJ.toPlainObject() : {};
+    delete plainProtoBJ.dependencies;
+
+    return BitJson.fromPlainObject(
+      R.merge(json, plainProtoBJ)
+    );
+  }
+
   static create(json = {}, protoBJ: ConsumerBitJson) {
-    return BitJson.fromPlainObject(R.merge(json, protoBJ.toPlainObject()));
+    return this.mergeWithProto(json, protoBJ);
   }
 
   static load(dirPath: string, protoBJ?: ConsumerBitJson) {
@@ -128,8 +137,8 @@ export default class BitJson extends AbstractBitJson {
       
       if (!R.prop('name', thisBJ)) thisBJ.name = path.basename(dirPath);
       if (!R.prop('box', thisBJ)) thisBJ.box = path.basename(path.dirname(dirPath));
-      const mergedBJ = R.merge(protoBJ ? protoBJ.toPlainObject() : {}, thisBJ);
-      return resolve(BitJson.fromPlainObject(mergedBJ));
+      const mergedBJ = this.mergeWithProto(thisBJ, protoBJ);
+      return resolve(mergedBJ);
     });
   }
 
@@ -141,7 +150,7 @@ export default class BitJson extends AbstractBitJson {
     
     if (!R.prop('name', thisBJ)) thisBJ.name = path.basename(dirPath);
     if (!R.prop('box', thisBJ)) thisBJ.box = path.basename(path.dirname(dirPath));
-    const mergedBJ = R.merge(protoBJ ? protoBJ.toPlainObject() : {}, thisBJ);
-    return BitJson.fromPlainObject(mergedBJ);
+    const mergedBJ = this.mergeWithProto(thisBJ, protoBJ);
+    return mergedBJ;
   }
 }
