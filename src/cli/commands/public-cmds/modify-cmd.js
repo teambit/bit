@@ -9,9 +9,11 @@ export default class Modify extends Command {
   description = 'modify a component (transfer to the inline directory for modification)';
   alias = 'm';
   opts = [];
-  
+  loader = { autoStart: false, text: 'importing components' };
+
   action([id, ]: [string, ]): Promise<Bit> {
-    return modify(id)
+    const loader = this.loader;
+    return modify({ id, loader })
     .then((component) => {
       return {
         name: component.name,
