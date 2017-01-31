@@ -40,7 +40,7 @@ node  {
 
     stage ("upload repo scripts")
     sh("gsutil -m cp -a public-read repos/bitsrc.repo  gs://bit-assets/")
-
+    sh("curl -X PURGE http://assets.bitsrc.io/bitsrc.repo")
     
 }
 
