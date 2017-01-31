@@ -45,7 +45,7 @@ def notifyReleaseServer(version,packageUrl,method) {
                   file: "${packageUrl}")
     print(payload)
 
-    def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${env.BIT_PROD_SERVER} + "/update" -u ${releaseServerToken}"
+    def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${env.BIT_PROD_SERVER}/update -u ${releaseServerToken}"
     print ("${post}")
     sh ("${post}")
 }
