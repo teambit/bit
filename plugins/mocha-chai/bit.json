@@ -13,6 +13,6 @@
     "packageDependencies": {
         "mocha": "^3.2.0",
         "chai": "^3.5.0",
-        "bit-node":"^0.1.2"
+        "bit-js":"^0.1.3"
     }
 }
