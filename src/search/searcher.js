@@ -52,13 +52,10 @@ function formatSearchResult(doc: Doc): string {
 }
 
 function queryItem(field, queryStr): Object {
-  const query = {
+  return {
     AND: { [field]: queryStr.toLowerCase().split(' ') },
     BOOST: boost[field],
-    NOT: {}
   };
-  
-  return query;
 }
 
 function buildQuery(queryStr: string): Array<Object> {
@@ -74,19 +71,52 @@ function buildQuery(queryStr: string): Array<Object> {
   return query;
 }
 
+/**
+ * Sort by the length of the name
+ * @param {Array<Doc>} results
+ * @return {Array<Doc>}
+ */
+function sortSearchResults(results: Array<Doc>): Array<Doc> {
+  return results.sort((a, b) => a.name.length > b.name.length);
+}
+
+/**
+ * Search in a local index.
+ * 
+ * When a string is found in more than one field, and these fields don't have the same boost,
+ * the search-engine picks the boost of one of them randomly.
+ * For example, the search term "object" is in the 'name' and the 'description' fields. The
+ * search-engine might use the boost for the 'name', which is 4. But it also might use the boost
+ * for the 'description', which is 1.
+ * To workaround this issue, the search results are sorted manually after receiving them from the search engine.
+ * 
+ * The sort algorithm is as follows: 
+ * Results that have a match with the 'name' field, are the most relevant, and therefore are first.
+ * Among them, the shorter the name the most relevant it is. 
+ * Other results, that is, results with a match of fields such as 'description', will be last.
+ * 
+ * @param {string} queryStr
+ * @param {string} path
+ * @return {Promise}
+ */
 function search(queryStr: string, path: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const index = serverlessIndex.initializeIndex(path);
-    const searchResults = [];
+    const searchResultsName = [];
+    const searchResultsOthers = [];
     const query = buildQuery(queryStr);
     return index.then((indexInstance) => {
       indexInstance.search({
         query,
       }).on('data', function (data) {
-        searchResults.push(formatSearchResult(data.document));
+        if (data.document.name.toLowerCase().includes(queryStr)) searchResultsName.push(data.document);
+        else searchResultsOthers.push(data.document);
       }).on('end', function () {
-          return resolve(JSON.stringify(searchResults));
-        });
+        const sortedResults = sortSearchResults(searchResultsName);
+        const searchResults = sortedResults.concat(searchResultsOthers);
+        const formattedResults = searchResults.map(formatSearchResult);
+        return resolve(JSON.stringify(formattedResults));
+      });
     });
   });
 }
