@@ -117,12 +117,15 @@ export const paintDocumentation = (docs) => {
       return `${arg.type} -> ${arg.description}`;
     };
 
-    docsTable.push(
-      { [c.cyan('Name')]: name },
+    const rows = [
+      name ? { [c.cyan('Name')]: name } : null,
       { [c.cyan('Description')]: description },
       { [c.cyan('Args')]: `(${args.map(painArg).join(', ')})` },
       { [c.cyan('Returns')]: painDescription(returns) }
-    );
+    ].filter(x => x);
+
+    docsTable.push(...rows);
+
     return docsTable + paintExamples(doc.examples);
   };
   
