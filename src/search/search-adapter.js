@@ -12,7 +12,7 @@ function searchLocally(queryStr: string, reindex: boolean = false): Promise<any>
       loadConsumer()
         .then(consumer => {
           scopePath = consumer.scope.path;
-          return consumer.scope.list();
+          return consumer.scope.listStage();
         })
         .then((components) => {
           return indexer.indexAll(scopePath, components);
@@ -52,7 +52,7 @@ function scopeSearch(path: string, query: string, reindex: boolean): Promise<any
     if (reindex) {
       loadScope(path)
         .then(scope => {
-          return scope.list();
+          return scope.listStage();
         })
         .then((components) => {
           return indexer.indexAll(path, components);

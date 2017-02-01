@@ -19,7 +19,6 @@ export default function list({ scopeName, loader }:
       );
     }
 
-    return scope.objects.list()
-      .then(components => scope.toConsumerComponents(components));
+    return scope.listStage();
   });
 }

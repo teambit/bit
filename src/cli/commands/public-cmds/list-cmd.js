@@ -23,7 +23,8 @@ export default class List extends Command {
       return listScope({ scopeName, loader });
     }
 
-    return list().then(components => ({
+    return list()
+    .then(components => ({
       components,
       scope: scopeName,
       inline

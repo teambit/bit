@@ -94,8 +94,8 @@ export default class Scope {
     );
   }
 
-  list() {
-    return this.objects.list()
+  list() { // @Deprecated
+    return this.objects.list() // @TODO - check version and cross check them with components
       .then(components => this.toConsumerComponents(components));
   }
 
