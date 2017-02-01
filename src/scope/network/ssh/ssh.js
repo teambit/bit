@@ -2,7 +2,7 @@
 import R from 'ramda';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
-import { RemoteScopeNotFound, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
+import { RemoteScopeNotFound, NetworkError, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
 import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, fromBase64 } from '../../../utils';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
@@ -77,7 +77,13 @@ export default class SSH {
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
     return this.exec('_put', componentObjects.toString())
-      .then((str: string) => ComponentObjects.fromString(fromBase64(str)));
+      .then((str: string) => {
+        try {
+          return ComponentObjects.fromString(fromBase64(str));
+        } catch (err) {
+          throw new NetworkError(str);
+        }
+      });
   }
 
   describeScope(): Promise<ScopeDescriptor> {

@@ -7,6 +7,7 @@ import BitAlreadyExistExternaly from '../consumer/component/exceptions/bit-alrea
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import ComponentNotFound from '../scope/exceptions/component-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
+import NetworkError from '../scope/network/exceptions/network-error';
 import UnexpectedNetworkError from '../scope/network/exceptions/unexpected-network-error';
 import MissingImpl from '../consumer/component/exceptions/missing-impl';
 import MergeConflict from '../scope/exceptions/merge-conflict';
@@ -28,6 +29,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ ComponentNotFound, err => `fatal: component with id ${chalk.bold(err.id.toString())} was not found`],
   [ PermissionDenied, () => 'fatal: permission to scope was denied'],
   [ RemoteNotFound, err => `fatal: remote '${chalk.bold(err.name)}' was not found`],
+  [ NetworkError, err => `fatal: remote failed with error: '${chalk.bold(err.remoteErr)}'`],
   [ MergeConflict, () => 'fatal: merge conflict'],
   [ UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
   [ ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`']
