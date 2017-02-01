@@ -110,8 +110,13 @@ export default class Scope {
     
   }
 
-  put(consumerComponent: ConsumerComponent, message: string): Promise<ComponentDependencies> {
+  put(consumerComponent: ConsumerComponent, message: string, loader: ?any): Promise<ComponentDependencies> {
     consumerComponent.scope = this.name;
+    if (loader) {
+      loader.text = 'importing components';
+      loader.start();
+    }
+
     const dependenciesP = this.importMany(consumerComponent.dependencies);
     const ensureEnvironmentP = this.ensureEnvironment({
       testerId: consumerComponent.testerId,
@@ -122,8 +127,9 @@ export default class Scope {
       .then(([dependencies, ]) => {
         return flattenDependencyIds(dependencies, this.objects)
           .then((depIds) => {
-            return this.sources.addSource(consumerComponent, depIds, message)
+            return this.sources.addSource(consumerComponent, depIds, message, loader)
               .then((component) => {
+                if (loader) { loader.text = 'persisting data'; }
                 return this.objects.persist()
                   .then(() => component.toVersionDependencies(LATEST, this, this.name))
                   .then(deps => deps.toConsumer(this.objects));

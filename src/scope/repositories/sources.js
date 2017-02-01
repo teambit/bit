@@ -74,7 +74,7 @@ export default class SourceRepository {
       });
   }
 
-  addSource(source: consumerComponent, flattenedDeps: BitId[], message: string):
+  addSource(source: consumerComponent, flattenedDeps: BitId[], message: string, loader: ?any):
   Promise<Component> {
     const objectRepo = this.objects();
 
@@ -93,6 +93,7 @@ export default class SourceRepository {
         const username = globalConfig.getSync(USER_NAME_KEY);
         const email = globalConfig.getSync(USER_EMAIL_KEY);
 
+        if (loader) { loader.text = 'running specs'; }
         return source.runSpecs(this.scope)
         .then((specsResults) => {
           const version = Version.fromComponent({

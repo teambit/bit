@@ -178,10 +178,10 @@ export default class Consumer {
     }));
   }
 
-  commit(id: BitInlineId, message: string) {
+  commit(id: BitInlineId, message: string, loader: any) {
     return this.loadComponent(id)
       .then(bit => 
-        this.scope.put(bit, message)
+        this.scope.put(bit, message, loader)
         .then(bits => this.writeToComponentsDir([bits]))
         .then(() => this.removeFromInline(id))
         .then(() => bit)

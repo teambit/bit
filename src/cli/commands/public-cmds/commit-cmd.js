@@ -8,9 +8,11 @@ export default class Export extends Command {
   description = 'commit a component to the local scope and add a log message';
   alias = 'c';
   opts = [];
+  loader = { autoStart: false, text: 'importing components' };
 
   action([id, message]: [string, string]): Promise<any> {
-    return commitAction({ id, message });
+    const loader = this.loader;
+    return commitAction({ id, message, loader });
   }
 
   report(c: Component): string {
