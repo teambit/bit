@@ -1,7 +1,9 @@
 /** @flow */
 import c from 'chalk';
+import Table from 'cli-table';
 import { formatter } from '../jsdoc';
 import SpecsResults from '../consumer/specs-results/specs-results';
+import ConsumerComponent from '../consumer/component/consumer-component';
 
 export const formatInlineBit = ({ box, name }: any): string => 
 c.white('     > ') + c.cyan(`${box}/${name}`);
@@ -65,4 +67,18 @@ const paintStats = (results) => {
 
 export const paintSpecsResults = (results: SpecsResults) => {
   return paintStats(results) + results.tests.map(paintTest).join('\n');
+};
+
+export const listToTable = (components: ConsumerComponent[]) => {
+  const table = new Table({
+    head: [c.cyan('Box'), c.cyan('Component'), c.cyan('Version')],
+    colWidths: [16, 30, 9],
+  });
+
+  function tablizeComponent(component) {
+    return [component.box, component.name, component.version]; // Add date, author 
+  }
+
+  table.push(...components.map(tablizeComponent));
+  return table.toString();
 };

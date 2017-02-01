@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { listInline, listScope } from '../../../api/consumer';
 import Component from '../../../consumer/component';
-import { formatBit, paintHeader } from '../../chalk-box';
+import { paintHeader, listToTable } from '../../chalk-box';
 
 export default class List extends Command {
   name = 'list [scope]';
@@ -37,19 +37,16 @@ export default class List extends Command {
     inline: ?bool
   }): string {
     function decideHeaderSentence() {
-      if (inline) return 'inline_components directory';
-      if (!scope) return 'local scope';
-      return `the scope ${scope}`;
+      if (inline) return `Total ${components.length} components in inline directory`;
+      if (!scope) return `Total ${components.length} components in local scope`;
+      return `Total ${components.length} components in ${scope}`;
     }
 
     if (R.isEmpty(components)) {
       return chalk.red(`${decideHeaderSentence()} is empty`);  
     }
-
-    return R.prepend(
-      paintHeader(decideHeaderSentence()),
-      components.map(formatBit)
-    ).join('\n');
+    
+    return paintHeader(decideHeaderSentence()) + listToTable(components);
   }
 
 }
