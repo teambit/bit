@@ -189,7 +189,7 @@ export default class Component {
         const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
         return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc })
         .then((specsResults) => {
-          this.specsResults = SpecsResults.serialize(specsResults);
+          this.specsResults = SpecsResults.deserialize(specsResults);
           return specsResults;
         });
       } catch (e) { return Promise.reject(e); }
