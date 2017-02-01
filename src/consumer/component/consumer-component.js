@@ -14,6 +14,7 @@ import docsParser, { Doclet } from '../../jsdoc/parser';
 import specsRunner from '../../specs-runner';
 import SpecsResults from '../specs-results';
 import type { Results } from '../../specs-runner/specs-runner';
+import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 
 import { 
   DEFAULT_BOX_NAME,
@@ -190,6 +191,10 @@ export default class Component {
         return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc })
         .then((specsResults) => {
           this.specsResults = SpecsResults.createFromRaw(specsResults);
+          if (!this.specsResults.pass) {
+            return Promise.reject(new ComponentSpecsFailed());
+          }
+
           return this.specsResults;
         });
       } catch (e) { return Promise.reject(e); }

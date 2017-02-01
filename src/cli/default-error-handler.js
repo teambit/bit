@@ -14,6 +14,7 @@ import MergeConflict from '../scope/exceptions/merge-conflict';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import { ScopeNotFound } from '../scope/exceptions';
 import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
+import ComponentSpecsFailed from '../consumer/exceptions/component-specs-failed';
 
 const chalk = require('chalk');
 
@@ -32,7 +33,8 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ NetworkError, err => `fatal: remote failed with error: '${chalk.bold(err.remoteErr)}'`],
   [ MergeConflict, () => 'fatal: merge conflict'],
   [ UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
-  [ ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`']
+  [ ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init --bare`'],
+  [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit']
 ];
 
 export default (err: Error): ?string => {
