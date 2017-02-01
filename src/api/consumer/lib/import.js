@@ -9,7 +9,7 @@ export default function importAction(
   return loadConsumer()
     .then((consumer) => {
       if (tester || compiler) { 
-        loader.text = 'importing Environment component';
+        loader.text = 'importing environment dependencies...';
         loader.start();
 
         return consumer.importEnvironment(bitId)
