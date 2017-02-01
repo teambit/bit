@@ -32,6 +32,14 @@ Bit currently supports JavaScript. We plan to add drivers for more languages as 
 * **On-export dependency resolution.** All dependencies are kept with your component, to keep components immutable while downloading.
 * **Distributed.** Multiple backups, works offline and supports any workflow.
 
+## Getting Started
+
+1. [Install instructions](https://github.com/teambit/bit/wiki/Install).
+
+2. [Quick getting started manual](https://github.com/teambit/bit/wiki/Getting-Started)
+
+Head over to Bit's [wiki pages](https://github.com/teambit/bit/wiki) for more information.
+
 ## Contributing to Bit
 
 Contributions are always welcome, no matter how large or small. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
