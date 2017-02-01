@@ -1,8 +1,12 @@
 /** @flow */
 import cliSpinners from 'cli-spinners';
+import os from 'os';
+import path from 'path';
+
 const userHome = require('user-home');
 const packageFile = require('../package.json');
-const path = require('path');
+
+const isWindows = os.platform() === 'win32';
 
 function getDirectory(): string {
   if (process.platform === 'win32' && process.env.LOCALAPPDATA) {
@@ -78,7 +82,7 @@ export const USER_EMAIL_KEY = 'user.email';
 
 export const USER_NAME_KEY = 'user.name';
 
-export const SPINNER_TYPE = cliSpinners.dots12;
+export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
 
 /**
  * cache root directory
