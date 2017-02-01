@@ -14,17 +14,22 @@ export default function importAction(
 
         return consumer.importEnvironment(bitId)
         .then((component) => {
-          if (save && compiler) {
-            consumer.bitJson.compilerId = bitId;
-            return consumer.bitJson.write({ bitDir: consumer.getPath() });
-          }
+          function writeToBitJsonIfNeeded() {
+            if (save && compiler) {
+              consumer.bitJson.compilerId = bitId;
+              return consumer.bitJson.write({ bitDir: consumer.getPath() });
+            }
 
-          if (save && tester) {
-            consumer.bitJson.testerId = bitId;
-            return consumer.bitJson.write({ bitDir: consumer.getPath() });
-          }
+            if (save && tester) {
+              consumer.bitJson.testerId = bitId;
+              return consumer.bitJson.write({ bitDir: consumer.getPath() });
+            }
 
-          return Promise.resolve(component);
+            return Promise.resolve(true);
+          }
+          
+          return writeToBitJsonIfNeeded()
+          .then(() => component);
         })
         .then(component => [component]);
       }
