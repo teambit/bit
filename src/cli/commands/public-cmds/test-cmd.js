@@ -3,6 +3,7 @@ import Command from '../../command';
 import { testInline } from '../../../api/consumer';
 import { testInScope } from '../../../api/scope';
 import type { Results } from '../../../specs-runner/specs-runner';
+import { paintSpecsResults } from '../../chalk-box';
 
 export default class Test extends Command {
   name = 'test <id>';
@@ -26,10 +27,9 @@ export default class Test extends Command {
 
   report({ res, inline }: { res: Results, inline: ?bool }): string {
     if (res) {
-      console.log(res);
-      return 'tests pass';
+      return paintSpecsResults(res);
     }
 
-    return 'no results...';
+    return 'coudn\'t get results results...';
   }
 }
