@@ -7,7 +7,7 @@ import { put } from '../../../api/scope';
 export default class Put extends Command {
   name = '_put <path> <objects>';
   private = true;
-  description = 'upload a bit to a scope';
+  description = 'upload a component to a scope';
   alias = '';
   opts = [];
   

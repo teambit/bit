@@ -22,6 +22,6 @@ export default class Create extends Command {
     const name = component.name;
     const box = component.box;
 
-    return chalk.green(`created bit "${name}" in box "${box}"`);
+    return chalk.green(`created component "${name}" in box "${box}"`);
   }
 }

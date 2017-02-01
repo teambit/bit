@@ -6,7 +6,7 @@ import { searchAdapter } from '../../../search';
 export default class Search extends Command {
   name = '_search <path> <query> <reindex>';
   private = true;
-  description = 'search for bits on a remote scope';
+  description = 'search for components on a remote scope';
   alias = '';
   opts = [];
 

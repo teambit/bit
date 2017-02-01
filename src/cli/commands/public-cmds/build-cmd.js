@@ -10,7 +10,7 @@ export default class Build extends Command {
   description = 'uses the compiler defined in the bit.json in order to return the compiled version of the component';
   alias = '';
   opts = [
-    ['i', 'inline', 'create a compiled file on an inline bit (dist/dist.js)']
+    ['i', 'inline', 'create a compiled file on an inline component (dist/dist.js)']
   ];
   
   action([id]: string[], { inline }: { inline: ?bool }): Promise<any> {

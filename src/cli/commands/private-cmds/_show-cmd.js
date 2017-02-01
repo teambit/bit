@@ -7,7 +7,7 @@ import { scopeShow } from '../../../api/scope';
 export default class _Show extends Command {
   name = '_show <path> <id>';
   private = true;
-  description = 'show a specific bit on scope';
+  description = 'show a specific component on scope';
   alias = '';
   opts = [];
   

@@ -7,12 +7,12 @@ import { formatBit, paintHeader } from '../../chalk-box';
 
 export default class Import extends Command {
   name = 'import [ids]';
-  description = 'import a bit-component';
+  description = 'import a component';
   alias = 'i';
   opts = [
     ['s', 'save', 'save into bit.json'],
-    ['t', 'tester', 'import a tester environment bit-component'],
-    ['c', 'compiler', 'import a compiler environment bit-component']
+    ['t', 'tester', 'import a tester environment component'],
+    ['c', 'compiler', 'import a compiler environment component']
   ];
   loader = { autoStart: false, text: 'importing components' };
 
@@ -38,7 +38,7 @@ export default class Import extends Command {
     if (R.isEmpty(components)) { return 'done'; }
     return immutableUnshift(
       components.map(formatBit),
-      paintHeader('imported the following bits:')
+      paintHeader('imported the following components:')
     ).join('\n');
   }
 }

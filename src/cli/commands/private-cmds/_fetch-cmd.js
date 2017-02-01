@@ -8,7 +8,7 @@ import { pack } from '../../cli-utils';
 export default class Fetch extends Command {
   name = '_fetch <path> <ids...>';
   private = true;
-  description = 'fetch bit components(s) from a scope';
+  description = 'fetch components(s) from a scope';
   alias = '';
   opts = [
     ['n', 'no-dependencies', 'do not include component dependencies']

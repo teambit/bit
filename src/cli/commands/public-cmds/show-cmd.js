@@ -6,10 +6,10 @@ import ConsumerComponent from '../../../consumer/component';
 
 export default class Show extends Command {
   name = 'show <id>';
-  description = 'show a bit';
+  description = 'show a component';
   alias = '';
   opts = [
-    ['i', 'inline', 'show inline bit']
+    ['i', 'inline', 'show inline component']
   ];
   loader = { autoStart: false, text: 'fetching remote component' };
 
@@ -25,7 +25,7 @@ export default class Show extends Command {
   }
 
   report(component: ?ConsumerComponent): string {
-    if (!component) return 'could not find the requested bit';
+    if (!component) return 'could not find the requested component';
     const { name, box, compilerId, testerId, dependencies, packageDependencies, docs } = component;
 
     return paintHeader(`${box}/${name}`) +

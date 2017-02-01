@@ -5,7 +5,7 @@ import { searchAdapter } from '../../../search';
 
 export default class Search extends Command {
   name = 'search [query...]';
-  description = 'search for bits';
+  description = 'search for components';
   alias = '';
   opts = [
     ['s', 'scope <scopename>', 'search in scope'],
@@ -23,7 +23,7 @@ export default class Search extends Command {
       return searchAdapter.searchRemotely(queryStr, scope, reindex);
     }
     
-    console.log(`searching bits in ${scope ? scope : 'local scope'} for "${queryStr}"`);
+    console.log(`searching components in ${scope ? scope : 'local scope'} for "${queryStr}"`);
     return searchAdapter.searchLocally(queryStr, reindex);
   }
 

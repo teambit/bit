@@ -11,7 +11,7 @@ export default class List extends Command {
   description = 'list all scope components';
   alias = 'ls';
   opts = [
-    ['i', 'inline', 'in inline bit']
+    ['i', 'inline', 'in inline components']
   ];
   loader = { autoStart: false, text: 'listing remote components' };
 

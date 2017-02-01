@@ -19,13 +19,13 @@ const chalk = require('chalk');
 
 const errorsMap: [[Error, (err: Error) => string]] = [ 
   [ ConsumerNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`' ],
-  [ BitNotFound, () => 'fatal: bit not found. to create a new bit, please use `bit create {bitName}`' ],
-  [ BitAlreadyExistExternaly, err => `fatal: bit "${err.bitName}" already exists in the external library try "bit modify ${err.bitName}" to modify the current bit or "bit create -f ${err.bitName}"!`],
+  [ BitNotFound, () => 'fatal: component not found. to create a new bit, please use `bit create {bitName}`' ],
+  [ BitAlreadyExistExternaly, err => `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${err.bitName}" to modify the current component or "bit create -f ${err.bitName}"!`],
   [ PluginNotFound, err => `fatal: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`],
   [ MissingImpl, err => `fatal: The impl file in path "${err.implPath}" does not exist, please check the bit.json or implementation file`],
   [ ProtocolNotSupported, () => 'fatal: remote scope protocol is not suppoerted, please use: `ssh://`, `file://` or `bit://`'],
   [ RemoteScopeNotFound, () => 'fatal: remote scope not found. to create a new scope, please use `bit init --bare` in the remote destination'],
-  [ InvalidBitId, () => 'fatal: bit component ID is invalid, please use the following format: <scope>/[box]/<name>'],
+  [ InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: <scope>/[box]/<name>'],
   [ ComponentNotFound, err => `fatal: component with id ${chalk.bold(err.id.toString())} was not found`],
   [ PermissionDenied, () => 'fatal: permission to scope was denied'],
   [ RemoteNotFound, err => `fatal: remote '${chalk.bold(err.name)}' was not found`],
