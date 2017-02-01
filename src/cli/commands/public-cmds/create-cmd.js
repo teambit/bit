@@ -8,7 +8,7 @@ const chalk = require('chalk');
 export default class Create extends Command {
   name = 'create <id>';
   description = 'create a new component';
-  alias = 'c';
+  alias = 'cr';
   opts = [
     ['s', 'specs', 'create specs file automatically'],
     ['j', 'json', 'create bit.json file automatically']
