@@ -142,6 +142,42 @@ describe('JSDoc Parser', () => {
         expect(doclet).to.have.property('args').that.is.an('array').that.have.lengthOf(2);
       });
     });
+
+    describe('Various Param Types', () => {
+      let args;
+      before(function() {
+        const file = path.join(__dirname, 'fixtures', 'variousParamTypes.js');
+        const doclets = parser(fs.readFileSync(file).toString());
+        expect(doclets).to.be.an('array').and.to.have.lengthOf(1);
+        const doclet = doclets[0];
+        expect(doclet).to.have.property('args').that.is.an('array').that.is.not.empty;
+        args = doclet.args;
+      });
+      it('should recognize "*" as "any"', () => {
+        const anyArg = args.find(arg => arg.name === 'anyType');
+        expect(anyArg.type).to.equal('any');
+      });
+      it('should recognize "[]" as "array"', () => {
+        const anyArg = args.find(arg => arg.name === 'arrayType');
+        expect(anyArg.type).to.equal('Array');
+      });
+      it('should recognize Union type correctly', () => {
+        const anyArg = args.find(arg => arg.name === 'unionType');
+        expect(anyArg.type).to.equal('number|Array');
+      });
+      it('should recognize custom type correctly', () => {
+        const anyArg = args.find(arg => arg.name === 'myCustomType');
+        expect(anyArg.type).to.equal('CustomType');
+      });
+      it('should recognize Object type', () => {
+        const anyArg = args.find(arg => arg.name === 'objectType');
+        expect(anyArg.type).to.equal('Object');
+      });
+      it('should recognize Funcion type', () => {
+        const anyArg = args.find(arg => arg.name === 'functionType');
+        expect(anyArg.type).to.equal('Function');
+      });
+    });
   });
 });
 
