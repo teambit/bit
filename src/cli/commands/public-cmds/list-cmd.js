@@ -43,7 +43,7 @@ export default class List extends Command {
     }
 
     if (R.isEmpty(components)) {
-      return chalk.red(`${decideHeaderSentence()} is empty`);  
+      return chalk.white(`${decideHeaderSentence()}`);  
     }
     
     return paintHeader(decideHeaderSentence()) + listToTable(components);

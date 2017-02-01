@@ -1,5 +1,6 @@
 /** @flow */
 import c from 'chalk';
+import R from 'ramda';
 import Table from 'cli-table';
 import { formatter } from '../jsdoc';
 import SpecsResults from '../consumer/specs-results/specs-results';
@@ -71,14 +72,77 @@ export const paintSpecsResults = (results: SpecsResults) => {
 
 export const listToTable = (components: ConsumerComponent[]) => {
   const table = new Table({
-    head: [c.cyan('Box'), c.cyan('Component'), c.cyan('Version')],
-    colWidths: [16, 30, 9],
+    head: [c.cyan('ID'), c.cyan('Version')],
+    colWidths: [46, 9],
   });
 
   function tablizeComponent(component) {
-    return [component.box, component.name, component.version]; // Add date, author 
+    return [`${component.box}/${component.name}`, component.version]; // Add date, author 
   }
 
   table.push(...components.map(tablizeComponent));
   return table.toString();
+};
+
+export const paintDocumentation = (docs) => {
+  if (R.isEmpty(docs) || R.isNil(docs)) {
+    return 'No documentation found';
+  }
+  
+  const paintExample = (example) => {
+    return example.raw;
+  };
+
+  const paintExamples = (examples) => {
+    if (R.isEmpty(examples) || R.isNil(examples)) { return ''; }
+
+    return '\n' + paintHeader('Examples') + '\n' + examples.map(paintExample).join('\n');
+  };
+
+  const tabeDoc = (doc) => {
+    const docsTable = new Table({
+      colWidths: [20, 50]    
+    });
+    const { name, description, args, returns } = doc;
+
+    const painArg = (arg) => {
+      if (!arg.type && !arg.name) { return ''; }
+      if (!arg.type) { return `${arg.name}`; }
+      return `${arg.name}: ${arg.type}`;
+    };
+
+    const painDescription = (arg) => {
+      if (!arg.type) { return ''; }
+      if (arg.type && !arg.description) { return arg.type; }
+      return `${arg.type} -> ${arg.description}`;
+    };
+
+    docsTable.push(
+      { [c.cyan('Name')]: name },
+      { [c.cyan('Description')]: description },
+      { [c.cyan('Args')]: `(${args.map(painArg).join(', ')})` },
+      { [c.cyan('Returns')]: painDescription(returns) }
+    );
+    return docsTable + paintExamples(doc.examples);
+  };
+  
+  return `\n${paintHeader('Documentation')}${docs.map(tabeDoc).join('')}`;
+};
+
+export const tablizeComponent = (component: ConsumerComponent) => {
+  const table = new Table({
+    colWidths: [20, 50]    
+  });
+
+  const { name, box, compilerId, testerId, dependencies, packageDependencies, docs } = component;
+
+  table.push(
+    { [c.cyan('ID')]: `${box}/${name}` },
+    { [c.cyan('Compiler')]: compilerId },
+    { [c.cyan('Tester')]: testerId },
+    { [c.cyan('Dependencies')]: dependencies.map(id => id.toString()).join(', ') },
+    { [c.cyan('Packages')]: Object.keys(packageDependencies).join(', ') },
+  );
+
+  return table.toString() + paintDocumentation(docs);
 };

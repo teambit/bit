@@ -1,7 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import { getInlineBit, getScopeBit } from '../../../api/consumer';
-import { paintBitProp, paintHeader, paintDoc } from '../../chalk-box';
+import { paintBitProp, paintHeader, paintDoc, tablizeComponent } from '../../chalk-box';
 import ConsumerComponent from '../../../consumer/component';
 
 export default class Show extends Command {
@@ -26,6 +26,7 @@ export default class Show extends Command {
 
   report(component: ?ConsumerComponent): string {
     if (!component) return 'could not find the requested component';
+    return tablizeComponent(component);
     const { name, box, compilerId, testerId, dependencies, packageDependencies, docs } = component;
 
     return paintHeader(`${box}/${name}`) +
