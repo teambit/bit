@@ -150,7 +150,7 @@ function extractData(node: Object, doclets: Array<Doclet>) {
 }
 
 function extractDataRegex(doc: string, doclets: Array<Doclet>) {
-  const commentsAst = doctrine.parse(doc, { unwrap: true });
+  const commentsAst = doctrine.parse(doc.trim(), { unwrap: true, recoverable: true });
   if (!commentsAst) return;
 
   const args = [];
@@ -170,6 +170,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
         args.push(formatTag(tag));
         break;
       case 'returns':
+      case 'return':
         returns = formatTag(tag);
         break;
       case 'static':
