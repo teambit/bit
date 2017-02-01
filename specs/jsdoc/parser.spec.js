@@ -186,6 +186,23 @@ describe('JSDoc Parser', () => {
         expect(anyArg.type).to.equal('Array.<(number|Object)>');
       });
     });
+    
+    describe('Flow Type File', () => {
+      it('should parse the file with no errors', () => {
+        const file = path.join(__dirname, 'fixtures', 'flowTypeFile.js');
+        const doclets = parser(fs.readFileSync(file).toString());
+        expect(doclets).to.be.an('array').and.to.have.lengthOf(1);
+        const doclet = doclets[0];
+
+        expect(doclet).to.have.property('name').that.equals('first');
+        expect(doclet).to.have.property('description').that.equals('returns the first element of an array reference.');
+        expect(doclet).to.have.property('access').that.equals('public');
+        expect(doclet).to.have.property('static').that.is.false;
+        expect(doclet).to.have.property('returns').that.is.an('object').that.is.not.empty;
+        expect(doclet).to.have.property('examples').that.is.an('array').that.is.not.empty;
+        expect(doclet).to.have.property('args').that.is.an('array').that.is.not.empty;
+      });
+    });
   });
 });
 
