@@ -58,7 +58,7 @@ function execAction(command, concrete, args) {
       const errorHandled = defaultHandleError(err)
       || command.handleError(err);
       
-      if (errorHandled) logAndExit(errorHandled);
+      if (!command.private && errorHandled) logAndExit(errorHandled);
       else logErrAndExit(err);
     });
 }
