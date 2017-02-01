@@ -27,13 +27,4 @@ export default class Show extends Command {
   report(component: ?ConsumerComponent): string {
     if (!component) return 'could not find the requested component';
     return tablizeComponent(component);
-    const { name, box, compilerId, testerId, dependencies, packageDependencies, docs } = component;
-
-    return paintHeader(`${box}/${name}`) +
-      paintBitProp('compiler', compilerId === 'none' ? '' : compilerId) +
-      paintBitProp('tester', testerId === 'none' ? '' : testerId) +
-      paintBitProp('dependencies', dependencies.map(id => id.toString()).join(', ')) +
-      paintBitProp('packageDependencies', Object.keys(packageDependencies).join(', ')) +
-      paintBitProp('docs', docs.map(paintDoc).join('\n'));
-  }
 }
