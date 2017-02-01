@@ -31,6 +31,10 @@ function run({ scope, testerFilePath, implSrc, specsSrc }:
       }
     });
 
+    process.on('exit', () => {
+      child.kill('SIGKILL');
+    });
+
     child.on('message', ({ type, payload }: { type: string, payload: Object }) => {
       removeTmpFiles();
       if (type === 'error') return reject(payload);

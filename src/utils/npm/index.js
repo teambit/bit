@@ -14,6 +14,10 @@ export default ({ name, version, dir, silent = true }:
       }
     });
 
+    process.on('exit', () => {
+      child.kill('SIGKILL');
+    });
+    
     child.on('message', ({ type, payload }: { type: string, payload: Object }) => {
       if (type === 'error') return reject(payload);
       return resolve(payload);
