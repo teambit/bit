@@ -79,6 +79,7 @@ export default class Cache extends Repository {
     const name = bitId.name;
     const scope = bitId.getScopeWithoutRemoteAnnotaion();
     // @TODO - add the version
+    // @HACKALERT
     // @TODO - maybe check for node_modules
     const bitPath = path.join(this.getPath(), box, name, scope);
     return fs.existsSync(bitPath);

@@ -160,6 +160,13 @@ export default class Component {
     .then(() => { return withBitJson ? this.writeBitJson(bitDir): undefined; })
     .then(() => this);
   }
+  
+  ensureEnvironments(scope: Scope) {
+    return scope.ensureEnvironment({
+      testerId: this.testerId,
+      compilerId: this.compilerId,
+    });
+  }
 
   runSpecs(scope: Scope): Promise<?Results> {
     function compileIfNeeded(
@@ -171,18 +178,22 @@ export default class Component {
     }
 
     if (!this.testerId || !this.specs || !this.specs.src) return Promise.resolve(null);
-    try {
-      const testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
-      const compiler = this.compilerId ? scope.loadEnvironment(this.compilerId) : null;
-      const implSrc = compileIfNeeded(!!this.compilerId, compiler, this.impl.src);
-      // $FlowFixMe
-      const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
-      return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc })
-      .then((specsResults) => {
-        this.specsResults = SpecsResults.serialize(specsResults);
-        return specsResults;
-      });
-    } catch (e) { return Promise.reject(e); }
+
+    return this.ensureEnvironments(scope)
+    .then(() => {
+      try {
+        const testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
+        const compiler = this.compilerId ? scope.loadEnvironment(this.compilerId) : null;
+        const implSrc = compileIfNeeded(!!this.compilerId, compiler, this.impl.src);
+        // $FlowFixMe
+        const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
+        return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc })
+        .then((specsResults) => {
+          this.specsResults = SpecsResults.serialize(specsResults);
+          return specsResults;
+        });
+      } catch (e) { return Promise.reject(e); }
+    });
   }
 
   build(scope: Scope): {code: string, map: Object}|null { // @TODO - write SourceMap Type
