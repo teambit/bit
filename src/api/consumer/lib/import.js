@@ -29,9 +29,8 @@ export default function importAction(
           }
           
           return writeToBitJsonIfNeeded()
-          .then(() => component);
-        })
-        .then(component => [component]);
+          .then(() => [component]);
+        });
       }
       
       loader.start();
