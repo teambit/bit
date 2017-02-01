@@ -136,13 +136,15 @@ export const tablizeComponent = (component: ConsumerComponent) => {
 
   const { name, box, compilerId, testerId, dependencies, packageDependencies, docs } = component;
 
-  table.push(
+  const rows = [
     { [c.cyan('ID')]: `${box}/${name}` },
-    { [c.cyan('Compiler')]: compilerId },
-    { [c.cyan('Tester')]: testerId },
-    { [c.cyan('Dependencies')]: dependencies.map(id => id.toString()).join(', ') },
-    { [c.cyan('Packages')]: Object.keys(packageDependencies).join(', ') },
-  );
+    compilerId ? { [c.cyan('Compiler')]: compilerId }: null,
+    testerId ? { [c.cyan('Tester')]: testerId }: null,
+    !R.isEmpty(dependencies) ? { [c.cyan('Dependencies')]: dependencies.map(id => id.toString()).join(', ') } : null,
+    !R.isEmpty(packageDependencies) ? { [c.cyan('Packages')]: Object.keys(packageDependencies).join(', ') } : null
+  ].filter(x => x);
+
+  table.push(...rows);
 
   return table.toString() + paintDocumentation(docs);
 };
