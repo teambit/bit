@@ -9,6 +9,8 @@
     },
     "dependencies": {
         "bit.utils/array/first": "1",
-        "bit.utils/array/diff": "4"
+        "bit.utils/array/diff": "4",
+        "bit.utils/string/contains": "1",
+        "bit.utils/string/to-base64": "latest"
     }
 }
