@@ -153,17 +153,17 @@ describe('JSDoc Parser', () => {
         expect(doclet).to.have.property('args').that.is.an('array').that.is.not.empty;
         args = doclet.args;
       });
-      it('should recognize "*" as "any"', () => {
+      it('should recognize "*" as "*"', () => {
         const anyArg = args.find(arg => arg.name === 'anyType');
-        expect(anyArg.type).to.equal('any');
+        expect(anyArg.type).to.equal('*');
       });
-      it('should recognize "[]" as "array"', () => {
+      it('should recognize "[]" as "[]"', () => {
         const anyArg = args.find(arg => arg.name === 'arrayType');
-        expect(anyArg.type).to.equal('Array');
+        expect(anyArg.type).to.equal('[]');
       });
       it('should recognize Union type correctly', () => {
         const anyArg = args.find(arg => arg.name === 'unionType');
-        expect(anyArg.type).to.equal('number|Array');
+        expect(anyArg.type).to.equal('(number|[])');
       });
       it('should recognize custom type correctly', () => {
         const anyArg = args.find(arg => arg.name === 'myCustomType');
@@ -173,9 +173,17 @@ describe('JSDoc Parser', () => {
         const anyArg = args.find(arg => arg.name === 'objectType');
         expect(anyArg.type).to.equal('Object');
       });
-      it('should recognize Funcion type', () => {
+      it('should recognize Function type', () => {
         const anyArg = args.find(arg => arg.name === 'functionType');
         expect(anyArg.type).to.equal('Function');
+      });
+      it('should recognize Array of one type', () => {
+        const anyArg = args.find(arg => arg.name === 'arrayOfType');
+        expect(anyArg.type).to.equal('Array.<string>');
+      });
+      it('should recognize Array of union', () => {
+        const anyArg = args.find(arg => arg.name === 'arrayOfUnion');
+        expect(anyArg.type).to.equal('Array.<(number|Object)>');
       });
     });
   });
