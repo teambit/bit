@@ -58,8 +58,8 @@ FPM="fpm --input-type dir --chdir . --name bit --version $VERSION "`
   `"--url https://www.bitsrc.io  --description 'Bit - Distributed Code Component Manager' --after-install ../../scripts/linux/postInstall.sh "
 
 #### Build RPM (Centos) package
-node ../../scripts/set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/usr/share/bit/package.json deb
-eval "$FPM --output-type rpm  --architecture noarch -p ../../distribution/ --depends nodejs   --depends gcc --depends make --depends python --depends g++ --category 'Development/Languages' ."
+node ../../scripts/set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/usr/share/bit/package.json yum
+eval "$FPM --output-type rpm  --architecture noarch -p ../../distribution/ --depends nodejs   --depends gcc --depends make --depends python --depends gcc-c++ --category 'Development/Languages' ."
 #mv $PACKAGE_DIST/*.rpm $PACKAGE_DIST/
 
 
