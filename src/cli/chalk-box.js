@@ -58,7 +58,7 @@ const paintTest = (test) => {
 };
 
 const paintStats = (results) => {
-  const statsHeader = results.passed ? c.underline.green('tests passed') : c.underline.red('tests failed');
+  const statsHeader = results.pass ? c.underline.green('tests passed') : c.underline.red('tests failed');
   const totalDuration = `total duration - ${c.cyan(`${results.stats.duration}ms\n`)}`;
   return `${statsHeader}\n${totalDuration}\n`;
 };

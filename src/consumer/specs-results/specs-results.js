@@ -20,7 +20,7 @@ type Stats = {
 export type Results = {
   tests: Test[],
   stats: Stats,
-  passed: bool
+  pass: bool
 }
 
 type TestProps = {
@@ -39,25 +39,25 @@ type StatsProps = {
 export type ResultsProps = {
   tests: TestProps[],
   stats: StatsProps,
-  passed: ?bool
+  pass: ?bool
 }
 
 export default class SpecsResults {
   tests: Test[];
   stats: Stats;
-  passed: bool;
+  pass: bool;
 
-  constructor({ tests, stats, passed }: Results) {
+  constructor({ tests, stats, pass }: Results) {
     this.tests = tests;
     this.stats = stats;
-    this.passed = passed;
+    this.pass = pass;
   }
 
   serialize() {
     return {
       tests: this.tests,
       stats: this.stats,
-      passed: this.passed,
+      pass: this.pass,
     };
   }
 
@@ -66,7 +66,7 @@ export default class SpecsResults {
   }
 
   static createFromRaw(rawResults: ResultsProps): SpecsResults {
-    const passed = rawResults.passed || rawResults.tests.every(test => test.pass);
+    const pass = rawResults.pass || rawResults.tests.every(test => test.pass);
 
     const calcDuration = (endDateString, startDateString) => 
       new Date(endDateString) - new Date(startDateString);
@@ -84,6 +84,6 @@ export default class SpecsResults {
       return result;
     });
 
-    return new SpecsResults({ tests, stats, passed });
+    return new SpecsResults({ tests, stats, pass });
   }
 }
