@@ -38,6 +38,8 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
         name = tag.name;
         break;
       case 'param':
+      case 'arg':
+      case 'argument':
         args.push(formatTag(tag));
         break;
       case 'returns':
