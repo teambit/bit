@@ -77,11 +77,11 @@ export default class Cache extends Repository {
   hasSync(bitId: BitId) {
     const box = bitId.box;
     const name = bitId.name;
+    const version = bitId.version;
     const scope = bitId.getScopeWithoutRemoteAnnotaion();
-    // @TODO - add the version
     // @HACKALERT
     // @TODO - maybe check for node_modules
-    const bitPath = path.join(this.getPath(), box, name, scope);
+    const bitPath = path.join(this.getPath(), box, name, scope, version);
     return fs.existsSync(bitPath);
   }
 
