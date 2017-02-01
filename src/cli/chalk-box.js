@@ -45,7 +45,7 @@ export const paintDoc = (value: string): string => {
 };
 
 const successTest = (test) => {
-  return `✅   ${c.white(test.title)} - ${c.cyan(`${test.duration}ms`)}`;
+  return `✔   ${c.white(test.title)} - ${c.cyan(`${test.duration}ms`)}`;
 };
 
 const failureTest = (test) => {
