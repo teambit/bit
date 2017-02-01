@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import R from 'ramda';
 import { fork } from 'child_process';
 import Scope from '../scope/scope';
 import { Results } from '../consumer/specs-results';
@@ -20,9 +21,23 @@ function run({ scope, testerFilePath, implSrc, specsSrc }:
     scope.tmp.removeSync(specsFilePath);
   };
 
+  function getDebugPort(): ?number {
+    const debugPortArgName = '--debug-brk';
+    try {
+      const execArgv = process.execArgv.map(arg => arg.split('='));
+      const execArgvObj = R.fromPairs(execArgv);
+      if (execArgvObj[debugPortArgName]) return parseInt(execArgvObj[debugPortArgName]);
+    } catch (e) { return null; }
+    
+    return null;
+  }
+
   return new Promise((resolve, reject) => {
+    const debugPort = getDebugPort();
+    const openPort = debugPort ? debugPort + 1 : null; 
+
     const child = fork(path.join(__dirname, 'worker.js'), {
-      // execArgv: ['--debug=26304'],
+      execArgv: openPort ? [`--debug=${openPort.toString()}`] : [],
       stdio: [null, null, 2, 'ipc'],
       env: {
         __impl__: implFilePath,
