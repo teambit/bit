@@ -1,7 +1,5 @@
 <p align="center">
-  <a href="https://bitsrc.io/">
     <img alt="Bit" src="https://s29.postimg.org/q9flqqoif/cover_github_1.png" width="500">
-  </a>
 </p>
 
 <p align="center">
