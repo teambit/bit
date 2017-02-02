@@ -14,11 +14,11 @@
 
 Bit is a distributed, fast and language-agnostic code component manager designed for easy use, maintenance and discovery of code components.
 
-**Easily reuse code components:** Bit is an open source tool for fast and easy extraction and reuse of code components. No more code duplications, no more micro-packages.
+**Easily reuse code components:** Open source tool for fast and easy extraction and reuse of code components without creating code duplications or having to publish tiny packages.
 
-**Easy to maintain:** Bit makes component maintenance super easy with features like isolated component environment, simple minor versioning and more.
+**Easy to maintain:** Easily maintain all your components in one place. Isolated component environment and simplified versioning make life even easier.
 
-**Simple to find:** Bit uses a functional search and a simple yet smart scoping mechanism to easily find components created by you or your team. Thanks to the component isolated environment, components can be built and run anywhere.
+**Simple to find:** A built-in functional search and a simple scoping mechanism make it simple to find components created by you, your team or the community. Thanks to the component isolated environment, components can be built and run anywhere.
 
 Bit currently supports JavaScript. We plan to add drivers for more languages as soon as we can. We always love some help.
 
