@@ -1,5 +1,6 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
+import { loadScope } from '../../../scope';
 
 export default function list({ scopeName, loader }: 
 { scopeName: ?string, loader: any }): Promise<string[]> {
@@ -20,5 +21,8 @@ export default function list({ scopeName, loader }:
     }
 
     return scope.listStage();
+  }).catch((err) => {
+    return loadScope(process.cwd())
+      .then(scope => scope.listStage());
   });
 }
