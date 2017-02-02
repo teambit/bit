@@ -53,6 +53,7 @@ function addAllToLocalIndex(components: Array<Component>): Promise<string> {
     const docs = components.map(component => prepareDoc(component.docs, component));
     localIndex.then((indexInstance) => {
       const docStream = new Readable({ objectMode: true });
+      // $FlowFixMe: a flow bug. Stream can be an object as well when objectMode is true
       docs.map(doc => docStream.push(doc));
       docStream.push(null);
       docStream
@@ -73,6 +74,7 @@ function addToLocalIndex(component: Component): Promise<string> {
     const doc = prepareDoc(component.docs, component);
     localIndex.then((indexInstance) => {
       const docStream = new Readable({ objectMode: true });
+      // $FlowFixMe: a flow bug. Stream can be an object as well when objectMode is true
       docStream.push(doc);
       docStream.push(null);
       docStream

@@ -1,7 +1,7 @@
 /** @flow */
 import serverlessIndex from './serverless-index';
 import indexer from './indexer';
-import type Doc from './indexer';
+import type { Doc } from './indexer';
 
 const boost = {
   box: 3,
@@ -77,7 +77,7 @@ function buildQuery(queryStr: string): Array<Object> {
  * @return {Array<Doc>}
  */
 function sortSearchResults(results: Array<Doc>): Array<Doc> {
-  return results.sort((a, b) => a.name.length > b.name.length);
+  return results.sort((a, b) => a.name.length - b.name.length);
 }
 
 /**
