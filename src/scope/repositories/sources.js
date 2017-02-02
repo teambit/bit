@@ -10,7 +10,7 @@ import Version from '../models/version';
 import Source from '../models/source';
 import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
-import consumerComponent from '../../consumer/component/consumer-component';
+import ConsumerComponent from '../../consumer/component/consumer-component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 
 export type ComponentTree = {
@@ -74,7 +74,8 @@ export default class SourceRepository {
       });
   }
 
-  addSource(source: consumerComponent, flattenedDeps: BitId[], message: string, loader: ?any):
+  addSource({ source, depIds, message, force, loader }: 
+  { source: ConsumerComponent, depIds: BitId[], message: string, force: ?bool, loader: ?any }): 
   Promise<Component> {
     const objectRepo = this.objects();
 
@@ -94,14 +95,14 @@ export default class SourceRepository {
         const email = globalConfig.getSync(USER_EMAIL_KEY);
 
         if (loader) { loader.text = 'running specs'; }
-        return source.runSpecs(this.scope)
+        return source.runSpecs(this.scope, !force)
         .then((specsResults) => {
           const version = Version.fromComponent({
             component: source,
             impl,
             specs,
             dist,
-            flattenedDeps,
+            flattenedDeps: depIds,
             specsResults,
             message,
             username,

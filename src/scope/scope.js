@@ -110,7 +110,8 @@ export default class Scope {
     
   }
 
-  put(consumerComponent: ConsumerComponent, message: string, loader: ?any): Promise<ComponentDependencies> {
+  put(consumerComponent: ConsumerComponent, message: string, force: ?bool, loader: ?any):
+  Promise<ComponentDependencies> {
     consumerComponent.scope = this.name;
     if (loader) {
       loader.text = 'importing components';
@@ -127,7 +128,7 @@ export default class Scope {
       .then(([dependencies, ]) => {
         return flattenDependencyIds(dependencies, this.objects)
           .then((depIds) => {
-            return this.sources.addSource(consumerComponent, depIds, message, loader)
+            return this.sources.addSource({ source: consumerComponent, depIds, message, force, loader })
               .then((component) => {
                 if (loader) { loader.text = 'persisting data'; }
                 return this.objects.persist()

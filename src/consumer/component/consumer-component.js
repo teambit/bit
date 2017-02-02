@@ -169,7 +169,7 @@ export default class Component {
     });
   }
 
-  runSpecs(scope: Scope): Promise<?Results> {
+  runSpecs(scope: Scope, rejectOnFailure: ?bool): Promise<?Results> {
     function compileIfNeeded(
       condition: bool,
       compiler: ?{ compile?: (string) => { code: string } },
@@ -191,7 +191,7 @@ export default class Component {
         return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc })
         .then((specsResults) => {
           this.specsResults = SpecsResults.createFromRaw(specsResults);
-          if (!this.specsResults.pass) {
+          if (rejectOnFailure && !this.specsResults.pass) {
             return Promise.reject(new ComponentSpecsFailed());
           }
 

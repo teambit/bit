@@ -153,7 +153,7 @@ export default class Component extends BitObject {
               specs: specs ? new Specs(specs.toString()) : null,
               docs: version.docs,
               dist: dist ? new Dist(dist.toString()) : null,
-              specsResults: 
+              specsResults:
                 version.specsResults ? SpecsResults.deserialize(version.specsResults) : null, 
             });
           });

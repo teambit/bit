@@ -7,12 +7,14 @@ export default class Export extends Command {
   name = 'commit <id> <message>';
   description = 'commit a component to the local scope and add a log message';
   alias = 'c';
-  opts = [];
+  opts = [
+    ['f', 'force', 'forcely commit even if specs fails'],
+  ];
   loader = { autoStart: false, text: 'importing components' };
 
-  action([id, message]: [string, string]): Promise<any> {
+  action([id, message]: [string, string], { force }: { force: ?bool }): Promise<any> {
     const loader = this.loader;
-    return commitAction({ id, message, loader });
+    return commitAction({ id, message, force, loader });
   }
 
   report(c: Component): string {
