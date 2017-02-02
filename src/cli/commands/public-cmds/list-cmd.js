@@ -4,7 +4,8 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { listInline, listScope } from '../../../api/consumer';
 import Component from '../../../consumer/component';
-import { paintHeader, listToTable } from '../../chalk-box';
+import { paintHeader } from '../../chalk-box';
+import listTemplate from '../../templates/list-template';
 
 export default class List extends Command {
   name = 'list [scope]';
@@ -42,11 +43,9 @@ export default class List extends Command {
       return `Total ${components.length} components in ${scope}`;
     }
 
-    if (R.isEmpty(components)) {
-      return chalk.white(`${decideHeaderSentence()}`);  
-    }
+    if (R.isEmpty(components)) { return chalk.white(`${decideHeaderSentence()}`); }
     
-    return paintHeader(decideHeaderSentence()) + listToTable(components);
+    return paintHeader(decideHeaderSentence()) + listTemplate(components);
   }
 
 }
