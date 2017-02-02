@@ -22,6 +22,19 @@ Bit is a distributed, fast and language-agnostic code component manager designed
 
 Bit currently supports JavaScript. We plan to add drivers for more languages as soon as we can. We always love some help.
 
+## Why...?
+
+We beleive that the more code gets reused across software projects - the better.
+
+Currently the best way to reuse code is to package it, and distribute via package managers. 
+In theory it should work, but in practice it's not so simple. Packaging small pieces of code is an over
+kill for most uses cases (would you go to all the trouble to package 'isString'?). The packaging
+overhead causes many developers to prefer copy-pasting code snippets instead (the infamus left-pad
+discussion). 
+
+This is why we built Bit. To make distributing the small pieces of functionality a simple and easy
+task. We want tTo make it a part of the workflow and routine of how we code.
+
 ## Features
 
 * **Fast & Easy component export.** Easily export a component to be reused anywhere by you or your team - all in less than a minute.
