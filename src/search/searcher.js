@@ -47,10 +47,6 @@ function getDoc(index: Promise<any>, docIds: string[]) {
   });
 }
 
-function formatSearchResult(doc: Doc): string {
-  return `> ${doc.box}/${doc.name}`;
-}
-
 function queryItem(field, queryStr): Object {
   return {
     AND: { [field]: queryStr.toLowerCase().split(' ') },
@@ -83,6 +79,10 @@ function sortSearchResults(results: Array<any>): Array<any> {
   });
 }
 
+function formatter(doc: Doc): string {
+  return `> ${doc.box}/${doc.name}`;
+}
+
 /**
  * Search in a local LevelUp index.
  * 
@@ -90,7 +90,7 @@ function sortSearchResults(results: Array<any>): Array<any> {
  * @param {string} path
  * @return {Promise}
  */
-function search(queryStr: string, path: string): Promise<string> {
+function search(queryStr: string, path: string): Promise<Doc[]> {
   return new Promise((resolve, reject) => {
     const index = serverlessIndex.initializeIndex(path);
     const searchResults = [];
@@ -102,8 +102,7 @@ function search(queryStr: string, path: string): Promise<string> {
         searchResults.push(data);
       }).on('end', function () {
         const searchResultsSorted = sortSearchResults(searchResults);
-        const formattedResults = searchResultsSorted.map(result => formatSearchResult(result.document));
-        return resolve(JSON.stringify(formattedResults));
+        return resolve(searchResultsSorted.map(result => result.document));
       });
     });
   });
@@ -111,4 +110,5 @@ function search(queryStr: string, path: string): Promise<string> {
 
 module.exports = {
   search,
+  formatter
 };

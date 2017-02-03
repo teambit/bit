@@ -107,7 +107,7 @@ export default class SSH {
   }
 
   search(query: string, reindex: boolean) {
-    return this.exec('_search', query, reindex.toString());
+    return this.exec('_search', query, reindex.toString()).then(JSON.parse);
   }
 
   show(id: BitId) {

@@ -2,6 +2,7 @@
 import Command from '../../command';
 import { fromBase64 } from '../../../utils';
 import { searchAdapter } from '../../../search';
+import { Doc } from '../../../search/indexer';
 
 export default class Search extends Command {
   name = '_search <path> <query> <reindex>';
@@ -14,7 +15,7 @@ export default class Search extends Command {
     return searchAdapter.scopeSearch(fromBase64(path), fromBase64(query), fromBase64(reindex) === 'true');
   }
 
-  report(searchResults: string): string {
-    return searchResults;
+  report(searchResults: Array<Doc>): string {
+    return JSON.stringify(searchResults);
   }
 }
