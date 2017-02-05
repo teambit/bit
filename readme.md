@@ -29,7 +29,7 @@ Calling component is simple :)
 console.log(isString('Hello World!');
 ```
 
-## Contributing to Bit
+## Contributing to Bit-node
 
 Contributions are always welcome, no matter how large or small. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
 
