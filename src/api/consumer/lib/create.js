@@ -8,10 +8,5 @@ Promise<Component> {
   return loadConsumer()
     .then(consumer =>
       consumer.createBit({ id: InlineId.parse(id), withSpecs, withBitJson })
-      // .then((component) => {
-      //   return consumer.scope.ensureEnvironment({
-      //     testerId: component.testerId, compilerId: component.compilerId
-      //   })
-      // .then(() => component)
     );
 }

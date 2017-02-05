@@ -6,7 +6,7 @@ import createTemplate from '../templates/impl.default-template';
 import BitId from '../../../bit-id';
 import InvalidImpl from '../exceptions/invalid-impl';
 import MissingImpl from '../exceptions/missing-impl';
-import Environment from '../../../scope/repositories/environment';
+import { Scope } from '../../../scope';
 
 export default class Impl extends Source {
   write(bitPath: string, fileName: string): Promise<any> {
@@ -40,10 +40,10 @@ export default class Impl extends Source {
     }
   }
 
-  static create(name: string, compilerId: BitId, environment: Environment): Impl {
+  static create(name: string, compilerId: BitId, scope: Scope): Impl {
     function getTemplate() {
       try {
-        const testerModule = environment.get(compilerId);
+        const testerModule = scope.loadEnvironment(compilerId);
         return testerModule.getTemplate(name);
       } catch (e) {
         return createTemplate({ name });

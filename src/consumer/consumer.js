@@ -84,21 +84,17 @@ export default class Consumer {
   import(rawId: ?string): Component {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
-      return this.scope.ensureEnvironment({
-        testerId: this.testerId,
-        compilerId: this.compilerId
-      }).then(() =>
-        Promise.all(dependencies.map(dep => this.scope.get(dep)))
-        .then(bits => this.writeToComponentsDir(flatten(bits)))
+      return this.scope.installEnvironment([this.testerId, this.compilerId], this)
+      .then(() =>
+        Promise.all(this.scope.getMany(dependencies))
+        .then(components => this.writeToComponentsDir(flatten(components)))
       );
     };
 
     const importSpecificComponent = () => {
       const bitId = BitId.parse(rawId, this.scope.name);
       return this.scope.get(bitId)
-      .then((componentDependencies) => {
-        return this.writeToComponentsDir([componentDependencies]);
-      });
+      .then((component) => { return this.writeToComponentsDir([component]); });
     };
 
     if (!rawId) return importAccordingToConsumerBitJson();
@@ -107,12 +103,8 @@ export default class Consumer {
 
   importEnvironment(rawId: ?string) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
-
     const bitId = BitId.parse(rawId, this.scope.name);
-    return this.scope.get(bitId) // @HACKALERT - replace with getOne
-    .then((componentDependencies) => {
-      return this.scope.writeToEnvironmentsDir(componentDependencies.component);
-    });
+    return this.scope.installEnvironment([bitId], this);
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {
@@ -124,7 +116,7 @@ export default class Consumer {
       box: id.box,
       withSpecs,
       consumerBitJson: this.bitJson,
-    }, this.scope.environment).write(inlineBitPath, withBitJson);
+    }, this.scope).write(inlineBitPath, withBitJson);
   }
 
   removeFromInline(id: BitInlineId): Promise<any> {

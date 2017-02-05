@@ -162,13 +162,6 @@ export default class Component {
     .then(() => this);
   }
   
-  ensureEnvironments(scope: Scope) {
-    return scope.ensureEnvironment({
-      testerId: this.testerId,
-      compilerId: this.compilerId,
-    });
-  }
-
   runSpecs(scope: Scope, rejectOnFailure: ?bool): Promise<?Results> {
     function compileIfNeeded(
       condition: bool,
@@ -179,26 +172,23 @@ export default class Component {
     }
 
     if (!this.testerId || !this.specs || !this.specs.src) return Promise.resolve(null);
+    
+    try {
+      const testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
+      const compiler = this.compilerId ? scope.loadEnvironment(this.compilerId) : null;
+      const implSrc = compileIfNeeded(!!this.compilerId, compiler, this.impl.src);
+      // $FlowFixMe
+      const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
+      return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc })
+      .then((specsResults) => {
+        this.specsResults = SpecsResults.createFromRaw(specsResults);
+        if (rejectOnFailure && !this.specsResults.pass) {
+          return Promise.reject(new ComponentSpecsFailed());
+        }
 
-    return this.ensureEnvironments(scope)
-    .then(() => {
-      try {
-        const testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
-        const compiler = this.compilerId ? scope.loadEnvironment(this.compilerId) : null;
-        const implSrc = compileIfNeeded(!!this.compilerId, compiler, this.impl.src);
-        // $FlowFixMe
-        const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
-        return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc })
-        .then((specsResults) => {
-          this.specsResults = SpecsResults.createFromRaw(specsResults);
-          if (rejectOnFailure && !this.specsResults.pass) {
-            return Promise.reject(new ComponentSpecsFailed());
-          }
-
-          return this.specsResults;
-        });
-      } catch (e) { return Promise.reject(e); }
-    });
+        return this.specsResults;
+      });
+    } catch (e) { return Promise.reject(e); }
   }
 
   build(scope: Scope): {code: string, map: Object}|null { // @TODO - write SourceMap Type
@@ -300,13 +290,13 @@ export default class Component {
     });
   }
 
-  static create({ scope, name, box, withSpecs, consumerBitJson }:{ 
+  static create({ scopeName, name, box, withSpecs, consumerBitJson }:{ 
     consumerBitJson: ConsumerBitJson,
     name: string,
     box: string,
-    scope?: ?string,
+    scopeName?: ?string,
     withSpecs?: ?boolean,
-  }, environment: Environment) {
+  }, scope: Scope) {
     const implFile = consumerBitJson.getImplBasename();
     const specsFile = consumerBitJson.getSpecBasename();
     const compilerId = BitId.parse(consumerBitJson.compilerId);
@@ -316,13 +306,13 @@ export default class Component {
       name,
       box,
       version: DEFAULT_BIT_VERSION,
-      scope,
+      scope: scopeName,
       implFile,
       specsFile, 
       compilerId,
       testerId,
-      impl: Impl.create(name, compilerId, environment),
-      specs: withSpecs ? Specs.create(name, testerId, environment) : undefined,
+      impl: Impl.create(name, compilerId, scope),
+      specs: withSpecs ? Specs.create(name, testerId, scope) : undefined,
     });
   }
 }

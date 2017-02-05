@@ -7,7 +7,7 @@ try {
 
   const tester = require(testerFilePath);
   const mock = require('mock-require');
-
+  
   // define the __impl__ global
   global.__impl__ = implFilePath;
 

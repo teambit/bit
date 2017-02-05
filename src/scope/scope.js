@@ -1,18 +1,19 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs';
-import { merge, splitWhen } from 'ramda';
+import R, { merge, splitWhen } from 'ramda';
+import bitJs from 'bit-js';
 import { GlobalRemotes } from '../global-config';
 import { flattenDependencyIds } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHas, first, readFile } from '../utils';
+import { propogateUntil, currentDirName, pathHas, first, readFile, flatten } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
-import { Tmp, Environment } from './repositories';
+import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import ConsumerComponent from '../consumer/component';
 import ComponentVersion from './component-version';
@@ -22,6 +23,8 @@ import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
 import { postExportHook } from '../hooks';
 import type { Results } from '../specs-runner/specs-runner';
+import npmInstall from '../utils/npm';
+import Consumer from '../consumer/consumer';
 
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
 
@@ -34,7 +37,6 @@ export type ScopeProps = {
   scopeJson: ScopeJson;
   created?: boolean;
   tmp?: Tmp;
-  environment?: Environment;
   sources?: SourcesRepository;
   objects?: Repository;
 };
@@ -43,7 +45,6 @@ export default class Scope {
   created: boolean = false;
   scopeJson: ScopeJson;
   tmp: Tmp;
-  environment: Environment;
   path: string;
   sources: SourcesRepository;
   objects: Repository;
@@ -55,7 +56,6 @@ export default class Scope {
     this.tmp = scopeProps.tmp || new Tmp(this);
     this.sources = scopeProps.sources || new SourcesRepository(this);
     this.objects = scopeProps.objects || new Repository(this, types());
-    this.environment = scopeProps.environment || new Environment(this);
   }
 
   get groupName(): ?string {
@@ -118,25 +118,20 @@ export default class Scope {
       loader.start();
     }
 
-    const dependenciesP = this.importMany(consumerComponent.dependencies);
-    const ensureEnvironmentP = this.ensureEnvironment({
-      testerId: consumerComponent.testerId,
-      compilerId: consumerComponent.compilerId
+    return this.importMany(consumerComponent.dependencies).then((dependencies) => {
+      return flattenDependencyIds(dependencies, this.objects)
+        .then((depIds) => {
+          return this.sources.addSource({
+            source: consumerComponent, depIds, message, force, loader,
+          })
+          .then((component) => {
+            if (loader) { loader.text = 'persisting data'; }
+            return this.objects.persist()
+              .then(() => component.toVersionDependencies(LATEST, this, this.name))
+              .then(deps => deps.toConsumer(this.objects));
+          }); 
+        });
     });
-
-    return Promise.all([dependenciesP, ensureEnvironmentP])
-      .then(([dependencies, ]) => {
-        return flattenDependencyIds(dependencies, this.objects)
-          .then((depIds) => {
-            return this.sources.addSource({ source: consumerComponent, depIds, message, force, loader })
-              .then((component) => {
-                if (loader) { loader.text = 'persisting data'; }
-                return this.objects.persist()
-                  .then(() => component.toVersionDependencies(LATEST, this, this.name))
-                  .then(deps => deps.toConsumer(this.objects));
-              }); 
-          });
-      });
   }
 
   importSrc(componentObjects: ComponentObjects) {
@@ -166,7 +161,7 @@ export default class Scope {
     return this.sources.getMany(ids)
       .then((defs) => {
         if (localFetch) {
-          return Promise.all(defs.map(def => {
+          return Promise.all(defs.map((def) => {
             return def.component.toComponentVersion(
             def.id.version, 
             this.name
@@ -270,13 +265,23 @@ export default class Scope {
       });
   }
 
-  get(id: BitId): Promise<ComponentDependencies> {
+  get(id: BitId): Promise<ConsumerComponent> {
     return this.import(id)
       .then((versionDependencies) => {
         return versionDependencies.toConsumer(this.objects);
       });
   }
-  
+
+  getMany(ids: BitId[]): Promise<ConsumerComponent[]> {
+    return this.importMany(ids)
+    .then((versionDependenciesArr: VersionDependencies[]) => {
+      return Promise.all(
+        versionDependenciesArr.map(versionDependencies => 
+          versionDependencies.toConsumer(this.objects))
+      );
+    });
+  }
+
   // @TODO optimize ASAP
   modify(id: BitId): Promise<ComponentDependencies> {
     return this.import(id, true)
@@ -375,7 +380,6 @@ export default class Scope {
   ensureDir() {
     return this.tmp
       .ensureDir()
-      .then(() => this.environment.ensureDir())
       .then(() => this.scopeJson.write(this.getPath()))
       .then(() => this.objects.ensureDir())
       .then(() => this); 
@@ -385,24 +389,44 @@ export default class Scope {
     return this.sources.clean(bitId);
   }
 
+  /**
+   * sync method that loads the environment/(path to environment component)
+   */
   loadEnvironment(bitId: BitId, opts: ?{ pathOnly: ?bool }) {
     if (opts && opts.pathOnly) {
-      return this.environment.getPathTo(bitId);
+      return bitJs.loadExact(bitId.toString(), opts);
     }
 
-    return this.environment.get(bitId);
-  }
-
-  writeToEnvironmentsDir(component: ConsumerComponent) {
-    return this.environment.store(component);
+    return bitJs.loadExact(bitId.toString());
   }
   
-  /**
-   * check a bitJson compiler and tester, returns an empty promise and import environments if needed
-   */
-  ensureEnvironment({ testerId, compilerId }:
-  { testerId: BitId, compilerId: BitId }): Promise<any> {
-    return this.environment.ensureEnvironment({ testerId, compilerId });
+  installEnvironment(ids: BitId[], consumer: ?Consumer): Promise<any> {
+    const installPackageDependencies = (component: ConsumerComponent) => {
+      const scopePath = this.getPath();
+      const nodeModulesDir = consumer ? pathLib.dirname(scopePath) : scopePath;
+      // const isConsumerScope = p => pathLib.basename(p) === BIT_HIDDEN_DIR;
+      const deps = component.packageDependencies;
+      return Promise.all(
+        R.values(
+          R.mapObjIndexed(
+            (value, key) => npmInstall({ name: key, version: value, dir: nodeModulesDir })
+          , deps)
+        )
+      ).then(() => component);
+    };
+
+    return this.getMany(ids)
+    .then((components) => {
+      if (consumer) {
+        return consumer.writeToComponentsDir(flatten(components));
+      } else {
+        throw new Error('can install env component in bare scope');
+        // TODO -- write in scope relevant directory !! 
+      }
+    })
+    .then((components: ConsumerComponent[]) => {
+      return Promise.all(components.map(installPackageDependencies));
+    });
   }
 
   runComponentSpecs(id: BitId): Promise<?Results> {
@@ -418,13 +442,7 @@ export default class Scope {
 
   build(bitId: BitId): Promise<string> {
     return this.loadComponent(bitId)
-    .then((component) => {
-      return this.ensureEnvironment({
-        testerId: component.testerId,
-        compilerId: component.compilerId
-      })
-      .then(() => component.build(this));
-    });
+    .then(component => component.build(this));
   }
 
   static create(path: string = process.cwd(), name: ?string, groupName: ?string) {

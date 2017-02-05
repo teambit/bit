@@ -4,7 +4,7 @@ import * as path from 'path';
 import Source from './source';
 import BitId from '../../../bit-id';
 import createTemplate from '../templates/specs.default-template';
-import Environment from '../../../scope/repositories/environment';
+import { Scope } from '../../../scope';
 
 export default class Specs extends Source {
   write(bitPath: string, fileName: string): Promise<any> {
@@ -33,10 +33,10 @@ export default class Specs extends Source {
     }
   }
 
-  static create(name: string, testerId: BitId, environment: Environment): Specs {
+  static create(name: string, testerId: BitId, scope: Scope): Specs {
     function getTemplate() {
       try {
-        const testerModule = environment.get(testerId);
+        const testerModule = scope.loadEnvironment(testerId);
         return testerModule.getTemplate(name);
       } catch (e) {
         return createTemplate({ name });
