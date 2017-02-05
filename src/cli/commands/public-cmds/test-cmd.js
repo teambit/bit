@@ -30,6 +30,6 @@ export default class Test extends Command {
       return paintSpecsResults(res);
     }
 
-    return 'couldn\'t get results results...';
+    return 'couldn\'t get test results...';
   }
 }
