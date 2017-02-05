@@ -8,7 +8,7 @@ module.exports = (consumer, boxName, bitName) => {
   if (files.length === 0) return;
 
   if (files.length > 1) {
-    throw new Error(`you have more than one bit with the same id in the inline directory ${files}`);
+    throw new Error(`Found more than one component with the same ID in the inline directory ${files}`);
   }
 
   const bit = new Bit(files[0], consumer);

@@ -11,6 +11,6 @@ module.exports = (bitId) => {
   } else if (splitted.length === 2) {
     bitName = splitted[1];
     boxName = splitted[0];
-  } else throw new Error('bit id must consist of "name" or "box/name" pattern');
+  } else throw new Error('Component ID must consist of "name" or "box/name" pattern');
   return { bitName, boxName };
 };
