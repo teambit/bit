@@ -4,13 +4,13 @@
         "spec": "spec.js"
     },
     "env": {
-        "compiler": "bit.envs/compilers/flow",
-        "tester": "bit.envs/testers/mocha-chai"
+        "compiler": "bit.envs/compilers/flow::5",
+        "tester": "bit.envs/testers/mocha-chai::8"
     },
     "dependencies": {
         "bit.utils/array/first": "1",
         "bit.utils/array/diff": "4",
         "bit.utils/string/contains": "1",
-        "bit.utils/string/to-base64": "latest"
+        "bit.utils/string/to-base64": "1"
     }
 }
