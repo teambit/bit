@@ -85,9 +85,10 @@ export default class Consumer {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
       return this.scope.installEnvironment([this.testerId, this.compilerId], this)
-      .then(() =>
-        Promise.all(this.scope.getMany(dependencies))
-        .then(components => this.writeToComponentsDir(flatten(components)))
+      .then(() => this.scope.getMany(dependencies)
+        .then((components) => {
+          return this.writeToComponentsDir(flatten(components));
+        })
       );
     };
 

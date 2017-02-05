@@ -277,7 +277,8 @@ export default class Scope {
     .then((versionDependenciesArr: VersionDependencies[]) => {
       return Promise.all(
         versionDependenciesArr.map(versionDependencies => 
-          versionDependencies.toConsumer(this.objects))
+          versionDependencies.toConsumer(this.objects)
+        )
       );
     });
   }
