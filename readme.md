@@ -1,6 +1,33 @@
 # Bit driver for nodejs
 
-to be continue ...
+For more information on Bit drivers, head over this Bit's wiki page [about this
+topic](https://github.com/teambit/bit/wiki/Bit-Drivers).
+
+### Installing Bit-node.
+
+```sh
+npm install bit-node -s
+```
+
+### Requiring components
+
+First, you need to require the bit-node module:
+
+```js
+const bit = require('bit-node');
+```
+
+After requiring the module, you can use any component from your bit.json file.
+
+```js
+isString = bit.('isString');
+```
+
+Calling component is simple :)
+
+```js
+console.log(isString('Hello World!');
+```
 
 ## Contributing to Bit
 
