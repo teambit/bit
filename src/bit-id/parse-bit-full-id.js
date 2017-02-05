@@ -10,7 +10,7 @@ module.exports = (id, version) => {
     version = idAndVersion[1]; // eslint-disable-line
   }
 
-  if (!id || !version) { throw new Error(`invalid compiler id ${id}`); }
+  if (!id || !version) { throw new Error(`invalid component id ${id}`); }
   const splitted = id.split(ID_DELIMITER);
   let scope;
   let box = DEFAULT_BOXNAME;
@@ -23,7 +23,7 @@ module.exports = (id, version) => {
   } else if (splitted.length === 2) {
     scope = splitted[0].replace('@', '');
     name = splitted[1];
-  } else { throw new Error(`invalid compiler id ${id}`); }
+  } else { throw new Error(`invalid component id ${id}`); }
 
   return { scope, box, name, version };
 };

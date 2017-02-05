@@ -1,10 +1,13 @@
 const R = require('ramda');
+const path = require('path');
 const locateConsumer = require('./consumer/locate-consumer');
 const assert = require('assert').ok;
 const parseBitInlineId = require('./bit-id/parse-bit-inline-id');
+const parseBitFullId = require('./bit-id/parse-bit-full-id');
 const Consumer = require('./consumer/consumer');
 const mock = require('mock-require');
 const { DEFAULT_BOXNAME } = require('./constants');
+const resolveBit = require('./bit-resolver');
 
 const {
   loadBitInline,
@@ -61,6 +64,14 @@ load.mockModules = (modules) => {
   for (const m in modules) { // eslint-disable-line
     mock(m, modules[m]);
   }
+};
+
+load.loadExact = (fullId, opts) => {
+  const consumerPath = locateConsumer(process.cwd());
+  const consumer = new Consumer(consumerPath);
+  const { scope, box, name, version } = parseBitFullId(fullId);
+  const bitPath = path.join(consumer.getBitsDir(), box, name, scope, version);
+  return resolveBit(bitPath, opts);
 };
 
 module.exports = load;
