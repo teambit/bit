@@ -6,6 +6,7 @@ import { BitIds, BitId } from '../../../bit-id';
 import { FsScopeNotLoaded } from '../exceptions';
 import { flatten } from '../../../utils';
 import type { ScopeDescriptor } from '../../scope';
+import { searchAdapter } from '../../../search';
 
 export default class Fs {
   scopePath: string;
@@ -49,8 +50,8 @@ export default class Fs {
     return this.getScope().list();
   }
 
-  search(): Promise<[]> {
-    throw new Error('not implemented yet');
+  search(query: string, reindex: boolean): Promise<[]> {
+    return searchAdapter.scopeSearch(this.scopePath, query, reindex);
   }
 
   show(bitId: BitId): Promise<> {

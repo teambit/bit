@@ -2,6 +2,8 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { searchAdapter } from '../../../search';
+import { formatter } from '../../../search/searcher';
+import { Doc } from '../../../search/indexer';
 
 export default class Search extends Command {
   name = 'search [query...]';
@@ -27,11 +29,10 @@ export default class Search extends Command {
     return searchAdapter.searchLocally(queryStr, reindex);
   }
 
-  report(searchResults: string): string {
-    const parsedResults = JSON.parse(searchResults);
-    if (!parsedResults.length) {
+  report(searchResults: Array<Doc>): string {
+    if (!searchResults.length) {
       return chalk.red('No Results');
     }
-    return chalk.green(parsedResults.join('\n'));
+    return chalk.green(searchResults.map(formatter).join('\n'));
   }
 }

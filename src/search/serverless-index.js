@@ -5,6 +5,7 @@ import searchIndex from 'search-index';
 
 const indexName = 'search_index';
 const logLevel = 'error';
+let index: Promise<any>;
 
 function getIndexPath(scopePath: string) {
   return path.join(scopePath, indexName);
@@ -17,14 +18,14 @@ function deleteDb(scopePath: string) {
 }
 
 function initializeIndex(scopePath: string): Promise<any> {
-  const indexOptions = {
-    indexPath: getIndexPath(scopePath),
-    logLevel,
-    stopwords: []
-  };
-
-  if (!initializeIndex.index) { // static var to make sure the index is not instantiated twice
-    initializeIndex.index = new Promise((resolve, reject) => {
+  if (!index) { // static var to make sure the index is not instantiated twice
+    const indexOptions = {
+      indexPath: getIndexPath(scopePath),
+      logLevel,
+      stopwords: []
+    };
+    
+    index = new Promise((resolve, reject) => {
       searchIndex(indexOptions, (err, si) => {
         if (err) reject(err);
         resolve(si);
@@ -32,7 +33,7 @@ function initializeIndex(scopePath: string): Promise<any> {
     });
   }
 
-  return initializeIndex.index;
+  return index;
 }
 
 module.exports = {
