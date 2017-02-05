@@ -22,11 +22,6 @@ const getCacheDirectory = () => {
  */
 export const CACHE_ROOT = getCacheDirectory();
 
-/**
- * global compilers directory
- */
-export const ENVIRONEMT_DIRNAME = 'environment';
-
 export const BITS_DIRNAME = 'components';
 
 export const INLINE_BITS_DIRNAME = 'inline_components';
