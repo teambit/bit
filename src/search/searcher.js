@@ -3,6 +3,8 @@ import serverlessIndex from './serverless-index';
 import type { Doc } from './indexer';
 import buildQuery from './query-builder';
 
+const numOfResultsPerPage = 15;
+
 function totalHits(index: Promise<any>, query: string) {
   return new Promise((resolve, reject) => {
     return index.then((indexInstance) => {
@@ -70,6 +72,7 @@ function search(queryStr: string, path: string): Promise<Doc[]> {
     return index.then((indexInstance) => {
       indexInstance.search({
         query,
+        pageSize: numOfResultsPerPage
       }).on('data', function (data) {
         searchResults.push(data);
       }).on('end', function () {
