@@ -4,6 +4,7 @@ import ConsumerNotFound from '../consumer/exceptions/consumer-not-found';
 import BitNotFound from '../consumer/component/exceptions/bit-not-found';
 import InvalidBitId from '../bit-id/exceptions/invalid-bit-id';
 import BitAlreadyExistExternaly from '../consumer/component/exceptions/bit-already-exist-externaly';
+import ConsumerAlreadyExists from '../consumer/exceptions/consumer-already-exists';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import ComponentNotFound from '../scope/exceptions/component-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
@@ -19,6 +20,7 @@ import ComponentSpecsFailed from '../consumer/exceptions/component-specs-failed'
 const chalk = require('chalk');
 
 const errorsMap: [[Error, (err: Error) => string]] = [ 
+  [ ConsumerAlreadyExists, () => 'scope already exists... reinitialized.' ],
   [ ConsumerNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`' ],
   [ BitNotFound, () => 'fatal: component not found. to create a new bit, please use `bit create {bitName}`' ],
   [ BitAlreadyExistExternaly, err => `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${err.bitName}" to modify the current component or "bit create -f ${err.bitName}"!`],
