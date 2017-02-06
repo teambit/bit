@@ -28,6 +28,8 @@ export const INLINE_BITS_DIRNAME = 'inline_components';
 
 export const BIT_JSON_NAME = 'bit.json';
 
+export const LATEST_VERSION = 'latest';
+
 export const LOCAL_SCOPE_DIRNAME = '.bit';
 
 export const DEFAULT_BOXNAME = 'global';

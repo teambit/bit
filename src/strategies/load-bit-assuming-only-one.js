@@ -8,4 +8,6 @@ module.exports = (consumer, boxName, bitName) => {
   if (optionalBits.length === 1) {
     return resolveBit(optionalBits[0]);
   }
+
+  return null;
 };

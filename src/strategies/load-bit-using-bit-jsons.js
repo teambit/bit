@@ -12,15 +12,16 @@ module.exports = (consumer, boxName, bitName) => { // eslint-disable-line
   const localBitJsonPath = path.join(callerDirectory, BIT_JSON_NAME);
 
   const consumerBitJson = consumer.getBitJson();
-  const consumerDependencyMap = consumerBitJson.getDependencyMap();
+  const consumerDependencyMap = consumerBitJson.getDependencyMap(consumer.getPath());
 
   if (fs.existsSync(localBitJsonPath)) {
     const localBitJson = BitJson.load(callerDirectory);
-    const localDependencyMap = localBitJson.getDependencyMap();
+    const localDependencyMap = localBitJson.getDependencyMap(consumer.getPath());
     dependencyMap = R.merge(consumerDependencyMap, localDependencyMap);
   } else { dependencyMap = consumerDependencyMap; }
 
   const chosenDependency = dependencyMap[`${boxName}${ID_DELIMITER}${bitName}`];
+
   if (chosenDependency) {
     const { scope, box, name, version } = chosenDependency;
     const bitPath = path.join(consumer.getBitsDir(), box, name, scope, version);

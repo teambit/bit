@@ -54,13 +54,13 @@ class BitJson {
     return this.dependencies;
   }
 
-  populateDependencyMap() {
-    this.dependencyMap = DependencyMap.load(this.dependencies);
+  populateDependencyMap(consumerPath) {
+    this.dependencyMap = DependencyMap.load(this.dependencies, consumerPath);
   }
 
-  getDependencyMap() {
+  getDependencyMap(consumerPath) {
     if (!this.dependencyMap) {
-      this.populateDependencyMap();
+      this.populateDependencyMap(consumerPath);
     }
 
     return this.dependencyMap.getDependencies();

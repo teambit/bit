@@ -7,7 +7,9 @@ const resolveBit = require('./bit-resolver');
 module.exports = (fullId, opts) => {
   const consumerPath = locateConsumer(process.cwd());
   const consumer = new Consumer(consumerPath);
-  const { scope, box, name, version } = parseBitFullId(fullId);
+  const { scope, box, name, version } =
+  parseBitFullId({ id: fullId, consumerPath: consumer.getPath() });
   const bitPath = path.join(consumer.getBitsDir(), box, name, scope, version);
+  console.log('bitPath: ', bitPath);
   return resolveBit(bitPath, opts);
 };
