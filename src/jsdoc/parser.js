@@ -15,8 +15,14 @@ export type Doclet = {
 function formatTag(tag: Object): Object {
   delete tag.title;
   if (!tag.type) return tag;
-  tag.type = doctrine.type.stringify(tag.type);
-  
+  let formattedType = doctrine.type.stringify(tag.type);
+  if (tag.type.type === doctrine.type.Syntax.TypeApplication) {
+    // Doctrine adds a dot after the generic type for historical reasons.
+    // see here for more info: https://github.com/eslint/doctrine/issues/185
+    formattedType = formattedType.replace('.<', '<');
+  }
+  tag.type = formattedType;
+
   return tag;
 }
 
@@ -63,7 +69,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
   }
 
   const doclet = {
-    name, // todo: find the function/method name by regex 
+    name, // todo: find the function/method name by regex
     description,
     args,
     returns,
@@ -83,6 +89,6 @@ export default function parse(data: string): Doclet|[] {
   } catch (e) {
     // never mind, ignore the doc of this source
   }
-  
+
   return doclets;
 }
