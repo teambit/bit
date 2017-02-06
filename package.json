@@ -1,6 +1,7 @@
 {
   "name": "bit-cli",
   "version": "0.1.22",
+  "license": "Apache 0.2",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "gulp lint && flow check",
@@ -11,6 +12,11 @@
   },
   "bin": {
     "bit": "bin/bit.js"
+  },
+  "repository" :
+  {
+    "type" : "git",
+    "url" : "https://github.com/teambit/bit"
   },
   "dependencies": {
     "bit-js": "^0.1.5",
