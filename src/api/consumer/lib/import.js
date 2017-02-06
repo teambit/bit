@@ -13,7 +13,7 @@ export default function importAction(
         loader.start();
 
         return consumer.importEnvironment(bitId)
-        .then((component) => {
+        .then((components) => {
           function writeToBitJsonIfNeeded() {
             if (save && compiler) {
               consumer.bitJson.compilerId = bitId;
@@ -29,20 +29,20 @@ export default function importAction(
           }
           
           return writeToBitJsonIfNeeded()
-          .then(() => [component]);
+          .then(() => components);
         });
       }
       
       loader.start();
       return consumer.import(bitId)
-        .then((bits) => {
+        .then((components) => {
           if (save) {
             const parseId = BitId.parse(bitId, consumer.scope.name);
             return consumer.bitJson.addDependency(parseId).write({ bitDir: consumer.getPath() })
-            .then(() => bits);
+            .then(() => components);
           }
 
-          return Promise.resolve(bits);
+          return Promise.resolve(components);
         });
     });
 }

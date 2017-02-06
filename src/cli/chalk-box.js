@@ -6,7 +6,7 @@ export const formatInlineBit = ({ box, name }: any): string =>
 c.white('     > ') + c.cyan(`${box}/${name}`);
 
 export const formatBit = ({ scope = '@this', box, name, version }: any): string => 
-c.white('     > ') + c.cyan(`${scope}/${box}/${name} - ${version}`);
+c.white('     > ') + c.cyan(`${scope}/${box}/${name} - ${version ? version.toString() : 'latest'}`);
 
 export const paintBitProp = (key: string, value: string): string => {
   if (!value) return '';

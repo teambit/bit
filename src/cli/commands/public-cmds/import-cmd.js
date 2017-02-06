@@ -23,15 +23,7 @@ export default class Import extends Command {
       throw new Error('you cant use tester and compiler flags combined');
     }
     
-    return importAction({ bitId: id, save, tester, compiler, loader })
-      .then(components => 
-        components.map(component => ({
-          scope: component.scope,
-          box: component.box,
-          name: component.name,
-          version: component.version.toString()
-        }))
-      );
+    return importAction({ bitId: id, save, tester, compiler, loader });
   }
 
   report(components: any): string {
