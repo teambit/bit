@@ -1,18 +1,7 @@
 /** @flow */
 import serverlessIndex from './serverless-index';
-import indexer from './indexer';
 import type { Doc } from './indexer';
-import stopwords from './stopwords';
-
-const boost = {
-  box: 3,
-  tokenizedBox: 2,
-  name: 5,
-  tokenizedName: 4,
-  functionNames: 2,
-  tokenizedFunctionNames: 2,
-  minDescription: 1
-};
+import buildQuery from './query-builder';
 
 function totalHits(index: Promise<any>, query: string) {
   return new Promise((resolve, reject) => {
@@ -48,29 +37,7 @@ function getDoc(index: Promise<any>, docIds: string[]) {
   });
 }
 
-function queryItem(field, queryStr): Object {
-  return {
-    AND: { [field]: queryStr.toLowerCase().split(' ') },
-    BOOST: boost[field],
-  };
-}
 
-function buildQuery(queryStr: string): Array<Object> {
-  const queryStrWithoutStopwords = queryStr
-    .split(' ')
-    .filter(word => !stopwords.includes(word))
-    .join(' ');
-  const tokenizedQuery = indexer.tokenizeStr(queryStr);
-  const query = [];
-  query.push(queryItem('box', queryStr));
-  query.push(queryItem('tokenizedBox', queryStr));
-  query.push(queryItem('name', queryStr));
-  query.push(queryItem('tokenizedName', tokenizedQuery));
-  query.push(queryItem('functionNames', queryStr));
-  query.push(queryItem('tokenizedFunctionNames', tokenizedQuery));
-  query.push(queryItem('minDescription', queryStrWithoutStopwords));
-  return query;
-}
 
 /**
  * Sort by the score. If the score is equal, sort by the length of the name.
