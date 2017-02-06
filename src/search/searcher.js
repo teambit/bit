@@ -2,6 +2,7 @@
 import serverlessIndex from './serverless-index';
 import indexer from './indexer';
 import type { Doc } from './indexer';
+import stopwords from './stopwords';
 
 const boost = {
   box: 3,
@@ -55,6 +56,10 @@ function queryItem(field, queryStr): Object {
 }
 
 function buildQuery(queryStr: string): Array<Object> {
+  const queryStrWithoutStopwords = queryStr
+    .split(' ')
+    .filter(word => !stopwords.includes(word))
+    .join(' ');
   const tokenizedQuery = indexer.tokenizeStr(queryStr);
   const query = [];
   query.push(queryItem('box', queryStr));
@@ -63,7 +68,7 @@ function buildQuery(queryStr: string): Array<Object> {
   query.push(queryItem('tokenizedName', tokenizedQuery));
   query.push(queryItem('functionNames', queryStr));
   query.push(queryItem('tokenizedFunctionNames', tokenizedQuery));
-  query.push(queryItem('minDescription', queryStr));
+  query.push(queryItem('minDescription', queryStrWithoutStopwords));
   return query;
 }
 
@@ -85,7 +90,7 @@ function formatter(doc: Doc): string {
 
 /**
  * Search in a local LevelUp index.
- * 
+ *
  * @param {string} queryStr
  * @param {string} path
  * @return {Promise}
