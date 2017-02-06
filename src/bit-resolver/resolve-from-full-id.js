@@ -10,6 +10,5 @@ module.exports = (fullId, opts) => {
   const { scope, box, name, version } =
   parseBitFullId({ id: fullId, consumerPath: consumer.getPath() });
   const bitPath = path.join(consumer.getBitsDir(), box, name, scope, version);
-  console.log('bitPath: ', bitPath);
   return resolveBit(bitPath, opts);
 };
