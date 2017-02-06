@@ -6,7 +6,7 @@ export default ({ name, version, dir, silent = true }:
 { name: string, version: string, dir: string, silent?: bool }) => {
   return new Promise((resolve, reject) => {
     const child = fork(path.join(__dirname, 'npm-worker.js'), {
-      silent: true,
+      silent,
       env: {
         __name__: name,
         __version__: version,

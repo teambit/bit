@@ -1,4 +1,5 @@
 const npmi = require('npmi');
+const serializeError = require('serialize-error');
 
 const dir = process.env.__dir__;
 const name = process.env.__name__;
@@ -16,9 +17,7 @@ const options = {
 
 npmi(options, (err, result) => {
   if (err) {
-    if (err.code === npmi.LOAD_ERR) console.error('npm load error');
-    else if (err.code === npmi.INSTALL_ERR) console.error('npm install error');
-    return process.send({ type: 'error', payload: err });
+    return process.send({ type: 'error', payload: serializeError(err) });
   }
   
   return process.send({ type: 'success', payload: result });

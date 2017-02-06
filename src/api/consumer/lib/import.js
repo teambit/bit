@@ -4,15 +4,21 @@ import { loadConsumer } from '../../../consumer';
 import Bit from '../../../consumer/component';
 
 export default function importAction(
-  { bitId, save, tester, compiler, loader }: {
-    bitId: string, save: ?bool, tester: ?bool, compiler: ?bool, loader: any }): Promise<Bit[]> {
+  { bitId, save, tester, compiler, loader, verbose }: {
+    bitId: string,
+    save: ?bool,
+    tester: ?bool,
+    compiler: ?bool,
+    loader: any,
+    verbose: ?bool
+  }): Promise<Bit[]> {
   return loadConsumer()
     .then((consumer) => {
       if (tester || compiler) { 
         loader.text = 'importing environment dependencies...';
         loader.start();
 
-        return consumer.importEnvironment(bitId)
+        return consumer.importEnvironment(bitId, verbose, loader)
         .then((components) => {
           function writeToBitJsonIfNeeded() {
             if (save && compiler) {

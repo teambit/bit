@@ -84,7 +84,7 @@ export default class Consumer {
   import(rawId: ?string): Component {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
-      return this.scope.installEnvironment([this.testerId, this.compilerId], this)
+      return this.scope.installEnvironment({ ids: [this.testerId, this.compilerId], consumer: this })
       .then(() => this.scope.getMany(dependencies)
         .then((components) => {
           return this.writeToComponentsDir(flatten(components));
@@ -102,10 +102,10 @@ export default class Consumer {
     return importSpecificComponent();
   }
 
-  importEnvironment(rawId: ?string) {
+  importEnvironment(rawId: ?string, verbose: ?bool, loader: any) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId, this.scope.name);
-    return this.scope.installEnvironment([bitId], this);
+    return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose, loader });
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {

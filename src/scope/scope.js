@@ -401,16 +401,20 @@ export default class Scope {
     return bitJs.loadExact(bitId.toString());
   }
   
-  installEnvironment(ids: BitId[], consumer: ?Consumer): Promise<any> {
+  installEnvironment({ ids, consumer, verbose, loader }:
+  { ids: BitId[], consumer: ?Consumer, verbose?: bool, loader?: any }): Promise<any> {
     const installPackageDependencies = (component: ConsumerComponent) => {
       const scopePath = this.getPath();
       const nodeModulesDir = consumer ? pathLib.dirname(scopePath) : scopePath;
-      // const isConsumerScope = p => pathLib.basename(p) === BIT_HIDDEN_DIR;
       const deps = component.packageDependencies;
+      
+      if (verbose && loader) loader.stop(); // in order to show npm install output on verbose flag
+
       return Promise.all(
         R.values(
           R.mapObjIndexed(
-            (value, key) => npmInstall({ name: key, version: value, dir: nodeModulesDir })
+            (value, key) => 
+              npmInstall({ name: key, version: value, dir: nodeModulesDir, silent: !verbose })
           , deps)
         )
       ).then(() => component);
