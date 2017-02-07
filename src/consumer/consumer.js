@@ -85,20 +85,19 @@ export default class Consumer {
   import(rawId: ?string, verbose?: ?bool, loader?: ?any): Component {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
-      return this.scope.installEnvironment({
-        ids: [this.testerId, this.compilerId],
-        consumer: this,
-        verbose,
-        loader,
-      })
-      .then(envComponents => this.scope.getMany(dependencies)
+      return this.scope.getMany(dependencies)
         .then((components) => {
           return this.writeToComponentsDir(flatten(components))
           .then((depComponents) => {
-            return R.concat(depComponents, envComponents);
+            return this.scope.installEnvironment({
+              ids: [this.testerId, this.compilerId],
+              consumer: this,
+              verbose,
+              loader,
+            })
+            .then(envComponents => R.concat(depComponents, envComponents));
           });
-        })
-      );
+        });
     };
 
     const importSpecificComponent = () => {
