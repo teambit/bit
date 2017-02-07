@@ -1,6 +1,6 @@
 {
   "name": "bit-cli",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "license": "Apache 0.2",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
