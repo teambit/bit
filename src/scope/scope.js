@@ -25,6 +25,7 @@ import { postExportHook } from '../hooks';
 import type { Results } from '../specs-runner/specs-runner';
 import npmInstall from '../utils/npm';
 import Consumer from '../consumer/consumer';
+import { index } from '../search/indexer';
 
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
 
@@ -149,6 +150,7 @@ export default class Scope {
         this.getObjects([compVersion.id])
         .then((objs) => {
           return compVersion.toConsumer(this.objects)
+          .then(consumerComponent => index(consumerComponent, this.getPath()))
           .then(consumerComponent =>
             postExportHook(consumerComponent.toObject())
           )

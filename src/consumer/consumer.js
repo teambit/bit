@@ -18,6 +18,7 @@ import { flatten, removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
 import type { Results } from '../specs-runner/specs-runner';
+import { index } from '../search/indexer';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -185,6 +186,7 @@ export default class Consumer {
         this.scope.put(bit, message, force, loader)
         .then(bits => this.writeToComponentsDir([bits]))
         .then(() => this.removeFromInline(id))
+        .then(() => index(bit, this.scope.getPath()))
         .then(() => bit)
       );
   }
