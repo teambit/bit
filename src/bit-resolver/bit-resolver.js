@@ -4,7 +4,7 @@ import BitJson from '../bit-json';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
 
 module.exports = (bitPath, opts) => {
-  if (!fs.existsSync(bitPath)) throw new Error(`the component in path "${bitPath}" does not exist \n`);
+  if (!fs.existsSync(bitPath)) throw new Error(`the component in path "${bitPath}" does not exist`);
 
   const distFile = path.join(bitPath, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
   if (fs.existsSync(distFile)) {
