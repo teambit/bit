@@ -69,8 +69,13 @@ class BitJson {
   static load(bitPath) {
     const readJson = p => JSON.parse(fs.readFileSync(p, 'utf8'));
     const composeBitJsonPath = p => path.join(p, BIT_JSON_NAME);
-    const readBitJson = p => readJson(composeBitJsonPath(p));
-    return new BitJson(readBitJson(bitPath));
+    const bitJsonPath = composeBitJsonPath(bitPath);
+
+    try {
+      return new BitJson(readJson(bitJsonPath));
+    } catch (e) {
+      throw new Error(`invalid JSON - "${bitJsonPath}"`);
+    }
   }
 }
 
