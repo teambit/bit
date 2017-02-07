@@ -8,9 +8,9 @@
         "tester": "bit.envs/testers/mocha-chai::8"
     },
     "dependencies": {
-        "bit.utils/array/first": "1",
-        "bit.utils/array/diff": "4",
-        "bit.utils/string/contains": "1",
-        "bit.utils/string/to-base64": "1"
+        "bit.utils/array/first": "latest",
+        "bit.utils/array/diff": "latest",
+        "bit.utils/string/contains": "latest",
+        "bit.utils/string/to-base64": "latest"
     }
 }

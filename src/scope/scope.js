@@ -402,7 +402,7 @@ export default class Scope {
   }
   
   installEnvironment({ ids, consumer, verbose, loader }:
-  { ids: BitId[], consumer: ?Consumer, verbose?: bool, loader?: any }): Promise<any> {
+  { ids: BitId[], consumer: ?Consumer, verbose?: ?bool, loader?: ?any }): Promise<any> {
     const installPackageDependencies = (component: ConsumerComponent) => {
       const scopePath = this.getPath();
       const nodeModulesDir = consumer ? pathLib.dirname(scopePath) : scopePath;
