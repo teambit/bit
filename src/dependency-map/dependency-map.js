@@ -47,9 +47,9 @@ export default class DependencyMap {
           dep => R.objOf(`${dep.box}${ID_DELIMITER}${dep.name}`, dep),
           R.values(
             R.mapObjIndexed((version, id) =>
-              Dependency.load(id, version, consumerPath),
-            ), rawDependencies),
+              Dependency.load(id, version, consumerPath), rawDependencies),
           ),
+        ),
       );
 
     return new DependencyMap(dependencies);
