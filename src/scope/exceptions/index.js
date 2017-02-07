@@ -7,6 +7,7 @@ import MergeConflict from './merge-conflict';
 import ComponentNotFound from './component-not-found';
 import VersionNotFound from './version-not-found';
 import HashNotFound from './hash-not-found';
+import ResolutionException from './resolution-exception';
 
 export {
   ScopeNotFound,
@@ -16,5 +17,6 @@ export {
   MergeConflict,
   VersionNotFound,
   ScopeAlreadyExists,
-  BitNotInScope
+  BitNotInScope,
+  ResolutionException,
 };

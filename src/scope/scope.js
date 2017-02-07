@@ -12,7 +12,7 @@ import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, flatten } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import { ScopeNotFound, ComponentNotFound } from './exceptions';
+import { ScopeNotFound, ComponentNotFound, ResolutionException } from './exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import ConsumerComponent from '../consumer/component';
@@ -395,10 +395,18 @@ export default class Scope {
    */
   loadEnvironment(bitId: BitId, opts: ?{ pathOnly: ?bool }) {
     if (opts && opts.pathOnly) {
-      return bitJs.loadExact(bitId.toString(), opts);
+      try {
+        return bitJs.loadExact(bitId.toString(), opts);
+      } catch (e) {
+        throw new ResolutionException(e.message);
+      }
     }
 
-    return bitJs.loadExact(bitId.toString());
+    try {
+      return bitJs.loadExact(bitId.toString());
+    } catch (e) {
+      throw new ResolutionException(e.message);
+    }
   }
   
   installEnvironment({ ids, consumer, verbose, loader }:

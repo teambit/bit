@@ -12,7 +12,7 @@ import UnexpectedNetworkError from '../scope/network/exceptions/unexpected-netwo
 import MissingImpl from '../consumer/component/exceptions/missing-impl';
 import MergeConflict from '../scope/exceptions/merge-conflict';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
-import { ScopeNotFound } from '../scope/exceptions';
+import { ScopeNotFound, ResolutionException } from '../scope/exceptions';
 import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
 import ComponentSpecsFailed from '../consumer/exceptions/component-specs-failed';
 
@@ -34,7 +34,8 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ MergeConflict, () => 'fatal: merge conflict'],
   [ UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
   [ ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init --bare`'],
-  [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit']
+  [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit'],
+  [ ResolutionException, e => e.message]
 ];
 
 export default (err: Error): ?string => {
