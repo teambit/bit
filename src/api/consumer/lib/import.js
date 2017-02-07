@@ -40,7 +40,7 @@ export default function importAction(
       }
       
       loader.start();
-      return consumer.import(bitId)
+      return consumer.import(bitId, verbose, loader)
         .then((components) => {
           if (save) {
             const parseId = BitId.parse(bitId, consumer.scope.name);

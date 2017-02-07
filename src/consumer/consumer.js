@@ -2,6 +2,7 @@
 import path from 'path';
 import glob from 'glob';
 import fs from 'fs-extra';
+import R from 'ramda';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
@@ -81,13 +82,21 @@ export default class Consumer {
       );
   }
 
-  import(rawId: ?string): Component {
+  import(rawId: ?string, verbose?: bool, loader?: any): Component {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
-      return this.scope.installEnvironment({ ids: [this.testerId, this.compilerId], consumer: this })
-      .then(() => this.scope.getMany(dependencies)
+      return this.scope.installEnvironment({
+        ids: [this.testerId, this.compilerId],
+        consumer: this,
+        verbose,
+        loader
+      })
+      .then(envComponents => this.scope.getMany(dependencies)
         .then((components) => {
-          return this.writeToComponentsDir(flatten(components));
+          return this.writeToComponentsDir(flatten(components))
+          .then((depComponents) => {
+            return R.concat(depComponents, envComponents);
+          });
         })
       );
     };
