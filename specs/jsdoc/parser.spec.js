@@ -50,7 +50,7 @@ describe('JSDoc Parser', () => {
         expect(doclet.static).to.be.true;
       });
     });
-    
+
     describe('Invalid code', () => {
       it('should returns an empty array', () => {
         const doclets = parser('this is an invalid code');
@@ -58,7 +58,7 @@ describe('JSDoc Parser', () => {
         expect(doclets).to.have.lengthOf(0);
       });
     });
-    
+
     describe('Method Declaration and Class Declaration', () => {
       let doclets;
       before(function() {
@@ -179,14 +179,14 @@ describe('JSDoc Parser', () => {
       });
       it('should recognize Array of one type', () => {
         const anyArg = args.find(arg => arg.name === 'arrayOfType');
-        expect(anyArg.type).to.equal('Array.<string>');
+        expect(anyArg.type).to.equal('Array<string>');
       });
       it('should recognize Array of union', () => {
         const anyArg = args.find(arg => arg.name === 'arrayOfUnion');
-        expect(anyArg.type).to.equal('Array.<(number|Object)>');
+        expect(anyArg.type).to.equal('Array<(number|Object)>');
       });
     });
-    
+
     describe('Flow Type File', () => {
       it('should parse the file with no errors', () => {
         const file = path.join(__dirname, 'fixtures', 'flowTypeFile.js');
