@@ -16,7 +16,7 @@ module.exports = ({ scope, box, name, consumerPath }) => {
 
   if (versions.length < 1) {
     const errorMessage = `fatal: you were looking for the component ${scope}/${box}/${name} in latest version which does not exists please use bit import first`;
-    throw errorMessage;
+    throw new Error(errorMessage);
   }
 
   return Math.max(...versions).toString();

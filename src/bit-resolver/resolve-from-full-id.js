@@ -12,10 +12,11 @@ module.exports = (fullId, opts) => {
   const { scope, box, name, version } =
   parseBitFullId({ id: fullId });
 
+  let realVersion = version;
   if (!version || version === LATEST_VERSION) {
-    version = findLatestVersion({ scope, box, name, consumerPath }); // eslint-disable-line
+    realVersion = findLatestVersion({ scope, box, name, consumerPath });
   }
 
-  const bitPath = path.join(consumer.getBitsDir(), box, name, scope, version);
+  const bitPath = path.join(consumer.getBitsDir(), box, name, scope, realVersion);
   return resolveBit(bitPath, opts);
 };
