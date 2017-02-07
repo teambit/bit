@@ -9,9 +9,9 @@ const resolveFromFullId = require('./bit-resolver/resolve-from-full-id');
 
 const {
   loadBitInline,
-  loadBitAssumingOnlyOne,
+  loadBitAssumingOneScopeOneVersion,
   loadBitUsingBitJsons,
-  // loadBitUsingDependenciesMap, @TODO - write strategy
+  loadLatestBitAssumingOneScope,
 } = require('./strategies');
 
 const mockComponents = {};
@@ -29,9 +29,9 @@ const load = (bitId) => {
 
   const strategies = [
     loadBitInline,
-    loadBitAssumingOnlyOne,
+    loadBitAssumingOneScopeOneVersion,
     loadBitUsingBitJsons,
-    // loadBitUsingDependenciesMap,
+    loadLatestBitAssumingOneScope,
   ];
 
   for (let i = 0; i < strategies.length; i += 1) {

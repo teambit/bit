@@ -1,11 +1,11 @@
 const loadBitInline = require('./load-bit-inline');
-const loadBitUsingDependenciesMap = require('./load-bit-using-dependecies-map');
-const loadBitAssumingOnlyOne = require('./load-bit-assuming-only-one');
+const loadBitAssumingOneScopeOneVersion = require('./load-bit-assuming-one-scope-one-version');
 const loadBitUsingBitJsons = require('./load-bit-using-bit-jsons');
+const loadLatestBitAssumingOneScope = require('./load-latest-bit-assuming-one-scope');
 
 module.exports = {
   loadBitInline,
-  loadBitUsingDependenciesMap,
-  loadBitAssumingOnlyOne,
+  loadBitAssumingOneScopeOneVersion,
   loadBitUsingBitJsons,
+  loadLatestBitAssumingOneScope,
 };
