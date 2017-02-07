@@ -1,17 +1,9 @@
 /** @flow */
 import serverlessIndex from './serverless-index';
-import indexer from './indexer';
 import type { Doc } from './indexer';
+import buildQuery from './query-builder';
 
-const boost = {
-  box: 3,
-  tokenizedBox: 2,
-  name: 5,
-  tokenizedName: 4,
-  functionNames: 2,
-  tokenizedFunctionNames: 2,
-  minDescription: 1
-};
+const numOfResultsPerPage = 15;
 
 function totalHits(index: Promise<any>, query: string) {
   return new Promise((resolve, reject) => {
@@ -47,25 +39,7 @@ function getDoc(index: Promise<any>, docIds: string[]) {
   });
 }
 
-function queryItem(field, queryStr): Object {
-  return {
-    AND: { [field]: queryStr.toLowerCase().split(' ') },
-    BOOST: boost[field],
-  };
-}
 
-function buildQuery(queryStr: string): Array<Object> {
-  const tokenizedQuery = indexer.tokenizeStr(queryStr);
-  const query = [];
-  query.push(queryItem('box', queryStr));
-  query.push(queryItem('tokenizedBox', queryStr));
-  query.push(queryItem('name', queryStr));
-  query.push(queryItem('tokenizedName', tokenizedQuery));
-  query.push(queryItem('functionNames', queryStr));
-  query.push(queryItem('tokenizedFunctionNames', tokenizedQuery));
-  query.push(queryItem('minDescription', queryStr));
-  return query;
-}
 
 /**
  * Sort by the score. If the score is equal, sort by the length of the name.
@@ -85,7 +59,7 @@ function formatter(doc: Doc): string {
 
 /**
  * Search in a local LevelUp index.
- * 
+ *
  * @param {string} queryStr
  * @param {string} path
  * @return {Promise}
@@ -98,6 +72,7 @@ function search(queryStr: string, path: string): Promise<Doc[]> {
     return index.then((indexInstance) => {
       indexInstance.search({
         query,
+        pageSize: numOfResultsPerPage
       }).on('data', function (data) {
         searchResults.push(data);
       }).on('end', function () {
