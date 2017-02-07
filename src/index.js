@@ -12,6 +12,7 @@ const {
   loadBitAssumingOneScopeOneVersion,
   loadBitUsingBitJsons,
   loadLatestBitAssumingOneScope,
+  loadBitMultipleScopes,
 } = require('./strategies');
 
 const mockComponents = {};
@@ -32,6 +33,7 @@ const load = (bitId) => {
     loadBitAssumingOneScopeOneVersion,
     loadBitUsingBitJsons,
     loadLatestBitAssumingOneScope,
+    loadBitMultipleScopes,
   ];
 
   for (let i = 0; i < strategies.length; i += 1) {
