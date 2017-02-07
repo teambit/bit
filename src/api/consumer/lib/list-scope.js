@@ -21,7 +21,7 @@ export default function list({ scopeName, loader }:
     }
 
     return scope.listStage();
-  }).catch((err) => {
+  }).catch((err) => { // handle relevant error error
     return loadScope(process.cwd())
       .then(scope => scope.listStage());
   });

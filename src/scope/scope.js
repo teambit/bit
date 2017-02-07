@@ -321,6 +321,14 @@ export default class Scope {
     return this.sources.get(id)
     .then((componentModel) => {
       if (!componentModel) throw new ComponentNotFound(id);
+      return componentModel.collectLogs(this.objects);
+    });
+  }
+
+  loadAllVersions(id: BitId): Promise<ConsumerComponent> {
+    return this.sources.get(id)
+    .then((componentModel) => {
+      if (!componentModel) throw new ComponentNotFound(id);
       return componentModel.collectVersions(this.objects);
     });
   }

@@ -58,7 +58,7 @@ export default class Component extends BitObject {
     return Math.max(...this.listVersions());
   }
   
-  collectVersions(repo: Repository):
+  collectLogs(repo: Repository):
   Promise<{[number]: {message: string, date: string, hash: string}}> {
     return repo.findMany(this.versionArray)
     .then((versions) => {
@@ -66,6 +66,15 @@ export default class Component extends BitObject {
       const indexedHashes = mapObjIndexed(ref => objOf('hash', ref.toString()), this.versions);
       return mergeWith(merge, indexedLogs, indexedHashes);
     });
+  }
+
+  collectVersions(repo: Repository): Promise<ConsumerComponent> {
+    return Promise.all(
+      this.listVersions()
+      .map((versionNum) => {
+        return this.toConsumerComponent(String(versionNum), this.scope, repo);
+      })
+    );
   }
 
   addVersion(version: Version) {
