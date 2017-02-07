@@ -22,12 +22,12 @@ export default function importAction(
         .then((components) => {
           function writeToBitJsonIfNeeded() {
             if (save && compiler) {
-              consumer.bitJson.compilerId = bitId;
+              consumer.bitJson.compilerId = components[0].id.toString();
               return consumer.bitJson.write({ bitDir: consumer.getPath() });
             }
 
             if (save && tester) {
-              consumer.bitJson.testerId = bitId;
+              consumer.bitJson.testerId = components[0].id.toString();
               return consumer.bitJson.write({ bitDir: consumer.getPath() });
             }
 

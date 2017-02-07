@@ -425,7 +425,7 @@ export default class Scope {
       const deps = component.packageDependencies;
       
       if (verbose && loader) loader.stop(); // in order to show npm install output on verbose flag
-      if (loader) loader.text = 'installing npm dependencies';
+      if (loader) loader.text = 'ensuring npm dependencies';
       
       return Promise.all(
         R.values(
