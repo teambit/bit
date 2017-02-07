@@ -1,33 +1,43 @@
 const R = require('ramda');
 const parseBitFullId = require('../bit-id/parse-bit-full-id');
-const { ID_DELIMITER } = require('../constants');
+const findLatestVersion = require('../bit-id/find-latest-version');
+const { ID_DELIMITER, LATEST_VERSION } = require('../constants');
 
 export class Dependency {
-  constructor({ scope, box, name, version }) {
+  constructor({ scope, box, name, version }, consumerPath) {
+    this.consumerPath = consumerPath;
     this.scope = scope;
     this.box = box;
     this.name = name;
-    this.version = version;
+    this.versionString = version;
+    this.realVersion = null;
   }
 
-  getScope() {
-    return this.scope;
+  get id() {
+    return `${this.scope}/${this.box}/${this.name}` // eslint-disable-line
+    + (this.versionString ? `::${this.versionString}` : '');
   }
 
-  getBox() {
-    return this.box;
-  }
+  get version() {
+    if (this.realVersion) return this.realVersion;
+    if (!this.versionString || this.versionString === LATEST_VERSION) {
+      this.realVersion = findLatestVersion({
+        scope: this.scope,
+        box: this.box,
+        name: this.name,
+        consumerPath: this.consumerPath,
+      });
 
-  getName() {
-    return this.name;
-  }
+      return this.realVersion;
+    }
 
-  getVersion() {
-    return this.version;
+    if (isNaN(parseInt(this.versionString, 10))) { throw new Error(`the version of "${this.id}" is invalid`); }
+    this.realVersion = this.versionString;
+    return this.realVersion;
   }
 
   static load(id, version, consumerPath) {
-    return new Dependency(parseBitFullId({ id, version, consumerPath }));
+    return new Dependency(parseBitFullId({ id, version }), consumerPath);
   }
 }
 
