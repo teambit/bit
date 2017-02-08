@@ -22,18 +22,20 @@ Bit currently supports JavaScript. We plan to add drivers for more languages as 
 
 ## Why...?
 
-We believe in code reusability.
-Many components can and should be shared across projects.
-Reusability also means taking care of maintainability and discoverability. 
+Bit's design philosophy is one: code components should be composable building blocks.
 
-Up until now, the only way to reuse components was packaging them and distributing them via package managers. This is an overkill for code components. It also completely misses the mark when it comes to maintainability and recoverability. A small, focused component (e.g. ‘isString’, ‘left-pad’..) should not be a package. The problem is, the alternative (copy-pasting) creates endless code duplications across projects and services, and an ever growing technological debt. No good. Reusability, maintenance and discoverability of components across projects, teams and even communities should be done right.
+Code components should be easily reused across projects without creating code duplications. They should be easy to create, simple to maintain and quick to find.
+
+Up until now, the only way to reuse small and focused components (e.g. ‘isString’, ‘left-pad’ etc..) was packaging them and distributing them via package managers. Packages are hard to create, complex to maintain and impossible to find. However, components are not packages.
 
 This is why we built Bit - the distributed code component manager.
 
-Bit enables you to easily extract reusable components from your code in seconds.
-It allows you to handle all your components in one place, make sure they are ready to run and build. Bit also makes it easy to find and use any component created by you, your team or someone completely different. 
+Bit is an open source tool for fast and easy extraction and reuse of code components. 
+It enables you to reuse components anywhere you like without creating code duplications or having to publish hundreds of tiny packages. It also makes maintenance much simpler for both your individual components and your entire code base. Using bit means components are also easy to find, so you and your friends don't have to write the same component twice ever again.
+ 
+Bit was built with many features to support this philosophy such as being fully distributed, providing local workflow, creating an isolated component environment and performing an on-export offline dependency resolution. 
 
-Using Bit means you end up with a thinner code base with little to no duplications, lighter and faster applications and an easily manageable and dynamic collection of tested components - ready to be used anywhere.
+Bit helps create a thinner code base which is also much easier to test and maintain. It also means you only use the code you actually need, so your entire application can become lighter and faster.  Ultimately, bit allows you to create a dynamic collection of fully managed components ready to be used anywhere- writing components once and composing them together to build anything.
 
 ## Features
 
