@@ -6,26 +6,24 @@ import { formatter } from '../../../search/searcher';
 import { Doc } from '../../../search/indexer';
 
 export default class Search extends Command {
-  name = 'search [query...]';
+  name = 'search <scope> <query...>';
   description = 'search for components';
   alias = '';
   opts = [
-    ['s', 'scope <scopename>', 'search in scope'],
     ['r', 'reindex', 're-index all components']
   ];
   loader = { autoStart: false };
 
-  action([query, ]: [string[], ], { scope, reindex }: { scope: string, reindex: boolean }) {
+  action([scope, query, ]: [string, string[], ], { reindex }: { reindex: boolean }) {
     const queryStr = query.join(' ');
-    if (scope) {
+    if (scope !== '@this') {
       // $FlowFixMe
       this.loader.text = `searching remote scope <${scope}> for '${queryStr}'`;
       // $FlowFixMe
       this.loader.start();
       return searchAdapter.searchRemotely(queryStr, scope, reindex);
     }
-    
-    console.log(`searching components in ${scope ? scope : 'local scope'} for "${queryStr}"`);
+
     return searchAdapter.searchLocally(queryStr, reindex);
   }
 
