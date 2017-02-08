@@ -7,7 +7,8 @@ const { LATEST_VERSION } = require('../constants');
 const findLatestVersion = require('../bit-id/find-latest-version');
 
 module.exports = (fullId, opts) => {
-  const consumerPath = locateConsumer(process.cwd());
+  const callerDirectory = opts && opts.dir ? opts.dir : process.cwd();
+  const consumerPath = locateConsumer(callerDirectory);
   const consumer = new Consumer(consumerPath);
   const { scope, box, name, version } =
   parseBitFullId({ id: fullId });

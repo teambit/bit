@@ -6,6 +6,8 @@ const Consumer = require('./consumer/consumer');
 const mock = require('mock-require');
 const { DEFAULT_BOXNAME } = require('./constants');
 const resolveFromFullId = require('./bit-resolver/resolve-from-full-id');
+const stackTrace = require('stack-trace');
+const path = require('path');
 
 const {
   loadBitInline,
@@ -20,12 +22,13 @@ const mockComponents = {};
 const load = (bitId) => {
   assert(bitId, 'missing bit id');
   assert(R.is(String, bitId), 'bit id must be a string');
+  const callerDirectory = path.dirname(stackTrace.get()[1].getFileName());
 
   if (mockComponents[bitId]) return mockComponents[bitId];
 
   let loaded;
   const { bitName, boxName } = parseBitInlineId(bitId);
-  const consumerPath = locateConsumer(process.cwd());
+  const consumerPath = locateConsumer(callerDirectory);
   const consumer = new Consumer(consumerPath);
 
   const strategies = [
