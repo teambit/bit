@@ -1,6 +1,6 @@
 {
   "name": "bit-js",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "scripts": {
     "build": "gulp",
     "watch": "gulp watch"
