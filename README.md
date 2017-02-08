@@ -22,16 +22,18 @@ Bit currently supports JavaScript. We plan to add drivers for more languages as 
 
 ## Why...?
 
-We beleive that the more code gets reused across software projects - the better.
+We believe in code reusability.
+Many components can and should be shared across projects.
+Reusability also means taking care of maintainability and discoverability. 
 
-Currently the best way to reuse code is to package it, and distribute via package managers. 
-In theory it should work, but in practice it's not so simple. Packaging small pieces of code is an over
-kill for most uses cases (would you go to all the trouble to package 'isString'?). The packaging
-overhead causes many developers to prefer copy-pasting code snippets instead (the infamus left-pad
-discussion). 
+Up until now, the only way to reuse components was packaging them and distributing them via package managers. This is an overkill for code components. It also completely misses the mark when it comes to maintainability and recoverability. A small, focused component (e.g. ‘isString’, ‘left-pad’..) should not be a package. The problem is, the alternative (copy-pasting) creates endless code duplications across projects and services, and an ever growing technological debt. No good. Reusability, maintenance and discoverability of components across projects, teams and even communities should be done right.
 
-This is why we built Bit. To make distributing the small pieces of functionality a simple and easy
-task. We want tTo make it a part of the workflow and routine of how we code.
+This is why we built Bit - the distributed code component manager.
+
+Bit enables you to easily extract reusable components from your code in seconds.
+It allows you to handle all your components in one place, make sure they are ready to run and build. Bit also makes it easy to find and use any component created by you, your team or someone completely different. 
+
+Using Bit means you end up with a thinner code base with little to no duplications, lighter and faster applications and an easily manageable and dynamic collection of tested components - ready to be used anywhere.
 
 ## Features
 
