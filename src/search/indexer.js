@@ -69,7 +69,7 @@ function addAllToLocalIndex(components: Array<Component>): Promise<string> {
   });
 }
 
-function addToLocalIndex(component: Component): Promise<string> {
+function addToLocalIndex(component: Component): Promise<Component> {
   return new Promise((resolve, reject) => {
     const doc = prepareDoc(component.docs, component);
     localIndex.then((indexInstance) => {
@@ -84,13 +84,13 @@ function addToLocalIndex(component: Component): Promise<string> {
           // this function needs to be called if you want to listen for the end event
         })
         .on('end', () => {
-          resolve('The indexing has been completed');
+          resolve(component);
         });
     });
   });
 }
 
-function index(component: Component, scopePath: string): Promise<string> {
+function index(component: Component, scopePath: string): Promise<Component> {
   localIndex = serverlessIndex.initializeIndex(scopePath);
   return addToLocalIndex(component);
 }
