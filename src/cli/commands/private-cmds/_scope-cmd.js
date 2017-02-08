@@ -1,7 +1,10 @@
 /** @flow */
+import bit from 'bit-js';
 import Command from '../../command';
 import { describeScope } from '../../../api/scope';
-import { fromBase64, toBase64, empty } from '../../../utils';
+import { fromBase64, empty } from '../../../utils';
+
+const toBase64 = bit('string/to-base64');
 
 export default class Prepare extends Command {
   name = '_scope <path>';

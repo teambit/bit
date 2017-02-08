@@ -1,16 +1,18 @@
 /** @flow */
+import bit from 'bit-js';
 import { inflateSync } from 'zlib';
 import Repository from './repository';
-import { deflate, inflate, sha1 } from '../../utils';
+import { deflate, inflate } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import Ref from './ref';
+
+const sha1 = bit('sha1');
 
 function parse(buffer: Buffer, types: {[string]: Function}): BitObject {
   const [headers, contents] = buffer.toString().split(NULL_BYTE);
   const [type, ] = headers.split(SPACE_DELIMITER);
   return types[type].parse(contents);
 }
-
 
 export default class BitObject {
   id() {
