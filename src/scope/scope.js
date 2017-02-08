@@ -406,14 +406,14 @@ export default class Scope {
   loadEnvironment(bitId: BitId, opts: ?{ pathOnly: ?bool }) {
     if (opts && opts.pathOnly) {
       try {
-        return bitJs.loadExact(bitId.toString(), opts);
+        return bitJs.loadExact(bitId.toString(), this.getPath(), opts);
       } catch (e) {
         throw new ResolutionException(e.message);
       }
     }
 
     try {
-      return bitJs.loadExact(bitId.toString());
+      return bitJs.loadExact(bitId.toString(), this.getPath());
     } catch (e) {
       throw new ResolutionException(e.message);
     }
