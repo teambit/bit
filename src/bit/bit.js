@@ -51,7 +51,7 @@ class Bit {
 
     if (compilerId === NO_PLUGIN_TYPE) return require(implFilePath); // eslint-disable-line
 
-    const compiler = resolveFromFullId(compilerId, { dir: this.consumer.getPath() });
+    const compiler = resolveFromFullId(compilerId, this.consumer.getPath());
     const rawImpl = fs.readFileSync(implFilePath, 'utf8');
     return requireFromString(compiler.compile(rawImpl).code, implFilePath);
   }
