@@ -27,6 +27,7 @@ import npmInstall from '../utils/npm';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
 
+const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
 
 export type ScopeDescriptor = {
@@ -238,7 +239,10 @@ export default class Scope {
   }
 
   importMany(ids: BitIds): Promise<VersionDependencies[]> {
-    const [externals, locals] = splitWhen(id => id.isLocal(this.name), ids);
+    const idsWithoutNils = removeNils(ids);
+    if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
+    
+    const [externals, locals] = splitWhen(id => id.isLocal(this.name), idsWithoutNils);
     
     return this.sources.getMany(locals)
       .then((localDefs) => {
@@ -275,7 +279,9 @@ export default class Scope {
   }
 
   getMany(ids: BitId[]): Promise<ConsumerComponent[]> {
-    return this.importMany(ids)
+    const idsWithoutNils = removeNils(ids);
+    if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
+    return this.importMany(idsWithoutNils)
     .then((versionDependenciesArr: VersionDependencies[]) => {
       return Promise.all(
         versionDependenciesArr.map(versionDependencies => 
