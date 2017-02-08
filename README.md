@@ -49,7 +49,7 @@ Bit helps create a thinner code base which is also much easier to test and maint
 
 ## Getting Started
 
-1. [Install instructions](https://github.com/teambit/bit/wiki/Install).
+1. [Install instructions](https://github.com/teambit/bit/wiki/Install)
 
 2. [Quick getting started manual](https://github.com/teambit/bit/wiki/Getting-Started)
 
