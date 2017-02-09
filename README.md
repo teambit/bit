@@ -20,7 +20,7 @@ Bit is a distributed, fast and language-agnostic code component manager designed
 
 Bit currently supports JavaScript. We plan to add drivers for more languages as soon as we can. We always love some help.
 
-## Why...?
+## Why?
 
 Bit's design philosophy is one: code components should be composable building blocks.
 
