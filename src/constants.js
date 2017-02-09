@@ -30,7 +30,9 @@ export const BIT_JSON_NAME = 'bit.json';
 
 export const LATEST_VERSION = 'latest';
 
-export const LOCAL_SCOPE_DIRNAME = '.bit';
+export const COMPONENTS_DIRNAME = 'components';
+
+export const INLINE_COMPONENTS_DIRNAME = 'inline_components';
 
 export const DEFAULT_BOXNAME = 'global';
 

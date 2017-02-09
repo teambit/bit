@@ -1,23 +1,19 @@
 const fs = require('fs');
 const path = require('path');
-const { LOCAL_SCOPE_DIRNAME, BIT_JSON_NAME, DEPENDENCIES_MAP_NAME } = require('../constants');
-
-const readJson = p => JSON.parse(fs.readFileSync(p, 'utf8'));
+const { COMPONENTS_DIRNAME, INLINE_COMPONENTS_DIRNAME, BIT_JSON_NAME } = require('../constants');
 
 const composeBitJsonPath = p => path.join(p, BIT_JSON_NAME);
-const composeLocalScopePath = p => path.join(p, LOCAL_SCOPE_DIRNAME);
-const composeDependenciesMapPath = p => path.join(composeLocalScopePath(p), DEPENDENCIES_MAP_NAME);
+const composeComponentsPath = p => path.join(p, COMPONENTS_DIRNAME);
+const composeInlineComponentsPath = p => path.join(p, INLINE_COMPONENTS_DIRNAME);
 
 const pathHasBitJson = p => fs.existsSync(composeBitJsonPath(p));
-const pathHasLocalScope = p => fs.existsSync(composeLocalScopePath(p));
+const pathHasComponentsDir = p => fs.existsSync(composeComponentsPath(p));
+const pathHasInlineComponentsDir = p => fs.existsSync(composeInlineComponentsPath(p));
 
-const pathHasConsumer = p => pathHasBitJson(p) && pathHasLocalScope(p);
-const readDependenciesMap = p => readJson(composeDependenciesMapPath(p));
+const pathHasConsumer = p => pathHasBitJson(p) &&
+(pathHasComponentsDir(p) || pathHasInlineComponentsDir(p));
 
 module.exports = {
   pathHasConsumer,
   composeBitJsonPath,
-  composeLocalScopePath,
-  composeDependenciesMapPath,
-  readDependenciesMap,
 };
