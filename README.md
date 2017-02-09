@@ -31,9 +31,9 @@ Up until now, the only way to reuse small and focused components (e.g. ‘isStri
 This is why we built Bit - the distributed code component manager.
 
 Bit is an open source tool for fast and easy extraction and reuse of code components. 
-It enables you to reuse components anywhere you like without creating code duplications or having to publish hundreds of tiny packages. It also makes maintenance much simpler for both your individual components and your entire code base. Using bit means components are also easy to find, so you and your friends don't have to write the same component twice ever again.
+It enables you to reuse components anywhere you like without creating code duplications or having to publish hundreds of tiny packages. It also makes maintenance much simpler for both your individual components and your entire code base. Using bit means components are easy to find, so you and your friends don't have to write the same component twice ever again.
  
-Bit was built with many features to support this philosophy such as being fully distributed, providing local workflow, creating an isolated component environment and performing an on-export offline dependency resolution. 
+Bit was built with many features to support this philosophy such as being fully distributed, providing a local workflow, creating an isolated component environment and performing an on-export offline dependency resolution. 
 
 Bit helps create a thinner code base which is also much easier to test and maintain. It also means you only use the code you actually need, so your entire application can become lighter and faster.  Ultimately, bit allows you to create a dynamic collection of fully managed components ready to be used anywhere- writing components once and composing them together to build anything.
 
