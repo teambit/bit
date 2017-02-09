@@ -18,7 +18,7 @@
     "url": "https://github.com/teambit/bit"
   },
   "dependencies": {
-    "bit-js": "^0.1.5",
+    "bit-js": "^0.1.13",
     "camelcase": "^4.0.0",
     "chalk": "^1.1.3",
     "cli-spinners": "^1.0.0",
