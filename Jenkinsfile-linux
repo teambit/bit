@@ -20,7 +20,7 @@ node  {
 
     stage 'Running DEB & RPM'
     sh('./scripts/build-deb.sh')
-    stage 'Run test'
+   /* stage 'Run test'
     parallel (
         "stream 1" : { 
             sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-centos:latest")
@@ -28,7 +28,7 @@ node  {
         "stream 2" : { 
             sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-ubuntu:latest")
             }
-    )
+    )*/
 
     stage 'deploy to repository'
     def fullUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"

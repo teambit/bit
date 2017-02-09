@@ -35,13 +35,7 @@ build_script:
     .\scripts\build-dist.ps1
 
     .\scripts\build-windows-installer.bat
-test_script:
-- ps: >-
-    npm install -g
-
-    bit init
-
-    bit create test
+    
 artifacts:
 - path: distribution/windows/artifacts/*.msi
   name: Installer
