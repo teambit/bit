@@ -42,7 +42,7 @@ Bit helps create a thinner code base which is also much easier to test and maint
 * **Fast & Easy component export.** Easily export a component to be reused anywhere by you or your team - all in less than a minute.
 * **Code environment boilerplate.** Components are isolated, and contain their own full working environment, ready to be shipped and used anywhere.
 * **Components can build and run anywhere.** Thanks to the Bit component environment. 
-* **Simplified minor versioning.** Components versions is incremental for easier update and maintenance.
+* **Simplified minor versioning.** Components versions are incremental for easier update and maintenance.
 * **Internal search engine.** Find code components in local and remote locations.
 * **On-export dependency resolution.** All dependencies are kept with your component, to keep components immutable while downloading.
 * **Distributed.** Multiple backups, works offline and supports any workflow.
