@@ -23,7 +23,7 @@ import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exce
 const chalk = require('chalk');
 
 const errorsMap: [[Error, (err: Error) => string]] = [ 
-  [ ConsumerAlreadyExists, () => 'scope already exists... reinitialized.' ],
+  [ ConsumerAlreadyExists, () => 'there\'s already a scope' ],
   [ ConsumerNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`' ],
   [ BitNotFound, () => 'fatal: component not found. to create a new bit, please use `bit create {bitName}`' ],
   [ BitAlreadyExistExternaly, err => `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${err.bitName}" to modify the current component or "bit create -f ${err.bitName}"!`],

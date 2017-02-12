@@ -4,7 +4,7 @@ import glob from 'glob';
 import fs from 'fs-extra';
 import R from 'ramda';
 import { flattenDependencies } from '../scope/flatten-dependencies';
-import { locateConsumer, pathHasConsumer, pathHasLocalScope, pathHasBitJson } from './consumer-locator';
+import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport } from './exceptions';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
@@ -232,7 +232,7 @@ export default class Consumer {
   }
 
   static create(projectPath: string = process.cwd()): Promise<Consumer> {
-    if (pathHasConsumer(projectPath)) throw new ConsumerAlreadyExists();
+    if (pathHasConsumer(projectPath)) return Promise.reject(new ConsumerAlreadyExists());
     return this.ensure(projectPath);
   }
 
