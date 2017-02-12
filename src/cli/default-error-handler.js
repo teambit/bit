@@ -1,10 +1,14 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
-import ConsumerNotFound from '../consumer/exceptions/consumer-not-found';
 import BitNotFound from '../consumer/component/exceptions/bit-not-found';
 import InvalidBitId from '../bit-id/exceptions/invalid-bit-id';
 import BitAlreadyExistExternaly from '../consumer/component/exceptions/bit-already-exist-externaly';
-import ConsumerAlreadyExists from '../consumer/exceptions/consumer-already-exists';
+import { 
+  ConsumerAlreadyExists,
+  NothingToImport,
+  ConsumerNotFound,
+  ComponentSpecsFailed,
+} from '../consumer/exceptions';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import ComponentNotFound from '../scope/exceptions/component-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
@@ -15,7 +19,6 @@ import MergeConflict from '../scope/exceptions/merge-conflict';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import { ScopeNotFound, ResolutionException } from '../scope/exceptions';
 import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
-import ComponentSpecsFailed from '../consumer/exceptions/component-specs-failed';
 
 const chalk = require('chalk');
 
@@ -37,6 +40,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
   [ ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init --bare`'],
   [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit'],
+  [ NothingToImport, () => 'there is nothing to import'],
   [ ResolutionException, e => e.message]
 ];
 

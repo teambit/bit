@@ -44,6 +44,14 @@ export default class ConsumerBitJson extends AbstractBitJson {
     return new ConsumerBitJson({});
   }
 
+  static ensure(dirPath): Promise<ConsumerBitJson> {
+    return new Promise((resolve) => {
+      return this.load(dirPath)
+        .then(resolve)
+        .catch(() => resolve(this.create()));
+    });
+  }
+
   static fromPlainObject(object: Object) {
     const { sources, env, dependencies } = object;
     return new ConsumerBitJson({

@@ -13,18 +13,22 @@ export default class Import extends Command {
     ['s', 'save', 'save into bit.json'],
     ['t', 'tester', 'import a tester environment component'],
     ['v', 'verbose', 'show a more verbose output when possible'],
-    ['c', 'compiler', 'import a compiler environment component']
+    ['c', 'compiler', 'import a compiler environment component'],
+    ['p', 'prefix', 'import components into a specific directory'],
+    ['d', 'dev', 'also import dev dependencies (compiler | tester)']
   ];
   loader = { autoStart: false, text: 'importing components' };
 
-  action([id, ]: [string, ], { save, tester, compiler, verbose }: any): Promise<any> {
+  action([id, ]: [string, ], { save, tester, compiler, verbose, prefix, dev }: any): Promise<any> {
+    if (prefix) { return Promise.reject(new Error('prefix option currently not supported')); }
+    // TODO - prefix returns true instead of the relevant string.
     const loader = this.loader;
     // @TODO - import should support multiple components
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
     }
     
-    return importAction({ bitId: id, save, tester, compiler, loader, verbose });
+    return importAction({ bitId: id, save, tester, compiler, loader, verbose, prefix, dev });
   }
 
   report(components: any): string {

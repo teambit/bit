@@ -24,6 +24,20 @@ export function pathHasConsumer(path: string) {
 }
 
 /**
+ * determine whether given path has a bit.Json
+ */
+export function pathHasBitJson(path: string) {
+  return fs.existsSync(composeBitJsonPath(path));
+}
+
+/**
+ * determine whether given path has .bit
+ */
+export function pathHasLocalScope(path: string) {
+  return fs.existsSync(composeBitHiddenDirPath(path));
+}
+
+/**
  * recursively propogate the FS directory structure to find a box.
  */
 export function locateConsumer(absPath: string): ?string {

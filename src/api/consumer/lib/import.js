@@ -1,18 +1,23 @@
 /** @flow */
+import path from 'path';
 import { BitId } from '../../../bit-id';
-import { loadConsumer } from '../../../consumer';
 import Bit from '../../../consumer/component';
+import Consumer from '../../../consumer/consumer';
 
 export default function importAction(
-  { bitId, save, tester, compiler, loader, verbose }: {
+  { bitId, save, tester, compiler, loader, verbose, prefix, dev }: {
     bitId: string,
     save: ?bool,
     tester: ?bool,
     compiler: ?bool,
     loader: any,
-    verbose: ?bool
+    verbose: ?bool,
+    prefix: ?string,
+    dev: ?bool,
   }): Promise<Bit[]> {
-  return loadConsumer()
+  const performOnDir = prefix ? path.resolve(prefix) : process.cwd();
+  return Consumer.ensure(performOnDir)
+    .then(consumer => consumer.scope.ensureDir().then(() => consumer))
     .then((consumer) => {
       if (tester || compiler) { 
         loader.text = 'importing environment dependencies...';
@@ -39,8 +44,7 @@ export default function importAction(
         });
       }
       
-      loader.start();
-      return consumer.import(bitId, verbose, loader)
+      return consumer.import(bitId, verbose, loader, dev)
         .then((components) => {
           if (save) {
             const parseId = BitId.parse(bitId, consumer.scope.name);

@@ -4,15 +4,15 @@ import glob from 'glob';
 import fs from 'fs-extra';
 import R from 'ramda';
 import { flattenDependencies } from '../scope/flatten-dependencies';
-import { locateConsumer, pathHasConsumer } from './consumer-locator';
-import { ConsumerAlreadyExists, ConsumerNotFound } from './exceptions';
+import { locateConsumer, pathHasConsumer, pathHasLocalScope, pathHasBitJson } from './consumer-locator';
+import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport } from './exceptions';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-import { 
+import {
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
-  BIT_HIDDEN_DIR
+  BIT_HIDDEN_DIR,
  } from '../constants';
 import { flatten, removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
@@ -83,26 +83,32 @@ export default class Consumer {
       );
   }
 
-  import(rawId: ?string, verbose?: ?bool, loader?: ?any): Component {
+  import(rawId: ?string, verbose?: ?bool, loader?: ?any, withEnvironments: ?bool):
+  Promise<Component[]> {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
+      if (R.isNil(dependencies) || R.isEmpty(dependencies)) {
+        return Promise.reject(new NothingToImport());
+      } 
+      
+      if (loader) loader.start();
       return this.scope.getMany(dependencies)
         .then((components) => {
           return this.writeToComponentsDir(flatten(components))
           .then((depComponents) => {
-            return this.scope.installEnvironment({
+            return withEnvironments ? this.scope.installEnvironment({
               ids: [this.testerId, this.compilerId],
               consumer: this,
               verbose,
               loader,
-            })
-            .then(envComponents => R.concat(depComponents, envComponents));
+            }).then(envComponents => R.concat(depComponents, envComponents)) : depComponents;
           });
         });
     };
 
     const importSpecificComponent = () => {
       const bitId = BitId.parse(rawId, this.scope.name);
+      if (loader) loader.start();
       return this.scope.get(bitId)
       .then((component) => { return this.writeToComponentsDir([component]); });
     };
@@ -227,16 +233,22 @@ export default class Consumer {
 
   static create(projectPath: string = process.cwd()): Promise<Consumer> {
     if (pathHasConsumer(projectPath)) throw new ConsumerAlreadyExists();
-    const scopeP = Scope.create(path.join(projectPath, BIT_HIDDEN_DIR));
+    return this.ensure(projectPath);
+  }
 
-    return scopeP.then(scope => 
-      new Consumer({
+  static ensure(projectPath: string = process.cwd()): Promise<Consumer> {
+    const scopeP = Scope.ensure(path.join(projectPath, BIT_HIDDEN_DIR));
+    const bitJsonP = ConsumerBitJson.ensure(projectPath);
+
+    return Promise.all([scopeP, bitJsonP])
+    .then(([scope, bitJson]) => {
+      return new Consumer({
         projectPath,
         created: true,
         scope,
-        bitJson: ConsumerBitJson.create()
-      })
-    );
+        bitJson
+      });
+    });
   }
 
   static load(currentPath: string): Promise<Consumer> {

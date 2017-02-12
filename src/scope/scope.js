@@ -475,7 +475,7 @@ export default class Scope {
     .then(component => component.build(this));
   }
 
-  static create(path: string = process.cwd(), name: ?string, groupName: ?string) {
+  static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName(); 
     const scopeJson = new ScopeJson({ name, groupName });
