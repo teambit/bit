@@ -21,7 +21,7 @@ import { Repository, Ref, BitObject } from './objects';
 import ComponentDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
-import { postExportHook } from '../hooks';
+import { postExportHook, postImportHook } from '../hooks';
 import type { Results } from '../specs-runner/specs-runner';
 import npmInstall from '../utils/npm';
 import Consumer from '../consumer/consumer';
@@ -267,7 +267,8 @@ export default class Scope {
     return this.sources.get(id)
       .then((component) => {
         if (!component) throw new ComponentNotFound(id);
-        return component.toVersionDependencies(id.version, this);
+        return postImportHook({ id: id.toString() })
+        .then(() => component.toVersionDependencies(id.version, this));
       });
   }
 
