@@ -7,10 +7,13 @@ rm -rf ./distribution
 ver=$(cat ./package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs echo -n)
 tarName="bit-${ver}.tar.gz"
 
+
 npm install
 npm run build
-rm -rf ./node_modules
-npm install --production
+#need to install bit from npm (npm install -g bit)
+bit import
+#rm -rf ./node_modules
+npm prune --production
 
 umask 0022
 #set package json with corret packeing type
