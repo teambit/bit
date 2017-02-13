@@ -1,6 +1,7 @@
 const path = require('path');
 const glob = require('glob');
 const { BITS_DIRNAME } = require('../constants');
+const { VersionNotExistsException } = require('../exceptions');
 
 module.exports = ({ scope, box, name, consumerPath }) => {
   const dirToLookIn = path.join(
@@ -15,8 +16,8 @@ module.exports = ({ scope, box, name, consumerPath }) => {
   const versions = files.map(file => parseInt(path.basename(file), 10));
 
   if (versions.length < 1) {
-    const errorMessage = `fatal: you were looking for the component ${scope}/${box}/${name} in latest version which does not exists please use bit import first`;
-    throw new Error(errorMessage);
+    const id = `${scope}/${box}/${name}::latest`;
+    throw new VersionNotExistsException(id);
   }
 
   return Math.max(...versions).toString();

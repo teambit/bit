@@ -2,9 +2,10 @@ import path from 'path';
 import fs from 'fs';
 import BitJson from '../bit-json';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
+import { ComponentNotExistsInException } from '../exceptions';
 
 module.exports = (bitPath, opts) => {
-  if (!fs.existsSync(bitPath)) throw new Error(`the component in path "${bitPath}" does not exist`);
+  if (!fs.existsSync(bitPath)) throw new ComponentNotExistsInException(bitPath);
 
   const distFile = path.join(bitPath, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
   if (fs.existsSync(distFile)) {

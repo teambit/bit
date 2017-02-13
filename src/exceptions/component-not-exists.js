@@ -1,9 +1,8 @@
-export default class ComponentNotExistsException extends Error {
-  constructor(componentId, callerFile) {
-    super(`The component "${componentId}" does not found in the specified directory
-    called from ${callerFile}
+export default class ComponentNotExistsInException extends Error {
+  constructor(componentPath) {
+    super(`The component in path "${componentPath}" has not found
     `);
-    this.name = 'ComponentNotExistsException';
+    this.name = 'ComponentNotExistsInException';
     this.code = 'ENOENT';
   }
 }

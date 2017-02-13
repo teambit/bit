@@ -32,10 +32,10 @@ const mockComponents = {};
 const load = (bitId) => {
   assert(bitId, 'missing bit id');
   assert(R.is(String, bitId), 'bit id must be a string');
-  try {
-    const callerFile = stackTrace.get()[1].getFileName();
-    const callerDirectory = path.dirname(callerFile);
+  const callerFile = stackTrace.get()[1].getFileName();
+  const callerDirectory = path.dirname(callerFile);
 
+  try {
     if (mockComponents[bitId]) return mockComponents[bitId];
 
     let loaded;
@@ -60,10 +60,13 @@ const load = (bitId) => {
     }
 
     if (loaded) return loaded;
-    throw new ComponentNotExistsException(bitId, callerFile);
+    throw new ComponentNotExistsException(bitId);
   } catch (e) {
+    process.stderr.write(bitError(`please check the bit function call at - ${chalk.bold(callerFile)}`));
+    if (e.code) {
+      process.stderr.write(bitError(`\ncode: ${e.code}\n`));
+    }
     process.stderr.write(bitError(e.stack));
-    if (e.code) process.stderr.write(bitError(`code: ${e.code}`));
     return undefined;
   }
 };

@@ -2,6 +2,7 @@ const R = require('ramda');
 const parseBitFullId = require('../bit-id/parse-bit-full-id');
 const findLatestVersion = require('../bit-id/find-latest-version');
 const { ID_DELIMITER, LATEST_VERSION } = require('../constants');
+const { InvalidVersionException } = require('../exceptions');
 
 export class Dependency {
   constructor({ scope, box, name, version }, consumerPath) {
@@ -31,7 +32,10 @@ export class Dependency {
       return this.realVersion;
     }
 
-    if (isNaN(parseInt(this.versionString, 10))) { throw new Error(`the version of "${this.id}" is invalid`); }
+    if (!R.is(String, this.versionString) || isNaN(parseInt(this.versionString, 10))) {
+      throw new InvalidVersionException(this.id);
+    }
+
     this.realVersion = this.versionString;
     return this.realVersion;
   }

@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { BIT_JSON_NAME } = require('../constants');
 const DependencyMap = require('../dependency-map');
+const { InvalidBitJsonException } = require('../exceptions');
 
 class BitJson {
   constructor(bitJson) {
@@ -74,7 +75,7 @@ class BitJson {
     try {
       return new BitJson(readJson(bitJsonPath));
     } catch (e) {
-      throw new Error(`invalid JSON - "${bitJsonPath}"`);
+      throw new InvalidBitJsonException(e, bitJsonPath);
     }
   }
 }

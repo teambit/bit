@@ -1,4 +1,5 @@
 const { ID_DELIMITER, DEFAULT_BOXNAME } = require('../constants');
+const { InvalidComponentIdException } = require('../exceptions');
 
 module.exports = (bitId) => {
   const splitted = bitId.split(ID_DELIMITER);
@@ -11,6 +12,6 @@ module.exports = (bitId) => {
   } else if (splitted.length === 2) {
     bitName = splitted[1];
     boxName = splitted[0];
-  } else throw new Error('Component ID must consist of "name" or "box/name" pattern');
+  } else throw new InvalidComponentIdException(bitId);
   return { bitName, boxName };
 };

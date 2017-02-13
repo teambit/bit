@@ -1,5 +1,6 @@
 const path = require('path');
 const { pathHasConsumer } = require('./consumer-utils');
+const { NoConsumerFoundException } = require('../exceptions');
 
 const locateConsumer = (absPath) => {
   const buildPropogationPaths = () => {
@@ -19,7 +20,7 @@ const locateConsumer = (absPath) => {
   const resultPath = buildPropogationPaths().find(searchPath => pathHasConsumer(searchPath));
   if (resultPath) return resultPath;
 
-  throw new Error('could not find a bit repo');
+  throw new NoConsumerFoundException(absPath);
 };
 
 module.exports = locateConsumer;
