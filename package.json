@@ -1,5 +1,5 @@
 {
-  "name": "bit-cli",
+  "name": "bit-bin",
   "version": "0.1.29",
   "license": "Apache 0.2",
   "main":"./dist/api.js",
