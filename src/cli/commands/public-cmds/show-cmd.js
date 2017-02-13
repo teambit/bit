@@ -51,7 +51,7 @@ export default class Show extends Command {
         return 'could not find the requested component';
       }
       // $FlowFixMe
-      return components.map(c => c.toString());
+      return JSON.stringify(components.map(c => c.toObject()));
     }
 
     if (!component) return 'could not find the requested component';

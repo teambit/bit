@@ -3,8 +3,20 @@ import { loadConsumer } from '../../../consumer';
 import { loadScope } from '../../../scope';
 import { BitId } from '../../../bit-id';
 
-export default function getScopeBit({ id, loader, allVersions }: 
-{ id: string, loader: any, allVersions: ?bool }) {
+export default function getScopeBit({ id, loader, allVersions, scopePath }: 
+{ id: string, loader: any, allVersions: ?bool, scopePath: ?string }) {
+  function loadFromScope() {
+    return loadScope(scopePath || process.cwd())
+        .then((scope) => {
+          const localScopeName = scope.name;
+          const bitId = BitId.parse(id, localScopeName);
+          if (allVersions) { return scope.loadAllVersions(bitId); }
+          return scope.loadComponent(bitId);
+        });
+  }
+  
+  if (scopePath) { return loadFromScope(); }
+
   return loadConsumer()
     .then((consumer) => {
       const localScopeName = consumer.scope.name;
@@ -27,12 +39,6 @@ export default function getScopeBit({ id, loader, allVersions }:
       if (allVersions) { return consumer.scope.loadAllVersions(bitId); }
       return consumer.scope.loadComponent(bitId);
     }).catch((err) => { // TODO - handle relevant error error
-      return loadScope(process.cwd())
-        .then((scope) => {
-          const localScopeName = scope.name;
-          const bitId = BitId.parse(id, localScopeName);
-          if (allVersions) { return scope.loadAllVersions(bitId); }
-          return scope.loadComponent(bitId);
-        });
+      return loadFromScope();
     });
 }

@@ -153,7 +153,7 @@ export default class Scope {
           return compVersion.toConsumer(this.objects)
           .then(consumerComponent => index(consumerComponent, this.getPath()))
           .then(consumerComponent =>
-            postExportHook(consumerComponent.toObject())
+            postExportHook({ id: consumerComponent.id.toString() })
           )
           .then(() => first(objs));
         })
@@ -384,12 +384,12 @@ export default class Scope {
       .then((remote) => {
         return this.sources.getObjects(bitId)
         .then(component => remote.push(component)
-        .then(objects => this.clean(bitId).then(() => objects))
-        .then(objects => this.importSrc(objects))
-        .then(() => {
-          bitId.scope = remoteName;
-          return this.get(bitId);
-        }));
+          .then(objects => this.clean(bitId).then(() => objects))
+          .then(objects => this.importSrc(objects))
+          .then(() => {
+            bitId.scope = remoteName;
+            return this.get(bitId);
+          }));
       });
     });
   }

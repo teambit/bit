@@ -12,6 +12,7 @@
         "bit.utils/array/diff": "7",
         "bit.utils/string/contains": "3",
         "bit.utils/string/to-base64": "3",
-        "bit.utils/global/sha1": "4"
+        "bit.utils/global/sha1": "4",
+        "bit.utils/array/is": "latest"
     }
 }

@@ -2,6 +2,7 @@
   "name": "bit-cli",
   "version": "0.1.29",
   "license": "Apache 0.2",
+  "main":"./dist/api.js",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "gulp lint && flow check",
