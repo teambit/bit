@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import ComponentDependencies from './component-dependencies';
 import ComponentVersion from './component-version';
 import ComponentObjects from './component-objects';
@@ -13,6 +14,12 @@ export default class VersionDependencies {
     this.component = component;
     this.dependencies = dependencies;
     this.sourceScope = sourceScope;
+  }
+
+  getAllIds() {
+    const componentId = this.component.id.toString();
+    const dependenciesIds = this.dependencies.map(dep => dep.id.toString());
+    return R.concat([componentId], dependenciesIds);
   }
 
   toConsumer(repo: Repository): Promise<ComponentDependencies> {

@@ -251,11 +251,42 @@ export default class Scope {
           return def.component.toVersionDependencies(def.id.version, this, def.id.scope);
         }))
         .then((versionDeps) => {
-          return this.remotes()
+          return postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) })
+          .then(() => this.remotes()
             .then(remotes => this.getExternalMany(externals, remotes))
-            .then(externalDeps => versionDeps.concat(externalDeps));
+            .then(externalDeps => versionDeps.concat(externalDeps))
+          );
         });
       });
+  }
+
+  importManyOnes(ids: BitId[]): Promise<ComponentVersion[]> {
+    const idsWithoutNils = removeNils(ids);
+    if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
+    
+    const [externals, locals] = splitWhen(id => id.isLocal(this.name), ids);
+    
+    return this.sources.getMany(locals)
+      .then((localDefs) => {
+        return Promise.all(localDefs.map((def) => {
+          if (!def.component) throw new ComponentNotFound(def.id);
+          return def.component.toComponentVersion(def.id.version, this.name);
+        }))
+        .then((componentVersionArr) => {
+          return postImportHook({ ids: componentVersionArr.map(cv => cv.id.toString()) })
+          .then(() => this.remotes()
+            .then(remotes => this.getExternalOnes(externals, remotes))
+            .then(externalDeps => componentVersionArr.concat(externalDeps))
+          );
+        });
+      });    
+  }
+
+  manyOneObjects(ids: BitId[]): Promise<ComponentObjects[]> {
+    return this.importManyOnes(ids)
+      .then(componentVersions => Promise.all(componentVersions.map((version) => {
+        return version.toObjects(this.objects);
+      })));
   }
 
   import(id: BitId): Promise<VersionDependencies> {
@@ -267,8 +298,7 @@ export default class Scope {
     return this.sources.get(id)
       .then((component) => {
         if (!component) throw new ComponentNotFound(id);
-        return postImportHook({ id: id.toString() })
-        .then(() => component.toVersionDependencies(id.version, this));
+        return component.toVersionDependencies(id.version, this);
       });
   }
 
@@ -353,30 +383,6 @@ export default class Scope {
         if (!component) throw new ComponentNotFound(id);
         return component.toComponentVersion(id.version, this.name);
       });
-  }
-
-  importManyOnes(ids: BitId[]): Promise<ComponentVersion[]> {
-    const [externals, locals] = splitWhen(id => id.isLocal(this.name), ids);
-    
-    return this.sources.getMany(locals)
-      .then((localDefs) => {
-        return Promise.all(localDefs.map((def) => {
-          if (!def.component) throw new ComponentNotFound(def.id);
-          return def.component.toComponentVersion(def.id.version, this.name);
-        }))
-        .then((versionDeps) => {
-          return this.remotes()
-            .then(remotes => this.getExternalOnes(externals, remotes))
-            .then(externalDeps => versionDeps.concat(externalDeps));
-        });
-      });    
-  }
-
-  manyOneObjects(ids: BitId[]): Promise<ComponentObjects[]> {
-    return this.importManyOnes(ids)
-      .then(componentVersions => Promise.all(componentVersions.map((version) => {
-        return version.toObjects(this.objects);
-      })));
   }
 
   exportAction(bitId: BitId, remoteName: string) {
