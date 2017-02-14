@@ -4,6 +4,7 @@ import Command from '../../command';
 import { importAction } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
 import { formatBit, paintHeader } from '../../chalk-box';
+import Component from '../../../consumer/component';
 
 export default class Import extends Command {
   name = 'import [ids]';
@@ -11,11 +12,11 @@ export default class Import extends Command {
   alias = 'i';
   opts = [
     ['s', 'save', 'save into bit.json'],
+    ['d', 'dev', 'also import dev dependencies (compiler | tester)'],
     ['t', 'tester', 'import a tester environment component'],
     ['v', 'verbose', 'show a more verbose output when possible'],
     ['c', 'compiler', 'import a compiler environment component'],
     ['p', 'prefix', 'import components into a specific directory'],
-    ['d', 'dev', 'also import dev dependencies (compiler | tester)']
   ];
   loader = { autoStart: false, text: 'importing components' };
 
@@ -31,11 +32,30 @@ export default class Import extends Command {
     return importAction({ bitId: id, save, tester, compiler, loader, verbose, prefix, dev });
   }
 
-  report(components: any): string {
-    if (R.isEmpty(components)) { return 'done'; }
-    return immutableUnshift(
-      components.map(formatBit),
-      paintHeader('imported the following components:')
-    ).join('\n');
+  report({ dependencies, envDependencies }: 
+  { dependencies?: Component[], envDependencies?: Component[] }): string {
+    let dependenciesOutput;
+    let envDependenciesOutput;
+    
+    if (dependencies && !R.isEmpty(dependencies)) {
+      dependenciesOutput = immutableUnshift(
+        dependencies.map(formatBit),
+        paintHeader('imported the following dependencies:')
+      ).join('\n');
+    }
+
+    if (envDependencies && !R.isEmpty(envDependencies)) {
+      envDependenciesOutput = immutableUnshift(
+        envDependencies.map(formatBit),
+        paintHeader('imported the following environment dependencies:')
+      ).join('\n');
+    }
+
+    if (!dependenciesOutput && !envDependenciesOutput) return 'nothing to import';
+    if (dependenciesOutput && !envDependenciesOutput) return dependenciesOutput;
+    if (!dependenciesOutput && envDependenciesOutput) return envDependenciesOutput;
+    if (dependenciesOutput && envDependenciesOutput) {
+      return `${dependenciesOutput}\n\n${envDependenciesOutput}`;
+    }
   }
 }

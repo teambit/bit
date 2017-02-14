@@ -84,7 +84,7 @@ export default class Consumer {
   }
 
   import(rawId: ?string, verbose?: ?bool, loader?: ?any, withEnvironments: ?bool):
-  Promise<Component[]> {
+  Promise<{ dependencies: Component[], envDependencies?: Component[] }> {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
       if (R.isNil(dependencies) || R.isEmpty(dependencies)) {
@@ -96,12 +96,17 @@ export default class Consumer {
         .then((components) => {
           return this.writeToComponentsDir(flatten(components))
           .then((depComponents) => {
-            return withEnvironments ? this.scope.installEnvironment({
+            return withEnvironments ? 
+            this.scope.installEnvironment({
               ids: [this.testerId, this.compilerId],
               consumer: this,
               verbose,
               loader,
-            }).then(envComponents => R.concat(depComponents, envComponents)) : depComponents;
+            })
+            .then(envComponents => ({ 
+              dependencies: depComponents,
+              envDependencies: envComponents,
+            })) : { dependencies: depComponents };
           });
         });
     };
@@ -110,7 +115,10 @@ export default class Consumer {
       const bitId = BitId.parse(rawId, this.scope.name);
       if (loader) loader.start();
       return this.scope.get(bitId)
-      .then((component) => { return this.writeToComponentsDir([component]); });
+      .then(component =>
+        this.writeToComponentsDir([component])
+        .then(dependencies => ({ dependencies }))
+      );
     };
 
     if (!rawId) return importAccordingToConsumerBitJson();
