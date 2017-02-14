@@ -51,11 +51,12 @@ export default class Import extends Command {
       ).join('\n');
     }
 
-    if (!dependenciesOutput && !envDependenciesOutput) return 'nothing to import';
     if (dependenciesOutput && !envDependenciesOutput) return dependenciesOutput;
     if (!dependenciesOutput && envDependenciesOutput) return envDependenciesOutput;
     if (dependenciesOutput && envDependenciesOutput) {
       return `${dependenciesOutput}\n\n${envDependenciesOutput}`;
     }
+    
+    return 'nothing to import';
   }
 }

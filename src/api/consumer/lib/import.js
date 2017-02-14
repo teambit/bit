@@ -1,8 +1,15 @@
 /** @flow */
+import fs from 'fs-extra';
+import glob from 'glob';
+import chalk from 'chalk';
+import R from 'ramda';
 import path from 'path';
+import semver from 'semver';
 import { BitId } from '../../../bit-id';
 import Bit from '../../../consumer/component';
 import Consumer from '../../../consumer/consumer';
+
+const key = R.compose(R.head, R.keys);
 
 export default function importAction(
   { bitId, save, tester, compiler, loader, verbose, prefix, dev }: {
@@ -56,6 +63,81 @@ export default function importAction(
           }
 
           return Promise.resolve(({ dependencies, envDependencies }));
-        });
+        })
+        .then(({ dependencies, envDependencies }) =>
+          warnForPackageDependencies({ dependencies, envDependencies, consumer })
+          .then(() => ({ dependencies, envDependencies }))
+        );
     });
 }
+
+const getSemverType = (str): ?string => {
+  if (semver.valid(str)) return 'V';
+  if (semver.validRange(str)) return 'R';
+  return null;
+};
+
+function compatibleWith(a: { [string]: string }, b: { [string]: string, }): bool {
+  const depName = key(a);
+  if (!b[depName]) return false; // dependency does not exist - return false
+  const bVersion = b[depName];
+  const aVersion = a[depName];
+  const aType = getSemverType(aVersion);
+  const bType = getSemverType(bVersion);
+  if (!aType || !bType) return false; // in case one of the versions is invalid - return false
+  if (aType === 'V' && bType === 'V') { return semver.eq(aVersion, bVersion); }
+  if (aType === 'V' && bType === 'R') { return semver.satisfies(aVersion, bVersion); }
+  if (aType === 'R' && bType === 'V') { return semver.satisfies(bVersion, aVersion); }
+  if (aType === 'R' && bType === 'R') { 
+    if (aVersion.startsWith('^') && (bVersion.startsWith('^'))) {
+      const aMajorVersion = parseInt(aVersion[1], 10);
+      const bMajorVersion = parseInt(bVersion[1], 10);
+      if (aMajorVersion === bMajorVersion) return true;
+    }
+  }
+  return false;
+}
+
+const warnForPackageDependencies = ({ dependencies, envDependencies, consumer }) => {
+  const projectDir = consumer.getPath();
+  const getPackageJson = (dir) => {
+    try {
+      return fs.readJSONSync(path.join(dir, 'package.json'));
+    } catch (e) { return {}; } // do we want to inform the use that he has no package.json
+  };
+  const packageJson = getPackageJson(projectDir);
+  const packageJsonDependencies = R.merge(
+    packageJson.dependencies || {}, packageJson.devDependencies || {}
+  );
+
+  const getNameAndVersion = pj => ({ [pj.name]: pj.version });
+  const nodeModules = R.mergeAll(
+    glob.sync(path.join(projectDir, 'node_modules', '*'))
+    .map(R.compose(getNameAndVersion, getPackageJson))
+  );
+
+  dependencies.forEach((dep) => {
+    if (!dep.packageDependencies || R.isEmpty(dep.packageDependencies)) return null;
+
+    R.forEachObjIndexed((packageDepVersion, packageDepName) => {
+      const packageDep = { [packageDepName]: packageDepVersion };
+      const compatibleWithPackgeJson = compatibleWith(packageDep, packageJsonDependencies);
+      const compatibleWithNodeModules = compatibleWith(packageDep, nodeModules);
+      const basicMessage = `the npm package { ${packageDepName}:${packageDepVersion} } is a package dependency of ${dep.id.toString()}`;
+
+      if (!compatibleWithPackgeJson && !compatibleWithNodeModules) {
+        process.stdout.write(chalk.red(`${basicMessage} please use npm install --save to install this package dependency\n`));
+      }
+
+      if (!compatibleWithPackgeJson && compatibleWithNodeModules) {
+        process.stdout.write(chalk.yellow(`${basicMessage} please make sure it also can be found in the project package.json file\n`));
+      }
+
+      if (compatibleWithPackgeJson && !compatibleWithNodeModules) {
+        process.stdout.write(chalk.yellow(`${basicMessage} please make sure to run npm install in order for this bit component to work properly\n`));
+      }
+    }, dep.packageDependencies);
+  });
+
+  return Promise.resolve({ dependencies, envDependencies });
+};
