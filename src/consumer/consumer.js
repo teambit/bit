@@ -217,9 +217,14 @@ export default class Consumer {
       glob(path.join('*', '*'), { cwd: this.getInlineBitsPath() }, (err, files) => {
         if (err) reject(err);
 
-        const bitsP = files.map(bitRawId =>
-          this.loadComponent(BitInlineId.parse(bitRawId))
-        );
+        const bitsP = files.map((bitRawId) => {
+          try {
+            const parsedId = BitInlineId.parse(bitRawId);
+            return this.loadComponent(parsedId);
+          } catch (e) {
+            return reject(e);
+          }
+        });
 
         return Promise.all(bitsP)
         .then(resolve)

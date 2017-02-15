@@ -1,7 +1,10 @@
 /** @flow */
+import chalk from 'chalk';
 import path from 'path';
 import InvalidBitInlineId from './exceptions';
+import { InvalidIdChunk } from '../../bit-id/exceptions';
 import { INLINE_BITS_DIRNAME } from '../../constants';
+import { isValidIdChunk } from '../../utils';
 
 export type BitInlineIdProps = {
   box?: string;
@@ -30,6 +33,14 @@ export default class BitInlineId {
     const splited = id.split('/'); 
     if (splited.length === 2) {
       const [box, name] = splited;
+      if (!isValidIdChunk(name)) {
+        throw new InvalidIdChunk(id);
+      }
+      
+      if (!isValidIdChunk(box)) {
+        throw new InvalidIdChunk(id);
+      }
+
       return new BitInlineId({
         name,
         box,
@@ -37,6 +48,10 @@ export default class BitInlineId {
     }
 
     if (splited.length === 1) {
+      if (!isValidIdChunk(id)) {
+        throw new InvalidIdChunk(id);
+      }
+
       return new BitInlineId({ name: id });
     }
 
