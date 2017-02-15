@@ -402,8 +402,7 @@ export default class Scope {
   }
 
   ensureDir() {
-    return this.tmp
-      .ensureDir()
+    return this.tmp.ensureDir()
       .then(() => this.scopeJson.write(this.getPath()))
       .then(() => this.objects.ensureDir())
       .then(() => this); 
@@ -484,7 +483,7 @@ export default class Scope {
 
   static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {
     if (pathHasScope(path)) return this.load(path);
-    if (!name) name = currentDirName(); 
+    if (!name) name = currentDirName();
     const scopeJson = new ScopeJson({ name, groupName });
     return Promise.resolve(new Scope({ path, created: true, scopeJson }));
   }
