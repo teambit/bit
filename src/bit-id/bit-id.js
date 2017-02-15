@@ -78,7 +78,8 @@ export default class BitId {
       }
       const digestScopeName = scope === LOCAL_SCOPE_NOTATION ? realScopeName : scope;
       if (!isValidIdChunk(name) || !isValidIdChunk(box) || !isValidIdChunk(digestScopeName)) {
-        throw new InvalidIdChunk(id);
+        // $FlowFixMe
+        throw new InvalidIdChunk(`${digestScopeName}/${box}/${name}`);
       }
       // $FlowFixMe (in this case the realScopeName is not null)
       return new BitId({
@@ -96,7 +97,8 @@ export default class BitId {
       }
       const digestScopeName = scope === LOCAL_SCOPE_NOTATION ? realScopeName : scope;
       if (!isValidIdChunk(name) || !isValidIdChunk(digestScopeName)) {
-        throw new InvalidIdChunk(id);
+        // $FlowFixMe
+        throw new InvalidIdChunk(`${digestScopeName}/${name}`);
       }
       // $FlowFixMe (in this case the realScopeName is not null)
       return new BitId({
