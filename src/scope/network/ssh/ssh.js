@@ -5,6 +5,7 @@ import ComponentObjects from '../../component-objects';
 import { RemoteScopeNotFound, NetworkError, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
 import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, fromBase64 } from '../../../utils';
+import ComponentNotFound from '../../../consumer/component/exceptions/bit-not-found';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
 import { unpack } from '../../../cli/cli-utils';
@@ -27,6 +28,10 @@ function errorHandler(err) {
     default:
       return new UnexpectedNetworkError();
     case 127:
+      return new ComponentNotFound();
+    case 128:
+      return new RemoteScopeNotFound();
+    case 129:
       return new RemoteScopeNotFound();
     case 130:
       return new PermissionDenied();
