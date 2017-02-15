@@ -3,7 +3,7 @@
 import BitNotFound from '../consumer/component/exceptions/bit-not-found';
 import InvalidBitId from '../bit-id/exceptions/invalid-bit-id';
 import BitAlreadyExistExternaly from '../consumer/component/exceptions/bit-already-exist-externaly';
-import { 
+import {
   ConsumerAlreadyExists,
   NothingToImport,
   ConsumerNotFound,
@@ -25,7 +25,7 @@ const chalk = require('chalk');
 const errorsMap: [[Error, (err: Error) => string]] = [ 
   [ ConsumerAlreadyExists, () => 'there\'s already a scope' ],
   [ ConsumerNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`' ],
-  [ BitNotFound, () => 'fatal: component not found. to create a new bit, please use `bit create {bitName}`' ],
+  [ BitNotFound, () => 'fatal: component not found. to create a new component, please use `bit create {component-name}`' ],
   [ BitAlreadyExistExternaly, err => `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${err.bitName}" to modify the current component or "bit create -f ${err.bitName}"!`],
   [ PluginNotFound, err => `fatal: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`],
   [ MissingImpl, err => `fatal: The impl file in path "${err.implPath}" does not exist, please check the bit.json or implementation file`],
