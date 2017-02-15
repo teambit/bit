@@ -94,7 +94,17 @@ export default class Version extends BitObject {
   }
 
   id() {
-    return JSON.stringify(this.toObject());
+    const obj = this.toObject();
+    
+    return JSON.stringify(filterObject({
+      impl: obj.impl,
+      specs: obj.specs,
+      compiler: this.compiler ? this.compiler.toString(): null,
+      tester: this.tester ? this.tester.toString(): null,
+      log: obj.log,
+      dependencies: this.dependencies.map(dep => dep.toString()),
+      packageDependencies: this.packageDependencies
+    }, val => !!val));
   }
 
   collectDependencies(scope: Scope): Promise<ComponentVersion[]> {
