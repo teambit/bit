@@ -1,6 +1,7 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
 import { loadScope } from '../../../scope';
+import { ConsumerNotFound } from '../../../consumer/exceptions';
 
 export default function list({ scopeName, loader }: 
 { scopeName: ?string, loader: any }): Promise<string[]> {
@@ -21,8 +22,11 @@ export default function list({ scopeName, loader }:
     }
 
     return scope.listStage();
-  }).catch((err) => { // handle relevant error error
+  })
+  .catch((err) => {
+    if (!(err instanceof ConsumerNotFound)) throw err;
     return loadScope(process.cwd())
-      .then(scope => scope.listStage());
+      .then(scope => scope.listStage())
+      .catch(e => Promise.reject(err)); // throw the error from the first strategy (about init and not about init --bare)
   });
 }
