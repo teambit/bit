@@ -10,16 +10,23 @@ export default class Build extends Command {
   description = 'uses the compiler defined in the bit.json in order to return the compiled version of the component';
   alias = '';
   opts = [
-    ['i', 'inline', 'create a compiled file on an inline component (dist/dist.js)']
+    ['i', 'inline', 'create a compiled file on an inline component (dist/dist.js)'],
+    ['e', 'environment', 'also pre install the required environment bit before running the build'],
+    ['s', 'save', 'for running build and save the results in the model']
   ];
   
-  action([id]: string[], { inline }: { inline: ?bool }): Promise<any> {
+  action([id]: string[], { inline, save, environment }: {
+    inline: ?bool,
+    save: ?bool,
+    environment: ?bool,
+  }): Promise<any> {
     function build() {
       if (inline) return buildInline(id);
-      return buildInScope(id);
+      return buildInScope(id, environment, save);
     }
     
-    return build().then(res => ({
+    return build()
+    .then(res => ({
       res,
       inline,
     }));

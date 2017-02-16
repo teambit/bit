@@ -191,18 +191,29 @@ export default class Component {
     } catch (e) { return Promise.reject(e); }
   }
 
-  build(scope: Scope): {code: string, map: Object}|null { // @TODO - write SourceMap Type
-    if (!this.compilerId) return null;
-    try {
-      const compiler = scope.loadEnvironment(this.compilerId);
-      const src = this.impl.src;
-      const { code, map } = compiler.compile(src); // eslint-disable-line
-      this.dist = new Dist(code);
-      return code;
-    } catch (e) {
-      throw e;
-      // return null;
-    }
+  build(scope: Scope, environment: ?bool, save: ?bool):
+  Promise<{code: string, map: Object}|null> { // @TODO - write SourceMap Type
+    return new Promise((resolve, reject) => {
+      if (!this.compilerId) return resolve(null);
+      const installEnvironmentIfNeeded = (): Promise<any> => {
+        if (environment) return scope.installEnvironment({ ids: [this.compilerId] });
+        return Promise.resolve();
+      };
+      
+      return installEnvironmentIfNeeded()
+      .then(() => {
+        const compiler = scope.loadEnvironment(this.compilerId);
+        const src = this.impl.src;
+        const { code, map } = compiler.compile(src); // eslint-disable-line
+        this.dist = new Dist(code);
+        
+        if (save) {
+          // @TODO - save on model
+        }
+
+        return resolve(code);
+      }).catch(reject);
+    });
   }
   
   toObject(): Object {

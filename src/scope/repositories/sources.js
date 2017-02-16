@@ -81,44 +81,41 @@ export default class SourceRepository {
 
     return this.findOrAddComponent(source)
       .then((component) => {
-        const impl = Source.from(Buffer.from(source.impl.src));
-        try { 
-          source.build(this.scope);
-        } catch (e) {
-          throw e;
-        }
-        
-        const dist = source.dist ? Source.from(Buffer.from(source.dist.src)): null;
-        const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
+        return source.build(this.scope)
+        .then(() => {
+          const impl = Source.from(Buffer.from(source.impl.src));
+          const dist = source.dist ? Source.from(Buffer.from(source.dist.src)): null;
+          const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
 
-        const username = globalConfig.getSync(USER_NAME_KEY);
-        const email = globalConfig.getSync(USER_EMAIL_KEY);
+          const username = globalConfig.getSync(USER_NAME_KEY);
+          const email = globalConfig.getSync(USER_EMAIL_KEY);
 
-        if (loader) { loader.text = 'running specs'; }
-        return source.runSpecs(this.scope, !force)
-        .then((specsResults) => {
-          const version = Version.fromComponent({
-            component: source,
-            impl,
-            specs,
-            dist,
-            flattenedDeps: depIds,
-            specsResults,
-            message,
-            username,
-            email,
+          if (loader) { loader.text = 'running specs'; }
+          return source.runSpecs(this.scope, !force)
+          .then((specsResults) => {
+            const version = Version.fromComponent({
+              component: source,
+              impl,
+              specs,
+              dist,
+              flattenedDeps: depIds,
+              specsResults,
+              message,
+              username,
+              email,
+            });
+            
+            component.addVersion(version);
+            
+            objectRepo
+              .add(version)
+              .add(component)
+              .add(impl)
+              .add(specs)
+              .add(dist);
+            
+            return component;
           });
-          
-          component.addVersion(version);
-          
-          objectRepo
-            .add(version)
-            .add(component)
-            .add(impl)
-            .add(specs)
-            .add(dist);
-          
-          return component;
         });
       });
   }

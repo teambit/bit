@@ -456,7 +456,7 @@ export default class Scope {
       if (consumer) {
         return consumer.writeToComponentsDir(flatten(components));
       } else {
-        throw new Error('can install env component in bare scope');
+        throw new Error('cant install env component in bare scope');
         // TODO -- write in scope relevant directory !! 
       }
     })
@@ -476,9 +476,9 @@ export default class Scope {
       });
   }
 
-  build(bitId: BitId): Promise<string> {
+  build(bitId: BitId, environment: ?bool, save: ?bool): Promise<string> {
     return this.loadComponent(bitId)
-    .then(component => component.build(this));
+      .then(component => component.build(this, environment, save));
   }
 
   static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {
