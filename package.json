@@ -5,16 +5,17 @@
     "build": "gulp",
     "watch": "gulp watch"
   },
-  "homepage": "https://github.com/teambit/bit-node",
+  "homepage": "https://github.com/teambit/bit-js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/teambit/bit-node"
+    "url": "https://github.com/teambit/bit-js"
   },
   "keywords": [
     "bit",
     "node",
     "components",
     "bit-node",
+    "bit-js",
     "bit-component",
     "bit-components"
   ],
