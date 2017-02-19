@@ -15,14 +15,12 @@ export default class List extends Command {
     ['i', 'inline', 'in inline components'],
     ['ids', 'ids', 'in inline components']
   ];
-  loader = { autoStart: false, text: 'listing remote components' };
+  loader = true;
 
   action([scopeName]: string[], { inline, ids }: { inline: ?bool, ids: ?bool }): Promise<any> {
-    const loader = this.loader;
-
     function list() {
       if (inline) return listInline();
-      return listScope({ scopeName, loader });
+      return listScope({ scopeName });
     }
 
     return list()

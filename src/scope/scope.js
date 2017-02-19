@@ -26,6 +26,7 @@ import type { Results } from '../specs-runner/specs-runner';
 import npmInstall from '../utils/npm';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
+import loader from '../cli/loader';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -116,29 +117,25 @@ export default class Scope {
     
   }
 
-  put({ consumerComponent, message, force, loader, consumer }: 
+  put({ consumerComponent, message, force, consumer }: 
   { 
     consumerComponent: ConsumerComponent,
     message: string,
     force: ?bool,
-    loader: ?any,
     consumer:Consumer
   }):
   Promise<ComponentDependencies> {
     consumerComponent.scope = this.name;
-    if (loader) {
-      loader.text = 'importing components';
-      loader.start();
-    }
+    loader.start('importing components');
 
     return this.importMany(consumerComponent.dependencies).then((dependencies) => {
       return flattenDependencyIds(dependencies, this.objects)
         .then((depIds) => {
           return this.sources.addSource({
-            source: consumerComponent, depIds, message, force, loader, consumer
+            source: consumerComponent, depIds, message, force, consumer
           })
           .then((component) => {
-            if (loader) { loader.text = 'persisting data'; }
+            loader.start('persisting data');
             return this.objects.persist()
               .then(() => component.toVersionDependencies(LATEST, this, this.name))
               .then(deps => deps.toConsumer(this.objects));
@@ -468,15 +465,15 @@ export default class Scope {
 
 
 
-  installEnvironment({ ids, consumer, verbose, loader }:
-  { ids: BitId[], consumer?: ?Consumer, verbose?: ?bool, loader?: ?any }): Promise<any> {
+  installEnvironment({ ids, consumer, verbose }:
+  { ids: BitId[], consumer?: ?Consumer, verbose?: ?bool }): Promise<any> {
     const installPackageDependencies = (component: ConsumerComponent) => {
       const scopePath = this.getPath();
       const nodeModulesDir = consumer ? pathLib.dirname(scopePath) : scopePath;
       const deps = component.packageDependencies;
       
-      if (verbose && loader) loader.stop(); // in order to show npm install output on verbose flag
-      if (loader) loader.text = 'ensuring npm dependencies';
+      loader.setText('ensuring npm dependencies');
+      if (verbose) loader.stop(); // in order to show npm install output on verbose flag
       
       return Promise.all(
         R.values(

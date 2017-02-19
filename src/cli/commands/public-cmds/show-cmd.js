@@ -14,15 +14,14 @@ export default class Show extends Command {
     ['j', 'json', 'return a json version of the component'],
     ['ver', 'versions', 'return a json of all the versions of the component'],
   ];
-  loader = { autoStart: false, text: 'fetching remote component' };
+  loader = true;
 
   action([id, ]: [string], { inline, json, versions }:
   { inline: ?bool, json: ?bool, versions: ?bool }): Promise<*> {
-    const loader = this.loader;
     
     function getBitComponent(allVersions: ?bool) {
       if (inline) return getInlineBit({ id });
-      return getScopeBit({ id, loader, allVersions });
+      return getScopeBit({ id, allVersions });
     }
     
     if (versions) {

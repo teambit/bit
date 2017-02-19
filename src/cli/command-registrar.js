@@ -1,12 +1,10 @@
 /** @flow */
-import ora from 'ora';
 import commander from 'commander';
-import { SPINNER_TYPE } from '../constants';
+import chalk from 'chalk';
 import type Command from './command';   
 import defaultHandleError from './default-error-handler';
 import { empty, first } from '../utils';
-
-const chalk = require('chalk');
+import loader from './loader';
 
 function logAndExit(msg: string) {
   console.log(msg); // eslint-disable-line
@@ -44,18 +42,16 @@ function execAction(command, concrete, args) {
   // $FlowFixMe
   const opts = getOpts(concrete, command.opts);
   if (command.loader) {
-    const autoStart = command.loader.autoStart || true;
-    command.loader = ora({ spinner: SPINNER_TYPE, text: command.loader.text || '' });
-    if (autoStart) { command.loader.start(); }
+    loader.on();
   }
 
   command.action(args.slice(0, args.length - 1), opts)
     .then((data) => {
-      if (command.loader) { command.loader.stop(); }
+      loader.off();
       return logAndExit(command.report(data));
     })
     .catch((err) => {
-      if (command.loader) { command.loader.stop(); }
+      loader.off();
       const errorHandled = defaultHandleError(err)
       || command.handleError(err);
       

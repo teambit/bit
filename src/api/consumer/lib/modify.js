@@ -3,8 +3,9 @@ import { loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import InlineId from '../../../consumer/bit-inline-id';
 import { ComponentDependencies } from '../../../scope';
+import loader from '../../../cli/loader';
 
-export default function modify({ id, loader }: { id: string, loader: any }) {
+export default function modify({ id }: { id: string }) {
   return loadConsumer()
     .then((consumer) => {
       const bitId = BitId.parse(id, consumer.scope.name);

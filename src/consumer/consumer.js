@@ -18,6 +18,7 @@ import { flatten, removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
 import type { Results } from '../specs-runner/specs-runner';
+import loader from '../cli/loader';
 import { index } from '../search/indexer';
 
 export type ConsumerProps = {
@@ -83,7 +84,7 @@ export default class Consumer {
       );
   }
 
-  import(rawId: ?string, verbose?: ?bool, loader?: ?any, withEnvironments: ?bool):
+  import(rawId: ?string, verbose?: ?bool, withEnvironments: ?bool):
   Promise<{ dependencies: Component[], envDependencies?: Component[] }> {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
@@ -91,7 +92,7 @@ export default class Consumer {
         return Promise.reject(new NothingToImport());
       } 
       
-      if (loader) loader.start();
+      loader.start();
       return this.scope.getMany(dependencies)
         .then((components) => {
           return this.writeToComponentsDir(flatten(components))
@@ -100,8 +101,7 @@ export default class Consumer {
             this.scope.installEnvironment({
               ids: [this.testerId, this.compilerId],
               consumer: this,
-              verbose,
-              loader,
+              verbose
             })
             .then(envComponents => ({ 
               dependencies: depComponents,
@@ -113,7 +113,7 @@ export default class Consumer {
 
     const importSpecificComponent = () => {
       const bitId = BitId.parse(rawId, this.scope.name);
-      if (loader) loader.start();
+      loader.start();
       return this.scope.get(bitId)
       .then(component =>
         this.writeToComponentsDir([component])
@@ -125,10 +125,10 @@ export default class Consumer {
     return importSpecificComponent();
   }
 
-  importEnvironment(rawId: ?string, verbose?: ?bool, loader?: ?any) {
+  importEnvironment(rawId: ?string, verbose?: ?bool) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId, this.scope.name);
-    return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose, loader });
+    return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose });
   }
 
   createBit({ id, withSpecs = false, withBitJson = false }: {
@@ -194,10 +194,10 @@ export default class Consumer {
     }));
   }
 
-  commit(id: BitInlineId, message: string, force: ?bool, loader: any) {
+  commit(id: BitInlineId, message: string, force: ?bool) {
     return this.loadComponent(id)
       .then(bit =>
-        this.scope.put({ consumerComponent: bit, message, force, loader, consumer: this })
+        this.scope.put({ consumerComponent: bit, message, force, consumer: this })
         .then(bits => this.writeToComponentsDir([bits]))
         .then(() => this.removeFromInline(id))
         .then(() => index(bit, this.scope.getPath()))

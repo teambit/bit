@@ -2,9 +2,10 @@
 import { loadConsumer } from '../../../consumer';
 import { loadScope } from '../../../scope';
 import { BitId } from '../../../bit-id';
+import loader from '../../../cli/loader';
 
-export default function getScopeBit({ id, loader, allVersions, scopePath }: 
-{ id: string, loader: any, allVersions: ?bool, scopePath: ?string }) {
+export default function getScopeBit({ id, allVersions, scopePath }: 
+{ id: string, allVersions: ?bool, scopePath: ?string }) {
   function loadFromScope() {
     return loadScope(scopePath || process.cwd())
         .then((scope) => {
