@@ -4,7 +4,7 @@ const chalk = require('chalk');
 const path = require('path');
 const mock = require('mock-require');
 const stackTrace = require('stack-trace');
-const locateConsumer = require('./consumer/locate-consumer');
+const locateBitEnvironment = require('./consumer/locate-bit-environment');
 const parseBitInlineId = require('./bit-id/parse-bit-inline-id');
 const Consumer = require('./consumer/consumer');
 const { DEFAULT_BOXNAME } = require('./constants');
@@ -40,7 +40,7 @@ const load = (bitId) => {
 
     let loaded;
     const { bitName, boxName } = parseBitInlineId(bitId);
-    const consumerPath = locateConsumer(callerDirectory);
+    const consumerPath = locateBitEnvironment(callerDirectory);
     const consumer = new Consumer(consumerPath);
 
     const strategies = [

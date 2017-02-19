@@ -1,5 +1,5 @@
 const path = require('path');
-const { pathHasConsumer } = require('./consumer-utils');
+const { pathHasBitEnvironment } = require('./consumer-utils');
 const { NoConsumerFoundException } = require('../exceptions');
 
 const locateConsumer = (absPath) => {
@@ -17,8 +17,8 @@ const locateConsumer = (absPath) => {
   };
 
 
-  if (pathHasConsumer(absPath)) return absPath;
-  const resultPath = buildPropogationPaths().find(searchPath => pathHasConsumer(searchPath));
+  if (pathHasBitEnvironment(absPath)) return absPath;
+  const resultPath = buildPropogationPaths().find(searchPath => pathHasBitEnvironment(searchPath));
 
   if (resultPath) return resultPath;
   throw new NoConsumerFoundException(absPath);

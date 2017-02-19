@@ -28,6 +28,8 @@ export const INLINE_BITS_DIRNAME = 'inline_components';
 
 export const BIT_JSON_NAME = 'bit.json';
 
+export const SCOPE_JSON_NAME = 'scope.json';
+
 export const LATEST_VERSION = 'latest';
 
 export const COMPONENTS_DIRNAME = 'components';

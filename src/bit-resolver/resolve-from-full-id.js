@@ -1,13 +1,13 @@
 const path = require('path');
 const Consumer = require('../consumer/consumer');
-const locateConsumer = require('../consumer/locate-consumer');
+const locateBitEnvironment = require('../consumer/locate-bit-environment');
 const parseBitFullId = require('../bit-id/parse-bit-full-id');
 const resolveBit = require('./bit-resolver');
 const { LATEST_VERSION } = require('../constants');
 const findLatestVersion = require('../bit-id/find-latest-version');
 
 module.exports = (fullId, dir, opts) => {
-  const consumerPath = locateConsumer(dir);
+  const consumerPath = locateBitEnvironment(dir);
   const consumer = new Consumer(consumerPath);
   const { scope, box, name, version } =
   parseBitFullId({ id: fullId });
