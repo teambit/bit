@@ -196,8 +196,8 @@ export default class Consumer {
 
   commit(id: BitInlineId, message: string, force: ?bool, loader: any) {
     return this.loadComponent(id)
-      .then(bit => 
-        this.scope.put(bit, message, force, loader)
+      .then(bit =>
+        this.scope.put({ consumerComponent: bit, message, force, loader, consumer: this })
         .then(bits => this.writeToComponentsDir([bits]))
         .then(() => this.removeFromInline(id))
         .then(() => index(bit, this.scope.getPath()))
@@ -208,7 +208,7 @@ export default class Consumer {
   runComponentSpecs(id: BitInlineId): Promise<?Results> {
     return this.loadComponent(id)
       .then((component) => {
-        return component.runSpecs(this.scope);
+        return component.runSpecs({ scope: this.scope, consumer: this });
       });
   }
 

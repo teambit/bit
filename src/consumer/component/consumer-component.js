@@ -6,10 +6,10 @@ import Impl from '../component/sources/impl';
 import Specs from '../component/sources/specs';
 import Dist from '../component/sources/dist';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
+import Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
-import Environment from '../../scope/repositories/environment';
 import docsParser, { Doclet } from '../../jsdoc/parser';
 import specsRunner from '../../specs-runner';
 import SpecsResults from '../specs-results';
@@ -162,7 +162,14 @@ export default class Component {
     .then(() => this);
   }
   
-  runSpecs(scope: Scope, rejectOnFailure: ?bool): Promise<?Results> {
+  runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose }: {
+    scope: Scope,
+    rejectOnFailure?: bool,
+    consumer?: Consumer,
+    environment?: ?bool,
+    save?: ?bool,
+    verbose?: ?bool
+  }): Promise<?Results> {
     function compileIfNeeded(
       condition: bool,
       compiler: ?{ compile?: (string) => { code: string } },
@@ -171,38 +178,66 @@ export default class Component {
       return compiler.compile(src).code;
     }
 
+    const installEnvironmentsIfNeeded = (): Promise<any> => {
+      if (environment) {
+        return scope.installEnvironment({
+          ids: [this.compilerId, this.testerId],
+          consumer,
+          verbose
+        });
+      }
+      return Promise.resolve();
+    };
+
     if (!this.testerId || !this.specs || !this.specs.src) return Promise.resolve(null);
     
-    try {
-      const testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
-      const compiler = this.compilerId ? scope.loadEnvironment(this.compilerId) : null;
-      const implSrc = compileIfNeeded(!!this.compilerId, compiler, this.impl.src);
-      // $FlowFixMe
-      const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
-      return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc })
-      .then((specsResults) => {
-        this.specsResults = SpecsResults.createFromRaw(specsResults);
-        if (rejectOnFailure && !this.specsResults.pass) {
-          return Promise.reject(new ComponentSpecsFailed());
-        }
+    return installEnvironmentsIfNeeded()
+    .then(() => {
+      try {
+        const testerFilePath = scope.loadEnvironment(
+          this.testerId, { pathOnly: true, bareScope: !consumer });
+        const compiler = this.compilerId ? scope.loadEnvironment(
+          this.compilerId, { bareScope: !consumer }) : null;
+        const implSrc = compileIfNeeded(!!this.compilerId, compiler, this.impl.src);
+        // $FlowFixMe
+        const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
+        return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc })
+        .then((specsResults) => {
+          this.specsResults = SpecsResults.createFromRaw(specsResults);
+          if (rejectOnFailure && !this.specsResults.pass) {
+            return Promise.reject(new ComponentSpecsFailed());
+          }
 
-        return this.specsResults;
-      });
-    } catch (e) { return Promise.reject(e); }
+          if (save) {
+            // @TODO - save on model
+          }
+
+          return this.specsResults;
+        });
+      } catch (e) { return Promise.reject(e); }
+    });
   }
 
-  build(scope: Scope, environment: ?bool, save: ?bool):
+  build({ scope, environment, save, consumer, verbose }:
+  { scope: Scope, environment?: ?bool, save?: ?bool, consumer?: Consumer, verbose?: ?bool }):
   Promise<{code: string, map: Object}|null> { // @TODO - write SourceMap Type
     return new Promise((resolve, reject) => {
       if (!this.compilerId) return resolve(null);
       const installEnvironmentIfNeeded = (): Promise<any> => {
-        if (environment) return scope.installEnvironment({ ids: [this.compilerId] });
+        if (environment) {
+          return scope.installEnvironment({
+            ids: [this.compilerId],
+            consumer,
+            verbose,
+          });
+        }
         return Promise.resolve();
       };
       
       return installEnvironmentIfNeeded()
       .then(() => {
-        const compiler = scope.loadEnvironment(this.compilerId);
+        const opts = { bareScope: !consumer };
+        const compiler = scope.loadEnvironment(this.compilerId, opts);
         const src = this.impl.src;
         const { code, map } = compiler.compile(src); // eslint-disable-line
         this.dist = new Dist(code);

@@ -1,16 +1,16 @@
 /** @flow */
 import * as pathLib from 'path';
-import fs from 'fs';
+import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import bitJs from 'bit-js';
 import { GlobalRemotes } from '../global-config';
-import { flattenDependencyIds } from './flatten-dependencies';
+import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, flatten } from '../utils';
-import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR } from '../constants';
+import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException } from './exceptions';
 import { Tmp } from './repositories';
@@ -73,6 +73,10 @@ export default class Scope {
     return this.path;
   }
 
+  getComponentsPath(): string {
+    return pathLib.join(this.path, BITS_DIRNAME);
+  }
+
   remotes(): Promise<Remotes> {
     const self = this;
     function mergeRemotes(globalRemotes: GlobalRemotes) {
@@ -112,7 +116,14 @@ export default class Scope {
     
   }
 
-  put(consumerComponent: ConsumerComponent, message: string, force: ?bool, loader: ?any):
+  put({ consumerComponent, message, force, loader, consumer }: 
+  { 
+    consumerComponent: ConsumerComponent,
+    message: string,
+    force: ?bool,
+    loader: ?any,
+    consumer:Consumer
+  }):
   Promise<ComponentDependencies> {
     consumerComponent.scope = this.name;
     if (loader) {
@@ -124,7 +135,7 @@ export default class Scope {
       return flattenDependencyIds(dependencies, this.objects)
         .then((depIds) => {
           return this.sources.addSource({
-            source: consumerComponent, depIds, message, force, loader,
+            source: consumerComponent, depIds, message, force, loader, consumer
           })
           .then((component) => {
             if (loader) { loader.text = 'persisting data'; }
@@ -402,6 +413,7 @@ export default class Scope {
   }
 
   ensureDir() {
+    fs.ensureDirSync(this.getComponentsPath());
     return this.tmp.ensureDir()
       .then(() => this.scopeJson.write(this.getPath()))
       .then(() => this.objects.ensureDir())
@@ -415,24 +427,49 @@ export default class Scope {
   /**
    * sync method that loads the environment/(path to environment component)
    */
-  loadEnvironment(bitId: BitId, opts: ?{ pathOnly: ?bool }) {
+  loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?bool, bareScope?: ?bool }) {
+    const envDir = opts && opts.bareScope ? this.getPath() : pathLib.dirname(this.getPath());
     if (opts && opts.pathOnly) {
       try {
-        return bitJs.loadExact(bitId.toString(), this.getPath(), opts);
+        return bitJs.loadExact(bitId.toString(), envDir, opts);
       } catch (e) {
         throw new ResolutionException(e.message);
       }
     }
 
     try {
-      return bitJs.loadExact(bitId.toString(), this.getPath());
+      const a = bitJs.loadExact(bitId.toString(), envDir);
+      return a;
     } catch (e) {
       throw new ResolutionException(e.message);
     }
   }
   
+  writeToComponentsDir(componentDependencies: ComponentDependencies[]):
+  Promise<ConsumerComponent[]> {
+    const componentsDir = this.getComponentsPath();
+    const components = flattenDependencies(componentDependencies);
+
+    const bitDirForConsumerImport = (component: ConsumerComponent) => {
+      return pathLib.join(
+        componentsDir,
+        component.box,
+        component.name,
+        component.scope,
+        component.version.toString(),
+      );
+    };
+
+    return Promise.all(components.map((component) => {
+      const bitPath = bitDirForConsumerImport(component);
+      return component.write(bitPath, true);
+    }));
+  }
+
+
+
   installEnvironment({ ids, consumer, verbose, loader }:
-  { ids: BitId[], consumer: ?Consumer, verbose?: ?bool, loader?: ?any }): Promise<any> {
+  { ids: BitId[], consumer?: ?Consumer, verbose?: ?bool, loader?: ?any }): Promise<any> {
     const installPackageDependencies = (component: ConsumerComponent) => {
       const scopePath = this.getPath();
       const nodeModulesDir = consumer ? pathLib.dirname(scopePath) : scopePath;
@@ -455,30 +492,41 @@ export default class Scope {
     .then((components) => {
       if (consumer) {
         return consumer.writeToComponentsDir(flatten(components));
-      } else {
-        throw new Error('cant install env component in bare scope');
-        // TODO -- write in scope relevant directory !! 
       }
+
+      return this.writeToComponentsDir(flatten(components));
     })
     .then((components: ConsumerComponent[]) => {
       return Promise.all(components.map(installPackageDependencies));
     });
   }
 
-  runComponentSpecs(id: BitId): Promise<?Results> {
-    if (!id.isLocal(this.name)) {
+  runComponentSpecs({ bitId, consumer, environment, save, verbose }: { 
+    bitId: BitId,
+    consumer?: ?Consumer,
+    environment?: ?bool,
+    save?: ?bool,
+    verbose?: ?bool
+  }): Promise<?Results> {
+    if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run specs on remote scopes');
     }
 
-    return this.loadComponent(id)
+    return this.loadComponent(bitId)
       .then((component) => {
-        return component.runSpecs(this);
+        return component.runSpecs({ scope: this, consumer, environment, save, verbose });
       });
   }
 
-  build(bitId: BitId, environment: ?bool, save: ?bool): Promise<string> {
+  build({ bitId, environment, save, consumer, verbose }: { 
+    bitId: BitId,
+    environment?: ?bool,
+    save?: ?bool,
+    consumer?: Consumer,
+    verbose?: ?bool
+  }): Promise<string> {
     return this.loadComponent(bitId)
-      .then(component => component.build(this, environment, save));
+      .then(component => component.build({ scope: this, environment, save, consumer, verbose }));
   }
 
   static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {

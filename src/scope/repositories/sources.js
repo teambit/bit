@@ -81,7 +81,7 @@ export default class SourceRepository {
 
     return this.findOrAddComponent(source)
       .then((component) => {
-        return source.build(this.scope)
+        return source.build({ scope: this.scope })
         .then(() => {
           const impl = Source.from(Buffer.from(source.impl.src));
           const dist = source.dist ? Source.from(Buffer.from(source.dist.src)): null;
@@ -91,7 +91,7 @@ export default class SourceRepository {
           const email = globalConfig.getSync(USER_EMAIL_KEY);
 
           if (loader) { loader.text = 'running specs'; }
-          return source.runSpecs(this.scope, !force)
+          return source.runSpecs({ scope: this.scope, rejectOnFailure: !force })
           .then((specsResults) => {
             const version = Version.fromComponent({
               component: source,

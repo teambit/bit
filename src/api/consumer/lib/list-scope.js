@@ -12,7 +12,6 @@ export default function list({ scopeName, loader }:
     if (scopeName) {
       return scope.remotes()
       .then(remotes =>
-        // $FlowFixMe
         remotes.resolve(scopeName, scope.name)
         .then((remote) => {
           loader.start();
@@ -26,7 +25,8 @@ export default function list({ scopeName, loader }:
   .catch((err) => {
     if (!(err instanceof ConsumerNotFound)) throw err;
     return loadScope(process.cwd())
+      .catch(() => Promise.reject(err))
       .then(scope => scope.listStage())
-      .catch(e => Promise.reject(err)); // throw the error from the first strategy (about init and not about init --bare)
+      .catch(e => Promise.reject(e));
   });
 }

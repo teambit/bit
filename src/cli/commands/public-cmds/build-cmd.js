@@ -12,17 +12,19 @@ export default class Build extends Command {
   opts = [
     ['i', 'inline', 'create a compiled file on an inline component (dist/dist.js)'],
     ['e', 'environment', 'also pre install the required environment bit before running the build'],
-    ['s', 'save', 'for running build and save the results in the model']
+    ['s', 'save', 'for running build and save the results in the model'],
+    ['v', 'verbose', 'showing npm verbose output for inspection'],
   ];
   
-  action([id]: string[], { inline, save, environment }: {
+  action([id]: string[], { inline, save, environment, verbose }: {
     inline: ?bool,
     save: ?bool,
     environment: ?bool,
+    verbose: ?bool,
   }): Promise<any> {
     function build() {
       if (inline) return buildInline(id);
-      return buildInScope(id, environment, save);
+      return buildInScope({ id, environment, save, verbose });
     }
     
     return build()
