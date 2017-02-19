@@ -16,10 +16,11 @@ const locateConsumer = (absPath) => {
     return paths.reverse();
   };
 
+
   if (pathHasConsumer(absPath)) return absPath;
   const resultPath = buildPropogationPaths().find(searchPath => pathHasConsumer(searchPath));
-  if (resultPath) return resultPath;
 
+  if (resultPath) return resultPath;
   throw new NoConsumerFoundException(absPath);
 };
 
