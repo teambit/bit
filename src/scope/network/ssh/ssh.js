@@ -30,7 +30,7 @@ function errorHandler(err) {
     case 127:
       return new ComponentNotFound();
     case 128:
-      return new RemoteScopeNotFound();
+      return new PermissionDenied();
     case 129:
       return new RemoteScopeNotFound();
     case 130:

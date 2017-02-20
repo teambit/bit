@@ -4,12 +4,13 @@ import { BitId } from '../../../bit-id';
 import InlineId from '../../../consumer/bit-inline-id';
 import { ComponentDependencies } from '../../../scope';
 import loader from '../../../cli/loader';
+import { BEFORE_MODIFY_ACTION } from '../../../cli/loader/loader-messages';
 
 export default function modify({ id }: { id: string }) {
   return loadConsumer()
     .then((consumer) => {
       const bitId = BitId.parse(id, consumer.scope.name);
-      loader.start();
+      loader.start(BEFORE_MODIFY_ACTION);
 
       return consumer.scope.modify(bitId)
       .then((c: ComponentDependencies) => {

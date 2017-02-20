@@ -19,6 +19,7 @@ import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
 import type { Results } from '../specs-runner/specs-runner';
 import loader from '../cli/loader';
+import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
 import { index } from '../search/indexer';
 
 export type ConsumerProps = {
@@ -92,7 +93,6 @@ export default class Consumer {
         return Promise.reject(new NothingToImport());
       } 
       
-      loader.start();
       return this.scope.getMany(dependencies)
         .then((components) => {
           return this.writeToComponentsDir(flatten(components))
@@ -113,14 +113,14 @@ export default class Consumer {
 
     const importSpecificComponent = () => {
       const bitId = BitId.parse(rawId, this.scope.name);
-      loader.start();
       return this.scope.get(bitId)
       .then(component =>
         this.writeToComponentsDir([component])
         .then(dependencies => ({ dependencies }))
       );
     };
-
+    
+    loader.start(BEFORE_IMPORT_ACTION);
     if (!rawId) return importAccordingToConsumerBitJson();
     return importSpecificComponent();
   }

@@ -3,6 +3,7 @@ import { loadConsumer } from '../../../consumer';
 import { loadScope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import loader from '../../../cli/loader';
+import { BEFORE_REMOTE_LIST } from '../../../cli/loader/loader-messages';
 
 export default function list({ scopeName }: 
 { scopeName: ?string }): Promise<string[]> {
@@ -15,8 +16,7 @@ export default function list({ scopeName }:
       .then(remotes =>
         remotes.resolve(scopeName, scope.name)
         .then((remote) => {
-          loader.setText('listing remote components');
-          loader.start();
+          loader.start(BEFORE_REMOTE_LIST);
           return remote.list();
         })
       );

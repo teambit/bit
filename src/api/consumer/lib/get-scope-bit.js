@@ -3,6 +3,7 @@ import { loadConsumer } from '../../../consumer';
 import { loadScope } from '../../../scope';
 import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
+import { BEFORE_REMOTE_SHOW } from '../../../cli/loader/loader-messages';
 
 export default function getScopeBit({ id, allVersions, scopePath }: 
 { id: string, allVersions: ?bool, scopePath: ?string }) {
@@ -31,7 +32,7 @@ export default function getScopeBit({ id, allVersions, scopePath }:
         .then(remotes => 
           remotes.resolve(bitId.scope, consumer.scope)
           .then((remote) => {
-            loader.start();
+            loader.start(BEFORE_REMOTE_SHOW);
             return remote.show(bitId);
           })
         );

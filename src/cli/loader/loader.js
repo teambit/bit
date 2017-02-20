@@ -1,15 +1,16 @@
 /** @flow */
 import ora from 'ora';
-import { SPINNER_TYPE } from '../constants';
+import { SPINNER_TYPE } from '../../constants';
 
 let _loader;
 
 type Loader = {
   on: () => Loader,
-  off: () => Loader,
-  start: (text: ?string) => Loader,
-  stop: () => Loader,
-  setText: (string) => Loader,
+  off: () => ?Loader,
+  start: (text: ?string) => ?Loader,
+  stop: () => ?Loader,
+  setText: (string) => ?Loader,
+  get: () => ?Loader
 }
 
 const on = (): Loader => {
@@ -18,6 +19,7 @@ const on = (): Loader => {
 };
 
 const off = (): Loader => {
+  stop();
   _loader = null;
   return loader;
 };
@@ -40,12 +42,16 @@ const setText = (text: string): Loader => {
   return loader;
 };
 
+const get = (): ?Loader => _loader;
+
 const loader: Loader = {
   on,
   off,
   stop,
   start,
   setText,
+  get,
 };
 
-module.exports = loader;
+export default loader;
+

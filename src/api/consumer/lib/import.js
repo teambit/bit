@@ -4,6 +4,7 @@ import { BitId } from '../../../bit-id';
 import Bit from '../../../consumer/component';
 import Consumer from '../../../consumer/consumer';
 import loader from '../../../cli/loader';
+import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 
 export default function importAction(
   { bitId, save, tester, compiler, verbose, prefix, dev }: {
@@ -16,8 +17,7 @@ export default function importAction(
     dev: ?bool,
   }): Promise<Bit[]> {
   function importEnvironment(consumer) {
-    loader.setText('importing environment dependencies...');
-    loader.start();
+    loader.start(BEFORE_IMPORT_ENVIRONMENT);
 
     return consumer.importEnvironment(bitId, verbose)
     .then((envDependencies) => {

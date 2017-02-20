@@ -6,6 +6,7 @@ import defaultHandleError from './default-error-handler';
 import { empty, first } from '../utils';
 import loader from './loader';
 
+
 function logAndExit(msg: string) {
   console.log(msg); // eslint-disable-line
   process.exit();

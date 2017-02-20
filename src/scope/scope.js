@@ -27,6 +27,10 @@ import npmInstall from '../utils/npm';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
+import {
+  BEFORE_PERSISTING_PUT_ON_SCOPE,
+  BEFORE_IMPORT_PUT_ON_SCOPE,
+  BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -126,7 +130,7 @@ export default class Scope {
   }):
   Promise<ComponentDependencies> {
     consumerComponent.scope = this.name;
-    loader.start('importing components');
+    loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
 
     return this.importMany(consumerComponent.dependencies).then((dependencies) => {
       return flattenDependencyIds(dependencies, this.objects)
@@ -135,7 +139,7 @@ export default class Scope {
             source: consumerComponent, depIds, message, force, consumer
           })
           .then((component) => {
-            loader.start('persisting data');
+            loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
             return this.objects.persist()
               .then(() => component.toVersionDependencies(LATEST, this, this.name))
               .then(deps => deps.toConsumer(this.objects));
@@ -472,7 +476,7 @@ export default class Scope {
       const nodeModulesDir = consumer ? pathLib.dirname(scopePath) : scopePath;
       const deps = component.packageDependencies;
       
-      loader.setText('ensuring npm dependencies');
+      loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
       if (verbose) loader.stop(); // in order to show npm install output on verbose flag
       
       return Promise.all(
