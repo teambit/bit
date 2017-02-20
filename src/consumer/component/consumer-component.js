@@ -209,10 +209,11 @@ export default class Component {
           }
 
           if (save) {
-            // @TODO - save on model
+            return scope.sources.modifySpecsResults({ source: this, specsResults })
+            .then(() => Promise.resolve(this.specsResults));
           }
 
-          return this.specsResults;
+          return Promise.resolve(this.specsResults);
         });
       } catch (e) { return Promise.reject(e); }
     });
@@ -243,7 +244,8 @@ export default class Component {
         this.dist = new Dist(code);
         
         if (save) {
-          // @TODO - save on model
+          return scope.sources.updateDist({ source: this })
+          .then(() => resolve(code));
         }
 
         return resolve(code);

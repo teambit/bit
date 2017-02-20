@@ -2,9 +2,8 @@
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
-import { empty, filterObject } from '../../utils';
+import { filterObject } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
-import { Remotes } from '../../remotes';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
 import type { Doclet } from '../../jsdoc/parser';
@@ -130,12 +129,12 @@ export default class Version extends BitObject {
       specs: this.specs ? {
         file: this.specs.file.toString(),
         // $FlowFixMe
-        name: this.specs.name        
+        name: this.specs.name
       }: null,
       dist: this.dist ? {
         file: this.dist.file.toString(),
         // $FlowFixMe
-        name: this.dist.name        
+        name: this.dist.name
       }: null,
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
@@ -250,5 +249,16 @@ export default class Version extends BitObject {
       flattenedDependencies: flattenedDeps,
       dependencies: component.dependencies
     });    
+  }
+
+  setSpecsResults(specsResults: ?Results) {
+    this.specsResults = specsResults;
+  }
+
+  setDist(dist: ?Source) {
+    this.dist = dist ? {
+      file: dist.hash(),
+      name: DEFAULT_BUNDLE_FILENAME,
+    }: null;
   }
 }

@@ -76,6 +76,36 @@ export default class SourceRepository {
       });
   }
 
+  modifySpecsResults({ source, specsResults }:
+  { source: ConsumerComponent, specsResults?: any }): Promise<any> {
+    const objectRepo = this.objects();
+
+    return this.findOrAddComponent(source)
+      .then((component) => {
+        return component.loadVersion(component.latest(), objectRepo)
+        .then((version) => {
+          version.setSpecsResults(specsResults);
+          return objectRepo.persistOne(version);
+        });
+      });
+  }
+
+  updateDist({ source }: { source: ConsumerComponent }): Promise<any> {
+    const objectRepo = this.objects();
+
+    return this.findOrAddComponent(source)
+      .then((component) => {
+        return component.loadVersion(component.latest(), objectRepo)
+        .then((version) => {
+          const dist = source.dist ? Source.from(Buffer.from(source.dist.src)): null;
+          version.setDist(dist);
+          objectRepo.add(dist)
+          .add(version);
+          return objectRepo.persist();
+        });
+      });
+  }
+
   addSource({ source, depIds, message, force }: 
   { source: ConsumerComponent, depIds: BitId[], message: string, force: ?bool }): 
   Promise<Component> {
