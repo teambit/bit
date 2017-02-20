@@ -82,6 +82,8 @@ export const USER_NAME_KEY = 'user.name';
 
 export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
 
+export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
+
 /**
  * cache root directory
  */

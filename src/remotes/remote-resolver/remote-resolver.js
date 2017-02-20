@@ -2,8 +2,8 @@
 import R from 'ramda';
 import Scope from '../../scope/scope';
 import { getSync } from '../../api/consumer/lib/global-config';
+import { DEFAULT_HUB_DOMAIN } from '../../constants';
 
-const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
 const hubDomain = getSync('hub_domain') || DEFAULT_HUB_DOMAIN;
 
 const hubResolver = (scopeName) => {
