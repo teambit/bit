@@ -9,7 +9,7 @@ export default function build(id: string): Promise<Bit> {
     .then((consumer) => {
       return consumer.loadComponent(inlineId)
       .then((component) => { 
-        return component.build({ scope: consumer.scope })
+        return component.build({ scope: consumer.scope, consumer })
         .then(() => {
           const bitPath = inlineId.composeBitPath(consumer.getPath());
           return component.dist ? component.dist.write(bitPath) : null;

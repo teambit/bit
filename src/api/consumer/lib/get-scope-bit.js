@@ -8,12 +8,12 @@ export default function getScopeBit({ id, allVersions, scopePath }:
 { id: string, allVersions: ?bool, scopePath: ?string }) {
   function loadFromScope() {
     return loadScope(scopePath || process.cwd())
-        .then((scope) => {
-          const localScopeName = scope.name;
-          const bitId = BitId.parse(id, localScopeName);
-          if (allVersions) { return scope.loadAllVersions(bitId); }
-          return scope.loadComponent(bitId);
-        });
+      .then((scope) => {
+        const localScopeName = scope.name;
+        const bitId = BitId.parse(id, localScopeName);
+        if (allVersions) { return scope.loadAllVersions(bitId); }
+        return scope.loadComponent(bitId);
+      });
   }
   
   if (scopePath) { return loadFromScope(); }
