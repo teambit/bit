@@ -31,7 +31,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
   if (!commentsAst) return;
 
   const args = [];
-  const description = commentsAst.description;
+  let description = commentsAst.description;
   let returns = {};
   let isStatic = false;
   let access = 'public';
@@ -40,6 +40,10 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
 
   for (const tag of commentsAst.tags) {
     switch (tag.title) {
+      case 'desc':
+      case 'description':
+        description = tag.description;
+        break;
       case 'name':
         name = tag.name;
         break;

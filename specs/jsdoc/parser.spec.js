@@ -203,6 +203,32 @@ describe('JSDoc Parser', () => {
         expect(doclet).to.have.property('args').that.is.an('array').that.is.not.empty;
       });
     });
+
+    describe('Description Tag', () => {
+      let doclets;
+      before(function() {
+        const file = path.join(__dirname, 'fixtures', 'descriptionTag.js');
+        doclets = parser(fs.readFileSync(file).toString());
+        expect(doclets).to.be.an('array').and.to.have.lengthOf(3);
+      });
+      it('should ignore an invalid description', () => {
+        const doclet = doclets[0];
+        expect(doclet.name).to.equal('invalidDescription');
+        expect(doclet.description).to.equal('');
+      });
+
+      it('should recognize the description tag', () => {
+        const doclet = doclets[1];
+        expect(doclet.name).to.equal('descriptionTag');
+        expect(doclet.description).to.equal('Adds two numbers.');
+      });
+
+      it('should recognize the synonym "desc"', () => {
+        const doclet = doclets[2];
+        expect(doclet.name).to.equal('descTag');
+        expect(doclet.description).to.equal('Adds two numbers.');
+      });
+    });
   });
 });
 
