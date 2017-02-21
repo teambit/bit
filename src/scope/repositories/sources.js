@@ -2,7 +2,7 @@
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { USER_NAME_KEY, USER_EMAIL_KEY } from '../../constants';
+import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import Component from '../models/component';
 import ComponentVersion from '../component-version';
@@ -76,6 +76,20 @@ export default class SourceRepository {
       });
   }
 
+  modifyCIProps({ source, ciProps }:
+  { source: ConsumerComponent, ciProps: Object }): Promise<any> {
+    const objectRepo = this.objects();
+
+    return this.findOrAddComponent(source)
+      .then((component) => {
+        return component.loadVersion(component.latest(), objectRepo)
+        .then((version) => {
+          version.setCIProps(ciProps);
+          return objectRepo.persistOne(version);
+        });
+      });
+  }
+
   modifySpecsResults({ source, specsResults }:
   { source: ConsumerComponent, specsResults?: any }): Promise<any> {
     const objectRepo = this.objects();
@@ -119,8 +133,8 @@ export default class SourceRepository {
           const dist = source.dist ? Source.from(Buffer.from(source.dist.src)): null;
           const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
 
-          const username = globalConfig.getSync(USER_NAME_KEY);
-          const email = globalConfig.getSync(USER_EMAIL_KEY);
+          const username = globalConfig.getSync(CFG_USER_NAME_KEY);
+          const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
           loader.start(BEFORE_RUNNING_SPECS);
           return source.runSpecs({ scope: this.scope, rejectOnFailure: !force })

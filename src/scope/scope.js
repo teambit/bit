@@ -31,6 +31,7 @@ import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
   BEFORE_IMPORT_PUT_ON_SCOPE,
   BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
+import performCIOps from './ci-ops';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -164,9 +165,8 @@ export default class Scope {
         .then((objs) => {
           return compVersion.toConsumer(this.objects)
           .then(consumerComponent => index(consumerComponent, this.getPath()))
-          .then(consumerComponent =>
-            postExportHook({ id: consumerComponent.id.toString() })
-          )
+          .then(consumerComponent => postExportHook({ id: consumerComponent.id.toString() }))
+          .then(consumerComponent => performCIOps(consumerComponent, this.getPath()))
           .then(() => first(objs));
         })
       );

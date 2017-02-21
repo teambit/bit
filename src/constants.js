@@ -76,13 +76,30 @@ export const DEFAULT_REMOTES = {};
 
 export const DEFAULT_DEPENDENCIES = {};
 
-export const USER_EMAIL_KEY = 'user.email';
-
-export const USER_NAME_KEY = 'user.name';
-
 export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
 
 export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
+
+export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
+
+/**
+ * bit global config keys
+ */
+export const CFG_USER_EMAIL_KEY = 'user.email';
+
+export const CFG_USER_NAME_KEY = 'user.name';
+
+export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
+
+export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
+
+export const CFG_POST_EXPORT_HOOK_KEY = 'post_export_hook';
+
+export const CFG_POST_IMPORT_HOOK_KEY = 'post_import_hook';
+
+export const CFG_CI_FUNCTION_PATH_KEY = 'ci_function_path';
+
+export const CFG_CI_ENABLE_KEY = 'ci_enable';
 
 /**
  * cache root directory

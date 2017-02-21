@@ -1,12 +1,11 @@
 /** @flow */
 import * as fs from 'fs';
 import { getSync } from '../../../api/consumer/lib/global-config';
-
-const userHome = require('user-home');
+import { CFG_SSH_KEY_FILE_KEY, DEFAULT_SSH_KEY_FILE } from '../../../constants';
 
 function getPathToIdentityFile() {
-  const identityFile = getSync('ssh_key_file');
-  return identityFile || `${userHome}/.ssh/id_rsa`;
+  const identityFile = getSync(CFG_SSH_KEY_FILE_KEY);
+  return identityFile || DEFAULT_SSH_KEY_FILE;
 }
 
 export default function keyGetter(keyPath: ?string) {
