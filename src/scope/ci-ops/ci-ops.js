@@ -8,6 +8,7 @@ import { CFG_CI_FUNCTION_PATH_KEY, CFG_CI_ENABLE_KEY } from '../../constants';
 function defaultCIFunc(id: string, scopePath: string) {
   const child = spawn(process.argv[0], [path.join(__dirname, 'ci-worker.js')], {
     detached: true,
+    cwd: scopePath,
     env: { 
       __id__: id,
       __scope__: scopePath,
@@ -22,7 +23,7 @@ export default (component: ConsumerComponent, scopePath: string) => {
   const enableCI = globalConfig.getSync(CFG_CI_ENABLE_KEY);
   const ciFuncPath = globalConfig.getSync(CFG_CI_FUNCTION_PATH_KEY);
 
-  if (!enableCI && !ciFuncPath) return component;
+  if (enableCI !== 'true' && !ciFuncPath) return component;
 
   const id = component.id.toString();
   let ciFunc;
