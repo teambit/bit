@@ -9,7 +9,7 @@ function defaultCIFunc(id: string, scopePath: string) {
   const child = spawn(process.argv[0], [path.join(__dirname, 'ci-worker.js')], {
     detached: true,
     cwd: scopePath,
-    env: { 
+    env: {
       __id__: id,
       __scope__: scopePath,
     },
