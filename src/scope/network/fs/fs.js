@@ -47,7 +47,7 @@ export default class Fs {
   }
 
   list(): Promise<[]> {
-    return this.getScope().list();
+    return this.getScope().listStage();
   }
 
   search(query: string, reindex: boolean): Promise<[]> {
@@ -60,7 +60,8 @@ export default class Fs {
   }
 
   connect() {
-    return loadScope(this.scopePath).then((scope) => {
+    return loadScope(this.scopePath)
+    .then((scope) => {
       this.scope = scope;
       return this;
     });

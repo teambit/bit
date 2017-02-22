@@ -165,7 +165,10 @@ export default class Scope {
         .then((objs) => {
           return compVersion.toConsumer(this.objects)
           .then(consumerComponent => index(consumerComponent, this.getPath()))
-          .then(consumerComponent => postExportHook({ id: consumerComponent.id.toString() }))
+          .then(consumerComponent => 
+            postExportHook({ id: consumerComponent.id.toString() })
+            .then(() => consumerComponent)
+          )
           .then(consumerComponent => performCIOps(consumerComponent, this.getPath()))
           .then(() => first(objs));
         })

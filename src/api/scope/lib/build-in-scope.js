@@ -8,7 +8,7 @@ export default function buildInScope({ id, environment, save, verbose, scopePath
 { id: string, environment: ?bool, save: ?bool, verbose: ?bool, scopePath: string }) {
   function loadFromScope(initialError: ?Error) {
     return loadScope(scopePath || process.cwd())
-      .catch(() => Promise.reject(initialError))
+      .catch(newErr => Promise.reject(initialError || newErr))
       .then((scope) => {
         const bitId = BitId.parse(id, scope.name);
         return scope.build({ bitId, environment, save, verbose });

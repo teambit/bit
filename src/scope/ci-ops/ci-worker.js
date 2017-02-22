@@ -15,7 +15,6 @@ function addCIAttrsInTheModel(error) {
     ciProps.error = serializedError;
     return modifyCIProps(scopePath, id, ciProps);
   }
-  
   return modifyCIProps(scopePath, id, ciProps);
 }
 
@@ -28,11 +27,17 @@ try {
   buildInScope({ id, scopePath, environment, save, verbose })
   .then(() => testInScope({ id, scopePath, environment, save, verbose }))
   .then(() => {
-    return addCIAttrsInTheModel().then(() => null);
+    return addCIAttrsInTheModel()
+    .then(() => null)
+    .catch(er => process.stderr.write(er));
   })
   .catch((e) => {
-    return addCIAttrsInTheModel(e).then(() => null);
+    return addCIAttrsInTheModel(e)
+    .then(() => null)
+    .catch(er => process.stderr.write(er));
   });
 } catch (e) {
-  addCIAttrsInTheModel(e).then(() => null);
+  addCIAttrsInTheModel(e)
+  .then(() => null)
+  .catch(er => process.stderr.write(er));
 }
