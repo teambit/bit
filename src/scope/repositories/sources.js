@@ -14,6 +14,7 @@ import ConsumerComponent from '../../consumer/component/consumer-component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import loader from '../../cli/loader';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
+import Consumer from '../../consumer';
 
 export type ComponentTree = {
   component: Component;
@@ -120,14 +121,18 @@ export default class SourceRepository {
       });
   }
 
-  addSource({ source, depIds, message, force }: 
-  { source: ConsumerComponent, depIds: BitId[], message: string, force: ?bool }): 
-  Promise<Component> {
+  addSource({ source, depIds, message, force, consumer }: { 
+    source: ConsumerComponent,
+    depIds: BitId[],
+    message: string,
+    force: ?bool,
+    consumer: Consumer
+  }): Promise<Component> {
     const objectRepo = this.objects();
 
     return this.findOrAddComponent(source)
       .then((component) => {
-        return source.build({ scope: this.scope })
+        return source.build({ scope: this.scope, consumer })
         .then(() => {
           const impl = Source.from(Buffer.from(source.impl.src));
           const dist = source.dist ? Source.from(Buffer.from(source.dist.src)): null;
@@ -137,7 +142,7 @@ export default class SourceRepository {
           const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
           loader.start(BEFORE_RUNNING_SPECS);
-          return source.runSpecs({ scope: this.scope, rejectOnFailure: !force })
+          return source.runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer })
           .then((specsResults) => {
             const version = Version.fromComponent({
               component: source,
