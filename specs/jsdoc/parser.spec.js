@@ -229,6 +229,19 @@ describe('JSDoc Parser', () => {
         expect(doclet.description).to.equal('Adds two numbers.');
       });
     });
+
+    describe('Access property', () => {
+      let doclets;
+      before(function() {
+        const file = path.join(__dirname, 'fixtures', 'misc.js');
+        doclets = parser(fs.readFileSync(file).toString());
+        expect(doclets).to.be.an('array');
+      });
+      it('should find only public functions', () => {
+        expect(doclets.find(doclet => doclet.name === 'publicFunc')).not.to.be.empty;
+        expect(doclets.find(doclet => doclet.name === 'privateFunc')).to.be.empty;
+      });
+    });
   });
 });
 

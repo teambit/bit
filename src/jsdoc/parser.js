@@ -94,5 +94,5 @@ export default function parse(data: string): Doclet|[] {
     // never mind, ignore the doc of this source
   }
 
-  return doclets;
+  return doclets.filter(doclet => doclet.access === 'public');
 }
