@@ -118,8 +118,9 @@ export default class Scope {
     ));
   }
 
-  getDependencies() {
-    
+  importDependencies(component: ConsumerComponent) {
+    return this.importMany(component.dependencies);
+    // .catch((e) => { throw new Error(e); });
   }
 
   put({ consumerComponent, message, force, consumer }: 
@@ -133,20 +134,21 @@ export default class Scope {
     consumerComponent.scope = this.name;
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
 
-    return this.importMany(consumerComponent.dependencies).then((dependencies) => {
-      return flattenDependencyIds(dependencies, this.objects)
-        .then((depIds) => {
-          return this.sources.addSource({
-            source: consumerComponent, depIds, message, force, consumer
-          })
-          .then((component) => {
-            loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-            return this.objects.persist()
-              .then(() => component.toVersionDependencies(LATEST, this, this.name))
-              .then(deps => deps.toConsumer(this.objects));
-          }); 
-        });
-    });
+    return this.importDependencies(consumerComponent)
+      .then((dependencies) => {
+        return flattenDependencyIds(dependencies, this.objects)
+          .then((depIds) => {
+            return this.sources.addSource({
+              source: consumerComponent, depIds, message, force, consumer
+            })
+            .then((component) => {
+              loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
+              return this.objects.persist()
+                .then(() => component.toVersionDependencies(LATEST, this, this.name))
+                .then(deps => deps.toConsumer(this.objects));
+            }); 
+          });
+      });
   }
 
   importSrc(componentObjects: ComponentObjects) {
@@ -262,7 +264,7 @@ export default class Scope {
     return this.sources.getMany(locals)
       .then((localDefs) => {
         return Promise.all(localDefs.map((def) => {
-          if (!def.component) throw new ComponentNotFound(def.id);
+          if (!def.component) throw new ComponentNotFound(def.id.toString());
           return def.component.toVersionDependencies(def.id.version, this, def.id.scope);
         }))
         .then((versionDeps) => {
