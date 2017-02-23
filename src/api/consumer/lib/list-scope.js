@@ -5,8 +5,8 @@ import { ConsumerNotFound } from '../../../consumer/exceptions';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_LIST } from '../../../cli/loader/loader-messages';
 
-export default function list({ scopeName }: 
-{ scopeName: ?string }): Promise<string[]> {
+export default function list({ scopeName, cache }: 
+{ scopeName: ?string, cache?: bool }): Promise<string[]> {
   return loadConsumer()
   .then((consumer) => {
     const scope = consumer.scope;
@@ -22,13 +22,13 @@ export default function list({ scopeName }:
       );
     }
 
-    return scope.listStage();
+    return cache ? scope.list() : scope.listStage();
   })
   .catch((err) => {
     if (!(err instanceof ConsumerNotFound)) throw err;
     return loadScope(process.cwd())
       .catch(() => Promise.reject(err))
-      .then(scope => scope.listStage())
+      .then((scope) => { return cache ? scope.list() : scope.listStage(); })
       .catch(e => Promise.reject(e));
   });
 }
