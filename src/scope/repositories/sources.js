@@ -183,6 +183,8 @@ export default class SourceRepository {
       .then(component => component.remove(this.objects()));
   }
 
+
+
   merge({ component, objects }: ComponentTree, inScope: boolean = false): Promise<Component> {
     if (inScope) component.scope = this.scope.name;
     return this.findComponent(component).then((existingComponent) => {

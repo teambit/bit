@@ -1,4 +1,5 @@
 /** @flow */
+import serializeError from 'serialize-error';
 import commander from 'commander';
 import chalk from 'chalk';
 import type Command from './command';   
@@ -56,9 +57,16 @@ function execAction(command, concrete, args) {
       const errorHandled = defaultHandleError(err)
       || command.handleError(err);
       
+      if (command.private) return serializeErrAndExit(err);
       if (!command.private && errorHandled) logAndExit(errorHandled);
       else logErrAndExit(err);
     });
+}
+
+function serializeErrAndExit(err) {
+  console.log(serializeError(err));
+  if (err.code) return process.exit(err.code);
+  return process.exit(1);
 }
 
 // @TODO add help for subcommands
