@@ -64,7 +64,7 @@ function execAction(command, concrete, args) {
 }
 
 function serializeErrAndExit(err) {
-  console.log(serializeError(err));
+  console.error(serializeError(err));
   if (err.code) return process.exit(err.code);
   return process.exit(1);
 }
