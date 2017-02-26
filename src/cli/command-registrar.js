@@ -9,7 +9,7 @@ import loader from './loader';
 
 
 function logAndExit(msg: string) {
-  process.stdout.write(msg);
+  process.stdout.write(`${msg}\n`);
   process.exit();
 }
 
@@ -147,7 +147,7 @@ export default class CommandRegistrar {
     if (cmdList.indexOf(subcommand) === -1 && aliasList.indexOf(subcommand) === -1) {
       process.stdout.write(
         chalk.yellow(
-          `warning: no command named '${chalk.bold(subcommand)}' was found...\nsee 'bit --help' for additional information.`)
+          `warning: no command named '${chalk.bold(subcommand)}' was found...\nsee 'bit --help' for additional information.\n`)
       );
       return this;
     }

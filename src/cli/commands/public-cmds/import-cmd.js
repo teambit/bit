@@ -20,7 +20,15 @@ export default class Import extends Command {
   ];
   loader = true;
 
-  action([id, ]: [string, ], { save, tester, compiler, verbose, prefix, dev }: any): Promise<any> {
+  action([id, ]: [string, ], { save, tester, compiler, verbose, prefix, dev }:
+  { 
+    save?: bool,
+    tester?: bool,
+    compiler?: bool,
+    verbose?: bool,
+    prefix?: bool,
+    dev?: bool,
+  }): Promise<any> {
     if (prefix) { return Promise.reject(new Error('prefix option currently not supported')); }
     // TODO - prefix returns true instead of the relevant string.
     // @TODO - import should support multiple components

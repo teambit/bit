@@ -90,7 +90,11 @@ export default class Consumer {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
       if (R.isNil(dependencies) || R.isEmpty(dependencies)) {
-        return Promise.reject(new NothingToImport());
+        if (!withEnvironments) {
+          return Promise.reject(new NothingToImport());
+        } else if (R.isNil(this.testerId) || R.isNil(this.compilerId)) {
+          return Promise.reject(new NothingToImport());
+        }
       } 
       
       return this.scope.getMany(dependencies)
