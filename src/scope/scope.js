@@ -340,12 +340,23 @@ export default class Scope {
   }
 
   // @TODO optimize ASAP
-  modify(id: BitId): Promise<ComponentDependencies> {
-    return this.import(id, true)
+  modify({ bitId, consumer, no_env, verbose }: {
+    bitId: BitId,
+    consumer?: Consumer,
+    no_env?: bool,
+    verbose?: bool
+  }): Promise<ComponentDependencies> {
+    const installEnvironmentsIfNeeded = (component) => {
+      if (no_env) return Promise.resolve();
+      const ids = [component.compilerId, component.testerId];
+      return this.installEnvironment({ ids, consumer, verbose });
+    };
+
+    return this.import(bitId, true)
       .then((versionDependencies) => {
         const versions = versionDependencies.component.component.listVersions();
         const versionsP = this.importManyOnes(versions.map((version) => {
-          const versionId = BitId.parse(id.toString());
+          const versionId = BitId.parse(bitId.toString());
           versionId.version = version.toString();
           return versionId;
         }));
@@ -356,8 +367,12 @@ export default class Scope {
         return this.export(componentObjects);
       }) 
       .then(() => {
-        id.scope = this.name;
-        return this.get(id);
+        bitId.scope = this.name;
+        return this.get(bitId)
+          .then((component) => {
+            return installEnvironmentsIfNeeded(component.component)
+            .then(() => component);
+          });
       });
   }
 

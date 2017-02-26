@@ -8,11 +8,14 @@ export default class Modify extends Command {
   name = 'modify <id>';
   description = 'modify a component (transfer to the inline directory for modification)';
   alias = 'm';
-  opts = [];
+  opts = [
+    ['ne', 'no_env', 'no pre-import of environment bit components (tester/compiler)'],
+    ['v', 'verbose', 'showing npm verbose output for inspection'],
+  ];
   loader = true;
 
-  action([id, ]: [string, ]): Promise<Bit> {
-    return modify({ id })
+  action([id, ]: [string, ], { no_env, verbose }: { no_env?: bool, verbose?: bool }): Promise<Bit> {
+    return modify({ id, no_env, verbose })
     .then((component) => {
       return {
         name: component.name,
