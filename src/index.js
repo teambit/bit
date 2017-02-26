@@ -89,6 +89,8 @@ load.mockModules = (modules) => {
   }
 };
 
+load.reRequire = mock.reRequire;
+
 load.loadExact = resolveFromFullId;
 
 module.exports = load;

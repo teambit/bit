@@ -23,3 +23,5 @@ node_modules
 
 # dist
 dist
+
+.history
