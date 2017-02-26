@@ -286,7 +286,7 @@ export default class Scope {
     return this.sources.getMany(locals)
       .then((localDefs) => {
         return Promise.all(localDefs.map((def) => {
-          if (!def.component) throw new ComponentNotFound(def.id);
+          if (!def.component) throw new ComponentNotFound(def.id.toString());
           return def.component.toComponentVersion(def.id.version, this.name);
         }))
         .then((componentVersionArr) => {
@@ -314,7 +314,7 @@ export default class Scope {
     
     return this.sources.get(id)
       .then((component) => {
-        if (!component) throw new ComponentNotFound(id);
+        if (!component) throw new ComponentNotFound(id.toString());
         return component.toVersionDependencies(id.version, this);
       });
   }
@@ -368,7 +368,7 @@ export default class Scope {
 
     return this.getOne(id)
       .then((component) => {
-        if (!component) throw new ComponentNotFound(id);
+        if (!component) throw new ComponentNotFound(id.toString());
         return component.toConsumer(this.objects);
       });
   }
@@ -376,7 +376,7 @@ export default class Scope {
   loadComponentLogs(id: BitId): Promise<{[number]: {message: string, date: string, hash: string}}> {
     return this.sources.get(id)
     .then((componentModel) => {
-      if (!componentModel) throw new ComponentNotFound(id);
+      if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectLogs(this.objects);
     });
   }
@@ -384,7 +384,7 @@ export default class Scope {
   loadAllVersions(id: BitId): Promise<ConsumerComponent> {
     return this.sources.get(id)
     .then((componentModel) => {
-      if (!componentModel) throw new ComponentNotFound(id);
+      if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectVersions(this.objects);
     });
   }
@@ -397,7 +397,7 @@ export default class Scope {
     
     return this.sources.get(id)
       .then((component) => {
-        if (!component) throw new ComponentNotFound(id);
+        if (!component) throw new ComponentNotFound(id.toString());
         return component.toComponentVersion(id.version, this.name);
       });
   }

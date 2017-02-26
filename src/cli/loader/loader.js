@@ -13,6 +13,26 @@ type Loader = {
   get: () => ?Loader
 }
 
+const start = (text: ?string): Loader => {
+  if (_loader) {
+    if (text) _loader.text = text;
+    _loader.start();
+  }
+  return loader;
+};
+
+const setText = (text: string): Loader => {
+  if (_loader) _loader.text = text;
+  return loader;
+};
+
+const get = (): ?Loader => _loader;
+
+const stop = (): Loader => {
+  if (_loader) _loader.stop();
+  return loader;
+};
+
 const on = (): Loader => {
   if (!_loader) _loader = ora({ spinner: SPINNER_TYPE, text: '' });
   return loader;
@@ -23,26 +43,6 @@ const off = (): Loader => {
   _loader = null;
   return loader;
 };
-
-const start = (text: ?string): Loader => {
-  if (_loader) {
-    if (text) _loader.text = text;
-    _loader.start();
-  }
-  return loader;
-};
-
-const stop = (): Loader => {
-  if (_loader) _loader.stop();
-  return loader;
-};
-
-const setText = (text: string): Loader => {
-  if (_loader) _loader.text = text;
-  return loader;
-};
-
-const get = (): ?Loader => _loader;
 
 const loader: Loader = {
   on,

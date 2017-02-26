@@ -9,12 +9,12 @@ import loader from './loader';
 
 
 function logAndExit(msg: string) {
-  console.log(msg); // eslint-disable-line
+  process.stdout.write(msg);
   process.exit();
 }
 
 function logErrAndExit(msg: Error) {
-  console.error(msg); // eslint-disable-line
+  process.stderr.write(msg);
   if (msg.code) return process.exit(msg.code);
   return process.exit(1);
 }
@@ -64,7 +64,7 @@ function execAction(command, concrete, args) {
 }
 
 function serializeErrAndExit(err) {
-  console.error(serializeError(err));
+  process.stderr.write(JSON.stringify(serializeError(err)));
   if (err.code) return process.exit(err.code);
   return process.exit(1);
 }
@@ -145,7 +145,7 @@ export default class CommandRegistrar {
     const aliasList = this.commands.map(cmd => first(cmd.alias.split(' ')));
 
     if (cmdList.indexOf(subcommand) === -1 && aliasList.indexOf(subcommand) === -1) {
-      console.log(
+      process.stdout.write(
         chalk.yellow(
           `warning: no command named '${chalk.bold(subcommand)}' was found...\nsee 'bit --help' for additional information.`)
       );
@@ -154,10 +154,6 @@ export default class CommandRegistrar {
 
     return this;
   } 
-
-  errorHandler(err: Error) {
-    console.error(err);
-  }
   
   run() {
     this.registerBaseCommand();

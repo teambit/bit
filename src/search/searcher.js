@@ -33,7 +33,7 @@ function getDoc(index: Promise<any>, docIds: string[]) {
   return new Promise((resolve, reject) => {
     return index.then((indexInstance) => {
       indexInstance.get(docIds).on('data', function (doc) {
-        console.log(doc);
+        // console.log(doc);
       });
     });
   });
