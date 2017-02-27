@@ -1,14 +1,23 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/) 
+The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+
+## [0.2.0]
+
 ### Added
-- loaders for the commands
 
-### Changed
-- scope.list() not going to fetch things from a remote as a default behavior anymore, the logic located in the api method
+- loaders.
+- stablize version.
+- improve error handling.
 
-<!--## [1.0.0] - 2017-2-3-->
+## [0.1.0]
+
+initial version
+
+
