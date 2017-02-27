@@ -11,11 +11,11 @@ export default class Fetch extends Command {
   description = 'fetch components(s) from a scope';
   alias = '';
   opts = [
-    ['n', 'no-dependencies', 'do not include component dependencies']
+    ['n', 'no_dependencies', 'do not include component dependencies']
   ];
 
-  action([path, ids, ]: [string, string[], ], { noDependencies }: any): Promise<any> {
-    return fetch(fromBase64(path), ids.map(fromBase64), noDependencies);
+  action([path, ids, ]: [string, string[], ], { no_dependencies }: any): Promise<any> {
+    return fetch(fromBase64(path), ids.map(fromBase64), no_dependencies);
   }
 
   report(componentObjects: ComponentObjects[]): string {
