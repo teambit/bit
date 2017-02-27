@@ -30,17 +30,17 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ RemoteScopeNotFound, () => 'fatal: remote scope not found. to create a new scope, please use `bit init --bare` in the remote destination'],
   [ InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: <scope>/[box]/<name>'],
   [ ComponentNotFound, err => `fatal: component with id "${chalk.bold(err.id)}" was not found`],
-  [ DependencyNotFound, err => `Error - Dependency "${chalk.bold(err.id)}" not found. Please verify bit.json - ${chalk.bold(err.bitJsonPath)}`],
+  [ DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found. Please verify bit.json - ${chalk.bold(err.bitJsonPath)}`],
   [ PermissionDenied, () => 'fatal: permission to scope was denied'],
   [ RemoteNotFound, err => `fatal: remote "${chalk.bold(err.name)}" was not found`],
   [ NetworkError, err => `fatal: remote failed with error: "${chalk.bold(err.remoteErr)}"`],
-  [ MergeConflict, () => 'fatal: merge conflict'],
+  [ MergeConflict, () => 'error: Merge conflict occured when exporting the componet.\nTo resolve it, please modify the latest version of the remote component, and only then export your changes.'],
   [ UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
   [ ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init --bare`'],
   [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit'],
   [ NothingToImport, () => 'there is nothing to import'],
   [ InvalidIdChunk, err => `invalid id part in "${chalk.bold(err.id)}", id part can have only alphanumeric, lowercase charecters, and the following ["-", "_", "$", "!", "."]`],
-  [ InvalidBitJson, err => `Error - ${chalk.bold(err.path)} is not a valid JSON file.`],
+  [ InvalidBitJson, err => `error: ${chalk.bold(err.path)} is not a valid JSON file.`],
   [ ResolutionException, e => e.message]
 ];
 
