@@ -10,6 +10,7 @@ import testInScope from './lib/test-in-scope';
 import { getResolver, setResolver, resetResolver } from './lib/resolver';
 import modifyCIProps from './lib/modify-ci-props';
 import ciUpdateAction from './lib/ci-update-action';
+import scopeConfig from './lib/scope-config';
 
 export {
   catObject,
@@ -26,4 +27,5 @@ export {
   fetch,
   modifyCIProps,
   ciUpdateAction,
+  scopeConfig,
 };

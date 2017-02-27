@@ -12,6 +12,7 @@ import Modify from './commands/public-cmds/modify-cmd';
 import Commit from './commands/public-cmds/commit-cmd';
 import Import from './commands/public-cmds/import-cmd';
 import Config from './commands/public-cmds/config-cmd';
+import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
 import Search from './commands/public-cmds/search-cmd';
 import Test from './commands/public-cmds/test-cmd';
@@ -52,5 +53,6 @@ export default function registerCommands(): CommandRegistrar {
     new Build(),
     new DescribeScope(),
     new CiUpdate(),
+    // new ScopeConfig(),
   ]);
 }
