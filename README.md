@@ -54,26 +54,6 @@ In case you would like to modify this component, you can just use:
 bit modify @my-scope/string/is
 ```
 
-## Why?
-
-The current ecosystem is not suited for management of code components. 
-
-As a result code components are being duplicated across repositories creating an ever growing technological debt. People also spend much time and effort re inventing the same components over and over again. 
-
-This happens because packages are simply too much overhead. Publishing and maintaining a package + repository + CI for every small component is an unscalable odyssey. Packages are also hard to find, and add unnecessary weight and complexity. 
-
-This is why we built Bit - the simple code component manager.
-
-* Bit helps get rid of code duplications by making it it easy to extract reusable components from your code to be used anywhere you like.
-
-* It allows you to easily maintain all your components in one place with full versioning and dependency management.
-
-* It takes care of your components CI cycle with build and test execution.
-
-* It makes your components easy to find with a built in semantic search engine.
-
-Ultimately, bit allows you to create a dynamic collection of fully managed and good-to-go reusable components ready to be used anywhere. 
-
 ## Features
 
 * **Export components with one command** A single CLI command to export a reusable component to be use anywhere and by anyone you like.
@@ -89,6 +69,18 @@ Ultimately, bit allows you to create a dynamic collection of fully managed and g
 * **Quick consumption and modification of components.** Using simple commands such as import, modify etc.
 
 * **Scope distribution** enables you to create a Bit scope, anywhere with a single `bit init` command.
+
+## Why Bit?
+
+Today, we often find ourselves re-implementing or copy-pasting pieces of code in multiple places. This wastes time and effort while turning our code base into a maintenance nightmare.
+
+The alternative, spending hours on boilerplating and publishing a package + git repository + CI for every small component is simply too much overhead. Packages are also hard to find and add unnecessary weight and complexity. 
+
+This compelled us to build a single tool that allows us to easily extract code components from our code and use them anywhere we want. We also made sure our components would be taken care of through their entire lifecycle, so that they can be trusted and deployed anywhere.
+
+Finally, we made sure our team can collaborate by importing and exporting each other’s components to build and maintain our projects. 
+
+Ultimately, bit allows you to create a dynamic collection of fully managed and good-to-go components ready to be used anywhere. This is something we truly believe in.
 
 ## Learn more
 
