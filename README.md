@@ -56,17 +56,19 @@ bit modify @my-scope/string/is
 
 ## Features
 
-* **Export components with one command** A single CLI command to export a reusable component to be use anywhere and by anyone you like.
+* **Export components with one command.** A single CLI command to export a reusable component with only two files: impl and specs.
 
 * **Component CI.** Bit‘s scoping mechanism takes care of your component’s build and test execution.
 
-* **Full versioning management.** Bit takes care of version management with a simplified incremental versioning for easier update and maintenance.
+* **Simple versioning management.** Bit takes care of version management with a simplified incremental versioning for easier update and maintenance.
 
-* **On-export dependency resolution.** A faster, more reliable dependency resolution as dependencies are kept aside the component itself.
+* **On-export dependency resolution.** A faster, more reliable dependency resolution as dependencies are kept within the component itself.
 
-* **Built-in semantic search engine.** Easily find code components in local and remote locations.
+* **Super fast component installation** Components are lighter and faster to install depending on bandwidth alone. 
 
-* **Quick consumption and modification of components.** Using simple commands such as import, modify etc.
+* **Built-in semantic search engine.** Easily find and use components created by your or your friends.
+
+* **Quick modification and update of components.** Using simple commands such as import, modify etc. to modify and update your components.
 
 * **Scope distribution** enables you to create a Bit scope, anywhere with a single `bit init` command.
 
