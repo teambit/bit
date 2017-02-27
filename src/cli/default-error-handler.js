@@ -19,6 +19,7 @@ import MergeConflict from '../scope/exceptions/merge-conflict';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import { ScopeNotFound, ResolutionException } from '../scope/exceptions';
 import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
+import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 
 const errorsMap: [[Error, (err: Error) => string]] = [ 
   [ ConsumerAlreadyExists, () => 'there\'s already a scope' ],
@@ -39,6 +40,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit'],
   [ NothingToImport, () => 'there is nothing to import'],
   [ InvalidIdChunk, err => `invalid id part in "${chalk.bold(err.id)}", id part can have only alphanumeric, lowercase charecters, and the following ["-", "_", "$", "!", "."]`],
+  [ InvalidBitJson, err => `Error - ${chalk.bold(err.path)} is not a valid JSON file.`],
   [ ResolutionException, e => e.message]
 ];
 

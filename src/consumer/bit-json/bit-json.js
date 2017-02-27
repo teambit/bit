@@ -109,11 +109,16 @@ export default class BitJson extends AbstractBitJson {
   }
 
   static load(dirPath: string, protoBJ?: ConsumerBitJson) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       let thisBJ = {};
-      try {
-        thisBJ = JSON.parse(fs.readFileSync(composePath(dirPath)).toString('utf8'));
-      } catch (e) {} // eslint-disable-line
+      const bitJsonPath = composePath(dirPath);
+      if (fs.existsSync(bitJsonPath)) {
+        try {
+          thisBJ = JSON.parse(fs.readFileSync(bitJsonPath).toString('utf8'));
+        } catch (e) {
+          return reject(new InvalidBitJson(bitJsonPath));
+        }
+      }
       
       const mergedBJ = this.mergeWithProto(thisBJ, protoBJ);
       return resolve(mergedBJ);
@@ -122,10 +127,15 @@ export default class BitJson extends AbstractBitJson {
 
   static loadSync(dirPath: string, protoBJ?: ConsumerBitJson) {
     let thisBJ = {};
-    try {
-      thisBJ = JSON.parse(fs.readFileSync(composePath(dirPath)).toString('utf8'));
-    } catch (e) {} // eslint-disable-line
-    
+    const bitJsonPath = composePath(dirPath);
+    if (fs.existsSync(bitJsonPath)) {
+      try {
+        thisBJ = JSON.parse(fs.readFileSync(bitJsonPath).toString('utf8'));
+      } catch (e) {
+        throw new InvalidBitJson(bitJsonPath);
+      }
+    }
+
     return this.mergeWithProto(thisBJ, protoBJ);
   }
 }

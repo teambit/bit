@@ -222,12 +222,8 @@ export default class Consumer {
         if (err) reject(err);
 
         const bitsP = files.map((bitRawId) => {
-          try {
-            const parsedId = BitInlineId.parse(bitRawId);
-            return this.loadComponent(parsedId);
-          } catch (e) {
-            return reject(e);
-          }
+          const parsedId = BitInlineId.parse(bitRawId);
+          return this.loadComponent(parsedId);
         });
 
         return Promise.all(bitsP)
