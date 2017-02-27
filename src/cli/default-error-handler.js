@@ -10,14 +10,13 @@ import {
   ComponentSpecsFailed,
 } from '../consumer/exceptions';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
-import ComponentNotFound from '../scope/exceptions/component-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
 import NetworkError from '../scope/network/exceptions/network-error';
 import UnexpectedNetworkError from '../scope/network/exceptions/unexpected-network-error';
 import MissingImpl from '../consumer/component/exceptions/missing-impl';
 import MergeConflict from '../scope/exceptions/merge-conflict';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
-import { ScopeNotFound, ResolutionException } from '../scope/exceptions';
+import { ScopeNotFound, ResolutionException, ComponentNotFound, DependencyNotFound } from '../scope/exceptions';
 import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 
@@ -31,6 +30,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ RemoteScopeNotFound, () => 'fatal: remote scope not found. to create a new scope, please use `bit init --bare` in the remote destination'],
   [ InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: <scope>/[box]/<name>'],
   [ ComponentNotFound, err => `fatal: component with id "${chalk.bold(err.id)}" was not found`],
+  [ DependencyNotFound, err => `Error - Dependency "${chalk.bold(err.id)}" not found. Please verify bit.json - ${chalk.bold(err.bitJsonPath)}`],
   [ PermissionDenied, () => 'fatal: permission to scope was denied'],
   [ RemoteNotFound, err => `fatal: remote "${chalk.bold(err.name)}" was not found`],
   [ NetworkError, err => `fatal: remote failed with error: "${chalk.bold(err.remoteErr)}"`],

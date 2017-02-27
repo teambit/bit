@@ -8,6 +8,7 @@ import ComponentNotFound from './component-not-found';
 import VersionNotFound from './version-not-found';
 import HashNotFound from './hash-not-found';
 import ResolutionException from './resolution-exception';
+import DependencyNotFound from './dependency-not-found';
 
 export {
   ScopeNotFound,
@@ -19,4 +20,5 @@ export {
   ScopeAlreadyExists,
   BitNotInScope,
   ResolutionException,
+  DependencyNotFound,
 };

@@ -10,9 +10,9 @@ import ComponentModel from './models/component';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, flatten } from '../utils';
-import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME } from '../constants';
+import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, BIT_JSON } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import { ScopeNotFound, ComponentNotFound, ResolutionException } from './exceptions';
+import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import ConsumerComponent from '../consumer/component';
@@ -118,23 +118,27 @@ export default class Scope {
     ));
   }
 
-  importDependencies(component: ConsumerComponent) {
-    return this.importMany(component.dependencies);
-    // .catch((e) => { throw new Error(e); });
+  importDependencies(component: ConsumerComponent, bitDir: string) {
+    const bitJsonPath = pathLib.join(bitDir, BIT_JSON);
+    return new Promise((resolve, reject) => {
+      return this.importMany(component.dependencies)
+      .then(resolve)
+      .catch(e => reject(new DependencyNotFound(e.id, bitJsonPath)));
+    });
   }
 
-  put({ consumerComponent, message, force, consumer }: 
-  { 
+  put({ consumerComponent, message, force, consumer, bitDir }: { 
     consumerComponent: ConsumerComponent,
     message: string,
     force: ?bool,
-    consumer:Consumer
+    consumer: Consumer,
+    bitDir: string,
   }):
   Promise<ComponentDependencies> {
     consumerComponent.scope = this.name;
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
 
-    return this.importDependencies(consumerComponent)
+    return this.importDependencies(consumerComponent, bitDir)
       .then((dependencies) => {
         return flattenDependencyIds(dependencies, this.objects)
           .then((depIds) => {
