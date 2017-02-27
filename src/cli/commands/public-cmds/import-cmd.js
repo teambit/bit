@@ -76,23 +76,24 @@ export default class Import extends Command {
       return 'nothing to import';
     };
     
+    const logObject = obj => `> ${R.keys(obj)[0]}: ${R.values(obj)[0]}`;
     const getWarningOutput = () => {
       if (!warnings) return '';
       let output = '\n';
 
       if (!R.isEmpty(warnings.notInBoth)) {
         output += chalk.red.underline('\nerror - Missing the following package dependencies. Please install and add to package.json.\n');
-        output += chalk.red(`${JSON.stringify(R.mergeAll(warnings.notInBoth))}\n`);
+        output += chalk.red(`${warnings.notInBoth.map(logObject).join('\n')}\n`);
       }
 
       if (!R.isEmpty(warnings.notInPackageJson)) {
         output += chalk.yellow.underline('\nwarning - Add the following packages to package.json\n');
-        output += chalk.yellow(`${JSON.stringify(R.mergeAll(warnings.notInPackageJson))}\n`);
+        output += chalk.yellow(`${warnings.notInPackageJson.map(logObject).join('\n')}\n`);
       }
 
       if (!R.isEmpty(warnings.notInNodeModules)) {
         output += chalk.yellow.underline('\nwarning - Following packages are not installed. Please install them.\n');
-        output += chalk.yellow(`${JSON.stringify(R.mergeAll(warnings.notInNodeModules))}\n`);
+        output += chalk.yellow(`${warnings.notInNodeModules.map(logObject).join('\n')}\n`);
       }
 
       return output === '\n' ? '' : output;
