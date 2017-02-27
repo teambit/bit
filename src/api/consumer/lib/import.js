@@ -66,7 +66,7 @@ export default function importAction(
         })
         .then(({ dependencies, envDependencies }) =>
           warnForPackageDependencies({ dependencies, envDependencies, consumer })
-          .then(() => ({ dependencies, envDependencies }))
+          .then(warnings => ({ dependencies, envDependencies, warnings }))
         );
     });
 }
@@ -99,6 +99,12 @@ function compatibleWith(a: { [string]: string }, b: { [string]: string, }): bool
 }
 
 const warnForPackageDependencies = ({ dependencies, envDependencies, consumer }) => {
+  const warnings = {
+    notInPackageJson: [],
+    notInNodeModules: [],
+    notInBoth: [],
+  };
+
   const projectDir = consumer.getPath();
   const getPackageJson = (dir) => {
     try {
@@ -126,18 +132,18 @@ const warnForPackageDependencies = ({ dependencies, envDependencies, consumer })
       const basicMessage = `the npm package { ${packageDepName}:${packageDepVersion} } is a package dependency of ${dep.id.toString()}`;
 
       if (!compatibleWithPackgeJson && !compatibleWithNodeModules) {
-        process.stdout.write(chalk.red(`${basicMessage} please use npm install --save to install this package dependency\n`));
+        warnings.notInBoth.push(packageDep);
       }
 
       if (!compatibleWithPackgeJson && compatibleWithNodeModules) {
-        process.stdout.write(chalk.yellow(`${basicMessage} please make sure it also can be found in the project package.json file\n`));
+        warnings.notInPackageJson.push(packageDep);
       }
 
       if (compatibleWithPackgeJson && !compatibleWithNodeModules) {
-        process.stdout.write(chalk.yellow(`${basicMessage} please make sure to run npm install in order for this bit component to work properly\n`));
+        warnings.notInNodeModules.push(packageDep);
       }
     }, dep.packageDependencies);
   });
 
-  return Promise.resolve({ dependencies, envDependencies });
+  return Promise.resolve(warnings);
 };
