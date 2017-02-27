@@ -24,6 +24,7 @@ import Put from './commands/private-cmds/_put-cmd';
 import Fetch from './commands/private-cmds/_fetch-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Build from './commands/public-cmds/build-cmd';
+import CiUpdate from './commands/private-cmds/ci-update-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -49,6 +50,7 @@ export default function registerCommands(): CommandRegistrar {
     new ScopeShow(),
     new Fetch(),
     new Build(),
-    new DescribeScope()
+    new DescribeScope(),
+    new CiUpdate(),
   ]);
 }

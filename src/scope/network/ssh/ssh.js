@@ -5,6 +5,7 @@ import ComponentObjects from '../../component-objects';
 import { RemoteScopeNotFound, NetworkError, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
 import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, fromBase64 } from '../../../utils';
+import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
 import { unpack } from '../../../cli/cli-utils';
@@ -22,11 +23,15 @@ function clean(str: string) {
   return str.replace('\n', '');
 }
 
-function errorHandler(err) {
+function errorHandler(err, optionalId) {
   switch (err.code) {
     default:
       return new UnexpectedNetworkError();
     case 127:
+      return new ComponentNotFound(err.id || optionalId);
+    case 128:
+      return new PermissionDenied();
+    case 129:
       return new RemoteScopeNotFound();
     case 130:
       return new PermissionDenied();
@@ -69,7 +74,7 @@ export default class SSH {
       const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
       this.connection(cmd, function (err, res, o) {
         if (!o) return reject(new UnexpectedNetworkError());
-        if (err && o.code && o.code !== 0) return reject(errorHandler(err));
+        if (err && o.code && o.code !== 0) return reject(errorHandler(err, res));
         return resolve(clean(res));
       });
     });

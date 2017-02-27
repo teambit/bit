@@ -1,6 +1,6 @@
 /** @flow */
 import Version from '../version';
-import { InvalidBitId } from './exceptions';
+import { InvalidBitId, InvalidIdChunk } from './exceptions';
 import { 
   LATEST_BIT_VERSION,
   VERSION_DELIMITER,
@@ -8,7 +8,7 @@ import {
   NO_PLUGIN_TYPE,
   REMOTE_ALIAS_SIGN,
 } from '../constants';
-import { contains } from '../utils';
+import { contains, isValidIdChunk } from '../utils';
 
 export type BitIdProps = {
   scope: string;  
@@ -76,10 +76,14 @@ export default class BitId {
       if (scope === LOCAL_SCOPE_NOTATION && !realScopeName) {
         throw new Error('real scope name is required in bitId.parse with @this notation');
       }
-      
+      const digestScopeName = scope === LOCAL_SCOPE_NOTATION ? realScopeName : scope;
+      if (!isValidIdChunk(name) || !isValidIdChunk(box) || !isValidIdChunk(digestScopeName)) {
+        // $FlowFixMe
+        throw new InvalidIdChunk(`${digestScopeName}/${box}/${name}`);
+      }
       // $FlowFixMe (in this case the realScopeName is not null)
       return new BitId({
-        scope: scope === LOCAL_SCOPE_NOTATION ? realScopeName : scope,
+        scope: digestScopeName,
         box,
         name,
         version
@@ -91,10 +95,14 @@ export default class BitId {
       if (scope === LOCAL_SCOPE_NOTATION && !realScopeName) {
         throw new Error('real scope name is required in bitId.parse with @this notation');
       }
-      
+      const digestScopeName = scope === LOCAL_SCOPE_NOTATION ? realScopeName : scope;
+      if (!isValidIdChunk(name) || !isValidIdChunk(digestScopeName)) {
+        // $FlowFixMe
+        throw new InvalidIdChunk(`${digestScopeName}/${name}`);
+      }
       // $FlowFixMe (in this case the realScopeName is not null)
       return new BitId({
-        scope: scope === LOCAL_SCOPE_NOTATION ? realScopeName : scope,
+        scope: digestScopeName,
         name,
         version
       });

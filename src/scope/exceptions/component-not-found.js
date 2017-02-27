@@ -1,11 +1,11 @@
 /** @flow */
-import { BitId } from '../../bit-id';
-
 export default class ComponentNotFound extends Error {
-  id: BitId;
+  id: string;
+  code: number;
   
-  constructor(id: BitId) {
+  constructor(id: string) {
     super();
+    this.code = 127;
     this.id = id;
   }
 }

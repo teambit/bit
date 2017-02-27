@@ -10,16 +10,25 @@ export default class Test extends Command {
   description = 'run component(s) unit tests';
   alias = 't';
   opts = [
-    ['i', 'inline', 'test an inline component specs']
+    ['i', 'inline', 'test an inline component specs'],
+    ['e', 'environment', 'also pre install the required environment bit before running the build'],
+    ['s', 'save', 'for running build and save the results in the model'],
+    ['v', 'verbose', 'showing npm verbose output for inspection'],
   ];
 
-  action([id, ]: [string, ], { inline }: { inline: ?bool }): Promise<any> {
-    function build() {
+  action([id, ]: [string, ], { inline, save, environment, verbose }: {
+    inline: ?bool,
+    save: ?bool,
+    environment: ?bool,
+    verbose: ?bool,
+  }): Promise<any> {
+    function test() {
       if (inline) return testInline(id);
-      return testInScope(id);
+      return testInScope({ id, environment, save, verbose });
     }
     
-    return build().then(res => ({
+    return test()
+    .then(res => ({
       res,
       inline,
     }));

@@ -1,21 +1,22 @@
 /** @flow */
-import ora from 'ora';
+import serializeError from 'serialize-error';
 import commander from 'commander';
-import { SPINNER_TYPE } from '../constants';
+import chalk from 'chalk';
 import type Command from './command';   
 import defaultHandleError from './default-error-handler';
 import { empty, first } from '../utils';
+import loader from './loader';
 
-const chalk = require('chalk');
 
 function logAndExit(msg: string) {
-  console.log(msg); // eslint-disable-line
+  process.stdout.write(`${msg}\n`);
   process.exit();
 }
 
-function logErrAndExit(msg: string) {
-  console.error(msg); // eslint-disable-line
-  process.exit(1);
+function logErrAndExit(msg: Error) {
+  process.stderr.write(msg);
+  if (msg.code) return process.exit(msg.code);
+  return process.exit(1);
 }
 
 function parseSubcommandFromArgs(args: [any]) {
@@ -43,24 +44,29 @@ function execAction(command, concrete, args) {
   // $FlowFixMe
   const opts = getOpts(concrete, command.opts);
   if (command.loader) {
-    const autoStart = command.loader.autoStart || true;
-    command.loader = ora({ spinner: SPINNER_TYPE, text: command.loader.text || '' });
-    if (autoStart) { command.loader.start(); }
+    loader.on();
   }
 
   command.action(args.slice(0, args.length - 1), opts)
     .then((data) => {
-      if (command.loader) { command.loader.stop(); }
+      loader.off();
       return logAndExit(command.report(data));
     })
     .catch((err) => {
-      if (command.loader) { command.loader.stop(); }
+      loader.off();
       const errorHandled = defaultHandleError(err)
       || command.handleError(err);
       
+      if (command.private) return serializeErrAndExit(err);
       if (!command.private && errorHandled) logAndExit(errorHandled);
       else logErrAndExit(err);
     });
+}
+
+function serializeErrAndExit(err) {
+  process.stderr.write(JSON.stringify(serializeError(err)));
+  if (err.code) return process.exit(err.code);
+  return process.exit(1);
 }
 
 // @TODO add help for subcommands
@@ -139,19 +145,15 @@ export default class CommandRegistrar {
     const aliasList = this.commands.map(cmd => first(cmd.alias.split(' ')));
 
     if (cmdList.indexOf(subcommand) === -1 && aliasList.indexOf(subcommand) === -1) {
-      console.log(
+      process.stdout.write(
         chalk.yellow(
-          `warning: no command named '${chalk.bold(subcommand)}' was found...\nsee 'bit --help' for additional information.`)
+          `warning: no command named '${chalk.bold(subcommand)}' was found...\nsee 'bit --help' for additional information.\n`)
       );
       return this;
     }
 
     return this;
   } 
-
-  errorHandler(err: Error) {
-    console.error(err);
-  }
   
   run() {
     this.registerBaseCommand();

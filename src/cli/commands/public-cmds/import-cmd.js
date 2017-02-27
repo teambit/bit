@@ -18,18 +18,25 @@ export default class Import extends Command {
     ['c', 'compiler', 'import a compiler environment component'],
     ['p', 'prefix', 'import components into a specific directory'],
   ];
-  loader = { autoStart: false, text: 'importing components' };
+  loader = true;
 
-  action([id, ]: [string, ], { save, tester, compiler, verbose, prefix, dev }: any): Promise<any> {
+  action([id, ]: [string, ], { save, tester, compiler, verbose, prefix, dev }:
+  { 
+    save?: bool,
+    tester?: bool,
+    compiler?: bool,
+    verbose?: bool,
+    prefix?: bool,
+    dev?: bool,
+  }): Promise<any> {
     if (prefix) { return Promise.reject(new Error('prefix option currently not supported')); }
     // TODO - prefix returns true instead of the relevant string.
-    const loader = this.loader;
     // @TODO - import should support multiple components
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
     }
     
-    return importAction({ bitId: id, save, tester, compiler, loader, verbose, prefix, dev });
+    return importAction({ bitId: id, save, tester, compiler, verbose, prefix, dev });
   }
 
   report({ dependencies, envDependencies }: 

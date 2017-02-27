@@ -1,9 +1,12 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
 import { loadScope } from '../../../scope';
+import { ConsumerNotFound } from '../../../consumer/exceptions';
+import loader from '../../../cli/loader';
+import { BEFORE_REMOTE_LIST } from '../../../cli/loader/loader-messages';
 
-export default function list({ scopeName, loader }: 
-{ scopeName: ?string, loader: any }): Promise<string[]> {
+export default function list({ scopeName, cache }: 
+{ scopeName: ?string, cache?: bool }): Promise<string[]> {
   return loadConsumer()
   .then((consumer) => {
     const scope = consumer.scope;
@@ -11,18 +14,21 @@ export default function list({ scopeName, loader }:
     if (scopeName) {
       return scope.remotes()
       .then(remotes =>
-        // $FlowFixMe
         remotes.resolve(scopeName, scope.name)
         .then((remote) => {
-          loader.start();
+          loader.start(BEFORE_REMOTE_LIST);
           return remote.list();
         })
       );
     }
 
-    return scope.listStage();
-  }).catch((err) => { // handle relevant error error
+    return cache ? scope.list() : scope.listStage();
+  })
+  .catch((err) => {
+    if (!(err instanceof ConsumerNotFound)) throw err;
     return loadScope(process.cwd())
-      .then(scope => scope.listStage());
+      .catch(() => Promise.reject(err))
+      .then((scope) => { return cache ? scope.list() : scope.listStage(); })
+      .catch(e => Promise.reject(e));
   });
 }

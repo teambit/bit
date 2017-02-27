@@ -2,7 +2,7 @@
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { USER_NAME_KEY, USER_EMAIL_KEY } from '../../constants';
+import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import Component from '../models/component';
 import ComponentVersion from '../component-version';
@@ -12,6 +12,9 @@ import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
 import ConsumerComponent from '../../consumer/component/consumer-component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
+import loader from '../../cli/loader';
+import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
+import Consumer from '../../consumer';
 
 export type ComponentTree = {
   component: Component;
@@ -60,7 +63,7 @@ export default class SourceRepository {
 
   getObjects(id: BitId): Promise<ComponentObjects> {
     return this.get(id).then((component) => {
-      if (!component) throw new ComponentNotFound(id);
+      if (!component) throw new ComponentNotFound(id.toString());
       return component.collectObjects(this.objects());
     });
   }
@@ -74,51 +77,96 @@ export default class SourceRepository {
       });
   }
 
-  addSource({ source, depIds, message, force, loader }: 
-  { source: ConsumerComponent, depIds: BitId[], message: string, force: ?bool, loader: ?any }): 
-  Promise<Component> {
+  modifyCIProps({ source, ciProps }:
+  { source: ConsumerComponent, ciProps: Object }): Promise<any> {
     const objectRepo = this.objects();
 
     return this.findOrAddComponent(source)
       .then((component) => {
-        const impl = Source.from(Buffer.from(source.impl.src));
-        try { 
-          source.build(this.scope);
-        } catch (e) {
-          throw e;
-        }
-        
-        const dist = source.dist ? Source.from(Buffer.from(source.dist.src)): null;
-        const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
+        return component.loadVersion(component.latest(), objectRepo)
+        .then((version) => {
+          version.setCIProps(ciProps);
+          return objectRepo.persistOne(version);
+        });
+      });
+  }
 
-        const username = globalConfig.getSync(USER_NAME_KEY);
-        const email = globalConfig.getSync(USER_EMAIL_KEY);
+  modifySpecsResults({ source, specsResults }:
+  { source: ConsumerComponent, specsResults?: any }): Promise<any> {
+    const objectRepo = this.objects();
 
-        if (loader) { loader.text = 'running specs'; }
-        return source.runSpecs(this.scope, !force)
-        .then((specsResults) => {
-          const version = Version.fromComponent({
-            component: source,
-            impl,
-            specs,
-            dist,
-            flattenedDeps: depIds,
-            specsResults,
-            message,
-            username,
-            email,
+    return this.findOrAddComponent(source)
+      .then((component) => {
+        return component.loadVersion(component.latest(), objectRepo)
+        .then((version) => {
+          version.setSpecsResults(specsResults);
+          return objectRepo.persistOne(version);
+        });
+      });
+  }
+
+  updateDist({ source }: { source: ConsumerComponent }): Promise<any> {
+    const objectRepo = this.objects();
+
+    return this.findOrAddComponent(source)
+      .then((component) => {
+        return component.loadVersion(component.latest(), objectRepo)
+        .then((version) => {
+          const dist = source.dist ? Source.from(Buffer.from(source.dist.src)): null;
+          version.setDist(dist);
+          objectRepo.add(dist)
+          .add(version);
+          return objectRepo.persist();
+        });
+      });
+  }
+
+  addSource({ source, depIds, message, force, consumer }: { 
+    source: ConsumerComponent,
+    depIds: BitId[],
+    message: string,
+    force: ?bool,
+    consumer: Consumer
+  }): Promise<Component> {
+    const objectRepo = this.objects();
+
+    return this.findOrAddComponent(source)
+      .then((component) => {
+        return source.build({ scope: this.scope, consumer })
+        .then(() => {
+          const impl = Source.from(Buffer.from(source.impl.src));
+          const dist = source.dist ? Source.from(Buffer.from(source.dist.src)): null;
+          const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
+
+          const username = globalConfig.getSync(CFG_USER_NAME_KEY);
+          const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
+
+          loader.start(BEFORE_RUNNING_SPECS);
+          return source.runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer })
+          .then((specsResults) => {
+            const version = Version.fromComponent({
+              component: source,
+              impl,
+              specs,
+              dist,
+              flattenedDeps: depIds,
+              specsResults,
+              message,
+              username,
+              email,
+            });
+            
+            component.addVersion(version);
+            
+            objectRepo
+              .add(version)
+              .add(component)
+              .add(impl)
+              .add(specs)
+              .add(dist);
+            
+            return component;
           });
-          
-          component.addVersion(version);
-          
-          objectRepo
-            .add(version)
-            .add(component)
-            .add(impl)
-            .add(specs)
-            .add(dist);
-          
-          return component;
         });
       });
   }
@@ -134,6 +182,8 @@ export default class SourceRepository {
     return this.get(bitId)
       .then(component => component.remove(this.objects()));
   }
+
+
 
   merge({ component, objects }: ComponentTree, inScope: boolean = false): Promise<Component> {
     if (inScope) component.scope = this.scope.name;

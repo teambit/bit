@@ -1,5 +1,7 @@
 <p align="center">
-    <img alt="Bit" src="https://s29.postimg.org/q9flqqoif/cover_github_1.png" width="500">
+    <a href="https://bitsrc.io/">
+        <img alt="Bit" src="https://s29.postimg.org/q9flqqoif/cover_github_1.png" width="500">
+    </a>
 </p>
 
 <p align="center">
@@ -10,50 +12,118 @@
 </p>
 ---
 
-Bit is a distributed, fast and language-agnostic code component manager designed for easy use, maintenance and discovery of code components.
+Bit is a simple code component manager.
 
-**Easily reuse code components:** Open source tool for fast and easy extraction and reuse of code components without creating code duplications or having to publish tiny packages.
+It is a distributed tool for easy export and reuse of code components across repsoitories.
 
-**Easy to maintain:** Easily maintain all your components in one place. Isolated component environment and simplified versioning make life even easier.
+Bit helps to get rid of code duplications and technological debt while saving you the overhead of publishing packages.
 
-**Simple to find:** A built-in functional search and a simple scoping mechanism make it simple to find components created by you, your team or the community. Thanks to the component isolated environment, components can be built and run anywhere.
+**Easy extraction and reuse**- Easily extract and reuse of code components across repositories and projects without creating code duplications or having to publish tiny packages. 
 
-Bit currently supports JavaScript. We plan to add drivers for more languages as soon as we can. We always love some help.
+**Simple management & maintenance**-  Maintain all your components in one place using simple commands, with simplified versioning and more reliable dependency management.
+
+**Full component CI**-  Bit handles your component's entire lifecycle with full build and test execution, to make sure all your components are working and ready to go.
+
+**Easily find your components**- A built-in semantic search engine and a scoping mechanism make it easy to find and use components created by you, your team or the community. 
 
 ## Why?
 
-Bit's design philosophy is one: code components should be composable building blocks.
+The current ecosystem is not suited for management of code components. 
 
-Code components should be easily reused across projects without creating code duplications. They should be easy to create, simple to maintain and quick to find.
+As a result code components are being duplicated across repositories creating an ever growing technological debt. People also spend much time and effort re inventing the same components over and over again. 
 
-Up until now, the only way to reuse small and focused components (e.g. ‘isString’, ‘left-pad’ etc..) was packaging them and distributing them via package managers. Packages are hard to create, complex to maintain and impossible to find. However, components are not packages.
+This happens because packages are simply too much overhead. Publishing and maintaining a package + repository + CI for every small component is an unscalable odyssey. Packages are also hard to find, and add unnecessary weight and complexity. 
 
-This is why we built Bit - the distributed code component manager.
+This is why we built Bit - the simple code component manager.
 
-Bit is an open source tool for fast and easy extraction and reuse of code components. 
-It enables you to reuse components anywhere you like without creating code duplications or having to publish hundreds of tiny packages. It also makes maintenance much simpler for both your individual components and your entire code base. Using bit means components are easy to find, so you and your friends don't have to write the same component twice ever again.
- 
-Bit was built with many features to support this philosophy such as being fully distributed, providing a local workflow, creating an isolated component environment and performing an on-export offline dependency resolution. 
+* Bit helps get rid of code duplications by making it it easy to extract reusable components from your code to be used anywhere you like.
 
-Bit helps create a thinner code base which is also much easier to test and maintain. It also means you only use the code you actually need, so your entire application can become lighter and faster.  Ultimately, bit allows you to create a dynamic collection of fully managed components ready to be used anywhere- writing components once and composing them together to build anything.
+* It allows you to easily maintain all your components in one place with full versioning and dependency management.
+
+* It takes care of your components CI cycle with build and test execution.
+
+* It makes your components easy to find with a built in semantic search engine.
+
+Ultimately, bit allows you to create a dynamic collection of fully managed and good-to-go reusable components ready to be used anywhere. 
 
 ## Features
 
-* **Fast & Easy component export.** Easily export a component to be reused anywhere by you or your team - all in less than a minute.
-* **Code environment boilerplate.** Components are isolated, and contain their own full working environment, ready to be shipped and used anywhere.
-* **Components can build and run anywhere.** Thanks to the Bit component environment. 
-* **Simplified minor versioning.** Components versions are incremental for easier update and maintenance.
-* **Internal search engine.** Find code components in local and remote locations.
-* **On-export dependency resolution.** All dependencies are kept with your component, to keep components immutable while downloading.
-* **Distributed.** Multiple backups, works offline and supports any workflow.
+* **Export components with one command** A single CLI command to export a reusable component to be use anywhere and by anyone you like.
+
+* **Component CI.** Bit‘s scoping mechanism takes care of your component’s build and test execution.
+
+* **Full versioning management.** Bit takes care of version management with a simplified incremental versioning for easier update and maintenance.
+
+* **On-export dependency resolution.** A faster, more reliable dependency resolution as dependencies are kept within the component itself.
+
+* **Built-in semantic search engine.** Easily find code components in local and remote locations.
+
+* **Quick consumption and modification of components.** Using simple commands such as import, modify etc.
+
+* **Bit is distributed**.
+
+## Install
+
+#### macOS
+
+Homebrew - Bit can be installed via Homebrew package manager:
+
+`brew install bit`
+
+#### Debian/Ubuntu Linux
+
+On Debian or Ubuntu Linux, you can install Bit via our Debian package repository. Configure it using this command
+
+```
+curl https://bitsrc.jfrog.io/bitsrc/api/gpg/key/public | sudo apt-key add -
+sudo sh -c "echo 'deb http://bitsrc.jfrog.io/bitsrc/bit-deb all main' >> /etc/apt/sources.list"
+```
+
+Then simply install using
+
+`sudo apt-get update && sudo apt-get install bit`
+
+#### CentOS / Fedora / RHEL
+
+On CentOS, Fedora and RHEL, you can install Bit via our RPM package repository.
+
+`sudo wget http://assets.bitsrc.io/bitsrc.repo -O /etc/yum.repos.d/bitsrc.repo`
+
+Then simply install using
+
+`sudo yum install bit`
+
+#### Windows
+There are two installation methods for Windows.
+
+1. **Download installer** - You can download a msi file and run it.
+
+    Installation can be found [here](https://api.bitsrc.io/release/msi/latest).
+
+2. **Chocolatey** - Bit can be installed via Chocolatey:
+
+    `choco install bit`
+
+#### Other
+
+##### NPM 
+
+If you have NPM installed, you can use it to install Bit:
+
+`npm install --global bit-cli`
+
+##### Yarn
+
+If you have Yarn installed, you can use it to install Bit:
+
+`Yarn global add bit-cli`
+
 
 ## Getting Started
 
-1. [Install instructions](https://github.com/teambit/bit/wiki/Install)
+Here is a [Quick getting started manual](https://github.com/teambit/bit/wiki/Getting-Started).
 
-2. [Quick getting started manual](https://github.com/teambit/bit/wiki/Getting-Started)
-
-Head over to Bit's [wiki pages](https://github.com/teambit/bit/wiki) for more information.
+You can also head over to Bit's [wiki pages](https://github.com/teambit/bit/wiki) for more information.
 
 ## Contributing to Bit
 

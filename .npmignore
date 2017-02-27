@@ -69,3 +69,6 @@ tmp/
 # bit directories
 .bit
 inline_components
+
+#vscode history
+.history

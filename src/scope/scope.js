@@ -1,16 +1,16 @@
 /** @flow */
 import * as pathLib from 'path';
-import fs from 'fs';
+import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import bitJs from 'bit-js';
 import { GlobalRemotes } from '../global-config';
-import { flattenDependencyIds } from './flatten-dependencies';
+import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, flatten } from '../utils';
-import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR } from '../constants';
+import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException } from './exceptions';
 import { Tmp } from './repositories';
@@ -26,6 +26,12 @@ import type { Results } from '../specs-runner/specs-runner';
 import npmInstall from '../utils/npm';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
+import loader from '../cli/loader';
+import {
+  BEFORE_PERSISTING_PUT_ON_SCOPE,
+  BEFORE_IMPORT_PUT_ON_SCOPE,
+  BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
+import performCIOps from './ci-ops';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -73,6 +79,10 @@ export default class Scope {
     return this.path;
   }
 
+  getComponentsPath(): string {
+    return pathLib.join(this.path, BITS_DIRNAME);
+  }
+
   remotes(): Promise<Remotes> {
     const self = this;
     function mergeRemotes(globalRemotes: GlobalRemotes) {
@@ -108,32 +118,37 @@ export default class Scope {
     ));
   }
 
-  getDependencies() {
-    
+  importDependencies(component: ConsumerComponent) {
+    return this.importMany(component.dependencies);
+    // .catch((e) => { throw new Error(e); });
   }
 
-  put(consumerComponent: ConsumerComponent, message: string, force: ?bool, loader: ?any):
+  put({ consumerComponent, message, force, consumer }: 
+  { 
+    consumerComponent: ConsumerComponent,
+    message: string,
+    force: ?bool,
+    consumer:Consumer
+  }):
   Promise<ComponentDependencies> {
     consumerComponent.scope = this.name;
-    if (loader) {
-      loader.text = 'importing components';
-      loader.start();
-    }
+    loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
 
-    return this.importMany(consumerComponent.dependencies).then((dependencies) => {
-      return flattenDependencyIds(dependencies, this.objects)
-        .then((depIds) => {
-          return this.sources.addSource({
-            source: consumerComponent, depIds, message, force, loader,
-          })
-          .then((component) => {
-            if (loader) { loader.text = 'persisting data'; }
-            return this.objects.persist()
-              .then(() => component.toVersionDependencies(LATEST, this, this.name))
-              .then(deps => deps.toConsumer(this.objects));
-          }); 
-        });
-    });
+    return this.importDependencies(consumerComponent)
+      .then((dependencies) => {
+        return flattenDependencyIds(dependencies, this.objects)
+          .then((depIds) => {
+            return this.sources.addSource({
+              source: consumerComponent, depIds, message, force, consumer
+            })
+            .then((component) => {
+              loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
+              return this.objects.persist()
+                .then(() => component.toVersionDependencies(LATEST, this, this.name))
+                .then(deps => deps.toConsumer(this.objects));
+            }); 
+          });
+      });
   }
 
   importSrc(componentObjects: ComponentObjects) {
@@ -152,9 +167,11 @@ export default class Scope {
         .then((objs) => {
           return compVersion.toConsumer(this.objects)
           .then(consumerComponent => index(consumerComponent, this.getPath()))
-          .then(consumerComponent =>
+          .then(consumerComponent => 
             postExportHook({ id: consumerComponent.id.toString() })
+            .then(() => consumerComponent)
           )
+          .then(consumerComponent => performCIOps(consumerComponent, this.getPath()))
           .then(() => first(objs));
         })
       );
@@ -247,7 +264,7 @@ export default class Scope {
     return this.sources.getMany(locals)
       .then((localDefs) => {
         return Promise.all(localDefs.map((def) => {
-          if (!def.component) throw new ComponentNotFound(def.id);
+          if (!def.component) throw new ComponentNotFound(def.id.toString());
           return def.component.toVersionDependencies(def.id.version, this, def.id.scope);
         }))
         .then((versionDeps) => {
@@ -269,7 +286,7 @@ export default class Scope {
     return this.sources.getMany(locals)
       .then((localDefs) => {
         return Promise.all(localDefs.map((def) => {
-          if (!def.component) throw new ComponentNotFound(def.id);
+          if (!def.component) throw new ComponentNotFound(def.id.toString());
           return def.component.toComponentVersion(def.id.version, this.name);
         }))
         .then((componentVersionArr) => {
@@ -297,7 +314,7 @@ export default class Scope {
     
     return this.sources.get(id)
       .then((component) => {
-        if (!component) throw new ComponentNotFound(id);
+        if (!component) throw new ComponentNotFound(id.toString());
         return component.toVersionDependencies(id.version, this);
       });
   }
@@ -323,12 +340,23 @@ export default class Scope {
   }
 
   // @TODO optimize ASAP
-  modify(id: BitId): Promise<ComponentDependencies> {
-    return this.import(id, true)
+  modify({ bitId, consumer, no_env, verbose }: {
+    bitId: BitId,
+    consumer?: Consumer,
+    no_env?: bool,
+    verbose?: bool
+  }): Promise<ComponentDependencies> {
+    const installEnvironmentsIfNeeded = (component) => {
+      if (no_env) return Promise.resolve();
+      const ids = [component.compilerId, component.testerId];
+      return this.installEnvironment({ ids, consumer, verbose });
+    };
+
+    return this.import(bitId, true)
       .then((versionDependencies) => {
         const versions = versionDependencies.component.component.listVersions();
         const versionsP = this.importManyOnes(versions.map((version) => {
-          const versionId = BitId.parse(id.toString());
+          const versionId = BitId.parse(bitId.toString());
           versionId.version = version.toString();
           return versionId;
         }));
@@ -339,8 +367,12 @@ export default class Scope {
         return this.export(componentObjects);
       }) 
       .then(() => {
-        id.scope = this.name;
-        return this.get(id);
+        bitId.scope = this.name;
+        return this.get(bitId)
+          .then((component) => {
+            return installEnvironmentsIfNeeded(component.component)
+            .then(() => component);
+          });
       });
   }
 
@@ -351,7 +383,7 @@ export default class Scope {
 
     return this.getOne(id)
       .then((component) => {
-        if (!component) throw new ComponentNotFound(id);
+        if (!component) throw new ComponentNotFound(id.toString());
         return component.toConsumer(this.objects);
       });
   }
@@ -359,7 +391,7 @@ export default class Scope {
   loadComponentLogs(id: BitId): Promise<{[number]: {message: string, date: string, hash: string}}> {
     return this.sources.get(id)
     .then((componentModel) => {
-      if (!componentModel) throw new ComponentNotFound(id);
+      if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectLogs(this.objects);
     });
   }
@@ -367,7 +399,7 @@ export default class Scope {
   loadAllVersions(id: BitId): Promise<ConsumerComponent> {
     return this.sources.get(id)
     .then((componentModel) => {
-      if (!componentModel) throw new ComponentNotFound(id);
+      if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectVersions(this.objects);
     });
   }
@@ -380,7 +412,7 @@ export default class Scope {
     
     return this.sources.get(id)
       .then((component) => {
-        if (!component) throw new ComponentNotFound(id);
+        if (!component) throw new ComponentNotFound(id.toString());
         return component.toComponentVersion(id.version, this.name);
       });
   }
@@ -402,8 +434,8 @@ export default class Scope {
   }
 
   ensureDir() {
-    return this.tmp
-      .ensureDir()
+    fs.ensureDirSync(this.getComponentsPath());
+    return this.tmp.ensureDir()
       .then(() => this.scopeJson.write(this.getPath()))
       .then(() => this.objects.ensureDir())
       .then(() => this); 
@@ -416,31 +448,56 @@ export default class Scope {
   /**
    * sync method that loads the environment/(path to environment component)
    */
-  loadEnvironment(bitId: BitId, opts: ?{ pathOnly: ?bool }) {
+  loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?bool, bareScope?: ?bool }) {
+    const envDir = opts && opts.bareScope ? this.getPath() : pathLib.dirname(this.getPath());
     if (opts && opts.pathOnly) {
       try {
-        return bitJs.loadExact(bitId.toString(), this.getPath(), opts);
+        return bitJs.loadExact(bitId.toString(), envDir, opts);
       } catch (e) {
         throw new ResolutionException(e.message);
       }
     }
 
     try {
-      return bitJs.loadExact(bitId.toString(), this.getPath());
+      const a = bitJs.loadExact(bitId.toString(), envDir);
+      return a;
     } catch (e) {
       throw new ResolutionException(e.message);
     }
   }
   
-  installEnvironment({ ids, consumer, verbose, loader }:
-  { ids: BitId[], consumer: ?Consumer, verbose?: ?bool, loader?: ?any }): Promise<any> {
+  writeToComponentsDir(componentDependencies: ComponentDependencies[]):
+  Promise<ConsumerComponent[]> {
+    const componentsDir = this.getComponentsPath();
+    const components = flattenDependencies(componentDependencies);
+
+    const bitDirForConsumerImport = (component: ConsumerComponent) => {
+      return pathLib.join(
+        componentsDir,
+        component.box,
+        component.name,
+        component.scope,
+        component.version.toString(),
+      );
+    };
+
+    return Promise.all(components.map((component) => {
+      const bitPath = bitDirForConsumerImport(component);
+      return component.write(bitPath, true);
+    }));
+  }
+
+
+
+  installEnvironment({ ids, consumer, verbose }:
+  { ids: BitId[], consumer?: ?Consumer, verbose?: ?bool }): Promise<any> {
     const installPackageDependencies = (component: ConsumerComponent) => {
       const scopePath = this.getPath();
       const nodeModulesDir = consumer ? pathLib.dirname(scopePath) : scopePath;
       const deps = component.packageDependencies;
       
-      if (verbose && loader) loader.stop(); // in order to show npm install output on verbose flag
-      if (loader) loader.text = 'ensuring npm dependencies';
+      loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
+      if (verbose) loader.stop(); // in order to show npm install output on verbose flag
       
       return Promise.all(
         R.values(
@@ -456,35 +513,46 @@ export default class Scope {
     .then((components) => {
       if (consumer) {
         return consumer.writeToComponentsDir(flatten(components));
-      } else {
-        throw new Error('can install env component in bare scope');
-        // TODO -- write in scope relevant directory !! 
       }
+
+      return this.writeToComponentsDir(flatten(components));
     })
     .then((components: ConsumerComponent[]) => {
       return Promise.all(components.map(installPackageDependencies));
     });
   }
 
-  runComponentSpecs(id: BitId): Promise<?Results> {
-    if (!id.isLocal(this.name)) {
+  runComponentSpecs({ bitId, consumer, environment, save, verbose }: { 
+    bitId: BitId,
+    consumer?: ?Consumer,
+    environment?: ?bool,
+    save?: ?bool,
+    verbose?: ?bool
+  }): Promise<?Results> {
+    if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run specs on remote scopes');
     }
 
-    return this.loadComponent(id)
+    return this.loadComponent(bitId)
       .then((component) => {
-        return component.runSpecs(this);
+        return component.runSpecs({ scope: this, consumer, environment, save, verbose });
       });
   }
 
-  build(bitId: BitId): Promise<string> {
+  build({ bitId, environment, save, consumer, verbose }: { 
+    bitId: BitId,
+    environment?: ?bool,
+    save?: ?bool,
+    consumer?: Consumer,
+    verbose?: ?bool
+  }): Promise<string> {
     return this.loadComponent(bitId)
-    .then(component => component.build(this));
+      .then(component => component.build({ scope: this, environment, save, consumer, verbose }));
   }
 
   static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {
     if (pathHasScope(path)) return this.load(path);
-    if (!name) name = currentDirName(); 
+    if (!name) name = currentDirName();
     const scopeJson = new ScopeJson({ name, groupName });
     return Promise.resolve(new Scope({ path, created: true, scopeJson }));
   }

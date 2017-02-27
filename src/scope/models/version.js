@@ -2,14 +2,19 @@
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
-import { empty, filterObject } from '../../utils';
+import { filterObject } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
-import { Remotes } from '../../remotes';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
 import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
+
+type CiProps = {
+  error: Object,
+  startTime: string,
+  endTime: string,
+};
 
 export type VersionProps = {
   impl: {
@@ -32,6 +37,7 @@ export type VersionProps = {
     username: ?string,
     email: ?string,
   };
+  ci?: CiProps;
   specsResults?: ?Results;
   docs?: Doclet[],
   dependencies?: BitIds;
@@ -60,6 +66,7 @@ export default class Version extends BitObject {
     username: ?string,
     email: ?string,
   };
+  ci: CiProps|{};
   specsResults: ?Results;
   docs: ?Doclet[];
   dependencies: BitIds;
@@ -75,6 +82,7 @@ export default class Version extends BitObject {
     log,
     dependencies,
     docs,
+    ci,
     specsResults,
     flattenedDependencies,
     packageDependencies
@@ -88,17 +96,29 @@ export default class Version extends BitObject {
     this.log = log;
     this.dependencies = dependencies || new BitIds();
     this.docs = docs;
+    this.ci = ci || {};
     this.specsResults = specsResults;
     this.flattenedDependencies = flattenedDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
   }
 
   id() {
-    return JSON.stringify(this.toObject());
+    const obj = this.toObject();
+    
+    return JSON.stringify(filterObject({
+      impl: obj.impl,
+      specs: obj.specs,
+      compiler: this.compiler ? this.compiler.toString(): null,
+      tester: this.tester ? this.tester.toString(): null,
+      log: obj.log,
+      dependencies: this.dependencies.map(dep => dep.toString()),
+      packageDependencies: this.packageDependencies
+    }, val => !!val));
   }
 
   collectDependencies(scope: Scope): Promise<ComponentVersion[]> {
-    return scope.importManyOnes(this.flattenedDependencies);
+    const devDependencies = [ this.compiler, this.tester ];
+    return scope.importManyOnes(this.flattenedDependencies.concat(devDependencies));
   }
 
   refs(): Ref[] {
@@ -120,12 +140,12 @@ export default class Version extends BitObject {
       specs: this.specs ? {
         file: this.specs.file.toString(),
         // $FlowFixMe
-        name: this.specs.name        
+        name: this.specs.name
       }: null,
       dist: this.dist ? {
         file: this.dist.file.toString(),
         // $FlowFixMe
-        name: this.dist.name        
+        name: this.dist.name
       }: null,
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
@@ -135,6 +155,7 @@ export default class Version extends BitObject {
         username: this.log.username,
         email: this.log.email,
       },
+      ci: this.ci,
       specsResults: this.specsResults,
       docs: this.docs,
       dependencies: this.dependencies.map(dep => dep.toString()),
@@ -157,6 +178,7 @@ export default class Version extends BitObject {
       tester,
       log,
       docs,
+      ci,
       specsResults,
       dependencies,
       flattenedDependencies,
@@ -184,6 +206,7 @@ export default class Version extends BitObject {
         username: log.username,
         email: log.email,
       },
+      ci,
       specsResults,
       docs,
       dependencies: BitIds.deserialize(dependencies),
@@ -240,5 +263,20 @@ export default class Version extends BitObject {
       flattenedDependencies: flattenedDeps,
       dependencies: component.dependencies
     });    
+  }
+
+  setSpecsResults(specsResults: ?Results) {
+    this.specsResults = specsResults;
+  }
+
+  setDist(dist: ?Source) {
+    this.dist = dist ? {
+      file: dist.hash(),
+      name: DEFAULT_BUNDLE_FILENAME,
+    }: null;
+  }
+
+  setCIProps(ci: CiProps) {
+    this.ci = ci;
   }
 }

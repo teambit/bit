@@ -72,3 +72,6 @@ tmp/
 .bit
 components
 inline_components
+
+#vscode history
+.history

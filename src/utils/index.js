@@ -44,6 +44,7 @@ import isString from './is-string';
 import diff from './array-diff';
 import filterObject from './filter-object';
 import removeContainingDirIfEmpty from './remove-containing-dir-if-empty';
+import isValidIdChunk from './is-valid-id-chunk';
 
 export {
   parseSSHUrl,
@@ -91,5 +92,6 @@ export {
   currentDirName,
   immutableUnshift,
   toResultObject,
-  allSettled
+  allSettled,
+  isValidIdChunk,
 };

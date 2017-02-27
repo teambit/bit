@@ -9,5 +9,5 @@ const registrar = buildRegistrar();
 try {
   registrar.run();
 } catch (err) {
-  console.error(err);
+  console.error('loud rejected:', err);
 }

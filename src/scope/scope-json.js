@@ -17,7 +17,7 @@ export type ScopeJsonProps = {
 };
 
 export class ScopeJson {
-  name: string;
+  _name: string;
   resolverPath: ?string;
   remotes: {[string]: string};
   groupName: string;
@@ -29,6 +29,25 @@ export class ScopeJson {
     this.groupName = groupName || '';
   }
 
+  set name(suggestedName: string) { 
+    suggestedName = suggestedName.toLowerCase();
+    const cleanName = suggestedName.split('')
+      .map((char) => {
+        if (/^[$\-_!.a-z0-9]+$/.test(char)) return char;
+        return '';
+      }).join('');
+
+    if (!cleanName) {
+      throw new Error('scope name created by directory name have to contains at least one charecter or number');
+    }
+
+    this._name = cleanName;
+    return this;
+  }
+
+  get name(): string {
+    return this._name;
+  }
   toPlainObject() {
     return cleanObject({
       name: this.name,

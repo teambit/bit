@@ -10,11 +10,10 @@ export default class Export extends Command {
   opts = [
     ['f', 'force', 'forcely commit even if specs fails'],
   ];
-  loader = { autoStart: false, text: 'importing components' };
+  loader = true;
 
   action([id, message]: [string, string], { force }: { force: ?bool }): Promise<any> {
-    const loader = this.loader;
-    return commitAction({ id, message, force, loader });
+    return commitAction({ id, message, force });
   }
 
   report(c: Component): string {

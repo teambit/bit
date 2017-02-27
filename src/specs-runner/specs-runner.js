@@ -38,7 +38,7 @@ function run({ scope, testerFilePath, implSrc, specsSrc }:
 
     const child = fork(path.join(__dirname, 'worker.js'), {
       execArgv: openPort ? [`--debug=${openPort.toString()}`] : [],
-      silent: true,
+      silent: false,
       env: {
         __impl__: implFilePath,
         __specs__: specsFilePath,

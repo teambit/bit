@@ -8,25 +8,25 @@ import semver from 'semver';
 import { BitId } from '../../../bit-id';
 import Bit from '../../../consumer/component';
 import Consumer from '../../../consumer/consumer';
+import loader from '../../../cli/loader';
+import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 
 const key = R.compose(R.head, R.keys);
 
 export default function importAction(
-  { bitId, save, tester, compiler, loader, verbose, prefix, dev }: {
+  { bitId, save, tester, compiler, verbose, prefix, dev }: {
     bitId: string,
     save: ?bool,
     tester: ?bool,
     compiler: ?bool,
-    loader: any,
     verbose: ?bool,
     prefix: ?string,
     dev: ?bool,
   }): Promise<Bit[]> {
   function importEnvironment(consumer) {
-    loader.text = 'importing environment dependencies...';
-    loader.start();
+    loader.start(BEFORE_IMPORT_ENVIRONMENT);
 
-    return consumer.importEnvironment(bitId, verbose, loader)
+    return consumer.importEnvironment(bitId, verbose)
     .then((envDependencies) => {
       function writeToBitJsonIfNeeded() {
         if (save && compiler) {
@@ -53,7 +53,7 @@ export default function importAction(
     .then(consumer => consumer.scope.ensureDir().then(() => consumer))
     .then((consumer) => {
       if (tester || compiler) { return importEnvironment(consumer); }
-      return consumer.import(bitId, verbose, loader, dev)
+      return consumer.import(bitId, verbose, dev)
         .then(({ dependencies, envDependencies }) => {
           if (save) {
             const parseId = BitId.parse(bitId, consumer.scope.name);

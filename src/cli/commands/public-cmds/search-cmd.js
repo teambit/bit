@@ -4,6 +4,8 @@ import Command from '../../command';
 import { searchAdapter } from '../../../search';
 import { formatter } from '../../../search/searcher';
 import { Doc } from '../../../search/indexer';
+import loader from '../../../cli/loader';
+import { BEFORE_REMOTE_SEARCH } from '../../../cli/loader/loader-messages';
 
 export default class Search extends Command {
   name = 'search <scope> <query...>';
@@ -12,15 +14,12 @@ export default class Search extends Command {
   opts = [
     ['r', 'reindex', 're-index all components']
   ];
-  loader = { autoStart: false };
+  loader = true;
 
   action([scope, query, ]: [string, string[], ], { reindex }: { reindex: boolean }) {
     const queryStr = query.join(' ');
     if (scope !== '@this') {
-      // $FlowFixMe
-      this.loader.text = `searching remote scope <${scope}> for '${queryStr}'`;
-      // $FlowFixMe
-      this.loader.start();
+      loader.start(BEFORE_REMOTE_SEARCH({ scope, queryStr })); // eslint-disable-line
       return searchAdapter.searchRemotely(queryStr, scope, reindex);
     }
 

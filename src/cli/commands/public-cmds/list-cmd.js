@@ -6,6 +6,7 @@ import { listInline, listScope } from '../../../api/consumer';
 import Component from '../../../consumer/component';
 import { paintHeader } from '../../chalk-box';
 import listTemplate from '../../templates/list-template';
+import bareListTemplate from '../../templates/bare-list-template';
 
 export default class List extends Command {
   name = 'list [scope]';
@@ -13,16 +14,17 @@ export default class List extends Command {
   alias = 'ls';
   opts = [
     ['i', 'inline', 'in inline components'],
-    ['ids', 'ids', 'in inline components']
+    ['ids', 'ids', 'in inline components'],
+    ['c', 'cache', 'also show cached components in scope (works for local scopes)'],
+    ['b', 'bare', 'show bare output (more details, less pretty)'],
   ];
-  loader = { autoStart: false, text: 'listing remote components' };
+  loader = true;
 
-  action([scopeName]: string[], { inline, ids }: { inline: ?bool, ids: ?bool }): Promise<any> {
-    const loader = this.loader;
-
+  action([scopeName]: string[], { inline, ids, cache, bare }: {
+    inline?: bool, ids?: bool, cache?: bool, bare?: bool }): Promise<any> {
     function list() {
       if (inline) return listInline();
-      return listScope({ scopeName, loader });
+      return listScope({ scopeName, cache });
     }
 
     return list()
@@ -31,14 +33,16 @@ export default class List extends Command {
       scope: scopeName,
       inline,
       ids,
+      bare,
     }));
   }
 
-  report({ components, scope, inline, ids }: {
+  report({ components, scope, inline, ids, bare }: {
     components: Component[],
     scope: ?string,
-    inline: ?bool,
-    ids: ?bool,
+    inline?: bool,
+    ids?: bool,
+    bare?: bool,
   }): string {
     function decideHeaderSentence() {
       if (inline) return `Total ${components.length} components in inline directory`;
@@ -49,6 +53,7 @@ export default class List extends Command {
     if (R.isEmpty(components)) { return chalk.white(`${decideHeaderSentence()}`); }
     if (ids) return JSON.stringify(components.map(c => c.id.toString())); 
     // TODO - use a cheaper list for ids flag (do not fetch versions at all) @!IMPORTANT
-    return paintHeader(decideHeaderSentence()) + listTemplate(components);
+    return paintHeader(decideHeaderSentence()) + 
+    (bare ? bareListTemplate(components) : listTemplate(components));
   }
 }
