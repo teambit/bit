@@ -9,6 +9,7 @@ import {
   ConsumerNotFound,
   ComponentSpecsFailed,
 } from '../consumer/exceptions';
+import ComponentNotFoundInline from '../consumer/component/exceptions/component-not-found-inline';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
 import NetworkError from '../scope/network/exceptions/network-error';
@@ -30,6 +31,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ RemoteScopeNotFound, () => 'fatal: remote scope not found. to create a new scope, please use `bit init --bare` in the remote destination'],
   [ InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: <scope>/[box]/<name>'],
   [ ComponentNotFound, err => `fatal: component with id "${chalk.bold(err.id)}" was not found`],
+  [ ComponentNotFoundInline, err => `fatal: component in path "${chalk.bold(err.path)}" was not found`],
   [ DependencyNotFound, err => `Error - Dependency "${chalk.bold(err.id)}" not found. Please verify bit.json - ${chalk.bold(err.bitJsonPath)}`],
   [ PermissionDenied, () => 'fatal: permission to scope was denied'],
   [ RemoteNotFound, err => `fatal: remote "${chalk.bold(err.name)}" was not found`],

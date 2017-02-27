@@ -1,5 +1,5 @@
-/** @flow */
 import path from 'path';
+import fs from 'fs';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
 import Impl from '../component/sources/impl';
@@ -15,6 +15,7 @@ import specsRunner from '../../specs-runner';
 import SpecsResults from '../specs-results';
 import type { Results } from '../../specs-runner/specs-runner';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
+import ComponentNotFoundInline from './exceptions/component-not-found-inline';
 
 import { 
   DEFAULT_BOX_NAME,
@@ -188,7 +189,7 @@ export default class Component {
       }
       return Promise.resolve();
     };
-
+    
     if (!this.testerId || !this.specs || !this.specs.src) return Promise.resolve(null);
     
     return installEnvironmentsIfNeeded()
@@ -321,6 +322,7 @@ export default class Component {
   }
 
   static loadFromInline(bitDir, consumerBitJson): Promise<Component> {
+    if (!fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInline(bitDir));
     return BitJson.load(bitDir, consumerBitJson)
     .then((bitJson) => {
       return new Component({
