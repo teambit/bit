@@ -285,7 +285,7 @@ export default class Scope {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
     
-    const [externals, locals] = splitWhen(id => id.isLocal(this.name), ids);
+    const [externals, locals] = splitWhen(id => id.isLocal(this.name), idsWithoutNils);
     
     return this.sources.getMany(locals)
       .then((localDefs) => {
