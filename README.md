@@ -19,11 +19,8 @@ Bit allows you to:
 - **Maintain your components end-to-end** including simple versioning, faster dependency management and CI.
 - **Find and use** tested and ready-to-go components created by you or your team.
 
-## Install
-```bash
-npm install bit-bin -g
-```
-For other installation methods, please check out our wiki's [installation section](https://github.com/teambit/bit/wiki/install).
+## Installation
+For the different installation methods, please check out our wiki's [installation section](https://github.com/teambit/bit/wiki/install).
 
 ## Get started
 Create the component isString 
