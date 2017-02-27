@@ -5,26 +5,57 @@
 </p>
 
 <p align="center">
-<b>Distributed code component manager</b>
+<b>Distributed code component management</b>
 </p>
 <p align="center">
   <a href="https://ci.appveyor.com/project/TeamBit/bit"><img alt="Appveyor Status" src="https://ci.appveyor.com/api/projects/status/pr2caxu6awb387lr?svg=true"></a>
 </p>
----
 
-Bit is a simple code component manager.
+Bit is a single open source project to easily maintain and reuse all your code components. 
 
-It is a distributed tool for easy export and reuse of code components across repsoitories.
+Bit allows you to:
 
-Bit helps to get rid of code duplications and technological debt while saving you the overhead of publishing packages.
+- **Easily export** components from your code to be used in other repositories or by other team members.
+- **Maintain your components end-to-end** including simple versioning, faster dependency management and CI.
+- **Find and use** tested and ready-to-go components created by you or your team.
 
-**Easy extraction and reuse**- Easily extract and reuse of code components across repositories and projects without creating code duplications or having to publish tiny packages. 
+## Install
+```bash
+npm install bit-bin -g
+```
+For other installation methods, please check out our wiki's [installation section](https://github.com/teambit/bit/wiki/install).
 
-**Simple management & maintenance**-  Maintain all your components in one place using simple commands, with simplified versioning and more reliable dependency management.
+## Get started
+Create the component isString 
+```bash
+bit create string/is -s
+```
 
-**Full component CI**-  Bit handles your component's entire lifecycle with full build and test execution, to make sure all your components are working and ready to go.
+Edit your component's code and tests using your favorite IDE
+```bash
+vim inline_components/string/is/impl.js
+vim inline_components/string/is/spec.js
+```
 
-**Easily find your components**- A built-in semantic search engine and a scoping mechanism make it easy to find and use components created by you, your team or the community. 
+Commit your component to your Bit scope
+```bash
+bit commit string/is 'initial commit'
+```
+
+Export your newly created component to a remote scope
+```
+bit export @this/string/is @my-scope
+```
+
+After exporting a component you can easily import it anywhere using:
+```bash
+bit import @my-scope/string/is
+```
+
+In case you would like to modify this component, you can just use:
+```bash
+bit modify @my-scope/string/is
+```
 
 ## Why?
 
@@ -54,72 +85,15 @@ Ultimately, bit allows you to create a dynamic collection of fully managed and g
 
 * **Full versioning management.** Bit takes care of version management with a simplified incremental versioning for easier update and maintenance.
 
-* **On-export dependency resolution.** A faster, more reliable dependency resolution as dependencies are kept within the component itself.
+* **On-export dependency resolution.** A faster, more reliable dependency resolution as dependencies are kept aside the component itself.
 
 * **Built-in semantic search engine.** Easily find code components in local and remote locations.
 
 * **Quick consumption and modification of components.** Using simple commands such as import, modify etc.
 
-* **Bit is distributed**.
+* **Scope distribution** enables you to create a Bit scope, anywhere with a single `bit init` command.
 
-## Install
-
-#### macOS
-
-Homebrew - Bit can be installed via Homebrew package manager:
-
-`brew install bit`
-
-#### Debian/Ubuntu Linux
-
-On Debian or Ubuntu Linux, you can install Bit via our Debian package repository. Configure it using this command
-
-```
-curl https://bitsrc.jfrog.io/bitsrc/api/gpg/key/public | sudo apt-key add -
-sudo sh -c "echo 'deb http://bitsrc.jfrog.io/bitsrc/bit-deb all main' >> /etc/apt/sources.list"
-```
-
-Then simply install using
-
-`sudo apt-get update && sudo apt-get install bit`
-
-#### CentOS / Fedora / RHEL
-
-On CentOS, Fedora and RHEL, you can install Bit via our RPM package repository.
-
-`sudo wget http://assets.bitsrc.io/bitsrc.repo -O /etc/yum.repos.d/bitsrc.repo`
-
-Then simply install using
-
-`sudo yum install bit`
-
-#### Windows
-There are two installation methods for Windows.
-
-1. **Download installer** - You can download a msi file and run it.
-
-    Installation can be found [here](https://api.bitsrc.io/release/msi/latest).
-
-2. **Chocolatey** - Bit can be installed via Chocolatey:
-
-    `choco install bit`
-
-#### Other
-
-##### NPM 
-
-If you have NPM installed, you can use it to install Bit:
-
-`npm install --global bit-cli`
-
-##### Yarn
-
-If you have Yarn installed, you can use it to install Bit:
-
-`Yarn global add bit-cli`
-
-
-## Getting Started
+## Learn more
 
 Here is a [Quick getting started manual](https://github.com/teambit/bit/wiki/Getting-Started).
 
