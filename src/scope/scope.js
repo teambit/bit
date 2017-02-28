@@ -527,15 +527,18 @@ export default class Scope {
     };
 
     return this.getMany(ids)
-    .then((components) => {
-      if (consumer) {
-        return consumer.writeToComponentsDir(flatten(components));
-      }
-
-      return this.writeToComponentsDir(flatten(components));
-    })
-    .then((components: ConsumerComponent[]) => {
-      return Promise.all(components.map(installPackageDependencies));
+    .then((componentDependenciesArr) => {
+      const writeToProperDir = () => {
+        if (consumer) { return consumer.writeToComponentsDir(componentDependenciesArr); } 
+        // also doing flatting for componentDependencies (need to refactor)
+        return this.writeToComponentsDir(componentDependenciesArr);
+        // also doing flatting for componentDependencies (need to refactor)
+      };
+      
+      return writeToProperDir()
+        .then((components: ConsumerComponent[]) => {
+          return Promise.all(components.map(installPackageDependencies));
+        });
     });
   }
 

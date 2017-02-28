@@ -85,8 +85,8 @@ export default class Consumer {
       );
   }
 
-  import(rawId: ?string, verbose?: ?bool, withEnvironments: ?bool):
-  Promise<{ dependencies: Component[], envDependencies?: Component[] }> {
+  import(rawIds: ?string[], verbose?: ?bool, withEnvironments: ?bool):
+  Promise<{ dependencies: ComponentDependencies[], envDependencies?: Component[] }> {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
       if (R.isNil(dependencies) || R.isEmpty(dependencies)) {
@@ -98,9 +98,9 @@ export default class Consumer {
       } 
       
       return this.scope.getMany(dependencies)
-        .then((components) => {
-          return this.writeToComponentsDir(flatten(components))
-          .then((depComponents) => {
+        .then((componentDependenciesArr) => {
+          return this.writeToComponentsDir(componentDependenciesArr)
+          .then(() => {
             return withEnvironments ? 
             this.scope.installEnvironment({
               ids: [this.testerId, this.compilerId],
@@ -108,25 +108,26 @@ export default class Consumer {
               verbose
             })
             .then(envComponents => ({ 
-              dependencies: depComponents,
+              dependencies: componentDependenciesArr,
               envDependencies: envComponents,
-            })) : { dependencies: depComponents };
+            })) : { dependencies: componentDependenciesArr };
           });
         });
     };
 
-    const importSpecificComponent = () => {
-      const bitId = BitId.parse(rawId, this.scope.name);
-      return this.scope.get(bitId, false)
-      .then(component =>
-        this.writeToComponentsDir([component])
-        .then(dependencies => ({ dependencies }))
-      );
+    const importSpecificComponents = () => {
+      // $FlowFixMe - we check if there are bitIds before we call this function
+      const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
+      return this.scope.getMany(bitIds)
+      .then((componentDependenciesArr) => {
+        return this.writeToComponentsDir(componentDependenciesArr)
+          .then(() => ({ dependencies: componentDependenciesArr }));
+      });
     };
     
     loader.start(BEFORE_IMPORT_ACTION);
-    if (!rawId) return importAccordingToConsumerBitJson();
-    return importSpecificComponent();
+    if (!rawIds || R.isEmpty(rawIds)) return importAccordingToConsumerBitJson();
+    return importSpecificComponents();
   }
 
   importEnvironment(rawId: ?string, verbose?: ?bool) {
@@ -178,7 +179,7 @@ export default class Consumer {
     });
   }
 
-  writeToComponentsDir(componentDependencies: ComponentDependencies[]): Promise<Component[]> {
+  writeToComponentsDir(componentDependencies: versionDependencies[]): Promise<Component[]> {
     const componentsDir = this.getComponentsPath();
     const components = flattenDependencies(componentDependencies);
 

@@ -49,6 +49,12 @@ export default class AbstractBitJson {
     this.tester = testerId;
   }
 
+  addDependencies(bitIds: BitId[]): this {
+    const idObjects = R.mergeAll(bitIds.map(bitId => bitId.toObject()));
+    this.dependencies = R.merge(this.dependencies, idObjects);
+    return this;
+  }
+
   addDependency(bitId: BitId): this {
     this.dependencies = R.merge(this.dependencies, bitId.toObject());
     return this;

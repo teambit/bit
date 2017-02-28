@@ -1,7 +1,6 @@
 /** @flow */
 import fs from 'fs-extra';
 import glob from 'glob';
-import chalk from 'chalk';
 import R from 'ramda';
 import path from 'path';
 import semver from 'semver';
@@ -10,12 +9,13 @@ import Bit from '../../../consumer/component';
 import Consumer from '../../../consumer/consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
+import { flattenDependencies } from '../../../scope/flatten-dependencies';
 
 const key = R.compose(R.head, R.keys);
 
 export default function importAction(
-  { bitId, save, tester, compiler, verbose, prefix, environment }: {
-    bitId: string,
+  { ids, save, tester, compiler, verbose, prefix, environment }: {
+    ids: string,
     save: ?bool,
     tester: ?bool,
     compiler: ?bool,
@@ -25,8 +25,9 @@ export default function importAction(
   }): Promise<Bit[]> {
   function importEnvironment(consumer) {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
-
-    return consumer.importEnvironment(bitId, verbose)
+    
+    // TODO - import enviroment on multiple environments
+    return consumer.importEnvironment(ids[0], verbose)
     .then((envDependencies) => {
       function writeToBitJsonIfNeeded() {
         if (save && compiler) {
@@ -53,11 +54,11 @@ export default function importAction(
     .then(consumer => consumer.scope.ensureDir().then(() => consumer))
     .then((consumer) => {
       if (tester || compiler) { return importEnvironment(consumer); }
-      return consumer.import(bitId, verbose, environment)
+      return consumer.import(ids, verbose, environment)
         .then(({ dependencies, envDependencies }) => {
           if (save) {
-            const parseId = BitId.parse(bitId, consumer.scope.name);
-            return consumer.bitJson.addDependency(parseId)
+            const bitIds = dependencies.map(R.path(['component', 'id']));
+            return consumer.bitJson.addDependencies(bitIds)
             .write({ bitDir: consumer.getPath() })
             .then(() => ({ dependencies, envDependencies }));
           }
@@ -65,15 +66,19 @@ export default function importAction(
           return Promise.resolve(({ dependencies, envDependencies }));
         })
         .then(({ dependencies, envDependencies }) =>
-          warnForPackageDependencies({ dependencies, envDependencies, consumer })
+          warnForPackageDependencies({
+            dependencies: flattenDependencies(dependencies),
+            envDependencies,
+            consumer,
+          })
           .then(warnings => ({ dependencies, envDependencies, warnings }))
         );
     });
 }
 
 const getSemverType = (str): ?string => {
-  if (semver.valid(str)) return 'V';
-  if (semver.validRange(str)) return 'R';
+  if (semver.valid(str)) return 'V'; // VALID_VERSION
+  if (semver.validRange(str)) return 'R'; // RANGE_VERSIONS
   return null;
 };
 
@@ -98,7 +103,7 @@ function compatibleWith(a: { [string]: string }, b: { [string]: string, }): bool
   return false;
 }
 
-const warnForPackageDependencies = ({ dependencies, envDependencies, consumer }) => {
+const warnForPackageDependencies = ({ dependencies, consumer }) => {
   const warnings = {
     notInPackageJson: [],
     notInNodeModules: [],
@@ -122,14 +127,13 @@ const warnForPackageDependencies = ({ dependencies, envDependencies, consumer })
     .map(R.compose(getNameAndVersion, getPackageJson))
   );
 
-  dependencies.forEach((dep) => {
+  dependencies.forEach((dep) => { //eslint-disable-line
     if (!dep.packageDependencies || R.isEmpty(dep.packageDependencies)) return null;
 
     R.forEachObjIndexed((packageDepVersion, packageDepName) => {
       const packageDep = { [packageDepName]: packageDepVersion };
       const compatibleWithPackgeJson = compatibleWith(packageDep, packageJsonDependencies);
       const compatibleWithNodeModules = compatibleWith(packageDep, nodeModules);
-      const basicMessage = `the npm package { ${packageDepName}:${packageDepVersion} } is a package dependency of ${dep.id.toString()}`;
 
       if (!compatibleWithPackgeJson && !compatibleWithNodeModules) {
         warnings.notInBoth.push(packageDep);

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.3]
+
+### Added
+
+- import multiple components on one import (bit import componentA componentB)
+- write components specific version in bit.json after import -s flag
+- distinguish between peerDependencies and dependencies on the output of import command
+
 ## [0.2.2]
 
 ### Added

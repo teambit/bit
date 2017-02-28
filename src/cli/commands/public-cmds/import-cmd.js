@@ -6,9 +6,10 @@ import { importAction } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
 import { formatBit, paintHeader } from '../../chalk-box';
 import Component from '../../../consumer/component';
+import { ComponentDependencies } from '../../../scope';
 
 export default class Import extends Command {
-  name = 'import [ids]';
+  name = 'import [ids...]';
   description = 'import a component';
   alias = 'i';
   opts = [
@@ -21,7 +22,7 @@ export default class Import extends Command {
   ];
   loader = true;
 
-  action([id, ]: [string, ], { save, tester, compiler, verbose, prefix, environment }:
+  action([ids, ]: [string[], ], { save, tester, compiler, verbose, prefix, environment }:
   { 
     save?: bool,
     tester?: bool,
@@ -37,11 +38,11 @@ export default class Import extends Command {
       throw new Error('you cant use tester and compiler flags combined');
     }
     
-    return importAction({ bitId: id, save, tester, compiler, verbose, prefix, environment });
+    return importAction({ ids, save, tester, compiler, verbose, prefix, environment });
   }
 
   report({ dependencies, envDependencies, warnings }: {
-    dependencies?: Component[],
+    dependencies?: ComponentDependencies[],
     envDependencies?: Component[],
     warnings?: {
       notInPackageJson: [],
@@ -53,10 +54,20 @@ export default class Import extends Command {
     let envDependenciesOutput;
     
     if (dependencies && !R.isEmpty(dependencies)) {
-      dependenciesOutput = immutableUnshift(
-        dependencies.map(formatBit),
-        paintHeader('successfully imported the following Bit components and dependencies.')
+      const components = dependencies.map(R.prop('component'));
+      const peerDependencies = R.flatten(dependencies.map(R.prop('dependencies')));
+
+      const componentDependenciesOutput = immutableUnshift(
+        components.map(formatBit),
+        paintHeader('successfully imported the following Bit components.')
       ).join('\n');
+
+      const peerDependenciesOutput = immutableUnshift(
+        peerDependencies.map(formatBit),
+        paintHeader('\n\nsuccessfully imported the following peer dependencies.')
+      ).join('\n');
+
+      dependenciesOutput = componentDependenciesOutput + peerDependenciesOutput;
     }
 
     if (envDependencies && !R.isEmpty(envDependencies)) {
