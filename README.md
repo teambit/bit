@@ -23,35 +23,35 @@ Bit allows you to:
 For the different installation methods, please check out our wiki's [installation section](https://github.com/teambit/bit/wiki/install).
 
 ## Get started
-Create the component isString 
+Create the component pad-left 
 ```bash
-bit create string/is -s
+bit create string/pad-left -s
 ```
 
 Edit your component's code and tests using your favorite IDE
 ```bash
-vim inline_components/string/is/impl.js
-vim inline_components/string/is/spec.js
+vim inline_components/string/pad-left/impl.js
+vim inline_components/string/pad-left/spec.js
 ```
 
 Commit your component to your Bit scope
 ```bash
-bit commit string/is 'initial commit'
+bit commit string/pad-left 'initial commit'
 ```
 
 Export your newly created component to a remote scope
 ```
-bit export @this/string/is @my-scope
+bit export @this/string/pad-left @my-scope
 ```
 
 After exporting a component you can easily import it anywhere using:
 ```bash
-bit import @my-scope/string/is
+bit import @my-scope/string/pad-left
 ```
 
 In case you would like to modify this component, you can just use:
 ```bash
-bit modify @my-scope/string/is
+bit modify @my-scope/string/pad-left
 ```
 
 ## Features
