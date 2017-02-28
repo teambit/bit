@@ -11,47 +11,52 @@
   <a href="https://ci.appveyor.com/project/TeamBit/bit"><img alt="Appveyor Status" src="https://ci.appveyor.com/api/projects/status/pr2caxu6awb387lr?svg=true"></a>
 </p>
 
-Bit is a single open source project to easily maintain and reuse all your code components. 
+Bit is a simple code component management system.
+It allows you to easily extract reusable components from your code and use them anywhere.
 
-Bit allows you to:
+Instead of re-writing or duplicating code across repositories and projects, Bit makes it super easy to extract reusable components without any boilerplating or overhead. Bit also takes care of your component's entire lifecycle including CI (test and build with any environment), versioning and dependency management and even even makes components easy to find.
 
-- **Easily export** components from your code to be used in other repositories or by other team members.
+Bit allows you and your team to easily build a dynamic collection of fully-managed components ready to be deployed anywhere.
+
+TL:DR
+
+- **Easily export** components from your code in seconds using simple commands and with only 2 files: impl. and specs.
 - **Maintain your components end-to-end** including simple versioning, faster dependency management and CI.
-- **Find and use** tested and ready-to-go components created by you or your team.
+- **Find and deploy** tested and ready-to-go components created by you or your team in a fully distributed system.
 
 ## Installation
 For the different installation methods, please check out our wiki's [installation section](https://github.com/teambit/bit/wiki/install).
 
 ## Get started
-Create the component pad-left 
+Create the component left-pad
 ```bash
-bit create string/pad-left -s
+bit create string/left-pad -s
 ```
 
 Edit your component's code and tests using your favorite IDE
 ```bash
-vim inline_components/string/pad-left/impl.js
-vim inline_components/string/pad-left/spec.js
+vim inline_components/string/left-pad/impl.js
+vim inline_components/string/left-pad/spec.js
 ```
 
 Commit your component to your Bit scope
 ```bash
-bit commit string/pad-left 'initial commit'
+bit commit string/left-pad 'initial commit'
 ```
 
 Export your newly created component to a remote scope
 ```
-bit export @this/string/pad-left @my-scope
+bit export @this/string/left-pad @my-scope
 ```
 
 After exporting a component you can easily import it anywhere using:
 ```bash
-bit import @my-scope/string/pad-left
+bit import @my-scope/string/left-pad
 ```
 
 In case you would like to modify this component, you can just use:
 ```bash
-bit modify @my-scope/string/pad-left
+bit modify @my-scope/string/left-pad
 ```
 
 ## Features
@@ -69,6 +74,8 @@ bit modify @my-scope/string/pad-left
 * **Built-in semantic search engine.** Easily find and use components created by your or your friends.
 
 * **Quick modification and update of components.** Using simple commands such as import, modify etc. to modify and update your components.
+
+* **Language agnostic.** Bit is designed to be compatible to any language using a special driver. Using Bit, components of different programming languages can ultimately be composed together to create a joint functionality.
 
 * **Scope distribution** enables you to create a Bit scope, anywhere with a single `bit init` command.
 
