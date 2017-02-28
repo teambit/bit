@@ -13,7 +13,7 @@ export default class Import extends Command {
   alias = 'i';
   opts = [
     ['s', 'save', 'save into bit.json'],
-    ['d', 'dev', 'also import dev dependencies (compiler | tester)'],
+    ['e', 'environment', 'install development environment dependencies (compiler | tester)'],
     ['t', 'tester', 'import a tester environment component'],
     ['v', 'verbose', 'show a more verbose output when possible'],
     ['c', 'compiler', 'import a compiler environment component'],
@@ -21,14 +21,14 @@ export default class Import extends Command {
   ];
   loader = true;
 
-  action([id, ]: [string, ], { save, tester, compiler, verbose, prefix, dev }:
+  action([id, ]: [string, ], { save, tester, compiler, verbose, prefix, environment }:
   { 
     save?: bool,
     tester?: bool,
     compiler?: bool,
     verbose?: bool,
     prefix?: bool,
-    dev?: bool,
+    environment?: bool,
   }): Promise<any> {
     if (prefix) { return Promise.reject(new Error('prefix option currently not supported')); }
     // TODO - prefix returns true instead of the relevant string.
@@ -37,7 +37,7 @@ export default class Import extends Command {
       throw new Error('you cant use tester and compiler flags combined');
     }
     
-    return importAction({ bitId: id, save, tester, compiler, verbose, prefix, dev });
+    return importAction({ bitId: id, save, tester, compiler, verbose, prefix, environment });
   }
 
   report({ dependencies, envDependencies, warnings }: {

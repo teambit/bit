@@ -14,14 +14,14 @@ import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 const key = R.compose(R.head, R.keys);
 
 export default function importAction(
-  { bitId, save, tester, compiler, verbose, prefix, dev }: {
+  { bitId, save, tester, compiler, verbose, prefix, environment }: {
     bitId: string,
     save: ?bool,
     tester: ?bool,
     compiler: ?bool,
     verbose: ?bool,
     prefix: ?string,
-    dev: ?bool,
+    environment: ?bool,
   }): Promise<Bit[]> {
   function importEnvironment(consumer) {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
@@ -53,7 +53,7 @@ export default function importAction(
     .then(consumer => consumer.scope.ensureDir().then(() => consumer))
     .then((consumer) => {
       if (tester || compiler) { return importEnvironment(consumer); }
-      return consumer.import(bitId, verbose, dev)
+      return consumer.import(bitId, verbose, environment)
         .then(({ dependencies, envDependencies }) => {
           if (save) {
             const parseId = BitId.parse(bitId, consumer.scope.name);
