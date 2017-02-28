@@ -11,7 +11,8 @@ export default class Export extends Command {
   opts = [
     ['s', 'save', 'save into bit.json']
   ];
-
+  loader = true;
+  
   action([id, remote]: [string, string], { save }: any): Promise<*> {
     return exportAction(id, remote, save).then(() => ({ id, remote }));
   }
