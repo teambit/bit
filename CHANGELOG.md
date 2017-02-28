@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Change
+
+- scope now fetch devDependencies (compiler/tester) on export
+- scope does not fetch devDependencies on import
+
 ## [0.2.1] hot-fix
 
 fix a bug with import many ones function
