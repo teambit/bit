@@ -177,9 +177,9 @@ export default class Component extends BitObject {
     return new Buffer(JSON.stringify(this.toObject()));
   }
 
-  toVersionDependencies(version: string, scope: Scope, source: string) {
+  toVersionDependencies(version: string, scope: Scope, source: string, withDevDependencies?: bool) {
     const versionComp = this.toComponentVersion(version, scope.name);
-    return versionComp.toVersionDependencies(scope, source);
+    return versionComp.toVersionDependencies(scope, source, withDevDependencies);
   }
 
   static parse(contents: string): Component {

@@ -38,7 +38,8 @@ export default class ComponentVersion {
     return this.toId();
   }
 
-  toVersionDependencies(scope: Scope, source: string): Promise<VersionDependencies> {
+  toVersionDependencies(scope: Scope, source: string, withDependencies?: bool):
+  Promise<VersionDependencies> {
     return this.getVersion(scope.objects)
       .then((version) => {
         if (!version) {
@@ -46,11 +47,11 @@ export default class ComponentVersion {
             .then((remotes) => {
               const src = this.id;
               src.scope = source;
-              return scope.getExternal(src, remotes, false);
+              return scope.getExternal({ id: src, remotes, localFetch: false, withDependencies });
             });
         }
         
-        return version.collectDependencies(scope)
+        return version.collectDependencies(scope, withDependencies)
           .then(dependencies => new VersionDependencies(this, dependencies, source));
       });
   }

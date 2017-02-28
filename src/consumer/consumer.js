@@ -117,7 +117,7 @@ export default class Consumer {
 
     const importSpecificComponent = () => {
       const bitId = BitId.parse(rawId, this.scope.name);
-      return this.scope.get(bitId)
+      return this.scope.get(bitId, false)
       .then(component =>
         this.writeToComponentsDir([component])
         .then(dependencies => ({ dependencies }))

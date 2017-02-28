@@ -167,7 +167,7 @@ export default class Scope {
       .then(() => this.objects.persist())
       .then(() => component.toComponentVersion(LATEST, this.name))
       .then((compVersion: ComponentVersion) => 
-        this.getObjects([compVersion.id])
+        this.getObjects([compVersion.id], true)
         .then((objs) => {
           return compVersion.toConsumer(this.objects)
           .then(consumerComponent => index(consumerComponent, this.getPath()))
@@ -224,33 +224,41 @@ export default class Scope {
       });   
   }
 
-  getExternal(id: BitId, remotes: Remotes, localFetch: bool = true): Promise<VersionDependencies> {
+  getExternal({ id, remotes, localFetch }: {
+    id: BitId,
+    remotes: Remotes,
+    localFetch: bool,
+  }): Promise<VersionDependencies> {
+    localFetch = localFetch || true;
     return this.sources.get(id)
       .then((component) => {
         if (component && localFetch) {
           return component.toVersionDependencies(id.version, this, id.scope);
         }
+
         return remotes
           .fetch([id], this)
           .then(([componentObjects, ]) => {
             return this.importSrc(componentObjects);
           })
-          .then(() => this.getExternal(id, remotes));
+          .then(() => this.getExternal({ id, remotes, localFetch: true }));
       });
   }
 
-  getExternalOne(id: BitId, remotes: Remotes, localFetch: bool = true) {
+  getExternalOne({ id, remotes, localFetch }: {
+    id: BitId, remotes: Remotes, localFetch: bool }) {
+    localFetch = localFetch || true;
     return this.sources.get(id)
       .then((component) => {
         if (component && localFetch) return component.toComponentVersion(id.version, this.name);
         return remotes.fetch([id], this, true)
           .then(([componentObjects, ]) => this.importSrc(componentObjects))
-          .then(() => this.getExternal(id, remotes));
+          .then(() => this.getExternal({ id, remotes, localFetch: true }));
       });
   }
 
-  getObjects(ids: BitId[]): Promise<ComponentObjects[]> {
-    return this.importMany(ids)
+  getObjects(ids: BitId[], withDevDependencies?: bool): Promise<ComponentObjects[]> {
+    return this.importMany(ids, withDevDependencies)
       .then(versions => Promise.all(
         versions.map(version => version.toObjects(this.objects))));
   }
@@ -259,7 +267,7 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
-  importMany(ids: BitIds): Promise<VersionDependencies[]> {
+  importMany(ids: BitIds, withDevDependencies?: bool): Promise<VersionDependencies[]> {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
     
@@ -269,7 +277,12 @@ export default class Scope {
       .then((localDefs) => {
         return Promise.all(localDefs.map((def) => {
           if (!def.component) throw new ComponentNotFound(def.id.toString());
-          return def.component.toVersionDependencies(def.id.version, this, def.id.scope);
+          return def.component.toVersionDependencies(
+            def.id.version,
+            this,
+            def.id.scope,
+            withDevDependencies,
+          );
         }))
         .then((versionDeps) => {
           return postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) })
@@ -313,13 +326,13 @@ export default class Scope {
   import(id: BitId): Promise<VersionDependencies> {
     if (!id.isLocal(this.name)) {
       return this.remotes()
-        .then(remotes => this.getExternal(id, remotes));
+        .then(remotes => this.getExternal({ id, remotes, localFetch: true }));
     }
     
     return this.sources.get(id)
       .then((component) => {
         if (!component) throw new ComponentNotFound(id.toString());
-        return component.toVersionDependencies(id.version, this);
+        return component.toVersionDependencies(id.version, this, this.name);
       });
   }
 
@@ -356,7 +369,7 @@ export default class Scope {
       return this.installEnvironment({ ids, consumer, verbose });
     };
 
-    return this.import(bitId, true)
+    return this.import(bitId)
       .then((versionDependencies) => {
         const versions = versionDependencies.component.component.listVersions();
         const versionsP = this.importManyOnes(versions.map((version) => {
@@ -411,7 +424,7 @@ export default class Scope {
   getOne(id: BitId): Promise<ComponentVersion> {
     if (!id.isLocal(this.name)) {
       return this.remotes()
-        .then(remotes => this.getExternalOne(id, remotes));
+        .then(remotes => this.getExternalOne({ id, remotes, localFetch: true }));
     }
     
     return this.sources.get(id)
