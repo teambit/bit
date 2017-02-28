@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.2]
+
 ### Added
 
 - loader for export command
@@ -15,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - scope now fetch devDependencies (compiler/tester) on export
 - scope does not fetch devDependencies on import
+- changed dev to environment flag on import command
 
 ## [0.2.1] hot-fix
 
