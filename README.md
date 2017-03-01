@@ -7,9 +7,10 @@
 <p align="center">
 <b>Language-agnostic and distributed code component manager</b>
 </p>
+<div style="text-align:center"> 
 
-[![Build status](https://ci.appveyor.com/api/projects/status/pr2caxu6awb387lr?svg=true)](https://ci.appveyor.com/project/TeamBit/bit)[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
+ [![Build status](https://ci.appveyor.com/api/projects/status/pr2caxu6awb387lr?svg=true)](https://ci.appveyor.com/project/TeamBit/bit)[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+</div>
 Bit allows you to easily create a dynamic set of fully-managed code components ready to be used or deployed anywhere.
 
 Bit enables you to make components reusable without having to worry about boilerplating (docs, configs, build and test execution), versioning, dependency management and CI. 
