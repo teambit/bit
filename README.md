@@ -5,28 +5,27 @@
 </p>
 
 <p align="center">
-<b>Distributed code component management</b>
+<b>Language-agnostic and distributed code component manager</b>
 </p>
 <p align="center">
   <a href="https://ci.appveyor.com/project/TeamBit/bit"><img alt="Appveyor Status" src="https://ci.appveyor.com/api/projects/status/pr2caxu6awb387lr?svg=true"></a>
 </p>
 
-Bit is a language agnostic code component management system.
-It allows you to easily extract reusable components from your code and use them anywhere.
+Bit allows you to easily create a dynamic set of fully-managed code components ready to be used or deployed anywhere.
 
-Instead of re-writing or duplicating code across repositories and projects, Bit makes it easy to extract reusable components without any boilerplating or overhead. Bit also takes care of your component's entire lifecycle including CI (test and build with any environment), versioning and dependency management and even even makes components easy to find.
+Bit enables you to make components reusable without having to worry about boilerplating (docs, configs, build and test execution), versioning, dependency management and CI. 
 
-Bit allows you and your team to easily build a dynamic collection of fully-managed components ready to be deployed anywhere.
+Bit takes care of everything for you so that extracting a component from your code and using it across repositories can take less than 30 seconds.
+
+<p align="center">
+<img src="https://storage.googleapis.com/bit-assets/pad-left.gif" height="550">
+</p>
 
 TL:DR
 
 - **Easily export** components from your code in seconds using simple commands and with only 2 files: impl. and specs.
 - **Maintain your components end-to-end** including simple versioning, faster dependency management and CI.
 - **Find and deploy** tested and ready-to-go components created by you or your team in a fully distributed system.
-
-<p align="center">
-<img src="https://storage.googleapis.com/bit-assets/pad-left.gif" height="550">
-</p>
 
 ## Installation
 For the different installation methods, please check out our wiki's [installation section](https://github.com/teambit/bit/wiki/install).
@@ -92,7 +91,7 @@ The alternative, spending hours on boilerplating and publishing a package + git 
 
 This compelled us to build a single tool that allows us to easily extract code components from our code and use them anywhere we want. We also made sure our components would be taken care of through their entire lifecycle, so that they can be trusted and deployed anywhere.
 
-Finally, we made sure our team can collaborate by importing and exporting each other’s components to build and maintain our projects. 
+Finally, we made sue our team can collaborate by importing and exporting each other’s components to build and maintain our projects. 
 
 Ultimately, bit allows you to create a dynamic collection of fully managed and good-to-go components ready to be used anywhere. This is something we truly believe in.
 
