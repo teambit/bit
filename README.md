@@ -23,9 +23,11 @@ TL:DR
 - **Easily export** components from your code in seconds using simple commands and with only 2 files: impl. and specs.
 - **Maintain your components end-to-end** including simple versioning, faster dependency management and CI.
 - **Find and deploy** tested and ready-to-go components created by you or your team in a fully distributed system.
+
 <p align="center">
 <img src="https://storage.googleapis.com/bit-assets/pad-left.gif" height="550">
 </p>
+
 ## Installation
 For the different installation methods, please check out our wiki's [installation section](https://github.com/teambit/bit/wiki/install).
 
