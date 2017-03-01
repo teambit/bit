@@ -11,7 +11,7 @@
   <a href="https://ci.appveyor.com/project/TeamBit/bit"><img alt="Appveyor Status" src="https://ci.appveyor.com/api/projects/status/pr2caxu6awb387lr?svg=true"></a>
 </p>
 
-Bit is a simple code component management system.
+Bit is a language agnostic code component management system.
 It allows you to easily extract reusable components from your code and use them anywhere.
 
 Instead of re-writing or duplicating code across repositories and projects, Bit makes it easy to extract reusable components without any boilerplating or overhead. Bit also takes care of your component's entire lifecycle including CI (test and build with any environment), versioning and dependency management and even even makes components easy to find.
@@ -23,9 +23,9 @@ TL:DR
 - **Easily export** components from your code in seconds using simple commands and with only 2 files: impl. and specs.
 - **Maintain your components end-to-end** including simple versioning, faster dependency management and CI.
 - **Find and deploy** tested and ready-to-go components created by you or your team in a fully distributed system.
-
+<p align="center">
 <img src="https://storage.googleapis.com/bit-assets/pad-left.gif" height="550">
-
+</p>
 ## Installation
 For the different installation methods, please check out our wiki's [installation section](https://github.com/teambit/bit/wiki/install).
 
