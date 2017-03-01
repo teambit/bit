@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Change
+
+- small fix after import without peer dependencies (do not show the peer dependencies header)
+
 ## [0.2.3]
 
 ### Added

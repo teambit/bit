@@ -62,10 +62,11 @@ export default class Import extends Command {
         paintHeader('successfully imported the following Bit components.')
       ).join('\n');
 
-      const peerDependenciesOutput = immutableUnshift(
+      const peerDependenciesOutput = (peerDependencies && !R.isEmpty(peerDependencies)) ? 
+      immutableUnshift(
         peerDependencies.map(formatBit),
         paintHeader('\n\nsuccessfully imported the following peer dependencies.')
-      ).join('\n');
+      ).join('\n') : '';
 
       dependenciesOutput = componentDependenciesOutput + peerDependenciesOutput;
     }
