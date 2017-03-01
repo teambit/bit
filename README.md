@@ -18,7 +18,7 @@ Bit enables you to make components reusable without having to worry about boiler
 Bit takes care of everything for you so that extracting a component from your code and using it across repositories can take less than 30 seconds.
 
 <p align="center">
-<img src="https://storage.googleapis.com/bit-assets/pad-left.gif" height="550">
+<img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="550">
 </p>
 
 TL:DR
