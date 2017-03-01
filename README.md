@@ -18,7 +18,7 @@ Bit enables you to make components reusable without having to worry about boiler
 Bit takes care of everything for you so that extracting a component from your code and using it across repositories can take less than 30 seconds.
 
 <p align="center">
-<img src="https://storage.googleapis.com/bit-assets/pad-left.gif" height="550">
+<img src="https://storage.googleapis.com/bit-assets/gifs/ezgif.com-optimize.gif" height="550">
 </p>
 
 TL:DR
@@ -31,6 +31,9 @@ TL:DR
 For the different installation methods, please check out our wiki's [installation section](https://github.com/teambit/bit/wiki/install).
 
 ## Get started
+<p align="center">
+<img src="https://storage.googleapis.com/bit-assets/gifs/Kapture%202017-02-28%20at%2012.15.34.gif" height="350">
+</p>
 
 Create the component left-pad 
 ```bash
