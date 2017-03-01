@@ -158,7 +158,7 @@ export default class Component {
     return mkdirp(bitDir)
     .then(() => this.impl.write(bitDir, this.implFile))
     .then(() => { return this.specs ? this.specs.write(bitDir, this.specsFile) : undefined; })
-    .then(() => { return this.dist ? this.dist.write(bitDir) : undefined; })
+    .then(() => { return this.dist ? this.dist.write(bitDir, this.implFile) : undefined; })
     .then(() => { return withBitJson ? this.writeBitJson(bitDir): undefined; })
     .then(() => this);
   }
@@ -241,8 +241,8 @@ export default class Component {
         const opts = { bareScope: !consumer };
         const compiler = scope.loadEnvironment(this.compilerId, opts);
         const src = this.impl.src;
-        const { code, map } = compiler.compile(src); // eslint-disable-line
-        this.dist = new Dist(code);
+        const { code, mappings } = compiler.compile(src); // eslint-disable-line
+        this.dist = new Dist(code, mappings);
         
         if (save) {
           return scope.sources.updateDist({ source: this })

@@ -161,7 +161,7 @@ export default class Component extends BitObject {
               impl: new Impl(impl.toString()),
               specs: specs ? new Specs(specs.toString()) : null,
               docs: version.docs,
-              dist: dist ? new Dist(dist.toString()) : null,
+              dist: dist ? Dist.fromString(dist.toString()) : null,
               specsResults:
                 version.specsResults ? SpecsResults.deserialize(version.specsResults) : null, 
             });

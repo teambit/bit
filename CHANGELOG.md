@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- add source-map support for dist (enables compiled bit debugging)
+
 ### Change
 
 - small fix after import without peer dependencies (do not show the peer dependencies header)

@@ -43,7 +43,7 @@ export default class Repository {
       .then((fileContents) => {
         return BitObject.parseObject(fileContents, this.types);
       })
-      .catch(() => null);
+      .catch(() => null); // Wat is dat ?
   }
 
   list():Promise<[]> {
