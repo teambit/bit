@@ -133,7 +133,7 @@ export default class Component extends BitObject {
       .parse(versionStr)
       .resolve(this.listVersions());
 
-    if (!this.versions[versionNum]) throw new Error();
+    if (!this.versions[versionNum]) throw new Error(`the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`);
     return new ComponentVersion(this, versionNum, scopeName);
   }
 

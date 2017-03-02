@@ -224,12 +224,11 @@ export default class Scope {
       });   
   }
 
-  getExternal({ id, remotes, localFetch }: {
+  getExternal({ id, remotes, localFetch = true }: {
     id: BitId,
     remotes: Remotes,
     localFetch: bool,
   }): Promise<VersionDependencies> {
-    localFetch = localFetch || true;
     return this.sources.get(id)
       .then((component) => {
         if (component && localFetch) {
@@ -245,9 +244,8 @@ export default class Scope {
       });
   }
 
-  getExternalOne({ id, remotes, localFetch }: {
+  getExternalOne({ id, remotes, localFetch = true }: {
     id: BitId, remotes: Remotes, localFetch: bool }) {
-    localFetch = localFetch || true;
     return this.sources.get(id)
       .then((component) => {
         if (component && localFetch) return component.toComponentVersion(id.version, this.name);
