@@ -62,7 +62,7 @@ Here is a [Quick getting started manual](https://github.com/teambit/bit/wiki/Get
 Head over to the [Docs](https://github.com/teambit/bit/wiki) for more information.
 
 <p align="center">
-    <a href="https://bitsrc.io/">
+    <a href="https://github.com/teambit/bit/wiki">
         <img alt="Bit" src="https://storage.googleapis.com/bit-docs-marketing/bit-commands.png">
     </a>
 </p>
