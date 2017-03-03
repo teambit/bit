@@ -1,3 +1,8 @@
+PATH
+  remote: .
+  specs:
+    jekyll-cayman-theme (0.1.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -17,8 +22,7 @@ GEM
       pathutil (~> 0.9)
       rouge (~> 1.7)
       safe_yaml (~> 1.0)
-    jekyll-feed (0.9.1)
-      jekyll (~> 3.3)
+    jekyll-paginate (1.1.0)
     jekyll-sass-converter (1.5.0)
       sass (~> 3.4)
     jekyll-watch (1.5.0)
@@ -29,11 +33,13 @@ GEM
       rb-fsevent (~> 0.9, >= 0.9.4)
       rb-inotify (~> 0.9, >= 0.9.7)
     mercenary (0.3.6)
-    minima (2.1.0)
-      jekyll (~> 3.3)
+    multi_json (1.12.1)
     pathutil (0.14.0)
       forwardable-extended (~> 2.6)
     public_suffix (2.0.5)
+    pygments.rb (1.1.1)
+      multi_json (>= 1.0.0)
+    rake (10.5.0)
     rb-fsevent (0.9.8)
     rb-inotify (0.9.8)
       ffi (>= 0.5.0)
@@ -45,13 +51,13 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  jekyll (= 3.4.1)
-  jekyll-feed (~> 0.6)
-  minima (~> 2.0)
-  tzinfo-data
-
-RUBY VERSION
-   ruby 2.2.3p173
+  bundler (~> 1.12)
+  jekyll
+  jekyll-cayman-theme!
+  jekyll-paginate
+  kramdown
+  pygments.rb
+  rake (~> 10.0)
 
 BUNDLED WITH
    1.14.5
