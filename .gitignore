@@ -78,3 +78,6 @@ inline_components
 
 #vscode history
 .history
+
+#gitbook
+_book
