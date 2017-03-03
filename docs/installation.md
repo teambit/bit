@@ -1,17 +1,17 @@
-## NPM 
+## Using NPM 
 
 If you have NPM installed, you can use it to install Bit: (recommended)
 
 `npm install bit-bin --global `
 
 
-## macOS
+## Using brew (macOS)
 
 Homebrew - Bit can be installed via Homebrew package manager:
 
 `brew install bit` (currently unavailable)
 
-#### Debian/Ubuntu Linux
+## Debian/Ubuntu Linux
 
 On Debian or Ubuntu Linux, you can install Bit via our Debian package repository. Configure it using this command
 
@@ -34,7 +34,7 @@ Then simply install using
 
 `sudo yum install bit`
 
-## Windows
+## installer/Chocolatey (Windows)
 
 (currently unavailable)
 
@@ -48,7 +48,7 @@ There are two installation methods for Windows.
 
     `choco install bit`
 
-## Yarn
+## Using Yarn
 
 If you have Yarn installed, you can use it to install Bit:
 
