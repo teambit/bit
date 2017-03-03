@@ -139,3 +139,5 @@ There are many designated libraries to run unit tests for code. Each developer c
 ### Tester
 
 the `tester`, like the compiler, it's just a Bit component implementing the tester interface. It is defined in bit.json under { env: { tester: `tester_id` }}.
+
+// TODO - write about the tester interface

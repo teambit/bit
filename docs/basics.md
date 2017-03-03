@@ -1,5 +1,5 @@
 
-## create-commit-export
+# create-commit-export
 
 ```
 TL.DR
@@ -12,7 +12,7 @@ bit export @this/<component-id> <remote-scope-name>
 
 **Create a component, debug it, commit and than export it to a remote scope.**
 
-### create and use
+## Create a component
 
 Go to a project with bit scope in it (or create one by using `bit init` in a directory).
 
@@ -35,6 +35,8 @@ You can copy and paste this example:
 ```
 
 * You can see the status of all the components in your project using: `bit status`.
+
+### Use it in your code
 
 3\. Install the bit-js module using [NPM](https://www.npmjs.com/package/bit-js) or Yarn.
 
@@ -166,14 +168,58 @@ Verify the version change with show command.
 
 # add-compiler
 
-1. Import the [Flow environment](https://bitsrc.io/bit/envs/compilers/flow) to your local scope, and set it as default to all newly created components:
+1\. Import the [Flow environment](https://bitsrc.io/bit/envs/compilers/flow) to your local scope, and set it as default to all newly created components:
   `bit import bit.envs/compilers/babel --compiler --save`
 
 // TODO
 
 # add-tester
 
-2. Import the [Mocha environment](https://bitsrc.io/bit/envs/testers/mocha) to your local scope, and set it as default to all newly created components:
-  `bit import bit.envs/testers/mocha --tester --save`
+```
+TL.DR
 
-// TODO
+bit import <tester-id> --tester --save
+bit modify <remote-scope>/<component-id>
+bit add-spec <component-id>
+open inline_components/<box><component>/spec.js // add tests
+bit test --component <component-id>
+bit commit <component-id> "<commit-message>"
+bit export @this/<component-id> <remote-scope>
+```
+
+1\. Import the [Mocha environment](https://bitsrc.io/bit/envs/testers/mocha) to your local scope, and set it as default to all newly created components:
+
+`bit import bit.envs/testers/mocha --tester --save`
+
+A tester enables you to test your components, read more about it [Here](GLOSSARY.md#tester)
+
+2\. Modify `bit modify @scopy/is-string`.
+3\. Add a spec.js file using `bit add-spec is-string` or you can just create spec.js file yourself yourself.
+4\. Open the spec.js file: `open inline_components/global/is-string/spec.js`
+5\. Paste this implementation or write tests of your own:
+
+```js
+const expect = require('chai').expect;
+const isString = require(__impl__);
+
+describe('#isString()', () => {
+  it('should return true if `foo` is passed', () => {
+    expect(isString('foo')).to.equal(true);
+  });
+
+  it('should return false if `1` is passed', () => {
+    expect(isString(1)).to.equal(false);
+
+  it('should return false if `[]` is passed', () => {
+    expect(isString([1]])).to.equal(false);
+  });
+```
+
+* note that the `__impl__` is a reference to the impl file injected by the testing environment.
+* you can't use node modules like you would normal do, because the component should be exported to an isolated environment and run the specs there. you can only require the modules that the tester provides,
+
+6\. Run the component's specs `bit test --inline is-string`.
+
+7\. Commit the component `bit commit is-string "add unit tests"`.
+
+8\. Export to a remote scope `bit export @this/is-string @scopy`.
