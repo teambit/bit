@@ -40,7 +40,7 @@ A local scope takes care of your components build and test execution. In our pro
 1. Import the [Flow environment](https://bitsrc.io/bit/envs/compilers/flow) to your local scope, and set it as default to all newly created components:
   `bit import bit.envs/compilers/flow --compiler --save`
 2. Import the [Mocha environment](https://bitsrc.io/bit/envs/testers/mocha) to your local scope, and set it as default to all newly created components:
-  ` bit import bit.envs/testers/mocha --tester --save`
+  `bit import bit.envs/testers/mocha --tester --save`
 
 You can read more about this feature in the [environments](Artifacts#environments) section.
 
