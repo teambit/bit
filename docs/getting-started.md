@@ -108,7 +108,7 @@ Bit components are a part of your code and workflow, so you can edit your Bit co
 
 The most convenient way to set a remote scope would be to create a free scope on [bitsrc.io](bitsrc.io) where you can also contribute and find communtiy components.
 
-Alternatively, you can host a scope on any POSIX machine (you can host multiple scopes on the same machine/VM). All communication is done over SSH. You should already have everything set up for such access to your machine (public keys, firewall rules, etc...), and only focus on the specific requirements to host Bit.
+Alternatively, you can host a scope on any POSIX machine (you can host multiple scopes on the same machine/VM). All communication is done over SSH.
 
 Follow these steps to host your own scope:
 
@@ -116,11 +116,11 @@ Follow these steps to host your own scope:
 
 2. Create a directory on your machine.
     
-    `mkdir ~/bit/utils`
+    `mkdir scopy && cd scopy`
 
 3. Initialize a bare Bit scope in the new folder.
     
-    `cd ~/bit/utils && bit init --bare`
+    `bit init --bare`
 
 4. In your own development machine, use the `remote` command to add the new remote scope to your project.
     

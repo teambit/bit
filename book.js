@@ -5,7 +5,7 @@ module.exports = {
   root: './docs',
   title: 'Bit - distributed component manager',
   structure: {
-    readme: 'INTRODUCTION.md', // TODO - replace to INTRODUCTION.md
+    readme: 'INTRODUCTION.md',
   },
   author: 'Rany',
   language: 'en',
