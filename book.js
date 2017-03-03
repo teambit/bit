@@ -1,27 +1,31 @@
-// { 
-//   "gitbook": "2.5.2",
-//   "structure": { 
-//     "summary": "docs/SUMMARY.md" 
-//   } 
-// }
-
 const pkg = require('./package.json');
 
 module.exports = {
-    // Documentation for GitBook is stored under "docs"
-    root: './docs',
-    title: 'GitBook Toolchain Documentation',
-
-    // Use the "official" theme
-    plugins: ['sitemap'],
-
-    variables: {
-        version: pkg.version
+// Documentation for GitBook is stored under "docs"
+  root: './docs',
+  title: 'Bit - distributed component manager',
+  structure: {
+    readme: 'INTRODUCTION.md' // TODO - replace to INTRODUCTION.md
+  },
+  author: 'Rany',
+  language: 'en',
+  gitbook: '>= 3.2.0',
+  plugins: ['sitemap', 'prism', '-highlight'],
+  variables: {
+    version: pkg.version
+  },
+  pluginsConfig: {
+    sitemap: {
+      hostname: 'https://teambit.github.io/bit/'
     },
-
-    pluginsConfig: {
-        sitemap: {
-            hostname: 'https://toolchain.gitbook.com'
-        }
+    sharing: {
+      facebook: true,
+      twitter: true,
+      google: false,
+      weibo: false,
+      instapaper: false,
+      vk: false,
+      all: [ 'facebook', 'google', 'twitter', 'weibo', 'instapaper' ]
     }
+  }
 };
