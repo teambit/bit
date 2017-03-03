@@ -51,15 +51,15 @@ Extracting a component from your code and using it across repositories can take 
 npm install bit-bin -g
 ```
 
-For more installation methods, please check our wiki's [installation section](https://github.com/teambit/bit/wiki/install).
+For more installation methods, please check our wiki's [installation section](https://teambit.github.io/bit/installation.html).
 
 ## Quick start
 
-Here is a [Quick getting started manual](https://github.com/teambit/bit/wiki/Getting-Started).
+Here is a [getting started guide](https://teambit.github.io/bit/basics.html).
 
 ## Documentation
 
-Head over to the [Docs](https://github.com/teambit/bit/wiki) for more information.
+Head over to the [Docs](https://teambit.github.io/bit) for more information.
 
 <p align="center">
     <a href="https://github.com/teambit/bit/wiki">
