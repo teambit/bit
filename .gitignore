@@ -73,5 +73,8 @@ tmp/
 components
 inline_components
 
+# DS_Store
+.DS_Store
+
 #vscode history
 .history
