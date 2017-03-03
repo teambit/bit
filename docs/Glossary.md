@@ -1,7 +1,7 @@
 
 The glossary defines the various Bit entities and explains the relationship between them.
 
-## Component
+# Component
 
 A code component is the smallest atomic functionality that handles a single responsibility.
 It can be a anything, for example function, class, object, array, string etc ...
@@ -16,7 +16,7 @@ It can also contain two additional (recommended) files:
 
 1. `bit.json` - contains dependencies, description, environments etc.
 
-## Component id
+# Component id
 
 There are two types of ids.
 
@@ -32,7 +32,7 @@ Consists of `<box>/<component>`.
 When you want to refer to a component located in the inline_components, you have to use the inline id.
 You can also use the inline id to refer the components from your code. `bit('array/sort')`
 
-## Scope
+# Scope
 
 A scope is a collection of boxes and components. The most basic role of the scope is to group and organize components. The scope's name appears in the component's id.
 
@@ -63,14 +63,14 @@ Use a `bit remote add` command to manually set up your own remote scope on a loc
 
 For more information on how to set a remote scope [learn more here](Getting-Started#setting-a-bit-scope).
 
-## Scope network
+# Scope network
 
 Scopes can be interconnected between themselves to form a network.
 By implementing a network, scopes can share components as dependencies.
 
 You can read more about this topic at the [Network of Bit scopes](Advanced#bits-distributed-network) section.
 
-## Box (namespace)
+# Box (namespace)
 
 Boxes are actually just namespaces. They can help organize your components.
 if you don't specify a box, the component will be created at the global box.
@@ -100,11 +100,11 @@ Important notes:
 
 - The drivers that implement the resolution algorithm will check the inline_components before going to the components directory.
 
-## components directory
+# components directory
 
 The components directory is managed by Bit. All the imported components will be there.
 
-## bit.json
+# bit.json
 
 The bit.json file is used as a configuration file for project and component levels.
 
@@ -119,7 +119,7 @@ Also, used as a prototype for defining default properties for the components in 
 
 Used for defining the component's dependencies, package dependencies, compiler, tester, and the names of impl. and spec. files.
 
-## Environment
+# Environment
 
 Bit consists of two main environments build (compile) and test.
 
