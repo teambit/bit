@@ -5,9 +5,6 @@ Other parts of the system, the Search, in particular, use that information for a
 
 The JS Docs get discovered by a Regex pattern, and parsing the docs is done by [Doctrine](https://github.com/eslint/doctrine).
 
-An alternative for using a Regex that had been taken into account was parsing the implementation file, extracting the AST and finding the docs. 
-While this method has some advantages, it requires special care for TypeScript, Flow and any other language/tool that needs compilation.
- 
 # advanced testing
 
 working on it ...
