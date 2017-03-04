@@ -164,7 +164,7 @@ Verify the version change with show command.
 
 `bit show @scopy/is-string`
 
-* you can read more about js-doc parsing [Here](advanced.md#js-docs-parsing)
+* you can read more about js-doc parsing [Here](advanced.md#js-docs-parsing "learn more about how to write documentation for components")
 
 # add-compiler
 
