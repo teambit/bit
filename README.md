@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://bitsrc.io/">
-        <img alt="Bit" src="https://s29.postimg.org/q9flqqoif/cover_github_1.png" width="500">
+        <img alt="Bit" src="https://s29.postimg.org/q9flqqoif/cover_github_1.png" width="350">
     </a>
 </p>
 
@@ -11,18 +11,20 @@
 
 <p align="center">
   <a href="https://ci.appveyor.com/project/TeamBit/bit"><img alt="Appveyor Status" src="https://ci.appveyor.com/api/projects/status/pr2caxu6awb387lr?svg=true"></a>
-  <a href="https://opensource.org/licenses/Apache-2.0"><img alt="Appveyor Status" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
+  <a href="https://opensource.org/licenses/Apache-2.0"><img alt="Appveyor Status" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a> 
+  <a href="https://github.com/teambit/bit/blob/master/CONTRIBUTING.md"><img alt="Appveyor Status" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
+  
 </p>
 
 </div>
 Bit is a code component manager written in javascript yet designed to be language agnostic.
 
-It enables you to make components reusable with zero initial configuration.
-
-Extracting a component from your code and using it across repositories can take less than 30 seconds.
+It helps you make code components such as functions, classes and more reusable with zero initial configuration. Bit uses a distributed scoping system to organize your components and take care of versioning, dependency management and even building and testing them in an isolated environment.
+ 
+You can create a scope anywhere or connect scopes together to create a distributed network. Creating a Bit component and using it across repositories prevents the need to duplicate or re-invent it over and over again.
 
 <p align="center">
-<img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="550">
+<img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
 </p>
 
 ## Features
@@ -31,9 +33,9 @@ Extracting a component from your code and using it across repositories can take 
 
 * **Zero initial configuration.** Transpiling and testing with simple  commands.
 
-* **Scoping system** Orgenize your components in multiple scopes.
+* **Scoping system.** Orgenize your components in multiple scopes.
 
-* **Distributed** Create a scope anywhere you want with `bit init --bare`
+* **Distributed.** Create a scope anywhere you want with `bit init --bare`
 
 * **Component CI.** Build and test execution in an isolated invironment.
 
@@ -69,13 +71,17 @@ Head over to the [Docs](https://teambit.github.io/bit) for more information.
 
 ## Why Bit?
 
-Before Bit, we often found ourselves re-writing or duplicating code across repositories. This wasted time and effort while making our code base harder to maintain.
+Before Bit, we often found ourselves re-writing or duplicating code across repositories over and over again. This wasted time and effort while making our code base harder to maintain.
 
-The only alternative was to spend time on boilerplating and build configuration. We also ended up having to maintain a git repo, package and CI for every small component. This requires too much overhead to be practical.
+The only alternative was to spend time on boilerplating and build configuration. We also ended up having to maintain a git repo, package and CI for every small component. This required too much overhead to be practical.
 
-We needed a tool that can save us the overhead of making code components reusable. We also needed to take care of our components through their entire lifecycle. Finally, our team needed to collaborate by using and maintaining each other's components.
+We needed a tool that can save us the overhead of making code components reusable. We also needed to take care of our components through their entire lifecycle. We also wanted to collaborate by using and maintaining each other's components.
 
 This compelled us to build Bit.
+It helped us get rid of hundreds of duplications, saved time an effort and made our code base much easier to maintain.
+It also proved valuable to performence and helped us get rid of tools we no longer needed.
+Bit made it practical to collaborate as a team working with the same components.
+In the long run, we hope Bit will help create dynamic sets of building blocks that will allow everyone to create anything.
 
 ## Feedback
 
