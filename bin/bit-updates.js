@@ -2,7 +2,7 @@ var Store = require('jfs');
 var readline = require('readline');
 var needle = require('needle');
 var child_process = require('child_process');
-var constants = require('../dist-legacy/constants');
+var constants = require('../dist/constants');
 
 var ONE_DAY = 1000 * 60 * 60 * 24;
 var url = [constants.RELEASE_SERVER,constants.BIT_INSTALL_METHOD,constants.BIT_VERSION].join('/');

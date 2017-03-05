@@ -4,16 +4,17 @@
 /* eslint-disable no-var */
 var semver = require('semver');
 var mkdirp = require('mkdirp');
-var constants = require('../dist-legacy/constants');
+var constants = require('../dist/constants');
 var roadRunner = require('roadrunner');
-var bitUpdates = require('./bit-updates')
+var bitUpdates = require('./bit-updates');
+
 var nodeVersion = process.versions.node.split('-')[0]; 
 var compatibilityStatus = getCompatibilityStatus();
 
 function getBuildDir() {
   var map = {
     current: 'dist',
-    legacy: 'dist-legacy'
+    legacy: 'dist'
   };
 
   return `../${map[compatibilityStatus]}`;

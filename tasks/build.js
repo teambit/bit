@@ -5,12 +5,12 @@ const fs = require('fs');
 const path = require('path'); 
 const sourceMaps = require('gulp-sourcemaps')
 
-const babelRc = JSON.parse(fs.readFileSync(path.resolve('.babelrc')), 'utf8');
+// const babelRc = JSON.parse(fs.readFileSync(path.resolve('.babelrc')), 'utf8');
 
 module.exports = () => gulp
   .src([
     './src/**/*.js'
   ])
   .pipe(newer('dist'))
-  .pipe(babel(babelRc.env.node5))
+  .pipe(babel())
   .pipe(gulp.dest('dist'));
