@@ -1,14 +1,30 @@
 
-# create-commit-export
+# Create your first code component
 
 ```
 TL.DR
 
+mkdir <scope-name> && cd <scope-name>
+bit init
 bit create <component-id>
 open ./inline_components/<component-id>/impl.js // write some code in impl.js
 bit commit <component-id> 'initial commit'
 bit export @this/<component-id> <remote-scope-name>
 ```
+
+**Create a local scope**
+
+Scope’s responsibility is to store and manage the components lifecycle. It's recommended to create the scope at the root of a project. You can create as many scopes as you need.
+
+**type the following in the command line.**
+
+* `mkdir hello-world` Create an empty directory.
+
+* `bit init` Initialize an empty scope.
+
+This generates a `bit.json` file and a `.bit` directory.
+
+read more about the [local scope](glossary.md#local-scope)
 
 **Create a component, debug it, commit and than export it to a remote scope.**
 
@@ -20,7 +36,7 @@ Go to a project with bit scope in it (or create one by using `bit init` in a dir
 
 `bit create is-string`
 
-This creates an implementation file in the [inline_components](GLOSSARY.md#inlinecomponents) directory.
+This creates an implementation file in the [inline_components](glossary.md#inlinecomponents) directory.
 
 2\. Write the component's implementation in the `impl.js` file created for the component.
 
@@ -78,6 +94,8 @@ Our goal is to use a component in our future work. Before exporting it to a remo
 
 Remote scopes allow you to use the components they contain in any repository or project. They also allow you to collaborate with others while using and managing your components together.
 
+**Important ! -  If you don't have a remote scope yet, please create one on [Setup a remote scope](working-with-remotes.md)**
+
 1. Export the component to the remote scope using `bit export @this/is-string @scopy`
 
 * assuming that you created `@scopy` in the [initial setup chapter](initial-setup.md#create-remote-scope)
@@ -86,7 +104,7 @@ Remote scopes allow you to use the components they contain in any repository or 
 
 * you can use `bit list @scopy` and `bit show @scopy/is-string` to verify that your component exported correctly.
 
-# import-from-different-project
+# Import a component
 
 ```
 TL.DR
@@ -110,7 +128,7 @@ import the component and save it in bit.json file.
 
 You can see that the component was exported to the project. (located in the components directory)
 
-# modify-commit-export
+# Modify a component
 
 ```
 TL.DR
@@ -166,14 +184,14 @@ Verify the version change with show command.
 
 * you can read more about js-doc parsing [Here](advanced.md#js-docs-parsing "learn more about how to write documentation for components")
 
-# add-compiler
+# Use a compiler
 
 1\. Import the [Flow environment](https://bitsrc.io/bit/envs/compilers/flow) to your local scope, and set it as default to all newly created components:
   `bit import bit.envs/compilers/babel --compiler --save`
 
 // TODO
 
-# add-tester
+# Test a component
 
 ```
 TL.DR
@@ -191,7 +209,7 @@ bit export @this/<component-id> <remote-scope>
 
 `bit import bit.envs/testers/mocha --tester --save`
 
-A tester enables you to test your components, read more about it [Here](GLOSSARY.md#tester)
+A tester enables you to test your components, read more about it [Here](glossary.md#tester)
 
 2\. Modify `bit modify @scopy/is-string`.
 3\. Add a spec.js file using `bit add-spec is-string` or you can just create spec.js file yourself yourself.
@@ -223,3 +241,7 @@ describe('#isString()', () => {
 7\. Commit the component `bit commit is-string "add unit tests"`.
 
 8\. Export to a remote scope `bit export @this/is-string @scopy`.
+
+# Find a component
+
+// TODO
