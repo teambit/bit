@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [unreleased]
+
+## [0.2.5]
+
+### Added
+
+- documentation under ./docs
+- gitbook integration
+
+### Change
+
+- change mock-require to mockery on testing mechanism
+- support node 4 with babel-preset-env + add plugins, instead of stage-0 preset
+
 ## [0.2.4]
 
 ### Added
