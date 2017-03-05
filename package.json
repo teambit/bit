@@ -36,7 +36,7 @@
     "jfs": "^0.2.6",
     "loud-rejection": "^1.6.0",
     "mkdirp": "^0.5.1",
-    "mock-require": "^2.0.1",
+    "mockery": "^2.0.0",
     "needle": "^1.4.3",
     "npmi": "^2.0.1",
     "ora": "^1.1.0",

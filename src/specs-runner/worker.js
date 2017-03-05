@@ -1,12 +1,21 @@
+// TODO - move to language specific driver.
+
 const serializeError = require('serialize-error');
+const bit = require('bit-js');
 
 try {
   const implFilePath = process.env.__impl__;
   const specsFilePath = process.env.__specs__;
   const testerFilePath = process.env.__tester__;
 
+  const mockery = require('mockery');
+  mockery.enable({
+    warnOnReplace: false,
+    warnOnUnregistered: false,
+    useCleanCache: true,
+  }); // enable mocks on process
+  
   const tester = require(testerFilePath);
-  const mock = require('mock-require');
   
   // define the __impl__ global
   global.__impl__ = implFilePath;
@@ -21,15 +30,20 @@ try {
   // register modules
   if (tester.modules) {
     for (const m in tester.modules) { // eslint-disable-line
-      mock(m, tester.modules[m]);
+      mockery.registerMock(m, tester.modules[m]);
     }
   }
 
+  mockery.registerMock('bit-js', bit); // register bit-js on require
+  global.bit = bit; // register bit-js on bit global variable
+
   tester.run(specsFilePath)
   .then((results) => {
+    mockery.disable();
     return process.send({ type: 'results', payload: results });
   })
   .catch((err) => {
+    mockery.disable();
     return process.send({ type: 'error', payload: serializeError(err) });
   });
 } catch (e) {
