@@ -2,7 +2,7 @@
 
 ### Name
 
-build-cmd - Uses the compiler defined in the bit.json in order to return the compiled version of the component.
+build-cmd - Uses the compiler defined in bit.json to return the compiled version of the component.
 
 ### Synopsis
 
@@ -23,11 +23,11 @@ For example - if a component is written in Babel, it will download Babel, and us
 
 Build a specific component.
 
-`Bit build [component ID]`
+`bit build [component ID]`
 
 Build a component in the [inline_components](artifacts.md) folder.
 
-`Bit build [component ID] -i`
+`bit build [component ID] -i`
 
 ---
 

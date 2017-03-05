@@ -10,7 +10,7 @@
   * [Test a component](getting-started.md#test-a-component)
   * [Find a component](getting-started.md#find-a-component)
 * [Bit Scope](bit-scope.md)
-  * [What is a Bit Scope?](bit-scope.md#what-is-a-scope)
+  * [What is a Bit Scope?](bit-scope.md#what-is-a-bit-scope)
   * [Component Store](bit-scope.md#component-store)
   * [Dependency Resolution and Management](bit-scope.md#dependency-resolution-and-management)
   * [Scope CI](bit-scope.md#scope-ci)

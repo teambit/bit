@@ -6,7 +6,7 @@ TL.DR
 
 mkdir <scope-name> && cd <scope-name>
 bit init
-bit create <component-id>
+bit create <namespace/component>
 open ./inline_components/<component-id>/impl.js // write some code in impl.js
 bit commit <component-id> 'initial commit'
 bit export @this/<component-id> <remote-scope-name>

@@ -15,7 +15,7 @@ Bit's first fully supported programming language is JavaScript.
 
 You can find the bit-js driver codebase [here](https://github.com/teambit/bit-js).
 
-### Installing bit-js.
+### Installing bit-js
 
 Bit Node driver is distributed as any other JavaScript package - using [NPM](https://www.npmjs.com/package/bit-node).
 
