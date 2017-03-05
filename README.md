@@ -69,14 +69,6 @@ Head over to the [Docs](https://teambit.github.io/bit) for more information.
     </a>
 </p>
 
-* [Installation](https://github.com/teambit/bit/wiki/Installation)
-* [Getting started](https://github.com/teambit/bit/wiki/getting-Started)
-* [Initial setup](https://github.com/teambit/bit/wiki/initial-setup)
-* [Basics](https://github.com/teambit/bit/wiki/Basics)
-* [Glossary](https://github.com/teambit/bit/wiki/Glossary)
-* [Drivers](https://github.com/teambit/bit/wiki/drivers)
-* [CLI reference](https://github.com/teambit/bit/wiki/CLI-Reference)
-
 ## Why Bit?
 
 Before Bit, we often found ourselves re-writing or duplicating code across repositories over and over again. This wasted time and effort while making our code base harder to maintain.
