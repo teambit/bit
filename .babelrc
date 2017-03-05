@@ -8,8 +8,11 @@
     }]
   ],
   "plugins": [
+    ["babel-plugin-transform-builtin-extend", { 
+      "globals": ["Error", "Array", "Map"]
+    }],
+    ["transform-class-properties"],
     ["transform-inline-imports-commonjs"],
-    ["transform-flow-strip-types"],
-    ["transform-class-properties"]
+    ["transform-flow-strip-types"]
   ]
 }

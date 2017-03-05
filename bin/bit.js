@@ -67,7 +67,7 @@ function updateOrLaunch(updateCommand) {
 }
 
 function loadCli() {
-  return require(`${getBuildDir()}/app.js`);
+  return require('../dist/app.js');
 }
 
 verifyCompatibility();

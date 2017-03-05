@@ -8,7 +8,7 @@ function getPath() {
   return path.join(GLOBAL_CONFIG, GLOBAL_CONFIG_FILE);
 }
 
-export default class Config extends Map<string, string> {
+export default class Config extends Map<string, string> {  
   toPlainObject() {
     return mapToObject(this);
   }
