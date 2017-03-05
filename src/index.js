@@ -2,7 +2,6 @@ const assert = require('assert').ok;
 const R = require('ramda');
 const chalk = require('chalk');
 const path = require('path');
-const mock = require('mock-require');
 const stackTrace = require('stack-trace');
 const locateBitEnvironment = require('./consumer/locate-bit-environment');
 const parseBitInlineId = require('./bit-id/parse-bit-inline-id');
@@ -82,14 +81,6 @@ load.mockComponents = (components) => {
     }
   }
 };
-
-load.mockModules = (modules) => {
-  for (const m in modules) { // eslint-disable-line
-    mock(m, modules[m]);
-  }
-};
-
-load.require = mock.reRequire;
 
 load.loadExact = resolveFromFullId;
 
