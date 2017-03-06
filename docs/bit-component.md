@@ -144,15 +144,15 @@ Implicitly reference the global namespace to make names shorter.
 # Component Configuration
 Bit components are configured via a configration file named [bit.json](configuring-bit.md#bitjson).
 
-# Component Versioning
+For more information, please check out the [bit.json](configuring-bit.md#bitjson) documantation section.
 
-Bit's goal is to 
+# Component Versioning
 
 In Bit, versions are automatically assigned to a component once its commited (using `bit commit`) to a Scope using a simple and automatic versioning mechanism.
 
 Once a component is commited from the `inline_components` directory to a Scope, Bit checks whether a version of this component exists and does one of the following:
-1. Component with the same ID
-2. 
+1. Component exists - Bit will uptick components version by one.
+2. New component (component does not exists on scope) - A new component would be created.
 
 Bit handles small code component with a single responsibility, not large packages. Such components simply tend to change less often. This made us favor strict versioning over SemVer and automatic updates. We value reliability and stability.
 
