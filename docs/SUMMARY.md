@@ -35,7 +35,7 @@
   * [Generating your SSH public key](bit-on-the-server.md#generating-your-ssh-public-key)
 * [Bit Internals](bit-internals.md)
   * [Bit Objects](bit-internals.md#bit-objects)
-  * [JsDocs parsing](bit-internals.md#jsdoc-parsing)
+  * [JSDoc parsing](bit-internals.md#jsdoc-parsing)
 * [Glossary](glossary.md)
 * [CLI Reference](cli-reference.md)
 * [Drivers](drivers.md)
