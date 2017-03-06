@@ -61,9 +61,9 @@ Here is a [getting started guide](https://teambit.github.io/bit/basics.html).
 
 ## Documentation
 
-[General-Docs](https://teambit.github.io/bit)
+[Docs](https://teambit.github.io/bit)
 
-[Installing Bit](https://teambit.github.io/bit/installation.html)
+[Installation](https://teambit.github.io/bit/installation.html)
 
 [Getting started](https://teambit.github.io/bit/getting-started.html)
 
@@ -73,11 +73,7 @@ Here is a [getting started guide](https://teambit.github.io/bit/basics.html).
 
 [Bit on the server](https://teambit.github.io/bit/bit-on-the-server.html)
 
-[Glossary](https://teambit.github.io/bit/glossary.html)
-
 [CLI refrence](https://teambit.github.io/bit/cli-reference.html)
-
-[Drivers](https://teambit.github.io/bit/drivers.html)
 
 <p align="center">
     <a href="https://github.com/teambit/bit/wiki">
