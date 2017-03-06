@@ -23,7 +23,7 @@ gets to create, maintain, test and discover code components.
 ## Component's Anatomy
 
 A Bit component's most fundamental and only mandatory file is the implementation file named `impl.js` (default name).
-The implementation file consists the component implmantation itself and its docs which are parsed to form 
+The implementation file consists the component implementation itself and its docs which are parsed to form 
 the entire component documantation (see [Component Documentation](#component-documantation) section for more info).
 
 On top of the implmantation file, two more optional files can be added:
@@ -37,25 +37,52 @@ Please note, component file names can be configured via [bit.json](configuring-b
 
 ### Component Example
 
-`impl.js`
+`impl.js` - includes the implmantation itself with its docs (later to be parsed and form the component's documantation).
 ```js
 /**
- *
+ * determines whether `val` is a reference
+ * @name isString
+ * @param {*} val value to be tested.
+ * @returns {boolean} 
+ * @example
+ *  isString('') // => true
 **/
 module.exports = function isString(val) {
   return typeof val === 'undefined';
 }
 ```
 
-`spec.js`
+`spec.js` - includes unit tests implmented using Mocha and Chai executed by the defined testing environment.
 ```js
+import { expect } from 'chai';
 
+const isString = require(__impl__);
+
+describe('#isString()', () => {
+  it('should return false if undefined is passed', () => {
+    expect(isString()).to.equal(false);
+  });
+
+  it('should return true if string is passed', () => {
+    expect(isString('foo')).to.equal(true);
+  });
+});
 ```
 
-`bit.json`
+`bit.json` - configured to handle test execution with Mocha and transpiling with Babel. 
+(Please note, this configuration can be specified)
 ```json
 {
-
+    "env": {
+        "compiler": "bit.envs/compilers/babel", // Traspiler component for implementation and unit tests files
+        "tester": "bit.envs/testers/mocha" // Testing environment component for unit test execution
+    },
+    "dependencies": {
+      "@scope/is-string": "1" // specify component dependencies (they will be resolved upon export) 
+    },
+    "packageDependencies": {
+      "user-home": "^2.0.0", // set package dependencies if needed
+    } 
 }
 ```
 
@@ -131,7 +158,7 @@ Bit handles small code component with a single responsibility, not large package
 
 # Component Documentation
 
-Documentation for packages is not fun, but if you want your code to be truely reuseable, other developers will need to have a place to learn how to use your code. We beleive that the best place to tell people how to use your code, is... well.. alongside your code. This way, when you distribute code components, and even open a code component to review it's code, the usage instruction are there (!).
+Documentation for packages is not fun, but if you want your code to be truely reuseable, other developers will need to have a place to learn how to use your code. We beleive that the best place to tell people how to use your code, is... well.. alongside your code. This way, when you distribute code components, and even open a code component to review its code, the usage instruction are there (!).
 
 This is no magic. To do this, bit utilize the 'Xdoc' format for annotating everything as a part of yoru code.
 
