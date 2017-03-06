@@ -139,18 +139,32 @@ Let's take JavaScript for example.
 
 JavaScript uses [JSDocs](http://usejsdoc.org) to create documentation on JS code. Bit knows how to read these docs, and parse them in a way that gives other users a formatted view of them, to better understand what to expect from the component before even using it.
 
+### How does it work in real life?
+Let's imagine a `pad-left` function, and write the JSdocs:
+
+```js
+/**
+ * pad a string to the left.
+ * @name leftPad
+ * @param {string} str string to pad
+ * @param {number} len total 
+ * @param {string} ch char to use for padding
+ * @returns {string} modified string
+ * @example
+ * ```js
+ *  leftPad('foo', 5) // => "  foo"
+ *  leftPad('foobar', 6) // => "foobar"
+ *  leftPad(1, 2, '0') // => "01"
+ * ```
+ */
+```
+
+When exporting the component to a scope, Bit will parse the annotations, and create a proper documentation from it. Furthermore, Bit will use the documentation to index the component, so when searching for components, a better documented code component will be more discoverable by other users.
+
 To view the docs for a component you can either open the code, or use the `show` command (which also works on [remote scopes](bit-scope.md)).
 
 ```sh
 › bit show string/pad-left
-┌────────────────────┬──────────────────────────────────────────────────┐
-│ ID                 │ string/pad-left                                  │
-├────────────────────┼──────────────────────────────────────────────────┤
-│ Compiler           │ bit.envs/compilers/flow::2                       │
-├────────────────────┼──────────────────────────────────────────────────┤
-│ Tester             │ bit.envs/testers/mocha::4                        │
-└────────────────────┴──────────────────────────────────────────────────┘
-Documentation
 ┌────────────────────┬──────────────────────────────────────────────────┐
 │ Name               │ leftPad                                          │
 ├────────────────────┼──────────────────────────────────────────────────┤
@@ -178,12 +192,30 @@ Bit has an internal search engine. This search engine uses the data parsed from 
 
 # Component Environment
 
-//TODO
+Making sure code can run everywhere is hard. To ease this process, Bit implements 'environments'.
+
+You can define your code's build and test requirements. Bit will then make sure all requirements are met when using a components. Taking the load of building a boilerplate to run code from you, to Bit.
 
 ## Build Environment
 
-//TODO
+Some programming languages need some sort of compiling done in order for them to run. If you use such language, Bit will make sure that the code you write will be able to build anywhere.
+
+Define in bit.json the required build tool your code needs. Bit will use it to get all requirements so it can build it on any environment.
+
+The build environment is a component with a set of requirements and an API for Bit to use.
+
+When you run 'bit build', Bit will download the build component and it's dependencies. Bit will use it to build your code within the scope. The outcome of this action will be a dist file that can run without any boilerplating.
 
 ## Testing Environment
 
-//TODO
+There are many libraries designated to run test cases for code. Each developer chooses the one right for him.
+
+Like build environments, Bit also support another type of environments for running tests.
+
+When running 'bit test', Bit imports the configured test environments with it's dependencies. Using the imported environment, Bit runs the tests. Bit gets the output from the test results, and outputs it to you.
+
+To run tests Bit uses a Bit component which provides an API to run the test suite with the specific test tool.
+
+## Writing Environments
+
+Bit does not contain build or test libraries. So you need to extend it to support your specific programming language and tooling. What you need to do is to implement a component designed to build or test using a specific library. Use a scope to host it, so you can reuse it later as a dependency for other components.
