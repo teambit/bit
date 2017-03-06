@@ -1,3 +1,13 @@
+**This quick guide will take you through the basics of working with Bit:**
+* [Creating a Bit component](#create-your-first-code-component)
+    * Using it in your code
+    * Commiting your component to a local Scope
+    * Exporting a component to a remote Scope
+* [Importing a component](#import-a-component)
+* [Modifying a component](#modify-a-component) 
+* [Using a compiler](#test-a-component)
+* [Testing a component](#test-a-component)
+* [Searching and finding components](#find-a-component)
 
 # Create your first code component
 
@@ -14,9 +24,9 @@ bit export @this/<component-id> <remote-scope-name>
 
 **Create a local scope**
 
-Scope’s responsibility is to store and manage the components lifecycle. It's recommended to create the scope at the root of a project. You can create as many scopes as you need.
+Bit uses [Scopes](https://teambit.github.io/bit/bit-scope.html) to store, organize and manage components. Local scopes are created for your projects. Components exported to remote scopes can be used across projects. It's recommended to create the scope at the root of a project. You can create as many scopes as you need.
 
-**type the following in the command line.**
+**Type the following in the command line.**
 
 * `mkdir hello-world` Create an empty directory.
 
@@ -24,20 +34,18 @@ Scope’s responsibility is to store and manage the components lifecycle. It's r
 
 This generates a `bit.json` file and a `.bit` directory.
 
-read more about the [local scope](glossary.md#local-scope)
+You can read more about the [local scope here](glossary.md#local-scope).
 
-**Create a component, debug it, commit and than export it to a remote scope.**
+## Create a Bit component
 
-## Create a component
-
-Go to a project with bit scope in it (or create one by using `bit init` in a directory).
+[Bit components](glossary.html#component) are organized and managed in scopes. To create your first Bit component go to a project with a bit scope in it (or create one by using `bit init` in a directory).
 
 1\. Create a Bit component:
 
 `bit create is-string`
 
 This creates an implementation file in the [inline_components](glossary.md#inlinecomponents) directory.
-
+    * Bit components contain a minimum of one `impl` file and may contain two additional files: `specs` and `bit.json` - [glossary.html#component).
 2\. Write the component's implementation in the `impl.js` file created for the component.
 
     `open ./inline_components/global/is-string/impl.js`
@@ -52,7 +60,7 @@ You can copy and paste this example:
 
 * You can see the status of all the components in your project using: `bit status`.
 
-### Use it in your code
+### Use the Bit component in your code
 
 3\. Install the bit-js module using [NPM](https://www.npmjs.com/package/bit-js) or Yarn.
 
@@ -94,7 +102,7 @@ Our goal is to use a component in our future work. Before exporting it to a remo
 
 Remote scopes allow you to use the components they contain in any repository or project. They also allow you to collaborate with others while using and managing your components together.
 
-**Important ! -  If you don't have a remote scope yet, please create one on [Setup a remote scope](working-with-remotes.md)**
+**Important -  If you don't have a remote scope yet, please create one on [Setup a remote scope](working-with-remotes.md)**
 
 1. Export the component to the remote scope using `bit export @this/is-string @scopy`
 
