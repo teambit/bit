@@ -29,23 +29,23 @@ Bit uses a distributed scoping system to organize your components and take care 
 
 ## Features
 
-* **Use components across repositories.** Use your functions/classes in multiple repos.
+* **Use components across repositories.** Use your code components (functions/classes etc.) in multiple repositories without creating duplications or having to publish packages.
 
-* **Zero initial configuration.** Transpiling and testing with simple  commands.
+* **Zero initial configuration.** Creating a new Bit component requires next to no configuration at all, and can be done directly from within the project you're working on. Transpiling and testing is done with simple commands.
 
-* **Scoping system.** Orgenize your components in multiple scopes.
+* **Scoping system.** Bit uses Scopes to organize, store and manage components. Exporting components to a remote scope makes them reusable across repositories for everyone working with this scope.
 
-* **Distributed.** Create a scope anywhere you want with `bit init --bare`
+* **Distributed network.** Scopes can be created anywhere with a simple command (bit init --bare), and can be connected to create a distributed network.
 
-* **Component CI.** Build and test execution in an isolated invironment.
+* **Component CI.** Scopes can build and test your components in an isolated environment, so that they can build and run anywhere. 
 
-* **Fast dependency resolution.** Performed on export.
+* **Fast dependency resolution.** Dependency resolution is performed on-export, so Bit doesn't have to perform any runtime resolution. Both performance and reliability are increased.
 
-* **Quick modification.** Update components with a single `bit modify` command.
+* **Quick modification.** Updating and modifying components is done with a single `bit modify` command. Components can be "brought in" for repairs, and shifted right back out.
 
-* **Simple versioning management.** Simplified incremental versioning for easier update and maintenance.
+* **Simple versioning management.** Bit uses simplified incremental versioning for components, preferring reliability and simplicity.
 
-* **Semantic search engine.** Find and use components created by you or your team.
+* **Semantic search engine.** A `bit search` CLI command kicks Bit's semantic search engine into action, searching for components created and stored in the Scopes you search.
 
 ## Installation
 
@@ -61,7 +61,23 @@ Here is a [getting started guide](https://teambit.github.io/bit/basics.html).
 
 ## Documentation
 
-Head over to the [Docs](https://teambit.github.io/bit) for more information.
+[General-Docs](https://teambit.github.io/bit)
+
+[Installing Bit](https://teambit.github.io/bit/installation.html)
+
+[Getting started](https://teambit.github.io/bit/getting-started.html)
+
+[Bit Scope](https://teambit.github.io/bit/bit-scope.html)
+
+[Bit component](https://teambit.github.io/bit/bit-component.html)
+
+[Bit on the server](https://teambit.github.io/bit/bit-on-the-server.html)
+
+[Glossary](https://teambit.github.io/bit/glossary.html)
+
+[CLI refrence](https://teambit.github.io/bit/cli-reference.html)
+
+[Drivers](https://teambit.github.io/bit/drivers.html)
 
 <p align="center">
     <a href="https://github.com/teambit/bit/wiki">
@@ -77,11 +93,9 @@ The only alternative was to spend time on boilerplating and build configuration.
 
 We needed a tool that can save us the overhead of making code components reusable. We also needed to take care of our components through their entire lifecycle. We also wanted to collaborate by using and maintaining each other's components.
 
-This compelled us to build Bit.
-It helped us get rid of hundreds of duplications, saved time an effort and made our code base much easier to maintain.
-It also proved valuable to performence and helped us get rid of tools we no longer needed.
-Bit made it practical to collaborate as a team working with the same components.
-In the long run, we hope Bit will help create dynamic sets of building blocks that will allow everyone to create anything.
+To achieve this we designed Bit - the first code component manager. Bit is a distributed manager written in javascript yet designed to be language agnostic. It allows you to make components reusable with zero initial configuration and use these components across repositories. It also helps to store, organize and manage your components. It allows you to group your components by context, while also handling versioning, dependency management, build and test execution and more. Bit also makes components easy to find and collaborate on.
+
+At the end of the day, distributed component management is deeply connected to the very basics of writing software as we want it to be. Managing code components can help us all to build great things out of smaller building blocks - together. Imagine the possibilities.
 
 ## Feedback
 
@@ -96,3 +110,6 @@ See [Contributing](CONTRIBUTING.md).
 ## License
 
 Apache License, Version 2.0
+
+
+
