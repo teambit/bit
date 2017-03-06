@@ -107,21 +107,6 @@ Our philosophy is that any functionality can be composed out of smaller pieces. 
 
 ### How Bit calculate dependencies
 
-When you build a new component, you can add as many dependencies as you need in the bit.json file.
-
-The bit export command will ensure the component will be packaged with all its dependencies.
-
-When bit push is issued, the new component, with all it’s dependencies, will all be uploaded to the scope.
-
-Once a component is pushed to a scope, the receiving scope will try to build and test the component to ensure it is, in fact, isolated.
-bit import will download the component with all of its dependencies in a single call.
-
-#### The benefits of on-export dependency resolution.
-
-1. Fast build time - When your application builds Bit does nothing but simply downloading a flat list of dependencies. That's it. Bit doesn’t have a dependency tree, so no need for recalculating and downloading more dependencies. This means a faster build time. 
-2. Reliability - Since every component is stored with its dependencies, in a tested version to work with, you can be sure it will keep working in any new environment regardless of any changes made to its dependencies (even if deleted).
-3. No duplications - Bit knows what are the exact dependencies it needs to grab, so if there are any duplications, it will simply download a single working copy. 
-
 ---
 
 ## Versioning
@@ -134,21 +119,6 @@ Bit handles small code component with a single responsibility, not large package
 
 ## Discovering code components
 
-One of the major issues with today’s package managers is that finding the right package is hard. Even if you've found the right package, you still need to figure out how to use it. 
-
-The journey from searching a certain package with an implemented functionality to finding and using it is long and full of uncertainty. This is exactly why developers end-up rewriting stuff and duplicating it.
-
-Bit solves both these issues by design.
-
-1. Finding the right component - 
-    Bit has an internal search engine capable of searching in all the scopes connected to your computer. This search engine can be accessed from your CLI so that you do not need to leave your development environment while still having access to external resources.
-The search engine works by indexing and quering over the documentation you write in the components themselves (there are no README.md files at all). That code itself is the most up-to-date place to point out the component’s functionality. Keeping the code and comments updated will make sure you can find the components you need.
-2. Learning to use components - 
-    Normally, while writing and maintaining packages, you need to have a README.md file of sort that other developers can read and learn how to use your pacakge.
-    Maintaining it means more manual work, ending up in these files often not being up-to-date. They may even contain false information, and cause frustration when trying to use a new package.
-    Keeping the component documentation right with the code itself means that it'll always be updated, approachable, and easy to use.
-3. Combining search and documentation - 
-    By integrating the search engine to the code's documentation we can assure that you will find the most accurate result, which is sure to be maintained and working, with the latest version of the component.
 
 ---
 
