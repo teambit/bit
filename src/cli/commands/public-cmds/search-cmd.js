@@ -5,6 +5,7 @@ import { searchAdapter } from '../../../search';
 import { formatter } from '../../../search/searcher';
 import { Doc } from '../../../search/indexer';
 import loader from '../../../cli/loader';
+import { LOCAL_SCOPE_NOTATION } from '../../../constants';
 import { BEFORE_REMOTE_SEARCH } from '../../../cli/loader/loader-messages';
 
 export default class Search extends Command {
@@ -18,7 +19,7 @@ export default class Search extends Command {
 
   action([scope, query, ]: [string, string[], ], { reindex }: { reindex: boolean }) {
     const queryStr = query.join(' ');
-    if (scope !== '@this') {
+    if (scope !== LOCAL_SCOPE_NOTATION) {
       loader.start(BEFORE_REMOTE_SEARCH({ scope, queryStr })); // eslint-disable-line
       return searchAdapter.searchRemotely(queryStr, scope, reindex);
     }
