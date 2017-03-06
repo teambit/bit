@@ -43,3 +43,11 @@ console.log(isString('Hello World');
 ```
 
 That's it :)
+
+### Runtime Dependency Resolution
+
+// TODO
+
+## Implementing a Bit Driver
+
+// TODO

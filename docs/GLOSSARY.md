@@ -1,6 +1,26 @@
 
 The glossary defines the various Bit entities and explains the relationship between them.
 
+* [Component](#component)
+* [Component id](#component-id)
+  * [Full id](#full-id)
+  * [Inline id](#inline-id)
+* [Scope](#scope)
+  * [Local Scope](#local-scope)
+  * [Remote Scope](#remote-scope)
+* [Scope network](#scope-network)
+* [Box (namespace)](#box-namespace)
+* [inline_components](#inlinecomponents)
+* [components directory](#components-directory)
+* [bit.json](#bitjson)
+  * [Project bit.json](#project-bitjson)
+  * [Component bit.json](#component-bitjson)
+* [Environment](#environment)
+  * [Build environment](#build-environment)
+  * [Compiler](#compiler)
+  * [Test environment](#test-environment)
+  * [Tester](#tester)
+
 # Component
 
 A code component is the smallest atomic functionality that handles a single responsibility.
@@ -83,7 +103,7 @@ To use components within boxes, you can append the box name to the component's I
 Example: bit('array\sort');
 Example: bit('do-work');
 
-## inline_components
+### inline_components
 
 The inline_components directory is a workspace for creating new components.
 

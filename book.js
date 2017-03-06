@@ -6,9 +6,9 @@ module.exports = {
   title: 'Bit - distributed component manager',
   structure: {
     readme: 'INTRODUCTION.md',
-    summary: 'SUMMARY_NEW.md'
+    summary: 'SUMMARY.md'
   },
-  author: 'Rany',
+  author: 'teambit',
   language: 'en',
   gitbook: '>= 3.2.0',
   plugins: ['sitemap', 'prism', '-highlight'],

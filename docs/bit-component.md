@@ -7,7 +7,7 @@
 
 //TODO
 
-#Component Documantation
+#Component Documentation
 
 //TODO
 
