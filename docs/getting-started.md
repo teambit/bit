@@ -1,7 +1,9 @@
+
 **This quick guide will take you through the basics of working with Bit:**
+
 * [Creating a Bit component](#create-your-first-code-component)
-    * Using it in your code
-    * Commiting your component to a local Scope
+  * [Using it in your code](#use-the-bit-component-in-your-code)
+  * [Committing your component to a local Scope](#commit-your-code])
 * [Exporting a component to a remote Scope](#setup-a-remote-scope)
 * [Importing a component](#import-a-component)
 * [Modifying a component](#modify-a-component)
@@ -10,17 +12,6 @@
 * [Searching and finding components](#find-a-component)
 
 # Create your first code component
-
-```
-Summary
-
-mkdir <scope-name> && cd <scope-name>
-bit init
-bit create <namespace/component>
-open ./inline_components/<component-id>/impl.js // write some code in impl.js
-bit commit <component-id> 'initial commit'
-bit export @this/<component-id> <remote-scope-name>
-```
 
 **Create a local scope**
 
@@ -102,6 +93,16 @@ Our goal is to use a component in our future work. Before exporting it to a remo
 
 * `@this`, is the local scope annotation. That means when you want to refer to your local scope, you can use `@this` instead the real scope name (located in the scope.json file under the .bit directory)
 
+```
+Summary
+
+mkdir <scope-name> && cd <scope-name>
+bit init
+bit create <namespace/component>
+open ./inline_components/<component-id>/impl.js // write some code in impl.js
+bit commit <component-id> 'initial commit'
+```
+
 # Setup a Remote Scope
 
 Create and use as many [remote scopes](bit-on-the-server.md) as you need to distribute your code, to be later reused across projects and development teams.
@@ -161,15 +162,13 @@ Go back to the 'Hello-world' directory, where you first created your component a
 
 * you can use `bit list @scopy` and `bit show @scopy/is-string` to verify that your component exported correctly.
 
+```
+summery
+
+bit export @this/<component-id> <remote-scope-name>
+```
+
 # Import a component
-
-```
-Summary
-
-mkdir <different-project> && cd <different-project>
-bit init
-bit import <@remote-scope>/<component-id> --save
-```
 
 Open a new directory somewhere else.
 
@@ -185,15 +184,15 @@ import the component and save it in bit.json file.
 
 You can see that the component was exported to the project. (located in the components directory)
 
-# Modify a component
-
 ```
 Summary
 
-bit modify <component-id>
-bit commit <component-id>
-bit export @this<component-id> <remote-scope>
+mkdir <different-project> && cd <different-project>
+bit init
+bit import <@remote-scope>/<component-id> --save
 ```
+
+# Modify a component
 
 First, a few notes about versioning - Bit doesn’t use semantic versioning. Instead, it supports only incremented component versioning. For example, the first version of a component will be 1, the second will be 2 and so forth.
 
@@ -241,18 +240,15 @@ Verify the version change with show command.
 
 * you can read more about js-doc parsing [Here](advanced.md#js-docs-parsing "learn more about how to write documentation for components")
 
-# Use a compiler
-
 ```
 Summary
 
-bit import <compiler-id> --compiler --save
-bit modify <remote-scope>/<component-id>
-open inline_components/<box><component>/bit.json // add compiler
-open inline_components/<box><component>/impl.js // make some changes
-bit commit <component-id> "<commit-message>"
-bit export @this/<component-id> <remote-scope>
+bit modify <component-id>
+bit commit <component-id>
+bit export @this<component-id> <remote-scope>
 ```
+
+# Use a compiler
 
 1\. Import the [Babel environment](https://bitsrc.io/bit/envs/compilers/babel) to your local scope, and set it as default to all newly created components:
 
@@ -305,20 +301,18 @@ bit export @this/<component-id> <remote-scope>
 
 5\. Export to a remote scope `bit export @this/is-string @scopy`.
 
-# Test a component
-
 ```
 Summary
 
-bit import <tester-id> --tester --save
+bit import <compiler-id> --compiler --save
 bit modify <remote-scope>/<component-id>
-touch inline_components/<box><component>/spec.js // create spec file
-open inline_components/<box><component>/spec.js // add specs
-open inline_components/<box><component>/bit.json // add tester
-bit test --inline <component-id>
+open inline_components/<box><component>/bit.json // add compiler
+open inline_components/<box><component>/impl.js // make some changes
 bit commit <component-id> "<commit-message>"
 bit export @this/<component-id> <remote-scope>
 ```
+
+# Test a component
 
 1\. Import the [Mocha environment](https://bitsrc.io/bit/envs/testers/mocha) to your local scope, and set it as default to all newly created components:
 
@@ -375,6 +369,19 @@ describe('#isString()', () => {
 8\. Commit the component `bit commit is-string "add unit tests"`.
 
 9\. Export to a remote scope `bit export @this/is-string @scopy`.
+
+```
+Summary
+
+bit import <tester-id> --tester --save
+bit modify <remote-scope>/<component-id>
+touch inline_components/<box><component>/spec.js // create spec file
+open inline_components/<box><component>/spec.js // add specs
+open inline_components/<box><component>/bit.json // add tester
+bit test --inline <component-id>
+bit commit <component-id> "<commit-message>"
+bit export @this/<component-id> <remote-scope>
+```
 
 # Find a component
 
