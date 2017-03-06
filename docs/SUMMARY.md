@@ -1,9 +1,10 @@
 
 * [Why Code Component Management?](why-code-component-manager.md)
 * [Installing Bit](installation.md)
-* [Working with remotes](working-with-remotes.md)
 * [Getting Started](getting-started.md)
   * [Create your first code component](getting-started.md#create-your-first-code-component)
+  * [Setup a Remote Scope](getting-started.md#setup-a-remote-scope)
+  * [Export a component](getting-started.md#export-a-component)
   * [Import a component](getting-started.md#import-a-component)
   * [Modify a component](getting-started.md#modify-a-component)
   * [Use a compiler](getting-started.md#use-a-compiler)
