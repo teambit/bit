@@ -27,7 +27,9 @@ npm install bit-js -s
 
 This will add the bit-node package as a dependency.
 
-### Using JavaScript Components
+# Drivers
+
+## Using JavaScript Components
 
 To use Bit components within your JS code you need to first require bit-node:
 
@@ -45,9 +47,5 @@ console.log(isString('Hello World');
 That's it :)
 
 ### Runtime Dependency Resolution
-
-// TODO
-
-## Implementing a Bit Driver
 
 // TODO

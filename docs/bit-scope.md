@@ -1,5 +1,7 @@
 
-# What is a Bit Scope?
+# Bit Scope
+
+## What is a Bit Scope?
 Bit's Scope is one of the fundamental entities of Bit. A Scope is a dynamic codebase responsible to end-to-end management of code components.
 Scopes are where components are stored, tested, built and integrate with each other.
  
@@ -8,13 +10,13 @@ For example, a team in an organization may want
 
 Each component belongs in a scope (or multiple scopes). therefore, the scope's name appears in the component's ID path (which consists of owner/scope/box/component).
 
-# Component Store
+## Component Store
 Bit stores all components with version in a content-addressable filesystem.
 This enables Bit to...
 
 // TODO
 
-# Dependency Management
+## Dependency Management
 
 Bit's dependency resolution and management was especially designed for the use code components.
 Therefore, we designed its dependency management mechanism with few relevent and major constraints in mind:
@@ -38,13 +40,13 @@ bit import will download the component with all of its dependencies in a single 
 2. Reliability - Since every component is stored with its dependencies, in a tested version to work with, you can be sure it will keep working in any new environment regardless of any changes made to its dependencies (even if deleted).
 3. No duplications - Bit knows what are the exact dependencies it needs to grab, so if there are any duplications, it will simply download a single working copy. 
 
-# Scope CI
+## Scope CI
 
 Bit comes with a built-in slim CI mechanism.
 
 // TODO
 
-# Discoverability
+## Discoverability
 
 One of the biggest problems for developers today is being able to find and reuse existing code components. Bit was created with exactly this problem in mind, so we place high importance on component discoverability.
 
