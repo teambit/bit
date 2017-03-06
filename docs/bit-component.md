@@ -182,10 +182,6 @@ Examples
 
 ```
 
-### Discoverability using documentation
-
-Bit has an internal search engine. This search engine uses the data parsed from the code component documentation to build indexes and search in them. So by better documenting your components, other users will discover them easily.
-
 # Component Debugging
 
 // TODO
@@ -196,6 +192,8 @@ Making sure code can run everywhere is hard. To ease this process, Bit implement
 
 You can define your code's build and test requirements. Bit will then make sure all requirements are met when using a components. Taking the load of building a boilerplate to run code from you, to Bit.
 
+All environment are basically a code component that exports an API that allows Bit to either build or test a code component.
+
 ## Build Environment
 
 Some programming languages need some sort of compiling done in order for them to run. If you use such language, Bit will make sure that the code you write will be able to build anywhere.
@@ -204,7 +202,38 @@ Define in bit.json the required build tool your code needs. Bit will use it to g
 
 The build environment is a component with a set of requirements and an API for Bit to use.
 
-When you run 'bit build', Bit will download the build component and it's dependencies. Bit will use it to build your code within the scope. The outcome of this action will be a dist file that can run without any boilerplating.
+When you run `bit build`, Bit will download the build component and it's dependencies. Bit will use it to build your code within the scope. The outcome of this action will be a dist file that can run without any boilerplating.
+
+### Using Build Environment
+
+To show how a build environment works, lets take this code, written in [flow](https://flowtype.org).
+
+```js
+/* @flow */
+module.exports = function isString(val: string): boolean {
+  return typeof val === 'string';
+};
+```
+
+Now we can add the flow environment to the component's bit.json file.
+
+```json
+{
+    "env": {
+        "compiler": "bit.envs/compilers/flow"
+    }
+}
+```
+
+and after running the `bit build` command, a `dist.js` file will be generated in component's folder:
+
+```js
+'use strict';
+
+module.exports = function isString(val) {
+  return typeof val === 'string';
+};
+```
 
 ## Testing Environment
 
@@ -212,9 +241,52 @@ There are many libraries designated to run test cases for code. Each developer c
 
 Like build environments, Bit also support another type of environments for running tests.
 
-When running 'bit test', Bit imports the configured test environments with it's dependencies. Using the imported environment, Bit runs the tests. Bit gets the output from the test results, and outputs it to you.
+When running `bit test`, Bit imports the configured test environments with its dependencies. Using the imported environment, Bit runs the tests. Bit gets the output from the test results, and outputs it to you.
 
 To run tests Bit uses a Bit component which provides an API to run the test suite with the specific test tool.
+
+### Using Test Environment
+
+Just as build environment, a test environment is also defined in the component's bit.json file. However, to test a component you need to implement some tests for it.
+
+Adding tests to a component is very simple. Just create a file name `spec` in the component folder, implement, add the proper test environment to the bit.json file, and run using `bit test <component ID>`
+
+For example, lets implement tests for the `isString` code component from the privous example.
+
+Add the following `spec.js` file:
+
+```js
+import { expect } from 'chai';
+
+const isString = require(__impl__);
+
+describe('#isString()', () => {
+  it('should return true if `foo` is passed', () => {
+    expect(isString('foo')).to.equal(true);
+  });
+});
+```
+
+And the following test environment to bit.json
+
+```json
+{
+    "env": {
+        "compiler": "bit.envs/compilers/flow",
+        "tester": "bit.envs/testers/mocha"
+    }
+}
+```
+
+Now run the tests using `bit test <component ID>`, and see the results summary.
+
+```sh
+› bit test -i is-string
+tests passed
+total duration - 4ms
+
+✔   #isString() should return true if `foo` is passed - 1ms
+```
 
 ## Writing Environments
 
