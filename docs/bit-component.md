@@ -33,7 +33,7 @@ On top of the implmantation file, two more optional files can be added:
 2. `bit.json` - 
   Configuration file for handling of dependencies, environment, naming conventions and more.
 
-Please note, component file names can be configured via bit.json, `spec.js` and `impl.js` are the default names.
+Please note, component file names can be configured via [bit.json](configuring-bit.md#bitjson), `spec.js` and `impl.js` are the default names.
 
 ### Component Example
 
@@ -113,6 +113,9 @@ Implicitly reference the global namespace to make names shorter.
 ```
 @this/is-string
 ```
+
+# Component Configuration
+Bit components are configured via a configration file named [bit.json](configuring-bit.md#bitjson).
 
 # Component Versioning
 
