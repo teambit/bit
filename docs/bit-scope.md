@@ -19,9 +19,9 @@ This enables Bit to...
 Bit's dependency resolution and management was especially designed for the use code components.
 Therefore, we designed its dependency management mechanism with few relevent and major constraints in mind:
 
-1. **Installation (import) performance** - To make 
-2. **Predictable and deterministic** - The same dependencies will be installed at the same exact version, anywhere and acoross every machine to avoid dependency hell and deep dependency debugging.
-3. **Component availability** - components should be made always available 
+1. ***Installation (import) performance*** - To make 
+2. ***Predictable and deterministic*** - The same dependencies will be installed at the same exact version, anywhere and acoross every machine to avoid dependency hell and deep dependency debugging.
+3. ***Component availability*** - components should be made always available 
 
 When you build a new component, you can add as many dependencies as you need in the bit.json file.
 
