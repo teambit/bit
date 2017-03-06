@@ -4,17 +4,60 @@
 A component is Bit's most fundamental entity. A code component is a testable and a reusable definition of a 
 certain atomic functionality that handles a single and a well-defiend responsibility.
 
-It can be almost anything, from a function, class, object, array, string to a React or AngularJS components.
+It can be almost anything, from a function, class, object, array, string to a React or an AngularJS component.
 
-Bit's component is designed with testability 
-Code components were designed to prefer composability, means we encourage adding dependencies over sourcing or any other usage pattern.
+Bit's component was designed with testability and simplicity in mind, our goal was to make it as simple as it 
+gets to create, maintain, test and discover code components.
 
-A Bit component consists of one file that includes the implementation: `impl.js`.
+* ***Creation simplicity*** - 
+  Creating a component requires only one mandatory file which is the implementation file itself 
+  (tests and configration are optional). 
+  Transpiling, testing, docs and other boilerplate mechanics can be set using the [component environment](#component-environment).
+* ***Maintainable*** - 
+  [Automatic versioning](#component-versioning), a [slim built-in Scope CI mechanism](bit-scope.md#scope-ci) 
+  and a [dependency management mechanism](bit-scope.md#dependency-resolution-and-management) designed to center performance, consistency and predictability. 
+* ***Discoverable*** - 
+  Each component is indexed and made fully discoverable by a natural-language search that aimes to understand and cluster components by its functionality.
+  See our [Scope Discoverability](bit-scope.md#discoverability) section for more information.
 
-It can also contain two more optional files:
+## Component's Anatomy
 
-1. `spec.js` - contains the component's unit tests.
-2. `bit.json` - contains dependencies, description, environments etc.
+A Bit component's most fundamental and only mandatory file is the implementation file named `impl.js` (default name).
+The implementation file consists the component implmantation itself and its docs which are parsed to form 
+the entire component documantation (see [Component Documentation](#component-documantation) section for more info).
+
+On top of the implmantation file, two more optional files can be added:
+
+1. `spec.js` - 
+  contains the component's unit tests, designated to be executed by the configured [Testing Environment](#testing-environment).
+2. `bit.json` - 
+  Configuration file for handling of dependencies, environment, naming conventions and more.
+
+Please note, component file names can be configured via bit.json, `spec.js` and `impl.js` are the default names.
+
+### Component Example
+
+`impl.js`
+```js
+/**
+ *
+**/
+module.exports = function isString(val) {
+  return typeof val === 'undefined';
+}
+```
+
+`spec.js`
+```js
+
+```
+
+`bit.json`
+```json
+{
+
+}
+```
 
 # Component ID
 
