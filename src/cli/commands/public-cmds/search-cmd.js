@@ -5,20 +5,29 @@ import { searchAdapter } from '../../../search';
 import { formatter } from '../../../search/searcher';
 import { Doc } from '../../../search/indexer';
 import loader from '../../../cli/loader';
-import { LOCAL_SCOPE_NOTATION } from '../../../constants';
+import { LOCAL_SCOPE_NOTATION, SEARCH_DOMAIN } from '../../../constants';
 import { BEFORE_REMOTE_SEARCH } from '../../../cli/loader/loader-messages';
+const requestify = require('requestify');
 
 export default class Search extends Command {
-  name = 'search <scope> <query...>';
+  name = 'search <query...>';
   description = 'search for components';
   alias = '';
   opts = [
+    ['s', 'scope <scopename>', 'search in scope'],
     ['r', 'reindex', 're-index all components']
   ];
   loader = true;
 
-  action([scope, query, ]: [string, string[], ], { reindex }: { reindex: boolean }) {
+  action([query, ]: [string[], ], { scope, reindex }: { scope: string, reindex: boolean }) {
     const queryStr = query.join(' ');
+    if (!scope) { // web search
+      const url = `https://${SEARCH_DOMAIN}/search/?q=${queryStr}`;
+      return requestify.get(url).then((response) => {
+        const body = response.getBody();
+        return Promise.resolve(body.payload.hits);
+      });
+    }
     if (scope !== LOCAL_SCOPE_NOTATION) {
       loader.start(BEFORE_REMOTE_SEARCH({ scope, queryStr })); // eslint-disable-line
       return searchAdapter.searchRemotely(queryStr, scope, reindex);

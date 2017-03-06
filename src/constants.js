@@ -80,6 +80,8 @@ export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
 
 export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
 
+export const SEARCH_DOMAIN = 'api.bitsrc.io';
+
 export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
 
 /**
@@ -137,7 +139,7 @@ export const SOURCES_MAP = 'sources.json';
 export const GLOBAL_REMOTES = 'global-remotes.json';
 
 /**
- * bits cache directory 
+ * bits cache directory
  */
 export const GLOBAL_BIT_CACHE = path.join(CACHE_ROOT, 'bits');
 
@@ -148,7 +150,7 @@ export const BIT_CONTAINER_FOLDERS = ['sources'];
 /**
  * modules cache filename
  */
-export const MODULES_CACHE_FILENAME = path.join(MODULES_CACHE_DIR, '.roadrunner.json'); 
+export const MODULES_CACHE_FILENAME = path.join(MODULES_CACHE_DIR, '.roadrunner.json');
 
 /**
  * auth cache fileName
