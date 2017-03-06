@@ -1,4 +1,21 @@
 
+# What is a Bit component?
+
+A component is Bit's most fundamental entity. A code component is a testable and a reusable definition of a 
+certain atomic functionality that handles a single and a well-defiend responsibility.
+
+It can be almost anything, from a function, class, object, array, string to a React or AngularJS components.
+
+Bit's component is designed with testability 
+Code components were designed to prefer composability, means we encourage adding dependencies over sourcing or any other usage pattern.
+
+A Bit component consists of one file that includes the implementation: `impl.js`.
+
+It can also contain two more optional files:
+
+1. `spec.js` - contains the component's unit tests.
+2. `bit.json` - contains dependencies, description, environments etc.
+
 # Component ID
 
 Bit components are universally and uniquely identified using a Bit ID to support the distributed nature of a Scope.
@@ -32,6 +49,12 @@ string/is
 
 In this case, Bit will look for a directory named `string` with a component directory named `is` in your `inline_components` directory.
 
+A component ID may also include a specific version using the `::` annotation.
+For example, a reference to a component named `is-string` on Scope `foo` in version `2` could be done like that:
+
+```
+@foo/is-string::2
+```
 
 ## Global namespace
 
@@ -50,7 +73,13 @@ Implicitly reference the global namespace to make names shorter.
 
 # Component Versioning
 
-Bit only supports incremental versioning. One might wonder if this is a lesser way of doing things. If using SemVer is better, because you get small fixes automatically. But, as we see in new packaging tools (OSTree, Snappy), the later approach is being increasingly unused. SemVer is based on a developer decision, and as such, is not bullet-proof.
+Bit's goal is to 
+
+In Bit, versions are automatically assigned to a component once its commited (using `bit commit`) to a Scope using a simple and automatic versioning mechanism.
+
+Once a component is commited from the `inline_components` directory to a Scope, Bit checks whether a version of this component exists and does one of the following:
+1. Component with the same ID
+2. 
 
 Bit handles small code component with a single responsibility, not large packages. Such components simply tend to change less often. This made us favor strict versioning over SemVer and automatic updates. We value reliability and stability.
 
@@ -74,10 +103,10 @@ The JS Docs get discovered by a Regex pattern, and parsing the docs is done by [
 
 //TODO
 
-# Build Environment
+## Build Environment
 
 //TODO
 
-# Testing Environment
+## Testing Environment
 
 //TODO
