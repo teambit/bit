@@ -36,7 +36,7 @@ export default class Search extends Command {
     return searchAdapter.searchLocally(queryStr, reindex);
   }
 
-  report(searchResults: Array<Doc>): string {
+  report(searchResults: Array<Doc|*>): string {
     if (!searchResults.length) {
       return chalk.red('No Results');
     }
