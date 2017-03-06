@@ -1,5 +1,3 @@
-// TODO make this section address only the use of remote scope and not installation.
-// installation should be only part of `Bit on the Server` section!
 
 # Working with remotes
 
