@@ -46,20 +46,8 @@ Bit comes with a built-in slim CI mechanism.
 
 # Discoverability
 
-One of the major issues with today’s package managers is that finding the right package is hard. Even if you've found the right package, you still need to figure out how to use it.
+One of the biggest problems for developers today is being able to find and reuse existing code components. Bit was created with exactly this problem in mind, so we place high importance on component discoverability.
 
-The journey from searching a certain package with an implemented functionality to finding and using it is long and full of uncertainty. This is exactly why developers end-up rewriting stuff and duplicating it.
+Bit has an internal search engine capable of searching all the scopes connected to your computer. This search engine can be accessed from your CLI so you can access external resources without leaving your development environment. The search engine works by indexing components along with their documentation and querying them using fuzzy search techniques like abbreviations and stemming. This allows more flexibility when searching components, because you don’t have to remember exactly how you called your component in order to easily retrieve it.
 
-Bit solves both these issues by design.
-
-1. Finding the right component -
-    Bit has an internal search engine capable of searching in all the scopes connected to your computer. This search engine can be accessed from your CLI so that you do not need to leave your development environment while still having access to external resources.
-    The search engine works by indexing and querying over the documentation you write in the components themselves (there are no README.md files at all). That code itself is the most up-to-date place to point out the component’s functionality. Keeping the code and comments updated will make sure you can find the components you need.
-
-2. Learning to use components -
-    Normally, while writing and maintaining packages, you need to have a README.md file of sort that other developers can read and learn how to use your package.
-    Maintaining it means more manual work, ending up in these files often not being up-to-date. They may even contain false information, and cause frustration when trying to use a new package.
-    Keeping the component documentation right with the code itself means that it'll always be updated, approachable, and easy to use.
-
-3. Combining search and documentation -
-    By integrating the search engine to the code's documentation we can assure that you will find the most accurate result, which is sure to be maintained and working, with the latest version of the component.
+The paradigm of keeping your code components in small packages also facilitates discoverability. Normally, while writing and maintaining packages, you need to have a README file that explains the whole project to other developers. Maintaining it means more manual work, which in many cases ends up in out-of-date information. Keeping component documentation right with the code itself means that it will always be up-to-date, accessible and easy to use. Bit search also makes sure to provide you only with the most recent version of each component.
