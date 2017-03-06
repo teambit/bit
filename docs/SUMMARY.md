@@ -29,8 +29,6 @@
   * [Generating your SSH public key](bit-on-the-server.md#generating-your-ssh-public-key)
 * [Bit Internals](bit-internals.md)
   * [Bit Objects](bit-internals.md#bit-objects)
-  * [Maintenance and Data Recovery](bit-internals.md#maintenance-and-data-recovery)
-* [Distributed Bit](distributed-bit.md)
 * [Glossary](glossary.md)
 * [CLI Reference](cli-reference.md)
 * [Drivers](drivers.md)
