@@ -3,14 +3,21 @@
 
 Bit components are universally and uniquely identified using a Bit ID to support the distributed nature of a Scope.
 
+We designed the component ID to make it easy for developers to create and maintain code components without the need to resolve different naming conflicts and to enable semantic organization of code components on a Scope. 
+
 Each Bit component has its own ID which is a composition of the scope name, namespace and name of the component.
+
+```
+@<scope>/[namespace]/<name>
+```
+
 For example, a component named `string/is` stored in a Scope named `foo` would have the following ID:
 
 ```
 @foo/string/is
 ```
 
-In case the component's source is stored on your local scope, you can also use the `@this` keyword syntactic-sugar to reference it.
+In case the component's source is stored on your local scope, you can also use the `@this` annotation as a syntactic-sugar to reference it.
 
 ```
 @this/string/is
@@ -24,6 +31,22 @@ string/is
 ```
 
 In this case, Bit will look for a directory named `string` with a component directory named `is` in your `inline_components` directory.
+
+
+## Global namespace
+
+When creating a component without a namespace, it will be automatically assigned to the `global` namespace.
+For example, a component named `is-string` created without a namespace on your local scope, can be addressed in two different ways.
+
+Explicitly reference the global namespace
+```
+@this/global/is-string
+```
+
+Implicitly reference the global namespace to make names shorter.
+```
+@this/is-string
+```
 
 # Component Versioning
 
