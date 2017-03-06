@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.2.6]
+
+### Fixed
+
+- bug with @ on scope annotation
+- improved readme and docs
+
 ## [0.2.5]
 
 ### Added
