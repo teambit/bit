@@ -85,7 +85,46 @@ Bit handles small code component with a single responsibility, not large package
 
 # Component Documentation
 
-// TODO - add examples and why we parse js-docs.
+Documentation for packages is not fun, but if you want your code to be truely reuseable, other developers will need to have a place to learn how to use your code. We beleive that the best place to tell people how to use your code, is... well.. alongside your code. This way, when you distribute code components, and even open a code component to review it's code, the usage instruction are there (!).
+
+This is no magic. To do this, bit utilize the 'Xdoc' format for annotating everything as a part of yoru code.
+
+Let's take JavaScript for example.
+
+JavaScript uses [JSDocs](http://usejsdoc.org) to create documentation on JS code. Bit knows how to read these docs, and parse them in a way that gives other users a formatted view of them, to better understand what to expect from the component before even using it.
+
+To view the docs for a component you can either open the code, or use the `show` command (which also works on [remote scopes](bit-scope.md)).
+
+```sh
+› bit show string/pad-left
+┌────────────────────┬──────────────────────────────────────────────────┐
+│ ID                 │ string/pad-left                                  │
+├────────────────────┼──────────────────────────────────────────────────┤
+│ Compiler           │ bit.envs/compilers/flow::2                       │
+├────────────────────┼──────────────────────────────────────────────────┤
+│ Tester             │ bit.envs/testers/mocha::4                        │
+└────────────────────┴──────────────────────────────────────────────────┘
+Documentation
+┌────────────────────┬──────────────────────────────────────────────────┐
+│ Name               │ leftPad                                          │
+├────────────────────┼──────────────────────────────────────────────────┤
+│ Description        │ pad a string to the left.                        │
+├────────────────────┼──────────────────────────────────────────────────┤
+│ Args               │ (str: string, len: number, ch: string)           │
+├────────────────────┼──────────────────────────────────────────────────┤
+│ Returns            │ string -> modified string                        │
+└────────────────────┴──────────────────────────────────────────────────┘
+Examples
+
+ leftPad('foo', 5) // => "  foo"
+ leftPad('foobar', 6) // => "foobar"
+ leftPad(1, 2, '0') // => "01"
+
+```
+
+### Discoverability using documentation
+
+Bit has an internal search engine. This search engine uses the data parsed from the code component documentation to build indexes and search in them. So by better documenting your components, other users will discover them easily.
 
 ### js-docs parsing
 
