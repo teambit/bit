@@ -19,7 +19,7 @@
 //       this.getPath(),
 //       bitId.box,
 //       bitId.name,
-//       bitId.getScopeWithoutRemoteAnnotaion(),
+//       bitId.getScopeWithoutRemoteAnnotation(),
 //       bitId.version
 //     );
 //   }
@@ -36,7 +36,7 @@
 //       this.getPath(),
 //       bitId.box,
 //       bitId.name,
-//       bitId.getScopeWithoutRemoteAnnotaion()
+//       bitId.getScopeWithoutRemoteAnnotation()
 //     );
 //     const files = glob.sync(path.join(dirToLookIn, '*'));
 //     const versions = files.map((file: string): number => {
@@ -66,7 +66,7 @@
 //     const box = bitId.box;
 //     const name = bitId.name;
 //     const version = bitId.version;
-//     const scope = bitId.getScopeWithoutRemoteAnnotaion();
+//     const scope = bitId.getScopeWithoutRemoteAnnotation();
 //     // @HACKALERT
 //     // @TODO - maybe check for node_modules
 //     const bitPath = path.join(this.getPath(), box, name, scope, version);

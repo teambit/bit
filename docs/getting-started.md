@@ -2,8 +2,8 @@
 **This quick guide will take you through the basics of working with Bit:**
 
 * [Creating a Bit component](#create-your-first-code-component)
-    * [Using it in your code]
-    * [Committing your component to a local Scope]
+  * [Using it in your code](#use-the-bit-component-in-your-code)
+  * [Committing your component to a local Scope](#commit-your-code])
 * [Exporting a component to a remote Scope](#setup-a-remote-scope)
 * [Importing a component](#import-a-component)
 * [Modifying a component](#modify-a-component)

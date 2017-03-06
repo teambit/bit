@@ -45,6 +45,7 @@ import diff from './array-diff';
 import filterObject from './filter-object';
 import removeContainingDirIfEmpty from './remove-containing-dir-if-empty';
 import isValidIdChunk from './is-valid-id-chunk';
+import isValidScopeName from './is-valid-scope-name';
 
 export {
   parseSSHUrl,
@@ -94,4 +95,5 @@ export {
   toResultObject,
   allSettled,
   isValidIdChunk,
+  isValidScopeName,
 };

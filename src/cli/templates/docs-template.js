@@ -50,7 +50,7 @@ export const paintDoc = (doc: Doclet) => {
 
 export default (docs: ?Doclet[]) => {
   if (R.isEmpty(docs) || R.isNil(docs)) {
-    return 'No documentation found';
+    return '\nNo documentation found';
   }
   // $FlowFixMe
   return `\n${paintHeader('Documentation')}${docs.map(paintDoc).join('')}`;
