@@ -203,9 +203,12 @@ First, a few notes about versioning - Bit doesn’t use semantic versioning. Ins
 `bit modify @scopy/is-string`
 
 The component is also in the staging area as you can see by typing `bit status`.
+
 When you'll commit it, the version will increment itself.
 
-2\. Make some changes. you can also copy and paste the following code.
+2\. Open the impl.jd file and make some changes. you can also copy and paste the following code.
+
+`open ./inline_components/global/is-string/impl.js`
 
 <pre>
   <code class="js language-js">
@@ -243,9 +246,10 @@ Verify the version change with show command.
 ```
 Summary
 
-bit modify <component-id>
-bit commit <component-id>
-bit export @this<component-id> <remote-scope>
+bit modify <component>
+open ./inline_components/<namespace><component>/impl.js // make some changes
+bit commit <component>
+bit export @this<component> <remote-scope>
 ```
 
 # Use a compiler
@@ -297,7 +301,7 @@ bit export @this<component-id> <remote-scope>
 
 * you can check the compiled file by using `bit build -i is-string`.
 
-4\. Commit the component `bit commit is-string "add unit tests"`.
+4\. Commit the component `bit commit is-string "add babel compiler"`.
 
 5\. Export to a remote scope `bit export @this/is-string @scopy`.
 
@@ -321,8 +325,11 @@ bit export @this/<component-id> <remote-scope>
 A tester enables you to test your components, read more about it [Here](glossary.md#tester)
 
 2\. Modify `bit modify @scopy/is-string`.
+
 3\. Create a spec.js in the component directory file using `touch inline_components/global/is-string/spec.js`.
+
 4\. Open the spec.js file: `open inline_components/global/is-string/spec.js`
+
 5\. Paste this implementation or write tests of your own:
 
 ```js
@@ -336,16 +343,18 @@ describe('#isString()', () => {
 
   it('should return false if `1` is passed', () => {
     expect(isString(1)).to.equal(false);
+  });
 
   it('should return false if `[]` is passed', () => {
-    expect(isString([1]])).to.equal(false);
+    expect(isString([1])).to.equal(false);
   });
+});
 ```
 
 * note that the `__impl__` is a reference to the impl file injected by the testing environment.
 * you can't use node modules like you would normal do, because the component should be exported to an isolated environment and run the specs there. you can only require the modules that the tester provides,
 
-6\. Add the tester to the component's bit.json `open inline_components/<box><component>/bit.json`
+6\. Add the tester to the component's bit.json `open ./inline_components/global/is-string/bit.json`
 
 * Copy and paste the following:
 
