@@ -2,7 +2,7 @@
 * [Creating a Bit component](#create-your-first-code-component)
     * Using it in your code
     * Commiting your component to a local Scope
-    * Exporting a component to a remote Scope
+* [Exporting a component to a remote Scope](#setup-a-remote-scope)
 * [Importing a component](#import-a-component)
 * [Modifying a component](#modify-a-component) 
 * [Using a compiler](#test-a-component)
@@ -45,7 +45,8 @@ You can read more about the [local scope here](glossary.md#local-scope).
 `bit create is-string`
 
 This creates an implementation file in the [inline_components](glossary.md#inlinecomponents) directory.
-    * Bit components contain a minimum of one `impl` file and may contain two additional files: `specs` and `bit.json` - [glossary.html#component).
+    * Bit components contain a minimum of one `impl` file and may contain two additional files: `specs` and `bit.json` - [learn more here](glossary.html#component).
+    
 2\. Write the component's implementation in the `impl.js` file created for the component.
 
     `open ./inline_components/global/is-string/impl.js`
@@ -84,11 +85,11 @@ bit-js will resolve the component from the inline_components directory.
 
 ### Commit your code
 
-Our goal is to use a component in our future work. Before exporting it to a remote scope, it needs to committed from your inline_components to your local scope.
+Our goal is to use a component in our future work. Before exporting it to a remote scope, it needs to committed from your inline_components to your project's local scope.
 
 6\. `bit commit is-string 'initial commit'`
 
-* Your component moved from the `inline_components` directory into the `components` directory. and you can still use it with `bit-js` same way as before.
+* Your component moved from the `inline_components` directory into the `components` directory. You can still use it with `bit-js` the same way as before.
 
 * You can view the component you just added to your scope: `bit show @this/is-string`
 
