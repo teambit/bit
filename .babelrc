@@ -9,7 +9,6 @@
   ],
   "plugins": [
     ["transform-flow-strip-types"],
-    ["/Users/ran/Projects/bit-webpack-plugin/test/babel-plugin.js"],
     ["babel-plugin-transform-builtin-extend", { 
       "globals": ["Error", "Array", "Map"]
     }],
