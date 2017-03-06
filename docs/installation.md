@@ -1,4 +1,6 @@
-## Using NPM 
+# Installation
+
+## Using NPM
 
 If you have NPM installed, you can use it to install Bit: (recommended)
 

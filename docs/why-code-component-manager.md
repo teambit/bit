@@ -1,7 +1,9 @@
 
-As the world moves to a multi-repository architecture we increasingly need to use the same code components in multiple places again and again. People are re-inventing and duplicating code components already written before on daily basis. 
+# Why Code Component Management?
 
-This wastes precious time and effort which can be better invested in building new things. Components can be improved and evolved without having to start from scratch every time. Duplicating components across repositories isn't any better, as maintaining or changing a single function becomes an odyssey, and the larger the code base the worse it gets. 
+As the world moves to a multi-repository architecture we increasingly need to use the same code components in multiple places again and again. People are re-inventing and duplicating code components already written before on daily basis.
+
+This wastes precious time and effort which can be better invested in building new things. Components can be improved and evolved without having to start from scratch every time. Duplicating components across repositories isn't any better, as maintaining or changing a single function becomes an odyssey, and the larger the code base the worse it gets.
 
 Up until Bit, the only way to make components reusable was to spend too much time on boilerplating and build configuration just to end up having to maintain a git repo, a package and CI for every small component. This isn’t practical and is very hard to scale.
 

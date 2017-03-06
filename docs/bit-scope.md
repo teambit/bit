@@ -14,7 +14,7 @@ This enables Bit to...
 
 // TODO
 
-# Dependency Resolution and Management
+# Dependency Management
 
 Bit's dependency resolution and management was especially designed for the use code components.
 Therefore, we designed its dependency management mechanism with few relevent and major constraints in mind:
