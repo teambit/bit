@@ -13,7 +13,7 @@ export function flattenDependencies(dependencies: VersionDependencies[]) {
     }, {}));
 }
 
-export function flattenDependencyIds(dependencies: VersionDependencies[], repo: Repository): Promise<BitId[]> {
+export function flattenDependencyIds(dependencies: VersionDependencies[], repo: Repository): Promise<BitId[]> { // eslint-disable-line
   return Promise.all(dependencies.map((dep) => {
     const depCompId = dep.component.id;
     depCompId.scope = dep.sourceScope;

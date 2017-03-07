@@ -261,7 +261,7 @@ export default class Scope {
         versions.map(version => version.toObjects(this.objects))));
   }
 
-  getObject(hash: string): BitObject {
+  getObject(hash: string): Promise<BitObject> {
     return new Ref(hash).load(this.objects);
   }
 
@@ -546,7 +546,7 @@ export default class Scope {
     environment?: ?bool,
     save?: ?bool,
     verbose?: ?bool
-  }): Promise<?Results> {
+  }): Promise<?any> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run specs on remote scopes');
     }
