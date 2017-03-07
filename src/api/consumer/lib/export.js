@@ -14,8 +14,8 @@ export default function exportAction(id: string, remote: string, save: ?bool) {
         .write({ bitDir: consumer.getPath() })
         .then(() => component);
       }
-      
+
       return component;
     });
   });
-} 
+}

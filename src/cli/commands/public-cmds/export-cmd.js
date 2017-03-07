@@ -9,12 +9,12 @@ export default class Export extends Command {
   description = 'export local scope refs to a remote scope.';
   alias = 'e';
   opts = [
-    ['s', 'save', 'save into bit.json']
+    ['f', 'forget', 'do not save to bit.json after export']
   ];
   loader = true;
-  
-  action([id, remote]: [string, string], { save }: any): Promise<*> {
-    return exportAction(id, remote, save).then(() => ({ id, remote }));
+
+  action([id, remote]: [string, string], { forget }: any): Promise<*> {
+    return exportAction(id, remote, !forget).then(() => ({ id, remote }));
   }
 
   report({ id, remote }: { id: string, remote: string }): string {

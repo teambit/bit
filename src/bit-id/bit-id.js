@@ -1,7 +1,7 @@
 /** @flow */
 import Version from '../version';
 import { InvalidBitId, InvalidIdChunk } from './exceptions';
-import { 
+import {
   LATEST_BIT_VERSION,
   VERSION_DELIMITER,
   LOCAL_SCOPE_NOTATION,
@@ -11,7 +11,7 @@ import {
 import { contains, isValidIdChunk, isValidScopeName } from '../utils';
 
 export type BitIdProps = {
-  scope: string;  
+  scope: string;
   box?: string;
   name: string;
   version: string;
@@ -31,8 +31,7 @@ export default class BitId {
   }
 
   changeScope(newScope: string) {
-    this.scope = newScope;
-    return this;
+    return new BitId({ scope: newScope, box: this.box, name: this.name, version: this.version });
   }
 
   getScopeWithoutRemoteAnnotation() {
@@ -70,7 +69,7 @@ export default class BitId {
       version = newVersion;
     }
 
-    const splited = id.split('/'); 
+    const splited = id.split('/');
     if (splited.length === 3) {
       const [scope, box, name] = splited;
       if (scope === LOCAL_SCOPE_NOTATION && !realScopeName) {

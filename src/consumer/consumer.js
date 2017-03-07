@@ -74,13 +74,14 @@ export default class Consumer {
     return Component.loadFromInline(bitDir, this.bitJson);
   }
 
-  exportAction(rawId: string, rawRemote: string) { 
+  exportAction(rawId: string, rawRemote: string) {
     // @TODO - move this method to api, not related to consumer
-    const bitId = BitId.parse(rawId, this.scope.name);
-    
-    return this.scope.exportAction(bitId, rawRemote)
+    const originalBitId = BitId.parse(rawId, this.scope.name);
+    const newBitId = originalBitId.changeScope(this.scope.name);
+
+    return this.scope.exportAction(originalBitId, rawRemote)
       .then(componentDependencies => this.writeToComponentsDir([componentDependencies])
-        .then(() => this.removeFromComponents(bitId.changeScope(this.scope.name))) // @HACKALERT
+        .then(() => this.removeFromComponents(newBitId)) // @HACKALERT
         .then(() => componentDependencies.component)
       );
   }
@@ -95,19 +96,19 @@ export default class Consumer {
         } else if (R.isNil(this.testerId) || R.isNil(this.compilerId)) {
           return Promise.reject(new NothingToImport());
         }
-      } 
-      
+      }
+
       return this.scope.getMany(dependencies)
         .then((componentDependenciesArr) => {
           return this.writeToComponentsDir(componentDependenciesArr)
           .then(() => {
-            return withEnvironments ? 
+            return withEnvironments ?
             this.scope.installEnvironment({
               ids: [this.testerId, this.compilerId],
               consumer: this,
               verbose
             })
-            .then(envComponents => ({ 
+            .then(envComponents => ({
               dependencies: componentDependenciesArr,
               envDependencies: envComponents,
             })) : { dependencies: componentDependenciesArr };
@@ -124,7 +125,7 @@ export default class Consumer {
           .then(() => ({ dependencies: componentDependenciesArr }));
       });
     };
-    
+
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) return importAccordingToConsumerBitJson();
     return importSpecificComponents();
@@ -140,7 +141,7 @@ export default class Consumer {
     id: BitInlineId, withSpecs: boolean, withBitJson: boolean }): Promise<Component> {
     const inlineBitPath = id.composeBitPath(this.getPath());
 
-    return Component.create({ 
+    return Component.create({
       name: id.name,
       box: id.box,
       withSpecs,
@@ -162,7 +163,7 @@ export default class Consumer {
   removeFromComponents(id: BitId): Promise<any> {
     // @TODO - also consider
     // @HACKALERT - also consider version when removing a directory from components
-    
+
     const componentsDir = this.getComponentsPath();
     const componentDir = path.join(
       componentsDir,
@@ -274,7 +275,7 @@ export default class Consumer {
       const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
       const bitJsonP = ConsumerBitJson.load(projectPath);
       return Promise.all([scopeP, bitJsonP])
-      .then(([scope, bitJson]) => 
+      .then(([scope, bitJson]) =>
         resolve(
           new Consumer({
             projectPath,
