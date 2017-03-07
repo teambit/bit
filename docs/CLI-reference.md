@@ -361,33 +361,27 @@ search-cmd - Search a component in a scope.
 
 ### Synopsis
 
-`bit search [--scope | -s]="scope name" [--reindex | -r]`
+`bit search scope_name search_query`
 
 ### Description
 
 Search in either local or remote scope for a component. The search covers the name, description and docs of each component.
 
-Each scope has its own index of components. You can tell a scope to reindex itself before issuing the search, to get the most updated results (will take a bit longer to search).
+Each scope has its own index of components. 
 
-### Options
+If you search in the current scope, use `bit search @this search_query`.
 
-```
--s, --scope
-    Select in which of the remote scopes to search in.
-
--r, --reindex
-    Preform a reindex for all components in scope before running the search.
-```
+To search in another scope, use `bit search @scope_name search_query`
 
 ### Examples
 
-Search for a component in a scope.
+Search for a component in a current scope.
 
-`bit search "< search query> -s <scope name>`
+`bit search @this concat array`
 
-Reindex and then perform a search.
+Search for a component in a remote scope.
 
-`bit search "< search query> -s <scope name> -r`
+`bit search @my_remote_scope concat array`
 
 ---
 
@@ -399,7 +393,7 @@ show-cmd - Show metadata of a given component.
 
 ### Synopsis
 
-`bit show [--inline | -i] [component ID]
+`bit show [--inline | -i] [component ID]`
 
 ### Description
 
