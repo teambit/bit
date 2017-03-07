@@ -20,7 +20,7 @@ It makes code components such as functions, classes and more reusable without th
 Bit uses a distributed Scoping system to store, organize and manage your components. Scopes benefit from managing small components by using simplified versioning, faster on-export dependency management, a semantic search engine and more. Scopes also take care of your component's CI by building and testing components in an isolated environment. You can create a scope anywhere or connect scopes together to create a distributed network. 
 
 <p align="center">
-<img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
+  <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
 </p>
 
 ## Features
@@ -68,9 +68,7 @@ Here is a [getting started guide](https://teambit.github.io/bit/getting-started.
 [CLI refrence](https://teambit.github.io/bit/cli-reference.html)
 
 <p align="center">
-    <a href="https://github.com/teambit/bit/wiki">
-        <img alt="Bit" src="https://storage.googleapis.com/bit-docs/bit-commands.png">
-    </a>
+  <img alt="Bit" src="https://storage.googleapis.com/bit-docs/bit-commands.png">
 </p>
 
 ## Why Bit?
