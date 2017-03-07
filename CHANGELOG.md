@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Fixed
+
+- Solved bug with specsResults pass attribute not updating after ci update.
+
 ## [0.2.6]
 
 ### Fixed
