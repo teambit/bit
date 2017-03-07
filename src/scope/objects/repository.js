@@ -43,10 +43,10 @@ export default class Repository {
       .then((fileContents) => {
         return BitObject.parseObject(fileContents, this.types);
       })
-      .catch(() => null); // Wat is dat ?
+      .catch(() => null);
   }
 
-  list():Promise<[]> {
+  list():Promise<BitObject[]> {
     // @TODO - write
     const filterComponents = refs =>
       refs.filter(ref => ref instanceof Component);
@@ -55,7 +55,7 @@ export default class Repository {
       return glob(path.join('*', '*'), { cwd: this.getPath() }, (err, matches) => {
         if (err) reject(err);
         const refs = matches.map(str => str.replace(path.sep, ''));
-        Promise.all(refs.map(ref => this.load(ref)))
+        return Promise.all(refs.map(ref => this.load(ref)))
         .then(filterComponents)
         .then(resolve);
       });
@@ -120,7 +120,7 @@ export default class Repository {
         const options = {};
         if (this.scope.groupName) options.gid = resolveGroupId(this.scope.groupName);
         return writeFile(this.objectPath(object.hash()), contents, options);
-      }); 
+      });
   }
 }
 

@@ -5,39 +5,39 @@ import buildQuery from './query-builder';
 
 const numOfResultsPerPage = 15;
 
-function totalHits(index: Promise<any>, query: string) {
-  return new Promise((resolve, reject) => {
-    return index.then((indexInstance) => {
-      indexInstance.totalHits({
-        query: buildQuery(query)
-      }, (err, count) => {
-        if (err) reject(err);
-        resolve(JSON.stringify(count));
-      });
-    });
-  });
-}
+// function totalHits(index: Promise<any>, query: string) {
+//   return new Promise((resolve, reject) => {
+//     return index.then((indexInstance) => {
+//       indexInstance.totalHits({
+//         query: buildQuery(query)
+//       }, (err, count) => {
+//         if (err) reject(err);
+//         resolve(JSON.stringify(count));
+//       });
+//     });
+//   });
+// }
 
-function countDocs(index: Promise<any>) {
-  return new Promise((resolve, reject) => {
-    return index.then((indexInstance) => {
-      indexInstance.countDocs((err, info) => {
-        if (err) reject(err);
-        resolve(info);
-      });
-    });
-  });
-}
+// function countDocs(index: Promise<any>) {
+//   return new Promise((resolve, reject) => {
+//     return index.then((indexInstance) => {
+//       indexInstance.countDocs((err, info) => {
+//         if (err) reject(err);
+//         resolve(info);
+//       });
+//     });
+//   });
+// }
 
-function getDoc(index: Promise<any>, docIds: string[]) {
-  return new Promise((resolve, reject) => {
-    return index.then((indexInstance) => {
-      indexInstance.get(docIds).on('data', function (doc) {
-        // console.log(doc);
-      });
-    });
-  });
-}
+// function getDoc(index: Promise<any>, docIds: string[]) {
+//   return new Promise((resolve, reject) => {
+//     return index.then((indexInstance) => {
+//       indexInstance.get(docIds).on('data', function (doc) {
+//         // console.log(doc);
+//       });
+//     });
+//   });
+// }
 
 
 
@@ -49,12 +49,12 @@ function getDoc(index: Promise<any>, docIds: string[]) {
 function sortSearchResults(results: Array<any>): Array<any> {
   return results.sort((a, b) => {
     if (a.score !== b.score) return a.score - b.score;
-    return a.document.name.length - b.document.name.length
+    return a.document.name.length - b.document.name.length;
   });
 }
 
 function formatter(doc: Doc|*): string {
-  if (doc.owner) { // from web search
+  if (doc.owner && typeof doc.owner === 'string' && typeof doc.scope === 'string') { // from web search
     return `> ${doc.owner}.${doc.scope}/${doc.box}/${doc.name}`;
   }
   return `> ${doc.box}/${doc.name}`;
@@ -68,7 +68,7 @@ function formatter(doc: Doc|*): string {
  * @return {Promise}
  */
 function search(queryStr: string, path: string): Promise<Doc[]> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const index = serverlessIndex.initializeIndex(path);
     const searchResults = [];
     const query = buildQuery(queryStr);

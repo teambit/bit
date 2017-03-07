@@ -3,7 +3,7 @@ import path from 'path';
 import { BitId, BitIds } from '../bit-id';
 import { forEach, writeFile } from '../utils';
 import Scope from './scope';
-import Bit from '../consumer/component'; 
+import Bit from '../consumer/component';
 import { SOURCES_MAP } from '../constants';
 
 export function getPath(scopePath: string) {
@@ -22,6 +22,7 @@ export class SourcesMap extends Map<string, BitIds> {
     return super.get(bitId.toString(true));
   }
 
+  // $FlowFixMe
   delete(bitId: BitId): SourcesMap {
     super.delete(bitId.toString(true));
     return this;
@@ -57,7 +58,7 @@ export class SourcesMap extends Map<string, BitIds> {
     forEach(json, (val, key) => {
       matrix.push([key, val.map(bitDep => BitId.parse(bitDep))]);
     });
-    
+
     return new SourcesMap(scope, matrix);
   }
 }
