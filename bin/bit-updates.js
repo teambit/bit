@@ -38,17 +38,22 @@ function _exec(command,cb) {
 function runUpdate(updateCommand){
   var previousCommand = 'bit ' + process.argv.slice(2).join(' ');
   
-  if (!!~previousCommand.indexOf(constants.SKIP_UPDATE_FLAG)) return _exec(previousCommand);
   _askUser(function (shouldUpdate) {
     if (shouldUpdate) _exec(updateCommand, function() { _exec(previousCommand)});
     else _exec(previousCommand)
   });
 }
 
+function shouldSkipUpdate(){
+  var cmd = 'bit ' + process.argv.slice(2).join(' ');
+  return (!!~cmd.indexOf(constants.SKIP_UPDATE_FLAG));
+}
+
 /**
  * Check for updates every day and output a nag message if there's a newer version.
  */
 function checkUpdate(cb) {
+  if (shouldSkipUpdate()) return cb();
   var lastUpdateCheck = _getCache('lastUpdateCheck');
   if (lastUpdateCheck && Date.now() - lastUpdateCheck < ONE_DAY) cb();
   else { needle.get(url, function(err, res) {

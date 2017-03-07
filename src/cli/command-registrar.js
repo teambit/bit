@@ -2,7 +2,7 @@
 import serializeError from 'serialize-error';
 import commander from 'commander';
 import chalk from 'chalk';
-import type Command from './command';   
+import type Command from './command';
 import defaultHandleError from './default-error-handler';
 import { empty, first } from '../utils';
 import loader from './loader';
@@ -117,11 +117,14 @@ export default class CommandRegistrar {
       const concrete = commanderCmd
         .command(command.name, null, { noHelp: command.private })
         .description(command.description)
-        .alias(command.alias);
+        .alias(command.alias)
 
       command.opts.forEach(([alias, name, description]) => {
         concrete.option(createOptStr(alias, name), description);
       });
+      
+      // attach skip-version to all commands
+      concrete.option('--skip-update', 'Skips auto updates');
       
       command.commands.forEach((nestedCmd) => {
         register(nestedCmd, concrete);
@@ -131,7 +134,7 @@ export default class CommandRegistrar {
     }
     
     this.commands.forEach(cmd => register(cmd, commander));
-  } 
+  }
 
   outputHelp() {
     const args = process.argv.slice(2);
@@ -153,7 +156,7 @@ export default class CommandRegistrar {
     }
 
     return this;
-  } 
+  }
   
   run() {
     this.registerBaseCommand();
