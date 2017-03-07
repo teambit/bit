@@ -53,15 +53,11 @@ For more installation methods, please check our wiki's [installation section](ht
 
 ## Quick start
 
-Here is a [getting started guide](https://teambit.github.io/bit/basics.html).
+Here is a [getting started guide](https://teambit.github.io/bit/getting-started.html).
 
 ## Documentation
 
 [Docs](https://teambit.github.io/bit)
-
-[Installation](https://teambit.github.io/bit/installation.html)
-
-[Getting started](https://teambit.github.io/bit/getting-started.html)
 
 [Bit Scope](https://teambit.github.io/bit/bit-scope.html)
 
