@@ -3,36 +3,36 @@
 
 ## What is a Bit component?
 
-A component is Bit's most fundamental entity. A code component is a testable and a reusable definition of a 
+A component is Bit's most fundamental entity. A code component is a testable and a reusable definition of a
 certain atomic functionality that handles a single and a well-defiend responsibility.
 
 It can be almost anything, from a function, class, object, array, string to a React or an AngularJS component.
 
-Bit's component was designed with testability and simplicity in mind, our goal was to make it as simple as it 
+Bit's component was designed with testability and simplicity in mind, our goal was to make it as simple as it
 gets to create, maintain, test and discover code components.
 
-* ***Creation simplicity*** - 
-  Creating a component requires only one mandatory file which is the implementation file itself 
-  (tests and configration are optional). 
+* ***Creation simplicity*** -
+  Creating a component requires only one mandatory file which is the implementation file itself
+  (tests and configration are optional).
   Transpiling, testing, docs and other boilerplate mechanics can be set using the [component environment](#component-environment).
-* ***Maintainable*** - 
-  [Automatic versioning](#component-versioning), a [slim built-in Scope CI mechanism](bit-scope.md#scope-ci) 
-  and a [dependency management mechanism](bit-scope.md#dependency-resolution-and-management) designed to center performance, consistency and predictability. 
-* ***Discoverable*** - 
+* ***Maintainable*** -
+  [Automatic versioning](#component-versioning), a [slim built-in Scope CI mechanism](bit-scope.md#scope-ci)
+  and a [dependency management mechanism](bit-scope.md#dependency-resolution-and-management) designed to center performance, consistency and predictability.
+* ***Discoverable*** -
   Each component is indexed and made fully discoverable by a natural-language search that aimes to understand and cluster components by its functionality.
   See our [Scope Discoverability](bit-scope.md#discoverability) section for more information.
 
 ### Component's Anatomy
 
 A Bit component's most fundamental and only mandatory file is the implementation file named `impl.js` (default name).
-The implementation file consists the component implementation itself and its docs which are parsed to form 
+The implementation file consists the component implementation itself and its docs which are parsed to form
 the entire component documantation (see [Component Documentation](#component-documantation) section for more info).
 
 On top of the implmantation file, two more optional files can be added:
 
-1. `spec.js` - 
+1. `spec.js` -
   contains the component's unit tests, designated to be executed by the configured [Testing Environment](#testing-environment).
-2. `bit.json` - 
+2. `bit.json` -
   Configuration file for handling of dependencies, environment, naming conventions and more.
 
 Please note, component file names can be configured via [bit.json](configuring-bit.md#bitjson), `spec.js` and `impl.js` are the default names.
@@ -45,7 +45,7 @@ Please note, component file names can be configured via [bit.json](configuring-b
  * determines whether `val` is a reference
  * @name isString
  * @param {*} val value to be tested.
- * @returns {boolean} 
+ * @returns {boolean}
  * @example
  *  isString('') // => true
 **/
@@ -71,7 +71,7 @@ describe('#isString()', () => {
 });
 ```
 
-`bit.json` - configured to handle test execution with Mocha and transpiling with Babel. 
+`bit.json` - configured to handle test execution with Mocha and transpiling with Babel.
 (Please note, this configuration can be specified)
 ```json
 {
@@ -80,11 +80,11 @@ describe('#isString()', () => {
         "tester": "bit.envs/testers/mocha" // Testing environment component for unit test execution
     },
     "dependencies": {
-      "@scope/is-string": "1" // specify component dependencies (they will be resolved upon export) 
+      "@scope/is-string": "1" // specify component dependencies (they will be resolved upon export)
     },
     "packageDependencies": {
       "user-home": "^2.0.0", // set package dependencies if needed
-    } 
+    }
 }
 ```
 
@@ -92,7 +92,7 @@ describe('#isString()', () => {
 
 Bit components are universally and uniquely identified using a Bit ID to support the distributed nature of a Scope.
 
-We designed the component ID to make it easy for developers to create and maintain code components without the need to resolve different naming conflicts and to enable semantic organization of code components on a Scope. 
+We designed the component ID to make it easy for developers to create and maintain code components without the need to resolve different naming conflicts and to enable semantic organization of code components on a Scope.
 
 Each Bit component has its own ID which is a composition of the scope name, namespace and name of the component.
 
@@ -176,7 +176,7 @@ Let's imagine a `pad-left` function, and write the JSdocs:
  * pad a string to the left.
  * @name leftPad
  * @param {string} str string to pad
- * @param {number} len total 
+ * @param {number} len total
  * @param {string} ch char to use for padding
  * @returns {string} modified string
  * @example
@@ -213,7 +213,24 @@ Examples
 
 ## Component Debugging
 
-// TODO
+**javascript**
+
+Some IDEs (Integrated Development Environment) such as [IntelliJ](https://www.jetbrains.com/idea/) and [Visual Studio Code](https://code.visualstudio.com/) have A built in debugger.
+
+If you want to use the debugger on your bit components, in most cases you only need to put a breakpoint in the implementation file and the debugger will stop at the breakpoint.
+
+In some cases you want to use a compiler, which creates a dist/dist.js file in your component root directory,
+in these cases, the dist/dist.js will be the file that runs.
+
+You can attach a breakpoint in the dist/dist.js, and it will work, but debugging a compiled file is no fun. Therefore bit compilers will supply sourcemaps and put them in the dist directory. Most IDEs have features to support sourcemaps for debugging, let's take vscode for example.
+
+If you attach a breakpoint on a file, vscode will try to identify the compiled version of it and bind the breakpoint in order to give the developer the experience of breakpoint in a pre compiled code (that's not actually runs by node).
+
+All you need to do is to tell vscode where is the outFiles directory, and because the outFiles directory of bit is the components directory just add this to the `launch.json` file:
+
+`"outFiles": [ "${workspaceRoot}/components/**/*.js" ]`
+
+[Read some more about vscode node-debugger handle sourcemaps](https://code.visualstudio.com/docs/editor/node-debugging#_source-maps).
 
 ## Component Environment
 
