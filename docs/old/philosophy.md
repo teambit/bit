@@ -40,15 +40,15 @@ This will make sure that the consumer of your package will not need to install B
 ## Best practices for Bit components
 
 ### Naming
-Component names should be clear. 
+Component names should be clear.
 
-A clear name provides more clarity as to what a component actually does. 
+A clear name provides more clarity as to what a component actually does.
 
 Prefer short and descriptive names. If more namespacing and separation are needed, use scopes and boxes.
- 
+
 ### Focused components
 
-Writing small and focus components can be tricky. 
+Writing small and focus components can be tricky.
 
 To encourage this design principle, we built Bit to handle components as small and separated as possible. When exporting a component Bit only allows one file for implementation, a second file for testing and a third for metadata. This encourages you to strip away everything which isn’t relevant to the code functionality itself.
 
@@ -78,7 +78,7 @@ Keep your APIs short, simple, and easy to remember.
 
 ### Avoid globals
 
-Globals, static fields, and singletons are dangerous. Avoid using them when designing your components. 
+Globals, static fields, and singletons are dangerous. Avoid using them when designing your components.
 Data types
 
 It's best to assume generic types for vectors, quaternions, matrices, and so forth. It makes it easier to compose with other modules, so you can avoid "boxing and unboxing" objects across different components.
@@ -89,7 +89,7 @@ It's best to assume generic types for vectors, quaternions, matrices, and so for
 
 While writing code means we’re always designing new things, the majority of the building blocks we use were already written before.
 
-When looking at the top 10k Javascript repositories on GitHub, we learned that the simple functionality “is-string” was implemented in more than 100 different ways. The top 10 implementations were duplicated more than 1000 times. Really, this shouldn’t happen.
+When looking at the top 10k JavaScript repositories on GitHub, we learned that the simple functionality “is-string” was implemented in more than 100 different ways. The top 10 implementations were duplicated more than 1000 times. Really, this shouldn’t happen.
 
 Time being wasted reinventing stuff is only part of the problem. As the world moves forward to microservice and multi-repository based architecture, code duplications and maintenance become an increasing problem. So does finding the code you actually need.
 Micro-packages aren’t really a solution either. Packages are very demanding to publish. They are hard to find. They add code you don’t need to your application. They create external dependencies. They are very hard to find and discover.They just weren’t built to handle small components.
@@ -111,7 +111,7 @@ Our philosophy is that any functionality can be composed out of smaller pieces. 
 
 ## Versioning
 
-Bit only supports incremental versioning. One might wonder if this is a lesser way of doing things. If using SemVer is better, because you get small fixes automatically. But, as we see in new packaging tools (OSTree, Snappy), the later approach is being increasingly unused. SemVer is based on a developer decision, and as such, is not bullet-proof. 
+Bit only supports incremental versioning. One might wonder if this is a lesser way of doing things. If using SemVer is better, because you get small fixes automatically. But, as we see in new packaging tools (OSTree, Snappy), the later approach is being increasingly unused. SemVer is based on a developer decision, and as such, is not bullet-proof.
 
 Bit handles small code component with a single responsibility, not large packages. Such components simply tend to change less often. This made us favor strict versioning over SemVer and automatic updates. We value reliability and stability.
 
@@ -158,17 +158,17 @@ Interconnected scope network
 11. Separate push operation for committing changes to remote scopes.
 12. You can update current components in a complete working environment to test and iterate over them, making them isolated and ready to use outside of your project. When you’re all set and ready, push your changes to the remote scopes.
 13. Most operations are fast (local).
-    Most of the work is done on your local disk. Network access is only needed to either download more resources or push your changes. 
+    Most of the work is done on your local disk. Network access is only needed to either download more resources or push your changes.
 14. Consistency.
-    Distributed code component management is better suited to how we manage code. Centralized solutions for package management are still vital and work well to solve the specific problem of distributing large projects. 
+    Distributed code component management is better suited to how we manage code. Centralized solutions for package management are still vital and work well to solve the specific problem of distributing large projects.
 
 ### Network of Bit scopes
 Bit's distributed architecture adds a complexity when working with Bit on a large scale. All scopes needs to be interconnected to truly harness the collaborative nature of Bit.
 Imagine creating a new component named Foo, which depends on Bar, which is located in a remote scope named Moon. Now, due to its nature, Foo needs to be pushed to another scope named Sun, and not to Moon.
 So, in order for this scenario to work, both Moon and Sun needs to be connected. Together they form a sort of distributed network storage, so that Sun will be able to access Moon to grab Bar, which is Foo's dependency (more about this process).
 
-This kind of configuration is important as it allows components to be flexible and dependent on components found outside their scope. This prevents the bad practice of putting components where they don't belong (imagine not having a utils class in your project's code). 
-Bit aims to make your code less tangled and more organized. It prefers refering between scopes over duplicating components or adding necessary items. 
+This kind of configuration is important as it allows components to be flexible and dependent on components found outside their scope. This prevents the bad practice of putting components where they don't belong (imagine not having a utils class in your project's code).
+Bit aims to make your code less tangled and more organized. It prefers refering between scopes over duplicating components or adding necessary items.
 The process of referring between scopes works the same as referring your local project to a remote scope. To connect Sun to Moon you will need to head to each of the remote scopes, and add a remote to the other scope by:
 bit remote add Sun # Or Moon, depends on the scope you are configuring.
 You will need to ensure that both scopes have network connectivity between them, and that each scope has read permissions to the other scope.
