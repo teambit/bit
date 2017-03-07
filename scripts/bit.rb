@@ -14,6 +14,6 @@ class Bit < Formula
 
   test do
     assert_equal "successfully initialized an empty bit scope.\n",
-                 shell_output("#{bin}/bit init")
+                 shell_output("#{bin}/bit init --skip-update")
   end
 end
