@@ -40,6 +40,7 @@
     "needle": "^1.4.3",
     "npmi": "^2.0.1",
     "ora": "^1.1.0",
+    "porter-stemmer": "^0.9.1",
     "posix": "^4.1.1",
     "ramda": "^0.23.0",
     "requestify": "^0.2.5",

@@ -1,6 +1,7 @@
 /** @flow */
 import path from 'path';
 import { Readable } from 'stream';
+import { stemmer } from 'porter-stemmer';
 import Component from '../consumer/component';
 import serverlessIndex from './serverless-index';
 
@@ -8,14 +9,17 @@ export type Doc = {
   id: string,
   name: string,
   tokenizedName: string,
+  stemmedName: string,
   box: string,
   tokenizedBox: string,
   functionNames: string,
   tokenizedFunctionNames: string,
   description: string,
-  minDescription: string
+  minDescription: string,
+  stemmedMinDescription: string
 };
 
+const stem = (sentence: string): string => sentence.split(' ').map(stemmer).join(' ');
 let localIndex;
 
 function tokenizeStr(str: string): string {
@@ -23,7 +27,7 @@ function tokenizeStr(str: string): string {
 }
 
 /**
- * returns the first sentence of the description. 
+ * returns the first sentence of the description.
  * @param {string} desc
  * @return {string}
  */
@@ -34,17 +38,21 @@ function minimizeDescription(desc: string = ''): string {
 function prepareDoc(docs: Object, component: Component): Doc {
   const name = component.name;
   const box = component.box;
+  const tokenizedName = tokenizeStr(name);
   const functionNames = docs.map(doc => doc.name).join(' ');
+  const minDescription = docs.map(doc => minimizeDescription(doc.description)).join(' ');
   return {
     id: `${box}_${name}`,
     name,
     box,
-    tokenizedName: tokenizeStr(name),
+    tokenizedName,
+    stemmedName: stem(tokenizedName),
     tokenizedBox: tokenizeStr(box),
     functionNames,
     tokenizedFunctionNames: tokenizeStr(functionNames),
     description: docs.map(doc => doc.description).join(' '),
-    minDescription: docs.map(doc => minimizeDescription(doc.description)).join(' ')
+    minDescription,
+    stemmedMinDescription: stem(minDescription)
   };
 }
 
@@ -108,5 +116,6 @@ function indexAll(path: string, components: Component[]): Promise<any> {
 module.exports = {
   index,
   indexAll,
-  tokenizeStr
+  tokenizeStr,
+  stem
 };
