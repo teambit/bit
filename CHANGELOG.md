@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.3.0]
+
 ### Change
 
 - saving the component id to bit.json after export is a default behavior.
