@@ -12,6 +12,14 @@
 * [Testing a component](#test-a-component)
 * [Searching and finding components](#find-a-component)
 
+## Before we start
+
+1. [verify that node.js is installed](https://nodejs.org)
+
+1. [verify that bit is installed](installation.md)
+
+1. [configure you identity](configuring-bit.md#your-identity)
+
 ## Create your first code component
 
 **Create a local scope**

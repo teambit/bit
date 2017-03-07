@@ -15,6 +15,14 @@ You can learn more by typing `bit config --help` in the terminal.
 |     user.name        | T      |   String  | The name of the user, will be saved on the commit logs         |
 |     hub_domain       | F      |   String  | The domain of the default hub, defaults to "hub.bitsrc.io"     |
 
+### Your Identity
+
+The first thing you should do when you install Bit is to set your user name and e-mail address. This is important because every component's commit uses this information, and it’s immutable after you perform a commit:
+
+`bit config set user.name "mickey mouse"`
+
+`bit config set user.email mickey@example.com`
+
 ## bit.json
 
 |         Name         |Required|   Type    |                            Details                             |
