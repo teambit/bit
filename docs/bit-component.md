@@ -1,5 +1,7 @@
 
-# What is a Bit component?
+# Bit component
+
+## What is a Bit component?
 
 A component is Bit's most fundamental entity. A code component is a testable and a reusable definition of a 
 certain atomic functionality that handles a single and a well-defiend responsibility.
@@ -20,7 +22,7 @@ gets to create, maintain, test and discover code components.
   Each component is indexed and made fully discoverable by a natural-language search that aimes to understand and cluster components by its functionality.
   See our [Scope Discoverability](bit-scope.md#discoverability) section for more information.
 
-## Component's Anatomy
+### Component's Anatomy
 
 A Bit component's most fundamental and only mandatory file is the implementation file named `impl.js` (default name).
 The implementation file consists the component implementation itself and its docs which are parsed to form 
@@ -35,7 +37,7 @@ On top of the implmantation file, two more optional files can be added:
 
 Please note, component file names can be configured via [bit.json](configuring-bit.md#bitjson), `spec.js` and `impl.js` are the default names.
 
-### Component Example
+#### Component Example
 
 `impl.js` - includes the implmantation itself with its docs (later to be parsed and form the component's documantation).
 ```js
@@ -86,7 +88,7 @@ describe('#isString()', () => {
 }
 ```
 
-# Component ID
+## Component ID
 
 Bit components are universally and uniquely identified using a Bit ID to support the distributed nature of a Scope.
 
@@ -126,7 +128,7 @@ For example, a reference to a component named `is-string` on Scope `foo` in vers
 @foo/is-string::2
 ```
 
-## Global namespace
+### Global namespace
 
 When creating a component without a namespace, it will be automatically assigned to the `global` namespace.
 For example, a component named `is-string` created without a namespace on your local scope, can be addressed in two different ways.
@@ -141,22 +143,22 @@ Implicitly reference the global namespace to make names shorter.
 @this/is-string
 ```
 
-# Component Configuration
+## Component Configuration
 Bit components are configured via a configration file named [bit.json](configuring-bit.md#bitjson).
 
-# Component Versioning
+For more information, please check out the [bit.json](configuring-bit.md#bitjson) documantation section.
 
-Bit's goal is to 
+## Component Versioning
 
 In Bit, versions are automatically assigned to a component once its commited (using `bit commit`) to a Scope using a simple and automatic versioning mechanism.
 
 Once a component is commited from the `inline_components` directory to a Scope, Bit checks whether a version of this component exists and does one of the following:
-1. Component with the same ID
-2. 
+1. Component exists - Bit will uptick components version by one.
+2. New component (component does not exists on scope) - A new component would be created.
 
 Bit handles small code component with a single responsibility, not large packages. Such components simply tend to change less often. This made us favor strict versioning over SemVer and automatic updates. We value reliability and stability.
 
-# Component Documentation
+## Component Documentation
 
 Documentation for packages is not fun, but if you want your code to be truely reuseable, other developers will need to have a place to learn how to use your code. We beleive that the best place to tell people how to use your code, is... well.. alongside your code. This way, when you distribute code components, and even open a code component to review its code, the usage instruction are there (!).
 
@@ -166,7 +168,7 @@ Let's take JavaScript for example.
 
 JavaScript uses [JSDocs](http://usejsdoc.org) to create documentation on JS code. Bit knows how to read these docs, and parse them in a way that gives other users a formatted view of them, to better understand what to expect from the component before even using it.
 
-### How does it work in real life?
+#### How does it work in real life?
 Let's imagine a `pad-left` function, and write the JSdocs:
 
 ```js
@@ -209,11 +211,11 @@ Examples
 
 ```
 
-# Component Debugging
+## Component Debugging
 
 // TODO
 
-# Component Environment
+## Component Environment
 
 Making sure code can run everywhere is hard. To ease this process, Bit implements 'environments'.
 
@@ -221,7 +223,7 @@ You can define your code's build and test requirements. Bit will then make sure 
 
 All environment are basically a code component that exports an API that allows Bit to either build or test a code component.
 
-## Build Environment
+### Build Environment
 
 Some programming languages need some sort of compiling done in order for them to run. If you use such language, Bit will make sure that the code you write will be able to build anywhere.
 
@@ -231,7 +233,7 @@ The build environment is a component with a set of requirements and an API for B
 
 When you run `bit build`, Bit will download the build component and it's dependencies. Bit will use it to build your code within the scope. The outcome of this action will be a dist file that can run without any boilerplating.
 
-### Using Build Environment
+#### Using Build Environment
 
 To show how a build environment works, lets take this code, written in [flow](https://flowtype.org).
 
@@ -262,7 +264,7 @@ module.exports = function isString(val) {
 };
 ```
 
-## Testing Environment
+### Testing Environment
 
 There are many libraries designated to run test cases for code. Each developer chooses the one right for him.
 
@@ -274,7 +276,7 @@ To run tests Bit uses a Bit component which provides an API to run the test suit
 
 Note - your specs should be written in the same build environment as your code.
 
-### Using Test Environment
+#### Using Test Environment
 
 Just as build environment, a test environment is also defined in the component's bit.json file. However, to test a component you need to implement some tests for it.
 
@@ -317,6 +319,6 @@ total duration - 4ms
 ✔   #isString() should return true if `foo` is passed - 1ms
 ```
 
-## Writing Environments
+### Writing Environments
 
 Bit does not contain build or test libraries. So you need to extend it to support your specific programming language and tooling. What you need to do is to implement a component designed to build or test using a specific library. Use a scope to host it, so you can reuse it later as a dependency for other components.

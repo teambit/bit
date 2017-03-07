@@ -1,5 +1,7 @@
 
-# General configuration
+# Configuring Bit
+
+## General configuration
 
 The general (global) configuration is configured through the `bit config` command.
 
@@ -13,7 +15,7 @@ You can learn more by typing `bit config --help` in the terminal.
 |     user.name        | T      |   String  | The name of the user, will be saved on the commit logs         |
 |     hub_domain       | F      |   String  | The domain of the default hub, defaults to "hub.bitsrc.io"     |
 
-# bit.json
+## bit.json
 
 |         Name         |Required|   Type    |                            Details                             |
 | -------------------- |:------:|:---------:| ---------------------------------------------------------------|
@@ -47,7 +49,7 @@ You can learn more by typing `bit config --help` in the terminal.
 }
 ```
 
-# scope.json
+## scope.json
 
 |         Name         |Required|   Type    |                            Details                             |
 | -------------------- |:------:|:---------:| ---------------------------------------------------------------|

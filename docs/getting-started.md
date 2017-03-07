@@ -1,3 +1,4 @@
+# Getting Started
 
 **This quick guide will take you through the basics of working with Bit:**
 
@@ -11,7 +12,7 @@
 * [Testing a component](#test-a-component)
 * [Searching and finding components](#find-a-component)
 
-# Create your first code component
+## Create your first code component
 
 **Create a local scope**
 
@@ -29,7 +30,7 @@ This generates a `bit.json` file and a `.bit` directory.
 
 You can read more about the [local scope here](glossary.md#local-scope).
 
-## Create a Bit component
+### Create a Bit component
 
 [Bit components](glossary.html#component) are organized and managed in scopes. To create your first Bit component go to a project with a bit scope in it (or create one by using `bit init` in a directory).
 
@@ -55,7 +56,7 @@ You can copy and paste this example:
 
 * You can see the status of all the components in your project using: `bit status`.
 
-### Use the Bit component in your code
+#### Use the Bit component in your code
 
 3\. Install the bit-js module using [NPM](https://www.npmjs.com/package/bit-js) or Yarn.
 
@@ -77,7 +78,7 @@ bit-js will resolve the component from the inline_components directory.
 
 * Read more about [Drivers](drivers.md).
 
-### Commit your code
+#### Commit your code
 
 Our goal is to use a component in our future work. Before exporting it to a remote scope, it needs to be committed from your inline_components to your local scope.
 
@@ -103,7 +104,7 @@ open ./inline_components/<component-id>/impl.js // write some code in impl.js
 bit commit <component-id> 'initial commit'
 ```
 
-# Setup a Remote Scope
+## Setup a Remote Scope
 
 Create and use as many [remote scopes](bit-on-the-server.md) as you need to distribute your code, to be later reused across projects and development teams.
 
@@ -148,7 +149,7 @@ You can check your registered remotes with the `bit remote` command.s
 
 `bit remote add ssh://</path/to/scope>`
 
-# Export a component
+## Export a component
 
 Remote scopes allow you to use the components they contain in any repository or project. They also allow you to collaborate with others while using and managing your components together.
 
@@ -168,7 +169,7 @@ summery
 bit export @this/<component-id> <remote-scope-name>
 ```
 
-# Import a component
+## Import a component
 
 Open a new directory somewhere else.
 
@@ -192,7 +193,7 @@ bit init
 bit import <@remote-scope>/<component-id> --save
 ```
 
-# Modify a component
+## Modify a component
 
 First, a few notes about versioning - Bit doesn’t use semantic versioning. Instead, it supports only incremented component versioning. For example, the first version of a component will be 1, the second will be 2 and so forth.
 
@@ -252,7 +253,7 @@ bit commit <component>
 bit export @this<component> <remote-scope>
 ```
 
-# Use a compiler
+## Use a compiler
 
 1\. Import the [Babel environment](https://bitsrc.io/bit/envs/compilers/babel) to your local scope, and set it as default to all newly created components:
 
@@ -316,7 +317,7 @@ bit commit <component-id> "<commit-message>"
 bit export @this/<component-id> <remote-scope>
 ```
 
-# Test a component
+## Test a component
 
 1\. Import the [Mocha environment](https://bitsrc.io/bit/envs/testers/mocha) to your local scope, and set it as default to all newly created components:
 
@@ -392,6 +393,43 @@ bit commit <component-id> "<commit-message>"
 bit export @this/<component-id> <remote-scope>
 ```
 
-# Find a component
+## Find a component
 
-// TODO
+
+You can find components using the ‘search’ command.
+
+1\. To search a component in your local scope, type: `bit search @this search_query`
+
+* Note that the search will only find components that have already been committed.
+
+ For example, let’s create the bit ‘concat’ in the scope ‘my_scope’.
+
+ `test@snippets:~/my_scope$ bit create concat`
+ 
+ `created component "concat" in box “global"`
+
+ Then commit it:
+
+ `test@snippets:~/my_scope$ bit commit concat "initial commit"`
+ 
+ `component global/concat committed successfully`
+
+ Then search for it:
+
+ `test@snippets:~/my_scope$ bit search @this concat`
+ 
+ Output: 
+ `> global/concat`
+
+
+2\. You can also search components on remote scopes (scopes that are located on a remote server). To do this, type: 
+
+  `bit search @scope_name search_query`
+  
+* For example:
+  `test@snippets:~/my_scope$ bit search @my_remote_scope concat`
+ 
+  Output: 
+  `> global/concat`
+
+  Read more about Bit search under [Discoverability](https://teambit.github.io/bit/bit-scope.html#discoverability).

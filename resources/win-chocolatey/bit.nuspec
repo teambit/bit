@@ -31,7 +31,7 @@ scoping mechanism to easily find and reuse components created by you or by other
 		<docsUrl>https://bitsrc.io/en/docs/</docsUrl>
 		<bugTrackerUrl>https://github.com/teambit/bit/issues</bugTrackerUrl>
 		<releaseNotes>https://github.com/teambit/bit/tags</releaseNotes>
-		
+
 	</metadata>
 
 	<files>

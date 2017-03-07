@@ -1,27 +1,23 @@
-<p align="center">
-    <a href="https://bitsrc.io/">
-        <img alt="Bit" src="https://s29.postimg.org/q9flqqoif/cover_github_1.png" width="350">
-    </a>
-</p>
 
-<p align="center">
+<p align="left">
+<h1>Bit</h1>
 <b>Distributed code component manager</b>
 </p>
-<div style="text-align:center"> 
+<div style="text-align:left">
 
-<p align="center">
+<p align="left">
   <a href="https://ci.appveyor.com/project/TeamBit/bit"><img alt="Appveyor Status" src="https://ci.appveyor.com/api/projects/status/pr2caxu6awb387lr?svg=true"></a>
-  <a href="https://opensource.org/licenses/Apache-2.0"><img alt="Appveyor Status" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a> 
+  <a href="https://opensource.org/licenses/Apache-2.0"><img alt="Appveyor Status" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="https://github.com/teambit/bit/blob/master/CONTRIBUTING.md"><img alt="Appveyor Status" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
-  
+
 </p>
 
 </div>
-Bit is a code component manager written in javascript yet designed to be language agnostic.
+Bit is a code component manager written in JavaScript yet designed to be language agnostic.
 
-It helps you make code components such as functions, classes and more reusable with zero initial configuration. Creating a Bit component and using it across repositories prevents the need to duplicate or re-invent it over and over again.
+It helps you make code components such as functions, classes and more reusable without the overhead of packages and with zero initial configuration. Creating a Bit component and using it across repositories prevents the need to duplicate or re-invent it over and over again. Bit makes it easy to create a set of managed and tested components ready to be used anywhere.
 
-Bit uses a distributed scoping system to organize your components and take care of their entire lifecycle. Scopes take care of versioning, dependency management, building and testing components in an isolated environment and more. You can create a scope anywhere or connect scopes together to create a distributed network.
+Bit uses a distributed scoping system to organize your components and take care of their entire lifecycle including versioning, dependency management, building and testing components in an isolated environment and more. You can create a scope anywhere or connect scopes together to create a distributed network. 
 
 <p align="center">
 <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
@@ -37,7 +33,7 @@ Bit uses a distributed scoping system to organize your components and take care 
 
 * **Distributed network.** Scopes can be created anywhere with a simple command (bit init --bare), and can be connected to create a distributed network.
 
-* **Component CI.** Scopes can build and test your components in an isolated environment, so that they can build and run anywhere. 
+* **Component CI.** Scopes can build and test your components in an isolated environment, so that they can build and run anywhere.
 
 * **Fast dependency resolution.** Dependency resolution is performed on-export, so Bit doesn't have to perform any runtime resolution. Both performance and reliability are increased.
 
@@ -89,7 +85,7 @@ The only alternative was to spend time on boilerplating and build configuration.
 
 We needed a tool that can save us the overhead of making code components reusable. We also needed to take care of our components through their entire lifecycle. We also wanted to collaborate by using and maintaining each other's components.
 
-To achieve this we designed Bit - the first code component manager. Bit is a distributed manager written in javascript yet designed to be language agnostic. It allows you to make components reusable with zero initial configuration and use these components across repositories. It also helps to store, organize and manage your components. It allows you to group your components by context, while also handling versioning, dependency management, build and test execution and more. Bit also makes components easy to find and collaborate on.
+To achieve this we designed Bit - the first code component manager. Bit is a distributed manager written in JavaScript yet designed to be language agnostic. It allows you to make components reusable with zero initial configuration and use these components across repositories. It also helps to store, organize and manage your components. It allows you to group your components by context, while also handling versioning, dependency management, build and test execution and more. Bit also makes components easy to find and collaborate on.
 
 At the end of the day, distributed component management is deeply connected to the very basics of writing software as we want it to be. Managing code components can help us all to build great things out of smaller building blocks - together. Imagine the possibilities.
 
@@ -106,6 +102,3 @@ See [Contributing](CONTRIBUTING.md).
 ## License
 
 Apache License, Version 2.0
-
-
-
