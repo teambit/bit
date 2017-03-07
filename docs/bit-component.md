@@ -274,6 +274,8 @@ When running `bit test`, Bit imports the configured test environments with its d
 
 To run tests Bit uses a Bit component which provides an API to run the test suite with the specific test tool.
 
+Note - your specs should be written in the same build environment as your code.
+
 #### Using Test Environment
 
 Just as build environment, a test environment is also defined in the component's bit.json file. However, to test a component you need to implement some tests for it.
