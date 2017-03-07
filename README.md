@@ -15,9 +15,9 @@
 </div>
 Bit is a code component manager written in JavaScript yet designed to be language agnostic.
 
-It helps you make code components such as functions, classes and more reusable without the overhead of packages and with zero initial configuration. Creating a Bit component and using it across repositories prevents the need to duplicate or re-invent it over and over again. Bit makes it easy to create a set of managed and tested components ready to be used anywhere.
+It makes code components such as functions, classes and more reusable without the overhead of packages and with zero initial configuration. Creating a Bit component and using it across repositories saves the need to duplicate or re-invent components  over and over again.
 
-Bit uses a distributed scoping system to organize your components and take care of their entire lifecycle including versioning, dependency management, building and testing components in an isolated environment and more. You can create a scope anywhere or connect scopes together to create a distributed network. 
+Bit uses a distributed Scoping system to store, organize and manage your components. Scopes benefit from managing small components by using simplified versioning, faster on-export dependency management, a semantic search engine and more. Scopes also take care of your component's CI by building and testing components in an isolated environment. You can create a scope anywhere or connect scopes together to create a distributed network. 
 
 <p align="center">
 <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
