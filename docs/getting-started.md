@@ -24,7 +24,7 @@
 
 **Create a local scope**
 
-Bit uses [Scopes](https://teambit.github.io/bit/bit-scope.html) to store, organize and manage components. Local scopes are created for your projects. Components exported to remote scopes can be used across projects. It's recommended to create the scope at the root of a project. You can create as many scopes as you need.
+Bit uses [Scopes](https://teambit.github.io/bit/bit-scope.html) to store, organize and manage components. Local scopes are created for your projects. Components exported to remote scopes can be used across projects. It's recommended to create the scope at the root of a project.
 
 **Type the following in the command line.**
 
@@ -76,7 +76,7 @@ You can copy and paste this example:
 const bit = require('bit-js');
 const isString = bit('is-string'); // <component-id>
 
-console.log(isString('string')); // true
+console.log(isString('It\'s the bit')); // true
 console.log(isString(1)); // false
 ```
 
