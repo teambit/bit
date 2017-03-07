@@ -1,5 +1,5 @@
 /** @flow */
-import indexer from './indexer';
+import { tokenizeStr, stem } from './indexer';
 import stopwords from './stopwords';
 
 const boost = {
@@ -7,9 +7,11 @@ const boost = {
   tokenizedBox: 2,
   name: 5,
   tokenizedName: 4,
+  stemmedName: 3,
   functionNames: 2,
   tokenizedFunctionNames: 2,
-  minDescription: 1
+  minDescription: 1,
+  stemmedMinDescription: 0.5,
 };
 
 function queryItem(field, queryStr): Object {
@@ -24,15 +26,17 @@ function buildQuery(queryStr: string): Array<Object> {
     .split(' ')
     .filter(word => !stopwords.includes(word))
     .join(' ');
-  const tokenizedQuery = indexer.tokenizeStr(queryStr);
+  const tokenizedQuery = tokenizeStr(queryStr);
   const query = [];
   query.push(queryItem('box', queryStr));
   query.push(queryItem('tokenizedBox', queryStr));
   query.push(queryItem('name', queryStr));
   query.push(queryItem('tokenizedName', tokenizedQuery));
+  query.push(queryItem('stemmedName', stem(tokenizedQuery)));
   query.push(queryItem('functionNames', queryStr));
   query.push(queryItem('tokenizedFunctionNames', tokenizedQuery));
   query.push(queryItem('minDescription', queryStrWithoutStopwords));
+  query.push(queryItem('stemmedMinDescription', stem(queryStrWithoutStopwords)));
   return query;
 }
 
