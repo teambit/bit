@@ -14,10 +14,9 @@ import {
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
  } from '../constants';
-import { flatten, removeContainingDirIfEmpty } from '../utils';
+import { removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
-import type { Results } from '../specs-runner/specs-runner';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
 import { index } from '../search/indexer';
@@ -213,7 +212,7 @@ export default class Consumer {
       );
   }
 
-  runComponentSpecs(id: BitInlineId): Promise<?Results> {
+  runComponentSpecs(id: BitInlineId): Promise<?any> {
     return this.loadComponent(id)
       .then((component) => {
         return component.runSpecs({ scope: this.scope, consumer: this });

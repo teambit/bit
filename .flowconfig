@@ -4,10 +4,9 @@
 <PROJECT_ROOT>/node_modules/babel.*
 <PROJECT_ROOT>/node_modules
 <PROJECT_ROOT>/plugins
+<PROJECT_ROOT>/.history
 node_modules/
 private/tmp
-
-[include]
 
 [libs]
 
@@ -17,4 +16,4 @@ unsafe.enable_getters_and_setters=true
 module.system.node.resolve_dirname=<PROJECT_ROOT>/node_modules
 
 [version]
-0.38.0
+ >=0.38.0

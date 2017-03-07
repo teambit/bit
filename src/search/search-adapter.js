@@ -1,5 +1,5 @@
 /** @flow */
-import serverlessIndex from './serverless-index';
+// import serverlessIndex from './serverless-index';
 import indexer from './indexer';
 import searcher from './searcher';
 import { loadConsumer } from '../consumer';
@@ -10,7 +10,7 @@ function searchLocally(queryStr: string, reindex: boolean = false): Promise<any>
     let scopePath;
     if (reindex) {
       loadConsumer()
-        .then(consumer => {
+        .then((consumer) => {
           scopePath = consumer.scope.path;
           return consumer.scope.listStage();
         })
@@ -19,11 +19,11 @@ function searchLocally(queryStr: string, reindex: boolean = false): Promise<any>
         })
         .then(() => {
           resolve(searcher.search(queryStr, scopePath));
-        });
-    }
-    else {
+        })
+        .catch(reject);
+    } else {
       loadConsumer()
-        .then(consumer => {
+        .then((consumer) => {
           scopePath = consumer.scope.path;
           resolve(searcher.search(queryStr, scopePath));
         });
@@ -34,16 +34,15 @@ function searchLocally(queryStr: string, reindex: boolean = false): Promise<any>
 function searchRemotely(queryStr: string, scope: string, reindex: boolean = false): Promise<any> {
   return new Promise((resolve, reject) => {
     loadConsumer()
-      .then(consumer => {
+      .then((consumer) => {
         return consumer.scope.remotes()
           .then(remotes =>
-            // $FlowFixMe
             remotes.resolve(scope, consumer.scope.name)
-              .then(remote => {
+              .then((remote) => {
                 resolve(remote.search(queryStr, reindex));
               })
           );
-      });
+      }).catch(reject);
   });
 }
 
@@ -51,7 +50,7 @@ function scopeSearch(path: string, query: string, reindex: boolean): Promise<any
   return new Promise((resolve, reject) => {
     if (reindex) {
       loadScope(path)
-        .then(scope => {
+        .then((scope) => {
           return scope.listStage();
         })
         .then((components) => {
@@ -59,9 +58,9 @@ function scopeSearch(path: string, query: string, reindex: boolean): Promise<any
         })
         .then(() => {
           resolve(searcher.search(query, path));
-        });
-    }
-    else {
+        })
+        .catch(reject);
+    } else {
       resolve(searcher.search(query, path));
     }
   });
