@@ -38,6 +38,7 @@ function _exec(command,cb) {
 function runUpdate(updateCommand){
   var previousCommand = 'bit ' + process.argv.slice(2).join(' ');
   
+  if (!!~previousCommand.indexOf(constants.SKIP_UPDATE_FLAG)) return _exec(previousCommand);
   _askUser(function (shouldUpdate) {
     if (shouldUpdate) _exec(updateCommand, function() { _exec(previousCommand)});
     else _exec(previousCommand)
@@ -57,7 +58,7 @@ function checkUpdate(cb) {
 }
 
 function getUpdateCommand() {
-  if (constants.BIT_INSTALL_METHOD === 'brew') return 'brew upgrade bit';
+  if (constants.BIT_INSTALL_METHOD === 'brew') return 'brew update && brew upgrade bit';
   if (constants.BIT_INSTALL_METHOD === 'yum') return 'yum clean all && yum upgrade bit -y';
   if (constants.BIT_INSTALL_METHOD === 'deb') return 'sudo apt-get update && sudo apt-get install bit';
   if (constants.BIT_INSTALL_METHOD === 'npm') return 'npm upgrade --global bit';

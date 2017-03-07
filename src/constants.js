@@ -186,3 +186,5 @@ export const BIT_VERSION = packageFile.version;
 export const BIT_INSTALL_METHOD = packageFile.installationMethod;
 
 export const RELEASE_SERVER = 'https://api-stg.bitsrc.io/release';
+
+export const SKIP_UPDATE_FLAG = '--skip-update';
