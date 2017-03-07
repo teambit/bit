@@ -4,7 +4,7 @@
 
 * [Creating a Bit component](#create-your-first-code-component)
   * [Using it in your code](#use-the-bit-component-in-your-code)
-  * [Committing your component to a local Scope](#commit-your-code])
+  * [Committing your component to a local Scope](#commit-your-code)
 * [Exporting a component to a remote Scope](#setup-a-remote-scope)
 * [Importing a component](#import-a-component)
 * [Modifying a component](#modify-a-component)
@@ -405,31 +405,31 @@ You can find components using the ‘search’ command.
  For example, let’s create the bit ‘concat’ in the scope ‘my_scope’.
 
  `test@snippets:~/my_scope$ bit create concat`
- 
+
  `created component "concat" in box “global"`
 
  Then commit it:
 
  `test@snippets:~/my_scope$ bit commit concat "initial commit"`
- 
+
  `component global/concat committed successfully`
 
  Then search for it:
 
  `test@snippets:~/my_scope$ bit search @this concat`
- 
- Output: 
+
+ Output:
  `> global/concat`
 
 
-2\. You can also search components on remote scopes (scopes that are located on a remote server). To do this, type: 
+2\. You can also search components on remote scopes (scopes that are located on a remote server). To do this, type:
 
   `bit search @scope_name search_query`
-  
+
 * For example:
   `test@snippets:~/my_scope$ bit search @my_remote_scope concat`
- 
-  Output: 
+
+  Output:
   `> global/concat`
 
   Read more about Bit search under [Discoverability](https://teambit.github.io/bit/bit-scope.html#discoverability).
