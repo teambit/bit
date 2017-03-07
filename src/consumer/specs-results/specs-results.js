@@ -68,13 +68,13 @@ export default class SpecsResults {
   static createFromRaw(rawResults: ResultsProps): SpecsResults {
     const pass = rawResults.pass || rawResults.tests.every(test => test.pass);
 
-    const calcDuration = (endDateString, startDateString) => 
+    const calcDuration = (endDateString, startDateString) =>
       new Date(endDateString) - new Date(startDateString);
 
     const stats = {
       start: rawResults.stats.start,
       end: rawResults.stats.end,
-      duration: parseInt(rawResults.stats.duration) || 
+      duration: parseInt(rawResults.stats.duration) ||
         calcDuration(rawResults.stats.end, rawResults.stats.start)
     };
 

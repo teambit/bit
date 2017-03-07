@@ -104,7 +104,7 @@ export default class Version extends BitObject {
 
   id() {
     const obj = this.toObject();
-    
+
     return JSON.stringify(filterObject({
       impl: obj.impl,
       specs: obj.specs,
@@ -118,7 +118,7 @@ export default class Version extends BitObject {
 
   collectDependencies(scope: Scope, withDevDependencies?: bool): Promise<ComponentVersion[]> {
     const devDependencies = [ this.compiler, this.tester ];
-    const allDependencies = withDevDependencies ? 
+    const allDependencies = withDevDependencies ?
     this.flattenedDependencies.concat(devDependencies) : this.flattenedDependencies;
     return scope.importManyOnes(allDependencies);
   }
@@ -194,11 +194,11 @@ export default class Version extends BitObject {
       },
       specs: specs ? {
         file: Ref.from(specs.file),
-        name: specs.name        
+        name: specs.name
       } : null,
       dist: dist ? {
         file: Ref.from(dist.file),
-        name: dist.name        
+        name: dist.name
       } : null,
       compiler: compiler ? BitId.parse(compiler) : null,
       tester: tester ? BitId.parse(tester) : null,
@@ -217,8 +217,8 @@ export default class Version extends BitObject {
     });
   }
 
-  static fromComponent({ 
-    component, 
+  static fromComponent({
+    component,
     impl,
     specs,
     dist,
@@ -264,7 +264,7 @@ export default class Version extends BitObject {
       packageDependencies: component.packageDependencies,
       flattenedDependencies: flattenedDeps,
       dependencies: component.dependencies
-    });    
+    });
   }
 
   setSpecsResults(specsResults: ?Results) {
