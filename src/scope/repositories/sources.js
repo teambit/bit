@@ -5,7 +5,6 @@ import Scope from '../scope';
 import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import Component from '../models/component';
-import ComponentVersion from '../component-version';
 import Version from '../models/version';
 import Source from '../models/source';
 import { BitId } from '../../bit-id';
@@ -27,7 +26,7 @@ export type ComponentDef = {
 };
 
 export default class SourceRepository {
-  scope: Scope;  
+  scope: Scope;
 
   constructor(scope: Scope) {
     this.scope = scope;
@@ -55,7 +54,7 @@ export default class SourceRepository {
       });
     }));
   }
-  
+
   get(bitId: BitId): Promise<?Component> {
     const component = Component.fromBitId(bitId);
     return this.findComponent(component);
@@ -121,7 +120,7 @@ export default class SourceRepository {
       });
   }
 
-  addSource({ source, depIds, message, force, consumer }: { 
+  addSource({ source, depIds, message, force, consumer }: {
     source: ConsumerComponent,
     depIds: BitId[],
     message: string,
@@ -155,16 +154,16 @@ export default class SourceRepository {
               username,
               email,
             });
-            
+
             component.addVersion(version);
-            
+
             objectRepo
               .add(version)
               .add(component)
               .add(impl)
               .add(specs)
               .add(dist);
-            
+
             return component;
           });
         });
@@ -191,7 +190,7 @@ export default class SourceRepository {
       if (!existingComponent || component.compatibleWith(existingComponent)) {
         return this.put({ component, objects });
       }
-      
+
       throw new MergeConflict();
     });
   }

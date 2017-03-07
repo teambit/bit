@@ -56,10 +56,10 @@ function execAction(command, concrete, args) {
       loader.off();
       const errorHandled = defaultHandleError(err)
       || command.handleError(err);
-      
+
       if (command.private) return serializeErrAndExit(err);
-      if (!command.private && errorHandled) logAndExit(errorHandled);
-      else logErrAndExit(err);
+      if (!command.private && errorHandled) return logAndExit(errorHandled);
+      return logErrAndExit(err);
     });
 }
 
@@ -73,7 +73,6 @@ function serializeErrAndExit(err) {
 function registerAction(command: Command, concrete) {
   concrete.action((...args) => {
     if (!empty(command.commands)) {
-      // $FlowFixMe
       const subcommandName = parseSubcommandFromArgs(args);
       const subcommand = command.commands.find((cmd) => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
@@ -111,28 +110,28 @@ export default class CommandRegistrar {
     function createOptStr(alias, name) {
       return `-${alias}, --${name}`;
     }
-    
+
     function register(command: Command, commanderCmd) {
       // $FlowFixMe
       const concrete = commanderCmd
         .command(command.name, null, { noHelp: command.private })
         .description(command.description)
-        .alias(command.alias)
+        .alias(command.alias);
 
       command.opts.forEach(([alias, name, description]) => {
         concrete.option(createOptStr(alias, name), description);
       });
-      
+
       // attach skip-version to all commands
       concrete.option('--skip-update', 'Skips auto updates');
-      
+
       command.commands.forEach((nestedCmd) => {
         register(nestedCmd, concrete);
       });
 
       return registerAction(command, concrete);
     }
-    
+
     this.commands.forEach(cmd => register(cmd, commander));
   }
 
@@ -157,7 +156,7 @@ export default class CommandRegistrar {
 
     return this;
   }
-  
+
   run() {
     this.registerBaseCommand();
     this.registerCommands();
