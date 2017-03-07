@@ -53,7 +53,10 @@ function sortSearchResults(results: Array<any>): Array<any> {
   });
 }
 
-function formatter(doc: Doc): string {
+function formatter(doc: Doc|*): string {
+  if (doc.owner) { // from web search
+    return `> ${doc.owner}.${doc.scope}/${doc.box}/${doc.name}`;
+  }
   return `> ${doc.box}/${doc.name}`;
 }
 
