@@ -1,10 +1,11 @@
 
-<p align="center">
+<p align="left">
+<h1>Bit</h1>
 <b>Distributed code component manager</b>
 </p>
-<div style="text-align:center">
+<div style="text-align:left">
 
-<p align="center">
+<p align="left">
   <a href="https://ci.appveyor.com/project/TeamBit/bit"><img alt="Appveyor Status" src="https://ci.appveyor.com/api/projects/status/pr2caxu6awb387lr?svg=true"></a>
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="Appveyor Status" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="https://github.com/teambit/bit/blob/master/CONTRIBUTING.md"><img alt="Appveyor Status" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
