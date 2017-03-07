@@ -17,7 +17,7 @@ export function hasExisting(bitPath: string): boolean {
 
 export type BitJsonProps = {
   impl?: string;
-  spec?: string;  
+  spec?: string;
   compiler?: string;
   tester?: string;
   dependencies?: Object;
@@ -26,13 +26,13 @@ export type BitJsonProps = {
 
 export default class BitJson extends AbstractBitJson {
   impl: string;
-  spec: string; 
+  spec: string;
   compiler: string;
   tester: string;
   dependencies: {[string]: string};
   packageDependencies: {[string]: string};
 
-  constructor({ 
+  constructor({
     impl, spec, compiler, tester, dependencies, packageDependencies
   }: BitJsonProps) {
     super({ impl, spec, compiler, tester, dependencies });
@@ -74,13 +74,13 @@ export default class BitJson extends AbstractBitJson {
     });
   }
 
-  validate() {
+  validate(bitJsonPath: string) {
     if (
       typeof this.getImplBasename() !== 'string' ||
       typeof this.compilerId !== 'string' ||
       typeof this.testerId !== 'string' ||
       typeof this.getDependencies() !== 'object'
-    ) throw new InvalidBitJson();
+    ) throw new InvalidBitJson(bitJsonPath);
   }
 
   static fromPlainObject(object: Object): BitJson {
@@ -119,7 +119,7 @@ export default class BitJson extends AbstractBitJson {
           return reject(new InvalidBitJson(bitJsonPath));
         }
       }
-      
+
       const mergedBJ = this.mergeWithProto(thisBJ, protoBJ);
       return resolve(mergedBJ);
     });
