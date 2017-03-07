@@ -11,7 +11,7 @@ If you have NPM installed, you can use it to install Bit: (recommended)
 
 Homebrew - Bit can be installed via Homebrew package manager:
 
-`brew install bit` (currently unavailable)
+`brew install bit`
 
 ## Debian/Ubuntu Linux
 
