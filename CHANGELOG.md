@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Change
+
+- saving the component id to bit.json after export is a default behavior.
+- bit export --forget flag for not saving to bit.json after export.
+
 ### Fixed
 
 - Solved bug with specsResults pass attribute not updating after ci update.
