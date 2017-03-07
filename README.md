@@ -1,8 +1,3 @@
-<p align="center">
-    <a href="https://bitsrc.io/">
-        <img alt="Bit" src="https://s29.postimg.org/q9flqqoif/cover_github_1.png" width="350">
-    </a>
-</p>
 
 <p align="center">
 <b>Distributed code component manager</b>
@@ -19,9 +14,9 @@
 </div>
 Bit is a code component manager written in JavaScript yet designed to be language agnostic.
 
-It helps you make code components such as functions, classes and more reusable with zero initial configuration. Creating a Bit component and using it across repositories prevents the need to duplicate or re-invent it over and over again.
+It helps you make code components such as functions, classes and more reusable without the overhead of packages and with zero initial configuration. Creating a Bit component and using it across repositories prevents the need to duplicate or re-invent it over and over again. Bit makes it easy to create a set of managed and tested components ready to be used anywhere.
 
-Bit uses a distributed scoping system to organize your components and take care of their entire lifecycle. Scopes take care of versioning, dependency management, building and testing components in an isolated environment and more. You can create a scope anywhere or connect scopes together to create a distributed network.
+Bit uses a distributed scoping system to organize your components and take care of their entire lifecycle including versioning, dependency management, building and testing components in an isolated environment and more. You can create a scope anywhere or connect scopes together to create a distributed network. 
 
 <p align="center">
 <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
@@ -106,6 +101,3 @@ See [Contributing](CONTRIBUTING.md).
 ## License
 
 Apache License, Version 2.0
-
-
-
