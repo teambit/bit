@@ -17,7 +17,7 @@ import type { Results } from '../../specs-runner/specs-runner';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import ComponentNotFoundInline from './exceptions/component-not-found-inline';
 
-import { 
+import {
   DEFAULT_BOX_NAME,
   DEFAULT_IMPL_NAME,
   DEFAULT_SPECS_NAME,
@@ -49,7 +49,7 @@ export default class Component {
   version: ?number;
   scope: ?string;
   implFile: string;
-  specsFile: string; 
+  specsFile: string;
   compilerId: ?BitId;
   testerId: ?BitId;
   dependencies: BitIds;
@@ -70,12 +70,12 @@ export default class Component {
     // $FlowFixMe
     return this._impl;
   }
-  
+
   set specs(val: Specs) { this._specs = val; }
 
   get specs(): ?Specs {
     if (!this._specs) return null;
-    
+
     if (isString(this._specs)) {
       // $FlowFixMe
       this._specs = Specs.load(this._specs);
@@ -83,7 +83,7 @@ export default class Component {
     // $FlowFixMe
     return this._specs;
   }
-  
+
   get id(): BitId {
     if (!this.scope || !this.version) {
       console.error(this);
@@ -103,7 +103,7 @@ export default class Component {
     return this._docs;
   }
 
-  constructor({ 
+  constructor({
     name,
     box,
     version,
@@ -129,7 +129,7 @@ export default class Component {
     this.compilerId = compilerId;
     this.testerId = testerId;
     this.dependencies = dependencies || new BitIds();
-    this.packageDependencies = packageDependencies || {}; 
+    this.packageDependencies = packageDependencies || {};
     this._specs = specs;
     this._impl = impl;
     this._docs = docs;
@@ -162,7 +162,7 @@ export default class Component {
     .then(() => { return withBitJson ? this.writeBitJson(bitDir): undefined; })
     .then(() => this);
   }
-  
+
   runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose }: {
     scope: Scope,
     rejectOnFailure?: bool,
@@ -189,9 +189,9 @@ export default class Component {
       }
       return Promise.resolve();
     };
-    
+
     if (!this.testerId || !this.specs || !this.specs.src) return Promise.resolve(null);
-    
+
     return installEnvironmentsIfNeeded()
     .then(() => {
       try {
@@ -210,7 +210,10 @@ export default class Component {
           }
 
           if (save) {
-            return scope.sources.modifySpecsResults({ source: this, specsResults })
+            return scope.sources.modifySpecsResults({
+              source: this,
+              specsResults: this.specsResults
+            })
             .then(() => Promise.resolve(this.specsResults));
           }
 
@@ -235,7 +238,7 @@ export default class Component {
         }
         return Promise.resolve();
       };
-      
+
       return installEnvironmentIfNeeded()
       .then(() => {
         const opts = { bareScope: !consumer };
@@ -243,7 +246,7 @@ export default class Component {
         const src = this.impl.src;
         const { code, mappings } = compiler.compile(src); // eslint-disable-line
         this.dist = new Dist(code, mappings);
-        
+
         if (save) {
           return scope.sources.updateDist({ source: this })
           .then(() => resolve(code));
@@ -253,7 +256,7 @@ export default class Component {
       }).catch(reject);
     });
   }
-  
+
   toObject(): Object {
     return {
       name: this.name,
@@ -279,11 +282,11 @@ export default class Component {
   }
 
   static fromObject(object: Object): Component {
-    const { 
-      name, 
-      box, 
-      version, 
-      scope, 
+    const {
+      name,
+      box,
+      version,
+      scope,
       implFile,
       specsFile,
       compilerId,
@@ -296,7 +299,7 @@ export default class Component {
       dist,
       specsResults
     } = object;
-    
+
     return new Component({
       name,
       box,
@@ -329,7 +332,7 @@ export default class Component {
         name: path.basename(bitDir),
         box: path.basename(path.dirname(bitDir)),
         implFile: bitJson.getImplBasename(),
-        specsFile: bitJson.getSpecBasename(), 
+        specsFile: bitJson.getSpecBasename(),
         compilerId: BitId.parse(bitJson.compilerId),
         testerId: BitId.parse(bitJson.testerId),
         dependencies: BitIds.fromObject(bitJson.dependencies),
@@ -340,7 +343,7 @@ export default class Component {
     });
   }
 
-  static create({ scopeName, name, box, withSpecs, consumerBitJson }:{ 
+  static create({ scopeName, name, box, withSpecs, consumerBitJson }:{
     consumerBitJson: ConsumerBitJson,
     name: string,
     box: string,
@@ -358,7 +361,7 @@ export default class Component {
       version: DEFAULT_BIT_VERSION,
       scope: scopeName,
       implFile,
-      specsFile, 
+      specsFile,
       compilerId,
       testerId,
       impl: Impl.create(name, compilerId, scope),
