@@ -40,15 +40,10 @@ Then simply install using
 
 (currently unavailable)
 
-There are two installation methods for Windows.
+## Tarball Release
 
-1. **Download installer** - You can download a msi file and run it.
-
-    Installation can be found [here](https://api.bitsrc.io/release/msi/latest).
-
-2. **Chocolatey** - Bit can be installed via Chocolatey:
-
-    `choco install bit`
+You can simply download the application packages in a tarball
+[here](https://api.bitsrc.io/release/tar/latest).
 
 ## Using Yarn
 
