@@ -369,19 +369,25 @@ Search in either local or remote scope for a component. The search covers the na
 
 Each scope has its own index of components. 
 
-If you search in the current scope, use `bit search @this search_query`.
+If you search in the current scope, use `bit search search_query -s @this`.
 
-To search in another scope, use `bit search @scope_name search_query`
+To search in another scope, use `bit search search_query -s @scope_name`
+
+To search public components on [bitsrc.io] (www.bitsrc.io), use `bit search search_query`
 
 ### Examples
 
 Search for a component in a current scope.
 
-`bit search @this concat array`
+`bit search concat array -s @this`
 
 Search for a component in a remote scope.
 
-`bit search @my_remote_scope concat array`
+`bit search concat array -s @my_remote_scope`
+
+Search for a public component on [bitsrc.io] (www.bitsrc.io).
+
+`bit search concat array`
 
 ---
 
