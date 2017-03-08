@@ -134,7 +134,7 @@ That's it, the scope is ready, next we need to register it as a remote scope.
 
 ### Add the new scope to your remotes list
 
-If you are in the scope directory use `pwd | pbcopy` to copy the current working directory to you clipboard.
+If you are in the scope directory use `pwd` and copy the current working directory to the clipboard.
 We will refer it as `<path/to/scope>`
 
 In your own development machine, use the `remote` command to add the new remote scope to your project.
@@ -147,21 +147,21 @@ You can check your registered remotes with the `bit remote` command.s
 
 * You can also add a scope from another machine via ssh.
 
-`bit remote add ssh://</path/to/scope> --global`
+`bit remote add ssh://user@server</path/to/scope> --global`
 
-* Important note about ssh! If you write the path without the third `/`, you'll start from the home directory.
+* Important note about ssh!
 
-`ssh://path/to/scope` === `~/path/to.scope`
+`ssh://user@server<path/to/scope>` === `~/path/to.scope`
 
-`ssh:///path/to/scope>` === `/path/to.scope`
+`ssh://user@server</path/to/scope>` === `/path/to.scope`
 
 * If you don't use the `--global` flag, the remote is added to a specific project.
 
-`bit remote add ssh://</path/to/scope>`
+`bit remote add ssh://user@server</path/to/scope>`
 
 ## Export a component
 
-Remote scopes allow you to use the components they contain in any repository or project. They also allow you to collaborate with others while using and managing your components together.
+Exporting your components to a remote scope enables reusability. It allows you and others to import them from a different repositories and modify them if needed.
 
 **Important -  If you don't have a remote scope yet, please create one on [Setup a remote scope](#setup-a-remote-scope)**
 
@@ -176,7 +176,7 @@ Go back to the 'Hello-world' directory, where you first created your component a
 ```
 summery
 
-bit export @this/<component-id> <remote-scope-name>
+bit export @this/<component-id> <@remote-scope>
 ```
 
 ## Import a component
@@ -217,7 +217,7 @@ The component is also in the staging area as you can see by typing `bit status`.
 
 When you'll commit it, the version will increment itself.
 
-2\. Open the impl.jd file and make some changes. you can also copy and paste the following code.
+2\. Open the impl.js file and make some changes. you can also copy and paste the following code.
 
 `open ./inline_components/global/is-string/impl.js`
 
@@ -258,7 +258,7 @@ Verify the version change with show command.
 Summary
 
 bit modify <component>
-open ./inline_components/<namespace><component>/impl.js // make some changes
+open ./inline_components/<component-id>/impl.js // make some changes
 bit commit <component>
 bit export @this<component> <remote-scope>
 ```
