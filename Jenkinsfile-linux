@@ -31,7 +31,7 @@ node  {
     )
 
     stage 'move tar to distribution'
-    sh("mv bit-${currentVersion}.tar.gz" ./distribution)
+    sh("mv bit-${currentVersion}.tar.gz ./distribution")
 
     stage 'deploy to repository'
     def debUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
