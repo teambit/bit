@@ -36,7 +36,7 @@ node {
             //def sha = sh returnStdout: true, script: '$( curl -s "${env.EXTERNAL_REPO}/bit-brew/stable/bit/${VERSION}/${brewTarName}" |shasum -b -a 256| cut -d \' \' -f 1 )'
             //sh("brew bump-formula-pr --url=${env.EXTERNAL_REPO}/bit-brew/stable/bit/${VERSION}/${brewTarName} --sha256=${sha}")
              }
-         }
+         },
          "tar" : {
             if (params.tar){
                publishToRepo("bit-tar/development/bit/${VERSION}/${tarName}","bit-tar/stable/bit/${VERSION}/${tarName}")
