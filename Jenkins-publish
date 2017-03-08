@@ -40,7 +40,7 @@ node {
          "tar" : {
             if (params.tar){
                publishToRepo("bit-tar/development/bit/${VERSION}/${tarName}","bit-tar/stable/bit/${VERSION}/${tarName}")
-               notifyReleaseServer("${VERSION}","${env.EXTERNAL_REPO}/bit-tar/stable/bit/${VERSION}/bit_${VERSION}.tar.gz","tar")
+               notifyReleaseServer("${VERSION}","${env.EXTERNAL_REPO}/bit-tar/stable/bit/${VERSION}/bit-${VERSION}.tar.gz","tar")
 
                 }
          }
