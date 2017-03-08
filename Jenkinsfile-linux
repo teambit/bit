@@ -36,8 +36,8 @@ node  {
     stage 'deploy to repository'
     def debUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
     sh("curl -u${REPO_TOKEN} -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${debUrl}'")
-    deployToArtifactory("rpm","bit-yum/development/bit/${currentVersion}","${currentVersion}-1.noarch")
-    deployToArtifactory("tar.gz","bit-tar/development/bit/${currentVersion}","${currentVersion}")
+    deployToArtifactory("rpm","bit-yum/development/bit/${currentVersion}","${currentVersion}-1.noarch",null)
+    deployToArtifactory("tar.gz","bit-tar/development/bit/${currentVersion}","${currentVersion}","bit-tar/development/bit/${currentVersion}/")
 
     stage 'notify release server'
     notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb","deb")
@@ -51,13 +51,18 @@ node  {
 
 }
 
-def deployToArtifactory(artifactSuffix,repo,version){
+def deployToArtifactory(artifactSuffix,repo,version,target){
+     def  currentTarget =  "${repo}/"
+     if (target != null) {
+      currentTarget =target
+     }
+
      def server = Artifactory.server 'Bitsrc-artifactory'
       def uploadSpec = """{
         "files": [
           {
             "pattern": "distribution/bit-${version}.${artifactSuffix}",
-            "target": "${repo}/"
+            "target": "${currentTarget}"
           }
        ]
       }"""
