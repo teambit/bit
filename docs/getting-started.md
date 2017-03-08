@@ -64,6 +64,8 @@ You can copy and paste this example:
 
 * You can see the status of all the components in your project using: `bit status`.
 
+* A `component-id` is built from `<namespace>/<name>` but you can refer to a component without the `namespace` if it's in the `global` namespace.
+
 #### Use the Bit component in your code
 
 3\. Install the bit-js module using [NPM](https://www.npmjs.com/package/bit-js) or Yarn.
@@ -92,7 +94,7 @@ Our goal is to use a component in our future work. Before exporting it to a remo
 
 6\. `bit commit is-string 'initial commit'`
 
-* Your component moved from the `inline_components` directory into the `components` directory. You can still use it with `bit-js` the same way as before.
+* Your component moved from the `inline_components` directory into the `components` directory. You can still use it with `bit-js` driver the same way as before.
 
 * You can view the component you just added to your scope: `bit show @this/is-string`
 
@@ -100,14 +102,14 @@ Our goal is to use a component in our future work. Before exporting it to a remo
 
 * Use `bit status` to get a clear view of all components in your local scope.
 
-* `@this`, is the local scope annotation. That means when you want to refer to your local scope, you can use `@this` instead the real scope name (located in the scope.json file under the .bit directory)
+* When you perform a commit, Bit creates an immutable object with your identify as the Author, you can verify it with the following command - `bit log @this/is-string`. If you don't see your identity please [configure you identity](configuring-bit.md#your-identity)
 
 ```
 Summary
 
 mkdir <scope-name> && cd <scope-name>
 bit init
-bit create <namespace/component>
+bit create <component-id>
 open ./inline_components/<component-id>/impl.js // write some code in impl.js
 bit commit <component-id> 'initial commit'
 ```
@@ -319,8 +321,8 @@ Summary
 
 bit import <compiler-id> --compiler --save
 bit modify <remote-scope>/<component-id>
-open inline_components/<box><component>/bit.json // add compiler
-open inline_components/<box><component>/impl.js // make some changes
+open inline_components/<component-id>/bit.json // add compiler
+open inline_components/<component-id>/impl.js // make some changes
 bit commit <component-id> "<commit-message>"
 bit export @this/<component-id> <remote-scope>
 ```
@@ -393,9 +395,9 @@ Summary
 
 bit import <tester-id> --tester --save
 bit modify <remote-scope>/<component-id>
-touch inline_components/<box><component>/spec.js // create spec file
-open inline_components/<box><component>/spec.js // add specs
-open inline_components/<box><component>/bit.json // add tester
+touch inline_components/<component-id>/spec.js // create spec file
+open inline_components/<component-id>/spec.js // add specs
+open inline_components/<component-id>/bit.json // add tester
 bit test --inline <component-id>
 bit commit <component-id> "<commit-message>"
 bit export @this/<component-id> <remote-scope>
@@ -414,7 +416,7 @@ You can find components using the ‘search’ command.
 
  `test@snippets:~/my_scope$ bit create concat`
 
- `created component "concat" in box “global"`
+ `created component "concat" in namespace “global"`
 
  Then commit it:
 
