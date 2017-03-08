@@ -22,27 +22,33 @@ node  {
     sh('./scripts/build-deb.sh')
     stage 'Run test'
     parallel (
-        "stream 1" : { 
+        "stream 1" : {
             sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-centos:latest")
         },
-        "stream 2" : { 
+        "stream 2" : {
             sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-ubuntu:latest")
             }
     )
 
+    stage 'move tar to distribution'
+    sh("mv bit-${currentVersion}.tar.gz" ./distribution)
+
     stage 'deploy to repository'
-    def fullUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
-    sh("curl -u${REPO_TOKEN} -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${fullUrl}'")
+    def debUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
+    sh("curl -u${REPO_TOKEN} -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${debUrl}'")
     deployToArtifactory("rpm","bit-yum/development/bit/${currentVersion}","${currentVersion}-1.noarch")
+    deployToArtifactory("tar.gz","bit-tar/development/bit/${currentVersion}","${currentVersion}.tar.gz")
 
     stage 'notify release server'
     notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb","deb")
     notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/development/bit/${currentVersion}/bit-${currentVersion}-1.noarch.rpm","yum")
+    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-tar/development/bit/${currentVersion}/bit-${currentVersion}-tar.gz","tar")
+
 
     stage ("upload repo scripts")
     sh("gsutil -m cp -a public-read repos/bitsrc.repo  gs://bit-assets/")
     sh("curl -X PURGE http://assets.bitsrc.io/bitsrc.repo")
-    
+
 }
 
 def deployToArtifactory(artifactSuffix,repo,version){
