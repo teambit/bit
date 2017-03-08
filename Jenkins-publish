@@ -1,6 +1,6 @@
 node {
     checkout scm
-    tarName = bit-${VERSION}.tar.gz"
+    tarName = "bit-${VERSION}.tar.gz"
     brewTarName = "bit-${VERSION}-brew.tar.gz"
     debpkg="bit_${VERSION}_all.deb"
     rpm="bit-${VERSION}-1.noarch.rpm"
