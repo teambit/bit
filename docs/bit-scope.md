@@ -10,27 +10,23 @@ For example, a team in an organization may want
 
 Each component belongs in a scope (or multiple scopes). therefore, the scope's name appears in the component's ID path (which consists of owner/scope/box/component).
 
-
-## Component Store
-Bit stores all components with version in a content-addressable filesystem.
-This enables Bit to...
-
-// TODO
-
 ## Dependency Management
 
 Bit's dependency resolution and management was especially designed for the use code components.
-Therefore, we designed its dependency management mechanism with few relevent and major constraints in mind:
+Therefore, we designed its dependency management mechanism with few major constraints in mind:
 
-1. ***Installation (import) performance*** - To make 
-2. ***Predictable and deterministic*** - The same dependencies will be installed at the same exact version, anywhere and acoross every machine to avoid dependency hell and deep dependency debugging.
-3. ***Component availability*** - components should be made always available 
+1. ***Installation (import) performance*** -
+ To make component installation fast, we're resolving depedencies on export. This design approach makes component installation to be based on bandwidth alone. 
+2. ***Predictable and deterministic*** - 
+  The same dependencies will be installed at the same exact version, anywhere and acoross every machine to avoid dependency hell and deep dependency debugging.
+3. ***Component availability*** - 
+  Components are cached to make sure specific versions or components you've used are always available in your "closest scope".
 
 When you build a new component, you can add as many dependencies as you need in the bit.json file.
 
 The bit export command will ensure the component will be packaged with all its dependencies.
 
-When bit push is issued, the new component, with all its dependencies, will all be uploaded to the scope.
+When bit push is issued, the new component, with all its dependencies, will be all stored/cached on the scope.
 
 Once a component is pushed to a scope, the receiving scope will try to build and test the component to ensure it is, in fact, isolated.
 bit import will download the component with all of its dependencies in a single call.
