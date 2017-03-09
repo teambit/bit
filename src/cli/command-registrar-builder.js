@@ -12,20 +12,19 @@ import Modify from './commands/public-cmds/modify-cmd';
 import Commit from './commands/public-cmds/commit-cmd';
 import Import from './commands/public-cmds/import-cmd';
 import Config from './commands/public-cmds/config-cmd';
-import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
 import Search from './commands/public-cmds/search-cmd';
 import Test from './commands/public-cmds/test-cmd';
 import Show from './commands/public-cmds/show-cmd';
 import Status from './commands/public-cmds/status-cmd';
 import CatObject from './commands/private-cmds/cat-object-cmd';
-import Resolver from './commands/private-cmds/resolver-cmd';
 import DescribeScope from './commands/private-cmds/_scope-cmd';
 import Put from './commands/private-cmds/_put-cmd';
 import Fetch from './commands/private-cmds/_fetch-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Build from './commands/public-cmds/build-cmd';
 import CiUpdate from './commands/private-cmds/ci-update-cmd';
+import ScopeConfig from './commands/private-cmds/scope-config-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -42,7 +41,6 @@ export default function registerCommands(): CommandRegistrar {
     new CatObject(),
     new Show(),
     new Log(),
-    new Resolver(),
     new Search(),
     new Test(),
     new Put(),
@@ -53,6 +51,6 @@ export default function registerCommands(): CommandRegistrar {
     new Build(),
     new DescribeScope(),
     new CiUpdate(),
-    // new ScopeConfig(),
+    new ScopeConfig(),
   ]);
 }

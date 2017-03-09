@@ -16,7 +16,7 @@ import filter from './filter';
 import resolveGroupId from './os-resolve-group-id';
 import toResultObject from './promise-to-result-object';
 import empty from './is-empty';
-import { propogateUntil, pathHas } from './fs-propogate-until'; 
+import { propogateUntil, pathHas } from './fs-propogate-until';
 import isBitUrl from './is-bit-url';
 import bufferToReadStream from './buffer-to-read-stream';
 import toBase64 from './to-base64';
@@ -38,6 +38,7 @@ import glob from './glob';
 import inflate from './zlib-inflate';
 import mapToObject from './map-to-object';
 import objectToTupleArray from './object-to-tuple-array';
+import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
 import deflate from './zlib-deflate';
 import sha1 from './sha1';
 import isString from './is-string';
@@ -51,7 +52,8 @@ export {
   parseSSHUrl,
   sha1,
   objectToTupleArray,
-  resolveGroupId,
+  objectToStringifiedTupleArray,
+resolveGroupId,
   mapToObject,
   rmDir,
   filterObject,
