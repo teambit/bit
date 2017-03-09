@@ -7,7 +7,6 @@ import scopeList from './lib/scope-list';
 import scopeShow from './lib/scope-show';
 import buildInScope from './lib/build-in-scope';
 import testInScope from './lib/test-in-scope';
-import { getResolver, setResolver, resetResolver } from './lib/resolver';
 import modifyCIProps from './lib/modify-ci-props';
 import ciUpdateAction from './lib/ci-update-action';
 import scopeConfig from './lib/scope-config';
@@ -16,9 +15,6 @@ import refreshScope from './lib/refresh-scope';
 
 export {
   catObject,
-  getResolver,
-  setResolver,
-  resetResolver,
   describeScope,
   initScope,
   testInScope,

@@ -12,6 +12,7 @@ export function getPath(scopePath: string): string {
 export type ScopeJsonProps = {
   name: string,
   resolverPath?: string,
+  license?: string,
   groupName: ?string;
   remotes?: { name: string, url: string };
 };
@@ -19,17 +20,19 @@ export type ScopeJsonProps = {
 export class ScopeJson {
   _name: string;
   resolverPath: ?string;
+  license: string;
   remotes: {[string]: string};
   groupName: string;
 
-  constructor({ name, remotes, resolverPath, groupName }: ScopeJsonProps) {
+  constructor({ name, remotes, resolverPath, license, groupName }: ScopeJsonProps) {
     this.name = name;
     this.resolverPath = resolverPath;
+    this.license = license;
     this.remotes = remotes || {};
     this.groupName = groupName || '';
   }
 
-  set name(suggestedName: string) { 
+  set name(suggestedName: string) {
     suggestedName = suggestedName.toLowerCase();
     const cleanName = suggestedName.split('')
       .map((char) => {
@@ -53,6 +56,7 @@ export class ScopeJson {
       name: this.name,
       remotes: this.remotes,
       resolverPath: this.resolverPath,
+      license: this.license,
       groupName: this.groupName
     });
   }
@@ -62,6 +66,22 @@ export class ScopeJson {
     return JSON.stringify(this.toPlainObject(), null, 4);
   }
 
+  set(key: string, val: string) {
+    if (!this.hasOwnProperty(key)) throw `unknown key ${key}`;
+    this[key] = val;
+    return this;
+  }
+  
+  get(key: string) : string{
+    if (!this.hasOwnProperty(key)) throw `unknown key ${key}`;
+    return this[key];
+  }
+  
+  del(key: string) : string{
+    if (!this.hasOwnProperty(key)) throw `unknown key ${key}`;
+    return this[key];
+  }
+  
   addRemote(remote: Remote) {
     this.remotes[remote.name] = remote.host;
     return this;
