@@ -27,7 +27,7 @@ It also stores, organizes and manages your components end-to-end. Specially buil
 
 * **Use components across repositories.** Use your code components in multiple repositories without creating duplications or having the overhead of creating and maintaining packages.
 
-* **Zero initial configuration and boilerplate.** Creating a new Bit component requires next to no configuration at all, and can be done directly from within the project you're working on without duplicating or generating boilerplate code (transpiling, testing, configuration, etc.). Transpiling and testing are done simply with other Bit components you can easily reuse while creating a component using any superset or a testing framework.
+* **Zero initial configuration/boilerplate.** Creating a new Bit component requires next to no configuration at all, and can be done directly from within the project you're working on without duplicating or generating boilerplate code (transpiling, testing, configuration, etc.). Transpiling and testing are done simply with other Bit components you can easily reuse while creating a component using any superset or a testing framework.
 
 * **Scoping system.** A Scope is a "virtual codebase". Bit uses Scopes to organize, store and manage components. Exporting components to a remote scope makes them reusable and discoverable across repositories for everyone having access with this scope.
 
