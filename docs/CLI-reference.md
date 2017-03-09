@@ -1,5 +1,5 @@
 
-# Cli Reference
+# CLI Reference
 
 ## Build
 
@@ -120,7 +120,7 @@ export-cmd - Export a component to a remote scope.
 
 ### Description
 
-Pushes a component from the local '.bit' folder to a remote scope, to update a version, or submit a new functionatlity to a scope. Making it available for others to use.
+Pushes a component from the local '.bit' folder to a remote scope, to update a version, or submit a new functionality to a scope. Making it available for others to use.
 
 ### Options
 
@@ -189,7 +189,7 @@ Import a component as a build environment, and not set it as a dependency for th
 
 ### Name
 
-bit-init - Initialate an empty scope.
+bit-init - Initiate an empty scope.
 
 ### Synopsis
 
@@ -271,9 +271,9 @@ log-cmd - Show a log of a specific component.
 
 ### Description
 
-Show a log of a spcefic component, including all commit messages. Can run on local or remote components.
+Show a log of a specific component, including all commit messages. Can run on local or remote components.
 
-### Exmaples
+### Examples
 
 Show log of a local component
 
