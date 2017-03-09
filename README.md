@@ -13,11 +13,9 @@
 </p>
 
 </div>
-Many of us constantly copy and paste code across repositories, usually from the web or from other repositories. However, Code duplications make maintnance a difficult job. This happens because packages and package managment are not suitable for small components. Creating and maintaing a git repo, a package and more for every atomic functionality is simply too much overhead.
+Many of us constantly copy and paste code across repositories, from the web or from other repositories. However, Code duplications make maintenance a difficult job. This happens because creating and maintaining a git repo, a package and more for every atomic functionality is simply too much overhead. 
 
-Bit is a code component manager designed to be language agnostic. It makes components easy to create, maintain and discover while allowing you to use them across repositores without creating duplications and with zero overhead and initial confoguration. 
-
-Bit also stores, organizes and manages your components end-to-end. Built to benefit from handling small components, it comes with a fast export and modification, simplified versioning, faster on-export dependency management, a semantic search engine and even component CI with build and test execution in an isolated environment. You can create a Bit scope anywhere or connect scopes together to create a distributed network.
+Bit is a code component manager designed to be language agnostic. It makes components easy to create, maintain and discover. It makes them reusable across repositories without creating duplications and with zero overhead and initial configuration. It comes with easy component export and modification, simplified versioning, fast on-export dependency management, a semantic search engine and full component CI with build and test execution in an isolated environment. You can create a Bit Scope anywhere or connect Scopes together to create a distributed network.
 
 <p align="center">
   <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
