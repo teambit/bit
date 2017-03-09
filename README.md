@@ -17,9 +17,7 @@ Bit is a code component manager written in JavaScript yet designed to be languag
 
 It helps make code components (functions, classes and more) reusable across repositories with zero initial configuration and without the overhead of packages. 
 
-Bit also stores, organizes and manages your components end-to-end. Specially built for small components, it offers fast export and modification, simplified versioning, faster on-export dependency management, a semantic search engine and even component CI with build and test execution in an isolated environment. 
-You can create a Bit scope anywhere or connect scopes together to create a distributed network.
-
+Bit stores, organizes and manages your components with simplified modification and versioning, faster on-export dependency management, a semantic search engine and an isolated environment for component CI with build and test execution. You can create a Bit scope anywhere or connect scopes together to create a distributed network.
 <p align="center">
   <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
 </p>
