@@ -13,7 +13,7 @@
 </p>
 
 </div>
-Many of us constantly copy and paste code across repositories. Usually, either from the web or other repositories. This makes maintenance much harder. Bit's goal is to make code component reuse as easy as copy and paste, without duplicating code and without the overhead of maintaining packages. It makes components easy to create, maintain and discover.
+Many of us constantly copy and paste code across repositories. Usually, either from the web or other repositories. This makes maintenance a nightmare. Bit's goal is to make code component reuse as easy as copy and paste, without duplicating code and without the overhead of maintaining packages. It makes components easy to create, maintain and discover.
 
 Bit is a code component manager designed to be language agnostic. It helps make code components reusable across repositories with zero initial configuration and without duplicating or maintaining different boilerplates for each package.
 
@@ -27,7 +27,7 @@ It also stores, organizes and manages your components end-to-end. Specially buil
 
 * **Use components across repositories.** Use your code components (functions/classes etc.) in multiple repositories without creating duplications or having to publish packages.
 
-* **Zero initial configuration.** Creating a new Bit component requires next to no configuration at all, and can be done directly from within the project you're working on. Transpiling and testing is done with simple commands.
+* **Zero initial configuration.** Creating a new Bit component requires next to no configuration at all, and can be done directly from within the project you're working on. Transpiling, testing, docs are done simply with other Bit components.
 
 * **Scoping system.** Bit uses Scopes to organize, store and manage components. Exporting components to a remote scope makes them reusable across repositories for everyone working with this scope.
 
@@ -45,11 +45,7 @@ It also stores, organizes and manages your components end-to-end. Specially buil
 
 ## Installation
 
-```bash
-npm install bit-bin -g
-```
-
-For more installation methods, please check our wiki's [installation section](https://teambit.github.io/bit/installation.html).
+For our different installation methods, please visit our docs [installation section](https://teambit.github.io/bit/installation.html).
 
 ## Quick start
 
