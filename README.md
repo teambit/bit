@@ -13,11 +13,11 @@
 </p>
 
 </div>
-Many of us constantly copy and paste code across repositories. Usually, either from the web or other repositories. This makes maintenance much harder. Bit's goal is to make code component reuse as easy as copy and paste, without duplicating code and without the overhead of maintaining packages. It makes components easy to create, maintain and discover.
+Many of us constantly copy and paste code across repositories, usually from the web or from other repositories. However, Code duplications make maintnance a difficult job. This happens because packages and package managment are not suitable for small components. Creating and maintaing a git repo, a package and more for every atomic functionality is simply too much overhead.
 
-Bit is a code component manager designed to be language agnostic. It helps make code components reusable across repositories with zero initial configuration and without duplicating code or maintaining different boilerplates for each package.
+Bit is a code component manager designed to be language agnostic. It makes components easy to create, maintain and discover while allowing you to use them across repositores without creating duplications and with zero overhead and initial confoguration. 
 
-It also stores, organizes and manages your components end-to-end. Specially built for small components, it comes with a fast export and modification, simplified versioning, faster on-export dependency management, a semantic search engine and even component CI with build and test execution in an isolated environment. You can create a Bit scope anywhere or connect scopes together to create a distributed network.
+Bit also stores, organizes and manages your components end-to-end. Built to benefit from handling small components, it comes with a fast export and modification, simplified versioning, faster on-export dependency management, a semantic search engine and even component CI with build and test execution in an isolated environment. You can create a Bit scope anywhere or connect scopes together to create a distributed network.
 
 <p align="center">
   <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
