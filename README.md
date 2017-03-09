@@ -13,9 +13,9 @@
 </p>
 
 </div>
-Many of us constantly copy and paste code across repositories. Usually, either from the web or other repositories. This makes maintenance a nightmare. Bit's goal is to make code component reuse as easy as copy and paste, without duplicating code and without the overhead of maintaining packages. It makes components easy to create, maintain and discover.
+Many of us constantly copy and paste code across repositories. Usually, either from the web or other repositories. This makes maintenance much harder. Bit's goal is to make code component reuse as easy as copy and paste, without duplicating code and without the overhead of maintaining packages. It makes components easy to create, maintain and discover.
 
-Bit is a code component manager designed to be language agnostic. It helps make code components reusable across repositories with zero initial configuration and without duplicating or maintaining different boilerplates for each package.
+Bit is a code component manager designed to be language agnostic. It helps make code components reusable across repositories with zero initial configuration and without duplicating code or maintaining different boilerplates for each package.
 
 It also stores, organizes and manages your components end-to-end. Specially built for small components, it comes with a fast export and modification, simplified versioning, faster on-export dependency management, a semantic search engine and even component CI with build and test execution in an isolated environment. You can create a Bit scope anywhere or connect scopes together to create a distributed network.
 
@@ -25,7 +25,7 @@ It also stores, organizes and manages your components end-to-end. Specially buil
 
 ## Features
 
-* **Use components across repositories.** Use your code components (functions/classes etc.) in multiple repositories without creating duplications or having to publish packages.
+* **Use components across repositories.** Use your code components in multiple repositories without creating duplications or having the overhead of creating and maintaining packages.
 
 * **Zero initial configuration.** Creating a new Bit component requires next to no configuration at all, and can be done directly from within the project you're working on. Transpiling, testing, docs are done simply with other Bit components.
 
