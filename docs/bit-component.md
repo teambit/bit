@@ -13,22 +13,22 @@ gets to create, maintain, test and discover code components.
 
 * ***Creation simplicity*** -
   Creating a component requires only one mandatory file which is the implementation file itself
-  (tests and configration are optional).
+  (tests and configuration are optional).
   Transpiling, testing, docs and other boilerplate mechanics can be set using the [component environment](#component-environment).
 * ***Maintainable*** -
   [Automatic versioning](#component-versioning), a [slim built-in Scope CI mechanism](bit-scope.md#scope-ci)
   and a [dependency management mechanism](bit-scope.md#dependency-resolution-and-management) designed to center performance, consistency and predictability.
 * ***Discoverable*** -
-  Each component is indexed and made fully discoverable by a natural-language search that aimes to understand and cluster components by its functionality.
+  Each component is indexed and made fully discoverable by a natural-language search that aims to understand and cluster components by its functionality.
   See our [Scope Discoverability](bit-scope.md#discoverability) section for more information.
 
 ### Component's Anatomy
 
 A Bit component's most fundamental and only mandatory file is the implementation file named `impl.js` (default name).
 The implementation file consists the component implementation itself and its docs which are parsed to form
-the entire component documantation (see [Component Documentation](#component-documantation) section for more info).
+the entire component documentation (see [Component Documentation](#component-documantation) section for more info).
 
-On top of the implmantation file, two more optional files can be added:
+On top of the implementation file, two more optional files can be added:
 
 1. `spec.js` -
   contains the component's unit tests, designated to be executed by the configured [Testing Environment](#testing-environment).
@@ -39,7 +39,7 @@ Please note, component file names can be configured via [bit.json](configuring-b
 
 #### Component Example
 
-`impl.js` - includes the implmantation itself with its docs (later to be parsed and form the component's documantation).
+`impl.js` - includes the implementation itself with its docs (later to be parsed and form the component's documentation).
 ```js
 /**
  * determines whether `val` is a reference
@@ -54,7 +54,7 @@ module.exports = function isString(val) {
 }
 ```
 
-`spec.js` - includes unit tests implmented using Mocha and Chai executed by the defined testing environment.
+`spec.js` - includes unit tests implemented using Mocha and Chai executed by the defined testing environment.
 ```js
 import { expect } from 'chai';
 
@@ -144,15 +144,15 @@ Implicitly reference the global namespace to make names shorter.
 ```
 
 ## Component Configuration
-Bit components are configured via a configration file named [bit.json](configuring-bit.md#bitjson).
+Bit components are configured via a configuration file named [bit.json](configuring-bit.md#bitjson).
 
-For more information, please check out the [bit.json](configuring-bit.md#bitjson) documantation section.
+For more information, please check out the [bit.json](configuring-bit.md#bitjson) documentation section.
 
 ## Component Versioning
 
-In Bit, versions are automatically assigned to a component once its commited (using `bit commit`) to a Scope using a simple and automatic versioning mechanism.
+In Bit, versions are automatically assigned to a component once its committed (using `bit commit`) to a Scope using a simple and automatic versioning mechanism.
 
-Once a component is commited from the `inline_components` directory to a Scope, Bit checks whether a version of this component exists and does one of the following:
+Once a component is committed from the `inline_components` directory to a Scope, Bit checks whether a version of this component exists and does one of the following:
 1. Component exists - Bit will uptick components version by one.
 2. New component (component does not exists on scope) - A new component would be created.
 
@@ -160,9 +160,9 @@ Bit handles small code component with a single responsibility, not large package
 
 ## Component Documentation
 
-Documentation for packages is not fun, but if you want your code to be truely reuseable, other developers will need to have a place to learn how to use your code. We beleive that the best place to tell people how to use your code, is... well.. alongside your code. This way, when you distribute code components, and even open a code component to review its code, the usage instruction are there (!).
+Documentation for packages is not fun, but if you want your code to be truly reusable, other developers will need to have a place to learn how to use your code. We believe that the best place to tell people how to use your code, is... well.. alongside your code. This way, when you distribute code components, and even open a code component to review its code, the usage instruction are there (!).
 
-This is no magic. To do this, bit utilize the 'Xdoc' format for annotating everything as a part of yoru code.
+This is no magic. To do this, bit utilize the 'Xdoc' format for annotating everything as a part of your code.
 
 Let's take JavaScript for example.
 
@@ -213,7 +213,7 @@ Examples
 
 ## Component Debugging
 
-**javascript**
+**JavaScript**
 
 Some IDEs (Integrated Development Environment) such as [IntelliJ](https://www.jetbrains.com/idea/) and [Visual Studio Code](https://code.visualstudio.com/) have A built in debugger.
 
@@ -222,15 +222,15 @@ If you want to use the debugger on your bit components, in most cases you only n
 In some cases you want to use a compiler, which creates a dist/dist.js file in your component root directory,
 in these cases, the dist/dist.js will be the file that runs.
 
-You can attach a breakpoint in the dist/dist.js, and it will work, but debugging a compiled file is no fun. Therefore bit compilers will supply sourcemaps and put them in the dist directory. Most IDEs have features to support sourcemaps for debugging, let's take vscode for example.
+You can attach a breakpoint in the dist/dist.js, and it will work, but debugging a compiled file is no fun. Therefore bit compilers will supply source maps and put them in the dist directory. Most IDEs have features to support source maps for debugging, let's take VScode for example.
 
-If you attach a breakpoint on a file, vscode will try to identify the compiled version of it and bind the breakpoint in order to give the developer the experience of breakpoint in a pre compiled code (that's not actually runs by node).
+If you attach a breakpoint on a file, VScode will try to identify the compiled version of it and bind the breakpoint in order to give the developer the experience of breakpoint in a pre compiled code (that's not actually runs by node).
 
-All you need to do is to tell vscode where is the outFiles directory, and because the outFiles directory of bit is the components directory just add this to the `launch.json` file:
+All you need to do is to tell VScode where is the outFiles directory, and because the outFiles directory of bit is the components directory just add this to the `launch.json` file:
 
 `"outFiles": [ "${workspaceRoot}/components/**/*.js" ]`
 
-[Read some more about vscode node-debugger handle sourcemaps](https://code.visualstudio.com/docs/editor/node-debugging#_source-maps).
+[Read some more about VScode node-debugger handle source maps](https://code.visualstudio.com/docs/editor/node-debugging#_source-maps).
 
 ## Component Environment
 
@@ -299,7 +299,7 @@ Just as build environment, a test environment is also defined in the component's
 
 Adding tests to a component is very simple. Just create a file name `spec` in the component folder, implement, add the proper test environment to the bit.json file, and run using `bit test <component ID>`
 
-For example, lets implement tests for the `isString` code component from the privous example.
+For example, lets implement tests for the `isString` code component from the previous example.
 
 Add the following `spec.js` file:
 

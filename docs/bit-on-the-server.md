@@ -1,12 +1,12 @@
 # Bit on the Server
 
-Bit is up and formost a collaboration tool. To do so, you will need to set up a remote server to do any collaboration on [bit components](bit-component.md) (well, to be techincally correct - you can import/export components directory from individual scopes, but it will not scale).
+Bit is up and foremost a collaboration tool. To do so, you will need to set up a remote server to do any collaboration on [bit components](bit-component.md) (well, to be technically correct - you can import/export components directory from individual scopes, but it will not scale).
 
 The best collaboration method is to set up a remote scope that all the consumers will have access to import and export component from. In this section, we'll refer to the 'remote scope' as 'bit server'. However, you will notice that the amount of resources used by a remote scope is so small, that you rarely need an entire server for it.
 
 To set up a bit server you will need to decide on the type of protocol you need. Currently bit supports 2 protocols, which you will need to choose between them, according to your workflow. Then use this simple guide to run the commands required to create and connect the bit server.
 
-Due to the fact that a bit server in used only as a collaboration tool, a bit server is basicaly a bare repository. Meaning a bit scope with no working directory.
+Due to the fact that a bit server in used only as a collaboration tool, a bit server is basically a bare repository. Meaning a bit scope with no working directory.
 
 ## Protocols
 
@@ -16,7 +16,7 @@ Each protocol has it's own use cases, and here you'll learn when to use which.
 
 ### Local Protocol
 
-Bit's local protocal is based on accessing folders and files in your local file system. This means that a bit server which uses the local protocol will not be accesible for users that want to connect to the bit server from outside of the machine. So using this protocol is best for local work only, such as evaluating bit or developing it.
+Bit's local protocol is based on accessing folders and files in your local file system. This means that a bit server which uses the local protocol will not be accessible for users that want to connect to the bit server from outside of the machine. So using this protocol is best for local work only, such as evaluating bit or developing it.
 
 To use it, simply connect to the bit server by using this command:
 
@@ -28,7 +28,7 @@ bit remote add file://<path>/<to>/<remote>/<scope>
 
 A common transport protocol for Bit when self-hosting is over SSH. This is because SSH access to servers is already set up in most places – and if it isn’t, it’s easy to do. SSH is also an authenticated network protocol; and because it’s ubiquitous, it’s generally easy to set up and use.
 
-This makes SSH to be the prefered way for collaboration when developing components to remote scopes.
+This makes SSH to be the preferred way for collaboration when developing components to remote scopes.
 
 To add a bit server over SSH, run this command:
 
@@ -58,7 +58,7 @@ cd first-scope
 bit init --bare
 ```
 
-Now add your own pulic SSH key to the `authorized_keys` list of the user `bit`. This will allow you to import and export components hosted in `first-scope`.
+Now add your own public SSH key to the `authorized_keys` list of the user `bit`. This will allow you to import and export components hosted in `first-scope`.
 
 Let's add our `first-scope` as a remote scope to a newly create local scope on our development machine. I'll assume that our server is named `bit-server`, for the sake of this example.
 
@@ -71,7 +71,7 @@ bit commit hello-world 'testing remote'
 bit export @this/hello-world first @first-scope
 ```
 
-Notice that when working with scopes, you need to prepand the scope's name with @. Also not that when working with youe local scope, you can use `@this` to tell bit you are doing actions on it, and not on remote scopes.
+Notice that when working with scopes, you need to prepand the scope's name with @. Also not that when working with your local scope, you can use `@this` to tell bit you are doing actions on it, and not on remote scopes.
 
 ## Generating your SSH public key
 
