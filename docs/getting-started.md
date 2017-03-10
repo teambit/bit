@@ -64,6 +64,8 @@ You can copy and paste this example:
 
 * You can see the status of all the components in your project using: `bit status`.
 
+* A `component-id` is built from `<namespace>/<name>` but you can refer to a component without the `namespace` if it's in the `global` namespace.
+
 #### Use the Bit component in your code
 
 3\. Install the bit-js module using [NPM](https://www.npmjs.com/package/bit-js) or Yarn.
@@ -92,22 +94,20 @@ Our goal is to use a component in our future work. Before exporting it to a remo
 
 6\. `bit commit is-string 'initial commit'`
 
-* Your component moved from the `inline_components` directory into the `components` directory. You can still use it with `bit-js` the same way as before.
+* Your component moved from the `inline_components` directory into the `components` directory. You can still use it with `bit-js` driver, the same way as before.
 
 * You can view the component you just added to your scope: `bit show @this/is-string`
 
-* `@this` stands for local scope notation, you can also call the scope in it's real name located in `.bit/scope.json` file.
+* When you perform a commit, Bit creates an immutable object with your identify as the Author, you can verify it with the following command - `bit log @this/is-string`. If you don't see your identity please [configure you identity](configuring-bit.md#your-identity)
 
 * Use `bit status` to get a clear view of all components in your local scope.
-
-* `@this` is the local scope annotation. That means when you want to refer to your local scope, you can use `@this` instead the real scope name (located in the scope.json file under the .bit directory)
 
 ```
 Summary
 
 mkdir <scope-name> && cd <scope-name>
 bit init
-bit create <namespace/component>
+bit create <component-id>
 open ./inline_components/<component-id>/impl.js // write some code in impl.js
 bit commit <component-id> 'initial commit'
 ```
@@ -132,7 +132,7 @@ That's it, the scope is ready, next we need to register it as a remote scope.
 
 ### Add the new scope to your remotes list
 
-If you are in the scope directory use `pwd | pbcopy` to copy the current working directory to you clipboard.
+If you are in the scope directory use `pwd` and copy the current working directory to the clipboard.
 We will refer to it as `<path/to/scope>`
 
 In your own development machine, use the `remote` command to add the new remote scope to your project.
@@ -145,21 +145,21 @@ You can check your registered remotes with the `bit remote` command.s
 
 * You can also add a scope from another machine via ssh.
 
-`bit remote add ssh://</path/to/scope> --global`
+`bit remote add ssh://user@server</path/to/scope> --global`
 
-* Important note about ssh! If you write the path without the third `/`, you'll start from the home directory.
+* Important note about ssh!
 
-`ssh://path/to/scope` === `~/path/to.scope`
+`ssh://user@server</path/to/scope>` === `/path/to.scope`
 
 `ssh:///path/to/scope>` === `/path/to.scope`
 
 * If you don't use the `--global` flag, the remote is added to a specific project.
 
-`bit remote add ssh://</path/to/scope>`
+`bit remote add ssh://user@server</path/to/scope>`
 
 ## Export a component
 
-Remote scopes allow you to use the components they contain in any repository or project. They also allow you to collaborate with others while using and managing your components together.
+Exporting your components to a remote scope enables reusability. It allows you and others to import them from a different repositories and modify them when needed.
 
 **Important -  If you don't have a remote scope yet, please create one on [Setup a remote scope](#setup-a-remote-scope)**
 
@@ -167,7 +167,7 @@ Go back to the 'Hello-world' directory, where you first created your component a
 
 * assuming that you created `@scopy` in the [initial setup chapter](initial-setup.md#create-remote-scope)
 
-* Your component was exported from the local scope, but it is still in the components directory, and available for requiring in the project. it also adds it to the bit.json file as a dependency.
+* Your component exported from the local scope, but it is still in the components directory, and available for requiring in the project. it also adds it to the bit.json file as a dependency.
 
 * you can use `bit list @scopy` and `bit show @scopy/is-string` to verify that your component exported correctly.
 
@@ -256,7 +256,7 @@ Verify the version change with show command.
 Summary
 
 bit modify <component>
-open ./inline_components/<namespace><component>/impl.js // make some changes
+open ./inline_components/<component-id>/impl.js // make some changes
 bit commit <component>
 bit export @this<component> <remote-scope>
 ```
@@ -319,8 +319,8 @@ Summary
 
 bit import <compiler-id> --compiler --save
 bit modify <remote-scope>/<component-id>
-open inline_components/<box><component>/bit.json // add compiler
-open inline_components/<box><component>/impl.js // make some changes
+open inline_components/<component-id>/bit.json // add compiler
+open inline_components/<component-id>/impl.js // make some changes
 bit commit <component-id> "<commit-message>"
 bit export @this/<component-id> <remote-scope>
 ```
@@ -393,9 +393,9 @@ Summary
 
 bit import <tester-id> --tester --save
 bit modify <remote-scope>/<component-id>
-touch inline_components/<box><component>/spec.js // create spec file
-open inline_components/<box><component>/spec.js // add specs
-open inline_components/<box><component>/bit.json // add tester
+touch inline_components/<component-id>/spec.js // create spec file
+open inline_components/<component-id>/spec.js // add specs
+open inline_components/<component-id>/bit.json // add tester
 bit test --inline <component-id>
 bit commit <component-id> "<commit-message>"
 bit export @this/<component-id> <remote-scope>
@@ -406,7 +406,7 @@ bit export @this/<component-id> <remote-scope>
 
 You can find components using the ‘search’ command.
 
-1\. To search a component in your local scope, type: 
+1\. To search a component in your local scope, type:
 
   `bit search search_query -s @this`
 
@@ -431,7 +431,7 @@ You can find components using the ‘search’ command.
 
 2\. You can also search components on remote scopes (scopes that are located on a remote server). To do this, type:
 
-    bit search search_query -s @scope_name 
+    bit search search_query -s @scope_name
 
   For example:
 
