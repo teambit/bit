@@ -1,40 +1,48 @@
 node {
     checkout scm
-    tarName = "bit-${VERSION}-brew.tar.gz"
+    tarName = "bit-${VERSION}.tar.gz"
+    brewTarName = "bit-${VERSION}-brew.tar.gz"
     debpkg="bit_${VERSION}_all.deb"
-    rpm="bit-${VERSION}-1.noarch.rpm" 
+    rpm="bit-${VERSION}-1.noarch.rpm"
     msi="bit-${VERSION}-unsigned.msi"
     def uploadfolder = "gs://bit-assets/release/${VERSION}/"
         parallel (
-        "deb" : { 
-           if (params.deb){ 
+        "deb" : {
+           if (params.deb){
            sh("wget ${env.EXTERNAL_REPO}/bit-deb/development/bit/${VERSION}/${debpkg} ")
            def fullUrl = "${env.EXTERNAL_REPO}/bit-deb/stable/bit/${VERSION}/bit_${VERSION}_all.deb;deb.distribution=all;deb.component=stable;deb.architecture=amd64"
            sh("curl -u${REPO_TOKEN} -T ${debpkg} -XPUT '${fullUrl}'")
            notifyReleaseServer("${VERSION}","${env.EXTERNAL_REPO}/bit-deb/stable/bit/${VERSION}/bit_${VERSION}_all.deb","deb")
            }
         },
-        "rpm" : { 
-             if (params.yum){ 
+        "rpm" : {
+             if (params.yum){
             publishToRepo("bit-yum/development/bit/${VERSION}/${rpm}","bit-yum/stable/bit/${VERSION}/${rpm}")
             notifyReleaseServer("${VERSION}","${env.EXTERNAL_REPO}/bit-yum/stable/bit/${VERSION}/${rpm}","yum")
             }
         },
-        "msi" : { 
-             if (params.msi){ 
+        "msi" : {
+             if (params.msi){
             publishToRepo("bit-msi/development/bit/${VERSION}/${msi}","bit-msi/stable/bit/${VERSION}/${msi}")
             notifyReleaseServer("${VERSION}","${env.EXTERNAL_REPO}/bit-msi/stable/bit/${VERSION}/${msi}","msi")
             notifyAppveyor()
             }
         },
-        "brew" : { 
-             if (params.brew){ 
-            publishToRepo("bit-brew/development/bit/${VERSION}/${tarName}","bit-brew/stable/bit/${VERSION}/${tarName}")
-            sh("./scripts/generate-formula.sh ${env.EXTERNAL_REPO}/bit-brew/stable/bit/${VERSION}/${tarName}")
+        "brew" : {
+             if (params.brew){
+            publishToRepo("bit-brew/development/bit/${VERSION}/${brewTarName}","bit-brew/stable/bit/${VERSION}/${brewTarName}")
+            sh("./scripts/generate-formula.sh ${env.EXTERNAL_REPO}/bit-brew/stable/bit/${VERSION}/${brewTarName}")
             sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}")
-            //def sha = sh returnStdout: true, script: '$( curl -s "${env.EXTERNAL_REPO}/bit-brew/stable/bit/${VERSION}/${tarName}" |shasum -b -a 256| cut -d \' \' -f 1 )'
-            //sh("brew bump-formula-pr --url=${env.EXTERNAL_REPO}/bit-brew/stable/bit/${VERSION}/${tarName} --sha256=${sha}")
+            //def sha = sh returnStdout: true, script: '$( curl -s "${env.EXTERNAL_REPO}/bit-brew/stable/bit/${VERSION}/${brewTarName}" |shasum -b -a 256| cut -d \' \' -f 1 )'
+            //sh("brew bump-formula-pr --url=${env.EXTERNAL_REPO}/bit-brew/stable/bit/${VERSION}/${brewTarName} --sha256=${sha}")
              }
+         },
+         "tar" : {
+            if (params.tar){
+               publishToRepo("bit-tar/development/bit/${VERSION}/${tarName}","bit-tar/stable/bit/${VERSION}/${tarName}")
+               notifyReleaseServer("${VERSION}","${env.EXTERNAL_REPO}/bit-tar/stable/bit/${VERSION}/bit-${VERSION}.tar.gz","tar")
+
+                }
          }
     )
 }
@@ -58,7 +66,7 @@ def notifyReleaseServer(version,packageUrl,method) {
 }
 import groovy.json.JsonOutput
 def notifyAppveyor(){
-    
+
     def payload = JsonOutput.toJson(accountName : 'TeamBit',
                   projectSlug: "bit-mr045",
                   branch: "master")

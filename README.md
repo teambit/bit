@@ -13,11 +13,9 @@
 </p>
 
 </div>
-Bit is a code component manager written in JavaScript yet designed to be language agnostic.
+Many of us constantly copy and paste code across repositories, from the web or from other repositories. However, Code duplications make maintenance a difficult job. This happens because creating and maintaining a git repo, a package and more for every atomic functionality is simply too much overhead. 
 
-It makes code components such as functions, classes and more reusable without the overhead of packages and with zero initial configuration. Creating a Bit component and using it across repositories saves the need to duplicate or re-invent components  over and over again.
-
-Bit uses a distributed Scoping system to store, organize and manage your components. Scopes benefit from managing small components by using simplified versioning, faster on-export dependency management, a semantic search engine and more. Scopes also take care of your component's CI by building and testing components in an isolated environment. You can create a scope anywhere or connect scopes together to create a distributed network. 
+Bit is a code component manager designed to be language agnostic. It makes components easy to create, maintain and discover. It makes them reusable across repositories without creating duplications and with zero overhead and initial configuration. It comes with easy component export and modification, simplified versioning, fast on-export dependency management, a semantic search engine and full component CI with build and test execution in an isolated environment. You can create a Bit Scope anywhere or connect Scopes together to create a distributed network.
 
 <p align="center">
   <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
@@ -25,11 +23,11 @@ Bit uses a distributed Scoping system to store, organize and manage your compone
 
 ## Features
 
-* **Use components across repositories.** Use your code components (functions/classes etc.) in multiple repositories without creating duplications or having to publish packages.
+* **Use components across repositories.** Use your code components in multiple repositories without creating duplications or having the overhead of creating and maintaining packages.
 
-* **Zero initial configuration.** Creating a new Bit component requires next to no configuration at all, and can be done directly from within the project you're working on. Transpiling and testing is done with simple commands.
+* **Zero initial configuration/boilerplate.** Creating a new Bit component requires next to no configuration at all, and can be done directly from within the project you're working on without duplicating or generating boilerplate code (transpiling, testing, configuration, etc.). Transpiling and testing are done simply with other Bit components you can easily reuse while creating a component using any superset or a testing framework.
 
-* **Scoping system.** Bit uses Scopes to organize, store and manage components. Exporting components to a remote scope makes them reusable across repositories for everyone working with this scope.
+* **Scoping system.** A Scope is a "virtual codebase". Bit uses Scopes to organize, store and manage components. Exporting components to a remote scope makes them reusable and discoverable across repositories for everyone having access with this scope.
 
 * **Distributed network.** Scopes can be created anywhere with a simple command (bit init --bare), and can be connected to create a distributed network.
 
@@ -45,11 +43,7 @@ Bit uses a distributed Scoping system to store, organize and manage your compone
 
 ## Installation
 
-```bash
-npm install bit-bin -g
-```
-
-For more installation methods, please check our wiki's [installation section](https://teambit.github.io/bit/installation.html).
+For our different installation methods, please visit our docs [installation section](https://teambit.github.io/bit/installation.html).
 
 ## Quick start
 

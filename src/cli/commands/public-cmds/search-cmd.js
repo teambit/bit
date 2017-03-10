@@ -1,5 +1,6 @@
 /** @flow */
 import chalk from 'chalk';
+import requestify from 'requestify';
 import Command from '../../command';
 import { searchAdapter } from '../../../search';
 import { formatter } from '../../../search/searcher';
@@ -7,7 +8,6 @@ import { Doc } from '../../../search/indexer';
 import loader from '../../../cli/loader';
 import { LOCAL_SCOPE_NOTATION, SEARCH_DOMAIN } from '../../../constants';
 import { BEFORE_REMOTE_SEARCH } from '../../../cli/loader/loader-messages';
-const requestify = require('requestify');
 
 export default class Search extends Command {
   name = 'search <query...>';

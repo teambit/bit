@@ -8,7 +8,7 @@
 * [Exporting a component to a remote Scope](#setup-a-remote-scope)
 * [Importing a component](#import-a-component)
 * [Modifying a component](#modify-a-component)
-* [Using a compiler](#test-a-component)
+* [Using a compiler](#use-a-compiler)
 * [Testing a component](#test-a-component)
 * [Searching and finding components](#find-a-component)
 
@@ -24,7 +24,7 @@
 
 **Create a local scope**
 
-Bit uses [Scopes](https://teambit.github.io/bit/bit-scope.html) to store, organize and manage components. Local scopes are created for your projects. Components exported to remote scopes can be used across projects. It's recommended to create the scope at the root of a project. You can create as many scopes as you need.
+Bit uses [Scopes](https://teambit.github.io/bit/bit-scope.html) to store, organize and manage components. Local scopes are created for your projects. Components exported to remote scopes can be used across projects. It's recommended to create the scope at the root of a project.
 
 **Type the following in the command line.**
 
@@ -76,11 +76,11 @@ You can copy and paste this example:
 const bit = require('bit-js');
 const isString = bit('is-string'); // <component-id>
 
-console.log(isString('string')); // true
+console.log(isString('It\'s the bit')); // true
 console.log(isString(1)); // false
 ```
 
-5\. Now simply run the application `node index.js`.
+5\. Now run the application `node index.js`.
 
 bit-js will resolve the component from the inline_components directory.
 
@@ -100,7 +100,7 @@ Our goal is to use a component in our future work. Before exporting it to a remo
 
 * Use `bit status` to get a clear view of all components in your local scope.
 
-* `@this`, is the local scope annotation. That means when you want to refer to your local scope, you can use `@this` instead the real scope name (located in the scope.json file under the .bit directory)
+* `@this` is the local scope annotation. That means when you want to refer to your local scope, you can use `@this` instead the real scope name (located in the scope.json file under the .bit directory)
 
 ```
 Summary
@@ -133,7 +133,7 @@ That's it, the scope is ready, next we need to register it as a remote scope.
 ### Add the new scope to your remotes list
 
 If you are in the scope directory use `pwd | pbcopy` to copy the current working directory to you clipboard.
-We will refer it as `<path/to/scope>`
+We will refer to it as `<path/to/scope>`
 
 In your own development machine, use the `remote` command to add the new remote scope to your project.
 
@@ -167,12 +167,12 @@ Go back to the 'Hello-world' directory, where you first created your component a
 
 * assuming that you created `@scopy` in the [initial setup chapter](initial-setup.md#create-remote-scope)
 
-* Your component exported from the local scope, but it is still in the components directory, and available for requiring in the project. it also adds it to the bit.json file as a dependency.
+* Your component was exported from the local scope, but it is still in the components directory, and available for requiring in the project. it also adds it to the bit.json file as a dependency.
 
 * you can use `bit list @scopy` and `bit show @scopy/is-string` to verify that your component exported correctly.
 
 ```
-summery
+summary
 
 bit export @this/<component-id> <remote-scope-name>
 ```
@@ -406,38 +406,53 @@ bit export @this/<component-id> <remote-scope>
 
 You can find components using the ‘search’ command.
 
-1\. To search a component in your local scope, type: `bit search @this search_query`
+1\. To search a component in your local scope, type: 
 
-* Note that the search will only find components that have already been committed.
+  `bit search search_query -s @this`
 
- For example, let’s create the bit ‘concat’ in the scope ‘my_scope’.
+  * Note that the search will only find components that have already been committed.
 
- `test@snippets:~/my_scope$ bit create concat`
+  For example, create the bit 'is-string' in the scope ‘my_scope’.
 
- `created component "concat" in box “global"`
+    $ bit create is-string
 
- Then commit it:
+  Then commit it:
 
- `test@snippets:~/my_scope$ bit commit concat "initial commit"`
+    $ bit commit is-string "initial commit"
 
- `component global/concat committed successfully`
+  Then search for it:
 
- Then search for it:
+    $ bit search is-string -s @this
 
- `test@snippets:~/my_scope$ bit search @this concat`
+  Output:
 
- Output:
- `> global/concat`
+      > global/is-string
 
 
 2\. You can also search components on remote scopes (scopes that are located on a remote server). To do this, type:
 
-  `bit search @scope_name search_query`
+    bit search search_query -s @scope_name 
 
-* For example:
-  `test@snippets:~/my_scope$ bit search @my_remote_scope concat`
+  For example:
+
+    $ bit search is-string -s @my_remote_scope
 
   Output:
-  `> global/concat`
+
+    > global/is-string
+
+3\. A third option is to search for public components. All public components are hosted in [www.bitsrc.io](www.bitsrc.io).
+
+  To search public components type:
+
+    bit search search_query
+
+  For example:
+
+    bit search is string
+
+  Output:
+
+    > bit.utils/global/is-string
 
   Read more about Bit search under [Discoverability](https://teambit.github.io/bit/bit-scope.html#discoverability).
