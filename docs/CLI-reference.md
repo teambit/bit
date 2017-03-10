@@ -361,7 +361,7 @@ search-cmd - Search a component in a scope.
 
 ### Synopsis
 
-`bit search scope_name search_query`
+`bit search search_query -s @scope_name`
 
 ### Description
 
