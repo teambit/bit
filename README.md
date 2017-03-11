@@ -24,23 +24,15 @@ It helps resuing code components in different contexts (repositories, micro-serv
 
 ## Features
 
-* **Use components across repositories.** Use your code components in multiple repositories without creating duplications or having the overhead of creating and maintaining packages.
+- **Scope.** A Scope is a distributed dynamic codebase responsible for end-to-end management of code components. Scopes are where components are stored, tested, built and integrate with each other.
 
-* **Zero initial configuration/boilerplate.** Creating a new Bit component requires next to no configuration at all, and can be done directly from within the project you're working on without duplicating or generating boilerplate code (transpiling, testing, configuration, etc.). Transpiling and testing are done simply with other Bit components you can easily reuse while creating a component using any superset or a testing framework.
+- **Dynamic and virtual API.** Define the components you need in your application to form a dynamic API made of these components alone, without pulling any redundant code or irrelevant dependencies. 
 
-* **Scoping system.** A Scope is a "virtual codebase". Bit uses Scopes to organize, store and manage components. Exporting components to a remote scope makes them reusable and discoverable across repositories for everyone having access with this scope.
+- **Component environment.** Transpiling and testing are done by other Bit components, so you can easily reuse while creating a component using any superset or a testing framework in any context.
 
-* **Distributed network.** Scopes can be created anywhere with a simple command (bit init --bare), and can be connected to create a distributed network.
+- **Fast and predictable depednency resolution.** Dependency resolution is performed on component export, so Bit doesn't have to perform any runtime resolution. This makes the use of components predictable, fast and always available.
 
-* **Component CI.** Scopes can build and test your components in an isolated environment, so that they can build and run anywhere.
-
-* **Fast dependency resolution.** Dependency resolution is performed on-export, so Bit doesn't have to perform any runtime resolution. Both performance and reliability are increased.
-
-* **Quick modification.** Updating and modifying components is done with a single `bit modify` command. Components can be "brought in" for repairs, and shifted right back out.
-
-* **Simple versioning management.** Bit uses simplified incremental versioning for components, preferring reliability and simplicity.
-
-* **Semantic search engine.** A `bit search` CLI command kicks Bit's semantic search engine into action, searching for components created and stored in the Scopes you search.
+- **Discoverability.** Bit has an integrated search engine that uses expressive linguistic models to make your components discoverable even when you forget the exact name you gave each component.
 
 ## Installation
 
