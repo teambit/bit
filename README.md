@@ -13,9 +13,8 @@
 </p>
 
 </div>
-Bit is a distributed and virtual code component repository designed to be language agnostic.  
-It helps make code components reusable and accissable across repositories and micro-services with zero initial configuration without maintaining packages with different boilerplates.  
-Bit makes it easy to create, maintain and discover code components for any use in any application, pulling only the code you need for the component to execute.
+Bit is a distributed and virtual code component repository designed to be language agnostic. It helps make code components reusable and accissable across repositories and micro-services with zero initial configuration without maintaining packages with different boilerplates.  
+Bit makes it easy to create, maintain and discover code components for any use in any application, pulling only the code you need for a component to execute.
 
 Bit stores, organizes and tests your components end-to-end. Specially built for small components, it comes with a fast create and modification (less than 30 seconds), simplified versioning, faster on-export dependency management, a semantic search engine with build and test execution in an isolated environment.  
 You can create a Bit scope anywhere or connect scopes together to form a distributed network.
