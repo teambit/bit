@@ -1,7 +1,6 @@
 
 <p align="left">
 <h1>Bit</h1>
-<b>Distributed and virtual component repository</b>
 </p>
 <div style="text-align:left">
 
@@ -15,7 +14,7 @@
 </div>
 Bit is a distributed and virtual code component repository designed to be language agnostic.  
 
-With Bit, you can virtually create and model components on a [distributed Scope](https://teambit.github.io/bit/bit-scope.html), than discover and use these components to dynamically compose a virtual API with the components you actually use in your application.  
+With Bit, you can virtually create and model components on a [distributed Scope](https://teambit.github.io/bit/bit-scope.html), then discover and use these components to dynamically compose a virtual API with the components you actually use in your application.  
 
 It helps resuing code components in different contexts (repositories, micro-services, serverless functions, etc.) without the overhead of maintaining many small packages with different boilerplates or pulling redundant code.  
 
