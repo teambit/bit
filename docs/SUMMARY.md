@@ -1,5 +1,4 @@
 
-* [Why Code Component Management?](why-code-component-manager.md)
 * [Installing Bit](installation.md)
 * [Getting Started](getting-started.md)
   * [Create your first code component](getting-started.md#create-your-first-code-component)

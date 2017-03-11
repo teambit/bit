@@ -1,7 +1,7 @@
 
 # CLI Reference
 
-## Build
+## build
 
 ### Name
 
@@ -10,7 +10,7 @@ build-cmd - Uses the compiler defined in bit.json to return the compiled version
 ### Synopsis
 
 ```
-Bit build [component ID] [-inline | -i]
+bit build [component ID] [-inline | -i]
 ```
 
 ### Description
