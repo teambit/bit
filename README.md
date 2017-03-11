@@ -1,7 +1,7 @@
 
 <p align="left">
 <h1>Bit</h1>
-<b>Distributed code component manager</b>
+<b>distributed and virtual code component</b>
 </p>
 <div style="text-align:left">
 
@@ -13,10 +13,10 @@
 </p>
 
 </div>
-Bit is a code component manager written in JavaScript yet designed to be language agnostic.  
+Bit is a distributed and a virtual code component repository designed to be language agnostic.  
 It helps make code components reusable across repositories with zero initial configuration and without duplicating code or maintaining different boilerplates for each package.
 
-Bit stores, organizes and manages your components end-to-end. Specially built for small components, it comes with a fast export and modification, simplified versioning, faster on-export dependency management, a semantic search engine and even component CI with build and test execution in an isolated environment.  
+Bit stores, organizes and tests your components end-to-end. Specially built for small components, it comes with a fast export and modification, simplified versioning, faster on-export dependency management, a semantic search engine and even component CI with build and test execution in an isolated environment.  
 You can create a Bit scope anywhere or connect scopes together to form a distributed network.
 
 <p align="center">
@@ -75,7 +75,7 @@ The only alternative was to spend time on boilerplating and build configuration.
 
 We needed a tool that can save us the overhead of making code components reusable. We also needed to take care of our components through their entire lifecycle. We also wanted to collaborate by using and maintaining each other's components.
 
-To achieve this we designed Bit - the first code component manager. Bit is a distributed manager written in JavaScript yet designed to be language agnostic. It allows you to make components reusable with zero initial configuration and use these components across repositories. It also helps to store, organize and manage your components. It allows you to group your components by context, while also handling versioning, dependency management, build and test execution and more. Bit also makes components easy to find and collaborate on.
+To achieve this we designed Bit - the first distributed and virtual component repository. Bit is a distributed repository designed to be language agnostic. It allows you to make components reusable with zero initial configuration and use these components across repositories. It also helps to store, organize and manage your components. It allows you to group your components by context, while also handling versioning, dependency management, build and test execution and more. Bit also makes components easy to find and collaborate on.
 
 At the end of the day, distributed component management is deeply connected to the very basics of writing software as we want it to be. Managing code components can help us all to build great things out of smaller building blocks - together. Imagine the possibilities.
 
