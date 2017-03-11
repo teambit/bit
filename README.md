@@ -66,18 +66,6 @@ Here is a [getting started guide](https://teambit.github.io/bit/getting-started.
   <img alt="Bit" src="https://storage.googleapis.com/bit-docs/bit-commands.png">
 </p>
 
-## Why Bit?
-
-Before Bit, we often found ourselves re-writing or duplicating code across repositories over and over again. This wasted time and effort while making our code base harder to maintain.
-
-The only alternative was to spend time on boilerplating and build configuration. We also ended up having to maintain a git repo, package and CI for every small component. This required too much overhead to be practical.
-
-We needed a tool that can save us the overhead of making code components reusable. We also needed to take care of our components through their entire lifecycle. We also wanted to collaborate by using and maintaining each other's components.
-
-To achieve this we designed Bit - the first distributed and virtual component repository. Bit is a distributed repository designed to be language agnostic. It allows you to make components reusable with zero initial configuration and use these components across repositories. It also helps to store, organize and manage your components. It allows you to group your components by context, while also handling versioning, dependency management, build and test execution and more. Bit also makes components easy to find and collaborate on.
-
-At the end of the day, distributed component management is deeply connected to the very basics of writing software as we want it to be. Managing code components can help us all to build great things out of smaller building blocks - together. Imagine the possibilities.
-
 ## Feedback
 
 Feedbacks are more than welcome: [team@bitsrc.io](mailto:team@bitsrc.io)
