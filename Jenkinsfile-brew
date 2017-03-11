@@ -39,6 +39,7 @@ node  {
     }
      catch (err) {
            slackSend channel: '#deployment', color: 'error', message: "Failed: to build bit-bin ${err}"
+             currentBuild.result = 'FAILURE'
         }
 
 
