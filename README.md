@@ -54,10 +54,6 @@ Here is a [getting started guide](https://teambit.github.io/bit/getting-started.
 
 [CLI refrence](https://teambit.github.io/bit/cli-reference.html)
 
-<p align="center">
-  <img alt="Bit" src="https://storage.googleapis.com/bit-docs/bit-commands.png">
-</p>
-
 ## Feedback
 
 Feedbacks are more than welcome: [team@bitsrc.io](mailto:team@bitsrc.io)
