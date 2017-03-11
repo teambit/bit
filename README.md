@@ -1,7 +1,7 @@
 
 <p align="left">
 <h1>Bit</h1>
-<b>distributed and virtual component repository</b>
+<b>Distributed and virtual component repository</b>
 </p>
 <div style="text-align:left">
 
