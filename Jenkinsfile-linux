@@ -10,6 +10,7 @@ node  {
 	def bundleName = "bit_${currentVersion}"
     def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
 
+try{
     stage 'remove old zip files '
     sh("rm -rf *.tar.gz  && rm -rf ./distribution")
     sh("rm -rf ./node_modules")
@@ -49,6 +50,11 @@ node  {
     sh("gsutil -m cp -a public-read repos/bitsrc.repo  gs://bit-assets/")
     sh("curl -X PURGE http://assets.bitsrc.io/bitsrc.repo")
 
+   slackSend channel: '#deployment', color: 'good', message: 'development - https://github.com/teambit/bit/blob/master/CHANGELOG.md'
+}
+ catch (err) {
+         slackSend channel: '#deployment', color: 'error', message: "Failed: to build bit-bin ${err}"
+    }
 }
 
 def deployToArtifactory(artifactSuffix,repo,version,target){

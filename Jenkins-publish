@@ -45,6 +45,9 @@ node {
                 }
          }
     )
+
+       slackSend channel: '#deployment', color: 'good', message: 'production - https://github.com/teambit/bit/blob/master/CHANGELOG.md'
+
 }
 
 def publishToRepo(from,to){
