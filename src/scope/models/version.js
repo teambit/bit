@@ -9,7 +9,9 @@ import ComponentVersion from '../component-version';
 import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
-const bufferFrom = require('buffer-from')
+import bit from 'bit-js';
+
+const bufferFrom = bit('buffer/from');
 
 type CiProps = {
   error: Object,
