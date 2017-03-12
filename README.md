@@ -28,7 +28,7 @@ It helps resuing code components in different contexts (repositories, micro-serv
 
 - **Dynamic and virtual API.** Define the components you need in your application to form a dynamic API made of these components alone, without pulling any redundant code or irrelevant dependencies. 
 
-- **Component environment.** Transpiling and testing are done by other Bit components, so you can easily reuse while creating a component using any superset or a testing framework in any context.
+- **Component environment.** Transpiling and testing are done by simply using other Bit components (compiler and tester), which you can reuse while creating any component with any superset or a testing framework in any context.
 
 - **Fast and predictable depednency resolution.** Dependency resolution is performed on component export, so Bit doesn't have to perform any runtime resolution. This makes the use of components predictable, fast and always available.
 
