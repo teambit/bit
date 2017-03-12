@@ -28,7 +28,7 @@ const {
 
 const mockComponents = {};
 
-const load = (bitId) => {
+const load = (bitId, opts) => {
   assert(bitId, 'missing bit id');
   assert(R.is(String, bitId), 'bit id must be a string');
   const callerFile = stackTrace.get()[1].getFileName();
@@ -51,7 +51,7 @@ const load = (bitId) => {
     ];
 
     for (let i = 0; i < strategies.length; i += 1) {
-      const result = strategies[i](consumer, boxName, bitName);
+      const result = strategies[i](consumer, boxName, bitName, opts);
       if (result) {
         loaded = result;
         break;

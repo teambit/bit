@@ -27,7 +27,7 @@ class Bit {
     return this.bitJson;
   }
 
-  getImpl() {
+  getImpl(opts) {
     let implBasename;
     let compilerId;
 
@@ -38,6 +38,8 @@ class Bit {
     }
 
     const implFilePath = path.join(this.getPath(), implBasename);
+
+    if (opts && opts.pathOnly) return implFilePath;
 
     try {
       compilerId = this.getBitJson().getCompiler();
