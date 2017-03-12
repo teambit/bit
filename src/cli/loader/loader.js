@@ -45,12 +45,12 @@ const off = (): Loader => {
 };
 
 const loader: Loader = {
-  on,
-  off,
-  stop,
-  start,
-  setText,
-  get,
+  on: on,
+  off: off,
+  stop: stop,
+  start: start,
+  setText: setText,
+  get: get,
 };
 
 export default loader;
