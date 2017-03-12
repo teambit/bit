@@ -9,10 +9,11 @@
   ],
   "plugins": [
     ["transform-flow-strip-types"],
-    ["babel-plugin-transform-builtin-extend", { 
+    ["babel-plugin-transform-builtin-extend", {
       "globals": ["Error", "Array", "Map"]
     }],
     ["transform-class-properties"],
-    ["transform-inline-imports-commonjs"]
+    ["transform-inline-imports-commonjs"],
+    ["transform-runtime"]
   ]
 }

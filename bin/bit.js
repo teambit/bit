@@ -8,7 +8,7 @@ var constants = require('../dist/constants');
 var roadRunner = require('roadrunner');
 var bitUpdates = require('./bit-updates');
 
-var nodeVersion = process.versions.node.split('-')[0]; 
+var nodeVersion = process.versions.node.split('-')[0];
 var compatibilityStatus = getCompatibilityStatus();
 
 function getBuildDir() {
@@ -18,7 +18,7 @@ function getBuildDir() {
   };
 
   return `../${map[compatibilityStatus]}`;
-} 
+}
 
 function ensureDirectories() {
   mkdirp.sync(constants.MODULES_CACHE_DIR);

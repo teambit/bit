@@ -14,6 +14,7 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import loader from '../../cli/loader';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import Consumer from '../../consumer';
+const bufferFrom = require('buffer-from');
 
 export type ComponentTree = {
   component: Component;
@@ -111,7 +112,7 @@ export default class SourceRepository {
       .then((component) => {
         return component.loadVersion(component.latest(), objectRepo)
         .then((version) => {
-          const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())): null;
+          const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())): null;
           version.setDist(dist);
           objectRepo.add(dist)
           .add(version);
@@ -133,9 +134,9 @@ export default class SourceRepository {
       .then((component) => {
         return source.build({ scope: this.scope, consumer })
         .then(() => {
-          const impl = Source.from(Buffer.from(source.impl.src));
-          const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())): null;
-          const specs = source.specs ? Source.from(Buffer.from(source.specs.src)): null;
+          const impl = Source.from(bufferFrom(source.impl.src));
+          const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())): null;
+          const specs = source.specs ? Source.from(bufferFrom(source.specs.src)): null;
 
           const username = globalConfig.getSync(CFG_USER_NAME_KEY);
           const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);

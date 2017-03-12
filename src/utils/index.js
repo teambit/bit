@@ -16,7 +16,7 @@ import filter from './filter';
 import resolveGroupId from './os-resolve-group-id';
 import toResultObject from './promise-to-result-object';
 import empty from './is-empty';
-import { propogateUntil, pathHas } from './fs-propogate-until'; 
+import { propogateUntil, pathHas } from './fs-propogate-until';
 import isBitUrl from './is-bit-url';
 import bufferToReadStream from './buffer-to-read-stream';
 import toBase64 from './to-base64';

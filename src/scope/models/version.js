@@ -9,6 +9,7 @@ import ComponentVersion from '../component-version';
 import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
+const bufferFrom = require('buffer-from')
 
 type CiProps = {
   error: Object,
@@ -168,7 +169,8 @@ export default class Version extends BitObject {
 
   toBuffer(): Buffer {
     const obj = this.toObject();
-    return Buffer.from(JSON.stringify(obj));
+    const str = JSON.stringify(obj);
+    return bufferFrom(str);
   }
 
   static parse(contents) {
