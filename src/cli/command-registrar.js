@@ -58,7 +58,7 @@ function execAction(command, concrete, args) {
       || command.handleError(err);
 
       if (command.private) return serializeErrAndExit(err);
-      if (!command.private && errorHandled) return logAndExit(errorHandled);
+      if (!command.private && errorHandled) return logErrAndExit(errorHandled);
       return logErrAndExit(err);
     });
 }
