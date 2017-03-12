@@ -34,6 +34,7 @@
     "fs-extra": "^1.0.0",
     "fstream": "^1.0.10",
     "glob": "^7.1.1",
+    "is-array-buffer-x": "^1.0.13",
     "jfs": "^0.2.6",
     "loud-rejection": "^1.6.0",
     "mkdirp": "^0.5.1",
