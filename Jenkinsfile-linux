@@ -50,10 +50,10 @@ try{
     sh("gsutil -m cp -a public-read repos/bitsrc.repo  gs://bit-assets/")
     sh("curl -X PURGE http://assets.bitsrc.io/bitsrc.repo")
 
-   slackSend channel: '#deployment', color: 'good', message: 'development - https://github.com/teambit/bit/blob/master/CHANGELOG.md'
+   slackSend channel: '#deployment', color: 'good', message: 'Linux: development - https://github.com/teambit/bit/blob/master/CHANGELOG.md'
 }
  catch (err) {
-         slackSend channel: '#deployment', color: 'error', message: "Failed: to build bit-bin ${err}"
+         slackSend channel: '#deployment', color: 'error', message: "Linux: Failed to build bit-bin ${err}"
          currentBuild.result = 'FAILURE'
     }
 }
