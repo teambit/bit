@@ -8,7 +8,7 @@ node  {
 	currentVersion = currentVersion.replaceAll("\\s","")
 	def tarName ="bit-${currentVersion}-brew.tar.gz"
   brewTarName = "bit-${currentVersion}-brew.tar.gz"
-  def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
+  def uploadfolder = "gs://bit-assets/release/${currentVersion}"
     try {
     stage 'remove old zip files '
     sh("rm -rf *.tar.gz  && rm -rf ./distribution")
