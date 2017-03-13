@@ -23,7 +23,6 @@
     "url": "https://github.com/teambit/bit"
   },
   "dependencies": {
-    "babel-plugin-transform-runtime": "^6.23.0",
     "bit-js": "^0.2.0",
     "buffer-from": "^0.1.1",
     "camelcase": "^4.0.0",
