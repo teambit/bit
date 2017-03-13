@@ -56,7 +56,7 @@ jspm_packages
 .flowconfig
 
 #output
-dist/
+/dist/
 dist-legacy/
 flow-typed/
 
