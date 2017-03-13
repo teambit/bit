@@ -1,0 +1,12 @@
+{
+    "sources": {
+        "impl": "impl.js",
+        "spec": "spec.js"
+    },
+    "env": {
+        "compiler": "bit.envs/compilers/flow::latest",
+        "tester": "bit.envs/testers/mocha-chai::latest"
+    },
+    "dependencies": {},
+    "packageDependencies": {}
+}

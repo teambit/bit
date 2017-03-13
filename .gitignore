@@ -70,7 +70,7 @@ tmp/
 
 # bit directories
 .bit
-components
+#components
 inline_components
 
 # DS_Store
