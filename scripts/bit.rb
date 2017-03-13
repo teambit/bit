@@ -5,11 +5,11 @@ class Bit < Formula
   url ""
   sha256 ""
 
-  depends_on "node"
-
   def install
-    system "npm", "install", "-g", *Language::Node.std_npm_install_args(libexec)
-    bin.install_symlink Dir["#{libexec}/bin/*"]
+    libexec.install Dir["*"]
+    bin.install_symlink Dir["#{libexec}/bin/bit"]
+    bin.install_symlink Dir["#{libexec}/bin/bit.js"]
+    bin.install_symlink "#{libexec}/bin/node" => "bitNode"
   end
 
   test do

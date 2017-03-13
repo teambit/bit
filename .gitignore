@@ -67,6 +67,8 @@ distribution/
 artifacts/
 bit-*.tar.gz
 tmp/
+bin/node
+nodeBin
 
 # bit directories
 .bit

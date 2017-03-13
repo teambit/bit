@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Fixed
+
+- handled errors will also have exit code 1
+
 ## [0.3.0]
 
 ### Change

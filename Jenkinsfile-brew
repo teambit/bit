@@ -7,14 +7,15 @@ node  {
 	def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
 	currentVersion = currentVersion.replaceAll("\\s","")
 	def tarName ="bit-${currentVersion}-brew.tar.gz"
-
+  brewTarName = "bit-${currentVersion}-brew.tar.gz"
+  def uploadfolder = "gs://bit-assets/release/${currentVersion}"
     try {
     stage 'remove old zip files '
     sh("rm -rf *.tar.gz  && rm -rf ./distribution")
     sh("rm -rf ./node_modules")
 
     stage 'Running tar'
-    sh('./scripts/build-tar.sh tar')
+    sh('./scripts/build-tar.sh mac')
 
     stage 'Running brew'
     sh("./scripts/build-brew.sh ")
@@ -31,6 +32,9 @@ node  {
           }"""
 
      server.upload(uploadSpec)
+
+     sh("./scripts/generate-formula.sh ${env.EXTERNAL_REPO}/bit-brew/development/bit/${currentVersion}/${brewTarName}")
+     sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}/bit-dev.rb")
 
      stage 'notify release server'
      notifyReleaseServer(currentVersion,releaseServer+"/update","${ArtifactRepo}/bit-brew/development/bit/${currentVersion}/${tarName}","brew")
