@@ -83,7 +83,8 @@
     "sinon": "^1.17.7"
   },
   "optionalDependencies" : {
-    "posix": "^4.1.1"
+    "posix": "^4.1.1",
+    "gitbook-cli": "^2.3.0"
   },
   "installationMethod": "tar"
 }
