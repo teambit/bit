@@ -16,7 +16,7 @@ try{
     sh("rm -rf ./node_modules")
 
     stage 'Running tar'
-    sh('./scripts/build-tar.sh')
+    sh('./scripts/build-tar.sh linux')
 
 
     stage 'Running DEB & RPM'
