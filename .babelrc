@@ -13,7 +13,6 @@
       "globals": ["Error", "Array", "Map"]
     }],
     ["transform-class-properties"],
-    ["transform-inline-imports-commonjs"],
-    ["transform-runtime"]
+    ["transform-inline-imports-commonjs"]
   ]
 }
