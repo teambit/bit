@@ -10,7 +10,7 @@ environment:
   repoUser:
     secure: B5rIxIs4O8RRe0ml9e87+A==
   repoPassword:
-    secure: ajxoh+tY0Qm/CVa6u66nmw==
+    secure: tR01IIjMw35fBOFhTQd9jw==
   ruby_version:
     secure: k41GeNhYWLfPG/Fir8TGhA==
   ENVIRONMENT:
