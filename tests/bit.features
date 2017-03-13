@@ -9,5 +9,5 @@ Feature: Run commands
     When I run `bit init`
     Then the features should all pass
   Scenario: Run command bit create test
-    When I run `bit create test`
+    When I run `bit init && bit create test`
     Then the features should all pass
