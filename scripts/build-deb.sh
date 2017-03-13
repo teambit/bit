@@ -43,11 +43,11 @@ pwd
 # Common FPM parameters for all packages we'll build using FPM
 FPM="fpm --input-type dir --chdir . --name bit --version $VERSION "`
   `"--vendor 'Cocycles, LTD <team@cocycles.com>' --maintainer 'Cocycles, LTD <team@cocycles.com>' "`
-  `"--url https://www.bitsrc.io  --description 'Bit - Distributed Code Component Manager' --after-install ../../scripts/linux/postInstall.sh "
+  `"--url https://www.bitsrc.io  --description 'Bit - Distributed Code Component Manager' --after-install ../../scripts/linux/postInstall.sh --after-remove ../../scripts/linux/postRemove.sh "
 
 #### Build DEB (Debian, Ubuntu) package
 node ../../scripts/set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/usr/share/bit/package.json deb
-eval "$FPM --output-type deb  --architecture noarch -p ../../distribution/ --depends nodejs  --depends gcc --depends make --depends python --depends g++ --category 'Development/Languages' ."
+eval "$FPM --output-type deb  --architecture noarch -p ../../distribution/   --depends gcc --depends make --depends python --depends g++ --category 'Development/Languages' ."
 #mv $PACKAGE_DIST/$BIT_PACKAGE_NAME $PACKAGE_DIST/
 
 
@@ -55,11 +55,11 @@ eval "$FPM --output-type deb  --architecture noarch -p ../../distribution/ --dep
 # Common FPM parameters for all packages we'll build using FPM
 FPM="fpm --input-type dir --chdir . --name bit --version $VERSION "`
   `"--vendor 'Cocycles, LTD <team@cocycles.com>' --maintainer 'Cocycles, LTD <team@cocycles.com>' "`
-  `"--url https://www.bitsrc.io  --description 'Bit - Distributed Code Component Manager' --after-install ../../scripts/linux/postInstall.sh "
+  `"--url https://www.bitsrc.io  --description 'Bit - Distributed Code Component Manager' --after-install ../../scripts/linux/postInstall.sh  --after-remove ../../scripts/linux/postRemove.sh "
 
 #### Build RPM (Centos) package
 node ../../scripts/set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/usr/share/bit/package.json yum
-eval "$FPM --output-type rpm  --architecture noarch -p ../../distribution/ --depends nodejs   --depends gcc --depends make --depends python --depends gcc-c++ --category 'Development/Languages' ."
+eval "$FPM --output-type rpm  --architecture noarch -p ../../distribution/  --depends gcc --depends make --depends python --depends gcc-c++ --category 'Development/Languages' ."
 #mv $PACKAGE_DIST/*.rpm $PACKAGE_DIST/
 
 

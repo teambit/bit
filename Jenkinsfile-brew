@@ -14,7 +14,7 @@ node  {
     sh("rm -rf ./node_modules")
 
     stage 'Running tar'
-    sh('./scripts/build-tar.sh tar')
+    sh('./scripts/build-tar.sh mac')
 
     stage 'Running brew'
     sh("./scripts/build-brew.sh ")
