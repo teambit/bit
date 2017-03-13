@@ -13,6 +13,7 @@ node  {
     stage 'remove old zip files '
     sh("rm -rf *.tar.gz  && rm -rf ./distribution")
     sh("rm -rf ./node_modules")
+    sh("rm -rf ./components")
 
     stage 'Running tar'
     sh('./scripts/build-tar.sh mac')
