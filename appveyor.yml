@@ -31,7 +31,7 @@ build_script:
 - ps: >-
     mv .\package.json .\package.json.bak
 
-    Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Set-Content package.json
+    Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Where-Object {$_ -notmatch 'gitbook-cli'} | Set-Content package.json
 
     .\scripts\node-installer.sh windows
 

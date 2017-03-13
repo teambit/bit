@@ -43,6 +43,7 @@
     "npmi": "^2.0.1",
     "ora": "^1.1.0",
     "porter-stemmer": "^0.9.1",
+    "posix": "^4.1.1",
     "ramda": "^0.23.0",
     "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",
@@ -70,6 +71,7 @@
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-react": "^6.7.1",
     "flow-bin": "^0.41.0",
+    "gitbook-cli": "^2.3.0",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-clean": "^0.3.2",
@@ -81,10 +83,6 @@
     "gulp-sync": "^0.1.4",
     "run-sequence": "^1.2.2",
     "sinon": "^1.17.7"
-  },
-  "optionalDependencies" : {
-    "posix": "^4.1.1",
-    "gitbook-cli": "^2.3.0"
   },
   "installationMethod": "tar"
 }
