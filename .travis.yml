@@ -1,12 +1,10 @@
 language: node_js
 node_js:
-  - '4'
-  - '5'
   - '6'
   - '7'
 
 before_install:
-  - sudo npm install bit-bin
+  - npm install bit-bin
   - node --version
 
 
