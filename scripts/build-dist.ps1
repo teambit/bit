@@ -15,5 +15,3 @@ npm run build
 rm -r node_modules
 npm install --production --no-optional
 mv scripts/windows/bit.cmd bin/
-
-
