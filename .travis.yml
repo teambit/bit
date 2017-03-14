@@ -19,6 +19,7 @@ addons:
 branches:
   only:
   - master
+  - stable
 
 cache:
   directories:
