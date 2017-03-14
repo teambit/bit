@@ -1,0 +1,14 @@
+{
+    "sources": {
+        "impl": "impl.js",
+        "spec": "spec.js"
+    },
+    "env": {
+        "compiler": "none",
+        "tester": "bit.envs/testers/mocha-chai::1"
+    },
+    "dependencies": {},
+    "packageDependencies": {
+        "is-array-buffer-x": "^1.0.13"
+    }
+}
