@@ -4,6 +4,7 @@ import { Readable } from 'stream';
 import { stemmer } from 'porter-stemmer';
 import Component from '../consumer/component';
 import serverlessIndex from './serverless-index';
+const isWin = require('os').platform() === 'win32';
 
 export type Doc = {
   id: string,
@@ -99,6 +100,7 @@ function addToLocalIndex(component: Component): Promise<Component> {
 }
 
 function index(component: Component, scopePath: string): Promise<Component> {
+  if (isWin) return Promise.resolve();
   localIndex = serverlessIndex.initializeIndex(scopePath);
   return addToLocalIndex(component);
 }
