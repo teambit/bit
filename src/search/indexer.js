@@ -100,7 +100,7 @@ function addToLocalIndex(component: Component): Promise<Component> {
 }
 
 function index(component: Component, scopePath: string): Promise<Component> {
-  if (isWin) return Promise.resolve();
+  if (isWin) return Promise.resolve(component);
   localIndex = serverlessIndex.initializeIndex(scopePath);
   return addToLocalIndex(component);
 }
