@@ -3,8 +3,10 @@ node_js:
   - '6'
   - '7'
 
+before_script:
+  - npm install -g bit-bin
+
 before_install:
-  - npm install bit-bin
   - node --version
 
 
