@@ -7,7 +7,7 @@ before_script:
   - npm install -g bit-bin
 
 before_install:
-  - apt-get install build-essential -y
+  - sudo apt-get install build-essential -y
   - node --version
 
 
