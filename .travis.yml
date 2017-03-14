@@ -4,3 +4,26 @@ node_js:
   - '5'
   - '6'
   - '7'
+
+before_install:
+  - sudo npm install bit-bin
+  - node --version
+
+
+addons:
+  apt:
+    packages:
+      - git
+
+branches:
+  only:
+  - master
+
+cache:
+  directories:
+  - node_modules
+  - lib
+  - lib-legacy
+
+os:
+  - linux
