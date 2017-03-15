@@ -44,8 +44,6 @@ build_script:
 
     Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Where-Object {$_ -notmatch 'gitbook-cli'} | Set-Content package.json
 
-    .\scripts\node-installer.sh windows
-
     .\scripts\build-dist.ps1
 
     .\scripts\build-windows-installer.bat
