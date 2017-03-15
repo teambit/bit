@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Added
+
+- add bit clear-cache cmd
+- now running clear cache before bit update
+
 ## [0.3.2]
 
 ### Added
