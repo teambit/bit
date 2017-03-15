@@ -1,4 +1,3 @@
-./scripts/node-installer.ps1
 npm pack
 if (Test-Path distribution/windows) {
   rm distribution/windows -Recurse
