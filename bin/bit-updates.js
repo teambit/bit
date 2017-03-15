@@ -58,9 +58,11 @@ function checkUpdate(cb) {
   if (lastUpdateCheck && Date.now() - lastUpdateCheck < ONE_DAY) cb();
   else { needle.get(url, function(err, res) {
     _setCache('lastUpdateCheck', Date.now());
-    (err || res.statusCode !== 200) ? cb() : cb(getUpdateCommand())
+    (err || res.statusCode !== 200) ? cb() : cb(clearCachePrefix+getUpdateCommand())
   })}
 }
+
+var clearCachePrefix = 'bit cc && ';
 
 function getUpdateCommand() {
   if (constants.BIT_INSTALL_METHOD === 'brew') return 'brew update && brew upgrade bit';
