@@ -1,13 +1,16 @@
+./scripts/node-installer.ps1
 npm pack
 if (Test-Path distribution/windows) {
   rm distribution/windows -Recurse
 }
+$VERSION= $(node -p -e "require('./package.json').version")
+mkdir distribution
 mkdir distribution/windows
-mv bit-*.tgz distribution/windows/pack.tgz
+mv bit-bin-$VERSION.tgz distribution/windows/
 
 cd distribution/windows
-tar -xzf pack.tgz --strip 1
-rm pack.tgz
+tar -xzf bit-bin-$VERSION.tgz --strip 1
+rm bit-bin-$VERSION.tgz
 npm install -g bit-bin --no-optional
 npm install --no-optional
 bit import

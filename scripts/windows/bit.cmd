@@ -1,2 +1,2 @@
 @echo off
-node "%~dp0\bit.js" %*
+"%~dp0\node.exe" "%~dp0\bit.js" %*
