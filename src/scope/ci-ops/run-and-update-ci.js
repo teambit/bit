@@ -25,14 +25,14 @@ function runAndUpdateCI({ id, scopePath }: { id: string, scopePath: string }): P
 
     return buildInScope({ id, scopePath, environment, save, verbose })
     .then(() => testInScope({ id, scopePath, environment, save, verbose }))
-    .then(() => {
-      return addCIAttrsInTheModel({ startTime });
+    .then((specsResults) => {
+      return addCIAttrsInTheModel({ startTime }).then(() => specsResults);
     })
     .catch((e) => {
-      return addCIAttrsInTheModel({ error: e, startTime });
+      return addCIAttrsInTheModel({ error: e, startTime }).then(() => e);
     });
   } catch (e) {
-    return addCIAttrsInTheModel({ error: e, startTime });
+    return addCIAttrsInTheModel({ error: e, startTime }).then(() => e);
   }
 }
 

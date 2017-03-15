@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- specsResults verbose output after ci-update
 - add bit clear-cache cmd
 - now running clear cache before bit update
 
