@@ -1,9 +1,10 @@
 {
   "name": "bit-bin",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
+    "dev-link": "node ./scripts/establish-dev-link.js $1",
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "gulp lint && flow check",
     "test": "gulp test",
@@ -43,7 +44,6 @@
     "npmi": "^2.0.1",
     "ora": "^1.1.0",
     "porter-stemmer": "^0.9.1",
-    "posix": "^4.1.1",
     "ramda": "^0.23.0",
     "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",
@@ -83,6 +83,9 @@
     "gulp-sync": "^0.1.4",
     "run-sequence": "^1.2.2",
     "sinon": "^1.17.7"
+  },
+  "optionalDependencies": {
+    "posix": "^4.1.1"
   },
   "installationMethod": "tar"
 }

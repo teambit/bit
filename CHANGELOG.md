@@ -7,8 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.3.2]
+
+### Added
+
+- add bit-dev script for linking dev command, for development
+- circle ci integration
+- package node v6.10.0 (LTS) (working for osx, debian, centos)
+
 ### Fixed
 
+- throw the right error code when inner problem occures
 - handled errors will also have exit code 1
 
 ## [0.3.0]

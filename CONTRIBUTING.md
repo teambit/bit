@@ -4,23 +4,42 @@ Contributions are always welcome, no matter how large or small. Before contribut
 please read the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Setup
+
 ### installation
 
-- install dependencies using yarn
-```bash
-  $ yarn
-```
-
-- you can use npm instead
+- install dependencies using npm
 ```bash
   $ npm i
 ```
 
-- install command globally and link (in order to use the "bit" command globaly and always use the
+- you can use yarn instead
+```bash
+  $ yarn
+```
+
+**[install bit](https://teambit.github.io/bit/installation.html)**
+
+perform bit import to fetch the project bit components.
+
+```bash
+  $ bit import
+```
+
+- install command globally and link (in order to use the "bit-dev" command globaly and always use the
   latest development build)
 ```bash
-  npm install -g
-  npm link
+  npm run dev-link
+```
+
+if you want your command to be different then the default (bit-dev) just add your favorite command name as an argument to the script
+```bash
+  npm run dev-link my-bit-dev-cmd-name
+```
+
+bit will install these commands in `/usr/local/bin/` directory, so in order to remove them just use the bash `rm` command.
+
+```bash
+  rm /usr/local/bin/my-bit-dev-cmd-name
 ```
 
 ### Flow

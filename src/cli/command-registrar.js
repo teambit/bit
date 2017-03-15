@@ -13,9 +13,9 @@ function logAndExit(msg: string) {
   process.exit();
 }
 
-function logErrAndExit(msg: Error) {
+function logErrAndExit(msg: Error|string) {
+  if (msg.code) throw msg;
   console.error(msg); // eslint-disable-line
-  if (msg.code) return process.exit(msg.code);
   return process.exit(1);
 }
 
