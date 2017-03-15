@@ -7,8 +7,6 @@ if  [ "$OS" == "linux" ]; then
 	url="https://nodejs.org/dist/v6.10.0/node-v6.10.0-linux-x64.tar.xz"
 elif [ "$OS" == "mac" ]; then
 	 url="https://nodejs.org/dist/v6.10.0/node-v6.10.0-darwin-x64.tar.gz"
-elif [ "$OS" == "windows" ]; then
-	url="https://nodejs.org/dist/v6.10.0/node-v6.10.0-win-x64.zip"
 fi
 
 
