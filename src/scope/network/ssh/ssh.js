@@ -146,10 +146,16 @@ export default class SSH {
   }
 
   connect(sshUrl: SSHUrl, key: ?string): Promise<SSH> {
-    this.connection = sequest.connect(this.composeConnectionUrl(), {
-      privateKey: keyGetter(key)
-    });
+    return new Promise((resolve, reject) => {
+      try {
+        this.connection = sequest.connect(this.composeConnectionUrl(), {
+          privateKey: keyGetter(key)
+        });
+      } catch (e) {
+        return reject(e);
+      }
 
-    return Promise.resolve(this);
+      return resolve(this);
+    });
   }
 }
