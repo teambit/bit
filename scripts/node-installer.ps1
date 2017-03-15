@@ -8,5 +8,5 @@ Invoke-WebRequest -Uri $url -OutFile $zipName
 mkdir distribution/windowsNode
 mv $zipName distribution/windowsNode/
 cd distribution/windowsNode
-tar -xzf $zipName  --strip 1
+tar -xzf "$zipName"  --strip 1
 mv node.exe ../../bin/
