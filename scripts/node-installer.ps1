@@ -16,3 +16,4 @@ unzip node-v6.10.0-win-x64.zip
 Get-ChildItem -Force .
 mv node-v6.10.0-win-x64/node.exe ../../bin/
 cd ../../
+rm -r distribution
