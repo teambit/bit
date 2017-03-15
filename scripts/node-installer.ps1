@@ -5,7 +5,7 @@ Invoke-WebRequest -Uri $url -OutFile "$PSScriptRoot\..\node-v6.10.0-win-x64.zip"
 
 mkdir distribution
 mkdir distribution/windowsNode
-mv $zipName distribution/windowsNode/
+mv node-v6.10.0-win-x64.zip distribution/windowsNode/
 cd distribution/windowsNode
 tar -xzf node-v6.10.0-win-x64.zip  --strip 1
 mv node.exe ../../bin/
