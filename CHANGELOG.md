@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.3.3]
+
+### Fixed
+
+- add posix as an optional dependency (windows)
+
 ### Added
 
 - specsResults verbose output after ci-update
