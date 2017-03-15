@@ -13,8 +13,9 @@ function logAndExit(msg: string) {
   process.exit();
 }
 
-function logErrAndExit(msg: Error) {
+function logErrAndExit(msg: Error|string) {
   console.error(msg); // eslint-disable-line
+  // $FlowFixMe
   if (msg.code) return process.exit(msg.code);
   return process.exit(1);
 }
