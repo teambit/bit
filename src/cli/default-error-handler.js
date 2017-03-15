@@ -21,7 +21,7 @@ import { ScopeNotFound, ResolutionException, ComponentNotFound, DependencyNotFou
 import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 
-const errorsMap: [[Error, (err: Error) => string]] = [ 
+const errorsMap: [[Error, (err: Error) => string]] = [
   [ ConsumerAlreadyExists, () => 'there\'s already a scope' ],
   [ ConsumerNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`' ],
   [ BitAlreadyExistExternaly, err => `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${err.bitName}" to modify the current component or "bit create -f ${err.bitName}"!`],
@@ -47,9 +47,10 @@ const errorsMap: [[Error, (err: Error) => string]] = [
 ];
 
 export default (err: Error): ?string => {
-  const error = errorsMap.find(([ErrorType, ]) => { 
+  const error = errorsMap.find(([ErrorType, ]) => {
     return err instanceof ErrorType;
   });
+
   if (!error) return null;
   const [, func] = error;
   return chalk.red(func(err));
