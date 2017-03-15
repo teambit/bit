@@ -16,11 +16,21 @@ please read the [code of conduct](CODE_OF_CONDUCT.md).
   $ npm i
 ```
 
-- install command globally and link (in order to use the "bit" command globaly and always use the
+- install command globally and link (in order to use the "bit-dev" command globaly and always use the
   latest development build)
 ```bash
-  npm install -g
-  npm link
+  npm run dev-link
+```
+
+if you want your command to be different then the default (bit-dev) just add your favorite command name as an argument to the script
+```bash
+  npm run dev-link my-bit-dev-cmd-name
+```
+
+bit will install these commands in `/usr/local/bin/` directory, so in order to remove them just use the bash `rm` command.
+
+```bash
+  rm /usr/local/bin/my-bit-dev-cmd-name
 ```
 
 ### Flow

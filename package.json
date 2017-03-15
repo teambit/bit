@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
-    "dev-link": "node ./scripts/establish-dev-link.js",
+    "dev-link": "node ./scripts/establish-dev-link.js $1",
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "gulp lint && flow check",
     "test": "gulp test",
