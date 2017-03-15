@@ -24,4 +24,7 @@ node_modules
 # dist
 dist
 
-.history
+# bit
+.bit
+inline_components
+components

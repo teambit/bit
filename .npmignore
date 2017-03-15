@@ -22,3 +22,7 @@ node_modules
 .idea/
 
 .history
+
+# bit
+inline_components
+.bit
