@@ -7,6 +7,7 @@ mkdir distribution
 mkdir distribution/windowsNode
 mv $PSScriptRoot/"../node-v6.10.0-win-x64.zip" $PSScriptRoot/"../distribution/windowsNode/"
 cd $PSScriptRoot"/../distribution/windowsNode"
+Get-ChildItem -Force Convert-Path .
 tar -xzf node-v6.10.0-win-x64.zip  --strip 1
 mv node.exe ../../bin/
 cd ../../
