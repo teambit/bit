@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.3.1]
+
 ### Added
 
 - add bit-dev script for linking dev command, for development
