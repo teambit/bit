@@ -1,5 +1,10 @@
 version: 1.0.{build}
 image: Visual Studio 2015
+
+branches:
+  only:
+    - master
+
 environment:
   token:
     secure: 0a4USjGKxWeE8xz4tO5MnQ==
