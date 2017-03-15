@@ -4,7 +4,6 @@ compile:
     - "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
     - echo $bithubKey >> /home/ubuntu/.ssh/id_rsa
     - "echo \"-----END RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
-    - "cat /home/ubuntu/.ssh/id_rsa"
     - "./scripts/build-tar.sh linux"
     - ./scripts/build-deb.sh
 dependencies:
