@@ -4,16 +4,25 @@ Contributions are always welcome, no matter how large or small. Before contribut
 please read the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Setup
+
 ### installation
 
-- install dependencies using yarn
+- install dependencies using npm
+```bash
+  $ npm i
+```
+
+- you can use yarn instead
 ```bash
   $ yarn
 ```
 
-- you can use npm instead
+**[install bit](https://teambit.github.io/bit/installation.html)**
+
+perform bit import to fetch the project bit components.
+
 ```bash
-  $ npm i
+  $ bit import
 ```
 
 - install command globally and link (in order to use the "bit-dev" command globaly and always use the
