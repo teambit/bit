@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Added
+
+- add bit-dev script for linking dev command, for development
+
 ### Fixed
 
 - handled errors will also have exit code 1
