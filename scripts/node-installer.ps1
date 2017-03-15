@@ -1,10 +1,7 @@
 $url = "https://nodejs.org/dist/v6.10.0/node-v6.10.0-win-x64.zip"
 $zipName = "node-v6.10.0-win-x64.zip"
 
-if (Test-Path distribution/windowsNode) {
-  rm distribution/windowsNode -Recurse
-}
-Invoke-WebRequest -Uri $url -OutFile $zipName
+Invoke-WebRequest -Uri $url -OutFile "node-v6.10.0-win-x64.zip"
 mkdir distribution
 mkdir distribution/windowsNode
 mv $zipName distribution/windowsNode/
