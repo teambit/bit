@@ -11,6 +11,7 @@ import List from './commands/public-cmds/list-cmd';
 import Modify from './commands/public-cmds/modify-cmd';
 import Commit from './commands/public-cmds/commit-cmd';
 import Import from './commands/public-cmds/import-cmd';
+import ClearCache from './commands/public-cmds/clear-cache-cmd';
 import Config from './commands/public-cmds/config-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
 import Search from './commands/public-cmds/search-cmd';
@@ -37,6 +38,7 @@ export default function registerCommands(): CommandRegistrar {
     new Modify(),
     new List(),
     new Config(),
+    new ClearCache(),
     new Remote(),
     new CatObject(),
     new Show(),
