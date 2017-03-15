@@ -1,6 +1,8 @@
 /** @flow */
 import Command from '../../command';
 import { ciUpdateAction } from '../../../api/scope';
+import SpecsResults from '../../../consumer/specs-results/specs-results';
+import { paintSpecsResults } from '../../chalk-box';
 
 export default class CiUpdate extends Command {
   name = 'ci-update <id> [scopePath]';
@@ -13,7 +15,11 @@ export default class CiUpdate extends Command {
     return ciUpdateAction(id, scopePath || process.cwd());
   }
 
-  report(): string {
-    return 'build and test passed, and the ci properties are written in the model';
+  report(maybeSpecsResults: SpecsResults|Error): string {
+    if (maybeSpecsResults instanceof Error) {
+      return maybeSpecsResults.message;
+    }
+
+    return paintSpecsResults(maybeSpecsResults);
   }
 }
