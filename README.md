@@ -11,8 +11,8 @@
 
 </div>
 Bit is a distributed and virtualized component codebase designed to be language agnostic.  
-
-It helps reusing code components in different repositories by allowing to create and model components on a [distributed Scope](https://teambit.github.io/bit/bit-scope.html).
+  
+It helps reusing code components in different repositories by allowing to create and model components on a [distributed Scope](https://teambit.github.io/bit/bit-scope.html).  
 Discover and use these components to dynamically compose a virtual API with the components you actually use in your 
 application.  
   
