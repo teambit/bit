@@ -10,12 +10,12 @@
 </p>
 
 </div>
+Bit is a distributed and virtualized component codebase designed to be language agnostic.  
 
-A virtual and distributed code component repository with a dynamic API.
-
-Bit allows you to create and model components on a [virtual Scope](https://teambit.github.io/bit/bit-scope.html) creating a dynamic API that contains nothing but the components actually used in your application. Bit components can be reused in different contexts (repositories, micro-services etc.) without the overhead of configuring and maintaining multiple repos, packages and tools or having to pull redundant code. 
- 
-
+It helps reusing code components in different repositories by allowing to create and model components on a [distributed Scope](https://teambit.github.io/bit/bit-scope.html).
+Discover and use these components to dynamically compose a virtual API with the components you actually use in your 
+application.  
+  
 <p align="center">
   <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
 </p>
