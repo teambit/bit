@@ -11,11 +11,12 @@
 
 </div>
 
-Bit is a distributed and virtualized component codebase designed to be language agnostic.  
+Bit is a distributed and virtualized component repository designed to be language agnostic.  
 
-It helps reusing code components in different repositories by allowing to create and model components on a [distributed Scope](https://teambit.github.io/bit/bit-scope.html).  
-Discover and use these components to dynamically compose a virtual API with the components you actually use in your 
-application.  
+With Bit, you can create and model components on a [distributed Scope](https://teambit.github.io/bit/bit-scope.html). Then,
+you can discover and use these components as a virtual API with the components you actually use in your application.
+
+Bit components can be reused in different contexts (repositories, micro-services, packages, etc.) without the overhead of configuring and maintaining multiple repos, packages and tools or having to pull redundant code. 
   
 <p align="center">
   <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
@@ -40,9 +41,9 @@ Bit is a single tool that allows you to create, find and reuse your components a
 
 ## Main features of Bit
 
-- **Virtual Scope.** A Scope is a distributed dynamic codebase responsible for end-to-end management of code components. Scopes are where components are stored, tested, built and integrate with each other.
+- **Virtual Scope.** A Scope is a distributed and virtualized codebase responsible for end-to-end management of code components. Scopes are where components are stored, tested, built and integrate with each other.
 
-- **Dynamic API.** Define the components you need in your application to form a dynamic API made of these components alone, without pulling any redundant code or irrelevant dependencies. 
+- **Virtual API.** Define the components you need in your application to form a dynamic API made of these components alone, without pulling any redundant code or irrelevant dependencies. 
 
 - **Component environment.** Transpiling and testing are done by simply using other Bit components (compiler and tester), which you can reuse while creating any component with any superset or a testing framework in any context.
 
