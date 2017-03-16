@@ -1,26 +1,18 @@
 node  {
-    //properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
-    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/teambit/bit.git']]])
-   // checkout scm
+  checkout scm
 	def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
 	def repo = "${env.EXTERNAL_REPO}"
-	def app = "bit"
 	def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
 	currentVersion = currentVersion.replaceAll("\\s","")
-	def bundleName = "bit_${currentVersion}"
-    def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
+  try{
+    stage ('Running tar'){
+      sh("npm i -g bit-bin")
+      sh('./scripts/build-tar.sh linux')
+    }
 
-try{
-    stage 'remove old zip files '
-    sh("rm -rf *.tar.gz  && rm -rf ./distribution")
-    sh("rm -rf ./node_modules")
-
-    stage 'Running tar'
-    sh('./scripts/build-tar.sh linux')
-
-
-    stage 'Running DEB & RPM'
-    sh('./scripts/build-deb.sh')
+    stage ('Running DEB & RPM'){
+      sh('./scripts/build-deb.sh')
+    }
     stage 'Run test'
     parallel (
         "stream 1" : {
@@ -30,26 +22,20 @@ try{
             sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-ubuntu:latest")
             }
     )
-
-    stage 'move tar to distribution'
-    sh("mv bit-${currentVersion}.tar.gz ./distribution")
-
-    stage 'deploy to repository'
-    def debUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
-    sh("curl -u${REPO_TOKEN} -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${debUrl}'")
-    deployToArtifactory("rpm","bit-yum/development/bit/${currentVersion}","${currentVersion}-1.noarch",null)
-    deployToArtifactory("tar.gz","bit-tar/development/bit/${currentVersion}","${currentVersion}","bit-tar/development/bit/${currentVersion}/")
-
-    stage 'notify release server'
-    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb","deb")
-    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/development/bit/${currentVersion}/bit-${currentVersion}-1.noarch.rpm","yum")
-    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-tar/development/bit/${currentVersion}/bit-${currentVersion}-tar.gz","tar")
-
-
-    stage ("upload repo scripts")
-    sh("gsutil -m cp -a public-read repos/bitsrc.repo  gs://bit-assets/")
-    sh("curl -X PURGE http://assets.bitsrc.io/bitsrc.repo")
-
+    stage ('move tar to distribution'){
+      sh("mv bit-${currentVersion}.tar.gz ./distribution")
+    }
+    stage ('deploy to repository'){
+      def debUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
+      sh("curl -u${REPO_TOKEN} -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${debUrl}'")
+      deployToArtifactory("rpm","bit-yum/development/bit/${currentVersion}","${currentVersion}-1.noarch",null)
+      deployToArtifactory("tar.gz","bit-tar/development/bit/${currentVersion}","${currentVersion}","bit-tar/development/bit/${currentVersion}/")
+    }
+    stage ('notify release server'){
+      notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb","deb")
+      notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/development/bit/${currentVersion}/bit-${currentVersion}-1.noarch.rpm","yum")
+      notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-tar/development/bit/${currentVersion}/bit-${currentVersion}-tar.gz","tar")
+    }
    slackSend channel: '#deployment', color: 'good', message: 'Linux: development - https://github.com/teambit/bit/blob/master/CHANGELOG.md'
 }
  catch (err) {
@@ -76,13 +62,13 @@ def deployToArtifactory(artifactSuffix,repo,version,target){
       server.upload(uploadSpec)
 }
 
-import groovy.json.JsonOutput
 def notifyReleaseServer(version,url,packageUrl,method) {
-    def payload = JsonOutput.toJson(version : version,
-                                 method: "${method}",
-                                 file: "${packageUrl}")
+    def payload = """
+        {"version": "$version",
+         "method":"$method",
+         "file": "$packageUrl"
+         }
+    """
+    def response = httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: payload, url: "$url"
 
-    def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${url} -u ${releaseServerToken} "
-    print ("${post}")
-    sh ("${post}")
 }
