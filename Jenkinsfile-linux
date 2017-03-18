@@ -1,6 +1,6 @@
 pipeline {
       agent {
-          docker { image 'gcr.io/cocycles-963/containers/bit-bin' }
+          docker { image 'node' }
     }
     stages {
         stage('build') {
