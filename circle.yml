@@ -12,12 +12,14 @@ dependencies:
     - "sudo apt-get update -qq"
     - "sudo apt-get install -y rpm lintian"
     - "gem install fpm"
+    - "curl -fL https://getcli.jfrog.io | sh && mv jfrog /usr/local/bin"
 general:
   branches:
     only:
       - master
       - develop
       - stable
+      - ci
 machine:
   node:
     version: 6
