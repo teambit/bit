@@ -41,6 +41,7 @@ pipeline {
                     notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-tar/development/bit/${currentVersion}/bit-${currentVersion}-tar.gz","tar")
                   }
             }
+    }
     post {
         always {
             sh 'This will always run'
@@ -59,7 +60,7 @@ pipeline {
             sh 'For example, the Pipeline was previously failing but is now successful'
         }
     }
-}
+
 }
 
 
