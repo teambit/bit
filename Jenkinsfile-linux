@@ -1,12 +1,15 @@
 pipeline {
     agent any
     environment {
-         releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
-         repo = "${env.EXTERNAL_REPO}"
-         currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
-         currentVersion = currentVersion.replaceAll("\\s","")
+
     }
     stages {
+    stage('set env'){
+        def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
+         def     repo = "${env.EXTERNAL_REPO}"
+        def     currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
+             currentVersion = currentVersion.replaceAll("\\s","")
+    }
         stage('build') {
             steps {
                 sh('./scripts/build-tar.sh linux')
