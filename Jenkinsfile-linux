@@ -60,6 +60,7 @@ pipeline {
         }
     }
 }
+}
 
 
 def deployToArtifactory(artifactSuffix,repo,version,target){
