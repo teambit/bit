@@ -10,7 +10,6 @@ pipeline {
                     sh("apt-get update -qq")
                     sh("apt-get install -y rpm lintian")
                     sh("gem install fpm")
-                    sh('mkdir /root/.ssh')
                     sh('echo \"-----BEGIN RSA PRIVATE KEY-----\" >> /root/.ssh/id_rsa')
                     sh('echo ${env.SSHKEY} >> /root/.ssh/id_rsa')
                     sh('echo \"-----END RSA PRIVATE KEY-----\" >> /root/.ssh/id_rsa')
