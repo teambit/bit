@@ -5,6 +5,7 @@ pipeline {
             steps {
                 sh("curl -sL https://deb.nodesource.com/setup_6.x | bash -")
                 sh("apt-get install -y nodejs")
+                sh("npm install -g bit-bin")
             }
         }
         stage('build') {
