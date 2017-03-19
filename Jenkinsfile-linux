@@ -3,10 +3,7 @@ pipeline {
     stages {
            stage('pre') {
                 steps {
-
-                    sh('echo \"-----BEGIN RSA PRIVATE KEY-----\" >> /root/.ssh/id_rsa')
-                    sh("echo ${env.SSHKEY} >> /root/.ssh/id_rsa")
-                    sh('echo \"-----END RSA PRIVATE KEY-----\" >> /root/.ssh/id_rsa')
+                sh("./scripts/bootstrap-env-ubuntu.sh ${env.SSHKEY}")
                 }
             }
         stage('build') {
