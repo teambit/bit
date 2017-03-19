@@ -6,4 +6,5 @@ apt-get install -y rubygems
 apt-get update -qq
 apt-get install -y rpm lintian
 gem install fpm
+apt-get install fakeroot -y
 npm install -g bit-bin
