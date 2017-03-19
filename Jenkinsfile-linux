@@ -1,7 +1,7 @@
 pipeline {
       agent any
     stages {
-        stage('build') {
+        stage('prep') {
             steps {
                 sh("curl -sL https://deb.nodesource.com/setup_6.x | bash -")
                 sh("apt-get install -y nodejs")
