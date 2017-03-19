@@ -3,15 +3,9 @@ pipeline {
     stages {
            stage('pre') {
                 steps {
-                    sh('apt-get install ruby-dev -y')
-                    sh('apt-get install -y rubygems')
-                    sh('apt-get install rubygems-integration -y')
-                    sh('apt-get install -y git-core curl zlib1g-dev build-essential libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev')
-                    sh("apt-get update -qq")
-                    sh("apt-get install -y rpm lintian")
-                    sh("gem install fpm")
+
                     sh('echo \"-----BEGIN RSA PRIVATE KEY-----\" >> /root/.ssh/id_rsa')
-                    sh('echo ${env.SSHKEY} >> /root/.ssh/id_rsa')
+                    sh("echo ${env.SSHKEY} >> /root/.ssh/id_rsa")
                     sh('echo \"-----END RSA PRIVATE KEY-----\" >> /root/.ssh/id_rsa')
                 }
             }
