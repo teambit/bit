@@ -1,13 +1,6 @@
 pipeline {
-      agent any
+      agent   docker {image 'node'}
     stages {
-        stage('prep') {
-            steps {
-                sh("curl -sL https://deb.nodesource.com/setup_6.x | bash -")
-                sh("apt-get install -y nodejs")
-                sh("npm install -g bit-bin")
-            }
-        }
         stage('build') {
             steps {
 
