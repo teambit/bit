@@ -3,6 +3,11 @@ pipeline {
         docker {image 'node'}
       }
     stages {
+           stage('pre') {
+                steps {
+                    sh('npm i -g bit-bin')
+                }
+            }
         stage('build') {
             steps {
 
