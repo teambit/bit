@@ -3,7 +3,7 @@ pipeline {
     stages {
            stage('pre') {
                 steps {
-                sh("./scripts/bootstrap-env-ubuntu.sh ${env.SSHKEY}")
+                sh("./scripts/bootstrap-env-ubuntu.sh")
                 }
             }
         stage('build') {

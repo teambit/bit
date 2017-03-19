@@ -6,10 +6,4 @@ apt-get install -y rubygems
 apt-get update -qq
 apt-get install -y rpm lintian
 gem install fpm
-mkdir -p /root/.ssh
-if [ ! -f /root/.ssh/id_rsa ]; then
-    echo \"-----BEGIN RSA PRIVATE KEY-----\" >> /root/.ssh/id_rsa
-    echo $1 >> /root/.ssh/id_rsa
-    echo \"-----END RSA PRIVATE KEY-----\" >> /root/.ssh/id_rsa
-fi
 npm install -g bit-bin
