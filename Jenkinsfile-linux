@@ -3,10 +3,15 @@ pipeline {
     stages {
         stage('build') {
             steps {
-            withDockerContainer('node') {
-                sh('./scripts/build-deb.sh')
-                sh('./scripts/build-tar.sh linux')            }
+                sh("curl -sL https://deb.nodesource.com/setup_6.x | bash -")
+                sh("apt-get install -y nodejs")
+            }
+        }
+        stage('build') {
+            steps {
 
+                sh('./scripts/build-tar.sh linux')
+                sh('./scripts/build-deb.sh')
             }
         }
         stage ('test'){
