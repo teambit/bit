@@ -3,7 +3,7 @@ pipeline {
     stages {
            stage('pre') {
                 steps {
-                    sh('npm i -g bit-bin')
+                    sh('apt-get install ruby-dev -y')
                     sh("apt-get update -qq")
                     sh("apt-get install -y rpm lintian")
                     sh("gem install fpm")
