@@ -3,7 +3,7 @@ pipeline {
     stages {
            stage('pre') {
                 steps {
-                sh("./scripts/bootstrap-env-ubuntu.sh")
+                sh("npm i -g bit-bin")
                 }
             }
         stage('build') {
