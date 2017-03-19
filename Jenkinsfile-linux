@@ -1,12 +1,12 @@
 pipeline {
-      agent {
-          docker { image 'node' }
-    }
+      agent any
     stages {
         stage('build') {
             steps {
-                sh('./scripts/build-tar.sh linux')
+            withDockerContainer('node') {
                 sh('./scripts/build-deb.sh')
+                sh('./scripts/build-tar.sh linux')            }
+
             }
         }
         stage ('test'){
