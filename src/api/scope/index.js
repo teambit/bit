@@ -11,6 +11,8 @@ import { getResolver, setResolver, resetResolver } from './lib/resolver';
 import modifyCIProps from './lib/modify-ci-props';
 import ciUpdateAction from './lib/ci-update-action';
 import scopeConfig from './lib/scope-config';
+import catScope from './lib/cat-scope';
+import refreshScope from './lib/refresh-scope';
 
 export {
   catObject,
@@ -28,4 +30,6 @@ export {
   modifyCIProps,
   ciUpdateAction,
   scopeConfig,
+  catScope,
+  refreshScope,
 };

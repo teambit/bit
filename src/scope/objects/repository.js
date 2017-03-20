@@ -43,23 +43,28 @@ export default class Repository {
       .then((fileContents) => {
         return BitObject.parseObject(fileContents, this.types);
       })
-      .catch(() => null);
+      .catch((e) => {
+        return null;
+      });
   }
 
-  list():Promise<BitObject[]> {
-    // @TODO - write
-    const filterComponents = refs =>
-      refs.filter(ref => ref instanceof Component);
-
+  list(): Promise<BitObject[]> {
     return new Promise((resolve, reject) => {
       return glob(path.join('*', '*'), { cwd: this.getPath() }, (err, matches) => {
         if (err) reject(err);
         const refs = matches.map(str => str.replace(path.sep, ''));
         return Promise.all(refs.map(ref => this.load(ref)))
-        .then(filterComponents)
         .then(resolve);
       });
     });
+  }
+
+  listComponents(): Promise<Component[]> {
+    // @TODO - write
+    const filterComponents = refs =>
+      refs.filter(ref => ref instanceof Component);
+
+    return this.list().then(filterComponents);
   }
 
   remove(ref: Ref) {

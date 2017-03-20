@@ -106,12 +106,12 @@ export default class Scope {
   }
 
   list() { // @Deprecated
-    return this.objects.list() // @TODO - check version and cross check them with components
+    return this.objects.listComponents() // @TODO - check version and cross check them with components
       .then(components => this.toConsumerComponents(components));
   }
 
   listStage() {
-    return this.objects.list()
+    return this.objects.listComponents()
     .then(components => this.toConsumerComponents(
       components.filter(c => c.scope === this.name)
     ));
