@@ -79,9 +79,26 @@ export default class SSH {
       });
     });
   }
+  
+  execPut(...args: any[]): Promise<any> {
+    return new Promise((resolve, reject) => {
+      let cmd = this.buildCmd('_put', absolutePath(this.path || ''), ...args);
+      const data = R.last(R.split(' ',cmd));
+      cmd = R.head(R.split(data,cmd));
+      this.connection(cmd, function (err, result, o) {
+        if (!o) return reject(new UnexpectedNetworkError());
+        if (err && o.code && o.code !== 0) return reject(errorHandler(err, res));
+        this.connection(data, function (err, res, o) {
+          if (!o) return reject(new UnexpectedNetworkError());
+          if (err && o.code && o.code !== 0) return reject(errorHandler(err, res));
+          return resolve(clean(res));
+        });
+      });
+    });
+  }
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
-    return this.exec('_put', componentObjects.toString())
+    return this.execPut('_put', componentObjects.toString())
       .then((str: string) => {
         try {
           return ComponentObjects.fromString(fromBase64(str));
