@@ -1,88 +1,84 @@
-node  {
-    //properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'stage\nproduction', description: '', name: 'environment']]]])
-    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/teambit/bit.git']]])
-   // checkout scm
-	def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
-	def repo = "${env.EXTERNAL_REPO}"
-	def app = "bit"
-	def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
-	currentVersion = currentVersion.replaceAll("\\s","")
-	def bundleName = "bit_${currentVersion}"
-    def uploadfolder = "gs://bit-assets/release/${currentVersion}/"
-
-try{
-    stage 'remove old zip files '
-    sh("rm -rf *.tar.gz  && rm -rf ./distribution")
-    sh("rm -rf ./node_modules")
-
-    stage 'Running tar'
-    sh('./scripts/build-tar.sh linux')
-
-
-    stage 'Running DEB & RPM'
-    sh('./scripts/build-deb.sh')
-    stage 'Run test'
-    parallel (
-        "stream 1" : {
-            sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-centos:latest")
-        },
-        "stream 2" : {
-            sh("docker run -v `pwd`/distribution:/packages -v `pwd`/tests:/tests gcr.io/cocycles-963/containers/bit-testing-ubuntu:latest")
+pipeline {
+      agent any
+    stages {
+           stage('pre') {
+                steps {
+                sh("npm i -g bit-bin")
+                }
             }
-    )
+        stage('build') {
+            steps {
 
-    stage 'move tar to distribution'
-    sh("mv bit-${currentVersion}.tar.gz ./distribution")
+                sh('./scripts/build-tar.sh linux')
+                sh('./scripts/build-deb.sh')
+            }
+        }
+        stage ('test'){
+            steps {
+                    sh("npm i -g")
+                    sh("./tests/e2e.sh")
+                }
+        }
+        stage ('deploy to repo'){
+            steps {
+               script {
+                  def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
+                  def repo = "${env.EXTERNAL_REPO}"
+                  def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
+                      currentVersion = currentVersion.replaceAll("\\s","")
+                  def debUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
+                  sh("mv bit-${currentVersion}.tar.gz ./distribution")
 
-    stage 'deploy to repository'
-    def debUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
-    sh("curl -u${REPO_TOKEN} -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${debUrl}'")
-    deployToArtifactory("rpm","bit-yum/development/bit/${currentVersion}","${currentVersion}-1.noarch",null)
-    deployToArtifactory("tar.gz","bit-tar/development/bit/${currentVersion}","${currentVersion}","bit-tar/development/bit/${currentVersion}/")
+                  sh("curl -u${REPO_TOKEN} -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${debUrl}'")
+                  deployToArtifactory("rpm","bit-yum/development/bit/${currentVersion}","${currentVersion}-1.noarch",null)
+                  deployToArtifactory("tar.gz","bit-tar/development/bit/${currentVersion}","${currentVersion}","bit-tar/development/bit/${currentVersion}/")
+                  notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb","deb")
+                  notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/development/bit/${currentVersion}/bit-${currentVersion}-1.noarch.rpm","yum")
+                  notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-tar/development/bit/${currentVersion}/bit-${currentVersion}-tar.gz","tar")
+                }
 
-    stage 'notify release server'
-    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb","deb")
-    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/development/bit/${currentVersion}/bit-${currentVersion}-1.noarch.rpm","yum")
-    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-tar/development/bit/${currentVersion}/bit-${currentVersion}-tar.gz","tar")
-
-
-    stage ("upload repo scripts")
-    sh("gsutil -m cp -a public-read repos/bitsrc.repo  gs://bit-assets/")
-    sh("curl -X PURGE http://assets.bitsrc.io/bitsrc.repo")
-
-   slackSend channel: '#deployment', color: 'good', message: 'Linux: development - https://github.com/teambit/bit/blob/master/CHANGELOG.md'
-}
- catch (err) {
-         slackSend channel: '#deployment', color: 'error', message: "Linux: Failed to build bit-bin ${err}"
-         currentBuild.result = 'FAILURE'
+              }
+            }
     }
+
+        post {
+
+            success {
+               slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'  OS:LINUX")
+            }
+            failure {
+               slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' OS:LINUX ")
+            }
+
+        }
+
 }
+
 
 def deployToArtifactory(artifactSuffix,repo,version,target){
-     def  currentTarget =  "${repo}/"
-     if (target != null) {
-      currentTarget =target
-     }
+    def  currentTarget =  "${repo}/"
+    if (target != null) {
+    currentTarget =target
+    }
 
-     def server = Artifactory.server 'Bitsrc-artifactory'
-      def uploadSpec = """{
+    def server = Artifactory.server 'Bitsrc-artifactory'
+    def uploadSpec = """{
         "files": [
-          {
+        {
             "pattern": "distribution/bit-${version}.${artifactSuffix}",
             "target": "${currentTarget}"
-          }
-       ]
-      }"""
-      server.upload(uploadSpec)
+        }
+    ]
+    }"""
+    server.upload(uploadSpec)
 }
 
-import groovy.json.JsonOutput
 def notifyReleaseServer(version,url,packageUrl,method) {
-    def payload = JsonOutput.toJson(version : version,
-                                 method: "${method}",
-                                 file: "${packageUrl}")
-
-    def post = "curl -d '${payload.toString()}' -H 'Content-Type: application/json' ${url} -u ${releaseServerToken} "
-    print ("${post}")
-    sh ("${post}")
+    def payload = """
+        {"version": "$version",
+        "method":"$method",
+        "file": "$packageUrl"
+        }
+    """
+    def response = httpRequest authentication: 'releaseUser', acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: payload, url: "$url"
 }
