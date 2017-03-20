@@ -50,8 +50,15 @@ build_script:
 
     .\scripts\build-windows-installer.bat
 
+    npm
+
+# run custom scripts before tests
+before_test:
+  - npm i -g
+
 test_script:
-  -  .\tests\windows.ps1
+  - bit init
+  - bit init && bit create test
 
 
 artifacts:
