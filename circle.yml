@@ -6,6 +6,8 @@ compile:
     - "echo \"-----END RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
     - "./scripts/build-tar.sh linux"
     - ./scripts/build-deb.sh
+    - npm i -g
+
 dependencies:
   post:
     - "npm install -g bit-bin"
@@ -18,6 +20,11 @@ general:
       - master
       - develop
       - stable
+
+test_script:
+  - bit --version
+  - ./tests/e2e.sh
+
 machine:
   node:
     version: 6
