@@ -8,9 +8,10 @@ mkdir distribution/windows
 mv bit-bin-$VERSION.tgz distribution/windows/
 
 cd distribution/windows
+
 tar -xzf bit-bin-$VERSION.tgz --strip 1
 rm bit-bin-$VERSION.tgz
-npm install -g bit-bin --no-optional
+npm install -g bit-bin@stage --no-optional
 npm install --no-optional
 bit import
 npm run build

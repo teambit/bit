@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.3.3]
+
+### Fixed
+
+- add posix as an optional dependency (windows)
+
+### Added
+
+- specsResults verbose output after ci-update
+- add bit clear-cache cmd
+- now running clear cache before bit update
+
 ## [0.3.2]
 
 ### Added

@@ -38,7 +38,15 @@ Then simply install using
 
 ## installer/Chocolatey (Windows)
 
-(currently unavailable)
+There are two installation methods for Windows.
+  
+1. **Download installer** - You can download a msi file and run it.
+
+Installation can be found [here](https://api.bitsrc.io/release/msi/latest).
+
+2. **Chocolatey** - Bit can be installed via Chocolatey:
+
+`choco install bit`
 
 ## Tarball Release
 

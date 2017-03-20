@@ -2,10 +2,10 @@
 import c from 'chalk';
 import SpecsResults from '../consumer/specs-results/specs-results';
 
-export const formatInlineBit = ({ box, name }: any): string => 
+export const formatInlineBit = ({ box, name }: any): string =>
 c.white('     > ') + c.cyan(`${box}/${name}`);
 
-export const formatBit = ({ scope = '@this', box, name, version }: any): string => 
+export const formatBit = ({ scope = '@this', box, name, version }: any): string =>
 c.white('     > ') + c.cyan(`${scope}/${box}/${name} - ${version ? version.toString() : 'latest'}`);
 
 export const paintBitProp = (key: string, value: string): string => {
@@ -26,7 +26,7 @@ const paintAuthor = (email: ?string, username: ?string): string => {
   } else if (!email && username) {
     return c.white(`Author: ${username}\n`);
   }
-  
+
   return '';
 };
 
@@ -57,6 +57,6 @@ const paintStats = (results) => {
   return `${statsHeader}\n${totalDuration}\n`;
 };
 
-export const paintSpecsResults = (results: SpecsResults) => {
+export const paintSpecsResults = (results: SpecsResults): string => {
   return paintStats(results) + results.tests.map(paintTest).join('\n');
 };
