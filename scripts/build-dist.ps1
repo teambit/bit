@@ -8,7 +8,7 @@ mv bit-*.tgz distribution/windows/pack.tgz
 cd distribution/windows
 tar -xzf pack.tgz --strip 1
 rm pack.tgz
-npm install -g bit-bin --no-optional
+npm install -g bit-bin@stage --no-optional
 npm install --no-optional
 bit import
 npm run build
