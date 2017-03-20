@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.3.4]
+
+### Fixed
+
+- add the hash to the header of the any bit-object
+
 ## [0.3.3]
 
 ### Fixed

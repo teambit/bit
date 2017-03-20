@@ -29,7 +29,7 @@ export default class BitObject {
 
   collectRefs(repo: Repository): Ref[] {
     const refsCollection = [];
-    
+
     function addRefs(object: BitObject) {
       const refs = object.refs();
       const objs = refs.map((ref) => {
@@ -57,7 +57,7 @@ export default class BitObject {
 
   collect(repo: Repository): BitObject[] {
     const objects = [];
-    
+
     function addRefs(object: BitObject) {
       const objs = object.refs().map((ref) => {
         return ref.loadSync(repo);
@@ -84,10 +84,10 @@ export default class BitObject {
 
   serialize(): Buffer {
     const contents = this.toBuffer();
-    const header = `${this.constructor.name} ${contents.toString().length}${NULL_BYTE}`;
+    const header = `${this.constructor.name} ${this.hash().toString()} ${contents.toString().length}${NULL_BYTE}`;
     return Buffer.concat([new Buffer(header), contents]);
   }
-  
+
   static parseObject(fileContents: Buffer, types: {[string]: Function}): Promise<BitObject> {
     return inflate(fileContents)
       .then(buffer => parse(buffer, types));
