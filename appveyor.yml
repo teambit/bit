@@ -4,6 +4,7 @@ image: Visual Studio 2015
 branches:
   only:
     - master
+    - windowsNode
 
 environment:
   token:
@@ -43,7 +44,7 @@ build_script:
 
     Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Where-Object {$_ -notmatch 'gitbook-cli'} | Set-Content package.json
 
-    .\scripts\node-installer.sh windows
+    .\scripts\node-installer.ps1
 
     .\scripts\build-dist.ps1
 
