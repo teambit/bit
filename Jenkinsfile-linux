@@ -69,5 +69,5 @@ def notifyReleaseServer(version,url,packageUrl,method) {
         "file": "$packageUrl"
         }
     """
-    def response = httpRequest authentication: 'releaseUser' acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: payload, url: "$url"
+    def response = httpRequest authentication: 'releaseUser', acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: payload, url: "$url"
 }
