@@ -1,7 +1,7 @@
 import { BitObject } from '../objects';
 
 export default class Source extends BitObject {
-  contents: Buffer;  
+  contents: Buffer;
 
   constructor(contents: Buffer) {
     super();
@@ -28,4 +28,3 @@ export default class Source extends BitObject {
     return new Source(str);
   }
 }
-  
