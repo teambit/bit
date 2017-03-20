@@ -21,13 +21,11 @@ general:
       - develop
       - stable
 
-test_script:
-  - bit --version
-  - ./tests/e2e.sh
+
 
 machine:
   node:
     version: 6
 test:
   override:
-    - "true"
+    - ./tests/e2e.sh
