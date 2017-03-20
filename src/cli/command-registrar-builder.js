@@ -25,7 +25,9 @@ import Fetch from './commands/private-cmds/_fetch-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Build from './commands/public-cmds/build-cmd';
 import CiUpdate from './commands/private-cmds/ci-update-cmd';
-import ScopeConfig from './commands/private-cmds/scope-config-cmd';
+import RefreshScope from './commands/private-cmds/refresh-scope-cmd';
+import CatScope from './commands/private-cmds/cat-scope-cmd';
+import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -53,6 +55,8 @@ export default function registerCommands(): CommandRegistrar {
     new Build(),
     new DescribeScope(),
     new CiUpdate(),
+    new RefreshScope(),
+    new CatScope()
     new ScopeConfig(),
   ]);
 }

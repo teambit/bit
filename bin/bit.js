@@ -22,7 +22,6 @@ function getBuildDir() {
 
 function ensureDirectories() {
   mkdirp.sync(constants.MODULES_CACHE_DIR);
-  mkdirp.sync(constants.GLOBAL_BIT_CACHE);
   mkdirp.sync(constants.GLOBAL_CONFIG);
 }
 
@@ -53,7 +52,7 @@ function initCache() {
   if (!cacheVersion || cacheVersion !== constants.BIT_VERSION) {
     roadRunner.reset(constants.MODULES_CACHE_FILENAME);
   }
-  
+
   roadRunner.set('CACHE_BREAKER', { version: constants.BIT_VERSION });
   roadRunner.setup(constants.MODULES_CACHE_FILENAME);
 }

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.4.0]
+
+### Added
+
+- bit cat-scope private command
+- bit refresh-scope private command for updating model
+
+### Change
+
+- change the header of the bit-objects to contain the hash of the file as a second argument
+
 ## [0.3.4]
 
 ### Fixed

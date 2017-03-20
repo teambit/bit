@@ -109,11 +109,6 @@ export const CFG_CI_ENABLE_KEY = 'ci_enable';
 export const CACHE_ROOT = getCacheDirectory();
 
 /**
- * global plugins directory
- */
-export const PLUGINS_DIR = path.join(CACHE_ROOT, 'plugins');
-
-/**
  * modules cache directory
  */
 export const MODULES_CACHE_DIR = path.join(CACHE_ROOT, 'modules');
@@ -138,11 +133,6 @@ export const SOURCES_MAP = 'sources.json';
 
 export const GLOBAL_REMOTES = 'global-remotes.json';
 
-/**
- * bits cache directory
- */
-export const GLOBAL_BIT_CACHE = path.join(CACHE_ROOT, 'bits');
-
 export const BIT_HIDDEN_DIR = '.bit';
 
 export const BIT_CONTAINER_FOLDERS = ['sources'];
@@ -151,11 +141,6 @@ export const BIT_CONTAINER_FOLDERS = ['sources'];
  * modules cache filename
  */
 export const MODULES_CACHE_FILENAME = path.join(MODULES_CACHE_DIR, '.roadrunner.json');
-
-/**
- * auth cache fileName
- */
-export const AUTH_CACHE_FILENAME = path.join(CACHE_ROOT, '.auth.json');
 
 /**
  * bit registry default URL.
