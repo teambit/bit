@@ -16,12 +16,11 @@ pipeline {
         stage ('test'){
             steps {
                     sh("npm i -g")
-                    sh("./tests/test.sh")
+                    sh("./tests/e2e.sh")
                 }
         }
         stage ('deploy to repo'){
             steps {
-
                script {
                   def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
                   def repo = "${env.EXTERNAL_REPO}"
@@ -70,5 +69,5 @@ def notifyReleaseServer(version,url,packageUrl,method) {
         "file": "$packageUrl"
         }
     """
-    def response = httpRequest acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: payload, url: "$url"
+    def response = httpRequest authentication: 'releaseUser' acceptType: 'APPLICATION_JSON', contentType: 'APPLICATION_JSON', httpMode: 'POST', requestBody: payload, url: "$url"
 }
