@@ -50,7 +50,7 @@ build_script:
 
     .\scripts\build-windows-installer.bat
 
-    npm
+
 
 # run custom scripts before tests
 before_test:
