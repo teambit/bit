@@ -85,9 +85,11 @@ export default class SSH {
       let cmd = this.buildCmd('_put', absolutePath(this.path || ''), ...args);
       const data = R.last(R.split(' ',cmd));
       cmd = R.head(R.split(data,cmd));
+      console.log('cmd: ', cmd);
+      console.log('data: ', data);
       this.connection(cmd, function (err, result, o) {
         if (!o) return reject(new UnexpectedNetworkError());
-        if (err && o.code && o.code !== 0) return reject(errorHandler(err, res));
+        if (err && o.code && o.code !== 0) return reject(errorHandler(err, result));
         this.connection(data, function (err, res, o) {
           if (!o) return reject(new UnexpectedNetworkError());
           if (err && o.code && o.code !== 0) return reject(errorHandler(err, res));
@@ -98,7 +100,7 @@ export default class SSH {
   }
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
-    return this.execPut('_put', componentObjects.toString())
+    return this.execPut(componentObjects.toString())
       .then((str: string) => {
         try {
           return ComponentObjects.fromString(fromBase64(str));
