@@ -11,54 +11,34 @@
 
 </div>
 
-Bit is a distributed and virtualized component repository designed to be language agnostic.  
+Bit is a distributed and virtualized code component repository designed to be language agnostic.  
 
-With Bit, you can create and model components on a [distributed Scope](https://teambit.github.io/bit/bit-scope.html). Then,
-you can discover and use these components as a virtual API with the components you actually use in your application.
+Bit adds a virtualized level of abstraction on top of your source files, allowing you to create and model code components in a single vritualized repository while still being able to find, maintain and use them individually. Chosen components can be used as a virtual API containing nothing but the code actually used in your application.
 
-Bit components can be reused in different contexts (repositories, micro-services, packages, etc.) without the overhead of configuring and maintaining multiple repos, packages and tools or having to pull redundant code. 
-  
+Bit components can be reused in different contexts (repositories, micro-services, packages, etc.) without the overhead of configuring and maintaining multiple repos, packages and other tools for every few lines of code.
+
 <p align="center">
   <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
 </p>
 
-## The case for Bit
+## Virtualized code component repository
 
 Code components are the fundamental building blocks of any application.
-Different functionalities can and should be reused across different contexts, repositories and projects. In practice, this rarely happens. People often end up duplicating code everywhere or using vast libraries with static APIs that contain a lot of redundant code and dependencies they don’t really need. This happens for a few reasons:
+Different functionalities can and should be reused across different contexts, repositories and projects. In practice, this rarely happens. Building and maintaining an arsenal of tiny repositories and micro-packages for all your different components simply isn't practical. People often end up duplicating code everywhere or using vast libraries with static APIs that contain a lot of redundant code and dependencies they don’t really need. This happens for for a few reasons:
 
-* Initial overhead: To create a new repository and package for every small component you would have to create a VCS repository, create the package boilerplate (build, testing, etc.) and somehow make this process practical for a large set of components.
+* Initial overhead: to create a new repository and package for every small component you would have to create a VCS repository, create the package boilerplate (build, testing, etc.) and somehow make this process practical for a large set of components.
 
-* Maintenance: Modifying a repository and a package takes time and forces you to go through multiple steps such as cloning, linking, debugging, committing, republishing and so on. Centralized registries also makes it hard to address the different levels of abstraction needed for multiple micro-packages. Build and install times quickly increase and dependency hell always feels near.
+* Maintenance: modifying a repository and a package takes time and forces you to go through multiple steps such as cloning, linking, debugging, committing, republishing and so on. Centralized registries also makes it hard to address the different levels of abstraction needed for multiple micro-packages. Build and install times quickly increase and dependency hell always feels near.
 
-* Discoverability: It’s hard if not impossible to organize and search multiple repositories and packages to quickly find the components you need. People often used different terms to describe the same functionality, and there is no single source of truth to search and trust.
+* Discoverability: it’s hard if not impossible to organize and search multiple repositories and packages to quickly find the components you need. People often used different terms to describe the same functionality, and there is no single source of truth to search and trust.
 
-Bit relies on a different paradigm that never creates these problems in the first place. It allows you to use a new entity called a [Bit Scope](https://teambit.github.io/bit/bit-scope.html) to create and model your components in a virtual repository with a dynamic API that allows your application to pull only the code it actually needs to run. 
+Bit relies on a different paradigm that solves all of these problems. It adds a virtualized level of abstraction on top of your source files, allowing you to easily create, maintain and find reusable code components. Instead of addressing source files, Bit is designed from the ground up to address code components:
 
-Creating a [Bit component](https://teambit.github.io/bit/bit-component.html) requires little to no initial configuration thanks to the nature of the component itself and Bit’s [component environment](https://teambit.github.io/bit/bit-component.html#component-environment) that uses other components for compiling and testing your components. The Bit scope also manages your component end-to-end and prevents the need to use package managers built to handle large and complex packages and additional tools for transpiling and testing your components. 
+- **Virtual Scope.** Bit uses a distributed and virtual repository called a Scope to keep and maintain all your components in a single place, while still being able to independently find, use and modify each component. You can define the components needed in your application to form a dynamic API made of these components alone, without pulling any redundant code or irrelevant dependencies.
 
-Bit is a single tool that allows you to create, find and reuse your components anywhere. It also works well for collaborating as a team.
+- **Component environment.** Bit lowers the overhead of creating and maintaining multiple reusbale components. An isolated configurable environment uses other Bit components (compiler and tester) for transpiling and testing any component using any superset or a testing framework in any context.
 
-## Main features of Bit
-
-- **Virtual Scope.** A Scope is a distributed and virtualized codebase responsible for end-to-end management of code components. Scopes are where components are stored, tested, built and integrate with each other.
-
-- **Virtual API.** Define the components you need in your application to form a dynamic API made of these components alone, without pulling any redundant code or irrelevant dependencies. 
-
-- **Component environment.** Transpiling and testing are done by simply using other Bit components (compiler and tester), which you can reuse while creating any component with any superset or a testing framework in any context.
-
-- **Fast and predictable dependency resolution.** Dependency resolution is performed on component export, so Bit doesn't have to perform any runtime resolution. This makes the use of components predictable, fast and always available.
-
-- **Discoverability.** Bit has an integrated search engine that uses expressive linguistic models to make your components discoverable even when you forget the exact name you gave each component.
-
-
-## Installation
-
-For our different installation methods, please visit our docs [installation section](https://teambit.github.io/bit/installation.html).
-
-## Quick start
-
-Here is a [getting started guide](https://teambit.github.io/bit/getting-started.html).
+- **Component discovery engine.** Bit comes with an integrated search engine that uses expressive linguistic models to make your components discoverable even when you forget the exact name you gave each component. This also helps for collaborating as a team on shared Scopes.
 
 ## Documentation
 
@@ -68,19 +48,29 @@ Here is a [getting started guide](https://teambit.github.io/bit/getting-started.
 
 [Bit component](https://teambit.github.io/bit/bit-component.html)
 
+[Bit environment](https://teambit.github.io/bit/bit-component.html#component-environment)
+
 [Bit on the server](https://teambit.github.io/bit/bit-on-the-server.html)
 
-[CLI refrence](https://teambit.github.io/bit/cli-reference.html)
+[CLI reference](https://teambit.github.io/bit/cli-reference.html)
 
-## Feedback
+## Installation
 
-Feedbacks are more than welcome: [team@bitsrc.io](mailto:team@bitsrc.io)
+For our different installation methods, please visit our docs [installation section](https://teambit.github.io/bit/installation.html).
+
+## Quick start
+
+Here is a [getting started guide](https://teambit.github.io/bit/getting-started.html).
 
 ## Contributing
 
 Contributions are always welcome, no matter how large or small. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
 
 See [Contributing](CONTRIBUTING.md).
+
+## Feedback
+
+Feedbacks are more than welcome: [team@bitsrc.io](mailto:team@bitsrc.io)
 
 ## License
 
