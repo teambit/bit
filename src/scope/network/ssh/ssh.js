@@ -14,7 +14,6 @@ import ConsumerComponent from '../../../consumer/component';
 const rejectNils = R.reject(R.isNil);
 const Client = require('ssh2').Client;
 const conn = new Client();
-const sequest = require('sequest');
 
 function absolutePath(path: string) {
   if (!path.startsWith('/')) return `~/${path}`;
