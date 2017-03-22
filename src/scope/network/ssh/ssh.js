@@ -23,6 +23,10 @@ function absolutePath(path: string) {
 function clean(str: string) {
   return str.replace('\n', '');
 }
+function splitDataForPut(cmd) {
+  const index = cmd.lastIndexOf(' ');
+  return [cmd.slice(index+1), cmd.slice(0,index)];
+}
 
 function errorHandler(err, optionalId) {
   switch (err.code) {
@@ -74,7 +78,7 @@ export default class SSH {
     return new Promise((resolve, reject) => {
       let res, data;
       let cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
-      if (commandName === '_put') [cmd, data] = R.split(cmd.lastIndexOf(' '),cmd);
+      if (commandName === '_put') [data, cmd] = splitDataForPut(cmd);
       this.connection.exec(cmd, (err, stream) => {
         if (commandName === '_put') stream.stdin.write(data);
         stream
@@ -89,7 +93,7 @@ export default class SSH {
   }
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
-    return this.exec(componentObjects.toString())
+    return this.exec('_put', componentObjects.toString())
       .then((str: string) => {
         try {
           return ComponentObjects.fromString(fromBase64(str));
