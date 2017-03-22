@@ -83,16 +83,16 @@ export default class SSH {
   execPut(...args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
       let cmd = this.buildCmd('_put', absolutePath(this.path || ''), ...args);
-      const data = R.last(R.split(' ',cmd));
-      cmd = R.head(R.split(data,cmd));
+      const [cmd, data] = R.split(cmd.lastIndexOf(' '),cmd);
       console.log('cmd: ', cmd);
       console.log('data: ', data);
-      this.connection(cmd, function (err, result, o) {
+      this.connection(cmd, function (err, res, o) {
         if (!o) return reject(new UnexpectedNetworkError());
         if (err && o.code && o.code !== 0) return reject(errorHandler(err, result));
-        this.connection(data, function (err, res, o) {
+        this.connection(data, function () {
           if (!o) return reject(new UnexpectedNetworkError());
           if (err && o.code && o.code !== 0) return reject(errorHandler(err, res));
+          this.close();
           return resolve(clean(res));
         });
       });
