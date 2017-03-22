@@ -12,6 +12,8 @@ import { unpack } from '../../../cli/cli-utils';
 import ConsumerComponent from '../../../consumer/component';
 
 const rejectNils = R.reject(R.isNil);
+const Client = require('ssh2').Client;
+const conn = new Client();
 const sequest = require('sequest');
 
 function absolutePath(path: string) {
@@ -71,36 +73,24 @@ export default class SSH {
 
   exec(commandName: string, ...args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
-      const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
-      this.connection(cmd, function (err, res, o) {
-        if (!o) return reject(new UnexpectedNetworkError());
-        if (err && o.code && o.code !== 0) return reject(errorHandler(err, res));
-        return resolve(clean(res));
-      });
-    });
-  }
-  
-  execPut(...args: any[]): Promise<any> {
-    return new Promise((resolve, reject) => {
-      let cmd = this.buildCmd('_put', absolutePath(this.path || ''), ...args);
-      const [cmd, data] = R.split(cmd.lastIndexOf(' '),cmd);
-      console.log('cmd: ', cmd);
-      console.log('data: ', data);
-      this.connection(cmd, function (err, res, o) {
-        if (!o) return reject(new UnexpectedNetworkError());
-        if (err && o.code && o.code !== 0) return reject(errorHandler(err, result));
-        this.connection(data, function () {
-          if (!o) return reject(new UnexpectedNetworkError());
-          if (err && o.code && o.code !== 0) return reject(errorHandler(err, res));
-          this.close();
-          return resolve(clean(res));
-        });
+      let res, data;
+      let cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
+      if (commandName === '_put') [cmd, data] = R.split(cmd.lastIndexOf(' '),cmd);
+      this.connection.exec(cmd, (err, stream) => {
+        if (commandName === '_put') stream.stdin.write(data);
+        stream
+          .on('close', code => {
+            code !== 0 ? reject(errorHandler({ code }, res)) : resolve(res);
+            this.connection.end();
+          })
+          .on('data', response => res = clean(response.toString()))
+          .stderr.on('data', response => res = response.toString());
       });
     });
   }
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
-    return this.execPut(componentObjects.toString())
+    return this.exec(componentObjects.toString())
       .then((str: string) => {
         try {
           return ComponentObjects.fromString(fromBase64(str));
@@ -163,18 +153,19 @@ export default class SSH {
   composeConnectionUrl() {
     return `${this.username}@${this.host}:${this.port}`;
   }
+  
+  composeConnectionObject(key: ?string) {
+    return { username: this.username, host: this.host, port: this.port, privateKey: keyGetter(key) };
+  }
 
   connect(sshUrl: SSHUrl, key: ?string): Promise<SSH> {
     return new Promise((resolve, reject) => {
       try {
-        this.connection = sequest.connect(this.composeConnectionUrl(), {
-          privateKey: keyGetter(key)
-        });
-      } catch (e) {
-        return reject(e);
-      }
-
-      return resolve(this);
+        conn.on('ready',() => {
+          this.connection = conn;
+          resolve(this);
+        }).connect(this.composeConnectionObject(key));
+      } catch (e) { return reject(e); }
     });
   }
 }
