@@ -11,7 +11,12 @@ export default class Put extends Command {
   alias = '';
   opts = [];
   
-  action([path]: [ string ]): Promise<any> {
+  action([path, objects, ]: [ string, ?string, ?string ]): Promise<any> {
+    if (objects) return put({
+      componentObjects: fromBase64(objects),
+      path: fromBase64(path)
+    });
+    
     return new Promise((resolve,reject) => {
       process.stdin.on('readable', () => put({
           componentObjects: fromBase64(process.stdin.read().toString()),
