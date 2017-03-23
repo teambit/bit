@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.4.2]
+
+### Fixed
+
+- make the ssh mechanism backwards compatible with older versions
+
 ## [0.4.1]
 
 ### Added
