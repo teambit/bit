@@ -30,6 +30,7 @@ const pathHasBitEnvironment = p => pathHasConsumer(p) || pathHasScope(p);
 module.exports = {
   pathHasConsumer,
   composeBitJsonPath,
+  composeComponentsPath,
   pathHasScope,
   pathHasBitEnvironment,
 };

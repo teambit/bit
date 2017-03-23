@@ -1,7 +1,7 @@
 const R = require('ramda');
 const fs = require('fs');
 const path = require('path');
-const { BIT_JSON_NAME } = require('../constants');
+const { BIT_JSON_NAME, VERSION_DELIMITER } = require('../constants');
 const DependencyMap = require('../dependency-map');
 const { InvalidBitJsonException } = require('../exceptions');
 
@@ -53,6 +53,11 @@ class BitJson {
 
   getDependencies() {
     return this.dependencies;
+  }
+
+  getDependenciesArray() {
+    return R.toPairs(this.dependencies)
+    .map(([component, version]) => component + VERSION_DELIMITER + version.toString());
   }
 
   populateDependencyMap(consumerPath) {
