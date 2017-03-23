@@ -76,18 +76,22 @@ export default class SSH {
 
   exec(commandName: string, ...args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
-      let res, data;
+      let res ='', data;
       let cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
       if (commandName === '_put') [data, cmd] = splitDataForPut(cmd);
       this.connection.exec(cmd, (err, stream) => {
         if (commandName === '_put') stream.stdin.write(data);
         stream
           .on('close', code => {
-            code !== 0 ? reject(errorHandler({ code }, res)) : resolve(res);
+            code && code !== 0 ? reject(errorHandler({ code }, res)) : resolve(clean(res));
             this.connection.end();
           })
-          .on('data', response => res = clean(response.toString()))
-          .stderr.on('data', response => res = response.toString());
+          .on('data', response => {
+            res+= response.toString();
+          })
+          .stderr.on('data', response => {
+            res+= response.toString();
+        });
       });
     });
   }
