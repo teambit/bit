@@ -13,7 +13,7 @@
 
 Bit is a distributed and virtualized code component repository designed to be language agnostic.  
 
-Bit adds a higher level of abstraction on top of your source files, allowing you to create and model code components in a single distributed repository while still being able to find, maintain and use them individually. Chosen components can be used as a virtual API containing nothing but the code actually used in your application.
+With Bit you can create and model code components on a vritualized [Scope](https://teambit.github.io/bit/bit-scope.html), using them as a dynamic API made only of the components actually used in your application.
 
 Bit components can be reused in different contexts (repositories, micro-services, packages, etc.) without the overhead of configuring and maintaining multiple repos, packages and other tools for every few lines of code.
 
@@ -21,10 +21,10 @@ Bit components can be reused in different contexts (repositories, micro-services
   <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
 </p>
 
-## Virtualized code component repository
+## Why Bit
 
 Code components are the fundamental building blocks of any application.
-Different functionalities can and should be reused across different contexts, repositories and projects. In practice, this rarely happens. Building and maintaining an arsenal of tiny repositories and micro-packages for all your different components simply isn't practical. People often end up duplicating code everywhere or using vast libraries with static APIs that contain a lot of redundant code and dependencies they don’t really need. This happens for for a few reasons:
+Different functionalities can and should be reused in different contexts, projects and repositories. In practice, this rarely happens. Building and maintaining an arsenal of tiny repositories and micro-packages for all your different components isn't practical. As a result, people often end up duplicating code everywhere or using vast libraries with static APIs that contain redundant code and dependencies they don’t need. This happens for for a few reasons:
 
 * Initial overhead: to create a new repository and package for every small component you would have to create a VCS repository, create the package boilerplate (build, testing, etc.) and somehow make this process practical for a large set of components.
 
@@ -32,7 +32,9 @@ Different functionalities can and should be reused across different contexts, re
 
 * Discoverability: it’s hard if not impossible to organize and search multiple repositories and packages to quickly find the components you need. People often used different terms to describe the same functionality, and there is no single source of truth to search and trust.
 
-Bit relies on a different paradigm that solves all of these problems. It adds a virtualized level of abstraction on top of your source files, allowing you to easily create, maintain and find reusable code components. This allows you to create an arsenal of reusbale code components. Instead of addressing source files, Bit is designed from the ground up to address code components:
+### Built for code components
+
+Bit solves all of these problems. It adds a level of abstraction on top of your source files, allowing you to create and model components in a vritualized repository. These components can be found and used individually as a dynamic API containing nothing but the code actually used in your application. Bit is designed from the ground to make code components reusbale:
 
 - **Virtual Scope.** Bit uses a distributed and virtual repository called a Scope to keep and maintain all your components in a single place, while still being able to independently find, use and modify each component. You can define the components needed in your application to form a dynamic API made of these components alone, without pulling any redundant code or irrelevant dependencies.
 
