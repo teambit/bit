@@ -5,17 +5,20 @@ import { fromBase64, toBase64 } from '../../../utils';
 import { put } from '../../../api/scope';
 
 export default class Put extends Command {
-  name = '_put <path> <objects>';
+  name = '_put <path>';
   private = true;
   description = 'upload a component to a scope';
   alias = '';
   opts = [];
   
-  action([path, objects, ]: [string, string, string, ]): Promise<any> {
-    return put({
-      componentObjects: fromBase64(objects),
-      path: fromBase64(path)
-    });
+  action([path]: [ string ]): Promise<any> {
+    return new Promise((resolve,reject) => {
+      process.stdin.on('readable', () => put({
+          componentObjects: fromBase64(process.stdin.read().toString()),
+          path: fromBase64(path)
+        }).then(resolve).catch(reject)
+      );
+    })
   }
 
   report(componentObjects: ComponentObjects): string {
