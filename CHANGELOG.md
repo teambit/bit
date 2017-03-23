@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.4.1]
+
+### Added
+
+- put now work with stream (after export) instead of putting the data on a command argument
+
+### Change
+
+- replace the use of sequest module with ssh2 module directly.
+
 ## [0.4.0]
 
 ### Added
