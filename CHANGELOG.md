@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.4.3]
+
+### Fixed
+
+- added validation on stdin readable for private cmd _put
+
 ## [0.4.2]
 
 ### Fixed
