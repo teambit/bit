@@ -1,6 +1,6 @@
 import { loadScope } from '../../../scope';
 
-export function set (key: string, value: string): Promise<any> {
+function set (key: string, value: string): Promise<any> {
   return loadScope()
     .then(scope => {
       scope.scopeJson.set(key,value);
@@ -8,12 +8,12 @@ export function set (key: string, value: string): Promise<any> {
     });
 }
 
-export function get (key: string): Promise<string> {
+function get (key: string): Promise<string> {
   return loadScope()
     .then(scope => scope.scopeJson.get(key));
 }
 
-export function del (key: string): Promise<any> {
+function del (key: string): Promise<any> {
   return loadScope()
     .then(scope => {
       scope.scopeJson.del(key);
@@ -21,6 +21,9 @@ export function del (key: string): Promise<any> {
     });
 }
 
-export function list (): Promise<any> {
+function list (): Promise<any> {
   return loadScope().then(scope => scope.scopeJson.toPlainObject());
 }
+
+
+module.exports = { set, get, del, list };

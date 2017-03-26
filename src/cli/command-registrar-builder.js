@@ -56,7 +56,7 @@ export default function registerCommands(): CommandRegistrar {
     new DescribeScope(),
     new CiUpdate(),
     new RefreshScope(),
-    new CatScope()
+    new CatScope(),
     new ScopeConfig(),
   ]);
 }
