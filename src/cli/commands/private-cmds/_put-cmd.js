@@ -18,12 +18,14 @@ export default class Put extends Command {
     });
     
     return new Promise((resolve,reject) => {
-      process.stdin.on('readable', () => put({
-          componentObjects: fromBase64(process.stdin.read().toString()),
-          path: fromBase64(path)
-        }).then(resolve).catch(reject)
-      );
-    })
+      process.stdin.on('readable', () => {
+        const data = process.stdin.read();
+        if (data) {
+          return put({ componentObjects: fromBase64(data.toString()), path: fromBase64(path)})
+            .then(resolve).catch(reject)
+        }
+      });
+    });
   }
 
   report(componentObjects: ComponentObjects): string {
