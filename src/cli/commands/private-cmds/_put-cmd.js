@@ -11,7 +11,7 @@ export default class Put extends Command {
   alias = '';
   opts = [];
   
-  action([path, objects, ]: [ string, string, string, ]): Promise<any> {
+  action([path, objects ]: [ string, ?string ]): Promise<any> {
     if (objects) return put({
       componentObjects: fromBase64(objects),
       path: fromBase64(path)
