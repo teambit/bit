@@ -72,3 +72,28 @@ The first thing you should do when you install Bit is to set your user name and 
     "remotes": {}
 }
 ```
+
+# Folders
+
+  Folder structure used by Bit.
+
+Bit stores information in several folders and files on your machine. This section describes the
+various locations on these items, and their responsibilities.
+
+## Cache
+
+### Location
+
+Depending on your OS, Bit stores it's cache folder in the following locations:
+
+* MacOS - /Library/Caches/Bit
+* Windows - %LOCAL-APP-DATA%\Bit
+* Linux - ~/.bit
+
+### Structure
+
+* modules - Cache for various node modules used by Bit.
+* config - stores Bit specific configurations.
+  * config.json - stores all the configurations required for Bit to operate (location of SSH keys,
+    username, email...)
+  * global-remotes.json - Manages the list of the remote scopes connected to the machine.
