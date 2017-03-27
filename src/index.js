@@ -84,4 +84,6 @@ load.mockComponents = (components) => {
 
 load.loadExact = resolveFromFullId;
 
+load.resolve = bitId => load(bitId, { pathOnly: true });
+
 module.exports = load;
