@@ -37,7 +37,7 @@ function errorHandler(code, err) {
     case 128:
       return new PermissionDenied();
     case 129:
-      return new RemoteScopeNotFound();
+      return new RemoteScopeNotFound(err);
     case 130:
       return new PermissionDenied();
   }
@@ -108,8 +108,8 @@ export default class SSH {
       .then((data) => {
         return JSON.parse(fromBase64(data));
       })
-      .catch(() => {
-        throw new RemoteScopeNotFound();
+      .catch(err => {
+        throw new RemoteScopeNotFound(err);
       });
   }
 
