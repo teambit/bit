@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add 'no results found' message on ci when there are no specs
+
 ## [0.4.4]
 
 ### Fixed
