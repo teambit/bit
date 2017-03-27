@@ -10,3 +10,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Change
 
 - Add opts to the load function
+- Add resolve function
