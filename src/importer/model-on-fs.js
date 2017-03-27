@@ -8,19 +8,17 @@ const buildComponentPath = (targetModuleDir, component) => {
 };
 
 function putRawComponentOnFS(components, targetModuleDir) {
-  // TODO - enable + write
-
-  // return Promise.all(
-  //   components.map((c) => {
-  //     return new Promise((resolve, reject) => {
-  //       const componentDir = buildComponentPath(targetModuleDir, c);
-  //       fs.ensureDir(componentDir, (err) => {
-  //         if (err) reject(err);
-  //         resolve();
-  //       });
-  //     });
-  //   }),
-  // );
+  return Promise.all(
+    components.map((c) => {
+      return new Promise((resolve, reject) => {
+        const componentDir = buildComponentPath(targetModuleDir, c);
+        fs.ensureDir(componentDir, (err) => {
+          if (err) reject(err);
+          resolve();
+        });
+      });
+    }),
+  );
 }
 
 function modelComponent({ component, dependencies }, targetModuleDir) {
@@ -30,7 +28,7 @@ function modelComponent({ component, dependencies }, targetModuleDir) {
 }
 
 module.exports = (componentDependenciesArr) => {
-  const moduleName = 'bit-js';
+  const moduleName = 'bit-js/test-module';
   const bitJscontainingDir = path.join(__dirname, '..', '..', '..');
   const targetModuleDir = path.join(bitJscontainingDir, moduleName);
 
