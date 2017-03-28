@@ -13,7 +13,7 @@
 
 Bit is a distributed and virtualized code component repository designed to be language agnostic.  
 
-With Bit you can create and model code components on a vritualized [Scope](https://teambit.github.io/bit/bit-scope.html), using them as a dynamic API made only of the components actually used in your application.
+With Bit you can create and model code components on a virtualized [Scope](https://teambit.github.io/bit/bit-scope.html), using them as a dynamic API made only of the components actually used in your application.
 
 Bit components can be reused in different contexts (repositories, micro-services, packages, etc.) without the overhead of configuring and maintaining multiple repos, packages and other tools for every few lines of code.
 
@@ -34,11 +34,11 @@ Different functionalities can and should be reused in different contexts, projec
 
 ### Built for code components
 
-Bit solves all of these problems. It adds a level of abstraction on top of your source files, allowing you to create and model components in a vritualized repository. These components can be found and used individually as a dynamic API containing nothing but the code actually used in your application. Bit is designed from the ground to make code components reusbale:
+Bit solves all of these problems. It adds a level of abstraction on top of your source files, allowing you to create and model components in a virtualized repository. These components can be found and used individually as a dynamic API containing nothing but the code actually used in your application. Bit is designed from the ground to make code components reusable:
 
 - **Virtual Scope.** Bit uses a distributed and virtual repository called a Scope to keep and maintain all your components in a single place, while still being able to independently find, use and modify each component. You can define the components needed in your application to form a dynamic API made of these components alone, without pulling any redundant code or irrelevant dependencies.
 
-- **Component environment.** Bit lowers the overhead of creating and maintaining multiple reusbale components. An isolated configurable environment uses other Bit components (compiler and tester) for transpiling and testing any component using any superset or a testing framework in any context.
+- **Component environment.** Bit lowers the overhead of creating and maintaining multiple reusable components. An isolated configurable environment uses other Bit components (compiler and tester) for transpiling and testing any component using any superset or a testing framework in any context.
 
 - **Component discovery engine.** Bit comes with an integrated search engine that uses expressive linguistic models to make your components discoverable even when you forget the exact name you gave each component. This also helps for collaborating as a team on shared Scopes.
 
