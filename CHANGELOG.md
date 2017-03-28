@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.4.5]
+
+### Fixed
+
+- error message on component not found
+- hotfix for multifetch bug
 - add 'no results found' message on ci when there are no specs
 
 ## [0.4.4]
