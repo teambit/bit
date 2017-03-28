@@ -84,7 +84,8 @@ export default class SSH {
         stream
           .on('close', code => {
             code && code !== 0 ? reject(errorHandler(code, err)) : resolve(clean(res));
-            this.connection.end();
+            // TODO: close the connection from somewhere else
+            // this.connection.end();
           })
           .on('data', response => res+= response.toString())
           .stderr.on('data', response => err= response.toString());
