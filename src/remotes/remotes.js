@@ -32,19 +32,21 @@ export default class Remotes extends Map<string, Remote> {
         this.get(scopeName.replace(REMOTE_ALIAS_SIGN, ''))
       );
     }
-    
+
     return remotesResolver(scopeName, thisScope)
     .then((scopeHost) => {
-      return new Remote(scopeHost, scopeName); 
+      return new Remote(scopeHost, scopeName);
     });
   }
 
   fetch(ids: BitId[], thisScope: Scope, withoutDeps: boolean = false):
   Promise<ComponentObjects[]> {
+    // TODO - Transfer the fetch logic into the ssh module,
+    // in order to close the ssh connection in the end of the multifetch instead of one fetch
     const byScope = groupBy(prop('scope'));
     const promises = [];
     forEach(byScope(ids), (scopeIds, scopeName) => {
-      if (!withoutDeps) { 
+      if (!withoutDeps) {
         promises.push(
           this.resolve(scopeName, thisScope)
           .then(remote => remote.fetch(scopeIds))
@@ -65,7 +67,7 @@ export default class Remotes extends Map<string, Remote> {
 
     this.forEach((remote) => {
       let name = remote.name;
-      if (remote.primary) name = prependBang(remote.name); 
+      if (remote.primary) name = prependBang(remote.name);
       object[name] = remote.host;
     });
 
@@ -74,11 +76,11 @@ export default class Remotes extends Map<string, Remote> {
 
   static load(remotes: {[string]: string}): Remotes {
     const models = [];
-    
+
     if (!remotes) return new Remotes();
 
     forEach(remotes, (name, host) => {
-      const remote = Remote.load(name, host); 
+      const remote = Remote.load(name, host);
       models.push([remote.name, remote]);
     });
 
