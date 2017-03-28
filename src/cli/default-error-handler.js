@@ -28,7 +28,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ PluginNotFound, err => `fatal: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`],
   [ MissingImpl, err => `fatal: The impl file in path "${err.implPath}" does not exist, please check the bit.json or implementation file`],
   [ ProtocolNotSupported, () => 'fatal: remote scope protocol is not suppoerted, please use: `ssh://`, `file://` or `bit://`'],
-  [ RemoteScopeNotFound, () => 'fatal: remote scope not found. to create a new scope, please use `bit init --bare` in the remote destination'],
+  [ RemoteScopeNotFound, err => `fatal: remote scope "${chalk.bold(err)}" not found.`],
   [ InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: <scope>/[box]/<name>'],
   [ ComponentNotFound, err => `fatal: component with id "${chalk.bold(err.id)}" was not found`],
   [ DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found. Please verify bit.json - ${chalk.bold(err.bitJsonPath)}`],
