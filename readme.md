@@ -20,7 +20,7 @@ const bit = require('bit-js');
 After requiring the module, you can use any component from your bit.json file.
 
 ```js
-isString = bit.('isString');
+const isString = bit('isString');
 ```
 
 Calling component is simple :)
@@ -32,7 +32,7 @@ console.log(isString('Hello World!');
 If your component is in a box, you can use it like that:
 
 ```js
-isString = bit.('string/is');
+isString = bit('string/is');
 ```
 
 ## Contributing to Bit-node
