@@ -16,6 +16,8 @@ export default class CiUpdate extends Command {
   }
 
   report(maybeSpecsResults: SpecsResults|Error): string {
+    if (!maybeSpecsResults) { return 'no results found'; }
+
     if (maybeSpecsResults instanceof Error) {
       return maybeSpecsResults.message;
     }

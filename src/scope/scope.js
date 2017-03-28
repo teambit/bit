@@ -13,6 +13,7 @@ import { propogateUntil, currentDirName, pathHas, first, readFile } from '../uti
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, BIT_JSON } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
+import { RemoteScopeNotFound } from './network/exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import ConsumerComponent from '../consumer/component';
@@ -122,7 +123,10 @@ export default class Scope {
     return new Promise((resolve, reject) => {
       return this.importMany(component.dependencies)
       .then(resolve)
-      .catch(e => reject(new DependencyNotFound(e.id, bitJsonPath)));
+      .catch(e => {
+        if (e instanceof RemoteScopeNotFound) return reject(e);
+        reject(new DependencyNotFound(e.id, bitJsonPath))
+      });
     });
   }
 

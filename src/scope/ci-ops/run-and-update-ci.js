@@ -12,6 +12,7 @@ function runAndUpdateCI({ id, scopePath }: { id: string, scopePath: string }): P
       ciProps.error = serializedError;
       return modifyCIProps(scopePath, id, ciProps);
     }
+
     return modifyCIProps(scopePath, id, ciProps);
   }
 

@@ -37,7 +37,7 @@ function errorHandler(code, err) {
     case 128:
       return new PermissionDenied();
     case 129:
-      return new RemoteScopeNotFound();
+      return new RemoteScopeNotFound(err);
     case 130:
       return new PermissionDenied();
   }
@@ -84,7 +84,8 @@ export default class SSH {
         stream
           .on('close', code => {
             code && code !== 0 ? reject(errorHandler(code, err)) : resolve(clean(res));
-            this.connection.end();
+            // TODO: close the connection from somewhere else
+            // this.connection.end();
           })
           .on('data', response => res+= response.toString())
           .stderr.on('data', response => err= response.toString());
@@ -108,8 +109,8 @@ export default class SSH {
       .then((data) => {
         return JSON.parse(fromBase64(data));
       })
-      .catch(() => {
-        throw new RemoteScopeNotFound();
+      .catch(err => {
+        throw new RemoteScopeNotFound(err);
       });
   }
 
