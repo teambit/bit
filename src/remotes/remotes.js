@@ -6,7 +6,7 @@ import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
 import ComponentObjects from '../scope/component-objects';
 import { REMOTE_ALIAS_SIGN } from '../constants';
-import remotesResolver from './remote-resolver/remote-resolver';
+import remoteResolver from './remote-resolver/remote-resolver';
 import Scope from '../scope/scope';
 
 export default class Remotes extends Map<string, Remote> {
@@ -26,17 +26,28 @@ export default class Remotes extends Map<string, Remote> {
     return remote;
   }
 
+  static isHub(scopeName?: string): boolean {
+    return !!scopeName && !scopeName.startsWith(REMOTE_ALIAS_SIGN);
+  }
+
+  static resolveHub(scopeName: string): Promise<Remote> {
+    return remoteResolver(scopeName)
+      .then((scopeHost) => {
+        return new Remote(scopeHost, scopeName);
+      });
+  }
+
   resolve(scopeName: string, thisScope: Scope): Promise<Remote> {
-    if (scopeName.startsWith(REMOTE_ALIAS_SIGN)) {
-      return Promise.resolve(
-        this.get(scopeName.replace(REMOTE_ALIAS_SIGN, ''))
-      );
+    if (this.isHub) {
+      return remoteResolver(scopeName, thisScope)
+        .then((scopeHost) => {
+          return new Remote(scopeHost, scopeName);
+        });
     }
-    
-    return remotesResolver(scopeName, thisScope)
-    .then((scopeHost) => {
-      return new Remote(scopeHost, scopeName); 
-    });
+
+    return Promise.resolve(
+      this.get(scopeName.replace(REMOTE_ALIAS_SIGN, ''))
+    );
   }
 
   fetch(ids: BitId[], thisScope: Scope, withoutDeps: boolean = false):
@@ -44,7 +55,7 @@ export default class Remotes extends Map<string, Remote> {
     const byScope = groupBy(prop('scope'));
     const promises = [];
     forEach(byScope(ids), (scopeIds, scopeName) => {
-      if (!withoutDeps) { 
+      if (!withoutDeps) {
         promises.push(
           this.resolve(scopeName, thisScope)
           .then(remote => remote.fetch(scopeIds))
@@ -65,7 +76,7 @@ export default class Remotes extends Map<string, Remote> {
 
     this.forEach((remote) => {
       let name = remote.name;
-      if (remote.primary) name = prependBang(remote.name); 
+      if (remote.primary) name = prependBang(remote.name);
       object[name] = remote.host;
     });
 
@@ -74,11 +85,11 @@ export default class Remotes extends Map<string, Remote> {
 
   static load(remotes: {[string]: string}): Remotes {
     const models = [];
-    
+
     if (!remotes) return new Remotes();
 
     forEach(remotes, (name, host) => {
-      const remote = Remote.load(name, host); 
+      const remote = Remote.load(name, host);
       models.push([remote.name, remote]);
     });
 
