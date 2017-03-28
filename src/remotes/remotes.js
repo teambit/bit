@@ -38,7 +38,7 @@ export default class Remotes extends Map<string, Remote> {
   }
 
   resolve(scopeName: string, thisScope: Scope): Promise<Remote> {
-    if (this.isHub) {
+    if (Remotes.isHub(scopeName)) {
       return remoteResolver(scopeName, thisScope)
         .then((scopeHost) => {
           return new Remote(scopeHost, scopeName);
