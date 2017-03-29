@@ -14,9 +14,9 @@ try {
     warnOnUnregistered: false,
     useCleanCache: true,
   }); // enable mocks on process
-  
+
   const tester = require(testerFilePath);
-  
+
   // define the __impl__ global
   global.__impl__ = implFilePath;
 
@@ -36,6 +36,14 @@ try {
 
   mockery.registerMock('bit-js', bit); // register bit-js on require
   global.bit = bit; // register bit-js on bit global variable
+
+  if (!tester.run) {
+    process.send({
+      type: 'error',
+      payload: `"${process.env.__testerId__}" doesn't have a valid tester interface`
+    });
+    process.exit(1);
+  }
 
   tester.run(specsFilePath)
   .then((results) => {

@@ -11,8 +11,8 @@ export type Tester = {
   modules: Object;
 }
 
-function run({ scope, testerFilePath, implSrc, specsSrc }:
-{ scope: Scope, testerFilePath: string, implSrc: string, specsSrc: string }) {
+function run({ scope, testerFilePath, implSrc, specsSrc, testerId }:
+{ scope: Scope, testerFilePath: string, implSrc: string, specsSrc: string, testerId: Object }) {
   const implFilePath = scope.tmp.saveSync(implSrc);
   const specsFilePath = scope.tmp.saveSync(specsSrc);
 
@@ -28,13 +28,13 @@ function run({ scope, testerFilePath, implSrc, specsSrc }:
       const execArgvObj = R.fromPairs(execArgv);
       if (execArgvObj[debugPortArgName]) return parseInt(execArgvObj[debugPortArgName]);
     } catch (e) { return null; }
-    
+
     return null;
   }
 
   return new Promise((resolve, reject) => {
     const debugPort = getDebugPort();
-    const openPort = debugPort ? debugPort + 1 : null; 
+    const openPort = debugPort ? debugPort + 1 : null;
 
     const child = fork(path.join(__dirname, 'worker.js'), {
       execArgv: openPort ? [`--debug=${openPort.toString()}`] : [],
@@ -42,7 +42,8 @@ function run({ scope, testerFilePath, implSrc, specsSrc }:
       env: {
         __impl__: implFilePath,
         __specs__: specsFilePath,
-        __tester__: testerFilePath
+        __tester__: testerFilePath,
+        __testerId__: testerId.toString()
       }
     });
 
