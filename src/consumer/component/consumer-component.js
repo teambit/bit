@@ -202,7 +202,7 @@ export default class Component {
         const implSrc = compileIfNeeded(!!this.compilerId, compiler, this.impl.src);
         // $FlowFixMe
         const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
-        return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc })
+        return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc, testerId: this.testerId })
         .then((specsResults) => {
           this.specsResults = SpecsResults.createFromRaw(specsResults);
           if (rejectOnFailure && !this.specsResults.pass) {
@@ -244,6 +244,9 @@ export default class Component {
         const opts = { bareScope: !consumer };
         const compiler = scope.loadEnvironment(this.compilerId, opts);
         const src = this.impl.src;
+        if (!compiler.compile) {
+          return reject(`"${this.compilerId.toString()}" does not have a valid compiler interface`);
+        }
         const { code, mappings } = compiler.compile(src); // eslint-disable-line
         this.dist = new Dist(code, mappings);
 
