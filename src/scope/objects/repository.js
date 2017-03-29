@@ -32,6 +32,10 @@ export default class Repository {
     return path.join(this.scope.getPath(), OBJECTS_DIR);
   }
 
+  getLicense() {
+    return this.scope.scopeJson.getPopulatedLicense();
+  }
+  
   objectPath(ref: Ref): string {
     const hash = ref.toString();
     return path.join(this.getPath(), hash.slice(0, 2), hash.slice(2));

@@ -24,7 +24,7 @@ export default class ComponentObjects {
     const { component, objects } = JSON.parse(str);
 
     return new ComponentObjects(
-      new Buffer(component), 
+      new Buffer(component),
       objects.map(obj => new Buffer(obj))
     );
   }
