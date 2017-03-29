@@ -42,6 +42,7 @@ try {
       type: 'error',
       payload: `"${process.env.__testerId__}" doesn't have a valid tester interface`
     });
+    process.exit(1);
   }
 
   tester.run(specsFilePath)
