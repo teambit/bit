@@ -1,5 +1,5 @@
 /** @flow */
-import { equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
+import { equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, map, prop } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import { VersionNotFound } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject } from '../../utils';
@@ -11,15 +11,23 @@ import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
 import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
-import { Impl, Specs, Dist } from '../../consumer/component/sources';
+import { Impl, Specs, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
+import bit from 'bit-js';
+const merge = bit('object/merge');
+
+function resolveLicense(rawComponent: { scope: string, license: ?string }, repo: Repository) {
+  const isLocal = rawComponent.scope === repo.scope.name;
+  return isLocal ? repo.getLicense() : rawComponent.license;
+}
 
 export type ComponentProps = {
   scope: string;
   box?: string;
   name: string;
   versions?: {[number]: Ref};
+  license? : ?string
 };
 
 export default class Component extends BitObject {
@@ -27,6 +35,7 @@ export default class Component extends BitObject {
   name: string;
   box: string;
   versions: {[number]: Ref};
+  license: ?string;
 
   constructor(props: ComponentProps) {
     super();
@@ -34,6 +43,7 @@ export default class Component extends BitObject {
     this.name = props.name;
     this.box = props.box || DEFAULT_BOX_NAME;
     this.versions = props.versions || {};
+    this.license = props.license;
   }
 
   get versionArray(): Ref[] {
@@ -46,7 +56,7 @@ export default class Component extends BitObject {
 
   compatibleWith(component: Component) {
     const differnece = diff(
-      Object.keys(this.versions), 
+      Object.keys(this.versions),
       Object.keys(component.versions
     ));
     const comparableObject = filterObject(this.versions, (val, key) => !differnece.includes(key));
@@ -89,7 +99,7 @@ export default class Component extends BitObject {
   }
 
   id(): string {
-    return [this.scope, this.box, this.name].join('/');   
+    return [this.scope, this.box, this.name].join('/');
   }
 
   toObject() {
@@ -105,7 +115,8 @@ export default class Component extends BitObject {
       box: this.box,
       name: this.name,
       scope: this.scope,
-      versions: versions(this.versions)
+      versions: versions(this.versions),
+      license: this.license
     };
   }
 
@@ -163,7 +174,8 @@ export default class Component extends BitObject {
               docs: version.docs,
               dist: dist ? Dist.fromString(dist.toString()) : null,
               specsResults:
-                version.specsResults ? SpecsResults.deserialize(version.specsResults) : null, 
+                version.specsResults ? SpecsResults.deserialize(version.specsResults) : null,
+              license: this.license ? License.deserialize(this.license) : null
             });
           });
         });
@@ -182,13 +194,14 @@ export default class Component extends BitObject {
     return versionComp.toVersionDependencies(scope, source, withDevDependencies);
   }
 
-  static parse(contents: string): Component {
+  static parse(contents: string, repo: Repository): Component {
     const rawComponent = JSON.parse(contents);
     return Component.from({
       name: rawComponent.name,
       box: rawComponent.box,
       scope: rawComponent.scope,
-      versions: mapObject(rawComponent.versions, val => Ref.from(val))
+      versions: mapObject(rawComponent.versions, val => Ref.from(val)),
+      license: resolveLicense(rawComponent, repo),
     });
   }
 
@@ -196,11 +209,13 @@ export default class Component extends BitObject {
     return new Component(props);
   }
 
-  static fromBitId(bitId: BitId): Component {
-    return new Component({ 
-      name: bitId.name, 
-      box: bitId.box, 
+  static fromBitId(bitId: BitId, repo: Repository): Component {
+    const rawComponent = {
+      name: bitId.name,
+      box: bitId.box,
       scope: bitId.getScopeWithoutRemoteAnnotation()
-    });
+    };
+    
+    return new Component(merge(rawComponent, { license: resolveLicense(rawComponent, repo) }));
   }
 }

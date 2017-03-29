@@ -99,4 +99,8 @@ export class ScopeJson {
   static loadFromJson(json: string) {
     return new ScopeJson(JSON.parse(json));
   }
+  
+  getPopulatedLicense() {
+    return this.get('license');
+  }
 }
