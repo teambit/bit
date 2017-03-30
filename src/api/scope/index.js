@@ -9,7 +9,7 @@ import buildInScope from './lib/build-in-scope';
 import testInScope from './lib/test-in-scope';
 import modifyCIProps from './lib/modify-ci-props';
 import ciUpdateAction from './lib/ci-update-action';
-import * as scopeConfig from './lib/scope-config' ;
+import scopeConfig from './lib/scope-config' ;
 import catScope from './lib/cat-scope';
 import refreshScope from './lib/refresh-scope';
 
