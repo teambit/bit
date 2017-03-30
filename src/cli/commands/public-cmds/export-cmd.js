@@ -18,6 +18,6 @@ export default class Export extends Command {
   }
 
   report({ id, remote }: { id: string, remote: string }): string {
-    return chalk.green(`component ${id} pushed succesfully to scope ${remote}`);
+    return chalk.green(`component ${id} pushed successfully to scope ${remote}`);
   }
 }
