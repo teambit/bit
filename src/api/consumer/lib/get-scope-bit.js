@@ -6,6 +6,7 @@ import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_SHOW } from '../../../cli/loader/loader-messages';
 import { ScopeNotFound } from '../../../scope/exceptions';
 import Remotes from '../../../remotes/remotes';
+import { GlobalRemotes } from '../../../global-config';
 
 export default function getScopeBit({ id, allVersions, scopePath }:
 { id: string, allVersions: ?bool, scopePath: ?string }) {
@@ -49,9 +50,12 @@ export default function getScopeBit({ id, allVersions, scopePath }:
     }).catch((err) => {
       if (err instanceof ScopeNotFound) {
         const bitId = BitId.parse(id);
-        if (Remotes.isHub(bitId.scope)) {
-          return Remotes.resolveHub(bitId.scope).then((remote) => remoteShow(remote, bitId));
-        }
+        return GlobalRemotes.load()
+          .then((globalRemotes) => {
+            const remotes = Remotes.load(globalRemotes.toPlainObject());
+            return remotes.resolve(bitId.scope).then((remote) => remoteShow(remote, bitId));
+          })
+          .catch(e => Promise.reject(e));
       }
       throw err;
     });

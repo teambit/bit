@@ -5,6 +5,7 @@ import { ConsumerNotFound } from '../../../consumer/exceptions';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_LIST } from '../../../cli/loader/loader-messages';
 import Remotes from '../../../remotes/remotes';
+import { GlobalRemotes } from '../../../global-config';
 
 export default function list({ scopeName, cache }:
 { scopeName?: string, cache?: bool }): Promise<string[]> {
@@ -14,11 +15,6 @@ export default function list({ scopeName, cache }:
     return remote.list();
   };
   const scopeList = (scope) => cache ? scope.list() : scope.listStage();
-
-  if (Remotes.isHub(scopeName)) {
-    // $FlowFixMe
-    return Remotes.resolveHub(scopeName).then(remoteList);
-  }
 
   return loadConsumer()
   .then((consumer) => {
@@ -36,6 +32,16 @@ export default function list({ scopeName, cache }:
   })
   .catch((err) => {
     if (!(err instanceof ConsumerNotFound)) throw err;
+
+    if (scopeName) {
+      return GlobalRemotes.load()
+        .then((globalRemotes) => {
+          const remotes = Remotes.load(globalRemotes.toPlainObject());
+          return remotes.resolve(scopeName).then(remoteList);
+        })
+        .catch(e => Promise.reject(e));
+    }
+
     return loadScope(process.cwd())
       .catch(() => Promise.reject(err))
       .then(scopeList)
