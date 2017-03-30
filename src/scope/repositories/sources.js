@@ -18,11 +18,6 @@ import bit from 'bit-js';
 
 const bufferFrom = bit('buffer/from');
 
-
-import bit from 'bit-js';
-
-const bufferFrom = bit('buffer/from');
-
 export type ComponentTree = {
   component: Component;
   objects: BitObject[];
