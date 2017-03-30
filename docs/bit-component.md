@@ -230,7 +230,7 @@ All you need to do is to tell VScode where is the outFiles directory, and becaus
 
 `"outFiles": [ "${workspaceRoot}/components/**/*.js" ]`
 
-[Read some more about VScode node-debugger handle source maps](https://code.visualstudio.com/docs/editor/node-debugging#_source-maps).
+[Read more about how VScode node-debugger handle source maps](https://code.visualstudio.com/docs/editor/node-debugging#_source-maps).
 
 ## Component Environment
 

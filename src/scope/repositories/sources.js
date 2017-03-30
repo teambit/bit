@@ -14,6 +14,10 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import loader from '../../cli/loader';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import Consumer from '../../consumer';
+import bit from 'bit-js';
+
+const bufferFrom = bit('buffer/from');
+
 
 import bit from 'bit-js';
 
