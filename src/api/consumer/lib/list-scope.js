@@ -34,12 +34,7 @@ export default function list({ scopeName, cache }:
     if (!(err instanceof ConsumerNotFound)) throw err;
 
     if (scopeName) {
-      return GlobalRemotes.load()
-        .then((globalRemotes) => {
-          const remotes = Remotes.load(globalRemotes.toPlainObject());
-          return remotes.resolve(scopeName).then(remoteList);
-        })
-        .catch(e => Promise.reject(e));
+      return Remotes.getScopeRemote(scopeName).then(remoteList);
     }
 
     return loadScope(process.cwd())

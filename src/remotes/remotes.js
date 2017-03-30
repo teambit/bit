@@ -7,6 +7,7 @@ import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
 import ComponentObjects from '../scope/component-objects';
 import { REMOTE_ALIAS_SIGN } from '../constants';
 import remoteResolver from './remote-resolver/remote-resolver';
+import { GlobalRemotes } from '../global-config';
 import Scope from '../scope/scope';
 
 export default class Remotes extends Map<string, Remote> {
@@ -72,6 +73,16 @@ export default class Remotes extends Map<string, Remote> {
     });
 
     return object;
+  }
+
+  static getScopeRemote(scopeName: string): Promise<Remote> {
+    const getRemotesP = () => {
+      if (scopeName.startsWith(REMOTE_ALIAS_SIGN)) {
+        return GlobalRemotes.load().then((globalRemotes) => globalRemotes.toPlainObject());
+      }
+      return Promise.resolve({});
+    };
+    return getRemotesP().then((remotes) => Remotes.load(remotes).resolve(scopeName));
   }
 
   static load(remotes: {[string]: string}): Remotes {

@@ -50,11 +50,8 @@ export default function getScopeBit({ id, allVersions, scopePath }:
     }).catch((err) => {
       if (err instanceof ScopeNotFound) {
         const bitId = BitId.parse(id);
-        return GlobalRemotes.load()
-          .then((globalRemotes) => {
-            const remotes = Remotes.load(globalRemotes.toPlainObject());
-            return remotes.resolve(bitId.scope).then((remote) => remoteShow(remote, bitId));
-          })
+        return Remotes.getScopeRemote(bitId.scope)
+          .then((remote) => remoteShow(remote, bitId))
           .catch(e => Promise.reject(e));
       }
       throw err;
