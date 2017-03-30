@@ -100,7 +100,7 @@ export class ScopeJson {
     return new ScopeJson(JSON.parse(json));
   }
   
-  getPopulatedLicense() {
-    return this.get('license');
+  getPopulatedLicense() : Promise<string> {
+    return Promise.resolve(this.get('license'));
   }
 }

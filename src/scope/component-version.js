@@ -63,13 +63,14 @@ export default class ComponentVersion {
   toObjects(repo: Repository): Promise<ComponentObjects> {
     return this.getVersion(repo)
       .then(version => Promise.all([
-        this.component.asRaw(repo), 
+        this.component.asRaw(repo),
         version.collectRaw(repo),
-        version.asRaw(repo)
+        version.asRaw(repo),
+        repo.getScopeMetaObject()
       ]))
-      .then(([compObject, objects, version]) => new ComponentObjects(
+      .then(([compObject, objects, version, scopeMeta]) => new ComponentObjects(
         compObject,
-        objects.concat([version])
+        objects.concat([version, scopeMeta])
       ));
   }
 }
