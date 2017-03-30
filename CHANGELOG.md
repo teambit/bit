@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Added
+
+- bit scope-config public command
+- license file inflation
+- scope meta model
+
+### Removed
+
+- bit resolver command
+
 ## [0.4.5]
 
 ### Fixed
