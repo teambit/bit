@@ -46,7 +46,7 @@ class ConfigSet extends Command {
 
 class ConfigGet extends Command {
   name = 'get <key>';
-  description = 'get a glboal configuration';
+  description = 'get a global configuration';
   alias = '';
   opts = [
   ];

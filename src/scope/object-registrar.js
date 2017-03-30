@@ -1,12 +1,11 @@
 /** @flow */
-import Source from './models/source';
-import Component from './models/component';
-import Version from './models/version';
+import { Source, Component, Version, ScopeMeta } from './models';
 
 export default function types() {
   return [
     Source,
     Component,
-    Version
+    Version,
+    ScopeMeta
   ];
 }

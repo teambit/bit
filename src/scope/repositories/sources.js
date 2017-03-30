@@ -19,6 +19,10 @@ import bit from 'bit-js';
 const bufferFrom = bit('buffer/from');
 
 
+import bit from 'bit-js';
+
+const bufferFrom = bit('buffer/from');
+
 export type ComponentTree = {
   component: Component;
   objects: BitObject[];
@@ -183,10 +187,11 @@ export default class SourceRepository {
 
   clean(bitId: BitId) {
     return this.get(bitId)
-      .then(component => component.remove(this.objects()));
+      .then((component) => {
+        if (!component) return;
+        component.remove(this.objects());
+      });
   }
-
-
 
   merge({ component, objects }: ComponentTree, inScope: boolean = false): Promise<Component> {
     if (inScope) component.scope = this.scope.name;
