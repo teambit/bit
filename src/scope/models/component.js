@@ -164,7 +164,7 @@ export default class Component extends BitObject {
               specs: specs ? new Specs(specs.toString()) : null,
               docs: version.docs,
               dist: dist ? Dist.fromString(dist.toString()) : null,
-              license: License.deserialize(scopeMeta.license),
+              license: scopeMeta ? License.deserialize(scopeMeta.license) : null,
               specsResults:
                 version.specsResults ? SpecsResults.deserialize(version.specsResults) : null,
             });
