@@ -1,7 +1,6 @@
 /** @flow */
-import R from 'ramda';
 import pathlib from 'path';
-import { writeFile, cleanObject } from '../utils';
+import { writeFile, cleanObject, readFile } from '../utils';
 import { Remote } from '../remotes';
 import { SCOPE_JSON } from '../constants';
 
@@ -101,6 +100,6 @@ export class ScopeJson {
   }
   
   getPopulatedLicense() : Promise<string> {
-    return Promise.resolve(this.get('license'));
+    return readFile(this.get('license')).then(license => license.toString());
   }
 }
