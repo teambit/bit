@@ -215,7 +215,7 @@ The component is also in the staging area as you can see by typing `bit status`.
 
 When you'll commit it, the version will increment itself.
 
-2\. Open the impl.jd file and make some changes. you can also copy and paste the following code.
+2\. Open the impl.js file and make some changes. you can also copy and paste the following code.
 
 `open ./inline_components/global/is-string/impl.js`
 

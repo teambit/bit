@@ -5,7 +5,7 @@ As the world moves to a multi-repository architecture we increasingly need to us
 
 This wastes precious time and effort which can be better invested in building new things. Components can be improved and evolved without having to start from scratch every time. Duplicating components across repositories isn't any better, as maintaining or changing a single function becomes an odyssey, and the larger the code base the worse it gets.
 
-Up until Bit, the only way to make components reusable was to spend too much time on boilerplating and build configuration just to end up having to maintain a git repo, a package and CI for every small component. This isn’t practical and is very hard to scale.
+Up until Bit, the only way to make components reusable was to spend too much time on boilerplating and build configuration just to end up having to maintain a git repository, a package and CI for every small component. This isn’t practical and is very hard to scale.
 
 To understand the solution we turned back to the basics of writing code, as we were taught from day one. We should create independent and isolated components. We should also manage them to make this a practical practice.
 
