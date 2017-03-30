@@ -162,7 +162,7 @@ export default class Component {
     .then(() => { return this.specs ? this.specs.write(bitDir, this.specsFile) : undefined; })
     .then(() => { return this.dist ? this.dist.write(bitDir, this.implFile) : undefined; })
     .then(() => { return withBitJson ? this.writeBitJson(bitDir): undefined; })
-    .then(() => { return this.license ? this.license.write(bitDir) : undefined; })
+    .then(() => { return this.license && this.license.src ? this.license.write(bitDir) : undefined; })
     .then(() => this);
   }
 

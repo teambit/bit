@@ -1,6 +1,6 @@
 /** @flow */
 import pathlib from 'path';
-import { writeFile, cleanObject, readFile } from '../utils';
+import { writeFile, cleanObject, readFile, existsSync } from '../utils';
 import { Remote } from '../remotes';
 import { SCOPE_JSON } from '../constants';
 
@@ -100,6 +100,7 @@ export class ScopeJson {
   }
   
   getPopulatedLicense() : Promise<string> {
+    if (!this.get('license') || !existsSync(this.get('license'))) return Promise.resolve();
     return readFile(this.get('license')).then(license => license.toString());
   }
 }

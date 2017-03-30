@@ -29,6 +29,7 @@ import writeFile from './fs-write-file';
 import readFile from './fs-read-file';
 import immutableUnshift from './immutable-unshift';
 import rmDir from './fs-rmdir';
+import existsSync from './fs-exists-sync';
 import resolveHomePath from './os-resolve-home-path';
 import currentDirName from './current-dir-name';
 import removeFile from './fs-remove-file';
@@ -72,6 +73,7 @@ resolveGroupId,
   cleanChar,
   writeFile,
   mkdirp,
+  existsSync,
   cleanObject,
   cleanBang,
   prependBang,
