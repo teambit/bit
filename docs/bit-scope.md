@@ -13,6 +13,7 @@ Each component belongs in a scope (or multiple scopes). therefore, the scope's n
 ## Dependency Management
 
 Bit's dependency resolution and management was especially designed for the use code components.
+
 Therefore, we designed its dependency management mechanism with few major constraints in mind:
 
 1. ***Installation (import) performance*** -

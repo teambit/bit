@@ -1,6 +1,7 @@
 /** @flow */
 import { equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
 import { Ref, BitObject } from '../objects';
+import { ScopeMeta } from '../models';
 import { VersionNotFound } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject } from '../../utils';
 import Version from './version';
@@ -11,7 +12,7 @@ import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
 import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
-import { Impl, Specs, Dist } from '../../consumer/component/sources';
+import { Impl, Specs, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 
@@ -46,7 +47,7 @@ export default class Component extends BitObject {
 
   compatibleWith(component: Component) {
     const differnece = diff(
-      Object.keys(this.versions), 
+      Object.keys(this.versions),
       Object.keys(component.versions
     ));
     const comparableObject = filterObject(this.versions, (val, key) => !differnece.includes(key));
@@ -89,7 +90,7 @@ export default class Component extends BitObject {
   }
 
   id(): string {
-    return [this.scope, this.box, this.name].join('/');   
+    return [this.scope, this.box, this.name].join('/');
   }
 
   toObject() {
@@ -145,8 +146,9 @@ export default class Component extends BitObject {
           const implP = version.impl.file.load(repository);
           const specsP = version.specs ? version.specs.file.load(repository) : null;
           const distP = version.dist ? version.dist.file.load(repository) : null;
-          return Promise.all([implP, specsP, distP])
-          .then(([impl, specs, dist]) => {
+          const scopeMetaP = ScopeMeta.fromScopeName(scopeName).load(repository);
+          return Promise.all([implP, specsP, distP, scopeMetaP])
+          .then(([impl, specs, dist, scopeMeta]) => {
             return new ConsumerComponent({
               name: this.name,
               box: this.box,
@@ -162,8 +164,9 @@ export default class Component extends BitObject {
               specs: specs ? new Specs(specs.toString()) : null,
               docs: version.docs,
               dist: dist ? Dist.fromString(dist.toString()) : null,
+              license: License.deserialize(scopeMeta.license),
               specsResults:
-                version.specsResults ? SpecsResults.deserialize(version.specsResults) : null, 
+                version.specsResults ? SpecsResults.deserialize(version.specsResults) : null,
             });
           });
         });
@@ -197,9 +200,9 @@ export default class Component extends BitObject {
   }
 
   static fromBitId(bitId: BitId): Component {
-    return new Component({ 
-      name: bitId.name, 
-      box: bitId.box, 
+    return new Component({
+      name: bitId.name,
+      box: bitId.box,
       scope: bitId.getScopeWithoutRemoteAnnotation()
     });
   }

@@ -8,7 +8,7 @@ import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound } from '../exceptions';
 import { resolveGroupId, mkdirp, writeFile, removeFile, allSettled, readFile, inflate } from '../../utils';
 import { Scope } from '../../scope';
-import Component from '../models/component';
+import { Component, ScopeMeta } from '../models';
 
 export default class Repository {
   objects: BitObject[] = [];
@@ -32,6 +32,15 @@ export default class Repository {
     return path.join(this.scope.getPath(), OBJECTS_DIR);
   }
 
+  getLicense() : Promise<string> {
+    return this.scope.scopeJson.getPopulatedLicense();
+  }
+  
+  getScopeMetaObject() : Promise<Buffer> {
+    return this.getLicense()
+      .then(license => ScopeMeta.fromObject({ license, name: this.scope.name }).compress());
+  }
+  
   objectPath(ref: Ref): string {
     const hash = ref.toString();
     return path.join(this.getPath(), hash.slice(0, 2), hash.slice(2));

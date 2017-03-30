@@ -2,9 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
-import Impl from '../component/sources/impl';
-import Specs from '../component/sources/specs';
-import Dist from '../component/sources/dist';
+import { Impl, Specs, Dist, License } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
@@ -41,6 +39,7 @@ export type ComponentProps = {
   docs?: ?Doclet[],
   dist?: ?Dist,
   specsResults?: ?SpecsResults,
+  license?: ?License
 }
 
 export default class Component {
@@ -59,6 +58,7 @@ export default class Component {
   _docs: ?Doclet[];
   dist: ?Dist;
   specsResults: ?SpecsResults;
+  license: ?License;
 
   set impl(val: Impl) { this._impl = val; }
 
@@ -118,7 +118,8 @@ export default class Component {
     specs,
     docs,
     dist,
-    specsResults
+    specsResults,
+    license
   }: ComponentProps) {
     this.name = name;
     this.box = box || DEFAULT_BOX_NAME;
@@ -135,6 +136,7 @@ export default class Component {
     this._docs = docs;
     this.dist = dist;
     this.specsResults = specsResults;
+    this.license = license;
   }
 
   writeBitJson(bitDir: string): Promise<Component> {
@@ -160,6 +162,7 @@ export default class Component {
     .then(() => { return this.specs ? this.specs.write(bitDir, this.specsFile) : undefined; })
     .then(() => { return this.dist ? this.dist.write(bitDir, this.implFile) : undefined; })
     .then(() => { return withBitJson ? this.writeBitJson(bitDir): undefined; })
+    .then(() => { return this.license ? this.license.write(bitDir) : undefined; })
     .then(() => this);
   }
 
@@ -276,7 +279,8 @@ export default class Component {
       impl: this.impl.serialize(),
       docs: this.docs,
       dist: this.dist ? this.dist.serialize() : null,
-      specsResults: this.specsResults ? this.specsResults.serialize() : null
+      specsResults: this.specsResults ? this.specsResults.serialize() : null,
+      license: this.license ? this.license.serialize() : null
     };
   }
 
@@ -300,7 +304,8 @@ export default class Component {
       specs,
       docs,
       dist,
-      specsResults
+      specsResults,
+      license
     } = object;
 
     return new Component({
@@ -318,7 +323,8 @@ export default class Component {
       specs: specs ? Specs.deserialize(specs) : null,
       docs,
       dist: dist ? Dist.deserialize(dist) : null,
-      specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null
+      specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null,
+      license: license ? License.deserialize(license) : null
     });
   }
 
