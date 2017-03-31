@@ -58,7 +58,7 @@ export default class BitJson extends AbstractBitJson {
   write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
     return new Promise((resolve, reject) => {
       if (!override && hasExisting(bitDir)) {
-        throw new BitJsonAlreadyExists();
+        return resolve(false);
       }
 
       const repspond = (err, res) => {

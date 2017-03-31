@@ -139,7 +139,7 @@ export default class Component {
     this.license = license;
   }
 
-  writeBitJson(bitDir: string): Promise<Component> {
+  writeBitJson(bitDir: string, force?:boolean = true): Promise<Component> {
     return new BitJson({
       version: this.version,
       scope: this.scope,
@@ -149,7 +149,7 @@ export default class Component {
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this.dependencies.toObject(),
       packageDependencies: this.packageDependencies
-    }).write({ bitDir });
+    }).write({ bitDir, override: force });
   }
 
   dependencies(): BitIds {
