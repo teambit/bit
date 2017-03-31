@@ -5,22 +5,24 @@ import Source from './source';
 import { LICENSE_FILENAME } from '../../../constants';
 
 export default class License extends Source {
-  
-  write(bitPath: string): Promise<any> {
+
+  write(bitPath: string, force: boolean = true): Promise<any> {
+    const filePath = path.join(bitPath, LICENSE_FILENAME);
+    if (!force && fs.existsSync(filePath)) return Promise.resolve();
     return new Promise((resolve, reject) =>
-      fs.writeFile(path.join(bitPath, LICENSE_FILENAME), this.src, (err, res) => {
+      fs.writeFile(filePath, this.src, (err, res) => {
         if (err) return reject(err);
         return resolve(res);
       })
     );
   }
-  
+
   serialize() {
     return this.src;
   }
-  
+
   static deserialize(str: string) {
     return new License(str);
   }
-  
+
 }

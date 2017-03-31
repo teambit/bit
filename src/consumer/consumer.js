@@ -21,6 +21,7 @@ import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
 import { index } from '../search/indexer';
 
+
 export type ConsumerProps = {
   projectPath: string,
   created?: boolean,
@@ -136,8 +137,8 @@ export default class Consumer {
     return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose });
   }
 
-  createBit({ id, withSpecs = false, withBitJson = false }: {
-    id: BitInlineId, withSpecs: boolean, withBitJson: boolean }): Promise<Component> {
+  createBit({ id, withSpecs = false, withBitJson = false, force = false }: {
+    id: BitInlineId, withSpecs: boolean, withBitJson: boolean, force: boolean }): Promise<Component> {
     const inlineBitPath = id.composeBitPath(this.getPath());
 
     return Component.create({
@@ -145,7 +146,7 @@ export default class Consumer {
       box: id.box,
       withSpecs,
       consumerBitJson: this.bitJson,
-    }, this.scope).write(inlineBitPath, withBitJson);
+    }, this.scope).write(inlineBitPath, withBitJson, force);
   }
 
   removeFromInline(id: BitInlineId): Promise<any> {

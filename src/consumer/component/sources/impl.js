@@ -9,15 +9,17 @@ import MissingImpl from '../exceptions/missing-impl';
 import { Scope } from '../../../scope';
 
 export default class Impl extends Source {
-  write(bitPath: string, fileName: string): Promise<any> {
+  write(bitPath: string, fileName: string, force: boolean = true): Promise<any> {
+    const filePath = path.join(bitPath, fileName);
+    if (!force && fs.existsSync(filePath)) return Promise.resolve();
     return new Promise((resolve, reject) =>
-      fs.writeFile(path.join(bitPath, fileName), this.src, (err, res) => {
+      fs.writeFile(filePath, this.src, (err, res) => {
         if (err) return reject(err);
         return resolve(res);
       })
     );
   }
-  
+
   validate() {
     if (typeof this.src !== 'string') throw new InvalidImpl();
   }

@@ -156,14 +156,14 @@ export default class Component {
     return BitIds.fromObject(this.dependencies);
   }
 
-  write(bitDir: string, withBitJson: boolean): Promise<Component> {
+  write(bitDir: string, withBitJson: boolean, force: boolean = true): Promise<Component> {
     return mkdirp(bitDir)
-    .then(() => this.impl.write(bitDir, this.implFile))
-    .then(() => { return this.specs ? this.specs.write(bitDir, this.specsFile) : undefined; })
-    .then(() => { return this.dist ? this.dist.write(bitDir, this.implFile) : undefined; })
-    .then(() => { return withBitJson ? this.writeBitJson(bitDir): undefined; })
-    .then(() => { return this.license && this.license.src ? this.license.write(bitDir) : undefined; })
-    .then(() => this);
+      .then(() => this.impl.write(bitDir, this.implFile, force))
+      .then(() => { return this.specs ? this.specs.write(bitDir, this.specsFile, force) : undefined; })
+      .then(() => { return this.dist ? this.dist.write(bitDir, this.implFile, force) : undefined; })
+      .then(() => { return withBitJson ? this.writeBitJson(bitDir, force): undefined; })
+      .then(() => { return this.license && this.license.src ? this.license.write(bitDir, force) : undefined; })
+      .then(() => this);
   }
 
   runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose }: {

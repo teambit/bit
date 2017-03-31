@@ -15,8 +15,9 @@ export default class Dist extends Source {
     this.mappings = mappings;
   }
 
-  write(bitPath: string, implFileName: string): Promise<any> {
+  write(bitPath: string, implFileName: string, force: boolean = true): Promise<any> {
     const distFilePath = path.join(bitPath, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
+    if (!force && fs.existsSync(distFilePath)) return Promise.resolve();
     const distP = new Promise((resolve, reject) =>
       fs.outputFile(distFilePath, this.buildSrcWithSourceMapAnnotation(), (err) => {
         if (err) return reject(err);
@@ -42,12 +43,12 @@ export default class Dist extends Source {
     return JSON.stringify({
       version: DEFAULT_SOURCEMAP_VERSION,
       sources: [path.join('..', implFileName)],
-      mappings: this.mappings 
+      mappings: this.mappings
     });
   }
 
   buildSrcWithSourceMapAnnotation() {
-    return this.mappings ? 
+    return this.mappings ?
     `${this.src}\n\n//# sourceMappingURL=${DEFAULT_BUNDLE_FILENAME}${MAP_EXTENSION}` : this.src;
   }
 
