@@ -7,7 +7,7 @@ import createTemplate from '../templates/specs.default-template';
 import { Scope } from '../../../scope';
 
 export default class Specs extends Source {
-  write(bitPath: string, fileName: string, force: boolean = true): Promise<any> {
+  write(bitPath: string, fileName: string, force?: boolean = true): Promise<any> {
     const filePath = path.join(bitPath, fileName);
     if (!force && fs.existsSync(filePath)) return Promise.resolve();
     return new Promise((resolve, reject) => {

@@ -156,7 +156,7 @@ export default class Component {
     return BitIds.fromObject(this.dependencies);
   }
 
-  write(bitDir: string, withBitJson: boolean, force: boolean = true): Promise<Component> {
+  write(bitDir: string, withBitJson: boolean, force?: boolean = true): Promise<Component> {
     return mkdirp(bitDir)
       .then(() => this.impl.write(bitDir, this.implFile, force))
       .then(() => { return this.specs ? this.specs.write(bitDir, this.specsFile, force) : undefined; })

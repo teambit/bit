@@ -9,7 +9,7 @@ import MissingImpl from '../exceptions/missing-impl';
 import { Scope } from '../../../scope';
 
 export default class Impl extends Source {
-  write(bitPath: string, fileName: string, force: boolean = true): Promise<any> {
+  write(bitPath: string, fileName: string, force?: boolean = true): Promise<any> {
     const filePath = path.join(bitPath, fileName);
     if (!force && fs.existsSync(filePath)) return Promise.resolve();
     return new Promise((resolve, reject) =>

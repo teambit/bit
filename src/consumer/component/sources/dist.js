@@ -15,7 +15,7 @@ export default class Dist extends Source {
     this.mappings = mappings;
   }
 
-  write(bitPath: string, implFileName: string, force: boolean = true): Promise<any> {
+  write(bitPath: string, implFileName: string, force?: boolean = true): Promise<any> {
     const distFilePath = path.join(bitPath, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
     if (!force && fs.existsSync(distFilePath)) return Promise.resolve();
     const distP = new Promise((resolve, reject) =>

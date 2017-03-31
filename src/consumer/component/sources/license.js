@@ -6,7 +6,7 @@ import { LICENSE_FILENAME } from '../../../constants';
 
 export default class License extends Source {
 
-  write(bitPath: string, force: boolean = true): Promise<any> {
+  write(bitPath: string, force?: boolean = true): Promise<any> {
     const filePath = path.join(bitPath, LICENSE_FILENAME);
     if (!force && fs.existsSync(filePath)) return Promise.resolve();
     return new Promise((resolve, reject) =>
