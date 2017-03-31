@@ -7,15 +7,22 @@ import { GlobalRemotes } from '../../../../src/global-config';
 import Remotes from '../../../../src/remotes/remotes';
 
 describe('ListScope', () => {
+  let sandbox;
+  before(() => {
+    sandbox = sinon.sandbox.create();
+  });
+  after(() => {
+    sandbox.restore();
+  });
   describe('list', () => {
     it('should list components outside a scope if scopeName is given', () => {
-      sinon.stub(consumer, 'loadConsumer').returns(Promise.reject(new ConsumerNotFound()));
-      sinon.stub(GlobalRemotes, 'load').returns(Promise.resolve({ toPlainObject: () => {}}));
-      const listSpy = sinon.spy();
-      const resolveStub = sinon.stub(Remotes.prototype, 'resolve').returns(Promise.resolve({list: listSpy}));
+      sandbox.stub(consumer, 'loadConsumer').returns(Promise.reject(new ConsumerNotFound()));
+      sandbox.stub(GlobalRemotes, 'load').returns(Promise.resolve({ toPlainObject: () => {}}));
+      const listSpy = sandbox.spy();
+      const resolveStub = sandbox.stub(Remotes.prototype, 'resolve').returns(Promise.resolve({list: listSpy}));
 
       const result = listScope({scopeName: 'non-exists-scope'});
-      expect(result).to.be.a.Promise;
+      expect(result).to.be.a('Promise');
 
       return result
         .then(() => {
