@@ -1,5 +1,5 @@
 /** @flow */
-import * as fs from 'fs';
+import fs from 'fs';
 import * as path from 'path';
 import Source from './source';
 import BitId from '../../../bit-id';
