@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Fixed
+
+- bit ls and show commands can be performed outside of bit scope
+
 ### Added
 
 - bit scope-config public command
