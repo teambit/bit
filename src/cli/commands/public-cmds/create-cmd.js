@@ -11,11 +11,12 @@ export default class Create extends Command {
   alias = 'cr';
   opts = [
     ['s', 'specs', 'create specs file automatically'],
-    ['j', 'json', 'create bit.json file automatically']
+    ['j', 'json', 'create bit.json file automatically'],
+    ['f', 'force', 'override an existing component']
   ];
 
-  action([id, ]: [string], { specs, json }: any): Promise<*> {
-    return create(id, specs, json);
+  action([id, ]: [string], { specs, json, force }: any): Promise<*> {
+    return create(id, specs, json, force);
   }
 
   report(component: Component): string {
