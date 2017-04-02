@@ -88,6 +88,7 @@ We actively welcome your pull requests.
 2. If you've added code that should be tested, add tests.
 3. Ensure the test suite passes.
 4. Make sure your code lints.
+5. Add your change to the CHANGELOG.md file at the [unreleased] section.
 
 ## License
 
