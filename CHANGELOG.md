@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Change
+
+- do not override files upon "bit create" unless -f (--force) flag is used
+
 ### Fixed
 
 - bit ls and show commands can be performed outside of bit scope
