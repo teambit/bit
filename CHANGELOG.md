@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.0]
+
 ** breaking change - a scope with this version won't work with consumer with lower versions **
 
 ### Change
