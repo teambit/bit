@@ -75,7 +75,7 @@ export default class SSH {
       const cmd = this.buildCmd(
         commandName,
         absolutePath(this.path || ''),
-        commandName === '_put' ? payload : null
+        commandName === '_put' ? null : payload
       );
 
       this.connection.exec(cmd, (e, stream) => {
