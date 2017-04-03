@@ -1,6 +1,6 @@
 /** @flow */
 import Command from '../../command';
-import { fromBase64, unpackCommand } from '../../../utils';
+import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 import { fetch } from '../../../api/scope';
 import ComponentObjects from '../../../scope/component-objects';
 import { pack } from '../../cli-utils';
@@ -21,6 +21,7 @@ export default class Fetch extends Command {
   }
 
   report(componentObjects: ComponentObjects[]): string {
-    return pack(componentObjects.map(obj => obj.toString()));
+    const components = componentObjects.map(obj => obj.toString());
+    return packCommand(buildCommandMessage(components));
   }
 }

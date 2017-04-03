@@ -119,8 +119,8 @@ export default class SSH {
   list() {
     return this.exec('_list')
     .then((str: string) => {
-      const components = unpack(str);
-      return rejectNils(components.map((c) => {
+      const { payload, headers } = unpackCommand(str);
+      return rejectNils(payload.map((c) => {
         return c ? ConsumerComponent.fromString(c) : null;
       }));
     });
@@ -133,8 +133,8 @@ export default class SSH {
   show(id: BitId) {
     return this.exec('_show', id.toString())
     .then((str: string) => {
-      const component = unpack(str);
-      return str ? ConsumerComponent.fromString(component) : null;
+      const { payload, headers } = unpackCommand(str);
+      return str ? ConsumerComponent.fromString(payload) : null;
     });
   }
 
@@ -144,8 +144,8 @@ export default class SSH {
     if (noDeps) options = '-n';
     return this.exec(`_fetch ${options}`, ids)
       .then((str: string) => {
-        const components = unpack(str);
-        return components.map((raw) => {
+        const { payload, headers } = unpackCommand(str);
+        return payload.map((raw) => {
           return ComponentObjects.fromString(raw);
         });
       });

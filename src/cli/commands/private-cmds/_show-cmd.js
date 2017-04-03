@@ -1,7 +1,6 @@
 /** @flow */
 import Command from '../../command';
-import { fromBase64, unpackCommand } from '../../../utils';
-import { pack } from '../../cli-utils';
+import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 import { scopeShow } from '../../../api/scope';
 
 export default class _Show extends Command {
@@ -10,7 +9,7 @@ export default class _Show extends Command {
   description = 'show a specific component on scope';
   alias = '';
   opts = [];
-  
+
   action([path, args]: [string, string]): Promise<any> {
     const { payload, headers } = unpackCommand(args);
     // validateVersion(headers)
@@ -18,6 +17,6 @@ export default class _Show extends Command {
   }
 
   report(str: string): string {
-    return pack(str);
+    return packCommand(buildCommandMessage(str));
   }
 }
