@@ -21,7 +21,11 @@ export default class ComponentObjects {
 
   // @TODO opitimize ASAP.
   static fromString(str: string): ComponentObjects {
-    const { component, objects } = JSON.parse(str);
+    return ComponentObjects.fromObject(JSON.parse(str));
+  }
+
+  static fromObject(object: Object): ComponentObjects {
+    const { component, objects } = object;
 
     return new ComponentObjects(
       new Buffer(component),
