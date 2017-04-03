@@ -3,11 +3,19 @@ import { loadConsumer } from '../../../consumer';
 import ConsumerComponent from '../../../consumer/component/consumer-component';
 import loader from '../../../cli/loader';
 import { BEFORE_EXPORT } from '../../../cli/loader/loader-messages';
+import { ComponentNotFound } from '../../../scope/exceptions';
+import { LOCAL_SCOPE_NOTATION } from '../../../constants';
 
 export default function exportAction(id: string, remote: string, save: ?bool) {
   return loadConsumer().then((consumer) => {
     loader.start(BEFORE_EXPORT);
     return consumer.exportAction(id, remote)
+    .catch((err) => {
+      if (err instanceof ComponentNotFound && !id.startsWith(LOCAL_SCOPE_NOTATION)) {
+        throw (`Error: Missing local scope annotation when exporting ${id}. Please run 'bit export ${LOCAL_SCOPE_NOTATION}/${id} ${remote}'`);
+      }
+      throw err;
+    })
     .then((component: ConsumerComponent) => {
       if (save) {
         return consumer.bitJson.addDependency(component.id)
