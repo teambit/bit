@@ -3,7 +3,7 @@ pipeline {
     stages {
            stage('pre') {
                 steps {
-                sh("npm i -g bit-bin")
+                sh("npm i -g bit-bin@stable")
                 }
             }
         stage('build') {
