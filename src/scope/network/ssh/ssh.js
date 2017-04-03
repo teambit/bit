@@ -65,14 +65,18 @@ export default class SSH {
     this.host = host || '';
   }
 
-  buildCmd(commandName: string, path: string, ...args: string[]): string {
-    return `bit ${commandName} ${toBase64(path)} ${packCommand(buildCommandMessage(args))}`;
+  buildCmd(commandName: string, path: string, payload: any): string {
+    return `bit ${commandName} ${toBase64(path)} ${packCommand(buildCommandMessage(payload))}`;
   }
 
   exec(commandName: string, payload: any): Promise<any> {
     return new Promise((resolve, reject) => {
       let res = '', err;
-      const cmd = this.buildCmd(commandName, absolutePath(this.path || ''));
+      const cmd = this.buildCmd(
+        commandName,
+        absolutePath(this.path || ''),
+        commandName === '_put' ? payload : null
+      );
 
       this.connection.exec(cmd, (e, stream) => {
         if (commandName === '_put') stream.stdin.write(toBase64(payload));
@@ -84,8 +88,12 @@ export default class SSH {
             // TODO: close the connection from somewhere else
             // this.connection.end();
           })
-          .on('data', (response) => { res += response.toString(); })
-          .stderr.on('data', (response) => { err = response.toString(); });
+          .on('data', (response) => {
+            res += response.toString();
+          })
+          .stderr.on('data', (response) => {
+            err = response.toString();
+          });
       });
     });
   }
@@ -93,11 +101,7 @@ export default class SSH {
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
     return this.exec('_put', componentObjects.toString())
       .then((str: string) => {
-        try {
-          return ComponentObjects.fromString(fromBase64(str));
-        } catch (err) {
-          throw new NetworkError(str);
-        }
+        return ComponentObjects.fromString(fromBase64(str));
       });
   }
 

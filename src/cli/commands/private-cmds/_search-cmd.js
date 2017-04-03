@@ -5,7 +5,7 @@ import { searchAdapter } from '../../../search';
 import { Doc } from '../../../search/indexer';
 
 export default class Search extends Command {
-  name = '_search <path> <args> ';
+  name = '_search <path> <args>';
   private = true;
   description = 'search for components on a remote scope';
   alias = '';
