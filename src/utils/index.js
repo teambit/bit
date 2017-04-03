@@ -50,6 +50,7 @@ import isValidIdChunk from './is-valid-id-chunk';
 import isValidScopeName from './is-valid-scope-name';
 import packCommand from './pack-command';
 import unpackCommand from './unpack-command';
+import buildCommandMessage from './build-command-message';
 
 export {
   parseSSHUrl,
@@ -104,4 +105,5 @@ resolveGroupId,
   isValidScopeName,
   packCommand,
   unpackCommand,
+  buildCommandMessage,
 };

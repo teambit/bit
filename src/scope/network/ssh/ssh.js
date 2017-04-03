@@ -4,13 +4,12 @@ import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
 import { RemoteScopeNotFound, NetworkError, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
 import { BitIds, BitId } from '../../../bit-id';
-import { toBase64, fromBase64, packCommand } from '../../../utils';
+import { toBase64, fromBase64, packCommand, buildCommandMessage } from '../../../utils';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
 import { unpack } from '../../../cli/cli-utils';
 import ConsumerComponent from '../../../consumer/component';
-import { BIT_VERSION } from '../../../constants';
 
 const rejectNils = R.reject(R.isNil);
 const Client = require('ssh2').Client;
@@ -27,7 +26,7 @@ function clean(str: string) {
 }
 function splitDataForPut(cmd) {
   const index = cmd.lastIndexOf(' ');
-  return [cmd.slice(index+1), cmd.slice(0,index)];
+  return [cmd.slice(index+1), cmd.slice(0, index)];
 }
 
 function errorHandler(code, err) {
@@ -67,22 +66,13 @@ export default class SSH {
   }
 
   buildCmd(commandName: string, path: string, ...args: string[]): string {
-    function buildCmd() {
-      return {
-        payload: args,
-        headers: {
-          version: BIT_VERSION
-        }
-      };
-    }
-
-    return `bit ${commandName} ${toBase64(path)} ${packCommand(buildCmd())}`;
+    return `bit ${commandName} ${toBase64(path)} ${packCommand(buildCommandMessage(args))}`;
   }
 
-  exec(commandName: string, ...args: any[]): Promise<any> {
+  exec(commandName: string, payload: any): Promise<any> {
     return new Promise((resolve, reject) => {
-      let res ='', err , data;
-      let cmd = this.buildCmd(commandName, absolutePath(this.path || ''), ...args);
+      let res ='', err, data;
+      let cmd = this.buildCmd(commandName, absolutePath(this.path || ''), payload);
       if (commandName === '_put') [data, cmd] = splitDataForPut(cmd);
       this.connection.exec(cmd, (err, stream) => {
         if (commandName === '_put') stream.stdin.write(data);
@@ -130,7 +120,7 @@ export default class SSH {
   }
 
   search(query: string, reindex: boolean) {
-    return this.exec('_search', query, reindex.toString()).then(JSON.parse);
+    return this.exec('_search', { query, reindex: reindex.toString() }).then(JSON.parse);
   }
 
   show(id: BitId) {
@@ -145,7 +135,7 @@ export default class SSH {
     let options = '';
     ids = ids.map(bitId => bitId.toString());
     if (noDeps) options = '-n';
-    return this.exec(`_fetch ${options}`, ...ids)
+    return this.exec(`_fetch ${options}`, ids)
       .then((str: string) => {
         const components = unpack(str);
         return components.map((raw) => {
