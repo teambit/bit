@@ -9,27 +9,7 @@ import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
 import ConsumerComponent from '../../../consumer/component';
-import { BIT_VERSION } from '../../../constants';
-import * as semver from 'semver';
-import loader from '../../../cli/loader/loader';
-
-function checkVersionCompatibility(remoteVersion: string) {
-  const remoteMajor = semver.major(remoteVersion);
-  const currentMajor = semver.major(BIT_VERSION);
-
-  if (remoteMajor > currentMajor) {
-    loader.off();
-    console.log('there is a mismatch between the versions');
-  }
-
-  const remoteMinor = semver.minor(remoteVersion);
-  const currentMinor = semver.major(BIT_VERSION);
-
-  if (remoteMinor > currentMinor) {
-    loader.off();
-    console.log('there is a mismatch between the versions');
-  }
-}
+import checkVersionCompatibility from '../check-version-compatibility'
 
 const rejectNils = R.reject(R.isNil);
 const Client = require('ssh2').Client;
