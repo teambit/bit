@@ -26,15 +26,22 @@ function clean(str: string) {
 }
 
 function errorHandler(code, err) {
+  let parsedError;
+  try {
+    parsedError = JSON.parse(err);
+  } catch (e) {
+    // be greacfull when can't parse error message
+  }
+
   switch (code) {
     default:
       return new UnexpectedNetworkError();
     case 127:
-      return new ComponentNotFound(err);
+      return new ComponentNotFound((parsedError && parsedError.id) || err);
     case 128:
       return new PermissionDenied();
     case 129:
-      return new RemoteScopeNotFound(err);
+      return new RemoteScopeNotFound((parsedError && parsedError.id) || err);
     case 130:
       return new PermissionDenied();
   }
@@ -78,15 +85,15 @@ export default class SSH {
       this.connection.exec(cmd, (e, stream) => {
         if (commandName === '_put') stream.stdin.write(toBase64(payload));
         stream
+          .on('data', (response) => {
+            res += response.toString();
+          })
           .on('close', (code) => {
             return code && code !== 0 ?
             reject(errorHandler(code, err)) :
             resolve(clean(res));
             // TODO: close the connection from somewhere else
             // this.connection.end();
-          })
-          .on('data', (response) => {
-            res += response.toString();
           })
           .stderr.on('data', (response) => {
             err = response.toString();
