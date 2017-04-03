@@ -14,7 +14,7 @@ export default class Search extends Command {
   action([path, args]: [string, string]): Promise<any> {
     const { payload, headers } = unpackCommand(args);
     // validateVersion(headers)
-    return searchAdapter.scopeSearch(fromBase64(path), payload, fromBase64(reindex) === 'true');
+    return searchAdapter.scopeSearch(fromBase64(path), payload.query, payload.reindex === 'true');
   }
 
   report(searchResults: Array<Doc>): string {
