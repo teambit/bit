@@ -150,6 +150,7 @@ export default class SSH {
     return this.exec(`_fetch ${options}`, ids)
       .then((str: string) => {
         const { payload, headers } = unpackCommand(str);
+
         return payload.map((raw) => {
           return ComponentObjects.fromString(raw);
         });

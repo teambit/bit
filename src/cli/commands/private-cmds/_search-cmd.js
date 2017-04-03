@@ -17,6 +17,6 @@ export default class Search extends Command {
   }
 
   report(searchResults: Array<Doc>): string {
-    return packCommand(buildCommandMessage(JSON.stringify(searchResults)));
+    return packCommand(buildCommandMessage(searchResults));
   }
 }
