@@ -220,6 +220,14 @@ export default class Consumer {
       });
   }
 
+  runAllInlineSpecs() {
+      return this.listInline().then((components) => {
+        return Promise.all(components.map(component => component
+          .runSpecs({ scope: this.scope, consumer: this })
+          .then((result) => { return { specs: result, component } } ) ));
+      });
+  }
+
   listInline(): Promise<Component[]> {
     return new Promise((resolve, reject) =>
       glob(path.join('*', '*'), { cwd: this.getInlineBitsPath() }, (err, files) => {

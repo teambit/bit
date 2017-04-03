@@ -61,3 +61,11 @@ const paintStats = (results) => {
 export const paintSpecsResults = (results: SpecsResults): string => {
   return paintStats(results) + results.tests.map(paintTest).join('\n');
 };
+
+export const paintAllSpecsResults = (results: Array<*>): string => {
+  return results.map((result) => {
+    const componentId = c.bold(`${result.component.box}/${result.component.name}: `);
+    if (result.specs) return componentId + paintSpecsResults(result.specs);
+    return `${componentId}couldn't get test results`;
+  }).join('\n');
+};
