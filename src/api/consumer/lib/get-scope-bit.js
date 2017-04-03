@@ -16,7 +16,7 @@ export default function getScopeBit({ id, allVersions, scopePath }:
         const localScopeName = scope.name;
         const bitId = BitId.parse(id, localScopeName);
         if (allVersions) { return scope.loadAllVersions(bitId); }
-        return scope.loadComponent(bitId);
+        return scope.loadRemoteComponent(bitId);
       });
   }
 
