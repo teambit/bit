@@ -4,15 +4,17 @@ import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
 import { RemoteScopeNotFound, NetworkError, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
 import { BitIds, BitId } from '../../../bit-id';
-import { toBase64, fromBase64 } from '../../../utils';
+import { toBase64, fromBase64, packCommand } from '../../../utils';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
 import { unpack } from '../../../cli/cli-utils';
 import ConsumerComponent from '../../../consumer/component';
+import { BIT_VERSION } from '../../../constants';
 
 const rejectNils = R.reject(R.isNil);
 const Client = require('ssh2').Client;
+
 const conn = new Client();
 
 function absolutePath(path: string) {
@@ -64,14 +66,17 @@ export default class SSH {
     this.host = host || '';
   }
 
-  buildCmd(commandName: string, ...args: string[]): string {
-    function serialize() {
-      return args
-        .map(val => toBase64(val))
-        .join(' ');
+  buildCmd(commandName: string, path: string, ...args: string[]): string {
+    function buildCmd() {
+      return {
+        payload: args,
+        headers: {
+          version: BIT_VERSION
+        }
+      };
     }
 
-    return `bit ${commandName} ${serialize()}`;
+    return `bit ${commandName} ${toBase64(path)} ${packCommand(buildCmd())}`;
   }
 
   exec(commandName: string, ...args: any[]): Promise<any> {
@@ -157,7 +162,7 @@ export default class SSH {
   composeConnectionUrl() {
     return `${this.username}@${this.host}:${this.port}`;
   }
-  
+
   composeConnectionObject(key: ?string) {
     return { username: this.username, host: this.host, port: this.port, privateKey: keyGetter(key) };
   }

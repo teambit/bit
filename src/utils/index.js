@@ -48,6 +48,8 @@ import filterObject from './filter-object';
 import removeContainingDirIfEmpty from './remove-containing-dir-if-empty';
 import isValidIdChunk from './is-valid-id-chunk';
 import isValidScopeName from './is-valid-scope-name';
+import packCommand from './pack-command';
+import unpackCommand from './unpack-command';
 
 export {
   parseSSHUrl,
@@ -100,4 +102,6 @@ resolveGroupId,
   allSettled,
   isValidIdChunk,
   isValidScopeName,
+  packCommand,
+  unpackCommand,
 };
