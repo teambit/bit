@@ -100,8 +100,9 @@ export default class SSH {
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
     return this.exec('_put', componentObjects.toString())
-      .then((str: string) => {
-        return ComponentObjects.fromString(fromBase64(str));
+      .then((data: string) => {
+        const { payload, headers } = unpackCommand(data);
+        return ComponentObjects.fromString(payload);
       });
   }
 
@@ -127,7 +128,11 @@ export default class SSH {
   }
 
   search(query: string, reindex: boolean) {
-    return this.exec('_search', { query, reindex: reindex.toString() }).then(JSON.parse);
+    return this.exec('_search', { query, reindex: reindex.toString() })
+      .then(data => {
+        const { payload, headers } = unpackCommand(data);
+        return payload;
+      });
   }
 
   show(id: BitId) {

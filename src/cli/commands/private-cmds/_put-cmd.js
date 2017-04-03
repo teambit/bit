@@ -1,7 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import ComponentObjects from '../../../scope/component-objects';
-import { fromBase64, toBase64, unpackCommand } from '../../../utils';
+import { fromBase64, unpackCommand, buildCommandMessage, packCommand } from '../../../utils';
 import { put } from '../../../api/scope';
 
 export default class Put extends Command {
@@ -11,9 +11,7 @@ export default class Put extends Command {
   alias = '';
   opts = [];
 
-  action([path, args]: [string, string]): Promise<any> {
-    const { headers } = unpackCommand(args);
-    // validateVersion(headers)
+  action([path, ]: [string, string]): Promise<any> {
     return new Promise((resolve, reject) => {
       process.stdin.on('readable', () => {
         const data = process.stdin.read();
@@ -27,6 +25,6 @@ export default class Put extends Command {
 
 
   report(componentObjects: ComponentObjects): string {
-    return toBase64(componentObjects.toString());
+    return packCommand(buildCommandMessage(componentObjects.toString()));
   }
 }
