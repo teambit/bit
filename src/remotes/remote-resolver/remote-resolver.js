@@ -11,14 +11,14 @@ const hubResolver = (scopeName) => {
   return Promise.resolve(hubPrefix + scopeName);
 };
 
-const remoteResolver = (scopeName: string, thisScope: Scope): Promise<string> => {
+const remoteResolver = (scopeName: string, thisScope?: Scope): Promise<string> => {
   const resolverPath = R.path(['scopeJson', 'resolverPath'], thisScope);
   let resolverFunction;
   if (!resolverPath) resolverFunction = hubResolver;
   // $FlowFixMe
   else resolverFunction = require(resolverPath);
 
-  return resolverFunction(scopeName, thisScope.name);
+  return resolverFunction(scopeName, thisScope ? thisScope.name : undefined);
 };
 
 export default remoteResolver;

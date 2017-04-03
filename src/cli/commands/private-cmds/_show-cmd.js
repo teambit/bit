@@ -1,21 +1,22 @@
 /** @flow */
 import Command from '../../command';
-import { fromBase64 } from '../../../utils';
-import { pack } from '../../cli-utils';
+import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 import { scopeShow } from '../../../api/scope';
 
 export default class _Show extends Command {
-  name = '_show <path> <id>';
+  name = '_show <path> <args>';
   private = true;
   description = 'show a specific component on scope';
   alias = '';
   opts = [];
-  
-  action([path, id]: [string, string]): Promise<any> {
-    return scopeShow(fromBase64(path), fromBase64(id));
+
+  action([path, args]: [string, string]): Promise<any> {
+    const { payload, headers } = unpackCommand(args);
+    // validateVersion(headers)
+    return scopeShow(fromBase64(path), payload);
   }
 
   report(str: string): string {
-    return pack(str);
+    return packCommand(buildCommandMessage(str));
   }
 }

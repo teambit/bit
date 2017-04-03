@@ -123,9 +123,9 @@ export default class Scope {
     return new Promise((resolve, reject) => {
       return this.importMany(component.dependencies)
       .then(resolve)
-      .catch(e => {
+      .catch((e) => {
         if (e instanceof RemoteScopeNotFound) return reject(e);
-        reject(new DependencyNotFound(e.id, bitJsonPath))
+        reject(new DependencyNotFound(e.id, bitJsonPath));
       });
     });
   }
@@ -395,16 +395,20 @@ export default class Scope {
       });
   }
 
-  loadComponent(id: BitId): Promise<ConsumerComponent> {
-    if (!id.isLocal(this.name)) {
-      throw new Error('cannot load bit from remote scope, please import first');
-    }
-
+  loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
     return this.getOne(id)
       .then((component) => {
         if (!component) throw new ComponentNotFound(id.toString());
         return component.toConsumer(this.objects);
       });
+  }
+
+  loadComponent(id: BitId): Promise<ConsumerComponent> {
+    if (!id.isLocal(this.name)) {
+      throw new Error('cannot load bit from remote scope, please import first');
+    }
+
+    return this.loadRemoteComponent(id);
   }
 
   loadComponentLogs(id: BitId): Promise<{[number]: {message: string, date: string, hash: string}}> {

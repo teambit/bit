@@ -1,5 +1,5 @@
 /** @flow */
-import * as fs from 'fs';
+import fs from 'fs';
 import * as path from 'path';
 import Source from './source';
 import BitId from '../../../bit-id';
@@ -7,15 +7,17 @@ import createTemplate from '../templates/specs.default-template';
 import { Scope } from '../../../scope';
 
 export default class Specs extends Source {
-  write(bitPath: string, fileName: string): Promise<any> {
+  write(bitPath: string, fileName: string, force?: boolean = true): Promise<any> {
+    const filePath = path.join(bitPath, fileName);
+    if (!force && fs.existsSync(filePath)) return Promise.resolve();
     return new Promise((resolve, reject) => {
-      fs.writeFile(path.join(bitPath, fileName), this.src, (err, res) => {
+      fs.writeFile(filePath, this.src, (err, res) => {
         if (err) return reject(err);
         return resolve(res);
       });
     });
   }
-  
+
   serialize() {
     return this.src;
   }

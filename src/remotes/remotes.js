@@ -6,7 +6,8 @@ import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded, RemoteNotFound } from './exceptions';
 import ComponentObjects from '../scope/component-objects';
 import { REMOTE_ALIAS_SIGN } from '../constants';
-import remotesResolver from './remote-resolver/remote-resolver';
+import remoteResolver from './remote-resolver/remote-resolver';
+import { GlobalRemotes } from '../global-config';
 import Scope from '../scope/scope';
 
 export default class Remotes extends Map<string, Remote> {
@@ -26,17 +27,17 @@ export default class Remotes extends Map<string, Remote> {
     return remote;
   }
 
-  resolve(scopeName: string, thisScope: Scope): Promise<Remote> {
+  resolve(scopeName: string, thisScope?: Scope): Promise<Remote> {
     if (scopeName.startsWith(REMOTE_ALIAS_SIGN)) {
       return Promise.resolve(
         this.get(scopeName.replace(REMOTE_ALIAS_SIGN, ''))
       );
     }
 
-    return remotesResolver(scopeName, thisScope)
-    .then((scopeHost) => {
-      return new Remote(scopeHost, scopeName);
-    });
+    return remoteResolver(scopeName, thisScope)
+      .then((scopeHost) => {
+        return new Remote(scopeHost, scopeName);
+      });
   }
 
   fetch(ids: BitId[], thisScope: Scope, withoutDeps: boolean = false):
@@ -49,12 +50,12 @@ export default class Remotes extends Map<string, Remote> {
       if (!withoutDeps) {
         promises.push(
           this.resolve(scopeName, thisScope)
-          .then(remote => remote.fetch(scopeIds))
+            .then(remote => remote.fetch(scopeIds))
         );
       } else {
         promises.push(
           this.resolve(scopeName, thisScope)
-          .then(remote => remote.fetchOnes(scopeIds)));
+            .then(remote => remote.fetchOnes(scopeIds)));
       }
     });
 
@@ -72,6 +73,16 @@ export default class Remotes extends Map<string, Remote> {
     });
 
     return object;
+  }
+
+  static getScopeRemote(scopeName: string): Promise<Remote> {
+    const getRemotesP = () => {
+      if (scopeName.startsWith(REMOTE_ALIAS_SIGN)) {
+        return GlobalRemotes.load().then((globalRemotes) => globalRemotes.toPlainObject());
+      }
+      return Promise.resolve({});
+    };
+    return getRemotesP().then((remotes) => Remotes.load(remotes).resolve(scopeName));
   }
 
   static load(remotes: {[string]: string}): Remotes {
