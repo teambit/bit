@@ -1,24 +1,19 @@
 /** @flow */
 import Command from '../../command';
 import ComponentObjects from '../../../scope/component-objects';
-import { fromBase64, toBase64 } from '../../../utils';
+import { fromBase64, toBase64, unpackCommand } from '../../../utils';
 import { put } from '../../../api/scope';
 
 export default class Put extends Command {
-  name = '_put <path> [objects]';
+  name = '_put <path> <args>';
   private = true;
   description = 'upload a component to a scope';
   alias = '';
   opts = [];
 
-  action([path, objects ]: [ string, ?string ]): Promise<any> {
-    if (objects) {
-      return put({
-        componentObjects: fromBase64(objects),
-        path: fromBase64(path)
-      });
-    }
-
+  action([path, args]: [string, string]): Promise<any> {
+    const { headers } = unpackCommand(args);
+    // validateVersion(headers)
     return new Promise((resolve, reject) => {
       process.stdin.on('readable', () => {
         const data = process.stdin.read();

@@ -14,7 +14,7 @@ export default class Fetch extends Command {
     ['n', 'no_dependencies', 'do not include component dependencies']
   ];
 
-  action([path, args, ]: [string, string, ], { no_dependencies }: any): Promise<any> {
+  action([path, args]: [string, string], { no_dependencies }: any): Promise<any> {
     const { payload, headers } = unpackCommand(args);
     // validateVersion(headers)
     return fetch(fromBase64(path), payload, no_dependencies);
