@@ -2,14 +2,34 @@
 import R from 'ramda';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
-import { RemoteScopeNotFound, NetworkError, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
+import { RemoteScopeNotFound, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
 import { BitIds, BitId } from '../../../bit-id';
-import { toBase64, fromBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
+import { toBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
-import { unpack } from '../../../cli/cli-utils';
 import ConsumerComponent from '../../../consumer/component';
+import { BIT_VERSION } from '../../../constants';
+import * as semver from 'semver';
+import loader from '../../../cli/loader/loader';
+
+function checkVersionCompatibility(remoteVersion: string) {
+  const remoteMajor = semver.major(remoteVersion);
+  const currentMajor = semver.major(BIT_VERSION);
+
+  if (remoteMajor > currentMajor) {
+    loader.off();
+    console.log('there is a mismatch between the versions');
+  }
+
+  const remoteMinor = semver.minor(remoteVersion);
+  const currentMinor = semver.major(BIT_VERSION);
+
+  if (remoteMinor > currentMinor) {
+    loader.off();
+    console.log('there is a mismatch between the versions');
+  }
+}
 
 const rejectNils = R.reject(R.isNil);
 const Client = require('ssh2').Client;
@@ -23,10 +43,6 @@ function absolutePath(path: string) {
 
 function clean(str: string) {
   return str.replace('\n', '');
-}
-function splitDataForPut(cmd) {
-  const index = cmd.lastIndexOf(' ');
-  return [cmd.slice(index+1), cmd.slice(0, index)];
 }
 
 function errorHandler(code, err) {
@@ -71,7 +87,8 @@ export default class SSH {
 
   exec(commandName: string, payload: any): Promise<any> {
     return new Promise((resolve, reject) => {
-      let res = '', err;
+      let res = '';
+      let err;
       const cmd = this.buildCmd(
         commandName,
         absolutePath(this.path || ''),
@@ -102,6 +119,7 @@ export default class SSH {
     return this.exec('_put', componentObjects.toString())
       .then((data: string) => {
         const { payload, headers } = unpackCommand(data);
+        checkVersionCompatibility(headers.version);
         return ComponentObjects.fromString(payload);
       });
   }
@@ -110,9 +128,10 @@ export default class SSH {
     return this.exec('_scope')
       .then((data) => {
         const { payload, headers } = unpackCommand(data);
+        checkVersionCompatibility(headers.version);
         return payload;
       })
-      .catch(err => {
+      .catch((err) => {
         throw new RemoteScopeNotFound(err);
       });
   }
@@ -121,6 +140,7 @@ export default class SSH {
     return this.exec('_list')
     .then((str: string) => {
       const { payload, headers } = unpackCommand(str);
+      checkVersionCompatibility(headers.version);
       return rejectNils(payload.map((c) => {
         return c ? ConsumerComponent.fromString(c) : null;
       }));
@@ -129,8 +149,9 @@ export default class SSH {
 
   search(query: string, reindex: boolean) {
     return this.exec('_search', { query, reindex: reindex.toString() })
-      .then(data => {
+      .then((data) => {
         const { payload, headers } = unpackCommand(data);
+        checkVersionCompatibility(headers.version);
         return payload;
       });
   }
@@ -139,6 +160,7 @@ export default class SSH {
     return this.exec('_show', id.toString())
     .then((str: string) => {
       const { payload, headers } = unpackCommand(str);
+      checkVersionCompatibility(headers.version);
       return str ? ConsumerComponent.fromString(payload) : null;
     });
   }
@@ -150,7 +172,7 @@ export default class SSH {
     return this.exec(`_fetch ${options}`, ids)
       .then((str: string) => {
         const { payload, headers } = unpackCommand(str);
-
+        checkVersionCompatibility(headers.version);
         return payload.map((raw) => {
           return ComponentObjects.fromString(raw);
         });
@@ -162,18 +184,19 @@ export default class SSH {
     return this;
   }
 
-  composeConnectionUrl() {
-    return `${this.username}@${this.host}:${this.port}`;
-  }
-
   composeConnectionObject(key: ?string) {
-    return { username: this.username, host: this.host, port: this.port, privateKey: keyGetter(key) };
+    return {
+      username: this.username,
+      host: this.host,
+      port: this.port,
+      privateKey: keyGetter(key)
+    };
   }
 
   connect(sshUrl: SSHUrl, key: ?string): Promise<SSH> {
     return new Promise((resolve, reject) => {
       try {
-        conn.on('ready',() => {
+        conn.on('ready', () => {
           this.connection = conn;
           resolve(this);
         }).connect(this.composeConnectionObject(key));
