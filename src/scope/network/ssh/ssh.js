@@ -4,7 +4,7 @@ import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
 import { RemoteScopeNotFound, NetworkError, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
 import { BitIds, BitId } from '../../../bit-id';
-import { toBase64, fromBase64, packCommand, buildCommandMessage } from '../../../utils';
+import { toBase64, fromBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
@@ -108,7 +108,8 @@ export default class SSH {
   describeScope(): Promise<ScopeDescriptor> {
     return this.exec('_scope')
       .then((data) => {
-        return JSON.parse(fromBase64(data));
+        const { payload, headers } = unpackCommand(data);
+        return payload;
       })
       .catch(err => {
         throw new RemoteScopeNotFound(err);

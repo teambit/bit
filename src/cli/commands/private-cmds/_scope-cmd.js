@@ -2,7 +2,7 @@
 import bit from 'bit-js';
 import Command from '../../command';
 import { describeScope } from '../../../api/scope';
-import { fromBase64, empty, unpackCommand } from '../../../utils';
+import { fromBase64, empty, unpackCommand, buildCommandMessage, packCommand } from '../../../utils';
 
 const toBase64 = bit('string/to-base64');
 
@@ -21,6 +21,6 @@ export default class Prepare extends Command {
 
   report(scopeObj: any): string {
     if (empty(scopeObj)) return '';
-    return toBase64(JSON.stringify(scopeObj));
+    return packCommand(buildCommandMessage(scopeObj));
   }
 }
