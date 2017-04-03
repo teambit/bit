@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+** breaking change - a scope with this version won't work with consumer with lower versions **
+
 ### Change
 
+- ssh protocol has changes and now contains headers with bit version
 - do not override files upon "bit create" unless -f (--force) flag is used
 
 ### Fixed
@@ -17,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- if there is a difference between the versions of the remote bit and the local bit (the remote scope has a greater version) bit throws a error/warning message according to semver difference major/minor
 - bit scope-config public command
 - license file inflation
 - scope meta model
