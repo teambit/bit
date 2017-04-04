@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -ex
 
+ensureAvailable bit
+
 ./scripts/node-installer.sh $1
 rm -rf ./*.tar.gz
 rm -rf ./distribution
@@ -10,8 +12,7 @@ tarName="bit-${ver}.tar.gz"
 npm install
 bit import
 npm run build
-rm -rf ./node_modules
-npm install --production
+npm prune --production
 
 umask 0022
 #set package json with corret packeing type
