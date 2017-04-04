@@ -30,6 +30,7 @@ export type ComponentProps = {
   scope?: ?string,
   implFile?: ?string,
   specsFile?: ?string,
+  miscFiles?: ?string[],
   compilerId?: ?BitId,
   testerId?: ?BitId,
   dependencies?: ?BitIds,
@@ -49,6 +50,7 @@ export default class Component {
   scope: ?string;
   implFile: string;
   specsFile: string;
+  miscFiles: string[];
   compilerId: ?BitId;
   testerId: ?BitId;
   dependencies: BitIds;
@@ -110,6 +112,7 @@ export default class Component {
     scope,
     implFile,
     specsFile,
+    miscFiles,
     compilerId,
     testerId,
     dependencies,
@@ -127,6 +130,7 @@ export default class Component {
     this.scope = scope;
     this.implFile = implFile || DEFAULT_IMPL_NAME;
     this.specsFile = specsFile || DEFAULT_SPECS_NAME;
+    this.miscFiles = miscFiles || [];
     this.compilerId = compilerId;
     this.testerId = testerId;
     this.dependencies = dependencies || new BitIds();
@@ -342,6 +346,7 @@ export default class Component {
         box: path.basename(path.dirname(bitDir)),
         implFile: bitJson.getImplBasename(),
         specsFile: bitJson.getSpecBasename(),
+        miscFiles: bitJson.getMiscFiles(),
         compilerId: BitId.parse(bitJson.compilerId),
         testerId: BitId.parse(bitJson.testerId),
         dependencies: BitIds.fromObject(bitJson.dependencies),
