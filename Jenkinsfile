@@ -39,12 +39,12 @@ pipeline {
                         notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb","deb")
                         notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/development/bit/${currentVersion}/bit-${currentVersion}-1.noarch.rpm","yum")
                         notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-tar/development/bit/${currentVersion}/bit-${currentVersion}-tar.gz","tar")
-                        } else {
-                         def tarName ="bit-${currentVersion}-brew.tar.gz"
-                         deployToArtifactory("-brew.tar.gz","bit-brew/development/bit/${currentVersion}/"","${currentVersion}","bit-brew/development/bit/${currentVersion}/")
-                         notifyReleaseServer(currentVersion,releaseServer+"/update","${repo}/bit-brew/development/bit/${currentVersion}/${tarName}","brew")
-                         sh("./scripts/generate-formula.sh ${env.EXTERNAL_REPO}/bit-brew/development/bit/${currentVersion}/${brewTarName}")
-                         sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}/bit-dev.rb")
+                  } else {
+                        def tarName ="bit-${currentVersion}-brew.tar.gz"
+                        deployToArtifactory("-brew.tar.gz","bit-brew/development/bit/${currentVersion}/"","${currentVersion}","bit-brew/development/bit/${currentVersion}/")
+                        notifyReleaseServer(currentVersion,releaseServer+"/update","${repo}/bit-brew/development/bit/${currentVersion}/${tarName}","brew")
+                        sh("./scripts/generate-formula.sh ${env.EXTERNAL_REPO}/bit-brew/development/bit/${currentVersion}/${brewTarName}")
+                        sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}/bit-dev.rb")
                         }
                     }
 
