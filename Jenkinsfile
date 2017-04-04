@@ -1,5 +1,5 @@
 pipeline {
-  properties([[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'ChoiceParameterDefinition', choices: 'linux\nmac', description: '', name: 'OS']]]])
+properties([parameters([choice(choices: ['linux', 'mac'], description: '', name: 'OS')]), pipelineTriggers([])])
      agent any
     stages {
            stage('pre') {
