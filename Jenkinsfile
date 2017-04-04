@@ -1,13 +1,9 @@
 pipeline {
 
-    options([[$class: 'ThrottleJobProperty',
-            categories: ['linux,mac'],
-            limitOneJobWithMatchingParams: false,
-            maxConcurrentPerNode: 0,
-            maxConcurrentTotal: 0,
-            paramsToUseForLimit: '',
-            throttleEnabled: true,
-            throttleOption: 'OS']])
+     parameters {
+         // choices are newline separated
+         choice(choices: 'linux\nmac', description: 'which operating system', name: 'OS')
+     }
      agent any
     stages {
            stage('pre') {
