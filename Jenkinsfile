@@ -1,5 +1,13 @@
 pipeline {
-properties([parameters([choice(choices: ['linux', 'mac'], description: '', name: 'OS')]), pipelineTriggers([])])
+
+    options([[$class: 'ThrottleJobProperty',
+            categories: ['linux,mac'],
+            limitOneJobWithMatchingParams: false,
+            maxConcurrentPerNode: 0,
+            maxConcurrentTotal: 0,
+            paramsToUseForLimit: '',
+            throttleEnabled: true,
+            throttleOption: 'OS']])
      agent any
     stages {
            stage('pre') {
