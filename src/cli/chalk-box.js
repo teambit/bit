@@ -63,6 +63,7 @@ export const paintSpecsResults = (results: SpecsResults): string => {
 };
 
 export const paintAllSpecsResults = (results: Array<*>): string => {
+  if (results.length === 0) return c.red('There are no inline components to test');
   return results.map((result) => {
     const componentId = c.bold(`${result.component.box}/${result.component.name}: `);
     if (result.specs) return componentId + paintSpecsResults(result.specs);
