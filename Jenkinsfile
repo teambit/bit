@@ -13,7 +13,7 @@ pipeline {
             }
         stage('build') {
             steps {
-                if ("${env.OS}"!="mac"){
+                if ("${params.OS}"!="mac"){
                   sh('./scripts/build-tar.sh linux')
                   sh('./scripts/build-deb.sh')
                 }else{
@@ -37,7 +37,7 @@ pipeline {
                   currentVersion = currentVersion.replaceAll("\\s","")
                   def debUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
                   sh("mv bit-${currentVersion}.tar.gz ./distribution")
-                  if ("${env.OS}"!="mac"){
+                  if ("${params.OS}"!="mac"){
                         sh("curl -u${REPO_TOKEN} -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${debUrl}'")
                         deployToArtifactory(".rpm","bit-yum/development/bit/${currentVersion}","${currentVersion}-1.noarch",null)
                         deployToArtifactory(".tar.gz","bit-tar/development/bit/${currentVersion}","${currentVersion}","bit-tar/development/bit/${currentVersion}/")
