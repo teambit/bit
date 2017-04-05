@@ -1,0 +1,13 @@
+{
+  "only": "*.js",
+  "presets": [
+    ["env", {
+      "targets": {
+        "node": 4
+      }
+    }]
+  ],
+  "plugins": [
+    ["transform-flow-strip-types"]
+  ]
+}

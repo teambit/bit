@@ -1,3 +1,1 @@
-const importer = require('./dist/importer');
-
-module.exports = importer;
+module.exports = require('./dist/importer');
