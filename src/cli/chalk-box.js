@@ -58,9 +58,8 @@ const paintStats = (results) => {
   return `${statsHeader}\n${totalDuration}\n`;
 };
 
-export const paintSpecsResults = (results: SpecsResults): string => {
-  return paintStats(results) + results.tests.map(paintTest).join('\n');
-};
+export const paintSpecsResults = (results: SpecsResults): string => (results.tests ?
+  paintStats(results) + results.tests.map(paintTest).join('\n') : '');
 
 export const paintAllSpecsResults = (results: Array<*>): string => {
   if (results.length === 0) return c.red('There are no inline components to test');
