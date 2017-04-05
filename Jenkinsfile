@@ -12,14 +12,16 @@ pipeline {
             }
 
         stage ('build dist according to os'){
-           sh("./scripts/build-tar.sh ${params.OS}")
-           script {
-             if ("${params.OS}" != "mac"){
-              sh('./scripts/build-deb.sh')
-             } else {
-              sh('./scripts/build-brew.sh')
-             }
-          }
+           steps {
+             sh("./scripts/build-tar.sh ${params.OS}")
+             script {
+               if ("${params.OS}" != "mac"){
+                sh('./scripts/build-deb.sh')
+               } else {
+                sh('./scripts/build-brew.sh')
+               }
+            }
+         }
         }
         stage ('test'){
             steps {
