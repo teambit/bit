@@ -6,15 +6,11 @@
                     parallel (
                         "Linux" : {
                             node("k8s") {
-                                stage "install bit as dependency"
                                     sh("npm i -g bit-bin")
-                                stage "build bit"
                                     sh('./scripts/build-tar.sh linux')
                                     sh('./scripts/build-deb.sh')
-                                stage "test"
                                     sh("npm i -g")
                                     sh("./tests/e2e.sh")
-                                stage "deploy"
                                     script {
                                     def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
                                     def repo = "${env.EXTERNAL_REPO}"
@@ -33,15 +29,11 @@
                          },
                         "Mac" : {
                             node("k8s"){
-                                stage "install bit as dependency"
                                     sh("npm i -g bit-bin")
-                                stage "build bit"
                                     sh('./scripts/build-tar.sh mac')
                                     sh('./scripts/build-brew.sh')
-                                stage "test"
                                     sh("npm i -g")
                                     sh("./tests/e2e.sh")
-                                stage "deploy"
                                     script {
                                     def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
                                     def repo = "${env.EXTERNAL_REPO}"
