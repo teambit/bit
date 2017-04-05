@@ -1,7 +1,4 @@
     pipeline {
-        parameters {
-            choice(choices: 'linux\nmac', description: 'which operating system', name: 'OS')
-        }
         agent any
         stages {
             stage('pre') {
