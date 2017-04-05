@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-ensureAvailable bit
+
 
 ./scripts/node-installer.sh $1
 rm -rf ./*.tar.gz
