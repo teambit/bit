@@ -42,7 +42,7 @@
                                     currentVersion = currentVersion.replaceAll("\\s","")
                                     def tarName ="bit-${currentVersion}-brew.tar.gz"
                                     deployToArtifactory("-brew.tar.gz","bit-brew/development/bit/${currentVersion}/","${currentVersion}","bit-brew/development/bit/${currentVersion}/")
-                                    notifyReleaseServer(currentVersion,releaseServer+"/update","${repo}/bit-brew/development/bit/${currentVersion}/${tarName}","brew")
+                                    notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-brew/development/bit/${currentVersion}/${tarName}","brew")
                                     //sh("./scripts/generate-formula.sh ${env.EXTERNAL_REPO}/bit-brew/development/bit/${currentVersion}/${brewTarName}")
                                     //sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}/bit-dev.rb")
                                     }
