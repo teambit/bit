@@ -30,12 +30,13 @@ function getIdsFromBitJsonIfNeeded(componentIds, consumerPath) {
 }
 
 export default (componentIds: string[]) => {
-  const currentDir = '/Users/ran/Projects/bit-scope-client' || process.cwd(); // TODO - replace with cwd this is mock
+  // TODO - replace with cwd this is mock
+  const currentDir = '/Users/ran/Projects/bit-scope-client' || process.cwd();
   const consumerPath = locateConsumer(currentDir);
 
   return getIdsFromBitJsonIfNeeded(componentIds, consumerPath)
-  .then((ids) => {
-    // return importComponents(ids); // mock - replace to the real importer
-    return Promise.resolve(componentsMock);
-  }).then(componentDependencies => modelOnFs(componentDependencies));
+  .then((ids) => { // eslint-disable-line
+    // return importComponents(ids);
+    return Promise.resolve(componentsMock); // mock - replace to the real importer
+  }).then(componentDependencies => modelOnFs(componentDependencies, consumerPath));
 };

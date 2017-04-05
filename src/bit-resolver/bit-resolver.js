@@ -16,7 +16,7 @@ module.exports = (bitPath, opts) => {
 
   try {
     const bitJson = BitJson.load(bitPath);
-    const implFile = path.join(bitPath, bitJson.getImpl());
+    const implFile = path.join(bitPath, bitJson.impl);
     return opts && opts.pathOnly ? implFile : require(implFile); // eslint-disable-line
   } catch (e) { throw e; }
 };

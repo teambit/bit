@@ -1,78 +1,79 @@
+// @flow
 const R = require('ramda');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const { BIT_JSON_NAME, VERSION_DELIMITER } = require('../constants');
 const DependencyMap = require('../dependency-map');
 const { InvalidBitJsonException } = require('../exceptions');
 
+const composePath = p => path.join(p, BIT_JSON_NAME);
+
 class BitJson {
-  constructor(bitJson) {
-    this.name = R.prop('name', bitJson);
-    this.box = R.prop('box', bitJson);
-    this.version = R.prop('version', bitJson);
+  impl: string;
+  spec: string;
+  compiler: string;
+  tester: string;
+  dependencies: {[string]: string};
+  packageDepndencies: {[string]: string};
+  dependencyMap: ?DependencyMap;
+
+  constructor(bitJson: Object) {
     this.impl = R.path(['sources', 'impl'], bitJson);
     this.spec = R.path(['sources', 'spec'], bitJson);
     this.compiler = R.path(['env', 'compiler'], bitJson);
     this.tester = R.path(['env', 'tester'], bitJson);
-    this.remotes = R.prop('remotes', bitJson);
     this.dependencies = R.prop('dependencies', bitJson);
+    this.packageDepndencies = R.prop('packageDepndencies', bitJson);
     this.dependencyMap = null;
   }
 
-  getName() {
-    return this.name;
-  }
-
-  getBox() {
-    return this.box;
-  }
-
-  getVersion() {
-    return this.version;
-  }
-
-  getImpl() {
-    return this.impl;
-  }
-
-  getSpec() {
-    return this.spec;
-  }
-
-  getCompiler() {
-    return this.compiler;
-  }
-
-  getTester() {
-    return this.tester;
-  }
-
-  getRemotes() {
-    return this.remotes;
-  }
-
-  getDependencies() {
-    return this.dependencies;
-  }
-
-  getDependenciesArray() {
+  getDependenciesArray(): string[] {
     return R.toPairs(this.dependencies)
     .map(([component, version]) => component + VERSION_DELIMITER + version.toString());
   }
 
-  populateDependencyMap(consumerPath) {
+  populateDependencyMap(consumerPath: string) {
     this.dependencyMap = DependencyMap.load(this.dependencies, consumerPath);
   }
 
-  getDependencyMap(consumerPath) {
+  getDependencyMap(consumerPath: string) {
     if (!this.dependencyMap) {
       this.populateDependencyMap(consumerPath);
     }
 
+    // $FlowFixMe
     return this.dependencyMap.getDependencies();
   }
 
-  static load(bitPath) {
+  toObject() {
+    return {
+      sources: {
+        impl: this.impl,
+        spec: this.spec,
+      },
+      env: {
+        compiler: this.compiler,
+        tester: this.tester,
+      },
+      dependencies: this.dependencies,
+      packageDepndencies: this.packageDepndencies,
+    };
+  }
+
+  write(dir: string): Promise<?Error> {
+    return new Promise((resolve, reject) => {
+      return fs.outputJson(
+        composePath(dir),
+        this.toObject(),
+        (err) => {
+          if (err) return reject(err);
+          return resolve();
+        },
+      );
+    });
+  }
+
+  static load(bitPath: string): BitJson {
     const readJson = p => JSON.parse(fs.readFileSync(p, 'utf8'));
     const composeBitJsonPath = p => path.join(p, BIT_JSON_NAME);
     const bitJsonPath = composeBitJsonPath(bitPath);

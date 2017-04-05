@@ -1,36 +1,24 @@
-const path = require('path');
-const R = require('ramda');
-const fs = require('fs-extra');
+// @flow
+import path from 'path';
+import R from 'ramda';
+import { ComponentObject } from './component/component-types';
+import { MODULE_NAME, MODULES_DIR } from '../constants';
+import Component from './component';
 
-const buildComponentPath = (targetModuleDir, component) => {
-  const { name, box, scope, version } = component;
-  return path.join(targetModuleDir, box, name, scope, version);
+export type componentDependencies = {
+  component: ComponentObject;
+  dependencies: ComponentObject[];
 };
-
-function putRawComponentOnFS(components, targetModuleDir) {
-  return Promise.all(
-    components.map((c) => {
-      return new Promise((resolve, reject) => {
-        const componentDir = buildComponentPath(targetModuleDir, c);
-        fs.ensureDir(componentDir, (err) => {
-          if (err) reject(err);
-          resolve();
-        });
-      });
-    }),
-  );
-}
 
 function modelComponent({ component, dependencies }, targetModuleDir) {
   const allComponents = R.concat([component], dependencies);
-  return putRawComponentOnFS(allComponents, targetModuleDir)
-  .then(() => console.log('TODO - put some glue code'));
+  const parsedComponents = allComponents.map(Component.fromObject);
+  return Promise.all(parsedComponents.map(c => c.write(targetModuleDir)));
 }
 
-module.exports = (componentDependenciesArr) => {
-  const moduleName = 'bit-js/test-module';
-  const bitJscontainingDir = path.join(__dirname, '..', '..', '..');
-  const targetModuleDir = path.join(bitJscontainingDir, moduleName);
+export default (componentDependenciesArr: componentDependencies[], consumerPath: string):
+Promise<void[]> => {
+  const targetModuleDir = path.join(consumerPath, MODULES_DIR, MODULE_NAME);
 
   return Promise.all(componentDependenciesArr.map(cd => modelComponent(cd, targetModuleDir)));
 };

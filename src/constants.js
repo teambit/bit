@@ -46,6 +46,12 @@ export const NO_PLUGIN_TYPE = 'none';
 
 export const DEFAULT_BUNDLE_FILENAME = 'dist.js';
 
+export const DEFAULT_LICENSE_FILENAME = 'LICENSE';
+
 export const DEFAULT_DIST_DIRNAME = 'dist';
 
 export const DEPENDENCIES_MAP_NAME = 'dependencies.json';
+
+export const MODULE_NAME = 'bit';
+
+export const MODULES_DIR = 'node_modules';

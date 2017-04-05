@@ -32,9 +32,9 @@ class Bit {
     let compilerId;
 
     try {
-      implBasename = this.getBitJson().getImpl();
+      implBasename = this.getBitJson().impl;
     } catch (e) {
-      implBasename = this.consumer.getBitJson().getImpl();
+      implBasename = this.consumer.getBitJson().impl;
     }
 
     const implFilePath = path.join(this.getPath(), implBasename);
@@ -42,10 +42,10 @@ class Bit {
     if (opts && opts.pathOnly) return implFilePath;
 
     try {
-      compilerId = this.getBitJson().getCompiler();
+      compilerId = this.getBitJson().compiler;
     } catch (e) {
       try {
-        compilerId = this.consumer.getBitJson().getCompiler();
+        compilerId = this.consumer.getBitJson().compiler;
       } catch (err) {
         compilerId = NO_PLUGIN_TYPE;
       }
