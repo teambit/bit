@@ -15,6 +15,7 @@
                                     sh("npm i -g")
                                     sh("./tests/e2e.sh")
                                 stage "deploy"
+                                    script {
                                     def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
                                     def repo = "${env.EXTERNAL_REPO}"
                                     def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
@@ -27,6 +28,7 @@
                                     notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-tar/development/bit/${currentVersion}/bit-${currentVersion}-tar.gz","tar")
                                     def debUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
                                     sh("mv bit-${currentVersion}.tar.gz ./distribution")
+                                    }
                             }
                          },
                         "Mac" : {
@@ -40,6 +42,7 @@
                                     sh("npm i -g")
                                     sh("./tests/e2e.sh")
                                 stage "deploy"
+                                    script {
                                     def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
                                     def repo = "${env.EXTERNAL_REPO}"
                                     def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
@@ -49,6 +52,7 @@
                                     notifyReleaseServer(currentVersion,releaseServer+"/update","${repo}/bit-brew/development/bit/${currentVersion}/${tarName}","brew")
                                     sh("./scripts/generate-formula.sh ${env.EXTERNAL_REPO}/bit-brew/development/bit/${currentVersion}/${brewTarName}")
                                     sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}/bit-dev.rb")
+                                    }
                             }
                         })
                 }
