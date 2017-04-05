@@ -1,7 +1,6 @@
 pipeline {
 
      parameters {
-         // choices are newline separated
          choice(choices: 'linux\nmac', description: 'which operating system', name: 'OS')
      }
      agent any
@@ -11,16 +10,16 @@ pipeline {
                 sh("npm i -g bit-bin")
                 }
             }
-        stage('build') {
-            steps {
-                if ("${params.OS}"!="mac"){
-                  sh('./scripts/build-tar.sh linux')
-                  sh('./scripts/build-deb.sh')
-                }else{
-                  sh('./scripts/build-tar.sh mac')
-                  sh('./scripts/build-brew.sh')
-                }
-            }
+
+        stage ('build dist according to os'){
+           sh("./scripts/build-tar.sh ${params.OS}")
+           script {
+             if ("${params.OS}" != "mac"){
+              sh('./scripts/build-deb.sh')
+             } else {
+              sh('./scripts/build-brew.sh')
+             }
+          }
         }
         stage ('test'){
             steps {
