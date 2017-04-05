@@ -28,3 +28,6 @@ dist
 .bit
 inline_components
 components
+
+# Flow
+flow-typed

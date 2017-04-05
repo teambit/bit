@@ -1,9 +1,10 @@
-const R = require('ramda');
-// const importComponents = require('bit-scope-client');
-const componentsMock = require('./component-mock');
-const modelOnFs = require('./model-on-fs');
-const locateConsumer = require('../consumer/locate-consumer');
-const BitJson = require('../bit-json');
+// @flow
+import R from 'ramda';
+// import importComponents from 'bit-scope-client';
+import componentsMock from './component-mock';
+import modelOnFs from './model-on-fs';
+import locateConsumer from '../consumer/locate-consumer';
+import BitJson from '../bit-json';
 
 const readIdsFromBitJson = consumerPath =>
   new Promise((resolve, reject) => {
@@ -28,7 +29,7 @@ function getIdsFromBitJsonIfNeeded(componentIds, consumerPath) {
   });
 }
 
-module.exports = (componentIds) => {
+module.exports = (componentIds: string[]) => {
   const currentDir = '/Users/ran/Projects/bit-scope-client' || process.cwd(); // TODO - replace with cwd this is mock
   const consumerPath = locateConsumer(currentDir);
 
