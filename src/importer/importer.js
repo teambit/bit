@@ -6,7 +6,7 @@ import modelOnFs from './model-on-fs';
 import locateConsumer from '../consumer/locate-consumer';
 import BitJson from '../bit-json';
 
-const readIdsFromBitJson = consumerPath =>
+export const readIdsFromBitJson = (consumerPath: string) =>
   new Promise((resolve, reject) => {
     try {
       const bitJson = BitJson.load(consumerPath);
@@ -15,7 +15,8 @@ const readIdsFromBitJson = consumerPath =>
     } catch (e) { reject(e); }
   });
 
-function getIdsFromBitJsonIfNeeded(componentIds, consumerPath) {
+export function getIdsFromBitJsonIfNeeded(componentIds: string[], consumerPath: string):
+Promise<string[]> {
   return new Promise((resolve, reject) => {
     if (!componentIds || R.isEmpty(componentIds)) {
       return readIdsFromBitJson(consumerPath)
