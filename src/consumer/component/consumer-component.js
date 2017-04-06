@@ -92,6 +92,7 @@ export default class Component {
 
   get misc(): ?Misc {
     if (!this._misc) return null;
+    if (this._misc instanceof Misc) return this._misc;
 
     if (Array.isArray(this._misc)) {
       // $FlowFixMe

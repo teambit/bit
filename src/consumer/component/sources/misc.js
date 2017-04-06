@@ -7,9 +7,12 @@ export default class Misc extends Source {
     super(src);
   }
 
-  static load(filePaths: []): Misc|null {
+  static load(miscs: []): Misc|null {
     try {
-      return new Misc(filePaths);
+      const miscFiles = miscs.map(file => { return {
+        name: path.basename(file), content: fs.readFileSync(file)
+      } } );
+      return new Misc(miscFiles);
     } catch (err) {
       return null;
     }

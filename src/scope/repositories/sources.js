@@ -1,6 +1,4 @@
 /** @flow */
-import fs from 'fs';
-import path from 'path';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
@@ -141,9 +139,9 @@ export default class SourceRepository {
           const impl = Source.from(bufferFrom(source.impl.src));
           const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())): null;
           const specs = source.specs ? Source.from(bufferFrom(source.specs.src)): null;
-          //TODO 1) add this logic to Misc class. 2) if file doesn't exist, show a warning
+          //TODO if file doesn't exist, show a warning
           const miscFiles = source.misc && source.misc.src.length ? source.misc.src.map((misc) => { return {
-            name: path.basename(misc), file: Source.from(fs.readFileSync(misc))
+            name: misc.name, file: Source.from(misc.content)
             } }) : null;
 
           const username = globalConfig.getSync(CFG_USER_NAME_KEY);
