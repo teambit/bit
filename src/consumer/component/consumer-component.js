@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
-import { Impl, Specs, Dist, License } from '../component/sources';
+import { Impl, Specs, Dist, License, Misc } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
@@ -37,6 +37,7 @@ export type ComponentProps = {
   packageDependencies?: ?Object,
   impl?: ?Impl|string,
   specs?: ?Specs|string,
+  misc?: ?Misc|[],
   docs?: ?Doclet[],
   dist?: ?Dist,
   specsResults?: ?SpecsResults,
@@ -58,6 +59,7 @@ export default class Component {
   _impl: ?Impl|string;
   _specs: ?Specs|string;
   _docs: ?Doclet[];
+  _misc: ?Misc|[];
   dist: ?Dist;
   specsResults: ?SpecsResults;
   license: ?License;
@@ -84,6 +86,19 @@ export default class Component {
     }
     // $FlowFixMe
     return this._specs;
+  }
+
+  set misc(val: Misc) { this._misc = val; }
+
+  get misc(): ?Misc {
+    if (!this._misc) return null;
+
+    if (Array.isArray(this._misc)) {
+      // $FlowFixMe
+      this._misc = Misc.load(this._misc);
+    }
+    // $FlowFixMe
+    return this._misc;
   }
 
   get id(): BitId {
@@ -119,6 +134,7 @@ export default class Component {
     packageDependencies,
     impl,
     specs,
+    misc,
     docs,
     dist,
     specsResults,
@@ -137,6 +153,7 @@ export default class Component {
     this.packageDependencies = packageDependencies || {};
     this._specs = specs;
     this._impl = impl;
+    this._misc = misc;
     this._docs = docs;
     this.dist = dist;
     this.specsResults = specsResults;
@@ -353,6 +370,7 @@ export default class Component {
         packageDependencies: bitJson.packageDependencies,
         impl: path.join(bitDir, bitJson.getImplBasename()),
         specs: path.join(bitDir, bitJson.getSpecBasename()),
+        misc: bitJson.getMiscFiles().map(misc => path.join(bitDir, misc)),
       });
     });
   }

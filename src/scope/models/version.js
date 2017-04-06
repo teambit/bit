@@ -28,6 +28,10 @@ export type VersionProps = {
     name: string,
     file: Ref
   };
+  miscFiles?: ?Array<{
+    name: string,
+    file: Ref
+  }>;
   dist?: ?{
     name: string,
     file: Ref
@@ -57,6 +61,10 @@ export default class Version extends BitObject {
     name: string,
     file: Ref
   };
+  miscFiles: ?Array<{
+    name: string,
+    file: Ref
+  }>;
   dist: ?{
     name: string,
     file: Ref
@@ -79,6 +87,7 @@ export default class Version extends BitObject {
   constructor({
     impl,
     specs,
+    miscFiles,
     dist,
     compiler,
     tester,
@@ -93,6 +102,7 @@ export default class Version extends BitObject {
     super();
     this.impl = impl;
     this.specs = specs;
+    this.miscFiles = miscFiles;
     this.dist = dist;
     this.compiler = compiler;
     this.tester = tester;
@@ -111,6 +121,7 @@ export default class Version extends BitObject {
     return JSON.stringify(filterObject({
       impl: obj.impl,
       specs: obj.specs,
+      miscFiles: obj.miscFiles,
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
       log: obj.log,
@@ -147,6 +158,11 @@ export default class Version extends BitObject {
         // $FlowFixMe
         name: this.specs.name
       }: null,
+      miscFiles: this.miscFiles ? this.miscFiles.map(miscFile => { return {
+          file: miscFile.file.toString(),
+            // $FlowFixMe
+          name: miscFile.name
+        } }) : null,
       dist: this.dist ? {
         file: this.dist.file.toString(),
         // $FlowFixMe
@@ -180,6 +196,7 @@ export default class Version extends BitObject {
       impl,
       specs,
       dist,
+      miscFiles,
       compiler,
       tester,
       log,
@@ -200,6 +217,10 @@ export default class Version extends BitObject {
         file: Ref.from(specs.file),
         name: specs.name
       } : null,
+      miscFiles: miscFiles ? miscFiles.map(misc => { return {
+        file: Ref.from(misc.file),
+          name: misc.name
+        } }) : null,
       dist: dist ? {
         file: Ref.from(dist.file),
         name: dist.name
@@ -225,6 +246,7 @@ export default class Version extends BitObject {
     component,
     impl,
     specs,
+    miscFiles,
     dist,
     flattenedDeps,
     message,
@@ -235,6 +257,7 @@ export default class Version extends BitObject {
     component: ConsumerComponent,
     impl: Source,
     specs: ?Source,
+    miscFiles: ?Array<{name: string, file: Source}>,
     flattenedDeps: BitId[],
     message: string,
     dist: ?Source,
@@ -251,6 +274,10 @@ export default class Version extends BitObject {
         file: specs.hash(),
         name: component.specsFile
       }: null,
+      miscFiles: miscFiles ? miscFiles.map(misc => { return {
+          file: misc.file.hash(),
+          name: misc.name
+        } }): null,
       dist: dist ? {
         file: dist.hash(),
         name: DEFAULT_BUNDLE_FILENAME,

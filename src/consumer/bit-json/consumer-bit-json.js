@@ -16,11 +16,12 @@ function hasExisting(bitPath: string): boolean {
 
 export default class ConsumerBitJson extends AbstractBitJson {
   impl: string;
-  spec: string; 
+  spec: string;
+  miscFiles: [];
   compiler: string;
   tester: string;
   dependencies: {[string]: string};
-  
+
   write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
     return new Promise((resolve, reject) => {
       if (!override && hasExisting(bitDir)) {
@@ -57,6 +58,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     return new ConsumerBitJson({
       impl: R.prop('impl', sources),
       spec: R.prop('spec', sources),
+      miscFiles: R.prop('misc', sources),
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
       dependencies,
