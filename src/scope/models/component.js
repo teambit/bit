@@ -12,7 +12,7 @@ import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
 import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
-import { Impl, Specs, Dist, License } from '../../consumer/component/sources';
+import { Impl, Specs, Misc, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 
@@ -145,7 +145,8 @@ export default class Component extends BitObject {
         .then((version) => {
           const implP = version.impl.file.load(repository);
           const specsP = version.specs ? version.specs.file.load(repository) : null;
-          const miscP = version.miscFiles ? Promise.all(version.miscFiles.map(misc => misc.file.load(repository))) : null;
+          const miscP = version.miscFiles ? Promise.all(version.miscFiles.map(misc => misc.file.load(repository)
+              .then(content => { return { name: misc.name, content } } ) )) : null;
           const distP = version.dist ? version.dist.file.load(repository) : null;
           const scopeMetaP = ScopeMeta.fromScopeName(scopeName).load(repository);
           return Promise.all([implP, specsP, miscP, distP, scopeMetaP])
@@ -164,7 +165,7 @@ export default class Component extends BitObject {
               packageDependencies: version.packageDependencies,
               impl: new Impl(impl.toString()),
               specs: specs ? new Specs(specs.toString()) : null,
-              // misc: miscs ? '' : null,
+              misc: miscs ? new Misc(miscs) : null,
               docs: version.docs,
               dist: dist ? Dist.fromString(dist.toString()) : null,
               license: scopeMeta ? License.deserialize(scopeMeta.license) : null,

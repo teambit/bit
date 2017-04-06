@@ -181,6 +181,7 @@ export default class Component {
     return mkdirp(bitDir)
       .then(() => this.impl.write(bitDir, this.implFile, force))
       .then(() => { return this.specs ? this.specs.write(bitDir, this.specsFile, force) : undefined; })
+      .then(() => { return this.misc ? this.misc.write(bitDir, this.miscFiles, force) : undefined; })
       .then(() => { return this.dist ? this.dist.write(bitDir, this.implFile, force) : undefined; })
       .then(() => { return withBitJson ? this.writeBitJson(bitDir, force): undefined; })
       .then(() => { return this.license && this.license.src ? this.license.write(bitDir, force) : undefined; })
