@@ -41,6 +41,6 @@ describe('component writeSource', () => {
 
 describe('buildComponentPath', () => {
   test('should build the component path out of the component and the target module', () => {
-
+     // TODO
   });
 });
