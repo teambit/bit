@@ -1,0 +1,36 @@
+bit.json -> public api
+// ["bit.utils/array/diff::1"]
+
+
+{
+  "bit.utils/array/diff::1": {
+    "loc": "./array/diff/bit.utils/1",
+    "file": "dist/dist.js",
+    "dependencies": ["bit.utils/array/first::2"]
+  },
+  "bit.utils/array/diff::4": {
+    "loc": "./array/diff/bit.utils/1",
+    "file": "dist/dist.js",
+    "dependencies": ["bit.utils/array/first::2"]
+  },
+  "bit.utils/array/first::2": {
+    "loc": "./array/diff/bit.utils/2",
+    "file": "impl.js",
+    "dependencies": []
+  }
+}
+
+[
+  {
+    "name": "bit.utils/array/diff::1",
+    "loc": "./array/diff/bit.utils/1/dist/dist.js",
+    "dependencies": [
+      "bit.utils/array/first::3"
+    ]
+  },
+  {
+    "name": "bit.utils/array/first::3",
+    "loc": "./array/first/bit.utils/3/impl.js",
+    "dependencies": []
+  }
+]

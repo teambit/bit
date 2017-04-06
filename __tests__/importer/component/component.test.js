@@ -38,3 +38,9 @@ describe('component writeSource', () => {
     writeSource(undefined, 'file.js', mockObj).then(() => done.fail()).catch(e => done(e));
   });
 });
+
+describe('buildComponentPath', () => {
+  test('should build the component path out of the component and the target module', () => {
+
+  });
+});
