@@ -36,7 +36,7 @@ Then simply install using
 
 `sudo yum install bit`
 
-## installer/Chocolatey (Windows)
+## Windows (64bit)
 
 There are two installation methods for Windows.
   
@@ -46,7 +46,7 @@ Installation can be found [here](https://api.bitsrc.io/release/msi/latest).
 
 2. **Chocolatey** - Bit can be installed via Chocolatey:
 
-`choco install bit`
+`choco install bit -version 0.5.0`
 
 ## Tarball Release
 
