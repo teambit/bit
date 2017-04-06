@@ -12,8 +12,8 @@ import {
 } from '../../constants';
 import BitJson from '../../bit-json';
 
-const writeSource = (componentDir: string, fileName: string, fileContent: string) => {
-  return new Promise((resolve, reject) => {
+export const writeSource = (componentDir: string, fileName: string, fileContent: string) =>
+  new Promise((resolve, reject) => {
     if (fileName && fileContent) {
       fs.outputFile(path.join(componentDir, fileName), fileContent, (err) => {
         if (err) return reject(err);
@@ -23,7 +23,6 @@ const writeSource = (componentDir: string, fileName: string, fileContent: string
 
     resolve();
   });
-};
 
 export default class Component {
   name: string;
