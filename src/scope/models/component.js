@@ -58,7 +58,7 @@ export default class Component extends BitObject {
     if (empty(this.versions)) return 0;
     return Math.max(...this.listVersions());
   }
-  
+
   collectLogs(repo: Repository):
   Promise<{[number]: {message: string, date: string, hash: string}}> {
     return repo.findMany(this.versionArray)
