@@ -1,5 +1,5 @@
 const mockFs = require('mock-fs');
-const { readIdsFromBitJson } = require('../../src/importer/importer');
+const { readIdsFromBitJson, getIdsFromBitJsonIfNeeded } = require('../../src/importer/importer');
 
 const mockGoodConsumerPath = '/my/good/consumer';
 const mockBadConsumerPath = '/my/bad/consumer';
@@ -80,4 +80,21 @@ describe('readIdsFromBitJson', () => {
       done();
     }),
   );
+});
+
+describe('getIdsFromBitJsonIfNeeded', () => {
+  it('should get the ids from the bit.json if no ids were supllied', (done) => {
+    getIdsFromBitJsonIfNeeded([], mockGoodConsumerPath).then((ids) => {
+      expect(ids).toEqual(extractedIds);
+      done();
+    }).catch(done.fail);
+  });
+
+  it('should get return the ids if they supplied', (done) => {
+    const mockIds = ['bit.utils/global/is-number::1', 'bit.utils/ssh/parse-url::1'];
+    getIdsFromBitJsonIfNeeded(mockIds, mockGoodConsumerPath).then((ids) => {
+      expect(ids).toEqual(mockIds);
+      done();
+    }).catch(done.fail);
+  });
 });
