@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Added
+
+- support adding misc files to a bit component
+
 ## [0.5.0]
 
 ** breaking change - a scope with this version won't work with consumer with lower versions **
