@@ -9,11 +9,14 @@ export default class Misc extends Source {
 
   static load(miscs: []): Misc|null {
     try {
-      const miscFiles = miscs.map(file => { return {
-        name: path.basename(file), content: fs.readFileSync(file)
-      } } );
+      const miscFiles = miscs.map(file => {
+        return { name: path.basename(file), content: fs.readFileSync(file) }
+      } );
       return new Misc(miscFiles);
     } catch (err) {
+      if (err.code === 'ENOENT' && err.path) {
+        console.log(`\nwarning: the file ${err.path} mentioned in your bit.json inside source.misc was not found!\n`);
+      }
       return null;
     }
   }
