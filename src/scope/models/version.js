@@ -138,12 +138,14 @@ export default class Version extends BitObject {
   }
 
   refs(): Ref[] {
+    const miscFiles = this.miscFiles ? this.miscFiles.map(misc => misc.file) : [];
     return [
       this.impl.file,
       // $FlowFixMe
       this.specs ? this.specs.file : null,
       // $FlowFixMe (after filtering the nulls there is no problem)
       this.dist ? this.dist.file : null,
+      ...miscFiles,
     ].filter(ref => ref);
   }
 

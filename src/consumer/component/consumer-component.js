@@ -167,6 +167,7 @@ export default class Component {
       scope: this.scope,
       impl: this.implFile,
       spec: this.specsFile,
+      miscFiles: this.miscFiles,
       compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this.dependencies.toObject(),
