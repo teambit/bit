@@ -387,6 +387,7 @@ export default class Component {
   }, scope: Scope) {
     const implFile = consumerBitJson.getImplBasename();
     const specsFile = consumerBitJson.getSpecBasename();
+    const miscFiles = consumerBitJson.getMiscFiles();
     const compilerId = BitId.parse(consumerBitJson.compilerId);
     const testerId = BitId.parse(consumerBitJson.testerId);
 
@@ -397,6 +398,7 @@ export default class Component {
       scope: scopeName,
       implFile,
       specsFile,
+      miscFiles,
       compilerId,
       testerId,
       impl: Impl.create(name, compilerId, scope),
