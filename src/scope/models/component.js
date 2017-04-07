@@ -150,7 +150,7 @@ export default class Component extends BitObject {
           const distP = version.dist ? version.dist.file.load(repository) : null;
           const scopeMetaP = ScopeMeta.fromScopeName(scopeName).load(repository);
           return Promise.all([implP, specsP, miscP, distP, scopeMetaP])
-          .then(([impl, specs, miscs, dist, scopeMeta]) => {
+          .then(([impl, specs, miscFiles, dist, scopeMeta]) => {
             return new ConsumerComponent({
               name: this.name,
               box: this.box,
@@ -165,7 +165,7 @@ export default class Component extends BitObject {
               packageDependencies: version.packageDependencies,
               impl: new Impl(impl.toString()),
               specs: specs ? new Specs(specs.toString()) : null,
-              misc: miscs ? new Misc(miscs) : null,
+              misc: miscFiles ? new Misc(miscFiles) : null,
               docs: version.docs,
               dist: dist ? Dist.fromString(dist.toString()) : null,
               license: scopeMeta ? License.deserialize(scopeMeta.license) : null,

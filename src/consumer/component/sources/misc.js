@@ -7,9 +7,9 @@ export default class Misc extends Source {
     super(src);
   }
 
-  static load(miscs: []): Misc|null {
+  static load(filePaths: []): Misc|null {
     try {
-      const miscFiles = miscs.map(file => {
+      const miscFiles = filePaths.map(file => {
         return { name: path.basename(file), content: fs.readFileSync(file) }
       } );
       return new Misc(miscFiles);

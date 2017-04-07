@@ -139,10 +139,9 @@ export default class SourceRepository {
           const impl = Source.from(bufferFrom(source.impl.src));
           const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())): null;
           const specs = source.specs ? Source.from(bufferFrom(source.specs.src)): null;
-          //TODO if file doesn't exist, show a warning
-          const miscFiles = source.misc && source.misc.src.length ? source.misc.src.map((misc) => { return {
-            name: misc.name, file: Source.from(misc.content)
-            } }) : null;
+          const miscFiles = source.misc && source.misc.src.length ? source.misc.src.map((misc) => {
+            return { name: misc.name, file: Source.from(misc.content) }
+          }) : null;
 
           const username = globalConfig.getSync(CFG_USER_NAME_KEY);
           const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
