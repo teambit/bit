@@ -522,14 +522,8 @@ export default class Scope {
       loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
       if (verbose) loader.stop(); // in order to show npm install output on verbose flag
 
-      return Promise.all(
-        R.values(
-          R.mapObjIndexed(
-            (value, key) =>
-              npmInstall({ name: key, version: value, dir: nodeModulesDir, silent: !verbose })
-          , deps)
-        )
-      ).then(() => component);
+      return npmInstall({ deps, dir: nodeModulesDir, silent: !verbose })
+      .then(() => component);
     };
 
     return this.getMany(ids)
