@@ -15,10 +15,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - enable "bit test --inline" command with no arguments (test all inline components)
 
-### Change
-
-- npm install for bit dependencies will work via temp package.json instead of invoking parallel npmi 
-
 ## [0.5.0]
 
 ** breaking change - a scope with this version won't work with consumer with lower versions **
