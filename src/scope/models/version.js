@@ -160,11 +160,12 @@ export default class Version extends BitObject {
         // $FlowFixMe
         name: this.specs.name
       }: null,
-      miscFiles: this.miscFiles ? this.miscFiles.map(miscFile => { return {
+      miscFiles: this.miscFiles ? this.miscFiles.map((miscFile) => {
+        return {
           file: miscFile.file.toString(),
-            // $FlowFixMe
           name: miscFile.name
-        } }) : null,
+        };
+      }) : null,
       dist: this.dist ? {
         file: this.dist.file.toString(),
         // $FlowFixMe
@@ -219,8 +220,8 @@ export default class Version extends BitObject {
         file: Ref.from(specs.file),
         name: specs.name
       } : null,
-      miscFiles: miscFiles ? miscFiles.map(misc => {
-        return { file: Ref.from(misc.file), name: misc.name }
+      miscFiles: miscFiles ? miscFiles.map((misc) => {
+        return { file: Ref.from(misc.file), name: misc.name };
       }) : null,
       dist: dist ? {
         file: Ref.from(dist.file),
@@ -275,8 +276,8 @@ export default class Version extends BitObject {
         file: specs.hash(),
         name: component.specsFile
       }: null,
-      miscFiles: miscFiles ? miscFiles.map(misc => {
-        return { file: misc.file.hash(), name: misc.name }
+      miscFiles: miscFiles ? miscFiles.map((misc) => {
+        return { file: misc.file.hash(), name: misc.name };
       }): null,
       dist: dist ? {
         file: dist.hash(),

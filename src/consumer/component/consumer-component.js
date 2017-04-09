@@ -361,19 +361,21 @@ export default class Component {
     if (!fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInline(bitDir));
     return BitJson.load(bitDir, consumerBitJson)
     .then((bitJson) => {
+      const miscFiles = bitJson.getMiscFiles();
+
       return new Component({
         name: path.basename(bitDir),
         box: path.basename(path.dirname(bitDir)),
         implFile: bitJson.getImplBasename(),
         specsFile: bitJson.getSpecBasename(),
-        miscFiles: bitJson.getMiscFiles(),
+        miscFiles,
         compilerId: BitId.parse(bitJson.compilerId),
         testerId: BitId.parse(bitJson.testerId),
         dependencies: BitIds.fromObject(bitJson.dependencies),
         packageDependencies: bitJson.packageDependencies,
         impl: path.join(bitDir, bitJson.getImplBasename()),
         specs: path.join(bitDir, bitJson.getSpecBasename()),
-        misc: bitJson.getMiscFiles().map(misc => path.join(bitDir, misc)),
+        misc: miscFiles ? miscFiles.map(misc => path.join(bitDir, misc)) : [],
       });
     });
   }

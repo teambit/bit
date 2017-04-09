@@ -145,8 +145,16 @@ export default class Component extends BitObject {
         .then((version) => {
           const implP = version.impl.file.load(repository);
           const specsP = version.specs ? version.specs.file.load(repository) : null;
-          const miscP = version.miscFiles ? Promise.all(version.miscFiles.map(misc => misc.file.load(repository)
-              .then(content => { return { name: misc.name, content } } ) )) : null;
+          const miscP = version.miscFiles ?
+          Promise.all(version.miscFiles.map(misc =>
+            misc.file.load(repository)
+            .then((content) => {
+              return {
+                name: misc.name,
+                content
+              };
+            })
+          )) : null;
           const distP = version.dist ? version.dist.file.load(repository) : null;
           const scopeMetaP = ScopeMeta.fromScopeName(scopeName).load(repository);
           return Promise.all([implP, specsP, miscP, distP, scopeMetaP])
