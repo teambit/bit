@@ -15,14 +15,14 @@ function parse(buffer: Buffer, types: {[string]: Function}): BitObject {
 }
 
 export default class BitObject {
-  id() {
+  id(): string {
     throw new Error('id() was not implemented...');
   }
 
-  toBuffer() {
+  toBuffer(): Buffer {
     throw new Error('toBuffer() was not implemented...');
   }
-  
+
   static parse() {
     throw new Error('parse() was not implemented...');
   }
