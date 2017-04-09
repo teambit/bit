@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Change
+
+- npm install for bit dependencies will work via temp package.json instead of invoking parallel npmi 
+
 ### Added
 
 - support adding misc files to a bit component
