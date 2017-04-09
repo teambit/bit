@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- support adding misc files to a bit component
 - enable "bit test --inline" command with no arguments (test all inline components)
 
 ## [0.5.0]
