@@ -21,12 +21,11 @@ tar zxf $TARBALL_NAME -C $PACKAGE_TMPDIR/bit
 PACKAGE_TMPDIR_ABSOLUTE=$(cd $(dirname ".") && pwd -P)/$PACKAGE_TMPDIR/bit/
 
 
-#### Build DEB (Debian, Ubuntu) package
 node ./scripts/set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/package.json brew
 cd $PACKAGE_TMPDIR_ABSOLUTE
-#eval "$FPM --output-type tar  --architecture noarch --depends nodejs --category 'Development/Languages' ."
+
 eval tar --exclude='./Jenkinsfile' --exclude='./scripts/' -zcvf ${tarName}  *
 shasum -a 256 ${tarName}
-mv ${tarName} ../
-rm -rf ../bit
+mv ${tarName} ../../
+rm -rf ../../brew_pkg
 
