@@ -26,16 +26,16 @@ const paintAuthor = (email: ?string, username: ?string): string => {
   } else if (!email && username) {
     return c.white(`Author: ${username}\n`);
   }
-
+  
   return '';
 };
 
 export const paintLog = ({ message, date, hash, username, email }:
-{ message: string, hash: string, date: string, username: ?string, email: ?string }): string => {
+  { message: string, hash: string, date: string, username: ?string, email: ?string }): string => {
   return c.yellow(`commit ${hash}\n`) +
-  paintAuthor(email, username) +
-  c.white(`Date: ${date}\n`) +
-  c.white(`\n      ${message}\n`);
+    paintAuthor(email, username) +
+    c.white(`Date: ${date}\n`) +
+    c.white(`\n      ${message}\n`);
 };
 
 const successTest = (test) => {
@@ -54,12 +54,20 @@ const paintTest = (test) => {
 const paintStats = (results) => {
   const statsHeader = results.pass ? c.underline.green('tests passed') : c.underline.red('tests failed');
   const totalDuration = results.stats && results.stats.duration ?
-  `total duration - ${c.cyan(`${results.stats.duration}ms\n`)}` : '';
+    `total duration - ${c.cyan(`${results.stats.duration}ms\n`)}` : '';
   return `${statsHeader}\n${totalDuration}\n`;
 };
 
-export const paintSpecsResults = (results: SpecsResults): string => {
-  return paintStats(results) + results.tests.map(paintTest).join('\n');
+export const paintSpecsResults = (results: SpecsResults): string => (results.tests ?
+  paintStats(results) + results.tests.map(paintTest).join('\n') : '');
+
+export const paintAllSpecsResults = (results: Array<*>): string => {
+  if (results.length === 0) return c.red('There are no inline components to test');
+  return results.map((result) => {
+    const componentId = c.bold(`${result.component.box}/${result.component.name}: `);
+    if (result.specs) return componentId + paintSpecsResults(result.specs);
+    return `${componentId}couldn't get test results`;
+  }).join('\n');
 };
 
 export const paintAllSpecsResults = (results: Array<*>): string => {
