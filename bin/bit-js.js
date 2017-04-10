@@ -5,4 +5,5 @@ var ids = process.argv.slice(2);
 importer(ids)
 .then((result) => {
   console.log('done');
+  process.exit(0);
 });

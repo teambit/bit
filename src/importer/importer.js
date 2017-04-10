@@ -2,7 +2,7 @@
 import R from 'ramda';
 import importComponents from 'bit-scope-client';
 import path from 'path';
-import componentsMock from './component-mock';
+import responseMock from './response-mock';
 import modelOnFs from './model-on-fs';
 // import locateConsumer from '../consumer/locate-consumer';
 import BitJson from '../bit-json';
@@ -58,10 +58,13 @@ export default (componentIds: string[]) => {
 
   return getIdsFromBitJsonIfNeeded(componentIds, projectRoot)
   .then((ids) => { // eslint-disable-line
-    return importComponents(ids);
-    // return Promise.resolve(componentsMock); // mock - replace to the real importer
+    // return importComponents(ids);
+    return Promise.resolve(responseMock); // mock - replace to the real importer
   })
-  .then(componentDependencies => modelOnFs(componentDependencies, targetComponentsDir))
+  .then((responses) => {
+    const componentDependenciesArr = R.unnest(responses.map(R.prop('payload')));
+    return modelOnFs(componentDependenciesArr, targetComponentsDir);
+  })
   .then(() => createMapFromComponents(targetComponentsDir))
   .then(map => createDependencyLinks(targetComponentsDir, map))
   .then(map => createPublicApi(targetModuleDir, map, projectBitJson));

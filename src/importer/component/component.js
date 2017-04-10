@@ -11,6 +11,7 @@ import {
   DEFAULT_LICENSE_FILENAME,
 } from '../../constants';
 import BitJson from '../../bit-json';
+import Dist from '../sources/dist';
 
 export const writeSource = (componentDir: string, fileName: string, fileContent: string) =>
   new Promise((resolve, reject) => {
@@ -35,7 +36,7 @@ export default class Component {
   dependencies: string[];
   flattenDependencies: string[];
   packageDependencies: {[string]: string};
-  dist: Source;
+  dist: ?Dist;
   impl: Source;
   specs: Source;
   specsResults: SpecsResults;
@@ -54,7 +55,7 @@ export default class Component {
     this.dependencies = componentObject.dependencies;
     this.flattenDependencies = componentObject.flattenDependencies;
     this.packageDependencies = componentObject.packageDependencies;
-    this.dist = componentObject.dist || {};
+    this.dist = componentObject.dist ? Dist.fromString(componentObject.dist.file) : null;
     this.impl = componentObject.impl || {};
     this.specs = componentObject.specs || {};
     this.specsResults = componentObject.specsResults;
@@ -79,9 +80,7 @@ export default class Component {
         this.writeBitJson(componentDir),
         writeSource(componentDir, this.impl.name, this.impl.file),
         writeSource(componentDir, this.specs.name, this.specs.file),
-        writeSource(
-          path.join(componentDir, DEFAULT_DIST_DIRNAME), DEFAULT_BUNDLE_FILENAME, this.dist.file,
-        ),
+        this.dist.write(componentDir, this.impl.name),
         writeSource(componentDir, DEFAULT_LICENSE_FILENAME, this.license.file),
       ]);
   }
