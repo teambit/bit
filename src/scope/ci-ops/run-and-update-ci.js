@@ -30,10 +30,10 @@ function runAndUpdateCI({ id, scopePath }: { id: string, scopePath: string }): P
         return addCIAttrsInTheModel({ startTime }).then(() => specsResults);
       })
       .catch((e) => {
-        return addCIAttrsInTheModel({ error: e, startTime }).then(() => { throw new Error(e); });
+        return addCIAttrsInTheModel({ error: e, startTime }).then(() => { throw e; });
       });
   } catch (e) {
-    return addCIAttrsInTheModel({ error: e, startTime }).then(() => { throw new Error(e); });
+    return addCIAttrsInTheModel({ error: e, startTime }).then(() => { throw e; });
   }
 }
 
