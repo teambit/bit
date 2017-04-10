@@ -11,3 +11,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Add opts to the load function
 - Add resolve function
+- Fix dist bug
+- add sourcemaps
+- update importer to version 0.5.0
