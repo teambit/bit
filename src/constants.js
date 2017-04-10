@@ -17,6 +17,8 @@ const getCacheDirectory = () => {
   return getDirectory();
 };
 
+const packageFile = require('../package.json');
+
 /**
  * cache root directory
  */
@@ -31,6 +33,8 @@ export const BIT_JSON_NAME = 'bit.json';
 export const SCOPE_JSON_NAME = 'scope.json';
 
 export const LATEST_VERSION = 'latest';
+
+export const BIT_VERSION = packageFile.version;
 
 export const COMPONENTS_DIRNAME = 'components';
 
