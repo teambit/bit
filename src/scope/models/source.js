@@ -24,7 +24,7 @@ export default class Source extends BitObject {
     return new Source(new Buffer(contents));
   }
 
-  static from(str: string): Source {
-    return new Source(str);
+  static from(buffer: Buffer): Source {
+    return new Source(buffer);
   }
 }

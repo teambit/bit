@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Added
+
+- support adding misc files to a bit component
+- enable "bit test --inline" command with no arguments (test all inline components)
+
 ## [0.5.0]
 
 ** breaking change - a scope with this version won't work with consumer with lower versions **

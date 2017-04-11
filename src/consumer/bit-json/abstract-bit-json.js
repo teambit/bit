@@ -1,7 +1,7 @@
 /** @flow */
 import R from 'ramda';
 import { BitIds, BitId } from '../../bit-id';
-import { 
+import {
   DEFAULT_COMPILER_ID,
   DEFAULT_TESTER_ID,
   DEFAULT_IMPL_NAME,
@@ -12,7 +12,8 @@ import {
 
 export type AbstractBitJsonProps = {
   impl?: string;
-  spec?: string;  
+  spec?: string;
+  miscFiles?: string[];
   compiler?: string;
   tester?: string;
   dependencies?: Object;
@@ -20,14 +21,16 @@ export type AbstractBitJsonProps = {
 
 export default class AbstractBitJson {
   impl: string;
-  spec: string; 
+  spec: string;
+  miscFiles: string[];
   compiler: string;
   tester: string;
   dependencies: {[string]: string};
-  
-  constructor({ impl, spec, compiler, tester, dependencies }: AbstractBitJsonProps) {
+
+  constructor({ impl, spec, miscFiles, compiler, tester, dependencies }: AbstractBitJsonProps) {
     this.impl = impl || DEFAULT_IMPL_NAME;
-    this.spec = spec || DEFAULT_SPECS_NAME; 
+    this.spec = spec || DEFAULT_SPECS_NAME;
+    this.miscFiles = miscFiles || [];
     this.compiler = compiler || DEFAULT_COMPILER_ID;
     this.tester = tester || DEFAULT_TESTER_ID;
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
@@ -60,22 +63,26 @@ export default class AbstractBitJson {
     return this;
   }
 
-  getImplBasename(): string { 
+  getImplBasename(): string {
     return this.impl;
   }
 
-  setImplBasename(name: string) { 
+  setImplBasename(name: string) {
     this.impl = name;
     return this;
   }
 
-  getSpecBasename(): string { 
+  getSpecBasename(): string {
     return this.spec;
   }
 
-  setSpecBasename(name: string) { 
+  setSpecBasename(name: string) {
     this.spec = name;
     return this;
+  }
+
+  getMiscFiles(): string[] {
+    return this.miscFiles;
   }
 
   hasCompiler(): boolean {
@@ -95,6 +102,7 @@ export default class AbstractBitJson {
       sources: {
         impl: this.getImplBasename(),
         spec: this.getSpecBasename(),
+        misc: this.getMiscFiles(),
       },
       env: {
         compiler: this.compilerId,

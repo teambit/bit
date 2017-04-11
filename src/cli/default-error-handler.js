@@ -22,6 +22,7 @@ import { ScopeNotFound, ResolutionException, ComponentNotFound, DependencyNotFou
 import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import ExportWithoutThis from '../api/consumer/lib/exceptions/export-without-this';
+import MiscSourceNotFound from '../consumer/component/exceptions/misc-source-not-found';
 
 const errorsMap: [[Error, (err: Error) => string]] = [
   [ ConsumerAlreadyExists, () => 'there\'s already a scope' ],
@@ -29,6 +30,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ BitAlreadyExistExternaly, err => `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${err.bitName}" to modify the current component or "bit create -f ${err.bitName}"!`],
   [ PluginNotFound, err => `fatal: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`],
   [ MissingImpl, err => `fatal: The impl file in path "${err.implPath}" does not exist, please check the bit.json or implementation file`],
+  [ MiscSourceNotFound, err => `warning: the file "${err.path}" mentioned in your bit.json inside source.misc was not found!`],
   [ ProtocolNotSupported, () => 'fatal: remote scope protocol is not suppoerted, please use: `ssh://`, `file://` or `bit://`'],
   [ RemoteScopeNotFound, err => `fatal: remote scope "${chalk.bold(err)}" not found.`],
   [ InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: <scope>/[box]/<name>'],

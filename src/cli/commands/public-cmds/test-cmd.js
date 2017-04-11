@@ -1,11 +1,11 @@
 /** @flow */
 import Command from '../../command';
-import { testInline } from '../../../api/consumer';
+import { testInline, testInlineAll } from '../../../api/consumer';
 import { testInScope } from '../../../api/scope';
-import { paintSpecsResults } from '../../chalk-box';
+import { paintSpecsResults, paintAllSpecsResults } from '../../chalk-box';
 
 export default class Test extends Command {
-  name = 'test <id>';
+  name = 'test [id]';
   description = 'run component(s) unit tests';
   alias = 't';
   opts = [
@@ -22,6 +22,7 @@ export default class Test extends Command {
     verbose: ?bool,
   }): Promise<any> {
     function test() {
+      if (!id) return testInlineAll(id);
       if (inline) return testInline(id);
       return testInScope({ id, environment, save, verbose });
     }
@@ -35,7 +36,7 @@ export default class Test extends Command {
 
   report({ res }: { res: any, inline: ?bool }): string {
     if (res) {
-      return paintSpecsResults(res);
+      return Array.isArray(res) ? paintAllSpecsResults(res) : paintSpecsResults(res);
     }
 
     return 'couldn\'t get test results...';

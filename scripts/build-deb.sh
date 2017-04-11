@@ -60,7 +60,6 @@ FPM="fpm --input-type dir --chdir . --name bit --version $VERSION "`
 #### Build RPM (Centos) package
 node ../../scripts/set-installation-method.js $PACKAGE_TMPDIR_ABSOLUTE/usr/share/bit/package.json yum
 eval "$FPM --output-type rpm  --architecture noarch -p ../../distribution/  --depends gcc --depends make --depends python --depends gcc-c++ --category 'Development/Languages' ."
-#mv $PACKAGE_DIST/*.rpm $PACKAGE_DIST/
 
 
 rm -rf $PACKAGE_TMPDIR_ABSOLUTE/

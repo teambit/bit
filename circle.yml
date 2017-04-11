@@ -10,7 +10,7 @@ compile:
 
 dependencies:
   post:
-    - "npm install -g bit-bin"
+    - "npm install -g bit-bin@stable"
     - "sudo apt-get update -qq"
     - "sudo apt-get install -y rpm lintian"
     - "gem install fpm"

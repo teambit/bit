@@ -139,6 +139,9 @@ export default class SourceRepository {
           const impl = Source.from(bufferFrom(source.impl.src));
           const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())): null;
           const specs = source.specs ? Source.from(bufferFrom(source.specs.src)): null;
+          const miscFiles = source.misc && source.misc.src.length ? source.misc.src.map((misc) => {
+            return { name: misc.name, file: Source.from(misc.content) };
+          }) : null;
 
           const username = globalConfig.getSync(CFG_USER_NAME_KEY);
           const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
@@ -150,6 +153,7 @@ export default class SourceRepository {
               component: source,
               impl,
               specs,
+              miscFiles,
               dist,
               flattenedDeps: depIds,
               specsResults,
@@ -166,6 +170,8 @@ export default class SourceRepository {
               .add(impl)
               .add(specs)
               .add(dist);
+
+            if (miscFiles) miscFiles.forEach(misc => objectRepo.add(misc.file));
 
             return component;
           });

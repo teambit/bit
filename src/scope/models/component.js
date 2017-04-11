@@ -12,7 +12,7 @@ import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
 import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
-import { Impl, Specs, Dist, License } from '../../consumer/component/sources';
+import { Impl, Specs, Misc, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 
@@ -58,7 +58,7 @@ export default class Component extends BitObject {
     if (empty(this.versions)) return 0;
     return Math.max(...this.listVersions());
   }
-  
+
   collectLogs(repo: Repository):
   Promise<{[number]: {message: string, date: string, hash: string}}> {
     return repo.findMany(this.versionArray)
@@ -145,10 +145,20 @@ export default class Component extends BitObject {
         .then((version) => {
           const implP = version.impl.file.load(repository);
           const specsP = version.specs ? version.specs.file.load(repository) : null;
+          const miscP = version.miscFiles ?
+          Promise.all(version.miscFiles.map(misc =>
+            misc.file.load(repository)
+            .then((content) => {
+              return {
+                name: misc.name,
+                content
+              };
+            })
+          )) : null;
           const distP = version.dist ? version.dist.file.load(repository) : null;
           const scopeMetaP = ScopeMeta.fromScopeName(scopeName).load(repository);
-          return Promise.all([implP, specsP, distP, scopeMetaP])
-          .then(([impl, specs, dist, scopeMeta]) => {
+          return Promise.all([implP, specsP, miscP, distP, scopeMetaP])
+          .then(([impl, specs, miscFiles, dist, scopeMeta]) => {
             return new ConsumerComponent({
               name: this.name,
               box: this.box,
@@ -156,12 +166,14 @@ export default class Component extends BitObject {
               scope: this.scope,
               implFile: version.impl.name,
               specsFile: version.specs ? version.specs.name : null,
+              miscFiles: version.miscFiles ? version.miscFiles.map(misc => misc.name) : null,
               compilerId: version.compiler,
               testerId: version.tester,
               dependencies: version.dependencies,
               packageDependencies: version.packageDependencies,
               impl: new Impl(impl.toString()),
               specs: specs ? new Specs(specs.toString()) : null,
+              misc: miscFiles ? new Misc(miscFiles) : null,
               docs: version.docs,
               dist: dist ? Dist.fromString(dist.toString()) : null,
               license: scopeMeta ? License.deserialize(scopeMeta.license) : null,

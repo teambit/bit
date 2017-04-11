@@ -3,7 +3,7 @@ import R from 'ramda';
 import path from 'path';
 import fs from 'fs';
 import { BIT_JSON } from '../../constants';
-import { BitJsonAlreadyExists, InvalidBitJson } from './exceptions';
+import { InvalidBitJson } from './exceptions';
 import AbstractBitJson from './abstract-bit-json';
 import ConsumerBitJson from './consumer-bit-json';
 
@@ -18,6 +18,7 @@ export function hasExisting(bitPath: string): boolean {
 export type BitJsonProps = {
   impl?: string;
   spec?: string;
+  miscFiles?: string[];
   compiler?: string;
   tester?: string;
   dependencies?: Object;
@@ -27,15 +28,16 @@ export type BitJsonProps = {
 export default class BitJson extends AbstractBitJson {
   impl: string;
   spec: string;
+  miscFiles: string[];
   compiler: string;
   tester: string;
   dependencies: {[string]: string};
   packageDependencies: {[string]: string};
 
   constructor({
-    impl, spec, compiler, tester, dependencies, packageDependencies
+    impl, spec, miscFiles, compiler, tester, dependencies, packageDependencies
   }: BitJsonProps) {
-    super({ impl, spec, compiler, tester, dependencies });
+    super({ impl, spec, miscFiles, compiler, tester, dependencies });
     this.packageDependencies = packageDependencies || {};
   }
 
@@ -88,6 +90,7 @@ export default class BitJson extends AbstractBitJson {
     return new BitJson({
       impl: R.prop('impl', sources),
       spec: R.prop('spec', sources),
+      miscFiles: R.prop('misc', sources),
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
       dependencies,
