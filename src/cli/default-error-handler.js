@@ -1,6 +1,7 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
+import { LOCAL_SCOPE_NOTATION } from '../constants';
 import { InvalidBitId, InvalidIdChunk } from '../bit-id/exceptions';
 import BitAlreadyExistExternaly from '../consumer/component/exceptions/bit-already-exist-externaly';
 import {
@@ -20,6 +21,7 @@ import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import { ScopeNotFound, ResolutionException, ComponentNotFound, DependencyNotFound } from '../scope/exceptions';
 import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
+import ExportWithoutThis from '../api/consumer/lib/exceptions/export-without-this';
 
 const errorsMap: [[Error, (err: Error) => string]] = [
   [ ConsumerAlreadyExists, () => 'there\'s already a scope' ],
@@ -43,6 +45,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ NothingToImport, () => 'there is nothing to import'],
   [ InvalidIdChunk, err => `invalid id part in "${chalk.bold(err.id)}", id part can have only alphanumeric, lowercase charecters, and the following ["-", "_", "$", "!", "."]`],
   [ InvalidBitJson, err => `error: ${chalk.bold(err.path)} is not a valid JSON file.`],
+  [ ExportWithoutThis, err => `Error: Missing local scope annotation when exporting ${err.id}. Please run 'bit export ${LOCAL_SCOPE_NOTATION}/${err.id} ${err.remote}'`],
   [ ResolutionException, e => e.message]
 ];
 

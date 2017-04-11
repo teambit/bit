@@ -5,6 +5,7 @@ import loader from '../../../cli/loader';
 import { BEFORE_EXPORT } from '../../../cli/loader/loader-messages';
 import { ComponentNotFound } from '../../../scope/exceptions';
 import { LOCAL_SCOPE_NOTATION } from '../../../constants';
+import ExportWithoutThis from './exceptions/export-without-this';
 
 export default function exportAction(id: string, remote: string, save: ?bool) {
   return loadConsumer().then((consumer) => {
@@ -12,7 +13,7 @@ export default function exportAction(id: string, remote: string, save: ?bool) {
     return consumer.exportAction(id, remote)
     .catch((err) => {
       if (err instanceof ComponentNotFound && !id.startsWith(LOCAL_SCOPE_NOTATION)) {
-        throw (`Error: Missing local scope annotation when exporting ${id}. Please run 'bit export ${LOCAL_SCOPE_NOTATION}/${id} ${remote}'`);
+        throw new ExportWithoutThis(id, remote);
       }
       throw err;
     })
