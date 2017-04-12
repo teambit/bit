@@ -3,15 +3,20 @@ import path from 'path';
 import Source from './source';
 import MiscSourceNotFound from '../exceptions/misc-source-not-found';
 
+export type MiscSrc = { name: string, content: string|Buffer };
+
 export default class Misc extends Source {
-  constructor(src: []) { // eslint-disable-line
+  constructor(src: MiscSrc[]) { // eslint-disable-line
     super(src);
   }
 
   static load(filePaths: []): Misc|null {
     try {
       const miscFiles = filePaths.map((file) => {
-        return { name: path.basename(file), content: fs.readFileSync(file) };
+        return {
+          name: path.basename(file),
+          content: fs.readFileSync(file)
+        };
       });
       return new Misc(miscFiles);
     } catch (err) {
@@ -37,5 +42,13 @@ export default class Misc extends Source {
       if (!force && fs.existsSync(filePath)) return Promise.resolve();
       return this.writeOneFile(filePath, file.content.contents);
     }));
+  }
+
+  serialize(): MiscSrc[] {
+    return this.src;
+  }
+
+  deserialize(src): Misc {
+    return new Misc(src);
   }
 }
