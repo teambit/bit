@@ -3,8 +3,6 @@
         stages {
             stage('pre') {
                 steps {
-                    parallel (
-                        "Linux" : {
                             node("k8s") {
                                     sh("npm i -g bit-bin")
                                     sh('./scripts/build-tar.sh linux')
@@ -27,8 +25,8 @@
 
                                     }
                             }
-                         },
-                        "Mac" : {
+
+
                             node("k8s"){
                                     sh("npm i -g bit-bin")
                                     sh('./scripts/build-tar.sh mac')
@@ -47,7 +45,6 @@
                                     //sh("cd ./distribution && gsutil -m cp bit.rb ${uploadfolder}/bit-dev.rb")
                                     }
                             }
-                        })
                 }
             }
         }
