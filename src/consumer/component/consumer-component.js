@@ -302,7 +302,7 @@ export default class Component {
       packageDependencies: this.packageDependencies,
       specs: this.specs ? this.specs.serialize() : null,
       impl: this.impl.serialize(),
-      misc: this.misc.serialize(),
+      misc: this.misc ? this.misc.serialize() : null,
       docs: this.docs,
       dist: this.dist ? this.dist.serialize() : null,
       specsResults: this.specsResults ? this.specsResults.serialize() : null,
