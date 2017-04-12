@@ -7,6 +7,8 @@ import modelOnFs from './model-on-fs';
 // import locateConsumer from '../consumer/locate-consumer';
 import BitJson from '../bit-json';
 import { MODULE_NAME, MODULES_DIR, COMPONENTS_DIRNAME } from '../constants';
+import componentsMap from './components-map';
+import * as createLinks from './create-links';
 
  // TODO - inject bitJson instead of load it
 export const readIdsFromBitJson = (consumerPath: string) =>
@@ -34,38 +36,25 @@ Promise<string[]> {
   });
 }
 
-export const createMapFromComponents = (targetComponentsDir) => {
-  // TODO - using the components map class
-  return Promise.resolve();
-};
-
-export const createDependencyLinks = (targetComponentsDir, map) => {
-  // TODO - implement
-  return Promise.resolve();
-};
-
-export const createPublicApi = (targetModuleDir, map, projectBitJson) => {
-  // TODO - implement
-  return Promise.resolve();
-};
-
 export default (componentIds: string[]) => {
   // TODO - replace with cwd this is mock
-  const projectRoot = '/Users/ran/bit-playground/consumers/test-bit-js' || process.cwd();
+  // const projectRoot = '/Users/ran/bit-playground/consumers/test-bit-js' || process.cwd();
+  const projectRoot = process.cwd();
   const targetModuleDir = path.join(projectRoot, MODULES_DIR, MODULE_NAME);
   const targetComponentsDir = path.join(projectRoot, COMPONENTS_DIRNAME);
   const projectBitJson = BitJson.load(projectRoot);
+  let components;
 
   return getIdsFromBitJsonIfNeeded(componentIds, projectRoot)
   .then((ids) => { // eslint-disable-line
-    // return importComponents(ids);
-    return Promise.resolve(responseMock); // mock - replace to the real importer
+    return importComponents(ids);
+    // return Promise.resolve(responseMock); // mock - replace to the real importer
   })
   .then((responses) => {
-    const componentDependenciesArr = R.unnest(responses.map(R.prop('payload')));
-    return modelOnFs(componentDependenciesArr, targetComponentsDir);
+    components = R.unnest(responses.map(R.prop('payload')));
+    return modelOnFs(components, targetComponentsDir);
   })
-  .then(() => createMapFromComponents(targetComponentsDir))
-  .then(map => createDependencyLinks(targetComponentsDir, map))
-  .then(map => createPublicApi(targetModuleDir, map, projectBitJson));
+  .then(() => componentsMap(targetComponentsDir))
+  .then(map => createLinks.dependencies(targetComponentsDir, map))
+  .then(map => createLinks.publicApi(targetModuleDir, map, components));
 };
