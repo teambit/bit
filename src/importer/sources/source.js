@@ -7,7 +7,7 @@ export default class Source {
     this.src = src;
   }
 
-  create(bit: Bit): Source { // eslint-disable-line
+  create(bit: any): Source { // eslint-disable-line
     throw Error('every source must implement a create method');
   }
 }

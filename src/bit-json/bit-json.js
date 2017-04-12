@@ -61,16 +61,15 @@ class BitJson {
   }
 
   write(dir: string): Promise<?Error> {
-    return new Promise((resolve, reject) => {
-      return fs.outputJson(
+    return new Promise((resolve, reject) =>
+      fs.outputJson(
         composePath(dir),
         this.toObject(),
         (err) => {
           if (err) return reject(err);
           return resolve();
-        },
-      );
-    });
+        }),
+    );
   }
 
   static load(bitPath: string): BitJson {

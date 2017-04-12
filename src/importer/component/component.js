@@ -6,8 +6,6 @@ import { ComponentObject, Source, Doclet, Log, SpecsResults, Ci } from './compon
 import {
   NO_PLUGIN_TYPE,
   VERSION_DELIMITER,
-  DEFAULT_DIST_DIRNAME,
-  DEFAULT_BUNDLE_FILENAME,
   DEFAULT_LICENSE_FILENAME,
 } from '../../constants';
 import BitJson from '../../bit-json';
@@ -73,14 +71,14 @@ export default class Component {
     );
   }
 
-  write(moduleDir: string): Promise<void[]> {
+  write(moduleDir: string): Promise<any[]> {
     const componentDir = this.buildComponentPath(moduleDir);
     return Promise.all(
       [
         this.writeBitJson(componentDir),
         writeSource(componentDir, this.impl.name, this.impl.file),
         writeSource(componentDir, this.specs.name, this.specs.file),
-        this.dist.write(componentDir, this.impl.name),
+        this.dist ? this.dist.write(componentDir, this.impl.name) : null,
         writeSource(componentDir, DEFAULT_LICENSE_FILENAME, this.license.file),
       ]);
   }

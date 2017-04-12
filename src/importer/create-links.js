@@ -20,12 +20,23 @@ export function dependencies(targetComponentsDir: string, map: Object): Promise<
   return new Promise((resolve, reject) => {
     const promises = [];
     Object.keys(map).forEach((component) => {
-      const targetModuleDir = path.join(targetComponentsDir, map[component].loc, MODULES_DIR, MODULE_NAME);
+      const targetModuleDir = path.join(
+        targetComponentsDir,
+        map[component].loc,
+        MODULES_DIR,
+        MODULE_NAME,
+      );
+
       map[component].dependencies.forEach((dependency) => {
         const [box, name] = map[dependency].loc.split(path.sep);
         const targetFile = path.join(targetModuleDir, box, name, 'index.js');
         const relativeComponentsDir = path.join(...Array(8).fill('..'));
-        const dependencyDir = path.join(relativeComponentsDir, map[dependency].loc, map[dependency].file);
+        const dependencyDir = path.join(
+          relativeComponentsDir,
+          map[dependency].loc,
+          map[dependency].file,
+        );
+
         promises.push(writeFile(targetFile, linkTemplate(dependencyDir)));
       });
     });
@@ -33,12 +44,18 @@ export function dependencies(targetComponentsDir: string, map: Object): Promise<
   });
 }
 
-export function publicApi(targetModuleDir: string, map: Object, components: Array<Object>): Promise<*> {
+export function publicApi(targetModuleDir: string, map: Object, components: Array<Object>):
+Promise<*> {
   return Promise.all(components.map(({ component }) => {
     const targetDir = path.join(targetModuleDir, component.box, component.name, 'index.js');
     const componentId = componentToString(component);
     const relativeComponentsDir = path.join(...Array(4).fill('..'), COMPONENTS_DIRNAME);
-    const dependencyDir = path.join(relativeComponentsDir, map[componentId].loc, map[componentId].file);
+    const dependencyDir = path.join(
+      relativeComponentsDir,
+      map[componentId].loc,
+      map[componentId].file,
+    );
+
     return writeFile(targetDir, linkTemplate(dependencyDir));
   }));
 }

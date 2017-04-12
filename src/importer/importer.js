@@ -2,7 +2,7 @@
 import R from 'ramda';
 import importComponents from 'bit-scope-client';
 import path from 'path';
-import responseMock from './response-mock';
+// import responseMock from './response-mock';
 import modelOnFs from './model-on-fs';
 // import locateConsumer from '../consumer/locate-consumer';
 import BitJson from '../bit-json';
@@ -37,12 +37,10 @@ Promise<string[]> {
 }
 
 export default (componentIds: string[]) => {
-  // TODO - replace with cwd this is mock
-  // const projectRoot = '/Users/ran/bit-playground/consumers/test-bit-js' || process.cwd();
   const projectRoot = process.cwd();
   const targetModuleDir = path.join(projectRoot, MODULES_DIR, MODULE_NAME);
   const targetComponentsDir = path.join(projectRoot, COMPONENTS_DIRNAME);
-  const projectBitJson = BitJson.load(projectRoot);
+  // const projectBitJson = BitJson.load(projectRoot);
   let components;
 
   return getIdsFromBitJsonIfNeeded(componentIds, projectRoot)

@@ -35,7 +35,7 @@ export default class Dist extends Source {
     });
 
     return Promise.all([distP, sourceMapP])
-    .then(([distPath, SourceMapPath]) => distFilePath);
+    .then(([distPath, SourceMapPath]) => distFilePath); // eslint-disable-line
     // TODO - refactor to use the source map as returned value
   }
 

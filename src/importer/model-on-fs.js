@@ -15,6 +15,5 @@ function modelComponent({ component, dependencies }, targetModuleDir) {
 }
 
 export default (componentDependenciesArr: componentDependencies[], targetComponentDir: string):
-Promise<void[]> => {
-  return Promise.all(componentDependenciesArr.map(cd => modelComponent(cd, targetComponentDir)));
-};
+Promise<void[]> =>
+Promise.all(componentDependenciesArr.map(cd => modelComponent(cd, targetComponentDir)));
