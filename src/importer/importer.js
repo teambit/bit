@@ -81,8 +81,8 @@ export default (componentIds: string[]) => {
 
   return getIdsFromBitJsonIfNeeded(componentIds, projectRoot)
   .then((ids) => { // eslint-disable-line
-    // return importComponents(ids);
-    return Promise.resolve(responseMock); // mock - replace to the real importer
+    return importComponents(ids);
+    // return Promise.resolve(responseMock); // mock - replace to the real importer
   })
   .then((responses) => {
     components = R.unnest(responses.map(R.prop('payload')));
