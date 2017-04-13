@@ -7,10 +7,13 @@ import modelOnFs from './model-on-fs';
 import { componentDependencies } from './model-on-fs';
 // import locateConsumer from '../consumer/locate-consumer';
 import BitJson from '../bit-json';
-import { MODULE_NAME, MODULES_DIR, COMPONENTS_DIRNAME, ID_DELIMITER } from '../constants';
-import componentsMap from './components-map';
+import { MODULE_NAME, MODULES_DIR, COMPONENTS_DIRNAME, INLINE_COMPONENTS_DIRNAME, ID_DELIMITER } from '../constants';
+import * as componentsMap from './components-map';
 import * as createLinks from './create-links';
 import parseBitFullId from '../bit-id/parse-bit-full-id';
+
+const projectRoot = process.cwd();
+const targetComponentsDir = path.join(projectRoot, COMPONENTS_DIRNAME);
 
  // TODO - inject bitJson instead of load it
 export const readIdsFromBitJson = (consumerPath: string) =>
@@ -39,7 +42,7 @@ Promise<string[]> {
 }
 
 function saveIdsToBitJsonIfNeeded(componentIds: string[], components: componentDependencies[],
-  projectBitJson: BitJson, projectRoot: string): Promise<*> {
+  projectBitJson: BitJson): Promise<*> {
   return new Promise((resolve, reject) => {
     if (!componentIds || R.isEmpty(componentIds)) return resolve();
     let bitJsonHasChanged = false;
@@ -60,10 +63,18 @@ function saveIdsToBitJsonIfNeeded(componentIds: string[], components: componentD
   });
 }
 
-export default (componentIds: string[]) => {
-  const projectRoot = process.cwd();
+export function bind() {
   const targetModuleDir = path.join(projectRoot, MODULES_DIR, MODULE_NAME);
-  const targetComponentsDir = path.join(projectRoot, COMPONENTS_DIRNAME);
+  const targetInlineComponentsDir = path.join(projectRoot, INLINE_COMPONENTS_DIRNAME);
+  const projectBitJson = BitJson.load(projectRoot);
+  return componentsMap.build(targetComponentsDir)
+    .then(map => createLinks.dependencies(targetComponentsDir, map, projectBitJson))
+    .then(map => createLinks.publicApi(targetModuleDir, map, projectBitJson))
+    .then(() => componentsMap.buildForInline(targetInlineComponentsDir, projectBitJson))
+    .then(inlineMap => createLinks.publicApiForInlineComponents(targetModuleDir, inlineMap));
+}
+
+export default (componentIds: string[]) => {
   const projectBitJson = BitJson.load(projectRoot);
   projectBitJson.validateDependencies();
   let components;
@@ -78,7 +89,5 @@ export default (componentIds: string[]) => {
     return modelOnFs(components, targetComponentsDir);
   })
   .then(() => saveIdsToBitJsonIfNeeded(componentIds, components, projectBitJson, projectRoot))
-  .then(() => componentsMap(targetComponentsDir))
-  .then(map => createLinks.dependencies(targetComponentsDir, map))
-  .then(map => createLinks.publicApi(targetModuleDir, map, projectBitJson));
+  .then(bind);
 };
