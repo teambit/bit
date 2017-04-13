@@ -1,6 +1,6 @@
 {
   "name": "bitjs",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint src && flow check || true",
@@ -9,7 +9,7 @@
     "watch": "babel watch src -d dist --source-maps",
     "build-debug": "babel src -d dist --source-maps"
   },
-  "bin":{
+  "bin": {
     "bitjs": "bin/bitjs.js"
   },
   "homepage": "https://github.com/teambit/bit-js",
