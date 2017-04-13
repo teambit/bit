@@ -1,4 +1,7 @@
+#!/usr/bin/env node
+
 /* eslint-disable */
+'use strict';
 var importer = require('../dist/importer/index.js');
 var ids = process.argv.slice(2);
 

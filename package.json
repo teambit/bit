@@ -1,5 +1,5 @@
 {
-  "name": "bit-js",
+  "name": "bitjs",
   "version": "0.2.2",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
@@ -8,6 +8,9 @@
     "build": "babel src -d dist",
     "watch": "babel watch src -d dist --source-maps",
     "build-debug": "babel src -d dist --source-maps"
+  },
+  "bin":{
+    "bitjs": "bin/bitjs.js"
   },
   "homepage": "https://github.com/teambit/bit-js",
   "repository": {
