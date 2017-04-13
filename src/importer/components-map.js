@@ -7,10 +7,11 @@ import {
   ID_DELIMITER,
   DEFAULT_BUNDLE_FILENAME,
   DEFAULT_DIST_DIRNAME,
+  NO_PLUGIN_TYPE,
 } from '../constants';
 
 function getRequiredFile(bitJson: BitJson): string {
-  return bitJson.compiler ?
+  return !bitJson.compiler || bitJson.compiler !== NO_PLUGIN_TYPE ?
     path.join(DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME) : bitJson.impl;
 }
 

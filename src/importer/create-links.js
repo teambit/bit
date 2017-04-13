@@ -34,18 +34,26 @@ function findAllDependenciesInComponentMap(componentsMap: Object, components: Ar
   return dependenciesArr;
 }
 
-function filterNonReferencedComponents(componentsMap: Object, projectBitJson: BitJson):
-Array<string> {
+function filterNonReferencedComponents(
+  componentsMap: Object, projectBitJson: BitJson,
+): Array<string> {
+  if (
+    !projectBitJson.dependencies ||
+    R.isEmpty(projectBitJson.dependencies) ||
+    !componentsMap ||
+    R.isEmpty(componentsMap)
+  ) return [];
+
+  const bitJsonComponents = projectBitJson.getDependenciesArray();
   const componentsOnFS = Object.keys(componentsMap);
-  const bitJsonComponents = Object.keys(projectBitJson.dependencies).map(id => id
-  + VERSION_DELIMITER + projectBitJson.dependencies[id]);
   const components = componentsOnFS.filter(component => bitJsonComponents.includes(component));
   const componentDependencies = findAllDependenciesInComponentMap(componentsMap, bitJsonComponents);
   return R.uniq(components.concat(componentDependencies));
 }
 
-export function dependencies(targetComponentsDir: string, map: Object, projectBitJson: BitJson):
-Promise<Object> {
+export function dependencies(
+  targetComponentsDir: string, map: Object, projectBitJson: BitJson,
+): Promise<Object> {
   return new Promise((resolve, reject) => {
     const promises = [];
     const components = filterNonReferencedComponents(map, projectBitJson);
@@ -75,6 +83,8 @@ Promise<Object> {
 }
 
 export function publicApiForInlineComponents(targetModuleDir: string, inlineMap: Object) {
+  if (!inlineMap || R.isEmpty(inlineMap)) return Promise.resolve();
+
   return Promise.all(Object.keys(inlineMap).map((id) => {
     const [box, name] = id.split(path.sep);
     const targetDir = path.join(targetModuleDir, box, name, 'index.js');
@@ -86,6 +96,10 @@ export function publicApiForInlineComponents(targetModuleDir: string, inlineMap:
 
 export function publicApi(targetModuleDir: string, map: Object, projectBitJson: BitJson):
 Promise<*> {
+  if (!projectBitJson.dependencies || R.isEmpty(projectBitJson.dependencies)) {
+    return Promise.resolve();
+  }
+
   return Promise.all(Object.keys(projectBitJson.dependencies).map((id) => {
     const [, box, name] = id.split(ID_DELIMITER);
     const targetDir = path.join(targetModuleDir, box, name, 'index.js');

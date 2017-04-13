@@ -9,12 +9,12 @@ const { InvalidBitJsonException, DuplicateComponentException } = require('../exc
 const composePath = p => path.join(p, BIT_JSON_NAME);
 
 class BitJson {
-  impl: string;
-  spec: string;
-  compiler: string;
-  tester: string;
-  dependencies: {[string]: string};
-  packageDepndencies: {[string]: string};
+  impl: ?string;
+  spec: ?string;
+  compiler: ?string;
+  tester: ?string;
+  dependencies: ?{[string]: string};
+  packageDepndencies: ?{[string]: string};
   dependencyMap: ?DependencyMap;
 
   constructor(bitJson: Object) {
@@ -61,6 +61,7 @@ class BitJson {
   }
 
   validateDependencies(): void {
+    if (!this.dependencies || R.isEmpty(this.dependencies)) return;
     const dependenciesArr = Object.keys(this.dependencies);
     const boxesAndNames = dependenciesArr
       .map(dependency => dependency.substring(dependency.indexOf(ID_DELIMITER) + 1));
@@ -81,7 +82,7 @@ class BitJson {
     );
   }
 
-  static load(bitPath: string): BitJson {
+  static load(bitPath: string): ?BitJson {
     const readJson = p => JSON.parse(fs.readFileSync(p, 'utf8'));
     const composeBitJsonPath = p => path.join(p, BIT_JSON_NAME);
     const bitJsonPath = composeBitJsonPath(bitPath);
@@ -89,6 +90,7 @@ class BitJson {
     try {
       return new BitJson(readJson(bitJsonPath));
     } catch (e) {
+      if (e.code === 'ENOENT') return new BitJson({});
       throw new InvalidBitJsonException(e, bitJsonPath);
     }
   }

@@ -2,7 +2,7 @@
 import R from 'ramda';
 import importComponents from 'bit-scope-client';
 import path from 'path';
-// import responseMock from './response-mock';
+import responseMock from './response-mock';
 import modelOnFs from './model-on-fs';
 import { componentDependencies } from './model-on-fs';
 // import locateConsumer from '../consumer/locate-consumer';
@@ -49,11 +49,11 @@ function saveIdsToBitJsonIfNeeded(componentIds: string[], components: componentD
     componentIds.forEach((componentId) => {
       const objId = parseBitFullId({ id: componentId });
       const strId = objId.scope + ID_DELIMITER + objId.box + ID_DELIMITER + objId.name;
-      if (!projectBitJson.dependencies[strId]) {
+      if (projectBitJson.dependencies && !projectBitJson.dependencies[strId]) {
         const component = components.find(item => item.component.scope === objId.scope
         && item.component.box === objId.box && item.component.name === objId.name);
         /* eslint no-param-reassign: ["error", { "props": false }] */
-        projectBitJson.dependencies[strId] = component.component.version;
+        projectBitJson.dependencies[strId] = component && component.component.version;
         bitJsonHasChanged = true;
       }
     });
@@ -81,8 +81,8 @@ export default (componentIds: string[]) => {
 
   return getIdsFromBitJsonIfNeeded(componentIds, projectRoot)
   .then((ids) => { // eslint-disable-line
-    return importComponents(ids);
-    // return Promise.resolve(responseMock); // mock - replace to the real importer
+    // return importComponents(ids);
+    return Promise.resolve(responseMock); // mock - replace to the real importer
   })
   .then((responses) => {
     components = R.unnest(responses.map(R.prop('payload')));
