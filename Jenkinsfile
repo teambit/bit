@@ -25,7 +25,7 @@ pipeline {
 
 			}
 		}
-	stage('build linux') {
+	stage('build mac') {
 		steps {
 			sh('./scripts/build-tar.sh mac')
 			sh('./scripts/build-brew.sh')
