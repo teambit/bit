@@ -27,11 +27,9 @@ pipeline {
 		}
 	stage('build linux') {
 		steps {
-			sh("npm i -g bit-bin")
 			sh('./scripts/build-tar.sh mac')
 			sh('./scripts/build-brew.sh')
 			sh("npm i -g")
-			sh("./tests/e2e.sh")
 			script {
 			def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
 			def repo = "${env.EXTERNAL_REPO}"
