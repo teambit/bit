@@ -6,6 +6,7 @@ import InvalidBitJsonException from './invalid-bit-json';
 import NoConsumerFoundException from './no-consumer-found';
 import InvalidVersionException from './invalid-version';
 import MultipleScopesNoDefException from './multiple-scopes-no-def';
+import DuplicateComponentException from './duplicate-component';
 
 export {
   ComponentNotExistsException,
@@ -16,4 +17,5 @@ export {
   NoConsumerFoundException,
   InvalidVersionException,
   MultipleScopesNoDefException,
+  DuplicateComponentException,
 };

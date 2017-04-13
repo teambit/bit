@@ -2,9 +2,9 @@
 const R = require('ramda');
 const fs = require('fs-extra');
 const path = require('path');
-const { BIT_JSON_NAME, VERSION_DELIMITER } = require('../constants');
+const { BIT_JSON_NAME, VERSION_DELIMITER, ID_DELIMITER } = require('../constants');
 const DependencyMap = require('../dependency-map');
-const { InvalidBitJsonException } = require('../exceptions');
+const { InvalidBitJsonException, DuplicateComponentException } = require('../exceptions');
 
 const composePath = p => path.join(p, BIT_JSON_NAME);
 
@@ -58,6 +58,15 @@ class BitJson {
       dependencies: this.dependencies,
       packageDepndencies: this.packageDepndencies,
     };
+  }
+
+  validateDependencies(): void {
+    const dependenciesArr = Object.keys(this.dependencies);
+    const boxesAndNames = dependenciesArr
+      .map(dependency => dependency.substring(dependency.indexOf(ID_DELIMITER) + 1));
+    if (R.uniq(boxesAndNames).length !== dependenciesArr.length) {
+      throw new DuplicateComponentException();
+    }
   }
 
   write(dir: string): Promise<?Error> {
