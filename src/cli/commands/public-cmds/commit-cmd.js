@@ -17,6 +17,6 @@ export default class Export extends Command {
   }
 
   report(c: Component): string {
-    return `component ${c.box}/${c.name} commited succesfully`;
+    return `component ${c.box}/${c.name} committed successfully`;
   }
 }

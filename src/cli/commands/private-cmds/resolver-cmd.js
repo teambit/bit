@@ -9,7 +9,7 @@ class ResolverSet extends Command {
   alias = 's';
   private = true;
   opts = [];
-  
+
   action([resolverPath, ]: [string, ]): Promise<any> {
     if (!resolverPath) {
       // @TODO mandatory arguments do not work for sub commands - please fix !
@@ -21,7 +21,7 @@ class ResolverSet extends Command {
   }
 
   report(resolverPath): string {
-    return `resovler path has changed sucessfully to - ${chalk.yellow(resolverPath)}`;
+    return `resovler path has changed successfully to - ${chalk.yellow(resolverPath)}`;
   }
 }
 
@@ -30,13 +30,13 @@ class ResolverReset extends Command {
   description = 'reset remote resolver to default resolver';
   alias = 'r';
   opts = [];
-  
+
   action(): Promise<any> {
     return resetResolver(process.cwd());
   }
 
   report(): string {
-    return 'resovler path has successfully reset to deafult';
+    return 'resovler path has successfully reset to default';
   }
 }
 
@@ -59,7 +59,7 @@ export default class Resolver extends Command {
     if (!resovlerPath) {
       return 'there is no resolver path, bit uses the default resolver';
     }
-    
+
     return chalk.yellow(resovlerPath);
   }
 }

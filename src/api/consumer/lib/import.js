@@ -25,8 +25,8 @@ export default function importAction(
   }): Promise<Bit[]> {
   function importEnvironment(consumer) {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
-    
-    // TODO - import enviroment on multiple environments
+
+    // TODO - import environment on multiple environments
     return consumer.importEnvironment(ids[0], verbose)
     .then((envDependencies) => {
       function writeToBitJsonIfNeeded() {
@@ -42,7 +42,7 @@ export default function importAction(
 
         return Promise.resolve(true);
       }
-      
+
       return writeToBitJsonIfNeeded()
       .then(() => ({ envDependencies }));
     });
@@ -93,7 +93,7 @@ function compatibleWith(a: { [string]: string }, b: { [string]: string, }): bool
   if (aType === 'V' && bType === 'V') { return semver.eq(aVersion, bVersion); }
   if (aType === 'V' && bType === 'R') { return semver.satisfies(aVersion, bVersion); }
   if (aType === 'R' && bType === 'V') { return semver.satisfies(bVersion, aVersion); }
-  if (aType === 'R' && bType === 'R') { 
+  if (aType === 'R' && bType === 'R') {
     if (aVersion.startsWith('^') && (bVersion.startsWith('^'))) {
       const aMajorVersion = parseInt(aVersion[1], 10);
       const bMajorVersion = parseInt(bVersion[1], 10);
