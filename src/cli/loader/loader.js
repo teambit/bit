@@ -12,36 +12,36 @@ type Loader = {
   get: () => ?Loader
 }
 
-const start = (text: ?string): Loader => {
+const start = (text: ?string): ?Loader => {
   if (_loader) {
     if (text) _loader.text = text;
     _loader.start();
   }
 
-  return loader;
+  return _loader;
 };
 
-const setText = (text: string): Loader => {
+const setText = (text: string): ?Loader => {
   if (_loader) _loader.text = text;
-  return loader;
+  return _loader;
 };
 
 const get = (): ?Loader => _loader;
 
-const stop = (): Loader => {
+const stop = (): ?Loader => {
   if (_loader) _loader.stop();
-  return loader;
+  return _loader;
 };
 
 const on = (): Loader => {
   if (!_loader) _loader = ora({ text: '' });
-  return loader;
+  return _loader;
 };
 
-const off = (): Loader => {
+const off = (): ?Loader => {
   stop();
   _loader = null;
-  return loader;
+  return _loader;
 };
 
 const loader: Loader = {
