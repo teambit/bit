@@ -3,8 +3,7 @@ import R from 'ramda';
 import importComponents from 'bit-scope-client';
 import path from 'path';
 import responseMock from './response-mock';
-import modelOnFs from './model-on-fs';
-import { componentDependencies } from './model-on-fs';
+import modelOnFs, { type componentDependencies } from './model-on-fs';
 // import locateConsumer from '../consumer/locate-consumer';
 import BitJson from '../bit-json';
 import { MODULE_NAME, MODULES_DIR, COMPONENTS_DIRNAME, INLINE_COMPONENTS_DIRNAME, ID_DELIMITER } from '../constants';
@@ -63,7 +62,7 @@ function saveIdsToBitJsonIfNeeded(componentIds: string[], components: componentD
   });
 }
 
-export function bind() {
+export function bindAction(): Promise<any> {
   const targetModuleDir = path.join(projectRoot, MODULES_DIR, MODULE_NAME);
   const targetInlineComponentsDir = path.join(projectRoot, INLINE_COMPONENTS_DIRNAME);
   const projectBitJson = BitJson.load(projectRoot);
@@ -74,7 +73,7 @@ export function bind() {
     .then(inlineMap => createLinks.publicApiForInlineComponents(targetModuleDir, inlineMap));
 }
 
-export default (componentIds: string[]) => {
+export function fetchAction(componentIds: string[]): Promise<any> {
   const projectBitJson = BitJson.load(projectRoot);
   projectBitJson.validateDependencies();
   let components;
@@ -89,5 +88,13 @@ export default (componentIds: string[]) => {
     return modelOnFs(components, targetComponentsDir);
   })
   .then(() => saveIdsToBitJsonIfNeeded(componentIds, components, projectBitJson, projectRoot))
-  .then(bind);
-};
+}
+
+export function watchAction(): Promise<any> {
+  // TODO - implement
+  return Promise.reject('not implemented');
+}
+
+export function importAction(componentIds: string[]): Promise<any> {
+  return fetchAction(componentIds).then(bindAction);
+}

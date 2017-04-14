@@ -35,6 +35,7 @@
     "fs-extra": "^2.1.2",
     "glob": "^7.1.1",
     "mockery": "^2.0.0",
+    "ora": "^1.2.0",
     "ramda": "^0.22.1",
     "require-from-string": "^1.2.1",
     "stack-trace": "0.0.9",

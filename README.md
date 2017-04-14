@@ -1,41 +1,47 @@
-# Bit driver for nodejs
+# Bit driver for javascript
 
 For more information on Bit drivers, head over this Bit's wiki page [about this
 topic](https://github.com/teambit/bit/wiki/Bit-Drivers).
 
-### Installing Bit-node.
+## Installing bitjs
 
 ```sh
-npm install bit-js -s
+npm install bitjs -g
 ```
 
-### Requiring components
+## enabling autocompletions
 
-First, you need to require the bit-node module:
+#### If you are using bash
 
-```js
-const bit = require('bit-js');
+```bash
+# For bash
+source <(bitjs completion bash)
+
+# or add it to your .bashrc to make it persist
+echo "source <(bitjs completion bash)" >> ~/.bashrc
 ```
 
-After requiring the module, you can use any component from your bit.json file.
+#### If you are using zsh
 
-```js
-const isString = bit('isString');
+```bash
+# For zsh
+source <(bitjs completion zsh)
+
+# or add it to your .zshrc to make it persist
+echo "source <(bitjs completion zsh)" >> ~/.zshrc
 ```
 
-Calling component is simple :)
+#### If you are using fish
 
-```js
-console.log(isString('Hello World!');
+```bash
+# For fish
+source <(bitjs completion fish)
+
+# or add it to your config.fish to make it persist
+echo "source <(bitjs completion fish)" >> ~/.config/fish/config.fish
 ```
 
-If your component is in a box, you can use it like that:
-
-```js
-isString = bit('string/is');
-```
-
-## Contributing to Bit-node
+## Contributing to bitjs
 
 Contributions are always welcome, no matter how large or small. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
 
