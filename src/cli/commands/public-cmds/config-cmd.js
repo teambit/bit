@@ -30,7 +30,7 @@ export default class Config extends Command {
 
 class ConfigSet extends Command {
   name = 'set <key> <val>';
-  description = 'set a glboal configuration';
+  description = 'set a global configuration';
   alias = '';
   opts = [
   ];

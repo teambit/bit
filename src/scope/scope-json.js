@@ -40,7 +40,7 @@ export class ScopeJson {
       }).join('');
 
     if (!cleanName) {
-      throw new Error('scope name created by directory name have to contains at least one charecter or number');
+      throw new Error('scope name created by directory name have to contains at least one character or number');
     }
 
     this._name = cleanName;
@@ -70,17 +70,17 @@ export class ScopeJson {
     this[key] = val;
     return this;
   }
-  
+
   get(key: string) : string{
     if (!this.hasOwnProperty(key)) throw `unknown key ${key}`;
     return this[key];
   }
-  
+
   del(key: string) : string{
     if (!this.hasOwnProperty(key)) throw `unknown key ${key}`;
     return this[key];
   }
-  
+
   addRemote(remote: Remote) {
     this.remotes[remote.name] = remote.host;
     return this;
@@ -98,7 +98,7 @@ export class ScopeJson {
   static loadFromJson(json: string) {
     return new ScopeJson(JSON.parse(json));
   }
-  
+
   getPopulatedLicense() : Promise<string> {
     if (!this.get('license') || !existsSync(this.get('license'))) return Promise.resolve();
     return readFile(this.get('license')).then(license => license.toString());

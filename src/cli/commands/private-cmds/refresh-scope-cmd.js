@@ -14,6 +14,6 @@ export default class RefershScope extends Command {
   }
 
   report(): string {
-    return 'scope updated succesfully';
+    return 'scope updated successfully';
   }
 }
