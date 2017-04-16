@@ -9,6 +9,7 @@ import BitJson from 'bit-scope-client/bit-json';
 import { MODULE_NAME, MODULES_DIR, COMPONENTS_DIRNAME, INLINE_COMPONENTS_DIRNAME, ID_DELIMITER } from '../constants';
 import * as componentsMap from './components-map';
 import * as createLinks from './create-links';
+import watch from './watch';
 
 const projectRoot = process.cwd();
 const targetComponentsDir = path.join(projectRoot, COMPONENTS_DIRNAME);
@@ -95,8 +96,7 @@ export function fetchAction(componentIds: string[]): Promise<any> {
 }
 
 export function watchAction(): Promise<any> {
-  // TODO - implement
-  return Promise.reject('not implemented');
+  return watch(projectRoot);
 }
 
 export function importAction(componentIds: string[]): Promise<any> {
