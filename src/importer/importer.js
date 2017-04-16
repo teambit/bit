@@ -56,7 +56,12 @@ function saveIdsToBitJsonIfNeeded(componentIds: string[], components: Object[],
       }
     });
     if (!bitJsonHasChanged) return resolve();
-    projectBitJson.validateDependencies();
+    try {
+      projectBitJson.validateDependencies();
+    } catch (e) {
+      return reject(e);
+    }
+
     return projectBitJson.write(projectRoot).then(resolve).catch(reject);
   });
 }
@@ -74,7 +79,11 @@ export function bindAction(): Promise<any> {
 
 export function fetchAction(componentIds: string[]): Promise<any> {
   const projectBitJson = BitJson.load(projectRoot);
-  projectBitJson.validateDependencies();
+  try {
+    projectBitJson.validateDependencies();
+  } catch (e) {
+    return Promise.reject(e);
+  }
 
   return getIdsFromBitJsonIfNeeded(componentIds, projectRoot)
   .then((ids) => { // eslint-disable-line

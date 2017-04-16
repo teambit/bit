@@ -3,10 +3,23 @@ import prog from 'caporal';
 import pkg from '../../package.json';
 import loader from './loader';
 import commands from './commands/command-list';
+import chalk from 'chalk';
+
+function bitError(message) {
+  return chalk.red(
+    message.split('\n') // eslint-disable-line
+    .map(m => `bitjs ERR! ${m}`)
+    .join('\n') + '\n',
+  );
+}
 
 function errorHandler(e) {
   loader.off();
-  console.error(e); // eslint-disable-line
+  process.stderr.write(bitError(e.message));
+  if (e.code) {
+    process.stderr.write(bitError(`\ncode: ${e.code}\n`));
+  }
+  process.stderr.write(bitError(e.stack));
   process.exit(1);
 }
 

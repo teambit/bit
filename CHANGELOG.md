@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add pretty error handling to the command registrar
 - Move the writing-to-fs functionality to [bit-scope-client](https://github.com/teambit/bit-scope-client) project
 - Add opts to the load function
 - Add resolve function
