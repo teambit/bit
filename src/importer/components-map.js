@@ -1,7 +1,7 @@
 // @flow
 import glob from 'glob';
 import path from 'path';
-import BitJson from '../bit-json';
+import BitJson from 'bit-scope-client/bit-json';
 import {
   VERSION_DELIMITER,
   ID_DELIMITER,

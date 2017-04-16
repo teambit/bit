@@ -34,8 +34,6 @@ export const SCOPE_JSON_NAME = 'scope.json';
 
 export const LATEST_VERSION = 'latest';
 
-export const BIT_VERSION = packageFile.version;
-
 export const COMPONENTS_DIRNAME = 'components';
 
 export const INLINE_COMPONENTS_DIRNAME = 'inline_components';
@@ -50,11 +48,7 @@ export const NO_PLUGIN_TYPE = 'none';
 
 export const DEFAULT_BUNDLE_FILENAME = 'dist.js';
 
-export const DEFAULT_LICENSE_FILENAME = 'LICENSE';
-
 export const DEFAULT_DIST_DIRNAME = 'dist';
-
-export const DEPENDENCIES_MAP_NAME = 'dependencies.json';
 
 export const MODULE_NAME = 'bit';
 

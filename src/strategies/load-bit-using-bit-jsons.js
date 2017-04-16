@@ -4,7 +4,7 @@ const R = require('ramda');
 const { ID_DELIMITER, BIT_JSON_NAME } = require('../constants');
 const resolveBit = require('../bit-resolver');
 const stackTrace = require('stack-trace');
-const BitJson = require('../bit-json');
+const BitJson = require('bit-scope-client/bit-json');
 
 module.exports = (consumer, boxName, bitName, opts) => { // eslint-disable-line
   let dependencyMap = null;

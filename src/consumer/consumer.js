@@ -1,7 +1,7 @@
 const path = require('path');
 const { readDependenciesMap } = require('./consumer-utils');
 const { INLINE_BITS_DIRNAME, BITS_DIRNAME } = require('../constants.js');
-const BitJson = require('../bit-json');
+const BitJson = require('bit-scope-client/bit-json');
 
 class Consumer {
   constructor(consumerPath) {

@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import BitJson from '../bit-json';
+import BitJson from 'bit-scope-client/bit-json';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME } from '../constants';
 import { ComponentNotExistsInException } from '../exceptions';
 

@@ -2,14 +2,13 @@
 import R from 'ramda';
 import importComponents from 'bit-scope-client';
 import path from 'path';
+import { parseBitFullId } from 'bit-scope-client/bit-id';
+import BitJson from 'bit-scope-client/bit-json';
 import responseMock from './response-mock';
-import modelOnFs, { type componentDependencies } from './model-on-fs';
 // import locateConsumer from '../consumer/locate-consumer';
-import BitJson from '../bit-json';
 import { MODULE_NAME, MODULES_DIR, COMPONENTS_DIRNAME, INLINE_COMPONENTS_DIRNAME, ID_DELIMITER } from '../constants';
 import * as componentsMap from './components-map';
 import * as createLinks from './create-links';
-import parseBitFullId from '../bit-id/parse-bit-full-id';
 
 const projectRoot = process.cwd();
 const targetComponentsDir = path.join(projectRoot, COMPONENTS_DIRNAME);
@@ -40,7 +39,7 @@ Promise<string[]> {
   });
 }
 
-function saveIdsToBitJsonIfNeeded(componentIds: string[], components: componentDependencies[],
+function saveIdsToBitJsonIfNeeded(componentIds: string[], components: Object[],
   projectBitJson: BitJson): Promise<*> {
   return new Promise((resolve, reject) => {
     if (!componentIds || R.isEmpty(componentIds)) return resolve();
@@ -76,18 +75,14 @@ export function bindAction(): Promise<any> {
 export function fetchAction(componentIds: string[]): Promise<any> {
   const projectBitJson = BitJson.load(projectRoot);
   projectBitJson.validateDependencies();
-  let components;
 
   return getIdsFromBitJsonIfNeeded(componentIds, projectRoot)
   .then((ids) => { // eslint-disable-line
     return importComponents(ids);
     // return Promise.resolve(responseMock); // mock - replace to the real importer
   })
-  .then((responses) => {
-    components = R.unnest(responses.map(R.prop('payload')));
-    return modelOnFs(components, targetComponentsDir);
-  })
-  .then(() => saveIdsToBitJsonIfNeeded(componentIds, components, projectBitJson, projectRoot))
+  .then(components => saveIdsToBitJsonIfNeeded(componentIds,
+    components, projectBitJson, projectRoot));
 }
 
 export function watchAction(): Promise<any> {

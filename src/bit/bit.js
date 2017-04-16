@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const requireFromString = require('require-from-string');
 const { NO_PLUGIN_TYPE } = require('../constants');
-const BitJson = require('../bit-json');
+const BitJson = require('bit-scope-client/bit-json');
 const resolveFromFullId = require('../bit-resolver/resolve-from-full-id');
 
 class Bit {
