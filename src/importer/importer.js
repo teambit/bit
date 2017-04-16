@@ -1,10 +1,10 @@
 // @flow
 import R from 'ramda';
-import importComponents from 'bit-scope-client';
+import { importComponents } from 'bit-scope-client';
 import path from 'path';
 import { parseBitFullId } from 'bit-scope-client/bit-id';
 import BitJson from 'bit-scope-client/bit-json';
-import responseMock from './response-mock';
+// import responseMock from './response-mock';
 // import locateConsumer from '../consumer/locate-consumer';
 import { MODULE_NAME, MODULES_DIR, COMPONENTS_DIRNAME, INLINE_COMPONENTS_DIRNAME, ID_DELIMITER } from '../constants';
 import * as componentsMap from './components-map';
