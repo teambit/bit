@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.1] - 2017-04-18
+
 ### Added
 
 - support adding misc files to a bit component
@@ -14,8 +16,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Change
 
-- npm install for bit dependencies will work via temp package.json instead of invoking parallel npmi 
- 
+- npm install for bit dependencies will work via temp package.json instead of invoking parallel npmi
+
+### Fixed
+
+- when exporting and missing @this, show friendly error
+
 ## [0.5.0]
 
 ** breaking change - a scope with this version won't work with consumer with lower versions **
