@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [unreleased]
+
+- write a default bit.json if not exists
+
 ## [0.5.1] - rc (2017-04-16)
 
 - implemented watch for inline_components and bit.json, call bind on every change.
