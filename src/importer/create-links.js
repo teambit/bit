@@ -12,9 +12,18 @@ import { MODULE_NAME,
 
 const linkTemplate = (link: string): string => `module.exports = require('${link}');`;
 
-function writeFile(file: string, content: string): Promise<*> {
+function writeFileP(file: string, content: string): Promise<*> {
   return new Promise((resolve, reject) => {
     fs.outputFile(file, content, (err) => {
+      if (err) return reject(err);
+      return resolve();
+    });
+  });
+}
+
+function removeDirP(dir: string): Promise<*> {
+  return new Promise((resolve, reject) => {
+    fs.remove(dir, (err) => {
       if (err) return reject(err);
       return resolve();
     });
@@ -75,7 +84,7 @@ export function dependencies(
           map[dependency].file,
         );
 
-        promises.push(writeFile(targetFile, linkTemplate(dependencyDir)));
+        promises.push(writeFileP(targetFile, linkTemplate(dependencyDir)));
       });
     });
     Promise.all(promises).then(() => resolve(map)).catch(reject);
@@ -90,7 +99,7 @@ export function publicApiForInlineComponents(targetModuleDir: string, inlineMap:
     const targetDir = path.join(targetModuleDir, box, name, 'index.js');
     const relativeComponentsDir = path.join(...Array(4).fill('..'), INLINE_COMPONENTS_DIRNAME);
     const dependencyDir = path.join(relativeComponentsDir, inlineMap[id].loc, inlineMap[id].file);
-    return writeFile(targetDir, linkTemplate(dependencyDir));
+    return writeFileP(targetDir, linkTemplate(dependencyDir));
   }));
 }
 
@@ -100,13 +109,16 @@ Promise<*> {
     return Promise.resolve();
   }
 
-  return Promise.all(Object.keys(projectBitJson.dependencies).map((id) => {
-    const [, box, name] = id.split(ID_DELIMITER);
-    const targetDir = path.join(targetModuleDir, box, name, 'index.js');
-    const mapId = id + VERSION_DELIMITER + projectBitJson.dependencies[id];
-    const relativeComponentsDir = path.join(...Array(4).fill('..'), COMPONENTS_DIRNAME);
-    if (!map[mapId]) return Promise.resolve(); // the file is in bit.json but not fetched yet
-    const dependencyDir = path.join(relativeComponentsDir, map[mapId].loc, map[mapId].file);
-    return writeFile(targetDir, linkTemplate(dependencyDir));
-  }));
+  return removeDirP(targetModuleDir).then(() => {
+    const writeAllFiles = Object.keys(projectBitJson.dependencies).map((id) => {
+      const [, box, name] = id.split(ID_DELIMITER);
+      const targetDir = path.join(targetModuleDir, box, name, 'index.js');
+      const mapId = id + VERSION_DELIMITER + projectBitJson.dependencies[id];
+      const relativeComponentsDir = path.join(...Array(4).fill('..'), COMPONENTS_DIRNAME);
+      if (!map[mapId]) return Promise.resolve(); // the file is in bit.json but not fetched yet
+      const dependencyDir = path.join(relativeComponentsDir, map[mapId].loc, map[mapId].file);
+      return writeFileP(targetDir, linkTemplate(dependencyDir));
+    });
+    return Promise.all(writeAllFiles);
+  });
 }
