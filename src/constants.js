@@ -53,3 +53,15 @@ export const DEFAULT_DIST_DIRNAME = 'dist';
 export const MODULE_NAME = 'bit';
 
 export const MODULES_DIR = 'node_modules';
+
+export const DEFAULT_IMPL_NAME = 'impl.js';
+
+export const DEFAULT_SPECS_NAME = 'spec.js';
+
+export const DEFAULT_MISC_FILES = [];
+
+export const DEFAULT_COMPILER_ID = NO_PLUGIN_TYPE;
+
+export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
+
+export const DEFAULT_DEPENDENCIES = {};

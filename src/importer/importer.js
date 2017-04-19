@@ -6,7 +6,9 @@ import { parseBitFullId } from 'bit-scope-client/bit-id';
 import BitJson from 'bit-scope-client/bit-json';
 // import responseMock from './response-mock';
 // import locateConsumer from '../consumer/locate-consumer';
-import { MODULE_NAME, MODULES_DIR, COMPONENTS_DIRNAME, INLINE_COMPONENTS_DIRNAME, ID_DELIMITER } from '../constants';
+import { MODULE_NAME, MODULES_DIR, COMPONENTS_DIRNAME, INLINE_COMPONENTS_DIRNAME, ID_DELIMITER,
+  DEFAULT_IMPL_NAME, DEFAULT_SPECS_NAME, NO_PLUGIN_TYPE, DEFAULT_COMPILER_ID, DEFAULT_TESTER_ID,
+  DEFAULT_MISC_FILES, DEFAULT_DEPENDENCIES } from '../constants';
 import * as componentsMap from './components-map';
 import * as createLinks from './create-links';
 import watch from './watch';
@@ -78,8 +80,17 @@ export function bindAction(): Promise<any> {
     .then(inlineMap => createLinks.publicApiForInlineComponents(targetModuleDir, inlineMap));
 }
 
+const defaultProjectBitJson = {
+  impl: DEFAULT_IMPL_NAME,
+  spec: DEFAULT_SPECS_NAME,
+  misc: DEFAULT_MISC_FILES,
+  compiler: DEFAULT_COMPILER_ID,
+  tester: DEFAULT_TESTER_ID,
+  dependencies: DEFAULT_DEPENDENCIES,
+};
+
 export function fetchAction(componentIds: string[]): Promise<any> {
-  const projectBitJson = BitJson.load(projectRoot);
+  const projectBitJson = BitJson.load(projectRoot, defaultProjectBitJson);
   try {
     projectBitJson.validateDependencies();
   } catch (e) {
