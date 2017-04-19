@@ -1,7 +1,7 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs-extra';
-import R, { merge, splitWhen } from 'ramda';
+import R, { merge, splitWhen, mergeAll } from 'ramda';
 import bitJs from 'bit-js';
 import { GlobalRemotes } from '../global-config';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
@@ -514,16 +514,14 @@ export default class Scope {
   
   installEnvironment({ ids, consumer, verbose }:
     { ids: BitId[], consumer?: ?Consumer, verbose?: ?bool }): Promise<any> {
-    const installPackageDependencies = (component: ConsumerComponent) => {
+    const installPackageDependencies = (deps) => {
       const scopePath = this.getPath();
       const nodeModulesDir = consumer ? pathLib.dirname(scopePath) : scopePath;
-      const deps = component.packageDependencies;
       
       loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
       if (verbose) loader.stop(); // in order to show npm install output on verbose flag
       
       return npmInstall({ deps, dir: nodeModulesDir, silent: !verbose })
-        .then(() => component);
     };
     
     return this.getMany(ids)
@@ -537,7 +535,8 @@ export default class Scope {
         
         return writeToProperDir()
           .then((components: ConsumerComponent[]) => {
-            return Promise.all(components.map(installPackageDependencies));
+            const deps = mergeAll(components.map(({ packageDependencies }) => packageDependencies));
+            return installPackageDependencies(deps).then(() => components);
           });
       });
   }
