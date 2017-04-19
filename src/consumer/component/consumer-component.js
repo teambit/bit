@@ -255,6 +255,7 @@ export default class Component {
   Promise<{code: string, map: Object}|null> { // @TODO - write SourceMap Type
     return new Promise((resolve, reject) => {
       if (!this.compilerId) return resolve(null);
+
       const installEnvironmentIfNeeded = (): Promise<any> => {
         if (environment) {
           return scope.installEnvironment({
@@ -263,6 +264,7 @@ export default class Component {
             verbose,
           });
         }
+
         return Promise.resolve();
       };
 

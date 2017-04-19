@@ -25,7 +25,7 @@ export type ComponentTree = {
 
 export type ComponentDef = {
   id: BitId;
-  component: Component;
+  component: ?Component;
 };
 
 export default class SourceRepository {
@@ -48,14 +48,17 @@ export default class SourceRepository {
   }
 
   getMany(ids: BitId[]): Promise<ComponentDef[]> {
-    return Promise.all(ids.map((id) => {
-      return this.get(id).then((component) => {
-        return {
-          id,
-          component
-        };
-      });
-    }));
+    return Promise.all(
+      ids.map((id) => {
+        return this.get(id)
+        .then((component) => {
+          return {
+            id,
+            component
+          };
+        });
+      })
+    );
   }
 
   get(bitId: BitId): Promise<?Component> {
