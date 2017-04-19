@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Fixed
+
+- issue with npm ensure that was caused due to latest version changes
+
 ## [0.5.1] - 2017-04-18
 
 ### Added
