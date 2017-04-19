@@ -3,7 +3,11 @@ Bit components are language agnostic. You can write components in any language y
 
 ### What does the driver do?
 
-The driver resolves the ID of the components you want to use in your code, and using [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) run the component you want to use.
+Drivers are responsible for several tasks:
+
+1. Resolving the `bit.json` file, and fetching all components and dependencies to the `components` directory.
+2. Creating and maintainig all relevant links for the language-specific development environment, with the components imported with Bit.
+  * For example - in JavaScropt, to use a module via `require`, the module will need to be in the `node_modules` direcotry, so in this case the driver maintains a mock-module with links back to the `components` directory, where all components are stored.
 
 **Important** To import and manage components use Bit-CLI. This doc only explains how to use components in your code.
 
@@ -31,20 +35,21 @@ This will add the bit-node package as a dependency.
 
 ## Using JavaScript Components
 
-To use Bit components within your JS code you need to first require bit-node:
+To use Bit components within your JS code you need to first link the components to the `node_modules` directory. This can be done by wither running Bitjs in 'watch' mode, by issueing `bitjs watch` command, or manually with `bit bind`, on every change.
+
+Once all components are linked, you can simply `require` them:
 
 ```js
-const bit = require('bit-js');
-```
-
-Now it's a matter of calling the right components, like so:
-
-```js
-isString = bit('is-string');
-console.log(isString('Hello World');
+const isString = require('bit/is-string');
 ```
 
 That's it :)
+
+## Using JavaScript driver in a build process
+
+If you are using Bit to manage your code components, the components are not a part of the codebase. This means that in order to populate the `components` directory (and all the links in the `node_modules`), you will need to use bitjs.
+
+Bit-js is able to both fetch components, and link them properly using a single command - `bitjs import`. This means that you can simply need to add Bit-js in your `package.json` file for your project, and a post-install hook to run `bitjs import`. This way, after installing all the packages (including bit-js), bit-js will be able to bring all components and link them, so your code will be able to require them.
 
 ### Runtime Dependency Resolution
 
