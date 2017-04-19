@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - write a default bit.json if not exists
+- keep the bit-module in sync with the components map (e.g. remove the node_modules/bit module on every bind action)
 
 ## [0.5.1] - rc (2017-04-16)
 
