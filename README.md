@@ -24,7 +24,7 @@ Bit components can be reused in different contexts (repositories, micro-services
 ## Why Bit
 
 Code components are the fundamental building blocks of any application.
-Different functionalities can and should be reused in different contexts, projects and repositories. In practice, this rarely happens. Building and maintaining an arsenal of tiny repositories and micro-packages for all your different components isn't practical. As a result, people often end up duplicating code everywhere or using vast libraries with static APIs that contain redundant code and dependencies they don’t need. This happens for for a few reasons:
+Different functionalities can and should be reused in different contexts, projects and repositories. In practice, this rarely happens. Building and maintaining an arsenal of tiny repositories and micro-packages for all your different components isn't practical. As a result, people often end up duplicating code everywhere or using vast libraries with static APIs that contain redundant code and dependencies they don’t need. This happens for a few reasons:
 
 * Initial overhead: to create a new repository and package for every small component you would have to create a VCS repository, create the package boilerplate (build, testing, etc.) and somehow make this process practical for a large set of components.
 
