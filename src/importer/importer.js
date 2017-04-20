@@ -9,7 +9,7 @@ import { MODULE_NAME, MODULES_DIR, COMPONENTS_DIRNAME, INLINE_COMPONENTS_DIRNAME
   DEFAULT_IMPL_NAME, DEFAULT_SPECS_NAME, NO_PLUGIN_TYPE, DEFAULT_COMPILER_ID, DEFAULT_TESTER_ID,
   DEFAULT_MISC_FILES, DEFAULT_DEPENDENCIES } from '../constants';
 import * as componentsMap from './components-map';
-import * as createLinks from './create-links';
+import * as linksGenerator from './links-generator';
 import watch from './watch';
 
 const projectRoot = process.cwd();
@@ -46,10 +46,10 @@ export function bindAction(): Promise<any> {
   const targetInlineComponentsDir = path.join(projectRoot, INLINE_COMPONENTS_DIRNAME);
   const projectBitJson = BitJson.load(projectRoot);
   return componentsMap.build(targetComponentsDir)
-    .then(map => createLinks.dependencies(targetComponentsDir, map, projectBitJson))
-    .then(map => createLinks.publicApi(targetModuleDir, map, projectBitJson))
+    .then(map => linksGenerator.dependencies(targetComponentsDir, map, projectBitJson))
+    .then(map => linksGenerator.publicApi(targetModuleDir, map, projectBitJson))
     .then(() => componentsMap.buildForInline(targetInlineComponentsDir, projectBitJson))
-    .then(inlineMap => createLinks.publicApiForInlineComponents(targetModuleDir, inlineMap));
+    .then(inlineMap => linksGenerator.publicApiForInlineComponents(targetModuleDir, inlineMap));
 }
 
 const defaultProjectBitJson = {
