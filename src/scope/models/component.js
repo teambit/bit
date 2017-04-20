@@ -50,6 +50,7 @@ export default class Component extends BitObject {
       Object.keys(this.versions),
       Object.keys(component.versions
     ));
+
     const comparableObject = filterObject(this.versions, (val, key) => !differnece.includes(key));
     return equals(component.versions, comparableObject);
   }

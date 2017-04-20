@@ -547,7 +547,7 @@ export default class Scope {
     verbose?: ?bool
   }): Promise<?any> {
     if (!bitId.isLocal(this.name)) {
-      throw new Error('cannot run specs on remote scopes');
+      throw new Error('cannot run specs on remote component');
     }
 
     return this.loadComponent(bitId)
@@ -563,6 +563,10 @@ export default class Scope {
     consumer?: Consumer,
     verbose?: ?bool
   }): Promise<string> {
+    if (!bitId.isLocal(this.name)) {
+      throw new Error('cannot run build on remote component');
+    }
+
     return this.loadComponent(bitId)
       .then(component => component.build({ scope: this, environment, save, consumer, verbose }));
   }
