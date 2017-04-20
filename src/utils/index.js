@@ -43,6 +43,7 @@ import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
 import deflate from './zlib-deflate';
 import sha1 from './sha1';
 import isString from './is-string';
+import isNumeric from './is-numeric';
 import diff from './array-diff';
 import filterObject from './filter-object';
 import removeContainingDirIfEmpty from './remove-containing-dir-if-empty';
@@ -62,6 +63,7 @@ resolveGroupId,
   rmDir,
   filterObject,
   isString,
+  isNumeric,
   inflate,
   diff,
   deflate,

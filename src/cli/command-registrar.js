@@ -4,7 +4,7 @@ import commander from 'commander';
 import chalk from 'chalk';
 import type Command from './command';
 import defaultHandleError from './default-error-handler';
-import { empty, first } from '../utils';
+import { empty, first, isNumeric } from '../utils';
 import loader from './loader';
 
 
@@ -65,7 +65,7 @@ function execAction(command, concrete, args) {
 
 function serializeErrAndExit(err) {
   process.stderr.write(JSON.stringify(serializeError(err)));
-  if (err.code) return process.exit(err.code);
+  if (err.code && isNumeric(err.code)) return process.exit(err.code);
   return process.exit(1);
 }
 
