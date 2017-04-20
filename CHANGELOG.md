@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - issue with npm ensure that was caused due to latest version changes
+- issue with installing deps from local cache instead of external
+- exit code with only numeric values
 
 ## [0.5.1] - 2017-04-18
 
