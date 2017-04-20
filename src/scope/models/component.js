@@ -5,7 +5,7 @@ import { ScopeMeta } from '../models';
 import { VersionNotFound } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject } from '../../utils';
 import Version from './version';
-import { DEFAULT_BOX_NAME } from '../../constants';
+import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/component';
@@ -21,6 +21,7 @@ export type ComponentProps = {
   box?: string;
   name: string;
   versions?: {[number]: Ref};
+  lang?: string;
 };
 
 export default class Component extends BitObject {
@@ -28,6 +29,7 @@ export default class Component extends BitObject {
   name: string;
   box: string;
   versions: {[number]: Ref};
+  lang: string;
 
   constructor(props: ComponentProps) {
     super();
@@ -35,6 +37,7 @@ export default class Component extends BitObject {
     this.name = props.name;
     this.box = props.box || DEFAULT_BOX_NAME;
     this.versions = props.versions || {};
+    this.lang = props.lang || DEFAULT_LANGUAGE;
   }
 
   get versionArray(): Ref[] {
@@ -107,7 +110,8 @@ export default class Component extends BitObject {
       box: this.box,
       name: this.name,
       scope: this.scope,
-      versions: versions(this.versions)
+      versions: versions(this.versions),
+      lang: this.lang,
     };
   }
 
@@ -165,6 +169,7 @@ export default class Component extends BitObject {
               box: this.box,
               version: componentVersion.version,
               scope: this.scope,
+              lang: this.lang,
               implFile: version.impl.name,
               specsFile: version.specs ? version.specs.name : null,
               miscFiles: version.miscFiles ? version.miscFiles.map(misc => misc.name) : null,
@@ -204,7 +209,8 @@ export default class Component extends BitObject {
       name: rawComponent.name,
       box: rawComponent.box,
       scope: rawComponent.scope,
-      versions: mapObject(rawComponent.versions, val => Ref.from(val))
+      versions: mapObject(rawComponent.versions, val => Ref.from(val)),
+      lang: rawComponent.lang,
     });
   }
 

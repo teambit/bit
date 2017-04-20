@@ -54,6 +54,8 @@ export const DEFAULT_BUNDLE_FILENAME = 'dist.js';
 
 export const DEFAULT_BIT_VERSION = 1;
 
+export const DEFAULT_LANGUAGE = 'javascript';
+
 export const LATEST_BIT_VERSION = 'latest';
 
 export const OBJECTS_DIR = 'objects';

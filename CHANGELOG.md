@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Added
+
+- lang attribute on the bit.json, enable language that will save on the model of the component.
+
 ### Fixed
 
 - issue with npm ensure that was caused due to latest version changes

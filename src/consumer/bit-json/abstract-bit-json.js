@@ -8,6 +8,7 @@ import {
   DEFAULT_SPECS_NAME,
   DEFAULT_DEPENDENCIES,
   NO_PLUGIN_TYPE,
+  DEFAULT_LANGUAGE,
 } from '../../constants';
 
 export type AbstractBitJsonProps = {
@@ -17,6 +18,7 @@ export type AbstractBitJsonProps = {
   compiler?: string;
   tester?: string;
   dependencies?: Object;
+  lang?: string;
 };
 
 export default class AbstractBitJson {
@@ -26,14 +28,24 @@ export default class AbstractBitJson {
   compiler: string;
   tester: string;
   dependencies: {[string]: string};
+  lang: string;
 
-  constructor({ impl, spec, miscFiles, compiler, tester, dependencies }: AbstractBitJsonProps) {
+  constructor({
+    impl,
+    spec,
+    miscFiles,
+    compiler,
+    tester,
+    dependencies,
+    lang,
+  }: AbstractBitJsonProps) {
     this.impl = impl || DEFAULT_IMPL_NAME;
     this.spec = spec || DEFAULT_SPECS_NAME;
     this.miscFiles = miscFiles || [];
     this.compiler = compiler || DEFAULT_COMPILER_ID;
     this.tester = tester || DEFAULT_TESTER_ID;
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
+    this.lang = lang || DEFAULT_LANGUAGE;
   }
 
   get compilerId(): string {
@@ -99,6 +111,7 @@ export default class AbstractBitJson {
 
   toPlainObject(): Object {
     return {
+      lang: this.lang,
       sources: {
         impl: this.getImplBasename(),
         spec: this.getSpecBasename(),
