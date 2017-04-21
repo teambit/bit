@@ -85,3 +85,10 @@ export function watchAction(): Promise<any> {
 export function importAction(componentIds: string[]): Promise<any> {
   return fetchAction(componentIds).then(bindAction);
 }
+
+export const lifecycleHooks = {
+  onCreate: bindAction,
+  onCommit: bindAction,
+  onImport: bindAction,
+  onExport: bindAction,
+};

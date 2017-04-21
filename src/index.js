@@ -1,14 +1,17 @@
+import { lifecycleHooks } from './importer/importer';
+
 const assert = require('assert').ok;
 const R = require('ramda');
 const chalk = require('chalk');
 const path = require('path');
 const stackTrace = require('stack-trace');
 const locateBitEnvironment = require('./consumer/locate-bit-environment');
-const parseBitInlineId = require('./bit-id/parse-bit-inline-id');
+const parseBitInlineId = require('bit-scope-client/bit-id').parseBitInlineId;
 const Consumer = require('./consumer/consumer');
 const { DEFAULT_BOXNAME } = require('./constants');
 const resolveFromFullId = require('./bit-resolver/resolve-from-full-id');
 const { ComponentNotExistsException } = require('./exceptions');
+
 
 function bitError(message) {
   return chalk.red(
@@ -85,5 +88,8 @@ load.mockComponents = (components) => {
 load.loadExact = resolveFromFullId;
 
 load.resolve = bitId => load(bitId, { pathOnly: true });
+
+// TODO: get rid of the entire "load" object, expose only the lifeCycleHooks.
+load.lifecycleHooks = lifecycleHooks;
 
 module.exports = load;
