@@ -65,7 +65,6 @@ export default function importAction(
                                                                           //
           return Promise.resolve(({ dependencies, envDependencies }));    // here we should return { dependencies, envDependencies: [] }
         })
-        .then(allDependencies => consumer.runHook('onImport', allDependencies))
         .then(({ dependencies, envDependencies }) =>
           warnForPackageDependencies({
             dependencies: flattenDependencies(dependencies),
