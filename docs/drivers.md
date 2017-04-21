@@ -44,10 +44,9 @@ Import with destructuring assignment syntax is available as well
 import { isString } from 'bit/utils';
 ``` 
 
-Lastly, to levarage your IDE autocomplete functionality, you might prefer to require 'bit' itself, and get some help from the IDE to navigate to the specific component.
+You can also destructure namespaces from the bit module itself. 
 ```js
-const bit = require('bit');
-bit.util.isString();
+import { utils } from 'bit';
 ```
 
 ### Installing bit-js
