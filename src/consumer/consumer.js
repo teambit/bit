@@ -74,10 +74,10 @@ export default class Consumer {
   }
 
   runHook(hookName, param: *) {
-    if (!this.driver.lifeCycleHooks || !this.driver.lifeCycleHooks[hookName]) {
+    if (!this.driver.lifecycleHooks || !this.driver.lifecycleHooks[hookName]) {
       return Promise.resolve(param); // it's ok for a driver to not implement a hook
     }
-    return this.driver.lifeCycleHooks[hookName](param);
+    return this.driver.lifecycleHooks[hookName](param);
   }
 
   write(): Promise<Consumer> {

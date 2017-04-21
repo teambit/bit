@@ -68,7 +68,7 @@ This will add the bit-node package as a dependency.
 
 1) create a new npm package "bit-driver-yourLanguage".
 2) add the package as bit-bin dependency.
-3) in your new package, expose an object "lifeCycleHooks" with the following functions: `onCreate(component)`, `onCommit(component)`, `onExport(component)`, `onImport(components)`. It's fine to not implement them all if not needed.
+3) in your new package, expose an object "lifecycleHooks" with the following functions: `onCreate(component)`, `onCommit(component)`, `onExport(component)`, `onImport(components)`. It's fine to not implement them all if not needed.
 
 Internally, bit searches for a dependency according to the "lang" attribute specified in bit.json. If the "lang" doesn't start with "bit-driver-", it adds it automatically and search with the new name. For instance, for "lang": "python", it searches for a dependency "bit-driver-python". 
  
