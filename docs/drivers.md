@@ -3,9 +3,22 @@ Bit components are language agnostic. You can write components in any language y
 
 ### What does the driver do?
 
-The driver resolves the ID of the components you want to use in your code, and using [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) run the component you want to use.
+The driver is responsible for a language specific tasks. It gets called upon specific events, for now, when creating, committing, exporting and importing components.
 
-**Important** To import and manage components use Bit-CLI. This doc only explains how to use components in your code.
+For example, when importing a component, Bit downloads them to the 'components' directory. However, in order for a programing lanuage to recognize and work with this directory, some work needs to be done. 
+
+### How to set a driver
+
+By default the language is Javascript, to change it, edit your bit.json file and change the 'lang' attribute.
+
+### How to implement a new driver
+
+1) create a new npm package "bit-driver-yourLanguage".
+2) add the package as bit-bin dependency.
+3) in your new package, expose an object "lifeCycleHooks" with the following functions: `onCreate(component)`, `onCommit(component)`, `onExport(component)`, `onImport(components)`. It's fine to not implement them all if not needed.
+
+Internally, bit searches for a dependency according to the "lang" attribute specified in bit.json. If the "lang" doesn't start with "bit-driver-", it adds it automatically and search with the new name. For instance, for "lang": "python", it searches for a dependency "bit-driver-python". 
+ 
 
 In this docs we will describe all currently available drivers.
 
