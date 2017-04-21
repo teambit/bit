@@ -8,14 +8,15 @@ import paintDocumentation from './docs-template';
 export default (component: ConsumerComponent) => {
   const table = new Table({
     colWidths: [20, 50],
-    wordWrap: true,    
+    wordWrap: true,
   });
 
-  const { name, box, compilerId, testerId, dependencies, packageDependencies, docs } = component;
+  const { name, box, lang, compilerId, testerId, dependencies, packageDependencies, docs } = component;
 
   const rows = [
     { [c.cyan('ID')]: `${box}/${name}` },
     compilerId ? { [c.cyan('Compiler')]: compilerId.toString() }: null,
+    lang ? { [c.cyan('Language')]: lang }: null,
     testerId ? { [c.cyan('Tester')]: testerId.toString() }: null,
     !R.isEmpty(dependencies) ? { [c.cyan('Dependencies')]: dependencies.map(id => id.toString()).join(', ') } : null,
     !R.isEmpty(packageDependencies) ? { [c.cyan('Packages')]: Object.keys(packageDependencies).join(', ') } : null
