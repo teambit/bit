@@ -47,9 +47,11 @@ export function bindAction(): Promise<any> {
   const projectBitJson = BitJson.load(projectRoot);
   return componentsMap.build(targetComponentsDir)
     .then(map => linksGenerator.dependencies(targetComponentsDir, map, projectBitJson))
-    .then(map => linksGenerator.publicApi(targetModuleDir, map, projectBitJson))
+    .then(map => linksGenerator.publicApiComponentLevel(targetModuleDir, map, projectBitJson))
     .then(() => componentsMap.buildForInline(targetInlineComponentsDir, projectBitJson))
-    .then(inlineMap => linksGenerator.publicApiForInlineComponents(targetModuleDir, inlineMap));
+    .then(inlineMap => linksGenerator.publicApiForInlineComponents(targetModuleDir, inlineMap))
+    .then(() => linksGenerator.publicApiNamespaceLevel(targetModuleDir))
+    .then(namespaces => linksGenerator.publicApiRootLevel(targetModuleDir, namespaces));
 }
 
 const defaultProjectBitJson = {

@@ -2,7 +2,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
+import glob from 'glob';
 import BitJson from 'bit-scope-client/bit-json';
+import camelcase from 'camelcase';
 import { MODULE_NAME,
   MODULES_DIR,
   COMPONENTS_DIRNAME,
@@ -11,6 +13,10 @@ import { MODULE_NAME,
   INLINE_COMPONENTS_DIRNAME } from '../constants';
 
 const linkTemplate = (link: string): string => `module.exports = require('${link}');`;
+const namespaceTemplate = (name: string): string => `${camelcase(name)}: require('./${name}')`;
+const linksTemplate = (links: string[]): string => `module.exports = {
+  ${links.join(',\n  ')}
+};`;
 
 function writeFileP(file: string, content: string): Promise<*> {
   return new Promise((resolve, reject) => {
@@ -75,8 +81,8 @@ export function dependencies(
       );
 
       map[component].dependencies.forEach((dependency) => {
-        const [box, name] = map[dependency].loc.split(path.sep);
-        const targetFile = path.join(targetModuleDir, box, name, 'index.js');
+        const [namespace, name] = map[dependency].loc.split(path.sep);
+        const targetFile = path.join(targetModuleDir, namespace, name, 'index.js');
         const relativeComponentsDir = path.join(...Array(8).fill('..'));
         const dependencyDir = path.join(
           relativeComponentsDir,
@@ -95,24 +101,54 @@ export function publicApiForInlineComponents(targetModuleDir: string, inlineMap:
   if (!inlineMap || R.isEmpty(inlineMap)) return Promise.resolve();
 
   return Promise.all(Object.keys(inlineMap).map((id) => {
-    const [box, name] = id.split(path.sep);
-    const targetDir = path.join(targetModuleDir, box, name, 'index.js');
+    const [namespace, name] = id.split(path.sep);
+    const targetDir = path.join(targetModuleDir, namespace, name, 'index.js');
     const relativeComponentsDir = path.join(...Array(4).fill('..'), INLINE_COMPONENTS_DIRNAME);
     const dependencyDir = path.join(relativeComponentsDir, inlineMap[id].loc, inlineMap[id].file);
     return writeFileP(targetDir, linkTemplate(dependencyDir));
   }));
 }
 
-export function publicApi(targetModuleDir: string, map: Object, projectBitJson: BitJson):
-Promise<*> {
+export function publicApiNamespaceLevel(targetModuleDir: string) {
+  return new Promise((resolve) => {
+    glob('*/*', { cwd: targetModuleDir }, (err, dirs) => {
+      if (!dirs.length) return resolve();
+      const namespaceMap = {};
+      dirs.forEach((dir) => {
+        const [namespace, name] = dir.split(path.sep);
+        if (namespaceMap[namespace]) namespaceMap[namespace].push(name);
+        else namespaceMap[namespace] = [name];
+      });
+
+      const writeAllFiles = [];
+      Object.keys(namespaceMap).forEach((namespace) => {
+        const links = namespaceMap[namespace].map(name => `${camelcase(name)}: require('./${name}')`);
+        const indexFile = path.join(targetModuleDir, namespace, 'index.js');
+        writeAllFiles.push(writeFileP(indexFile, linksTemplate(links)));
+      });
+
+      return Promise.all(writeAllFiles).then(() => resolve(Object.keys(namespaceMap)));
+    });
+  });
+}
+
+export function publicApiRootLevel(targetModuleDir: string, namespaces: string[]) {
+  if (!namespaces || !namespaces.length) return Promise.resolve();
+  const links = namespaces.map(namespace => namespaceTemplate(namespace));
+  const indexFile = path.join(targetModuleDir, 'index.js');
+  return writeFileP(indexFile, linksTemplate(links));
+}
+
+export function publicApiComponentLevel(targetModuleDir: string, map: Object,
+  projectBitJson: BitJson): Promise<*> {
   if (!projectBitJson.dependencies || R.isEmpty(projectBitJson.dependencies)) {
     return Promise.resolve();
   }
 
   return removeDirP(targetModuleDir).then(() => {
     const writeAllFiles = Object.keys(projectBitJson.dependencies).map((id) => {
-      const [, box, name] = id.split(ID_DELIMITER);
-      const targetDir = path.join(targetModuleDir, box, name, 'index.js');
+      const [, namespace, name] = id.split(ID_DELIMITER);
+      const targetDir = path.join(targetModuleDir, namespace, name, 'index.js');
       const mapId = id + VERSION_DELIMITER + projectBitJson.dependencies[id];
       const relativeComponentsDir = path.join(...Array(4).fill('..'), COMPONENTS_DIRNAME);
       if (!map[mapId]) return Promise.resolve(); // the file is in bit.json but not fetched yet

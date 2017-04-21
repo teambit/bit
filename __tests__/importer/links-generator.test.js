@@ -60,16 +60,16 @@ describe('dependencies', () => {
   });
 });
 
-describe('publicApi', () => {
+describe('publicApiComponentLevel', () => {
   it('should not generate links if there are no dependencies', () => {
-    const result = linksGenerator.publicApi('dir', {}, {});
+    const result = linksGenerator.publicApiComponentLevel('dir', {}, {});
     return result.then(() => {
       expect(fsMock.remove.mock.calls.length).toBe(0);
       expect(fsMock.outputFile.mock.calls.length).toBe(0);
     });
   });
   it('should remove the node_module/bit folder and generate links', () => {
-    const result = linksGenerator.publicApi('/my/project/node_modules/bit', mapFixture, projectBitJsonFixture);
+    const result = linksGenerator.publicApiComponentLevel('/my/project/node_modules/bit', mapFixture, projectBitJsonFixture);
     return result
       .then(() => {
         expect(fsMock.remove.mock.calls.length).toBe(1);
@@ -104,6 +104,27 @@ describe('publicApiForInlineComponents', () => {
       expect(outputFileCalls.length).toBe(1);
       expect(outputFileCalls[0][0]).toBe('/my/project/node_modules/bit/global/is-string/index.js');
       expect(outputFileCalls[0][1]).toBe("module.exports = require('../../../../inline_components/global/is-string/impl.js');");
+    });
+  });
+});
+
+describe('publicApiRootLevel', () => {
+  it('should not create links if there are no boxes', () => {
+    const result = linksGenerator.publicApiRootLevel('dir', []);
+    return result.then(() => {
+      expect(fsMock.outputFile.mock.calls.length).toBe(0);
+    });
+  });
+
+  it('should generate an index.js in the node_modules/bit root', () => {
+    const result = linksGenerator.publicApiRootLevel('/my/project/node_modules/bit', ['global']);
+    return result.then(() => {
+      const outputFileCalls = fsMock.outputFile.mock.calls;
+      expect(outputFileCalls.length).toBe(1);
+      expect(outputFileCalls[0][0]).toBe('/my/project/node_modules/bit/index.js');
+      expect(outputFileCalls[0][1]).toBe(`module.exports = {
+  global: require('./global')
+};`);
     });
   });
 });

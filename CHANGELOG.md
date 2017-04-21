@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support require('bit/namespace').component and import { component } from 'bit/namespace' syntax.
 - write a default bit.json if not exists
 - keep the bit-module in sync with the components map (e.g. remove the node_modules/bit module on every bind action)
 
