@@ -5,7 +5,12 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
-import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport } from './exceptions';
+import {
+  ConsumerAlreadyExists,
+  ConsumerNotFound,
+  NothingToImport,
+  DriverNotFound
+} from './exceptions';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
@@ -13,6 +18,7 @@ import {
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
+  DEFAULT_LANGUAGE
  } from '../constants';
 import { removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
@@ -50,6 +56,30 @@ export default class Consumer {
     return BitId.parse(this.bitJson.compilerId, this.scope);
   }
 
+  get driver(): ?Object {
+    let langDriver;
+    if (!this.bitJson.lang || this.bitJson.lang === DEFAULT_LANGUAGE) {
+      langDriver = 'bit-js';
+    } else if (this.bitJson.lang.startsWith('bit-driver-')) {
+      langDriver = this.bitJson.lang;
+    } else {
+      langDriver = `bit-driver-${this.bitJson.lang}`;
+    }
+    try {
+      return require(langDriver);
+    } catch (err) {
+      if (err.code !== 'MODULE_NOT_FOUND') throw err;
+      throw new DriverNotFound(langDriver, this.bitJson.lang);
+    }
+  }
+
+  runHook(hookName, param: *) {
+    if (!this.driver.lifeCycleHooks || !this.driver.lifeCycleHooks[hookName]) {
+      return Promise.resolve(param); // it's ok for a driver to not implement a hook
+    }
+    return this.driver.lifeCycleHooks[hookName](param);
+  }
+
   write(): Promise<Consumer> {
     return this.bitJson
       .write({ bitDir: this.projectPath })
@@ -83,6 +113,7 @@ export default class Consumer {
       .then(componentDependencies => this.writeToComponentsDir([componentDependencies])
         .then(() => this.removeFromComponents(newBitId)) // @HACKALERT
         .then(() => componentDependencies.component)
+        .then(component => this.runHook('onExport', component))
       );
   }
 
@@ -146,7 +177,8 @@ export default class Consumer {
       box: id.box,
       withSpecs,
       consumerBitJson: this.bitJson,
-    }, this.scope).write(inlineBitPath, withBitJson, force);
+    }, this.scope).write(inlineBitPath, withBitJson, force)
+      .then(component => this.runHook('onCreate', component));
   }
 
   removeFromInline(id: BitInlineId): Promise<any> {
@@ -210,6 +242,7 @@ export default class Consumer {
         .then(() => this.removeFromInline(id))
         .then(() => index(bit, this.scope.getPath()))
         .then(() => bit)
+        .then(() => this.runHook('onCommit', bit))
       );
   }
 
