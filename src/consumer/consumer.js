@@ -57,7 +57,7 @@ export default class Consumer {
   }
 
   get driver(): ?Object {
-    let langDriver;
+    let langDriver: string;
     if (!this.bitJson.lang || this.bitJson.lang === DEFAULT_LANGUAGE) {
       langDriver = 'bit-js';
     } else if (this.bitJson.lang.startsWith('bit-driver-')) {
@@ -73,7 +73,7 @@ export default class Consumer {
     }
   }
 
-  runHook(hookName, param: *, returnValue?: *): Promise<*> {
+  runHook(hookName: string, param: *, returnValue?: *): Promise<*> {
     if (!this.driver.lifecycleHooks || !this.driver.lifecycleHooks[hookName]) {
       return Promise.resolve(returnValue); // it's ok for a driver to not implement a hook
     }
