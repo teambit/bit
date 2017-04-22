@@ -73,11 +73,11 @@ export default class Consumer {
     }
   }
 
-  runHook(hookName, param: *) {
+  runHook(hookName, param: *, returnValue?: *): Promise<*> {
     if (!this.driver.lifecycleHooks || !this.driver.lifecycleHooks[hookName]) {
-      return Promise.resolve(param); // it's ok for a driver to not implement a hook
+      return Promise.resolve(returnValue); // it's ok for a driver to not implement a hook
     }
-    return this.driver.lifecycleHooks[hookName](param);
+    return this.driver.lifecycleHooks[hookName](param).then(() => returnValue);
   }
 
   write(): Promise<Consumer> {
@@ -113,7 +113,7 @@ export default class Consumer {
       .then(componentDependencies => this.writeToComponentsDir([componentDependencies])
         .then(() => this.removeFromComponents(newBitId)) // @HACKALERT
         .then(() => componentDependencies.component)
-        .then(component => this.runHook('onExport', component))
+        .then(component => this.runHook('onExport', component, component))
       );
   }
 
@@ -178,7 +178,7 @@ export default class Consumer {
       withSpecs,
       consumerBitJson: this.bitJson,
     }, this.scope).write(inlineBitPath, withBitJson, force)
-      .then(component => this.runHook('onCreate', component));
+      .then(component => this.runHook('onCreate', component, component));
   }
 
   removeFromInline(id: BitInlineId): Promise<any> {
@@ -241,8 +241,8 @@ export default class Consumer {
         .then(bits => this.writeToComponentsDir([bits]))
         .then(() => this.removeFromInline(id))
         .then(() => index(bit, this.scope.getPath()))
-        .then(() => bit)
         .then(() => this.runHook('onCommit', bit))
+        .then(() => bit)
       );
   }
 
