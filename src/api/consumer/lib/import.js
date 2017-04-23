@@ -71,8 +71,9 @@ export default function importAction(
             envDependencies,
             consumer,
           })
-          .then(warnings => ({ dependencies, envDependencies, warnings }))
-        );
+          .then(warnings => consumer.runHook('onImport', dependencies,
+            { dependencies, envDependencies, warnings })
+        ));
     });
 }
 

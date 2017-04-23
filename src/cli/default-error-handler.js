@@ -9,6 +9,7 @@ import {
   NothingToImport,
   ConsumerNotFound,
   ComponentSpecsFailed,
+  DriverNotFound,
 } from '../consumer/exceptions';
 import ComponentNotFoundInline from '../consumer/component/exceptions/component-not-found-inline';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
@@ -48,7 +49,8 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ InvalidIdChunk, err => `invalid id part in "${chalk.bold(err.id)}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]`],
   [ InvalidBitJson, err => `error: ${chalk.bold(err.path)} is not a valid JSON file.`],
   [ ExportWithoutThis, err => `Error: Missing local scope annotation when exporting ${err.id}. Please run 'bit export ${LOCAL_SCOPE_NOTATION}/${err.id} ${err.remote}'`],
-  [ ResolutionException, e => e.message]
+  [ ResolutionException, e => e.message],
+  [ DriverNotFound, err => `fatal: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(err.lang)} set in your bit.json file`]
 ];
 
 export default (err: Error): ?string => {
