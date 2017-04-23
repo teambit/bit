@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.5.2] - rc (2017-04-23)
+## [0.5.3] - rc (2017-04-23)
 
 - support require('bit/namespace').component and import { component } from 'bit/namespace' syntax.
 - write a default bit.json if not exists
