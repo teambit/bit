@@ -188,7 +188,8 @@ export default class Scope {
   getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: bool = false) {
     return this.sources.getMany(ids)
       .then((defs) => {
-        if (localFetch) {
+      const invalidDefs = !!~defs.map(def => def.component).indexOf(null);
+        if (localFetch && defs.length > 0 && !invalidDefs) {
           return Promise.all(defs.map((def) => {
             return def.component.toComponentVersion(
               def.id.version,
