@@ -10,6 +10,9 @@ import {
   NO_PLUGIN_TYPE,
 } from '../constants';
 
+const generateId = ({ scope, namespace, name, version }) =>
+  scope + ID_DELIMITER + namespace + ID_DELIMITER + name + VERSION_DELIMITER + version;
+
 function getRequiredFile(bitJson: BitJson): string {
   return !bitJson.compiler || bitJson.compiler !== NO_PLUGIN_TYPE ?
     path.join(DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME) : bitJson.impl;
@@ -37,7 +40,7 @@ export function build(targetComponentsDir: string): Promise<Object> {
       if (err) return reject(err);
       files.forEach((loc) => {
         const [namespace, name, scope, version] = loc.split(path.sep);
-        const id = scope + ID_DELIMITER + namespace + ID_DELIMITER + name + VERSION_DELIMITER + version;
+        const id = generateId({ scope, namespace, name, version });
         const bitJson = BitJson.load(path.join(targetComponentsDir, loc));
         const dependencies = [];
         Object.keys(bitJson.dependencies).forEach((dependency) => {

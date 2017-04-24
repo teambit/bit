@@ -1,5 +1,5 @@
 import mockFs from 'mock-fs';
-import * as componentsMap from '../../src/importer/components-map';
+import * as componentsMap from '../src/components-map';
 
 const bitJsonFixture = {
   sources: {

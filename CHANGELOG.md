@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- major refactor + remove old deprecated behavior (the load function)
 - change name to bit-javascript
 
 ## [0.5.3] - rc (2017-04-23)

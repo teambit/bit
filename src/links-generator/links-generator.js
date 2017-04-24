@@ -1,5 +1,4 @@
 // @flow
-import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
 import glob from 'glob';
@@ -11,30 +10,13 @@ import { MODULE_NAME,
   VERSION_DELIMITER,
   ID_DELIMITER,
   INLINE_COMPONENTS_DIRNAME } from '../constants';
+import { writeFileP, removeDirP } from '../utils';
 
 const linkTemplate = (link: string): string => `module.exports = require('${link}');`;
 const namespaceTemplate = (name: string): string => `${camelcase(name)}: require('./${name}')`;
 const linksTemplate = (links: string[]): string => `module.exports = {
   ${links.join(',\n  ')}
 };`;
-
-function writeFileP(file: string, content: string): Promise<*> {
-  return new Promise((resolve, reject) => {
-    fs.outputFile(file, content, (err) => {
-      if (err) return reject(err);
-      return resolve();
-    });
-  });
-}
-
-function removeDirP(dir: string): Promise<*> {
-  return new Promise((resolve, reject) => {
-    fs.remove(dir, (err) => {
-      if (err) return reject(err);
-      return resolve();
-    });
-  });
-}
 
 function findAllDependenciesInComponentMap(componentsMap: Object, components: Array<string>,
   dependenciesArr: Array<string> = []) {
@@ -46,6 +28,7 @@ function findAllDependenciesInComponentMap(componentsMap: Object, components: Ar
         dependenciesArr.concat(componentsMap[component].dependencies));
     }
   });
+
   return dependenciesArr;
 }
 

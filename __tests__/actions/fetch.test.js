@@ -1,5 +1,5 @@
 const mockFs = require('mock-fs');
-const { readIdsFromBitJson, getIdsFromBitJsonIfNeeded } = require('../../src/importer/importer');
+const { readIdsFromBitJson, getIdsFromBitJsonIfNeeded } = require('../../src/actions/fetch');
 
 const mockGoodConsumerPath = '/my/good/consumer';
 const mockBadConsumerPath = '/my/bad/consumer';

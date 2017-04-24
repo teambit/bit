@@ -1,5 +1,5 @@
 import fsMock from 'fs-extra';
-import * as linksGenerator from '../../src/importer/links-generator';
+import * as linksGenerator from '../src/links-generator';
 
 jest.mock('fs-extra');
 fsMock.remove = jest.fn((dir, cb) => cb());
