@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- change name to bit-javascript
+
 ## [0.5.3] - rc (2017-04-23)
 
 - support require('bit/namespace').component and import { component } from 'bit/namespace' syntax.

@@ -1,5 +1,5 @@
 {
-  "name": "bitjs",
+  "name": "bit-javascript",
   "version": "0.5.3",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
