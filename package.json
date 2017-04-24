@@ -12,10 +12,10 @@
   "bin": {
     "bitjs": "bin/bitjs.js"
   },
-  "homepage": "https://github.com/teambit/bit-js",
+  "homepage": "https://github.com/teambit/bit-javascript",
   "repository": {
     "type": "git",
-    "url": "https://github.com/teambit/bit-js"
+    "url": "https://github.com/teambit/bit-javascript"
   },
   "keywords": [
     "bit",
