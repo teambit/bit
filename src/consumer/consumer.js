@@ -76,12 +76,21 @@ export default class Consumer {
   }
 
   runHook(hookName: string, param: *, returnValue?: *): Promise<*> {
-    // $FlowFixMe
-    if (!this.driver.lifecycleHooks || !this.driver.lifecycleHooks[hookName]) {
-      return Promise.resolve(returnValue); // it's ok for a driver to not implement a hook
-    }
+    try {
+        // $FlowFixMe
+      if (!this.driver.lifecycleHooks || !this.driver.lifecycleHooks[hookName]) {
+        return Promise.resolve(returnValue); // it's ok for a driver to not implement a hook
+      }
 
-    return this.driver.lifecycleHooks[hookName](param).then(() => returnValue);
+      return this.driver.lifecycleHooks[hookName](param).then(() => returnValue);
+    } catch (e) {
+      // TODO - this is a quick fix, so we will act greacfully in case there is no driver.
+      if (e instanceof DriverNotFound) {
+        return Promise.resolve(returnValue);
+      }
+
+      throw e;
+    }
   }
 
   write(): Promise<Consumer> {
