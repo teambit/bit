@@ -45,6 +45,7 @@
     "ora": "^1.1.0",
     "porter-stemmer": "^0.9.1",
     "ramda": "^0.23.0",
+    "req-cwd": "^1.0.1",
     "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",
     "search-index": "^0.9.15",

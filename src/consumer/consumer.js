@@ -3,6 +3,7 @@ import path from 'path';
 import glob from 'glob';
 import fs from 'fs-extra';
 import R from 'ramda';
+import reqCwd from 'req-cwd';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import {
@@ -58,15 +59,16 @@ export default class Consumer {
 
   get driver(): ?Object {
     let langDriver: string;
+
     if (!this.bitJson.lang || this.bitJson.lang === DEFAULT_LANGUAGE) {
-      langDriver = 'bit-js';
-    } else if (this.bitJson.lang.startsWith('bit-driver-')) {
+      langDriver = 'bit-javascript';
+    } else if (this.bitJson.lang.startsWith('bit-')) {
       langDriver = this.bitJson.lang;
     } else {
-      langDriver = `bit-driver-${this.bitJson.lang}`;
+      langDriver = `bit-${this.bitJson.lang}`;
     }
     try {
-      return require(langDriver);
+      return reqCwd(langDriver);
     } catch (err) {
       if (err.code !== 'MODULE_NOT_FOUND') throw err;
       throw new DriverNotFound(langDriver, this.bitJson.lang);
@@ -74,9 +76,11 @@ export default class Consumer {
   }
 
   runHook(hookName: string, param: *, returnValue?: *): Promise<*> {
+    // $FlowFixMe
     if (!this.driver.lifecycleHooks || !this.driver.lifecycleHooks[hookName]) {
       return Promise.resolve(returnValue); // it's ok for a driver to not implement a hook
     }
+
     return this.driver.lifecycleHooks[hookName](param).then(() => returnValue);
   }
 
@@ -169,7 +173,8 @@ export default class Consumer {
   }
 
   createBit({ id, withSpecs = false, withBitJson = false, force = false }: {
-    id: BitInlineId, withSpecs: boolean, withBitJson: boolean, force: boolean }): Promise<Component> {
+    id: BitInlineId, withSpecs: boolean, withBitJson: boolean, force: boolean
+  }): Promise<Component> {
     const inlineBitPath = id.composeBitPath(this.getPath());
 
     return Component.create({
@@ -254,11 +259,11 @@ export default class Consumer {
   }
 
   runAllInlineSpecs() {
-      return this.listInline().then((components) => {
-        return Promise.all(components.map(component => component
-          .runSpecs({ scope: this.scope, consumer: this })
-          .then((result) => { return { specs: result, component } } ) ));
-      });
+    return this.listInline().then((components) => {
+      return Promise.all(components.map(component => component
+        .runSpecs({ scope: this.scope, consumer: this })
+        .then((result) => { return { specs: result, component }; })));
+    });
   }
 
   listInline(): Promise<Component[]> {
