@@ -96,6 +96,7 @@ export default class CommandRegistrar {
     commander
       .version(this.version)
       .usage(this.usage)
+      .option('--skip-update', 'Skips auto updates for a command')
       .description(this.description);
   }
 
@@ -122,7 +123,7 @@ export default class CommandRegistrar {
         concrete.option(createOptStr(alias, name), description);
       });
 
-      // attach skip-version to all commands
+      // attach skip-update to all commands
       concrete.option('--skip-update', 'Skips auto updates');
 
       command.commands.forEach((nestedCmd) => {

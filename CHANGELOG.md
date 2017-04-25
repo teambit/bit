@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- add --skip-update option to the main bit help page.
 - run some hooks (for now: onCommit, onCreate, onExport and onImport) using a language-driver
 - lang attribute on the bit.json, enable language that will save on the model of the component.
 
