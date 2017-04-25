@@ -75,7 +75,7 @@ export default class SSH {
   exec(commandName: string, payload: any): Promise<any> {
     return new Promise((resolve, reject) => {
       let res = '';
-      let err;
+      let err = '';
       const cmd = this.buildCmd(
         commandName,
         absolutePath(this.path || ''),
@@ -83,21 +83,17 @@ export default class SSH {
       );
 
       this.connection.exec(cmd, (e, stream) => {
-        if (commandName === '_put') stream.stdin.write(toBase64(payload));
+        if (commandName === '_put') {
+          stream.stdin.write(toBase64(payload));
+          stream.stdin.close();
+        }
         stream
-          .on('data', (response) => {
-            res += response.toString();
-          })
-          .on('close', (code) => {
-            return code && code !== 0 ?
-            reject(errorHandler(code, err)) :
-            resolve(clean(res));
-            // TODO: close the connection from somewhere else
-            // this.connection.end();
-          })
-          .stderr.on('data', (response) => {
-            err = response.toString();
-          });
+          .on('data', chunk => res += chunk.toString())
+          .on('close', (code) => (code && code !== 0
+            ? reject(errorHandler(code, err))
+            : resolve(clean(res))
+          ))
+          .stderr.on('data', chunk => err += chunk.toString());
       });
     });
   }

@@ -311,7 +311,7 @@ export default class Scope {
           .then((componentVersionArr) => {
             return postImportHook({ ids: componentVersionArr.map(cv => cv.id.toString()) })
               .then(() => this.remotes()
-                .then(remotes => this.getExternalOnes(externals, remotes, true))
+                .then(remotes => this.getExternalOnes(externals, remotes))
                 .then(externalDeps => componentVersionArr.concat(externalDeps))
               );
           });
