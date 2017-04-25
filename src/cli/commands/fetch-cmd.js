@@ -1,7 +1,7 @@
 // @flow
 
 import { type Command } from './types';
-import { fetchAction } from '../../importer/importer';
+import { fetchAction } from '../../actions';
 
 const fetchCommand: Command = {
   name: 'fetch',

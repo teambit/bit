@@ -1,6 +1,6 @@
 // @flow
 import { type Command } from './types';
-import { watchAction } from '../../importer/importer';
+import { watchAction } from '../../actions';
 
 const watchCommand: Command = {
   name: 'watch',

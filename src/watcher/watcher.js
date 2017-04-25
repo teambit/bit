@@ -1,7 +1,7 @@
 import chokidar from 'chokidar';
 import path from 'path';
 import { BIT_JSON_NAME, INLINE_COMPONENTS_DIRNAME } from '../constants';
-import { bindAction } from '../importer';
+import { bindAction } from '../actions';
 
 export default function watch(projectRoot) {
   return new Promise(() => {

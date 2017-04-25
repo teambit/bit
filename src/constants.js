@@ -65,3 +65,7 @@ export const DEFAULT_COMPILER_ID = NO_PLUGIN_TYPE;
 export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_DEPENDENCIES = {};
+
+export const BIT_HIDDEN_DIR = '.bit';
+
+export const INDEX_JS = 'index.js';

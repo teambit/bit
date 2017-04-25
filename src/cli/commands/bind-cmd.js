@@ -1,7 +1,7 @@
 // @flow
 
 import { type Command } from './types';
-import { bindAction } from '../../importer/importer';
+import { bindAction } from '../../actions';
 
 const bindCommand: Command = {
   name: 'bind',

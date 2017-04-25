@@ -1,7 +1,7 @@
 // @flow
 
 import { type Command } from './types';
-import { importAction } from '../../importer/importer';
+import { importAction } from '../../actions';
 
 const importCommand: Command = {
   name: 'import',

@@ -1,13 +1,12 @@
+import mockFs from 'mock-fs';
 import fsMock from 'fs-extra';
-import * as linksGenerator from '../src/links-generator';
+import * as linksGenerator from '../../src/links-generator';
 
 jest.mock('fs-extra');
-fsMock.remove = jest.fn((dir, cb) => cb());
 fsMock.outputFile = jest.fn((file, content, cb) => cb());
 
 afterEach(() => {
   fsMock.outputFile.mockClear();
-  fsMock.remove.mockClear();
 });
 
 const mapFixture = {
@@ -15,6 +14,7 @@ const mapFixture = {
     loc: 'compilers/flow/bit.envs/2',
     file: 'impl.js',
     dependencies: [],
+    isFromInlineScope: true,
   },
   'bit.utils/object/foreach::1': {
     loc: 'object/foreach/bit.utils/1',
@@ -64,16 +64,13 @@ describe('publicApiComponentLevel', () => {
   it('should not generate links if there are no dependencies', () => {
     const result = linksGenerator.publicApiComponentLevel('dir', {}, {});
     return result.then(() => {
-      expect(fsMock.remove.mock.calls.length).toBe(0);
       expect(fsMock.outputFile.mock.calls.length).toBe(0);
     });
   });
-  it('should remove the node_module/bit folder and generate links', () => {
+  it('should generate links', () => {
     const result = linksGenerator.publicApiComponentLevel('/my/project/node_modules/bit', mapFixture, projectBitJsonFixture);
     return result
       .then(() => {
-        expect(fsMock.remove.mock.calls.length).toBe(1);
-        expect(fsMock.remove.mock.calls[0][0]).toBe('/my/project/node_modules/bit');
         const outputFileCalls = fsMock.outputFile.mock.calls;
 
         // this makes sure it doesn't generate a link for "foreach" as it's not in the bit.json
@@ -126,5 +123,48 @@ describe('publicApiRootLevel', () => {
   global: require('./global')
 };`);
     });
+  });
+});
+
+describe('publicApiNamespaceLevel', () => {
+  it('should not create links if there are no namespaces', () => {
+    const result = linksGenerator.publicApiNamespaceLevel('dir');
+    return result.then(() => {
+      expect(fsMock.outputFile.mock.calls.length).toBe(0);
+    });
+  });
+
+  it('should generate an index.js in the node_modules/bit/namespace directory', () => {
+    mockFs({
+      '/my/project/node_modules/bit/compilers/flow': {},
+    });
+    const result = linksGenerator.publicApiNamespaceLevel('/my/project/node_modules/bit');
+    return result.then(() => {
+      const outputFileCalls = fsMock.outputFile.mock.calls;
+      expect(outputFileCalls.length).toBe(1);
+      expect(outputFileCalls[0][0]).toBe('/my/project/node_modules/bit/compilers/index.js');
+      expect(outputFileCalls[0][1]).toBe(`module.exports = {
+  flow: require('./flow')
+};`);
+    });
+  });
+});
+
+describe('publicApiForExportPendingComponents', () => {
+  it('should not generate links if there are no export-pending components', () => {
+    const result = linksGenerator.publicApiForExportPendingComponents('dir', {});
+    return result.then(() => {
+      expect(fsMock.outputFile.mock.calls.length).toBe(0);
+    });
+  });
+  it('should generate links for components with isFromInlineScope = true', () => {
+    const result = linksGenerator.publicApiForExportPendingComponents('/my/project/node_modules/bit', mapFixture);
+    return result
+      .then(() => {
+        const outputFileCalls = fsMock.outputFile.mock.calls;
+        expect(outputFileCalls.length).toBe(1);
+        expect(outputFileCalls[0][0]).toBe('/my/project/node_modules/bit/compilers/flow/index.js');
+        expect(outputFileCalls[0][1]).toBe("module.exports = require('../../../../components/compilers/flow/bit.envs/2/impl.js');");
+      });
   });
 });

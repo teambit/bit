@@ -4,6 +4,7 @@ import {
   publicApiNamespaceLevel,
   publicApiRootLevel,
   publicApiComponentLevel,
+  publicApiForExportPendingComponents,
 } from './links-generator';
 
 export {
@@ -12,4 +13,5 @@ export {
   publicApiNamespaceLevel,
   publicApiRootLevel,
   publicApiComponentLevel,
+  publicApiForExportPendingComponents,
 };

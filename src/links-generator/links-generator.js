@@ -9,8 +9,9 @@ import { MODULE_NAME,
   COMPONENTS_DIRNAME,
   VERSION_DELIMITER,
   ID_DELIMITER,
+  INDEX_JS,
   INLINE_COMPONENTS_DIRNAME } from '../constants';
-import { writeFileP, removeDirP } from '../utils';
+import { writeFileP } from '../utils';
 
 const linkTemplate = (link: string): string => `module.exports = require('${link}');`;
 const namespaceTemplate = (name: string): string => `${camelcase(name)}: require('./${name}')`;
@@ -65,7 +66,7 @@ export function dependencies(
 
       map[component].dependencies.forEach((dependency) => {
         const [namespace, name] = map[dependency].loc.split(path.sep);
-        const targetFile = path.join(targetModuleDir, namespace, name, 'index.js');
+        const targetFile = path.join(targetModuleDir, namespace, name, INDEX_JS);
         const relativeComponentsDir = path.join(...Array(8).fill('..'));
         const dependencyDir = path.join(
           relativeComponentsDir,
@@ -85,7 +86,7 @@ export function publicApiForInlineComponents(targetModuleDir: string, inlineMap:
 
   return Promise.all(Object.keys(inlineMap).map((id) => {
     const [namespace, name] = id.split(path.sep);
-    const targetDir = path.join(targetModuleDir, namespace, name, 'index.js');
+    const targetDir = path.join(targetModuleDir, namespace, name, INDEX_JS);
     const relativeComponentsDir = path.join(...Array(4).fill('..'), INLINE_COMPONENTS_DIRNAME);
     const dependencyDir = path.join(relativeComponentsDir, inlineMap[id].loc, inlineMap[id].file);
     return writeFileP(targetDir, linkTemplate(dependencyDir));
@@ -106,7 +107,7 @@ export function publicApiNamespaceLevel(targetModuleDir: string) {
       const writeAllFiles = [];
       Object.keys(namespaceMap).forEach((namespace) => {
         const links = namespaceMap[namespace].map(name => `${camelcase(name)}: require('./${name}')`);
-        const indexFile = path.join(targetModuleDir, namespace, 'index.js');
+        const indexFile = path.join(targetModuleDir, namespace, INDEX_JS);
         writeAllFiles.push(writeFileP(indexFile, linksTemplate(links)));
       });
 
@@ -118,8 +119,23 @@ export function publicApiNamespaceLevel(targetModuleDir: string) {
 export function publicApiRootLevel(targetModuleDir: string, namespaces: string[]) {
   if (!namespaces || !namespaces.length) return Promise.resolve();
   const links = namespaces.map(namespace => namespaceTemplate(namespace));
-  const indexFile = path.join(targetModuleDir, 'index.js');
+  const indexFile = path.join(targetModuleDir, INDEX_JS);
   return writeFileP(indexFile, linksTemplate(links));
+}
+
+export function publicApiForExportPendingComponents(targetModuleDir: string, map: Object):
+Promise<Object> {
+  const exportPendingComponents = Object.keys(map)
+    .filter(component => map[component].isFromInlineScope === true);
+  if (!exportPendingComponents.length) return Promise.resolve(map);
+  const writeAllFiles = exportPendingComponents.map((component) => {
+    const [namespace, name] = map[component].loc.split(ID_DELIMITER);
+    const targetDir = path.join(targetModuleDir, namespace, name, INDEX_JS);
+    const relativeComponentsDir = path.join(...Array(4).fill('..'), COMPONENTS_DIRNAME);
+    const dependencyDir = path.join(relativeComponentsDir, map[component].loc, map[component].file);
+    return writeFileP(targetDir, linkTemplate(dependencyDir));
+  });
+  return Promise.all(writeAllFiles).then(() => map);
 }
 
 export function publicApiComponentLevel(targetModuleDir: string, map: Object,
@@ -128,16 +144,14 @@ export function publicApiComponentLevel(targetModuleDir: string, map: Object,
     return Promise.resolve();
   }
 
-  return removeDirP(targetModuleDir).then(() => {
-    const writeAllFiles = Object.keys(projectBitJson.dependencies).map((id) => {
-      const [, namespace, name] = id.split(ID_DELIMITER);
-      const targetDir = path.join(targetModuleDir, namespace, name, 'index.js');
-      const mapId = id + VERSION_DELIMITER + projectBitJson.dependencies[id];
-      const relativeComponentsDir = path.join(...Array(4).fill('..'), COMPONENTS_DIRNAME);
-      if (!map[mapId]) return Promise.resolve(); // the file is in bit.json but not fetched yet
-      const dependencyDir = path.join(relativeComponentsDir, map[mapId].loc, map[mapId].file);
-      return writeFileP(targetDir, linkTemplate(dependencyDir));
-    });
-    return Promise.all(writeAllFiles);
+  const writeAllFiles = Object.keys(projectBitJson.dependencies).map((id) => {
+    const [, namespace, name] = id.split(ID_DELIMITER);
+    const targetDir = path.join(targetModuleDir, namespace, name, INDEX_JS);
+    const mapId = id + VERSION_DELIMITER + projectBitJson.dependencies[id];
+    const relativeComponentsDir = path.join(...Array(4).fill('..'), COMPONENTS_DIRNAME);
+    if (!map[mapId]) return Promise.resolve(); // the file is in bit.json but not fetched yet
+    const dependencyDir = path.join(relativeComponentsDir, map[mapId].loc, map[mapId].file);
+    return writeFileP(targetDir, linkTemplate(dependencyDir));
   });
+  return Promise.all(writeAllFiles);
 }
