@@ -85,7 +85,7 @@ export default class SSH {
       this.connection.exec(cmd, (e, stream) => {
         if (commandName === '_put') {
           stream.stdin.write(toBase64(payload));
-          stream.stdin.close();
+          stream.stdin.eof();
         }
         stream
           .on('data', chunk => res += chunk.toString())
