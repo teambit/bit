@@ -70,7 +70,7 @@ export default class Consumer {
     try {
       return reqCwd(langDriver);
     } catch (err) {
-      if (err.code !== 'MODULE_NOT_FOUND') throw err;
+      if (err.code !== 'MODULE_NOT_FOUND' && err.message !== 'missing path') throw err;
       throw new DriverNotFound(langDriver, this.bitJson.lang);
     }
   }
