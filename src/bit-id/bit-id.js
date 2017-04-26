@@ -1,4 +1,5 @@
 /** @flow */
+import path from 'path';
 import Version from '../version';
 import { InvalidBitId, InvalidIdChunk } from './exceptions';
 import {
@@ -59,6 +60,10 @@ export default class BitId {
     const value = this.version;
 
     return { [key]: value };
+  }
+
+  toPath() {
+    return path.join(this.box, this.name, this.scope, this.version);
   }
 
   static parse(id: ?string, realScopeName: ?string, version: string = LATEST_BIT_VERSION): ?BitId {

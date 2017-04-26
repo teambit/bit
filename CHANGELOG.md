@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- the compiler can implement a build method instead of compile, get an entry file and run webpack for example (wip).
+implemented for inline_components, and still need to implement environment module in order to fully work.
 - add --skip-update option to the main bit help page.
 - run some hooks (for now: onCommit, onCreate, onExport and onImport) using a language-driver
 - lang attribute on the bit.json, enable language that will save on the model of the component.
