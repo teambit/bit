@@ -49,11 +49,13 @@ You can also destructure namespaces from the bit module itself.
 import { utils } from 'bit';
 ```
 
-## How does the above syntax work internally?
-Bit-javascript driver creates "public-api" by generating "index.js" files in the node_modules/bit directory.
+## How does the above syntax actually work?
+
+`bit-javascript` driver creates a "public-api" by generating "index.js" files in the `node_modules/bit` directory.
 These index.js files are links to the actual implementation files, which are located in "components" and "inline_components" directories.
 
-To find the components that need public-api, the driver follows specific strategies one by one, each strategy may override the previous strategy. 
+To find the components that need public-api, the driver follows specific strategies one by one, each strategy may override the previous strategy.
+
 1. Components that were created locally and committed. These components are in "components" directory and not mentioned in bit.json
 2. Components that are mentioned in bit.json file as dependencies and are in "components" directory.
 3. Inline components, which are components located in "inline_components" directory.
