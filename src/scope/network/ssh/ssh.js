@@ -85,13 +85,14 @@ export default class SSH {
       this.connection.exec(cmd, (e, stream) => {
         if (commandName === '_put') {
           stream.stdin.write(toBase64(payload));
-          stream.stdin.eof();
+          stream.stdin.end();
         }
         stream
           .on('data', (response) => {
             res += response.toString();
           })
           .on('close', (code) => {
+            if (commandName === '_put') res = res.replace(payload,'');
             return code && code !== 0 ?
               reject(errorHandler(code, err)) :
               resolve(clean(res));
