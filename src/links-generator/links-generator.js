@@ -81,9 +81,9 @@ export function dependencies(
   });
 }
 
-function generateLinkP(targetModuleDir, namespace, name, map, id, sourceComponentDir) {
+function generateLinkP(targetModuleDir, namespace, name, map, id, sourceComponentsDir) {
   const targetDir = path.join(targetModuleDir, namespace, name, INDEX_JS);
-  const relativeComponentsDir = path.join(...Array(4).fill('..'), sourceComponentDir);
+  const relativeComponentsDir = path.join(...Array(4).fill('..'), sourceComponentsDir);
   const dependencyDir = path.join(relativeComponentsDir, map[id].loc, map[id].file);
   return writeFileP(targetDir, linkTemplate(dependencyDir));
 }
