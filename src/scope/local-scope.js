@@ -3,7 +3,7 @@ import path from 'path';
 import { BIT_HIDDEN_DIR } from '../constants';
 import { readFileP } from '../utils';
 
-export default class InlineScope {
+export default class LocalScope {
   scopeJson: Object;
 
   constructor(scopeJson: Object) {
@@ -14,7 +14,7 @@ export default class InlineScope {
     return this.scopeJson.name;
   }
 
-  static load(projectRoot: string): Promise<InlineScope> {
+  static load(projectRoot: string): Promise<LocalScope> {
     const loadScopeJson = (): Promise<Object> => {
       const scopeJsonPath = path.join(projectRoot, BIT_HIDDEN_DIR, 'scope.json');
       return readFileP(scopeJsonPath).then(data => JSON.parse(data));
@@ -22,7 +22,7 @@ export default class InlineScope {
 
     return new Promise((resolve, reject) => {
       loadScopeJson(projectRoot)
-        .then(scopeJson => resolve(new InlineScope(scopeJson)))
+        .then(scopeJson => resolve(new LocalScope(scopeJson)))
         .catch(err => reject(err));
     });
   }

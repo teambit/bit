@@ -14,7 +14,7 @@ const mapFixture = {
     loc: 'compilers/flow/bit.envs/2',
     file: 'impl.js',
     dependencies: [],
-    isFromInlineScope: true,
+    isFromLocalScope: true,
   },
   'bit.utils/object/foreach::1': {
     loc: 'object/foreach/bit.utils/1',
@@ -157,7 +157,7 @@ describe('publicApiForExportPendingComponents', () => {
       expect(fsMock.outputFile.mock.calls.length).toBe(0);
     });
   });
-  it('should generate links for components with isFromInlineScope = true', () => {
+  it('should generate links for components with isFromLocalScope = true', () => {
     const result = linksGenerator.publicApiForExportPendingComponents('/my/project/node_modules/bit', mapFixture);
     return result
       .then(() => {

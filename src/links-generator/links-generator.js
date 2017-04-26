@@ -134,9 +134,9 @@ export function publicApiRootLevel(targetModuleDir: string, namespaces: string[]
 
 export function publicApiForExportPendingComponents(targetModuleDir: string, map: Object):
 Promise<Object> {
+  const components = {};
   const exportPendingComponents = Object.keys(map)
     .filter(component => map[component].isFromInlineScope === true);
-  const components = {};
   if (!exportPendingComponents.length) return Promise.resolve({ map, components });
   const writeAllFiles = exportPendingComponents.map((component) => {
     const [namespace, name] = map[component].loc.split(ID_DELIMITER);

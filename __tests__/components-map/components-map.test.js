@@ -46,10 +46,10 @@ describe('build', () => {
     const result = componentsMap.build('my/project', 'my/project/components');
     return result.then((map) => {
       expect(map).toEqual({
-        'bit.envs/compilers/flow::2': { dependencies: [], file: 'impl.js', loc: 'compilers/flow/bit.envs/2', isFromInlineScope: false },
-        'bit.utils/object/foreach::1': { dependencies: [], file: 'impl.js', loc: 'object/foreach/bit.utils/1', isFromInlineScope: false },
-        'project/global/is-number::1': { dependencies: [], file: 'impl.js', loc: 'global/is-number/project/1', isFromInlineScope: true },
-        'bit.utils/object/values::1': { dependencies: ['bit.utils/object/foreach::1'], file: 'impl.js', loc: 'object/values/bit.utils/1', isFromInlineScope: false }});
+        'bit.envs/compilers/flow::2': { dependencies: [], file: 'impl.js', loc: 'compilers/flow/bit.envs/2', isFromLocalScope: false },
+        'bit.utils/object/foreach::1': { dependencies: [], file: 'impl.js', loc: 'object/foreach/bit.utils/1', isFromLocalScope: false },
+        'project/global/is-number::1': { dependencies: [], file: 'impl.js', loc: 'global/is-number/project/1', isFromLocalScope: true },
+        'bit.utils/object/values::1': { dependencies: ['bit.utils/object/foreach::1'], file: 'impl.js', loc: 'object/values/bit.utils/1', isFromLocalScope: false }});
     });
   });
 });

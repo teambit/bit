@@ -9,7 +9,7 @@ import {
   DEFAULT_DIST_DIRNAME,
   NO_PLUGIN_TYPE,
 } from '../constants';
-import InlineScope from '../scope/inline-scope';
+import LocalScope from '../scope/local-scope';
 
 const generateId = ({ scope, namespace, name, version }) =>
   scope + ID_DELIMITER + namespace + ID_DELIMITER + name + VERSION_DELIMITER + version;
@@ -19,12 +19,11 @@ function getRequiredFile(bitJson: BitJson): string {
     path.join(DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME) : bitJson.impl;
 }
 
-function getInlineScopeNameP(projectRoot: string): Promise<string> {
+function getLocalScopeNameP(projectRoot: string): Promise<?string> {
   return new Promise((resolve) => {
-    const inlineScope = InlineScope.load(projectRoot);
-    inlineScope
-      .then(inlineScopeName => resolve(inlineScopeName.getScopeName()))
-      .catch(() => resolve(''));
+    return LocalScope.load(projectRoot)
+      .then(localScopeName => resolve(localScopeName.getScopeName()))
+      .catch(() => resolve(null));
   });
 }
 
@@ -46,7 +45,7 @@ export function buildForInline(targetComponentsDir: string, bitJson: BitJson): P
 export function build(projectRoot: string, targetComponentsDir: string): Promise<Object> {
   return new Promise((resolve, reject) => {
     const componentsMap = {};
-    getInlineScopeNameP(projectRoot).then((inlineScopeName) => {
+    getLocalScopeNameP(projectRoot).then((localScopeName) => {
       glob('*/*/*/*', { cwd: targetComponentsDir }, (err, files) => {
         if (err) return reject(err);
         files.forEach((loc) => {
@@ -58,9 +57,9 @@ export function build(projectRoot: string, targetComponentsDir: string): Promise
             dependencies.push(dependency + VERSION_DELIMITER + bitJson.dependencies[dependency]);
           });
           const file = getRequiredFile(bitJson);
-          const isFromInlineScope = inlineScopeName === scope;
+          const isFromLocalScope = localScopeName ? localScopeName === scope : false;
 
-          componentsMap[id] = { loc, file, dependencies, isFromInlineScope };
+          componentsMap[id] = { loc, file, dependencies, isFromLocalScope };
         });
         return resolve(componentsMap);
       });
