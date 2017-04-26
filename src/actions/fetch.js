@@ -52,7 +52,8 @@ export default function fetchAction(componentIds: string[]): Promise<any> {
 
   return getIdsFromBitJsonIfNeeded(componentIds, projectRoot)
   .then((ids) => { // eslint-disable-line
-    return importComponents(ids, true); // import and save to bitJson
+    return importComponents(ids, true) // import and save to bitJson
+      .then(() => ids);
     // return Promise.resolve(responseMock); // mock - replace to the real importer
   });
 }

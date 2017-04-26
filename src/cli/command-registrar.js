@@ -43,7 +43,7 @@ function start() {
 
     currentCommand.action((args, options) => {
       if (c.loader === true) loader.on();
-      loader.start(`performing ${c.name} command`);
+      loader.start(c.loaderText || `performing ${c.name} command`);
       c.action(args, options)
       .then(c.report)
       .then(logAndExit)

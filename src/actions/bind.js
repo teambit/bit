@@ -12,13 +12,24 @@ export default function bindAction(): Promise<any> {
   const targetModuleDir = path.join(projectRoot, MODULES_DIR, MODULE_NAME);
   const targetInlineComponentsDir = path.join(projectRoot, INLINE_COMPONENTS_DIRNAME);
   const projectBitJson = BitJson.load(projectRoot);
+  const boundComponents = {};
   return removeDirP(targetModuleDir)
     .then(() => componentsMap.build(projectRoot, targetComponentsDir))
     .then(map => linksGenerator.dependencies(targetComponentsDir, map, projectBitJson))
     .then(map => linksGenerator.publicApiForExportPendingComponents(targetModuleDir, map))
-    .then(map => linksGenerator.publicApiComponentLevel(targetModuleDir, map, projectBitJson))
-    .then(() => componentsMap.buildForInline(targetInlineComponentsDir, projectBitJson))
+    .then(({ map, components }) => {
+      Object.assign(boundComponents, components);
+      return linksGenerator.publicApiComponentLevel(targetModuleDir, map, projectBitJson);
+    })
+    .then((components) => {
+      Object.assign(boundComponents, components);
+      return componentsMap.buildForInline(targetInlineComponentsDir, projectBitJson);
+    })
     .then(inlineMap => linksGenerator.publicApiForInlineComponents(targetModuleDir, inlineMap))
-    .then(() => linksGenerator.publicApiNamespaceLevel(targetModuleDir))
-    .then(namespaces => linksGenerator.publicApiRootLevel(targetModuleDir, namespaces));
+    .then((components) => {
+      Object.assign(boundComponents, components);
+      return linksGenerator.publicApiNamespaceLevel(targetModuleDir);
+    })
+    .then(namespaces => linksGenerator.publicApiRootLevel(targetModuleDir, namespaces))
+    .then(() => boundComponents);
 }
