@@ -14,18 +14,18 @@ export default ({ deps, dir, silent = true }:
         __dir__: dir,
       }
     });
-    
+
     process.on('exit', () => {
       removeSync('./package.json');
       child.kill('SIGKILL');
     });
-    
+
     child.on('message', ({ type, payload }: { type: string, payload: Object }) => {
       removeSync('./package.json');
       if (type === 'error') return reject(payload);
       return resolve(payload);
     });
-    
+
     child.on('error', (e) => {
       removeSync('./package.json');
       reject(e);

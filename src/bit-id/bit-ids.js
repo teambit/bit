@@ -7,7 +7,7 @@ export default class BitIds extends Array<BitId> {
   serialize(): string[] {
     return this.map(bitId => bitId.toString());
   }
-  
+
   toObject(): Object {
     return mergeAll(
       this.map(bitId => bitId.toObject())
@@ -19,10 +19,10 @@ export default class BitIds extends Array<BitId> {
       ...array.map(id => BitId.parse(id))
     );
   }
-  
+
   static fromObject(dependencies: {[string]: string}) {
     const array = [];
-    
+
     forEach(dependencies, (version, id) => {
       array.push(BitId.parse(id, null, version));
     });

@@ -15,7 +15,7 @@ export default class Build extends Command {
     ['s', 'save', 'for running build and save the results in the model'],
     ['v', 'verbose', 'showing npm verbose output for inspection'],
   ];
-  
+
   action([id]: string[], { inline, save, environment, verbose }: {
     inline: ?bool,
     save: ?bool,
@@ -26,7 +26,7 @@ export default class Build extends Command {
       if (inline) return buildInline(id);
       return buildInScope({ id, environment, save, verbose });
     }
-    
+
     return build()
     .then(res => ({
       res,

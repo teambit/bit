@@ -53,7 +53,7 @@ export class DependencyMap extends Map<string, BitIds> {
     forEach(json, (val, key) => {
       matrix.push([key, val.map(bitDep => BitId.parse(bitDep.id))]);
     });
-    
+
     return new DependencyMap(repository, matrix);
   }
 }

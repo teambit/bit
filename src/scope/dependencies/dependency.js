@@ -33,5 +33,5 @@ export default class Dependency {
     if (!depName) throw new InvalidDependency();
     const { name, box, remote } = parseDepName(depName);
     return new Dependency(name, box, remote, Version.parse(version));
-  } 
+  }
 }

@@ -10,8 +10,8 @@ export type Options = {
 };
 
 export default function writeFile(
-    path: string, 
-    contents: string|Buffer, 
+    path: string,
+    contents: string|Buffer,
     options?: Options = {}): Promise<any> {
   return promisify(outputFile)(path, contents, options)
     .then(() => {

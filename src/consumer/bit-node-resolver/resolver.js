@@ -15,7 +15,7 @@ export default (bitPath: string, opts: ?{ onlyPath: ?bool }): any => {
       return require(distFile);
     } catch (e) { throw e; }
   }
-    
+
   const bitJson = BitJson.loadSync(bitPath);
   const implFile = path.join(bitPath, bitJson.getImplBasename());
   try {

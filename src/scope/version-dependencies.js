@@ -44,7 +44,7 @@ export default class VersionDependencies {
         }, []);
 
         return new ComponentObjects(
-          component.component, 
+          component.component,
           flattened.concat(component.objects));
       });
   }

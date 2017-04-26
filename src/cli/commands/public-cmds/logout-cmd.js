@@ -6,7 +6,7 @@ export default class Logout extends Command {
   description = 'logout from bit';
   alias = '';
   opts = [];
-  
+
   action(): Promise<any> {
     const m = this.alias;
     console.log('logged out from bit...');

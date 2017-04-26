@@ -23,7 +23,7 @@ export default class Import extends Command {
   loader = true;
 
   action([ids, ]: [string[], ], { save, tester, compiler, verbose, prefix, environment }:
-  { 
+  {
     save?: bool,
     tester?: bool,
     compiler?: bool,
@@ -37,7 +37,7 @@ export default class Import extends Command {
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
     }
-    
+
     return importAction({ ids, save, tester, compiler, verbose, prefix, environment });
   }
 
@@ -52,7 +52,7 @@ export default class Import extends Command {
   }): string {
     let dependenciesOutput;
     let envDependenciesOutput;
-    
+
     if (dependencies && !R.isEmpty(dependencies)) {
       const components = dependencies.map(R.prop('component'));
       const peerDependencies = R.flatten(dependencies.map(R.prop('dependencies')));
@@ -62,7 +62,7 @@ export default class Import extends Command {
         paintHeader('successfully imported the following Bit components.')
       ).join('\n');
 
-      const peerDependenciesOutput = (peerDependencies && !R.isEmpty(peerDependencies)) ? 
+      const peerDependenciesOutput = (peerDependencies && !R.isEmpty(peerDependencies)) ?
       immutableUnshift(
         peerDependencies.map(formatBit),
         paintHeader('\n\nsuccessfully imported the following peer dependencies.')
@@ -84,10 +84,10 @@ export default class Import extends Command {
       if (dependenciesOutput && envDependenciesOutput) {
         return `${dependenciesOutput}\n\n${envDependenciesOutput}`;
       }
-      
+
       return 'nothing to import';
     };
-    
+
     const logObject = obj => `> ${R.keys(obj)[0]}: ${R.values(obj)[0]}`;
     const getWarningOutput = () => {
       if (!warnings) return '';

@@ -23,7 +23,7 @@ export default function testInScope({ id, environment, save, verbose, scopePath 
         return consumer.scope.runComponentSpecs({ bitId, environment, save, consumer, verbose });
       });
   }
-  
+
   if (scopePath) return loadFromScope();
 
   return loadFromConsumer()

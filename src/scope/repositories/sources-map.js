@@ -12,7 +12,7 @@ export default class SourcesJson extends Map<BitId, BitIds> {
     super(sourcesTuples);
     this.sources = sources;
   }
-  
+
   getPath(): string {
     return path.join(this.sources.getPath(), SOURCES_JSON);
   }

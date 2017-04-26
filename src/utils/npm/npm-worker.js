@@ -19,6 +19,6 @@ npmi(options, (err, result) => {
   if (err) {
     return process.send({ type: 'error', payload: serializeError(err) });
   }
-  
+
   return process.send({ type: 'success', payload: result });
 });

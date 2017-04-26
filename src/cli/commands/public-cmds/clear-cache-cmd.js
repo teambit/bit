@@ -11,7 +11,7 @@ export default class ClearCache extends Command {
   alias = 'cc';
   opts = [];
   loader = false;
-  
+
   action(): Promise<any> {
     fs.removeSync(MODULES_CACHE_DIR);
     fs.mkdirsSync(MODULES_CACHE_DIR);

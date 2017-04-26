@@ -4,7 +4,7 @@
  * determines whether string `str` ref contains substring `searchRef`.
  * @param {string} str
  * @param {string} searchStr
- * @returns {boolean} 
+ * @returns {boolean}
  * @example
  * ```js
  *  contains('foo bar', 'bar') // => true

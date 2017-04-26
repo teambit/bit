@@ -15,7 +15,7 @@ export default class Source extends Repository {
 
   getBitPath(bitName: string) {
     return path.join(this.getPath(), bitName);
-  }  
+  }
 
   getPartial(name: string) {
     // @TODO - partial bit does not exist anymore, implement something else to load bits in the sources dir
