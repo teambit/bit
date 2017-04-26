@@ -1,6 +1,7 @@
-import { buildForInline, build } from './components-map';
+import { buildForInline, build, buildForNamespaces } from './components-map';
 
 export {
   buildForInline,
   build,
+  buildForNamespaces,
 };

@@ -1,7 +1,6 @@
 // @flow
 import path from 'path';
 import R from 'ramda';
-import glob from 'glob';
 import BitJson from 'bit-scope-client/bit-json';
 import camelcase from 'camelcase';
 import { MODULE_NAME,
@@ -91,44 +90,37 @@ function generateLinkP(targetModuleDir, namespace, name, map, id, sourceComponen
 export function publicApiForInlineComponents(
   targetModuleDir: string,
   inlineMap: Object,
-) :Promise<Object> {
+): Promise<Object> {
   const components = {};
   if (!inlineMap || R.isEmpty(inlineMap)) return Promise.resolve(components);
 
   const writeAllFiles = Promise.all(Object.keys(inlineMap).map((id) => {
     const [namespace, name] = id.split(path.sep);
     components[`${namespace}/${name}`] = id;
-    return generateLinkP(targetModuleDir, namespace, name, inlineMap, id, INLINE_COMPONENTS_DIRNAME);
+    return generateLinkP(targetModuleDir, namespace, name, inlineMap,
+      id, INLINE_COMPONENTS_DIRNAME);
   }));
 
   return writeAllFiles.then(() => components);
 }
 
-export function publicApiNamespaceLevel(targetModuleDir: string) {
-  return new Promise((resolve) => {
-    glob('*/*', { cwd: targetModuleDir }, (err, dirs) => {
-      if (!dirs.length) return resolve();
-      const namespaceMap = {};
-      dirs.forEach((dir) => {
-        const [namespace, name] = dir.split(path.sep);
-        if (namespaceMap[namespace]) namespaceMap[namespace].push(name);
-        else namespaceMap[namespace] = [name];
-      });
-
-      const writeAllFiles = [];
-      Object.keys(namespaceMap).forEach((namespace) => {
-        const links = namespaceMap[namespace].map(name => `${camelcase(name)}: require('./${name}')`);
-        const indexFile = path.join(targetModuleDir, namespace, INDEX_JS);
-        writeAllFiles.push(writeFileP(indexFile, linksTemplate(links)));
-      });
-
-      return Promise.all(writeAllFiles).then(() => resolve(Object.keys(namespaceMap)));
-    });
+export function publicApiNamespaceLevel(
+  targetModuleDir: string, namespacesMap: Object): Promise<Object> {
+  if (!namespacesMap || R.isEmpty(namespacesMap)) return Promise.resolve(namespacesMap);
+  const writeAllFiles = [];
+  Object.keys(namespacesMap).forEach((namespace) => {
+    const links = namespacesMap[namespace].map(name => `${camelcase(name)}: require('./${name}')`);
+    const indexFile = path.join(targetModuleDir, namespace, INDEX_JS);
+    writeAllFiles.push(writeFileP(indexFile, linksTemplate(links)));
   });
+
+  return Promise.all(writeAllFiles).then(() => namespacesMap);
 }
 
-export function publicApiRootLevel(targetModuleDir: string, namespaces: string[]) {
-  if (!namespaces || !namespaces.length) return Promise.resolve();
+export function publicApiRootLevel(
+  targetModuleDir: string, namespacesMap: Object): Promise<*> {
+  if (!namespacesMap || R.isEmpty(namespacesMap)) return Promise.resolve();
+  const namespaces = Object.keys(namespacesMap);
   const links = namespaces.map(namespace => namespaceTemplate(namespace));
   const indexFile = path.join(targetModuleDir, INDEX_JS);
   return writeFileP(indexFile, linksTemplate(links));

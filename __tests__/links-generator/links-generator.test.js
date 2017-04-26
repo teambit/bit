@@ -1,4 +1,3 @@
-import mockFs from 'mock-fs';
 import fsMock from 'fs-extra';
 import * as linksGenerator from '../../src/links-generator';
 
@@ -27,6 +26,8 @@ const mapFixture = {
     dependencies: ['bit.utils/object/foreach::1'],
   },
 };
+
+const namespacesMapFixture = { compilers: ['flow'] };
 
 const projectBitJsonFixture = {
   impl: 'impl.js',
@@ -114,13 +115,13 @@ describe('publicApiRootLevel', () => {
   });
 
   it('should generate an index.js in the node_modules/bit root', () => {
-    const result = linksGenerator.publicApiRootLevel('/my/project/node_modules/bit', ['global']);
+    const result = linksGenerator.publicApiRootLevel('/my/project/node_modules/bit', namespacesMapFixture);
     return result.then(() => {
       const outputFileCalls = fsMock.outputFile.mock.calls;
       expect(outputFileCalls.length).toBe(1);
       expect(outputFileCalls[0][0]).toBe('/my/project/node_modules/bit/index.js');
       expect(outputFileCalls[0][1]).toBe(`module.exports = {
-  global: require('./global')
+  compilers: require('./compilers')
 };`);
     });
   });
@@ -128,17 +129,14 @@ describe('publicApiRootLevel', () => {
 
 describe('publicApiNamespaceLevel', () => {
   it('should not create links if there are no namespaces', () => {
-    const result = linksGenerator.publicApiNamespaceLevel('dir');
+    const result = linksGenerator.publicApiNamespaceLevel('dir', {});
     return result.then(() => {
       expect(fsMock.outputFile.mock.calls.length).toBe(0);
     });
   });
 
   it('should generate an index.js in the node_modules/bit/namespace directory', () => {
-    mockFs({
-      '/my/project/node_modules/bit/compilers/flow': {},
-    });
-    const result = linksGenerator.publicApiNamespaceLevel('/my/project/node_modules/bit');
+    const result = linksGenerator.publicApiNamespaceLevel('/my/project/node_modules/bit', namespacesMapFixture);
     return result.then(() => {
       const outputFileCalls = fsMock.outputFile.mock.calls;
       expect(outputFileCalls.length).toBe(1);

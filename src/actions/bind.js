@@ -28,8 +28,9 @@ export default function bindAction(): Promise<any> {
     .then(inlineMap => linksGenerator.publicApiForInlineComponents(targetModuleDir, inlineMap))
     .then((components) => {
       Object.assign(boundComponents, components);
-      return linksGenerator.publicApiNamespaceLevel(targetModuleDir);
+      return componentsMap.buildForNamespaces(targetModuleDir);
     })
-    .then(namespaces => linksGenerator.publicApiRootLevel(targetModuleDir, namespaces))
+    .then(namespacesMap => linksGenerator.publicApiNamespaceLevel(targetModuleDir, namespacesMap))
+    .then(namespacesMap => linksGenerator.publicApiRootLevel(targetModuleDir, namespacesMap))
     .then(() => boundComponents);
 }

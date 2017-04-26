@@ -42,6 +42,21 @@ export function buildForInline(targetComponentsDir: string, bitJson: BitJson): P
   });
 }
 
+export function buildForNamespaces(targetModuleDir: string): Promise<Object> {
+  return new Promise((resolve, reject) => {
+    const namespaceMap = {};
+    glob('*/*', { cwd: targetModuleDir }, (err, dirs) => {
+      if (err) return reject(err);
+      dirs.forEach((dir) => {
+        const [namespace, name] = dir.split(path.sep);
+        if (namespaceMap[namespace]) namespaceMap[namespace].push(name);
+        else namespaceMap[namespace] = [name];
+      });
+      return resolve(namespaceMap);
+    });
+  });
+}
+
 export function build(projectRoot: string, targetComponentsDir: string): Promise<Object> {
   return new Promise((resolve, reject) => {
     const componentsMap = {};

@@ -6,7 +6,8 @@ import { bindAction } from '../../actions';
 const reportComponents = components => Object.keys(components)
   .map(component => chalk.cyan(`\t${component} => ${components[component]}`)).join('\n');
 const reportTitle = components => chalk.underline(`Bound ${chalk.bold(Object.keys(components).length)} components\n`);
-export const report = components => reportTitle(components) + reportComponents(components);
+export const report = (components: Object) => reportTitle(components)
++ reportComponents(components);
 
 const bindCommand: Command = {
   name: 'bind',
