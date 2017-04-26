@@ -81,22 +81,24 @@ export function dependencies(
   });
 }
 
-function generateLinkP(targetModuleDir, namespace, name, map, id) {
+function generateLinkP(targetModuleDir, namespace, name, map, id, sourceComponentDir) {
   const targetDir = path.join(targetModuleDir, namespace, name, INDEX_JS);
-  const relativeComponentsDir = path.join(...Array(4).fill('..'), INLINE_COMPONENTS_DIRNAME);
+  const relativeComponentsDir = path.join(...Array(4).fill('..'), sourceComponentDir);
   const dependencyDir = path.join(relativeComponentsDir, map[id].loc, map[id].file);
   return writeFileP(targetDir, linkTemplate(dependencyDir));
 }
 
-export function publicApiForInlineComponents(targetModuleDir: string, inlineMap: Object):
-Promise<Object> {
+export function publicApiForInlineComponents(
+  targetModuleDir: string,
+  inlineMap: Object,
+) :Promise<Object> {
   const components = {};
   if (!inlineMap || R.isEmpty(inlineMap)) return Promise.resolve(components);
 
   const writeAllFiles = Promise.all(Object.keys(inlineMap).map((id) => {
     const [namespace, name] = id.split(path.sep);
     components[`${namespace}/${name}`] = id;
-    return generateLinkP(targetModuleDir, namespace, name, inlineMap, id);
+    return generateLinkP(targetModuleDir, namespace, name, inlineMap, id, INLINE_COMPONENTS_DIRNAME);
   }));
 
   return writeAllFiles.then(() => components);
@@ -132,32 +134,40 @@ export function publicApiRootLevel(targetModuleDir: string, namespaces: string[]
   return writeFileP(indexFile, linksTemplate(links));
 }
 
-export function publicApiForExportPendingComponents(targetModuleDir: string, map: Object):
-Promise<Object> {
+export function publicApiForExportPendingComponents(
+  targetModuleDir: string,
+  map: Object,
+): Promise<Object> {
   const components = {};
   const exportPendingComponents = Object.keys(map)
-    .filter(component => map[component].isFromInlineScope === true);
+    .filter(component => map[component].isFromLocalScope === true);
+
   if (!exportPendingComponents.length) return Promise.resolve({ map, components });
   const writeAllFiles = exportPendingComponents.map((component) => {
     const [namespace, name] = map[component].loc.split(ID_DELIMITER);
     components[`${namespace}/${name}`] = component;
-    return generateLinkP(targetModuleDir, namespace, name, map, component);
+    return generateLinkP(targetModuleDir, namespace, name, map, component, COMPONENTS_DIRNAME);
   });
   return Promise.all(writeAllFiles).then(() => ({ map, components }));
 }
 
-export function publicApiComponentLevel(targetModuleDir: string, map: Object,
-  projectBitJson: BitJson): Promise<Object> {
+export function publicApiComponentLevel(
+  targetModuleDir: string,
+  map: Object,
+  projectBitJson: BitJson,
+): Promise<Object> {
   const components = {};
   if (!projectBitJson.dependencies || R.isEmpty(projectBitJson.dependencies)) {
     return Promise.resolve(components);
   }
+
   const writeAllFiles = Object.keys(projectBitJson.dependencies).map((id) => {
     const [, namespace, name] = id.split(ID_DELIMITER);
     const mapId = id + VERSION_DELIMITER + projectBitJson.dependencies[id];
     if (!map[mapId]) return Promise.resolve(); // the file is in bit.json but not fetched yet
     components[`${namespace}/${name}`] = mapId;
-    return generateLinkP(targetModuleDir, namespace, name, map, mapId);
+    return generateLinkP(targetModuleDir, namespace, name, map, mapId, COMPONENTS_DIRNAME);
   });
+
   return Promise.all(writeAllFiles).then(() => components);
 }
