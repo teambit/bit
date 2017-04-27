@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Fixed
+
+- fixed bug with list/show remote components with misc files.
+
 ### Added
 
 - the compiler can implement a build method instead of compile, get an entry file and run webpack for example (wip).
