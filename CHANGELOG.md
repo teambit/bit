@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Fixed
+
+- fixed bug with list/show remote components with misc files.
+
 ## [0.5.2] - 2017-04-27
 
 ### Fixed
