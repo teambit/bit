@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+- put index procedure under try catch, warns in case it fails.
 - fixed bug with list/show remote components with misc files.
 
 ## [0.5.2] - 2017-04-27
