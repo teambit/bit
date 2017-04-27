@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.2] - 2017-04-27
+
 ### Fixed
 
 - issue with npm ensure that was caused due to latest version changes
