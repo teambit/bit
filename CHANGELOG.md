@@ -15,6 +15,8 @@ implemented for inline_components, and still need to implement environment modul
 - run some hooks (for now: onCommit, onCreate, onExport and onImport) using a language-driver
 - lang attribute on the bit.json, enable language that will save on the model of the component.
 
+## [0.5.2] - 2017-04-27
+
 ### Fixed
 
 - issue with npm ensure that was caused due to latest version changes
