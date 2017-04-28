@@ -1,5 +1,4 @@
 /** @flow */
-/* eslint-disable */
 import os from 'os';
 import { v4 } from 'uuid';
 import fs from 'fs-extra';
@@ -18,6 +17,7 @@ const currentPath = process.cwd();
 export default class Environment {
   path: string;
   component: Component;
+  componentsDependencies: ConsumerComponent[] = [];
 
   constructor() {
     this.path = path.join(root, v4());
@@ -40,9 +40,9 @@ export default class Environment {
       return scope.get(bitId)
         .then((component) => {
           component.component.write(this.path, true, true);
-          this.component = component;
+          this.component = component.component;
           return component;
-        })
+        });
     });
   }
 
@@ -66,24 +66,36 @@ export default class Environment {
     }));
   }
 
-  importDependencies() {
-    // TODO: install also current bit dependencies.
+  importDependencies(): Promise<ConsumerComponent[]> {
     if (!this.component) return Promise.reject();
     return loadScope(currentPath).then((scope) => {
-      // TODO: currently it does not work with flow version 4. it gets invalid json.
-      this.component.component.compilerId.version = 'latest';
-      this.component.component.testerId.version = 'latest';
-      const ids = [this.component.component.compilerId, this.component.component.testerId];
-      return scope.getMany(ids).then((componentDependenciesArr) => {
+      // todo: (optimization) import() gets the dependencies data already
+      const dependencies = this.component.dependencies || [];
+
+      // TODO: for some reason the current versions of compiler/tester are not working.
+      // It returns "invalid json" error.
+      if (this.component.compilerId) {
+        this.component.compilerId.version = 'latest';
+        dependencies.push(this.component.compilerId);
+      }
+      if (this.component.testerId) {
+        this.component.testerId.version = 'latest';
+        dependencies.push(this.component.testerId);
+      }
+      return scope.getMany(dependencies).then((componentDependenciesArr) => {
         return this.writeToEnvironmentDir(componentDependenciesArr);
+      }).then((componentsDependencies) => {
+        this.componentsDependencies = componentsDependencies;
+        return componentsDependencies;
       });
     });
   }
 
-  installNpmPackages(components: ConsumerComponent[]) {
-    // components.push(this.component);
-    // console.log('installNpmPackages', components);
-    const deps = mergeAll(components.map(({ packageDependencies }) => packageDependencies));
+  installNpmPackages(): Promise<*> {
+    if (!this.component) return Promise.reject();
+    this.componentsDependencies.push(this.component);
+    const deps = mergeAll(this.componentsDependencies
+      .map(({ packageDependencies }) => packageDependencies));
     return npmInstall({ deps, dir: this.path, silent: false });
   }
 
@@ -100,7 +112,8 @@ export default class Environment {
   }
 
   getMiscFilesPaths() {
-    return this.component ? this.component.miscFiles.map(misc => path.join(this.path, misc)) : undefined;
+    return this.component ?
+      this.component.miscFiles.map(misc => path.join(this.path, misc)) : undefined;
   }
 
   destroy(): Promise<*> {
