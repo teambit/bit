@@ -6,7 +6,7 @@ export default class Login extends Command {
   description = 'login to bit';
   alias = '';
   opts = [];
-  
+
   action([name, password]: [string, string]): Promise<any> {
     const m = this.alias;
     console.log('logging in to bit.');

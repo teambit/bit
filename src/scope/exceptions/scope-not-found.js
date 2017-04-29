@@ -1,1 +1,1 @@
-export default class ScopeNotFound extends Error {} 
+export default class ScopeNotFound extends Error {}

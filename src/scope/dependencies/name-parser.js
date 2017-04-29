@@ -11,7 +11,7 @@ export default function parseDepName(depName: string): DepNameProps {
   const [remote, box, name] = depName.split(DEPENDENCY_DELIMITER);
   if (!name) {
     return {
-      remote, 
+      remote,
       name: box,
       box: null
     };

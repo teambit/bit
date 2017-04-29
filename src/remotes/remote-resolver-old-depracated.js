@@ -6,16 +6,16 @@
 // export function parseRemoteStr(remoteStr: string) {
 //   if (!remoteStr.startsWith(REMOTE_ALIAS_SIGN)) return null;
 //   const [, alias] = remoteStr.split(REMOTE_ALIAS_SIGN);
-//   return alias; 
-// } 
+//   return alias;
+// }
 
 // export function remoteResolver(name, remotes: Remotes, localScope: Scope) {
 //   if (name === LOCAL_SCOPE_NOTATION) return new LocalScope(localScope);
 //   const parsedRemote = parseRemoteStr(name);
 //   if (parsedRemote) {
-//     return remotes.get(parsedRemote); 
+//     return remotes.get(parsedRemote);
 //   }
-  
+
 //   // @TODO return community remote
 //   return null;
 // }

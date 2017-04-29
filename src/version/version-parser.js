@@ -13,7 +13,7 @@ function isLatestTested(versionStr: string) {
   if (splited.length !== 2) return false;
   const [, numberStr] = splited;
   const version = parseInt(numberStr);
-  if (!version) return false; 
+  if (!version) return false;
   return true;
 }
 
@@ -39,5 +39,5 @@ export default function versionParser(versionStr: string): Version {
   if (isLatest(versionStr)) return returnLatest();
   if (isLatestTested(versionStr)) return returnLatestTestedVersion(versionStr);
   if (isRegular(versionStr)) return returnRegular(versionStr);
-  throw new InvalidVersion(); 
+  throw new InvalidVersion();
 }

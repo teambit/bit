@@ -7,7 +7,7 @@ const ${camelcase(name)} = require('./impl.js');
 
 describe('${camelcase(name)}', () => {
   it('', () => {
-      
+
   });
 });`;
 };

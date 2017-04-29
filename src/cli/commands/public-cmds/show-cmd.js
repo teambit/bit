@@ -18,12 +18,12 @@ export default class Show extends Command {
 
   action([id, ]: [string], { inline, json, versions }:
   { inline: ?bool, json: ?bool, versions: ?bool }): Promise<*> {
-    
+
     function getBitComponent(allVersions: ?bool) {
       if (inline) return getInlineBit({ id });
       return getScopeBit({ id, allVersions });
     }
-    
+
     if (versions) {
       return getBitComponent(versions)
       .then(components => ({
@@ -39,7 +39,7 @@ export default class Show extends Command {
     }));
   }
 
-  report({ component, json, versions, components }: { 
+  report({ component, json, versions, components }: {
     component: ?ConsumerComponent,
     json: ?bool,
     versions: ?bool,

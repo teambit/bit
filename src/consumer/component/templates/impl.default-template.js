@@ -7,9 +7,9 @@ export default ({ name }: { name: string }): string => {
  * {description}
  * @param {type} name
  * @returns
- * 
+ *
  */
 module.exports = function ${camelcase(name)}() {
-   
+
 };`;
 };

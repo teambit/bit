@@ -9,10 +9,10 @@ export default class Show extends Command {
   description = 'log a component version messages';
   alias = '';
   opts = [];
-  
-  action([id, ]: [string]): Promise<*> {  
+
+  action([id, ]: [string]): Promise<*> {
     return getComponentLogs(id)
-    .then(logs => 
+    .then(logs =>
       R.reverse(R.values(logs))
       .map(R.evolve(
         {

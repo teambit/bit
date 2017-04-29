@@ -10,8 +10,8 @@
 //   opts = [
 //     ['i', 'inline', 'remove inline bit']
 //   ];
-  
-//   action([name]: [string], opts: any): Promise<any> {    
+
+//   action([name]: [string], opts: any): Promise<any> {
 //     return remove(name, opts)
 //     .then(() => ({
 //       name,

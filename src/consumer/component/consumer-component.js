@@ -22,6 +22,7 @@ import {
   DEFAULT_BIT_VERSION,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
+  INLINE_BITS_DIRNAME
 } from '../../constants';
 
 export type ComponentProps = {
@@ -185,6 +186,42 @@ export default class Component {
     return BitIds.fromObject(this.dependencies);
   }
 
+  buildIfNeeded(
+    condition: bool,
+    compiler: any,
+    src: string,
+    consumer?: Consumer,
+  ): Promise<?{ code: string, mappings?: string }> {
+    if (!condition) { return Promise.resolve({ code: src }); }
+
+    if (compiler.build) {
+      let componentRoot;
+      // if a consumer exist it's on inline components.
+      if (consumer) {
+        componentRoot = path.join(consumer.projectPath, INLINE_BITS_DIRNAME, this.box, this.name);
+      } else {
+        // TODO - here we need to create the environment and provide the root
+        componentRoot = 'Here the root should be provided by the environment module';
+        throw Error('(wip) - need to implement environment module');
+      }
+
+      const metaData = {
+        src,
+        entry: this.implFile,
+        misc: this.miscFiles,
+        root: componentRoot,
+      };
+
+      return compiler.build(metaData); // returns a promise
+    }
+
+    if (compiler.compile) {
+      return Promise.resolve(compiler.compile(src));
+    }
+
+    return Promise.reject(`"${this.compilerId.toString()}" does not have a valid compiler interface, it has to return a build method`);
+  }
+
   write(bitDir: string, withBitJson: boolean, force?: boolean = true): Promise<Component> {
     return mkdirp(bitDir)
       .then(() => this.impl.write(bitDir, this.implFile, force))
@@ -204,14 +241,6 @@ export default class Component {
     save?: ?bool,
     verbose?: ?bool
   }): Promise<?Results> {
-    function compileIfNeeded(
-      condition: bool,
-      compiler: ?{ compile?: (string) => { code: string } },
-      src: string): ?string {
-      if (!condition || !compiler || !compiler.compile) return src;
-      return compiler.compile(src).code;
-    }
-
     const installEnvironmentsIfNeeded = (): Promise<any> => {
       if (environment) {
         return scope.installEnvironment({
@@ -232,25 +261,34 @@ export default class Component {
           this.testerId, { pathOnly: true, bareScope: !consumer });
         const compiler = this.compilerId ? scope.loadEnvironment(
           this.compilerId, { bareScope: !consumer }) : null;
-        const implSrc = compileIfNeeded(!!this.compilerId, compiler, this.impl.src);
+        const bundledImplP = this.buildIfNeeded(!!this.compilerId, compiler, this.impl.src);
+
         // $FlowFixMe
-        const specsSrc = compileIfNeeded(!!this.compilerId, compiler, this.specs.src);
-        return specsRunner.run({ scope, testerFilePath, implSrc, specsSrc, testerId: this.testerId })
-        .then((specsResults) => {
-          this.specsResults = SpecsResults.createFromRaw(specsResults);
-          if (rejectOnFailure && !this.specsResults.pass) {
-            return Promise.reject(new ComponentSpecsFailed());
-          }
+        const bundledSpecsSrcP = this.buildIfNeeded(!!this.compilerId, compiler, this.specs.src);
+        return Promise.all([bundledImplP, bundledSpecsSrcP]).then(([bundledImpl, bundledSpecs]) => {
+          return specsRunner.run({
+            scope,
+            testerFilePath,
+            implSrc: bundledImpl && bundledImpl.code,
+            specsSrc: bundledSpecs && bundledSpecs.code,
+            testerId: this.testerId
+          })
+          .then((specsResults) => {
+            this.specsResults = SpecsResults.createFromRaw(specsResults);
+            if (rejectOnFailure && !this.specsResults.pass) {
+              return Promise.reject(new ComponentSpecsFailed());
+            }
 
-          if (save) {
-            return scope.sources.modifySpecsResults({
-              source: this,
-              specsResults: this.specsResults
-            })
-            .then(() => Promise.resolve(this.specsResults));
-          }
+            if (save) {
+              return scope.sources.modifySpecsResults({
+                source: this,
+                specsResults: this.specsResults
+              })
+              .then(() => Promise.resolve(this.specsResults));
+            }
 
-          return Promise.resolve(this.specsResults);
+            return Promise.resolve(this.specsResults);
+          });
         });
       } catch (e) { return Promise.reject(e); }
     });
@@ -278,19 +316,24 @@ export default class Component {
       .then(() => {
         const opts = { bareScope: !consumer };
         const compiler = scope.loadEnvironment(this.compilerId, opts);
-        const src = this.impl.src;
-        if (!compiler.compile) {
-          return reject(`"${this.compilerId.toString()}" does not have a valid compiler interface`);
-        }
-        const { code, mappings } = compiler.compile(src); // eslint-disable-line
-        this.dist = new Dist(code, mappings);
+        const buildedImplP = this.buildIfNeeded(!!this.compilerId, compiler, this.impl.src, consumer);
+        return buildedImplP.then((buildedImpl) => {
+          if (buildedImpl && (!buildedImpl.code || !isString(buildedImpl.code))) {
+            throw new Error('builder interface has to return object with a code attribute that contains string');
+          }
 
-        if (save) {
-          return scope.sources.updateDist({ source: this })
-          .then(() => resolve(code));
-        }
+          this.dist = new Dist(
+            buildedImpl && buildedImpl.code,
+            buildedImpl && buildedImpl.mappings
+          );
 
-        return resolve(code);
+          if (save) {
+            return scope.sources.updateDist({ source: this })
+            .then(() => resolve(buildedImpl));
+          }
+
+          return resolve(buildedImpl);
+        });
       }).catch(reject);
     });
   }

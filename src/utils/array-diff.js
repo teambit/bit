@@ -1,8 +1,8 @@
 /** @flow */
 
 /**
- * compute the difference between two array references. 
- * @param {[]} firstArray 
+ * compute the difference between two array references.
+ * @param {[]} firstArray
  * @param {[]} secondArray
  * @returns {[]} returns an array representing the difference between the two arrays
  * @example

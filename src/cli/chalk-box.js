@@ -26,7 +26,7 @@ const paintAuthor = (email: ?string, username: ?string): string => {
   } else if (!email && username) {
     return c.white(`Author: ${username}\n`);
   }
-  
+
   return '';
 };
 

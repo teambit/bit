@@ -6,4 +6,4 @@ export default function resolveBoolean(resolve, reject) {
     if (err) return reject(err);
     return resolve(true);
   };
-} 
+}

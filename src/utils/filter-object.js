@@ -2,7 +2,7 @@
 import forEach from './foreach';
 
 /**
- * 
+ *
  */
 export default function filterObject(obj: {[any]: any}, fn: (val: any, key: any) => bool): Object {
   const newObj = {};

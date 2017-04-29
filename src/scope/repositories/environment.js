@@ -30,7 +30,7 @@
 //   //     .write(componentPath, true)
 //   //     .then(() => installPackageDependencies(component, componentPath));
 //   // }
-  
+
 //   findLatestVersion(bitId: BitId): string {
 //     const dirToLookIn = path.join(
 //       this.getPath(),
@@ -50,7 +50,7 @@
 //     if (bitId.version === LATEST) {
 //       bitId.version = this.findLatestVersion(bitId);
 //     }
-    
+
 //     return resolveBit(this.composePath(bitId));
 //   }
 
@@ -58,7 +58,7 @@
 //     if (bitId.version === LATEST) {
 //       bitId.version = this.findLatestVersion(bitId);
 //     }
-    
+
 //     return resolveBit(this.composePath(bitId), { onlyPath: true });
 //   }
 
@@ -77,12 +77,12 @@
 //   Promise<any> {
 //     const rejectNils = R.reject(R.isNil);
 //     const envs = rejectNils([ testerId, compilerId ]);
-    
+
 //     const ensureEnv = (env: BitId): Promise<any> => {
 //       if (this.hasSync(env)) return Promise.resolve();
 
 //       return this.scope.get(env) // @HACKALERT - replace with getOne
-//         .then(bitDependencies => this.store(bitDependencies.component)); 
+//         .then(bitDependencies => this.store(bitDependencies.component));
 //     };
 
 //     return Promise.all(R.map(ensureEnv, envs));
@@ -91,7 +91,7 @@
 //   // writeToEnvBitsDir(bitDependencies: ComponentDependencies[]): Promise<Bit[]> {
 //   //   const bits = flattenDependencies(bitDependencies);
 //   //   return Promise.all(
-//   //     bits.map(bit => 
+//   //     bits.map(bit =>
 //   //       this.cdAndWrite(bit, this.getPath())
 //   //       .then(installPackageDependencies)
 //   //     )

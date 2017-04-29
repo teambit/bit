@@ -11,7 +11,7 @@ export function add(url: string, global: boolean) {
   const remote = buildRemote(url);
   return remote.scope().then((scopeDesc) => {
     remote.name = scopeDesc.name;
-    
+
     if (global) {
       return GlobalRemotes.load().then((globalRemotes) => {
         return globalRemotes
@@ -27,7 +27,7 @@ export function add(url: string, global: boolean) {
         .write(scope.getPath())
         .then(() => remote);
     });
-  });  
+  });
 }
 
 export function remove(name: string, global: boolean) {
@@ -61,5 +61,5 @@ export function list(global: boolean) {
 }
 
 export function refresh() {
-  
+
 }

@@ -101,8 +101,13 @@ function addToLocalIndex(component: Component): Promise<Component> {
 
 function index(component: Component, scopePath: string): Promise<Component> {
   if (isWin) return Promise.resolve(component);
-  localIndex = serverlessIndex.initializeIndex(scopePath);
-  return addToLocalIndex(component);
+  try {
+    localIndex = serverlessIndex.initializeIndex(scopePath);
+    return addToLocalIndex(component);
+  } catch (e) {
+    console.warn(e); // eslint-disable-line // TODO - handle this error
+    return Promise.resolve(component);
+  }
 }
 
 function indexAll(path: string, components: Component[]): Promise<any> {

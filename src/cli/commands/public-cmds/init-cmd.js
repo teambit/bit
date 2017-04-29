@@ -17,7 +17,7 @@ export default class Init extends Command {
 
   action([path, ]: [string, ], { bare, shared }: any): Promise<{[string]: any}> {
     if (path) path = pathlib.resolve(path);
-    
+
     if (bare) {
       if (typeof bare === 'boolean') bare = '';
       return initScope(path, bare, shared)
@@ -26,12 +26,12 @@ export default class Init extends Command {
           created,
           bare: true,
         };
-      }); 
+      });
     }
 
     return init(path)
       .then(({ created }) => {
-        return { 
+        return {
           created
         };
       });
@@ -41,7 +41,7 @@ export default class Init extends Command {
     if (bare) {
       // if (!created) return `${chalk.grey('successfully reinitialized a bare bit scope.')}`;
       // @TODO - a case that you already have a bit scope
-      return `${chalk.green('successfully initialized an empty bare bit scope.')}`;  
+      return `${chalk.green('successfully initialized an empty bare bit scope.')}`;
     }
 
     if (!created) return `${chalk.grey('successfully reinitialized a bit scope.')}`;

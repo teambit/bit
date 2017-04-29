@@ -16,7 +16,7 @@ export default class Status extends Command {
   description = 'show modifications status';
   alias = 's';
   opts = [];
- 
+
   action(): Promise<{ inline: StatusObj[], source: StatusObj[] }> {
     const getBitStatusForInline = bit => ({
       name: bit.name,
@@ -46,14 +46,14 @@ export default class Status extends Command {
       inline.map(formatInlineBit),
       inline.length ? chalk.underline.white('inline components') : chalk.green('your inline_component directory is empty')
     ).join('\n');
-    
+
     const sourcesBits = immutableUnshift(
       sources.map(formatBit),
       sources.length ? chalk.underline.white('sources waiting for export') : chalk.green('you don\'t have any sources to export')
     ).join('\n');
-      
+
     return [inlineBits, sourcesBits].join(
-      chalk.underline('\n                         \n') 
+      chalk.underline('\n                         \n')
     + chalk.white('\n'));
   }
 }
