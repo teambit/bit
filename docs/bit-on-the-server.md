@@ -12,7 +12,7 @@ Due to the fact that a bit server in used only as a collaboration tool, a bit se
 
 Bit currently supports 2 types of communication protocol, for the scopes to communicate with each other. Local and SSH.
 
-Each protocol has it's own use cases, and here you'll learn when to use which. 
+Each protocol has its own use cases, and here you'll learn when to use which. 
 
 ### Local Protocol
 
