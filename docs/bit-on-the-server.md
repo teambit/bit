@@ -43,7 +43,7 @@ In this section we'll explain how to use a remote server to setup as many [scope
 #### Prerequisites
 
 1. *nix server.
-2. User for `bit` (with with `.ssh` and `authorized_keys`, for remote workflow).
+2. User for `bit` (with `.ssh` and `authorized_keys`, for remote workflow).
 
 ### Create a remote scope
 
