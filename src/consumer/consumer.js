@@ -112,6 +112,10 @@ export default class Consumer {
     return this.projectPath;
   }
 
+  getBitPathInComponentsDir(id: BitId): string {
+    return path.join(this.getComponentsPath(), id.toPath());
+  }
+
   loadComponent(id: BitInlineId): Promise<Component> {
     const bitDir = id.composeBitPath(this.getPath());
     return Component.loadFromInline(bitDir, this.bitJson);

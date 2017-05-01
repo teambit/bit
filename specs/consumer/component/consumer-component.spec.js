@@ -28,7 +28,7 @@ describe('ConsumerComponent', () => {
       sinon.stub(Impl, ['load']).returns('impl');
     });
     it('should throw an error for a mismatch compiler interface', () => {
-      const scope = { loadEnvironment: () => { return {} } };
+      const scope = { loadEnvironment: () => { return {}; } };
       const result = consumerComponent.build({ scope });
       expect(result).to.be.a('Promise');
       return result
