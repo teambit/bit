@@ -37,7 +37,7 @@ install:
     Install-Product node $env:6
 
     $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
-
+- npm install -g bit-bin@stable
 build_script:
 - ps: >-
     mv .\package.json .\package.json.bak
@@ -57,7 +57,7 @@ before_test:
   - npm i -g
 
 test_script:
-  - bit create test
+  -  bit init && bit create test
 
 
 artifacts:

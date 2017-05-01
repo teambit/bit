@@ -1,7 +1,7 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs-extra';
-import R, { merge, splitWhen, mergeAll } from 'ramda';
+import R, { merge, splitWhen } from 'ramda';
 import bitJs from 'bit-js';
 import { GlobalRemotes } from '../global-config';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
@@ -23,7 +23,7 @@ import ComponentDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
 import { postExportHook, postImportHook } from '../hooks';
-import npmInstall from '../utils/npm';
+import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
@@ -81,6 +81,10 @@ export default class Scope {
 
   getComponentsPath(): string {
     return pathLib.join(this.path, BITS_DIRNAME);
+  }
+
+  getBitPathInComponentsDir(id: BitId): string {
+    return pathLib.join(this.getComponentsPath(), id.toPath());
   }
 
   remotes(): Promise<Remotes> {
@@ -512,14 +516,12 @@ export default class Scope {
   }
 
   installEnvironment({ ids, consumer, verbose }:
-    { ids: BitId[], consumer?: ?Consumer, verbose?: ?bool }): Promise<any> {
-    const installPackageDependencies = (deps) => {
-      const scopePath = this.getPath();
-      const nodeModulesDir = consumer ? pathLib.dirname(scopePath) : scopePath;
-      loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
-      if (verbose) loader.stop(); // in order to show npm install output on verbose flag
-
-      return npmInstall({ deps, dir: nodeModulesDir, silent: !verbose });
+  { ids: BitId[], consumer?: ?Consumer, verbose?: boolean }): Promise<any> {
+    const installPackageDependencies = (component: ConsumerComponent) => {
+      return npmClient.install(component.packageDependencies, {
+        cwd: consumer ? consumer.getBitPathInComponentsDir(component.id) :
+          this.getBitPathInComponentsDir(component.id)
+      });
     };
 
     return this.getMany(ids)
@@ -533,8 +535,16 @@ export default class Scope {
 
         return writeToProperDir()
           .then((components: ConsumerComponent[]) => {
-            const deps = mergeAll(components.map(({ packageDependencies }) => packageDependencies));
-            return installPackageDependencies(deps).then(() => components);
+            loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
+            return Promise.all(components.map(c => installPackageDependencies(c)))
+            .then((resultsArr) => {
+              if (verbose) {
+                loader.stop(); // in order to show npm install output on verbose flag
+                resultsArr.forEach(npmClient.printResults);
+              }
+
+              return components;
+            });
           });
       });
   }

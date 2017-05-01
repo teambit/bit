@@ -3,7 +3,7 @@ import os from 'os';
 import { v4 } from 'uuid';
 import fs from 'fs-extra';
 import path from 'path';
-import npmInstall from '../utils/npm';
+import npmClient from '../npm-client';
 import { loadScope } from '../scope';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { BitId } from '../bit-id';
@@ -96,7 +96,7 @@ export default class Environment {
     this.componentsDependencies.push(this.component);
     const deps = mergeAll(this.componentsDependencies
       .map(({ packageDependencies }) => packageDependencies));
-    return npmInstall({ deps, dir: this.path, silent: false });
+    return npmClient.install(deps, { cwd: this.path });
   }
 
   getPath() {

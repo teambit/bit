@@ -7,19 +7,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Change
+
+- package dependencies of environment modules would be installed at component level from now.
+- npm loader would not be present, --verbose will show npm output after the installation is done.
+
 ### Fixed
 
-- put index procedure under try catch, warns in case it fails.
-- fixed bug with list/show remote components with misc files.
+- bug with environment installation (npm install at project level).
 
 ### Added
 
 - support generating an isolated bit-component environment on-the-fly so it will be easier to run build and test from everywhere
-- the compiler can implement a build method instead of compile, get an entry file and run webpack for example (wip).
-implemented for inline_components, and still need to implement environment module in order to fully work.
+- the compiler can implement a build method instead of compile, get an entry file and run webpack for example (wip). implemented for inline_components, and still need to implement environment module in order to fully work.
 - add --skip-update option to the main bit help page.
 - run some hooks (for now: onCommit, onCreate, onExport and onImport) using a language-driver
 - lang attribute on the bit.json, enable language that will save on the model of the component.
+
+## [0.5.3] - 2017-04-27
+
+### Fixed
+
+- put [search] index procedure under try catch, warns in case it fails.
+- fixed bug with list/show remote components with misc files.
 
 ## [0.5.2] - 2017-04-27
 

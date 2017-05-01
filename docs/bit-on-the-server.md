@@ -12,7 +12,7 @@ Due to the fact that a bit server in used only as a collaboration tool, a bit se
 
 Bit currently supports 2 types of communication protocol, for the scopes to communicate with each other. Local and SSH.
 
-Each protocol has it's own use cases, and here you'll learn when to use which. 
+Each protocol has its own use cases, and here you'll learn when to use which. 
 
 ### Local Protocol
 
@@ -43,7 +43,7 @@ In this section we'll explain how to use a remote server to setup as many [scope
 #### Prerequisites
 
 1. *nix server.
-2. User for `bit` (with with `.ssh` and `authorized_keys`, for remote workflow).
+2. User for `bit` (with `.ssh` and `authorized_keys`, for remote workflow).
 
 ### Create a remote scope
 
