@@ -36,7 +36,7 @@ describe('ConsumerComponent', () => {
           throw new Error('Promise should fail');
         })
         .catch((err) => {
-          expect(err).to.eql('"scope/box/name::2" does not have a valid compiler interface');
+          expect(err).to.eql('"scope/box/name::2" does not have a valid compiler interface, it has to return a build method');
         });
     });
     it('should NOT throw an error for a correct compiler interface', () => {
