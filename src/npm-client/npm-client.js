@@ -3,6 +3,8 @@ import { exec } from 'child_process';
 import R, { mapObjIndexed, isNil, pipe, values, merge, toPairs, map, join, is } from 'ramda';
 import decamelize from 'decamelize';
 import chalk from 'chalk';
+import fs from 'fs-extra';
+import path from 'path';
 
 const objectToArray = obj => map(join('@'), toPairs(obj));
 const rejectNils = R.reject(isNil);
@@ -65,13 +67,14 @@ const installAction = (modules: string[] | string | {[string]: number|string}, u
   const serializedModules = modules && modules.length > 0 ? ` ${modules.join(' ')}` : '';
   const serializedFlags = flags && flags.length > 0 ? ` ${flags.join(' ')}` : '';
 
-  return new Promise((resolve, reject) =>
-    exec(`npm install${serializedModules}${serializedFlags}`,
+  return new Promise((resolve, reject) => {
+    fs.ensureDirSync(path.join(options.cwd, 'node_modules'));
+    return exec(`npm install${serializedModules}${serializedFlags}`,
     { cwd: options.cwd }, (error, stdout, stderr) => {
       if (error) return reject(error);
       return resolve({ stdout, stderr });
-    }),
-  );
+    });
+  });
 };
 
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {
