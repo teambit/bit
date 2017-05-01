@@ -57,7 +57,7 @@ before_test:
   - npm i -g
 
 test_script:
-  - bit create test
+  -  bit init && bit create test
 
 
 artifacts:
