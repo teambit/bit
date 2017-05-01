@@ -4,12 +4,14 @@ import { v4 } from 'uuid';
 import fs from 'fs-extra';
 import path from 'path';
 import npmClient from '../npm-client';
+import { mergeAll } from 'ramda';
 import { loadScope } from '../scope';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { BitId } from '../bit-id';
-import { Component } from '../consumer/component/consumer-component'
+import { Component } from '../consumer/component/consumer-component';
+import { Consumer } from '../consumer';
 import { BITS_DIRNAME } from '../constants';
-import { mergeAll } from 'ramda';
+import { init } from '../api/consumer';
 
 const root = path.join(os.tmpdir(), 'bit');
 const currentPath = process.cwd();
@@ -88,6 +90,16 @@ export default class Environment {
         this.componentsDependencies = componentsDependencies;
         return componentsDependencies;
       });
+    });
+  }
+
+  mimicConsumer() {
+    return init(this.path);
+  }
+
+  importByConsumer(id) {
+    return Consumer.load(this.path).then((consumer) => {
+      return consumer.import([id], true, true);
     });
   }
 
