@@ -3,15 +3,15 @@ import os from 'os';
 import { v4 } from 'uuid';
 import fs from 'fs-extra';
 import path from 'path';
-import npmClient from '../npm-client';
 import { mergeAll } from 'ramda';
+import npmClient from '../npm-client';
 import { loadScope } from '../scope';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { BitId } from '../bit-id';
 import { Component } from '../consumer/component/consumer-component';
-import { Consumer } from '../consumer';
+import Bit from '../consumer/component';
 import { BITS_DIRNAME } from '../constants';
-import { init } from '../api/consumer';
+import { init, importAction } from '../api/consumer';
 
 const root = path.join(os.tmpdir(), 'bit');
 const currentPath = process.cwd();
@@ -93,14 +93,25 @@ export default class Environment {
     });
   }
 
-  mimicConsumer() {
+  initConsumer() {
     return init(this.path);
   }
 
-  importByConsumer(id) {
-    return Consumer.load(this.path).then((consumer) => {
-      return consumer.import([id], true, true);
+  importByConsumer(ids): Promise<Bit[]> {
+    return importAction({
+      ids,
+      save: true,
+      verbose: true,
+      prefix: this.path,
+      environment: true
     });
+  }
+
+  npmInstallByConsumer(components) {
+    if (!components.dependencies.length
+      || !components.dependencies[0].component.packageDependencies) return Promise.resolve();
+    const deps = components.dependencies[0].component.packageDependencies;
+    return npmClient.install(deps, { cwd: this.path });
   }
 
   installNpmPackages(): Promise<*> {
