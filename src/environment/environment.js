@@ -10,10 +10,9 @@ import { flattenDependencies } from '../scope/flatten-dependencies';
 import { BitId } from '../bit-id';
 import { Component } from '../consumer/component/consumer-component';
 import Bit from '../consumer/component';
-import { BITS_DIRNAME } from '../constants';
+import { BITS_DIRNAME, ISOLATED_ENV_ROOT } from '../constants';
 import { init, importAction } from '../api/consumer';
 
-const root = path.join(os.tmpdir(), 'bit');
 const currentPath = process.cwd();
 
 export default class Environment {
@@ -22,7 +21,7 @@ export default class Environment {
   componentsDependencies: ConsumerComponent[] = [];
 
   constructor() {
-    this.path = path.join(root, v4());
+    this.path = path.join(ISOLATED_ENV_ROOT, v4());
     console.log(this.path);
   }
 
