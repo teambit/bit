@@ -37,10 +37,9 @@ install:
     Install-Product node $env:6
 
     $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
-
+- npm install -g bit-bin@stable
 build_script:
 - ps: >-
-    npm install -g bit-bin@stable
     mv .\package.json .\package.json.bak
 
     Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Where-Object {$_ -notmatch 'gitbook-cli'} | Set-Content package.json
