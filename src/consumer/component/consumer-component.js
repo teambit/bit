@@ -200,8 +200,8 @@ export default class Component {
       if (consumer) {
         componentRoot = path.join(consumer.projectPath, INLINE_BITS_DIRNAME, this.box, this.name);
       } else {
-        // TODO - here we need to create the environment and provide the root
-        componentRoot = 'Here the root should be provided by the environment module';
+        // TODO - here we need to create the environment and provide the root.
+        // componentRoot = 'Here the root should be provided by the environment module'.
         throw Error('(wip) - need to implement environment module');
       }
 
@@ -210,6 +210,8 @@ export default class Component {
         entry: this.implFile,
         misc: this.miscFiles,
         root: componentRoot,
+        packageDependencies: this.packageDependencies,
+        dependencies: this.dependencies
       };
 
       return compiler.build(metaData); // returns a promise
