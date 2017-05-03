@@ -1,141 +1,71 @@
 /** @flow */
-import os from 'os';
 import { v4 } from 'uuid';
 import fs from 'fs-extra';
 import path from 'path';
-import { mergeAll } from 'ramda';
 import npmClient from '../npm-client';
-import { loadScope } from '../scope';
-import { flattenDependencies } from '../scope/flatten-dependencies';
-import { BitId } from '../bit-id';
 import { Component } from '../consumer/component/consumer-component';
-import Bit from '../consumer/component';
-import { BITS_DIRNAME, ISOLATED_ENV_ROOT } from '../constants';
-import { init, importAction } from '../api/consumer';
-
-const currentPath = process.cwd();
+import { ISOLATED_ENV_ROOT } from '../constants';
+import { importAction } from '../api/consumer';
+import { Consumer } from '../consumer';
 
 export default class Environment {
   path: string;
-  component: Component;
-  componentsDependencies: ConsumerComponent[] = [];
+  consumer: Consumer;
 
   constructor() {
     this.path = path.join(ISOLATED_ENV_ROOT, v4());
-    console.log(this.path);
   }
 
-  init(): Promise<*> {
-    return new Promise((resolve, reject) => {
-      fs.ensureDir(this.path, (err) => {
-        if (err) return reject(err);
-        return resolve();
-      });
-    });
-  }
-
-  importById(rawId: string): Promise<Object> {
-    // loadScope works for local scope and remote scope
-    return loadScope(currentPath).then((scope) => {
-      const bitId = BitId.parse(rawId, scope.name);
-      return scope.get(bitId)
-        .then((component) => {
-          component.component.write(this.path, true, true);
-          this.component = component.component;
-          return component;
-        });
-    });
-  }
-
-  writeToEnvironmentDir(componentDependencies: versionDependencies[]): Promise<Component[]> {
-    const componentsDir = path.join(this.path, BITS_DIRNAME);
-    const components = flattenDependencies(componentDependencies);
-
-    const bitDirForEnvironmentImport = (component: Component) => {
-      return path.join(
-        componentsDir,
-        component.box,
-        component.name,
-        component.scope,
-        component.version.toString(),
-      );
-    };
-
-    return Promise.all(components.map((component) => {
-      const bitPath = bitDirForEnvironmentImport(component);
-      return component.write(bitPath, true);
-    }));
-  }
-
-  importDependencies(): Promise<ConsumerComponent[]> {
-    if (!this.component) return Promise.reject();
-    return loadScope(currentPath).then((scope) => {
-      // todo: (optimization) import() gets the dependencies data already
-      const dependencies = this.component.dependencies || [];
-
-      // TODO: for some reason the current versions of compiler/tester are not working.
-      // It returns "invalid json" error.
-      if (this.component.compilerId) {
-        this.component.compilerId.version = 'latest';
-        dependencies.push(this.component.compilerId);
-      }
-      if (this.component.testerId) {
-        this.component.testerId.version = 'latest';
-        dependencies.push(this.component.testerId);
-      }
-      return scope.getMany(dependencies).then((componentDependenciesArr) => {
-        return this.writeToEnvironmentDir(componentDependenciesArr);
-      }).then((componentsDependencies) => {
-        this.componentsDependencies = componentsDependencies;
-        return componentsDependencies;
-      });
-    });
-  }
-
-  initConsumer() {
-    return init(this.path);
-  }
-
-  importByConsumer(ids): Promise<Bit[]> {
-    return importAction({
-      ids,
-      save: true,
-      verbose: true,
-      prefix: this.path,
-      environment: true
-    });
-  }
-
-  npmInstallByConsumer(components) {
-    if (!components.dependencies.length
-      || !components.dependencies[0].component.packageDependencies) return Promise.resolve();
-    const deps = components.dependencies[0].component.packageDependencies;
-    return npmClient.install(deps, { cwd: this.path });
-  }
-
-  installNpmPackages(): Promise<*> {
-    if (!this.component) return Promise.reject();
-    this.componentsDependencies.push(this.component);
-    const deps = mergeAll(this.componentsDependencies
-      .map(({ packageDependencies }) => packageDependencies));
-    return npmClient.install(deps, { cwd: this.path });
-  }
-
-  getPath() {
+  getPath(): string {
     return this.path;
   }
 
-  getImplPath() {
-    return this.component ? path.join(this.path, this.component.implFile) : undefined;
+  init(): Promise<Consumer> {
+    if (this.consumer) return Promise.resolve(Consumer);
+    return Consumer.ensure(this.path).then((consumer) => {
+      this.consumer = consumer;
+      return consumer;
+    });
   }
 
-  getDist() {
-    return this.component ? this.component.dist : undefined;
+  importComponent(id: string): Promise<Component> {
+    return importAction({
+      ids: [id],
+      save: true,
+      verbose: true,
+      prefix: this.path,
+    }).then(bits => bits.dependencies[0].component);
   }
 
-  getMiscFilesPaths() {
-    return this.component ?
-      this.component.miscFiles.map(misc => path.join(this.path, misc)) : undefined;
+  installDependencies(component: Component, verbose: boolean = false): Promise<*> {
+    const testerId = component.testerId;
+    const compilerId = component.compilerId;
+    if (!testerId && !compilerId) return Promise.resolve(component);
+    return this.consumer.scope.installEnvironment({
+      ids: [testerId, compilerId],
+      consumer: this.consumer,
+      verbose
+    });
+  }
+
+  installNpmPackages(component: Component): Promise<*> {
+    if (!component.packageDependencies) return Promise.resolve(component);
+    const deps = component.packageDependencies;
+    return npmClient.install(deps, { cwd: this.path });
+  }
+
+  getComponentPath(component: Component): string {
+    return this.consumer.bitDirForConsumerComponent(component);
+  }
+
+
+  getImplPath(component: Component): string {
+    return path.join(this.getComponentPath(component), component.implFile);
+  }
+
+  getMiscFilesPaths(component: Component): string[] {
+    const componentPath = this.getComponentPath(component);
+    return component.miscFiles.map(misc => path.join(componentPath, misc));
   }
 
   destroy(): Promise<*> {

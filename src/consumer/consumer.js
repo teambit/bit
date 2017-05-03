@@ -230,22 +230,22 @@ export default class Consumer {
     });
   }
 
-  writeToComponentsDir(componentDependencies: versionDependencies[]): Promise<Component[]> {
+  bitDirForConsumerComponent(component: Component) {
     const componentsDir = this.getComponentsPath();
+    return path.join(
+      componentsDir,
+      component.box,
+      component.name,
+      component.scope,
+      component.version.toString(),
+    );
+  }
+
+  writeToComponentsDir(componentDependencies: versionDependencies[]): Promise<Component[]> {
     const components = flattenDependencies(componentDependencies);
 
-    const bitDirForConsumerImport = (component: Component) => {
-      return path.join(
-        componentsDir,
-        component.box,
-        component.name,
-        component.scope,
-        component.version.toString(),
-      );
-    };
-
     return Promise.all(components.map((component) => {
-      const bitPath = bitDirForConsumerImport(component);
+      const bitPath = this.bitDirForConsumerComponent(component);
       return component.write(bitPath, true);
     }));
   }
