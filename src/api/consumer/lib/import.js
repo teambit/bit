@@ -71,7 +71,8 @@ export default function importAction(
             envDependencies,
             consumer,
           })
-          .then(warnings => consumer.runHook('onImport', dependencies,
+          .then(warnings => consumer.runHook('onImport',
+            { components: dependencies, projectRoot: performOnDir },
             { dependencies, envDependencies, warnings })
         ));
     });

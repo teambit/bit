@@ -84,7 +84,7 @@ export default class Consumer {
 
       return this.driver.lifecycleHooks[hookName](param).then(() => returnValue);
     } catch (e) {
-      // TODO - this is a quick fix, so we will act greacfully in case there is no driver.
+      // TODO - this is a quick fix, so we will act gracefully in case there is no driver.
       if (e instanceof DriverNotFound) {
         return Promise.resolve(returnValue);
       }
@@ -230,22 +230,22 @@ export default class Consumer {
     });
   }
 
-  writeToComponentsDir(componentDependencies: versionDependencies[]): Promise<Component[]> {
+  bitDirForConsumerComponent(component: Component) {
     const componentsDir = this.getComponentsPath();
+    return path.join(
+      componentsDir,
+      component.box,
+      component.name,
+      component.scope,
+      component.version.toString(),
+    );
+  }
+
+  writeToComponentsDir(componentDependencies: versionDependencies[]): Promise<Component[]> {
     const components = flattenDependencies(componentDependencies);
 
-    const bitDirForConsumerImport = (component: Component) => {
-      return path.join(
-        componentsDir,
-        component.box,
-        component.name,
-        component.scope,
-        component.version.toString(),
-      );
-    };
-
     return Promise.all(components.map((component) => {
-      const bitPath = bitDirForConsumerImport(component);
+      const bitPath = this.bitDirForConsumerComponent(component);
       return component.write(bitPath, true);
     }));
   }

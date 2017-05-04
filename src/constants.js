@@ -177,3 +177,5 @@ export const RELEASE_SERVER = 'https://api.bitsrc.io/release';
 export const SKIP_UPDATE_FLAG = '--skip-update';
 
 export const LICENSE_FILENAME = 'LICENSE';
+
+export const ISOLATED_ENV_ROOT = path.join(os.tmpdir(), 'bit', 'env');
