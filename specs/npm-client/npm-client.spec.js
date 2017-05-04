@@ -1,12 +1,16 @@
 import { expect } from 'chai';
-import npmClient from '../../src/npm-client';
-import sinon from 'sinon';
 import mockery from 'mockery';
+import sinon from 'sinon';
+import npmClient from '../../src/npm-client';
 
 describe('npmClient.install()', () => {
   const execSpy = sinon.spy();
   const childProcessMock = {
     exec: execSpy,
+  };
+
+  const fsMock = {
+    ensureDirSync: () => { return null; }
   };
 
   before(() => {
@@ -16,6 +20,7 @@ describe('npmClient.install()', () => {
     });
 
     mockery.registerMock('child_process', childProcessMock);
+    mockery.registerMock('fs-extra', fsMock);
   });
 
   after(() => {
