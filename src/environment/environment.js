@@ -48,6 +48,12 @@ export default class Environment {
     });
   }
 
+  bindFromDriver() {
+    const driver = this.consumer.driver;
+    if (driver) return driver.bind({ projectRoot: this.path });
+    return Promise.resolve();
+  }
+
   installNpmPackages(component: Component): Promise<*> {
     if (!component.packageDependencies) return Promise.resolve(component);
     const deps = component.packageDependencies;

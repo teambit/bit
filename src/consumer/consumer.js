@@ -84,7 +84,7 @@ export default class Consumer {
 
       return this.driver.lifecycleHooks[hookName](param).then(() => returnValue);
     } catch (e) {
-      // TODO - this is a quick fix, so we will act greacfully in case there is no driver.
+      // TODO - this is a quick fix, so we will act gracefully in case there is no driver.
       if (e instanceof DriverNotFound) {
         return Promise.resolve(returnValue);
       }
