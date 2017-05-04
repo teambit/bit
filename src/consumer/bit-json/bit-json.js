@@ -115,7 +115,7 @@ export default class BitJson extends AbstractBitJson {
     return this.mergeWithProto(json, protoBJ);
   }
 
-  static load(dirPath: string, protoBJ?: ConsumerBitJson) {
+  static load(dirPath: string, protoBJ?: ConsumerBitJson): Promise<BitJson> {
     return new Promise((resolve, reject) => {
       let thisBJ = {};
       const bitJsonPath = composePath(dirPath);

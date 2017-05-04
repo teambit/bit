@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- add module 'component-resolver' to resolve a component path using its ID.
 - support generating an isolated bit-component environment on-the-fly so it will be easier to run build and test from everywhere
 - the compiler can implement a build method instead of compile, get an entry file and run webpack for example (wip). implemented for inline_components, and still need to implement environment module in order to fully work.
 - add --skip-update option to the main bit help page.
