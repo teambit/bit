@@ -4,6 +4,7 @@ import glob from 'glob';
 import fs from 'fs-extra';
 import R from 'ramda';
 import reqCwd from 'req-cwd';
+import VersionDependencies from '../scope/version-dependencies';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import {
@@ -134,7 +135,7 @@ export default class Consumer {
       );
   }
 
-  import(rawIds: ?string[], verbose?: ?bool, withEnvironments: ?bool):
+  import(rawIds: ?string[], verbose?: bool, withEnvironments: ?bool):
   Promise<{ dependencies: ComponentDependencies[], envDependencies?: Component[] }> {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
@@ -179,7 +180,7 @@ export default class Consumer {
     return importSpecificComponents();
   }
 
-  importEnvironment(rawId: ?string, verbose?: ?bool) {
+  importEnvironment(rawId: ?string, verbose?: bool) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId, this.scope.name);
     return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose });
@@ -230,7 +231,7 @@ export default class Consumer {
     });
   }
 
-  bitDirForConsumerComponent(component: Component) {
+  bitDirForConsumerComponent(component: Component): string {
     const componentsDir = this.getComponentsPath();
     return path.join(
       componentsDir,
@@ -241,7 +242,7 @@ export default class Consumer {
     );
   }
 
-  writeToComponentsDir(componentDependencies: versionDependencies[]): Promise<Component[]> {
+  writeToComponentsDir(componentDependencies: VersionDependencies[]): Promise<Component[]> {
     const components = flattenDependencies(componentDependencies);
 
     return Promise.all(components.map((component) => {
