@@ -34,7 +34,7 @@ export default class Environment {
       save: true,
       verbose: true,
       prefix: this.path,
-    }).then(bits => bits.dependencies[0].component);
+    }).then(imported => imported.dependencies[0].component);
   }
 
   installDependencies(component: Component, verbose: boolean = false): Promise<*> {
