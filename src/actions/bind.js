@@ -6,8 +6,8 @@ import * as componentsMap from '../components-map';
 import * as linksGenerator from '../links-generator';
 import { removeDirP } from '../utils';
 
-export default function bindAction(): Promise<any> {
-  const projectRoot = process.cwd();
+export default function bindAction({ projectRoot = process.cwd() }: { projectRoot?: string}):
+Promise<any> {
   const targetComponentsDir = path.join(projectRoot, COMPONENTS_DIRNAME);
   const targetModuleDir = path.join(projectRoot, MODULES_DIR, MODULE_NAME);
   const targetInlineComponentsDir = path.join(projectRoot, INLINE_COMPONENTS_DIRNAME);

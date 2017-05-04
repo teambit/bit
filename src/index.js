@@ -1,10 +1,10 @@
 import { bindAction, watchAction, fetchAction, importAction } from './actions';
 
 const lifecycleHooks = {
-  onCreate: () => bindAction(),
-  onCommit: () => bindAction(),
-  onImport: () => bindAction(),
-  onExport: () => bindAction(),
+  onCreate: bindAction,
+  onCommit: bindAction,
+  onImport: bindAction,
+  onExport: bindAction,
 };
 
 module.exports = {
