@@ -6,9 +6,10 @@ import { ComponentDependencies } from '../../../scope';
 import loader from '../../../cli/loader';
 import { BEFORE_MODIFY_ACTION } from '../../../cli/loader/loader-messages';
 
-export default function modify({ id, no_env, verbose }: {
-  id: string, no_env?: bool, verbose: true }) {
-  return loadConsumer()
+export default function modify({ id, no_env, verbose, prefix }: {
+  id: string, no_env?: bool, verbose: true, prefix?: string }) {
+  const performOnDir = prefix || process.cwd();
+  return loadConsumer(performOnDir)
     .then((consumer) => {
       const bitId = BitId.parse(id, consumer.scope.name);
       loader.start(BEFORE_MODIFY_ACTION);

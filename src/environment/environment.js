@@ -5,8 +5,9 @@ import path from 'path';
 import npmClient from '../npm-client';
 import { Component } from '../consumer/component/consumer-component';
 import { ISOLATED_ENV_ROOT } from '../constants';
-import { importAction } from '../api/consumer';
+import { modify, init } from '../api/consumer';
 import { Consumer } from '../consumer';
+import InlineId from '../consumer/bit-inline-id';
 
 export default class Environment {
   path: string;
@@ -22,30 +23,21 @@ export default class Environment {
 
   init(): Promise<Consumer> {
     if (this.consumer) return Promise.resolve(Consumer);
-    return Consumer.ensure(this.path).then((consumer) => {
+    fs.ensureDirSync(this.path);
+    return init(this.path).then((consumer) => {
       this.consumer = consumer;
       return consumer;
     });
   }
 
-  importComponent(id: string): Promise<Component> {
-    return importAction({
-      ids: [id],
-      save: true,
-      verbose: true,
-      prefix: this.path,
-    }).then(imported => imported.dependencies[0].component);
+  importComponent(id: string, verbose: boolean = false): Promise<Component> {
+    return modify({ id, no_env: false, verbose, prefix: this.path });
   }
 
-  installDependencies(component: Component, verbose: boolean = false): Promise<*> {
-    const testerId = component.testerId;
-    const compilerId = component.compilerId;
-    if (!testerId && !compilerId) return Promise.resolve(component);
-    return this.consumer.scope.installEnvironment({
-      ids: [testerId, compilerId],
-      consumer: this.consumer,
-      verbose
-    });
+  importDependencies(component: Component): Promise<?Component[]> {
+    if (!component.dependencies.length) return Promise.resolve();
+    return this.consumer.scope.getMany(component.dependencies)
+      .then(components => this.consumer.writeToComponentsDir(components));
   }
 
   bindFromDriver() {
@@ -55,15 +47,15 @@ export default class Environment {
   }
 
   installNpmPackages(component: Component): Promise<*> {
-    if (!component.packageDependencies) return Promise.resolve(component);
+    if (!component.packageDependencies) return Promise.resolve();
     const deps = component.packageDependencies;
     return npmClient.install(deps, { cwd: this.path });
   }
 
   getComponentPath(component: Component): string {
-    return this.consumer.bitDirForConsumerComponent(component);
+    const inlineId = new InlineId({ box: component.box, name: component.name });
+    return inlineId.composeBitPath(this.consumer.getPath());
   }
-
 
   getImplPath(component: Component): string {
     return path.join(this.getComponentPath(component), component.implFile);
