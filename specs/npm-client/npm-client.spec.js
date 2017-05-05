@@ -36,7 +36,7 @@ describe('npmClient.install()', () => {
     expect(execSpy.getCall(0).args[1].cwd).to.eql('/path/to/dir');
   });
 
-  it('should except an object of dependencies (from package.json and install the depenedncies)', () => {
+  it('should except an object of dependencies (from package.json and install the dependencies)', () => {
     npmClient.install({ 'mock-module': '^1.1.2', 'another-module': '3.3.2' });
     expect(execSpy.getCall(0).args[0]).to.eql('npm install mock-module@^1.1.2 another-module@3.3.2');
   });
@@ -46,7 +46,7 @@ describe('npmClient.install()', () => {
     expect(execSpy.getCall(0).args[1].cwd).to.eql(process.cwd());
   });
 
-  it('should work if no arguments supllied', () => {
+  it('should work if no arguments supplied', () => {
     npmClient.install();
     expect(execSpy.getCall(0).args[0]).to.eql('npm install');
   });

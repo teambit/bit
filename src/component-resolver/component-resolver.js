@@ -19,6 +19,9 @@ function getLatestVersion(bitId: BitId, componentsDir: string): Promise<number> 
     const pathWithoutVersion = path.join(componentsDir, relativePathWithoutVersion);
     glob('*', { cwd: pathWithoutVersion }, (err, versionsDirs) => {
       if (err) return reject(err);
+      if (!versionsDirs || !versionsDirs.length) {
+        return reject(new ComponentNotFound(bitId.toString()));
+      }
       return resolve(Math.max(versionsDirs));
     });
   });
