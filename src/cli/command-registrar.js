@@ -9,8 +9,7 @@ import loader from './loader';
 
 
 function logAndExit(msg: string) {
-  process.stdout.write(`${msg}\n`);
-  process.exit();
+  process.stdout.write(`${msg}\n`, () => process.exit());
 }
 
 function logErrAndExit(msg: Error|string) {

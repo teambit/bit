@@ -9,7 +9,7 @@ import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
 import ConsumerComponent from '../../../consumer/component';
-import checkVersionCompatibility from '../check-version-compatibility'
+import checkVersionCompatibility from '../check-version-compatibility';
 
 const rejectNils = R.reject(R.isNil);
 const Client = require('ssh2').Client;
@@ -92,16 +92,16 @@ export default class SSH {
             res += response.toString();
           })
           .on('close', (code) => {
-            if (commandName === '_put') res = res.replace(payload,'');
+            if (commandName === '_put') res = res.replace(payload, '');
             return code && code !== 0 ?
               reject(errorHandler(code, err)) :
               resolve(clean(res));
-            // TODO: close the connection from somewhere else
-            // this.connection.end();
+              // TODO: close the connection from somewhere else
+              // this.connection.end();
           })
           .stderr.on('data', (response) => {
-          err = response.toString();
-        });
+            err = response.toString();
+          });
       });
     });
   }
