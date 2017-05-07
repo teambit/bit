@@ -8,7 +8,17 @@ function getPathToIdentityFile() {
   return identityFile || DEFAULT_SSH_KEY_FILE;
 }
 
+function readKey(keyPath: ?string) {
+  if (!keyPath) return '';
+
+  try {
+    return fs.readFileSync(keyPath);
+  } catch (e) {
+    return '';
+  }
+}
+
 export default function keyGetter(keyPath: ?string) {
-  if (keyPath) return fs.readFileSync(keyPath);
-  return fs.readFileSync(getPathToIdentityFile());
+  if (keyPath) return readKey(keyPath);
+  return readKey(getPathToIdentityFile());
 }
