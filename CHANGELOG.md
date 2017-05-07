@@ -15,8 +15,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - bug with environment installation (npm install at project level).
-- ssh is exiting before writing the entire response.
-- exception was thrown when trying to read non-existing private key.
 
 ### Added
 
@@ -26,6 +24,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - add --skip-update option to the main bit help page.
 - run some hooks (for now: onCommit, onCreate, onExport and onImport) using a language-driver
 - lang attribute on the bit.json, enable language that will save on the model of the component.
+
+## [0.5.4] - 2017-05-07
+
+### Fixed
+
+- ssh is exiting before writing the entire response.
+- exception was thrown when trying to read non-existing private key.
 
 ## [0.5.3] - 2017-04-27
 
