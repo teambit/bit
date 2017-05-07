@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.4] - 2017-05-07
+
+### Fixed
+
+- ssh is exiting before writing the entire response.
+- exception was thrown when trying to read non-existing private key.
+
 ## [0.5.3] - 2017-04-27
 
 ### Fixed
