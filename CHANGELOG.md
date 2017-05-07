@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - bug with environment installation (npm install at project level).
+- ssh is exiting before writing the entire response.
+- exception was thrown when trying to read non-existing private key.
 
 ### Added
 
