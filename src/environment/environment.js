@@ -9,6 +9,7 @@ import { flattenDependencies } from '../scope/flatten-dependencies';
 import { BitId } from '../bit-id';
 import { Component } from '../consumer/component/consumer-component';
 import { BITS_DIRNAME, ISOLATED_ENV_ROOT } from '../constants';
+import { Driver } from '../driver';
 
 export default class Environment {
   path: string;
@@ -32,7 +33,11 @@ export default class Environment {
     return this.scope.get(bitId)
       .then((component) => {
         return this._writeToEnvironmentDir([component.component])
-          .then(components => components[0]);
+          .then((components) => {
+            // TODO: this is probably incorrect as it doesn't contain the main component
+            // and will be overridden by the next import.
+            return components[0].writeBitJson(this.path).then(() => components[0]);
+          });
       });
   }
 
@@ -43,8 +48,8 @@ export default class Environment {
     }));
   }
 
-  importDependencies(component): Promise<ConsumerComponent[]> {
-    // todo: (optimization) importComponent() gets the dependencies data already
+  importDependencies(component: Component): Promise<Component[]> {
+    // TODO: (optimization) importComponent() gets the dependencies data already
     const dependencies = component.dependencies || [];
 
     if (component.compilerId) {
@@ -67,6 +72,13 @@ export default class Environment {
     }));
   }
 
+  bindFromDriver() {
+    // TODO: Load the bit.json and pass the lang to the Driver.load().
+    const driver = Driver.load().getDriver(false);
+    if (driver) return driver.bind({ projectRoot: this.path });
+    return Promise.resolve();
+  }
+
   /**
    * import a component end to end. Including importing the dependencies and installing the npm
    * packages.
@@ -78,7 +90,9 @@ export default class Environment {
     return this.importComponent(rawId).then((component) => {
       return this.importDependencies(component).then((dependencies) => {
         const components = dependencies.concat(component);
-        return this.installNpmPackages(components).then(() => component);
+        return this.installNpmPackages(components)
+          .then(() => this.bindFromDriver())
+          .then(() => component);
       });
     });
   }
