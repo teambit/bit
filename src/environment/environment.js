@@ -72,10 +72,11 @@ export default class Environment {
     }));
   }
 
-  bindFromDriver() {
-    // TODO: Load the bit.json and pass the lang to the Driver.load().
-    const driver = Driver.load().getDriver(false);
-    if (driver) return driver.bind({ projectRoot: this.path });
+  bindFromDriver(component: Component) {
+    const driver = Driver.load(component.lang).getDriver(false);
+    if (driver) {
+      return driver.bindSpecificComponents({ projectRoot: this.path, components: [component] });
+    }
     return Promise.resolve();
   }
 
@@ -91,7 +92,7 @@ export default class Environment {
       return this.importDependencies(component).then((dependencies) => {
         const components = dependencies.concat(component);
         return this.installNpmPackages(components)
-          .then(() => this.bindFromDriver())
+          .then(() => this.bindFromDriver(component))
           .then(() => component);
       });
     });
