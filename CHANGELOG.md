@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.5] - 2017-05-09 rc
+
 ### Change
 
 - bare scope test creates a new environment and runs the tests there.
