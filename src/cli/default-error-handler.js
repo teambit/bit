@@ -9,8 +9,8 @@ import {
   NothingToImport,
   ConsumerNotFound,
   ComponentSpecsFailed,
-  DriverNotFound,
 } from '../consumer/exceptions';
+import { DriverNotFound } from '../driver';
 import ComponentNotFoundInline from '../consumer/component/exceptions/component-not-found-inline';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';

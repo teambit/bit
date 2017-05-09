@@ -3,7 +3,6 @@ import path from 'path';
 import glob from 'glob';
 import fs from 'fs-extra';
 import R from 'ramda';
-import reqCwd from 'req-cwd';
 import VersionDependencies from '../scope/version-dependencies';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
@@ -11,8 +10,8 @@ import {
   ConsumerAlreadyExists,
   ConsumerNotFound,
   NothingToImport,
-  DriverNotFound
 } from './exceptions';
+import { Driver } from '../driver';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
@@ -20,7 +19,6 @@ import {
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
-  DEFAULT_LANGUAGE
  } from '../constants';
 import { removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
@@ -58,40 +56,8 @@ export default class Consumer {
     return BitId.parse(this.bitJson.compilerId, this.scope);
   }
 
-  get driver(): ?Object {
-    let langDriver: string;
-
-    if (!this.bitJson.lang || this.bitJson.lang === DEFAULT_LANGUAGE) {
-      langDriver = 'bit-javascript';
-    } else if (this.bitJson.lang.startsWith('bit-')) {
-      langDriver = this.bitJson.lang;
-    } else {
-      langDriver = `bit-${this.bitJson.lang}`;
-    }
-    try {
-      return reqCwd(langDriver);
-    } catch (err) {
-      if (err.code !== 'MODULE_NOT_FOUND' && err.message !== 'missing path') throw err;
-      throw new DriverNotFound(langDriver, this.bitJson.lang);
-    }
-  }
-
-  runHook(hookName: string, param: *, returnValue?: *): Promise<*> {
-    try {
-        // $FlowFixMe
-      if (!this.driver.lifecycleHooks || !this.driver.lifecycleHooks[hookName]) {
-        return Promise.resolve(returnValue); // it's ok for a driver to not implement a hook
-      }
-
-      return this.driver.lifecycleHooks[hookName](param).then(() => returnValue);
-    } catch (e) {
-      // TODO - this is a quick fix, so we will act gracefully in case there is no driver.
-      if (e instanceof DriverNotFound) {
-        return Promise.resolve(returnValue);
-      }
-
-      throw e;
-    }
+  get driver(): Driver {
+    return Driver.load(this.bitJson.lang);
   }
 
   write(): Promise<Consumer> {
@@ -131,7 +97,7 @@ export default class Consumer {
       .then(componentDependencies => this.writeToComponentsDir([componentDependencies])
         .then(() => this.removeFromComponents(newBitId)) // @HACKALERT
         .then(() => componentDependencies.component)
-        .then(component => this.runHook('onExport', component, component))
+        .then(component => this.driver.runHook('onExport', component, component))
       );
   }
 
@@ -260,7 +226,7 @@ export default class Consumer {
         .then(bits => this.writeToComponentsDir([bits]))
         .then(() => this.removeFromInline(id))
         .then(() => index(bit, this.scope.getPath()))
-        .then(() => this.runHook('onCommit', bit))
+        .then(() => this.driver.runHook('onCommit', bit))
         .then(() => bit)
       );
   }
