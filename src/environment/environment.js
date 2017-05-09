@@ -4,27 +4,29 @@ import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
 import npmClient from '../npm-client';
-import { loadScope, Scope } from '../scope';
+import { Scope } from '../scope';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { BitId } from '../bit-id';
 import { Component } from '../consumer/component/consumer-component';
 import { BITS_DIRNAME, ISOLATED_ENV_ROOT } from '../constants';
 import { Driver } from '../driver';
+import { mkdirp } from '../utils';
 
 export default class Environment {
   path: string;
-  scopePath: string;
   scope: Scope;
 
-  constructor(scopePath: string = process.cwd()) {
-    this.scopePath = scopePath;
-    this.path = path.join(scopePath, ISOLATED_ENV_ROOT, v4());
+  constructor(scope: Scope) {
+    this.scope = scope;
+    this.path = path.join(scope.getPath(), ISOLATED_ENV_ROOT, v4());
   }
 
-  init(): Promise<Scope> {
-    return loadScope(this.scopePath).then((scope) => {
-      this.scope = scope;
-      return scope;
+  create(): Promise<> {
+    return new Promise((resolve, reject) => {
+      mkdirp(this.path, (err) => {
+        if (err) return reject(err);
+        return resolve();
+      });
     });
   }
 
@@ -48,23 +50,12 @@ export default class Environment {
     }));
   }
 
-  importDependencies(component: Component): Promise<Component[]> {
-    // TODO: (optimization) importComponent() gets the dependencies data already
-    const dependencies = component.dependencies || [];
-
-    if (component.compilerId) {
-      dependencies.push(component.compilerId);
-    }
-    if (component.testerId) {
-      dependencies.push(component.testerId);
-    }
-    return this.scope.getMany(dependencies).then((componentDependenciesArr) => {
-      const components = flattenDependencies(componentDependenciesArr);
-      return this._writeToEnvironmentDir(components);
-    });
+  importEnvironmentDependencies(component: Component): Promise<Component[]> {
+    const ids = [component.compilerId, component.testerId];
+    return this.scope.installEnvironment({ ids, verbose: false });
   }
 
-  installNpmPackages(components): Promise<*> {
+  installNpmPackages(components: Component[]): Promise<*> {
     return Promise.all(components.map((component) => {
       if (R.isEmpty(component.packageDependencies)) return Promise.resolve();
       const componentPath = this.getComponentPath(component);
@@ -88,9 +79,8 @@ export default class Environment {
    */
   importE2E(rawId: string): Promise<Component> {
     return this.importComponent(rawId).then((component) => {
-      return this.importDependencies(component).then((dependencies) => {
-        const components = dependencies.concat(component);
-        return this.installNpmPackages(components)
+      return this.importEnvironmentDependencies(component).then(() => {
+        return this.installNpmPackages([component])
           .then(() => this.bindFromDriver())
           .then(() => component);
       });

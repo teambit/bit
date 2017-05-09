@@ -34,9 +34,9 @@ export default class Build extends Command {
     }));
   }
 
-  report({ res, inline }: { res: ?string, inline: ?bool }): string {
+  report({ res, inline }: { res: ?string[], inline: ?bool }): string {
     if (!res) return chalk.red('there is no compiler to that component');
-    if (inline) { return chalk.cyan(res); }
-    return res;
+    if (inline) { return chalk.cyan(res.join('\n')); }
+    return res.join('\n');
   }
 }

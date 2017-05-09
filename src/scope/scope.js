@@ -516,7 +516,7 @@ export default class Scope {
   }
 
   installEnvironment({ ids, consumer, verbose }:
-  { ids: BitId[], consumer?: ?Consumer, verbose?: boolean }): Promise<any> {
+  { ids: BitId[], consumer?: Consumer, verbose?: boolean }): Promise<any> {
     const installPackageDependencies = (component: ConsumerComponent) => {
       return npmClient.install(component.packageDependencies, {
         cwd: consumer ? consumer.getBitPathInComponentsDir(component.id) :
@@ -549,12 +549,13 @@ export default class Scope {
       });
   }
 
-  runComponentSpecs({ bitId, consumer, environment, save, verbose }: {
+  runComponentSpecs({ bitId, consumer, environment, save, verbose, isolated }: {
     bitId: BitId,
     consumer?: ?Consumer,
     environment?: ?bool,
     save?: ?bool,
-    verbose?: ?bool
+    verbose?: ?bool,
+    isolated?: bool,
   }): Promise<?any> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run specs on remote component');
@@ -562,7 +563,14 @@ export default class Scope {
 
     return this.loadComponent(bitId)
       .then((component) => {
-        return component.runSpecs({ scope: this, consumer, environment, save, verbose });
+        return component.runSpecs({
+          scope: this,
+          consumer,
+          environment,
+          save,
+          verbose,
+          isolated,
+        });
       });
   }
 

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Change
 
+- bare scope test creates a new environment and runs the tests there.
+- test command -i runs the tests on the file system (inline components).
+- build command now saves dist/\<implFileName> && dist/\<specsFileName> for the specs file.
+- change the component resolver to fetch from dist/\<implFileName> instead of dist/dist.js.
+
 - package dependencies of environment modules would be installed at component level from now.
 - npm loader would not be present, --verbose will show npm output after the installation is done.
 

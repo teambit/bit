@@ -1,3 +1,3 @@
 import Environment from './environment';
 
-export { Environment };
+export default Environment;
