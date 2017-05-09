@@ -163,7 +163,7 @@ export default class Consumer {
       withSpecs,
       consumerBitJson: this.bitJson,
     }, this.scope).write(inlineBitPath, withBitJson, force)
-      .then(component => this.runHook('onCreate', component, component));
+      .then(component => this.driver.runHook('onCreate', component, component));
   }
 
   removeFromInline(id: BitInlineId): Promise<any> {
