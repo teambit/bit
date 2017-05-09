@@ -5,7 +5,6 @@ import BitJson from 'bit-scope-client/bit-json';
 import {
   VERSION_DELIMITER,
   ID_DELIMITER,
-  DEFAULT_BUNDLE_FILENAME,
   DEFAULT_DIST_DIRNAME,
   NO_PLUGIN_TYPE,
 } from '../constants';
@@ -14,9 +13,14 @@ import LocalScope from '../scope/local-scope';
 const generateId = ({ scope, namespace, name, version }) =>
   scope + ID_DELIMITER + namespace + ID_DELIMITER + name + VERSION_DELIMITER + version;
 
+// function getRequiredFileDEPRECATED(bitJson: BitJson): string {
+//   return !bitJson.compiler || bitJson.compiler !== NO_PLUGIN_TYPE ?
+//     path.join(DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME) : bitJson.impl;
+// }
+
 function getRequiredFile(bitJson: BitJson): string {
   return !bitJson.compiler || bitJson.compiler !== NO_PLUGIN_TYPE ?
-    path.join(DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME) : bitJson.impl;
+    path.join(DEFAULT_DIST_DIRNAME, bitJson.impl) : bitJson.impl;
 }
 
 function getLocalScopeNameP(projectRoot: string): Promise<?string> {

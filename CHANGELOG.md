@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - support passing a directory as a parameter to the `bind` function.
+- change the dist/dist.js constant to be dist/\<implFileName> when performing the bind process
 - add public-api for pending export components (staged components, that were commited and didn't exported yet).
 - major refactor + remove old deprecated behavior (the load function)
 - change name to bit-javascript
