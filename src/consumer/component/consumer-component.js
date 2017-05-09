@@ -14,6 +14,7 @@ import SpecsResults from '../specs-results';
 import type { Results } from '../../specs-runner/specs-runner';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import ComponentNotFoundInline from './exceptions/component-not-found-inline';
+import IsolatedEnvironment from '../../environment';
 
 import {
   DEFAULT_BOX_NAME,
@@ -21,8 +22,7 @@ import {
   DEFAULT_SPECS_NAME,
   DEFAULT_BIT_VERSION,
   NO_PLUGIN_TYPE,
-  DEFAULT_LANGUAGE,
-  INLINE_BITS_DIRNAME
+  DEFAULT_LANGUAGE
 } from '../../constants';
 
 export type ComponentProps = {
@@ -42,7 +42,8 @@ export type ComponentProps = {
   specs?: ?Specs|string,
   misc?: ?Misc|[],
   docs?: ?Doclet[],
-  dist?: ?Dist,
+  dist?: Dist,
+  specDist?: Dist,
   specsResults?: ?SpecsResults,
   license?: ?License
 }
@@ -65,6 +66,7 @@ export default class Component {
   _docs: ?Doclet[];
   _misc: ?Misc|[];
   dist: ?Dist;
+  specDist: ?Dist;
   specsResults: ?SpecsResults;
   license: ?License;
 
@@ -187,7 +189,7 @@ export default class Component {
   }
 
   buildIfNeeded(
-    condition: bool,
+    condition: ?bool,
     compiler: any,
     src: string,
     consumer?: Consumer,
@@ -198,7 +200,7 @@ export default class Component {
       let componentRoot;
       // if a consumer exist it's on inline components.
       if (consumer) {
-        componentRoot = path.join(consumer.projectPath, INLINE_BITS_DIRNAME, this.box, this.name);
+        componentRoot = path.join(consumer.getInlineBitsPath(), this.box, this.name);
       } else {
         // TODO - here we need to create the environment and provide the root.
         // componentRoot = 'Here the root should be provided by the environment module'.
@@ -227,21 +229,31 @@ export default class Component {
   write(bitDir: string, withBitJson: boolean, force?: boolean = true): Promise<Component> {
     return mkdirp(bitDir)
       .then(() => this.impl.write(bitDir, this.implFile, force))
-      .then(() => { return this.specs ? this.specs.write(bitDir, this.specsFile, force) : undefined; })
-      .then(() => { return this.misc ? this.misc.write(bitDir, this.miscFiles, force) : undefined; })
+      .then(() => {
+        return this.specs ? this.specs.write(bitDir, this.specsFile, force) : undefined;
+      }).then(() => {
+        return this.misc ? this.misc.write(bitDir, this.miscFiles, force) : undefined;
+      })
       .then(() => { return this.dist ? this.dist.write(bitDir, this.implFile, force) : undefined; })
+      .then(() => {
+        return this.specsFile && this.specDist ?
+        this.specDist.write(bitDir, this.specsFile, force) : undefined;
+      })
       .then(() => { return withBitJson ? this.writeBitJson(bitDir, force): undefined; })
-      .then(() => { return this.license && this.license.src ? this.license.write(bitDir, force) : undefined; })
+      .then(() => {
+        return this.license && this.license.src ? this.license.write(bitDir, force) : undefined;
+      })
       .then(() => this);
   }
 
-  runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose }: {
+  runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose, isolated }: {
     scope: Scope,
     rejectOnFailure?: bool,
     consumer?: Consumer,
-    environment?: ?bool,
-    save?: ?bool,
-    verbose?: ?bool
+    environment?: bool,
+    save?: bool,
+    verbose?: bool,
+    isolated?: bool,
   }): Promise<?Results> {
     const installEnvironmentsIfNeeded = (): Promise<any> => {
       if (environment) {
@@ -251,6 +263,7 @@ export default class Component {
           verbose
         });
       }
+
       return Promise.resolve();
     };
 
@@ -260,19 +273,16 @@ export default class Component {
     .then(() => {
       try {
         const testerFilePath = scope.loadEnvironment(
-          this.testerId, { pathOnly: true, bareScope: !consumer });
-        const compiler = this.compilerId ? scope.loadEnvironment(
-          this.compilerId, { bareScope: !consumer }) : null;
-        const bundledImplP = this.buildIfNeeded(!!this.compilerId, compiler, this.impl.src);
+          this.testerId,
+          { pathOnly: true, bareScope: !consumer },
+        );
 
-        // $FlowFixMe
-        const bundledSpecsSrcP = this.buildIfNeeded(!!this.compilerId, compiler, this.specs.src);
-        return Promise.all([bundledImplP, bundledSpecsSrcP]).then(([bundledImpl, bundledSpecs]) => {
+        const run = ({ implDistPath, specDistPath }) => {
           return specsRunner.run({
             scope,
             testerFilePath,
-            implSrc: bundledImpl && bundledImpl.code,
-            specsSrc: bundledSpecs && bundledSpecs.code,
+            implDistPath,
+            specDistPath,
             testerId: this.testerId
           })
           .then((specsResults) => {
@@ -291,14 +301,52 @@ export default class Component {
 
             return Promise.resolve(this.specsResults);
           });
-        });
-      } catch (e) { return Promise.reject(e); }
+        };
+
+        if (!isolated && consumer) {
+          const componentPath = path.join(consumer.getInlineBitsPath(), this.box, this.name);
+          return this.build({ scope, environment, verbose, consumer }).then(() => {
+            const saveImplDist = this.dist ?
+            this.dist.write(componentPath, this.implFile) : Promise.resolve();
+
+            const saveSpecDist = this.specDist ?
+            this.specDist.write(componentPath, this.specsFile) : Promise.resolve();
+
+            return Promise.all([saveImplDist, saveSpecDist]).then(() => {
+              const implDistPath = Dist.getFilePath(componentPath, this.implFile);
+              const specDistPath = Dist.getFilePath(componentPath, this.specsFile);
+              return run({ implDistPath, specDistPath });
+            });
+          });
+        }
+
+        const isolatedEnvironment = new IsolatedEnvironment(scope);
+
+        return isolatedEnvironment.create()
+        .then(() => {
+          return isolatedEnvironment.importE2E(this.id.toString());
+        })
+        .then((component) => {
+          const componentPath = isolatedEnvironment.getComponentPath(component);
+          return component.build({ scope, environment, verbose }).then(() => {
+            return component.specDist.write(componentPath, this.specsFile).then(() => {
+              const implDistPath = Dist.getFilePath(componentPath, this.implFile);
+              const specDistPath = Dist.getFilePath(componentPath, this.specsFile);
+              return run({ implDistPath, specDistPath }).then((results) => {
+                return isolatedEnvironment.destroy().then(() => results);
+              });
+            });
+          });
+        }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
+      } catch (err) {
+        return Promise.reject(err);
+      }
     });
   }
 
   build({ scope, environment, save, consumer, verbose }:
-  { scope: Scope, environment?: ?bool, save?: ?bool, consumer?: Consumer, verbose?: ?bool }):
-  Promise<{code: string, map: Object}|null> { // @TODO - write SourceMap Type
+  { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, verbose?: bool }):
+  Promise<null> { // @TODO - write SourceMap Type
     return new Promise((resolve, reject) => {
       if (!this.compilerId) return resolve(null);
 
@@ -318,8 +366,21 @@ export default class Component {
       .then(() => {
         const opts = { bareScope: !consumer };
         const compiler = scope.loadEnvironment(this.compilerId, opts);
-        const buildedImplP = this.buildIfNeeded(!!this.compilerId, compiler, this.impl.src, consumer);
-        return buildedImplP.then((buildedImpl) => {
+        const buildedImplP = this.buildIfNeeded(
+          !!this.compilerId,
+          compiler,
+          this.impl.src,
+          consumer
+        );
+
+        const buildedspecP = this.buildIfNeeded(
+          !!this.compilerId && this.specs,
+          compiler,
+          this.specs && this.specs.src,
+          consumer
+        );
+
+        return Promise.all([buildedImplP, buildedspecP]).then(([buildedImpl, buildedSpec]) => {
           if (buildedImpl && (!buildedImpl.code || !isString(buildedImpl.code))) {
             throw new Error('builder interface has to return object with a code attribute that contains string');
           }
@@ -329,12 +390,19 @@ export default class Component {
             buildedImpl && buildedImpl.mappings
           );
 
-          if (save) {
-            return scope.sources.updateDist({ source: this })
-            .then(() => resolve(buildedImpl));
+          if (buildedSpec) {
+            this.specDist = new Dist(
+              buildedSpec && buildedSpec.code,
+              buildedSpec && buildedSpec.mappings
+            );
           }
 
-          return resolve(buildedImpl);
+          if (save) {
+            return scope.sources.updateDist({ source: this })
+            .then(() => resolve());
+          }
+
+          return resolve();
         });
       }).catch(reject);
     });

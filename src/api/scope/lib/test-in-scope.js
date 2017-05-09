@@ -11,7 +11,13 @@ export default function testInScope({ id, environment, save, verbose, scopePath 
       .catch(newErr => Promise.reject(initialError || newErr))
       .then((scope) => {
         const bitId = BitId.parse(id, scope.name);
-        return scope.runComponentSpecs({ bitId, environment, save, verbose });
+        return scope.runComponentSpecs({
+          bitId,
+          environment,
+          save,
+          verbose,
+          isolated: true,
+        });
       })
       .catch(e => Promise.reject(e));
   }
@@ -20,7 +26,14 @@ export default function testInScope({ id, environment, save, verbose, scopePath 
     return loadConsumer()
       .then((consumer) => {
         const bitId = BitId.parse(id, consumer.scope.name);
-        return consumer.scope.runComponentSpecs({ bitId, environment, save, consumer, verbose });
+        return consumer.scope.runComponentSpecs({
+          consumer,
+          bitId,
+          environment,
+          save,
+          verbose,
+          isolated: true,
+        });
       });
   }
 

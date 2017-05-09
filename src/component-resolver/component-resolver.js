@@ -6,8 +6,7 @@ import { BitId } from '../bit-id';
 import { LATEST_BIT_VERSION,
   BITS_DIRNAME,
   NO_PLUGIN_TYPE,
-  DEFAULT_DIST_DIRNAME,
-  DEFAULT_BUNDLE_FILENAME } from '../constants';
+  DEFAULT_DIST_DIRNAME } from '../constants';
 import BitJson from '../consumer/bit-json';
 import { ComponentNotFound } from '../scope/exceptions';
 
@@ -29,7 +28,7 @@ function getLatestVersion(bitId: BitId, componentsDir: string): Promise<number> 
 
 function getRequiredFile(bitJson: BitJson): string {
   return !bitJson.compiler || bitJson.compiler !== NO_PLUGIN_TYPE ?
-    path.join(DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME) : bitJson.impl;
+    path.join(DEFAULT_DIST_DIRNAME, bitJson.impl) : bitJson.impl;
 }
 
 function resolvePath(componentId: string, projectRoot: string = process.cwd()): Promise<string> {

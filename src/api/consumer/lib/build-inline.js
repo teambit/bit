@@ -12,7 +12,13 @@ export default function build(id: string): Promise<Bit> {
         return component.build({ scope: consumer.scope, consumer })
         .then(() => {
           const bitPath = inlineId.composeBitPath(consumer.getPath());
-          return component.dist ? component.dist.write(bitPath, component.implFile) : null;
+          const saveImplDist = component.dist ?
+          component.dist.write(bitPath, component.implFile) : null;
+
+          const saveSpecDist = component.specDist ?
+          component.specDist.write(bitPath, component.specsFile) : null;
+
+          return Promise.all([saveImplDist, saveSpecDist]);
         });
       });
     });

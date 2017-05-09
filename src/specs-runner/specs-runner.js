@@ -11,16 +11,13 @@ export type Tester = {
   modules: Object;
 }
 
-function run({ scope, testerFilePath, implSrc, specsSrc, testerId }:
-{ scope: Scope, testerFilePath: string, implSrc: string, specsSrc: string, testerId: Object }) {
-  const implFilePath = scope.tmp.saveSync(implSrc);
-  const specsFilePath = scope.tmp.saveSync(specsSrc);
-
-  const removeTmpFiles = () => {
-    scope.tmp.removeSync(implFilePath);
-    scope.tmp.removeSync(specsFilePath);
-  };
-
+function run({ testerFilePath, testerId, implDistPath, specDistPath }: {
+  scope: Scope,
+  testerFilePath: string,
+  testerId: Object,
+  implDistPath: string,
+  specDistPath: string
+}) {
   function getDebugPort(): ?number {
     const debugPortArgName = '--debug-brk';
     try {
@@ -40,8 +37,8 @@ function run({ scope, testerFilePath, implSrc, specsSrc, testerId }:
       execArgv: openPort ? [`--debug=${openPort.toString()}`] : [],
       silent: false,
       env: {
-        __impl__: implFilePath,
-        __specs__: specsFilePath,
+        __impl__: implDistPath,
+        __specs__: specDistPath,
         __tester__: testerFilePath,
         __testerId__: testerId.toString()
       }
@@ -52,13 +49,11 @@ function run({ scope, testerFilePath, implSrc, specsSrc, testerId }:
     });
 
     child.on('message', ({ type, payload }: { type: string, payload: Object }) => {
-      removeTmpFiles();
       if (type === 'error') return reject(payload);
       return resolve(payload);
     });
 
     child.on('error', (e) => {
-      removeTmpFiles();
       reject(e);
     });
   });
