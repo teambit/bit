@@ -347,7 +347,9 @@ export default class Component {
         .then((component) => {
           const componentPath = isolatedEnvironment.getComponentPath(component);
           return component.build({ scope, environment, verbose }).then(() => {
-            return component.specDist.write(componentPath, this.specsFile).then(() => {
+            const specDistWrite = component.specDist ?
+              component.specDist.write(componentPath, this.specsFile) : Promise.resolve();
+            return specDistWrite.then(() => {
               const implDistPath = this.compiler ?
               Dist.getFilePath(componentPath, this.implFile) :
               path.join(componentPath, this.implFile);
