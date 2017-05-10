@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- implement the isolated environment for build
+
 ## [0.5.5] - 2017-05-09 rc
 
 ### Change

@@ -34,9 +34,10 @@ export default class Build extends Command {
     }));
   }
 
-  report({ res, inline }: { res: ?string[], inline: ?bool }): string {
+  report({ res, inline }: { res: ?string[]|string, inline: ?bool }): string {
     if (!res) return chalk.red('there is no compiler to that component');
-    if (inline) { return chalk.cyan(res.join('\n')); }
-    return res.join('\n');
+    if (inline && Array.isArray(res)) { return chalk.cyan(res.join('\n')); }
+    // $FlowFixMe - is a string
+    return res;
   }
 }

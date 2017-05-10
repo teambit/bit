@@ -188,25 +188,16 @@ export default class Component {
     return BitIds.fromObject(this.dependencies);
   }
 
-  buildIfNeeded(
-    condition: ?bool,
-    compiler: any,
-    src: string,
-    consumer?: Consumer,
-  ): Promise<?{ code: string, mappings?: string }> {
+  buildIfNeeded({ condition, compiler, src, consumer, scope }: {
+      condition?: ?bool,
+      compiler: any,
+      src: string,
+      consumer?: Consumer,
+      scope: Scope,
+  }): Promise<?{ code: string, mappings?: string }> {
     if (!condition) { return Promise.resolve({ code: src }); }
 
-    if (compiler.build) {
-      let componentRoot;
-      // if a consumer exist it's on inline components.
-      if (consumer) {
-        componentRoot = path.join(consumer.getInlineBitsPath(), this.box, this.name);
-      } else {
-        // TODO - here we need to create the environment and provide the root.
-        // componentRoot = 'Here the root should be provided by the environment module'.
-        throw Error('(wip) - need to implement environment module');
-      }
-
+    const runBuild = (componentRoot: string): Promise<any> => {
       const metaData = {
         src,
         entry: this.implFile,
@@ -216,14 +207,35 @@ export default class Component {
         dependencies: this.dependencies
       };
 
-      return compiler.build(metaData); // returns a promise
-    }
+      if (compiler.build) {
+        return compiler.build(metaData); // returns a promise
+      }
 
-    if (compiler.compile) {
+      // the compiler have one of the following (build/compile)
       return Promise.resolve(compiler.compile(src));
+    };
+
+    if (!compiler.build && !compiler.compile) {
+      return Promise.reject(`"${this.compilerId.toString()}" does not have a valid compiler interface, it has to return a build method`);
     }
 
-    return Promise.reject(`"${this.compilerId.toString()}" does not have a valid compiler interface, it has to return a build method`);
+    if (consumer) {
+      const componentRoot = path.join(consumer.getInlineBitsPath(), this.box, this.name);
+      return runBuild(componentRoot);
+    }
+
+    const isolatedEnvironment = new IsolatedEnvironment(scope);
+
+    return isolatedEnvironment.create()
+    .then(() => {
+      return isolatedEnvironment.importE2E(this.id.toString());
+    })
+    .then((component) => {
+      const componentRoot = isolatedEnvironment.getComponentPath(component);
+      return runBuild(componentRoot).then((result) => {
+        return isolatedEnvironment.destroy().then(() => result);
+      });
+    }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
   }
 
   write(bitDir: string, withBitJson: boolean, force?: boolean = true): Promise<Component> {
@@ -281,9 +293,9 @@ export default class Component {
           return specsRunner.run({
             scope,
             testerFilePath,
+            testerId: this.testerId,
             implDistPath,
             specDistPath,
-            testerId: this.testerId
           })
           .then((specsResults) => {
             this.specsResults = SpecsResults.createFromRaw(specsResults);
@@ -346,7 +358,7 @@ export default class Component {
 
   build({ scope, environment, save, consumer, verbose }:
   { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, verbose?: bool }):
-  Promise<null> { // @TODO - write SourceMap Type
+  Promise<string> { // @TODO - write SourceMap Type
     return new Promise((resolve, reject) => {
       if (!this.compilerId) return resolve(null);
 
@@ -366,19 +378,21 @@ export default class Component {
       .then(() => {
         const opts = { bareScope: !consumer };
         const compiler = scope.loadEnvironment(this.compilerId, opts);
-        const buildedImplP = this.buildIfNeeded(
-          !!this.compilerId,
+        const buildedImplP = this.buildIfNeeded({
+          condition: !!this.compilerId,
           compiler,
-          this.impl.src,
-          consumer
-        );
+          src: this.impl.src,
+          consumer,
+          scope
+        });
 
-        const buildedspecP = this.buildIfNeeded(
-          !!this.compilerId && this.specs,
+        const buildedspecP = this.buildIfNeeded({
+          condition: !!this.compilerId && this.specs,
           compiler,
-          this.specs && this.specs.src,
-          consumer
-        );
+          src: this.specs && this.specs.src,
+          consumer,
+          scope
+        });
 
         return Promise.all([buildedImplP, buildedspecP]).then(([buildedImpl, buildedSpec]) => {
           if (buildedImpl && (!buildedImpl.code || !isString(buildedImpl.code))) {
@@ -399,10 +413,10 @@ export default class Component {
 
           if (save) {
             return scope.sources.updateDist({ source: this })
-            .then(() => resolve());
+            .then(() => resolve(this.dist.src));
           }
 
-          return resolve();
+          return resolve(this.dist.src);
         });
       }).catch(reject);
     });

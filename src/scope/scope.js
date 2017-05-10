@@ -586,7 +586,9 @@ export default class Scope {
     }
 
     return this.loadComponent(bitId)
-      .then(component => component.build({ scope: this, environment, save, consumer, verbose }));
+      .then((component) => {
+        return component.build({ scope: this, environment, save, consumer, verbose });
+      });
   }
 
   static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {
