@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.5.4] - 2017-05-09 rc
 
+- support binding specific components
 - support passing a directory as a parameter to the `bind` function.
 - change the dist/dist.js constant to be dist/\<implFileName> when performing the bind process
 - add public-api for pending export components (staged components, that were commited and didn't exported yet).

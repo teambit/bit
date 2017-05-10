@@ -1,9 +1,9 @@
 // @flow
+import chalk from 'chalk';
 import prog from 'caporal';
 import pkg from '../../package.json';
 import loader from './loader';
 import commands from './commands/command-list';
-import chalk from 'chalk';
 
 function bitError(message) {
   return chalk.red(

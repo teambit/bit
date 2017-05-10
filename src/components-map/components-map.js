@@ -10,7 +10,8 @@ import {
 } from '../constants';
 import LocalScope from '../scope/local-scope';
 
-const generateId = ({ scope, namespace, name, version }) =>
+export const generateId = ({ scope, namespace, name, version }: { scope: string, namespace: string,
+  name: string, version: string }) =>
   scope + ID_DELIMITER + namespace + ID_DELIMITER + name + VERSION_DELIMITER + version;
 
 // function getRequiredFileDEPRECATED(bitJson: BitJson): string {
@@ -24,11 +25,9 @@ function getRequiredFile(bitJson: BitJson): string {
 }
 
 function getLocalScopeNameP(projectRoot: string): Promise<?string> {
-  return new Promise((resolve) => {
-    return LocalScope.load(projectRoot)
-      .then(localScopeName => resolve(localScopeName.getScopeName()))
-      .catch(() => resolve(null));
-  });
+  return new Promise(resolve => LocalScope.load(projectRoot)
+    .then(localScopeName => resolve(localScopeName.getScopeName()))
+    .catch(() => resolve(null)));
 }
 
 export function buildForInline(targetComponentsDir: string, bitJson: BitJson): Promise<Object> {

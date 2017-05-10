@@ -5,6 +5,8 @@ import {
   publicApiRootLevel,
   publicApiComponentLevel,
   publicApiForExportPendingComponents,
+  publicApiComponentLevelForSpecificComponents,
+  dependenciesForSpecificComponents,
 } from './links-generator';
 
 export {
@@ -14,4 +16,6 @@ export {
   publicApiRootLevel,
   publicApiComponentLevel,
   publicApiForExportPendingComponents,
+  publicApiComponentLevelForSpecificComponents,
+  dependenciesForSpecificComponents,
 };

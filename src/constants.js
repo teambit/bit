@@ -17,8 +17,6 @@ const getCacheDirectory = () => {
   return getDirectory();
 };
 
-const packageFile = require('../package.json');
-
 /**
  * cache root directory
  */

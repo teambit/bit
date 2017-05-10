@@ -1,4 +1,4 @@
-import { bindAction, watchAction, fetchAction, importAction } from './actions';
+import { bindAction, bindSpecificComponentsAction, watchAction, fetchAction, importAction } from './actions';
 
 const lifecycleHooks = {
   onCreate: bindAction,
@@ -13,4 +13,5 @@ module.exports = {
   watch: watchAction,
   fetch: fetchAction,
   import: importAction,
+  bindSpecificComponents: bindSpecificComponentsAction,
 };

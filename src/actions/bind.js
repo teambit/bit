@@ -34,3 +34,28 @@ Promise<any> {
     .then(namespacesMap => linksGenerator.publicApiRootLevel(targetModuleDir, namespacesMap))
     .then(() => boundComponents);
 }
+
+export function bindSpecificComponentsAction({ projectRoot = process.cwd(), components }: {
+  projectRoot?: string, components: Object[] }): Promise<any> {
+  const targetModuleDir = path.join(projectRoot, MODULES_DIR, MODULE_NAME);
+  const targetComponentsDir = path.join(projectRoot, COMPONENTS_DIRNAME);
+  const componentsObj = {};
+  components.forEach((component) => {
+    const id = componentsMap.generateId({
+      scope: component.scope,
+      namespace: component.box,
+      name: component.name,
+      version: component.version });
+    componentsObj[id] = component;
+  });
+  // for simplicity, it's better to build the map of the entire folder. Otherwise, if this specific
+  // component has dependencies, it will require recursive checking of all dependencies
+  return componentsMap.build(projectRoot, targetComponentsDir)
+    .then(map => linksGenerator
+      .dependenciesForSpecificComponents(targetComponentsDir, map, componentsObj))
+    .then(map => linksGenerator
+      .publicApiComponentLevelForSpecificComponents(targetModuleDir, map, componentsObj))
+    .then(() => componentsMap.buildForNamespaces(targetModuleDir))
+    .then(namespacesMap => linksGenerator.publicApiNamespaceLevel(targetModuleDir, namespacesMap))
+    .then(namespacesMap => linksGenerator.publicApiRootLevel(targetModuleDir, namespacesMap));
+}
