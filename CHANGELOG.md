@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.6] - 2017-05-10 rc
+
+- fix public api namespace destructuring for bind specific components
+
 ## [0.5.4] - 2017-05-09 rc
 
 - support binding specific components
