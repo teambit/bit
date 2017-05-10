@@ -325,8 +325,14 @@ export default class Component {
             this.specDist.write(componentPath, this.specsFile) : Promise.resolve();
 
             return Promise.all([saveImplDist, saveSpecDist]).then(() => {
-              const implDistPath = Dist.getFilePath(componentPath, this.implFile);
-              const specDistPath = Dist.getFilePath(componentPath, this.specsFile);
+              const implDistPath = this.compiler ?
+              Dist.getFilePath(componentPath, this.implFile) :
+              path.join(componentPath, this.implFile);
+
+              const specDistPath = this.compiler ?
+              Dist.getFilePath(componentPath, this.specsFile) :
+              path.join(componentPath, this.specsFile);
+
               return run({ implDistPath, specDistPath });
             });
           });
@@ -342,8 +348,14 @@ export default class Component {
           const componentPath = isolatedEnvironment.getComponentPath(component);
           return component.build({ scope, environment, verbose }).then(() => {
             return component.specDist.write(componentPath, this.specsFile).then(() => {
-              const implDistPath = Dist.getFilePath(componentPath, this.implFile);
-              const specDistPath = Dist.getFilePath(componentPath, this.specsFile);
+              const implDistPath = this.compiler ?
+              Dist.getFilePath(componentPath, this.implFile) :
+              path.join(componentPath, this.implFile);
+
+              const specDistPath = this.compiler ?
+              Dist.getFilePath(componentPath, this.specsFile) :
+              path.join(componentPath, this.specsFile);
+
               return run({ implDistPath, specDistPath }).then((results) => {
                 return isolatedEnvironment.destroy().then(() => results);
               });
