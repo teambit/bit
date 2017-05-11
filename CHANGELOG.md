@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.8] - 2017-05-11 rc
+
 - fix binding dependencies when using a non-hub scope.
 - create public-api for the dependencies namespaces.
 
