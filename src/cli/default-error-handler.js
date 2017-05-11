@@ -50,7 +50,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ InvalidBitJson, err => `error: ${chalk.bold(err.path)} is not a valid JSON file.`],
   [ ExportWithoutThis, err => `Error: Missing local scope annotation when exporting ${err.id}. Please run 'bit export ${LOCAL_SCOPE_NOTATION}/${err.id} ${err.remote}'`],
   [ ResolutionException, e => e.message],
-  [ DriverNotFound, err => `fatal: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(err.lang)} set in your bit.json file`]
+  [ DriverNotFound, err => `fatal: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(err.lang)} set in your bit.json file.`]
 ];
 
 export default (err: Error): ?string => {
