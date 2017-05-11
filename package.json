@@ -1,6 +1,6 @@
 {
   "name": "bit-javascript",
-  "version": "0.5.8",
+  "version": "0.5.11",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint src && flow check || true",
