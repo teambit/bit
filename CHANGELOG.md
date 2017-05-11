@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- show error-message for 'bit build' when no compiler is specified 
 - write dependencies on modify.
 - do not write bit.json's `misc` and `lang` properties if the default value is presented.
 - send correct error message when there is invalid inline id (wip).
