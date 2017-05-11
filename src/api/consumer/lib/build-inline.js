@@ -10,7 +10,8 @@ export default function build(id: string): Promise<Bit> {
       return consumer.loadComponent(inlineId)
       .then((component) => {
         return component.build({ scope: consumer.scope, consumer })
-        .then(() => {
+        .then((result) => {
+          if (result === null) return Promise.resolve(null);
           const bitPath = inlineId.composeBitPath(consumer.getPath());
           const saveImplDist = component.dist ?
           component.dist.write(bitPath, component.implFile) : null;
