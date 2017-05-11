@@ -17,8 +17,8 @@ export default function modify({ id, no_env, verbose }: {
       .then((c: ComponentDependencies) => {
         const inlineId = new InlineId({ box: bitId.box, name: bitId.name });
         const inlineBitPath = inlineId.composeBitPath(consumer.getPath());
-
-        return c.component.write(inlineBitPath, true);
+        return c.component.write(inlineBitPath, true)
+          .then(component => consumer.driver.runHook('onModify', { component }, component));
       });
     });
 }
