@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.5.8] - 2017-05-11 rc
 
+- create public-api for the dependencies root.
 - fix binding dependencies when using a non-hub scope.
 - create public-api for the dependencies namespaces.
 

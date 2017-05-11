@@ -63,6 +63,15 @@ export function publicApiNamespaceLevel(
   return Promise.all(writeAllFiles).then(() => namespacesMap);
 }
 
+export function publicApiRootLevel(
+  targetModuleDir: string, namespacesMap: Object): Promise<*> {
+  if (!namespacesMap || R.isEmpty(namespacesMap)) return Promise.resolve();
+  const namespaces = Object.keys(namespacesMap);
+  const links = namespaces.map(namespace => namespaceTemplate(namespace));
+  const indexFile = path.join(targetModuleDir, INDEX_JS);
+  return writeFileP(indexFile, linksTemplate(links));
+}
+
 function generateDependenciesP(targetComponentsDir: string, map: Object, components: string[]) {
   return new Promise((resolve, reject) => {
     const promises = [];
@@ -93,7 +102,8 @@ function generateDependenciesP(targetComponentsDir: string, map: Object, compone
         if (namespaceMap[namespace]) namespaceMap[namespace].push(name);
         else namespaceMap[namespace] = [name];
       });
-      promises.push(publicApiNamespaceLevel(targetModuleDir, namespaceMap));
+      promises.push(publicApiNamespaceLevel(targetModuleDir, namespaceMap)
+        .then(() => publicApiRootLevel(targetModuleDir, namespaceMap)));
     });
     Promise.all(promises).then(() => resolve(map)).catch(reject);
   });
@@ -133,15 +143,6 @@ export function publicApiForInlineComponents(
   }));
 
   return writeAllFiles.then(() => components);
-}
-
-export function publicApiRootLevel(
-  targetModuleDir: string, namespacesMap: Object): Promise<*> {
-  if (!namespacesMap || R.isEmpty(namespacesMap)) return Promise.resolve();
-  const namespaces = Object.keys(namespacesMap);
-  const links = namespaces.map(namespace => namespaceTemplate(namespace));
-  const indexFile = path.join(targetModuleDir, INDEX_JS);
-  return writeFileP(indexFile, linksTemplate(links));
 }
 
 export function publicApiForExportPendingComponents(
