@@ -15,6 +15,7 @@ import { testInline, testInlineAll } from './lib/test-inline';
 import getComponentLogs from './lib/get-component-logs';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import config from './lib/global-config';
+import getDriver from './lib/get-driver';
 
 export {
   init,
@@ -36,5 +37,6 @@ export {
   testInlineAll,
   remoteAdd,
   remoteList,
-  remoteRm
+  remoteRm,
+  getDriver,
 };
