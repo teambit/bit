@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.11] - 2017-05-11 rc
+
 - send a correct error message on commit with wrong id.
 - add onModify hook.
 - show error-message for 'bit build' when no compiler is specified.
