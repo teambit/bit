@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- write the specDist only if it exists
+
 ## [0.5.7] - 2017-05-010 rc
 
 - fix test for components without compiler
