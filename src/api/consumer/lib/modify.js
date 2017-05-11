@@ -18,7 +18,10 @@ export default function modify({ id, no_env, verbose }: {
         const inlineId = new InlineId({ box: bitId.box, name: bitId.name });
         const inlineBitPath = inlineId.composeBitPath(consumer.getPath());
 
-        return c.component.write(inlineBitPath, true);
+        return Promise.all(c.dependencies.map((dep) => {
+          const componentDir = consumer.getBitPathInComponentsDir(dep.id);
+          return dep.write(componentDir, true);
+        })).then(() => c.component.write(inlineBitPath, true));
       });
     });
 }
