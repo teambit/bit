@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.8] - 2017-05-11 rc
+
 - write the specDist only if it exists
 
-## [0.5.7] - 2017-05-010 rc
+## [0.5.7] - 2017-05-10 rc
 
 - fix test for components without compiler
 
-## [0.5.6] - 2017-05-010 rc
+## [0.5.6] - 2017-05-10 rc
 
 - implement the isolated environment for build
 
