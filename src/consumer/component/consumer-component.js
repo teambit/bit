@@ -325,11 +325,11 @@ export default class Component {
             this.specDist.write(componentPath, this.specsFile) : Promise.resolve();
 
             return Promise.all([saveImplDist, saveSpecDist]).then(() => {
-              const implDistPath = this.compiler ?
+              const implDistPath = this.compilerId ?
               Dist.getFilePath(componentPath, this.implFile) :
               path.join(componentPath, this.implFile);
 
-              const specDistPath = this.compiler ?
+              const specDistPath = this.compilerId ?
               Dist.getFilePath(componentPath, this.specsFile) :
               path.join(componentPath, this.specsFile);
 
