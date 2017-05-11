@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- send correct error message when there is invalid inline id (wip)
 - add bind command (which calls the driver bind command)
 
 ## [0.5.10] - 2017-05-11 rc

@@ -1,7 +1,6 @@
 /** @flow */
-import chalk from 'chalk';
 import path from 'path';
-import InvalidBitInlineId from './exceptions';
+import { InvalidBitInlineId } from './exceptions';
 import { InvalidIdChunk } from '../../bit-id/exceptions';
 import { INLINE_BITS_DIRNAME } from '../../constants';
 import { isValidIdChunk } from '../../utils';
