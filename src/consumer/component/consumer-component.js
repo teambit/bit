@@ -350,11 +350,11 @@ export default class Component {
             const specDistWrite = component.specDist ?
               component.specDist.write(componentPath, this.specsFile) : Promise.resolve();
             return specDistWrite.then(() => {
-              const implDistPath = this.compiler ?
+              const implDistPath = this.compilerId ?
               Dist.getFilePath(componentPath, this.implFile) :
               path.join(componentPath, this.implFile);
 
-              const specDistPath = this.compiler ?
+              const specDistPath = this.compilerId ?
               Dist.getFilePath(componentPath, this.specsFile) :
               path.join(componentPath, this.specsFile);
 
