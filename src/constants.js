@@ -67,3 +67,5 @@ export const DEFAULT_DEPENDENCIES = {};
 export const BIT_HIDDEN_DIR = '.bit';
 
 export const INDEX_JS = 'index.js';
+
+export const REMOTE_ALIAS_SIGN = '@';

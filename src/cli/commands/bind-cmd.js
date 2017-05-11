@@ -12,7 +12,7 @@ export const report = (components: Object) => reportTitle(components)
 const bindCommand: Command = {
   name: 'bind',
   description: 'create the bit module inside of node_modules and generate relevant links',
-  action: () => bindAction(),
+  action: bindAction,
   report,
   loaderText: 'Binding node_modules/bit directory structure to bit.json',
   loader: true,
