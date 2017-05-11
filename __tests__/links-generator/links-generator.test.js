@@ -54,7 +54,7 @@ describe('dependencies', () => {
     const result = linksGenerator.dependencies('/my/project/components', mapFixture, projectBitJsonFixture);
     return result.then(() => {
       const outputFileCalls = fsMock.outputFile.mock.calls;
-      expect(outputFileCalls.length).toBe(1);
+      expect(outputFileCalls.length).toBe(3);
       expect(outputFileCalls[0][0]).toBe('/my/project/components/object/values/bit.utils/1/node_modules/bit/object/foreach/index.js');
       expect(outputFileCalls[0][1]).toBe("module.exports = require('../../../../../../../../object/foreach/bit.utils/1/dist/dist.js');");
     });
