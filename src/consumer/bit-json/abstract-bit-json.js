@@ -1,6 +1,7 @@
 /** @flow */
 import R from 'ramda';
 import { BitIds, BitId } from '../../bit-id';
+import { filterObject } from '../../utils';
 import {
   DEFAULT_COMPILER_ID,
   DEFAULT_TESTER_ID,
@@ -110,19 +111,27 @@ export default class AbstractBitJson {
   }
 
   toPlainObject(): Object {
-    return {
+    const isMiscPropDefault = (val, key) => {
+      return !(key === 'misc' && R.isEmpty(val));
+    };
+
+    const isLangPropDefault = (val, key) => {
+      return !(key === 'lang' && val === DEFAULT_LANGUAGE);
+    };
+
+    return filterObject({
       lang: this.lang,
-      sources: {
+      sources: filterObject({
         impl: this.getImplBasename(),
         spec: this.getSpecBasename(),
         misc: this.getMiscFiles(),
-      },
+      }, isMiscPropDefault),
       env: {
         compiler: this.compilerId,
         tester: this.testerId,
       },
       dependencies: this.dependencies
-    };
+    }, isLangPropDefault);
   }
 
   toJson(readable: boolean = true) {
