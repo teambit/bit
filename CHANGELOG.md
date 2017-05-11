@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.11] - 2017-05-11 rc
+
 - add onModify hook
 - create public-api for the dependencies root.
 
