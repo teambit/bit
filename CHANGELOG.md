@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.13] - 2017-05-14 rc
+
 - enable bit watch command -> build-all-inline on every change
 
 ## [0.5.12] - 2017-05-14 rc
