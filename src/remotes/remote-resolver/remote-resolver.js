@@ -18,7 +18,10 @@ const remoteResolver = (scopeName: string, thisScope?: Scope): Promise<string> =
   // $FlowFixMe
   else resolverFunction = require(resolverPath); // use the resolver described in the scopeJson
 
-  return resolverFunction(scopeName, thisScope ? thisScope.name : undefined); // should return promise<string>
+  return resolverFunction(
+    scopeName,
+    thisScope ? thisScope.name : undefined
+  ); // should return promise<string>
 };
 
 export default remoteResolver;

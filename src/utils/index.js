@@ -52,6 +52,7 @@ import isValidScopeName from './is-valid-scope-name';
 import packCommand from './pack-command';
 import unpackCommand from './unpack-command';
 import buildCommandMessage from './build-command-message';
+import removeFromRequireCache from './remove-from-require-cache';
 
 export {
   parseSSHUrl,
@@ -108,4 +109,5 @@ resolveGroupId,
   packCommand,
   unpackCommand,
   buildCommandMessage,
+  removeFromRequireCache,
 };

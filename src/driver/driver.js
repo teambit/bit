@@ -1,6 +1,7 @@
 import reqCwd from 'req-cwd';
 import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';
+import { removeFromRequireCache } from '../utils';
 
 export default class Driver {
   lang: string;
@@ -15,6 +16,7 @@ export default class Driver {
     const langDriver = this.lang.startsWith('bit-') ? this.lang : `bit-${this.lang}`;
     try {
       this.driver = reqCwd(langDriver);
+      removeFromRequireCache(langDriver);
       return this.driver;
     } catch (err) {
       if (silent) return undefined;
