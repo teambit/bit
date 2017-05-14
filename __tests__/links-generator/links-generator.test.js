@@ -113,7 +113,7 @@ describe('publicApiForInlineComponents', () => {
     });
   });
 
-  it('should generate "register" public-api links when compiler is specified and environment is not prod', () => {
+  xit('should generate "register" public-api links when compiler is specified and environment is not prod', () => {
     process.env.NODE_ENV = 'dev';
     const result = linksGenerator.publicApiForInlineComponents('/my/project/node_modules/bit',
       inlineMapWithCompilerFixture, '/my/project/inline_components');

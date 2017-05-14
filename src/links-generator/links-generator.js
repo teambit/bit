@@ -146,13 +146,14 @@ export function publicApiForInlineComponents(
   const writeAllFiles = Promise.all(Object.keys(inlineMap).map((id) => {
     const [namespace, name] = id.split(path.sep);
     components[`${namespace}/${name}`] = id;
-    if (process.env.NODE_ENV === 'production' || inlineMap[id].compiler === NO_PLUGIN_TYPE) {
-      return generateLinkP(targetModuleDir, namespace, name, inlineMap, id,
-        INLINE_COMPONENTS_DIRNAME);
-    }
-    const componentDir = path.join(targetInlineComponentsDir, inlineMap[id].loc);
-    const distFile = path.join(componentDir, inlineMap[id].file);
-    return generateRegisterLinkP(targetModuleDir, namespace, name, componentDir, distFile);
+    // TODO - talk about it
+    // if (process.env.NODE_ENV === 'production' || inlineMap[id].compiler === NO_PLUGIN_TYPE) {
+    return generateLinkP(targetModuleDir, namespace, name, inlineMap, id,
+      INLINE_COMPONENTS_DIRNAME);
+    // }
+    // const componentDir = path.join(targetInlineComponentsDir, inlineMap[id].loc);
+    // const distFile = path.join(componentDir, inlineMap[id].file);
+    // return generateRegisterLinkP(targetModuleDir, namespace, name, componentDir, distFile);
   }));
 
   return writeAllFiles.then(() => components);
