@@ -87,7 +87,14 @@ describe('publicApiComponentLevel', () => {
 });
 
 describe('publicApiForInlineComponents', () => {
-  const inlineMapFixture = { 'global/is-string': { loc: 'global/is-string', file: 'impl.js' } };
+  const env = process.env.NODE_ENV;
+  const inlineMapFixture = { 'global/is-string': { loc: 'global/is-string', file: 'impl.js', compiler: 'none' } };
+  const inlineMapWithCompilerFixture = { 'global/is-string':
+    { loc: 'global/is-string', file: 'dist/impl.js', compiler: 'bit.envs/compilers/babel::2' } };
+  afterEach(() => {
+    process.env.NODE_ENV = env;
+  });
+
   it('should not create links if there are no inline components', () => {
     const result = linksGenerator.publicApiForInlineComponents('dir', {});
     return result.then(() => {
@@ -96,12 +103,37 @@ describe('publicApiForInlineComponents', () => {
   });
 
   it('should generate public-api links', () => {
-    const result = linksGenerator.publicApiForInlineComponents('/my/project/node_modules/bit', inlineMapFixture);
+    const result = linksGenerator.publicApiForInlineComponents('/my/project/node_modules/bit',
+      inlineMapFixture, '/my/project/inline_components');
     return result.then(() => {
       const outputFileCalls = fsMock.outputFile.mock.calls;
       expect(outputFileCalls.length).toBe(1);
       expect(outputFileCalls[0][0]).toBe('/my/project/node_modules/bit/global/is-string/index.js');
       expect(outputFileCalls[0][1]).toBe("module.exports = require('../../../../inline_components/global/is-string/impl.js');");
+    });
+  });
+
+  it('should generate "register" public-api links when compiler is specified and environment is not prod', () => {
+    process.env.NODE_ENV = 'dev';
+    const result = linksGenerator.publicApiForInlineComponents('/my/project/node_modules/bit',
+      inlineMapWithCompilerFixture, '/my/project/inline_components');
+    return result.then(() => {
+      const outputFileCalls = fsMock.outputFile.mock.calls;
+      expect(outputFileCalls.length).toBe(1);
+      expect(outputFileCalls[0][0]).toBe('/my/project/node_modules/bit/global/is-string/index.js');
+      expect(outputFileCalls[0][1]).toBe("module.exports = require('bit-javascript/register-component')('/my/project/inline_components/global/is-string','/my/project/inline_components/global/is-string/dist/impl.js');");
+    });
+  });
+
+  it('should NOT generate "register" public-api links when compiler is specified but the environment is production', () => {
+    process.env.NODE_ENV = 'production';
+    const result = linksGenerator.publicApiForInlineComponents('/my/project/node_modules/bit',
+      inlineMapWithCompilerFixture, '/my/project/inline_components');
+    return result.then(() => {
+      const outputFileCalls = fsMock.outputFile.mock.calls;
+      expect(outputFileCalls.length).toBe(1);
+      expect(outputFileCalls[0][0]).toBe('/my/project/node_modules/bit/global/is-string/index.js');
+      expect(outputFileCalls[0][1]).toBe("module.exports = require('../../../../inline_components/global/is-string/dist/impl.js');");
     });
   });
 });

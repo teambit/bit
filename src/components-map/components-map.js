@@ -37,7 +37,8 @@ export function buildForInline(targetComponentsDir: string, bitJson: BitJson): P
       if (err) return reject(err);
       files.forEach((loc) => {
         const file = getRequiredFile(bitJson);
-        componentsMap[loc] = { loc, file };
+        const compiler = bitJson.compiler;
+        componentsMap[loc] = { loc, file, compiler };
       });
 
       return resolve(componentsMap);

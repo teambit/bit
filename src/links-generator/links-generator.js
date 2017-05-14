@@ -9,6 +9,7 @@ import { MODULE_NAME,
   VERSION_DELIMITER,
   ID_DELIMITER,
   INDEX_JS,
+  NO_PLUGIN_TYPE,
   REMOTE_ALIAS_SIGN,
   INLINE_COMPONENTS_DIRNAME } from '../constants';
 import { writeFileP } from '../utils';
@@ -128,9 +129,16 @@ function generateLinkP(targetModuleDir, namespace, name, map, id, sourceComponen
   return writeFileP(targetDir, linkTemplate(dependencyDir));
 }
 
+function generateRegisterLinkP(targetModuleDir, namespace, name, componentDir, distFile) {
+  const template = `module.exports = require('bit-javascript/register-component')('${componentDir}','${distFile}');`;
+  const targetDir = path.join(targetModuleDir, namespace, name, INDEX_JS);
+  return writeFileP(targetDir, template);
+}
+
 export function publicApiForInlineComponents(
   targetModuleDir: string,
   inlineMap: Object,
+  targetInlineComponentsDir: string,
 ): Promise<Object> {
   const components = {};
   if (!inlineMap || R.isEmpty(inlineMap)) return Promise.resolve(components);
@@ -138,8 +146,13 @@ export function publicApiForInlineComponents(
   const writeAllFiles = Promise.all(Object.keys(inlineMap).map((id) => {
     const [namespace, name] = id.split(path.sep);
     components[`${namespace}/${name}`] = id;
-    return generateLinkP(targetModuleDir, namespace, name, inlineMap,
-      id, INLINE_COMPONENTS_DIRNAME);
+    if (process.env.NODE_ENV === 'production' || inlineMap[id].compiler === NO_PLUGIN_TYPE) {
+      return generateLinkP(targetModuleDir, namespace, name, inlineMap, id,
+        INLINE_COMPONENTS_DIRNAME);
+    }
+    const componentDir = path.join(targetInlineComponentsDir, inlineMap[id].loc);
+    const distFile = path.join(componentDir, inlineMap[id].file);
+    return generateRegisterLinkP(targetModuleDir, namespace, name, componentDir, distFile);
   }));
 
   return writeAllFiles.then(() => components);

@@ -25,7 +25,8 @@ Promise<any> {
       Object.assign(boundComponents, components);
       return componentsMap.buildForInline(targetInlineComponentsDir, projectBitJson);
     })
-    .then(inlineMap => linksGenerator.publicApiForInlineComponents(targetModuleDir, inlineMap))
+    .then(inlineMap => linksGenerator.publicApiForInlineComponents(targetModuleDir, inlineMap,
+      targetInlineComponentsDir))
     .then((components) => {
       Object.assign(boundComponents, components);
       return componentsMap.buildForNamespaces(targetModuleDir);
