@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.12] - 2017-05-14 rc
+
 - dynamically compile an impl file for inline-components on development environment
 
 ## [0.5.11] - 2017-05-11 rc
