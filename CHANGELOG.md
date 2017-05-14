@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.14] - 2017-05-14 rc
+
 - do not preserve node.js path cache for required bit-driver because it varies over time.
 
 ## [0.5.13] - 2017-05-14 rc
