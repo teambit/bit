@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.5.12] - 2017-05-14 rc
+
 - enable "bit build --inline" command with no arguments for building all inline components
 
 ## [0.5.11] - 2017-05-11 rc
