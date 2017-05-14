@@ -1,12 +1,12 @@
 /** @flow */
 import Command from '../../command';
-import { buildInline } from '../../../api/consumer';
+import { buildInline, buildInlineAll } from '../../../api/consumer';
 import { buildInScope } from '../../../api/scope';
 
 const chalk = require('chalk');
 
 export default class Build extends Command {
-  name = 'build <id>';
+  name = 'build [id]';
   description = 'uses the compiler defined in the bit.json in order to return the compiled version of the component';
   alias = '';
   opts = [
@@ -23,6 +23,7 @@ export default class Build extends Command {
     verbose: ?bool,
   }): Promise<any> {
     function build() {
+      if (!id) return buildInlineAll();
       if (inline) return buildInline(id);
       return buildInScope({ id, environment, save, verbose });
     }
@@ -34,10 +35,21 @@ export default class Build extends Command {
     }));
   }
 
-  report({ res, inline }: { res: ?string[]|string, inline: ?bool }): string {
-    if (!res) return chalk.red('there is no compiler to that component');
+  report({ res, inline }: { res: ?string[]|string|Object, inline: ?bool }): string {
+    const noCompilerSpecifiedError = chalk.red('there is no compiler to that component');
+    if (!res) return noCompilerSpecifiedError;
     if (inline && Array.isArray(res)) { return chalk.cyan(res.join('\n')); }
-    // $FlowFixMe - is a string
+    if (inline && typeof res === 'object') { // got from build-all-inline
+      // $FlowFixMe - res is an object
+      return Object.keys(res).map((component) => {
+        const title = chalk.bold(component);
+        // $FlowFixMe - res is an object
+        const content = Array.isArray(res[component]) ?
+          chalk.cyan(res[component].join('\n')) : noCompilerSpecifiedError;
+        return `${title}\n${content}\n`;
+      }).join('\n');
+    }
+    // $FlowFixMe - res is a string
     return res;
   }
 }
