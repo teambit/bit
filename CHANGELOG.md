@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.5.13] - 2017-05-14 rc
+## [0.6.0] - 2017-05-15
 
 - exclude dynamic compile behavior
 
