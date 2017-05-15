@@ -15,6 +15,7 @@ import type { Results } from '../../specs-runner/specs-runner';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import ComponentNotFoundInline from './exceptions/component-not-found-inline';
 import IsolatedEnvironment from '../../environment';
+import type { Log } from '../../scope/models/version';
 
 import {
   DEFAULT_BOX_NAME,
@@ -45,7 +46,8 @@ export type ComponentProps = {
   dist?: Dist,
   specDist?: Dist,
   specsResults?: ?SpecsResults,
-  license?: ?License
+  license?: ?License,
+  log?: ?Log,
 }
 
 export default class Component {
@@ -69,6 +71,7 @@ export default class Component {
   specDist: ?Dist;
   specsResults: ?SpecsResults;
   license: ?License;
+  log: ?Log;
 
   set impl(val: Impl) { this._impl = val; }
 
@@ -146,7 +149,8 @@ export default class Component {
     docs,
     dist,
     specsResults,
-    license
+    license,
+    log
   }: ComponentProps) {
     this.name = name;
     this.box = box || DEFAULT_BOX_NAME;
@@ -167,6 +171,7 @@ export default class Component {
     this.dist = dist;
     this.specsResults = specsResults;
     this.license = license;
+    this.log = log;
   }
 
   writeBitJson(bitDir: string, force?:boolean = true): Promise<Component> {
@@ -456,7 +461,8 @@ export default class Component {
       docs: this.docs,
       dist: this.dist ? this.dist.serialize() : null,
       specsResults: this.specsResults ? this.specsResults.serialize() : null,
-      license: this.license ? this.license.serialize() : null
+      license: this.license ? this.license.serialize() : null,
+      log: this.log
     };
   }
 

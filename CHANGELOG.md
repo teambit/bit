@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add the commit-log details to the Component object, so then it'll be available for `bit show --json` and `bit export`.
+
 ## [0.6.0] - 2017-05-15
 
 - do not preserve node.js path cache for required bit-driver because it varies over time.
