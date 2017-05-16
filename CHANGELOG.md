@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - do not cache components in the objects directory upon `bit import`, unless it is a bit bare scope. 
+- add the commit-log details to the Component object, so then it'll be available for `bit show --json` and `bit export`.
 
 ## [0.6.0] - 2017-05-15
 
