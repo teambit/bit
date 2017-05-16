@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "bit-js": "^0.2.0",
+    "bit-scope-client": "^0.6.0",
     "buffer-from": "^0.1.1",
     "camelcase": "^4.0.0",
     "chalk": "^1.1.3",
