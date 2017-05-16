@@ -162,6 +162,7 @@ export default class Component extends BitObject {
           )) : null;
           const distP = version.dist ? version.dist.file.load(repository) : null;
           const scopeMetaP = ScopeMeta.fromScopeName(scopeName).load(repository);
+          const log = version.log || null;
           return Promise.all([implP, specsP, miscP, distP, scopeMetaP])
           .then(([impl, specs, miscFiles, dist, scopeMeta]) => {
             return new ConsumerComponent({
@@ -185,6 +186,7 @@ export default class Component extends BitObject {
               license: scopeMeta ? License.deserialize(scopeMeta.license) : null,
               specsResults:
                 version.specsResults ? SpecsResults.deserialize(version.specsResults) : null,
+              log,
             });
           });
         });
