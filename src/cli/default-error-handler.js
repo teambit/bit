@@ -58,7 +58,10 @@ Run \`bit status\` command to list all components available for commit.`]
 
 export default (err: Error): ?string => {
   const error = errorsMap.find(([ErrorType, ]) => {
-    return err instanceof ErrorType;
+    // If the error came from another project (such as bit-scope-client), it's easier to use the
+    // "name" attribute, which is by default "Error" but can be overridden in the sub-class.
+    // The `ErrorType.name` is a string representation of the Error class name.
+    return err instanceof ErrorType || err.name === ErrorType.name;
   });
 
   if (!error) return null;
