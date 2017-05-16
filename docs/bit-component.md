@@ -58,7 +58,7 @@ module.exports = function isString(val) {
 ```js
 import { expect } from 'chai';
 
-const isString = require(__impl__);
+const isString = require('./impl');
 
 describe('#isString()', () => {
   it('should return false if undefined is passed', () => {
@@ -219,10 +219,10 @@ Some IDEs (Integrated Development Environment) such as [IntelliJ](https://www.je
 
 If you want to use the debugger on your bit components, in most cases you only need to put a breakpoint in the implementation file and the debugger will stop at the breakpoint.
 
-In some cases you want to use a compiler, which creates a dist/dist.js file in your component root directory,
-in these cases, the dist/dist.js will be the file that runs.
+In some cases you want to use a compiler, which creates a dist/impl.js file in your component root directory,
+in these cases, the dist/impl.js will be the file that runs.
 
-You can attach a breakpoint in the dist/dist.js, and it will work, but debugging a compiled file is no fun. Therefore bit compilers will supply source maps and put them in the dist directory. Most IDEs have features to support source maps for debugging, let's take VScode for example.
+You can attach a breakpoint in the dist/impl.js, and it will work, but debugging a compiled file is no fun. Therefore bit compilers will supply source maps and put them in the dist directory. Most IDEs have features to support source maps for debugging, let's take VScode for example.
 
 If you attach a breakpoint on a file, VScode will try to identify the compiled version of it and bind the breakpoint in order to give the developer the experience of breakpoint in a pre compiled code (that's not actually runs by node).
 
@@ -306,7 +306,7 @@ Add the following `spec.js` file:
 ```js
 import { expect } from 'chai';
 
-const isString = require(__impl__);
+const isString = require('./impl');
 
 describe('#isString()', () => {
   it('should return true if `foo` is passed', () => {

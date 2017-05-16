@@ -42,7 +42,7 @@ You can read more about the [local scope here](glossary.md#local-scope).
 
 [Bit components](glossary.html#component) are organized and managed in scopes. To create your first Bit component go to a project with a bit scope in it (or create one by using `bit init` in a directory).
 
-1\. Create a Bit component:
+1. Create a Bit component:
 
 `bit create is-string`
 
@@ -50,7 +50,7 @@ This creates an implementation file in the [inline_components](glossary.md#inlin
 
 * Bit components contain a minimum of one `impl.js` file and may contain two additional files: `spec.js` and `bit.json` - [component](glossary.html#component).
 
-2\. Write the component's implementation in the `impl.js` file created for the component.
+2. Write the component's implementation in the `impl.js` file created for the component.
 
 `open ./inline_components/global/is-string/impl.js`
 
@@ -68,13 +68,13 @@ You can copy and paste this example:
 
 #### Use the Bit component in your code
 
-Bit is designed to be language agnostic, so in order to use components, you first need to install a language-specific driver for Bit, that will be able to mitigate between the components managed in Bit, to your development environment. You can read more about it [here](drivers.html).
+Bit is designed to be language agnostic, so in order to use components, you first need to install a [language-specific driver](drivers.md) for Bit. This is to enable each specific programming language to be able to use components.
 
-1. Install the bit-js module using [NPM](https://www.npmjs.com/package/bit-js) or Yarn.
+1. Install the bit-javascript driver using [NPM](https://www.npmjs.com/package/bit-js) or Yarn, and add it as a development dependency.
 
-`npm install bit-js`
+`npm install bit-javascript --save -dev`
 
-2. Create a file - `touch index.js && open index.js`, require bit-js module, and call the component:
+2. Create a file - `touch index.js && open index.js`, and paste in this code:
 
 ```js
 const isString = require('bit/is-string'); // <component-id>
@@ -83,11 +83,7 @@ console.log(isString('It\'s the bit')); // true
 console.log(isString(1)); // false
 ```
 
-3. To ensure that the `require` statement will be able to find the right component, Bit-js needs to create a mock-module in the `node_modules` directory, that will point to the actual component. To do this, open another terminal window, browse to the project directory, and run the command `bitjs watch`. This way all work being done on the components will be directly reflected in the `node_modules` folder.
-
-4. Now run the application `node index.js`.
-
-  Read more about [Drivers](drivers.md).
+3. Now run the application `node index.js`.
 
 #### Commit your code
 
@@ -95,7 +91,7 @@ Our goal is to use a component in our future work. Before exporting it to a remo
 
 1. `bit commit is-string 'initial commit'`
 
-* Your component moved from the `inline_components` directory into the `components` directory. You can still use it with `bit-js` driver, the same way as before.
+* Your component moved from the `inline_components` directory into the `components` directory.
 
 * You can view the component you just added to your scope: `bit show @this/is-string`
 
@@ -108,6 +104,7 @@ Summary
 
 mkdir <scope-name> && cd <scope-name>
 bit init
+npm install bit-javascript --save -dev
 bit create <component-id>
 open ./inline_components/<component-id>/impl.js // write some code in impl.js
 bit commit <component-id> 'initial commit'
@@ -125,9 +122,9 @@ Follow these steps to host your own scope:
 
 1. [Verify that bit is installed.](installation.md)
 
-1. Create a directory on your machine. `mkdir scopy && cd scopy`
+2. Create a directory on your machine. `mkdir scopy && cd scopy`
 
-1. Initialize a bare Bit scope in the new folder. `bit init --bare`
+3. Initialize a bare Bit scope in the new folder. `bit init --bare`
 
 That's it, the scope is ready, next we need to register it as a remote scope.
 
@@ -140,7 +137,7 @@ In your own development machine, use the `remote` command to add the new remote 
 
 `bit remote add file://</path/to/scope> --global`
 
-You can check your registered remotes with the `bit remote` command.s
+You can check your registered remotes with the `bit remote` command.
 
 -------------------------------------------------------------------
 
@@ -188,19 +185,28 @@ Create a new scope
 
 `bit init`
 
+Install the JavaScript driver
+
+`npm install bit-javascript --save -dev`
+
 import the component and save it in bit.json file.
 
 `bit import @scopy/is-string --save`
 
-You can see that the component was exported to the project. (located in the components directory)
+You can see that the component was exported to the project. (located in the components directory).
 
-  Note - Currently `bit import` only fetches the component to the file system, to link it to the `node_modules` directory, you will need to use the `bitjs bind` command.
+Now you can simply require your component, and use it
+
+```js
+const comp = require('bit/<component name>')
+```
 
 ```
 Summary
 
 mkdir <different-project> && cd <different-project>
 bit init
+npm install bit-javascript --save -dev
 bit import <@remote-scope>/<component-id> --save
 ```
 
@@ -226,6 +232,7 @@ When you'll commit it, the version will increment itself.
   <code class="js language-js">
   /**
   * determines whether `val` is a string.
+  * @name isString
   * @param {*} val reference to test.
   * @returns {boolean}
   * @example
@@ -299,6 +306,7 @@ bit export @this<component> <remote-scope>
   <code class="js language-js">
   /**
   * determines whether `val` is a string.
+  * @name isString
   * @param {*} val reference to test.
   * @returns {boolean}
   * @example
@@ -346,7 +354,7 @@ A tester enables you to test your components, read more about it [Here](glossary
 
 ```js
 const expect = require('chai').expect;
-const isString = require(__impl__);
+const isString = require('./impl');
 
 describe('#isString()', () => {
   it('should return true if `foo` is passed', () => {
@@ -363,8 +371,7 @@ describe('#isString()', () => {
 });
 ```
 
-* note that the `__impl__` is a reference to the impl file injected by the testing environment.
-* you can't use node modules like you would normal do, because the component should be exported to an isolated environment and run the specs there. you can only require the modules that the tester provides,
+* you can't use node modules like you would normal do, because the component should be exported to an isolated environment and run the specs there. you can only require the modules that the tester provides.
 
 6. Add the tester to the component's bit.json `open ./inline_components/global/is-string/bit.json`
 
