@@ -8,7 +8,14 @@ export function flattenDependencies(dependencies: VersionDependencies[]) {
   return values(flatten(dependencies
     .map(dep => dep.dependencies.concat(dep.component)))
     .reduce((components, component) => {
-      components[component.id.toString()] = component;
+      // in case a component arrives from bit-scope-client, it doesn't have id.
+      const bitId = component.id || new BitId({
+        scope: component.scope,
+        box: component.box,
+        name: component.name,
+        version: component.version.toString(),
+      });
+      components[bitId.toString()] = component;
       return components;
     }, {}));
 }

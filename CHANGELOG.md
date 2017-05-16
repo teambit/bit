@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- do not cache components in the objects directory upon `bit import`, unless it is a bit bare scope. 
+
 ## [0.6.0] - 2017-05-15
 
 - do not preserve node.js path cache for required bit-driver because it varies over time.

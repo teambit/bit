@@ -4,6 +4,7 @@ import glob from 'glob';
 import R from 'ramda';
 import path from 'path';
 import semver from 'semver';
+import { importComponents } from 'bit-scope-client';
 import { BitId } from '../../../bit-id';
 import Bit from '../../../consumer/component';
 import Consumer from '../../../consumer/consumer';
@@ -54,16 +55,9 @@ export default function importAction(
     .then(consumer => consumer.scope.ensureDir().then(() => consumer))
     .then((consumer) => {
       if (tester || compiler) { return importEnvironment(consumer); }
-      return consumer.import(ids, verbose, environment)                   // from here replace with bit-scope-client.fetch
-        .then(({ dependencies, envDependencies }) => {                    //
-          if (save) {                                                     //
-            const bitIds = dependencies.map(R.path(['component', 'id'])); //
-            return consumer.bitJson.addDependencies(bitIds)               //
-            .write({ bitDir: consumer.getPath() })                        //
-            .then(() => ({ dependencies, envDependencies }));             //
-          }                                                               //
-                                                                          //
-          return Promise.resolve(({ dependencies, envDependencies }));    // here we should return { dependencies, envDependencies: [] }
+      return importComponents(ids)
+        .then((dependencies) => {
+          return Promise.resolve({ dependencies, envDependencies: undefined });
         })
         .then(({ dependencies, envDependencies }) =>
           warnForPackageDependencies({
