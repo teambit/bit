@@ -198,3 +198,37 @@ describe('publicApiForExportPendingComponents', () => {
       });
   });
 });
+
+describe('dependenciesForInlineComponents', () => {
+  it('should not generate links if there are no dependencies in the inline-map', () => {
+    const result = linksGenerator.dependenciesForInlineComponents('dir', {}, {});
+    return result.then(() => {
+      expect(fsMock.outputFile.mock.calls.length).toBe(0);
+    });
+  });
+  it('should generate dependencies links for inline components', () => {
+    const inlineMapFixture = { 'global/is-string': { loc: 'global/is-string', file: 'impl.js', compiler: 'none', dependencies: ['bit.utils/object/foreach::1'] } };
+    const result = linksGenerator.dependenciesForInlineComponents('/my/project/inline_components', mapFixture, inlineMapFixture);
+    return result
+      .then(() => {
+        const outputFileCalls = fsMock.outputFile.mock.calls;
+        expect(outputFileCalls.length).toBe(3);
+
+        // name level
+        expect(outputFileCalls[0][0]).toBe('/my/project/inline_components/global/is-string/node_modules/bit/object/foreach/index.js');
+        expect(outputFileCalls[0][1]).toBe("module.exports = require('../../../../../../../../components/object/foreach/bit.utils/1/dist/dist.js');");
+
+        // namespace level
+        expect(outputFileCalls[1][0]).toBe('/my/project/inline_components/global/is-string/node_modules/bit/object/index.js');
+        expect(outputFileCalls[1][1]).toBe(`module.exports = {
+  foreach: require('./foreach')
+};`);
+
+        // root level
+        expect(outputFileCalls[2][0]).toBe('/my/project/inline_components/global/is-string/node_modules/bit/index.js');
+        expect(outputFileCalls[2][1]).toBe(`module.exports = {
+  object: require('./object')
+};`);
+      });
+  });
+});

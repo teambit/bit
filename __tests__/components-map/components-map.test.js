@@ -66,7 +66,11 @@ describe('buildForInline', () => {
   it('should create a map from inline_components directory', () => {
     const result = componentsMap.buildForInline('my/project/inline_components', projectBitJson);
     return result.then((map) => {
-      expect(map).toEqual({ 'global/is-string': { compiler: 'none', file: 'impl.js', loc: 'global/is-string' } });
+      expect(map).toEqual({ 'global/is-string': { compiler: 'none',
+        file: 'impl.js',
+        loc: 'global/is-string',
+        dependencies: ['bit.envs/compilers/flow::2', 'bit.utils/object/values::1'],
+      } });
     });
   });
 });

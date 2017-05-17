@@ -7,6 +7,7 @@ import {
   publicApiForExportPendingComponents,
   publicApiComponentLevelForSpecificComponents,
   dependenciesForSpecificComponents,
+  dependenciesForInlineComponents,
 } from './links-generator';
 
 export {
@@ -18,4 +19,5 @@ export {
   publicApiForExportPendingComponents,
   publicApiComponentLevelForSpecificComponents,
   dependenciesForSpecificComponents,
+  dependenciesForInlineComponents,
 };

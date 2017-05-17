@@ -117,6 +117,47 @@ export function dependencies(
   return generateDependenciesP(targetComponentsDir, map, components);
 }
 
+export function dependenciesForInlineComponents(
+  targetInlineComponentsDir: string, map: Object, inlineMap: Object,
+): Promise<Object> {
+  return new Promise((resolve, reject) => {
+    const promises = [];
+    const components = Object.keys(inlineMap);
+
+    components.forEach((component) => {
+      const targetModuleDir = path.join(
+        targetInlineComponentsDir,
+        inlineMap[component].loc,
+        MODULES_DIR,
+        MODULE_NAME,
+      );
+
+      const namespaceMap = {};
+      inlineMap[component].dependencies.forEach((dependency) => {
+        if (dependency.startsWith(REMOTE_ALIAS_SIGN)) {
+          dependency = dependency.replace(REMOTE_ALIAS_SIGN, ''); // eslint-disable-line
+        }
+        if (!map[dependency]) return; // the dependency is not in the FS. should we throw an error?
+        const [namespace, name] = map[dependency].loc.split(path.sep);
+        const targetFile = path.join(targetModuleDir, namespace, name, INDEX_JS);
+        const relativeComponentsDir = path.join(...Array(8).fill('..'));
+        const dependencyDir = path.join(
+          relativeComponentsDir,
+          COMPONENTS_DIRNAME,
+          map[dependency].loc,
+          map[dependency].file,
+        );
+        promises.push(writeFileP(targetFile, linkTemplate(dependencyDir)));
+        if (namespaceMap[namespace]) namespaceMap[namespace].push(name);
+        else namespaceMap[namespace] = [name];
+      });
+      promises.push(publicApiNamespaceLevel(targetModuleDir, namespaceMap)
+        .then(() => publicApiRootLevel(targetModuleDir, namespaceMap)));
+    });
+    Promise.all(promises).then(() => resolve(inlineMap)).catch(reject);
+  });
+}
+
 export function dependenciesForSpecificComponents(
   targetComponentsDir: string, map: Object, components: Object): Promise<Object> {
   return generateDependenciesP(targetComponentsDir, map, Object.keys(components));
@@ -167,13 +208,13 @@ export function publicApiForExportPendingComponents(
   const exportPendingComponents = Object.keys(map)
     .filter(component => map[component].isFromLocalScope === true);
 
-  if (!exportPendingComponents.length) return Promise.resolve({ map, components });
+  if (!exportPendingComponents.length) return Promise.resolve(components);
   const writeAllFiles = exportPendingComponents.map((component) => {
     const [namespace, name] = map[component].loc.split(ID_DELIMITER);
     components[`${namespace}/${name}`] = component;
     return generateLinkP(targetModuleDir, namespace, name, map, component, COMPONENTS_DIRNAME);
   });
-  return Promise.all(writeAllFiles).then(() => ({ map, components }));
+  return Promise.all(writeAllFiles).then(() => components);
 }
 
 export function publicApiComponentLevel(

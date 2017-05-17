@@ -15,25 +15,28 @@ Promise<any> {
   const boundComponents = {};
   return removeDirP(targetModuleDir)
     .then(() => componentsMap.build(projectRoot, targetComponentsDir))
-    .then(map => linksGenerator.dependencies(targetComponentsDir, map, projectBitJson))
-    .then(map => linksGenerator.publicApiForExportPendingComponents(targetModuleDir, map))
-    .then(({ map, components }) => {
-      Object.assign(boundComponents, components);
-      return linksGenerator.publicApiComponentLevel(targetModuleDir, map, projectBitJson);
-    })
-    .then((components) => {
-      Object.assign(boundComponents, components);
-      return componentsMap.buildForInline(targetInlineComponentsDir, projectBitJson);
-    })
-    .then(inlineMap => linksGenerator.publicApiForInlineComponents(targetModuleDir, inlineMap,
-      targetInlineComponentsDir))
-    .then((components) => {
-      Object.assign(boundComponents, components);
-      return componentsMap.buildForNamespaces(targetModuleDir);
-    })
-    .then(namespacesMap => linksGenerator.publicApiNamespaceLevel(targetModuleDir, namespacesMap))
-    .then(namespacesMap => linksGenerator.publicApiRootLevel(targetModuleDir, namespacesMap))
-    .then(() => boundComponents);
+    .then(map => linksGenerator.dependencies(targetComponentsDir, map, projectBitJson)
+      .then(() => linksGenerator.publicApiForExportPendingComponents(targetModuleDir, map))
+      .then((components) => {
+        Object.assign(boundComponents, components);
+        return linksGenerator.publicApiComponentLevel(targetModuleDir, map, projectBitJson);
+      })
+      .then((components) => {
+        Object.assign(boundComponents, components);
+        return componentsMap.buildForInline(targetInlineComponentsDir, projectBitJson);
+      })
+      .then(inlineMap => linksGenerator
+        .dependenciesForInlineComponents(targetInlineComponentsDir, map, inlineMap))
+      .then(inlineMap => linksGenerator.publicApiForInlineComponents(targetModuleDir, inlineMap,
+        targetInlineComponentsDir))
+      .then((components) => {
+        Object.assign(boundComponents, components);
+        return componentsMap.buildForNamespaces(targetModuleDir);
+      })
+      .then(namespacesMap => linksGenerator.publicApiNamespaceLevel(targetModuleDir, namespacesMap))
+      .then(namespacesMap => linksGenerator.publicApiRootLevel(targetModuleDir, namespacesMap))
+      .then(() => boundComponents)
+    );
 }
 
 export function bindSpecificComponentsAction({ projectRoot = process.cwd(), components }: {

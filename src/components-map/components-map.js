@@ -30,15 +30,32 @@ function getLocalScopeNameP(projectRoot: string): Promise<?string> {
     .catch(() => resolve(null)));
 }
 
-export function buildForInline(targetComponentsDir: string, bitJson: BitJson): Promise<Object> {
+function getDependenciesArray(bitJson: BitJson): string[] {
+  const dependencies = [];
+  Object.keys(bitJson.dependencies).forEach((dependency) => {
+    dependencies.push(dependency + VERSION_DELIMITER + bitJson.dependencies[dependency]);
+  });
+  return dependencies;
+}
+
+export function buildForInline(targetComponentsDir: string, projectBitJson: BitJson):
+Promise<Object> {
   return new Promise((resolve, reject) => {
     const componentsMap = {};
     glob('*/*', { cwd: targetComponentsDir }, (err, files) => {
       if (err) return reject(err);
       files.forEach((loc) => {
+        const bitJsonPath = path.join(targetComponentsDir, loc);
+        let bitJson;
+        try {
+          bitJson = BitJson.loadIfExists(bitJsonPath);
+        } catch (e) {
+          bitJson = projectBitJson;
+        }
         const file = getRequiredFile(bitJson);
         const compiler = bitJson.compiler;
-        componentsMap[loc] = { loc, file, compiler };
+        const dependencies = getDependenciesArray(bitJson);
+        componentsMap[loc] = { loc, file, compiler, dependencies };
       });
 
       return resolve(componentsMap);
@@ -71,10 +88,7 @@ export function build(projectRoot: string, targetComponentsDir: string): Promise
           const [namespace, name, scope, version] = loc.split(path.sep);
           const id = generateId({ scope, namespace, name, version });
           const bitJson = BitJson.load(path.join(targetComponentsDir, loc));
-          const dependencies = [];
-          Object.keys(bitJson.dependencies).forEach((dependency) => {
-            dependencies.push(dependency + VERSION_DELIMITER + bitJson.dependencies[dependency]);
-          });
+          const dependencies = getDependenciesArray(bitJson);
           const file = getRequiredFile(bitJson);
           const isFromLocalScope = localScopeName ? localScopeName === scope : false;
 
