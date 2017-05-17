@@ -48,13 +48,13 @@ Just as you can use other Bit components as dependencies, we also understand tha
 
 ## Isolated Build/Test
 
-Bit is able to run your components buid and test steps in an isolated environment.
+Bit is able to run your component's buid and test operations in an isolated environment.
 
 This mechanism uses Bit's [environment boilerplating](bit-component.md#component-environment) to create an ad-hock isolated runtime environment for each code component. This process happens while a component is being committed to the local scope, and exported to a remote scope. 
 
 By utilizing each component's build and test environments, Bit has the instructions for building and testing components. Also, if a component has a dependency (or even requires an external package from a known source - NPM for example), Bit will retrieve the dependencies when starting the process. This way Bit makes sure that each component is indeed isolated and encapsulated.
 
-The reason Bit has this isolattion engine, is to validate that a component has all it's runtime and development requirements properly configured. This ease the process of maintaining and using components, because if Bit is able to run it on isolated environment, then if you will use this component in any project, you can rely on Bit to be able to get all the reuired resources. And also, for when you (or other developers) want to make changes to the component and maintaining it, Bit will be able to set up a complete development environment for the components. Bit makes it to be a simple process, which is based of the fact that the environments it uses for build and test are actual code components (which Bit is designed to manage), with a specific API (to run and get results) and an internal dependency management for other components as well as external packages.
+The reason Bit has this isolation engine, is to validate that a component has all it's runtime and development requirements properly configured. This ease the process of maintaining and using components, because if Bit is able to run it on isolated environment, then if you will use this component in any project, you can rely on Bit to be able to get all the reuired resources. And also, for when you (or other developers) want to make changes to the component and maintaining it, Bit will be able to set up a complete development environment for the components. Bit makes it to be a simple process, which is based of the fact that the environments it uses for build and test are actual code components (which Bit is designed to manage), with a specific API (to run and get results) and an internal dependency management for other components as well as external packages.
 
 Bit forces strict rules when it get to building and testing code. If a component needs to be build to run (for example - transpile from TypeScript to ES), and the build process fails when exporting, Bit will fail the exporting process. The same thing happens if a component has a set of tests that failed to run. This is to make sure that no breaking changes are being exported (this behavior can be overridden by using the `--force` flag when exporting components).
 

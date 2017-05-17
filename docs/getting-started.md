@@ -216,7 +216,7 @@ First, a few notes about versioning - Bit doesn’t use semantic versioning. Ins
 
 ### Let's say we want to add documentation to the component we've just created.
 
-1. Import the component to the inline_bits folder:
+1. Import the component to the inline_components directory:
 
 `bit modify @scopy/is-string`
 
@@ -371,7 +371,7 @@ describe('#isString()', () => {
 });
 ```
 
-* you can't use node modules like you would normal do, because the component should be exported to an isolated environment and run the specs there. you can only require the modules that the tester provides.
+* you can't use node modules like you would normally do, because the component should be exported to an isolated environment and run the specs there. you can only require the modules that the tester provides.
 
 6. Add the tester to the component's bit.json `open ./inline_components/global/is-string/bit.json`
 

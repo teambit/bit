@@ -45,7 +45,7 @@ Installation can be found [here](https://api.bitsrc.io/release/msi/latest).
 
 2. **Chocolatey** - Bit can be installed via Chocolatey:
 
-`choco install bit -version 0.6.0`
+`choco install bit`
 
 ## Tarball Release
 

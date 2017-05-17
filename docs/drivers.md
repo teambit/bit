@@ -5,9 +5,9 @@ Bit components are language agnostic. You can write components in any language y
 
 Drivers are responsible for several tasks:
 
-1. Resolving the `bit.json` file, and fetching all components and dependencies to the `components` directory.
-2. Creating and maintainig all relevant links for the language-specific development environment, with the components imported with Bit.
-  * For example - in JavaScript, to use a module via `require`, the module will need to be in the `node_modules` direcotry, so in this case the driver maintains a mock-module with links back to the `components` directory, where all components are stored.
+1. Importing all the component dependencies according to the `bit.json` file.
+2. Creating and maintainig all relevant links for the language-specific development environment, of the components imported/created/managed by Bit..
+  * For example - in JavaScript, to use a module via `import` or `require`, the module will need to be in the `node_modules` direcotry, so in this case the driver maintains a dynamic-module with links back to the `components` directory, where all components are stored.
 
 **Important** To import and manage components use Bit-CLI. This doc only explains how to use components in your code.
 
@@ -15,13 +15,14 @@ In this docs we will describe all currently available drivers.
 
 ### Drivers are simply devDependencies
 
-Bit drivers are only required when developing or building projects. They are there simply to create the virtual library. Once the virtual library is set accoring to your project's bit.json file, your application will natively use the components, just like libraries.
+Bit drivers are only required when developing or building projects. They are there simply to create the virtual library. Once the virtual library is set according to your project's bit.json file. You'll be able to require/import the components just like you'll do from any other node module.
 
-The only thing you need to do is to remember to pack the `components` directory alongside your project.
+The driver is able to import the components for you, so it's not always a must.
+I think we just need to find a solution for npm distributions.
 
-### Component devDependencies
+### Component Dependencies
 
-Bit manages all of it's components devDependencies in it's own `components` folder, so not to interfere with your project's environment.
+Bit manages all of its component's package dependencies in it's own `components` directory, so not to interfere with your project's environment.
 
 ### Component Runtime Dependencies
 
@@ -29,7 +30,7 @@ When importing new components that have runtime dependencies to your code, the d
 
 ### Components in Runtime
 
-All runtime dependency resulotion of Bit components is done via the virtual API that the language-specific driver creates. This means that there are no special steps you need to take when running applications that using Bit. Not even adding any runtime dependency.
+Due to the fact that all Bit components are linked to th virtual directory generated, it utilizes `node module` resolution algorithm, to allow `require` and `import` them. This means that there are no special steps you need to take when running applications that using Bit. Not even adding any runtime dependency.
 
 ## How Bit uses it's Drivers
 
@@ -43,7 +44,7 @@ These are Bit's lifecycle commands.:
 * export
 * import
 
-The way that Bit Knows which driver it needs to look for is using the component's `language` attribute from it's [bit.json](configuring-bit.mdl#bitjson) file. Once Bit figured out which driver it needs, it will simply try to `require` for the driver in the directory that the command ran in. So if the driver is installed as a devDependency, it will be able to find it in the project's folder tree, just like any other module.
+Bit knows which driver it needs to look for according to the project's language attribute from it's [bit.json](configuring-bit.mdl#bitjson) file. Once Bit figured out which driver it needs, it will simply try to `require` for the driver in the directory that the command ran in. So if the driver is installed as a devDependency, it will be able to find it in the project's node_modules directory, just like any other module.
 
 ## JavaScript
 
@@ -53,9 +54,9 @@ You can find the bit-js driver codebase [here](https://github.com/teambit/bit-js
 
 ### JavaScript Virtual Library
 
-All your project dependencies for your project are located in the `node_modules` directory. So if you are using NodeJS, you can `require` any of these dependencies. Also, any bundleing process uses the same method to pack them alongside your code, to run later on a web-browser.
+All your project dependencies for your project are located in the `node_modules` directory. If you're using NodeJS, all the external dependencies for your project are located in the node_modules directory. To run this code in a web browser, you can use Webpack/browserify, which are module bundlers.
 
-To support the same method of require and bundeling, Bit-javascript creates a virtual module called `bit` within the `node_modules` directory, by generating a directory tree containing links back to the `components` directory. This way all components are requireable by NodeJS, and have auto-complete, distructuring and all other features you are used to.
+In order to support NodeJS + bundlers for web, Bit-javascript creates a virtual module called bit within the node_modules directory. This is done by generating a directory tree that contains links to the components directory. This way all components are requireable by NodeJS, and have auto-complete, distructuring and all other features you are used to.
 
 It's important to note that the APIs that will be published to the virtual directory are only the ones listed in your project's bit.json file. So if any of your components has internal dependency (which is in the components directory), you will not have access to it via `require`.
 
