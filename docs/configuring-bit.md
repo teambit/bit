@@ -54,7 +54,8 @@ The first thing you should do when you install Bit is to set your user name and 
     },
     "packageDependencies": {
         "camelcase": "4.0.0"
-    }
+    },
+    "language": "javascript"
 }
 ```
 
