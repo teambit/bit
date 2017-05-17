@@ -5,7 +5,7 @@ import { buildInlineAll } from '../index';
 export default function watch() {
   return loadConsumer()
   .then((consumer) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(() => {
       const projectInlineComponents = consumer.getInlineBitsPath();
 
       const watcher = chokidar.watch([projectInlineComponents], {
@@ -20,15 +20,13 @@ export default function watch() {
         .on('add', (p) => {
           log(`File ${p} has been added, callind build`);
           buildInlineAll().catch((err) => {
-            console.error('\nwatcher has terminated due to an error\n'); // eslint-disable-line
-            return reject(err);
+            console.error(err); // eslint-disable-line
           });
         })
         .on('change', (p) => {
           log(`File ${p} has been changed, calling build`);
           buildInlineAll().catch((err) => {
-            console.error('\nwatcher has terminated due to an error\n'); // eslint-disable-line
-            return reject(err);
+            console.error(err); // eslint-disable-line
           });
         });
     });
