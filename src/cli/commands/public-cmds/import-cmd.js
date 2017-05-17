@@ -13,7 +13,6 @@ export default class Import extends Command {
   description = 'import a component';
   alias = 'i';
   opts = [
-    ['s', 'save', 'save into bit.json'],
     ['e', 'environment', 'install development environment dependencies (compiler | tester)'],
     ['t', 'tester', 'import a tester environment component'],
     ['v', 'verbose', 'show a more verbose output when possible'],
@@ -22,9 +21,8 @@ export default class Import extends Command {
   ];
   loader = true;
 
-  action([ids, ]: [string[], ], { save, tester, compiler, verbose, prefix, environment }:
+  action([ids, ]: [string[], ], { tester, compiler, verbose, prefix, environment }:
   {
-    save?: bool,
     tester?: bool,
     compiler?: bool,
     verbose?: bool,
@@ -38,7 +36,7 @@ export default class Import extends Command {
       throw new Error('you cant use tester and compiler flags combined');
     }
 
-    return importAction({ ids, save, tester, compiler, verbose, prefix, environment });
+    return importAction({ ids, tester, compiler, verbose, prefix, environment });
   }
 
   report({ dependencies, envDependencies, warnings }: {

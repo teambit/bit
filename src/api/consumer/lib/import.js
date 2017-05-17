@@ -15,9 +15,8 @@ import { flattenDependencies } from '../../../scope/flatten-dependencies';
 const key = R.compose(R.head, R.keys);
 
 export default function importAction(
-  { ids, save, tester, compiler, verbose, prefix, environment }: {
+  { ids, tester, compiler, verbose, prefix, environment }: {
     ids: string,
-    save: ?bool,
     tester: ?bool,
     compiler: ?bool,
     verbose: ?bool,
@@ -31,12 +30,12 @@ export default function importAction(
     return consumer.importEnvironment(ids[0], verbose)
     .then((envDependencies) => {
       function writeToBitJsonIfNeeded() {
-        if (save && compiler) {
+        if (compiler) {
           consumer.bitJson.compilerId = envDependencies[0].id.toString();
           return consumer.bitJson.write({ bitDir: consumer.getPath() });
         }
 
-        if (save && tester) {
+        if (tester) {
           consumer.bitJson.testerId = envDependencies[0].id.toString();
           return consumer.bitJson.write({ bitDir: consumer.getPath() });
         }
@@ -55,7 +54,7 @@ export default function importAction(
     .then(consumer => consumer.scope.ensureDir().then(() => consumer))
     .then((consumer) => {
       if (tester || compiler) { return importEnvironment(consumer); }
-      return importComponents(ids)
+      return importComponents(ids, true) // always save to bit.json
         .then((dependencies) => {
           return Promise.resolve({ dependencies, envDependencies: undefined });
         })
