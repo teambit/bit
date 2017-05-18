@@ -177,16 +177,14 @@ export default class Consumer {
     });
   }
 
-  removeFromComponents(id: BitId): Promise<any> {
-    // @TODO - also consider
-    // @HACKALERT - also consider version when removing a directory from components
-
+  removeFromComponents(id: BitId, currentVersionOnly: boolean = false): Promise<any> {
     const componentsDir = this.getComponentsPath();
     const componentDir = path.join(
       componentsDir,
       id.box,
       id.name,
-      id.scope
+      id.scope,
+      currentVersionOnly ? id.version : ''
     );
 
     return new Promise((resolve, reject) => {

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add `bit reset` command for cancelling the last local commit
+
 ## [0.6.1] - 2017-05-18 rc
 
 - JSDoc data are saved only for functions with a tag `@bit`.
