@@ -46,6 +46,7 @@ Please note, component file names can be configured via [bit.json](configuring-b
  * @name isString
  * @param {*} val value to be tested.
  * @returns {boolean}
+ * @bit
  * @example
  *  isString('') // => true
 **/
@@ -162,18 +163,28 @@ Bit handles small code component with a single responsibility, not large package
 
 Documentation for packages is not fun, but if you want your code to be truly reusable, other developers will need to have a place to learn how to use your code. We believe that the best place to tell people how to use your code, is... well.. alongside your code. This way, when you distribute code components, and even open a code component to review its code, the usage instruction are there (!).
 
-This is no magic. To do this, bit utilize the 'Xdoc' format for annotating everything as a part of your code.
+This is no magic. To do this, bit utilize the inline documentation format for annotating everything as a part of your code.
 
 Let's take JavaScript for example.
 
 JavaScript uses [JSDocs](http://usejsdoc.org) to create documentation on JS code. Bit knows how to read these docs, and parse them in a way that gives other users a formatted view of them, to better understand what to expect from the component before even using it.
 
-#### How does it work in real life?
+#### How to document a JavaScript component
+
+The most important part to know is that in order for Bit to parse a documentation you wrote, in order for other users to use it as usage instructions, you need to let Bit know that the docs section is for Bit to parse. This is done by adding `@bit` tag to the documentation.
+
+There are two main forms you can use Bit documentation to help other developers better understand your component:
+
+1. Documenting an API - To let Bit know that you are now describing an API, you must defined the `@name` property, following by the name of the API. You can also add more properties like `@param`, to add information on the input variables, `@returns` if there is an output for the API, and even `@example` to show usage examples for the API. If needed, you can add a `@description` to add any additional unstructured information (this part supports markdown annotations).
+2. General description for the component - If you need any additional documentation to be added to your component, you can simply create a documentation section anywhere in your file, and write a general description for the component. The description can have markdown annotations.
+
+#### Documentation examples for JavaScript components
 Let's imagine a `pad-left` function, and write the JSdocs:
 
 ```js
 /**
- * pad a string to the left.
+ * @bit
+ * @description pad a string to the left.
  * @name leftPad
  * @param {string} str string to pad
  * @param {number} len total

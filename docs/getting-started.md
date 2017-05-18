@@ -235,6 +235,7 @@ When you'll commit it, the version will increment itself.
   * @name isString
   * @param {*} val reference to test.
   * @returns {boolean}
+  * @bit
   * @example
   * ```js
   *  isString('') // => true
@@ -309,6 +310,7 @@ bit export @this<component> <remote-scope>
   * @name isString
   * @param {*} val reference to test.
   * @returns {boolean}
+  * @bit
   * @example
   * ```js
   *  isString('') // => true
