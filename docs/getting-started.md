@@ -68,7 +68,7 @@ You can copy and paste this example:
 
 #### Use the Bit component in your code
 
-Bit is designed to be language agnostic, so in order to use components, you first need to install a [language-specific driver](drivers.md) for Bit. This is to enable each specific programming language to be able to use components.
+Bit designed to be language agnostic, so in order to use the components, you first need to install a [language-specific driver](drivers.md) for Bit. This is to enable each specific programming language to be able to use components.
 
 1. Install the bit-javascript driver using [NPM](https://www.npmjs.com/package/bit-js) or Yarn, and add it as a development dependency.
 

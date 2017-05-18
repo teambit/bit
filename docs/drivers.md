@@ -50,7 +50,7 @@ Bit knows which driver it needs to look for according to the project's language 
 
 Bit's first fully supported programming language is JavaScript.
 
-You can find the bit-js driver codebase [here](https://github.com/teambit/bit-js).
+You can find the bit-javascript driver codebase [here](https://github.com/teambit/bit-js).
 
 ### JavaScript Virtual Library
 
@@ -95,7 +95,7 @@ Bit Node driver is distributed as any other JavaScript package - using [NPM](htt
 To install bit-javascript package, run:
 
 ```sh
-npm install bit-javascript --save -dev
+npm install bit-javascript --save-dev
 ```
 
 This will add the bit-node package as a dependency.
@@ -116,4 +116,4 @@ That's it :)
 
 If you are using Bit to manage your code components, the components are not a part of the codebase. This means that in order to populate the `components` directory (and all the links in the `node_modules`), you will need to use bitjs.
 
-Bit-javascripts is able to both fetch components, and link them properly using a single command - `bitjs import`. This means that you can simply need to add Bit-js in your `package.json` file for your project, and a post-install hook to run `bitjs import`. This way, after installing all the packages (including bit-js), bit-js will be able to bring all components and link them, so your code will be able to require them.
+bit-javascript can both fetch components and link them using the command - `bitjs import`. If you want to automatically install the bit components dependencies after you call `npm install` or `yarn` you can add bit-javascript to your `package.json` file, and configure a post-install hook to run `bitjs import`. This way, after installing all the packages, bit-javascript will be able to import all of the components and link them.
