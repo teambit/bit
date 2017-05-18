@@ -18,15 +18,15 @@ export default function watch(projectRoot) {
     watcher
       .on('add', (p) => {
         log(`File ${p} has been added, callind the bind process`);
-        bindAction();
+        bindAction({});
       })
       .on('change', (p) => {
         log(`File ${p} has been changed, calling the bind process`);
-        bindAction();
+        bindAction({});
       })
       .on('unlink', (p) => {
         log(`File ${p} has been removed, calling the bind process`);
-        bindAction();
+        bindAction({});
       });
   });
 }

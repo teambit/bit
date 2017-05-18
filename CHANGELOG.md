@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- generate dependencies links for inline-components 
+- fixed watcher and import command
+- generate dependencies links for inline-components
 
 ## [0.6.0] - 2017-05-15
 
