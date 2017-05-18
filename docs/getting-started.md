@@ -70,6 +70,7 @@ You can copy and paste this example:
 
 3\. Install the bit-js module using [NPM](https://www.npmjs.com/package/bit-js) or Yarn.
 
+`npm init` \\ initialize npm in project
 `npm install bit-js`
 
 4\. Create a file - `touch index.js && open index.js`, require bit-js module, and call the component:
