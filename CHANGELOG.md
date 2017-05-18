@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.6.2] - 2017-05-18
+
 - fix generation of links for inline-components
 
 ## [0.6.1] - 2017-05-18
