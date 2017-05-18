@@ -4,7 +4,7 @@
 ## What is a Bit component?
 
 A component is Bit's most fundamental entity. A code component is a testable and a reusable definition of a
-certain atomic functionality that handles a single and a well-defiend responsibility.
+certain atomic functionality that handles a single and a well-defined responsibility.
 
 It can be almost anything, from a function, class, object, array, string to a React or an AngularJS component.
 

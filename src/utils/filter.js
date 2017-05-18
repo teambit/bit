@@ -12,4 +12,4 @@ export default function filter(obj: Object, cb: (val: any, key: any) => boolean)
   });
 
   return obj;
-} 
+}

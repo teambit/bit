@@ -19,6 +19,13 @@ type CiProps = {
   endTime: string,
 };
 
+export type Log = {
+  message: string,
+  date: string,
+  username: ?string,
+  email: ?string,
+};
+
 export type VersionProps = {
   impl: {
     name: string,
@@ -38,12 +45,7 @@ export type VersionProps = {
   };
   compiler?: ?BitId;
   tester?: ?BitId;
-  log: {
-    message: string,
-    date: string,
-    username: ?string,
-    email: ?string,
-  };
+  log: Log;
   ci?: CiProps;
   specsResults?: ?Results;
   docs?: Doclet[],
@@ -71,12 +73,7 @@ export default class Version extends BitObject {
   };
   compiler: ?BitId;
   tester: ?BitId;
-  log: {
-    message: string,
-    date: string,
-    username: ?string,
-    email: ?string,
-  };
+  log: Log;
   ci: CiProps|{};
   specsResults: ?Results;
   docs: ?Doclet[];

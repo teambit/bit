@@ -9,6 +9,6 @@ export default class Cache extends Repository {
   }
 
   set(name: string, buffer: Buffer) {
-    
+
   }
 }

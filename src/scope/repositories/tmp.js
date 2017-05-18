@@ -9,7 +9,7 @@ export default class Tmp extends Repository {
   getPath(): string {
     return path.join(super.getPath(), BIT_TMP_DIRNAME);
   }
-  
+
   composePath(p: string): string {
     return path.join(this.getPath(), p);
   }

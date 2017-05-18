@@ -1,4 +1,5 @@
 /** @flow */
+import bit from 'bit-js';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
@@ -14,7 +15,6 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import loader from '../../cli/loader';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import Consumer from '../../consumer';
-import bit from 'bit-js';
 
 const bufferFrom = bit('buffer/from');
 
@@ -25,7 +25,7 @@ export type ComponentTree = {
 
 export type ComponentDef = {
   id: BitId;
-  component: Component;
+  component: ?Component;
 };
 
 export default class SourceRepository {
@@ -48,14 +48,17 @@ export default class SourceRepository {
   }
 
   getMany(ids: BitId[]): Promise<ComponentDef[]> {
-    return Promise.all(ids.map((id) => {
-      return this.get(id).then((component) => {
-        return {
-          id,
-          component
-        };
-      });
-    }));
+    return Promise.all(
+      ids.map((id) => {
+        return this.get(id)
+        .then((component) => {
+          return {
+            id,
+            component
+          };
+        });
+      })
+    );
   }
 
   get(bitId: BitId): Promise<?Component> {

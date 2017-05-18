@@ -2,7 +2,7 @@
 import SSH from './ssh';
 import connect from './network-lib';
 
-export { 
+export {
   SSH,
-  connect 
+  connect
 };

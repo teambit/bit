@@ -5,7 +5,7 @@ import listInline from './lib/list-inline';
 import listScope from './lib/list-scope';
 import commitAction from './lib/commit';
 import status from './lib/status';
-import buildInline from './lib/build-inline';
+import { buildInline, buildInlineAll } from './lib/build-inline';
 import modify from './lib/modify';
 import importAction from './lib/import';
 import exportAction from './lib/export';
@@ -15,6 +15,8 @@ import { testInline, testInlineAll } from './lib/test-inline';
 import getComponentLogs from './lib/get-component-logs';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import config from './lib/global-config';
+import getDriver from './lib/get-driver';
+import watchInlineComponents from './lib/watch-inline-components';
 
 export {
   init,
@@ -23,6 +25,7 @@ export {
   create,
   remove,
   listInline,
+  buildInlineAll,
   listScope,
   commitAction,
   status,
@@ -36,5 +39,7 @@ export {
   testInlineAll,
   remoteAdd,
   remoteList,
-  remoteRm
+  remoteRm,
+  getDriver,
+  watchInlineComponents,
 };

@@ -1,4 +1,4 @@
-/** 
+/**
  * @flow
  * @deprecated
  * @TODO deprecated and should be removed from here and use fs-propogate-until instead...
@@ -44,7 +44,7 @@ export function locateConsumer(absPath: string): ?string {
   function buildPropogationPaths(): string[] {
     const paths: string[] = [];
     const pathParts = absPath.split(pathlib.sep);
-      
+
     pathParts.forEach((val, index) => {
       const part = pathParts.slice(0, index).join('/');
       if (!part) return;
@@ -56,5 +56,5 @@ export function locateConsumer(absPath: string): ?string {
 
   if (pathHasConsumer(absPath)) return absPath;
   const searchPaths = buildPropogationPaths();
-  return searchPaths.find(searchPath => pathHasConsumer(searchPath));     
+  return searchPaths.find(searchPath => pathHasConsumer(searchPath));
 }

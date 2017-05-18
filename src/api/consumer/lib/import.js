@@ -54,16 +54,16 @@ export default function importAction(
     .then(consumer => consumer.scope.ensureDir().then(() => consumer))
     .then((consumer) => {
       if (tester || compiler) { return importEnvironment(consumer); }
-      return consumer.import(ids, verbose, environment)
-        .then(({ dependencies, envDependencies }) => {
-          if (save) {
-            const bitIds = dependencies.map(R.path(['component', 'id']));
-            return consumer.bitJson.addDependencies(bitIds)
-            .write({ bitDir: consumer.getPath() })
-            .then(() => ({ dependencies, envDependencies }));
-          }
-
-          return Promise.resolve(({ dependencies, envDependencies }));
+      return consumer.import(ids, verbose, environment)                   // from here replace with bit-scope-client.fetch
+        .then(({ dependencies, envDependencies }) => {                    //
+          if (save) {                                                     //
+            const bitIds = dependencies.map(R.path(['component', 'id'])); //
+            return consumer.bitJson.addDependencies(bitIds)               //
+            .write({ bitDir: consumer.getPath() })                        //
+            .then(() => ({ dependencies, envDependencies }));             //
+          }                                                               //
+                                                                          //
+          return Promise.resolve(({ dependencies, envDependencies }));    // here we should return { dependencies, envDependencies: [] }
         })
         .then(({ dependencies, envDependencies }) =>
           warnForPackageDependencies({
@@ -71,8 +71,10 @@ export default function importAction(
             envDependencies,
             consumer,
           })
-          .then(warnings => ({ dependencies, envDependencies, warnings }))
-        );
+          .then(warnings => consumer.driver.runHook('onImport',
+            { components: dependencies, projectRoot: performOnDir },
+            { dependencies, envDependencies, warnings })
+        ));
     });
 }
 

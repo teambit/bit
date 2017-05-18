@@ -24,7 +24,7 @@ function initializeIndex(scopePath: string): Promise<any> {
       logLevel,
       stopwords: []
     };
-    
+
     index = new Promise((resolve, reject) => {
       searchIndex(indexOptions, (err, si) => {
         if (err) reject(err);

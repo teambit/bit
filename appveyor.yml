@@ -37,7 +37,7 @@ install:
     Install-Product node $env:6
 
     $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
-
+- npm install -g bit-bin
 build_script:
 - ps: >-
     mv .\package.json .\package.json.bak
@@ -49,15 +49,6 @@ build_script:
     .\scripts\build-dist.ps1
 
     .\scripts\build-windows-installer.bat
-
-
-
-# run custom scripts before tests
-before_test:
-  - npm i -g
-
-test_script:
-  - bit create test
 
 
 artifacts:

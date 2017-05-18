@@ -33,7 +33,7 @@ export default class ComponentVersion {
       version: this.version.toString()
     });
   }
-  
+
   get id(): BitId {
     return this.toId();
   }
@@ -50,7 +50,7 @@ export default class ComponentVersion {
               return scope.getExternal({ id: src, remotes, localFetch: false, withDependencies });
             });
         }
-        
+
         return version.collectDependencies(scope, withDependencies)
           .then(dependencies => new VersionDependencies(this, dependencies, source));
       });

@@ -10,6 +10,7 @@ import {
   ConsumerNotFound,
   ComponentSpecsFailed,
 } from '../consumer/exceptions';
+import { DriverNotFound } from '../driver';
 import ComponentNotFoundInline from '../consumer/component/exceptions/component-not-found-inline';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
@@ -22,6 +23,7 @@ import { ScopeNotFound, ResolutionException, ComponentNotFound, DependencyNotFou
 import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import ExportWithoutThis from '../api/consumer/lib/exceptions/export-without-this';
+import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
 import MiscSourceNotFound from '../consumer/component/exceptions/misc-source-not-found';
 
 const errorsMap: [[Error, (err: Error) => string]] = [
@@ -48,7 +50,10 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ InvalidIdChunk, err => `invalid id part in "${chalk.bold(err.id)}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]`],
   [ InvalidBitJson, err => `error: ${chalk.bold(err.path)} is not a valid JSON file.`],
   [ ExportWithoutThis, err => `Error: Missing local scope annotation when exporting ${err.id}. Please run 'bit export ${LOCAL_SCOPE_NOTATION}/${err.id} ${err.remote}'`],
-  [ ResolutionException, e => e.message]
+  [ ResolutionException, e => e.message],
+  [ DriverNotFound, err => `fatal: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(err.lang)} set in your bit.json file.`],
+  [ invalidIdOnCommit, err => `error - Unable to commit. ${chalk.bold(err.id)} not found.
+Run \`bit status\` command to list all components available for commit.`]
 ];
 
 export default (err: Error): ?string => {

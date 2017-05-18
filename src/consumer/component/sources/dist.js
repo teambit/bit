@@ -2,7 +2,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import Source from './source';
-import { DEFAULT_BUNDLE_FILENAME, DEFAULT_DIST_DIRNAME } from '../../../constants';
+import { DEFAULT_DIST_DIRNAME } from '../../../constants';
 
 const MAP_EXTENSION = '.map'; // TODO - move to constant !
 const DEFAULT_SOURCEMAP_VERSION = 3; // TODO - move to constant !
@@ -15,11 +15,15 @@ export default class Dist extends Source {
     this.mappings = mappings;
   }
 
-  write(bitPath: string, implFileName: string, force?: boolean = true): Promise<any> {
-    const distFilePath = path.join(bitPath, DEFAULT_DIST_DIRNAME, DEFAULT_BUNDLE_FILENAME);
+  static getFilePath(bitPath: string, fileName: string) {
+    return path.join(bitPath, DEFAULT_DIST_DIRNAME, fileName);
+  }
+
+  write(bitPath: string, fileName: string, force?: boolean = true): Promise<any> {
+    const distFilePath = Dist.getFilePath(bitPath, fileName);
     if (!force && fs.existsSync(distFilePath)) return Promise.resolve();
     const distP = new Promise((resolve, reject) =>
-      fs.outputFile(distFilePath, this.buildSrcWithSourceMapAnnotation(), (err) => {
+      fs.outputFile(distFilePath, this.buildSrcWithSourceMapAnnotation(fileName), (err) => {
         if (err) return reject(err);
         return resolve(distFilePath);
       })
@@ -28,28 +32,28 @@ export default class Dist extends Source {
     const mappingsFilePath = distFilePath + MAP_EXTENSION;
     const sourceMapP = new Promise((resolve, reject) => {
       if (!this.mappings) return resolve();
-      return fs.outputFile(mappingsFilePath, this.buildSourceMap(implFileName), (err) => {
+      return fs.outputFile(mappingsFilePath, this.buildSourceMap(fileName), (err) => {
         if (err) return reject(err);
         return resolve(mappingsFilePath);
       });
     });
 
     return Promise.all([distP, sourceMapP])
-    .then(([distPath, SourceMapPath]) => distFilePath);
+    .then(() => distFilePath);
     // TODO - refactor to use the source map as returned value
   }
 
-  buildSourceMap(implFileName: string) {
+  buildSourceMap(fileName: string) {
     return JSON.stringify({
       version: DEFAULT_SOURCEMAP_VERSION,
-      sources: [path.join('..', implFileName)],
+      sources: [path.join('..', fileName)],
       mappings: this.mappings
     });
   }
 
-  buildSrcWithSourceMapAnnotation() {
+  buildSrcWithSourceMapAnnotation(fileName: string) {
     return this.mappings ?
-    `${this.src}\n\n//# sourceMappingURL=${DEFAULT_BUNDLE_FILENAME}${MAP_EXTENSION}` : this.src;
+    `${this.src}\n\n//# sourceMappingURL=${fileName}${MAP_EXTENSION}` : this.src;
   }
 
   toString() {

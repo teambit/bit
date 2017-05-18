@@ -54,6 +54,8 @@ export const DEFAULT_BUNDLE_FILENAME = 'dist.js';
 
 export const DEFAULT_BIT_VERSION = 1;
 
+export const DEFAULT_LANGUAGE = 'javascript';
+
 export const LATEST_BIT_VERSION = 'latest';
 
 export const OBJECTS_DIR = 'objects';
@@ -175,3 +177,5 @@ export const RELEASE_SERVER = 'https://api.bitsrc.io/release';
 export const SKIP_UPDATE_FLAG = '--skip-update';
 
 export const LICENSE_FILENAME = 'LICENSE';
+
+export const ISOLATED_ENV_ROOT = 'environment';

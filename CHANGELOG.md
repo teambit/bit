@@ -7,6 +7,99 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- JSDoc data are saved only for functions with a tag `@bit`.
+- do not terminate watcher after failures.
+- add the commit-log details to the Component object, so then it'll be available for `bit show --json` and `bit export`.
+
+## [0.6.0] - 2017-05-15
+
+- do not preserve node.js path cache for required bit-driver because it varies over time.
+
+## [0.5.13] - 2017-05-14 rc
+
+- enable bit watch command -> build-all-inline on every change
+
+## [0.5.12] - 2017-05-14 rc
+
+- enable "bit build --inline" command with no arguments for building all inline components
+
+## [0.5.11] - 2017-05-11 rc
+
+- send a correct error message on commit with wrong id.
+- add onModify hook.
+- show error-message for 'bit build' when no compiler is specified.
+- write dependencies on modify.
+- do not write bit.json's `misc` and `lang` properties if the default value is presented.
+- send correct error message when there is invalid inline id (wip).
+- add bind command (which calls the driver bind command).
+
+## [0.5.10] - 2017-05-11 rc
+
+- fix bug with specs that need compiling for server use
+
+## [0.5.9] - 2017-05-11 rc
+
+- fix bug with specs that need compiling
+
+## [0.5.8] - 2017-05-11 rc
+
+- write the specDist only if it exists
+
+## [0.5.7] - 2017-05-10 rc
+
+- fix test for components without compiler
+
+## [0.5.6] - 2017-05-10 rc
+
+- implement the isolated environment for build
+
+## [0.5.5] - 2017-05-09 rc
+
+### Change
+
+- bare scope test creates a new environment and runs the tests there.
+- test command -i runs the tests on the file system (inline components).
+- build command now saves dist/\<implFileName> && dist/\<specsFileName> for the specs file.
+- change the component resolver to fetch from dist/\<implFileName> instead of dist/dist.js.
+
+- package dependencies of environment modules would be installed at component level from now.
+- npm loader would not be present, --verbose will show npm output after the installation is done.
+
+### Fixed
+
+- bug with environment installation (npm install at project level).
+
+### Added
+
+- add module 'component-resolver' to resolve a component path using its ID.
+- support generating an isolated bit-component environment on-the-fly so it will be easier to run build and test from everywhere
+- the compiler can implement a build method instead of compile, get an entry file and run webpack for example (wip). implemented for inline_components, and still need to implement environment module in order to fully work.
+- add --skip-update option to the main bit help page.
+- run some hooks (for now: onCommit, onCreate, onExport and onImport) using a language-driver
+- lang attribute on the bit.json, enable language that will save on the model of the component.
+
+## [0.5.4] - 2017-05-07
+
+### Fixed
+
+- ssh is exiting before writing the entire response.
+- exception was thrown when trying to read non-existing private key.
+
+## [0.5.3] - 2017-04-27
+
+### Fixed
+
+- put [search] index procedure under try catch, warns in case it fails.
+- fixed bug with list/show remote components with misc files.
+
+## [0.5.2] - 2017-04-27
+
+### Fixed
+
+- issue with npm ensure that was caused due to latest version changes
+- issue with installing deps from local cache instead of external
+- exit code with only numeric values
+
 ## [0.5.1] - 2017-04-18
 
 ### Added

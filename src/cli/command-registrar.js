@@ -4,13 +4,12 @@ import commander from 'commander';
 import chalk from 'chalk';
 import type Command from './command';
 import defaultHandleError from './default-error-handler';
-import { empty, first } from '../utils';
+import { empty, first, isNumeric } from '../utils';
 import loader from './loader';
 
 
 function logAndExit(msg: string) {
-  process.stdout.write(`${msg}\n`);
-  process.exit();
+  process.stdout.write(`${msg}\n`, () => process.exit());
 }
 
 function logErrAndExit(msg: Error|string) {
@@ -65,7 +64,7 @@ function execAction(command, concrete, args) {
 
 function serializeErrAndExit(err) {
   process.stderr.write(JSON.stringify(serializeError(err)));
-  if (err.code) return process.exit(err.code);
+  if (err.code && isNumeric(err.code)) return process.exit(err.code);
   return process.exit(1);
 }
 
@@ -96,6 +95,7 @@ export default class CommandRegistrar {
     commander
       .version(this.version)
       .usage(this.usage)
+      .option('--skip-update', 'Skips auto updates for a command')
       .description(this.description);
   }
 
@@ -122,7 +122,7 @@ export default class CommandRegistrar {
         concrete.option(createOptStr(alias, name), description);
       });
 
-      // attach skip-version to all commands
+      // attach skip-update to all commands
       concrete.option('--skip-update', 'Skips auto updates');
 
       command.commands.forEach((nestedCmd) => {

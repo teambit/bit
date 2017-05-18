@@ -7,5 +7,5 @@ export default function describeScope(path: string) {
   })
   .catch(() => {
     return {};
-  });  
+  });
 }

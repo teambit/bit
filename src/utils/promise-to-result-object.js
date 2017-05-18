@@ -5,7 +5,7 @@ export type ResultObject<T> = {
   error: Error
 };
 
-export default function toResultObject<T>() { 
+export default function toResultObject<T>() {
   return (promise: Promise<any>): Promise<ResultObject<T>> => {
     return promise
       .then(val => ({ success: true, val }))

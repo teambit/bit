@@ -3,9 +3,15 @@ import path from 'path';
 import glob from 'glob';
 import fs from 'fs-extra';
 import R from 'ramda';
+import VersionDependencies from '../scope/version-dependencies';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
-import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport } from './exceptions';
+import {
+  ConsumerAlreadyExists,
+  ConsumerNotFound,
+  NothingToImport,
+} from './exceptions';
+import { Driver } from '../driver';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
@@ -50,6 +56,10 @@ export default class Consumer {
     return BitId.parse(this.bitJson.compilerId, this.scope);
   }
 
+  get driver(): Driver {
+    return Driver.load(this.bitJson.lang);
+  }
+
   write(): Promise<Consumer> {
     return this.bitJson
       .write({ bitDir: this.projectPath })
@@ -69,6 +79,10 @@ export default class Consumer {
     return this.projectPath;
   }
 
+  getBitPathInComponentsDir(id: BitId): string {
+    return path.join(this.getComponentsPath(), id.toPath());
+  }
+
   loadComponent(id: BitInlineId): Promise<Component> {
     const bitDir = id.composeBitPath(this.getPath());
     return Component.loadFromInline(bitDir, this.bitJson);
@@ -83,10 +97,11 @@ export default class Consumer {
       .then(componentDependencies => this.writeToComponentsDir([componentDependencies])
         .then(() => this.removeFromComponents(newBitId)) // @HACKALERT
         .then(() => componentDependencies.component)
+        .then(component => this.driver.runHook('onExport', component, component))
       );
   }
 
-  import(rawIds: ?string[], verbose?: ?bool, withEnvironments: ?bool):
+  import(rawIds: ?string[], verbose?: bool, withEnvironments: ?bool):
   Promise<{ dependencies: ComponentDependencies[], envDependencies?: Component[] }> {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
@@ -131,14 +146,15 @@ export default class Consumer {
     return importSpecificComponents();
   }
 
-  importEnvironment(rawId: ?string, verbose?: ?bool) {
+  importEnvironment(rawId: ?string, verbose?: bool) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId, this.scope.name);
     return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose });
   }
 
   createBit({ id, withSpecs = false, withBitJson = false, force = false }: {
-    id: BitInlineId, withSpecs: boolean, withBitJson: boolean, force: boolean }): Promise<Component> {
+    id: BitInlineId, withSpecs: boolean, withBitJson: boolean, force: boolean
+  }): Promise<Component> {
     const inlineBitPath = id.composeBitPath(this.getPath());
 
     return Component.create({
@@ -146,7 +162,8 @@ export default class Consumer {
       box: id.box,
       withSpecs,
       consumerBitJson: this.bitJson,
-    }, this.scope).write(inlineBitPath, withBitJson, force);
+    }, this.scope).write(inlineBitPath, withBitJson, force)
+      .then(component => this.driver.runHook('onCreate', component, component));
   }
 
   removeFromInline(id: BitInlineId): Promise<any> {
@@ -180,22 +197,22 @@ export default class Consumer {
     });
   }
 
-  writeToComponentsDir(componentDependencies: versionDependencies[]): Promise<Component[]> {
+  bitDirForConsumerComponent(component: Component): string {
     const componentsDir = this.getComponentsPath();
+    return path.join(
+      componentsDir,
+      component.box,
+      component.name,
+      component.scope,
+      component.version.toString(),
+    );
+  }
+
+  writeToComponentsDir(componentDependencies: VersionDependencies[]): Promise<Component[]> {
     const components = flattenDependencies(componentDependencies);
 
-    const bitDirForConsumerImport = (component: Component) => {
-      return path.join(
-        componentsDir,
-        component.box,
-        component.name,
-        component.scope,
-        component.version.toString(),
-      );
-    };
-
     return Promise.all(components.map((component) => {
-      const bitPath = bitDirForConsumerImport(component);
+      const bitPath = this.bitDirForConsumerComponent(component);
       return component.write(bitPath, true);
     }));
   }
@@ -209,6 +226,7 @@ export default class Consumer {
         .then(bits => this.writeToComponentsDir([bits]))
         .then(() => this.removeFromInline(id))
         .then(() => index(bit, this.scope.getPath()))
+        .then(() => this.driver.runHook('onCommit', bit))
         .then(() => bit)
       );
   }
@@ -221,11 +239,11 @@ export default class Consumer {
   }
 
   runAllInlineSpecs() {
-      return this.listInline().then((components) => {
-        return Promise.all(components.map(component => component
-          .runSpecs({ scope: this.scope, consumer: this })
-          .then((result) => { return { specs: result, component } } ) ));
-      });
+    return this.listInline().then((components) => {
+      return Promise.all(components.map(component => component
+        .runSpecs({ scope: this.scope, consumer: this })
+        .then((result) => { return { specs: result, component }; })));
+    });
   }
 
   listInline(): Promise<Component[]> {

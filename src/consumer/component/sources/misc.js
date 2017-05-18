@@ -48,7 +48,7 @@ export default class Misc extends Source {
     return this.src;
   }
 
-  deserialize(src): Misc {
+  static deserialize(src): Misc {
     return new Misc(src);
   }
 }

@@ -16,7 +16,7 @@ describe('JSDoc Parser', () => {
         doclet = doclets[0];
       });
       it('should have all the proper keys', () => {
-        expect(doclet).to.include.keys('name', 'description', 'returns', 'args', 'access', 'examples', 'static');
+        expect(doclet).to.include.keys('name', 'description', 'returns', 'args', 'access', 'examples', 'static', 'bit');
       });
       it('should extract the correct name', () => {
         expect(doclet.name).to.equal('add');
@@ -244,6 +244,3 @@ describe('JSDoc Parser', () => {
     });
   });
 });
-
-
-

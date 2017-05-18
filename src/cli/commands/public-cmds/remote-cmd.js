@@ -15,7 +15,7 @@ export default class Remote extends Command {
     new RemoteAdd(),
     new RemoteRm()
   ];
-  
+
   // $FlowFixMe
   action(args: string[], { global }: { glboal: boolean }): Promise<any> {
     return remoteList(global);
@@ -38,7 +38,7 @@ class RemoteAdd extends Command {
   opts = [
     ['g', 'global', 'configure a remote bit scope']
   ];
-  
+
   action([url, ]: [string, ], { global }: { global: boolean }): Promise<any> {
     return remoteAdd(url, global);
   }
@@ -55,7 +55,7 @@ class RemoteRm extends Command {
   opts = [
     ['g', 'global', 'remove a global configured remote scope']
   ];
-  
+
   action([name, ]: [string, ], { global }: { global: boolean }): Promise<any> {
     return remoteRm(name, global);
   }

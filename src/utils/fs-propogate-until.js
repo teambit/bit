@@ -28,7 +28,7 @@ export function propogateUntil(fromPath: string, pattern: (path: string) => bool
   function buildPropogationPaths(): string[] {
     const paths: string[] = [];
     const pathParts = fromPath.split(path.sep);
-      
+
     pathParts.forEach((val, index) => {
       const part = pathParts.slice(0, index).join('/');
       if (!part) return;
@@ -40,5 +40,5 @@ export function propogateUntil(fromPath: string, pattern: (path: string) => bool
 
   if (pattern(fromPath)) return fromPath;
   const searchPaths = buildPropogationPaths();
-  return searchPaths.find(searchPath => pattern(searchPath));     
+  return searchPaths.find(searchPath => pattern(searchPath));
 }

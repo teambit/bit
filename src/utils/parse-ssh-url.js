@@ -9,8 +9,8 @@ export type SSHUrl = {
 };
 
 /**
- * @credit taken from mikeal/sequest and modified 
- * to include path and protocol prefix parsing. 
+ * @credit taken from mikeal/sequest and modified
+ * to include path and protocol prefix parsing.
  */
 export default function parseSSHUrl(str: string): SSHUrl {
   let user = 'root';
@@ -26,13 +26,13 @@ export default function parseSSHUrl(str: string): SSHUrl {
   if (str.indexOf(':') !== -1) {
     const [potentialPort, potentialPath] = str
       .slice(str.indexOf(':') + 1)
-      .split(':'); 
+      .split(':');
 
     const maybePort = parseInt(potentialPort);
     if (!isNaN(maybePort) && isNumber(maybePort)) {
       port = maybePort;
       if (potentialPath) path = potentialPath;
-    } 
+    }
 
     if (!potentialPath && isNaN(maybePort)) {
       path = potentialPort;

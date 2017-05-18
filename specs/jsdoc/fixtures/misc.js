@@ -1,5 +1,6 @@
 /**
  * @name publicFunc
+ * @bit
  * @public
  */
 function publicFunc() {

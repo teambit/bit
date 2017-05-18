@@ -8,7 +8,7 @@ export default class Cmd {
   commands: Cmd[] = [];
   private: ?bool;
   loader: ?bool;
-  
+
   action(params: any, opts: {[string]: any}): Promise<{[string]: any}> { // eslint-disable-line
     console.log('"action" method not implemented on this command');
     return new Promise(resolve => resolve({}));

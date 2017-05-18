@@ -9,7 +9,7 @@ import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
 import ConsumerComponent from '../../../consumer/component';
-import checkVersionCompatibility from '../check-version-compatibility'
+import checkVersionCompatibility from '../check-version-compatibility';
 
 const rejectNils = R.reject(R.isNil);
 const Client = require('ssh2').Client;
@@ -32,7 +32,7 @@ function errorHandler(code, err) {
   } catch (e) {
     // be greacfull when can't parse error message
   }
-
+  
   switch (code) {
     default:
       return new UnexpectedNetworkError();
@@ -60,18 +60,18 @@ export default class SSH {
   username: string;
   port: number;
   host: string;
-
+  
   constructor({ path, username, port, host }: SSHProps) {
     this.path = path;
     this.username = username;
     this.port = port;
     this.host = host || '';
   }
-
+  
   buildCmd(commandName: string, path: string, payload: any): string {
     return `bit ${commandName} ${toBase64(path)} ${packCommand(buildCommandMessage(payload))}`;
   }
-
+  
   exec(commandName: string, payload: any): Promise<any> {
     return new Promise((resolve, reject) => {
       let res = '';
@@ -81,19 +81,23 @@ export default class SSH {
         absolutePath(this.path || ''),
         commandName === '_put' ? null : payload
       );
-
+      
       this.connection.exec(cmd, (e, stream) => {
-        if (commandName === '_put') stream.stdin.write(toBase64(payload));
+        if (commandName === '_put') {
+          stream.stdin.write(toBase64(payload));
+          stream.stdin.end();
+        }
         stream
           .on('data', (response) => {
             res += response.toString();
           })
           .on('close', (code) => {
+            if (commandName === '_put') res = res.replace(payload, '');
             return code && code !== 0 ?
-            reject(errorHandler(code, err)) :
-            resolve(clean(res));
-            // TODO: close the connection from somewhere else
-            // this.connection.end();
+              reject(errorHandler(code, err)) :
+              resolve(clean(res));
+              // TODO: close the connection from somewhere else
+              // this.connection.end();
           })
           .stderr.on('data', (response) => {
             err = response.toString();
@@ -101,7 +105,7 @@ export default class SSH {
       });
     });
   }
-
+  
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
     return this.exec('_put', componentObjects.toString())
       .then((data: string) => {
@@ -110,7 +114,7 @@ export default class SSH {
         return ComponentObjects.fromString(payload);
       });
   }
-
+  
   describeScope(): Promise<ScopeDescriptor> {
     return this.exec('_scope')
       .then((data) => {
@@ -122,18 +126,18 @@ export default class SSH {
         throw new RemoteScopeNotFound(err);
       });
   }
-
+  
   list() {
     return this.exec('_list')
-    .then((str: string) => {
-      const { payload, headers } = unpackCommand(str);
-      checkVersionCompatibility(headers.version);
-      return rejectNils(payload.map((c) => {
-        return c ? ConsumerComponent.fromString(c) : null;
-      }));
-    });
+      .then((str: string) => {
+        const { payload, headers } = unpackCommand(str);
+        checkVersionCompatibility(headers.version);
+        return rejectNils(payload.map((c) => {
+          return c ? ConsumerComponent.fromString(c) : null;
+        }));
+      });
   }
-
+  
   search(query: string, reindex: boolean) {
     return this.exec('_search', { query, reindex: reindex.toString() })
       .then((data) => {
@@ -142,16 +146,16 @@ export default class SSH {
         return payload;
       });
   }
-
+  
   show(id: BitId) {
     return this.exec('_show', id.toString())
-    .then((str: string) => {
-      const { payload, headers } = unpackCommand(str);
-      checkVersionCompatibility(headers.version);
-      return str ? ConsumerComponent.fromString(payload) : null;
-    });
+      .then((str: string) => {
+        const { payload, headers } = unpackCommand(str);
+        checkVersionCompatibility(headers.version);
+        return str ? ConsumerComponent.fromString(payload) : null;
+      });
   }
-
+  
   fetch(ids: BitIds, noDeps: bool = false): Promise<ComponentObjects[]> {
     let options = '';
     ids = ids.map(bitId => bitId.toString());
@@ -165,12 +169,12 @@ export default class SSH {
         });
       });
   }
-
+  
   close() {
     this.connection.end();
     return this;
   }
-
+  
   composeConnectionObject(key: ?string) {
     return {
       username: this.username,
@@ -179,7 +183,7 @@ export default class SSH {
       privateKey: keyGetter(key)
     };
   }
-
+  
   connect(sshUrl: SSHUrl, key: ?string): Promise<SSH> {
     return new Promise((resolve, reject) => {
       try {

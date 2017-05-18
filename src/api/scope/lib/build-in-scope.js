@@ -4,7 +4,7 @@ import { BitId } from '../../../bit-id';
 import { loadScope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 
-export default function buildInScope({ id, environment, save, verbose, scopePath }: 
+export default function buildInScope({ id, environment, save, verbose, scopePath }:
 { id: string, environment: ?bool, save: ?bool, verbose: ?bool, scopePath: string }) {
   function loadFromScope(initialError: ?Error) {
     return loadScope(scopePath || process.cwd())

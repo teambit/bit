@@ -16,11 +16,11 @@ export default class ScopeConfig extends Command {
   ];
   opts = [
   ];
-  
+
   action(): Promise<any> {
     return scopeConfig.list()
   }
-  
+
   report(conf: {[string]: string}): string {
     return objectToStringifiedTupleArray(conf).map((tuple) => {
       return tuple.join('     ');
@@ -34,11 +34,11 @@ class ScopeConfigSet extends Command {
   alias = '';
   private = true;
   opts = [];
-  
+
   action([key, value]: [string, string]): Promise<any> {
     return scopeConfig.set(key,value)
   }
-   
+
   report({ key, value }: { key: string, value: number }): string {
     return `${chalk.yellow(key)} has been set to - ${chalk.yellow(value)}`;
   }
@@ -50,11 +50,11 @@ class ScopeConfigGet extends Command {
   alias = '';
   private = true;
   opts = [];
-  
+
   action([key, ]: [string, ]): Promise<any> {
     return scopeConfig.get(key)
   }
-  
+
   report(value: string): string {
     return value;
   }
@@ -65,11 +65,11 @@ class ScopeConfigList extends Command {
   description = 'list all scope configuration(s)';
   alias = '';
   opts = [];
-  
+
   action(): Promise<any> {
     return scopeConfig.list();
   }
-  
+
   report(conf: {[string]: any}): string {
     return objectToStringifiedTupleArray(conf).map((tuple) => {
       return tuple.join('     ');
@@ -82,11 +82,11 @@ class ScopeConfigDel extends Command {
   description = 'delete given key from global configuration';
   alias = '';
   opts = [];
-  
+
   action([key]: [string]): Promise<any> {
     return scopeConfig.del(key);
   }
-  
+
   report(conf: {[string]: string}): string {
     return 'deleted successfully';
   }
