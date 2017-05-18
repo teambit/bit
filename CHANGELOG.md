@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- JSDoc data are saved only for functions with a tag `@bit`.
 - do not terminate watcher after failures.
 - add the commit-log details to the Component object, so then it'll be available for `bit show --json` and `bit export`.
 

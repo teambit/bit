@@ -1,6 +1,6 @@
 /**
  * Testing various params options
- *
+ * @bit
  * @param {*} anyType
  * @param {[]} arrayType
  * @param {number|[]} unionType
@@ -9,7 +9,7 @@
  * @param {Function} functionType The function to attempt.
  * @param {string[]} arrayOfType
  * @param {Array<number|Object>} arrayOfUnion
- * 
+ *
  */
 function foo(anyType, arrayType, unionType, myCustomType, objectType, functionType, arrayOfType, arrayOfUnion) {
   // ...
