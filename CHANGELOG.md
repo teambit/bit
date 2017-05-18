@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.6.1] - 2017-05-18
+
 - fixed watcher and import command
 - generate dependencies links for inline-components
 
