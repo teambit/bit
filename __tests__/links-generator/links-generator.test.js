@@ -216,7 +216,7 @@ describe('dependenciesForInlineComponents', () => {
 
         // name level
         expect(outputFileCalls[0][0]).toBe('/my/project/inline_components/global/is-string/node_modules/bit/object/foreach/index.js');
-        expect(outputFileCalls[0][1]).toBe("module.exports = require('../../../../../../../../components/object/foreach/bit.utils/1/dist/dist.js');");
+        expect(outputFileCalls[0][1]).toBe("module.exports = require('../../../../../../../components/object/foreach/bit.utils/1/dist/dist.js');");
 
         // namespace level
         expect(outputFileCalls[1][0]).toBe('/my/project/inline_components/global/is-string/node_modules/bit/object/index.js');

@@ -140,7 +140,7 @@ export function dependenciesForInlineComponents(
         if (!map[dependency]) return; // the dependency is not in the FS. should we throw an error?
         const [namespace, name] = map[dependency].loc.split(path.sep);
         const targetFile = path.join(targetModuleDir, namespace, name, INDEX_JS);
-        const relativeComponentsDir = path.join(...Array(8).fill('..'));
+        const relativeComponentsDir = path.join(...Array(7).fill('..'));
         const dependencyDir = path.join(
           relativeComponentsDir,
           COMPONENTS_DIRNAME,
