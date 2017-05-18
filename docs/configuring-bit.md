@@ -35,6 +35,7 @@ The first thing you should do when you install Bit is to set your user name and 
 |     sources          | F      |   Object  | An object describing the component sources                     |
 |     sources.impl     | F      |   String  | The component implementation file name                         |
 |     sources.spec     | F      |   String  | The component spec file name                                   |
+|     language         | F      |   String  | The component's programming language                           |
 
 **Example**
 
@@ -53,7 +54,8 @@ The first thing you should do when you install Bit is to set your user name and 
     },
     "packageDependencies": {
         "camelcase": "4.0.0"
-    }
+    },
+    "language": "javascript"
 }
 ```
 

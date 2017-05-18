@@ -6,7 +6,6 @@ If you have NPM installed, you can use it to install Bit: (recommended)
 
 `npm install bit-bin --global `
 
-
 ## Using brew (macOS)
 
 Homebrew - Bit can be installed via Homebrew package manager:
@@ -46,7 +45,7 @@ Installation can be found [here](https://api.bitsrc.io/release/msi/latest).
 
 2. **Chocolatey** - Bit can be installed via Chocolatey:
 
-`choco install bit -version 0.5.0`
+`choco install bit`
 
 ## Tarball Release
 

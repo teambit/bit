@@ -46,15 +46,17 @@ As shows in the [configurating bit](configurating-bit.md) section, you can list 
 
 Just as you can use other Bit components as dependencies, we also understand that there's a lot of previous work that have been developed and deployed to other package managers, and code components should be able to depend on them. Bit does it by integrating to other known package source (for example - NPM). However, bit does not handle these dependencies, and will not manage them. If a code component has a package dependency defined, it will tell the user what needs to be installed. So unlike code component dependencies, you will be required to manage your external dependencies by yourself. Bit will help you with letting you know what's missing, but will not interfere with your dependency resolution process. 
 
-## Scope CI
+## Isolated Build/Test
 
-Bit comes with a built-in slim CI mechanism.
+Bit is able to run your component's buid and test operations in an isolated environment.
 
-The CI mechanism uses Bit's [environment boilerplating](bit-component.md#component-environment) to create an ad-hock CI process for each code component. This process happens while a component is being committed to the local scope, and exported to a remote scope. 
+This mechanism uses Bit's [environment boilerplating](bit-component.md#component-environment) to create an ad-hock isolated runtime environment for each code component. This process happens while a component is being committed to the local scope, and exported to a remote scope. 
 
 By utilizing each component's build and test environments, Bit has the instructions for building and testing components. Also, if a component has a dependency (or even requires an external package from a known source - NPM for example), Bit will retrieve the dependencies when starting the process. This way Bit makes sure that each component is indeed isolated and encapsulated.
 
-The reason Bit has this built-in CI engine, is that figuring out a proper CI process for packages is a hassle. It requires setting up a build server, figuring out the right scripts and maintaining everything alongside with your package itself. For large packages this makes sense, but when using micro-packages - this is a lot of work. On top of that - it's very hard to update and debug these processes, and even update, if the package itself changes the underline technology it uses (for example - changing the library used to run tests). Bit makes it to be a simple process, which is based of the fact that the environments it uses for build and test are actual code components (which Bit is designed to manage), with a specific API (to run and get results) and an internal dependency management for other components as well as external packages. All are parts of the ecosystem, which together form a CI engine for code components.
+Bit has this isolation engine in order to validate the component's configuration of package/component dependencies (make sure it'll function on its own). It fetches the package dependencies (npm modules) and the component dependencies (bit components) in order to assimilate a development environment, it builds and runs the tests, if the test pass it means the dependencies were properly configured.
+It will also help other developers to automatically setup a development environment for the component.
+Component environments (uses for build and test) are actual code components (managed by bit) with an interface they need to implement.
 
 Bit forces strict rules when it get to building and testing code. If a component needs to be build to run (for example - transpile from TypeScript to ES), and the build process fails when exporting, Bit will fail the exporting process. The same thing happens if a component has a set of tests that failed to run. This is to make sure that no breaking changes are being exported (this behavior can be overridden by using the `--force` flag when exporting components).
 
