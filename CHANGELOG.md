@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.6.1] - 2017-05-18 rc
+
 - JSDoc data are saved only for functions with a tag `@bit`.
 - do not terminate watcher after failures.
 - add the commit-log details to the Component object, so then it'll be available for `bit show --json` and `bit export`.
@@ -15,15 +17,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - do not preserve node.js path cache for required bit-driver because it varies over time.
 
-## [0.5.13] - 2017-05-14 rc
+## [0.5.13] - 2017-05-14
 
 - enable bit watch command -> build-all-inline on every change
 
-## [0.5.12] - 2017-05-14 rc
+## [0.5.12] - 2017-05-14
 
 - enable "bit build --inline" command with no arguments for building all inline components
 
-## [0.5.11] - 2017-05-11 rc
+## [0.5.11] - 2017-05-11
 
 - send a correct error message on commit with wrong id.
 - add onModify hook.
@@ -33,27 +35,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - send correct error message when there is invalid inline id (wip).
 - add bind command (which calls the driver bind command).
 
-## [0.5.10] - 2017-05-11 rc
+## [0.5.10] - 2017-05-11
 
 - fix bug with specs that need compiling for server use
 
-## [0.5.9] - 2017-05-11 rc
+## [0.5.9] - 2017-05-11
 
 - fix bug with specs that need compiling
 
-## [0.5.8] - 2017-05-11 rc
+## [0.5.8] - 2017-05-11
 
 - write the specDist only if it exists
 
-## [0.5.7] - 2017-05-10 rc
+## [0.5.7] - 2017-05-10
 
 - fix test for components without compiler
 
-## [0.5.6] - 2017-05-10 rc
+## [0.5.6] - 2017-05-10
 
 - implement the isolated environment for build
 
-## [0.5.5] - 2017-05-09 rc
+## [0.5.5] - 2017-05-09
 
 ### Change
 
