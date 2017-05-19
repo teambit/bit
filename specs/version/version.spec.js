@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import Version from './version';
+import Version from '../../src/version';
 
 describe('Version', () => {
   describe('toString()', () => {
@@ -10,10 +10,10 @@ describe('Version', () => {
 
     it('should return latest', () => {
       const version = new Version(null, true);
-      expect(version.toString()).to.equal('latest');      
+      expect(version.toString()).to.equal('latest');
     });
 
-    it('should return concerete version number', () => {
+    it('should return concrete version number', () => {
       const version = new Version(12, false);
       expect(version.toString()).to.equal('12');
     });
@@ -27,7 +27,7 @@ describe('Version', () => {
   });
 
   describe('increase() + decrease()', () => {
-    it('should increase concerete version by one', () => {
+    it('should increase concrete version by one', () => {
       const version = new Version(24, false);
       version.increase();
       expect(version.versionNum).to.equal(25);
@@ -39,7 +39,7 @@ describe('Version', () => {
       expect(version.versionNum).to.equal(25);
     });
 
-    it('should decrease concerete version by one', () => {
+    it('should decrease concrete version by one', () => {
       const version = new Version(24, false);
       version.decrease();
       expect(version.versionNum).to.equal(23);

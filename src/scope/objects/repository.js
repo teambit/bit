@@ -32,11 +32,11 @@ export default class Repository {
     return path.join(this.scope.getPath(), OBJECTS_DIR);
   }
 
-  getLicense() : Promise<string> {
+  getLicense(): Promise<string> {
     return this.scope.scopeJson.getPopulatedLicense();
   }
 
-  getScopeMetaObject() : Promise<Buffer> {
+  getScopeMetaObject(): Promise<Buffer> {
     return this.getLicense()
       .then(license => ScopeMeta.fromObject({ license, name: this.scope.name }).compress());
   }

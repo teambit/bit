@@ -1,4 +1,4 @@
-function compile(src) {
+function compile(src) { //eslint-disable-line
 
 }
 

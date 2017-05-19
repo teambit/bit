@@ -1,9 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import ConsumerComponent from '../../../src/consumer/component/consumer-component';
-import ConsumerBitJson from '../../../src/consumer/bit-json/consumer-bit-json';
 import BitId from '../../../src/bit-id/bit-id';
-import Scope from '../../../src/scope/scope';
 import Impl from '../../../src/consumer/component/sources/impl';
 
 describe('ConsumerComponent', () => {

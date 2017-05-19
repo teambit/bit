@@ -5,8 +5,8 @@ import { SourceNotFound } from '../exceptions';
 import { BIT_SOURCES_DIRNAME } from '../../constants';
 import InvalidBit from '../../consumer/component/exceptions/invalid-bit';
 import Bit from '../../consumer/s';
-import { BitId, BitIds } from '../../bit-id';
-import { listDirectories, rmDir, empty, glob } from '../../utils';
+import { BitId } from '../../bit-id';
+import { listDirectories, rmDir, empty } from '../../utils';
 
 export default class Source extends Repository {
   getPath(): string {
