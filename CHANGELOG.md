@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- extract the importing bit.json components functionality from `bit import` into a new command `bit install`.
+
 ## [0.6.1] - 2017-05-18 rc
 
 - JSDoc data are saved only for functions with a tag `@bit`.

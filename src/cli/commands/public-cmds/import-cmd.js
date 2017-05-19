@@ -9,12 +9,10 @@ import Component from '../../../consumer/component';
 import { ComponentDependencies } from '../../../scope';
 
 export default class Import extends Command {
-  name = 'import [ids...]';
+  name = 'import <ids...>';
   description = 'import a component';
-  alias = 'i';
+  alias = '';
   opts = [
-    ['s', 'save', 'save into bit.json'],
-    ['e', 'environment', 'install development environment dependencies (compiler | tester)'],
     ['t', 'tester', 'import a tester environment component'],
     ['v', 'verbose', 'show a more verbose output when possible'],
     ['c', 'compiler', 'import a compiler environment component'],
@@ -22,14 +20,12 @@ export default class Import extends Command {
   ];
   loader = true;
 
-  action([ids, ]: [string[], ], { save, tester, compiler, verbose, prefix, environment }:
+  action([ids, ]: [string[], ], { tester, compiler, verbose, prefix }:
   {
-    save?: bool,
     tester?: bool,
     compiler?: bool,
     verbose?: bool,
     prefix?: bool,
-    environment?: bool,
   }): Promise<any> {
     if (prefix) { return Promise.reject(new Error('prefix option currently not supported')); }
     // TODO - prefix returns true instead of the relevant string.
@@ -38,7 +34,7 @@ export default class Import extends Command {
       throw new Error('you cant use tester and compiler flags combined');
     }
 
-    return importAction({ ids, save, tester, compiler, verbose, prefix, environment });
+    return importAction({ ids, tester, compiler, verbose, prefix, environment: false });
   }
 
   report({ dependencies, envDependencies, warnings }: {
