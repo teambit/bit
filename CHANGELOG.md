@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.6.2] - 2017-05-18 rc
+## [0.6.2] - 2017-05-21
 
 - [removed] JSDoc data are saved only for functions with a tag `@bit`.
 - fixed component classification (local or external)
