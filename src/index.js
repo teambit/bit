@@ -1,3 +1,4 @@
+import 'regenerator-runtime/runtime';
 import { bindAction, bindSpecificComponentsAction, watchAction, fetchAction, importAction } from './actions';
 
 const lifecycleHooks = {
