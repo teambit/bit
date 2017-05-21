@@ -1,5 +1,5 @@
 import {
-  dependencies,
+  componentsDependencies,
   publicApiForInlineComponents,
   publicApiNamespaceLevel,
   publicApiRootLevel,
@@ -11,7 +11,7 @@ import {
 } from './links-generator';
 
 export {
-  dependencies,
+  componentsDependencies,
   publicApiForInlineComponents,
   publicApiNamespaceLevel,
   publicApiRootLevel,

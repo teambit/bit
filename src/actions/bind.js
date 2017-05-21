@@ -21,7 +21,7 @@ Promise<any> {
   ]);
 
   const componentsDependenciesLinks = await LinksGenerator
-  .dependencies(componentsDir, componentsMap, projectBitJson);
+  .componentsDependencies(componentsDir, componentsMap, inlineComponentMap, projectBitJson);
 
   const stagedComponentsLinks = await LinksGenerator
   .publicApiForExportPendingComponents(moduleDir, componentsMap);

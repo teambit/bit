@@ -42,16 +42,16 @@ const projectBitJsonFixture = {
   getDependenciesArray: () => ['bit.envs/compilers/flow::2', 'bit.utils/object/values::1'],
 };
 
-describe('dependencies', () => {
+describe('componentsDependencies', () => {
   it('should not create links if there are no dependencies', () => {
-    const result = linksGenerator.dependencies('dir', {}, {});
+    const result = linksGenerator.componentsDependencies('dir', {}, {}, {});
     return result.then(() => {
       expect(fsMock.outputFile.mock.calls.length).toBe(0);
     });
   });
 
   it('should generate dependencies links', () => {
-    const result = linksGenerator.dependencies('/my/project/components', mapFixture, projectBitJsonFixture);
+    const result = linksGenerator.componentsDependencies('/my/project/components', mapFixture, {}, projectBitJsonFixture);
     return result.then(() => {
       const outputFileCalls = fsMock.outputFile.mock.calls;
       expect(outputFileCalls.length).toBe(3);

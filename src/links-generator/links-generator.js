@@ -35,19 +35,18 @@ function findAllDependenciesInComponentMap(componentsMap: Object, components: Ar
 }
 
 function filterNonReferencedComponents(
-  componentsMap: Object, projectBitJson: BitJson,
+  componentsMap: Object, rootComponents: string[],
 ): Array<string> {
   if (
-    !projectBitJson.dependencies ||
-    R.isEmpty(projectBitJson.dependencies) ||
+    !rootComponents ||
+    R.isEmpty(rootComponents) ||
     !componentsMap ||
     R.isEmpty(componentsMap)
   ) return [];
 
-  const bitJsonComponents = projectBitJson.getDependenciesArray();
   const componentsOnFS = Object.keys(componentsMap);
-  const components = componentsOnFS.filter(component => bitJsonComponents.includes(component));
-  const componentDependencies = findAllDependenciesInComponentMap(componentsMap, bitJsonComponents);
+  const components = componentsOnFS.filter(component => rootComponents.includes(component));
+  const componentDependencies = findAllDependenciesInComponentMap(componentsMap, rootComponents);
   return R.uniq(components.concat(componentDependencies));
 }
 
@@ -110,10 +109,14 @@ function generateDependenciesP(targetComponentsDir: string, map: Object, compone
   });
 }
 
-export function dependencies(
-  targetComponentsDir: string, map: Object, projectBitJson: BitJson,
+export function componentsDependencies(
+  targetComponentsDir: string, map: Object, inlineComponentMap: Object, projectBitJson: ?BitJson,
 ): Promise<Object> {
-  const components = filterNonReferencedComponents(map, projectBitJson);
+  const inlineDependencies = R.flatten(R.values(inlineComponentMap).map(R.prop('dependencies')));
+  const bitJsonComponents = projectBitJson && !R.isEmpty(projectBitJson) ?
+    projectBitJson.getDependenciesArray() : [];
+  const rootComponents = R.uniq(R.concat(bitJsonComponents, inlineDependencies));
+  const components = filterNonReferencedComponents(map, rootComponents);
   return generateDependenciesP(targetComponentsDir, map, components);
 }
 
