@@ -1,13 +1,17 @@
 /** @flow */
 
 /**
- * splits an array to two chunks by a given predicator
+ * splits an array to two chunks using a conditional predicate function.
  * 
  * @bit
  * @name splitBy
- * @param {[*]} array 
- * @param {() => boolean} fn 
- * @returns {[[], []]} truthy elements from the left and falsy elements from the right.
+ * @param {[*]} array array to split.
+ * @param {() => boolean} fn predicate function to test each element of the array.
+ * @returns {[[], []]} two new arrays with the elements that failed the test from the left.
+ * @example
+ * ```js
+ *  splitBy([1, 2, 3, 4, 5], isEven) // => [[1, 3, 5], [2, 4]]
+ * ```
  */
 function splitBy(array: [], fn: (elm: any) => boolean): [Array<any>, Array<any>] {
   const truthy = [];
