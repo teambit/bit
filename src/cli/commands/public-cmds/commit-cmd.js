@@ -3,6 +3,8 @@ import Command from '../../command';
 import { commitAction } from '../../../api/consumer';
 import Component from '../../../consumer/component';
 
+const chalk = require('chalk');
+
 export default class Export extends Command {
   name = 'commit <id> <message>';
   description = 'commit a component to the local scope and add a log message';
@@ -17,6 +19,7 @@ export default class Export extends Command {
   }
 
   report(c: Component): string {
-    return `component ${c.box}/${c.name} committed successfully`;
+    const componentName = `${c.box}/${c.name}`;
+    return chalk.green(`component ${chalk.bold(componentName)} committed successfully`);
   }
 }

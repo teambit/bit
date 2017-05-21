@@ -3,6 +3,7 @@ import R from 'ramda';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
 import { RemoteScopeNotFound, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
+import MergeConflict from '../../exceptions/merge-conflict';
 import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
@@ -44,6 +45,8 @@ function errorHandler(code, err) {
       return new RemoteScopeNotFound((parsedError && parsedError.id) || err);
     case 130:
       return new PermissionDenied();
+    case 131:
+      return new MergeConflict((parsedError && parsedError.id) || err);
   }
 }
 
