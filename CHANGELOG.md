@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- increased max listeners to 100 (prevent warning message)
+- colored commit success message
+- support for merge conflict error reporting via ssh
+
 ## [0.6.2] - 2017-05-21
 
 - [removed] JSDoc data are saved only for functions with a tag `@bit`.
