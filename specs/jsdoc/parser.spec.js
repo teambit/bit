@@ -7,7 +7,7 @@ describe('JSDoc Parser', () => {
   describe('parse()', () => {
     describe('Function Declaration', () => {
       let doclet;
-      before(function() {
+      before(() => {
         const functionDeclarationFile = path.join(__dirname, 'fixtures', 'functionDeclaration.js');
         const functionDeclaration = fs.readFileSync(functionDeclarationFile).toString();
         const doclets = parser(functionDeclaration);
@@ -61,7 +61,7 @@ describe('JSDoc Parser', () => {
 
     describe('Method Declaration and Class Declaration', () => {
       let doclets;
-      before(function() {
+      before(() => {
         const methodDeclarationFile = path.join(__dirname, 'fixtures', 'methodDeclaration.js');
         const methodDeclaration = fs.readFileSync(methodDeclarationFile).toString();
         doclets = parser(methodDeclaration);
@@ -123,7 +123,7 @@ describe('JSDoc Parser', () => {
 
     describe('Variable Declaration', () => {
       let doclets;
-      before(function() {
+      before(() => {
         const variableDeclarationFile = path.join(__dirname, 'fixtures', 'variableDeclaration.js');
         const variableDeclaration = fs.readFileSync(variableDeclarationFile).toString();
         doclets = parser(variableDeclaration);
@@ -145,7 +145,7 @@ describe('JSDoc Parser', () => {
 
     describe('Various Param Types', () => {
       let args;
-      before(function() {
+      before(() => {
         const file = path.join(__dirname, 'fixtures', 'variousParamTypes.js');
         const doclets = parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array').and.to.have.lengthOf(1);
@@ -206,7 +206,7 @@ describe('JSDoc Parser', () => {
 
     describe('Description Tag', () => {
       let doclets;
-      before(function() {
+      before(() => {
         const file = path.join(__dirname, 'fixtures', 'descriptionTag.js');
         doclets = parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array').and.to.have.lengthOf(3);
@@ -232,7 +232,7 @@ describe('JSDoc Parser', () => {
 
     describe('Access property', () => {
       let doclets;
-      before(function() {
+      before(() => {
         const file = path.join(__dirname, 'fixtures', 'misc.js');
         doclets = parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array');

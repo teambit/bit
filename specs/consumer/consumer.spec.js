@@ -23,8 +23,8 @@ describe('Consumer', () => {
         });
     });
     it('should return an array with results for all inline components', () => {
-      const consumerComponent1 = new ConsumerComponent({ name: 'component-name1', box: 'box'});
-      const consumerComponent2 = new ConsumerComponent({ name: 'component-name2', box: 'box'});
+      const consumerComponent1 = new ConsumerComponent({ name: 'component-name1', box: 'box' });
+      const consumerComponent2 = new ConsumerComponent({ name: 'component-name2', box: 'box' });
       sandbox.stub(Consumer.prototype, 'listInline').returns(Promise.resolve([consumerComponent1, consumerComponent2]));
 
       const consumer = new Consumer({ projectPath: '' });
@@ -34,7 +34,7 @@ describe('Consumer', () => {
         .then((data) => {
           expect(data).to.be.an('Array');
           expect(data.length).to.be.equal(2);
-          data.map(result => expect(result).to.have.all.keys('specs', 'component'));
+          data.map(resultData => expect(resultData).to.have.all.keys('specs', 'component'));
         });
     });
   });

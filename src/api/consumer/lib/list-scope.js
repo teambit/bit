@@ -9,12 +9,11 @@ import { GlobalRemotes } from '../../../global-config';
 
 export default function list({ scopeName, cache }:
 { scopeName?: string, cache?: bool }): Promise<string[]> {
-
   const remoteList = (remote) => {
     loader.start(BEFORE_REMOTE_LIST);
     return remote.list();
   };
-  const scopeList = (scope) => cache ? scope.list() : scope.listStage();
+  const scopeList = (scope) => { return cache ? scope.list() : scope.listStage(); };
 
   return loadConsumer()
   .then((consumer) => {

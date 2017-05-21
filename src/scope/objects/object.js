@@ -23,7 +23,7 @@ export default class BitObject {
     throw new Error('toBuffer() was not implemented...');
   }
 
-  static parse() {
+  static parse(data: *) { // eslint-disable-line no-unused-vars
     throw new Error('parse() was not implemented...');
   }
 
