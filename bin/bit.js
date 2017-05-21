@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 'use strict'; // eslint-disable-line
+require('events').EventEmitter.prototype._maxListeners = 100;
 
 /* eslint-disable no-var */
 var semver = require('semver');
