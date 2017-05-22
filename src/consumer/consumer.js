@@ -97,7 +97,6 @@ export default class Consumer {
       .then(componentDependencies => this.writeToComponentsDir([componentDependencies])
         .then(() => this.removeFromComponents(newBitId)) // @HACKALERT
         .then(() => componentDependencies.component)
-        .then(component => this.driver.runHook('onExport', component, component))
       );
   }
 
