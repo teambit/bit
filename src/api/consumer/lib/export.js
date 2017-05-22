@@ -21,6 +21,7 @@ export default function exportAction(id: string, remote: string, save: ?bool) {
       if (save) {
         return consumer.bitJson.addDependency(component.id)
         .write({ bitDir: consumer.getPath() })
+        .then(() => consumer.driver.runHook('onExport', component))
         .then(() => component);
       }
 
