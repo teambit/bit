@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add infrastructure for e2e tests    
 - fix onExport hook to get called after writing dependencies to bit.json
 - increased max listeners to 100 (prevent warning message)
 - colored commit success message

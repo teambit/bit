@@ -70,7 +70,12 @@ npm install -g flow-bin flow-typed
 
 - run the unit tests
 ```bash
-  npm  test
+  npm test
+```
+
+- run the e2e tests
+```bash
+  npm run e2e-test
 ```
 
 ### lint
