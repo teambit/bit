@@ -37,13 +37,9 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
   let access = 'public';
   let examples = [];
   let name = '';
-  let bit = false; // determines whether this is the main function
 
   for (const tag of commentsAst.tags) {
     switch (tag.title) {
-      case 'bit':
-        bit = true;
-        break;
       case 'desc':
       case 'description':
         description = tag.description;
@@ -78,7 +74,6 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
 
   const doclet = {
     name, // todo: find the function/method name by regex
-    bit,
     description,
     args,
     returns,
@@ -99,5 +94,5 @@ export default function parse(data: string): Doclet|[] {
     // never mind, ignore the doc of this source
   }
 
-  return doclets.filter(doclet => !!doclet.bit);
+  return doclets.filter(doclet => doclet.access === 'public');
 }

@@ -3,7 +3,6 @@
 /**
  * returns the first element of an array reference.
  * @name first
- * @bit
  * @param {[]} array
  * @returns {*|null} first element of given array
  * @example

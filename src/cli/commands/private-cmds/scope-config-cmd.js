@@ -18,7 +18,7 @@ export default class ScopeConfig extends Command {
   ];
 
   action(): Promise<any> {
-    return scopeConfig.list()
+    return scopeConfig.list();
   }
 
   report(conf: {[string]: string}): string {
@@ -36,7 +36,7 @@ class ScopeConfigSet extends Command {
   opts = [];
 
   action([key, value]: [string, string]): Promise<any> {
-    return scopeConfig.set(key,value)
+    return scopeConfig.set(key, value);
   }
 
   report({ key, value }: { key: string, value: number }): string {
@@ -52,7 +52,7 @@ class ScopeConfigGet extends Command {
   opts = [];
 
   action([key, ]: [string, ]): Promise<any> {
-    return scopeConfig.get(key)
+    return scopeConfig.get(key);
   }
 
   report(value: string): string {

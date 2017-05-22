@@ -203,8 +203,8 @@ export default class SourceRepository {
       if (!existingComponent || component.compatibleWith(existingComponent)) {
         return this.put({ component, objects });
       }
-
-      throw new MergeConflict();
+      
+      throw new MergeConflict(component.id());
     });
   }
 }

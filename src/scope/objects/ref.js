@@ -13,7 +13,7 @@ export default class Ref {
     return this.hash;
   }
 
-  load(repository: Repository) {
+  load(repository: Repository): Promise<BitObject> {
     return repository.findOne(this);
   }
 
@@ -25,7 +25,7 @@ export default class Ref {
     return repo.loadRaw(this);
   }
 
-  static from(hash: string) {
+  static from(hash: string): Ref {
     return new Ref(hash);
   }
 }

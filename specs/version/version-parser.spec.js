@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import versionParser from './version-parser';
+import versionParser from '../../src/version/version-parser';
 
 describe('versionParser()', () => {
-  it('should return latest verion reprenestation', () => {
+  it('should return latest version representation', () => {
     const version = versionParser('latest');
     expect(version.latest).to.equal(true);
     expect(version.versionNum).to.equal(null);
@@ -14,7 +14,7 @@ describe('versionParser()', () => {
     }).to.throw();
   });
 
-  it('should return a concerete version', () => {
+  it('should return a concrete version', () => {
     const version = versionParser('1');
     expect(version.latest).to.equal(false);
     expect(version.versionNum).to.equal(1);

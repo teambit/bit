@@ -1,5 +1,4 @@
 /**
- * @bit
  * @name invalidDescription
  * Adds two numbers.
  * @public
@@ -10,7 +9,6 @@ function invalidDescription() {
 
 
 /**
- * @bit
  * @name descriptionTag
  * @description Adds two numbers.
  * @public
@@ -21,7 +19,6 @@ function descriptionTag() {
 
 
 /**
- * @bit
  * @name descTag
  * @desc Adds two numbers.
  * @public

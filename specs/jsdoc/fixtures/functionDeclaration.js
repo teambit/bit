@@ -2,7 +2,6 @@
  * Adds two numbers.
  *
  * @name add
- * @bit
  * @static
  * @public
  * @param {number} a The first number in an addition.

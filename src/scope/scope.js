@@ -9,7 +9,7 @@ import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHas, first, readFile } from '../utils';
+import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, BIT_JSON } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
@@ -305,7 +305,7 @@ export default class Scope {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
-    const [externals, locals] = splitWhen(id => id.isLocal(this.name), idsWithoutNils);
+    const [externals, locals] = splitBy(idsWithoutNils, id => id.isLocal(this.name));
 
     return this.sources.getMany(locals)
       .then((localDefs) => {

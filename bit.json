@@ -5,7 +5,7 @@
     },
     "env": {
         "compiler": "bit.envs/compilers/flow",
-        "tester": "bit.envs/testers/mocha-chai"
+        "tester": "bit.envs/testers/mocha"
     },
     "dependencies": {
         "bit.utils/array/first": "1",

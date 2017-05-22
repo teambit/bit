@@ -10,7 +10,7 @@ describe('SeverLessIndex', () => {
       // it is needed because search-index library returns a function, not object.
       const myStubbedModule = (moduleName) => {
         const stub = sinon.stub();
-        require.cache[ require.resolve( moduleName ) ] = {
+        require.cache[require.resolve(moduleName)] = {
           default: stub,
           exports: stub
         };
@@ -20,12 +20,12 @@ describe('SeverLessIndex', () => {
       const result = serverlessIndex.initializeIndex('test_path');
 
       sinon.assert.calledWith(searchIndex, {
-        indexPath: "test_path/search_index",
-        logLevel: "error",
+        indexPath: 'test_path/search_index',
+        logLevel: 'error',
         stopwords: []
       });
       expect(result).to.be.a('Promise');
     });
-  })
+  });
 });
 

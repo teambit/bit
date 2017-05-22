@@ -18,7 +18,6 @@ export default class Show extends Command {
 
   action([id, ]: [string], { inline, json, versions }:
   { inline: ?bool, json: ?bool, versions: ?bool }): Promise<*> {
-
     function getBitComponent(allVersions: ?bool) {
       if (inline) return getInlineBit({ id });
       return getScopeBit({ id, allVersions });
