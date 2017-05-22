@@ -9,7 +9,7 @@ import Component from '../../../consumer/component';
 import { ComponentDependencies } from '../../../scope';
 
 export default class Import extends Command {
-  name = 'import <ids...>';
+  name = 'import [ids...]';
   description = 'import a component';
   alias = '';
   opts = [
@@ -32,6 +32,9 @@ export default class Import extends Command {
     // @TODO - import should support multiple components
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
+    }
+    if (!ids.length) {
+      console.log(chalk.yellow('\nwarning - using "bit import" without Ids is deprecated. Please use "bit install" instead\n')); // eslint-disable-line
     }
 
     return importAction({ ids, tester, compiler, verbose, prefix, environment: false });
