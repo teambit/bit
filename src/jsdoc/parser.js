@@ -9,6 +9,7 @@ export type Doclet = {
   returns?: Object,
   access?: string,
   examples?: Array,
+  properties?: Array,
   static?: Boolean
 };
 
@@ -35,7 +36,8 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
   let returns = {};
   let isStatic = false;
   let access = 'public';
-  let examples = [];
+  const examples = [];
+  const properties = [];
   let name = '';
 
   for (const tag of commentsAst.tags) {
@@ -69,6 +71,11 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
       case 'example':
         examples.push(exampleTagParser(tag.description));
         break;
+      case 'property':
+        properties.push(formatTag(tag));
+        break;
+      default:
+        break;
     }
   }
 
@@ -79,6 +86,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
     returns,
     access,
     examples,
+    properties,
     static: isStatic,
   };
   doclets.push(doclet);
