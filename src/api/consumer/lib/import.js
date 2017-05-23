@@ -4,7 +4,6 @@ import glob from 'glob';
 import R from 'ramda';
 import path from 'path';
 import semver from 'semver';
-import { BitId } from '../../../bit-id';
 import Bit from '../../../consumer/component';
 import Consumer from '../../../consumer/consumer';
 import loader from '../../../cli/loader';
@@ -14,9 +13,8 @@ import { flattenDependencies } from '../../../scope/flatten-dependencies';
 const key = R.compose(R.head, R.keys);
 
 export default function importAction(
-  { ids, save, tester, compiler, verbose, prefix, environment }: {
+  { ids, tester, compiler, verbose, prefix, environment }: {
     ids: string,
-    save: ?bool,
     tester: ?bool,
     compiler: ?bool,
     verbose: ?bool,
@@ -30,12 +28,12 @@ export default function importAction(
     return consumer.importEnvironment(ids[0], verbose)
     .then((envDependencies) => {
       function writeToBitJsonIfNeeded() {
-        if (save && compiler) {
+        if (compiler) {
           consumer.bitJson.compilerId = envDependencies[0].id.toString();
           return consumer.bitJson.write({ bitDir: consumer.getPath() });
         }
 
-        if (save && tester) {
+        if (tester) {
           consumer.bitJson.testerId = envDependencies[0].id.toString();
           return consumer.bitJson.write({ bitDir: consumer.getPath() });
         }
@@ -54,16 +52,12 @@ export default function importAction(
     .then(consumer => consumer.scope.ensureDir().then(() => consumer))
     .then((consumer) => {
       if (tester || compiler) { return importEnvironment(consumer); }
-      return consumer.import(ids, verbose, environment)                   // from here replace with bit-scope-client.fetch
-        .then(({ dependencies, envDependencies }) => {                    //
-          if (save) {                                                     //
-            const bitIds = dependencies.map(R.path(['component', 'id'])); //
-            return consumer.bitJson.addDependencies(bitIds)               //
-            .write({ bitDir: consumer.getPath() })                        //
-            .then(() => ({ dependencies, envDependencies }));             //
-          }                                                               //
-                                                                          //
-          return Promise.resolve(({ dependencies, envDependencies }));    // here we should return { dependencies, envDependencies: [] }
+      return consumer.import(ids, verbose, environment)                 // from here replace with bit-scope-client.fetch
+        .then(({ dependencies, envDependencies }) => {                  //
+          const bitIds = dependencies.map(R.path(['component', 'id'])); //
+          return consumer.bitJson.addDependencies(bitIds)               //
+          .write({ bitDir: consumer.getPath() })                        //
+          .then(() => ({ dependencies, envDependencies }));             // here we should return { dependencies, envDependencies: [] }
         })
         .then(({ dependencies, envDependencies }) =>
           warnForPackageDependencies({

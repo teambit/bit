@@ -12,6 +12,7 @@ import Modify from './commands/public-cmds/modify-cmd';
 import Reset from './commands/public-cmds/reset-cmd';
 import Commit from './commands/public-cmds/commit-cmd';
 import Import from './commands/public-cmds/import-cmd';
+import Install from './commands/public-cmds/install-cmd';
 import ClearCache from './commands/public-cmds/clear-cache-cmd';
 import Config from './commands/public-cmds/config-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
@@ -38,6 +39,7 @@ export default function registerCommands(): CommandRegistrar {
     new Create(),
     new Commit(),
     new Import(),
+    new Install(),
     new Export(),
     new Status(),
     new Modify(),
