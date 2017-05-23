@@ -67,7 +67,7 @@ describe('javascript-hooks', function () {
       before(() => {
         fs.emptyDirSync(localScopePath);
         runCmd('bit init');
-        runCmd('bit import bit.envs/compilers/babel --compiler --save');
+        runCmd('bit import bit.envs/compilers/babel --compiler');
         runCmd('bit create foo');
         fs.writeFileSync(fooImplPath, fooComponentFixture);
         runCmd('bit build -i foo');
@@ -108,7 +108,7 @@ describe('javascript-hooks', function () {
       before(() => {
         fs.emptyDirSync(localScopePath);
         runCmd('bit init');
-        runCmd('bit import bit.envs/compilers/babel --compiler --save');
+        runCmd('bit import bit.envs/compilers/babel --compiler');
         runCmd('bit create foo');
         fs.writeFileSync(fooImplPath, fooComponentFixture);
         runCmd('bit commit foo commit-msg'); // does the build as well
@@ -155,7 +155,7 @@ describe('javascript-hooks', function () {
       before(() => {
         fs.emptyDirSync(localScopePath);
         runCmd('bit init');
-        runCmd('bit import bit.envs/compilers/babel --compiler --save');
+        runCmd('bit import bit.envs/compilers/babel --compiler');
         runCmd('bit create foo');
         fs.writeFileSync(fooImplPath, fooComponentFixture);
         runCmd('bit commit foo commit-msg'); // does the build as well
@@ -196,7 +196,7 @@ describe('javascript-hooks', function () {
         fs.emptyDirSync(localScopePath); // a new local scope
         runCmd('bit init');
         runCmd(`bit remote add file://${remoteScopePath}`);
-        runCmd(`bit import @${remoteScope}/global/foo --save`); // todo: remove the save flag once PR 153 is merged
+        runCmd(`bit import @${remoteScope}/global/foo`);
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -213,7 +213,7 @@ describe('javascript-hooks', function () {
       before(() => {
         fs.emptyDirSync(localScopePath);
         runCmd('bit init');
-        runCmd('bit import bit.envs/compilers/babel --compiler --save');
+        runCmd('bit import bit.envs/compilers/babel --compiler');
         runCmd('bit create foo');
         fs.writeFileSync(fooImplPath, fooComponentFixture);
         runCmd('bit commit foo commit-msg'); // does the build as well
@@ -227,7 +227,7 @@ describe('javascript-hooks', function () {
         fs.emptyDirSync(localScopePath); // a new local scope
         runCmd('bit init');
         runCmd(`bit remote add file://${remoteScopePath}`);
-        runCmd(`bit import @${remoteScope}/global/foo --save`); // todo: remove the save flag once PR 153 is merged
+        runCmd(`bit import @${remoteScope}/global/foo`);
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
