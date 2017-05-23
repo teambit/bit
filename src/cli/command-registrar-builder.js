@@ -9,6 +9,7 @@ import Create from './commands/public-cmds/create-cmd';
 import Export from './commands/public-cmds/export-cmd';
 import List from './commands/public-cmds/list-cmd';
 import Modify from './commands/public-cmds/modify-cmd';
+import Reset from './commands/public-cmds/reset-cmd';
 import Commit from './commands/public-cmds/commit-cmd';
 import Import from './commands/public-cmds/import-cmd';
 import Install from './commands/public-cmds/install-cmd';
@@ -42,6 +43,7 @@ export default function registerCommands(): CommandRegistrar {
     new Export(),
     new Status(),
     new Modify(),
+    new Reset(),
     new List(),
     new Config(),
     new ClearCache(),

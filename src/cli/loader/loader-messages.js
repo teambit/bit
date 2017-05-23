@@ -4,6 +4,7 @@ export const BEFORE_REMOTE_SHOW = 'fetching remote component';
 export const BEFORE_IMPORT_ENVIRONMENT = 'importing environment dependencies...';
 export const BEFORE_REMOTE_LIST = 'listing remote components';
 export const BEFORE_MODIFY_ACTION = 'importing component';
+export const BEFORE_RESET_ACTION = 'resetting component';
 export const BEFORE_IMPORT_ACTION = 'importing components';
 export const BEFORE_REMOTE_SEARCH = ({ scope, queryStr }: { scope: string, queryStr: string }) =>
 `searching remote scope <${scope}> for '${queryStr}'`;

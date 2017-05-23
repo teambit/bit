@@ -7,6 +7,7 @@ import commitAction from './lib/commit';
 import status from './lib/status';
 import { buildInline, buildInlineAll } from './lib/build-inline';
 import modify from './lib/modify';
+import reset from './lib/reset';
 import importAction from './lib/import';
 import exportAction from './lib/export';
 import getInlineBit from './lib/get-inline-bit';
@@ -31,6 +32,7 @@ export {
   status,
   buildInline,
   modify,
+  reset,
   importAction,
   getInlineBit,
   getScopeBit,
