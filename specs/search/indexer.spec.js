@@ -19,6 +19,6 @@ describe('Indexer', () => {
       expect(indexer.tokenizeStr('CamelCase-with-hyphen_and_underscore'))
         .to.equal('camel case with hyphen and underscore');
     });
-  })
+  });
 });
 

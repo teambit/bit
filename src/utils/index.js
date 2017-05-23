@@ -53,13 +53,15 @@ import packCommand from './pack-command';
 import unpackCommand from './unpack-command';
 import buildCommandMessage from './build-command-message';
 import removeFromRequireCache from './remove-from-require-cache';
+import splitBy from './array-split-by';
 
 export {
   parseSSHUrl,
+  splitBy,
   sha1,
   objectToTupleArray,
   objectToStringifiedTupleArray,
-resolveGroupId,
+  resolveGroupId,
   mapToObject,
   rmDir,
   filterObject,

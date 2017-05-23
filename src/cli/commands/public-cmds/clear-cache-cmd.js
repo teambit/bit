@@ -1,7 +1,7 @@
 /** @flow */
 import chalk from 'chalk';
-import Command from '../../command';
 import fs from 'fs-extra';
+import Command from '../../command';
 
 const { MODULES_CACHE_DIR } = require('../../../constants');
 
@@ -19,6 +19,6 @@ export default class ClearCache extends Command {
   }
 
   report(): string {
-    return chalk.green(`Cache was cleared`);
+    return chalk.green('Cache was cleared');
   }
 }

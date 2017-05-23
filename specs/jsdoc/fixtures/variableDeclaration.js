@@ -1,6 +1,6 @@
 /**
  * Adds two numbers.
- * @bit
+ *
  * @name add
  * @category Math
  * @param {number} a The first number in an addition.
