@@ -77,7 +77,7 @@ Bit designed to be language agnostic, so in order to use the components, you fir
 2. Create a file - `touch index.js && open index.js`, and paste in this code:
 
 ```js
-const isString = require('bit/is-string'); // <component-id>
+const isString = require('bit/global/is-string'); // <component-id>
 
 console.log(isString('It\'s the bit')); // true
 console.log(isString(1)); // false
