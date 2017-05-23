@@ -45,6 +45,14 @@ function expectLinksInRootLevel() {
 
 describe('javascript-hooks', function () {
   this.timeout(0);
+  before(() => {
+    runCmd('npm init -y', e2eDir);
+    runCmd('npm install bit-javascript', e2eDir);
+  });
+  after(() => {
+    fs.removeSync(localScopePath);
+    fs.removeSync(remoteScopePath);
+  });
   describe('onCreate', () => {
     describe('without build', () => {
       before(() => {
