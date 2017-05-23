@@ -20,14 +20,14 @@ Promise<any> {
     ComponentsMap.buildForInline(inlineComponentsDir, projectBitJson),
   ]);
 
+  const publicApiComponentsLinks = await LinksGenerator
+  .publicApiComponentLevel(moduleDir, componentsMap, projectBitJson);
+
   const componentsDependenciesLinks = await LinksGenerator
   .componentsDependencies(componentsDir, componentsMap, inlineComponentMap, projectBitJson);
 
   const stagedComponentsLinks = await LinksGenerator
   .publicApiForExportPendingComponents(moduleDir, componentsMap);
-
-  const publicApiComponentsLinks = await LinksGenerator
-  .publicApiComponentLevel(moduleDir, componentsMap, projectBitJson);
 
   const inlineComponentsDependenciesLinks = await LinksGenerator
   .dependenciesForInlineComponents(inlineComponentsDir, componentsMap, inlineComponentMap);

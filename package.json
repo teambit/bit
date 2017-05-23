@@ -5,6 +5,7 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint src && flow check || true",
     "test": "jest",
+    "test-watch": "jest --watch",
     "build": "babel src -d dist",
     "watch": "babel watch src -d dist --source-maps",
     "build-debug": "babel src -d dist --source-maps"
@@ -38,15 +39,15 @@
     "mockery": "^2.0.0",
     "ora": "^1.2.0",
     "ramda": "^0.22.1",
+    "regenerator-runtime": "^0.10.5",
     "require-from-string": "^1.2.1",
     "stack-trace": "0.0.9",
-    "user-home": "^2.0.0",
-    "regenerator-runtime": "^0.10.5"
+    "user-home": "^2.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.0",
     "babel-eslint": "^7.2.1",
-    "babel-jest": "^19.0.0",
+    "babel-jest": "^20.0.3",
     "babel-plugin-syntax-async-functions": "^6.13.0",
     "babel-plugin-transform-builtin-extend": "^1.1.2",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
@@ -58,7 +59,7 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-jest": "^19.0.1",
     "flow-bin": "^0.43.0",
-    "jest-cli": "^19.0.2",
+    "jest-cli": "^20.0.3",
     "mock-fs": "^4.2.0"
   },
   "jest": {

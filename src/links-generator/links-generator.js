@@ -115,6 +115,7 @@ export function componentsDependencies(
   const inlineDependencies = R.flatten(R.values(inlineComponentMap).map(R.prop('dependencies')));
   const bitJsonComponents = projectBitJson && !R.isEmpty(projectBitJson) ?
     projectBitJson.getDependenciesArray() : [];
+
   const rootComponents = R.uniq(R.concat(bitJsonComponents, inlineDependencies));
   const components = filterNonReferencedComponents(map, rootComponents);
   return generateDependenciesP(targetComponentsDir, map, components);
