@@ -242,8 +242,21 @@ describe('JSDoc Parser', () => {
         expect(doclets.find(doclet => doclet.name === 'privateFunc')).to.be.empty;
       });
     });
+
+    describe('Properties property', () => {
+      let doclets;
+      before(() => {
+        const file = path.join(__dirname, 'fixtures', 'properties.js');
+        doclets = parser(fs.readFileSync(file).toString());
+        expect(doclets).to.be.an('array');
+      });
+      it('should parse the property tag correctly', () => {
+        const doclet = doclets[0];
+        expect(doclet).to.have.property('properties').that.is.an('array').that.have.lengthOf(5);
+        expect(doclet.properties[0].name).to.equal('defaults');
+        expect(doclet.properties[0].type).to.equal('object');
+        expect(doclet.properties[0].description).to.equal('The default values for parties.');
+      });
+    });
   });
 });
-
-
-
