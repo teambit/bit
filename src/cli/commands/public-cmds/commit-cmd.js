@@ -11,11 +11,13 @@ export default class Export extends Command {
   alias = 'c';
   opts = [
     ['f', 'force', 'forcely commit even if specs fails'],
+    ['v', 'verbose', 'show specs output on commit'],
   ];
   loader = true;
 
-  action([id, message]: [string, string], { force }: { force: ?bool }): Promise<any> {
-    return commitAction({ id, message, force });
+  action([id, message]: [string, string], { force, verbose }:
+  { force: ?bool, verbose: ?bool }): Promise<any> {
+    return commitAction({ id, message, force, verbose });
   }
 
   report(c: Component): string {

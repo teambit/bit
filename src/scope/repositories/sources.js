@@ -126,12 +126,13 @@ export default class SourceRepository {
       });
   }
 
-  addSource({ source, depIds, message, force, consumer }: {
+  addSource({ source, depIds, message, force, consumer, verbose }: {
     source: ConsumerComponent,
     depIds: BitId[],
     message: string,
     force: ?bool,
-    consumer: Consumer
+    consumer: Consumer,
+    verbose?: bool,
   }): Promise<Component> {
     const objectRepo = this.objects();
 
@@ -150,7 +151,7 @@ export default class SourceRepository {
           const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
           loader.start(BEFORE_RUNNING_SPECS);
-          return source.runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer })
+          return source.runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose })
           .then((specsResults) => {
             const version = Version.fromComponent({
               component: source,
@@ -203,7 +204,7 @@ export default class SourceRepository {
       if (!existingComponent || component.compatibleWith(existingComponent)) {
         return this.put({ component, objects });
       }
-      
+
       throw new MergeConflict(component.id());
     });
   }

@@ -134,12 +134,13 @@ export default class Scope {
     });
   }
 
-  put({ consumerComponent, message, force, consumer, bitDir }: {
+  put({ consumerComponent, message, force, consumer, bitDir, verbose }: {
     consumerComponent: ConsumerComponent,
     message: string,
     force: ?bool,
     consumer: Consumer,
     bitDir: string,
+    verbose: ?bool,
   }):
   Promise<ComponentDependencies> {
     consumerComponent.scope = this.name;
@@ -150,7 +151,7 @@ export default class Scope {
         return flattenDependencyIds(dependencies, this.objects)
           .then((depIds) => {
             return this.sources.addSource({
-              source: consumerComponent, depIds, message, force, consumer
+              source: consumerComponent, depIds, message, force, consumer, verbose,
             })
               .then((component) => {
                 loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
