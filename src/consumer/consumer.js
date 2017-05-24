@@ -3,6 +3,7 @@ import path from 'path';
 import glob from 'glob';
 import fs from 'fs-extra';
 import R from 'ramda';
+import chalk from 'chalk';
 import VersionDependencies from '../scope/version-dependencies';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
@@ -12,6 +13,7 @@ import {
   NothingToImport,
 } from './exceptions';
 import { Driver } from '../driver';
+import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
@@ -46,6 +48,7 @@ export default class Consumer {
     this.bitJson = bitJson;
     this.created = created;
     this.scope = scope;
+    this.warnForMissingDriver();
   }
 
   get testerId(): ?BitId {
@@ -58,6 +61,16 @@ export default class Consumer {
 
   get driver(): Driver {
     return Driver.load(this.bitJson.lang);
+  }
+
+  warnForMissingDriver() {
+    try {
+      this.driver.getDriver(false);
+    } catch (err) {
+      if (err instanceof DriverNotFound) {
+        console.log(chalk.yellow(`Warning: Bit is not be able to run the bind command. Please install bit-${err.lang} driver and run the bind command.`)); // eslint-disable-line
+      }
+    }
   }
 
   write(): Promise<Consumer> {
