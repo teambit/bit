@@ -8,6 +8,7 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "gulp lint && flow check",
     "test": "gulp test",
+    "postinstall": "bitjs import",
     "e2e-test": "gulp e2e-test",
     "build": "babel src specs -d dist",
     "watch": "babel watch bin src specs -d dist --source-maps",
@@ -25,7 +26,8 @@
     "url": "https://github.com/teambit/bit"
   },
   "dependencies": {
-    "bit-js": "^0.2.0",
+    "bit-javascript": "^0.6.3",
+    "bit-js": "^0.2.2",
     "buffer-from": "^0.1.1",
     "camelcase": "^4.0.0",
     "chalk": "^1.1.3",
