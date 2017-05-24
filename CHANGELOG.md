@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix bind of dependencies of dependencies
+- remove watch command
 - [bind] also create links for inline_components dependencies in the components directory
 
 ## [0.6.3] - 2017-05-21
