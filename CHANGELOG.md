@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- remove duplications from dependencies list of `bit import` output. 
+- suppress dependencies list upon `bit import`, unless a flag `--display_dependencies` is being used.
 - remove the injection of bit-js module into the tester environment.
 - add bit-javascript as a dependency and a post install hook.
 - do not show tests output in case of thrown error on commit, use verbose flag to see the error.

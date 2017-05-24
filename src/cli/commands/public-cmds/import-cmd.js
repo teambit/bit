@@ -18,10 +18,11 @@ export default class Import extends Command {
     ['v', 'verbose', 'show a more verbose output when possible'],
     ['c', 'compiler', 'import a compiler environment component'],
     ['p', 'prefix', 'import components into a specific directory'],
+    ['d', 'display_dependencies', 'display the imported dependencies'],
   ];
   loader = true;
 
-  action([ids, ]: [string[], ], { save, tester, compiler, verbose, prefix }:
+  action([ids, ]: [string[], ], { save, tester, compiler, verbose, prefix, display_dependencies }:
   {
     save?: bool,
     tester?: bool,
@@ -42,10 +43,11 @@ export default class Import extends Command {
       console.log(chalk.yellow('\nwarning - using "--save" flag is deprecated. Please omit the flag, and it will save into bit.json anyway\n')); // eslint-disable-line
     }
 
-    return importAction({ ids, tester, compiler, verbose, prefix, environment: false });
+    return importAction({ ids, tester, compiler, verbose, prefix, environment: false })
+      .then(importResults => R.assoc('display_dependencies', display_dependencies, importResults));
   }
 
-  report({ dependencies, envDependencies, warnings }: {
+  report({ dependencies, envDependencies, warnings, display_dependencies }: {
     dependencies?: ComponentDependencies[],
     envDependencies?: Component[],
     warnings?: {
@@ -66,9 +68,10 @@ export default class Import extends Command {
         paintHeader('successfully imported the following Bit components.')
       ).join('\n');
 
-      const peerDependenciesOutput = (peerDependencies && !R.isEmpty(peerDependencies)) ?
+      const peerDependenciesOutput = (peerDependencies && !R.isEmpty(peerDependencies)
+      && display_dependencies) ?
       immutableUnshift(
-        peerDependencies.map(formatBit),
+        R.uniq(peerDependencies.map(formatBit)),
         paintHeader('\n\nsuccessfully imported the following peer dependencies.')
       ).join('\n') : '';
 
