@@ -7,6 +7,7 @@ import {
   ID_DELIMITER,
   DEFAULT_DIST_DIRNAME,
   NO_PLUGIN_TYPE,
+  REMOTE_ALIAS_SIGN,
 } from '../constants';
 import LocalScope from '../scope/local-scope';
 
@@ -33,7 +34,12 @@ function getLocalScopeNameP(projectRoot: string): Promise<?string> {
 function getDependenciesArray(bitJson: BitJson): string[] {
   const dependencies = [];
   Object.keys(bitJson.dependencies).forEach((dependency) => {
-    dependencies.push(dependency + VERSION_DELIMITER + bitJson.dependencies[dependency]);
+    let dependencyWithoutAlias = dependency;
+    if (dependency.startsWith(REMOTE_ALIAS_SIGN)) {
+      dependencyWithoutAlias = dependency.replace(REMOTE_ALIAS_SIGN, '');
+    }
+    dependencies.push(dependencyWithoutAlias + VERSION_DELIMITER
+      + bitJson.dependencies[dependency]);
   });
   return dependencies;
 }

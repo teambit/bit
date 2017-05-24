@@ -9,7 +9,6 @@ import { MODULE_NAME,
   VERSION_DELIMITER,
   ID_DELIMITER,
   INDEX_JS,
-  NO_PLUGIN_TYPE,
   REMOTE_ALIAS_SIGN,
   INLINE_COMPONENTS_DIRNAME } from '../constants';
 import { writeFileP } from '../utils';
@@ -20,14 +19,16 @@ const linksTemplate = (links: string[]): string => `module.exports = {
   ${links.join(',\n  ')}
 };`;
 
+// todo: it might be better to get this recursive function and just create dependencies for all
 function findAllDependenciesInComponentMap(componentsMap: Object, components: Array<string>,
   dependenciesArr: Array<string> = []) {
   components.forEach((component) => {
     if (componentsMap[component] && componentsMap[component].dependencies.length) {
+      dependenciesArr = dependenciesArr.concat(componentsMap[component].dependencies); // eslint-disable-line
       findAllDependenciesInComponentMap(
         componentsMap,
         componentsMap[component].dependencies,
-        dependenciesArr.concat(componentsMap[component].dependencies));
+        dependenciesArr);
     }
   });
 
@@ -86,9 +87,6 @@ function generateDependenciesP(targetComponentsDir: string, map: Object, compone
 
       const namespaceMap = {};
       map[component].dependencies.forEach((dependency) => {
-        if (dependency.startsWith(REMOTE_ALIAS_SIGN)) {
-          dependency = dependency.replace(REMOTE_ALIAS_SIGN, ''); // eslint-disable-line
-        }
         if (!map[dependency]) return; // the dependency is not in the FS. should we throw an error?
         const [namespace, name] = map[dependency].loc.split(path.sep);
         const targetFile = path.join(targetModuleDir, namespace, name, INDEX_JS);
