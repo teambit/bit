@@ -130,6 +130,16 @@ export default class Component {
     return this._docs;
   }
 
+  get distImplFileName(): string {
+    const baseImplName = path.parse(this.implFile).name;
+    return `${baseImplName}.${this.getFileExtension()}`;
+  }
+
+  get distSpecFileName(): string {
+    const baseSpecName = path.parse(this.specsFile).name;
+    return `${baseSpecName}.${this.getFileExtension()}`;
+  }
+
   constructor({
     name,
     box,
@@ -172,6 +182,14 @@ export default class Component {
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
+  }
+
+  getFileExtension(): string {
+    switch (this.lang) {
+      case DEFAULT_LANGUAGE:
+      default:
+        return 'js';
+    }
   }
 
   writeBitJson(bitDir: string, force?:boolean = true): Promise<Component> {

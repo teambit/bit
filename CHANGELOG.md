@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- set the file-extension of the built-dist-file according to the current language ('.js' by default)
 - parse @property tag of JSDoc
 - add `bit reset` command for cancelling the last local commit
 - extract the importing bit.json components functionality from `bit import` into a new command `bit install`.
