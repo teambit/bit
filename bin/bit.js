@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 'use strict'; // eslint-disable-line
+// set max listeners to a more appripriate numbers
 require('events').EventEmitter.prototype._maxListeners = 100;
 
 /* eslint-disable no-var */

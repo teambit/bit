@@ -215,7 +215,12 @@ export default class Scope {
   Promise<VersionDependencies[]> {
     return this.sources.getMany(ids)
       .then((defs) => {
-        const left = defs.filter(def => !def.component && localFetch);
+        const left = defs.filter((def) => {
+          if (!localFetch) return true;
+          if (!def.component) return true;
+          return false;
+        });
+        
         if (left.length === 0) {
           // $FlowFixMe - there should be a component because there no defs without components left.
           return Promise.all(defs.map(def => def.component.toVersionDependencies(
@@ -275,7 +280,7 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
-  importMany(ids: BitIds, withDevDependencies?: bool): Promise<VersionDependencies[]> {
+  importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true): Promise<VersionDependencies[]> {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
@@ -295,7 +300,7 @@ export default class Scope {
           .then((versionDeps) => {
             return postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) })
               .then(() => this.remotes()
-                .then(remotes => this.getExternalMany(externals, remotes))
+                .then(remotes => this.getExternalMany(externals, remotes, cache))
                 .then(externalDeps => versionDeps.concat(externalDeps))
               );
           });
