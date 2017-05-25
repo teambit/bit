@@ -1,7 +1,7 @@
-import { BIT_VERSION } from '../../constants';
 import * as semver from 'semver';
-import loader from '../../cli/loader/loader';
 import chalk from 'chalk';
+import { BIT_VERSION } from '../../constants';
+import loader from '../../cli/loader/loader';
 
 const createMajorMessage = (remoteVersion, currentVersion) => chalk.red(
   `Fatal: There is a mismatch between the remote scope version - "${remoteVersion}" and your bit version - "${currentVersion}", please update\n`
