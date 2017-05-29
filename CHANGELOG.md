@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- remove duplications from dependencies list of `bit import` output. 
+- suppress dependencies list upon `bit import`, unless a flag `--display_dependencies` is being used.
 - warn for missing driver
 - set the file-extension of the built-dist-file according to the current language ('.js' by default)
 - avoid corrupted data in a scope when dependencies somehow are not being resolved.
