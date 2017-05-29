@@ -1,22 +1,25 @@
----
-dependencies:
-  pre:
-    - "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
-    - echo ${bithubKey} >> /home/ubuntu/.ssh/id_rsa
-    - "echo \"-----END RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
-    
-  general:
-    branches:
-      only:
-        - master
-        - develop
-        - stable
+general:
+  branches:
+    only:
+      - master
+      - develop
+      - stable
 
 machine:
   node:
     version: 6
+
+dependencies:
+  pre:
+    - "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
+    - echo ${bithubKey} >> /home/ubuntu/.ssh/id_rsa
+    - "echo \"-----END RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"  
+
+  override:
+    - yarn
     
-  test:
-    override:
-      - npm i -g
-      - ./tests/e2e.sh
+test:
+  override:
+    - yarn test
+    - npm i -g
+    - ./tests/e2e.sh
