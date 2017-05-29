@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- warn for missing driver
 - set the file-extension of the built-dist-file according to the current language ('.js' by default)
 - avoid corrupted data in a scope when dependencies somehow are not being resolved.
 - support async/await syntax.
