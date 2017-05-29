@@ -1,5 +1,4 @@
 /** @flow */
-import bit from 'bit-js';
 import Command from '../../command';
 import { describeScope } from '../../../api/scope';
 import { fromBase64, empty, buildCommandMessage, packCommand } from '../../../utils';

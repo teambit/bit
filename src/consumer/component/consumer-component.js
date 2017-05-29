@@ -335,6 +335,9 @@ export default class Component {
             }
 
             return Promise.resolve(this.specsResults);
+          }).catch((err) => {
+            if (verbose) throw err;
+            throw new ComponentSpecsFailed();
           });
         };
 

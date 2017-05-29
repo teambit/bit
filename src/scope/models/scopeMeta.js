@@ -1,7 +1,5 @@
-import bit from 'bit-js';
 import { BitObject, Ref } from '../objects';
-
-const bufferFrom = bit('buffer/from');
+import bufferFrom from 'bit/buffer/from';
 
 type ScopeMetaProps = {
   name: string;

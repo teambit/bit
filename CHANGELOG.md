@@ -8,10 +8,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - set the file-extension of the built-dist-file according to the current language ('.js' by default)
+- avoid corrupted data in a scope when dependencies somehow are not being resolved.
+- support async/await syntax.
+- remove the injection of bit-js module into the tester environment.
+- add bit-javascript as a dependency and a post install hook.
+- do not show tests output in case of thrown error on commit, use verbose flag to see the error.
 - parse @property tag of JSDoc
 - add `bit reset` command for cancelling the last local commit
 - extract the importing bit.json components functionality from `bit import` into a new command `bit install`.
-- add infrastructure for e2e tests    
+- add infrastructure for e2e tests
 - fix onExport hook to get called after writing dependencies to bit.json
 - increased max listeners to 100 (prevent warning message)
 - colored commit success message

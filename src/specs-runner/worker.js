@@ -1,7 +1,6 @@
 // TODO - move to language specific driver.
 
 const serializeError = require('serialize-error');
-const bit = require('bit-js');
 
 try {
   const implFilePath = process.env.__impl__;
@@ -33,9 +32,6 @@ try {
       mockery.registerMock(m, tester.modules[m]);
     }
   }
-
-  mockery.registerMock('bit-js', bit); // register bit-js on require
-  global.bit = bit; // register bit-js on bit global variable
 
   if (!tester.run) {
     process.send({

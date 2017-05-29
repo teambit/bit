@@ -1,5 +1,4 @@
 /** @flow */
-import bit from 'bit-js';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
@@ -15,8 +14,7 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import loader from '../../cli/loader';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import Consumer from '../../consumer';
-
-const bufferFrom = bit('buffer/from');
+import bufferFrom from 'bit/buffer/from';
 
 export type ComponentTree = {
   component: Component;
@@ -126,12 +124,13 @@ export default class SourceRepository {
       });
   }
 
-  addSource({ source, depIds, message, force, consumer }: {
+  addSource({ source, depIds, message, force, consumer, verbose }: {
     source: ConsumerComponent,
     depIds: BitId[],
     message: string,
     force: ?bool,
-    consumer: Consumer
+    consumer: Consumer,
+    verbose?: bool,
   }): Promise<Component> {
     const objectRepo = this.objects();
 
@@ -150,7 +149,7 @@ export default class SourceRepository {
           const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
           loader.start(BEFORE_RUNNING_SPECS);
-          return source.runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer })
+          return source.runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose })
           .then((specsResults) => {
             const version = Version.fromComponent({
               component: source,
@@ -203,7 +202,7 @@ export default class SourceRepository {
       if (!existingComponent || component.compatibleWith(existingComponent)) {
         return this.put({ component, objects });
       }
-      
+
       throw new MergeConflict(component.id());
     });
   }

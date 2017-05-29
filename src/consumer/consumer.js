@@ -214,12 +214,12 @@ export default class Consumer {
     }));
   }
 
-  commit(id: BitInlineId, message: string, force: ?bool) {
+  commit(id: BitInlineId, message: string, force: ?bool, verbose: ?bool) {
     const bitDir = id.composeBitPath(this.getPath());
 
     return this.loadComponent(id)
       .then(bit =>
-        this.scope.put({ consumerComponent: bit, message, force, consumer: this, bitDir })
+        this.scope.put({ consumerComponent: bit, message, force, consumer: this, bitDir, verbose })
         .then(bits => this.writeToComponentsDir([bits]))
         .then(() => this.removeFromInline(id))
         .then(() => index(bit, this.scope.getPath()))

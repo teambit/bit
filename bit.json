@@ -8,11 +8,6 @@
         "tester": "bit.envs/testers/mocha"
     },
     "dependencies": {
-        "bit.utils/array/first": "1",
-        "bit.utils/array/diff": "1",
-        "bit.utils/string/contains": "1",
-        "bit.utils/string/to-base64": "1",
-        "bit.utils/global/sha1": "1",
-        "bit.utils/buffer/from": "1"
+        "bit.utils/buffer/from": "2"
     }
 }
