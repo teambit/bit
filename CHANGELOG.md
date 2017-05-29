@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- allow `bit init` when there is a bit.json file without the `source` or `env` attributes.
 - bug fix: don't show the version-compatibility warning more than once
 - remove duplications from dependencies list of `bit import` output.
 - suppress dependencies list upon `bit import`, unless a flag `--display_dependencies` is being used.
