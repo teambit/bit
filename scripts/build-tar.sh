@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 set -ex
 
-
-
 ./scripts/node-installer.sh $1
 rm -rf ./*.tar.gz
 rm -rf ./distribution
 ver=$(cat ./package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs echo -n)
 tarName="bit-${ver}.tar.gz"
 
-npm install
-bit import
 npm run build
 npm prune --production
 
