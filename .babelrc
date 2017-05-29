@@ -12,6 +12,7 @@
     ["babel-plugin-transform-builtin-extend", {
       "globals": ["Error", "Array", "Map"]
     }],
+    ["syntax-async-functions"],
     ["transform-class-properties"],
     ["transform-inline-imports-commonjs"]
   ]

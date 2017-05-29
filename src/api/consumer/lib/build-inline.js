@@ -7,10 +7,10 @@ function buildImplAndSpecP(inlineId: InlineId, consumer, component: Component):
 Promise<?Array<?string>> {
   const bitPath = inlineId.composeBitPath(consumer.getPath());
   const saveImplDist = component.dist ?
-    component.dist.write(bitPath, component.implFile) : null;
+    component.dist.write(bitPath, component.distImplFileName) : null;
 
   const saveSpecDist = component.specDist ?
-    component.specDist.write(bitPath, component.specsFile) : null;
+    component.specDist.write(bitPath, component.distSpecFileName) : null;
 
   return Promise.all([saveImplDist, saveSpecDist]);
 }

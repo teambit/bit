@@ -26,6 +26,14 @@ describe('ConsumerComponent', () => {
       sinon.stub(Impl, ['load']).returns('impl');
     });
 
+    it('should use the ".js" extension for the impl dist file when the lang attribute was not set', () => {
+      expect(consumerComponent.distImplFileName).to.equal('impl.js');
+    });
+
+    it('should use the ".js" extension for the spec dist file when the lang attribute was not set', () => {
+      expect(consumerComponent.distSpecFileName).to.equal('spec.js');
+    });
+
     it('should throw an error for a mismatch compiler interface', () => {
       const scope = { loadEnvironment: () => { return {}; } };
       const result = consumerComponent.build({ scope });
