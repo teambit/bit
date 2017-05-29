@@ -42,7 +42,7 @@ beforeEach(() => {
 describe('bindAction', () => {
   it('should remove the moduleDir', () => {
     bindAction({});
-    expect(fs.remove.mock.calls[0][0]).toBe('/Users/ran/Projects/bit-javascript/node_modules/bit');
+    expect(fs.remove.mock.calls[0][0].includes('node_modules/bit')).toBeTruthy();
   });
   it('should call the ComponentMap.build function', () => {
     bindAction({});

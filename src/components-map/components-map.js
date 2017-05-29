@@ -22,7 +22,7 @@ export const generateId = ({ scope, namespace, name, version }: { scope: string,
 
 function getRequiredFile(bitJson: BitJson): string {
   return !bitJson.compiler || bitJson.compiler !== NO_PLUGIN_TYPE ?
-    path.join(DEFAULT_DIST_DIRNAME, bitJson.impl) : bitJson.impl;
+    path.join(DEFAULT_DIST_DIRNAME, bitJson.distImplFileName) : bitJson.distImplFileName;
 }
 
 function getLocalScopeNameP(projectRoot: string): Promise<?string> {

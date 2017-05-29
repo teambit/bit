@@ -59,6 +59,7 @@ describe('buildForInline', () => {
     impl: 'impl.js',
     spec: 'spec.js',
     misc: [],
+    distImplFileName: 'impl.js',
     compiler: 'none',
     tester: 'none',
     dependencies: { 'bit.envs/compilers/flow': '2', 'bit.utils/object/values': '1' },
