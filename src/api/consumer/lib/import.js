@@ -52,7 +52,8 @@ export default function importAction(
     .then(consumer => consumer.scope.ensureDir().then(() => consumer))
     .then((consumer) => {
       if (tester || compiler) { return importEnvironment(consumer); }
-      return consumer.import(ids, verbose, environment)                 // from here replace with bit-scope-client.fetch
+      const cache = false;
+      return consumer.import(ids, verbose, environment, cache)          // from here replace with bit-scope-client.fetch
         .then(({ dependencies, envDependencies }) => {                  //
           const bitIds = dependencies.map(R.path(['component', 'id'])); //
           return consumer.bitJson.addDependencies(bitIds)               //
