@@ -172,9 +172,9 @@ export default class Scope {
     const objects = componentObjects.toObjects(this.objects);
     const { component } = objects;
     await this.sources.merge(objects, true);
+    await this.objects.persist();
     const compVersion = await component.toComponentVersion(LATEST, this.name);
     const objs = await this.getObjects([compVersion.id], true);
-    await this.objects.persist();
     const consumerComponent = await compVersion.toConsumer(this.objects);
     await index(consumerComponent, this.getPath());
     await postExportHook({ id: consumerComponent.id.toString() });
