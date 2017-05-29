@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 'use strict'; // eslint-disable-line
+// set max listeners to a more appripriate numbers
 require('events').EventEmitter.prototype._maxListeners = 100;
-
+require('regenerator-runtime/runtime');
 /* eslint-disable no-var */
 var semver = require('semver');
 var mkdirp = require('mkdirp');

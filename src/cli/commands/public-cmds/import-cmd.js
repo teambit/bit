@@ -18,7 +18,7 @@ export default class Import extends Command {
     ['v', 'verbose', 'show a more verbose output when possible'],
     ['c', 'compiler', 'import a compiler environment component'],
     ['p', 'prefix', 'import components into a specific directory'],
-    ['d', 'display_dependencies', 'display the imported dependencies'],
+    ['d', 'display_dependencies', 'display the imported dependencies']
   ];
   loader = true;
 

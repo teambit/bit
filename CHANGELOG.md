@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - remove duplications from dependencies list of `bit import` output. 
 - suppress dependencies list upon `bit import`, unless a flag `--display_dependencies` is being used.
+- warn for missing driver
+- set the file-extension of the built-dist-file according to the current language ('.js' by default)
+- avoid corrupted data in a scope when dependencies somehow are not being resolved.
+- support async/await syntax.
 - remove the injection of bit-js module into the tester environment.
 - add bit-javascript as a dependency and a post install hook.
 - do not show tests output in case of thrown error on commit, use verbose flag to see the error.

@@ -168,26 +168,18 @@ export default class Scope {
       .then(() => this.objects.persist());
   }
 
-  export(componentObjects: ComponentObjects): Promise<any> {
+  async export(componentObjects: ComponentObjects): Promise<any> {
     const objects = componentObjects.toObjects(this.objects);
     const { component } = objects;
-
-    return this.sources.merge(objects, true)
-      .then(() => this.objects.persist())
-      .then(() => component.toComponentVersion(LATEST, this.name))
-      .then((compVersion: ComponentVersion) =>
-        this.getObjects([compVersion.id], true)
-          .then((objs) => {
-            return compVersion.toConsumer(this.objects)
-              .then(consumerComponent => index(consumerComponent, this.getPath()))
-              .then(consumerComponent =>
-                postExportHook({ id: consumerComponent.id.toString() })
-                  .then(() => consumerComponent)
-              )
-              .then(consumerComponent => performCIOps(consumerComponent, this.getPath()))
-              .then(() => first(objs));
-          })
-      );
+    await this.sources.merge(objects, true);
+    const compVersion = await component.toComponentVersion(LATEST, this.name);
+    const objs = await this.getObjects([compVersion.id], true);
+    await this.objects.persist();
+    const consumerComponent = await compVersion.toConsumer(this.objects);
+    await index(consumerComponent, this.getPath());
+    await postExportHook({ id: consumerComponent.id.toString() });
+    await performCIOps(consumerComponent, this.getPath());
+    return first(objs);
   }
 
   getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: bool = false) {
@@ -215,7 +207,12 @@ export default class Scope {
   Promise<VersionDependencies[]> {
     return this.sources.getMany(ids)
       .then((defs) => {
-        const left = defs.filter(def => !def.component && localFetch);
+        const left = defs.filter((def) => {
+          if (!localFetch) return true;
+          if (!def.component) return true;
+          return false;
+        });
+
         if (left.length === 0) {
           // $FlowFixMe - there should be a component because there no defs without components left.
           return Promise.all(defs.map(def => def.component.toVersionDependencies(
@@ -265,17 +262,16 @@ export default class Scope {
       });
   }
 
-  getObjects(ids: BitId[], withDevDependencies?: bool): Promise<ComponentObjects[]> {
-    return this.importMany(ids, withDevDependencies)
-      .then(versions => Promise.all(
-        versions.map(version => version.toObjects(this.objects))));
+  async getObjects(ids: BitId[], withDevDependencies?: bool): Promise<ComponentObjects[]> {
+    const versions = await this.importMany(ids, withDevDependencies);
+    return Promise.all(versions.map(version => version.toObjects(this.objects)));
   }
 
   getObject(hash: string): Promise<BitObject> {
     return new Ref(hash).load(this.objects);
   }
 
-  importMany(ids: BitIds, withDevDependencies?: bool): Promise<VersionDependencies[]> {
+  importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true): Promise<VersionDependencies[]> {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
@@ -295,7 +291,7 @@ export default class Scope {
           .then((versionDeps) => {
             return postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) })
               .then(() => this.remotes()
-                .then(remotes => this.getExternalMany(externals, remotes))
+                .then(remotes => this.getExternalMany(externals, remotes, cache))
                 .then(externalDeps => versionDeps.concat(externalDeps))
               );
           });
