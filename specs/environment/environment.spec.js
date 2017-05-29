@@ -13,7 +13,7 @@ describe('Environment', () => {
   });
 
   describe('constructor', () => {
-    it('should generate a unique path for every instance', () => {
+    it.skip('should generate a unique path for every instance', () => {
       sandbox.stub(Scope, 'load').returns({ getPath: () => '' });
       const scope = Scope.load();
       const environment1 = new Environment(scope);
