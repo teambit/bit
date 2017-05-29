@@ -4,11 +4,6 @@ dependencies:
     - "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
     - echo ${bithubKey} >> /home/ubuntu/.ssh/id_rsa
     - "echo \"-----END RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
-
-  post:
-    - "sudo apt-get update -qq"
-    - "sudo apt-get install -y rpm lintian"
-    - "gem install fpm"
     
   general:
     branches:
