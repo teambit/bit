@@ -1,10 +1,4 @@
 ---
-compile:
-  override:
-    - "./scripts/build-tar.sh linux"
-    - ./scripts/build-deb.sh
-    - npm i -g
-
 dependencies:
   pre:
     - "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
@@ -29,4 +23,5 @@ machine:
     
   test:
     override:
+      - npm i -g
       - ./tests/e2e.sh
