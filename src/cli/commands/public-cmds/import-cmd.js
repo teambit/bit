@@ -17,7 +17,7 @@ export default class Import extends Command {
     ['t', 'tester', 'import a tester environment component'],
     ['v', 'verbose', 'show a more verbose output when possible'],
     ['c', 'compiler', 'import a compiler environment component'],
-    ['p', 'prefix', 'import components into a specific directory'],
+    ['p', 'prefix', 'import components into a specific directory']
   ];
   loader = true;
 
