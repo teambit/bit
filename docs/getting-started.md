@@ -451,7 +451,7 @@ You can find components using the ‘search’ command.
 
     > global/is-string
 
-3. A third option is to search for public components. All public components are hosted in [www.bitsrc.io](https://www.bitsrc.io).
+3. A third option is to search for public components. All public components are hosted in [bitsrc.io](https://www.bitsrc.io).
 
   To search public components type:
 
