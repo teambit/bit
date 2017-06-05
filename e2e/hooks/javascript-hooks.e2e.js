@@ -307,9 +307,3 @@ describe('javascript-hooks', function () {
     });
   });
 });
-
-// scenarios todo:
-// 1. a new component bar with a dependency of foo.
-// 2. a new component baz with a dependency of bar. (deep = 2).
-// 3. same component, one in inline_component and the other in components directory, it should use the inline one.
-// 4. a component with multiple versions
