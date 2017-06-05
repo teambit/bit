@@ -373,7 +373,7 @@ If you search in the current scope, use `bit search search_query -s @this`.
 
 To search in another scope, use `bit search search_query -s @scope_name`
 
-To search public components on [bitsrc.io] (www.bitsrc.io), use `bit search search_query`
+To search public components on [bitsrc.io](https://bitsrc.io), use `bit search search_query`
 
 ### Examples
 
@@ -385,7 +385,7 @@ Search for a component in a remote scope.
 
 `bit search concat array -s @my_remote_scope`
 
-Search for a public component on [bitsrc.io] (www.bitsrc.io).
+Search for a public component on [bitsrc.io](https://bitsrc.io).
 
 `bit search concat array`
 

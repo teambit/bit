@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - increased max listeners to 100 (prevent warning message)
 - colored commit success message
 - support for merge conflict error reporting via ssh
+- docs - fix bitsrc links to work
 
 ## [0.6.2] - 2017-05-21
 
