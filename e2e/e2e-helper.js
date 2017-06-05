@@ -12,9 +12,11 @@ export default class Helper {
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
     this.localScopePath = path.join(this.e2eDir, this.localScope);
     this.remoteScopePath = path.join(this.e2eDir, this.remoteScope);
+    this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
   }
 
   runCmd(cmd, cwd = this.localScopePath) {
+    if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.verbose) console.log('running: ', cmd); // eslint-disable-line
     const cmdOutput = childProcess.execSync(cmd, { cwd });
     if (this.verbose) console.log(cmdOutput.toString()); // eslint-disable-line

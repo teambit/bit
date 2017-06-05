@@ -30,10 +30,6 @@ function expectLinksInRootLevel() {
 
 describe('javascript-hooks', function () {
   this.timeout(0);
-  before(() => {
-    helper.runCmd('npm init -y', helper.e2eDir);
-    helper.runCmd('npm install bit-javascript', helper.e2eDir);
-  });
   after(() => {
     helper.destroyEnv();
   });
