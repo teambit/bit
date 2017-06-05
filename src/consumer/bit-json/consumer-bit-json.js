@@ -57,11 +57,11 @@ export default class ConsumerBitJson extends AbstractBitJson {
   static fromPlainObject(object: Object) {
     const { sources, env, dependencies, lang } = object;
     return new ConsumerBitJson({
-      impl: R.prop('impl', sources),
-      spec: R.prop('spec', sources),
-      miscFiles: R.prop('misc', sources),
-      compiler: R.prop('compiler', env),
-      tester: R.prop('tester', env),
+      impl: R.propOr(undefined, 'impl', sources),
+      spec: R.propOr(undefined, 'spec', sources),
+      miscFiles: R.propOr(undefined, 'misc', sources),
+      compiler: R.propOr(undefined, 'compiler', env),
+      tester: R.propOr(undefined, 'tester', env),
       lang,
       dependencies,
     });

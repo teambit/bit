@@ -269,10 +269,10 @@ export default class Component {
       }).then(() => {
         return this.misc ? this.misc.write(bitDir, this.miscFiles, force) : undefined;
       })
-      .then(() => { return this.dist ? this.dist.write(bitDir, this.implFile, force) : undefined; })
+      .then(() => { return this.dist ? this.dist.write(bitDir, this.distImplFileName, force) : undefined; })
       .then(() => {
         return this.specsFile && this.specDist ?
-        this.specDist.write(bitDir, this.specsFile, force) : undefined;
+        this.specDist.write(bitDir, this.distSpecFileName, force) : undefined;
       })
       .then(() => { return withBitJson ? this.writeBitJson(bitDir, force): undefined; })
       .then(() => {
