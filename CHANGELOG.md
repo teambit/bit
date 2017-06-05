@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- avoid corrupted data in a scope when dependencies somehow are not being resolved.
 - allow `bit init` when there is a bit.json file without the `source` or `env` attributes.
 - bug fix: don't show the version-compatibility warning more than once
 - remove duplications from dependencies list of `bit import` output.
