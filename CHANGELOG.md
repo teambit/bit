@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- fix the file-extension of the dist file to be based on the language defined in bit.json 
+- create inner dependency links for all components in components directory.
+- support latest tag on bind process.
+- persist only in the end of the bind process.
+- fix the file-extension of the dist file to be based on the language defined in bit.json
 - fix bind of dependencies of dependencies
 - remove watch command
 - [bind] also create links for inline_components dependencies in the components directory

@@ -1,73 +1,55 @@
 // @flow
+import R from 'ramda';
 import path from 'path';
-import { mergeAll } from 'ramda';
 import BitJson from 'bit-scope-client/bit-json';
-import { MODULE_NAME, MODULES_DIR, INLINE_COMPONENTS_DIRNAME, COMPONENTS_DIRNAME } from '../constants';
-import * as ComponentsMap from '../components-map';
-import * as LinksGenerator from '../links-generator';
-import { removeDirP } from '../utils';
+import { InlineComponentsMap, ComponentsMap } from '../maps';
+import LocalScope from '../scope/local-scope';
+import { BitModuleDirectory, InlineComponentsDirectory, ComponentsDirectory } from '../directories';
+import MultiLink from '../directories/multi-link';
+
+const stripNonRelevantDataFromLinks = (allLinks, projectRoot) => {
+  const links = {};
+  const stripProjectRoot = str => str.replace(`${projectRoot}${path.sep}`, '');
+  Object.keys(allLinks).forEach((link) => {
+    if (allLinks[link] instanceof MultiLink) return;
+    links[stripProjectRoot(link)] = stripProjectRoot(allLinks[link].to);
+  });
+  return links;
+};
 
 export default async function bindAction({ projectRoot = process.cwd() }: { projectRoot?: string}):
 Promise<any> {
-  const componentsDir = path.join(projectRoot, COMPONENTS_DIRNAME);
-  const moduleDir = path.join(projectRoot, MODULES_DIR, MODULE_NAME);
-  const inlineComponentsDir = path.join(projectRoot, INLINE_COMPONENTS_DIRNAME);
+  const bitModuleDirectory = new BitModuleDirectory(projectRoot);
+  const inlineComponentsDirectory = new InlineComponentsDirectory(projectRoot);
+  const componentsDirectory = new ComponentsDirectory(projectRoot);
+
   const projectBitJson = BitJson.load(projectRoot);
-  await removeDirP(moduleDir);
+  const localScope = await LocalScope.load(projectRoot);
+  const localScopeName = localScope ? localScope.getScopeName() : null;
 
-  const [componentsMap, inlineComponentMap] = await Promise.all([
-    ComponentsMap.build(projectRoot, componentsDir),
-    ComponentsMap.buildForInline(inlineComponentsDir, projectBitJson),
+  const inlineComponentMap = await InlineComponentsMap.create(projectRoot, projectBitJson);
+  const componentsMap = await ComponentsMap.create(projectRoot, projectBitJson, localScopeName);
+  const projectDependenciesArray = projectBitJson.getDependenciesArray();
+
+  await bitModuleDirectory.erase();
+
+  bitModuleDirectory.addLinksFromInlineComponents(inlineComponentMap);
+  bitModuleDirectory.addLinksFromProjectDependencies(componentsMap, projectDependenciesArray);
+  bitModuleDirectory.addLinksFromStageComponents(componentsMap);
+  bitModuleDirectory.addLinksForNamespacesAndRoot(componentsMap);
+
+  inlineComponentsDirectory.addLinksToDependencies(inlineComponentMap, componentsMap);
+  componentsDirectory.addLinksToDependencies(componentsMap);
+
+  await bitModuleDirectory.persist();
+  await inlineComponentsDirectory.persist();
+  await componentsDirectory.persist();
+
+  const allLinks = R.mergeAll([
+    bitModuleDirectory.links,
+    inlineComponentsDirectory.links,
+    componentsDirectory.links,
   ]);
 
-  const publicApiComponentsLinks = await LinksGenerator
-  .publicApiComponentLevel(moduleDir, componentsMap, projectBitJson);
-
-  const componentsDependenciesLinks = await LinksGenerator
-  .componentsDependencies(componentsDir, componentsMap, inlineComponentMap, projectBitJson);
-
-  const stagedComponentsLinks = await LinksGenerator
-  .publicApiForExportPendingComponents(moduleDir, componentsMap);
-
-  const inlineComponentsDependenciesLinks = await LinksGenerator
-  .dependenciesForInlineComponents(inlineComponentsDir, componentsMap, inlineComponentMap);
-
-  const publicApiInlineComponentsLinks = await LinksGenerator
-  .publicApiForInlineComponents(moduleDir, inlineComponentMap, inlineComponentsDir);
-
-  const namespacesMap = await ComponentsMap.buildForNamespaces(moduleDir);
-
-  await LinksGenerator.publicApiNamespaceLevel(moduleDir, namespacesMap);
-  await LinksGenerator.publicApiRootLevel(moduleDir, namespacesMap);
-
-  return mergeAll([
-    stagedComponentsLinks,
-    publicApiComponentsLinks,
-    publicApiInlineComponentsLinks,
-  ]);
-}
-
-export function bindSpecificComponentsAction({ projectRoot = process.cwd(), components }: {
-  projectRoot?: string, components: Object[] }): Promise<any> {
-  const targetModuleDir = path.join(projectRoot, MODULES_DIR, MODULE_NAME);
-  const targetComponentsDir = path.join(projectRoot, COMPONENTS_DIRNAME);
-  const componentsObj = {};
-  components.forEach((component) => {
-    const id = ComponentsMap.generateId({
-      scope: component.scope,
-      namespace: component.box,
-      name: component.name,
-      version: component.version });
-    componentsObj[id] = component;
-  });
-  // for simplicity, it's better to build the map of the entire folder. Otherwise, if this specific
-  // component has dependencies, it will require recursive checking of all dependencies
-  return ComponentsMap.build(projectRoot, targetComponentsDir)
-    .then(map => LinksGenerator
-      .dependenciesForSpecificComponents(targetComponentsDir, map, componentsObj))
-    .then(map => LinksGenerator
-      .publicApiComponentLevelForSpecificComponents(targetModuleDir, map, componentsObj))
-    .then(() => ComponentsMap.buildForNamespaces(targetModuleDir))
-    .then(namespacesMap => LinksGenerator.publicApiNamespaceLevel(targetModuleDir, namespacesMap))
-    .then(namespacesMap => LinksGenerator.publicApiRootLevel(targetModuleDir, namespacesMap));
+  return stripNonRelevantDataFromLinks(allLinks, projectRoot);
 }

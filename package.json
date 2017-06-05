@@ -29,7 +29,7 @@
   ],
   "main": "dist/index.js",
   "dependencies": {
-    "bit-scope-client": "^0.6.1",
+    "bit-scope-client": "^0.6.3",
     "camelcase": "^4.0.0",
     "caporal": "^0.5.0",
     "chalk": "^1.1.3",

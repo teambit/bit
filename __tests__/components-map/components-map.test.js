@@ -1,5 +1,5 @@
 import mockFs from 'mock-fs';
-import * as componentsMap from '../../src/components-map';
+import ComponentsMap from '../../src/maps/components-map';
 
 const bitJsonFixture = {
   sources: {
@@ -43,35 +43,12 @@ afterEach(() => {
 
 describe('build', () => {
   it('should create a map from components directory', () => {
-    const result = componentsMap.build('my/project', 'my/project/components');
-    return result.then((map) => {
-      expect(map).toEqual({
-        'bit.envs/compilers/flow::2': { dependencies: [], file: 'impl.js', loc: 'compilers/flow/bit.envs/2', isFromLocalScope: false },
-        'bit.utils/object/foreach::1': { dependencies: [], file: 'impl.js', loc: 'object/foreach/bit.utils/1', isFromLocalScope: false },
-        'project/global/is-number::1': { dependencies: [], file: 'impl.js', loc: 'global/is-number/project/1', isFromLocalScope: true },
-        'bit.utils/object/values::1': { dependencies: ['bit.utils/object/foreach::1'], file: 'impl.js', loc: 'object/values/bit.utils/1', isFromLocalScope: false }});
-    });
-  });
-});
-
-describe('buildForInline', () => {
-  const projectBitJson = {
-    impl: 'impl.js',
-    spec: 'spec.js',
-    misc: [],
-    distImplFileName: 'impl.js',
-    compiler: 'none',
-    tester: 'none',
-    dependencies: { 'bit.envs/compilers/flow': '2', 'bit.utils/object/values': '1' },
-  };
-  it('should create a map from inline_components directory', () => {
-    const result = componentsMap.buildForInline('my/project/inline_components', projectBitJson);
-    return result.then((map) => {
-      expect(map).toEqual({ 'global/is-string': { compiler: 'none',
-        file: 'impl.js',
-        loc: 'global/is-string',
-        dependencies: ['bit.envs/compilers/flow::2', 'bit.utils/object/values::1'],
-      } });
+    return ComponentsMap.create('my/project', {}, 'project').then((componentsMap) => {
+      const flowComponent = componentsMap._map['compilers/flow/bit.envs']['2'];
+      expect(flowComponent.name).toEqual('flow');
+      expect(flowComponent.namespace).toEqual('compilers');
+      expect(flowComponent.scope).toEqual('bit.envs');
+      expect(flowComponent.version).toEqual('2');
     });
   });
 });

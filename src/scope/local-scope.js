@@ -14,7 +14,7 @@ export default class LocalScope {
     return this.scopeJson.name;
   }
 
-  static load(projectRoot: string): Promise<LocalScope> {
+  static load(projectRoot: string, silent: boolean = true): Promise<?LocalScope> {
     const loadScopeJson = (): Promise<Object> => {
       const scopeJsonPath = path.join(projectRoot, BIT_HIDDEN_DIR, 'scope.json');
       return readFileP(scopeJsonPath).then(data => JSON.parse(data));
@@ -23,7 +23,10 @@ export default class LocalScope {
     return new Promise((resolve, reject) => {
       loadScopeJson(projectRoot)
         .then(scopeJson => resolve(new LocalScope(scopeJson)))
-        .catch(err => reject(err));
+        .catch((err) => {
+          if (silent) return resolve(null);
+          return reject(err);
+        });
     });
   }
 }
