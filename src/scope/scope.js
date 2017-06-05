@@ -348,10 +348,10 @@ export default class Scope {
       });
   }
 
-  getMany(ids: BitId[]): Promise<ConsumerComponent[]> {
+  getMany(ids: BitId[], cache?: bool = true): Promise<ConsumerComponent[]> {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
-    return this.importMany(idsWithoutNils)
+    return this.importMany(idsWithoutNils, false, cache)
       .then((versionDependenciesArr: VersionDependencies[]) => {
         return Promise.all(
           versionDependenciesArr.map(versionDependencies =>

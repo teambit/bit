@@ -113,7 +113,7 @@ export default class Consumer {
       );
   }
 
-  import(rawIds: ?string[], verbose?: bool, withEnvironments: ?bool):
+  import(rawIds: ?string[], verbose?: bool, withEnvironments: ?bool, cache?: bool = true):
   Promise<{ dependencies: ComponentDependencies[], envDependencies?: Component[] }> {
     const importAccordingToConsumerBitJson = () => {
       const dependencies = BitIds.fromObject(this.bitJson.dependencies);
@@ -125,7 +125,7 @@ export default class Consumer {
         }
       }
 
-      return this.scope.getMany(dependencies)
+      return this.scope.getMany(dependencies, cache)
         .then((componentDependenciesArr) => {
           return this.writeToComponentsDir(componentDependenciesArr)
           .then(() => {
@@ -146,7 +146,7 @@ export default class Consumer {
     const importSpecificComponents = () => {
       // $FlowFixMe - we check if there are bitIds before we call this function
       const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
-      return this.scope.getMany(bitIds)
+      return this.scope.getMany(bitIds, cache)
       .then((componentDependenciesArr) => {
         return this.writeToComponentsDir(componentDependenciesArr)
           .then(() => ({ dependencies: componentDependenciesArr }));
