@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.6.3-rc.1] - 2017-06-06
+
 - support running e2e tests in a dev environment where `bit` command is different (such as bit-dev) 
 - `bit import` no longer uses the internal cache objects to retrieve remote bit-components.
 - avoid corrupted data in a scope when dependencies somehow are not being resolved.
