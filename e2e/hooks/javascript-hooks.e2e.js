@@ -30,6 +30,13 @@ function expectLinksInRootLevel() {
 
 describe('javascript-hooks', function () {
   this.timeout(0);
+  before(() => {
+    // makes sure the bit-javascript driver is the one used in bit-bin and not an outdated one
+    const bitJavascriptPath = fs.realpathSync(path.join(process.cwd(), 'node_modules', 'bit-javascript'));
+    const destPath = path.join(helper.e2eDir, 'node_modules', 'bit-javascript');
+    fs.removeSync(destPath);
+    fs.ensureSymlinkSync(bitJavascriptPath, destPath);
+  });
   after(() => {
     helper.destroyEnv();
   });
