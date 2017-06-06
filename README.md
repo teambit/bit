@@ -3,10 +3,10 @@
 For more information on Bit drivers, head over this Bit's wiki page [about this
 topic](https://github.com/teambit/bit/wiki/Bit-Drivers).
 
-## Installing bitjs
+## Installing bit-javascript
 
 ```sh
-npm install bitjs -g
+npm install bit-javascript -g
 ```
 
 ## enabling autocompletions
@@ -41,7 +41,7 @@ source <(bitjs completion fish)
 echo "source <(bitjs completion fish)" >> ~/.config/fish/config.fish
 ```
 
-## Contributing to bitjs
+## Contributing to bit-javascript
 
 Contributions are always welcome, no matter how large or small. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
 
