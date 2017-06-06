@@ -9,7 +9,7 @@
     "lint": "gulp lint && flow check",
     "test": "gulp test",
     "postinstall": "bitjs import",
-    "e2e-test": "gulp e2e-test",
+    "e2e-test": "mocha --compilers js:babel-core/register ./e2e/**/*.e2e.js",
     "build": "babel src specs -d dist",
     "watch": "babel watch bin src specs -d dist --source-maps",
     "build-debug": "babel src specs -d dist --source-maps",

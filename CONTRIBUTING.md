@@ -73,9 +73,14 @@ npm install -g flow-bin flow-typed
   npm test
 ```
 
-- run the e2e tests
+- run the e2e tests (with default 'bit' command)
 ```bash
   npm run e2e-test
+```
+
+- run e2e tests using bit-dev command
+```bash
+  npm run e2e-test --bit_bin=bit-dev
 ```
 
 ### lint
