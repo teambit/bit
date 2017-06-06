@@ -2,7 +2,7 @@
 import path from 'path';
 import { InvalidBitInlineId } from './exceptions';
 import { InvalidIdChunk } from '../../bit-id/exceptions';
-import { INLINE_BITS_DIRNAME } from '../../constants';
+import { BITS_DIRNAME } from '../../constants';
 import { isValidIdChunk } from '../../utils';
 
 export type BitInlineIdProps = {
@@ -20,7 +20,7 @@ export default class BitInlineId {
   }
 
   composeBitPath(consumerDir: string): string {
-    return path.join(consumerDir, INLINE_BITS_DIRNAME, this.box, this.name);
+    return path.join(consumerDir, BITS_DIRNAME, this.box, this.name);
   }
 
   toString() {

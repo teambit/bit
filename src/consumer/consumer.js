@@ -167,14 +167,14 @@ export default class Consumer {
   createBit({ id, withSpecs = false, withBitJson = false, force = false }: {
     id: BitInlineId, withSpecs: boolean, withBitJson: boolean, force: boolean
   }): Promise<Component> {
-    const inlineBitPath = id.composeBitPath(this.getPath());
+    const bitPath = id.composeBitPath(this.getPath());
 
     return Component.create({
       name: id.name,
       box: id.box,
       withSpecs,
       consumerBitJson: this.bitJson,
-    }, this.scope).write(inlineBitPath, withBitJson, force)
+    }, this.scope).write(bitPath, withBitJson, force)
       .then(component => this.driver.runHook('onCreate', component, component));
   }
 
