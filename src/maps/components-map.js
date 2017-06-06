@@ -4,7 +4,7 @@ import glob from 'glob';
 import path from 'path';
 import { BitId as ComponentId } from 'bit-scope-client/bit-id';
 import BitJson from 'bit-scope-client/bit-json';
-import { COMPONENTS_DIRNAME, LATEST_BIT_VERSION, REMOTE_ALIAS_SIGN } from '../constants';
+import { COMPONENTS_DIRNAME, LATEST_VERSION, REMOTE_ALIAS_SIGN } from '../constants';
 import Component from './component';
 
 export default class ComponentsMap {
@@ -56,7 +56,7 @@ export default class ComponentsMap {
       componentId.scope.replace(REMOTE_ALIAS_SIGN, '') : componentId.scope;
     const base = `${componentId.box}/${componentId.name}/${scope}`;
     const version = componentId.version;
-    if (version === LATEST_BIT_VERSION) return this.getLatestComponent(base);
+    if (version === LATEST_VERSION) return this.getLatestComponent(base);
     if (!Object.hasOwnProperty.call(this._map, base)) return null;
     if (!Object.hasOwnProperty.call(this._map[base], version)) return null;
     return this._map[base][version];
@@ -65,10 +65,12 @@ export default class ComponentsMap {
   getLatestComponent(baseId: string): ?Component {
     if (!Object.hasOwnProperty.call(this._map, baseId)) return null;
     if (R.isEmpty(this._map[baseId])) return null;
+
     const maxInArr = R.reduce(R.max, null);
     const castArrToNumber = R.map(s => parseInt(s, 10));
     const versionsArr = castArrToNumber(R.keys(this._map[baseId]));
     const maxVersion = maxInArr(versionsArr).toString();
+
     return this._map[baseId][maxVersion];
   }
 
