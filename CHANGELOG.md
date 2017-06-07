@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.6.4-rc.1] - 2017-06-07
+
 - create inner dependency links for all components in components directory.
 - support latest tag on bind process.
 - persist only in the end of the bind process.
