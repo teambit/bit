@@ -4,6 +4,7 @@ pipeline {
 		stage('build linux') {
 			steps {
 				sh("npm i -g bit-bin")
+				sh("npm i -g bit-javascript")
 				sh('./scripts/build-tar.sh linux')
 				sh('./scripts/build-deb.sh')
 				sh("npm i -g")
