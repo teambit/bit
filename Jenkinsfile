@@ -2,8 +2,7 @@ pipeline {
 	agent any
 	stages {
 		stage('build linux') {
-			steps {
-				sh("npm i -g bit-javascript")    
+			steps {  
 				sh("npm i")
         sh("npm run build")
         sh("npm i -g --unsafe")
