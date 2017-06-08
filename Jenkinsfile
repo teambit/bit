@@ -14,7 +14,7 @@ pipeline {
 					def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
 					def repo = "${env.EXTERNAL_REPO}"
 					def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
-					currentVersivimon = currentVersion.replaceAll("\\s","")
+					currentVersion = currentVersion.replaceAll("\\s","")
 					def debUrl = "${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb;deb.distribution=all;deb.component=development;deb.architecture=amd64"
 					sh("mv bit-${currentVersion}.tar.gz ./distribution")
 					sh("curl -u${REPO_TOKEN} -T ./distribution/bit_${currentVersion}_all.deb -XPUT '${debUrl}'")
