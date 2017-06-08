@@ -31,7 +31,7 @@ pipeline {
 		steps {
 			sh('./scripts/build-tar.sh mac')
 			sh('./scripts/build-brew.sh')
-			sh("npm i -g")
+			sh("npm i -g --unsafe")
 			script {
 			def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
 			def repo = "${env.EXTERNAL_REPO}"
