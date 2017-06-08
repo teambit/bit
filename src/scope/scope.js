@@ -299,7 +299,7 @@ export default class Scope {
       });
   }
 
-  importManyOnes(ids: BitId[]): Promise<ComponentVersion[]> {
+  importManyOnes(ids: BitId[], cache: boolean): Promise<ComponentVersion[]> {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
@@ -314,7 +314,7 @@ export default class Scope {
           .then((componentVersionArr) => {
             return postImportHook({ ids: componentVersionArr.map(cv => cv.id.toString()) })
               .then(() => this.remotes()
-                .then(remotes => this.getExternalOnes(externals, remotes))
+                .then(remotes => this.getExternalOnes(externals, remotes, cache))
                 .then(externalDeps => componentVersionArr.concat(externalDeps))
               );
           });

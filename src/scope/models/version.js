@@ -129,7 +129,7 @@ export default class Version extends BitObject {
     const devDependencies = [ this.compiler, this.tester ];
     const allDependencies = withDevDependencies ?
     this.flattenedDependencies.concat(devDependencies) : this.flattenedDependencies;
-    return scope.importManyOnes(allDependencies);
+    return scope.importManyOnes(allDependencies, true);
   }
 
   refs(): Ref[] {
