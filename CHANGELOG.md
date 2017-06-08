@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix the "--verbose" flag of `bit test`
+
 ## [0.6.3-rc.1] - 2017-06-06
 
 - support running e2e tests in a dev environment where `bit` command is different (such as bit-dev) 
