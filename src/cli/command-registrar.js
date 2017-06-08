@@ -6,16 +6,17 @@ import type Command from './command';
 import defaultHandleError from './default-error-handler';
 import { empty, first, isNumeric } from '../utils';
 import loader from './loader';
+import logger from '../logger/logger';
 
 
 function logAndExit(msg: string) {
-  process.stdout.write(`${msg}\n`, () => process.exit());
+  process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush());
 }
 
 function logErrAndExit(msg: Error|string) {
   if (msg.code) throw msg;
   console.error(msg); // eslint-disable-line
-  return process.exit(1);
+  logger.exitAfterFlush(1);
 }
 
 function parseSubcommandFromArgs(args: [any]) {
@@ -52,6 +53,7 @@ function execAction(command, concrete, args) {
       return logAndExit(command.report(data));
     })
     .catch((err) => {
+      logger.error(err);
       loader.off();
       const errorHandled = defaultHandleError(err)
       || command.handleError(err);
@@ -64,8 +66,8 @@ function execAction(command, concrete, args) {
 
 function serializeErrAndExit(err) {
   process.stderr.write(JSON.stringify(serializeError(err)));
-  if (err.code && isNumeric(err.code)) return process.exit(err.code);
-  return process.exit(1);
+  if (err.code && isNumeric(err.code)) return logger.exitAfterFlush(err.code);
+  return logger.exitAfterFlush(1);
 }
 
 // @TODO add help for subcommands
