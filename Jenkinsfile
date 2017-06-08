@@ -5,7 +5,7 @@ pipeline {
 			steps {
 				sh("npm i -g bit-javascript")    
 				sh("npm i")
-        sh("run build")
+        sh("npm run build")
         sh("npm i -g --unsafe")
 				sh("npm run e2e-test")
 				sh('./scripts/build-tar.sh linux')
