@@ -7,7 +7,7 @@ pipeline {
 				sh('./scripts/build-tar.sh linux')
 				sh('./scripts/build-deb.sh')
 				sh("npm i -g --unsafe")
-				sh("./tests/e2e.sh")
+				sh("npm run e2e-test")
 				script {
 					def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
 					def repo = "${env.EXTERNAL_REPO}"
