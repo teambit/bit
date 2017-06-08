@@ -3,9 +3,9 @@ pipeline {
 	stages {
 		stage('build linux') {
 			steps {
-				sh("npm i -g bit-javascript")
-        sh("npm i -g mocha")
+				sh("npm i -g bit-javascript")    
 				sh("npm i -g --unsafe")
+        sh("npm i -g mocha")
 				sh("npm run e2e-test")
 				sh('./scripts/build-tar.sh linux')
         sh('./scripts/build-deb.sh')
