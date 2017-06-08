@@ -221,6 +221,33 @@ describe('javascript-hooks', function () {
       });
     });
 
+    describe('with test', () => {
+      before(() => {
+        helper.cleanEnv();
+        helper.runCmd('bit init');
+        helper.runCmd('bit import bit.envs/testers/mocha --tester');
+        helper.runCmd('bit create foo --json --specs');
+        fs.writeFileSync(fooImplPath, fooComponentFixture);
+        helper.runCmd('bit commit foo commit-msg'); // run the test as well
+        helper.runCmd('bit init --bare', helper.remoteScopePath);
+        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
+        fs.emptyDirSync(helper.localScopePath); // a new local scope
+        helper.runCmd('bit init');
+        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.runCmd(`bit import @${helper.remoteScope}/global/foo`);
+      });
+      it('should create links in the component level', () => {
+        expectLinksInComponentLevel();
+      });
+      it('should create links in the namespace level', () => {
+        expectLinksInNamespaceLevel();
+      });
+      it('should create links in the root level', () => {
+        expectLinksInRootLevel();
+      });
+    });
+
     describe('with dependencies', () => {
       before(() => {
         helper.cleanEnv();
