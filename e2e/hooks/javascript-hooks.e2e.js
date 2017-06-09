@@ -333,5 +333,52 @@ describe('javascript-hooks', function () {
         });
       });
     });
+
+    describe('with multiple versions', () => {
+      before(() => {
+        helper.cleanEnv();
+        helper.runCmd('bit init');
+        helper.runCmd('bit create foo');
+        const fooComponentV1 = "module.exports = function foo() { return 'got foo v1'; };";
+        fs.writeFileSync(fooImplPath, fooComponentV1);
+        helper.runCmd('bit commit foo commit-msg1');
+        helper.runCmd('bit modify @this/global/foo');
+        const fooComponentV2 = "module.exports = function foo() { return 'got foo v2'; };";
+        fs.writeFileSync(fooImplPath, fooComponentV2);
+        helper.runCmd('bit commit foo commit-msg2');
+        helper.runCmd('bit init --bare', helper.remoteScopePath);
+        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
+      });
+      const prepareCleanLocalEnv = () => {
+        fs.emptyDirSync(helper.localScopePath); // a new local scope
+        helper.runCmd('bit init');
+        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+      };
+      describe('importing without mentioning the version', () => {
+        before(() => {
+          prepareCleanLocalEnv();
+          helper.runCmd(`bit import @${helper.remoteScope}/global/foo`);
+        });
+        it('should create links in the component level of the latest version', () => {
+          const appJs = "const foo = require('bit/global/foo'); console.log(foo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got foo v2');
+        });
+      });
+      describe('importing a specific version', () => {
+        before(() => {
+          prepareCleanLocalEnv();
+          helper.runCmd(`bit import @${helper.remoteScope}/global/foo::1`);
+        });
+        it('should create links in the component level of that specific version', () => {
+          const appJs = "const foo = require('bit/global/foo'); console.log(foo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got foo v1');
+        });
+      });
+    });
   });
 });
