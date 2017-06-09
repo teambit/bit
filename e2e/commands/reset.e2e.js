@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
-import Helper from './e2e-helper';
+import Helper from '../e2e-helper';
 
-describe('reset', function () {
+describe('bit reset', function () {
   this.timeout(0);
   let helper;
   before(() => {
