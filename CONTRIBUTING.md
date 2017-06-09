@@ -54,7 +54,7 @@ npm install -g flow-bin flow-typed
   flow-typed install
 ```
 
-### build
+### Build
 
 - build legacy and modern distributions:
 ```bash
@@ -66,12 +66,14 @@ npm install -g flow-bin flow-typed
   npm run watch
 ```
 
-### test
+### Unit Tests
 
 - run the unit tests
 ```bash
   npm test
 ```
+
+### End to End Tests
 
 - run the e2e tests (with default 'bit' command)
 ```bash
@@ -82,8 +84,9 @@ npm install -g flow-bin flow-typed
 ```bash
   npm run e2e-test --bit_bin=bit-dev
 ```
+Use "--debug" flag to watch the running commands and the output. It might be a useful tool for debugging failed e2e tests.
 
-### lint
+### Lint
 
 - run eslint
 ```bash
