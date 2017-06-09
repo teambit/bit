@@ -7,24 +7,10 @@ import Helper from '../e2e-helper';
 
 const helper = new Helper();
 
-describe.only('bit install command', function () {
+describe('bit install command', function () {
   this.timeout(0);
   after(() => {
     helper.destroyEnv();
-  });
-  describe('without anything to install', () => {
-    before(() => {
-      helper.cleanEnv();
-      helper.runCmd('bit init');
-    });
-    // TODO: The current behaviour doesn't seem to be correct. It shouldn't throw an error.
-    xit('should display "there is nothing to import" message', () => {
-      try {
-        helper.runCmd('bit install');
-      } catch (err) {
-        expect(err.output.toString().includes('there is nothing to import')).to.be.true;
-      }
-    });
   });
   describe('with a component to install', () => {
     before(() => {

@@ -267,9 +267,7 @@ describe('javascript-hooks', function () {
         helper.runCmd('bit create bar --json');
         fs.writeFileSync(barImplPath, barComponentFixture);
         const barJsonPath = path.join(helper.localScopePath, 'inline_components', 'global', 'bar', 'bit.json');
-        const barJson = JSON.parse(fs.readFileSync(barJsonPath).toString());
-        barJson.dependencies[`@${helper.remoteScope}/global/foo`] = '1';
-        fs.writeFileSync(barJsonPath, JSON.stringify(barJson, null, 4));
+        helper.addBitJsonDependencies(barJsonPath, { [`@${helper.remoteScope}/global/foo`]: '1' });
         helper.runCmd('bit commit bar commit-msg');
         helper.runCmd(`bit export @this/global/bar @${helper.remoteScope}`);
       });
@@ -306,9 +304,7 @@ describe('javascript-hooks', function () {
           helper.runCmd('bit create baz --json');
           fs.writeFileSync(bazImplPath, bazComponentFixture);
           const bazJsonPath = path.join(helper.localScopePath, 'inline_components', 'global', 'baz', 'bit.json');
-          const bazJson = JSON.parse(fs.readFileSync(bazJsonPath).toString());
-          bazJson.dependencies[`@${helper.remoteScope}/global/bar`] = '1';
-          fs.writeFileSync(bazJsonPath, JSON.stringify(bazJson, null, 4));
+          helper.addBitJsonDependencies(bazJsonPath, { [`@${helper.remoteScope}/global/bar`]: '1' });
           helper.runCmd('bit commit baz commit-msg');
           helper.runCmd(`bit export @this/global/baz @${helper.remoteScope}`);
 
