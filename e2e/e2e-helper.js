@@ -6,7 +6,7 @@ import { v4 } from 'uuid';
 
 export default class Helper {
   constructor() {
-    this.verbose = false;
+    this.debugMode = !!process.env.npm_config_debug;
     this.localScope = v4();
     this.remoteScope = v4();
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
@@ -16,10 +16,11 @@ export default class Helper {
   }
 
   runCmd(cmd, cwd = this.localScopePath) {
+    if (this.debugMode) console.log('cwd: ', cwd); // eslint-disable-line
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
-    if (this.verbose) console.log('running: ', cmd); // eslint-disable-line
+    if (this.debugMode) console.log('command: ', cmd); // eslint-disable-line
     const cmdOutput = childProcess.execSync(cmd, { cwd });
-    if (this.verbose) console.log(cmdOutput.toString()); // eslint-disable-line
+    if (this.debugMode) console.log('output: ', cmdOutput.toString()); // eslint-disable-line
     return cmdOutput.toString();
   }
 
