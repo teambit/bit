@@ -43,11 +43,13 @@ function getOpts(c, opts: [[string, string, string]]): {[string]: boolean|string
 function execAction(command, concrete, args) {
   // $FlowFixMe
   const opts = getOpts(concrete, command.opts);
+  const relevantArgs = args.slice(0, args.length - 1);
+  logger.info(`started a new command: "${command.name}" with the following data:`, { args: relevantArgs, opts });
   if (command.loader) {
     loader.on();
   }
 
-  command.action(args.slice(0, args.length - 1), opts)
+  command.action(relevantArgs, opts)
     .then((data) => {
       loader.off();
       return logAndExit(command.report(data));
@@ -55,8 +57,7 @@ function execAction(command, concrete, args) {
     .catch((err) => {
       logger.error(err);
       loader.off();
-      const errorHandled = defaultHandleError(err)
-      || command.handleError(err);
+      const errorHandled = defaultHandleError(err) || command.handleError(err);
 
       if (command.private) return serializeErrAndExit(err);
       if (!command.private && errorHandled) return logErrAndExit(errorHandled);
@@ -66,8 +67,8 @@ function execAction(command, concrete, args) {
 
 function serializeErrAndExit(err) {
   process.stderr.write(JSON.stringify(serializeError(err)));
-  if (err.code && isNumeric(err.code)) return logger.exitAfterFlush(err.code);
-  return logger.exitAfterFlush(1);
+  const code = err.code && isNumeric(err.code) ? err.code : 1;
+  return logger.exitAfterFlush(code);
 }
 
 // @TODO add help for subcommands

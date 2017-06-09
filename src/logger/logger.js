@@ -17,11 +17,36 @@ const logger = new winston.Logger({
   exitOnError: false
 });
 
-// @credit da-mkay from https://github.com/winstonjs/winston/issues/228
+// @credit Kegsay from https://github.com/winstonjs/winston/issues/228
 // it solves an issue when exiting the code explicitly and the log file is not written
 logger.exitAfterFlush = (code: number = 0) => {
-  logger.transports.file.on('flush', () => {
-    process.exit(code);
+  let level;
+  let msg;
+  if (code === 0) {
+    level = 'info';
+    msg = 'the command has been completed successfully';
+  } else {
+    level = 'error';
+    msg = `the command has been terminated with an error code ${code}`;
+  }
+  logger.log(level, msg, () => {
+    let numFlushes = 0;
+    let numFlushed = 0;
+    Object.keys(logger.transports).forEach((k) => {
+      if (logger.transports[k]._stream) {
+        numFlushes += 1;
+        logger.transports[k]._stream.once('finish', () => {
+          numFlushed += 1;
+          if (numFlushes === numFlushed) {
+            process.exit(code);
+          }
+        });
+        logger.transports[k]._stream.end();
+      }
+    });
+    if (numFlushes === 0) {
+      process.exit(code);
+    }
   });
 };
 
