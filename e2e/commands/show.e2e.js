@@ -1,4 +1,4 @@
-// test the bit show command and the js-doc parser
+// covers also init, create, commit commands and the js-doc parser
 
 import path from 'path';
 import fs from 'fs-extra';
