@@ -1,3 +1,5 @@
+// covers also init, create, commit, modify commands
+
 import { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
