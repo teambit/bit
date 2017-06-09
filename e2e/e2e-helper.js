@@ -24,6 +24,12 @@ export default class Helper {
     return cmdOutput.toString();
   }
 
+  addBitJsonDependencies(bitJsonPath, dependencies) {
+    const bitJson = JSON.parse(fs.readFileSync(bitJsonPath).toString());
+    Object.assign(bitJson.dependencies, dependencies);
+    fs.writeFileSync(bitJsonPath, JSON.stringify(bitJson, null, 4));
+  }
+
   cleanEnv() {
     fs.emptyDirSync(this.localScopePath);
     fs.emptyDirSync(this.remoteScopePath);
