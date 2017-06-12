@@ -168,7 +168,7 @@ export default class Consumer {
   addComponent(id?: string) {
     try {
       if (!id) { /** TODO: add all new components **/ }
-      const parsedId = BitInlineId.parse(id);
+      const parsedId = BitId.parse(id);
       const componentPath = parsedId.composeBitPath(this.getPath());
       const lockObject = bitLock.load(this.getPath());
       const modifiedLock = bitLock.addComponent(lockObject, parsedId.toString(), componentPath);
@@ -180,7 +180,7 @@ export default class Consumer {
   }
 
   createBit({ id, withSpecs = false, withBitJson = false, force = false }: {
-    id: BitInlineId, withSpecs: boolean, withBitJson: boolean, force: boolean
+    id: BitId, withSpecs: boolean, withBitJson: boolean, force: boolean
   }): Promise<Component> {
     const bitPath = id.composeBitPath(this.getPath());
 
@@ -191,17 +191,6 @@ export default class Consumer {
       consumerBitJson: this.bitJson,
     }, this.scope).write(bitPath, withBitJson, force)
       .then(component => this.driver.runHook('onCreate', component, component));
-  }
-
-  removeFromInline(id: BitInlineId): Promise<any> {
-    const componentDir = id.composeBitPath(this.getPath());
-    return new Promise((resolve, reject) => {
-      return fs.remove(componentDir, (err) => {
-        if (err) return reject(err);
-        return removeContainingDirIfEmpty(componentDir)
-          .then(resolve);
-      });
-    });
   }
 
   removeFromComponents(id: BitId, currentVersionOnly: boolean = false): Promise<any> {

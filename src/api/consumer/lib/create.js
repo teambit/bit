@@ -1,7 +1,7 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
-import InlineId from '../../../consumer/bit-inline-id';
 import Component from '../../../consumer/component';
+import { BitId } from '../../../bit-id';
 
 export default function create(
   id: string,
@@ -10,6 +10,6 @@ export default function create(
   ): Promise<Component> {
   return loadConsumer()
     .then(consumer =>
-      consumer.createBit({ id: InlineId.parse(id), withSpecs, withBitJson, force })
+      consumer.createBit({ id: BitId.parse(id), withSpecs, withBitJson, force })
     );
 }
