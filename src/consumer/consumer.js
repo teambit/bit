@@ -104,15 +104,12 @@ export default class Consumer {
 
   exportAction(rawId: string, rawRemote: string) {
     // @TODO - move this method to api, not related to consumer
-    const originalBitId = BitId.parse(rawId, this.scope.name);
-    const newBitId = originalBitId.changeScope(this.scope.name);
+    const bitId = BitId.parse(rawId);
 
-    return this.scope.exportAction(originalBitId, rawRemote)
-      .then(componentDependencies => this.writeToComponentsDir([componentDependencies])
-        .then(() => this.removeFromComponents(newBitId)) // @HACKALERT
-        .then(() => componentDependencies.component)
-      );
+    return this.scope.exportAction(bitId, rawRemote)
+      .then(componentDependencies => componentDependencies.component);
   }
+
 
   import(rawIds: ?string[], verbose?: bool, withEnvironments: ?bool, cache?: bool = true):
   Promise<{ dependencies: ComponentDependencies[], envDependencies?: Component[] }> {

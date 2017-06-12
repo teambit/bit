@@ -479,6 +479,7 @@ export default class Scope {
   }
 
   exportAction(bitId: BitId, remoteName: string) {
+    bitId.scope = this.name;
     return this.remotes().then((remotes) => {
       return remotes.resolve(remoteName, this)
         .then((remote) => {
