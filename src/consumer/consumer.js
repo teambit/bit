@@ -248,10 +248,8 @@ export default class Consumer {
     return this.loadComponent(id)
       .then(bit =>
         this.scope.put({ consumerComponent: bit, message, force, consumer: this, bitDir, verbose })
-        .then(bits => this.writeToComponentsDir([bits]))
-        .then(() => this.removeFromInline(id))
-        .then(() => index(bit, this.scope.getPath()))
-        .then(() => this.driver.runHook('onCommit', bit))
+        .then(() => index(bit, this.scope.getPath())) // todo: make sure it still works
+        .then(() => this.driver.runHook('onCommit', bit)) // todo: probably not needed as the bind happens on create
         .then(() => bit)
       );
   }
