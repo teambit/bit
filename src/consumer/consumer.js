@@ -28,6 +28,7 @@ import BitInlineId from './bit-inline-id';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
 import { index } from '../search/indexer';
+import * as bitLock from './bit-lock/bit-lock';
 
 
 export type ConsumerProps = {
@@ -162,6 +163,20 @@ export default class Consumer {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId, this.scope.name);
     return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose });
+  }
+
+  addComponent(id?: string) {
+    try {
+      if (!id) { /** TODO: add all new components **/ }
+      const parsedId = BitInlineId.parse(id);
+      const componentPath = parsedId.composeBitPath(this.getPath());
+      const lockObject = bitLock.load(this.getPath());
+      const modifiedLock = bitLock.addComponent(lockObject, parsedId.toString(), componentPath);
+      bitLock.write(this.getPath(), modifiedLock);
+      return Promise.resolve({ added: parsedId.toString() });
+    } catch (err) {
+      return Promise.reject(err);
+    }
   }
 
   createBit({ id, withSpecs = false, withBitJson = false, force = false }: {

@@ -32,6 +32,7 @@ import CatScope from './commands/private-cmds/cat-scope-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Bind from './commands/public-cmds/bind-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
+import Add from './commands/public-cmds/add-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -66,5 +67,6 @@ export default function registerCommands(): CommandRegistrar {
     new ScopeConfig(),
     new Bind(),
     new Watch(),
+    new Add(),
   ]);
 }
