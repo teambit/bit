@@ -36,6 +36,8 @@ export const INLINE_BITS_DIRNAME = 'inline_components';
 
 export const BIT_JSON = 'bit.json';
 
+export const BIT_LOCK = 'bit.lock';
+
 export const REMOTE_ALIAS_SIGN = '@';
 
 export const DEFAULT_IMPL_NAME = 'impl.js';
