@@ -68,8 +68,11 @@ export default class BitId {
     return { [key]: value };
   }
 
+
   composeBitPath(consumerDir: string): string {
-    return path.join(consumerDir, BITS_DIRNAME, this.box, this.name);
+    // TODO: Change this according to the user configuration
+    const defaultDirectoryConfig = [this.box, this.name];
+    return path.join(consumerDir, BITS_DIRNAME, ...defaultDirectoryConfig);
   }
 
   toPath() {
