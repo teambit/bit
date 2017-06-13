@@ -208,22 +208,11 @@ export default class Consumer {
     });
   }
 
-  bitDirForConsumerComponent(component: Component): string {
-    const componentsDir = this.getComponentsPath();
-    return path.join(
-      componentsDir,
-      component.box,
-      component.name,
-      component.scope,
-      component.version.toString(),
-    );
-  }
-
   writeToComponentsDir(componentDependencies: VersionDependencies[]): Promise<Component[]> {
     const components = flattenDependencies(componentDependencies);
 
     return Promise.all(components.map((component) => {
-      const bitPath = this.bitDirForConsumerComponent(component);
+      const bitPath = component.id.composeBitPath(this.getPath());
       return component.write(bitPath, true);
     }));
   }
