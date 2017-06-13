@@ -1,18 +1,18 @@
 /** @flow */
 import winston from 'winston';
 import path from 'path';
+import { GLOBAL_LOGS } from '../constants';
 
-const logPath = path.join(__dirname, '..', '..');
 const logger = new winston.Logger({
   transports: [
     new (winston.transports.File)({
-      filename: path.join(logPath, 'debug.log'),
+      filename: path.join(GLOBAL_LOGS, 'debug.log'),
       json: false,
       level: process.env.NODE_ENV === 'development' ? 'debug' : 'error'
     }),
   ],
   exceptionHandlers: [
-    new winston.transports.File({ filename: path.join(logPath, 'exceptions.log'), json: false })
+    new winston.transports.File({ filename: path.join(GLOBAL_LOGS, 'exceptions.log'), json: false })
   ],
   exitOnError: false
 });
