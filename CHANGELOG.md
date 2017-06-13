@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- fix the "--verbose" flag of `bit test`
+- `bit test` shows the error stack in case of a fatal error 
 - add logger
 - support debug-mode for e2e tests
 
