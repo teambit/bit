@@ -98,7 +98,7 @@ export default class Consumer {
   }
 
   loadComponent(id: BitInlineId): Promise<Component> {
-    const bitDir = id.composeBitPath(this.getPath());
+    const bitDir = this.composeBitPath(id);
     return Component.loadFromInline(bitDir, this.bitJson);
   }
 
@@ -166,7 +166,7 @@ export default class Consumer {
     try {
       if (!id) { /** TODO: add all new components **/ }
       const parsedId = BitId.parse(id);
-      const componentPath = parsedId.composeBitPath(this.getPath());
+      const componentPath = this.composeBitPath(parsedId);
       const lockObject = bitLock.load(this.getPath());
       const modifiedLock = bitLock.addComponent(lockObject, parsedId.toString(), componentPath);
       bitLock.write(this.getPath(), modifiedLock);
@@ -179,7 +179,7 @@ export default class Consumer {
   createBit({ id, withSpecs = false, withBitJson = false, force = false }: {
     id: BitId, withSpecs: boolean, withBitJson: boolean, force: boolean
   }): Promise<Component> {
-    const bitPath = id.composeBitPath(this.getPath());
+    const bitPath = this.composeBitPath(id);
 
     return Component.create({
       name: id.name,
@@ -212,13 +212,13 @@ export default class Consumer {
     const components = flattenDependencies(componentDependencies);
 
     return Promise.all(components.map((component) => {
-      const bitPath = component.id.composeBitPath(this.getPath());
+      const bitPath = this.composeBitPath(component.id);
       return component.write(bitPath, true);
     }));
   }
 
   commit(id: BitInlineId, message: string, force: ?bool, verbose: ?bool) {
-    const bitDir = id.composeBitPath(this.getPath());
+    const bitDir = this.composeBitPath(id);
 
     return this.loadComponent(id)
       .then(bit =>
@@ -227,6 +227,12 @@ export default class Consumer {
         .then(() => this.driver.runHook('onCommit', bit)) // todo: probably not needed as the bind happens on create
         .then(() => bit)
       );
+  }
+
+  composeBitPath(bitId: BitId): string {
+    // TODO: Change this according to the user configuration
+    const defaultDirectoryConfig = [bitId.box, bitId.name];
+    return path.join(this.getPath(), BITS_DIRNAME, ...defaultDirectoryConfig);
   }
 
   runComponentSpecs(id: BitInlineId): Promise<?any> {

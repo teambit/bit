@@ -8,7 +8,6 @@ import {
   LOCAL_SCOPE_NOTATION,
   NO_PLUGIN_TYPE,
   REMOTE_ALIAS_SIGN,
-  BITS_DIRNAME,
 } from '../constants';
 import { contains, isValidIdChunk, isValidScopeName } from '../utils';
 
@@ -66,13 +65,6 @@ export default class BitId {
     const value = this.version;
 
     return { [key]: value };
-  }
-
-
-  composeBitPath(consumerDir: string): string {
-    // TODO: Change this according to the user configuration
-    const defaultDirectoryConfig = [this.box, this.name];
-    return path.join(consumerDir, BITS_DIRNAME, ...defaultDirectoryConfig);
   }
 
   toPath() {
