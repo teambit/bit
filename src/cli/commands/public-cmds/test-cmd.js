@@ -22,8 +22,8 @@ export default class Test extends Command {
     verbose: ?bool,
   }): Promise<any> {
     function test() {
-      if (!id) return testInlineAll();
-      if (inline) return testInline(id);
+      if (!id) return testInlineAll(verbose);
+      if (inline) return testInline(id, verbose);
       return testInScope({ id, environment, save, verbose });
     }
 
