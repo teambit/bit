@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix the "--verbose" flag of `bit test`
+- add logger
+- support debug-mode for e2e tests
 
 ## [0.6.3-rc.1] - 2017-06-06
 
