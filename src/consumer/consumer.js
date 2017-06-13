@@ -267,17 +267,17 @@ export default class Consumer {
     return path.join(...addToPath);
   }
 
-  runComponentSpecs(id: BitInlineId): Promise<?any> {
+  runComponentSpecs(id: BitInlineId, verbose: boolean = false): Promise<?any> {
     return this.loadComponent(id)
       .then((component) => {
-        return component.runSpecs({ scope: this.scope, consumer: this });
+        return component.runSpecs({ scope: this.scope, consumer: this, verbose });
       });
   }
 
-  runAllInlineSpecs() {
+  runAllInlineSpecs(verbose: boolean = false) {
     return this.listInline().then((components) => {
       return Promise.all(components.map(component => component
-        .runSpecs({ scope: this.scope, consumer: this })
+        .runSpecs({ scope: this.scope, consumer: this, verbose })
         .then((result) => { return { specs: result, component }; })));
     });
   }

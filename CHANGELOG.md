@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- `bit test` shows the error stack in case of a fatal error 
+- add logger
 - support debug-mode for e2e tests
 
 ## [0.6.3-rc.1] - 2017-06-06
