@@ -229,10 +229,42 @@ export default class Consumer {
       );
   }
 
-  composeBitPath(bitId: BitId): string {
+  componentsDirStructure() {
     // TODO: Change this according to the user configuration
-    const defaultDirectoryConfig = [bitId.box, bitId.name];
-    return path.join(this.getPath(), BITS_DIRNAME, ...defaultDirectoryConfig);
+    return `${BITS_DIRNAME}/{namespace}/{name}`;
+  }
+
+  _getComponentStructurePart(componentStructure, componentPart) {
+    switch (componentPart) {
+      case 'name':
+        return 'name';
+      case 'namespace':
+        return 'box';
+      case 'scope':
+        return 'scope';
+      case 'version':
+        return 'version';
+      default:
+        throw new Error(`the ${componentPart} part of the component structure
+           ${componentStructure} is invalid, it must be one of the following: "name", "namespace", "scope" or "version" `);
+    }
+  }
+
+  composeBitPath(bitId: BitId): string {
+    const componentStructure = this.componentsDirStructure();
+    const componentStructureParts = componentStructure.split('/');
+    const addToPath = [this.getPath()];
+    componentStructureParts.forEach((dir) => {
+      if (dir.startsWith('{') && dir.endsWith('}')) { // this is variable
+        const dirStripped = dir.replace(/[{}]/g, '');
+        const componentPart = this._getComponentStructurePart(componentStructure, dirStripped);
+        addToPath.push(bitId[componentPart]);
+      } else {
+        addToPath.push(dir);
+      }
+    });
+    // todo: logger.debug(`component dir path: ${addToPath.join('/')}`)
+    return path.join(...addToPath);
   }
 
   runComponentSpecs(id: BitInlineId): Promise<?any> {
