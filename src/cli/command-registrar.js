@@ -6,16 +6,17 @@ import type Command from './command';
 import defaultHandleError from './default-error-handler';
 import { empty, first, isNumeric } from '../utils';
 import loader from './loader';
+import logger from '../logger/logger';
 
 
 function logAndExit(msg: string) {
-  process.stdout.write(`${msg}\n`, () => process.exit());
+  process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush());
 }
 
 function logErrAndExit(msg: Error|string) {
   if (msg.code) throw msg;
   console.error(msg); // eslint-disable-line
-  return process.exit(1);
+  logger.exitAfterFlush(1);
 }
 
 function parseSubcommandFromArgs(args: [any]) {
@@ -42,19 +43,21 @@ function getOpts(c, opts: [[string, string, string]]): {[string]: boolean|string
 function execAction(command, concrete, args) {
   // $FlowFixMe
   const opts = getOpts(concrete, command.opts);
+  const relevantArgs = args.slice(0, args.length - 1);
+  logger.info(`started a new command: "${command.name}" with the following data:`, { args: relevantArgs, opts });
   if (command.loader) {
     loader.on();
   }
 
-  command.action(args.slice(0, args.length - 1), opts)
+  command.action(relevantArgs, opts)
     .then((data) => {
       loader.off();
       return logAndExit(command.report(data));
     })
     .catch((err) => {
+      logger.error(err);
       loader.off();
-      const errorHandled = defaultHandleError(err)
-      || command.handleError(err);
+      const errorHandled = defaultHandleError(err) || command.handleError(err);
 
       if (command.private) return serializeErrAndExit(err);
       if (!command.private && errorHandled) return logErrAndExit(errorHandled);
@@ -64,8 +67,8 @@ function execAction(command, concrete, args) {
 
 function serializeErrAndExit(err) {
   process.stderr.write(JSON.stringify(serializeError(err)));
-  if (err.code && isNumeric(err.code)) return process.exit(err.code);
-  return process.exit(1);
+  const code = err.code && isNumeric(err.code) ? err.code : 1;
+  return logger.exitAfterFlush(code);
 }
 
 // @TODO add help for subcommands
