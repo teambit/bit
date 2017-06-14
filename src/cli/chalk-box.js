@@ -8,6 +8,9 @@ c.white('     > ') + c.cyan(`${box}/${name}`);
 export const formatBit = ({ scope = '@this', box, name, version }: any): string =>
 c.white('     > ') + c.cyan(`${scope}/${box}/${name} - ${version ? version.toString() : 'latest'}`);
 
+export const formatBitString = (bit: string): string =>
+c.white('     > ') + c.cyan(`${bit}`);
+
 export const paintBitProp = (key: string, value: string): string => {
   if (!value) return '';
   return `${c.magenta(key)} -> ${value}\n`;

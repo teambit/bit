@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { status } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
-import { formatBit, formatInlineBit } from '../../chalk-box';
+import { formatBit, formatInlineBit, formatBitString } from '../../chalk-box';
 
 type StatusObj = {
   name: string,
@@ -18,41 +18,32 @@ export default class Status extends Command {
   opts = [];
 
   action(): Promise<{ inline: StatusObj[], source: StatusObj[] }> {
-    const getBitStatusForInline = bit => ({
-      name: bit.name,
-      box: bit.box,
-      // valid: bit.validate(),
-      // version: bit.version
-    });
-
-    const getBitStatusForSources = bit => ({
-      name: bit.name,
-      box: bit.box,
-      // valid: bit.validate(),
-      version: bit.version
-    });
-
-    return status()
-    .then(({ inline, sources }) => {
-      return ({
-        inline: inline.map(getBitStatusForInline),
-        sources: sources.map(getBitStatusForSources)
-      });
-    });
+    return status();
   }
 
-  report({ inline, sources }: { inline: StatusObj[], sources: StatusObj[] }): string {
-    const inlineBits = immutableUnshift(
-      inline.map(formatInlineBit),
-      inline.length ? chalk.underline.white('inline components') : chalk.green('your inline_component directory is empty')
+  report({ untrackedComponents, newComponents, modifiedComponent, stagedComponents }
+  : { inline: StatusObj[], sources: StatusObj[] }): string {
+    const untrackedComponentsOutput = immutableUnshift(
+      untrackedComponents.map(formatBitString),
+      untrackedComponents.length ? chalk.underline.white('Untracked Components') : chalk.green('There are no untracked components')
     ).join('\n');
 
-    const sourcesBits = immutableUnshift(
-      sources.map(formatBit),
-      sources.length ? chalk.underline.white('sources waiting for export') : chalk.green('you don\'t have any sources to export')
+    const newComponentsOutput = immutableUnshift(
+      newComponents.map(formatBitString),
+      newComponents.length ? chalk.underline.white('New Components') : chalk.green('There are no new components')
     ).join('\n');
 
-    return [inlineBits, sourcesBits].join(
+    const modifiedComponentOutput = immutableUnshift(
+      modifiedComponent.map(formatBitString),
+      modifiedComponent.length ? chalk.underline.white('Modified Components') : chalk.green('There are no modified components')
+    ).join('\n');
+
+    const stagedComponentsOutput = immutableUnshift(
+      stagedComponents.map(formatBitString),
+      stagedComponents.length ? chalk.underline.white('Staged Components') : chalk.green('There are no staged components')
+    ).join('\n');
+
+    return [untrackedComponentsOutput, newComponentsOutput, modifiedComponentOutput, stagedComponentsOutput].join(
       chalk.underline('\n                         \n')
     + chalk.white('\n'));
   }

@@ -29,6 +29,7 @@ import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
 import { index } from '../search/indexer';
 import * as bitLock from './bit-lock/bit-lock';
+import logger from '../logger/logger';
 
 
 export type ConsumerProps = {
@@ -229,7 +230,7 @@ export default class Consumer {
       );
   }
 
-  componentsDirStructure() {
+  componentsDirStructureStr(): string {
     // TODO: Change this according to the user configuration
     return `${BITS_DIRNAME}/{namespace}/{name}`;
   }
@@ -250,20 +251,30 @@ export default class Consumer {
     }
   }
 
-  composeBitPath(bitId: BitId): string {
-    const componentStructure = this.componentsDirStructure();
-    const componentStructureParts = componentStructure.split('/');
-    const addToPath = [this.getPath()];
-    componentStructureParts.forEach((dir) => {
+  get componentsDirStructure(): Object {
+    const dirStructure = this.componentsDirStructureStr();
+    const staticParts = [];
+    const dynamicParts = [];
+    dirStructure.split('/').forEach((dir) => {
       if (dir.startsWith('{') && dir.endsWith('}')) { // this is variable
         const dirStripped = dir.replace(/[{}]/g, '');
-        const componentPart = this._getComponentStructurePart(componentStructure, dirStripped);
-        addToPath.push(bitId[componentPart]);
+        const componentPart = this._getComponentStructurePart(dirStructure, dirStripped);
+        dynamicParts.push(componentPart);
       } else {
-        addToPath.push(dir);
+        // todo: create a new exception class
+        if (!R.isEmpty(dynamicParts)) throw new Error(`${dirStructure} is invalid, a static directory can not be after the dynamic part`);
+        staticParts.push(dir);
       }
     });
-    // todo: logger.debug(`component dir path: ${addToPath.join('/')}`)
+
+    return { staticParts, dynamicParts };
+  }
+
+  composeBitPath(bitId: BitId): string {
+    const { staticParts, dynamicParts } = this.componentsDirStructure;
+    const dynamicDirs = dynamicParts.map(part => bitId[part]);
+    const addToPath = [this.getPath(), ...staticParts, ...dynamicDirs];
+    logger.debug(`component dir path: ${addToPath.join('/')}`);
     return path.join(...addToPath);
   }
 
@@ -297,6 +308,40 @@ export default class Consumer {
         .catch(reject);
       })
     );
+  }
+
+  listFromFileSystem(): Component[] {
+    const { staticParts, dynamicParts } = this.componentsDirStructure;
+    const asterisks = Array(dynamicParts.length).fill('*'); // e.g. ['*', '*', '*']
+    const cwd = path.join(this.getPath(), ...staticParts);
+    return new Promise((resolve, reject) =>
+      glob(path.join(...asterisks), { cwd }, (err, files) => {
+        if (err) reject(err);
+
+        const bitsP = files.map((componentDynamicDirStr) => {
+          const componentDynamicDir = componentDynamicDirStr.split(path.sep);
+          const bitIdObj = {};
+          // combine componentDynamicDir (e.g. ['array', 'sort]) and dynamicParts
+          // (e.g. ['namespace', 'name']) into one object.
+          // (e.g. { namespace: 'array', name: 'sort' } )
+          componentDynamicDir.forEach((dir, idx) => {
+            const key = dynamicParts[idx];
+            bitIdObj[key] = dir;
+          });
+          // todo: a component might be originated from a remote, load the objects to check
+          const parsedId = new BitId(bitIdObj);
+          return this.loadComponent(parsedId);
+        });
+
+        return Promise.all(bitsP)
+          .then(resolve)
+          .catch(reject);
+      })
+    );
+  }
+
+  listFromBitLock(): Object {
+    return bitLock.load(this.getPath());
   }
 
   includes({ inline, bitName }: { inline: ?boolean, bitName: string }): Promise<boolean> {

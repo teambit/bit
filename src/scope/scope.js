@@ -122,6 +122,11 @@ export default class Scope {
       ));
   }
 
+  listFromObjects(): ConsumerComponent[] {
+    return this.objects.listComponents()
+      .then(components => this.toConsumerComponents(components));
+  }
+
   importDependencies(component: ConsumerComponent, bitDir: string) {
     const bitJsonPath = pathLib.join(bitDir, BIT_JSON);
     return new Promise((resolve, reject) => {

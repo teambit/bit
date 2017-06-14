@@ -112,16 +112,16 @@ export default class Component {
   }
 
   get id(): BitId {
-    if (!this.scope || !this.version) {
-      console.error(this);
-      throw new Error('cant produce id because scope or version are missing');
-    }
+    // if (!this.scope || !this.version) {
+    //   console.error(this);
+    //   throw new Error('cant produce id because scope or version are missing');
+    // }
 
     return new BitId({
       scope: this.scope,
       box: this.box,
       name: this.name,
-      version: this.version.toString(),
+      version: this.version ? this.version.toString() : null,
     });
   }
 
