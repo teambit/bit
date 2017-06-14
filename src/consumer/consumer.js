@@ -21,6 +21,7 @@ import {
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
+  DEFAULT_DIR_STRUCTURE,
  } from '../constants';
 import { removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
@@ -231,8 +232,7 @@ export default class Consumer {
   }
 
   componentsDirStructureStr(): string {
-    // TODO: Change this according to the user configuration
-    return `${BITS_DIRNAME}/{namespace}/{name}`;
+    return this.bitJson.structure || DEFAULT_DIR_STRUCTURE;
   }
 
   _getComponentStructurePart(componentStructure, componentPart) {
