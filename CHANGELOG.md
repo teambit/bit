@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - add logger
 - support debug-mode for e2e tests
 
+## [0.6.3-rc.2] - 2017-06-08
+
+- update "bit-javascript" dependency to rc ("^0.6.4-rc.1")
+- Try using cache before fetching remote
+
 ## [0.6.3-rc.1] - 2017-06-06
 
 - support running e2e tests in a dev environment where `bit` command is different (such as bit-dev) 

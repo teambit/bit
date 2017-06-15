@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.6.3-rc.1",
+  "version": "0.6.3-rc.2",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
@@ -26,7 +26,7 @@
     "url": "https://github.com/teambit/bit"
   },
   "dependencies": {
-    "bit-javascript": "^0.6.3",
+    "bit-javascript": "^0.6.4-rc.1",
     "bit-js": "^0.2.2",
     "buffer-from": "^0.1.1",
     "camelcase": "^4.0.0",
