@@ -33,14 +33,32 @@ export default class BitLock {
   }
 
   addComponent(componentId: string, componentPath: string): void {
+    let stat;
+    try {
+      stat = fs.lstatSync(componentPath);
+    } catch (err) {
+      throw new Error(`The path ${componentPath} doesn't exist`);
+    }
     if (this.components[componentId]) {
       logger.info(`bit.lock: overriding an exiting component ${componentId}`);
     }
-    this.components[componentId] = { path: componentPath };
+    if (stat.isFile()) {
+      this.components[componentId] = {
+        path: path.dirname(componentPath),
+        implFile: path.basename(componentPath)
+      };
+    } else {
+      this.components[componentId] = { path: componentPath };
+    }
   }
 
   getComponentPath(id: string): ?string {
     if (this.components[id]) return this.components[id].path;
+    return null;
+  }
+
+  getComponentImplFile(id: string): ?string {
+    if (this.components[id] && this.components[id].implFile) return this.components[id].implFile;
     return null;
   }
 

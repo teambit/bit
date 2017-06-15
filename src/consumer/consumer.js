@@ -246,14 +246,19 @@ export default class Consumer {
   commit(id: BitInlineId, message: string, force: ?bool, verbose: ?bool) {
     const bitDir = this.bitLock.getComponentPath(id);
     if (!bitDir) throw new Error(`Unable to find a component ${id} in your bit.lock file. Consider "bit add" it`);
+    const implFile = this.bitLock.getComponentImplFile(id);
 
     return this.loadComponent(id)
-      .then(bit =>
-        this.scope.put({ consumerComponent: bit, message, force, consumer: this, bitDir, verbose })
-        .then(() => index(bit, this.scope.getPath())) // todo: make sure it still works
-        .then(() => this.driver.runHook('onCommit', bit)) // todo: probably not needed as the bind happens on create
-        .then(() => bit)
-      );
+      .then((bit) => {
+        if (implFile) {
+          bit.implFile = implFile;
+          bit.impl = path.join(bitDir, implFile);
+        }
+        return this.scope.put({ consumerComponent: bit, message, force, consumer: this, bitDir, verbose })
+          .then(() => index(bit, this.scope.getPath())) // todo: make sure it still works
+          .then(() => this.driver.runHook('onCommit', bit)) // todo: probably not needed as the bind happens on create
+          .then(() => bit);
+      });
   }
 
   composeRelativeBitPath(bitId: BitId): string {
