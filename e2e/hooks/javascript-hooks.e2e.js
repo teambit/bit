@@ -1,3 +1,5 @@
+// covers also init, commit, create, export, import, remote, build commands
+
 import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
@@ -221,6 +223,33 @@ describe('javascript-hooks', function () {
       });
     });
 
+    describe('with test', () => {
+      before(() => {
+        helper.cleanEnv();
+        helper.runCmd('bit init');
+        helper.runCmd('bit import bit.envs/testers/mocha --tester');
+        helper.runCmd('bit create foo --json --specs');
+        fs.writeFileSync(fooImplPath, fooComponentFixture);
+        helper.runCmd('bit commit foo commit-msg'); // run the test as well
+        helper.runCmd('bit init --bare', helper.remoteScopePath);
+        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
+        fs.emptyDirSync(helper.localScopePath); // a new local scope
+        helper.runCmd('bit init');
+        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.runCmd(`bit import @${helper.remoteScope}/global/foo`);
+      });
+      it('should create links in the component level', () => {
+        expectLinksInComponentLevel();
+      });
+      it('should create links in the namespace level', () => {
+        expectLinksInNamespaceLevel();
+      });
+      it('should create links in the root level', () => {
+        expectLinksInRootLevel();
+      });
+    });
+
     describe('with dependencies', () => {
       before(() => {
         helper.cleanEnv();
@@ -238,9 +267,7 @@ describe('javascript-hooks', function () {
         helper.runCmd('bit create bar --json');
         fs.writeFileSync(barImplPath, barComponentFixture);
         const barJsonPath = path.join(helper.localScopePath, 'inline_components', 'global', 'bar', 'bit.json');
-        const barJson = JSON.parse(fs.readFileSync(barJsonPath).toString());
-        barJson.dependencies[`@${helper.remoteScope}/global/foo`] = '1';
-        fs.writeFileSync(barJsonPath, JSON.stringify(barJson, null, 4));
+        helper.addBitJsonDependencies(barJsonPath, { [`@${helper.remoteScope}/global/foo`]: '1' });
         helper.runCmd('bit commit bar commit-msg');
         helper.runCmd(`bit export @this/global/bar @${helper.remoteScope}`);
       });
@@ -277,9 +304,7 @@ describe('javascript-hooks', function () {
           helper.runCmd('bit create baz --json');
           fs.writeFileSync(bazImplPath, bazComponentFixture);
           const bazJsonPath = path.join(helper.localScopePath, 'inline_components', 'global', 'baz', 'bit.json');
-          const bazJson = JSON.parse(fs.readFileSync(bazJsonPath).toString());
-          bazJson.dependencies[`@${helper.remoteScope}/global/bar`] = '1';
-          fs.writeFileSync(bazJsonPath, JSON.stringify(bazJson, null, 4));
+          helper.addBitJsonDependencies(bazJsonPath, { [`@${helper.remoteScope}/global/bar`]: '1' });
           helper.runCmd('bit commit baz commit-msg');
           helper.runCmd(`bit export @this/global/baz @${helper.remoteScope}`);
 
@@ -305,6 +330,53 @@ describe('javascript-hooks', function () {
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got baz and got bar and got foo');
+        });
+      });
+    });
+
+    describe('with multiple versions', () => {
+      before(() => {
+        helper.cleanEnv();
+        helper.runCmd('bit init');
+        helper.runCmd('bit create foo');
+        const fooComponentV1 = "module.exports = function foo() { return 'got foo v1'; };";
+        fs.writeFileSync(fooImplPath, fooComponentV1);
+        helper.runCmd('bit commit foo commit-msg1');
+        helper.runCmd('bit modify @this/global/foo');
+        const fooComponentV2 = "module.exports = function foo() { return 'got foo v2'; };";
+        fs.writeFileSync(fooImplPath, fooComponentV2);
+        helper.runCmd('bit commit foo commit-msg2');
+        helper.runCmd('bit init --bare', helper.remoteScopePath);
+        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
+      });
+      const prepareCleanLocalEnv = () => {
+        fs.emptyDirSync(helper.localScopePath); // a new local scope
+        helper.runCmd('bit init');
+        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+      };
+      describe('importing without mentioning the version', () => {
+        before(() => {
+          prepareCleanLocalEnv();
+          helper.runCmd(`bit import @${helper.remoteScope}/global/foo`);
+        });
+        it('should create links in the component level of the latest version', () => {
+          const appJs = "const foo = require('bit/global/foo'); console.log(foo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got foo v2');
+        });
+      });
+      describe('importing a specific version', () => {
+        before(() => {
+          prepareCleanLocalEnv();
+          helper.runCmd(`bit import @${helper.remoteScope}/global/foo::1`);
+        });
+        it('should create links in the component level of that specific version', () => {
+          const appJs = "const foo = require('bit/global/foo'); console.log(foo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got foo v1');
         });
       });
     });

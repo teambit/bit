@@ -1,4 +1,5 @@
 import reqCwd from 'req-cwd';
+import resolveFrom from 'resolve-from';
 import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';
 import { removeFromRequireCache } from '../utils';
@@ -11,9 +12,18 @@ export default class Driver {
     this.lang = lang;
   }
 
+  driverName(): string {
+    return this.lang.startsWith('bit-') ? this.lang : `bit-${this.lang}`;
+  }
+
+  driverPath(): string {
+    // "reqCwd" uses "resolveFrom" to determine the lib path
+    return resolveFrom('.', this.driverName());
+  }
+
   getDriver(silent: boolean = true): ?Object {
     if (this.driver) return this.driver;
-    const langDriver = this.lang.startsWith('bit-') ? this.lang : `bit-${this.lang}`;
+    const langDriver = this.driverName();
     try {
       this.driver = reqCwd(langDriver);
       removeFromRequireCache(langDriver);
