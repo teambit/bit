@@ -21,7 +21,6 @@ import {
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
-  DEFAULT_DIR_STRUCTURE,
  } from '../constants';
 import { removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
@@ -29,9 +28,9 @@ import BitInlineId from './bit-inline-id';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
 import { index } from '../search/indexer';
-import * as bitLock from './bit-lock/bit-lock';
+import BitLock from './bit-lock/bit-lock';
 import logger from '../logger/logger';
-
+import DirStructure from './dir-structure/dir-structure';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -45,6 +44,9 @@ export default class Consumer {
   created: boolean;
   bitJson: ConsumerBitJson;
   scope: Scope;
+  _driver: Driver;
+  _bitLock: BitLock;
+  _dirStructure: DirStructure;
 
   constructor({ projectPath, bitJson, scope, created = false }: ConsumerProps) {
     this.projectPath = projectPath;
@@ -63,7 +65,24 @@ export default class Consumer {
   }
 
   get driver(): Driver {
-    return Driver.load(this.bitJson.lang);
+    if (!this._driver) {
+      this._driver = Driver.load(this.bitJson.lang);
+    }
+    return this._driver;
+  }
+
+  get dirStructure(): DirStructure {
+    if (!this._dirStructure) {
+      this._dirStructure = new DirStructure(this.bitJson.structure);
+    }
+    return this._dirStructure;
+  }
+
+  get bitLock(): BitLock {
+    if (!this._bitLock) {
+      this._bitLock = BitLock.load(this.getPath());
+    }
+    return this._bitLock;
   }
 
   warnForMissingDriver() {
@@ -100,7 +119,7 @@ export default class Consumer {
   }
 
   loadComponent(id: BitInlineId): Promise<Component> {
-    const bitDir = this.composeBitPath(id);
+    const bitDir = this.bitLock.getComponentPath(id) || this.composeBitPath(id);
     return Component.loadFromInline(bitDir, this.bitJson);
   }
 
@@ -164,21 +183,21 @@ export default class Consumer {
     return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose });
   }
 
-  addComponent(id?: string) {
+  addComponent(componentPath: string, id: string) {
     try {
-      if (!id) { /** TODO: add all new components **/ }
       const parsedId = BitId.parse(id);
-      const componentPath = this.composeBitPath(parsedId);
-      const lockObject = bitLock.load(this.getPath());
-      const modifiedLock = bitLock.addComponent(lockObject, parsedId.toString(), componentPath);
-      bitLock.write(this.getPath(), modifiedLock);
+      this.bitLock.addComponent(parsedId.toString(), componentPath);
+      this.bitLock.write();
       return Promise.resolve({ added: parsedId.toString() });
     } catch (err) {
       return Promise.reject(err);
     }
   }
 
-  createBit({ id, withSpecs = false, withBitJson = false, force = false }: {
+  /**
+   * Creates a new component, writes it to the file system and adds to bit.lock
+   */
+  createComponent({ id, withSpecs = false, withBitJson = false, force = false }: {
     id: BitId, withSpecs: boolean, withBitJson: boolean, force: boolean
   }): Promise<Component> {
     const bitPath = this.composeBitPath(id);
@@ -188,8 +207,13 @@ export default class Consumer {
       box: id.box,
       withSpecs,
       consumerBitJson: this.bitJson,
-    }, this.scope).write(bitPath, withBitJson, force)
-      .then(component => this.driver.runHook('onCreate', component, component));
+    }, this.scope)
+      .write(bitPath, withBitJson, force)
+      .then((component) => {
+        this.bitLock.addComponent(id.toString(), this.composeRelativeBitPath(id));
+        this.bitLock.write();
+        return this.driver.runHook('onCreate', component, component);
+      });
   }
 
   removeFromComponents(id: BitId, currentVersionOnly: boolean = false): Promise<any> {
@@ -220,7 +244,8 @@ export default class Consumer {
   }
 
   commit(id: BitInlineId, message: string, force: ?bool, verbose: ?bool) {
-    const bitDir = this.composeBitPath(id);
+    const bitDir = this.bitLock.getComponentPath(id);
+    if (!bitDir) throw new Error(`Unable to find a component ${id} in your bit.lock file. Consider "bit add" it`);
 
     return this.loadComponent(id)
       .then(bit =>
@@ -231,49 +256,15 @@ export default class Consumer {
       );
   }
 
-  componentsDirStructureStr(): string {
-    return this.bitJson.structure || DEFAULT_DIR_STRUCTURE;
-  }
-
-  _getComponentStructurePart(componentStructure, componentPart) {
-    switch (componentPart) {
-      case 'name':
-        return 'name';
-      case 'namespace':
-        return 'box';
-      case 'scope':
-        return 'scope';
-      case 'version':
-        return 'version';
-      default:
-        throw new Error(`the ${componentPart} part of the component structure
-           ${componentStructure} is invalid, it must be one of the following: "name", "namespace", "scope" or "version" `);
-    }
-  }
-
-  get componentsDirStructure(): Object {
-    const dirStructure = this.componentsDirStructureStr();
-    const staticParts = [];
-    const dynamicParts = [];
-    dirStructure.split('/').forEach((dir) => {
-      if (dir.startsWith('{') && dir.endsWith('}')) { // this is variable
-        const dirStripped = dir.replace(/[{}]/g, '');
-        const componentPart = this._getComponentStructurePart(dirStructure, dirStripped);
-        dynamicParts.push(componentPart);
-      } else {
-        // todo: create a new exception class
-        if (!R.isEmpty(dynamicParts)) throw new Error(`${dirStructure} is invalid, a static directory can not be after the dynamic part`);
-        staticParts.push(dir);
-      }
-    });
-
-    return { staticParts, dynamicParts };
+  composeRelativeBitPath(bitId: BitId): string {
+    const { staticParts, dynamicParts } = this.dirStructure.componentsDirStructure;
+    const dynamicDirs = dynamicParts.map(part => bitId[part]);
+    const addToPath = [...staticParts, ...dynamicDirs];
+    return path.join(...addToPath);
   }
 
   composeBitPath(bitId: BitId): string {
-    const { staticParts, dynamicParts } = this.componentsDirStructure;
-    const dynamicDirs = dynamicParts.map(part => bitId[part]);
-    const addToPath = [this.getPath(), ...staticParts, ...dynamicDirs];
+    const addToPath = [this.getPath(), this.composeRelativeBitPath(bitId)];
     logger.debug(`component dir path: ${addToPath.join('/')}`);
     return path.join(...addToPath);
   }
@@ -310,15 +301,27 @@ export default class Consumer {
     );
   }
 
-  listFromFileSystem(): Component[] {
-    const { staticParts, dynamicParts } = this.componentsDirStructure;
+  /**
+   * Finds all components that are saved in the file system.
+   * Components might be stored in the default component directory and also might be outside
+   * of that directory, in which case the bit.lock is used to find them
+   * @return {Promise<Component[]>}
+   */
+  listFromFileSystem(): Promise<Component[]> {
+    const idsFromBitLock = Object.keys(this.listFromBitLock());
+    const componentsP = idsFromBitLock.map((id) => {
+      const parsedId = BitId.parse(id);
+      return this.loadComponent(parsedId);
+    });
+
+    const { staticParts, dynamicParts } = this.dirStructure.componentsDirStructure;
     const asterisks = Array(dynamicParts.length).fill('*'); // e.g. ['*', '*', '*']
     const cwd = path.join(this.getPath(), ...staticParts);
     return new Promise((resolve, reject) =>
       glob(path.join(...asterisks), { cwd }, (err, files) => {
         if (err) reject(err);
 
-        const bitsP = files.map((componentDynamicDirStr) => {
+        files.forEach((componentDynamicDirStr) => {
           const componentDynamicDir = componentDynamicDirStr.split(path.sep);
           const bitIdObj = {};
           // combine componentDynamicDir (e.g. ['array', 'sort]) and dynamicParts
@@ -330,10 +333,12 @@ export default class Consumer {
           });
           // todo: a component might be originated from a remote, load the objects to check
           const parsedId = new BitId(bitIdObj);
-          return this.loadComponent(parsedId);
+          if (!idsFromBitLock.includes(parsedId.toString())) {
+            componentsP.push(this.loadComponent(parsedId));
+          }
         });
 
-        return Promise.all(bitsP)
+        return Promise.all(componentsP)
           .then(resolve)
           .catch(reject);
       })
@@ -341,7 +346,8 @@ export default class Consumer {
   }
 
   listFromBitLock(): Object {
-    return bitLock.load(this.getPath());
+    const bitLock = BitLock.load(this.getPath());
+    return bitLock.getAllComponents();
   }
 
   includes({ inline, bitName }: { inline: ?boolean, bitName: string }): Promise<boolean> {

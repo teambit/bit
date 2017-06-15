@@ -3,6 +3,7 @@ import bufferFrom from 'bit/buffer/from';
 import { loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import Source from '../../../scope/models/source';
+import logger from '../../../logger/logger';
 
 export default function status(): Promise<{ inline: Component[], sources: Component[]}> {
   return loadConsumer()
@@ -30,19 +31,22 @@ export default function status(): Promise<{ inline: Component[], sources: Compon
     const idsFromObjects = Object.keys(objFromObjects);
 
     // case 1: a component is only on the FS (not the model) and not on bit.lock => "Untracked components".
-    // case 2: If a component is only on the FS (not the model) and does have a reference in bit.lock => "Modified components: new component".
     const untrackedComponents = [];
-    const newComponents = [];
     idsFromFileSystem.forEach((id) => {
       if (!idsFromObjects.includes(id) && !idsFromBitLock.includes(id)) {
         untrackedComponents.push(id);
       }
-      if (!idsFromObjects.includes(id) && idsFromBitLock.includes(id)) {
+    });
+
+    // case 2: a component is not in the model and have a reference in bit.lock => "Modified components: new component".
+    const newComponents = [];
+    idsFromBitLock.forEach((id) => {
+      if (!idsFromObjects.includes(id)) {
         newComponents.push(id);
       }
     });
 
-    // case 3: If a component is on the model and the scope is local => "Staged components".
+    // case 3: a component is on the model and the scope is local => "Staged components".
     const stagedComponents = [];
     idsFromObjects.forEach((id) => {
       if (objFromObjects[id].scope === localScopeName) {
@@ -50,17 +54,21 @@ export default function status(): Promise<{ inline: Component[], sources: Compon
       }
     });
 
-    // case 4: If a component is on the model and the FS, compare them.
+    // case 4: a component is on the model and the FS, compare them.
     // if there is a different => "Modified components: modified component". Otherwise => ignore.
     const modifiedComponent = [];
     idsFromObjects.forEach((id) => {
       const newId = objFromObjects[id].id.changeScope(null);
       const componentFromFS = objFromFileSystem[newId.toString()];
 
-      if (isComponentModified(objFromObjects[id], componentFromFS)) {
-        // todo: handle the case when there are two models of the same component, each from
-        // different scope
-        modifiedComponent.push(id);
+      if (componentFromFS) {
+        if (isComponentModified(objFromObjects[id], componentFromFS)) {
+          // todo: handle the case when there are two models of the same component, each from
+          // different scope
+          modifiedComponent.push(id);
+        }
+      } else {
+        logger.warn(`a component ${id} exists in the model but not on the file system`);
       }
     });
 

@@ -10,6 +10,6 @@ export default function create(
   ): Promise<Component> {
   return loadConsumer()
     .then(consumer =>
-      consumer.createBit({ id: BitId.parse(id), withSpecs, withBitJson, force })
+      consumer.createComponent({ id: BitId.parse(id), withSpecs, withBitJson, force })
     );
 }
