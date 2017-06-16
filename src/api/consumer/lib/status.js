@@ -11,9 +11,10 @@ export default function status(): Promise<{ inline: Component[], sources: Compon
     consumer.scope.listFromObjects(),
     consumer.listNewComponents(),
     consumer.listModifiedComponents(),
+    consumer.listExportPendingComponents(),
     consumer.scope
   ]))
-  .then(([listFromFileSystem, listFromBitLock, listFromObjects, newComponents, modifiedComponent, scope]) => {
+  .then(([listFromFileSystem, listFromBitLock, listFromObjects, newComponents, modifiedComponent, stagedComponents, scope]) => {
     const localScopeName = scope.name;
     const objFromFileSystem = listFromFileSystem.reduce((components, component) => {
       components[component.id.toString()] = component;
@@ -34,14 +35,6 @@ export default function status(): Promise<{ inline: Component[], sources: Compon
     idsFromFileSystem.forEach((id) => {
       if (!idsFromObjects.includes(id) && !idsFromBitLock.includes(id)) {
         untrackedComponents.push(id);
-      }
-    });
-
-    // a component is on the model and the scope is local
-    const stagedComponents = [];
-    idsFromObjects.forEach((id) => {
-      if (objFromObjects[id].scope === localScopeName) {
-        stagedComponents.push(id);
       }
     });
 

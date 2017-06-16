@@ -43,6 +43,7 @@ export default class Status extends Command {
       stagedComponents.length ? chalk.underline.white('Staged Components') : chalk.green('There are no staged components')
     ).join('\n');
 
+    // todo: new and modified components should be in the same section "Modified Components"
     return [untrackedComponentsOutput, newComponentsOutput, modifiedComponentOutput, stagedComponentsOutput].join(
       chalk.underline('\n                         \n')
     + chalk.white('\n'));

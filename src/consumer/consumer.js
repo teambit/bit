@@ -345,6 +345,23 @@ export default class Consumer {
     return [...newComponents, ...modifiedComponents];
   }
 
+  /**
+   * Components from the model where the scope is local are pending for export
+   * @return {Promise<string[]>}
+   */
+  async listExportPendingComponents(): Promise<string[]> {
+    const stagedComponents = [];
+    const listFromObjects = await this.scope.listLatestVersionObjects();
+    Object.keys(listFromObjects).forEach((id) => {
+      const bitId = BitId.parse(id);
+      if (bitId.scope === this.scope.name) {
+        bitId.scope = null;
+        stagedComponents.push(bitId.toString());
+      }
+    });
+    return stagedComponents;
+  }
+
   async commitAll(message: string, force: ?bool, verbose: ?bool): Promise<Component[]> {
     const commitPendingComponents = await this.listCommitPendingComponents();
     return Promise.all(commitPendingComponents.map((id) => {
@@ -408,6 +425,7 @@ export default class Consumer {
     const idsFromBitLock = Object.keys(this.listFromBitLock());
     const componentsP = idsFromBitLock.map((id) => {
       const parsedId = BitId.parse(id);
+      // todo: log a warning when a component is in bit.lock but not in the FS
       return this.loadComponent(parsedId);
     });
 
