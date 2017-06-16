@@ -3,7 +3,7 @@ import { loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import InvalidIdOnCommit from './exceptions/invalid-id-on-commit';
 
-export default function commitAction({ id, message, force, verbose }:
+export function commitAction({ id, message, force, verbose }:
 { id: string, message: string, force: ?bool, verbose?: bool }) {
   try {
     const componentId = BitId.parse(id);
@@ -13,3 +13,14 @@ export default function commitAction({ id, message, force, verbose }:
     return Promise.reject(new InvalidIdOnCommit(id));
   }
 }
+
+export function commitAllAction({ message, force, verbose }:
+{ message: string, force: ?bool, verbose?: bool }) {
+  try {
+    return loadConsumer()
+      .then(consumer => consumer.commitAll(message, force, verbose));
+  } catch (err) {
+    return Promise.reject(err);
+  }
+}
+

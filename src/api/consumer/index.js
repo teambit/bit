@@ -3,7 +3,7 @@ import create from './lib/create';
 import remove from './lib/remove';
 import listInline from './lib/list-inline';
 import listScope from './lib/list-scope';
-import commitAction from './lib/commit';
+import { commitAction, commitAllAction } from './lib/commit';
 import status from './lib/status';
 import { buildInline, buildInlineAll } from './lib/build-inline';
 import modify from './lib/modify';
@@ -29,6 +29,7 @@ export {
   buildInlineAll,
   listScope,
   commitAction,
+  commitAllAction,
   status,
   buildInline,
   modify,

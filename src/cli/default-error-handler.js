@@ -35,7 +35,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ MiscSourceNotFound, err => `warning: the file "${err.path}" mentioned in your bit.json inside source.misc was not found!`],
   [ ProtocolNotSupported, () => 'fatal: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'],
   [ RemoteScopeNotFound, err => `fatal: remote scope "${chalk.bold(err)}" not found.`],
-  [ InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: <scope>/[box]/<name>'],
+  [ InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: [scope]/[box]/<name>'],
   [ ComponentNotFound, err => `fatal: component with id "${chalk.bold(err.id)}" was not found`],
   [ DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found. Please verify bit.json - ${chalk.bold(err.bitJsonPath)}`],
   [ ComponentNotFoundInline, err => `fatal: component in path "${chalk.bold(err.path)}" was not found`],

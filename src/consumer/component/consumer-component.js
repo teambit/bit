@@ -542,7 +542,7 @@ export default class Component {
     return this.fromObject(object);
   }
 
-  static loadFromInline(bitDir, consumerBitJson): Promise<Component> {
+  static loadFromFileSystem(bitDir, consumerBitJson): Promise<Component> {
     if (!fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInline(bitDir));
     return BitJson.load(bitDir, consumerBitJson)
     .then((bitJson) => {

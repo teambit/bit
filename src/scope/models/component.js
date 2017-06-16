@@ -134,6 +134,7 @@ export default class Component extends BitObject {
     return repo.removeMany(objectRefs.concat([this.hash()]));
   }
 
+  // todo: remove the "scopeName" parameter, it seems to be not in use
   toComponentVersion(versionStr: string, scopeName: string): ComponentVersion {
     const versionNum = VersionParser
       .parse(versionStr)
