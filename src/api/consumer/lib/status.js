@@ -3,6 +3,7 @@ import { loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 
 // todo: improve performance. Components are now fetched multiple times
+// todo: move the lists part to ComponentsList
 export default function status(): Promise<{ inline: Component[], sources: Component[]}> {
   return loadConsumer()
   .then(consumer => Promise.all([

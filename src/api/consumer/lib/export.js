@@ -38,6 +38,7 @@ export default function exportAction(id?: string, remote: string, save: ?bool) {
     // export all
     return consumer.listExportPendingComponents().then((ids) => {
       // todo: what happens when some failed? we might consider avoid Promise.all
+      // todo: improve performance. Load the remote only once, run the hook only once.
       return Promise.all(ids.map(compId => exportComponent(consumer, compId)));
     });
   });

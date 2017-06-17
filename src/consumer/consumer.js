@@ -264,6 +264,7 @@ export default class Consumer {
       });
   }
 
+  // todo: move to a ComponentsList
   // todo: the comparison should include also MiscFiles and maybe file rename
   isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
     const getHash = (data): string => {
@@ -279,6 +280,7 @@ export default class Consumer {
       || isSourceModified(componentFromModel.specs, componentFromFileSystem.specs);
   }
 
+  // todo: move to ComponentsList
   /**
    * Components that are in the model (either, committed from a local scope or imported), and were
    * changed in the file system
@@ -312,6 +314,7 @@ export default class Consumer {
     return modifiedComponents;
   }
 
+  // todo: move to ComponentsList
   /**
    * Components that are registered in bit.lock but have never been committed
    *
@@ -334,6 +337,7 @@ export default class Consumer {
     return newComponents;
   }
 
+  // todo: move to ComponentsList
   /**
    * New and modified components are commit pending
    *
@@ -345,6 +349,7 @@ export default class Consumer {
     return [...newComponents, ...modifiedComponents];
   }
 
+  // todo: move to ComponentsList
   /**
    * Components from the model where the scope is local are pending for export
    * @return {Promise<string[]>}
@@ -415,6 +420,7 @@ export default class Consumer {
     );
   }
 
+  // todo: move to ComponentsList
   /**
    * Finds all components that are saved in the file system.
    * Components might be stored in the default component directory and also might be outside
@@ -460,6 +466,7 @@ export default class Consumer {
     );
   }
 
+  // todo: move to ComponentsList
   listFromBitLock(): Object {
     const bitLock = BitLock.load(this.getPath());
     return bitLock.getAllComponents();
