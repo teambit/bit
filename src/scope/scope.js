@@ -141,7 +141,7 @@ export default class Scope {
       componentsVersionsP[componentObjects.id()] = this.getObject(latestVersionRef.hash);
     });
 
-    const allVersions = await Promise.all(Object.values(componentsVersionsP));
+    const allVersions = await Promise.all(R.values(componentsVersionsP));
 
     Object.keys(componentsVersionsP).forEach((key, i) => {
       componentsVersions[key] = allVersions[i];
