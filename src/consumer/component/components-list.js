@@ -87,7 +87,6 @@ export default class ComponentsList {
 
       if (componentFromFS) {
         if (this.isComponentModified(objectComponents[id], componentFromFS)) {
-          // todo: handle a case of two models of the same component, each from different scope
           modifiedComponents.push(newId.toString());
         }
       } else {
@@ -97,18 +96,24 @@ export default class ComponentsList {
     return modifiedComponents;
   }
 
+  async idsFromObjects(withScope: boolean = true): Promise<string[]> {
+    const fromObjects = await this.getFromObjects();
+    const ids = Object.keys(fromObjects);
+    if (withScope) return ids;
+    return ids.map((id) => {
+      const bitId = BitId.parse(id);
+      return bitId.changeScope(null).toString();
+    });
+  }
+
   /**
    * Components that are registered in bit.lock but have never been committed
    *
    * @return {Promise.<string[]>}
    */
   async listNewComponents(): Promise<string[]> {
-    const idsFromBitLock = Object.keys(this.getFromBitLock());
-    const listFromObjects = await this.getFromObjects();
-    const idsFromObjects = Object.keys(listFromObjects).map((id) => {
-      const bitId = BitId.parse(id);
-      return bitId.changeScope(null).toString();
-    });
+    const idsFromBitLock = this.idsFromBitLock(false);
+    const idsFromObjects = await this.idsFromObjects(false);
     const newComponents = [];
     idsFromBitLock.forEach((id) => {
       if (!idsFromObjects.includes(id)) {
@@ -145,38 +150,46 @@ export default class ComponentsList {
     return stagedComponents;
   }
 
-  onFileSystemAndNotOnBitLock(): Promise<Component[]> {
+  globP(pattern, options): Promise {
+    return new Promise((resolve, reject) => {
+      glob(pattern, options, (err, files) => {
+        if (err) return reject(err);
+        return resolve(files);
+      });
+    });
+  }
+
+  idsFromBitLock(withScopeName = true) {
+    const ids = Object.keys(this.getFromBitLock());
+    if (withScopeName) return ids;
+    return ids.map(id => BitId.parse(id).changeScope(null).toString());
+  }
+
+  async onFileSystemAndNotOnBitLock(): Promise<Component[]> {
     const { staticParts, dynamicParts } = this.consumer.dirStructure.componentsDirStructure;
     const asterisks = Array(dynamicParts.length).fill('*'); // e.g. ['*', '*', '*']
     const cwd = path.join(this.consumer.getPath(), ...staticParts);
-    const idsFromBitLock = Object.keys(this.getFromBitLock());
-    return new Promise((resolve, reject) =>
-      glob(path.join(...asterisks), { cwd }, (err, files) => {
-        if (err) reject(err);
-
-        const componentsP = [];
-        files.forEach((componentDynamicDirStr) => {
-          const componentDynamicDir = componentDynamicDirStr.split(path.sep);
-          const bitIdObj = {};
-          // combine componentDynamicDir (e.g. ['array', 'sort]) and dynamicParts
-          // (e.g. ['namespace', 'name']) into one object.
-          // (e.g. { namespace: 'array', name: 'sort' } )
-          componentDynamicDir.forEach((dir, idx) => {
-            const key = dynamicParts[idx];
-            bitIdObj[key] = dir;
-          });
-          // todo: a component might be originated from a remote, load the objects to check
-          const parsedId = new BitId(bitIdObj);
-          if (!idsFromBitLock.includes(parsedId.toString())) {
-            componentsP.push(this.consumer.loadComponent(parsedId));
-          }
-        });
-
-        return Promise.all(componentsP)
-          .then(resolve)
-          .catch(reject);
-      })
-    );
+    const idsFromBitLock = this.idsFromBitLock();
+    const idsFromBitLockWithoutScope = this.idsFromBitLock(false);
+    const files = await this.globP(path.join(...asterisks), { cwd });
+    const componentsP = [];
+    files.forEach((componentDynamicDirStr) => {
+      const componentDynamicDir = componentDynamicDirStr.split(path.sep);
+      const bitIdObj = {};
+      // combine componentDynamicDir (e.g. ['array', 'sort']) and dynamicParts
+      // (e.g. ['namespace', 'name']) into one object.
+      // (e.g. { namespace: 'array', name: 'sort' } )
+      componentDynamicDir.forEach((dir, idx) => {
+        const key = dynamicParts[idx];
+        bitIdObj[key] = dir;
+      });
+      const parsedId = new BitId(bitIdObj);
+      if (!idsFromBitLock.includes(parsedId.toString())
+        && !idsFromBitLockWithoutScope.includes(parsedId.toString())) {
+        componentsP.push(this.consumer.loadComponent(parsedId));
+      }
+    });
+    return Promise.all(componentsP);
   }
 
   /**
@@ -195,7 +208,7 @@ export default class ComponentsList {
    */
   async getFromFileSystem(): Promise<Component[]> {
     if (!this._fromFileSystem) {
-      const idsFromBitLock = Object.keys(this.getFromBitLock());
+      const idsFromBitLock = this.idsFromBitLock();
       const registeredComponentsP = idsFromBitLock.map((id) => {
         const parsedId = BitId.parse(id);
         // todo: log a warning when a component is in bit.lock but not in the FS
