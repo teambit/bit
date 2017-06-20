@@ -4,7 +4,6 @@ import glob from 'glob';
 import fs from 'fs-extra';
 import R from 'ramda';
 import chalk from 'chalk';
-import bufferFrom from 'bit/buffer/from';
 import VersionDependencies from '../scope/version-dependencies';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
@@ -32,8 +31,6 @@ import { index } from '../search/indexer';
 import BitLock from './bit-lock/bit-lock';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import Version from '../scope/models/version';
-import Source from '../scope/models/source';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -264,117 +261,6 @@ export default class Consumer {
       });
   }
 
-  // todo: move to a ComponentsList
-  // todo: the comparison should include also MiscFiles and maybe file rename
-  isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
-    const getHash = (data): string => {
-      return Source.from(bufferFrom(data)).hash().toString();
-    };
-    const isSourceModified = (componentSrc, versionSrc) => {
-      if (!componentSrc && !versionSrc) return false;
-      if (!componentSrc && versionSrc) return true;
-      if (componentSrc && !versionSrc) return true;
-      return (componentSrc.file.hash !== getHash(versionSrc.src));
-    };
-    return isSourceModified(componentFromModel.impl, componentFromFileSystem.impl)
-      || isSourceModified(componentFromModel.specs, componentFromFileSystem.specs);
-  }
-
-  // todo: move to ComponentsList
-  /**
-   * Components that are in the model (either, committed from a local scope or imported), and were
-   * changed in the file system
-   *
-   * @return {Promise<string[]>}
-   */
-  async listModifiedComponents(): Promise<string[]> {
-    const [objectComponents, fileSystemComponents] = await Promise
-      .all([this.scope.listLatestVersionObjects(), this.listFromFileSystem()]);
-
-    const objFromFileSystem = fileSystemComponents.reduce((components, component) => {
-      components[component.id.toString()] = component;
-      return components;
-    }, {});
-
-    const modifiedComponents = [];
-    Object.keys(objectComponents).forEach((id) => {
-      const bitId = BitId.parse(id);
-      const newId = bitId.changeScope(null);
-      const componentFromFS = objFromFileSystem[newId.toString()];
-
-      if (componentFromFS) {
-        if (this.isComponentModified(objectComponents[id], componentFromFS)) {
-          // todo: handle a case of two models of the same component, each from different scope
-          modifiedComponents.push(newId.toString());
-        }
-      } else {
-        logger.warn(`a component ${id} exists in the model but not on the file system`);
-      }
-    });
-    return modifiedComponents;
-  }
-
-  // todo: move to ComponentsList
-  /**
-   * Components that are registered in bit.lock but have never been committed
-   *
-   * @return {Promise.<string[]>}
-   */
-  async listNewComponents(): Promise<string[]> {
-    const listFromBitLock = this.listFromBitLock();
-    const idsFromBitLock = Object.keys(listFromBitLock);
-    const listFromObjects = await this.scope.listLatestVersionObjects();
-    const idsFromObjects = Object.keys(listFromObjects).map((id) => {
-      const bitId = BitId.parse(id);
-      return bitId.changeScope(null).toString();
-    });
-    const newComponents = [];
-    idsFromBitLock.forEach((id) => {
-      if (!idsFromObjects.includes(id)) {
-        newComponents.push(id);
-      }
-    });
-    return newComponents;
-  }
-
-  // todo: move to ComponentsList
-  /**
-   * New and modified components are commit pending
-   *
-   * @return {Promise<string[]>}
-   */
-  async listCommitPendingComponents(): Promise<string[]> {
-    const [newComponents, modifiedComponents] = await Promise
-      .all([this.listNewComponents(), this.listModifiedComponents()]);
-    return [...newComponents, ...modifiedComponents];
-  }
-
-  // todo: move to ComponentsList
-  /**
-   * Components from the model where the scope is local are pending for export
-   * @return {Promise<string[]>}
-   */
-  async listExportPendingComponents(): Promise<string[]> {
-    const stagedComponents = [];
-    const listFromObjects = await this.scope.listLatestVersionObjects();
-    Object.keys(listFromObjects).forEach((id) => {
-      const bitId = BitId.parse(id);
-      if (bitId.scope === this.scope.name) {
-        bitId.scope = null;
-        stagedComponents.push(bitId.toString());
-      }
-    });
-    return stagedComponents;
-  }
-
-  async commitAll(message: string, force: ?bool, verbose: ?bool): Promise<Component[]> {
-    const commitPendingComponents = await this.listCommitPendingComponents();
-    return Promise.all(commitPendingComponents.map((id) => {
-      const bitId = BitId.parse(id);
-      return this.commit(bitId, message, force, verbose);
-    }));
-  }
-
   composeRelativeBitPath(bitId: BitId): string {
     const { staticParts, dynamicParts } = this.dirStructure.componentsDirStructure;
     const dynamicDirs = dynamicParts.map(part => bitId[part]);
@@ -418,58 +304,6 @@ export default class Consumer {
         .catch(reject);
       })
     );
-  }
-
-  // todo: move to ComponentsList
-  /**
-   * Finds all components that are saved in the file system.
-   * Components might be stored in the default component directory and also might be outside
-   * of that directory, in which case the bit.lock is used to find them
-   * @return {Promise<Component[]>}
-   */
-  listFromFileSystem(): Promise<Component[]> {
-    const idsFromBitLock = Object.keys(this.listFromBitLock());
-    const componentsP = idsFromBitLock.map((id) => {
-      const parsedId = BitId.parse(id);
-      // todo: log a warning when a component is in bit.lock but not in the FS
-      return this.loadComponent(parsedId);
-    });
-
-    const { staticParts, dynamicParts } = this.dirStructure.componentsDirStructure;
-    const asterisks = Array(dynamicParts.length).fill('*'); // e.g. ['*', '*', '*']
-    const cwd = path.join(this.getPath(), ...staticParts);
-    return new Promise((resolve, reject) =>
-      glob(path.join(...asterisks), { cwd }, (err, files) => {
-        if (err) reject(err);
-
-        files.forEach((componentDynamicDirStr) => {
-          const componentDynamicDir = componentDynamicDirStr.split(path.sep);
-          const bitIdObj = {};
-          // combine componentDynamicDir (e.g. ['array', 'sort]) and dynamicParts
-          // (e.g. ['namespace', 'name']) into one object.
-          // (e.g. { namespace: 'array', name: 'sort' } )
-          componentDynamicDir.forEach((dir, idx) => {
-            const key = dynamicParts[idx];
-            bitIdObj[key] = dir;
-          });
-          // todo: a component might be originated from a remote, load the objects to check
-          const parsedId = new BitId(bitIdObj);
-          if (!idsFromBitLock.includes(parsedId.toString())) {
-            componentsP.push(this.loadComponent(parsedId));
-          }
-        });
-
-        return Promise.all(componentsP)
-          .then(resolve)
-          .catch(reject);
-      })
-    );
-  }
-
-  // todo: move to ComponentsList
-  listFromBitLock(): Object {
-    const bitLock = BitLock.load(this.getPath());
-    return bitLock.getAllComponents();
   }
 
   includes({ inline, bitName }: { inline: ?boolean, bitName: string }): Promise<boolean> {

@@ -32,7 +32,6 @@ import {
   BEFORE_IMPORT_PUT_ON_SCOPE,
   BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
-import Version from './models/version';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -121,32 +120,6 @@ export default class Scope {
       .then(components => this.toConsumerComponents(
         components.filter(c => c.scope === this.name)
       ));
-  }
-
-  listFromObjects(): ConsumerComponent[] {
-    return this.objects.listComponents()
-      .then(components => this.toConsumerComponents(components));
-  }
-
-  /**
-   * List all objects where the id is the object-id and the value is the Version object
-   * It is useful when checking for modified components where the most important data is the Ref.
-   */
-  async listLatestVersionObjects(): Promise<Object<Version>> {
-    const componentsObjects = await this.objects.listComponents();
-    const componentsVersionsP = {};
-    const componentsVersions = {};
-    componentsObjects.forEach((componentObjects) => {
-      const latestVersionRef = componentObjects.versions[componentObjects.latest()];
-      componentsVersionsP[componentObjects.id()] = this.getObject(latestVersionRef.hash);
-    });
-
-    const allVersions = await Promise.all(R.values(componentsVersionsP));
-
-    Object.keys(componentsVersionsP).forEach((key, i) => {
-      componentsVersions[key] = allVersions[i];
-    });
-    return componentsVersions;
   }
 
   importDependencies(component: ConsumerComponent, bitDir: string) {

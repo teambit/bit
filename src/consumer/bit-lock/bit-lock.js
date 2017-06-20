@@ -28,7 +28,7 @@ export default class BitLock {
     return new BitLock(lockPath, components);
   }
 
-  getAllComponents() {
+  getAllComponents(): Object<string> {
     return this.components;
   }
 

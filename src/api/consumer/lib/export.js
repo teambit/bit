@@ -1,6 +1,7 @@
 /** @flow */
 import { Consumer, loadConsumer } from '../../../consumer';
 import ConsumerComponent from '../../../consumer/component/consumer-component';
+import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
 import { BEFORE_EXPORT } from '../../../cli/loader/loader-messages';
 import { ComponentNotFound } from '../../../scope/exceptions';
@@ -36,7 +37,8 @@ export default function exportAction(id?: string, remote: string, save: ?bool) {
       return exportComponent(consumer, id);
     }
     // export all
-    return consumer.listExportPendingComponents().then((ids) => {
+    const componentsList = new ComponentsList(consumer);
+    return componentsList.listExportPendingComponents().then((ids) => {
       // todo: what happens when some failed? we might consider avoid Promise.all
       // todo: improve performance. Load the remote only once, run the hook only once.
       return Promise.all(ids.map(compId => exportComponent(consumer, compId)));

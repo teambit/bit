@@ -1,6 +1,217 @@
+/** @flow */
 // this class should also help with the performance of status/commit/export commands.
-// common data of components-lists will be cached.
+// common data of components-lists are cached.
+
+import bufferFrom from 'bit/buffer/from';
+import path from 'path';
+import glob from 'glob';
+import R from 'ramda';
+import Version from '../../scope/models/version';
+import Source from '../../scope/models/source';
+import Component from '../component';
+import { BitId } from '../../bit-id';
+import logger from '../../logger/logger';
+import BitLock from '../bit-lock/bit-lock';
+import Consumer from '../consumer';
 
 export default class ComponentsList {
+  consumer: Consumer;
+  _fromFileSystem: Promise<string[]>;
+  _fromBitLock: Object;
+  _fromObjects: Promise<Object<Version>>;
+  constructor(consumer: Consumer) {
+    this.consumer = consumer;
+    this.scope = consumer.scope;
+  }
 
+  // todo: the comparison should include also MiscFiles and maybe file rename
+  isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
+    const getHash = (data): string => {
+      return Source.from(bufferFrom(data)).hash().toString();
+    };
+    const isSourceModified = (componentSrc, versionSrc) => {
+      if (!componentSrc && !versionSrc) return false;
+      if (!componentSrc && versionSrc) return true;
+      if (componentSrc && !versionSrc) return true;
+      return (componentSrc.file.hash !== getHash(versionSrc.src));
+    };
+    return isSourceModified(componentFromModel.impl, componentFromFileSystem.impl)
+      || isSourceModified(componentFromModel.specs, componentFromFileSystem.specs);
+  }
+
+
+  /**
+   * List all objects where the id is the object-id and the value is the Version object
+   * It is useful when checking for modified components where the most important data is the Ref.
+   */
+  async getFromObjects(): Promise<Object<Version>> {
+    if (!this._fromObjects) {
+      const componentsObjects = await this.scope.objects.listComponents();
+      const componentsVersionsP = {};
+      const componentsVersions = {};
+      componentsObjects.forEach((componentObjects) => {
+        const latestVersionRef = componentObjects.versions[componentObjects.latest()];
+        componentsVersionsP[componentObjects.id()] = this.scope.getObject(latestVersionRef.hash);
+      });
+
+      const allVersions = await Promise.all(R.values(componentsVersionsP));
+
+      Object.keys(componentsVersionsP).forEach((key, i) => {
+        componentsVersions[key] = allVersions[i];
+      });
+      this._fromObjects = componentsVersions;
+    }
+    return this._fromObjects;
+  }
+
+  /**
+   * Components that are in the model (either, committed from a local scope or imported), and were
+   * changed in the file system
+   *
+   * @return {Promise<string[]>}
+   */
+  async listModifiedComponents(): Promise<string[]> {
+    const [objectComponents, fileSystemComponents] = await Promise
+      .all([this.getFromObjects(), this.getFromFileSystem()]);
+
+    const objFromFileSystem = fileSystemComponents.reduce((components, component) => {
+      components[component.id.toString()] = component;
+      return components;
+    }, {});
+
+    const modifiedComponents = [];
+    Object.keys(objectComponents).forEach((id) => {
+      const bitId = BitId.parse(id);
+      const newId = bitId.changeScope(null);
+      const componentFromFS = objFromFileSystem[newId.toString()];
+
+      if (componentFromFS) {
+        if (this.isComponentModified(objectComponents[id], componentFromFS)) {
+          // todo: handle a case of two models of the same component, each from different scope
+          modifiedComponents.push(newId.toString());
+        }
+      } else {
+        logger.warn(`a component ${id} exists in the model but not on the file system`);
+      }
+    });
+    return modifiedComponents;
+  }
+
+  /**
+   * Components that are registered in bit.lock but have never been committed
+   *
+   * @return {Promise.<string[]>}
+   */
+  async listNewComponents(): Promise<string[]> {
+    const idsFromBitLock = Object.keys(this.getFromBitLock());
+    const listFromObjects = await this.getFromObjects();
+    const idsFromObjects = Object.keys(listFromObjects).map((id) => {
+      const bitId = BitId.parse(id);
+      return bitId.changeScope(null).toString();
+    });
+    const newComponents = [];
+    idsFromBitLock.forEach((id) => {
+      if (!idsFromObjects.includes(id)) {
+        newComponents.push(id);
+      }
+    });
+    return newComponents;
+  }
+  /**
+   * New and modified components are commit pending
+   *
+   * @return {Promise<string[]>}
+   */
+  async listCommitPendingComponents(): Promise<string[]> {
+    const [newComponents, modifiedComponents] = await Promise
+      .all([this.listNewComponents(), this.listModifiedComponents()]);
+    return [...newComponents, ...modifiedComponents];
+  }
+
+  /**
+   * Components from the model where the scope is local are pending for export
+   * @return {Promise<string[]>}
+   */
+  async listExportPendingComponents(): Promise<string[]> {
+    const stagedComponents = [];
+    const listFromObjects = await this.getFromObjects();
+    Object.keys(listFromObjects).forEach((id) => {
+      const bitId = BitId.parse(id);
+      if (bitId.scope === this.scope.name) {
+        bitId.scope = null;
+        stagedComponents.push(bitId.toString());
+      }
+    });
+    return stagedComponents;
+  }
+
+  onFileSystemAndNotOnBitLock(): Promise<Component[]> {
+    const { staticParts, dynamicParts } = this.consumer.dirStructure.componentsDirStructure;
+    const asterisks = Array(dynamicParts.length).fill('*'); // e.g. ['*', '*', '*']
+    const cwd = path.join(this.consumer.getPath(), ...staticParts);
+    const idsFromBitLock = Object.keys(this.getFromBitLock());
+    return new Promise((resolve, reject) =>
+      glob(path.join(...asterisks), { cwd }, (err, files) => {
+        if (err) reject(err);
+
+        const componentsP = [];
+        files.forEach((componentDynamicDirStr) => {
+          const componentDynamicDir = componentDynamicDirStr.split(path.sep);
+          const bitIdObj = {};
+          // combine componentDynamicDir (e.g. ['array', 'sort]) and dynamicParts
+          // (e.g. ['namespace', 'name']) into one object.
+          // (e.g. { namespace: 'array', name: 'sort' } )
+          componentDynamicDir.forEach((dir, idx) => {
+            const key = dynamicParts[idx];
+            bitIdObj[key] = dir;
+          });
+          // todo: a component might be originated from a remote, load the objects to check
+          const parsedId = new BitId(bitIdObj);
+          if (!idsFromBitLock.includes(parsedId.toString())) {
+            componentsP.push(this.consumer.loadComponent(parsedId));
+          }
+        });
+
+        return Promise.all(componentsP)
+          .then(resolve)
+          .catch(reject);
+      })
+    );
+  }
+
+  /**
+   * components that are on FS and not on bit.lock
+   */
+  async listUntrackedComponents(): Promise<string[]> {
+    const untrackedComponents = await this.onFileSystemAndNotOnBitLock();
+    return untrackedComponents.map(component => component.id.toString());
+  }
+
+  /**
+   * Finds all components that are saved in the file system.
+   * Components might be stored in the default component directory and also might be outside
+   * of that directory, in which case the bit.lock is used to find them
+   * @return {Promise<Component[]>}
+   */
+  async getFromFileSystem(): Promise<Component[]> {
+    if (!this._fromFileSystem) {
+      const idsFromBitLock = Object.keys(this.getFromBitLock());
+      const registeredComponentsP = idsFromBitLock.map((id) => {
+        const parsedId = BitId.parse(id);
+        // todo: log a warning when a component is in bit.lock but not in the FS
+        return this.consumer.loadComponent(parsedId);
+      });
+      const unRegisteredComponentsP = await this.onFileSystemAndNotOnBitLock();
+      this._fromFileSystem = Promise.all([...registeredComponentsP, ...unRegisteredComponentsP]);
+    }
+    return this._fromFileSystem;
+  }
+
+  getFromBitLock(): Object {
+    if (!this._fromBitLock) {
+      const bitLock = BitLock.load(this.consumer.getPath());
+      this._fromBitLock = bitLock.getAllComponents();
+    }
+    return this._fromBitLock;
+  }
 }

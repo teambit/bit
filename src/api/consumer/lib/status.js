@@ -1,44 +1,20 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
+import ComponentsList from '../../../consumer/component/components-list';
 
-// todo: improve performance. Components are now fetched multiple times
-// todo: move the lists part to ComponentsList
 export default function status(): Promise<{ inline: Component[], sources: Component[]}> {
   return loadConsumer()
-  .then(consumer => Promise.all([
-    consumer.listFromFileSystem(),
-    consumer.listFromBitLock(),
-    consumer.scope.listFromObjects(),
-    consumer.listNewComponents(),
-    consumer.listModifiedComponents(),
-    consumer.listExportPendingComponents(),
-    consumer.scope
-  ]))
-  .then(([listFromFileSystem, listFromBitLock, listFromObjects, newComponents, modifiedComponent, stagedComponents, scope]) => {
-    const localScopeName = scope.name;
-    const objFromFileSystem = listFromFileSystem.reduce((components, component) => {
-      components[component.id.toString()] = component;
-      return components;
-    }, {});
-    const idsFromFileSystem = Object.keys(objFromFileSystem);
-    const idsFromBitLock = Object.keys(listFromBitLock);
-    const objFromObjects = listFromObjects.reduce((components, component) => {
-      const id = component.id.scope === localScopeName ?
-        component.id.changeScope(null) : component.id;
-      components[id.toString()] = component;
-      return components;
-    }, {});
-    const idsFromObjects = Object.keys(objFromObjects);
+  .then((consumer) => {
+    const componentsList = new ComponentsList(consumer);
+    const untrackedComponents = componentsList.listUntrackedComponents();
+    const newComponents = componentsList.listNewComponents();
+    const modifiedComponent = componentsList.listModifiedComponents();
+    const stagedComponents = componentsList.listExportPendingComponents();
 
-    // a component is only on the FS (not the model) and not on bit.lock
-    const untrackedComponents = [];
-    idsFromFileSystem.forEach((id) => {
-      if (!idsFromObjects.includes(id) && !idsFromBitLock.includes(id)) {
-        untrackedComponents.push(id);
-      }
-    });
-
+    return Promise.all([untrackedComponents, newComponents, modifiedComponent, stagedComponents]);
+  })
+  .then(([untrackedComponents, newComponents, modifiedComponent, stagedComponents]) => {
     return { untrackedComponents, newComponents, modifiedComponent, stagedComponents };
   });
 }
