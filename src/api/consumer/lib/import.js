@@ -21,7 +21,7 @@ export default function importAction(
     prefix: ?string,
     environment: ?bool,
   }): Promise<Bit[]> {
-  function importEnvironment(consumer) {
+  function importEnvironment(consumer: Consumer) {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
 
     // TODO - import environment on multiple environments
@@ -50,7 +50,7 @@ export default function importAction(
 
   return Consumer.ensure(performOnDir)
     .then(consumer => consumer.scope.ensureDir().then(() => consumer))
-    .then((consumer) => {
+    .then((consumer: Consumer) => {
       if (tester || compiler) { return importEnvironment(consumer); }
       const cache = false;
       return consumer.import(ids, verbose, environment, cache)          // from here replace with bit-scope-client.fetch

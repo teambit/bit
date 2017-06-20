@@ -32,7 +32,9 @@ export default class BitLock {
     return this.components;
   }
 
+  // todo: make it async
   addComponent(componentId: string, componentPath: string): void {
+    logger.debug(`adding to bit.lock ${componentId}`);
     let stat;
     try {
       stat = fs.lstatSync(componentPath);
@@ -65,7 +67,9 @@ export default class BitLock {
   // todo: use this lib: https://github.com/getify/JSON.minify to add comments to this file
   // then, upon creating the file for the first time, add a comment with warnings about modifying
   // the file
+  // todo: make it async
   write() {
+    logger.debug('writing to bit.lock');
     fs.outputFileSync(this.lockPath, JSON.stringify(this.components, null, 4));
   }
 }

@@ -168,7 +168,13 @@ export default class Consumer {
       return this.scope.getMany(bitIds, cache)
       .then((componentDependenciesArr) => {
         return this.writeToComponentsDir(componentDependenciesArr)
-          .then(() => ({ dependencies: componentDependenciesArr }));
+          .then(() => {
+            bitIds.forEach((id) => {
+              this.bitLock.addComponent(id.toString(), this.composeRelativeBitPath(id));
+            });
+            this.bitLock.write();
+            return { dependencies: componentDependenciesArr };
+          });
       });
     };
 
@@ -180,7 +186,12 @@ export default class Consumer {
   importEnvironment(rawId: ?string, verbose?: bool) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId, this.scope.name);
-    return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose });
+    return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose })
+      .then((envDependencies) => {
+        this.bitLock.addComponent(bitId.toString(), this.composeRelativeBitPath(bitId));
+        this.bitLock.write();
+        return envDependencies;
+      });
   }
 
   addComponent(componentPath: string, id: string) {
