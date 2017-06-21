@@ -1,4 +1,5 @@
 /** @flow */
+import bufferFrom from 'bit/buffer/from';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
@@ -13,8 +14,8 @@ import ConsumerComponent from '../../consumer/component/consumer-component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import loader from '../../cli/loader';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
-import Consumer from '../../consumer';
-import bufferFrom from 'bit/buffer/from';
+import { Consumer } from '../../consumer';
+import logger from '../../logger/logger';
 
 export type ComponentTree = {
   component: Component;
@@ -41,6 +42,7 @@ export default class SourceRepository {
     return this.objects()
       .findOne(component.hash())
       .catch(() => {
+        logger.debug(`failed finding a component with hash: ${component.hash()}`);
         return null;
       });
   }

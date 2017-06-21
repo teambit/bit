@@ -126,6 +126,7 @@ export default class Repository {
   }
 
   persist(): Promise<[]> {
+    logger.debug(`repository: persisting ${this.objects.length} objects`);
     // @TODO handle failures
     return Promise.all(this.objects.map(object => this.persistOne(object)));
   }
@@ -135,7 +136,9 @@ export default class Repository {
       .then((contents) => {
         const options = {};
         if (this.scope.groupName) options.gid = resolveGroupId(this.scope.groupName);
-        return writeFile(this.objectPath(object.hash()), contents, options);
+        const objectPath = this.objectPath(object.hash());
+        logger.debug(`writing an object into ${objectPath}`);
+        return writeFile(objectPath, contents, options);
       });
   }
 }

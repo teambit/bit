@@ -32,6 +32,7 @@ import {
   BEFORE_IMPORT_PUT_ON_SCOPE,
   BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
+import logger from '../logger/logger';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -54,7 +55,7 @@ export default class Scope {
   scopeJson: ScopeJson;
   tmp: Tmp;
   path: string;
-  sources: SourcesRepository;
+  // sources: SourcesRepository; // for some reason it interferes with the IDE autocomplete
   objects: Repository;
 
   constructor(scopeProps: ScopeProps) {
@@ -163,6 +164,7 @@ export default class Scope {
       });
   }
 
+  // todo: rename this method. It writes into the objects directory
   importSrc(componentObjects: ComponentObjects) {
     return this.sources.merge(componentObjects.toObjects(this.objects))
       .then(() => this.objects.persist());
@@ -212,6 +214,7 @@ export default class Scope {
 
   getExternalMany(ids: BitId[], remotes: Remotes, localFetch: bool = true):
   Promise<VersionDependencies[]> {
+    logger.debug(`getExternalMany, planning on fetching from ${localFetch ? 'local': 'remote'} scope`);
     return this.sources.getMany(ids)
       .then((defs) => {
         const left = defs.filter((def) => {
@@ -221,6 +224,7 @@ export default class Scope {
         });
 
         if (left.length === 0) {
+          logger.debug('getExternalMany: no more ids left, all found locally, existing the method');
           // $FlowFixMe - there should be a component because there no defs without components left.
           return Promise.all(defs.map(def => def.component.toVersionDependencies(
             def.id.version,
@@ -229,15 +233,21 @@ export default class Scope {
           )));
         }
 
+        logger.debug(`getExternalMany: ${left.length} left. Fetching them from a remote`);
         return remotes
           .fetch(left.map(def => def.id), this)
           .then((componentObjects) => {
+            logger.debug('getExternalMany: writing them to the model');
             return Promise.all(componentObjects.map(compObj => this.importSrc(compObj)));
           })
           .then(() => this.getExternalMany(ids, remotes));
       });
   }
 
+  /**
+   * If the component is not in the local scope, fetch it from a remote and save into the local
+   * scope. (objects directory).
+   */
   getExternal({ id, remotes, localFetch = true }: {
     id: BitId,
     remotes: Remotes,
@@ -278,7 +288,11 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
-  importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true): Promise<VersionDependencies[]> {
+  /**
+   * If not found in the local scope, fetch from a remote scope and save into the local scope
+   */
+  importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true):
+  Promise<VersionDependencies[]> {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
@@ -354,6 +368,10 @@ export default class Scope {
       });
   }
 
+  /**
+   * get multiple components from a scope, if not found in the local scope, fetch from a remote
+   * scope. Then, write them to the local scope.
+   */
   getMany(ids: BitId[], cache?: bool = true): Promise<ConsumerComponent[]> {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
