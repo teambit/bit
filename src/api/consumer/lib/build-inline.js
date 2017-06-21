@@ -20,7 +20,7 @@ export function buildInline(id: string): Promise<?Array<string>> {
   return loadConsumer()
     .then((consumer) => {
       return consumer.loadComponent(inlineId)
-      .then((component) => {
+      .then((component: Component) => {
         return component.build({ scope: consumer.scope, consumer })
         .then((result) => {
           if (result === null) return Promise.resolve(null);

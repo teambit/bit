@@ -1,7 +1,7 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
-import { loadScope } from '../../../scope';
+import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 
 export default function buildInScope({ id, environment, save, verbose, scopePath }:
@@ -9,7 +9,7 @@ export default function buildInScope({ id, environment, save, verbose, scopePath
   function loadFromScope(initialError: ?Error) {
     return loadScope(scopePath || process.cwd())
       .catch(newErr => Promise.reject(initialError || newErr))
-      .then((scope) => {
+      .then((scope: Scope) => {
         const bitId = BitId.parse(id, scope.name);
         return scope.build({ bitId, environment, save, verbose });
       })

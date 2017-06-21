@@ -239,7 +239,7 @@ export default class Component {
     };
 
     if (!compiler.build && !compiler.compile) {
-      return Promise.reject(`"${this.compilerId.toString()}" does not have a valid compiler interface, it has to return a build method`);
+      return Promise.reject(`"${this.compilerId.toString()}" does not have a valid compiler interface, it has to expose a build method`);
     }
 
     if (consumer) {
