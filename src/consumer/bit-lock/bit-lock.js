@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import logger from '../../logger/logger';
 import { BIT_LOCK } from '../../constants';
 import InvalidBitLock from './exceptions/invalid-bit-lock';
+import { readFile, outputFile } from '../../utils';
 
 export default class BitLock {
   lockPath: string;
@@ -12,12 +13,13 @@ export default class BitLock {
     this.components = components;
   }
 
-  static load(dirPath: string): BitLock {
+  static async load(dirPath: string): BitLock {
     const lockPath = path.join(dirPath, BIT_LOCK);
     let components;
     if (fs.existsSync(lockPath)) {
       try {
-        components = JSON.parse(fs.readFileSync(lockPath).toString('utf8'));
+        const lockFileContent = await readFile(lockPath);
+        components = JSON.parse(lockFileContent.toString('utf8'));
       } catch (e) {
         throw new InvalidBitLock(lockPath);
       }
@@ -32,7 +34,6 @@ export default class BitLock {
     return this.components;
   }
 
-  // todo: make it async
   addComponent(componentId: string, componentPath: string): void {
     logger.debug(`adding to bit.lock ${componentId}`);
     let stat;
@@ -67,9 +68,8 @@ export default class BitLock {
   // todo: use this lib: https://github.com/getify/JSON.minify to add comments to this file
   // then, upon creating the file for the first time, add a comment with warnings about modifying
   // the file
-  // todo: make it async
-  write() {
+  write(): Promise<> {
     logger.debug('writing to bit.lock');
-    fs.outputFileSync(this.lockPath, JSON.stringify(this.components, null, 4));
+    return outputFile(this.lockPath, JSON.stringify(this.components, null, 4));
   }
 }

@@ -18,6 +18,7 @@ import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/
 import config from './lib/global-config';
 import getDriver from './lib/get-driver';
 import watchInlineComponents from './lib/watch-inline-components';
+import add from './lib/add';
 
 export {
   init,
@@ -45,4 +46,5 @@ export {
   remoteRm,
   getDriver,
   watchInlineComponents,
+  add,
 };

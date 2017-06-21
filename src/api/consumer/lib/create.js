@@ -2,14 +2,30 @@
 import { loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
+import BitLock from '../../../consumer/bit-lock';
 
-export default function create(
-  id: string,
-  withSpecs: boolean,
-  withBitJson: boolean, force: boolean
+/**
+ * Creates a new component, writes it to the file system and adds to bit.lock
+ */
+export default async function create(
+  idRaw: string,
+  withSpecs: boolean = false,
+  withBitJson: boolean = false,
+  force: boolean = false
   ): Promise<Component> {
-  return loadConsumer()
-    .then(consumer =>
-      consumer.createComponent({ id: BitId.parse(id), withSpecs, withBitJson, force })
-    );
+  const consumer = await loadConsumer();
+  const id = BitId.parse(idRaw);
+  const bitPath = consumer.composeBitPath(id);
+  const component = Component.create({
+    name: id.name,
+    box: id.box,
+    withSpecs,
+    consumerBitJson: consumer.bitJson,
+  }, consumer.scope);
+  await component.write(bitPath, withBitJson, force);
+  const bitLock = await BitLock.load(consumer.getPath());
+  bitLock.addComponent(id.toString(), consumer.composeRelativeBitPath(id));
+  await bitLock.write();
+  await consumer.driver.runHook('onCreate', component);
+  return component;
 }

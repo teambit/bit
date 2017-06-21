@@ -1,7 +1,7 @@
 /** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
-import { loadConsumer } from '../../../consumer';
+import { add } from '../../../api/consumer';
 
 export default class Add extends Command {
   name = 'add <path> <id>';
@@ -11,7 +11,7 @@ export default class Add extends Command {
   loader = true;
 
   action([path, id]: [string]): Promise<*> {
-    return loadConsumer().then(consumer => consumer.addComponent(path, id));
+    return add(path, id);
   }
 
   report(result: Object): string {

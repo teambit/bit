@@ -22,7 +22,6 @@ import {
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
  } from '../constants';
-import { removeContainingDirIfEmpty } from '../utils';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
 import loader from '../cli/loader';
@@ -78,9 +77,9 @@ export default class Consumer {
     return this._dirStructure;
   }
 
-  get bitLock(): BitLock {
+  async getBitLock(): BitLock {
     if (!this._bitLock) {
-      this._bitLock = BitLock.load(this.getPath());
+      this._bitLock = await BitLock.load(this.getPath());
     }
     return this._bitLock;
   }
@@ -118,8 +117,9 @@ export default class Consumer {
     return path.join(this.getComponentsPath(), id.toPath());
   }
 
-  loadComponent(id: BitId): Promise<Component> {
-    const bitDir = this.bitLock.getComponentPath(id) || this.composeBitPath(id);
+  async loadComponent(id: BitId): Promise<Component> {
+    const bitLock = await this.getBitLock();
+    const bitDir = bitLock.getComponentPath(id) || this.composeBitPath(id);
     return Component.loadFromFileSystem(bitDir, this.bitJson);
   }
 
@@ -131,56 +131,54 @@ export default class Consumer {
       .then(componentDependencies => componentDependencies.component);
   }
 
+  async importAccordingToConsumerBitJson(verbose?: bool, withEnvironments: ?bool,
+                                         cache?: bool = true): Promise<> {
+    const dependencies = BitIds.fromObject(this.bitJson.dependencies);
+    if (R.isNil(dependencies) || R.isEmpty(dependencies)) {
+      if (!withEnvironments) {
+        return Promise.reject(new NothingToImport());
+      } else if (R.isNil(this.testerId) || R.isNil(this.compilerId)) {
+        return Promise.reject(new NothingToImport());
+      }
+    }
+
+    const componentDependenciesArr = this.scope.getMany(dependencies, cache);
+    await this.writeToComponentsDir(componentDependenciesArr);
+    if (withEnvironments) {
+      const envComponents = this.scope.installEnvironment({
+        ids: [this.testerId, this.compilerId],
+        consumer: this,
+        verbose
+      });
+      return {
+        dependencies: componentDependenciesArr,
+        envDependencies: envComponents,
+      };
+    }
+    return { dependencies: componentDependenciesArr };
+  }
+
+  async importSpecificComponents(rawIds: ?string[], cache?: bool = true) {
+    // $FlowFixMe - we check if there are bitIds before we call this function
+    const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
+    const componentDependenciesArr = await this.scope.getMany(bitIds, cache);
+    await this.writeToComponentsDir(componentDependenciesArr);
+    const bitLock = await this.getBitLock();
+    bitIds.forEach((id) => {
+      bitLock.addComponent(id.toString(), this.composeRelativeBitPath(id));
+    });
+    await bitLock.write();
+    return { dependencies: componentDependenciesArr };
+  }
+
 
   import(rawIds: ?string[], verbose?: bool, withEnvironments: ?bool, cache?: bool = true):
   Promise<{ dependencies: ComponentDependencies[], envDependencies?: Component[] }> {
-    const importAccordingToConsumerBitJson = () => {
-      const dependencies = BitIds.fromObject(this.bitJson.dependencies);
-      if (R.isNil(dependencies) || R.isEmpty(dependencies)) {
-        if (!withEnvironments) {
-          return Promise.reject(new NothingToImport());
-        } else if (R.isNil(this.testerId) || R.isNil(this.compilerId)) {
-          return Promise.reject(new NothingToImport());
-        }
-      }
-
-      return this.scope.getMany(dependencies, cache)
-        .then((componentDependenciesArr) => {
-          return this.writeToComponentsDir(componentDependenciesArr)
-          .then(() => {
-            return withEnvironments ?
-            this.scope.installEnvironment({
-              ids: [this.testerId, this.compilerId],
-              consumer: this,
-              verbose
-            })
-            .then(envComponents => ({
-              dependencies: componentDependenciesArr,
-              envDependencies: envComponents,
-            })) : { dependencies: componentDependenciesArr };
-          });
-        });
-    };
-
-    const importSpecificComponents = () => {
-      // $FlowFixMe - we check if there are bitIds before we call this function
-      const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
-      return this.scope.getMany(bitIds, cache)
-      .then((componentDependenciesArr) => {
-        return this.writeToComponentsDir(componentDependenciesArr)
-          .then(() => {
-            bitIds.forEach((id) => {
-              this.bitLock.addComponent(id.toString(), this.composeRelativeBitPath(id));
-            });
-            this.bitLock.write();
-            return { dependencies: componentDependenciesArr };
-          });
-      });
-    };
-
     loader.start(BEFORE_IMPORT_ACTION);
-    if (!rawIds || R.isEmpty(rawIds)) return importAccordingToConsumerBitJson();
-    return importSpecificComponents();
+    if (!rawIds || R.isEmpty(rawIds)) {
+      return this.importAccordingToConsumerBitJson(verbose, withEnvironments, cache);
+    }
+    return this.importSpecificComponents(rawIds, cache);
   }
 
   importEnvironment(rawId: ?string, verbose?: bool) {
@@ -188,42 +186,10 @@ export default class Consumer {
     const bitId = BitId.parse(rawId, this.scope.name);
     return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose })
       .then((envDependencies) => {
-        this.bitLock.addComponent(bitId.toString(), this.composeRelativeBitPath(bitId));
-        this.bitLock.write();
+        // todo: do we need the environment in bit.lock?
+        // this.bitLock.addComponent(bitId.toString(), this.composeRelativeBitPath(bitId));
+        // this.bitLock.write();
         return envDependencies;
-      });
-  }
-
-  addComponent(componentPath: string, id: string) {
-    try {
-      const parsedId = BitId.parse(id);
-      this.bitLock.addComponent(parsedId.toString(), componentPath);
-      this.bitLock.write();
-      return Promise.resolve({ added: parsedId.toString() });
-    } catch (err) {
-      return Promise.reject(err);
-    }
-  }
-
-  /**
-   * Creates a new component, writes it to the file system and adds to bit.lock
-   */
-  createComponent({ id, withSpecs = false, withBitJson = false, force = false }: {
-    id: BitId, withSpecs: boolean, withBitJson: boolean, force: boolean
-  }): Promise<Component> {
-    const bitPath = this.composeBitPath(id);
-
-    return Component.create({
-      name: id.name,
-      box: id.box,
-      withSpecs,
-      consumerBitJson: this.bitJson,
-    }, this.scope)
-      .write(bitPath, withBitJson, force)
-      .then((component) => {
-        this.bitLock.addComponent(id.toString(), this.composeRelativeBitPath(id));
-        this.bitLock.write();
-        return this.driver.runHook('onCreate', component, component);
       });
   }
 
@@ -254,22 +220,22 @@ export default class Consumer {
     }));
   }
 
-  commit(id: BitId, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
-    const bitDir = this.bitLock.getComponentPath(id);
+  async commit(id: BitId, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
+    const bitLock = await this.getBitLock();
+    const bitDir = bitLock.getComponentPath(id);
     if (!bitDir) throw new Error(`Unable to find a component ${id} in your bit.lock file. Consider "bit add" it`);
-    const implFile = this.bitLock.getComponentImplFile(id);
+    const implFile = bitLock.getComponentImplFile(id);
 
-    return this.loadComponent(id)
-      .then((bit) => {
-        if (implFile) {
-          bit.implFile = implFile;
-          bit.impl = path.join(bitDir, implFile);
-        }
-        return this.scope.put({ consumerComponent: bit, message, force, consumer: this, bitDir, verbose })
-          .then(() => index(bit, this.scope.getPath())) // todo: make sure it still works
-          .then(() => this.driver.runHook('onCommit', bit)) // todo: probably not needed as the bind happens on create
-          .then(() => bit);
-      });
+    const component = await this.loadComponent(id);
+    if (implFile) {
+      component.implFile = implFile;
+      component.impl = path.join(bitDir, implFile);
+    }
+    await this.scope
+      .put({ consumerComponent: component, message, force, consumer: this, bitDir, verbose });
+    await index(component, this.scope.getPath()); // todo: make sure it still works
+    await this.driver.runHook('onCommit', component); // todo: probably not needed as the bind happens on create
+    return component;
   }
 
   composeRelativeBitPath(bitId: BitId): string {
