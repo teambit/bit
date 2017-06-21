@@ -40,9 +40,7 @@ export default class BitId {
   }
 
   isLocal(scopeName: string) {
-    // todo: are we good with this decision?
-    // return scopeName === this.getScopeWithoutRemoteAnnotation();
-    return scopeName === null;
+    return scopeName === null || scopeName === this.getScopeWithoutRemoteAnnotation();
   }
 
   getVersion() {
@@ -54,7 +52,7 @@ export default class BitId {
     const scope = this.scope;
     const componentStr = ignoreScope || !scope ? [box, name].join('/') : [scope, box, name].join('/');
     if (version) {
-      componentStr.concat(`::${version}`);
+      return componentStr.concat(`::${version}`);
     }
 
     return componentStr;
