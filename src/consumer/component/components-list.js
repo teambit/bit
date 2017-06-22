@@ -220,9 +220,9 @@ export default class ComponentsList {
     return this._fromFileSystem;
   }
 
-  getFromBitLock(): Object {
+  async getFromBitLock(): Object {
     if (!this._fromBitLock) {
-      const bitLock = BitLock.load(this.consumer.getPath());
+      const bitLock = await BitLock.load(this.consumer.getPath());
       this._fromBitLock = bitLock.getAllComponents();
     }
     return this._fromBitLock;
