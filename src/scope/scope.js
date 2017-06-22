@@ -33,6 +33,7 @@ import {
   BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
 import logger from '../logger/logger';
+import componentResolver from '../component-resolver';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -170,6 +171,12 @@ export default class Scope {
       .then(() => this.objects.persist());
   }
 
+  // todo: rename this method, it takes place on the remote scope only
+  /**
+   * saves a component into the objects directory of the remote scope, then, resolves its
+   * dependencies, saves them as well. Finally runs the build process if needed on an isolated
+   * environment.
+   */
   async export(componentObjects: ComponentObjects): Promise<any> {
     const objects = componentObjects.toObjects(this.objects);
     const { component } = objects;
@@ -529,18 +536,18 @@ export default class Scope {
    * sync method that loads the environment/(path to environment component)
    */
   loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?bool, bareScope?: ?bool }) {
-    const envDir = opts && opts.bareScope ? this.getPath() : pathLib.dirname(this.getPath());
+    // const envDir = opts && opts.bareScope ? this.getPath() : pathLib.dirname(this.getPath());
     if (opts && opts.pathOnly) {
       try {
-        return bitJs.loadExact(bitId.toString(), envDir, opts);
+        return componentResolver(bitId.toString(), this.getPath());
       } catch (e) {
         throw new ResolutionException(e.message);
       }
     }
 
     try {
-      const a = bitJs.loadExact(bitId.toString(), envDir);
-      return a;
+      const envFile = componentResolver(bitId.toString(), this.getPath());
+      return require(envFile);
     } catch (e) {
       throw new ResolutionException(e.message);
     }
@@ -571,15 +578,16 @@ export default class Scope {
   { ids: BitId[], consumer?: Consumer, verbose?: boolean }): Promise<any> {
     const installPackageDependencies = (component: ConsumerComponent) => {
       return npmClient.install(component.packageDependencies, {
-        cwd: consumer ? consumer.getBitPathInComponentsDir(component.id) :
-          this.getBitPathInComponentsDir(component.id)
+        cwd: this.getBitPathInComponentsDir(component.id)
       });
     };
 
     return this.getMany(ids)
       .then((componentDependenciesArr) => {
         const writeToProperDir = () => {
-          if (consumer) { return consumer.writeToComponentsDir(componentDependenciesArr); }
+          // todo: make sure we are ok with this decision of having the environment installed
+          // in the same place for both, the local scope and the remote scope
+          // if (consumer) { return consumer.writeToComponentsDir(componentDependenciesArr); }
           // also doing flatting for componentDependencies (need to refactor)
           return this.writeToComponentsDir(componentDependenciesArr);
           // also doing flatting for componentDependencies (need to refactor)

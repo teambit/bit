@@ -66,8 +66,12 @@ export default class BitId {
   }
 
   toPath() {
-    // return path.join(this.box, this.name, this.scope, this.version);
-    return path.join(this.box, this.name); // todo: change according to the resolve-conflict strategy
+    // todo: change according to the resolve-conflict strategy
+    return path.join(this.box, this.name);
+  }
+
+  toFullPath() {
+    return path.join(this.box, this.name, this.scope, this.version);
   }
 
   static parse(id: ?string, realScopeName: ?string, version: string = LATEST_BIT_VERSION): ?BitId {
