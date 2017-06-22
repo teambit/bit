@@ -10,20 +10,16 @@ import { LATEST_BIT_VERSION,
 import BitJson from '../consumer/bit-json';
 import { ComponentNotFound } from '../scope/exceptions';
 
-function getLatestVersion(bitId: BitId, componentsDir: string): Promise<number> {
-  return new Promise((resolve, reject) => {
-    if (bitId.version !== LATEST_BIT_VERSION) return resolve(bitId.version);
-    const regexRemoveLatestVersion = new RegExp(`${LATEST_BIT_VERSION}$`);
-    const relativePathWithoutVersion = bitId.toPath().replace(regexRemoveLatestVersion, '');
-    const pathWithoutVersion = path.join(componentsDir, relativePathWithoutVersion);
-    glob('*', { cwd: pathWithoutVersion }, (err, versionsDirs) => {
-      if (err) return reject(err);
-      if (!versionsDirs || !versionsDirs.length) {
-        return reject(new ComponentNotFound(bitId.toString()));
-      }
-      return resolve(Math.max(versionsDirs));
-    });
-  });
+function getLatestVersion(bitId: BitId, componentsDir: string): number {
+  if (bitId.version !== LATEST_BIT_VERSION) return bitId.version;
+  const regexRemoveLatestVersion = new RegExp(`${LATEST_BIT_VERSION}$`);
+  const relativePathWithoutVersion = bitId.toPath().replace(regexRemoveLatestVersion, '');
+  const pathWithoutVersion = path.join(componentsDir, relativePathWithoutVersion);
+  const versionsDirs = glob.sync('*', { cwd: pathWithoutVersion });
+  if (!versionsDirs || !versionsDirs.length) {
+    throw new ComponentNotFound(bitId.toString());
+  }
+  return Math.max(versionsDirs);
 }
 
 function getRequiredFile(bitJson: BitJson): string {
@@ -31,22 +27,20 @@ function getRequiredFile(bitJson: BitJson): string {
     path.join(DEFAULT_DIST_DIRNAME, bitJson.impl) : bitJson.impl;
 }
 
-function resolvePath(componentId: string, projectRoot: string = process.cwd()): Promise<string> {
+function componentResolver(componentId: string, projectRoot: string = process.cwd()): string {
   const bitId = BitId.parse(componentId);
   const componentsDir = path.join(projectRoot, BITS_DIRNAME);
-  return getLatestVersion(bitId, componentsDir).then((version) => {
-    bitId.version = version.toString();
-    const componentPath = path.join(componentsDir, bitId.toPath());
-    return BitJson.load(componentPath)
-      .then((bitJson) => {
-        const finalFile = getRequiredFile(bitJson);
-        return path.join(componentPath, finalFile);
-      })
-      .catch((err) => {
-        if (fs.existsSync(componentPath)) throw err;
-        throw new ComponentNotFound(componentId);
-      });
-  });
+  const version = getLatestVersion(bitId, componentsDir);
+  bitId.version = version.toString();
+  const componentPath = path.join(componentsDir, bitId.toFullPath());
+  try {
+    const bitJson = BitJson.loadSync(componentPath);
+    const finalFile = getRequiredFile(bitJson);
+    return path.join(componentPath, finalFile);
+  } catch (err) {
+    if (fs.existsSync(componentPath)) throw err;
+    throw new ComponentNotFound(componentId);
+  }
 }
 
-export default resolvePath;
+export default componentResolver;

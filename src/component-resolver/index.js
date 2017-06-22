@@ -1,3 +1,3 @@
-import resolvePath from './component-resolver';
+import componentResolver from './component-resolver';
 
-export default resolvePath;
+export default componentResolver;
