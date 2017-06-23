@@ -112,7 +112,7 @@ export default class ComponentsList {
    * @return {Promise.<string[]>}
    */
   async listNewComponents(): Promise<string[]> {
-    const idsFromBitLock = this.idsFromBitLock(false);
+    const idsFromBitLock = await this.idsFromBitLock(false);
     const idsFromObjects = await this.idsFromObjects(false);
     const newComponents = [];
     idsFromBitLock.forEach((id) => {
@@ -159,8 +159,9 @@ export default class ComponentsList {
     });
   }
 
-  idsFromBitLock(withScopeName = true) {
-    const ids = Object.keys(this.getFromBitLock());
+  async idsFromBitLock(withScopeName = true) {
+    const fromBitLock = await this.getFromBitLock();
+    const ids = Object.keys(fromBitLock);
     if (withScopeName) return ids;
     return ids.map(id => BitId.parse(id).changeScope(null).toString());
   }
@@ -169,8 +170,8 @@ export default class ComponentsList {
     const { staticParts, dynamicParts } = this.consumer.dirStructure.componentsDirStructure;
     const asterisks = Array(dynamicParts.length).fill('*'); // e.g. ['*', '*', '*']
     const cwd = path.join(this.consumer.getPath(), ...staticParts);
-    const idsFromBitLock = this.idsFromBitLock();
-    const idsFromBitLockWithoutScope = this.idsFromBitLock(false);
+    const idsFromBitLock = await this.idsFromBitLock();
+    const idsFromBitLockWithoutScope = await this.idsFromBitLock(false);
     const files = await this.globP(path.join(...asterisks), { cwd });
     const componentsP = [];
     files.forEach((componentDynamicDirStr) => {
@@ -208,7 +209,7 @@ export default class ComponentsList {
    */
   async getFromFileSystem(): Promise<Component[]> {
     if (!this._fromFileSystem) {
-      const idsFromBitLock = this.idsFromBitLock();
+      const idsFromBitLock = await this.idsFromBitLock();
       const registeredComponentsP = idsFromBitLock.map((id) => {
         const parsedId = BitId.parse(id);
         // todo: log a warning when a component is in bit.lock but not in the FS
