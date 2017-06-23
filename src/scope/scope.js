@@ -2,7 +2,6 @@
 import * as pathLib from 'path';
 import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
-import bitJs from 'bit-js';
 import { GlobalRemotes } from '../global-config';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';

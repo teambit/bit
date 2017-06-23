@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "bit-javascript": "^0.6.3",
-    "bit-js": "^0.2.2",
     "buffer-from": "^0.1.1",
     "camelcase": "^4.0.0",
     "chalk": "^1.1.3",
