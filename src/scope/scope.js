@@ -86,7 +86,7 @@ export default class Scope {
   }
 
   getBitPathInComponentsDir(id: BitId): string {
-    return pathLib.join(this.getComponentsPath(), id.toPath());
+    return pathLib.join(this.getComponentsPath(), id.toFullPath());
   }
 
   remotes(): Promise<Remotes> {
