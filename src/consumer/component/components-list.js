@@ -96,6 +96,16 @@ export default class ComponentsList {
     return modifiedComponents;
   }
 
+  async newAndModifiedComponents(): Promise<Component[]> {
+    const [newComponents, modifiedComponents] = await Promise
+      .all([this.listNewComponents(), this.listModifiedComponents()]);
+
+    const componentsIds = [...newComponents, ...modifiedComponents];
+    // todo: improve performance. Get the already loaded components
+    const componentsP = componentsIds.map(id => this.consumer.loadComponent(id));
+    return Promise.all(componentsP);
+  }
+
   async idsFromObjects(withScope: boolean = true): Promise<string[]> {
     const fromObjects = await this.getFromObjects();
     const ids = Object.keys(fromObjects);

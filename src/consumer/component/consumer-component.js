@@ -305,14 +305,22 @@ export default class Component {
 
     if (!this.testerId || !this.specs || !this.specs.src) return Promise.resolve(null);
 
+    let testerFilePath;
+    try {
+      testerFilePath = scope.loadEnvironment(
+        this.testerId,
+        { pathOnly: true, bareScope: !consumer },
+      );
+    } catch (err) {
+      if (err instanceof ResolutionException) {
+        environment = true;
+        // todo: once we agree about this approach, get rid of the environment variable
+      } else throw err;
+    }
+
     return installEnvironmentsIfNeeded()
     .then(() => {
       try {
-        const testerFilePath = scope.loadEnvironment(
-          this.testerId,
-          { pathOnly: true, bareScope: !consumer },
-        );
-
         const run = ({ implDistPath, specDistPath }) => {
           return specsRunner.run({
             scope,
@@ -343,7 +351,7 @@ export default class Component {
         };
 
         if (!isolated && consumer) {
-          const componentPath = path.join(consumer.getInlineBitsPath(), this.box, this.name);
+          const componentPath = consumer.composeBitPath(this.id);
           return this.build({ scope, environment, verbose, consumer }).then(() => {
             const saveImplDist = this.dist ?
             this.dist.write(componentPath, this.implFile) : Promise.resolve();

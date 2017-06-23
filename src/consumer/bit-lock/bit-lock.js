@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import logger from '../../logger/logger';
 import { BIT_LOCK } from '../../constants';
 import InvalidBitLock from './exceptions/invalid-bit-lock';
+import { BitId } from '../../bit-id';
 import { readFile, outputFile } from '../../utils';
 
 export default class BitLock {
@@ -55,8 +56,8 @@ export default class BitLock {
     }
   }
 
-  getComponentPath(id: string): ?string {
-    if (this.components[id]) return this.components[id].path;
+  getComponentPath(id: BitId): ?string {
+    if (this.components[id.toString()]) return this.components[id].path;
     return null;
   }
 

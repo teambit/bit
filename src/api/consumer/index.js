@@ -12,7 +12,7 @@ import importAction from './lib/import';
 import exportAction from './lib/export';
 import getInlineBit from './lib/get-inline-bit';
 import getScopeBit from './lib/get-scope-bit';
-import { testInline, testInlineAll } from './lib/test-inline';
+import { test, testAll } from './lib/test-inline';
 import getComponentLogs from './lib/get-component-logs';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import config from './lib/global-config';
@@ -39,8 +39,8 @@ export {
   getInlineBit,
   getScopeBit,
   getComponentLogs,
-  testInline,
-  testInlineAll,
+  test,
+  testAll,
   remoteAdd,
   remoteList,
   remoteRm,

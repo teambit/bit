@@ -40,15 +40,8 @@ async function buildAllResults(components, consumer) {
 export async function buildAll(): Promise<Object> {
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
-
-  const [newComponents, modifiedComponents] = await Promise
-    .all([componentsList.listNewComponents(), componentsList.listModifiedComponents()]);
-
-  const componentsIds = [...newComponents, ...modifiedComponents];
-  // todo: improve performance. Let ComponentsList return the loaded components
-  const componentsP = componentsIds.map(id => consumer.loadComponent(id));
-  const components = await Promise.all(componentsP);
-  const buildAllP = await buildAllResults(components, consumer);
+  const newAndModifiedComponents = await componentsList.newAndModifiedComponents();
+  const buildAllP = await buildAllResults(newAndModifiedComponents, consumer);
   const allComponents = await Promise.all(buildAllP);
   const componentsObj = {};
   allComponents.forEach((component) => {

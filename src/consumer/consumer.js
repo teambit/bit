@@ -165,7 +165,7 @@ export default class Consumer {
     await this.writeToComponentsDir(componentDependenciesArr);
     const bitLock = await this.getBitLock();
     bitIds.forEach((id) => {
-      bitLock.addComponent(id.toString(), this.composeRelativeBitPath(id));
+      bitLock.addComponent(id.changeScope(null).toString(), this.composeRelativeBitPath(id));
     });
     await bitLock.write();
     return { dependencies: componentDependenciesArr };
@@ -221,7 +221,7 @@ export default class Consumer {
   }
 
   async commit(id: BitId, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
-    const bitLock = await this.getBitLock();
+    const bitLock: BitLock = await this.getBitLock();
     const bitDir = bitLock.getComponentPath(id);
     if (!bitDir) throw new Error(`Unable to find a component ${id} in your bit.lock file. Consider "bit add" it`);
     const implFile = bitLock.getComponentImplFile(id);
@@ -251,19 +251,11 @@ export default class Consumer {
     return path.join(...addToPath);
   }
 
-  runComponentSpecs(id: BitInlineId, verbose: boolean = false): Promise<?any> {
+  runComponentSpecs(id: BitId, verbose: boolean = false): Promise<?any> {
     return this.loadComponent(id)
       .then((component) => {
         return component.runSpecs({ scope: this.scope, consumer: this, verbose });
       });
-  }
-
-  runAllInlineSpecs(verbose: boolean = false) {
-    return this.listInline().then((components) => {
-      return Promise.all(components.map(component => component
-        .runSpecs({ scope: this.scope, consumer: this, verbose })
-        .then((result) => { return { specs: result, component }; })));
-    });
   }
 
   listInline(): Promise<Component[]> {
