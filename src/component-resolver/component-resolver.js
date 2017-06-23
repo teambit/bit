@@ -9,11 +9,12 @@ import { LATEST_BIT_VERSION,
   DEFAULT_DIST_DIRNAME } from '../constants';
 import BitJson from '../consumer/bit-json';
 import { ComponentNotFound } from '../scope/exceptions';
+import logger from '../logger/logger';
 
 function getLatestVersion(bitId: BitId, componentsDir: string): number {
   if (bitId.version !== LATEST_BIT_VERSION) return bitId.version;
   const regexRemoveLatestVersion = new RegExp(`${LATEST_BIT_VERSION}$`);
-  const relativePathWithoutVersion = bitId.toPath().replace(regexRemoveLatestVersion, '');
+  const relativePathWithoutVersion = bitId.toFullPath().replace(regexRemoveLatestVersion, '');
   const pathWithoutVersion = path.join(componentsDir, relativePathWithoutVersion);
   const versionsDirs = glob.sync('*', { cwd: pathWithoutVersion });
   if (!versionsDirs || !versionsDirs.length) {
@@ -33,6 +34,7 @@ function componentResolver(componentId: string, projectRoot: string = process.cw
   const version = getLatestVersion(bitId, componentsDir);
   bitId.version = version.toString();
   const componentPath = path.join(componentsDir, bitId.toFullPath());
+  logger.debug(`resolving component, path: ${componentPath}`);
   try {
     const bitJson = BitJson.loadSync(componentPath);
     const finalFile = getRequiredFile(bitJson);

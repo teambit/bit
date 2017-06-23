@@ -67,7 +67,7 @@ export default class BitId {
 
   toPath() {
     // todo: change according to the resolve-conflict strategy
-    return path.join(this.box, this.name);
+    return path.join(this.box, this.name, this.scope, this.version);
   }
 
   toFullPath() {

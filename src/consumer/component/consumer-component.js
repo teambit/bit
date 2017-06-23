@@ -16,6 +16,7 @@ import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import ComponentNotFoundInline from './exceptions/component-not-found-inline';
 import IsolatedEnvironment from '../../environment';
 import type { Log } from '../../scope/models/version';
+import { ResolutionException } from '../../scope/exceptions';
 
 import {
   DEFAULT_BOX_NAME,
@@ -402,6 +403,19 @@ export default class Component {
     return new Promise((resolve, reject) => {
       if (!this.compilerId) return resolve(null);
 
+      // verify whether the environment is installed
+      let compiler;
+      try {
+        compiler = scope.loadEnvironment(this.compilerId);
+      } catch (err) {
+        if (err instanceof ResolutionException) {
+          environment = true;
+          // todo: once we agree about this approach, get rid of the environment variable
+        } else {
+          return reject(err);
+        }
+      }
+
       const installEnvironmentIfNeeded = (): Promise<any> => {
         if (environment) {
           return scope.installEnvironment({
@@ -416,8 +430,9 @@ export default class Component {
 
       return installEnvironmentIfNeeded()
       .then(() => {
-        const opts = { bareScope: !consumer };
-        const compiler = scope.loadEnvironment(this.compilerId, opts);
+        if (!compiler) {
+          compiler = scope.loadEnvironment(this.compilerId);
+        }
         const buildedImplP = this.buildIfNeeded({
           condition: !!this.compilerId,
           compiler,

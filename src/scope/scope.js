@@ -548,6 +548,7 @@ export default class Scope {
       const envFile = componentResolver(bitId.toString(), this.getPath());
       return require(envFile);
     } catch (e) {
+      if (e instanceof ComponentNotFound) throw e;
       throw new ResolutionException(e.message);
     }
   }
