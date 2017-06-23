@@ -1,3 +1,5 @@
+// todo: fix according to the build changes. buildInlineAll no longer exists
+
 import chokidar from 'chokidar';
 import { loadConsumer } from '../../../consumer';
 import { buildInlineAll } from '../index';
