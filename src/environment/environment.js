@@ -65,7 +65,9 @@ export default class Environment {
   bindFromDriver(component: Component) {
     const driver = Driver.load(component.lang).getDriver(false);
     if (driver) {
-      return driver.bindSpecificComponents({ projectRoot: this.path, components: [component] });
+      // TODO: should return this once we implement it again
+      // return driver.bindSpecificComponents({ projectRoot: this.path, components: [component] });
+      return driver.bind({ projectRoot: this.path });
     }
     return Promise.resolve();
   }
