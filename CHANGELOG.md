@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 ## [0.6.4] - 2017-06-25
+- update "bit-javascript" dependency to 0.6.4
 ## [0.6.3-rc.3] - 2017-06-15
 
 - `bit test` shows the error stack in case of a fatal error 
