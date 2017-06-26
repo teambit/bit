@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.6.5-rc.1] - 2017-06-26
+- bugfix - install drivers in scope level before build in scope
+- bugfix - calling to old bind command during component e2e tests
+
 ## [0.6.4] - 2017-06-25
+
 - update "bit-javascript" dependency to 0.6.4
 ## [0.6.3-rc.3] - 2017-06-15
 
