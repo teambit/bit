@@ -7,9 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.6.5] - 2017-06-26
+
+## [0.6.5-rc.1] - 2017-06-26
+- bugfix - install drivers in scope level before test in scope
+- bugfix - install drivers in scope level before build in scope
+- bugfix - calling to old bind command during component e2e tests
+
+## [0.6.4] - 2017-06-25
+
+- update "bit-javascript" dependency to 0.6.4
+## [0.6.3-rc.3] - 2017-06-15
+
 - `bit test` shows the error stack in case of a fatal error 
 - add logger
 - support debug-mode for e2e tests
+
+## [0.6.3-rc.2] - 2017-06-08
+
+- update "bit-javascript" dependency to rc ("^0.6.4-rc.1")
+- Try using cache before fetching remote
 
 ## [0.6.3-rc.1] - 2017-06-06
 
