@@ -546,6 +546,7 @@ export default class Scope {
 
     try {
       const envFile = componentResolver(bitId.toString(), this.getPath());
+      logger.debug(`Requiring an environment file at ${envFile}`);
       return require(envFile);
     } catch (e) {
       throw new ResolutionException(e);
