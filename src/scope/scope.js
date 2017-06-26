@@ -26,6 +26,7 @@ import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
+import { Driver } from '../driver';
 import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
   BEFORE_IMPORT_PUT_ON_SCOPE,
@@ -132,6 +133,24 @@ export default class Scope {
           if (e instanceof RemoteScopeNotFound) return reject(e);
           reject(new DependencyNotFound(e.id, bitJsonPath));
         });
+    });
+  }
+
+  /**
+   * Install drivers in the scope level
+   */
+  installDrivers(driversNames: string[]) {
+    const path = this.getPath();
+    return Promise.all(driversNames.map((driverName) => npmClient.install(driverName, { cwd: path })))
+  }
+
+  deleteNodeModulesDir():  Promise<*> {
+    return new Promise((resolve, reject) => {
+      const path = this.getPath() + '/node_modules';
+      fs.remove(path, (err) => {
+        if (err) return reject(err);
+        return resolve();
+      });
     });
   }
 
@@ -623,14 +642,22 @@ export default class Scope {
 
     return this.loadComponent(bitId)
       .then((component) => {
-        return component.runSpecs({
-          scope: this,
-          consumer,
-          environment,
-          save,
-          verbose,
-          isolated,
-        });
+        const driver = Driver.load(component.lang);
+        return this.installDrivers([driver.driverName()])
+          .then(() => {
+            return component.runSpecs({
+              scope: this,
+              consumer,
+              environment,
+              save,
+              verbose,
+              isolated,
+            });
+          })
+          .then((specsResults) => {
+            return this.deleteNodeModulesDir()
+              .then(() => specsResults)
+          });
       });
   }
 
@@ -647,7 +674,12 @@ export default class Scope {
 
     return this.loadComponent(bitId)
       .then((component) => {
-        return component.build({ scope: this, environment, save, consumer, verbose });
+        const driver = Driver.load(component.lang);
+        return this.installDrivers([driver.driverName()])
+          .then(() => {
+            return component.build({ scope: this, environment, save, consumer, verbose });
+          })
+          .then(() => this.deleteNodeModulesDir());
       });
   }
 
