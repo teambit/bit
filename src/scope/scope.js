@@ -140,14 +140,12 @@ export default class Scope {
    */
   installDrivers(driversNames: string[]) {
     const path = this.getPath();
-    console.log(path);
     return Promise.all(driversNames.map((driverName) => npmClient.install(driverName, { cwd: path })))
   }
 
   deleteNodeModulesDir():  Promise<*> {
     return new Promise((resolve, reject) => {
       const path = this.getPath() + '/node_modules';
-      console.log("removing node moduels");
       fs.remove(path, (err) => {
         if (err) return reject(err);
         return resolve();
@@ -617,14 +615,22 @@ export default class Scope {
 
     return this.loadComponent(bitId)
       .then((component) => {
-        return component.runSpecs({
-          scope: this,
-          consumer,
-          environment,
-          save,
-          verbose,
-          isolated,
-        });
+        const driver = Driver.load(component.lang);
+        return this.installDrivers([driver.driverName()])
+          .then(() => {
+            return component.runSpecs({
+              scope: this,
+              consumer,
+              environment,
+              save,
+              verbose,
+              isolated,
+            });
+          })
+          .then((specsResults) => {
+            return this.deleteNodeModulesDir()
+              .then(() => specsResults)
+          });
       });
   }
 
@@ -644,9 +650,9 @@ export default class Scope {
         const driver = Driver.load(component.lang);
         return this.installDrivers([driver.driverName()])
           .then(() => {
-            return component.build({ scope: this, environment, save, consumer, verbose })
-              .then(() => this.deleteNodeModulesDir());
-          }
+            return component.build({ scope: this, environment, save, consumer, verbose });
+          })
+          .then(() => this.deleteNodeModulesDir());
       });
   }
 
