@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.6.5] - 2017-06-26
+
 ## [0.6.5-rc.1] - 2017-06-26
 - bugfix - install drivers in scope level before test in scope
 - bugfix - install drivers in scope level before build in scope
