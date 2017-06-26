@@ -35,24 +35,20 @@ export default class BitLock {
     return this.components;
   }
 
-  addComponent(componentId: string, componentPath: string): void {
+  addComponent(componentId: string,
+               componentPath: string,
+               implFile?: string,
+               specFile?: string): void {
     logger.debug(`adding to bit.lock ${componentId}`);
-    let stat;
-    try {
-      stat = fs.lstatSync(componentPath);
-    } catch (err) {
-      throw new Error(`The path ${componentPath} doesn't exist`);
-    }
     if (this.components[componentId]) {
       logger.info(`bit.lock: overriding an exiting component ${componentId}`);
     }
-    if (stat.isFile()) {
-      this.components[componentId] = {
-        path: path.dirname(componentPath),
-        implFile: path.basename(componentPath)
-      };
-    } else {
-      this.components[componentId] = { path: componentPath };
+    this.components[componentId] = { path: componentPath };
+    if (implFile) {
+      this.components[componentId].implFile = implFile;
+    }
+    if (specFile) {
+      this.components[componentId].specFile = specFile;
     }
   }
 
