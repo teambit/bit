@@ -13,9 +13,10 @@ export default function exportAction(id?: string, remote: string, save: ?bool) {
   const exportComponent = (consumer: Consumer, componentId: string) => {
     return consumer.exportAction(componentId, remote)
       .catch((err) => {
-        if (err instanceof ComponentNotFound && !id.startsWith(LOCAL_SCOPE_NOTATION)) {
-          throw new ExportWithoutThis(componentId, remote);
-        }
+        // todo: make sure we are ok with the decision of exporting without @this
+        // if (err instanceof ComponentNotFound && !id.startsWith(LOCAL_SCOPE_NOTATION)) {
+        //   throw new ExportWithoutThis(componentId, remote);
+        // }
         throw err;
       })
       .then((component: ConsumerComponent) => {

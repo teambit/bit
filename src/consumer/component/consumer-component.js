@@ -282,7 +282,7 @@ export default class Component {
       .then(() => this);
   }
 
-  runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose, isolated }: {
+  async runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose, isolated }: {
     scope: Scope,
     rejectOnFailure?: bool,
     consumer?: Consumer,
@@ -303,14 +303,11 @@ export default class Component {
       return Promise.resolve();
     };
 
-    if (!this.testerId || !this.specs || !this.specs.src) return Promise.resolve(null);
+    if (!this.testerId || !this.specs || !this.specs.src) return null;
 
     let testerFilePath;
     try {
-      testerFilePath = scope.loadEnvironment(
-        this.testerId,
-        { pathOnly: true, bareScope: !consumer },
-      );
+      testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
     } catch (err) {
       if (err instanceof ResolutionException) {
         environment = true;
@@ -318,91 +315,91 @@ export default class Component {
       } else throw err;
     }
 
-    return installEnvironmentsIfNeeded()
-    .then(() => {
-      try {
-        const run = ({ implDistPath, specDistPath }) => {
-          return specsRunner.run({
+    await installEnvironmentsIfNeeded();
+    try {
+      if (!testerFilePath) {
+        testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
+      }
+
+      const run = async ({ implDistPath, specDistPath }) => {
+        try {
+          const specsResults = await specsRunner.run({
             scope,
             testerFilePath,
             testerId: this.testerId,
             implDistPath,
             specDistPath,
-          })
-          .then((specsResults) => {
-            this.specsResults = SpecsResults.createFromRaw(specsResults);
-            if (rejectOnFailure && !this.specsResults.pass) {
-              return Promise.reject(new ComponentSpecsFailed());
-            }
-
-            if (save) {
-              return scope.sources.modifySpecsResults({
-                source: this,
-                specsResults: this.specsResults
-              })
-              .then(() => Promise.resolve(this.specsResults));
-            }
-
-            return Promise.resolve(this.specsResults);
-          }).catch((err) => {
-            if (verbose) throw err;
-            throw new ComponentSpecsFailed();
           });
-        };
+          this.specsResults = SpecsResults.createFromRaw(specsResults);
+          if (rejectOnFailure && !this.specsResults.pass) {
+            return Promise.reject(new ComponentSpecsFailed());
+          }
 
-        if (!isolated && consumer) {
-          const componentPath = consumer.composeBitPath(this.id);
-          return this.build({ scope, environment, verbose, consumer }).then(() => {
-            const saveImplDist = this.dist ?
-            this.dist.write(componentPath, this.implFile) : Promise.resolve();
-
-            const saveSpecDist = this.specDist ?
-            this.specDist.write(componentPath, this.specsFile) : Promise.resolve();
-
-            return Promise.all([saveImplDist, saveSpecDist]).then(() => {
-              const implDistPath = this.compilerId ?
-              Dist.getFilePath(componentPath, this.implFile) :
-              path.join(componentPath, this.implFile);
-
-              const specDistPath = this.compilerId ?
-              Dist.getFilePath(componentPath, this.specsFile) :
-              path.join(componentPath, this.specsFile);
-
-              return run({ implDistPath, specDistPath });
+          if (save) {
+            await scope.sources.modifySpecsResults({
+              source: this,
+              specsResults: this.specsResults
             });
-          });
+            return this.specsResults;
+          }
+
+          return this.specsResults;
+        } catch (err) {
+          if (verbose) throw err;
+          throw new ComponentSpecsFailed();
         }
+      };
 
-        const isolatedEnvironment = new IsolatedEnvironment(scope);
+      if (!isolated && consumer) {
+        const componentPath = consumer.composeBitPath(this.id);
+        await this.build({ scope, environment, verbose, consumer });
+        const saveImplDist = this.dist ?
+        this.dist.write(componentPath, this.implFile) : Promise.resolve();
 
-        return isolatedEnvironment.create()
-        .then(() => {
-          return isolatedEnvironment.importE2E(this.id.toString());
-        })
-        .then((component) => {
-          const componentPath = isolatedEnvironment.getComponentPath(component);
-          return component.build({ scope, environment, verbose }).then(() => {
-            const specDistWrite = component.specDist ?
-              component.specDist.write(componentPath, this.specsFile) : Promise.resolve();
-            return specDistWrite.then(() => {
-              const implDistPath = this.compilerId ?
-              Dist.getFilePath(componentPath, this.implFile) :
-              path.join(componentPath, this.implFile);
+        const saveSpecDist = this.specDist ?
+        this.specDist.write(componentPath, this.specsFile) : Promise.resolve();
 
-              const specDistPath = this.compilerId ?
-              Dist.getFilePath(componentPath, this.specsFile) :
-              path.join(componentPath, this.specsFile);
+        await Promise.all([saveImplDist, saveSpecDist]);
+        const implDistPath = this.compilerId ?
+        Dist.getFilePath(componentPath, this.implFile) :
+        path.join(componentPath, this.implFile);
 
-              return run({ implDistPath, specDistPath }).then((results) => {
-                return isolatedEnvironment.destroy().then(() => results);
-              });
+        const specDistPath = this.compilerId ?
+        Dist.getFilePath(componentPath, this.specsFile) :
+        path.join(componentPath, this.specsFile);
+
+        return run({ implDistPath, specDistPath });
+      }
+
+      const isolatedEnvironment = new IsolatedEnvironment(scope);
+
+      return isolatedEnvironment.create()
+      .then(() => {
+        return isolatedEnvironment.importE2E(this.id.toString());
+      })
+      .then((component) => {
+        const componentPath = isolatedEnvironment.getComponentPath(component);
+        return component.build({ scope, environment, verbose }).then(() => {
+          const specDistWrite = component.specDist ?
+            component.specDist.write(componentPath, this.specsFile) : Promise.resolve();
+          return specDistWrite.then(() => {
+            const implDistPath = this.compilerId ?
+            Dist.getFilePath(componentPath, this.implFile) :
+            path.join(componentPath, this.implFile);
+
+            const specDistPath = this.compilerId ?
+            Dist.getFilePath(componentPath, this.specsFile) :
+            path.join(componentPath, this.specsFile);
+
+            return run({ implDistPath, specDistPath }).then((results) => {
+              return isolatedEnvironment.destroy().then(() => results);
             });
           });
-        }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
-      } catch (err) {
-        return Promise.reject(err);
-      }
-    });
+        });
+      }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
+    } catch (err) {
+      return Promise.reject(err);
+    }
   }
 
   build({ scope, environment, save, consumer, verbose }:
