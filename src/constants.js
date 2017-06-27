@@ -36,7 +36,7 @@ export const INLINE_BITS_DIRNAME = 'inline_components';
 
 export const BIT_JSON = 'bit.json';
 
-export const BIT_LOCK = 'bit.lock';
+export const BIT_MAP = 'bit.map';
 
 export const REMOTE_ALIAS_SIGN = '@';
 

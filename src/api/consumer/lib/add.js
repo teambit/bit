@@ -3,13 +3,13 @@ import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
-import BitLock from '../../../consumer/bit-lock';
+import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import { DEFAULT_IMPL_NAME } from '../../../constants';
 
 export default async function addAction(componentPaths: string[], id?: string, index?: string, spec?: string): Promise<Object> {
 
-  function addBitLockRecords(componentPath: string, bitLock: BitLock, consumer: Consumer) {
+  function addBitMapRecords(componentPath: string, bitMap: BitMap, consumer: Consumer) {
     let parsedId: BitId;
     if (id) {
       parsedId = BitId.parse(id);
@@ -39,7 +39,7 @@ export default async function addAction(componentPaths: string[], id?: string, i
         relativeDirName = dirName.replace(`${consumer.getPath()}${path.sep}`, '');
       }
       // const relativeDirName = path.isAbsolute(dirName) ? '.' : dirName;
-      bitLock.addComponent(parsedId.toString(), relativeDirName, pathParsed.base, spec);
+      bitMap.addComponent(parsedId.toString(), relativeDirName, pathParsed.base, spec);
       return parsedId;
     } else { // is directory
       const pathParsed = path.parse(componentPath);
@@ -48,7 +48,7 @@ export default async function addAction(componentPaths: string[], id?: string, i
       if (!parsedId) {
         parsedId = new BitId({ name: parsedFileName.name, box: pathParsed.name });
       }
-      bitLock.addComponent(parsedId.toString(), componentPath, implFileName, spec);
+      bitMap.addComponent(parsedId.toString(), componentPath, implFileName, spec);
       return parsedId;
     }
   }
@@ -57,14 +57,14 @@ export default async function addAction(componentPaths: string[], id?: string, i
     throw new Error('When specifying more than one path, the ID is automatically generated out of the directory and file name');
   }
   const consumer: Consumer = await loadConsumer();
-  const bitLock = await BitLock.load(consumer.getPath());
+  const bitMap = await BitMap.load(consumer.getPath());
 
   const added = [];
   componentPaths.forEach(componentPath => {
-    const addedId = addBitLockRecords(componentPath, bitLock, consumer);
+    const addedId = addBitMapRecords(componentPath, bitMap, consumer);
     added.push(addedId);
   });
 
-  await bitLock.write();
+  await bitMap.write();
   return { added };
 }

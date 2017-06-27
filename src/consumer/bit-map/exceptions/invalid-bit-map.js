@@ -1,5 +1,5 @@
 /** @flow */
-export default class InvalidBitLock extends Error {
+export default class InvalidBitMap extends Error {
   path: string;
 
   constructor(path: string) {

@@ -27,7 +27,7 @@ import BitInlineId from './bit-inline-id';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
 import { index } from '../search/indexer';
-import BitLock from './bit-lock/bit-lock';
+import BitMap from './bit-map/bit-map';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 
@@ -44,7 +44,7 @@ export default class Consumer {
   bitJson: ConsumerBitJson;
   scope: Scope;
   _driver: Driver;
-  _bitLock: BitLock;
+  _bitMap: BitMap;
   _dirStructure: DirStructure;
 
   constructor({ projectPath, bitJson, scope, created = false }: ConsumerProps) {
@@ -77,11 +77,11 @@ export default class Consumer {
     return this._dirStructure;
   }
 
-  async getBitLock(): BitLock {
-    if (!this._bitLock) {
-      this._bitLock = await BitLock.load(this.getPath());
+  async getbitMap(): BitMap {
+    if (!this._bitMap) {
+      this._bitMap = await BitMap.load(this.getPath());
     }
-    return this._bitLock;
+    return this._bitMap;
   }
 
   warnForMissingDriver() {
@@ -118,8 +118,8 @@ export default class Consumer {
   }
 
   async loadComponent(id: BitId): Promise<Component> {
-    const bitLock = await this.getBitLock();
-    const bitDir = bitLock.getComponentPath(id) || this.composeBitPath(id);
+    const bitMap = await this.getbitMap();
+    const bitDir = bitMap.getComponentPath(id) || this.composeBitPath(id);
     return Component.loadFromFileSystem(bitDir, this.bitJson);
   }
 
@@ -163,11 +163,11 @@ export default class Consumer {
     const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
     const componentDependenciesArr = await this.scope.getMany(bitIds, cache);
     await this.writeToComponentsDir(componentDependenciesArr);
-    const bitLock = await this.getBitLock();
+    const bitMap = await this.getbitMap();
     bitIds.forEach((id) => {
-      bitLock.addComponent(id.changeScope(null).toString(), this.composeRelativeBitPath(id));
+      bitMap.addComponent(id.changeScope(null).toString(), this.composeRelativeBitPath(id));
     });
-    await bitLock.write();
+    await bitMap.write();
     return { dependencies: componentDependenciesArr };
   }
 
@@ -186,9 +186,9 @@ export default class Consumer {
     const bitId = BitId.parse(rawId, this.scope.name);
     return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose })
       .then((envDependencies) => {
-        // todo: do we need the environment in bit.lock?
-        // this.bitLock.addComponent(bitId.toString(), this.composeRelativeBitPath(bitId));
-        // this.bitLock.write();
+        // todo: do we need the environment in bit.map?
+        // this.bitMap.addComponent(bitId.toString(), this.composeRelativeBitPath(bitId));
+        // this.bitMap.write();
         return envDependencies;
       });
   }
@@ -221,10 +221,10 @@ export default class Consumer {
   }
 
   async commit(id: BitId, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
-    const bitLock: BitLock = await this.getBitLock();
-    const bitDir = bitLock.getComponentPath(id);
-    if (!bitDir) throw new Error(`Unable to find a component ${id} in your bit.lock file. Consider "bit add" it`);
-    const implFile = bitLock.getComponentImplFile(id);
+    const bitMap: BitMap = await this.getbitMap();
+    const bitDir = bitMap.getComponentPath(id);
+    if (!bitDir) throw new Error(`Unable to find a component ${id} in your bit.map file. Consider "bit add" it`);
+    const implFile = bitMap.getComponentImplFile(id);
 
     const component = await this.loadComponent(id);
     if (implFile) {

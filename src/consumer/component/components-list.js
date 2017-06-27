@@ -11,13 +11,13 @@ import Source from '../../scope/models/source';
 import Component from '../component';
 import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
-import BitLock from '../bit-lock/bit-lock';
+import BitMap from '../bit-map/bit-map';
 import Consumer from '../consumer';
 
 export default class ComponentsList {
   consumer: Consumer;
   _fromFileSystem: Promise<string[]>;
-  _fromBitLock: Object;
+  _fromBitMap: Object;
   _fromObjects: Promise<Object<Version>>;
   constructor(consumer: Consumer) {
     this.consumer = consumer;
@@ -117,15 +117,15 @@ export default class ComponentsList {
   }
 
   /**
-   * Components that are registered in bit.lock but have never been committed
+   * Components that are registered in bit.map but have never been committed
    *
    * @return {Promise.<string[]>}
    */
   async listNewComponents(): Promise<string[]> {
-    const idsFromBitLock = await this.idsFromBitLock(false);
+    const idsFromBitMap = await this.idsFromBitMap(false);
     const idsFromObjects = await this.idsFromObjects(false);
     const newComponents = [];
-    idsFromBitLock.forEach((id) => {
+    idsFromBitMap.forEach((id) => {
       if (!idsFromObjects.includes(id)) {
         newComponents.push(id);
       }
@@ -169,19 +169,19 @@ export default class ComponentsList {
     });
   }
 
-  async idsFromBitLock(withScopeName = true) {
-    const fromBitLock = await this.getFromBitLock();
-    const ids = Object.keys(fromBitLock);
+  async idsFromBitMap(withScopeName = true) {
+    const fromBitMap = await this.getFromBitMap();
+    const ids = Object.keys(fromBitMap);
     if (withScopeName) return ids;
     return ids.map(id => BitId.parse(id).changeScope(null).toString());
   }
 
-  async onFileSystemAndNotOnBitLock(): Promise<Component[]> {
+  async onFileSystemAndNotOnBitMap(): Promise<Component[]> {
     const { staticParts, dynamicParts } = this.consumer.dirStructure.componentsDirStructure;
     const asterisks = Array(dynamicParts.length).fill('*'); // e.g. ['*', '*', '*']
     const cwd = path.join(this.consumer.getPath(), ...staticParts);
-    const idsFromBitLock = await this.idsFromBitLock();
-    const idsFromBitLockWithoutScope = await this.idsFromBitLock(false);
+    const idsFromBitMap = await this.idsFromBitMap();
+    const idsFromBitMapWithoutScope = await this.idsFromBitMap(false);
     const files = await this.globP(path.join(...asterisks), { cwd });
     const componentsP = [];
     files.forEach((componentDynamicDirStr) => {
@@ -195,8 +195,8 @@ export default class ComponentsList {
         bitIdObj[key] = dir;
       });
       const parsedId = new BitId(bitIdObj);
-      if (!idsFromBitLock.includes(parsedId.toString())
-        && !idsFromBitLockWithoutScope.includes(parsedId.toString())) {
+      if (!idsFromBitMap.includes(parsedId.toString())
+        && !idsFromBitMapWithoutScope.includes(parsedId.toString())) {
         componentsP.push(this.consumer.loadComponent(parsedId));
       }
     });
@@ -204,38 +204,38 @@ export default class ComponentsList {
   }
 
   /**
-   * components that are on FS and not on bit.lock
+   * components that are on FS and not on bit.map
    */
   async listUntrackedComponents(): Promise<string[]> {
-    const untrackedComponents = await this.onFileSystemAndNotOnBitLock();
+    const untrackedComponents = await this.onFileSystemAndNotOnBitMap();
     return untrackedComponents.map(component => component.id.toString());
   }
 
   /**
    * Finds all components that are saved in the file system.
    * Components might be stored in the default component directory and also might be outside
-   * of that directory, in which case the bit.lock is used to find them
+   * of that directory, in which case the bit.map is used to find them
    * @return {Promise<Component[]>}
    */
   async getFromFileSystem(): Promise<Component[]> {
     if (!this._fromFileSystem) {
-      const idsFromBitLock = await this.idsFromBitLock();
-      const registeredComponentsP = idsFromBitLock.map((id) => {
+      const idsFromBitMap = await this.idsFromBitMap();
+      const registeredComponentsP = idsFromBitMap.map((id) => {
         const parsedId = BitId.parse(id);
-        // todo: log a warning when a component is in bit.lock but not in the FS
+        // todo: log a warning when a component is in bit.map but not in the FS
         return this.consumer.loadComponent(parsedId);
       });
-      const unRegisteredComponentsP = await this.onFileSystemAndNotOnBitLock();
+      const unRegisteredComponentsP = await this.onFileSystemAndNotOnBitMap();
       this._fromFileSystem = Promise.all([...registeredComponentsP, ...unRegisteredComponentsP]);
     }
     return this._fromFileSystem;
   }
 
-  async getFromBitLock(): Object {
-    if (!this._fromBitLock) {
-      const bitLock = await BitLock.load(this.consumer.getPath());
-      this._fromBitLock = bitLock.getAllComponents();
+  async getFromBitMap(): Object {
+    if (!this._fromBitMap) {
+      const bitMap = await BitMap.load(this.consumer.getPath());
+      this._fromBitMap = bitMap.getAllComponents();
     }
-    return this._fromBitLock;
+    return this._fromBitMap;
   }
 }

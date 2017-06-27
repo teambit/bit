@@ -5,7 +5,7 @@ import { add } from '../../../api/consumer';
 
 export default class Add extends Command {
   name = 'add <path...>';
-  description = 'Track a new component (add to bit.lock file)';
+  description = 'Track a new component (add to bit.map file)';
   alias = 'a';
   opts = [
     ['id', 'id <name>', 'component id, if not specified the name will be '],
@@ -23,6 +23,6 @@ export default class Add extends Command {
   }
 
   report(result: Object): string {
-    return chalk.green(`${result.added} has been added to bit.lock`);
+    return chalk.green(`${result.added} has been added to bit.map`);
   }
 }

@@ -1,34 +1,34 @@
 import path from 'path';
 import fs from 'fs-extra';
 import logger from '../../logger/logger';
-import { BIT_LOCK } from '../../constants';
-import InvalidBitLock from './exceptions/invalid-bit-lock';
+import { BIT_MAP } from '../../constants';
+import InvalidBitMap from './exceptions/invalid-bit-map';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile } from '../../utils';
 
-export default class BitLock {
-  lockPath: string;
+export default class BitMap {
+  mapPath: string;
   components: Object<string>;
-  constructor(lockPath: string, components: Object<string>) {
-    this.lockPath = lockPath;
+  constructor(mapPath: string, components: Object<string>) {
+    this.mapPath = mapPath;
     this.components = components;
   }
 
-  static async load(dirPath: string): BitLock {
-    const lockPath = path.join(dirPath, BIT_LOCK);
+  static async load(dirPath: string): BitMap {
+    const mapPath = path.join(dirPath, BIT_MAP);
     let components;
-    if (fs.existsSync(lockPath)) {
+    if (fs.existsSync(mapPath)) {
       try {
-        const lockFileContent = await readFile(lockPath);
-        components = JSON.parse(lockFileContent.toString('utf8'));
+        const mapFileContent = await readFile(mapPath);
+        components = JSON.parse(mapFileContent.toString('utf8'));
       } catch (e) {
-        throw new InvalidBitLock(lockPath);
+        throw new InvalidBitMap(mapPath);
       }
     } else {
-      logger.info('bit.lock: unable to find an existing bit.lock file');
+      logger.info('bit.map: unable to find an existing bit.map file');
       components = {};
     }
-    return new BitLock(lockPath, components);
+    return new BitMap(mapPath, components);
   }
 
   getAllComponents(): Object<string> {
@@ -39,9 +39,9 @@ export default class BitLock {
                componentPath: string,
                implFile?: string,
                specFile?: string): void {
-    logger.debug(`adding to bit.lock ${componentId}`);
+    logger.debug(`adding to bit.map ${componentId}`);
     if (this.components[componentId]) {
-      logger.info(`bit.lock: overriding an exiting component ${componentId}`);
+      logger.info(`bit.map: overriding an exiting component ${componentId}`);
     }
     this.components[componentId] = { path: componentPath };
     if (implFile) {
@@ -66,7 +66,7 @@ export default class BitLock {
   // then, upon creating the file for the first time, add a comment with warnings about modifying
   // the file
   write(): Promise<> {
-    logger.debug('writing to bit.lock');
-    return outputFile(this.lockPath, JSON.stringify(this.components, null, 4));
+    logger.debug('writing to bit.map');
+    return outputFile(this.mapPath, JSON.stringify(this.components, null, 4));
   }
 }
