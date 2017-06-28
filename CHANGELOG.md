@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.6.6-rc.1] - 2017-06-28
+- Add babel-plugin-transform-runtime to support async functions
+
 ## [0.6.5] - 2017-06-26
 
 ## [0.6.5-rc.1] - 2017-06-26
