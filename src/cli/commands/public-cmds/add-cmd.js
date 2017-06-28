@@ -23,7 +23,11 @@ export default class Add extends Command {
     return add(path, id, index, [specs]);
   }
 
-  report(result: Object): string {
-    return chalk.green(`${result.added} has been added to bit.map`);
+  report(results: Array<{ id: string, files: string[] }>): string {
+    return results.map(result => {
+      const title = chalk.underline(`Tracking component ${chalk.bold(result.id)}:\n`);
+      const files = result.files.map(file =>  chalk.green(`added ${file}`));
+      return title + files.join('\n');
+    }).join('\n\n');
   }
 }

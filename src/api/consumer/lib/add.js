@@ -11,11 +11,20 @@ import { DEFAULT_INDEX_NAME } from '../../../constants';
 export default async function addAction(componentPaths: string[], id?: string, index?: string, specs?: string[]): Promise<Object> {
 
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
+    if (!componentPath) return componentPath;
     const absPath = path.resolve(componentPath);
     return absPath.replace(`${projectRoot}${path.sep}`, '');
   }
 
   async function addBitMapRecords(componentPath: string, bitMap: BitMap, consumer: Consumer) {
+
+    const addToBitMap = (componentId, files, indexFile, specsFiles): { id: string, files: string[] } => {
+      const relativeSpecs = specsFiles ?
+        specs.map(spec => getPathRelativeToProjectRoot(spec, consumer.getPath())) : [];
+      bitMap.addComponent(componentId.toString(), files, indexFile, relativeSpecs);
+      return { id: componentId.toString(), files };
+    };
+
     let parsedId: BitId;
     let componentExists = false;
     if (id) {
@@ -43,12 +52,10 @@ export default async function addAction(componentPaths: string[], id?: string, i
       }
 
       if (componentExists) {
-        bitMap.addComponent(parsedId.toString(), [relativeFilePath], index, specs);
-        return parsedId;
+        return addToBitMap(parsedId, [relativeFilePath], index, specs);
       }
-      const relativeSpecs = specs ? specs.map(spec => getPathRelativeToProjectRoot(spec, consumer.getPath())) : [];
-      bitMap.addComponent(parsedId.toString(), [relativeFilePath], relativeFilePath, relativeSpecs);
-      return parsedId;
+
+      return addToBitMap(parsedId, [relativeFilePath], relativeFilePath, specs);
     } else { // is directory
       const pathParsed = path.parse(componentPath);
       const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
@@ -66,8 +73,7 @@ export default async function addAction(componentPaths: string[], id?: string, i
       if (!parsedId) {
         parsedId = new BitId({ name: parsedFileName.name, box: pathParsed.name });
       }
-      bitMap.addComponent(parsedId.toString(), matches, indexFileName, specs);
-      return parsedId;
+      return addToBitMap(parsedId, matches, indexFileName, specs);
     }
   }
 
@@ -84,5 +90,5 @@ export default async function addAction(componentPaths: string[], id?: string, i
   await bitMap.write();
 
   // todo: return also the files added
-  return { added };
+  return added;
 }
