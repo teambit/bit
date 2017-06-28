@@ -13,6 +13,7 @@
       "globals": ["Error", "Array", "Map"]
     }],
     ["transform-runtime", {
+      "helpers": false,
       "polyfill": false,
       "regenerator": true
     }],
