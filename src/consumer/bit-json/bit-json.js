@@ -18,7 +18,6 @@ export function hasExisting(bitPath: string): boolean {
 export type BitJsonProps = {
   impl?: string;
   spec?: string;
-  miscFiles?: string[];
   lang?: string;
   compiler?: string;
   tester?: string;
@@ -29,7 +28,6 @@ export type BitJsonProps = {
 export default class BitJson extends AbstractBitJson {
   impl: string;
   spec: string;
-  miscFiles: string[];
   compiler: string;
   lang: string;
   tester: string;
@@ -37,9 +35,9 @@ export default class BitJson extends AbstractBitJson {
   packageDependencies: {[string]: string};
 
   constructor({
-    impl, spec, miscFiles, compiler, tester, dependencies, packageDependencies, lang,
+    impl, spec, compiler, tester, dependencies, packageDependencies, lang,
   }: BitJsonProps) {
-    super({ impl, spec, miscFiles, compiler, tester, dependencies, lang });
+    super({ impl, spec, compiler, tester, dependencies, lang });
     this.packageDependencies = packageDependencies || {};
   }
 
@@ -93,7 +91,6 @@ export default class BitJson extends AbstractBitJson {
     return new BitJson({
       impl: R.prop('impl', sources),
       spec: R.prop('spec', sources),
-      miscFiles: R.prop('misc', sources),
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
       dependencies,
@@ -115,8 +112,9 @@ export default class BitJson extends AbstractBitJson {
     return this.mergeWithProto(json, protoBJ);
   }
 
-  static load(dirPath: string, protoBJ?: ConsumerBitJson): Promise<BitJson> {
+  static load(dirPath?: string, protoBJ?: ConsumerBitJson, silent: boolean = false): Promise<BitJson> {
     return new Promise((resolve, reject) => {
+      if (silent && !dirPath) return resolve(protoBJ);
       let thisBJ = {};
       const bitJsonPath = composePath(dirPath);
       if (fs.existsSync(bitJsonPath)) {

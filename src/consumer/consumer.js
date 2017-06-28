@@ -118,9 +118,14 @@ export default class Consumer {
   }
 
   async loadComponent(id: BitId): Promise<Component> {
+    logger.debug(`loading a consumer-component ${id} from the file-system`);
     const bitMap = await this.getBitMap();
-    const bitDir = bitMap.getComponentFiles(id) || this.composeBitPath(id);
-    return Component.loadFromFileSystem(bitDir, this.bitJson);
+    const componentMap = bitMap.getComponent(id.toString());
+    let bitDir;
+    if (!componentMap) {
+      bitDir = this.composeBitPath(id);
+    }
+    return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, id, this.getPath());
   }
 
   exportAction(rawId: string, rawRemote: string) {
@@ -222,17 +227,12 @@ export default class Consumer {
 
   async commit(id: BitId, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
     const bitMap: BitMap = await this.getBitMap();
-    const bitDir = bitMap.getComponentFiles(id);
-    if (!bitDir) throw new Error(`Unable to find a component ${id} in your bit.map file. Consider "bit add" it`);
-    const implFile = bitMap.getComponentImplFile(id);
-
-    const component = await this.loadComponent(id);
-    if (implFile) {
-      component.implFile = implFile;
-      component.impl = path.join(bitDir, implFile);
+    if (!bitMap.isComponentExist(id)) {
+      throw new Error(`Unable to find a component ${id} in your bit.map file. Consider "bit add" it`);
     }
+    const component = await this.loadComponent(id);
     await this.scope
-      .put({ consumerComponent: component, message, force, consumer: this, bitDir, verbose });
+      .put({ consumerComponent: component, message, force, consumer: this, bitDir: undefined, verbose });
     await index(component, this.scope.getPath()); // todo: make sure it still works
     await this.driver.runHook('onCommit', component); // todo: probably not needed as the bind happens on create
     return component;

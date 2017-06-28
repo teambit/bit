@@ -124,8 +124,8 @@ export default class Scope {
       ));
   }
 
-  importDependencies(component: ConsumerComponent, bitDir: string) {
-    const bitJsonPath = pathLib.join(bitDir, BIT_JSON);
+  importDependencies(component: ConsumerComponent, bitDir?: string) {
+    const bitJsonPath = bitDir ? pathLib.join(bitDir, BIT_JSON) : '';
     return new Promise((resolve, reject) => {
       return this.importMany(component.dependencies)
         .then(resolve)
@@ -154,12 +154,13 @@ export default class Scope {
     });
   }
 
+  // todo: get rid of bitDir
   put({ consumerComponent, message, force, consumer, bitDir, verbose }: {
     consumerComponent: ConsumerComponent,
     message: string,
     force: ?bool,
     consumer: Consumer,
-    bitDir: string,
+    bitDir?: string,
     verbose: ?bool,
   }):
   Promise<ComponentDependencies> {

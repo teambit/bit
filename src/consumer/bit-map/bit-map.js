@@ -7,9 +7,15 @@ import InvalidBitMap from './exceptions/invalid-bit-map';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile } from '../../utils';
 
+export type ComponentMap = {
+  files: Object,
+  indexFile: string,
+  specsFiles: string[]
+}
+
 export default class BitMap {
   mapPath: string;
-  components: Object<string>;
+  components: Object<ComponentMap>;
   constructor(mapPath: string, components: Object<string>) {
     this.mapPath = mapPath;
     this.components = components;
@@ -48,29 +54,23 @@ export default class BitMap {
     if (this.components[componentId]) {
       logger.info(`bit.map: updating an exiting component ${componentId}`);
       if (componentPaths) {
-        const allPaths = componentPaths.concat(this.components[componentId].files);
-        this.components[componentId].files = R.uniq(allPaths);
+        const allPaths = R.merge(this.components[componentId].files, componentPaths);
+        this.components[componentId].files = allPaths;
       }
       if (indexFile) this.components[componentId].indexFile = indexFile;
-      if (specsFiles) {
+      if (specsFiles && specsFiles.length) {
         const allSpecsFiles = specsFiles.concat(this.components[componentId].specsFiles);
         this.components[componentId].specsFiles = R.uniq(allSpecsFiles);
       }
     } else {
       this.components[componentId] = { files: componentPaths };
       this.components[componentId].indexFile = indexFile || DEFAULT_INDEX_NAME;
-      this.components[componentId].specsFiles = specsFiles || [];
+      this.components[componentId].specsFiles = specsFiles && specsFiles.length ? specsFiles : [];
     }
   }
 
-  getComponentFiles(id: BitId): ?string {
-    if (this.components[id.toString()]) return this.components[id].files;
-    return null;
-  }
-
-  getComponentImplFile(id: string): ?string {
-    if (this.components[id] && this.components[id].implFile) return this.components[id].implFile;
-    return null;
+  getComponent(id: string): ComponentMap {
+    return this.components[id];
   }
 
   // todo: use this lib: https://github.com/getify/JSON.minify to add comments to this file

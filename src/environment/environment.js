@@ -97,15 +97,6 @@ export default class Environment {
     return this.path;
   }
 
-  getImplPath(component: Component): string {
-    return path.join(this.getComponentPath(component), component.implFile);
-  }
-
-  getMiscFilesPaths(component: Component): string[] {
-    const componentPath = this.getComponentPath(component);
-    return component.miscFiles.map(misc => path.join(componentPath, misc));
-  }
-
   destroy(): Promise<*> {
     return new Promise((resolve, reject) => {
       fs.remove(this.path, (err) => {

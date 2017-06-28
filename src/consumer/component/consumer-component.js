@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
-import { Impl, Specs, Dist, License, Misc } from '../component/sources';
+import { Impl, Specs, Dist, License, Files } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
@@ -17,11 +17,13 @@ import ComponentNotFoundInline from './exceptions/component-not-found-inline';
 import IsolatedEnvironment from '../../environment';
 import type { Log } from '../../scope/models/version';
 import { ResolutionException } from '../../scope/exceptions';
+import type { ComponentMap } from '../bit-map/bit-map';
 
 import {
   DEFAULT_BOX_NAME,
   DEFAULT_IMPL_NAME,
   DEFAULT_SPECS_NAME,
+  DEFAULT_INDEX_NAME,
   DEFAULT_BIT_VERSION,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE
@@ -35,14 +37,14 @@ export type ComponentProps = {
   lang?: string,
   implFile?: ?string,
   specsFile?: ?string,
-  miscFiles?: ?string[],
+  filesNames?: ?string[],
   compilerId?: ?BitId,
   testerId?: ?BitId,
   dependencies?: ?BitIds,
   packageDependencies?: ?Object,
   impl?: ?Impl|string,
   specs?: ?Specs|string,
-  misc?: ?Misc|[],
+  files?: ?Files|[],
   docs?: ?Doclet[],
   dist?: Dist,
   specDist?: Dist,
@@ -57,9 +59,13 @@ export default class Component {
   version: ?number;
   scope: ?string;
   lang: string;
-  implFile: string;
-  specsFile: string;
-  miscFiles: string[];
+  /** @deprecated **/
+  implFile: ?string;
+  /** @deprecated **/
+  specsFile: ?string;
+  indexFileName: string;
+  testsFileNames: string[];
+  filesNames: string[];
   compilerId: ?BitId;
   testerId: ?BitId;
   dependencies: BitIds;
@@ -67,7 +73,7 @@ export default class Component {
   _impl: ?Impl|string;
   _specs: ?Specs|string;
   _docs: ?Doclet[];
-  _misc: ?Misc|[];
+  _files: ?Files|[];
   dist: ?Dist;
   specDist: ?Dist;
   specsResults: ?SpecsResults;
@@ -76,7 +82,9 @@ export default class Component {
 
   set impl(val: Impl) { this._impl = val; }
 
-  get impl(): Impl {
+  get impl(): ?Impl {
+    if (!this._impl) return null;
+
     if (isString(this._impl)) {
       // $FlowFixMe
       this._impl = Impl.load(this._impl);
@@ -98,18 +106,18 @@ export default class Component {
     return this._specs;
   }
 
-  set misc(val: Misc) { this._misc = val; }
+  set files(val: Files) { this._files = val; }
 
-  get misc(): ?Misc {
-    if (!this._misc) return null;
-    if (this._misc instanceof Misc) return this._misc;
+  get files(): ?Files {
+    if (!this._files) return null;
+    if (this._files instanceof Files) return this._files;
 
-    if (Array.isArray(this._misc)) {
+    if (Array.isArray(this._files)) {
       // $FlowFixMe
-      this._misc = Misc.load(this._misc);
+      this._files = Files.load(this._files);
     }
     // $FlowFixMe
-    return this._misc;
+    return this._files;
   }
 
   get id(): BitId {
@@ -127,11 +135,13 @@ export default class Component {
   }
 
   get docs(): ?Doclet[] {
-    if (!this._docs) this._docs = docsParser(this.impl.src);
+    // todo: what files should be parsed?
+    if (!this._docs) this._docs = docsParser(this.impl ? this.impl.src : '');
     return this._docs;
   }
 
   get distImplFileName(): string {
+    // todo: what files should be built?
     const baseImplName = path.parse(this.implFile).name;
     return `${baseImplName}.${this.getFileExtension()}`;
   }
@@ -149,14 +159,16 @@ export default class Component {
     lang,
     implFile,
     specsFile,
-    miscFiles,
+    indexFileName,
+    testsFileNames,
+    filesNames,
     compilerId,
     testerId,
     dependencies,
     packageDependencies,
     impl,
     specs,
-    misc,
+    files,
     docs,
     dist,
     specsResults,
@@ -170,14 +182,16 @@ export default class Component {
     this.lang = lang || DEFAULT_LANGUAGE;
     this.implFile = implFile || DEFAULT_IMPL_NAME;
     this.specsFile = specsFile || DEFAULT_SPECS_NAME;
-    this.miscFiles = miscFiles || [];
+    this.indexFileName = indexFileName || DEFAULT_INDEX_NAME;
+    this.testsFileNames = testsFileNames || [];
+    this.filesNames = filesNames || [];
     this.compilerId = compilerId;
     this.testerId = testerId;
     this.dependencies = dependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
     this._specs = specs;
     this._impl = impl;
-    this._misc = misc;
+    this._files = files;
     this._docs = docs;
     this.dist = dist;
     this.specsResults = specsResults;
@@ -200,7 +214,7 @@ export default class Component {
       impl: this.implFile,
       spec: this.specsFile,
       lang: this.lang,
-      miscFiles: this.miscFiles,
+      filesNames: this.filesNames,
       compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this.dependencies.toObject(),
@@ -225,7 +239,7 @@ export default class Component {
       const metaData = {
         src,
         entry: this.implFile,
-        misc: this.miscFiles,
+        files: this.filesNames,
         root: componentRoot,
         packageDependencies: this.packageDependencies,
         dependencies: this.dependencies
@@ -262,13 +276,14 @@ export default class Component {
     }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
   }
 
+  // todo: change according to componentMap
   write(bitDir: string, withBitJson: boolean, force?: boolean = true): Promise<Component> {
     return mkdirp(bitDir)
       .then(() => this.impl.write(bitDir, this.implFile, force))
       .then(() => {
         return this.specs ? this.specs.write(bitDir, this.specsFile, force) : undefined;
       }).then(() => {
-        return this.misc ? this.misc.write(bitDir, this.miscFiles, force) : undefined;
+        return this.files ? this.files.write(bitDir, this.filesNames, force) : undefined;
       })
       .then(() => { return this.dist ? this.dist.write(bitDir, this.distImplFileName, force) : undefined; })
       .then(() => {
@@ -438,10 +453,11 @@ export default class Component {
         if (!compiler) {
           compiler = scope.loadEnvironment(this.compilerId);
         }
+        // todo: what files should be built?
         const buildedImplP = this.buildIfNeeded({
           condition: !!this.compilerId,
           compiler,
-          src: this.impl.src,
+          src: this.impl ? this.impl.src : '',
           consumer,
           scope
         });
@@ -491,14 +507,14 @@ export default class Component {
       lang: this.lang,
       implFile: this.implFile,
       specsFile: this.specsFile,
-      miscFiles: this.miscFiles,
+      filesNames: this.filesNames,
       compilerId: this.compilerId ? this.compilerId.toString() : null,
       testerId: this.testerId ? this.testerId.toString() : null,
       dependencies: this.dependencies.toObject(),
       packageDependencies: this.packageDependencies,
       specs: this.specs ? this.specs.serialize() : null,
       impl: this.impl.serialize(),
-      misc: this.misc ? this.misc.serialize() : null,
+      files: this.files ? this.files.serialize() : null,
       docs: this.docs,
       dist: this.dist ? this.dist.serialize() : null,
       specsResults: this.specsResults ? this.specsResults.serialize() : null,
@@ -520,7 +536,7 @@ export default class Component {
       lang,
       implFile,
       specsFile,
-      miscFiles,
+      filesNames,
       compilerId,
       testerId,
       dependencies,
@@ -529,7 +545,7 @@ export default class Component {
       specs,
       docs,
       dist,
-      misc,
+      files,
       specsResults,
       license
     } = object;
@@ -542,14 +558,14 @@ export default class Component {
       lang,
       implFile,
       specsFile,
-      miscFiles,
+      filesNames,
       compilerId: compilerId ? BitId.parse(compilerId) : null,
       testerId: testerId ? BitId.parse(testerId) : null,
       dependencies: BitIds.fromObject(dependencies),
       packageDependencies,
       impl: Impl.deserialize(impl),
       specs: specs ? Specs.deserialize(specs) : null,
-      misc: misc ? Misc.deserialize(misc) : null,
+      files: files ? Files.deserialize(files) : null,
       docs,
       dist: dist ? Dist.deserialize(dist) : null,
       specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null,
@@ -562,28 +578,44 @@ export default class Component {
     return this.fromObject(object);
   }
 
-  static loadFromFileSystem(bitDir, consumerBitJson): Promise<Component> {
-    if (!fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInline(bitDir));
-    return BitJson.load(bitDir, consumerBitJson)
-    .then((bitJson) => {
-      const miscFiles = bitJson.getMiscFiles();
+  static async loadFromFileSystem(bitDir: string,
+                                  consumerBitJson: BitJson,
+                                  componentMap: ComponentMap,
+                                  id: BitId,
+                                  consumerPath: string): Promise<Component> {
+    if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInline(bitDir));
+    const bitJson = await BitJson.load(bitDir, consumerBitJson, true);
 
+    if (bitDir) { // todo: get rid of this part
       return new Component({
         name: path.basename(bitDir),
         box: path.basename(path.dirname(bitDir)),
         lang: bitJson.lang,
         implFile: bitJson.getImplBasename(),
         specsFile: bitJson.getSpecBasename(),
-        miscFiles,
         compilerId: BitId.parse(bitJson.compilerId),
         testerId: BitId.parse(bitJson.testerId),
         dependencies: BitIds.fromObject(bitJson.dependencies),
         packageDependencies: bitJson.packageDependencies,
         impl: path.join(bitDir, bitJson.getImplBasename()),
         specs: path.join(bitDir, bitJson.getSpecBasename()),
-        misc: miscFiles ? miscFiles.map(misc => path.join(bitDir, misc)) : [],
       });
-    });
+    } else { // use componentMap
+      const files = componentMap.files;
+      return new Component({
+        name: id.name,
+        box: id.box,
+        lang: bitJson.lang,
+        // filesNames // todo: is it needed?
+        compilerId: BitId.parse(bitJson.compilerId),
+        testerId: BitId.parse(bitJson.testerId),
+        dependencies: BitIds.fromObject(bitJson.dependencies),
+        packageDependencies: bitJson.packageDependencies,
+        indexFileName: componentMap.indexFile,
+        testsFileNames: componentMap.specsFiles,
+        files: files ? Object.keys(files).map(file => path.join(consumerPath, files[file].path)) : [],
+      });
+    }
   }
 
   static create({ scopeName, name, box, withSpecs, consumerBitJson }:{

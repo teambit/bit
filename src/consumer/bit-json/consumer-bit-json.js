@@ -17,7 +17,6 @@ function hasExisting(bitPath: string): boolean {
 export default class ConsumerBitJson extends AbstractBitJson {
   impl: string;
   spec: string;
-  miscFiles: string[];
   compiler: string;
   tester: string;
   dependencies: {[string]: string};
@@ -60,7 +59,6 @@ export default class ConsumerBitJson extends AbstractBitJson {
     return new ConsumerBitJson({
       impl: R.propOr(undefined, 'impl', sources),
       spec: R.propOr(undefined, 'spec', sources),
-      miscFiles: R.propOr(undefined, 'misc', sources),
       compiler: R.propOr(undefined, 'compiler', env),
       tester: R.propOr(undefined, 'tester', env),
       lang,

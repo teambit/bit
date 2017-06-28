@@ -51,11 +51,13 @@ export default async function addAction(componentPaths: string[], id?: string, i
         parsedId = new BitId({ name: pathParsed.name, box: lastDir });
       }
 
+      const files = { [pathParsed.base]: { path: relativeFilePath} };
+
       if (componentExists) {
-        return addToBitMap(parsedId, [relativeFilePath], index, specs);
+        return addToBitMap(parsedId, files, index, specs);
       }
 
-      return addToBitMap(parsedId, [relativeFilePath], relativeFilePath, specs);
+      return addToBitMap(parsedId, files, relativeFilePath, specs);
     } else { // is directory
       const pathParsed = path.parse(componentPath);
       const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
@@ -89,6 +91,5 @@ export default async function addAction(componentPaths: string[], id?: string, i
 
   await bitMap.write();
 
-  // todo: return also the files added
   return added;
 }

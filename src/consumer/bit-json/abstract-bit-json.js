@@ -16,7 +16,6 @@ import {
 export type AbstractBitJsonProps = {
   impl?: string;
   spec?: string;
-  miscFiles?: string[];
   compiler?: string;
   tester?: string;
   dependencies?: Object;
@@ -24,10 +23,10 @@ export type AbstractBitJsonProps = {
   structure?: string;
 };
 
+// todo: add class property of "indexFileName" where the default is DEFAULT_INDEX_NAME.
 export default class AbstractBitJson {
   impl: string;
   spec: string;
-  miscFiles: string[];
   compiler: string;
   tester: string;
   dependencies: {[string]: string};
@@ -37,7 +36,6 @@ export default class AbstractBitJson {
   constructor({
     impl,
     spec,
-    miscFiles,
     compiler,
     tester,
     dependencies,
@@ -46,7 +44,6 @@ export default class AbstractBitJson {
   }: AbstractBitJsonProps) {
     this.impl = impl || DEFAULT_IMPL_NAME;
     this.spec = spec || DEFAULT_SPECS_NAME;
-    this.miscFiles = miscFiles || [];
     this.compiler = compiler || DEFAULT_COMPILER_ID;
     this.tester = tester || DEFAULT_TESTER_ID;
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
@@ -99,10 +96,6 @@ export default class AbstractBitJson {
     return this;
   }
 
-  getMiscFiles(): string[] {
-    return this.miscFiles;
-  }
-
   hasCompiler(): boolean {
     return !!this.compiler && this.compiler !== NO_PLUGIN_TYPE;
   }
@@ -116,10 +109,6 @@ export default class AbstractBitJson {
   }
 
   toPlainObject(): Object {
-    const isMiscPropDefault = (val, key) => {
-      return !(key === 'misc' && R.isEmpty(val));
-    };
-
     const isLangPropDefault = (val, key) => {
       return !(key === 'lang' && val === DEFAULT_LANGUAGE);
     };
@@ -127,11 +116,10 @@ export default class AbstractBitJson {
     return filterObject({
       lang: this.lang,
       structure: this.structure,
-      sources: filterObject({
+      sources: {
         impl: this.getImplBasename(),
         spec: this.getSpecBasename(),
-        misc: this.getMiscFiles(),
-      }, isMiscPropDefault),
+      },
       env: {
         compiler: this.compilerId,
         tester: this.testerId,

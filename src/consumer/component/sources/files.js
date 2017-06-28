@@ -1,27 +1,27 @@
 import fs from 'fs';
 import path from 'path';
 import Source from './source';
-import MiscSourceNotFound from '../exceptions/misc-source-not-found';
+import FileSourceNotFound from '../exceptions/file-source-not-found';
 
-export type MiscSrc = { name: string, content: string|Buffer };
+export type FileSrc = { name: string, content: string|Buffer };
 
-export default class Misc extends Source {
-  constructor(src: MiscSrc[]) { // eslint-disable-line
+export default class Files extends Source {
+  constructor(src: FileSrc[]) { // eslint-disable-line
     super(src);
   }
 
-  static load(filePaths: []): Misc|null {
+  static load(filePaths: []): Files|null {
     try {
-      const miscFiles = filePaths.map((file) => {
+      const files = filePaths.map((file) => {
         return {
           name: path.basename(file),
           content: fs.readFileSync(file)
         };
       });
-      return new Misc(miscFiles);
+      return new Files(files);
     } catch (err) {
       if (err.code === 'ENOENT' && err.path) {
-        throw new MiscSourceNotFound(err.path);
+        throw new FileSourceNotFound(err.path);
       }
       return null;
     }
@@ -44,11 +44,11 @@ export default class Misc extends Source {
     }));
   }
 
-  serialize(): MiscSrc[] {
+  serialize(): FileSrc[] {
     return this.src;
   }
 
-  static deserialize(src): Misc {
-    return new Misc(src);
+  static deserialize(src): Files {
+    return new Files(src);
   }
 }

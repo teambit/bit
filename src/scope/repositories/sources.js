@@ -140,11 +140,11 @@ export default class SourceRepository {
       .then((component) => {
         return source.build({ scope: this.scope, consumer })
         .then(() => {
-          const impl = Source.from(bufferFrom(source.impl.src));
+          const impl = source.impl ? Source.from(bufferFrom(source.impl.src)) : null;
           const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())): null;
           const specs = source.specs ? Source.from(bufferFrom(source.specs.src)): null;
-          const miscFiles = source.misc && source.misc.src.length ? source.misc.src.map((misc) => {
-            return { name: misc.name, file: Source.from(misc.content) };
+          const files = source.files && source.files.src.length ? source.files.src.map((file) => {
+            return { name: file.name, file: Source.from(file.content) };
           }) : null;
 
           const username = globalConfig.getSync(CFG_USER_NAME_KEY);
@@ -157,7 +157,7 @@ export default class SourceRepository {
               component: source,
               impl,
               specs,
-              miscFiles,
+              files,
               dist,
               flattenedDeps: depIds,
               specsResults,
@@ -175,7 +175,7 @@ export default class SourceRepository {
               .add(specs)
               .add(dist);
 
-            if (miscFiles) miscFiles.forEach(misc => objectRepo.add(misc.file));
+            if (files) files.forEach(file => objectRepo.add(file.file));
 
             return component;
           });

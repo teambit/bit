@@ -20,13 +20,14 @@ export default class Add extends Command {
     specs: ?string[],
   }): Promise<*> {
     // todo: the specs parameter should be an array, it is currently a string
-    return add(path, id, index, [specs]);
+    const specsArray = specs ? [specs] : [];
+    return add(path, id, index, specsArray);
   }
 
   report(results: Array<{ id: string, files: string[] }>): string {
     return results.map(result => {
       const title = chalk.underline(`Tracking component ${chalk.bold(result.id)}:\n`);
-      const files = result.files.map(file =>  chalk.green(`added ${file}`));
+      const files = Object.keys(result.files).map(file => chalk.green(`added ${file} => ${result.files[file].path}`));
       return title + files.join('\n');
     }).join('\n\n');
   }
