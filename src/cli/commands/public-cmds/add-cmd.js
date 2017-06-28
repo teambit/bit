@@ -10,16 +10,17 @@ export default class Add extends Command {
   opts = [
     ['id', 'id <name>', 'component id, if not specified the name will be '],
     ['i', 'index <file>', 'implementation/index file name'],
-    ['s', 'spec <file>', 'spec/test file name'],
+    ['s', 'specs <file...>', 'spec/test file name'],
   ];
   loader = true;
 
-  action([path]: [string], { id, index, spec }: {
+  action([path]: [string[]], { id, index, specs }: {
     id: ?string,
     index: ?string,
-    spec: ?string,
+    specs: ?string[],
   }): Promise<*> {
-    return add(path, id, index, spec);
+    // todo: the specs parameter should be an array, it is currently a string
+    return add(path, id, index, [specs]);
   }
 
   report(result: Object): string {

@@ -24,7 +24,7 @@ export default async function create(
   }, consumer.scope);
   await component.write(bitPath, withBitJson, force);
   const bitMap = await BitMap.load(consumer.getPath());
-  bitMap.addComponent(id.toString(), consumer.composeRelativeBitPath(id));
+  bitMap.addComponent(id.toString(), [consumer.composeRelativeBitPath(id)]);
   await bitMap.write();
   await consumer.driver.runHook('onCreate', component);
   return component;

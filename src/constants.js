@@ -42,6 +42,8 @@ export const REMOTE_ALIAS_SIGN = '@';
 
 export const DEFAULT_IMPL_NAME = 'impl.js';
 
+export const DEFAULT_INDEX_NAME = 'index.js';
+
 export const DEFAULT_SPECS_NAME = 'spec.js';
 
 export const NO_PLUGIN_TYPE = 'none';

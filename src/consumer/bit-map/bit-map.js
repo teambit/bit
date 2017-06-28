@@ -1,7 +1,8 @@
 import path from 'path';
 import fs from 'fs-extra';
+import R from 'ramda';
 import logger from '../../logger/logger';
-import { BIT_MAP } from '../../constants';
+import { BIT_MAP, DEFAULT_INDEX_NAME } from '../../constants';
 import InvalidBitMap from './exceptions/invalid-bit-map';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile } from '../../utils';
@@ -31,29 +32,39 @@ export default class BitMap {
     return new BitMap(mapPath, components);
   }
 
+  isComponentExist(componentId: string): boolean {
+    return !!this.components[componentId];
+  }
+
   getAllComponents(): Object<string> {
     return this.components;
   }
 
   addComponent(componentId: string,
-               componentPath: string,
-               implFile?: string,
-               specFile?: string): void {
+               componentPaths: string[],
+               indexFile?: string,
+               specsFiles?: string[]): void {
     logger.debug(`adding to bit.map ${componentId}`);
     if (this.components[componentId]) {
-      logger.info(`bit.map: overriding an exiting component ${componentId}`);
-    }
-    this.components[componentId] = { path: componentPath };
-    if (implFile) {
-      this.components[componentId].implFile = implFile;
-    }
-    if (specFile) {
-      this.components[componentId].specFile = specFile;
+      logger.info(`bit.map: updating an exiting component ${componentId}`);
+      if (componentPaths) {
+        const allPaths = componentPaths.concat(this.components[componentId].files);
+        this.components[componentId].files = R.uniq(allPaths);
+      }
+      if (indexFile) this.components[componentId].indexFile = indexFile;
+      if (specsFiles) {
+        const allSpecsFiles = specsFiles.concat(this.components[componentId].specsFiles);
+        this.components[componentId].specsFiles = R.uniq(allSpecsFiles);
+      }
+    } else {
+      this.components[componentId] = { files: componentPaths };
+      this.components[componentId].indexFile = indexFile || DEFAULT_INDEX_NAME;
+      this.components[componentId].specsFiles = specsFiles || [];
     }
   }
 
-  getComponentPath(id: BitId): ?string {
-    if (this.components[id.toString()]) return this.components[id].path;
+  getComponentFiles(id: BitId): ?string {
+    if (this.components[id.toString()]) return this.components[id].files;
     return null;
   }
 

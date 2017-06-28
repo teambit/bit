@@ -160,6 +160,7 @@ export default class ComponentsList {
     return stagedComponents;
   }
 
+  // todo: replace with utils/glob it's already implemented there
   globP(pattern, options): Promise {
     return new Promise((resolve, reject) => {
       glob(pattern, options, (err, files) => {

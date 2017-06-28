@@ -77,7 +77,7 @@ export default class Consumer {
     return this._dirStructure;
   }
 
-  async getbitMap(): BitMap {
+  async getBitMap(): BitMap {
     if (!this._bitMap) {
       this._bitMap = await BitMap.load(this.getPath());
     }
@@ -118,8 +118,8 @@ export default class Consumer {
   }
 
   async loadComponent(id: BitId): Promise<Component> {
-    const bitMap = await this.getbitMap();
-    const bitDir = bitMap.getComponentPath(id) || this.composeBitPath(id);
+    const bitMap = await this.getBitMap();
+    const bitDir = bitMap.getComponentFiles(id) || this.composeBitPath(id);
     return Component.loadFromFileSystem(bitDir, this.bitJson);
   }
 
@@ -163,9 +163,9 @@ export default class Consumer {
     const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
     const componentDependenciesArr = await this.scope.getMany(bitIds, cache);
     await this.writeToComponentsDir(componentDependenciesArr);
-    const bitMap = await this.getbitMap();
+    const bitMap = await this.getBitMap();
     bitIds.forEach((id) => {
-      bitMap.addComponent(id.changeScope(null).toString(), this.composeRelativeBitPath(id));
+      bitMap.addComponent(id.changeScope(null).toString(), [this.composeRelativeBitPath(id)]);
     });
     await bitMap.write();
     return { dependencies: componentDependenciesArr };
@@ -221,8 +221,8 @@ export default class Consumer {
   }
 
   async commit(id: BitId, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
-    const bitMap: BitMap = await this.getbitMap();
-    const bitDir = bitMap.getComponentPath(id);
+    const bitMap: BitMap = await this.getBitMap();
+    const bitDir = bitMap.getComponentFiles(id);
     if (!bitDir) throw new Error(`Unable to find a component ${id} in your bit.map file. Consider "bit add" it`);
     const implFile = bitMap.getComponentImplFile(id);
 
