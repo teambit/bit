@@ -64,7 +64,7 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
-        helper.runCmd('bit import bit.envs/compilers/babel --compiler');
+        helper.runCmd('bit import bit.envs/compilers/babel::5 --compiler');
         helper.runCmd('bit create foo');
         fs.writeFileSync(fooImplPath, fooComponentFixture);
         helper.runCmd('bit build -i foo');
@@ -105,7 +105,7 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
-        helper.runCmd('bit import bit.envs/compilers/babel --compiler');
+        helper.runCmd('bit import bit.envs/compilers/babel::5 --compiler');
         helper.runCmd('bit create foo');
         fs.writeFileSync(fooImplPath, fooComponentFixture);
         helper.runCmd('bit commit foo commit-msg'); // does the build as well
@@ -149,7 +149,7 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
-        helper.runCmd('bit import bit.envs/compilers/babel --compiler');
+        helper.runCmd('bit import bit.envs/compilers/babel::5 --compiler');
         helper.runCmd('bit create foo');
         fs.writeFileSync(fooImplPath, fooComponentFixture);
         helper.runCmd('bit commit foo commit-msg'); // does the build as well
@@ -200,7 +200,7 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
-        helper.runCmd('bit import bit.envs/compilers/babel --compiler');
+        helper.runCmd('bit import bit.envs/compilers/babel::5 --compiler');
         helper.runCmd('bit create foo');
         fs.writeFileSync(fooImplPath, fooComponentFixture);
         helper.runCmd('bit commit foo commit-msg'); // does the build as well

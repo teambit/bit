@@ -1,15 +1,19 @@
 /** @flow */
 import Command from '../../command';
-import { watchInlineComponents } from '../../../api/consumer';
+import { watch, watchAll } from '../../../api/consumer';
 
 export default class Create extends Command {
   name = 'watch';
-  description = 'watch the inline_components directory and perform `build -i` on changes';
+  description = 'watch components and perform `build` on changes';
   alias = 'w';
-  opts = [];
+  opts = [
+    ['v', 'verbose', 'showing npm verbose output for inspection'],
+  ];
 
-  action(): Promise<*> {
-    return watchInlineComponents();
+  action(args: string[], { verbose } : {
+    verbose: ?bool,
+  }): Promise<*> {
+    return watchAll(verbose);
   }
 
   report(): string {
