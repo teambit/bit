@@ -174,7 +174,7 @@ export default class Component extends BitObject {
               lang: this.lang,
               implFile: version.impl ? version.impl.name : null,
               specsFile: version.specs ? version.specs.name : null,
-              indexFileName: version.indexFileName ? version.indexFileName: null,
+              mainFileName: version.mainFileName ? version.mainFileName: null,
               testsFileNames: version.testsFileNames ? version.testsFileNames : null,
               filesNames: version.files ? version.files.map(file => file.name) : null,
               compilerId: version.compiler,

@@ -63,7 +63,7 @@ export default class Component {
   implFile: ?string;
   /** @deprecated **/
   specsFile: ?string;
-  indexFileName: string;
+  mainFileName: string;
   testsFileNames: string[];
   filesNames: string[];
   compilerId: ?BitId;
@@ -159,7 +159,7 @@ export default class Component {
     lang,
     implFile,
     specsFile,
-    indexFileName,
+    mainFileName,
     testsFileNames,
     filesNames,
     compilerId,
@@ -182,7 +182,7 @@ export default class Component {
     this.lang = lang || DEFAULT_LANGUAGE;
     this.implFile = implFile || DEFAULT_IMPL_NAME;
     this.specsFile = specsFile || DEFAULT_SPECS_NAME;
-    this.indexFileName = indexFileName || DEFAULT_INDEX_NAME;
+    this.mainFileName = mainFileName || DEFAULT_INDEX_NAME;
     this.testsFileNames = testsFileNames || [];
     this.filesNames = filesNames || [];
     this.compilerId = compilerId;
@@ -611,8 +611,8 @@ export default class Component {
         testerId: BitId.parse(bitJson.testerId),
         dependencies: BitIds.fromObject(bitJson.dependencies),
         packageDependencies: bitJson.packageDependencies,
-        indexFileName: componentMap.indexFile,
-        testsFileNames: componentMap.specsFiles,
+        mainFileName: componentMap.mainFile,
+        testsFileNames: componentMap.testsFiles,
         files: files ? Object.keys(files).map(file => path.join(consumerPath, files[file].path)) : [],
       });
     }

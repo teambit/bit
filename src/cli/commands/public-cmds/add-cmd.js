@@ -8,20 +8,20 @@ export default class Add extends Command {
   description = 'Track a new component (add to bit.map file)';
   alias = 'a';
   opts = [
-    ['id', 'id <name>', 'component id, if not specified the name will be '],
-    ['i', 'index <file>', 'implementation/index file name'],
-    ['s', 'specs <file...>', 'spec/test file name'],
+    ['i', 'id <name>', 'component id, if not specified the name will be '],
+    ['m', 'main <file>', 'implementation/index file name'],
+    ['t', 'tests <file...>', 'spec/test file name'],
   ];
   loader = true;
 
-  action([path]: [string[]], { id, index, specs }: {
+  action([path]: [string[]], { id, main, tests }: {
     id: ?string,
-    index: ?string,
-    specs: ?string[],
+    main: ?string,
+    tests: ?string[],
   }): Promise<*> {
     // todo: the specs parameter should be an array, it is currently a string
-    const specsArray = specs ? [specs] : [];
-    return add(path, id, index, specsArray);
+    const testsArray = tests ? [tests] : [];
+    return add(path, id, main, testsArray);
   }
 
   report(results: Array<{ id: string, files: string[] }>): string {

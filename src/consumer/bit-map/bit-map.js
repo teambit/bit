@@ -9,8 +9,8 @@ import { readFile, outputFile } from '../../utils';
 
 export type ComponentMap = {
   files: Object,
-  indexFile: string,
-  specsFiles: string[]
+  mainFile: string,
+  testsFiles: string[]
 }
 
 export default class BitMap {
@@ -48,8 +48,8 @@ export default class BitMap {
 
   addComponent(componentId: string,
                componentPaths: string[],
-               indexFile?: string,
-               specsFiles?: string[]): void {
+               mainFile?: string,
+               testsFiles?: string[]): void {
     logger.debug(`adding to bit.map ${componentId}`);
     if (this.components[componentId]) {
       logger.info(`bit.map: updating an exiting component ${componentId}`);
@@ -57,15 +57,15 @@ export default class BitMap {
         const allPaths = R.merge(this.components[componentId].files, componentPaths);
         this.components[componentId].files = allPaths;
       }
-      if (indexFile) this.components[componentId].indexFile = indexFile;
-      if (specsFiles && specsFiles.length) {
-        const allSpecsFiles = specsFiles.concat(this.components[componentId].specsFiles);
-        this.components[componentId].specsFiles = R.uniq(allSpecsFiles);
+      if (mainFile) this.components[componentId].mainFile = mainFile;
+      if (testsFiles && testsFiles.length) {
+        const allTestsFiles = testsFiles.concat(this.components[componentId].testsFiles);
+        this.components[componentId].testsFiles = R.uniq(allTestsFiles);
       }
     } else {
       this.components[componentId] = { files: componentPaths };
-      this.components[componentId].indexFile = indexFile || DEFAULT_INDEX_NAME;
-      this.components[componentId].specsFiles = specsFiles && specsFiles.length ? specsFiles : [];
+      this.components[componentId].mainFile = mainFile || DEFAULT_INDEX_NAME;
+      this.components[componentId].testsFiles = testsFiles && testsFiles.length ? testsFiles : [];
     }
   }
 

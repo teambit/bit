@@ -8,7 +8,7 @@ import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import { DEFAULT_INDEX_NAME } from '../../../constants';
 
-export default async function addAction(componentPaths: string[], id?: string, index?: string, specs?: string[]): Promise<Object> {
+export default async function addAction(componentPaths: string[], id?: string, main?: string, tests?: string[]): Promise<Object> {
 
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
     if (!componentPath) return componentPath;
@@ -18,10 +18,10 @@ export default async function addAction(componentPaths: string[], id?: string, i
 
   async function addBitMapRecords(componentPath: string, bitMap: BitMap, consumer: Consumer) {
 
-    const addToBitMap = (componentId, files, indexFile, specsFiles): { id: string, files: string[] } => {
-      const relativeSpecs = specsFiles ?
-        specs.map(spec => getPathRelativeToProjectRoot(spec, consumer.getPath())) : [];
-      bitMap.addComponent(componentId.toString(), files, indexFile, relativeSpecs);
+    const addToBitMap = (componentId, files, mainFile, testsFiles): { id: string, files: string[] } => {
+      const relativeTests = testsFiles ?
+        tests.map(spec => getPathRelativeToProjectRoot(spec, consumer.getPath())) : [];
+      bitMap.addComponent(componentId.toString(), files, mainFile, relativeTests);
       return { id: componentId.toString(), files };
     };
 
@@ -54,11 +54,12 @@ export default async function addAction(componentPaths: string[], id?: string, i
       const files = { [pathParsed.base]: { path: relativeFilePath} };
 
       if (componentExists) {
-        return addToBitMap(parsedId, files, index, specs);
+        return addToBitMap(parsedId, files, main, tests);
       }
 
-      return addToBitMap(parsedId, files, relativeFilePath, specs);
+      return addToBitMap(parsedId, files, relativeFilePath, tests);
     } else { // is directory
+      // todo: the directory name is the name and the one before is the namespace.
       const pathParsed = path.parse(componentPath);
       const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
       const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
@@ -66,16 +67,16 @@ export default async function addAction(componentPaths: string[], id?: string, i
       if (!id && matches.length > 1) {
         throw new Error('Please specify the ID of your component. It can\'t be concluded by the file-name as your directory has many files');
       }
-      let indexFileName = index;
-      if (!index) {
-        indexFileName = matches.length === 1 ? matches[0] : DEFAULT_INDEX_NAME;
+      let mainFileName = main;
+      if (!main) {
+        mainFileName = matches.length === 1 ? matches[0] : DEFAULT_INDEX_NAME;
       }
 
-      const parsedFileName = path.parse(indexFileName);
+      const parsedFileName = path.parse(mainFileName);
       if (!parsedId) {
         parsedId = new BitId({ name: parsedFileName.name, box: pathParsed.name });
       }
-      return addToBitMap(parsedId, matches, indexFileName, specs);
+      return addToBitMap(parsedId, matches, mainFileName, tests);
     }
   }
 
