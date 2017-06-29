@@ -45,7 +45,6 @@ export {
   remoteList,
   remoteRm,
   getDriver,
-  watch,
   watchAll,
   add,
 };
