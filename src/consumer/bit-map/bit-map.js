@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import logger from '../../logger/logger';
-import { BIT_MAP, DEFAULT_INDEX_NAME } from '../../constants';
+import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON } from '../../constants';
 import InvalidBitMap from './exceptions/invalid-bit-map';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile } from '../../utils';
@@ -14,9 +14,11 @@ export type ComponentMap = {
 }
 
 export default class BitMap {
+  projectRoot: string;
   mapPath: string;
   components: Object<ComponentMap>;
-  constructor(mapPath: string, components: Object<string>) {
+  constructor(projectRoot: string, mapPath: string, components: Object<string>) {
+    this.projectRoot = projectRoot;
     this.mapPath = mapPath;
     this.components = components;
   }
@@ -35,7 +37,7 @@ export default class BitMap {
       logger.info('bit.map: unable to find an existing bit.map file');
       components = {};
     }
-    return new BitMap(mapPath, components);
+    return new BitMap(dirPath, mapPath, components);
   }
 
   isComponentExist(componentId: string): boolean {
@@ -46,11 +48,33 @@ export default class BitMap {
     return this.components;
   }
 
+  _makePathRelativeToProjectRoot(pathToChange: string): string {
+    if (!path.isAbsolute(pathToChange)) return pathToChange;
+    return pathToChange.replace(`${this.projectRoot}${path.sep}`, '');
+  }
+
+  _validateAndFixPaths(componentPaths: Object<string>): void {
+    const ignoreFileList = [BIT_JSON];
+    const ignoreDirectoriesList = ['dependencies']; // todo: add "dist"?
+
+    Object.keys(componentPaths).forEach(component => {
+      const componentPath = componentPaths[component];
+      const fileName = path.basename(componentPath);
+      const baseDir = path.basename(path.dirname(fileName));
+      if (ignoreFileList.includes(fileName) || ignoreDirectoriesList.includes(baseDir)) {
+        delete componentPaths[component];
+      } else {
+        componentPaths[component] = this._makePathRelativeToProjectRoot(componentPath);
+      }
+    });
+  }
+
   addComponent(componentId: string,
-               componentPaths: string[],
+               componentPaths: Object<string>,
                mainFile?: string,
                testsFiles?: string[]): void {
     logger.debug(`adding to bit.map ${componentId}`);
+    this._validateAndFixPaths(componentPaths);
     if (this.components[componentId]) {
       logger.info(`bit.map: updating an exiting component ${componentId}`);
       if (componentPaths) {

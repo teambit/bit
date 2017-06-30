@@ -1,7 +1,9 @@
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import Source from './source';
 import FileSourceNotFound from '../exceptions/file-source-not-found';
+import { isString } from '../../../utils';
+import logger from '../../../logger/logger';
 
 export type FileSrc = { name: string, content: string|Buffer };
 
@@ -10,12 +12,12 @@ export default class Files extends Source {
     super(src);
   }
 
-  static load(filePaths: []): Files|null {
+  static load(filePaths: Object<string>): Files|null {
     try {
-      const files = filePaths.map((file) => {
+      const files = Object.keys(filePaths).map((file) => {
         return {
-          name: path.basename(file),
-          content: fs.readFileSync(file)
+          name: file,
+          content: fs.readFileSync(filePaths[file])
         };
       });
       return new Files(files);
@@ -27,9 +29,10 @@ export default class Files extends Source {
     }
   }
 
-  writeOneFile(filePath, content) {
+  writeOneFile(filePath, content, force) {
     return new Promise((resolve, reject) => {
-      fs.writeFile(filePath, content, (err, res) => {
+      if (!force && fs.existsSync(filePath)) return resolve();
+      fs.outputFile(filePath, content, (err, res) => {
         if (err) return reject(err);
         return resolve(res);
       });
@@ -39,8 +42,18 @@ export default class Files extends Source {
   write(bitPath: string, force?: boolean = true): Promise<any> {
     return Promise.all(this.src.map((file) => {
       const filePath = path.join(bitPath, file.name);
-      if (!force && fs.existsSync(filePath)) return Promise.resolve();
-      return this.writeOneFile(filePath, file.content.contents);
+      return this.writeOneFile(filePath, file.content.contents, force);
+    }));
+  }
+
+  writeUsingBitMap(projectRoot: string, bitMapFiles: Object<string>, force?: boolean = true) {
+    return Promise.all(this.src.map((file) => {
+      if (!bitMapFiles[file.name]) {
+        logger.error(`could not write the file "${file.name}" as it does not appear in the bit.map file`);
+        return Promise.resolve();
+      }
+      const filePath = path.join(projectRoot, bitMapFiles[file.name]);
+      return this.writeOneFile(filePath, file.content.contents, force);
     }));
   }
 

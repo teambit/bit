@@ -168,11 +168,6 @@ export default class Consumer {
     const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
     const componentDependenciesArr = await this.scope.getMany(bitIds, cache);
     await this.writeToComponentsDir(componentDependenciesArr);
-    const bitMap = await this.getBitMap();
-    bitIds.forEach((id) => {
-      bitMap.addComponent(id.changeScope(null).toString(), [this.composeRelativeBitPath(id)]);
-    });
-    await bitMap.write();
     return { dependencies: componentDependenciesArr };
   }
 
@@ -216,12 +211,12 @@ export default class Consumer {
     });
   }
 
-  writeToComponentsDir(componentDependencies: VersionDependencies[]): Promise<Component[]> {
+  async writeToComponentsDir(componentDependencies: VersionDependencies[]): Promise<Component[]> {
     const components = flattenDependencies(componentDependencies);
-
-    return Promise.all(components.map((component) => {
+    const bitMap: BitMap = await this.getBitMap();
+    return Promise.all(components.map((component: Component) => {
       const bitPath = this.composeBitPath(component.id);
-      return component.write(bitPath, true);
+      return component.write(bitPath, true, true, bitMap);
     }));
   }
 

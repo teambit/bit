@@ -27,6 +27,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
     return stat.isDirectory();
   }
 
+  // todo: remove the logic of fixing the absolute paths, it is already done in BitMap class
   async function addOneComponent(componentPathsStats: Object, bitMap: BitMap, consumer: Consumer,
                                  keepDirectoryName: boolean = false) {
 
@@ -64,13 +65,11 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
         const files = {};
         matches.forEach((match) => {
-          const fileName = path.basename(match);
           if (keepDirectoryName) {
-            const baseDir = path.basename(path.dirname(match));
-            const dirWithFile = path.join(baseDir, fileName);
-            files[dirWithFile] = { path: match };
+            files[match] = match;
           } else {
-            files[fileName] = { path: match };
+            const stripMainDir = match.replace(`${relativeComponentPath}${path.sep}`, '');
+            files[stripMainDir] = match;
           }
         });
 
@@ -92,7 +91,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
           parsedId = new BitId({ name: pathParsed.name, box: lastDir });
         }
 
-        const files = { [pathParsed.base]: { path: relativeFilePath} };
+        const files = { [pathParsed.base]: relativeFilePath };
 
         if (componentExists) {
           return { componentId: parsedId, files, mainFile: main, testsFiles: tests };

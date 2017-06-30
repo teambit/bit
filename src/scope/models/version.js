@@ -171,6 +171,8 @@ export default class Version extends BitObject {
           name: file.name
         };
       }) : null,
+      mainFileName: this.mainFileName,
+      testsFileNames: this.testsFileNames,
       dist: this.dist ? {
         file: this.dist.file.toString(),
         // $FlowFixMe
