@@ -122,43 +122,18 @@ export default async function addAction(componentPaths: string[], id?: string, m
   const componentPathsStats = {};
   componentPaths.forEach((componentPath) => {
     componentPathsStats[componentPath] = {
-      isDirectory: isDirectory(componentPath),
-      hasWildCard: componentPath.includes('*')
+      isDirectory: isDirectory(componentPath)
     };
   });
-  const doesUserWantMultipleComponents = () => {
-    if (componentPaths.length === 1) {
-      return (componentPathsStats[componentPaths[0]].hasWildCard);
-    }
-    // if a user entered multiple paths and entered an id, he wants all these paths to be one component
-    return !id;
-  };
-  // todo: throw an error in case of multiple paths and wild-card with id.
-
-  const addMultipleFromFiles = async (dirName) => {
-    const matches = await glob(path.join(dirName, '*'), { nodir: true });
-    return matches.map((match) => {
-      const file = path.join(dirName, match);
-      return addOneComponent({ [file]: { isDirectory: false }}, bitMap, consumer)
-    });
-  };
 
   let keepDirectoriesName = false;
-  const isMultipleComponents = doesUserWantMultipleComponents();
+  // if a user entered multiple paths and entered an id, he wants all these paths to be one component
+  const isMultipleComponents = componentPaths.length > 1 && !id;
   let added = [];
   if (isMultipleComponents) {
     logger.debug('bit add - multiple components');
-    let addedP = [];
-    Object.keys(componentPathsStats).forEach(onePath => {
-      if (onePath.endsWith('**')) { // create components from directories
-        // todo: turns out that commander already parses it and split to multiples args
-      } else if (onePath.endsWith('*')) { // create components from files
-        // todo: turns out that commander already parses it and split to multiples args
-        // addedP = addMultipleFromFiles(onePath.replace('*', ''));
-      } else {
-        addedP.push(addOneComponent({ [onePath]: componentPathsStats[onePath]}, bitMap, consumer));
-      }
-    });
+    const addedP = Object.keys(componentPathsStats).map(onePath => addOneComponent({
+      [onePath]: componentPathsStats[onePath]}, bitMap, consumer));
     added = await Promise.all(addedP);
   } else {
     logger.debug('bit add - one component');
@@ -170,7 +145,6 @@ export default async function addAction(componentPaths: string[], id?: string, m
     const addedOne = await addOneComponent(componentPathsStats, bitMap, consumer, keepDirectoriesName);
     added.push(addedOne);
   }
-
   await bitMap.write();
 
   return added;
