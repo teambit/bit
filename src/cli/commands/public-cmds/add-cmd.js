@@ -27,7 +27,7 @@ export default class Add extends Command {
   report(results: Array<{ id: string, files: string[] }>): string {
     return results.map(result => {
       const title = chalk.underline(`Tracking component ${chalk.bold(result.id)}:\n`);
-      const files = Object.keys(result.files).map(file => chalk.green(`added ${file} => ${result.files[file].path}`));
+      const files = Object.keys(result.files).map(file => chalk.green(`added ${result.files[file].path}`));
       return title + files.join('\n');
     }).join('\n\n');
   }
