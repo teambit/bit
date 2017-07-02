@@ -55,9 +55,15 @@ describe('bit import', function () {
   describe('Import component with dependencies', () => {
     it('Should add all missing components to bit.map file', () => {
     });
+    it('Should mark dependencies source in bit.map file', () => {
+      // Make sure direct imports are marked as such
+      // Make sure nested dependencies are marked as such
+    });
     it('Should not add existing components to bit.map file', () => {
     });
     it('Should create bit.json file with all the dependencies in the folder', () => {
+    });
+    it('Should print warning for missing package dependencies', () => {
     });
     dsecribe('Write the component to file system correctly', () => {
       it('Should create a recursive nested dependency tree', () => {
