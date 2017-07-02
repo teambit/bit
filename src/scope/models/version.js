@@ -63,7 +63,7 @@ export default class Version extends BitObject {
     name: string,
     file: Ref
   };
-  indexFileName: string;
+  mainFileName: string;
   testsFileNames: string[];
   files: ?Array<{
     name: string,
@@ -86,7 +86,7 @@ export default class Version extends BitObject {
   constructor({
     impl,
     specs,
-    indexFileName,
+    mainFileName,
     testsFileNames,
     files,
     dist,
@@ -103,7 +103,7 @@ export default class Version extends BitObject {
     super();
     this.impl = impl;
     this.specs = specs;
-    this.indexFileName = indexFileName;
+    this.mainFileName = mainFileName;
     this.testsFileNames = testsFileNames;
     this.files = files;
     this.dist = dist;
@@ -124,7 +124,7 @@ export default class Version extends BitObject {
     return JSON.stringify(filterObject({
       impl: obj.impl,
       specs: obj.specs,
-      indexFileName: obj.indexFileName,
+      mainFileName: obj.mainFileName,
       testsFileNames: obj.testsFileNames,
       files: obj.files,
       compiler: this.compiler ? this.compiler.toString(): null,
@@ -171,6 +171,8 @@ export default class Version extends BitObject {
           name: file.name
         };
       }) : null,
+      mainFileName: this.mainFileName,
+      testsFileNames: this.testsFileNames,
       dist: this.dist ? {
         file: this.dist.file.toString(),
         // $FlowFixMe
@@ -203,7 +205,7 @@ export default class Version extends BitObject {
     const {
       impl,
       specs,
-      indexFileName,
+      mainFileName,
       testsFileNames,
       dist,
       files,
@@ -227,7 +229,7 @@ export default class Version extends BitObject {
         file: Ref.from(specs.file),
         name: specs.name
       } : null,
-      indexFileName,
+      mainFileName,
       testsFileNames,
       files: files ? files.map((file) => {
         return { file: Ref.from(file.file), name: file.name };
@@ -285,7 +287,7 @@ export default class Version extends BitObject {
         file: specs.hash(),
         name: component.specsFile
       }: null,
-      indexFileName: component.indexFileName,
+      mainFileName: component.mainFileName,
       testsFileNames: component.testsFileNames,
       files: files ? files.map((file) => {
         return { file: file.file.hash(), name: file.name };

@@ -23,7 +23,7 @@ export type AbstractBitJsonProps = {
   structure?: string;
 };
 
-// todo: add class property of "indexFileName" where the default is DEFAULT_INDEX_NAME.
+// todo: add class property of "mainFileName" where the default is DEFAULT_INDEX_NAME.
 export default class AbstractBitJson {
   impl: string;
   spec: string;

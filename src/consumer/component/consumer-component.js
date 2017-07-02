@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import R from 'ramda';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
 import { Impl, Specs, Dist, License, Files } from '../component/sources';
@@ -17,6 +18,7 @@ import ComponentNotFoundInline from './exceptions/component-not-found-inline';
 import IsolatedEnvironment from '../../environment';
 import type { Log } from '../../scope/models/version';
 import { ResolutionException } from '../../scope/exceptions';
+import BitMap from '../bit-map';
 import type { ComponentMap } from '../bit-map/bit-map';
 
 import {
@@ -63,7 +65,7 @@ export default class Component {
   implFile: ?string;
   /** @deprecated **/
   specsFile: ?string;
-  indexFileName: string;
+  mainFileName: string;
   testsFileNames: string[];
   filesNames: string[];
   compilerId: ?BitId;
@@ -73,7 +75,7 @@ export default class Component {
   _impl: ?Impl|string;
   _specs: ?Specs|string;
   _docs: ?Doclet[];
-  _files: ?Files|[];
+  _files: ?Files|{};
   dist: ?Dist;
   specDist: ?Dist;
   specsResults: ?SpecsResults;
@@ -112,7 +114,7 @@ export default class Component {
     if (!this._files) return null;
     if (this._files instanceof Files) return this._files;
 
-    if (Array.isArray(this._files)) {
+    if (R.is(Object, this._files)) {
       // $FlowFixMe
       this._files = Files.load(this._files);
     }
@@ -159,7 +161,7 @@ export default class Component {
     lang,
     implFile,
     specsFile,
-    indexFileName,
+    mainFileName,
     testsFileNames,
     filesNames,
     compilerId,
@@ -182,7 +184,7 @@ export default class Component {
     this.lang = lang || DEFAULT_LANGUAGE;
     this.implFile = implFile || DEFAULT_IMPL_NAME;
     this.specsFile = specsFile || DEFAULT_SPECS_NAME;
-    this.indexFileName = indexFileName || DEFAULT_INDEX_NAME;
+    this.mainFileName = mainFileName || DEFAULT_INDEX_NAME;
     this.testsFileNames = testsFileNames || [];
     this.filesNames = filesNames || [];
     this.compilerId = compilerId;
@@ -276,25 +278,50 @@ export default class Component {
     }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
   }
 
-  // todo: change according to componentMap
-  write(bitDir: string, withBitJson: boolean, force?: boolean = true): Promise<Component> {
-    return mkdirp(bitDir)
-      .then(() => this.impl.write(bitDir, this.implFile, force))
-      .then(() => {
-        return this.specs ? this.specs.write(bitDir, this.specsFile, force) : undefined;
-      }).then(() => {
-        return this.files ? this.files.write(bitDir, this.filesNames, force) : undefined;
-      })
-      .then(() => { return this.dist ? this.dist.write(bitDir, this.distImplFileName, force) : undefined; })
-      .then(() => {
-        return this.specsFile && this.specDist ?
-        this.specDist.write(bitDir, this.distSpecFileName, force) : undefined;
-      })
-      .then(() => { return withBitJson ? this.writeBitJson(bitDir, force): undefined; })
-      .then(() => {
-        return this.license && this.license.src ? this.license.write(bitDir, force) : undefined;
-      })
-      .then(() => this);
+  async writeToComponentDir(bitDir: string, withBitJson: boolean, force?: boolean = true) {
+    await mkdirp(bitDir);
+    if (this.impl) await this.impl.write(bitDir, this.implFile, force);
+    if (this.specs) await this.specs.write(bitDir, this.specsFile, force);
+    if (this.files) await this.files.write(bitDir, force);
+    if (this.dist) await this.dist.write(bitDir, this.distImplFileName, force);
+    if (this.specsFile && this.specDist) await this.specDist.write(bitDir, this.distSpecFileName, force);
+    if (withBitJson) await this.writeBitJson(bitDir, force);
+    if (this.license && this.license.src) await this.license.write(bitDir, force);
+    return this;
+  }
+
+  async write(bitDir: string, withBitJson: boolean, force?: boolean = true, bitMap?: BitMap): Promise<Component> {
+    // if bitMap parameter is empty, for instance, when it came from the scope, ignore bitMap altogether.
+    // otherwise, check whether this component is in bitMap:
+    // if it's there, write the files according to the paths in bit.map.
+    // Otherwise, write to bitDir and update bitMap with the new paths.
+    if (!bitMap) return this.writeToComponentDir(bitDir, withBitJson, force);
+
+    const idWithoutScope = this.id.changeScope(null).toString();
+    const componentMap = bitMap.getComponent(idWithoutScope);
+    if (componentMap) {
+      if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
+
+      await this.files.writeUsingBitMap(bitMap.projectRoot, componentMap.files, force);
+      // todo: while refactoring the dist for the new changes, make sure it writes to the proper
+      // directory. Also, write the dist paths into bit.map.
+      // if (this.dist) await this.dist.write(bitDir, this.distImplFileName, force);
+      // if (withBitJson) await this.writeBitJson(bitDir, force); // todo: is it needed?
+      // if (this.license && this.license.src) await this.license.write(bitDir, force); // todo: is it needed?
+      return this;
+
+    } else {
+      // todo: make sure mainFileName and testsFileNames are available
+      await this.writeToComponentDir(bitDir, withBitJson, force);
+      if (!this.files) return this;
+      const filesToAdd = {};
+      this.files.src.forEach(file => {
+        filesToAdd[file.name] = path.join(bitDir, file.name);
+      });
+      bitMap.addComponent(idWithoutScope, filesToAdd, this.mainFileName, this.testsFileNames);
+      await bitMap.write();
+    }
+    return this;
   }
 
   async runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose, isolated }: {
@@ -602,6 +629,9 @@ export default class Component {
       });
     } else { // use componentMap
       const files = componentMap.files;
+      Object.keys(files).forEach(file => {
+        files[file] = path.join(consumerPath, files[file]);
+      });
       return new Component({
         name: id.name,
         box: id.box,
@@ -611,9 +641,9 @@ export default class Component {
         testerId: BitId.parse(bitJson.testerId),
         dependencies: BitIds.fromObject(bitJson.dependencies),
         packageDependencies: bitJson.packageDependencies,
-        indexFileName: componentMap.indexFile,
-        testsFileNames: componentMap.specsFiles,
-        files: files ? Object.keys(files).map(file => path.join(consumerPath, files[file].path)) : [],
+        mainFileName: componentMap.mainFile,
+        testsFileNames: componentMap.testsFiles,
+        files: files || {},
       });
     }
   }

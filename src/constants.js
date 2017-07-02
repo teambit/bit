@@ -42,7 +42,7 @@ export const REMOTE_ALIAS_SIGN = '@';
 
 export const DEFAULT_IMPL_NAME = 'impl.js';
 
-export const DEFAULT_INDEX_NAME = 'index.js';
+export const DEFAULT_INDEX_NAME = 'index.js'; // todo: move to bit-javascript
 
 export const DEFAULT_SPECS_NAME = 'spec.js';
 
