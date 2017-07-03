@@ -63,8 +63,8 @@ export default class Helper {
     this.runCmd('bit init --bare', this.remoteScopePath);
   }
 
-  createComponentBarFoo() {
-    const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";
+  createComponentBarFoo(impl?: string) {
+    const fooComponentFixture = impl || "module.exports = function foo() { return 'got foo'; };";
     fs.outputFileSync(path.join(this.localScopePath, 'bar', 'foo.js'), fooComponentFixture);
   }
 
