@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
-import { glob } from '../../../utils';
+import { glob, isValidIdChunk } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
@@ -36,6 +36,21 @@ export default async function addAction(componentPaths: string[], id?: string, m
         tests.map(spec => getPathRelativeToProjectRoot(spec, consumer.getPath())) : [];
       bitMap.addComponent(componentId.toString(), files, mainFile, relativeTests);
       return { id: componentId.toString(), files };
+    };
+
+
+    const getValidBitId = (box: string, name: string): BitId => {
+      // replace any invalid character with a dash character
+      const makeValidIdChunk = (chunk) => {
+        const invalidChars = /[^$\-_!.a-z0-9]+/g;
+        const replaceUpperCaseWithDash = chunk.trim().split(/(?=[A-Z])/).join('-').toLowerCase();
+        return replaceUpperCaseWithDash.replace(invalidChars, '-');
+      };
+
+      if (!isValidIdChunk(name)) name = makeValidIdChunk(name);
+      if (!isValidIdChunk(box)) box = makeValidIdChunk(box);
+
+      return new BitId({ name, box });
     };
 
     let parsedId: BitId;
@@ -73,7 +88,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         });
 
         if (!parsedId) {
-          parsedId = new BitId({ name: lastDir, box: oneBeforeLastDir });
+          parsedId = getValidBitId(oneBeforeLastDir, lastDir);
         }
         return { componentId: parsedId, files, mainFile: mainFileName, testsFiles: tests };
       } else { // is file
@@ -87,7 +102,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
             dirName = path.dirname(absPath);
           }
           const lastDir = R.last(dirName.split(path.sep));
-          parsedId = new BitId({ name: pathParsed.name, box: lastDir });
+          parsedId = getValidBitId(lastDir, pathParsed.name);
         }
 
         const files = { [pathParsed.base]: relativeFilePath };
