@@ -6,7 +6,6 @@ import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
 const helper = new Helper();
-const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";
 
 describe('bit install command', function () {
   this.timeout(0);
@@ -18,9 +17,9 @@ describe('bit install command', function () {
       helper.cleanEnv();
       helper.runCmd('bit init');
       // export a new component "bar/foo"
-      fs.outputFileSync(path.join(helper.localScopePath, 'bar', 'foo.js'), fooComponentFixture);
-      helper.runCmd('bit add bar/foo.js');
-      helper.runCmd('bit commit bar/foo -m commit-msg');
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
       helper.runCmd('bit init --bare', helper.remoteScopePath);
       helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
       helper.runCmd(`bit export @${helper.remoteScope} bar/foo`);
