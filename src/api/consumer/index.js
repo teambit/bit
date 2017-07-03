@@ -10,8 +10,8 @@ import modify from './lib/modify';
 import reset from './lib/reset';
 import importAction from './lib/import';
 import exportAction from './lib/export';
-import getInlineBit from './lib/get-inline-bit';
-import getScopeBit from './lib/get-scope-bit';
+import getConsumerComponent from './lib/get-consumer-component';
+import getScopeComponent from './lib/get-scope-component';
 import { test, testAll } from './lib/test-inline';
 import getComponentLogs from './lib/get-component-logs';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
@@ -36,8 +36,8 @@ export {
   modify,
   reset,
   importAction,
-  getInlineBit,
-  getScopeBit,
+  getConsumerComponent,
+  getScopeComponent,
   getComponentLogs,
   test,
   testAll,

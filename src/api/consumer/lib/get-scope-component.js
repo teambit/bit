@@ -8,7 +8,7 @@ import { ScopeNotFound } from '../../../scope/exceptions';
 import Remotes from '../../../remotes/remotes';
 import { GlobalRemotes } from '../../../global-config';
 
-export default function getScopeBit({ id, allVersions, scopePath }:
+export default function getScopeComponent({ id, allVersions, scopePath }:
 { id: string, allVersions: ?bool, scopePath: ?string }) {
   function loadFromScope() {
     return loadScope(scopePath || process.cwd())
