@@ -41,19 +41,22 @@ describe('bit import', function () {
   after(() => {
     helper.destroyEnv();
   });
+
+  beforeEach(() => {
+    helper.reInitLocalScope();
+    helper.addRemoteScope();
+  })
   
   describe('Import without component id', () => {
     it('should import all components defined in bit.json', () => {
     });
   });
 
-  describe.only('Import stand alone component (without dependencies)', () => {
+  describe('Import stand alone component (without dependencies)', () => {
     it('Should throw error if there is already component with the same name and namespace and different scope', () => {
     });
 
     it('Should write the component in bit.json file', () => {
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
       const output = helper.runCmd(`bit import @${helper.remoteScope}/global/simple`);
       const bitJson = helper.reatBitJson();
       expect(output.includes('successfully imported the following Bit components')).to.be.true;
@@ -101,7 +104,10 @@ describe('bit import', function () {
     });
     it('Should create bit.json file with all the dependencies in the folder', () => {
     });
-    it('Should print warning for missing package dependencies', () => {
+    it.only('Should print warning for missing package dependencies', () => {
+      const output = helper.runCmd(`bit import @${helper.remoteScope}/global/with-deps`);
+      expect(output.includes('Missing the following package dependencies. Please install and add to package.json')).to.be.true;
+      expect(output.includes('lodash.get: 4.4.2')).to.be.true;
     });
     describe('Write the component to file system correctly', () => {
       it('Should create a recursive nested dependency tree', () => {
