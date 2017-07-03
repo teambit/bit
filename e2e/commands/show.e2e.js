@@ -43,7 +43,7 @@ function add(a, b) {
 }`;
       commitFoo(fooComponentFixture);
     });
-    it.skip('should parse the documentation correctly', () => {
+    it('should parse the documentation correctly', () => {
       const output = helper.runCmd('bit show bar/foo');
       expect(output.includes('No documentation found')).to.be.false;
       expect(output.includes('Description')).to.be.true;

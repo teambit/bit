@@ -137,8 +137,8 @@ export default class Component {
   }
 
   get docs(): ?Doclet[] {
-    // todo: what files should be parsed?
-    if (!this._docs) this._docs = docsParser(this.impl ? this.impl.src : '');
+    if (!this._docs) this._docs = this.files ?
+      R.flatten(this.files.src.map(file => docsParser(file.content.toString()))) : [];
     return this._docs;
   }
 
