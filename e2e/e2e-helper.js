@@ -30,7 +30,8 @@ export default class Helper {
     bitJson.packageDependencies = bitJson.packageDependencies || {};
     Object.assign(bitJson.dependencies, dependencies);
     Object.assign(bitJson.packageDependencies, packageDependencies);
-    fs.writeJSONSync(bitJsonPath, JSON.stringify(bitJson, null, 4));
+    fs.writeJSONSync(bitJsonPath, bitJson);
+
   }
 
   reatBitJson(bitJsonPath = path.join(this.localScopePath, 'bit.json')){
