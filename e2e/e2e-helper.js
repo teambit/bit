@@ -24,10 +24,18 @@ export default class Helper {
     return cmdOutput.toString();
   }
 
-  addBitJsonDependencies(bitJsonPath, dependencies) {
-    const bitJson = JSON.parse(fs.readFileSync(bitJsonPath).toString());
+  addBitJsonDependencies(bitJsonPath, dependencies, packageDependencies) {
+    const bitJson = fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
+    bitJson.dependencies = bitJson.dependencies || {};
+    bitJson.packageDependencies = bitJson.packageDependencies || {};
     Object.assign(bitJson.dependencies, dependencies);
-    fs.writeFileSync(bitJsonPath, JSON.stringify(bitJson, null, 4));
+    Object.assign(bitJson.packageDependencies, packageDependencies);
+    fs.writeJSONSync(bitJsonPath, JSON.stringify(bitJson, null, 4));
+  }
+
+  reatBitJson(bitJsonPath = path.join(this.localScopePath, 'bit.json')){
+    const bitJson = fs.readJSONSync(bitJsonPath) || {};
+    return bitJson;
   }
 
   cleanEnv() {
@@ -38,5 +46,19 @@ export default class Helper {
   destroyEnv() {
     fs.removeSync(this.localScopePath);
     fs.removeSync(this.remoteScopePath);
+  }
+
+  reInitLocalScope(){
+    fs.emptyDirSync(this.localScopePath);
+    this.runCmd('bit init');
+  }
+
+  addRemoteScope(remoteScopePath = this.remoteScopePath){
+    this.runCmd(`bit remote add file://${remoteScopePath}`);
+  }
+
+  reInitRemoteScope(){
+    fs.emptyDirSync(this.remoteScopePath);
+    this.runCmd('bit init --bare', this.remoteScopePath);
   }
 }
