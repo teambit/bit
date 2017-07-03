@@ -611,7 +611,7 @@ export default class Component {
                                   id: BitId,
                                   consumerPath: string): Promise<Component> {
     if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInline(bitDir));
-    const bitJson = await BitJson.load(bitDir, consumerBitJson, true);
+    const bitJson = await BitJson.load(bitDir, consumerBitJson);
 
     if (bitDir) { // todo: get rid of this part
       return new Component({
