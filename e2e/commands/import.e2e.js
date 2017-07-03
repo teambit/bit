@@ -5,12 +5,41 @@ import path from 'path';
 import fs from 'fs-extra';
 import Helper from '../e2e-helper';
 
+const helper = new Helper();
+
 describe('bit import', function () {
   this.timeout(0);
-  let helper;
+
   before(() => {
-    helper = new Helper();
-    //TODO: Create remote scope with all needed components
+    helper.reInitLocalScope();
+    helper.reInitRemoteScope();
+
+    // Add remote
+    helper.addRemoteScope();
+
+    // Create remote scope with all needed components
+    
+    // export a new simple component
+    helper.runCmd('bit create simple'); // TODO: Change to use add instead of create
+    helper.runCmd('bit commit simple commit-msg');
+    helper.runCmd(`bit export @this/global/simple @${helper.remoteScope}`);
+
+    // export a new simple component with different scope
+    helper.runCmd('bit create my-scope/simple'); // TODO: Change to use add instead of create
+    helper.runCmd('bit commit my-scope/simple commit-msg');
+    helper.runCmd(`bit export @this/my-scope/simple @${helper.remoteScope}`);
+
+    // export a new component with dependencies
+    helper.runCmd('bit create with-deps'); // TODO: Change to use add instead of create
+    let bitJsonPath = path.join(helper.localScopePath, '/inline_components/global/with-deps/bit.json'); // TODO: Change to use the automatic deps resolver
+    // add "foo" as a bit.json dependency and lodash.get as package dependency
+    helper.addBitJsonDependencies(bitJsonPath, { [`@${helper.remoteScope}/global/simple`]: '1' }, {'lodash.get': "4.4.2"});
+    helper.runCmd('bit commit with-deps commit-msg');
+    helper.runCmd(`bit export @this/global/with-deps @${helper.remoteScope}`);
+  });
+
+  after(() => {
+    helper.destroyEnv();
   });
   
   describe('Import without component id', () => {
@@ -18,17 +47,26 @@ describe('bit import', function () {
     });
   });
 
-  describe('Import stand alone component (without dependencies)', () => {
+  describe.only('Import stand alone component (without dependencies)', () => {
     it('Should throw error if there is already component with the same name and namespace and different scope', () => {
     });
 
     it('Should write the component in bit.json file', () => {
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      const output = helper.runCmd(`bit import @${helper.remoteScope}/global/simple`);
+      const bitJson = helper.reatBitJson();
+      expect(output.includes('successfully imported the following Bit components')).to.be.true;
+      expect(output.includes('global/simple')).to.be.true;
+      console.log(bitJson);
+      const depName = path.join(helper.remoteScope, 'global', 'simple');
+      expect(bitJson.dependencies).to.include({[depName] : "1"});
     });
     
     describe('Component without envs', () => {
       it('Should write the component in bit.map file', () => {
       });
-      dsecribe('Write the component to file system correctly', () => {
+      describe('Write the component to file system correctly', () => {
         // TODO: Validate all files exists in a folder with the component name
         it('Should write the component to asked path (-p)', () => {
         });
@@ -48,7 +86,7 @@ describe('bit import', function () {
       it('Should install envs when requested (-e)', () => {
       });
       it('Should create bit.json file with envs in the folder', () => {
-    });
+      });
     });
   });
 
@@ -65,7 +103,7 @@ describe('bit import', function () {
     });
     it('Should print warning for missing package dependencies', () => {
     });
-    dsecribe('Write the component to file system correctly', () => {
+    describe('Write the component to file system correctly', () => {
       it('Should create a recursive nested dependency tree', () => {
       });
       it('Should not write again to file system same dependencies which imported by another component', () => {
