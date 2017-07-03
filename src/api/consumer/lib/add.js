@@ -48,7 +48,6 @@ export default async function addAction(componentPaths: string[], id?: string, m
     const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
 
       if (componentPathsStats[componentPath].isDirectory) {
-        // todo: make sure "bit add ." is working as well
         const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
         const absoluteComponentPath = path.resolve(componentPath);
         const splitPath = absoluteComponentPath.split(path.sep);
