@@ -1,6 +1,6 @@
 import 'regenerator-runtime/runtime';
 import { bindAction, bindSpecificComponentsAction, watchAction, fetchAction, importAction } from './actions';
-
+import {getDependecyTree} from './dependency-builder'
 const lifecycleHooks = {
   onCreate: bindAction,
   onCommit: bindAction,
@@ -16,4 +16,6 @@ module.exports = {
   fetch: fetchAction,
   import: importAction,
   bindSpecificComponents: bindSpecificComponentsAction,
+  getDependecyTree
 };
+

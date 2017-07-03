@@ -42,7 +42,9 @@
     "regenerator-runtime": "^0.10.5",
     "require-from-string": "^1.2.1",
     "stack-trace": "0.0.9",
-    "user-home": "^2.0.0"
+    "toposort-class": "^1.0.1",
+    "madge": "^1.6.0",
+    "find-package": "^1.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.0",
