@@ -629,8 +629,9 @@ export default class Component {
       });
     } else { // use componentMap
       const files = componentMap.files;
+      const absoluteFiles = {};
       Object.keys(files).forEach(file => {
-        files[file] = path.join(consumerPath, files[file]);
+        absoluteFiles[file] = path.join(consumerPath, files[file]);
       });
       return new Component({
         name: id.name,
@@ -643,7 +644,7 @@ export default class Component {
         packageDependencies: bitJson.packageDependencies,
         mainFileName: componentMap.mainFile,
         testsFileNames: componentMap.testsFiles,
-        files: files || {},
+        files: absoluteFiles || {},
       });
     }
   }
