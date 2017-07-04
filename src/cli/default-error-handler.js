@@ -32,7 +32,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ BitAlreadyExistExternaly, err => `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${err.bitName}" to modify the current component or "bit create -f ${err.bitName}"!`],
   [ PluginNotFound, err => `fatal: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`],
   [ MissingImpl, err => `fatal: The impl file in path "${err.implPath}" does not exist, please check the bit.json or implementation file`],
-  [ FileSourceNotFound, err => `warning: the file "${err.path}" mentioned in your bit.json inside source.misc was not found!`],
+  [ FileSourceNotFound, err => `fatal: the file "${err.path}" was not found!`],
   [ ProtocolNotSupported, () => 'fatal: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'],
   [ RemoteScopeNotFound, err => `fatal: remote scope "${chalk.bold(err)}" not found.`],
   [ InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: [scope]/[box]/<name>'],

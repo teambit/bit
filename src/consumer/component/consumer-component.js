@@ -137,8 +137,8 @@ export default class Component {
   }
 
   get docs(): ?Doclet[] {
-    // todo: what files should be parsed?
-    if (!this._docs) this._docs = docsParser(this.impl ? this.impl.src : '');
+    if (!this._docs) this._docs = this.files ?
+      R.flatten(this.files.src.map(file => docsParser(file.content.toString()))) : [];
     return this._docs;
   }
 
@@ -611,7 +611,7 @@ export default class Component {
                                   id: BitId,
                                   consumerPath: string): Promise<Component> {
     if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInline(bitDir));
-    const bitJson = await BitJson.load(bitDir, consumerBitJson, true);
+    const bitJson = await BitJson.load(bitDir, consumerBitJson);
 
     if (bitDir) { // todo: get rid of this part
       return new Component({
@@ -629,8 +629,9 @@ export default class Component {
       });
     } else { // use componentMap
       const files = componentMap.files;
+      const absoluteFiles = {};
       Object.keys(files).forEach(file => {
-        files[file] = path.join(consumerPath, files[file]);
+        absoluteFiles[file] = path.join(consumerPath, files[file]);
       });
       return new Component({
         name: id.name,
@@ -643,7 +644,7 @@ export default class Component {
         packageDependencies: bitJson.packageDependencies,
         mainFileName: componentMap.mainFile,
         testsFileNames: componentMap.testsFiles,
-        files: files || {},
+        files: absoluteFiles || {},
       });
     }
   }

@@ -10,7 +10,7 @@ import Version from '../models/version';
 import Source from '../models/source';
 import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
-import ConsumerComponent from '../../consumer/component/consumer-component';
+import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import loader from '../../cli/loader';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
@@ -126,7 +126,46 @@ export default class SourceRepository {
       });
   }
 
-  addSource({ source, depIds, message, force, consumer, verbose }: {
+  async consumerComponentToVersion({ consumerComponent, consumer, message, depIds, force, verbose }
+  : { consumerComponent: ConsumerComponent,
+      consumer: Consumer,
+      message?: string,
+      depIds?: Object,
+      force?: boolean,
+      verbose?: boolean }
+  )
+  : Promise<Object> {
+    await consumerComponent.build({ scope: this.scope, consumer });
+    const impl = consumerComponent.impl ? Source.from(bufferFrom(consumerComponent.impl.src)) : null;
+    const dist = consumerComponent.dist ? Source.from(bufferFrom(consumerComponent.dist.toString())): null;
+    const specs = consumerComponent.specs ? Source.from(bufferFrom(consumerComponent.specs.src)): null;
+    const files = consumerComponent.files && consumerComponent.files.src.length ? consumerComponent.files.src.map((file) => {
+      return { name: file.name, file: Source.from(file.content) };
+    }) : null;
+
+    const username = globalConfig.getSync(CFG_USER_NAME_KEY);
+    const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
+
+    loader.start(BEFORE_RUNNING_SPECS);
+    const specsResults =  await consumerComponent
+      .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
+    const version = Version.fromComponent({
+      component: consumerComponent,
+      impl,
+      specs,
+      files,
+      dist,
+      flattenedDeps: depIds,
+      specsResults,
+      message,
+      username,
+      email,
+    });
+
+    return { version, impl, specs, dist, files };
+  }
+
+  async addSource({ source, depIds, message, force, consumer, verbose }: {
     source: ConsumerComponent,
     depIds: BitId[],
     message: string,
@@ -136,51 +175,22 @@ export default class SourceRepository {
   }): Promise<Component> {
     const objectRepo = this.objects();
 
-    return this.findOrAddComponent(source)
-      .then((component) => {
-        return source.build({ scope: this.scope, consumer })
-        .then(() => {
-          const impl = source.impl ? Source.from(bufferFrom(source.impl.src)) : null;
-          const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())): null;
-          const specs = source.specs ? Source.from(bufferFrom(source.specs.src)): null;
-          const files = source.files && source.files.src.length ? source.files.src.map((file) => {
-            return { name: file.name, file: Source.from(file.content) };
-          }) : null;
+    // if a component exists in the model, add a new version. Otherwise, create a new component on them model
+    const component = await this.findOrAddComponent(source);
+    const { version, impl, specs, dist, files } = await this
+      .consumerComponentToVersion({ consumerComponent: source, consumer, message, depIds, force, verbose });
+    component.addVersion(version);
 
-          const username = globalConfig.getSync(CFG_USER_NAME_KEY);
-          const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
+    objectRepo
+      .add(version)
+      .add(component)
+      .add(impl)
+      .add(specs)
+      .add(dist);
 
-          loader.start(BEFORE_RUNNING_SPECS);
-          return source.runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose })
-          .then((specsResults) => {
-            const version = Version.fromComponent({
-              component: source,
-              impl,
-              specs,
-              files,
-              dist,
-              flattenedDeps: depIds,
-              specsResults,
-              message,
-              username,
-              email,
-            });
+    if (files) files.forEach(file => objectRepo.add(file.file));
 
-            component.addVersion(version);
-
-            objectRepo
-              .add(version)
-              .add(component)
-              .add(impl)
-              .add(specs)
-              .add(dist);
-
-            if (files) files.forEach(file => objectRepo.add(file.file));
-
-            return component;
-          });
-        });
-      });
+    return component;
   }
 
   put({ component, objects }: ComponentTree) {

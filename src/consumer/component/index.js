@@ -1,3 +1,3 @@
-import BitComponent from './consumer-component';
+import ConsumerComponent from './consumer-component';
 
-export default BitComponent;
+export default ConsumerComponent;

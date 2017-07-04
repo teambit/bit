@@ -2,12 +2,10 @@
 // this class should also help with the performance of status/commit/export commands.
 // common data of components-lists are cached.
 
-import bufferFrom from 'bit/buffer/from';
 import path from 'path';
 import glob from 'glob';
 import R from 'ramda';
 import Version from '../../scope/models/version';
-import Source from '../../scope/models/source';
 import Component from '../component';
 import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
@@ -24,19 +22,20 @@ export default class ComponentsList {
     this.scope = consumer.scope;
   }
 
-  // todo: the comparison should include also MiscFiles and maybe file rename
-  isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
-    const getHash = (data): string => {
-      return Source.from(bufferFrom(data)).hash().toString();
-    };
-    const isSourceModified = (componentSrc, versionSrc) => {
-      if (!componentSrc && !versionSrc) return false;
-      if (!componentSrc && versionSrc) return true;
-      if (componentSrc && !versionSrc) return true;
-      return (componentSrc.file.hash !== getHash(versionSrc.src));
-    };
-    return isSourceModified(componentFromModel.impl, componentFromFileSystem.impl)
-      || isSourceModified(componentFromModel.specs, componentFromFileSystem.specs);
+  /**
+   * Check whether a model representation and file-system representation of the same component is the same.
+   * The way how it is done is by converting the file-system representation of the component into
+   * a Version object. Once this is done, we have two Version objects, and we can compare their hashes
+   */
+  async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
+    const { version } = await this.consumer.scope.sources.consumerComponentToVersion(
+      { consumerComponent: componentFromFileSystem, consumer: this.consumer});
+
+    version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
+    // todo: once we know to auto-resolve dependencies, figure out if it should be part of the comparison. Currently, it is ignored.
+    version.flattenedDependencies = componentFromModel.flattenedDependencies;
+
+    return componentFromModel.hash().hash === version.hash().hash;
   }
 
 
@@ -80,13 +79,14 @@ export default class ComponentsList {
     }, {});
 
     const modifiedComponents = [];
-    Object.keys(objectComponents).forEach((id) => {
+    Object.keys(objectComponents).forEach(async (id) => {
       const bitId = BitId.parse(id);
       const newId = bitId.changeScope(null);
       const componentFromFS = objFromFileSystem[newId.toString()];
 
       if (componentFromFS) {
-        if (this.isComponentModified(objectComponents[id], componentFromFS)) {
+        const isModified = await this.isComponentModified(objectComponents[id], componentFromFS);
+        if (isModified) {
           modifiedComponents.push(newId.toString());
         }
       } else {
@@ -216,7 +216,7 @@ export default class ComponentsList {
    * Finds all components that are saved in the file system.
    * Components might be stored in the default component directory and also might be outside
    * of that directory, in which case the bit.map is used to find them
-   * @return {Promise<Component[]>}
+   * @return {Promise<ConsumerComponent[]>}
    */
   async getFromFileSystem(): Promise<Component[]> {
     if (!this._fromFileSystem) {
