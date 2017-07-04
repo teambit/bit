@@ -22,6 +22,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
   dependencies: {[string]: string};
   lang: string;
   structure: string;
+  distTarget: string;
+  distEntry: string;
 
   write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
     return new Promise((resolve, reject) => {
@@ -55,7 +57,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object) {
-    const { sources, env, dependencies, lang, structure } = object;
+    const { sources, env, dependencies, lang, structure, dist } = object;
     return new ConsumerBitJson({
       impl: R.propOr(undefined, 'impl', sources),
       spec: R.propOr(undefined, 'spec', sources),
@@ -64,6 +66,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
       lang,
       dependencies,
       structure,
+      distTarget: R.propOr(undefined, 'target', dist),
+      distEntry: R.propOr(undefined, 'entry', dist),
     });
   }
 
