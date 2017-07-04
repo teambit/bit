@@ -7,35 +7,27 @@ import Helper from '../e2e-helper';
 
 const helper = new Helper();
 
-describe.skip('bit import', function () {
+describe('bit import', function () {
   this.timeout(0);
 
   before(() => {
     helper.reInitLocalScope();
     helper.reInitRemoteScope();
-
-    // Add remote
     helper.addRemoteScope();
 
     // Create remote scope with all needed components
-
     // export a new simple component
-    helper.runCmd('bit create simple'); // TODO: Change to use add instead of create
-    helper.runCmd('bit commit simple commit-msg');
-    helper.runCmd(`bit export @this/global/simple @${helper.remoteScope}`);
-
-    // export a new simple component with different scope
-    helper.runCmd('bit create my-scope/simple'); // TODO: Change to use add instead of create
-    helper.runCmd('bit commit my-scope/simple commit-msg');
-    helper.runCmd(`bit export @this/my-scope/simple @${helper.remoteScope}`);
+    helper.runCmd('bit create simple');
+    helper.commitComponent('simple');
+    helper.exportComponent('simple');
 
     // export a new component with dependencies
-    helper.runCmd('bit create with-deps'); // TODO: Change to use add instead of create
-    let bitJsonPath = path.join(helper.localScopePath, '/inline_components/global/with-deps/bit.json'); // TODO: Change to use the automatic deps resolver
-    // add "foo" as a bit.json dependency and lodash.get as package dependency
+    helper.runCmd('bit create with-deps -j');
+    const bitJsonPath = path.join(helper.localScopePath, '/components/global/with-deps/bit.json'); // TODO: Change to use the automatic deps resolver
+    // add "foo" as a bit.json dependency and lodash.get as a package dependency
     helper.addBitJsonDependencies(bitJsonPath, { [`@${helper.remoteScope}/global/simple`]: '1' }, {'lodash.get': "4.4.2"});
-    helper.runCmd('bit commit with-deps commit-msg');
-    helper.runCmd(`bit export @this/global/with-deps @${helper.remoteScope}`);
+    helper.commitComponent('with-deps');
+    helper.exportComponent('with-deps');
   });
 
   after(() => {
@@ -45,20 +37,15 @@ describe.skip('bit import', function () {
   beforeEach(() => {
     helper.reInitLocalScope();
     helper.addRemoteScope();
-  })
-
-  describe('Import without component id', () => {
-    it('should import all components defined in bit.json', () => {
-    });
   });
 
   describe('Import stand alone component (without dependencies)', () => {
-    it('Should throw error if there is already component with the same name and namespace and different scope', () => {
+    it.skip('Should throw error if there is already component with the same name and namespace and different scope', () => {
     });
 
     it('Should write the component in bit.json file', () => {
       const output = helper.runCmd(`bit import @${helper.remoteScope}/global/simple`);
-      const bitJson = helper.reatBitJson();
+      const bitJson = helper.readBitJson();
       expect(output.includes('successfully imported the following Bit components')).to.be.true;
       expect(output.includes('global/simple')).to.be.true;
       console.log(bitJson);
@@ -66,7 +53,7 @@ describe.skip('bit import', function () {
       expect(bitJson.dependencies).to.include({[depName] : "1"});
     });
 
-    describe('Component without envs', () => {
+    describe.skip('Component without envs', () => {
       it('Should write the component in bit.map file', () => {
       });
       describe('Write the component to file system correctly', () => {
@@ -83,7 +70,7 @@ describe.skip('bit import', function () {
       });
     });
 
-    describe('Component with compiler and tester', () => {
+    describe.skip('Component with compiler and tester', () => {
       it('Should not install envs when not requested', () => {
       });
       it('Should install envs when requested (-e)', () => {
@@ -109,7 +96,7 @@ describe.skip('bit import', function () {
       expect(output.includes('Missing the following package dependencies. Please install and add to package.json')).to.be.true;
       expect(output.includes('lodash.get: 4.4.2')).to.be.true;
     });
-    describe('Write the component to file system correctly', () => {
+    describe.skip('Write the component to file system correctly', () => {
       it('Should create a recursive nested dependency tree', () => {
       });
       it('Should not write again to file system same dependencies which imported by another component', () => {
@@ -117,12 +104,12 @@ describe.skip('bit import', function () {
     });
   });
 
-  describe('Import compiler', () => {
+  describe.skip('Import compiler', () => {
     it('Should install package dependencies', () => {
     });
   });
 
-  describe('Import tester', () => {
+  describe.skip('Import tester', () => {
     it('Should install package dependencies', () => {
     });
   });

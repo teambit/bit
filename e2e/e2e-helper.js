@@ -31,12 +31,10 @@ export default class Helper {
     Object.assign(bitJson.dependencies, dependencies);
     Object.assign(bitJson.packageDependencies, packageDependencies);
     fs.writeJSONSync(bitJsonPath, bitJson);
-
   }
 
-  reatBitJson(bitJsonPath = path.join(this.localScopePath, 'bit.json')){
-    const bitJson = fs.readJSONSync(bitJsonPath) || {};
-    return bitJson;
+  readBitJson(bitJsonPath = path.join(this.localScopePath, 'bit.json')) {
+    return fs.readJSONSync(bitJsonPath) || {};
   }
 
   cleanEnv() {
@@ -61,6 +59,14 @@ export default class Helper {
   reInitRemoteScope(){
     fs.emptyDirSync(this.remoteScopePath);
     this.runCmd('bit init --bare', this.remoteScopePath);
+  }
+
+  commitComponent(id) {
+    this.runCmd(`bit commit ${id} -m commit-msg`);
+  }
+
+  exportComponent(id) {
+    this.runCmd(`bit export @${this.remoteScope} ${id}`);
   }
 
   createComponentBarFoo(impl?: string) {
