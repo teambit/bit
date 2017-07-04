@@ -649,7 +649,7 @@ export default class Component {
     }
   }
 
-  static create({ scopeName, name, box, withSpecs, consumerBitJson }:{
+  static create({ scopeName, name, box, withSpecs, files, consumerBitJson }:{
     consumerBitJson: ConsumerBitJson,
     name: string,
     box: string,
@@ -658,7 +658,6 @@ export default class Component {
   }, scope: Scope) {
     const implFile = consumerBitJson.getImplBasename();
     const specsFile = consumerBitJson.getSpecBasename();
-    const miscFiles = consumerBitJson.getMiscFiles();
     const compilerId = BitId.parse(consumerBitJson.compilerId);
     const testerId = BitId.parse(consumerBitJson.testerId);
     const lang = consumerBitJson.lang;
@@ -671,7 +670,7 @@ export default class Component {
       scope: scopeName,
       implFile,
       specsFile,
-      miscFiles,
+      files,
       compilerId,
       testerId,
       impl: Impl.create(name, compilerId, scope),
