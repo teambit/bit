@@ -121,10 +121,7 @@ export default class Consumer {
     logger.debug(`loading a consumer-component ${id} from the file-system`);
     const bitMap = await this.getBitMap();
     const componentMap = bitMap.getComponent(id.toString());
-    let bitDir;
-    if (!componentMap) {
-      bitDir = this.composeBitPath(id);
-    }
+    const bitDir = this.composeBitPath(id);
     return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, id, this.getPath());
   }
 

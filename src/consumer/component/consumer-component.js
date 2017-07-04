@@ -610,10 +610,10 @@ export default class Component {
                                   componentMap: ComponentMap,
                                   id: BitId,
                                   consumerPath: string): Promise<Component> {
-    if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInline(bitDir));
+    if (bitDir && !componentMap && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInline(bitDir));
     const bitJson = await BitJson.load(bitDir, consumerBitJson);
 
-    if (bitDir) { // todo: get rid of this part
+    if (!componentMap) { // todo: get rid of this part
       return new Component({
         name: path.basename(bitDir),
         box: path.basename(path.dirname(bitDir)),
