@@ -3,6 +3,12 @@ import madge from 'madge';
 import Toposort from 'toposort-class';
 import findPackage from 'find-package';
 
+/**
+ * Used for resolving npm package dependencies returned by madge
+ * @param dependenciesObject
+ * @param cwd
+ * @return {Object}
+ */
 const resloveNodePackages = (dependenciesObject: Object, cwd: String) => {
   const newDependencyObject:Object = {};
   Object.keys(dependenciesObject).forEach((key) => {
@@ -21,6 +27,12 @@ const resloveNodePackages = (dependenciesObject: Object, cwd: String) => {
   return newDependencyObject;
 };
 
+/**
+ * sortDependency- will sort depdency tree according to depndecies
+ * @param tree
+ * @param cwd
+ * @return {Array.<*>}
+ */
 const sortDependency = (tree, cwd) => {
   const t:Toposort = new Toposort();
   const sortedDependencieArr:Array<*> = [];
@@ -31,6 +43,13 @@ const sortDependency = (tree, cwd) => {
   return sortedDependencieArr;
 };
 
+
+/**
+ * Function for fetching dependecy tree of file or dir
+ * @param cwd
+ * @param filePath
+ * @return {Promise.<{missing, tree}>}
+ */
 export default function getDependecyTree(cwd: String, filePath: String): promise<*> {
   return madge(filePath, { baseDir: cwd, includeNpm: true })
    .then(res => ({ missing: res.skipped, tree: sortDependency(res.tree, cwd) }));
