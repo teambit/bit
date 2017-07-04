@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import getScopeBit from '../../../../src/api/consumer/lib/get-scope-bit';
+import getScopeBit from '../../../../src/api/consumer/lib/get-scope-component';
 import { ConsumerNotFound } from '../../../../src/consumer/exceptions';
 import { ScopeNotFound } from '../../../../src/scope/exceptions';
 import * as consumer from '../../../../src/consumer';

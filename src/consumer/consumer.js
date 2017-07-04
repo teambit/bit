@@ -147,7 +147,7 @@ export default class Consumer {
       }
     }
 
-    const componentDependenciesArr = this.scope.getMany(dependencies, cache);
+    const componentDependenciesArr = await this.scope.getMany(dependencies, cache);
     await this.writeToComponentsDir(componentDependenciesArr);
     if (withEnvironments) {
       const envComponents = this.scope.installEnvironment({

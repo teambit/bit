@@ -1,26 +1,27 @@
 /** @flow */
 import R from 'ramda';
 import Command from '../../command';
-import { getInlineBit, getScopeBit } from '../../../api/consumer';
+import { getConsumerComponent, getScopeComponent } from '../../../api/consumer';
 import paintComponent from '../../templates/component-template';
 import ConsumerComponent from '../../../consumer/component';
+import{ BitId } from '../../../bit-id';
 
 export default class Show extends Command {
   name = 'show <id>';
   description = 'show a component';
   alias = '';
   opts = [
-    ['i', 'inline', 'show inline component'],
     ['j', 'json', 'return a json version of the component'],
     ['ver', 'versions', 'return a json of all the versions of the component'],
   ];
   loader = true;
 
-  action([id, ]: [string], { inline, json, versions }:
+  action([id, ]: [string], { json, versions }:
   { inline: ?bool, json: ?bool, versions: ?bool }): Promise<*> {
     function getBitComponent(allVersions: ?bool) {
-      if (inline) return getInlineBit({ id });
-      return getScopeBit({ id, allVersions });
+      const bitId = BitId.parse(id);
+      if (bitId.isLocal()) return getConsumerComponent({ id });
+      return getScopeComponent({ id, allVersions });
     }
 
     if (versions) {

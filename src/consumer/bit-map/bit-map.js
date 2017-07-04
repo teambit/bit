@@ -55,13 +55,13 @@ export default class BitMap {
 
   _validateAndFixPaths(componentPaths: Object<string>): void {
     const ignoreFileList = [BIT_JSON];
-    const ignoreDirectoriesList = ['dependencies']; // todo: add "dist"?
+    const ignoreDirectoriesList = ['dependencies', 'node_modules']; // todo: add "dist"?
 
     Object.keys(componentPaths).forEach(component => {
       const componentPath = componentPaths[component];
       const fileName = path.basename(componentPath);
-      const baseDir = path.basename(path.dirname(fileName));
-      if (ignoreFileList.includes(fileName) || ignoreDirectoriesList.includes(baseDir)) {
+      const baseDirs = path.parse(componentPath).dir.split(path.sep);
+      if (ignoreFileList.includes(fileName) || baseDirs.some(dir => ignoreDirectoriesList.includes(dir))) {
         delete componentPaths[component];
       } else {
         componentPaths[component] = this._makePathRelativeToProjectRoot(componentPath);

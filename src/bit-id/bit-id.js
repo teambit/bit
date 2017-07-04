@@ -36,11 +36,11 @@ export default class BitId {
   }
 
   getScopeWithoutRemoteAnnotation() {
-    return this.scope.replace(REMOTE_ALIAS_SIGN, '');
+    return this.scope ? this.scope.replace(REMOTE_ALIAS_SIGN, '') : this.scope;
   }
 
   isLocal(scopeName: string) {
-    return scopeName === null || scopeName === this.getScopeWithoutRemoteAnnotation();
+    return this.scope === null || scopeName === this.getScopeWithoutRemoteAnnotation();
   }
 
   getVersion() {
