@@ -7,7 +7,7 @@ import Helper from '../e2e-helper';
 
 const helper = new Helper();
 
-describe('bit import', function () {
+describe.skip('bit import', function () {
   this.timeout(0);
 
   before(() => {
@@ -18,7 +18,7 @@ describe('bit import', function () {
     helper.addRemoteScope();
 
     // Create remote scope with all needed components
-    
+
     // export a new simple component
     helper.runCmd('bit create simple'); // TODO: Change to use add instead of create
     helper.runCmd('bit commit simple commit-msg');
@@ -46,7 +46,7 @@ describe('bit import', function () {
     helper.reInitLocalScope();
     helper.addRemoteScope();
   })
-  
+
   describe('Import without component id', () => {
     it('should import all components defined in bit.json', () => {
     });
@@ -65,7 +65,7 @@ describe('bit import', function () {
       const depName = path.join(helper.remoteScope, 'global', 'simple');
       expect(bitJson.dependencies).to.include({[depName] : "1"});
     });
-    
+
     describe('Component without envs', () => {
       it('Should write the component in bit.map file', () => {
       });
@@ -82,7 +82,7 @@ describe('bit import', function () {
         });
       });
     });
-    
+
     describe('Component with compiler and tester', () => {
       it('Should not install envs when not requested', () => {
       });
@@ -104,7 +104,7 @@ describe('bit import', function () {
     });
     it('Should create bit.json file with all the dependencies in the folder', () => {
     });
-    it.only('Should print warning for missing package dependencies', () => {
+    it('Should print warning for missing package dependencies', () => {
       const output = helper.runCmd(`bit import @${helper.remoteScope}/global/with-deps`);
       expect(output.includes('Missing the following package dependencies. Please install and add to package.json')).to.be.true;
       expect(output.includes('lodash.get: 4.4.2')).to.be.true;
