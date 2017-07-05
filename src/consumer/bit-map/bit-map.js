@@ -6,11 +6,15 @@ import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON } from '../../constants';
 import InvalidBitMap from './exceptions/invalid-bit-map';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile } from '../../utils';
+import { COMPONENT_ORIGINS } from '../../constants';
+
+export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
 export type ComponentMap = {
   files: Object,
   mainFile: string,
-  testsFiles: string[]
+  testsFiles: string[],
+  origin: ComponentOrigin
 }
 
 export default class BitMap {
@@ -69,32 +73,67 @@ export default class BitMap {
     });
   }
 
-  addComponent(componentId: string,
+  addComponent(componentId: BitId,
                componentPaths: Object<string>,
                mainFile?: string,
-               testsFiles?: string[]): void {
-    logger.debug(`adding to bit.map ${componentId}`);
+               testsFiles?: string[],
+               origin: ComponentOrigin): void {
+    const componentIdStr = componentId.changeScope(null).toString();
+    logger.debug(`adding to bit.map ${componentIdStr}`);
     this._validateAndFixPaths(componentPaths);
-    if (this.components[componentId]) {
-      logger.info(`bit.map: updating an exiting component ${componentId}`);
+    if (this.components[componentIdStr]) {
+      logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
       if (componentPaths) {
-        const allPaths = R.merge(this.components[componentId].files, componentPaths);
-        this.components[componentId].files = allPaths;
+        const allPaths = R.merge(this.components[componentIdStr].files, componentPaths);
+        this.components[componentIdStr].files = allPaths;
       }
-      if (mainFile) this.components[componentId].mainFile = mainFile;
+      if (mainFile) this.components[componentIdStr].mainFile = mainFile;
       if (testsFiles && testsFiles.length) {
-        const allTestsFiles = testsFiles.concat(this.components[componentId].testsFiles);
-        this.components[componentId].testsFiles = R.uniq(allTestsFiles);
+        const allTestsFiles = testsFiles.concat(this.components[componentIdStr].testsFiles);
+        this.components[componentIdStr].testsFiles = R.uniq(allTestsFiles);
       }
     } else {
-      this.components[componentId] = { files: componentPaths };
-      this.components[componentId].mainFile = mainFile || DEFAULT_INDEX_NAME;
-      this.components[componentId].testsFiles = testsFiles && testsFiles.length ? testsFiles : [];
+      this.components[componentIdStr] = { files: componentPaths };
+      this.components[componentIdStr].origin = origin;
+      this.components[componentIdStr].mainFile = mainFile || DEFAULT_INDEX_NAME;
+      this.components[componentIdStr].testsFiles = testsFiles && testsFiles.length ? testsFiles : [];
     }
   }
 
   getComponent(id: string): ComponentMap {
     return this.components[id];
+  }
+
+  /**
+   * 
+   * Return the full component object means:
+   * {
+   *    componentId: component
+   * }
+   * 
+   * @param {string} path relative to consumer - as stored in bit.map files object
+   * @returns {Object<string, ComponentMap>} 
+   * @memberof BitMap
+   */
+  getComponentObjectByPath(path: string): Object<string, ComponentMap> {
+    return R.pickBy(R.compose(
+                      R.contains(path),
+                      R.values(),
+                      R.prop('files')),
+                    this.components);
+  }
+
+  /**
+   * Return a component id as listed in bit.map file 
+   * by a path exist in the files object
+   * 
+   * @param {string} path relative to consumer - as stored in bit.map files object
+   * @returns {string} component id
+   * @memberof BitMap
+   */
+  getComponentIdByPath(path: string): string {
+    const componentObject = getComponentObjectByPath(path);
+    return R.keys(componentObject)[0];
   }
 
   // todo: use this lib: https://github.com/getify/JSON.minify to add comments to this file

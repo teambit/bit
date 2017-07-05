@@ -161,6 +161,7 @@ export default class Consumer {
   }
 
   async importSpecificComponents(rawIds: ?string[], cache?: bool = true) {
+    logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
     const componentDependenciesArr = await this.scope.getMany(bitIds, cache);

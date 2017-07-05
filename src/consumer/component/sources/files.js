@@ -7,6 +7,7 @@ import logger from '../../../logger/logger';
 
 export type FileSrc = { name: string, content: string|Buffer };
 
+// TODO: Remove Source?
 export default class Files extends Source {
   constructor(src: FileSrc[]) { // eslint-disable-line
     super(src);

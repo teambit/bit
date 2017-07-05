@@ -48,6 +48,7 @@ export default class SourceRepository {
   }
 
   getMany(ids: BitId[]): Promise<ComponentDef[]> {
+    logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return Promise.all(
       ids.map((id) => {
         return this.get(id)
@@ -194,6 +195,7 @@ export default class SourceRepository {
   }
 
   put({ component, objects }: ComponentTree) {
+    logger.debug(`sources.put, id: ${component.id()}`);
     const repo = this.objects();
     repo.add(component);
     objects.forEach(obj => repo.add(obj));
