@@ -6,7 +6,7 @@ import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON } from '../../constants';
 import InvalidBitMap from './exceptions/invalid-bit-map';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile } from '../../utils';
-import { COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS, DEPENDENCIES_DIR } from '../../constants';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
@@ -38,7 +38,7 @@ export default class BitMap {
         throw new InvalidBitMap(mapPath);
       }
     } else {
-      logger.info('bit.map: unable to find an existing bit.map file');
+      logger.info('bit.map: unable to find an existing bit.map file. Will probably create a new one if needed');
       components = {};
     }
     return new BitMap(dirPath, mapPath, components);
@@ -57,15 +57,17 @@ export default class BitMap {
     return pathToChange.replace(`${this.projectRoot}${path.sep}`, '');
   }
 
-  _validateAndFixPaths(componentPaths: Object<string>): void {
+  _validateAndFixPaths(componentPaths: Object<string>, isDependency: boolean): void {
     const ignoreFileList = [BIT_JSON];
-    const ignoreDirectoriesList = ['dependencies', 'node_modules']; // todo: add "dist"?
+    const ignoreDirectoriesList = ['node_modules']; // todo: add "dist"?
+    if (!isDependency) ignoreDirectoriesList.push(DEPENDENCIES_DIR);
 
     Object.keys(componentPaths).forEach(component => {
       const componentPath = componentPaths[component];
       const fileName = path.basename(componentPath);
       const baseDirs = path.parse(componentPath).dir.split(path.sep);
       if (ignoreFileList.includes(fileName) || baseDirs.some(dir => ignoreDirectoriesList.includes(dir))) {
+        logger.debug(`bit-map, ignoring file ${componentPath}`);
         delete componentPaths[component];
       } else {
         componentPaths[component] = this._makePathRelativeToProjectRoot(componentPath);
@@ -77,10 +79,11 @@ export default class BitMap {
                componentPaths: Object<string>,
                mainFile?: string,
                testsFiles?: string[],
-               origin: ComponentOrigin): void {
-    const componentIdStr = componentId.changeScope(null).toString();
+               origin: ComponentOrigin,
+               isDependency: boolean): void {
+    const componentIdStr = isDependency ? componentId.toString() : componentId.changeScope(null).toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
-    this._validateAndFixPaths(componentPaths);
+    this._validateAndFixPaths(componentPaths, isDependency);
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
       if (componentPaths) {
@@ -105,14 +108,14 @@ export default class BitMap {
   }
 
   /**
-   * 
+   *
    * Return the full component object means:
    * {
    *    componentId: component
    * }
-   * 
+   *
    * @param {string} path relative to consumer - as stored in bit.map files object
-   * @returns {Object<string, ComponentMap>} 
+   * @returns {Object<string, ComponentMap>}
    * @memberof BitMap
    */
   getComponentObjectByPath(path: string): Object<string, ComponentMap> {
@@ -124,9 +127,9 @@ export default class BitMap {
   }
 
   /**
-   * Return a component id as listed in bit.map file 
+   * Return a component id as listed in bit.map file
    * by a path exist in the files object
-   * 
+   *
    * @param {string} path relative to consumer - as stored in bit.map files object
    * @returns {string} component id
    * @memberof BitMap

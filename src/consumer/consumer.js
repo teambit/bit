@@ -21,6 +21,7 @@ import {
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
+  DEPENDENCIES_DIR,
  } from '../constants';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
@@ -209,12 +210,33 @@ export default class Consumer {
     });
   }
 
+  /**
+   * write the component into '/component' dir (or according to the bit.map) and its
+   * dependencies nested inside the component directory and under 'dependencies' dir.
+   * For example: global/a has a dependency my-scope/global/b::1. The directories will be:
+   * project/root/component/global/a
+   * project/root/component/global/a/dependency/global/b/my-scope/version-num/1
+   *
+   * In case there are some same dependencies shared between the components, it makes sure to
+   * write them only once.
+   */
   async writeToComponentsDir(componentDependencies: VersionDependencies[]): Promise<Component[]> {
-    const components = flattenDependencies(componentDependencies);
     const bitMap: BitMap = await this.getBitMap();
-    return Promise.all(components.map((component: Component) => {
-      const bitPath = this.composeBitPath(component.id);
-      return component.write(bitPath, true, true, bitMap);
+    const dependenciesIds = [];
+    return Promise.all(componentDependencies.map(componentWithDeps => {
+      const bitPath = this.composeBitPath(componentWithDeps.component.id);
+      const writeComponentP = componentWithDeps.component.write(bitPath, true, true, bitMap, false);
+      const writeDependenciesP = componentWithDeps.dependencies.map((dep) => {
+        const dependencyId = dep.id.toString();
+        if (bitMap.isComponentExist(dependencyId) || dependenciesIds.includes(dependencyId)) {
+          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists`);
+          return Promise.resolve();
+        }
+        dependenciesIds.push(dependencyId);
+        const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
+        return dep.write(depBitPath, true, true, bitMap, true);
+      });
+      return Promise.all([writeComponentP, ...writeDependenciesP]);
     }));
   }
 

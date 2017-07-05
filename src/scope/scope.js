@@ -125,11 +125,7 @@ export default class Scope {
   }
 
   importDependencies(component: ConsumerComponent, bitDir?: string) {
-    if (!bitDir) {
-      // todo: when bitDir is empty, there will be no bit.json. Apply the auto-resolve-dependencies here.
-      return Promise.resolve([]);
-    }
-    const bitJsonPath = pathLib.join(bitDir, BIT_JSON);
+    const bitJsonPath = bitDir ? pathLib.join(bitDir, BIT_JSON) : '';
     return new Promise((resolve, reject) => {
       return this.importMany(component.dependencies)
         .then(resolve)

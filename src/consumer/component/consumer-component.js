@@ -290,7 +290,8 @@ export default class Component {
     return this;
   }
 
-  async write(bitDir: string, withBitJson: boolean, force?: boolean = true, bitMap?: BitMap): Promise<Component> {
+  async write(bitDir: string, withBitJson: boolean, force?: boolean = true, bitMap?: BitMap,
+              isDependency: boolean = false): Promise<Component> {
     // if bitMap parameter is empty, for instance, when it came from the scope, ignore bitMap altogether.
     // otherwise, check whether this component is in bitMap:
     // if it's there, write the files according to the paths in bit.map.
@@ -311,14 +312,13 @@ export default class Component {
       return this;
 
     } else {
-      // todo: make sure mainFileName and testsFileNames are available
       await this.writeToComponentDir(bitDir, withBitJson, force);
       if (!this.files) return this;
       const filesToAdd = {};
       this.files.src.forEach(file => {
         filesToAdd[file.name] = path.join(bitDir, file.name);
       });
-      bitMap.addComponent(this.id, filesToAdd, this.mainFileName, this.testsFileNames);
+      bitMap.addComponent(this.id, filesToAdd, this.mainFileName, this.testsFileNames, undefined, isDependency);
       await bitMap.write();
     }
     return this;

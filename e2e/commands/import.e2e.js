@@ -48,7 +48,6 @@ describe('bit import', function () {
       const bitJson = helper.readBitJson();
       expect(output.includes('successfully imported the following Bit components')).to.be.true;
       expect(output.includes('global/simple')).to.be.true;
-      console.log(bitJson);
       const depName = path.join(helper.remoteScope, 'global', 'simple');
       expect(bitJson.dependencies).to.include({[depName] : "1"});
     });

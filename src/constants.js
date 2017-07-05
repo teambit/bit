@@ -84,6 +84,8 @@ export const VERSION_DELIMITER = '::';
 
 export const DEPENDENCY_MAP_FILENAME = 'dependencies.json';
 
+export const DEPENDENCIES_DIR = 'dependencies';
+
 export const BIT_EXTERNAL_DIRNAME = 'external';
 
 export const LOCAL_SCOPE_NOTATION = '@this';
