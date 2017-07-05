@@ -182,7 +182,8 @@ export default class Scope {
                 loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
                 return this.objects.persist()
                   .then(() => component.toVersionDependencies(LATEST, this, this.name))
-                  .then(deps => deps.toConsumer(this.objects));
+                  .then(deps => deps.toConsumer(this.objects))
+                  .then(() => index(component, this.scope.getPath())); // todo: make sure it still works
               });
           });
       });
