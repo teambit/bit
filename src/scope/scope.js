@@ -183,7 +183,7 @@ export default class Scope {
                 return this.objects.persist()
                   .then(() => component.toVersionDependencies(LATEST, this, this.name))
                   .then(deps => deps.toConsumer(this.objects))
-                  .then(() => index(component, this.scope.getPath())); // todo: make sure it still works
+                  .then(() => index(consumerComponent, this.getPath())); // todo: make sure it still works
               });
           });
       });
