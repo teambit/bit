@@ -34,7 +34,7 @@ describe('bit commit command', function () {
       it('should index the component', () => {
       });
 
-      it('Should throw error if there is tracked files which not commited yet', () => {
+      it('Should throw error if there is tracked files dependencies which not commited yet', () => {
       });
 
       it('should add the correct dependencies to each component', () => {
@@ -43,6 +43,9 @@ describe('bit commit command', function () {
   });
 
   describe('commit all components', () => {
+
+    it('Should print there is nothing to commit if there is no changes', () => {
+    });
 
     it('Should throw error if there is untracked files dependencies', () => {
     });
