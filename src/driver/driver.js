@@ -46,6 +46,12 @@ export default class Driver {
     return driver.lifecycleHooks[hookName](param).then(() => returnValue);
   }
 
+  // TODO: Improve flow object return type
+  async getDependecyTree(cwd: string, filePath: string): Promise<Object>{
+    const driver = this.getDriver();
+    return driver.getDependecyTree(cwd, filePath);
+  }
+
   static load(lang) {
     return new Driver(lang);
   }
