@@ -6,11 +6,15 @@ import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON } from '../../constants';
 import InvalidBitMap from './exceptions/invalid-bit-map';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile } from '../../utils';
+import { COMPONENT_ORIGINS } from '../../constants';
+
+export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
 export type ComponentMap = {
   files: Object,
   mainFile: string,
-  testsFiles: string[]
+  testsFiles: string[],
+  origin: ComponentOrigin
 }
 
 export default class BitMap {
@@ -72,7 +76,8 @@ export default class BitMap {
   addComponent(componentId: string,
                componentPaths: Object<string>,
                mainFile?: string,
-               testsFiles?: string[]): void {
+               testsFiles?: string[],
+               origin: ComponentOrigin): void {
     logger.debug(`adding to bit.map ${componentId}`);
     this._validateAndFixPaths(componentPaths);
     if (this.components[componentId]) {
