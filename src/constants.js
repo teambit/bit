@@ -36,13 +36,13 @@ export const INLINE_BITS_DIRNAME = 'inline_components';
 
 export const BIT_JSON = 'bit.json';
 
-export const BIT_MAP = 'bit.map';
+export const BIT_MAP = '.bit.map.json';
 
 export const COMPONENT_ORIGINS = {
   "IMPORTED": "IMPORTED",
   "AUTHORED": "AUTHORED",
   "NESTED": "NESTED"
-}
+};
 
 export const REMOTE_ALIAS_SIGN = '@';
 
