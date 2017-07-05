@@ -190,7 +190,9 @@ export default class Scope {
 
   // todo: rename this method. It writes into the objects directory
   importSrc(componentObjects: ComponentObjects) {
-    return this.sources.merge(componentObjects.toObjects(this.objects))
+    const objects = componentObjects.toObjects(this.objects);
+    logger.debug(`importSrc, writing into the model, Main id: ${objects.component.id()}. It might have dependencies which are going to be written too`);
+    return this.sources.merge(objects)
       .then(() => this.objects.persist());
   }
 
@@ -242,9 +244,12 @@ export default class Scope {
       });
   }
 
+  /**
+   * If found locally, use them. Otherwise, fetch from remote and then, save into the model.
+   */
   getExternalMany(ids: BitId[], remotes: Remotes, localFetch: bool = true):
   Promise<VersionDependencies[]> {
-    logger.debug(`getExternalMany, planning on fetching from ${localFetch ? 'local': 'remote'} scope`);
+    logger.debug(`getExternalMany, planning on fetching from ${localFetch ? 'local': 'remote'} scope. Ids: ${ids.join(', ')}`);
     return this.sources.getMany(ids)
       .then((defs) => {
         const left = defs.filter((def) => {
@@ -323,6 +328,7 @@ export default class Scope {
    */
   importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true):
   Promise<VersionDependencies[]> {
+    logger.debug(`scope.importMany: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
@@ -403,6 +409,7 @@ export default class Scope {
    * scope. Then, write them to the local scope.
    */
   getMany(ids: BitId[], cache?: bool = true): Promise<ConsumerComponent[]> {
+    logger.debug(`scope.getMany, Ids: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
     return this.importMany(idsWithoutNils, false, cache)
