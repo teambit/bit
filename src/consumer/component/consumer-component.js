@@ -297,8 +297,8 @@ export default class Component {
     // Otherwise, write to bitDir and update bitMap with the new paths.
     if (!bitMap) return this.writeToComponentDir(bitDir, withBitJson, force);
 
-    const idWithoutScope = this.id.changeScope(null).toString();
-    const componentMap = bitMap.getComponent(idWithoutScope);
+    const idWithoutScope = this.id.changeScope(null);
+    const componentMap = bitMap.getComponent(idWithoutScope.toString());
     if (componentMap) {
       if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
 
@@ -318,7 +318,7 @@ export default class Component {
       this.files.src.forEach(file => {
         filesToAdd[file.name] = path.join(bitDir, file.name);
       });
-      bitMap.addComponent(idWithoutScope, filesToAdd, this.mainFileName, this.testsFileNames);
+      bitMap.addComponent(this.id, filesToAdd, this.mainFileName, this.testsFileNames);
       await bitMap.write();
     }
     return this;
@@ -649,7 +649,7 @@ export default class Component {
     }
   }
 
-  static create({ scopeName, name, box, withSpecs, consumerBitJson }:{
+  static create({ scopeName, name, box, withSpecs, files, consumerBitJson }:{
     consumerBitJson: ConsumerBitJson,
     name: string,
     box: string,
@@ -658,7 +658,6 @@ export default class Component {
   }, scope: Scope) {
     const implFile = consumerBitJson.getImplBasename();
     const specsFile = consumerBitJson.getSpecBasename();
-    const miscFiles = consumerBitJson.getMiscFiles();
     const compilerId = BitId.parse(consumerBitJson.compilerId);
     const testerId = BitId.parse(consumerBitJson.testerId);
     const lang = consumerBitJson.lang;
@@ -671,7 +670,7 @@ export default class Component {
       scope: scopeName,
       implFile,
       specsFile,
-      miscFiles,
+      files,
       compilerId,
       testerId,
       impl: Impl.create(name, compilerId, scope),

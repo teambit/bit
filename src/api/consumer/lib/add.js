@@ -34,7 +34,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
     const addToBitMap = ({ componentId, files, mainFile, testsFiles }): { id: string, files: string[] } => {
       const relativeTests = testsFiles ?
         tests.map(spec => getPathRelativeToProjectRoot(spec, consumer.getPath())) : [];
-      bitMap.addComponent(componentId.toString(), files, mainFile, relativeTests, COMPONENT_ORIGINS.AUTHORED);
+      bitMap.addComponent(componentId, files, mainFile, relativeTests, COMPONENT_ORIGINS.AUTHORED);
       return { id: componentId.toString(), files };
     };
 

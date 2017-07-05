@@ -35,7 +35,7 @@ export default class ComponentsList {
     // todo: once we know to auto-resolve dependencies, figure out if it should be part of the comparison. Currently, it is ignored.
     version.flattenedDependencies = componentFromModel.flattenedDependencies;
 
-    return componentFromModel.hash().hash === version.hash().hash;
+    return componentFromModel.hash().hash !== version.hash().hash;
   }
 
 

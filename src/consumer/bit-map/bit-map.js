@@ -73,28 +73,30 @@ export default class BitMap {
     });
   }
 
-  addComponent(componentId: string,
+  addComponent(componentId: BitId,
                componentPaths: Object<string>,
                mainFile?: string,
                testsFiles?: string[],
                origin: ComponentOrigin): void {
-    logger.debug(`adding to bit.map ${componentId}`);
+    const componentIdStr = componentId.changeScope(null).toString();
+    logger.debug(`adding to bit.map ${componentIdStr}`);
     this._validateAndFixPaths(componentPaths);
-    if (this.components[componentId]) {
-      logger.info(`bit.map: updating an exiting component ${componentId}`);
+    if (this.components[componentIdStr]) {
+      logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
       if (componentPaths) {
-        const allPaths = R.merge(this.components[componentId].files, componentPaths);
-        this.components[componentId].files = allPaths;
+        const allPaths = R.merge(this.components[componentIdStr].files, componentPaths);
+        this.components[componentIdStr].files = allPaths;
       }
-      if (mainFile) this.components[componentId].mainFile = mainFile;
+      if (mainFile) this.components[componentIdStr].mainFile = mainFile;
       if (testsFiles && testsFiles.length) {
-        const allTestsFiles = testsFiles.concat(this.components[componentId].testsFiles);
-        this.components[componentId].testsFiles = R.uniq(allTestsFiles);
+        const allTestsFiles = testsFiles.concat(this.components[componentIdStr].testsFiles);
+        this.components[componentIdStr].testsFiles = R.uniq(allTestsFiles);
       }
     } else {
-      this.components[componentId] = { files: componentPaths };
-      this.components[componentId].mainFile = mainFile || DEFAULT_INDEX_NAME;
-      this.components[componentId].testsFiles = testsFiles && testsFiles.length ? testsFiles : [];
+      this.components[componentIdStr] = { files: componentPaths };
+      this.components[componentIdStr].origin = origin;
+      this.components[componentIdStr].mainFile = mainFile || DEFAULT_INDEX_NAME;
+      this.components[componentIdStr].testsFiles = testsFiles && testsFiles.length ? testsFiles : [];
     }
   }
 
