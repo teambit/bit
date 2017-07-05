@@ -114,31 +114,25 @@ export default class BitJson extends AbstractBitJson {
 
   static load(dirPath?: string, protoBJ?: ConsumerBitJson): Promise<BitJson> {
     return new Promise((resolve, reject) => {
-      let thisBJ = {};
-      if (dirPath) {
-        const bitJsonPath = composePath(dirPath);
-        if (fs.existsSync(bitJsonPath)) {
-          try {
-            thisBJ = JSON.parse(fs.readFileSync(bitJsonPath).toString('utf8'));
-          } catch (e) {
-            return reject(new InvalidBitJson(bitJsonPath));
-          }
-        }
+      try{
+        const result = this.loadSync(dirPath, protoBJ);
+        return resolve(result);
+      } catch (e) {
+        return reject(bitJsonPath);
       }
-
-      const mergedBJ = this.mergeWithProto(thisBJ, protoBJ);
-      return resolve(mergedBJ);
     });
   }
 
   static loadSync(dirPath: string, protoBJ?: ConsumerBitJson) {
     let thisBJ = {};
-    const bitJsonPath = composePath(dirPath);
-    if (fs.existsSync(bitJsonPath)) {
-      try {
-        thisBJ = JSON.parse(fs.readFileSync(bitJsonPath).toString('utf8'));
-      } catch (e) {
-        throw new InvalidBitJson(bitJsonPath);
+    if (dirPath) {
+      const bitJsonPath = composePath(dirPath);
+      if (fs.existsSync(bitJsonPath)) {
+        try {
+          thisBJ = JSON.parse(fs.readFileSync(bitJsonPath).toString('utf8'));
+        } catch (e) {
+          throw new InvalidBitJson(bitJsonPath);
+        }
       }
     }
 

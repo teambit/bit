@@ -43,6 +43,11 @@ export default class Export extends Command {
     if (Array.isArray(c)) {
       return c.map(oneComponent => output(oneComponent)).join('\n');
     }
+
+    if (!c) {
+      return chalk.green(`There is nothing to commit`);
+    }
+
     return output(c);
   }
 }

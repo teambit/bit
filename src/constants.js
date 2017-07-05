@@ -38,6 +38,12 @@ export const BIT_JSON = 'bit.json';
 
 export const BIT_MAP = 'bit.map';
 
+export const COMPONENT_ORIGINS = {
+  "IMPORTED": "IMPORTED",
+  "AUTHORED": "AUTHORED",
+  "NESTED": "NESTED"
+}
+
 export const REMOTE_ALIAS_SIGN = '@';
 
 export const DEFAULT_IMPL_NAME = 'impl.js';
