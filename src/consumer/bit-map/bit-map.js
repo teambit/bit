@@ -102,6 +102,38 @@ export default class BitMap {
     return this.components[id];
   }
 
+  /**
+   * 
+   * Return the full component object means:
+   * {
+   *    componentId: component
+   * }
+   * 
+   * @param {string} path relative to consumer - as stored in bit.map files object
+   * @returns {Object<string, ComponentMap>} 
+   * @memberof BitMap
+   */
+  getComponentObjectByPath(path: string): Object<string, ComponentMap> {
+    return R.pickBy(R.compose(
+                      R.contains(path),
+                      R.values(),
+                      R.prop('files')),
+                    this.components);
+  }
+
+  /**
+   * Return a component id as listed in bit.map file 
+   * by a path exist in the files object
+   * 
+   * @param {string} path relative to consumer - as stored in bit.map files object
+   * @returns {string} component id
+   * @memberof BitMap
+   */
+  getComponentIdByPath(path: string): string {
+    const componentObject = getComponentObjectByPath(path);
+    return R.keys(componentObject)[0];
+  }
+
   // todo: use this lib: https://github.com/getify/JSON.minify to add comments to this file
   // then, upon creating the file for the first time, add a comment with warnings about modifying
   // the file
