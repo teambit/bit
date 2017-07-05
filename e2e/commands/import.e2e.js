@@ -28,6 +28,13 @@ describe('bit import', function () {
     helper.addBitJsonDependencies(bitJsonPath, { [`@${helper.remoteScope}/global/simple`]: '1' }, {'lodash.get': "4.4.2"});
     helper.commitComponent('with-deps');
     helper.exportComponent('with-deps');
+
+    //export another component with dependencies
+    helper.runCmd('bit create with-deps2 -j');
+    const deps2JsonPath = path.join(helper.localScopePath, '/components/global/with-deps2/bit.json'); // TODO: Change to use the automatic deps resolver
+    helper.addBitJsonDependencies(deps2JsonPath, { [`@${helper.remoteScope}/global/simple`]: '1' });
+    helper.commitComponent('with-deps2');
+    helper.exportComponent('with-deps2');
   });
 
   after(() => {
@@ -52,10 +59,13 @@ describe('bit import', function () {
       expect(bitJson.dependencies).to.include({[depName] : "1"});
     });
 
-    describe.skip('Component without envs', () => {
-      it('Should write the component in bit.map file', () => {
+    describe('Component without envs', () => {
+      it('Should add the component into bit.map file', () => {
+        helper.runCmd(`bit import @${helper.remoteScope}/global/simple`);
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('global/simple');
       });
-      describe('Write the component to file system correctly', () => {
+      describe.skip('Write the component to file system correctly', () => {
         // TODO: Validate all files exists in a folder with the component name
         it('Should write the component to asked path (-p)', () => {
         });
@@ -81,24 +91,39 @@ describe('bit import', function () {
 
   describe('Import component with dependencies', () => {
     it('Should add all missing components to bit.map file', () => {
+      helper.runCmd(`bit import @${helper.remoteScope}/global/with-deps`);
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple::1`);
     });
-    it('Should mark dependencies source in bit.map file', () => {
+    it.skip('Should mark dependencies source in bit.map file', () => {
       // Make sure direct imports are marked as such
       // Make sure nested dependencies are marked as such
     });
-    it('Should not add existing components to bit.map file', () => {
+    it.skip('Should not add existing components to bit.map file', () => {
     });
-    it('Should create bit.json file with all the dependencies in the folder', () => {
+    it.skip('Should create bit.json file with all the dependencies in the folder', () => {
     });
     it('Should print warning for missing package dependencies', () => {
       const output = helper.runCmd(`bit import @${helper.remoteScope}/global/with-deps`);
       expect(output.includes('Missing the following package dependencies. Please install and add to package.json')).to.be.true;
       expect(output.includes('lodash.get: 4.4.2')).to.be.true;
     });
-    describe.skip('Write the component to file system correctly', () => {
+    describe('Write the component to file system correctly', () => {
       it('Should create a recursive nested dependency tree', () => {
+        helper.runCmd(`bit import @${helper.remoteScope}/global/with-deps`);
+        const depDir = path.join(helper.localScopePath, 'components', 'global', 'with-deps',
+          'dependencies', 'global', 'simple', helper.remoteScope, '1', 'impl.js');
+        expect(fs.existsSync(depDir)).to.be.true;
       });
       it('Should not write again to file system same dependencies which imported by another component', () => {
+        helper.runCmd(`bit import @${helper.remoteScope}/global/with-deps`);
+        helper.runCmd(`bit import @${helper.remoteScope}/global/with-deps2`);
+        const depDir = path.join(helper.localScopePath, 'components', 'global', 'with-deps',
+          'dependencies', 'global', 'simple', helper.remoteScope, '1', 'impl.js');
+        expect(fs.existsSync(depDir)).to.be.true;
+        const dep2Dir = path.join(helper.localScopePath, 'components', 'global', 'with-deps2',
+          'dependencies', 'global', 'simple', helper.remoteScope, '1', 'impl.js');
+        expect(fs.existsSync(dep2Dir)).to.be.false;
       });
     });
   });
