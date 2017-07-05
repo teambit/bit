@@ -297,8 +297,8 @@ export default class Component {
     // Otherwise, write to bitDir and update bitMap with the new paths.
     if (!bitMap) return this.writeToComponentDir(bitDir, withBitJson, force);
 
-    const idWithoutScope = this.id.changeScope(null).toString();
-    const componentMap = bitMap.getComponent(idWithoutScope);
+    const idWithoutScope = this.id.changeScope(null);
+    const componentMap = bitMap.getComponent(idWithoutScope.toString());
     if (componentMap) {
       if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
 
@@ -318,7 +318,7 @@ export default class Component {
       this.files.src.forEach(file => {
         filesToAdd[file.name] = path.join(bitDir, file.name);
       });
-      bitMap.addComponent(idWithoutScope, filesToAdd, this.mainFileName, this.testsFileNames);
+      bitMap.addComponent(this.id, filesToAdd, this.mainFileName, this.testsFileNames);
       await bitMap.write();
     }
     return this;
