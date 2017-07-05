@@ -4,9 +4,9 @@ import fs from 'fs';
 import R from 'ramda';
 import { glob, isValidIdChunk } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
-import BitMap from '../../../consumer/bit-map';
+import BitMap, {ComponentOrigin} from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
-import { DEFAULT_INDEX_NAME } from '../../../constants';
+import { DEFAULT_INDEX_NAME, COMPONENT_ORIGINS } from '../../../constants';
 import logger from '../../../logger/logger';
 
 export default async function addAction(componentPaths: string[], id?: string, main?: string, tests?: string[]): Promise<Object> {
@@ -34,7 +34,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
     const addToBitMap = ({ componentId, files, mainFile, testsFiles }): { id: string, files: string[] } => {
       const relativeTests = testsFiles ?
         tests.map(spec => getPathRelativeToProjectRoot(spec, consumer.getPath())) : [];
-      bitMap.addComponent(componentId.toString(), files, mainFile, relativeTests);
+      bitMap.addComponent(componentId.toString(), files, mainFile, relativeTests, COMPONENT_ORIGINS.AUTHORED);
       return { id: componentId.toString(), files };
     };
 
