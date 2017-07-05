@@ -2,52 +2,43 @@
 
 // @flow
 import madge from 'madge';
-import Toposort from 'toposort-class';
 import findPackage from 'find-package';
+import R from 'ramda';
 
-/**
- * Used for resolving npm package dependencies returned by madge
- * @param dependenciesObject
- * @param cwd
- * @return {Object}
- */
-const resloveNodePackages = (dependenciesObject: Object, cwd: string) => {
-  const newDependencyObject:Object = {};
-  Object.keys(dependenciesObject).forEach((key) => {
-    const packagesArr = [];
-    const componentsArr = [];
-    dependenciesObject[key].forEach((item) => {
-      if (item.startsWith('node_modules')) {
-        const packageInfo = findPackage(`${cwd}/${item}`);
-        packagesArr.push({ name: packageInfo.name, version: packageInfo.version });
-      } else {
-        componentsArr.push(item);
-      }
-    });
-    newDependencyObject[key] = { packages: packagesArr, internalDependencies: componentsArr };
+const byType = R.groupBy((dependecy) => {
+  return R.startsWith('bit/', dependecy) ? 'bits' :
+         R.startsWith('node_modules', dependecy) ? 'packages' :
+         'files';
+});
+
+function resloveNodePackage(packageFullPath) {
+  let result = {};
+  const packageInfo = findPackage(packageFullPath);
+  result[packageInfo.name] = packageInfo.version;
+
+  return result;
+}
+
+function groupDependencyList(list, cwd) {
+  let groups = byType(list);
+  if (groups.packages) {
+    const packages = groups.packages.reduce((res, packagePath) => {
+      const packageWithVersion = resloveNodePackage(`${cwd}/${packagePath}`);
+      return Object.assign(res, packageWithVersion);
+    }, {});
+    groups.packages = packages;
+  }
+  return groups;
+}
+
+function groupDependencyTree(tree, cwd) {
+  let result = {};
+  Object.keys(tree).forEach((key) => {
+    result[key] = groupDependencyList(tree[key], cwd);
   });
-  return newDependencyObject;
-};
 
-/**
- * sortDependency- will sort depdency tree according to depndecies
- * @param tree
- * @param cwd
- * @return {Array<*>}
- */
-const sortDependency = (tree, cwd) => {
-  const t:Toposort = new Toposort();
-  const sortedDependencieArr:Array<*> = [];
-  Object.keys(tree).forEach(key => t.add(key, tree[key].filter(item => !item.includes('node_modules'))));
-  const sortedTree:string[] = t.sort().reverse();
-  const treeWithResolvedDependencies = resloveNodePackages(tree, cwd);
-  sortedTree.forEach(key => sortedDependencieArr.push({
-    component: key,
-    internDependencies: treeWithResolvedDependencies[key].internDependencies,
-    packages: treeWithResolvedDependencies[key].packages }));
-  return sortedDependencieArr;
-};
-
+  return result;
+}
 
 /**
  * Function for fetching dependecy tree of file or dir
@@ -57,5 +48,5 @@ const sortDependency = (tree, cwd) => {
  */
 export default function getDependecyTree(cwd: string, filePath: string): Promise<*> {
   return madge(filePath, { baseDir: cwd, includeNpm: true })
-   .then(res => ({ missing: res.skipped, tree: sortDependency(res.tree, cwd) }));
+   .then((res) => ({ missing: res.skipped, tree: groupDependencyTree(res.tree, cwd) }));
 }
