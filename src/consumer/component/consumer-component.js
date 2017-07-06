@@ -14,7 +14,7 @@ import specsRunner from '../../specs-runner';
 import SpecsResults from '../specs-results';
 import type { Results } from '../../specs-runner/specs-runner';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
-import ComponentNotFoundInline from './exceptions/component-not-found-inline';
+import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment from '../../environment';
 import type { Log } from '../../scope/models/version';
 import { ResolutionException } from '../../scope/exceptions';
@@ -28,7 +28,8 @@ import {
   DEFAULT_INDEX_NAME,
   DEFAULT_BIT_VERSION,
   NO_PLUGIN_TYPE,
-  DEFAULT_LANGUAGE
+  DEFAULT_LANGUAGE,
+  COMPONENT_ORIGINS
 } from '../../constants';
 
 export type ComponentProps = {
@@ -312,6 +313,7 @@ export default class Component {
 
     } else {
       // todo: make sure mainFileName and testsFileNames are available
+      // TODO: Make sure to add the component origin arg
       await this.writeToComponentDir(bitDir, withBitJson, force);
       if (!this.files) return this;
       const filesToAdd = {};
@@ -610,43 +612,52 @@ export default class Component {
                                   componentMap: ComponentMap,
                                   id: BitId,
                                   consumerPath: string): Promise<Component> {
-    if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInline(bitDir));
-    const bitJson = await BitJson.load(bitDir, consumerBitJson);
+    let dependencies, packageDependencies;
+    let implFile, specsFile, impl, specs;
+    let bitJson = consumerBitJson;
 
-    if (bitDir) { // todo: get rid of this part
-      return new Component({
-        name: path.basename(bitDir),
-        box: path.basename(path.dirname(bitDir)),
-        lang: bitJson.lang,
-        implFile: bitJson.getImplBasename(),
-        specsFile: bitJson.getSpecBasename(),
-        compilerId: BitId.parse(bitJson.compilerId),
-        testerId: BitId.parse(bitJson.testerId),
-        dependencies: BitIds.fromObject(bitJson.dependencies),
-        packageDependencies: bitJson.packageDependencies,
-        impl: path.join(bitDir, bitJson.getImplBasename()),
-        specs: path.join(bitDir, bitJson.getSpecBasename()),
-      });
-    } else { // use componentMap
-      const files = componentMap.files;
-      const absoluteFiles = {};
-      Object.keys(files).forEach(file => {
-        absoluteFiles[file] = path.join(consumerPath, files[file]);
-      });
-      return new Component({
-        name: id.name,
-        box: id.box,
-        lang: bitJson.lang,
-        // filesNames // todo: is it needed?
-        compilerId: BitId.parse(bitJson.compilerId),
-        testerId: BitId.parse(bitJson.testerId),
-        dependencies: BitIds.fromObject(bitJson.dependencies),
-        packageDependencies: bitJson.packageDependencies,
-        mainFileName: componentMap.mainFile,
-        testsFileNames: componentMap.testsFiles,
-        files: absoluteFiles || {},
-      });
-    }
+    if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED){
+      if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInPath(bitDir));
+      // In case it's imported component we will have bit.json in the dir
+      bitJson = BitJson.loadSync(bitDir, consumerBitJson);
+      
+      // Load the dependencies from bit.json
+      dependencies = BitIds.fromObject(bitJson.dependencies);
+      packageDependencies = bitJson.packageDependencies;
+      
+      // We only create those attribute in case of imported component because 
+      // Adding new component shouldn't generate those any more
+      // It's mainly for backward compatability
+      // TODO: put this inside files / test files
+      implFile = bitJson.getImplBasename();
+      specsFile = bitJson.getSpecBasename();
+      impl = path.join(bitDir, bitJson.getImplBasename());
+      specs = path.join(bitDir, bitJson.getSpecBasename());
+    } 
+    
+    const files = componentMap.files;
+    const absoluteFiles = {};
+    Object.keys(files).forEach(file => {
+      absoluteFiles[file] = path.join(consumerPath, files[file]);
+    });
+    const absoluteTestFiles = componentMap.testsFiles.map((testFile) => path.join(consumerPath, testFile));
+
+    return new Component({
+      name: id.name,
+      box: id.box,
+      lang: bitJson.lang,
+      compilerId: BitId.parse(bitJson.compilerId),
+      testerId: BitId.parse(bitJson.testerId),
+      mainFileName: componentMap.mainFile,
+      files: absoluteFiles || {},
+      testsFiles: absoluteTestFiles,
+      dependencies,
+      packageDependencies,
+      implFile,
+      specsFile,
+      impl,
+      specs
+    });
   }
 
   static create({ scopeName, name, box, withSpecs, files, consumerBitJson }:{

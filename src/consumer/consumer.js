@@ -11,22 +11,25 @@ import {
   ConsumerAlreadyExists,
   ConsumerNotFound,
   NothingToImport,
+  MissingDependencies,
+  MissingDependenciesOnFs
 } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
+import ComponentsList from './component/components-list';
 import {
   INLINE_BITS_DIRNAME,
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
+  COMPONENT_ORIGINS
  } from '../constants';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
-import { index } from '../search/indexer';
 import BitMap from './bit-map/bit-map';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
@@ -119,13 +122,78 @@ export default class Consumer {
 
   async loadComponent(id: BitId): Promise<Component> {
     logger.debug(`loading a consumer-component ${id} from the file-system`);
+    return this.loadComponents([id])[0];
+  }
+
+  async loadComponents(ids: BitId[]): Promise<Component> {
     const bitMap = await this.getBitMap();
-    const componentMap = bitMap.getComponent(id.toString());
-    let bitDir;
-    if (!componentMap) {
-      bitDir = this.composeBitPath(id);
-    }
-    return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, id, this.getPath());
+    
+    let fullDependenciesTree = {
+      tree: {},
+      missing: []
+    };
+    // Map to store the id's of paths we already found in bit.map
+    // It's aim is to reduce the search in the bit.map for dependencies ids because it's an expensive operation
+    let dependenciesPathIdMap = new Map(); 
+
+    const components = ids.map(async (id) => {
+      let dependenciesTree = {};
+      let dependencies = [];
+
+      const componentMap = bitMap.getComponent(id.toString());
+      let bitDir;
+      // TODO: Take this from the map (the most up path of all component files)
+      // TODO: Taking it from compose will not work when someone will import with -p to specific path
+      if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+        bitDir = this.composeBitPath(id);
+        return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, id, this.getPath());
+      }
+      
+      let component = await Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, id, this.getPath());
+      // Check if we already calclulate the dependency tree (because it is another component dependency)
+      if (fullDependenciesTree.tree[id]){
+        // If we found it in the full tree it means we already take care of the missings earlier
+        dependenciesTree.missing = []; 
+      } else {
+        // Load the dependencies through automatic dependency resolution
+        dependenciesTree = await this.driver.getDependecyTree(this.getPath(), componentMap.mainFile);
+        Object.assign(fullDependenciesTree.tree, dependenciesTree.tree);
+        fullDependenciesTree.missing = fullDependenciesTree.missing.concat(dependenciesTree.missing);
+        // Check if there is missing dependencies in file system
+        // TODO: Decide if we want to throw error once there is missing or only in the end
+        if (!R.isEmpty(dependenciesTree.missing)) throw (new MissingDependenciesOnFs(dependenciesTree.missing));
+      }
+
+      // We only care of the relevant sub tree from now on
+      // We can be sure it's now exists because it's happen after the assign in case it was missing
+      dependenciesTree.tree = fullDependenciesTree.tree[componentMap.mainFile];
+      
+      let dependenciesMissingInMap = [];
+      const files = dependenciesTree.tree.files || [];
+      files.forEach((filePath) => {
+        // Trying to get the idString from map first
+        const dependencyIdString = dependenciesPathIdMap.get(filePath) || bitMap.getComponentIdByPath(filePath);
+
+        // Check if there is missing dependencies (dependencies which exist in file system but not added to bit.map)
+        if (!dependencyIdString){
+          dependenciesMissingInMap.push(filePath);
+        } else {
+          // Add the entry to cache map
+          dependenciesPathIdMap.set(filePath, dependencyIdString);
+          let dependencyId = BitId.parse(dependencyIdString);
+          dependencyId = dependencyId.scope ? dependencyId : dependencyId.changeScope(this.scope.name);
+          dependencies.push(dependencyId);
+        }
+      });
+      if (!R.isEmpty(dependenciesMissingInMap)) throw new MissingDependencies([dependenciesMissingInMap]);
+
+      // TODO: add the bit/ dependenices as well
+      component.dependencies = dependencies;
+      component.packageDependencies = dependenciesTree.tree.packages || {};
+      return component;
+    });
+
+    return Promise.all(components);
   }
 
   exportAction(rawId: string, rawRemote: string) {
@@ -220,17 +288,48 @@ export default class Consumer {
     }));
   }
 
-  async commit(id: BitId, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
+  async commit(id: string, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
+    const bitId = BitId.parse(id);
     const bitMap: BitMap = await this.getBitMap();
-    if (!bitMap.isComponentExist(id)) {
-      throw new Error(`Unable to find a component ${id} in your bit.map file. Consider "bit add" it`);
+    if (!bitMap.isComponentExist(bitId)) {
+      throw new Error(`Unable to find a component ${bitId} in your bit.map file. Consider "bit add" it`);
     }
-    const component = await this.loadComponent(id);
+    const component = await this.loadComponent(bitId);
     await this.scope
-      .put({ consumerComponent: component, message, force, consumer: this, bitDir: undefined, verbose });
-    await index(component, this.scope.getPath()); // todo: make sure it still works
+      .put({ consumerComponents: [component], message, force, consumer: this, verbose });
     await this.driver.runHook('onCommit', component); // todo: probably not needed as the bind happens on create
     return component;
+  }
+
+  async commitAll(ids: string[], message: string, force: ?bool, verbose: ?bool): Promise<Component> {
+    const componentsList = new ComponentsList(this);
+    let commitPendingComponents;
+    try{
+      commitPendingComponents = await componentsList.listCommitPendingComponents();
+    } catch (err){
+      console.log(err);
+      console.log(err.message);
+      throw err;
+    }
+    const componentsIds = commitPendingComponents.map(BitId.parse);
+    if (R.isEmpty(componentsIds)) return;
+
+    const bitMap: BitMap = await this.getBitMap();
+
+    // load components
+    let components;
+    try{
+      components = await this.loadComponents(componentsIds);
+    } catch (err){
+      console.log(err);
+      console.log(err.message);
+      throw err;
+    }
+
+    await this.scope
+      .putMany({ consumerComponents: components, message, force, consumer: this, verbose });
+    await this.driver.runHook('onCommit', components); // todo: probably not needed as the bind happens on create
+    return components;
   }
 
   composeRelativeBitPath(bitId: BitId): string {

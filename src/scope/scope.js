@@ -2,6 +2,7 @@
 import * as pathLib from 'path';
 import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
+import Toposort from 'toposort-class';
 import { GlobalRemotes } from '../global-config';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
@@ -124,18 +125,13 @@ export default class Scope {
       ));
   }
 
-  importDependencies(component: ConsumerComponent, bitDir?: string) {
-    if (!bitDir) {
-      // todo: when bitDir is empty, there will be no bit.json. Apply the auto-resolve-dependencies here.
-      return Promise.resolve([]);
-    }
-    const bitJsonPath = pathLib.join(bitDir, BIT_JSON);
+  importDependencies(dependencies) {
     return new Promise((resolve, reject) => {
-      return this.importMany(component.dependencies)
+      return this.importMany(dependencies)
         .then(resolve)
         .catch((e) => {
           if (e instanceof RemoteScopeNotFound) return reject(e);
-          reject(new DependencyNotFound(e.id, bitJsonPath));
+          reject(new DependencyNotFound(e.id));
         });
     });
   }
@@ -159,34 +155,95 @@ export default class Scope {
   }
 
   // todo: get rid of bitDir
-  put({ consumerComponent, message, force, consumer, bitDir, verbose }: {
+  async put({ consumerComponent, message, force, consumer, verbose }: {
     consumerComponent: ConsumerComponent,
     message: string,
     force: ?bool,
     consumer: Consumer,
-    bitDir?: string,
     verbose: ?bool,
   }):
   Promise<ComponentDependencies> {
-    consumerComponent.scope = this.name;
+  }
+
+  async putMany({ consumerComponents, message, force, consumer, verbose }: {
+    consumerComponent: ConsumerComponent,
+    message: string,
+    force: ?bool,
+    consumer: Consumer,
+    verbose: ?bool,
+  }):
+  Promise<ComponentDependencies> { //TODO: Change the return type
+    
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
 
-    return this.importDependencies(consumerComponent, bitDir)
-      .then((dependencies) => {
-        return flattenDependencyIds(dependencies, this.objects)
-          .then((depIds) => {
-            return this.sources.addSource({
-              source: consumerComponent, depIds, message, force, consumer, verbose,
-            })
-              .then((component) => {
-                loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-                return this.objects.persist()
-                  .then(() => component.toVersionDependencies(LATEST, this, this.name))
-                  .then(deps => deps.toConsumer(this.objects))
-                  .then(() => index(component, this.scope.getPath())); // todo: make sure it still works
-              });
-          });
+    const self = this;
+    let t = new Toposort();
+    let allDependencies = new Map();
+    const consumerComponentsIdsMap = new Map();
+
+    // Concat and unique all the depedencies from all the components so we will not import 
+    // the same dependecy more then once, it's mainly for performence purpose
+    consumerComponents.forEach((consumerComponent) => {
+      const componentIdString = consumerComponent.id.scope ? consumerComponent.id.toString() : BitId.parse(consumerComponent.id.changeScope(this.name).toString()).toString();
+      // const componentIdString = consumerComponent.id.toString();
+      // Store it in a map so we can take it easily from the sorted array which contain only the id
+      consumerComponentsIdsMap.set(componentIdString, consumerComponent);
+      const dependenciesIdsStrings = consumerComponent.dependencies.map(dep => dep.toString());
+      t.add(componentIdString, dependenciesIdsStrings || []);
+    });
+    
+    // Sort the consumerComponents by the dependency order so we can commit those without the dependencies first
+    const soretedConsumerComponentsIds = t.sort().reverse();
+
+    const getFlattenForComponent = (consumerComponent, cache) => {
+      const flattenDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
+        const dependecyIdString = dependency.toString();
+        // Try to get the flatten dependecies from cache
+        let flattenDependencies = cache.get(dependecyIdString);
+        if (flattenDependencies) return Promise.resolve(flattenDependencies);
+         
+        // Calculate the flatten dependecies
+        const versionDependencies = await this.importDependencies([dependency]);
+        flattenDependencies = await flattenDependencyIds(versionDependencies, self.objects);
+        
+        // Store the flatten dependecies in cache
+        cache.set(dependecyIdString, flattenDependencies);
+        
+        return flattenDependencies;
       });
+      return Promise.all(flattenDependenciesP);
+    }
+
+    const persistComponentsP = soretedConsumerComponentsIds.map((consumerComponentId) => async () => {
+      let consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
+      // This happens when i have a dependency which already commited
+      if (!consumerComponent) return Promise.resolve([]);
+      consumerComponent.scope = self.name;
+
+      return getFlattenForComponent(consumerComponent, allDependencies)
+        .then((flattenDependencies) => {
+          flattenDependencies = R.flatten(flattenDependencies);
+          const predicate = (id) => id.toString(); // TODO: should be moved to BitId class
+          flattenDependencies = R.uniqBy(predicate)(flattenDependencies);
+          return this.sources.addSource({source: consumerComponent, 
+                                  depIds: flattenDependencies, 
+                                  message, 
+                                  force, 
+                                  consumer, 
+                                  verbose})})
+        .then((component) => {
+          loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
+          return this.objects.persist()
+            .then(() => component.toVersionDependencies(LATEST, this, this.name))
+            .then(deps => deps.toConsumer(this.objects))
+            .then(() => index(consumerComponent, this.getPath())); // todo: make sure it still works
+        });
+    });
+
+    // Run the persistence one by one not in parallel!
+    return persistComponentsP.reduce((promise, func) =>
+      promise.then(result => func().then(Array.prototype.concat.bind(result))),
+    Promise.resolve([]));
   }
 
   // todo: rename this method. It writes into the objects directory
@@ -322,7 +379,7 @@ export default class Scope {
   /**
    * If not found in the local scope, fetch from a remote scope and save into the local scope
    */
-  importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true):
+  async importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true):
   Promise<VersionDependencies[]> {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);

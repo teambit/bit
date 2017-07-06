@@ -221,11 +221,8 @@ export default class ComponentsList {
   async getFromFileSystem(): Promise<Component[]> {
     if (!this._fromFileSystem) {
       const idsFromBitMap = await this.idsFromBitMap();
-      const registeredComponentsP = idsFromBitMap.map((id) => {
-        const parsedId = BitId.parse(id);
-        // todo: log a warning when a component is in bit.map but not in the FS
-        return this.consumer.loadComponent(parsedId);
-      });
+      const parsedBitIds = idsFromBitMap.map((id) => BitId.parse(id));
+      const registeredComponentsP = this.consumer.loadComponents(parsedBitIds);
       const unRegisteredComponentsP = await this.onFileSystemAndNotOnBitMap();
       this._fromFileSystem = Promise.all([...registeredComponentsP, ...unRegisteredComponentsP]);
     }
