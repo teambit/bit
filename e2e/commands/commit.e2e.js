@@ -61,6 +61,8 @@ describe('bit commit command', function () {
     });
 
     it('should add the correct dependencies to each component', () => {
+      // Make sure the use case contain dependenceis from all types - 
+      // Packages, files and bits
     });
 
     it('should persist all models in the scope', () => {
