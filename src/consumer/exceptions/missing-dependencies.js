@@ -5,7 +5,7 @@ export default class MissingDependencies extends Error {
 
   constructor(dependencies: string[]) {
     super();
-    this.code = 133;
+    this.code = 127;
     this.dependencies = dependencies;
   }
 }
