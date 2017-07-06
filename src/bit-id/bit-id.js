@@ -74,6 +74,22 @@ export default class BitId {
     return path.join(this.box, this.name, this.scope, this.version);
   }
 
+  /**
+   * Transfer the bit id to a format suitable for dependecny entery in the bit.json
+   * something like this:
+   * {
+   * "bit.utils/object/foreach": "1"
+   * }
+   * 
+   * @returns 
+   * @memberof BitId
+   */
+  toDependencyEntry() {
+    return {
+      [path.join(this.box, this.name, this.scope)] : this.version
+    }
+  }
+
   static parse(id: ?string, realScopeName: ?string, version: string = LATEST_BIT_VERSION): ?BitId {
     if (!id || id === NO_PLUGIN_TYPE) { return null; }
     if (contains(id, VERSION_DELIMITER)) {
