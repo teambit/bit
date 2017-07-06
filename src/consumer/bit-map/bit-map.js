@@ -98,7 +98,7 @@ export default class BitMap {
     } else {
       this.components[componentIdStr] = { files: componentPaths };
       this.components[componentIdStr].origin = origin;
-      this.components[componentIdStr].mainFile = mainFile || DEFAULT_INDEX_NAME;
+      this.components[componentIdStr].mainFile = mainFile ? path.basename(mainFile) : DEFAULT_INDEX_NAME;
       this.components[componentIdStr].testsFiles = testsFiles && testsFiles.length ? testsFiles : [];
     }
   }
