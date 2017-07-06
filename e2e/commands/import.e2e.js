@@ -29,7 +29,7 @@ describe('bit import', function () {
     helper.commitComponent('with-deps');
     helper.exportComponent('with-deps');
 
-    //export another component with dependencies
+    // export another component with dependencies
     helper.runCmd('bit create with-deps2 -j');
     const deps2JsonPath = path.join(helper.localScopePath, '/components/global/with-deps2/bit.json'); // TODO: Change to use the automatic deps resolver
     helper.addBitJsonDependencies(deps2JsonPath, { [`@${helper.remoteScope}/global/simple`]: '1' });
@@ -65,16 +65,22 @@ describe('bit import', function () {
         const bitMap = helper.readBitMap();
         expect(bitMap).to.have.property('global/simple');
       });
-      describe.skip('Write the component to file system correctly', () => {
+      describe('Write the component to file system correctly', () => {
         // TODO: Validate all files exists in a folder with the component name
         it('Should write the component to asked path (-p)', () => {
+          helper.runCmd(`bit import @${helper.remoteScope}/global/simple -p my-custom-location`);
+          const expectedLocation = path.join(helper.localScopePath, 'my-custom-location', 'impl.js');
+          expect(fs.existsSync(expectedLocation)).to.be.true;
         });
         it('Should write the component to default path from bit.json', () => {
           //TODO: check few cases with different structure props - namespace, name, version, scope
+          helper.runCmd(`bit import @${helper.remoteScope}/global/simple`);
+          const expectedLocation = path.join(helper.localScopePath, 'components', 'global', 'simple', 'impl.js');
+          expect(fs.existsSync(expectedLocation)).to.be.true;
         });
         // Prevent cases when I export a component with few files from different directories
         // and get it in another structure during imports
-        it('Should write the component to the paths specified in bit.map', () => {
+        it.skip('Should write the component to the paths specified in bit.map', () => {
         });
       });
     });

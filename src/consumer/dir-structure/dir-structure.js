@@ -29,7 +29,7 @@ export default class BitStructure {
     const staticParts = [];
     const dynamicParts = [];
     dirStructure.split('/').forEach((dir) => {
-      if (dir.startsWith('{') && dir.endsWith('}')) { // this is variable
+      if (dir.startsWith('{') && dir.endsWith('}')) { // this is a variable
         const dirStripped = dir.replace(/[{}]/g, '');
         const componentPart = this._getComponentStructurePart(dirStructure, dirStripped);
         dynamicParts.push(componentPart);
@@ -42,6 +42,4 @@ export default class BitStructure {
 
     return { staticParts, dynamicParts };
   }
-
-  parsePath
 }

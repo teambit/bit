@@ -161,23 +161,24 @@ export default class Consumer {
     return { dependencies: componentDependenciesArr };
   }
 
-  async importSpecificComponents(rawIds: ?string[], cache?: bool = true) {
+  async importSpecificComponents(rawIds: ?string[], cache?: boolean, writeToPath?: string) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
     const componentDependenciesArr = await this.scope.getMany(bitIds, cache);
-    await this.writeToComponentsDir(componentDependenciesArr);
+    await this.writeToComponentsDir(componentDependenciesArr, writeToPath);
     return { dependencies: componentDependenciesArr };
   }
 
 
-  import(rawIds: ?string[], verbose?: bool, withEnvironments: ?bool, cache?: bool = true):
+  import(rawIds: ?string[], verbose?: bool, withEnvironments: ?bool, cache?: bool = true,
+         writeToPath?: string):
   Promise<{ dependencies: ComponentDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
       return this.importAccordingToConsumerBitJson(verbose, withEnvironments, cache);
     }
-    return this.importSpecificComponents(rawIds, cache);
+    return this.importSpecificComponents(rawIds, cache, writeToPath);
   }
 
   importEnvironment(rawId: ?string, verbose?: bool) {
@@ -220,11 +221,12 @@ export default class Consumer {
    * In case there are some same dependencies shared between the components, it makes sure to
    * write them only once.
    */
-  async writeToComponentsDir(componentDependencies: VersionDependencies[]): Promise<Component[]> {
+  async writeToComponentsDir(componentDependencies: VersionDependencies[], writeToPath?: string):
+  Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIds = [];
-    return Promise.all(componentDependencies.map(componentWithDeps => {
-      const bitPath = this.composeBitPath(componentWithDeps.component.id);
+    return Promise.all(componentDependencies.map((componentWithDeps) => {
+      const bitPath = writeToPath || this.composeBitPath(componentWithDeps.component.id);
       const writeComponentP = componentWithDeps.component.write(bitPath, true, true, bitMap, false);
       const writeDependenciesP = componentWithDeps.dependencies.map((dep) => {
         const dependencyId = dep.id.toString();
