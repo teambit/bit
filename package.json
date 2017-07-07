@@ -7,7 +7,7 @@
     "test": "jest",
     "test-watch": "jest --watch",
     "build": "babel src -d dist",
-    "watch": "babel watch src -d dist --source-maps",
+    "watch": "babel --watch src -d dist --source-maps",
     "build-debug": "babel src -d dist --source-maps"
   },
   "bin": {
@@ -46,7 +46,6 @@
     "madge": "^1.6.0",
     "find-package": "^1.0.0",
     "user-home": "^2.0.0"
-
   },
   "devDependencies": {
     "babel-cli": "^6.24.0",
