@@ -38,7 +38,6 @@ export default class Driver {
   }
 
   runHook(hookName: string, param: *, returnValue?: *): Promise<*> {
-    return Promise.resolve(returnValue); // TODO: remove this line as soon as the bind is implemented in bit-javascript
     const driver = this.getDriver();
     // $FlowFixMe
     if (!driver || !driver.lifecycleHooks || !driver.lifecycleHooks[hookName]) {
