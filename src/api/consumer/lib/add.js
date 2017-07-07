@@ -72,11 +72,6 @@ export default async function addAction(componentPaths: string[], id?: string, m
         const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
         if (!matches.length) throw new Error(`The directory ${relativeComponentPath} is empty, nothing to add`);
 
-        let mainFileName = main;
-        if (!main) {
-          mainFileName = matches.length === 1 ? matches[0] : DEFAULT_INDEX_NAME;
-        }
-
         const files = {};
         matches.forEach((match) => {
           if (keepDirectoryName) {
@@ -90,7 +85,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         if (!parsedId) {
           parsedId = getValidBitId(oneBeforeLastDir, lastDir);
         }
-        return { componentId: parsedId, files, mainFile: mainFileName, testsFiles: tests };
+        return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
       } else { // is file
         const pathParsed = path.parse(componentPath);
         const relativeFilePath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
@@ -121,12 +116,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
     const files = R.mergeAll(mapValues.map(value => value.files));
     const componentId = mapValues[0].componentId;
-    if (!main && !Object.keys(files).includes(DEFAULT_INDEX_NAME)) {
-      throw new Error(`Please specify your main file. The default main file "${DEFAULT_INDEX_NAME}" is not in the added files`);
-    }
-    const mainFile = main || DEFAULT_INDEX_NAME;
 
-    return addToBitMap({ componentId, files, mainFile, testsFiles: tests });
+    return addToBitMap({ componentId, files, mainFile: main, testsFiles: tests });
   }
 
   const consumer: Consumer = await loadConsumer();

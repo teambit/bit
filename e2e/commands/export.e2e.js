@@ -51,8 +51,8 @@ describe('bit export command', function () {
       createComponent('bar', 'foo2');
       createComponent('baz', 'foo1');
       createComponent('baz', 'foo2');
-      helper.runCmd('bit add bar');
-      helper.runCmd('bit add baz');
+      helper.runCmd('bit add bar -m foo1.js');
+      helper.runCmd('bit add baz -m foo1.js');
       helper.runCmd('bit commit -a -m commit-msg');
       helper.runCmd('bit init --bare', helper.remoteScopePath);
       helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);

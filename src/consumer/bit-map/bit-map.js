@@ -79,7 +79,10 @@ export default class BitMap {
   _getMainFile(mainFile: string, componentMap: ComponentMap) {
     const baseMainFile = mainFile ? path.basename(mainFile) : DEFAULT_INDEX_NAME;
     if (!componentMap.files[baseMainFile]) {
-      throw new MissingMainFile(baseMainFile, Object.keys(componentMap.files));
+      const files = Object.keys(componentMap.files);
+      // when a user didn't enter the mainFile but there is only one file, that file is the main file
+      if (!mainFile && files.length === 1) return files[0];
+      throw new MissingMainFile(baseMainFile, files);
     }
     return baseMainFile;
   }

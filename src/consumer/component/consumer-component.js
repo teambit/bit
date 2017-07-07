@@ -185,7 +185,7 @@ export default class Component {
     this.lang = lang || DEFAULT_LANGUAGE;
     this.implFile = implFile || DEFAULT_IMPL_NAME;
     this.specsFile = specsFile || DEFAULT_SPECS_NAME;
-    this.mainFileName = mainFileName || DEFAULT_INDEX_NAME;
+    this.mainFileName = mainFileName;
     this.testsFileNames = testsFileNames || [];
     this.filesNames = filesNames || [];
     this.compilerId = compilerId;
