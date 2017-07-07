@@ -6,6 +6,7 @@ import { InlineComponentsMap, ComponentsMap } from '../maps';
 import LocalScope from '../scope/local-scope';
 import { BitModuleDirectory, InlineComponentsDirectory, ComponentsDirectory } from '../directories';
 import MultiLink from '../directories/multi-link';
+import BitMap from '../bit-map';
 
 const stripNonRelevantDataFromLinks = (allLinks, projectRoot) => {
   const links = {};
@@ -20,35 +21,38 @@ const stripNonRelevantDataFromLinks = (allLinks, projectRoot) => {
 export default async function bindAction({ projectRoot = process.cwd() }: { projectRoot?: string}):
 Promise<any> {
   const bitModuleDirectory = new BitModuleDirectory(projectRoot);
-  const inlineComponentsDirectory = new InlineComponentsDirectory(projectRoot);
-  const componentsDirectory = new ComponentsDirectory(projectRoot);
+  // const inlineComponentsDirectory = new InlineComponentsDirectory(projectRoot);
+  // const componentsDirectory = new ComponentsDirectory(projectRoot);
 
-  const projectBitJson = BitJson.load(projectRoot);
-  const localScope = await LocalScope.load(projectRoot);
-  const localScopeName = localScope ? localScope.getScopeName() : null;
+  // const projectBitJson = BitJson.load(projectRoot);
+  // const localScope = await LocalScope.load(projectRoot);
+  // const localScopeName = localScope ? localScope.getScopeName() : null;
 
-  const inlineComponentMap = await InlineComponentsMap.create(projectRoot, projectBitJson);
-  const componentsMap = await ComponentsMap.create(projectRoot, projectBitJson, localScopeName);
-  const projectDependenciesArray = projectBitJson.getDependenciesArray();
+  // const inlineComponentMap = await InlineComponentsMap.create(projectRoot, projectBitJson);
+  const bitMap = await BitMap.load(projectRoot);
+  // const componentsMap = await ComponentsMap.create(projectRoot, projectBitJson, localScopeName);
+  // const projectDependenciesArray = projectBitJson.getDependenciesArray();
 
   await bitModuleDirectory.erase();
+  const componentsMap = bitMap.getAllComponents();
+  // bitModuleDirectory.addLinksFromInlineComponents(inlineComponentMap);
+  // todo: filter out Origin: NESTED from the componentsMap
+  bitModuleDirectory.addLinksFromBitMap(componentsMap);
+  // bitModuleDirectory.addLinksFromProjectDependencies(componentsMap, projectDependenciesArray);
+  // bitModuleDirectory.addLinksFromStageComponents(componentsMap);
+  // bitModuleDirectory.addLinksForNamespacesAndRoot(componentsMap);
 
-  bitModuleDirectory.addLinksFromInlineComponents(inlineComponentMap);
-  bitModuleDirectory.addLinksFromProjectDependencies(componentsMap, projectDependenciesArray);
-  bitModuleDirectory.addLinksFromStageComponents(componentsMap);
-  bitModuleDirectory.addLinksForNamespacesAndRoot(componentsMap);
-
-  inlineComponentsDirectory.addLinksToDependencies(inlineComponentMap, componentsMap);
-  componentsDirectory.addLinksToDependencies(componentsMap);
+  // inlineComponentsDirectory.addLinksToDependencies(inlineComponentMap, componentsMap);
+  // componentsDirectory.addLinksToDependencies(componentsMap);
 
   await bitModuleDirectory.persist();
-  await inlineComponentsDirectory.persist();
-  await componentsDirectory.persist();
+  // await inlineComponentsDirectory.persist();
+  // await componentsDirectory.persist();
 
   const allLinks = R.mergeAll([
     bitModuleDirectory.links,
-    inlineComponentsDirectory.links,
-    componentsDirectory.links,
+    // inlineComponentsDirectory.links,
+    // componentsDirectory.links,
   ]);
 
   return stripNonRelevantDataFromLinks(allLinks, projectRoot);

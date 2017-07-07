@@ -135,6 +135,33 @@ export default class BitModuleDirectory extends LinksDirectory {
     return components;
   }
 
+  addLinksFromBitMap(componentsMap) {
+    Object.keys(componentsMap).forEach((componentId) => {
+      const componentIdParsed = ComponentId.parse(componentId);
+      const sourceFile = this.getComponentFilePath({
+        name: componentIdParsed.name,
+        namespace: componentIdParsed.box,
+      });
+
+      const mainFile = componentsMap[componentId].mainFile;
+      const mainFilePath = componentsMap[componentId].files[mainFile];
+
+      if (!mainFilePath) {
+        // todo: log a warning
+        return null;
+      }
+
+      const destFile = path.join(this.rootPath, mainFilePath);
+
+      this.addLink(
+        Link.create({
+          from: sourceFile,
+          to: destFile,
+        }),
+      );
+    });
+  }
+
   addLinksForNamespacesAndRoot() {
     if (!this.linkedComponents.length) return;
     const namespaceMap = {};
