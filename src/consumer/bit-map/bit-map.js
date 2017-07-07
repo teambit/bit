@@ -4,6 +4,7 @@ import R from 'ramda';
 import logger from '../../logger/logger';
 import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON } from '../../constants';
 import InvalidBitMap from './exceptions/invalid-bit-map';
+import MissingMainFile from './exceptions/missing-main-file';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile } from '../../utils';
 import { COMPONENT_ORIGINS, DEPENDENCIES_DIR } from '../../constants';
@@ -62,7 +63,7 @@ export default class BitMap {
     const ignoreDirectoriesList = ['node_modules']; // todo: add "dist"?
     if (!isDependency) ignoreDirectoriesList.push(DEPENDENCIES_DIR);
 
-    Object.keys(componentPaths).forEach(component => {
+    Object.keys(componentPaths).forEach((component) => {
       const componentPath = componentPaths[component];
       const fileName = path.basename(componentPath);
       const baseDirs = path.parse(componentPath).dir.split(path.sep);
@@ -73,6 +74,14 @@ export default class BitMap {
         componentPaths[component] = this._makePathRelativeToProjectRoot(componentPath);
       }
     });
+  }
+
+  _getMainFile(mainFile: string, componentMap: ComponentMap) {
+    const baseMainFile = mainFile ? path.basename(mainFile) : DEFAULT_INDEX_NAME;
+    if (!componentMap.files[baseMainFile]) {
+      throw new MissingMainFile(baseMainFile, Object.keys(componentMap.files));
+    }
+    return baseMainFile;
   }
 
   addComponent(componentId: BitId,
@@ -90,7 +99,10 @@ export default class BitMap {
         const allPaths = R.merge(this.components[componentIdStr].files, componentPaths);
         this.components[componentIdStr].files = allPaths;
       }
-      if (mainFile) this.components[componentIdStr].mainFile = mainFile;
+      if (mainFile) {
+        this.components[componentIdStr].mainFile = this
+          ._getMainFile(mainFile, this.components[componentIdStr]);
+      }
       if (testsFiles && testsFiles.length) {
         const allTestsFiles = testsFiles.concat(this.components[componentIdStr].testsFiles);
         this.components[componentIdStr].testsFiles = R.uniq(allTestsFiles);
@@ -98,7 +110,8 @@ export default class BitMap {
     } else {
       this.components[componentIdStr] = { files: componentPaths };
       this.components[componentIdStr].origin = origin;
-      this.components[componentIdStr].mainFile = mainFile ? path.basename(mainFile) : DEFAULT_INDEX_NAME;
+
+      this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
       this.components[componentIdStr].testsFiles = testsFiles && testsFiles.length ? testsFiles : [];
     }
   }

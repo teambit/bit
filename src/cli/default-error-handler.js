@@ -27,6 +27,7 @@ import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import ExportWithoutThis from '../api/consumer/lib/exceptions/export-without-this';
 import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
+import MissingMainFile from '../consumer/bit-map/exceptions/missing-main-file';
 
 const errorsMap: [[Error, (err: Error) => string]] = [
   [ ConsumerAlreadyExists, () => 'there\'s already a scope' ],
@@ -56,6 +57,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ ExportWithoutThis, err => `Error: Missing local scope annotation when exporting ${err.id}. Please run 'bit export ${LOCAL_SCOPE_NOTATION}/${err.id} ${err.remote}'`],
   [ ResolutionException, e => e.message],
   [ DriverNotFound, err => `fatal: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(err.lang)} set in your bit.json file.`],
+  [ MissingMainFile, err => `fatal: the main file ${chalk.bold(err.mainFile)} was not found in the files list ${chalk.bold(err.files.join(' ,'))}`],
   [ invalidIdOnCommit, err => `error - Unable to commit. ${chalk.bold(err.id)} not found.
 Run \`bit status\` command to list all components available for commit.`]
 ];
