@@ -1,5 +1,5 @@
-import getDependecyTree from './build-tree';
+import getDependencyTree from './build-tree';
 
 export {
-  getDependecyTree
+  getDependencyTree
 };

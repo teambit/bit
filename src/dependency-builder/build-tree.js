@@ -18,7 +18,7 @@ const byType = R.groupBy((dependecies) => {
 
 /**
  * Get a path to node package and return the name and version
- * 
+ *
  * @param {any} packageFullPath full path to the package
  * @returns {Object} name and version of the package
  */
@@ -34,7 +34,7 @@ function resloveNodePackage(packageFullPath) {
  * Gets a list of dependencies and group them by types (files, bits, packages)
  * It's also transform the node packge dependencies from array of paths to object in this format:
  * {dependencyName: version} (like in package.json)
- * 
+ *
  * @param {any} list of dependencies paths
  * @param {any} cwd root of working directory (used for node packages version calculation)
  * @returns {Object} object with the dependencies groups
@@ -54,8 +54,8 @@ function groupDependencyList(list, cwd) {
 /**
  * Run over each entry in the tree and transform the dependencies from list of paths
  * to object with dependencies types
- * 
- * @param {any} tree 
+ *
+ * @param {any} tree
  * @param {any} cwd the working directory path
  * @returns new tree with grouped dependencies
  */
@@ -76,5 +76,5 @@ function groupDependencyTree(tree, cwd) {
  */
 export default function getDependecyTree(cwd: string, filePath: string): Promise<*> {
   return madge(filePath, { baseDir: cwd, includeNpm: true })
-   .then((res) => ({ missing: res.skipped, tree: groupDependencyTree(res.tree, cwd) }));
+    .then((res) => ({ missing: res.skipped, tree: groupDependencyTree(res.tree, cwd) }))
 }

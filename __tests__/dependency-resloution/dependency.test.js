@@ -1,5 +1,5 @@
 import mockFs from 'mock-fs';
-import { getDependecyTree } from '../../src/dependency-builder';
+import { getDependencyTree } from '../../src/dependency-builder';
 const vm = jest.genMockFromModule('vm');
 jest.mock('vm');
 
@@ -13,9 +13,9 @@ beforeEach(() => {
     },
   });
 });
-describe('getDependecyTree', () => {
+describe('getDependencyTree', () => {
   it('should return missing dependency for component', () => {
-    return getDependecyTree(process.cwd(), 'my/project/component/test.js').then((dependencies) => {
+    return getDependencyTree(process.cwd(), 'my/project/component/test.js').then((dependencies) => {
       expect(dependencies.missing).toEqual(['npmPackage']);
     });
   });
