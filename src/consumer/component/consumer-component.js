@@ -607,16 +607,21 @@ export default class Component {
     return this.fromObject(object);
   }
 
-  static async loadFromFileSystem(bitDir: string,
+  static loadFromFileSystem(bitDir: string,
                                   consumerBitJson: BitJson,
                                   componentMap: ComponentMap,
                                   id: BitId,
-                                  consumerPath: string): Promise<Component> {
-    let dependencies, packageDependencies;
-    let implFile, specsFile, impl, specs;
+                                  consumerPath: string): Component {
+    let dependencies;
+    let packageDependencies;
+    let implFile;
+    let specsFile;
+    let impl;
+    let specs;
     let bitJson = consumerBitJson;
 
-    if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED){
+    if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED
+      || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInPath(bitDir));
       // In case it's imported component we will have bit.json in the dir
       bitJson = BitJson.loadSync(bitDir, consumerBitJson);
@@ -637,10 +642,10 @@ export default class Component {
 
     const files = componentMap.files;
     const absoluteFiles = {};
-    Object.keys(files).forEach(file => {
+    Object.keys(files).forEach((file) => {
       absoluteFiles[file] = path.join(consumerPath, files[file]);
     });
-    const absoluteTestFiles = componentMap.testsFiles.map((testFile) => path.join(consumerPath, testFile));
+    const absoluteTestFiles = componentMap.testsFiles.map(testFile => path.join(consumerPath, testFile));
 
     return new Component({
       name: id.name,

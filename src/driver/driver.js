@@ -3,6 +3,7 @@ import resolveFrom from 'resolve-from';
 import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';
 import { removeFromRequireCache } from '../utils';
+import logger from '../logger/logger';
 
 export default class Driver {
   lang: string;
@@ -29,6 +30,7 @@ export default class Driver {
       removeFromRequireCache(langDriver);
       return this.driver;
     } catch (err) {
+      logger.error('failed to get the driver', err);
       if (silent) return undefined;
       if (err.code !== 'MODULE_NOT_FOUND' && err.message !== 'missing path') throw err;
       throw new DriverNotFound(langDriver, this.lang);
@@ -47,9 +49,9 @@ export default class Driver {
   }
 
   // TODO: Improve flow object return type
-  async getDependecyTree(cwd: string, filePath: string): Promise<Object>{
-    const driver = this.getDriver();
-    return driver.getDependecyTree(cwd, filePath);
+  getDependencyTree(cwd: string, filePath: string): Promise<Object> {
+    const driver = this.getDriver(false);
+    return driver.getDependencyTree(cwd, filePath);
   }
 
   static load(lang) {

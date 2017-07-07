@@ -123,24 +123,24 @@ export default class Consumer {
 
   async loadComponent(id: BitId): Promise<Component> {
     logger.debug(`loading a consumer-component ${id} from the file-system`);
-    return this.loadComponents([id])[0];
+    const components = await this.loadComponents([id]);
+    return components[0];
   }
 
   async loadComponents(ids: BitId[]): Promise<Component> {
     const bitMap = await this.getBitMap();
 
-
-    let fullDependenciesTree = {
+    const fullDependenciesTree = {
       tree: {},
       missing: []
     };
     // Map to store the id's of paths we already found in bit.map
     // It's aim is to reduce the search in the bit.map for dependencies ids because it's an expensive operation
-    let dependenciesPathIdMap = new Map();
+    const dependenciesPathIdMap = new Map();
 
     const components = ids.map(async (id) => {
       let dependenciesTree = {};
-      let dependencies = [];
+      const dependencies = [];
 
       const componentMap = bitMap.getComponent(id.toString());
       let bitDir;
@@ -151,14 +151,15 @@ export default class Consumer {
         return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, id, this.getPath());
       }
 
-      let component = await Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, id, this.getPath());
-      // Check if we already calclulate the dependency tree (because it is another component dependency)
-      if (fullDependenciesTree.tree[id]){
+      const component = Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, id, this.getPath());
+      const mainFile = componentMap.files[componentMap.mainFile];
+      // Check if we already calculate the dependency tree (because it is another component dependency)
+      if (fullDependenciesTree.tree[id]) {
         // If we found it in the full tree it means we already take care of the missings earlier
         dependenciesTree.missing = [];
       } else {
         // Load the dependencies through automatic dependency resolution
-        dependenciesTree = await this.driver.getDependecyTree(this.getPath(), componentMap.mainFile);
+        dependenciesTree = await this.driver.getDependencyTree(this.getPath(), mainFile);
         Object.assign(fullDependenciesTree.tree, dependenciesTree.tree);
         fullDependenciesTree.missing = fullDependenciesTree.missing.concat(dependenciesTree.missing);
         // Check if there is missing dependencies in file system
@@ -168,16 +169,16 @@ export default class Consumer {
 
       // We only care of the relevant sub tree from now on
       // We can be sure it's now exists because it's happen after the assign in case it was missing
-      dependenciesTree.tree = fullDependenciesTree.tree[componentMap.mainFile];
+      dependenciesTree.tree = fullDependenciesTree.tree[mainFile];
 
-      let dependenciesMissingInMap = [];
+      const dependenciesMissingInMap = [];
       const files = dependenciesTree.tree.files || [];
       files.forEach((filePath) => {
         // Trying to get the idString from map first
         const dependencyIdString = dependenciesPathIdMap.get(filePath) || bitMap.getComponentIdByPath(filePath);
 
         // Check if there is missing dependencies (dependencies which exist in file system but not added to bit.map)
-        if (!dependencyIdString){
+        if (!dependencyIdString) {
           dependenciesMissingInMap.push(filePath);
         } else {
           // Add the entry to cache map
