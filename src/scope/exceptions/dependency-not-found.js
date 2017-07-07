@@ -4,10 +4,9 @@ export default class DependencyNotFound extends Error {
   code: number;
   bitJsonPath: string;
 
-  constructor(id: string, bitJsonPath: string) {
+  constructor(id: string) {
     super();
     this.code = 127;
     this.id = id;
-    this.bitJsonPath = bitJsonPath;
   }
 }

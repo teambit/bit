@@ -9,7 +9,8 @@ import {
   NothingToImport,
   ConsumerNotFound,
   ComponentSpecsFailed,
-  MissingDependencies
+  MissingDependencies,
+  MissingDependenciesOnFs
 } from '../consumer/exceptions';
 import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
@@ -38,7 +39,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ RemoteScopeNotFound, err => `fatal: remote scope "${chalk.bold(err)}" not found.`],
   [ InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: [scope]/[box]/<name>'],
   [ ComponentNotFound, err => `fatal: component with id "${chalk.bold(err.id)}" was not found`],
-  [ DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found. Please verify bit.json - ${chalk.bold(err.bitJsonPath)}`],
+  [ DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found.`],
   [ ComponentNotFoundInPath, err => `fatal: component in path "${chalk.bold(err.path)}" was not found`],
   [ PermissionDenied, () => 'fatal: permission to scope was denied'],
   [ RemoteNotFound, err => `fatal: remote "${chalk.bold(err.name)}" was not found`],
@@ -47,7 +48,8 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
   [ ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init --bare`'],
   [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit'],
-  [ MissingDependencies, () => `fatal: The following dependencies not found - "${chalk.bold(err.dependencies.join())}"`],
+  [ MissingDependencies, (err) => `fatal: The following dependencies not found - "${chalk.bold(err.dependencies.join())}"`],
+  [ MissingDependenciesOnFs, (err) => `fatal: The following dependencies not found on file system - "${chalk.bold(err.dependencies.join())}"`],
   [ NothingToImport, () => 'there is nothing to import'],
   [ InvalidIdChunk, err => `invalid id part in "${chalk.bold(err.id)}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]`],
   [ InvalidBitJson, err => `error: ${chalk.bold(err.path)} is not a valid JSON file.`],

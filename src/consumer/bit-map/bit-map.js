@@ -135,7 +135,7 @@ export default class BitMap {
    * @memberof BitMap
    */
   getComponentIdByPath(path: string): string {
-    const componentObject = getComponentObjectByPath(path);
+    const componentObject = this.getComponentObjectByPath(path);
     return R.keys(componentObject)[0];
   }
 

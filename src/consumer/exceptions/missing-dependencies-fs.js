@@ -1,5 +1,5 @@
 /** @flow */
-export default class MissingDependencies extends Error {
+export default class MissingDependenciesOnFs extends Error {
   dependencies: string[];
   code: number;
 
