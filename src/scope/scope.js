@@ -141,10 +141,10 @@ export default class Scope {
    */
   installDrivers(driversNames: string[]) {
     const path = this.getPath();
-    return Promise.all(driversNames.map((driverName) => npmClient.install(driverName, { cwd: path })))
+    return Promise.all(driversNames.map((driverName) => npmClient.install(driverName, { cwd: path })));
   }
 
-  deleteNodeModulesDir():  Promise<*> {
+  deleteNodeModulesDir(): Promise<*> {
     return new Promise((resolve, reject) => {
       const path = this.getPath() + '/node_modules';
       fs.remove(path, (err) => {
@@ -152,17 +152,6 @@ export default class Scope {
         return resolve();
       });
     });
-  }
-
-  // todo: get rid of bitDir
-  async put({ consumerComponent, message, force, consumer, verbose }: {
-    consumerComponent: ConsumerComponent,
-    message: string,
-    force: ?bool,
-    consumer: Consumer,
-    verbose: ?bool,
-  }):
-  Promise<ComponentDependencies> {
   }
 
   async putMany({ consumerComponents, message, force, consumer, verbose }: {
