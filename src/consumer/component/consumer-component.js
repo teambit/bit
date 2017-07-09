@@ -71,7 +71,6 @@ export default class Component {
   specsFile: ?string;
   mainFileName: string;
   testsFileNames: string[];
-  testsFiles:File[];
   filesNames: string[];
   compilerId: ?BitId;
   testerId: ?BitId;
@@ -181,7 +180,6 @@ export default class Component {
     specsResults,
     license,
     log,
-    testsFiles
   }: ComponentProps) {
     this.name = name;
     this.box = box || DEFAULT_BOX_NAME;
@@ -205,7 +203,6 @@ export default class Component {
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
-    this.testsFiles = testsFiles;
   }
 
   getFileExtension(): string {
@@ -489,7 +486,7 @@ export default class Component {
           compiler = scope.loadEnvironment(this.compilerId);
         }
         // todo: what files should be built?
-        const buildedImplP = this.buildIfNeeded({
+        const buildFilesP = this.buildIfNeeded({
           condition: !!this.compilerId,
           compiler,
           files: this.files,
@@ -497,16 +494,8 @@ export default class Component {
           scope
         });
 
-        const buildedspecP = this.buildIfNeeded({
-          condition: !!this.compilerId ,
-          compiler,
-          files: this.testsFiles,
-          consumer,
-          scope
-        });
-
-        return Promise.all([buildedImplP, buildedspecP]).then(([buildedImpl, buildedSpec]) => {
-          buildedImpl.forEach((file) =>{
+        return buildFilesP().then((buildedFiles) => {
+          buildedFiles.forEach((file) =>{
             if (file && (!file.contents || !isString(file.contents.toString()))) {
               throw new Error('builder interface has to return object with a code attribute that contains string');
             }
@@ -641,8 +630,14 @@ export default class Component {
     }
 
     const files = componentMap.files;
-    const absoluteFiles = Object.keys(files).map((file) => vinylFile.readSync(path.join(consumerPath, files[file])));
-    const absoluteTestFiles = componentMap.testsFiles.map(testFile => vinylFile.readSync(path.join(consumerPath, testFile)));
+    const vinylFiles = Object.keys(files).map((file) => vinylFile.readSync(path.join(consumerPath, files[file])));
+    // TODO: Decide about the model represntation
+    componentMap.testsFiles.forEach(testFile => {
+      let file = vinylFile.readSync(path.join(consumerPath, testFile))
+      file.isTest = true;
+      vinylFiles.push(file);
+    });
+
     return new Component({
       name: id.name,
       box: id.box,
@@ -650,8 +645,7 @@ export default class Component {
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
       mainFileName: componentMap.mainFile,
-      files: absoluteFiles || {},
-      testsFiles: absoluteTestFiles,
+      files: vinylFiles || [],
       dependencies,
       packageDependencies,
       implFile,
