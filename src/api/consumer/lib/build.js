@@ -32,7 +32,7 @@ function saveFile(file:File) {
       return saveFile(distFile);
     });
 
-    return Promise.all(saveImplDist,saveSpecDist);
+    return Promise.all([saveImplDist,saveSpecDist]);
 
   }
 
