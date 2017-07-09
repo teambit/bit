@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
+import vinylFile from 'vinyl-file';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
 import { Impl, Specs, Dist, License, Files } from '../component/sources';
@@ -54,6 +55,8 @@ export type ComponentProps = {
   specsResults?: ?SpecsResults,
   license?: ?License,
   log?: ?Log,
+  testsFiles:File[];
+
 }
 
 export default class Component {
@@ -68,6 +71,7 @@ export default class Component {
   specsFile: ?string;
   mainFileName: string;
   testsFileNames: string[];
+  testsFiles:File[];
   filesNames: string[];
   compilerId: ?BitId;
   testerId: ?BitId;
@@ -113,7 +117,7 @@ export default class Component {
 
   get files(): ?Files {
     if (!this._files) return null;
-    if (this._files instanceof Files) return this._files;
+    if (this._files instanceof Array) return this._files;
 
     if (R.is(Object, this._files)) {
       // $FlowFixMe
@@ -176,7 +180,8 @@ export default class Component {
     dist,
     specsResults,
     license,
-    log
+    log,
+    testsFiles
   }: ComponentProps) {
     this.name = name;
     this.box = box || DEFAULT_BOX_NAME;
@@ -200,6 +205,7 @@ export default class Component {
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
+    this.testsFiles = testsFiles;
   }
 
   getFileExtension(): string {
@@ -229,20 +235,19 @@ export default class Component {
     return BitIds.fromObject(this.dependencies);
   }
 
-  buildIfNeeded({ condition, compiler, src, consumer, scope }: {
-      condition?: ?bool,
-      compiler: any,
-      src: string,
-      consumer?: Consumer,
-      scope: Scope,
+  buildIfNeeded({ condition,files, compiler, consumer, scope }: {
+    condition?: ?bool,
+    files:Array[],
+    compiler: any,
+    consumer?: Consumer,
+    scope: Scope,
   }): Promise<?{ code: string, mappings?: string }> {
-    if (!condition) { return Promise.resolve({ code: src }); }
+    if (!condition) { return Promise.resolve({ code: '' }); }
 
     const runBuild = (componentRoot: string): Promise<any> => {
       const metaData = {
-        src,
         entry: this.implFile,
-        files: this.filesNames,
+        files: this.files,
         root: componentRoot,
         packageDependencies: this.packageDependencies,
         dependencies: this.dependencies
@@ -253,7 +258,7 @@ export default class Component {
       }
 
       // the compiler have one of the following (build/compile)
-      return Promise.resolve(compiler.compile(src));
+      return Promise.resolve(compiler.compile(files));
     };
 
     if (!compiler.build && !compiler.compile) {
@@ -268,16 +273,17 @@ export default class Component {
     const isolatedEnvironment = new IsolatedEnvironment(scope);
 
     return isolatedEnvironment.create()
-    .then(() => {
-      return isolatedEnvironment.importE2E(this.id.toString());
-    })
-    .then((component) => {
-      const componentRoot = isolatedEnvironment.getComponentPath(component);
-      return runBuild(componentRoot).then((result) => {
-        return isolatedEnvironment.destroy().then(() => result);
-      });
-    }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
+      .then(() => {
+        return isolatedEnvironment.importE2E(this.id.toString());
+      })
+      .then((component) => {
+        const componentRoot = isolatedEnvironment.getComponentPath(component);
+        return runBuild(componentRoot).then((result) => {
+          return isolatedEnvironment.destroy().then(() => result);
+        });
+      }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
   }
+
 
   async writeToComponentDir(bitDir: string, withBitJson: boolean, force?: boolean = true) {
     await mkdirp(bitDir);
@@ -486,35 +492,29 @@ export default class Component {
         const buildedImplP = this.buildIfNeeded({
           condition: !!this.compilerId,
           compiler,
-          src: this.impl ? this.impl.src : '',
+          files: this._files,
           consumer,
           scope
         });
 
         const buildedspecP = this.buildIfNeeded({
-          condition: !!this.compilerId && this.specs,
+          condition: !!this.compilerId ,
           compiler,
-          src: this.specs && this.specs.src,
+          files: this.testsFiles,
           consumer,
           scope
         });
 
         return Promise.all([buildedImplP, buildedspecP]).then(([buildedImpl, buildedSpec]) => {
-          if (buildedImpl && (!buildedImpl.code || !isString(buildedImpl.code))) {
-            throw new Error('builder interface has to return object with a code attribute that contains string');
-          }
+          buildedImpl.forEach((file) =>{
+            if (file && (!file.contents || !isString(file.contents.toString()))) {
+              throw new Error('builder interface has to return object with a code attribute that contains string');
+            }
+          });
 
-          this.dist = new Dist(
-            buildedImpl && buildedImpl.code,
-            buildedImpl && buildedImpl.mappings
-          );
+          this.dist = buildedImpl;
+          this.specDist = buildedSpec;
 
-          if (buildedSpec) {
-            this.specDist = new Dist(
-              buildedSpec && buildedSpec.code,
-              buildedSpec && buildedSpec.mappings
-            );
-          }
 
           if (save) {
             return scope.sources.updateDist({ source: this })
@@ -641,12 +641,8 @@ export default class Component {
     }
 
     const files = componentMap.files;
-    const absoluteFiles = {};
-    Object.keys(files).forEach((file) => {
-      absoluteFiles[file] = path.join(consumerPath, files[file]);
-    });
-    const absoluteTestFiles = componentMap.testsFiles.map(testFile => path.join(consumerPath, testFile));
-
+    const absoluteFiles = Object.keys(files).map((file) => vinylFile.readSync(path.join(consumerPath, files[file])));
+    const absoluteTestFiles = componentMap.testsFiles.map(testFile => vinylFile.readSync(path.join(consumerPath, testFile)));
     return new Component({
       name: id.name,
       box: id.box,
