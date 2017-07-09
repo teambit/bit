@@ -143,7 +143,7 @@ export default class Component {
 
   get docs(): ?Doclet[] {
     if (!this._docs) this._docs = this.files ?
-      R.flatten(this.files.src.map(file => docsParser(file.content.toString()))) : [];
+      R.flatten(this.files.map(file => docsParser(file.contents.toString()))) : [];
     return this._docs;
   }
 
@@ -323,8 +323,8 @@ export default class Component {
       await this.writeToComponentDir(bitDir, withBitJson, force);
       if (!this.files) return this;
       const filesToAdd = {};
-      this.files.src.forEach(file => {
-        filesToAdd[file.name] = path.join(bitDir, file.name);
+      this.files.forEach(file => {
+        filesToAdd[file.basename] = path.join(bitDir, file.basename);
       });
       bitMap.addComponent(this.id, filesToAdd, this.mainFileName, this.testsFileNames, undefined, isDependency);
       await bitMap.write();
@@ -492,7 +492,7 @@ export default class Component {
         const buildedImplP = this.buildIfNeeded({
           condition: !!this.compilerId,
           compiler,
-          files: this._files,
+          files: this.files,
           consumer,
           scope
         });
