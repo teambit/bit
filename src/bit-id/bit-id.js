@@ -9,7 +9,7 @@ import {
   NO_PLUGIN_TYPE,
   REMOTE_ALIAS_SIGN,
 } from '../constants';
-import { contains, isValidIdChunk, isValidScopeName } from '../utils';
+import { isValidIdChunk, isValidScopeName } from '../utils';
 
 export type BitIdProps = {
   scope?: string;
@@ -80,8 +80,8 @@ export default class BitId {
    * {
    * "bit.utils/object/foreach": "1"
    * }
-   * 
-   * @returns 
+   *
+   * @returns
    * @memberof BitId
    */
   toDependencyEntry() {
@@ -92,7 +92,7 @@ export default class BitId {
 
   static parse(id: ?string, realScopeName: ?string, version: string = LATEST_BIT_VERSION): ?BitId {
     if (!id || id === NO_PLUGIN_TYPE) { return null; }
-    if (contains(id, VERSION_DELIMITER)) {
+    if (id.includes(VERSION_DELIMITER)) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
       id = newId;
       version = newVersion;
