@@ -317,10 +317,16 @@ export default class Component {
       await this.writeToComponentDir(bitDir, withBitJson, force);
       if (!this.files) return this;
       const filesToAdd = {};
-      this.files.src.forEach(file => {
+      this.files.src.forEach((file) => {
         filesToAdd[file.name] = path.join(bitDir, file.name);
       });
-      bitMap.addComponent(this.id, filesToAdd, this.mainFileName, this.testsFileNames, undefined, isDependency);
+      bitMap.addComponent({
+        componentId: this.id,
+        componentPaths: filesToAdd,
+        mainFile: this.mainFileName,
+        testsFiles: this.testsFileNames,
+        rootDir: bitDir,
+        isDependency });
       await bitMap.write();
     }
     return this;
@@ -619,25 +625,24 @@ export default class Component {
     let impl;
     let specs;
     let bitJson = consumerBitJson;
-
-    if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED
-      || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInPath(bitDir));
-      // In case it's imported component we will have bit.json in the dir
+    if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInPath(bitDir));
+    if (!bitDir && componentMap && componentMap.rootDir) bitDir = componentMap.rootDir;
+    if (bitDir) {
       bitJson = BitJson.loadSync(bitDir, consumerBitJson);
+      if (bitJson) {
+        // Load the dependencies from bit.json
+        dependencies = BitIds.fromObject(bitJson.dependencies);
+        packageDependencies = bitJson.packageDependencies;
 
-      // Load the dependencies from bit.json
-      dependencies = BitIds.fromObject(bitJson.dependencies);
-      packageDependencies = bitJson.packageDependencies;
-
-      // We only create those attribute in case of imported component because
-      // Adding new component shouldn't generate those any more
-      // It's mainly for backward compatability
-      // TODO: put this inside files / test files
-      implFile = bitJson.getImplBasename();
-      specsFile = bitJson.getSpecBasename();
-      impl = path.join(bitDir, bitJson.getImplBasename());
-      specs = path.join(bitDir, bitJson.getSpecBasename());
+        // We only create those attribute in case of imported component because
+        // Adding new component shouldn't generate those anymore
+        // It's mainly for backward compatibility
+        // TODO: put this inside files / test files
+        implFile = bitJson.getImplBasename();
+        specsFile = bitJson.getSpecBasename();
+        impl = path.join(bitDir, bitJson.getImplBasename());
+        specs = path.join(bitDir, bitJson.getSpecBasename());
+      }
     }
 
     const files = componentMap.files;
@@ -671,7 +676,7 @@ export default class Component {
     box: string,
     scopeName?: ?string,
     withSpecs?: ?boolean,
-  }, scope: Scope) {
+  }, scope: Scope): Component {
     const implFile = consumerBitJson.getImplBasename();
     const specsFile = consumerBitJson.getSpecBasename();
     const compilerId = BitId.parse(consumerBitJson.compilerId);

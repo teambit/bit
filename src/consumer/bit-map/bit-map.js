@@ -15,7 +15,8 @@ export type ComponentMap = {
   files: Object,
   mainFile: string,
   testsFiles: string[],
-  origin: ComponentOrigin
+  rootDir?: string,
+  origin: ComponentOrigin,
 }
 
 export default class BitMap {
@@ -39,7 +40,7 @@ export default class BitMap {
         throw new InvalidBitMap(mapPath);
       }
     } else {
-      logger.info('bit.map: unable to find an existing bit.map file. Will probably create a new one if needed');
+      logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will probably create a new one if needed`);
       components = {};
     }
     return new BitMap(dirPath, mapPath, components);
@@ -87,12 +88,15 @@ export default class BitMap {
     return baseMainFile;
   }
 
-  addComponent(componentId: BitId,
-               componentPaths: Object<string>,
-               mainFile?: string,
-               testsFiles?: string[],
-               origin: ComponentOrigin,
-               isDependency: boolean): void {
+  addComponent({ componentId, componentPaths, mainFile, testsFiles, origin, isDependency, rootDir }: {
+    componentId: BitId,
+    componentPaths: Object<string>,
+    mainFile?: string,
+    testsFiles?: string[],
+    origin?: ComponentOrigin,
+    isDependency?: boolean,
+    rootDir?: string
+  }): void {
     const componentIdStr = isDependency ? componentId.toString() : componentId.changeScope(null).toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
     this._validateAndFixPaths(componentPaths, isDependency);
@@ -116,6 +120,9 @@ export default class BitMap {
 
       this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
       this.components[componentIdStr].testsFiles = testsFiles && testsFiles.length ? testsFiles : [];
+    }
+    if (rootDir) {
+      this.components[componentIdStr].rootDir = this._makePathRelativeToProjectRoot(rootDir);
     }
   }
 
