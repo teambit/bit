@@ -294,14 +294,14 @@ export default class Consumer {
    * In case there are some same dependencies shared between the components, it makes sure to
    * write them only once.
    */
-  async writeToComponentsDir(componentDependencies: VersionDependencies[], writeToPath?: string):
+  async writeToComponentsDir(componentDependencies: ComponentDependencies[], writeToPath?: string):
   Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIds = [];
     return Promise.all(componentDependencies.map((componentWithDeps) => {
       const bitPath = writeToPath || this.composeBitPath(componentWithDeps.component.id);
       const writeComponentP = componentWithDeps.component.write(bitPath, true, true, bitMap, false);
-      const writeDependenciesP = componentWithDeps.dependencies.map((dep) => {
+      const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         if (bitMap.isComponentExist(dependencyId) || dependenciesIds.includes(dependencyId)) {
           logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists`);
