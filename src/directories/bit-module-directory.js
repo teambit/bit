@@ -1,7 +1,7 @@
 // @flow
 import R from 'ramda';
 import path from 'path';
-import { BitId as ComponentId } from 'bit-scope-client/bit-id';
+import { BitId as ComponentId } from '../bit-id';
 import LinksDirectory from './links-directory';
 import Component from '../maps/component';
 import { InlineComponentsMap, ComponentsMap } from '../maps';
@@ -136,7 +136,7 @@ export default class BitModuleDirectory extends LinksDirectory {
   }
 
   addLinksFromBitMap(componentsMap) {
-    Object.keys(componentsMap).forEach((componentId) => {
+    const components = Object.keys(componentsMap).map((componentId) => {
       const componentIdParsed = ComponentId.parse(componentId);
       const sourceFile = this.getComponentFilePath({
         name: componentIdParsed.name,
@@ -159,7 +159,15 @@ export default class BitModuleDirectory extends LinksDirectory {
           to: destFile,
         }),
       );
+      return {
+        namespace: componentIdParsed.box,
+        name: componentIdParsed.name,
+        scope: componentIdParsed.scope,
+        version: componentIdParsed.version,
+      };
     });
+    this.linkedComponents = this.linkedComponents.concat(components);
+    return components;
   }
 
   addLinksForNamespacesAndRoot() {

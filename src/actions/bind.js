@@ -40,7 +40,7 @@ Promise<any> {
   bitModuleDirectory.addLinksFromBitMap(componentsMap);
   // bitModuleDirectory.addLinksFromProjectDependencies(componentsMap, projectDependenciesArray);
   // bitModuleDirectory.addLinksFromStageComponents(componentsMap);
-  // bitModuleDirectory.addLinksForNamespacesAndRoot(componentsMap);
+  bitModuleDirectory.addLinksForNamespacesAndRoot(componentsMap);
 
   // inlineComponentsDirectory.addLinksToDependencies(inlineComponentMap, componentsMap);
   // componentsDirectory.addLinksToDependencies(componentsMap);

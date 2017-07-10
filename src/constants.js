@@ -70,6 +70,8 @@ export const INDEX_JS = 'index.js';
 
 export const REMOTE_ALIAS_SIGN = '@';
 
+export const LOCAL_SCOPE_NOTATION = '@this';
+
 export const BIT_MAP = '.bit.map.json';
 
 export const COMPONENT_ORIGINS = {
