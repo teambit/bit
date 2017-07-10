@@ -51,7 +51,7 @@ export default class Helper {
     fs.removeSync(this.remoteScopePath);
   }
 
-  reInitLocalScope(){
+  reInitLocalScope() {
     fs.emptyDirSync(this.localScopePath);
     this.runCmd('bit init');
   }

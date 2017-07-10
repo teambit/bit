@@ -30,8 +30,14 @@ function expectLinksInRootLevel() {
   expect(result.trim()).to.equal('got foo');
 }
 
+function createComponent(name, impl) {
+  helper.runCmd(`bit create ${name}`);
+  const componentFixture = impl || `module.exports = function ${name}() { return 'got ${name}'; };`;
+  fs.outputFileSync(path.join(helper.localScopePath, 'components', 'global', name, 'impl.js'), componentFixture);
+}
+
 // todo: once the bind is implemented, make it work
-describe.skip('javascript-hooks', function () {
+describe('javascript-hooks', function () {
   this.timeout(0);
   before(() => {
     // makes sure the bit-javascript driver is the one used in bit-bin and not an outdated one
@@ -48,8 +54,7 @@ describe.skip('javascript-hooks', function () {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
-        helper.runCmd('bit create foo');
-        fs.writeFileSync(fooImplPath, fooComponentFixture);
+        createComponent('foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -61,7 +66,7 @@ describe.skip('javascript-hooks', function () {
         expectLinksInRootLevel();
       });
     });
-    describe('with build', () => {
+    describe.skip('with build', () => {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
@@ -87,9 +92,8 @@ describe.skip('javascript-hooks', function () {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
-        helper.runCmd('bit create foo');
-        fs.writeFileSync(fooImplPath, fooComponentFixture);
-        helper.runCmd('bit commit foo commit-msg');
+        createComponent('foo');
+        helper.commitComponent('foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -102,7 +106,7 @@ describe.skip('javascript-hooks', function () {
       });
     });
 
-    describe('with build', () => {
+    describe.skip('with build', () => {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
@@ -128,12 +132,11 @@ describe.skip('javascript-hooks', function () {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
-        helper.runCmd('bit create foo');
-        fs.writeFileSync(fooImplPath, fooComponentFixture);
-        helper.runCmd('bit commit foo commit-msg');
+        createComponent('foo');
+        helper.commitComponent('foo');
         helper.runCmd('bit init --bare', helper.remoteScopePath);
         helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
+        helper.exportComponent('foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -146,7 +149,7 @@ describe.skip('javascript-hooks', function () {
       });
     });
 
-    describe('with build', () => {
+    describe.skip('with build', () => {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
@@ -175,12 +178,11 @@ describe.skip('javascript-hooks', function () {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
-        helper.runCmd('bit create foo');
-        fs.writeFileSync(fooImplPath, fooComponentFixture);
-        helper.runCmd('bit commit foo commit-msg');
+        createComponent('foo');
+        helper.commitComponent('foo');
         helper.runCmd('bit init --bare', helper.remoteScopePath);
         helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
+        helper.exportComponent('foo');
         fs.emptyDirSync(helper.localScopePath); // a new local scope
         helper.runCmd('bit init');
         helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
@@ -197,7 +199,7 @@ describe.skip('javascript-hooks', function () {
       });
     });
 
-    describe('with build', () => {
+    describe.skip('with build', () => {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
@@ -224,7 +226,7 @@ describe.skip('javascript-hooks', function () {
       });
     });
 
-    describe('with test', () => {
+    describe.skip('with test', () => {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
@@ -251,7 +253,7 @@ describe.skip('javascript-hooks', function () {
       });
     });
 
-    describe('with dependencies', () => {
+    describe.skip('with dependencies', () => {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
@@ -335,7 +337,7 @@ describe.skip('javascript-hooks', function () {
       });
     });
 
-    describe('with multiple versions', () => {
+    describe.skip('with multiple versions', () => {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
