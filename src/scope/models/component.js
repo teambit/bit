@@ -12,7 +12,7 @@ import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
 import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
-import { Impl, Specs, Files, Dist, License } from '../../consumer/component/sources';
+import { Impl, Specs, SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 
@@ -183,7 +183,7 @@ export default class Component extends BitObject {
               packageDependencies: version.packageDependencies,
               impl: impl ? new Impl(impl.toString()) : null,
               specs: specs ? new Specs(specs.toString()) : null,
-              files: files ? new Files(files) : null,
+              files: files ? new SourceFile(files) : null,
               docs: version.docs,
               dist: dist ? Dist.fromString(dist.toString()) : null,
               license: scopeMeta ? License.deserialize(scopeMeta.license) : null,

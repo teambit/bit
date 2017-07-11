@@ -7,7 +7,7 @@ import Helper from '../e2e-helper';
 
 const helper = new Helper();
 
-describe('bit commit command', function () {
+describe.skip('bit commit command', function () {
   this.timeout(0);
   after(() => {
     helper.destroyEnv();

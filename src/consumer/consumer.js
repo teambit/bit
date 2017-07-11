@@ -4,6 +4,7 @@ import glob from 'glob';
 import fs from 'fs-extra';
 import R from 'ramda';
 import chalk from 'chalk';
+import format from 'string-format';
 import VersionDependencies from '../scope/version-dependencies';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
@@ -88,13 +89,24 @@ export default class Consumer {
     return this._bitMap;
   }
 
-  warnForMissingDriver() {
+  /**
+   * Check if the driver installed and print message if not
+   * 
+   * 
+   * @param {any} msg msg to print in case the driver not found (use string-format with the err context)
+   * @returns {boolean} true if the driver exists, false otherwise
+   * @memberof Consumer
+   */
+  warnForMissingDriver(msg) : boolean {
     try {
       this.driver.getDriver(false);
+      return true;
     } catch (err) {
+      msg = msg ? format(msg, err) : `Warning: Bit is not be able to run the bind command. Please install bit-${err.lang} driver and run the bind command.`;
       if (err instanceof DriverNotFound) {
-        console.log(chalk.yellow(`Warning: Bit is not be able to run the bind command. Please install bit-${err.lang} driver and run the bind command.`)); // eslint-disable-line
+        console.log(chalk.yellow(msg)); // eslint-disable-line
       }
+      return false;
     }
   }
 
@@ -138,6 +150,8 @@ export default class Consumer {
     // It's aim is to reduce the search in the bit.map for dependencies ids because it's an expensive operation
     const dependenciesPathIdMap = new Map();
 
+    const driverExists = this.warnForMissingDriver('Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.');
+
     const components = ids.map(async (id) => {
       let dependenciesTree = {};
       const dependencies = [];
@@ -158,7 +172,7 @@ export default class Consumer {
       if (fullDependenciesTree.tree[id]) {
         // If we found it in the full tree it means we already take care of the missings earlier
         dependenciesTree.missing = [];
-      } else {
+      } else if (driverExists){
         // Load the dependencies through automatic dependency resolution
         dependenciesTree = await this.driver.getDependencyTree(this.getPath(), mainFile);
         Object.assign(fullDependenciesTree.tree, dependenciesTree.tree);
@@ -170,7 +184,7 @@ export default class Consumer {
 
       // We only care of the relevant sub tree from now on
       // We can be sure it's now exists because it's happen after the assign in case it was missing
-      dependenciesTree.tree = fullDependenciesTree.tree[mainFile];
+      dependenciesTree.tree = fullDependenciesTree.tree[mainFile] || {};
 
       const dependenciesMissingInMap = [];
       const files = dependenciesTree.tree.files || [];

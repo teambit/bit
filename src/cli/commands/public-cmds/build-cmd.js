@@ -8,6 +8,7 @@ export default class Build extends Command {
   name = 'build [id]';
   description = 'uses the compiler defined in the bit.json in order to return the compiled version of the component';
   alias = '';
+  //TODO: Need to send parameters (non of them are used)
   opts = [
     ['e', 'environment', 'also pre install the required environment bit before running the build'],
     ['s', 'save', 'for running build and save the results in the model'],
