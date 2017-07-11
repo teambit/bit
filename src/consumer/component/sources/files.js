@@ -8,12 +8,13 @@ import logger from '../../../logger/logger';
 
 
 // TODO: Remove Source?
-export default class Files extends Vinyl {
+export default class SourceFile extends Vinyl {
+
   constructor(options) {
     super(options);
   }
 
-  static load(filePaths: Object<string>): Files|null {
+  static load(filePaths: Object<string>): SourceFile|null {
     try {
       const files = Object.keys(filePaths).map((file) => {
         return {
@@ -21,7 +22,7 @@ export default class Files extends Vinyl {
           content: fs.readFileSync(filePaths[file])
         };
       });
-      return new Files(files);
+      return new SourceFile(files);
     } catch (err) {
       if (err.code === 'ENOENT' && err.path) {
         throw new FileSourceNotFound(err.path);
@@ -30,37 +31,30 @@ export default class Files extends Vinyl {
     }
   }
 
-  writeOneFile(filePath, content, force) {
+  write(bitPath: string, force?: boolean = true): Promise<any> {
+    const filePath = path.join(bitPath, this.basename);
     return new Promise((resolve, reject) => {
       if (!force && fs.existsSync(filePath)) return resolve();
-      fs.outputFile(filePath, content, (err, res) => {
+      return fs.outputFile(filePath, this.contents, (err, res) => {
         if (err) return reject(err);
         return resolve(res);
       });
     });
   }
 
-  write(bitPath: string, force?: boolean = true): Promise<any> {
-    const filePath = path.join(bitPath, this.basename);
-    return this.writeOneFile(filePath, this.contents, force);
-  }
-
-  writeUsingBitMap(projectRoot: string, bitMapFiles: Object<string>, force?: boolean = true) {
-    return Promise.all(this.src.map((file) => {
-      if (!bitMapFiles[file.name]) {
-        logger.error(`could not write the file "${file.name}" as it does not appear in the bit.map file`);
-        return Promise.resolve();
-      }
-      const filePath = path.join(projectRoot, bitMapFiles[file.name]);
-      return this.writeOneFile(filePath, file.contents, force);
-    }));
+  writeUsingBitMap(bitMapFiles: Object<string>, force?: boolean = true) {
+    if (!bitMapFiles[this.relative]) {
+      logger.error(`could not write the file "${this.basename}" as it does not appear in the bit.map file`);
+      return Promise.resolve();
+    }
+    return this.write(this.path, force);
   }
 
   serialize(): Buffer {
     return this.contents;
   }
 
-  static deserialize(src): Files {
-    return new Files(src);
+  static deserialize(src): SourceFile {
+    return new SourceFile(src);
   }
 }

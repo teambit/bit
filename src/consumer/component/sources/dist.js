@@ -51,7 +51,7 @@ export default class Dist extends Vinyl {
 
   buildSrcWithSourceMapAnnotation(fileName: string) {
     return this.mappings ?
-    `${this.compiledContent}\n\n//# sourceMappingURL=${fileName}${MAP_EXTENSION}` : this.compiledContent;
+    `${this.contents.toString()}\n\n//# sourceMappingURL=${fileName}${MAP_EXTENSION}` : this.contents.toString();
   }
 
   toString() {
@@ -67,7 +67,6 @@ export default class Dist extends Vinyl {
   }
 
   serialize() {
-    console.log("xxx")
     return {
       src: this.contents,
       mappings: this.mappings,

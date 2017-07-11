@@ -12,7 +12,6 @@
     ["babel-plugin-transform-builtin-extend", {
       "globals": ["Error", "Array", "Map"]
     }],
-    ["babel-polyfill"],
     ["transform-runtime", {
       "helpers": false,
       "polyfill": false,

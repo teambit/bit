@@ -1,11 +1,10 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
-var Vinyl = require('vinyl');
 import vinylFile from 'vinyl-file';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
-import { Impl, Specs, Dist, License, Files } from '../component/sources';
+import { Impl, Specs, Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
@@ -49,7 +48,7 @@ export type ComponentProps = {
   packageDependencies?: ?Object,
   impl?: ?Impl|string,
   specs?: ?Specs|string,
-  files?: ?Files[]|[],
+  files?: ?SourceFile[]|[],
   docs?: ?Doclet[],
   dist?: Dist,
   specDist?: Dist,
@@ -80,7 +79,7 @@ export default class Component {
   _impl: ?Impl|string;
   _specs: ?Specs|string;
   _docs: ?Doclet[];
-  _files: ?Files[]|[];
+  _files: ?SourceFile[]|[];
   dist: ?Dist[];
   specDist: ?Dist;
   specsResults: ?SpecsResults;
@@ -113,15 +112,15 @@ export default class Component {
     return this._specs;
   }
 
-  set files(val: Files) { this._files = val; }
+  set files(val: ?SourceFile[]) { this._files = val; }
 
-  get files(): ?Files {
+  get files(): ?SourceFile[] {
     if (!this._files) return null;
     if (this._files instanceof Array) return this._files;
 
     if (R.is(Object, this._files)) {
       // $FlowFixMe
-      this._files = Files.load(this._files);
+      this._files = SourceFile.load(this._files);
     }
     // $FlowFixMe
     return this._files;
@@ -143,7 +142,7 @@ export default class Component {
 
   get docs(): ?Doclet[] {
     if (!this._docs) this._docs = this.files ?
-      R.flatten(this.files.map(file => docsParser(file.contents.toString(),file.relative))) : [];
+      R.flatten(this.files.map(file => docsParser(file.contents.toString(), file.relative))) : [];
     return this._docs;
   }
 
@@ -233,7 +232,7 @@ export default class Component {
     return BitIds.fromObject(this.dependencies);
   }
 
-  buildIfNeeded({ condition,files, compiler, consumer, scope }: {
+  buildIfNeeded({ condition, files, compiler, consumer, scope }: {
     condition?: ?bool,
     files:File[],
     compiler: any,
@@ -288,7 +287,7 @@ export default class Component {
     await mkdirp(bitDir);
     if (this.impl) await this.impl.write(bitDir, this.implFile, force);
     if (this.specs) await this.specs.write(bitDir, this.specsFile, force);
-    if (this.files) await this.files.forEach(file=>file.write(bitDir, force));
+    if (this.files) await this.files.forEach(file => file.write(bitDir, force));
     if (this.dist) await this.dist.write(bitDir, this.distImplFileName, force);
     if (this.specsFile && this.specDist) await this.specDist.write(bitDir, this.distSpecFileName, force);
     if (withBitJson) await this.writeBitJson(bitDir, force);
@@ -309,7 +308,7 @@ export default class Component {
     if (componentMap) {
       if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
 
-      await this.files.writeUsingBitMap(bitMap.projectRoot, componentMap.files, force);
+      await this.files.forEach(file => file.writeUsingBitMap(componentMap.files, force));
       // todo: while refactoring the dist for the new changes, make sure it writes to the proper
       // directory. Also, write the dist paths into bit.map.
       // if (this.dist) await this.dist.write(bitDir, this.distImplFileName, force);
@@ -317,17 +316,16 @@ export default class Component {
       // if (this.license && this.license.src) await this.license.write(bitDir, force); // todo: is it needed?
       return this;
 
-    } else {
-      // TODO: Make sure to add the component origin arg
-      await this.writeToComponentDir(bitDir, withBitJson, force);
-      if (!this.files) return this;
-      const filesToAdd = {};
-      this.files.forEach(file => {
-        filesToAdd[file.basename] = path.join(bitDir, file.basename);
-      });
-      bitMap.addComponent(this.id, filesToAdd, this.mainFileName, this.testsFileNames, undefined, isDependency);
-      await bitMap.write();
     }
+    // TODO: Make sure to add the component origin arg
+    await this.writeToComponentDir(bitDir, withBitJson, force);
+    if (!this.files) return this;
+    const filesToAdd = {};
+    this.files.forEach((file) => {
+      filesToAdd[file.basename] = path.join(bitDir, file.basename);
+    });
+    bitMap.addComponent(this.id, filesToAdd, this.mainFileName, this.testsFileNames, undefined, isDependency);
+    await bitMap.write();
     return this;
   }
 
@@ -497,13 +495,13 @@ export default class Component {
           });
 
           return Promise.resolve(buildFilesP).then((buildedFiles) => {
-            buildedFiles.forEach((file) =>{
+            buildedFiles.forEach((file) => {
               if (file && (!file.compiledContent || !isString(file.compiledContent.toString()))) {
                 throw new Error('builder interface has to return object with a code attribute that contains string');
               }
             });
 
-            this.dist = buildedFiles.map(file=> new Dist(file));
+            this.dist = buildedFiles.map(file => new Dist(file));
 
             if (save) {
               return scope.sources.updateDist({ source: this })
@@ -630,12 +628,12 @@ export default class Component {
     }
     const entry = fs.existsSync(path.join(process.cwd(), bitJson.distEntry)) ? path.join(process.cwd(), bitJson.distEntry) : process.cwd()
     const files = componentMap.files;
-    const vinylFiles = Object.keys(files).map(file =>  new Files(vinylFile.readSync(path.join(consumerPath, files[file]),{base:entry})));
+    const vinylFiles = Object.keys(files).map(file => new SourceFile(vinylFile.readSync(path.join(consumerPath, files[file]), { base: entry })));
     // TODO: Decide about the model represntation
-    componentMap.testsFiles.forEach(testFile => {
-      let file = vinylFile.readSync(path.join(consumerPath, testFile), {base:entry})
+    componentMap.testsFiles.forEach((testFile) => {
+      const file = vinylFile.readSync(path.join(consumerPath, testFile), { base: entry })
       file.isTest = true;
-      vinylFiles.push(new Files(file));
+      vinylFiles.push(new SourceFile(file));
     });
     return new Component({
       name: id.name,
@@ -666,7 +664,7 @@ export default class Component {
     const compilerId = BitId.parse(consumerBitJson.compilerId);
     const testerId = BitId.parse(consumerBitJson.testerId);
     const lang = consumerBitJson.lang;
-    const implVinylFile = new Files({
+    const implVinylFile = new SourceFile({
       path: files['impl.js'],
       contents: new Buffer(Impl.create(name, compilerId, scope).src)
     });
