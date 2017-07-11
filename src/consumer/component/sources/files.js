@@ -1,16 +1,16 @@
 import fs from 'fs-extra';
 import path from 'path';
+import Vinyl from 'vinyl';
 import Source from './source';
 import FileSourceNotFound from '../exceptions/file-source-not-found';
 import { isString } from '../../../utils';
 import logger from '../../../logger/logger';
 
-export type FileSrc = { name: string, content: string|Buffer };
 
 // TODO: Remove Source?
-export default class Files extends Source {
-  constructor(src: FileSrc[]) { // eslint-disable-line
-    super(src);
+export default class Files extends Vinyl {
+  constructor(options) {
+    super(options);
   }
 
   static load(filePaths: Object<string>): Files|null {
@@ -41,10 +41,8 @@ export default class Files extends Source {
   }
 
   write(bitPath: string, force?: boolean = true): Promise<any> {
-    return Promise.all(this.src.map((file) => {
-      const filePath = path.join(bitPath, file.name);
-      return this.writeOneFile(filePath, file.content.contents, force);
-    }));
+    const filePath = path.join(bitPath, this.basename);
+    return this.writeOneFile(filePath, this.contents, force);
   }
 
   writeUsingBitMap(projectRoot: string, bitMapFiles: Object<string>, force?: boolean = true) {
@@ -54,12 +52,12 @@ export default class Files extends Source {
         return Promise.resolve();
       }
       const filePath = path.join(projectRoot, bitMapFiles[file.name]);
-      return this.writeOneFile(filePath, file.content.contents, force);
+      return this.writeOneFile(filePath, file.contents, force);
     }));
   }
 
-  serialize(): FileSrc[] {
-    return this.src;
+  serialize(): Buffer {
+    return this.contents;
   }
 
   static deserialize(src): Files {

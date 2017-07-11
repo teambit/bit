@@ -1,20 +1,18 @@
 /** @flow */
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import Vinyl from 'vinyl';
+
 import Source from './source';
 import { DEFAULT_DIST_DIRNAME } from '../../../constants';
 
 const MAP_EXTENSION = '.map'; // TODO - move to constant !
 const DEFAULT_SOURCEMAP_VERSION = 3; // TODO - move to constant !
 
-export default class Dist extends Source {
-  mappings: ?string;
-
-  constructor(src: string, mappings: ?string) {
-    super(src);
-    this.mappings = mappings;
+export default class Dist extends Vinyl {
+  constructor(options) {
+    super(options);
   }
-
   static getFilePath(bitPath: string, fileName: string) {
     return path.join(bitPath, DEFAULT_DIST_DIRNAME, fileName);
   }
@@ -23,7 +21,7 @@ export default class Dist extends Source {
     const distFilePath = Dist.getFilePath(bitPath, fileName);
     if (!force && fs.existsSync(distFilePath)) return Promise.resolve();
     const distP = new Promise((resolve, reject) =>
-      fs.outputFile(distFilePath, this.buildSrcWithSourceMapAnnotation(fileName), (err) => {
+      fs.outputFile(distFilePath, this.buildSrcWithSourceMapAnnotation(this.basename), (err) => {
         if (err) return reject(err);
         return resolve(distFilePath);
       })
@@ -32,7 +30,7 @@ export default class Dist extends Source {
     const mappingsFilePath = distFilePath + MAP_EXTENSION;
     const sourceMapP = new Promise((resolve, reject) => {
       if (!this.mappings) return resolve();
-      return fs.outputFile(mappingsFilePath, this.buildSourceMap(fileName), (err) => {
+      return fs.outputFile(mappingsFilePath, this.buildSourceMap(this.basename), (err) => {
         if (err) return reject(err);
         return resolve(mappingsFilePath);
       });
@@ -53,7 +51,7 @@ export default class Dist extends Source {
 
   buildSrcWithSourceMapAnnotation(fileName: string) {
     return this.mappings ?
-    `${this.src}\n\n//# sourceMappingURL=${fileName}${MAP_EXTENSION}` : this.src;
+    `${this.compiledContent}\n\n//# sourceMappingURL=${fileName}${MAP_EXTENSION}` : this.compiledContent;
   }
 
   toString() {
@@ -69,8 +67,9 @@ export default class Dist extends Source {
   }
 
   serialize() {
+    console.log("xxx")
     return {
-      src: this.src,
+      src: this.contents,
       mappings: this.mappings,
     };
   }

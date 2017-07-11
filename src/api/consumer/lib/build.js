@@ -1,38 +1,24 @@
 /** @flow */
+import path from 'path';
+import fs from 'fs';
 import { loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
 import ComponentsList from '../../../consumer/component/components-list';
-const write = require('vinyl-write')
-import path from 'path';
 
 
-/**
- * save vinyl files to fs
- * @param file
- * @return {Promise}
- */
-function saveFile(file:File) {
-  return new Promise((resolve, reject) => {
-    return write(file, err => {
-      if (err) reject(err)
-      return resolve(file.path);
-    })
-  })
-}
+
+
   function buildImplAndSpecP(consumer, component: Component):
   Promise<?Array<?string>> {
-    const relativePath = path.join(consumer.getPath(), consumer.bitJson.distTarget);
-    const saveImplDist = component.dist.map(distFile =>{
-      distFile.path = path.join(relativePath, distFile.path.replace(path.join(consumer.getPath(),consumer.bitJson.distEntry),''));;
-      return saveFile(distFile);
-    });
-    const saveSpecDist = component.specDist.map(distFile =>{
-      distFile.path = path.join(relativePath, distFile.path.replace(path.join(consumer.getPath(),consumer.bitJson.distEntry),''));;
-      return saveFile(distFile);
+    //const relativePath = path.join(consumer.getPath(), consumer.bitJson.distTarget);
+    const saveDist = component.dist.map(distFile =>{
+      const distEntry = path.join(consumer.getPath(),consumer.bitJson.distEntry);
+      const relativePath =  fs.existsSync(distEntry) ? distEntry :  consumer.getPath()
+      return distFile.write(relativePath,distFile.relative);
     });
 
-    return Promise.all([saveImplDist,saveSpecDist]);
+    return Promise.all(saveDist);
 
   }
 
