@@ -141,7 +141,7 @@ export default class SourceRepository {
     const dist = consumerComponent.dist ? Source.from(bufferFrom(consumerComponent.dist.toString())): null;
     const specs = consumerComponent.specs ? Source.from(bufferFrom(consumerComponent.specs.src)): null;
     const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
-      return { name: file.basename, file: Source.from(file.contents.toString()) };
+      return { name: file.basename, file: Source.from(file.contents) };
     }) : null;
 
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);

@@ -3,7 +3,7 @@ import Specs from './specs';
 import Source from './source';
 import Dist from './dist';
 import License from './license';
-import Files from './files';
+import SourceFile from './files';
 
 export {
   Impl,
@@ -11,5 +11,5 @@ export {
   Source,
   Dist,
   License,
-  Files,
+  SourceFile,
 };
