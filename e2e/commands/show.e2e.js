@@ -3,18 +3,16 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-const helper = new Helper();
-
-function commitFoo(implementation) {
-  helper.cleanEnv();
-  helper.runCmd('bit init');
-  helper.createComponentBarFoo(implementation);
-  helper.addComponentBarFoo();
-  helper.commitComponentBarFoo();
-}
-
 describe('bit show command', function () {
   this.timeout(0);
+  const helper = new Helper();
+  const commitFoo = (implementation) => {
+    helper.cleanEnv();
+    helper.runCmd('bit init');
+    helper.createComponentBarFoo(implementation);
+    helper.addComponentBarFoo();
+    helper.commitComponentBarFoo();
+  };
   after(() => {
     helper.destroyEnv();
   });

@@ -5,11 +5,9 @@ import path from 'path';
 import fs from 'fs-extra';
 import Helper from '../e2e-helper';
 
-const helper = new Helper();
-
 describe('bit import', function () {
   this.timeout(0);
-
+  const helper = new Helper();
   before(() => {
     helper.reInitLocalScope();
     helper.reInitRemoteScope();

@@ -5,14 +5,13 @@ import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-const helper = new Helper();
-const createComponent = (dir, name) => {
-  const componentFixture = `module.exports = function foo() { return 'got ${name}'; };`;
-  fs.outputFileSync(path.join(helper.localScopePath, dir, `${name}.js`), componentFixture);
-};
-
 describe('bit export command', function () {
   this.timeout(0);
+  const helper = new Helper();
+  const createComponent = (dir, name) => {
+    const componentFixture = `module.exports = function foo() { return 'got ${name}'; };`;
+    fs.outputFileSync(path.join(helper.localScopePath, dir, `${name}.js`), componentFixture);
+  };
   after(() => {
     helper.destroyEnv();
   });

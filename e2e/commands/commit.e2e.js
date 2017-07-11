@@ -5,17 +5,13 @@ import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-const helper = new Helper();
-
 describe.skip('bit commit command', function () {
   this.timeout(0);
+  // const helper = new Helper();
   after(() => {
     // helper.destroyEnv();
   });
   describe('commit one component', () => {
-    before(() => {
-    });
-
     it('should throw error if the bit id not exists', () => {
     });
 
@@ -69,9 +65,6 @@ describe.skip('bit commit command', function () {
     });
 
     it('should run the onCommit hook', () => {
-    });
-
-    it('', () => {
     });
   });
 });
