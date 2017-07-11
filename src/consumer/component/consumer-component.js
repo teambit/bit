@@ -494,7 +494,7 @@ export default class Component {
             scope
           });
 
-          return Promise.resolve(buildFilesP).then((buildedFiles) => {
+          return buildFilesP.then((buildedFiles) => {
             buildedFiles.forEach((file) => {
               if (file && (!file.compiledContent || !isString(file.compiledContent.toString()))) {
                 throw new Error('builder interface has to return object with a code attribute that contains string');
@@ -505,7 +505,7 @@ export default class Component {
 
             if (save) {
               return scope.sources.updateDist({ source: this })
-                .then(() => resolve(this.dist.src));
+                .then(() => resolve(this.dist));
             }
 
             return resolve(this.dist);
@@ -626,7 +626,8 @@ export default class Component {
       impl = path.join(bitDir, bitJson.getImplBasename());
       specs = path.join(bitDir, bitJson.getSpecBasename());
     }
-    const entry = fs.existsSync(path.join(process.cwd(), bitJson.distEntry)) ? path.join(process.cwd(), bitJson.distEntry) : process.cwd()
+    const distPath =  path.join(process.cwd(), bitJson.distEntry);
+    const entry = fs.existsSync(distPath) ? distPath : process.cwd()
     const files = componentMap.files;
     const vinylFiles = Object.keys(files).map(file => new SourceFile(vinylFile.readSync(path.join(consumerPath, files[file]), { base: entry })));
     // TODO: Decide about the model represntation
