@@ -91,8 +91,8 @@ export default class Consumer {
 
   /**
    * Check if the driver installed and print message if not
-   * 
-   * 
+   *
+   *
    * @param {any} msg msg to print in case the driver not found (use string-format with the err context)
    * @returns {boolean} true if the driver exists, false otherwise
    * @memberof Consumer

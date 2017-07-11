@@ -318,7 +318,18 @@ export default class Component {
     }
     // TODO: Make sure to add the component origin arg
     await this.writeToComponentDir(bitDir, withBitJson, force);
-    if (!this.files) return this;
+
+    if (!this.files) {
+      if (!this.impl) throw new Error('Invalid component. There are no files nor impl.js file to write');
+
+      // for backward compatibility add impl.js to files.
+      const implVinylFile = new SourceFile({
+        path: path.join(bitDir, this.implFile),
+        contents: new Buffer(this.impl.src)
+      });
+      this.files = [implVinylFile];
+    }
+
     const filesToAdd = {};
     this.files.forEach((file) => {
       filesToAdd[file.basename] = path.join(bitDir, file.basename);
@@ -630,13 +641,13 @@ export default class Component {
         specs = path.join(bitDir, bitJson.getSpecBasename());
       }
     }
-    const distPath =  path.join(process.cwd(), bitJson.distEntry);
-    const entry = fs.existsSync(distPath) ? distPath : process.cwd()
+    const distPath = path.join(process.cwd(), bitJson.distEntry);
+    const entry = fs.existsSync(distPath) ? distPath : process.cwd();
     const files = componentMap.files;
     const vinylFiles = Object.keys(files).map(file => new SourceFile(vinylFile.readSync(path.join(consumerPath, files[file]), { base: entry })));
     // TODO: Decide about the model represntation
     componentMap.testsFiles.forEach((testFile) => {
-      const file = vinylFile.readSync(path.join(consumerPath, testFile), { base: entry })
+      const file = vinylFile.readSync(path.join(consumerPath, testFile), { base: entry });
       file.isTest = true;
       vinylFiles.push(new SourceFile(file));
     });

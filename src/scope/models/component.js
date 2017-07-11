@@ -183,7 +183,7 @@ export default class Component extends BitObject {
               packageDependencies: version.packageDependencies,
               impl: impl ? new Impl(impl.toString()) : null,
               specs: specs ? new Specs(specs.toString()) : null,
-              files: files ? new SourceFile(files) : null,
+              files: files ? files.map(file => new SourceFile({ path: file.name, contents: file.content.contents })) : null,
               docs: version.docs,
               dist: dist ? Dist.fromString(dist.toString()) : null,
               license: scopeMeta ? License.deserialize(scopeMeta.license) : null,

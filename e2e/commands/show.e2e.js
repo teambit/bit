@@ -15,6 +15,9 @@ function commitFoo(implementation) {
 
 describe('bit show command', function () {
   this.timeout(0);
+  after(() => {
+    helper.destroyEnv();
+  });
   describe('with no docs', () => {
     before(() => {
       const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";

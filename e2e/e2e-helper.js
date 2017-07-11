@@ -56,11 +56,11 @@ export default class Helper {
     this.runCmd('bit init');
   }
 
-  addRemoteScope(remoteScopePath = this.remoteScopePath){
+  addRemoteScope(remoteScopePath = this.remoteScopePath) {
     this.runCmd(`bit remote add file://${remoteScopePath}`);
   }
 
-  reInitRemoteScope(){
+  reInitRemoteScope() {
     fs.emptyDirSync(this.remoteScopePath);
     this.runCmd('bit init --bare', this.remoteScopePath);
   }

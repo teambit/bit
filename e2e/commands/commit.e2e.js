@@ -10,7 +10,7 @@ const helper = new Helper();
 describe.skip('bit commit command', function () {
   this.timeout(0);
   after(() => {
-    helper.destroyEnv();
+    // helper.destroyEnv();
   });
   describe('commit one component', () => {
     before(() => {
@@ -61,7 +61,7 @@ describe.skip('bit commit command', function () {
     });
 
     it('should add the correct dependencies to each component', () => {
-      // Make sure the use case contain dependenceis from all types - 
+      // Make sure the use case contain dependenceis from all types -
       // Packages, files and bits
     });
 

@@ -5,6 +5,9 @@ const helper = new Helper();
 
 describe('bit list command', function () {
   this.timeout(0);
+  after(() => {
+    helper.destroyEnv();
+  });
   describe('when no components created', () => {
     before(() => {
       helper.cleanEnv();
