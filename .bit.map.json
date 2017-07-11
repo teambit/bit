@@ -1,0 +1,14 @@
+{
+    "buffer/from": {
+        "files": {
+            "dist/impl.js": "components/buffer/from/bit.utils/2/dist/impl.js",
+            "impl.js": "components/buffer/from/bit.utils/2/impl.js",
+            "spec.js": "components/buffer/from/bit.utils/2/spec.js"
+        },
+        "origin": "AUTHORED",
+        "mainFile": "impl.js",
+        "testsFiles": [
+            "spec.js"
+        ]
+    }
+}
