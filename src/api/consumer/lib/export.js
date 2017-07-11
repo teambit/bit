@@ -8,41 +8,44 @@ import { ComponentNotFound } from '../../../scope/exceptions';
 import { LOCAL_SCOPE_NOTATION } from '../../../constants';
 import ExportWithoutThis from './exceptions/export-without-this';
 
-export default function exportAction(id?: string, remote: string, save: ?bool) {
+export default async function exportAction(id?: string, remote: string, save: ?bool) {
 
-  const exportComponent = (consumer: Consumer, componentId: string) => {
-    return consumer.exportAction(componentId, remote)
-      .catch((err) => {
-        // todo: make sure we are ok with the decision of exporting without @this
-        // if (err instanceof ComponentNotFound && !id.startsWith(LOCAL_SCOPE_NOTATION)) {
-        //   throw new ExportWithoutThis(componentId, remote);
-        // }
-        throw err;
-      })
-      .then((component: ConsumerComponent) => {
-        if (save) {
-          return consumer.bitJson.addDependency(component.id)
-            .write({ bitDir: consumer.getPath() })
-            .then(() => consumer.driver.runHook('onExport', component))
-            .then(() => component);
-        }
+  const exportComponent = async (consumer: Consumer, componentId: string) => {
+    const component: ConsumerComponent = await consumer.exportAction(componentId, remote);
+    if (save) {
+      await consumer.bitJson.addDependency(component.id).write({ bitDir: consumer.getPath() });
+      await consumer.driver.runHook('onExport', component);
+    }
 
-        return component;
-      });
+    return component;
   };
 
-  return loadConsumer().then((consumer) => {
-    loader.start(BEFORE_EXPORT);
+  const consumer = await loadConsumer();
+  loader.start(BEFORE_EXPORT);
 
-    if (id) {
-      return exportComponent(consumer, id);
+  if (id) {
+    return exportComponent(consumer, id);
+  }
+
+  // export all
+  const componentsList = new ComponentsList(consumer);
+  const ids = await componentsList.listExportPendingComponents();
+  // todo: what happens when some failed? we might consider avoid Promise.all
+  // todo: improve performance. Load the remote only once, run the hook only once.
+  // return Promise.all(ids.map(compId => exportComponent(consumer, compId)));
+
+  const componentsDependencies = await consumer.scope.exportAllAction(ids, remote);
+
+  const componentsP = componentsDependencies.map(async componentDependencies => {
+    const component: ConsumerComponent = componentDependencies.component;
+    if (save) {
+      await consumer.bitJson.addDependency(component.id).write({ bitDir: consumer.getPath() });
     }
-    // export all
-    const componentsList = new ComponentsList(consumer);
-    return componentsList.listExportPendingComponents().then((ids) => {
-      // todo: what happens when some failed? we might consider avoid Promise.all
-      // todo: improve performance. Load the remote only once, run the hook only once.
-      return Promise.all(ids.map(compId => exportComponent(consumer, compId)));
-    });
+    return component;
   });
+
+  const components = Promise.all(componentsP);
+  // todo: make sure runHook knows to deal with array of components
+  await consumer.driver.runHook('onExport', components);
+  return components;
 }
