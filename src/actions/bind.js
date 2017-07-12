@@ -4,7 +4,7 @@ import path from 'path';
 import BitJson from 'bit-scope-client/bit-json';
 import { InlineComponentsMap, ComponentsMap } from '../maps';
 import LocalScope from '../scope/local-scope';
-import { BitModuleDirectory, InlineComponentsDirectory, ComponentsDirectory } from '../directories';
+import { BitModuleDirectory, ComponentsDirectory } from '../directories';
 import MultiLink from '../directories/multi-link';
 import BitMap from '../bit-map';
 
