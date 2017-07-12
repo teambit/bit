@@ -8,7 +8,7 @@ import FileSourceNotFound from '../exceptions/file-source-not-found';
 import { isString } from '../../../utils';
 import logger from '../../../logger/logger';
 
-
+// todo: change the file name to source-file.
 // TODO: Remove Source?
 export default class SourceFile extends Vinyl {
   distFilePath:?string
