@@ -420,9 +420,9 @@ export default class Component {
       if (!isolated && consumer) {
         await this.build({ scope, environment, verbose, consumer });
         const saveImplDist = this.dist ?
-          this.dist.forEach(file => file.write()) : Promise.resolve();
+          this.dist.map(file => file.write()) : Promise.resolve();
 
-        await Promise.all([saveImplDist]);
+        await Promise.all(saveImplDist);
 
         const testDist = this.dist.filter(file => file.isTest);
         return run(this.mainFileName, testDist);
@@ -598,6 +598,10 @@ export default class Component {
     });
   }
 
+  static calculteEntryData(distEntry: string):string {
+    const enrtyPath = path.join(process.cwd(), distEntry);
+    return fs.existsSync(enrtyPath) ? enrtyPath : process.cwd();
+  }
   static fromString(str: string): Component {
     const object = JSON.parse(str);
     return this.fromObject(object);
@@ -634,22 +638,21 @@ export default class Component {
         specs = path.join(bitDir, bitJson.getSpecBasename());
       }
     }
-    const enrtyPath = path.join(process.cwd(), bitJson.distEntry);
-    const cwd = fs.existsSync(enrtyPath) ? enrtyPath : process.cwd();
 
+    const cwd = this.calculteEntryData(bitJson.distEntry);
     const files = componentMap.files;
+
     const vinylFiles = Object.keys(files).map((file) => {
-      const sourceFile = new SourceFile(vinylFile.readSync(path.join(consumerPath, files[file]), { base: cwd }));
-      sourceFile.distFilePath = path.join(process.cwd(), bitJson.distTarget, sourceFile.relative);
-      return sourceFile;
+      const filePath = path.join(consumerPath, files[file]);
+      return SourceFile.load(filePath, bitJson.distTarget, cwd);
     });
+
     // TODO: Decide about the model represntation
     componentMap.testsFiles.forEach((testFile) => {
-      const file = vinylFile.readSync(path.join(consumerPath, testFile), { base: cwd });
-      file.isTest = true;
-      file.distFilePath = path.join(process.cwd(), bitJson.distTarget, file.relative);
-      vinylFiles.push(new SourceFile(file));
+      const filePath = path.join(consumerPath, testFile);
+      vinylFiles.push(SourceFile.load(filePath, bitJson.distTarget, cwd, { isTest: true }));
     });
+
     return new Component({
       name: id.name,
       box: id.box,
