@@ -31,7 +31,7 @@ function expectLinksInRootLevel() {
 }
 
 function createComponent(name, impl) {
-  helper.runCmd(`bit create ${name}`);
+  helper.runCmd(`bit create ${name} --json`);
   const componentFixture = impl || `module.exports = function ${name}() { return 'got ${name}'; };`;
   fs.outputFileSync(path.join(helper.localScopePath, 'components', 'global', name, 'impl.js'), componentFixture);
 }
@@ -257,22 +257,19 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
-        helper.runCmd('bit create foo');
-        fs.writeFileSync(fooImplPath, fooComponentFixture);
-        helper.runCmd('bit commit foo commit-msg');
-
+        createComponent('foo');
+        helper.commitComponent('foo');
         helper.runCmd('bit init --bare', helper.remoteScopePath);
         helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
+        helper.exportComponent('foo');
 
         const barComponentFixture = "const foo = require('bit/global/foo'); module.exports = function bar() { return 'got bar and ' + foo(); };";
-        const barImplPath = path.join(helper.localScopePath, 'inline_components', 'global', 'bar', 'impl.js');
-        helper.runCmd('bit create bar --json');
-        fs.writeFileSync(barImplPath, barComponentFixture);
-        const barJsonPath = path.join(helper.localScopePath, 'inline_components', 'global', 'bar', 'bit.json');
+        createComponent('bar', barComponentFixture);
+
+        const barJsonPath = path.join(helper.localScopePath, 'components', 'global', 'bar', 'bit.json');
         helper.addBitJsonDependencies(barJsonPath, { [`@${helper.remoteScope}/global/foo`]: '1' });
-        helper.runCmd('bit commit bar commit-msg');
-        helper.runCmd(`bit export @this/global/bar @${helper.remoteScope}`);
+        helper.commitComponent('bar');
+        helper.exportComponent('bar');
       });
       before(() => {
         fs.emptyDirSync(helper.localScopePath); // a new local scope
@@ -303,13 +300,12 @@ describe('javascript-hooks', function () {
       describe('of depth=2, "baz" depends on "bar" that depends on "foo"', () => {
         before(() => {
           const bazComponentFixture = "const bar = require('bit/global/bar'); module.exports = function baz() { return 'got baz and ' + bar(); };";
-          const bazImplPath = path.join(helper.localScopePath, 'inline_components', 'global', 'baz', 'impl.js');
-          helper.runCmd('bit create baz --json');
-          fs.writeFileSync(bazImplPath, bazComponentFixture);
-          const bazJsonPath = path.join(helper.localScopePath, 'inline_components', 'global', 'baz', 'bit.json');
+          createComponent('baz', bazComponentFixture);
+
+          const bazJsonPath = path.join(helper.localScopePath, 'components', 'global', 'baz', 'bit.json');
           helper.addBitJsonDependencies(bazJsonPath, { [`@${helper.remoteScope}/global/bar`]: '1' });
-          helper.runCmd('bit commit baz commit-msg');
-          helper.runCmd(`bit export @this/global/baz @${helper.remoteScope}`);
+          helper.commitComponent('baz');
+          helper.exportComponent('baz');
 
           fs.emptyDirSync(helper.localScopePath); // a new local scope
           helper.runCmd('bit init');
