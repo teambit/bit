@@ -25,9 +25,7 @@ export default class Test extends Command {
 
   report(results: any): string {
     if (results && Array.isArray(results)) {
-      return results.map((res) => {
-        return paintSpecsResults(res);
-      });
+      return results.map(res => paintSpecsResults(res));
     }
 
     return 'couldn\'t get test results...';
