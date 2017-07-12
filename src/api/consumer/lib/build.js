@@ -11,11 +11,7 @@ import ComponentsList from '../../../consumer/component/components-list';
 
   function buildImplAndSpecP(consumer, component: Component):
   Promise<?Array<?string>> {
-    const saveDist = component.dist.map(distFile =>{
-      const distEntry = path.join(consumer.getPath(), consumer.bitJson.distEntry);
-      const relativePath = fs.existsSync(distEntry) ? distEntry :  consumer.getPath()
-      return distFile.write(relativePath, distFile.relative);
-    });
+    const saveDist = component.dist.map(distFile => distFile.write());
 
     return Promise.all(saveDist);
   }

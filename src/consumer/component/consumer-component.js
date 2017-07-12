@@ -21,7 +21,6 @@ import type { Log } from '../../scope/models/version';
 import { ResolutionException } from '../../scope/exceptions';
 import BitMap from '../bit-map';
 import type { ComponentMap } from '../bit-map/bit-map';
-import { DEFAULT_DIST_DIRNAME } from '../../constants';
 
 import {
   DEFAULT_BOX_NAME,
@@ -512,11 +511,7 @@ export default class Component {
                 throw new Error('builder interface has to return object with a code attribute that contains string');
               }
             });
-            const distPath = path.join(process.cwd(), consumer.bitJson.distEntry);
-            this.dist = buildedFiles.map((file) => {
-              file.distFilePath = path.join(distPath, DEFAULT_DIST_DIRNAME, file.relative);
-              return new Dist(file);
-            });
+            this.dist = buildedFiles.map(file => new Dist(file));
 
             if (save) {
               return scope.sources.updateDist({ source: this })
@@ -596,7 +591,7 @@ export default class Component {
       packageDependencies,
       impl: Impl.deserialize(impl),
       specs: specs ? Specs.deserialize(specs) : null,
-      files: files ? Files.deserialize(files) : null,
+      files: files ? SourceFile.deserialize(files) : null,
       docs,
       dist: dist ? Dist.deserialize(dist) : null,
       specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null,
@@ -640,20 +635,20 @@ export default class Component {
         specs = path.join(bitDir, bitJson.getSpecBasename());
       }
     }
+    const enrtyPath = path.join(process.cwd(), bitJson.distEntry);
+    const cwd = fs.existsSync(enrtyPath) ? enrtyPath : process.cwd();
 
-    const distPath = path.join(process.cwd(), bitJson.distEntry);
-    const entry = fs.existsSync(distPath) ? distPath : process.cwd();
     const files = componentMap.files;
     const vinylFiles = Object.keys(files).map((file) => {
-      const sourceFile = new SourceFile(vinylFile.readSync(path.join(consumerPath, files[file]), { base: entry }));
-      sourceFile.distFilePath = path.join(distPath, DEFAULT_DIST_DIRNAME, sourceFile.relative);
+      const sourceFile = new SourceFile(vinylFile.readSync(path.join(consumerPath, files[file]), { base: cwd }));
+      sourceFile.distFilePath = path.join(process.cwd(), bitJson.distTarget, sourceFile.relative);
       return sourceFile;
     });
     // TODO: Decide about the model represntation
     componentMap.testsFiles.forEach((testFile) => {
-      const file = vinylFile.readSync(path.join(consumerPath, testFile), { base: entry });
+      const file = vinylFile.readSync(path.join(consumerPath, testFile), { base: cwd });
       file.isTest = true;
-      file.distFilePath = path.join(distPath, DEFAULT_DIST_DIRNAME, file.relative);
+      file.distFilePath = path.join(process.cwd(), bitJson.distTarget, file.relative);
       vinylFiles.push(new SourceFile(file));
     });
     return new Component({
