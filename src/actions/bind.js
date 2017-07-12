@@ -21,38 +21,26 @@ const stripNonRelevantDataFromLinks = (allLinks, projectRoot) => {
 export default async function bindAction({ projectRoot = process.cwd() }: { projectRoot?: string}):
 Promise<any> {
   const bitModuleDirectory = new BitModuleDirectory(projectRoot);
-  // const inlineComponentsDirectory = new InlineComponentsDirectory(projectRoot);
-  // const componentsDirectory = new ComponentsDirectory(projectRoot);
+  const componentsDirectory = new ComponentsDirectory(projectRoot);
 
   // const projectBitJson = BitJson.load(projectRoot);
   // const localScope = await LocalScope.load(projectRoot);
   // const localScopeName = localScope ? localScope.getScopeName() : null;
 
-  // const inlineComponentMap = await InlineComponentsMap.create(projectRoot, projectBitJson);
   const bitMap = await BitMap.load(projectRoot);
-  // const componentsMap = await ComponentsMap.create(projectRoot, projectBitJson, localScopeName);
-  // const projectDependenciesArray = projectBitJson.getDependenciesArray();
-
   await bitModuleDirectory.erase();
   const componentsMap = bitMap.getAllComponents();
-  // bitModuleDirectory.addLinksFromInlineComponents(inlineComponentMap);
-  // todo: filter out Origin: NESTED from the componentsMap
-  bitModuleDirectory.addLinksFromBitMap(componentsMap);
-  // bitModuleDirectory.addLinksFromProjectDependencies(componentsMap, projectDependenciesArray);
-  // bitModuleDirectory.addLinksFromStageComponents(componentsMap);
-  bitModuleDirectory.addLinksForNamespacesAndRoot(componentsMap);
 
-  // inlineComponentsDirectory.addLinksToDependencies(inlineComponentMap, componentsMap);
-  // componentsDirectory.addLinksToDependencies(componentsMap);
+  bitModuleDirectory.addLinksFromBitMap(componentsMap);
+  bitModuleDirectory.addLinksForNamespacesAndRoot(componentsMap);
+  componentsDirectory.addLinksToDependencies(componentsMap);
 
   await bitModuleDirectory.persist();
-  // await inlineComponentsDirectory.persist();
-  // await componentsDirectory.persist();
+  await componentsDirectory.persist();
 
   const allLinks = R.mergeAll([
     bitModuleDirectory.links,
-    // inlineComponentsDirectory.links,
-    // componentsDirectory.links,
+    componentsDirectory.links,
   ]);
 
   return stripNonRelevantDataFromLinks(allLinks, projectRoot);

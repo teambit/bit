@@ -11,7 +11,9 @@ export type ComponentMap = {
   files: Object,
   mainFile: string,
   testsFiles: string[],
-  origin: ComponentOrigin
+  rootDir?: string,
+  origin: ComponentOrigin,
+  dependencies: string[],
 }
 
 export default class BitMap {

@@ -3,8 +3,7 @@ import R from 'ramda';
 import path from 'path';
 import AbstractLink from './abstract-link';
 import { removeDirP } from '../utils';
-import MultiLink from './multi-link';
-import { INDEX_JS, MODULES_DIR, MODULE_NAME } from '../constants';
+
 
 export default class Directory {
   rootPath: string;
@@ -33,33 +32,5 @@ export default class Directory {
 
   async erase(): Promise<any> {
     return removeDirP(this.path);
-  }
-
-  addLinksForNamespacesAndRoot(dependencies, parentComponent) {
-    dependencies = R.reject(R.isNil, dependencies); // eslint-disable-line
-    if (!dependencies.length) return;
-    const namespaceMap = {};
-    dependencies.forEach((component) => {
-      if (namespaceMap[component.namespace]) namespaceMap[component.namespace].push(component.name);
-      else namespaceMap[component.namespace] = [component.name];
-    });
-    Object.keys(namespaceMap).forEach((namespace) => {
-      const namespacePath = path.join(this.path, parentComponent.path, MODULES_DIR, MODULE_NAME,
-        namespace, INDEX_JS,
-      );
-      this.addLink(
-        MultiLink.create({
-          from: namespacePath,
-          names: namespaceMap[namespace],
-        }),
-      );
-    });
-    const rootPath = path.join(this.path, parentComponent.path, MODULES_DIR, MODULE_NAME, INDEX_JS);
-    this.addLink(
-      MultiLink.create({
-        from: rootPath,
-        names: Object.keys(namespaceMap),
-      }),
-    );
   }
 }

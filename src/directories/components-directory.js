@@ -1,23 +1,20 @@
 // @flow
 import path from 'path';
 import R from 'ramda';
-import { BitId as ComponentId } from 'bit-scope-client/bit-id';
+import { BitId as ComponentId } from '../bit-id';
 import LinksDirectory from './links-directory';
-import { COMPONENTS_DIRNAME, MODULES_DIR, MODULE_NAME, INDEX_JS } from '../constants';
-import { ComponentsMap } from '../maps';
-import Component from '../maps/component';
+import { MODULES_DIR, MODULE_NAME, INDEX_JS } from '../constants';
+import type { ComponentMap } from '../bit-map/bit-map';
 import Link from './link';
+import MultiLink from './multi-link';
 
 export default class ComponentsDirectory extends LinksDirectory {
-  constructor(rootPath: string) {
-    super(rootPath, COMPONENTS_DIRNAME);
-  }
 
   getComponentFilePath({ name, namespace, parentComponent }: {
-    name: string, namespace: string, parentComponent: Component,
-  }) {
+    name: string, namespace: string, parentComponent: ComponentMap,
+  }): string {
     return path.join(
-      this.path,
+      this.rootPath,
       parentComponent.path,
       MODULES_DIR,
       MODULE_NAME,
@@ -27,24 +24,56 @@ export default class ComponentsDirectory extends LinksDirectory {
     );
   }
 
-  addLinksToDependencies(componentsMap: ComponentsMap): void {
-    componentsMap.forEach((parentComponent: Component) => {
-      const dependencies = parentComponent.dependencies.map((dependency: string) => {
-        const componentId = ComponentId.parse(dependency);
-        const component = componentsMap.getComponent(componentId);
+  addLinksForNamespacesAndRoot(dependencies, parentComponent) {
+    dependencies = R.reject(R.isNil, dependencies); // eslint-disable-line
+    if (!dependencies.length) return;
+    const namespaceMap = {};
+    dependencies.forEach((component) => {
+      if (namespaceMap[component.namespace]) namespaceMap[component.namespace].push(component.name);
+      else namespaceMap[component.namespace] = [component.name];
+    });
+    Object.keys(namespaceMap).forEach((namespace) => {
+      const namespacePath = path.join(this.rootPath, parentComponent.path, MODULES_DIR, MODULE_NAME,
+        namespace, INDEX_JS,
+      );
+      this.addLink(
+        MultiLink.create({
+          from: namespacePath,
+          names: namespaceMap[namespace],
+        }),
+      );
+    });
+    const rootPath = path.join(this.rootPath, parentComponent.path, MODULES_DIR, MODULE_NAME, INDEX_JS);
+    this.addLink(
+      MultiLink.create({
+        from: rootPath,
+        names: Object.keys(namespaceMap),
+      }),
+    );
+  }
 
-        if (R.isNil(component)) return null;
+  addLinksToDependencies(componentsMap: ComponentMap[]): void {
+    Object.keys(componentsMap).forEach((parentComponentId: string) => {
+      const parentComponent: ComponentMap = componentsMap[parentComponentId];
+      if (!parentComponent.dependencies) return;
+      const parentMainFile = parentComponent.files[parentComponent.mainFile];
+      parentComponent.path = parentComponent.rootDir || path.dirname(parentMainFile);
+      const dependencies = parentComponent.dependencies.map((dependencyIdStr: string) => {
+        const dependencyId = ComponentId.parse(dependencyIdStr);
+        const dependency = componentsMap[dependencyIdStr];
+        if (!dependency) return null; // todo: log error
 
         const sourceFile = this.getComponentFilePath({
           parentComponent,
-          name: component.name,
-          namespace: component.namespace,
+          name: dependencyId.name,
+          namespace: dependencyId.box,
         });
 
+        // todo: consider dist
+        const dependencyMainFile = dependency.files[dependency.mainFile];
         const destFile = path.join(
           this.rootPath,
-          COMPONENTS_DIRNAME,
-          component.filePath,
+          dependencyMainFile,
         );
 
         this.addLink(
@@ -53,7 +82,12 @@ export default class ComponentsDirectory extends LinksDirectory {
             to: destFile,
           }),
         );
-        return component;
+        return {
+          namespace: dependencyId.box,
+          name: dependencyId.name,
+          scope: dependencyId.scope,
+          version: dependencyId.version,
+        };
       });
       this.addLinksForNamespacesAndRoot(dependencies, parentComponent);
     });

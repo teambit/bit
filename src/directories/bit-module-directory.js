@@ -11,6 +11,7 @@ import MultiLink from './multi-link';
 import {
   INLINE_COMPONENTS_DIRNAME,
   COMPONENTS_DIRNAME,
+  COMPONENT_ORIGINS,
   MODULES_DIR,
   MODULE_NAME,
   INDEX_JS,
@@ -45,98 +46,10 @@ export default class BitModuleDirectory extends LinksDirectory {
     });
   }
 
-  addLinksFromInlineComponents(
-    inlineMap: InlineComponentsMap,
-  ): InlineComponent[] {
-    const inlineComponents = inlineMap.map((inlineComponent: InlineComponent) => {
-      const sourceFile = this.getComponentFilePath({
-        name: inlineComponent.name,
-        namespace: inlineComponent.namespace,
-      });
-
-      const destFile = path.join(
-        this.rootPath,
-        INLINE_COMPONENTS_DIRNAME,
-        inlineComponent.filePath,
-      );
-
-      this.addLink(
-        Link.create({
-          from: sourceFile,
-          to: destFile,
-        }),
-      );
-
-      return inlineComponent;
-    });
-
-    this.linkedComponents = this.linkedComponents.concat(inlineComponents);
-    return inlineComponents;
-  }
-
-  addLinksFromProjectDependencies(
-    componentsMap: ComponentsMap,
-    dependenciesArray: string[],
-  ): Component[] {
-    const components = dependenciesArray.map((componentIdStr: string) => {
-      const componentId = ComponentId.parse(componentIdStr);
-      const component = componentsMap.getComponent(componentId);
-
-      const sourceFile = this.getComponentFilePath({
-        name: component.name,
-        namespace: component.namespace,
-      });
-
-      const destFile = path.join(
-        this.rootPath,
-        COMPONENTS_DIRNAME,
-        component.filePath,
-      );
-
-      this.addLink(
-        Link.create({
-          from: sourceFile,
-          to: destFile,
-        }),
-      );
-
-      return component;
-    });
-
-    this.linkedComponents = this.linkedComponents.concat(components);
-    return components;
-  }
-
-  addLinksFromStageComponents(
-    componentsMap: ComponentsMap,
-  ): Component[] {
-    const components = componentsMap.getLatestStagedComponents().map((component) => {
-      const sourceFile = this.getComponentFilePath({
-        name: component.name,
-        namespace: component.namespace,
-      });
-
-      const destFile = path.join(
-        this.rootPath,
-        COMPONENTS_DIRNAME,
-        component.filePath,
-      );
-
-      this.addLink(
-        Link.create({
-          from: sourceFile,
-          to: destFile,
-        }),
-      );
-
-      return component;
-    });
-    this.linkedComponents = this.linkedComponents.concat(components);
-    return components;
-  }
-
   addLinksFromBitMap(componentsMap) {
-    const components = Object.keys(componentsMap).map((componentId) => {
+    const directDependencies = Object.keys(componentsMap)
+      .filter(component => componentsMap[component].origin !== COMPONENT_ORIGINS.NESTED);
+    const components = directDependencies.map((componentId) => {
       const componentIdParsed = ComponentId.parse(componentId);
       const sourceFile = this.getComponentFilePath({
         name: componentIdParsed.name,
@@ -144,6 +57,7 @@ export default class BitModuleDirectory extends LinksDirectory {
       });
 
       const mainFile = componentsMap[componentId].mainFile;
+      // todo: consider dist
       const mainFilePath = componentsMap[componentId].files[mainFile];
 
       if (!mainFilePath) {
