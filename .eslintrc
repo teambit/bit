@@ -16,6 +16,13 @@
     "import/no-extraneous-dependencies": [0],
     "comma-dangle": [0, "never"],
     "no-use-before-define": [0],
+    "max-len": [2, 120, 2, {
+      "ignoreUrls": true,
+      "ignoreComments": true,
+      "ignoreRegExpLiterals": true,
+      "ignoreStrings": true,
+      "ignoreTemplateLiterals": true
+    }],
     "func-names": [0]
   },
   "env": {
