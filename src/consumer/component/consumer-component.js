@@ -21,6 +21,7 @@ import type { Log } from '../../scope/models/version';
 import { ResolutionException } from '../../scope/exceptions';
 import BitMap from '../bit-map';
 import type { ComponentMap } from '../bit-map/bit-map';
+import { DEFAULT_DIST_DIRNAME } from '../../constants';
 
 import {
   DEFAULT_BOX_NAME,
@@ -82,7 +83,7 @@ export default class Component {
   _files: ?SourceFile[]|[];
   dist: ?Dist[];
   specDist: ?Dist;
-  specsResults: ?SpecsResults;
+  specsResults: ?SpecsResults[];
   license: ?License;
   log: ?Log;
 
@@ -366,7 +367,8 @@ export default class Component {
       return Promise.resolve();
     };
 
-    if (!this.testerId || !this.specs || !this.specs.src) return null;
+    const testFiles = this.files.filter(file => file.isTest);
+    if (!this.testerId || !testFiles) return null;
 
     let testerFilePath;
     try {
@@ -384,16 +386,19 @@ export default class Component {
         testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
       }
 
-      const run = async ({ implDistPath, specDistPath }) => {
+      const run = async (mainFile: string, distTestFiles: Dist[]) => {
         try {
-          const specsResults = await specsRunner.run({
-            scope,
-            testerFilePath,
-            testerId: this.testerId,
-            implDistPath,
-            specDistPath,
+          const specsResultsP = distTestFiles.map(async (testFile) => {
+            return specsRunner.run({
+              scope,
+              testerFilePath,
+              testerId: this.testerId,
+              implDistPath: mainFile,
+              specDistPath: testFile.distFilePath,
+            });
           });
-          this.specsResults = SpecsResults.createFromRaw(specsResults);
+          const specsResults = await Promise.all(specsResultsP);
+          this.specsResults = specsResults.map(specRes => SpecsResults.createFromRaw(specRes));
           if (rejectOnFailure && !this.specsResults.pass) {
             return Promise.reject(new ComponentSpecsFailed());
           }
@@ -417,21 +422,12 @@ export default class Component {
         const componentPath = consumer.composeBitPath(this.id);
         await this.build({ scope, environment, verbose, consumer });
         const saveImplDist = this.dist ?
-          this.dist.write(componentPath, this.implFile) : Promise.resolve();
+          this.dist.forEach(file => file.write()) : Promise.resolve();
 
-        const saveSpecDist = this.specDist ?
-          this.specDist.write(componentPath, this.specsFile) : Promise.resolve();
+        await Promise.all([saveImplDist]);
 
-        await Promise.all([saveImplDist, saveSpecDist]);
-        const implDistPath = this.compilerId ?
-          Dist.getFilePath(componentPath, this.implFile) :
-          path.join(componentPath, this.implFile);
-
-        const specDistPath = this.compilerId ?
-          Dist.getFilePath(componentPath, this.specsFile) :
-          path.join(componentPath, this.specsFile);
-
-        return run({ implDistPath, specDistPath });
+        const testDist = this.dist.filter(file => file.isTest);
+        return run(this.mainFileName, testDist);
       }
 
       const isolatedEnvironment = new IsolatedEnvironment(scope);
@@ -516,8 +512,11 @@ export default class Component {
                 throw new Error('builder interface has to return object with a code attribute that contains string');
               }
             });
-
-            this.dist = buildedFiles.map(file => new Dist(file));
+            const distPath = path.join(process.cwd(), consumer.bitJson.distEntry);
+            this.dist = buildedFiles.map((file) => {
+              file.distFilePath = path.join(distPath, DEFAULT_DIST_DIRNAME, file.relative);
+              return new Dist(file);
+            });
 
             if (save) {
               return scope.sources.updateDist({ source: this })
@@ -641,14 +640,20 @@ export default class Component {
         specs = path.join(bitDir, bitJson.getSpecBasename());
       }
     }
+
     const distPath = path.join(process.cwd(), bitJson.distEntry);
     const entry = fs.existsSync(distPath) ? distPath : process.cwd();
     const files = componentMap.files;
-    const vinylFiles = Object.keys(files).map(file => new SourceFile(vinylFile.readSync(path.join(consumerPath, files[file]), { base: entry })));
+    const vinylFiles = Object.keys(files).map((file) => {
+      const sourceFile = new SourceFile(vinylFile.readSync(path.join(consumerPath, files[file]), { base: entry }));
+      sourceFile.distFilePath = path.join(distPath, DEFAULT_DIST_DIRNAME, sourceFile.relative);
+      return sourceFile;
+    });
     // TODO: Decide about the model represntation
     componentMap.testsFiles.forEach((testFile) => {
       const file = vinylFile.readSync(path.join(consumerPath, testFile), { base: entry });
       file.isTest = true;
+      file.distFilePath = path.join(distPath, DEFAULT_DIST_DIRNAME, file.relative);
       vinylFiles.push(new SourceFile(file));
     });
     return new Component({
