@@ -4,6 +4,7 @@ import { loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
 import BitMap from '../../../consumer/bit-map';
+import { COMPONENT_ORIGINS } from '../../../constants';
 
 /**
  * Creates a new component, writes it to the file system and adds to bit.map
@@ -27,7 +28,7 @@ export default async function create(
     consumerBitJson: consumer.bitJson,
   }, consumer.scope);
   const bitMap = await BitMap.load(consumer.getPath());
-  await component.write(bitPath, withBitJson, force, bitMap);
+  await component.write(bitPath, withBitJson, force, bitMap, COMPONENT_ORIGINS.AUTHORED);
   await consumer.driver.runHook('onCreate', component);
   return component;
 }

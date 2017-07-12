@@ -88,15 +88,15 @@ export default class BitMap {
     return baseMainFile;
   }
 
-  addComponent({ componentId, componentPaths, mainFile, testsFiles, origin, isDependency, rootDir }: {
+  addComponent({ componentId, componentPaths, mainFile, testsFiles, origin, rootDir }: {
     componentId: BitId,
     componentPaths: Object<string>,
     mainFile?: string,
     testsFiles?: string[],
     origin?: ComponentOrigin,
-    isDependency?: boolean,
     rootDir?: string
   }): void {
+    const isDependency = origin && origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = isDependency ? componentId.toString() : componentId.changeScope(null).toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
     this._validateAndFixPaths(componentPaths, isDependency);

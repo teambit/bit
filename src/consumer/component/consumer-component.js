@@ -296,7 +296,7 @@ export default class Component {
   }
 
   async write(bitDir: string, withBitJson: boolean, force?: boolean = true, bitMap?: BitMap,
-              isDependency: boolean = false): Promise<Component> {
+              origin?: string): Promise<Component> {
     // if bitMap parameter is empty, for instance, when it came from the scope, ignore bitMap altogether.
     // otherwise, check whether this component is in bitMap:
     // if it's there, write the files according to the paths in bit.map.
@@ -340,7 +340,7 @@ export default class Component {
       mainFile: this.mainFileName,
       testsFiles: this.testsFileNames,
       rootDir: bitDir,
-      isDependency });
+      origin });
     await bitMap.write();
     return this;
   }

@@ -39,9 +39,9 @@ export const BIT_JSON = 'bit.json';
 export const BIT_MAP = '.bit.map.json';
 
 export const COMPONENT_ORIGINS = {
-  "IMPORTED": "IMPORTED",
-  "AUTHORED": "AUTHORED",
-  "NESTED": "NESTED"
+  IMPORTED: 'IMPORTED',
+  AUTHORED: 'AUTHORED',
+  NESTED: 'NESTED', // which is a nested dependency
 };
 
 export const REMOTE_ALIAS_SIGN = '@';

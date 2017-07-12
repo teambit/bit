@@ -315,7 +315,7 @@ export default class Consumer {
     const dependenciesIds = [];
     return Promise.all(componentDependencies.map((componentWithDeps) => {
       const bitPath = writeToPath || this.composeBitPath(componentWithDeps.component.id);
-      const writeComponentP = componentWithDeps.component.write(bitPath, true, true, bitMap, false);
+      const writeComponentP = componentWithDeps.component.write(bitPath, true, true, bitMap, COMPONENT_ORIGINS.AUTHORED);
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         if (bitMap.isComponentExist(dependencyId) || dependenciesIds.includes(dependencyId)) {
@@ -324,7 +324,7 @@ export default class Consumer {
         }
         dependenciesIds.push(dependencyId);
         const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
-        return dep.write(depBitPath, true, true, bitMap, true);
+        return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED);
       });
       return Promise.all([writeComponentP, ...writeDependenciesP]);
     }));
@@ -339,7 +339,7 @@ export default class Consumer {
     const component = await this.loadComponent(bitId);
     await this.scope
       .putMany({ consumerComponents: [component], message, force, consumer: this, verbose });
-    await this.driver.runHook('onCommit', component); // todo: probably not needed as the bind happens on create
+    await this.driver.runHook('onCommit', [component]); // todo: probably not needed as the bind happens on create
     return component;
   }
 
