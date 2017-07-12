@@ -418,7 +418,6 @@ export default class Component {
       };
 
       if (!isolated && consumer) {
-        const componentPath = consumer.composeBitPath(this.id);
         await this.build({ scope, environment, verbose, consumer });
         const saveImplDist = this.dist ?
           this.dist.forEach(file => file.write()) : Promise.resolve();
