@@ -325,7 +325,7 @@ export default class Consumer {
         }
         dependenciesIds.push(dependencyId);
         const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
-        return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED);
+        return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id);
       });
       return Promise.all([writeComponentP, ...writeDependenciesP]);
     }));
