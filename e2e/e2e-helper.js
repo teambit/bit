@@ -6,7 +6,7 @@ import { v4 } from 'uuid';
 
 export default class Helper {
   constructor() {
-    this.debugMode = !!process.env.npm_config_debug;
+    this.debugMode = true//!!process.env.npm_config_debug;
     this.localScope = v4();
     this.remoteScope = v4();
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
@@ -53,36 +53,49 @@ export default class Helper {
 
   reInitLocalScope() {
     fs.emptyDirSync(this.localScopePath);
-    this.runCmd('bit init');
+    return this.runCmd('bit init');
   }
 
   addRemoteScope(remoteScopePath = this.remoteScopePath) {
-    this.runCmd(`bit remote add file://${remoteScopePath}`);
+    return this.runCmd(`bit remote add file://${remoteScopePath}`);
   }
 
   reInitRemoteScope() {
     fs.emptyDirSync(this.remoteScopePath);
-    this.runCmd('bit init --bare', this.remoteScopePath);
+    return this.runCmd('bit init --bare', this.remoteScopePath);
   }
 
-  commitComponent(id) {
-    this.runCmd(`bit commit ${id} -m commit-msg`);
+  commitComponent(id:string = 'bar/foo', commitMsg: string = 'commit-message') {
+    return this.runCmd(`bit commit ${id} -m ${commitMsg}`);
+  }
+
+  commitAllComponents(commitMsg: string = 'commit-message') {
+    return this.runCmd(`bit commit -am ${commitMsg}`);
   }
 
   exportComponent(id) {
-    this.runCmd(`bit export @${this.remoteScope} ${id}`);
+    return this.runCmd(`bit export @${this.remoteScope} ${id}`);
   }
 
   createComponentBarFoo(impl?: string) {
-    const fooComponentFixture = impl || "module.exports = function foo() { return 'got foo'; };";
-    fs.outputFileSync(path.join(this.localScopePath, 'bar', 'foo.js'), fooComponentFixture);
+    this.createComponent(undefined, undefined, impl);
   }
 
   addComponentBarFoo() {
-    this.runCmd('bit add bar/foo.js');
+    return this.addComponent();
   }
 
   commitComponentBarFoo() {
-    this.runCmd('bit commit bar/foo -m commit-msg');
+    return this.commitComponent();
+  }
+
+  createComponent(namespace: string = 'bar', name: string = 'foo.js' , impl?: string) {
+    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
+    const filePath = path.join(this.localScopePath, namespace, name);
+    fs.outputFileSync(filePath, fixture);
+  }
+
+  addComponent(filePaths: string = "bar/foo.js") {
+    return this.runCmd(`bit add ${filePaths}`);
   }
 }
