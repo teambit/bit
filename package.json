@@ -6,8 +6,10 @@
     "lint": "eslint src && flow check || true",
     "test": "jest",
     "test-watch": "jest --watch",
+    "clean": "rm -rf dist",
     "build": "babel src -d dist",
     "watch": "babel --watch src -d dist --source-maps",
+    "prepublishOnly": "npm run clean && npm run build",
     "build-debug": "babel src -d dist --source-maps"
   },
   "bin": {
