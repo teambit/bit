@@ -44,6 +44,7 @@ try {
   tester.run(specsFilePath)
   .then((results) => {
     mockery.disable();
+    results.specPath = specsFilePath;
     return process.send({ type: 'results', payload: results });
   })
   .catch((err) => {

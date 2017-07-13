@@ -8,6 +8,7 @@ import format from 'string-format';
 import VersionDependencies from '../scope/version-dependencies';
 import { flattenDependencies } from '../scope/flatten-dependencies';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
+import { ComponentNotFound } from '../scope/exceptions';
 import {
   ConsumerAlreadyExists,
   ConsumerNotFound,
@@ -27,7 +28,7 @@ import {
   BIT_HIDDEN_DIR,
   DEPENDENCIES_DIR,
   COMPONENT_ORIGINS,
- } from '../constants';
+} from '../constants';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
 import loader from '../cli/loader';
@@ -110,6 +111,9 @@ export default class Consumer {
     }
   }
 
+  checkIfComponentExists(ids:BitId, bitMap: BitMap) : boolean {
+    return (bitMap && bitMap.components[ids.toString()]);
+  }
   write(): Promise<Consumer> {
     return this.bitJson
       .write({ bitDir: this.projectPath })
@@ -141,6 +145,8 @@ export default class Consumer {
 
   async loadComponents(ids: BitId[]): Promise<Component> {
     const bitMap = await this.getBitMap();
+
+    if (!this.checkIfComponentExists(ids, bitMap)) throw new ComponentNotFound(ids);
 
     const fullDependenciesTree = {
       tree: {},
@@ -405,8 +411,8 @@ export default class Consumer {
         });
 
         return Promise.all(bitsP)
-        .then(resolve)
-        .catch(reject);
+          .then(resolve)
+          .catch(reject);
       })
     );
   }
@@ -432,14 +438,14 @@ export default class Consumer {
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
 
     return Promise.all([scopeP, bitJsonP])
-    .then(([scope, bitJson]) => {
-      return new Consumer({
-        projectPath,
-        created: true,
-        scope,
-        bitJson
+      .then(([scope, bitJson]) => {
+        return new Consumer({
+          projectPath,
+          created: true,
+          scope,
+          bitJson
+        });
       });
-    });
   }
 
   static load(currentPath: string): Promise<Consumer> {
@@ -449,15 +455,15 @@ export default class Consumer {
       const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
       const bitJsonP = ConsumerBitJson.load(projectPath);
       return Promise.all([scopeP, bitJsonP])
-      .then(([scope, bitJson]) =>
-        resolve(
-          new Consumer({
-            projectPath,
-            bitJson,
-            scope
-          })
-        )
-      );
+        .then(([scope, bitJson]) =>
+          resolve(
+            new Consumer({
+              projectPath,
+              bitJson,
+              scope
+            })
+          )
+        );
     });
   }
 }
