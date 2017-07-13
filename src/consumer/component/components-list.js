@@ -222,7 +222,7 @@ export default class ComponentsList {
     if (!this._fromFileSystem) {
       const idsFromBitMap = await this.idsFromBitMap();
       const parsedBitIds = idsFromBitMap.map((id) => BitId.parse(id));
-      const registeredComponentsP = this.consumer.loadComponents(parsedBitIds);
+      const registeredComponentsP = await this.consumer.loadComponents(parsedBitIds);
       const unRegisteredComponentsP = await this.onFileSystemAndNotOnBitMap();
       this._fromFileSystem = Promise.all([...registeredComponentsP, ...unRegisteredComponentsP]);
     }

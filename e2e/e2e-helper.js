@@ -6,7 +6,7 @@ import { v4 } from 'uuid';
 
 export default class Helper {
   constructor() {
-    this.debugMode = true//!!process.env.npm_config_debug;
+    this.debugMode = !!process.env.npm_config_debug;
     this.localScope = v4();
     this.remoteScope = v4();
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
@@ -75,6 +75,10 @@ export default class Helper {
 
   exportComponent(id) {
     return this.runCmd(`bit export @${this.remoteScope} ${id}`);
+  }
+
+  importComponent(id) {
+    return this.runCmd(`bit import @${this.remoteScope}/${id}`);
   }
 
   createComponentBarFoo(impl?: string) {
