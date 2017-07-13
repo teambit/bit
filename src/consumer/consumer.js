@@ -111,9 +111,6 @@ export default class Consumer {
     }
   }
 
-  checkIfComponentExists(ids:BitId, bitMap: BitMap) : boolean {
-    return (bitMap && bitMap.components[ids.toString()]);
-  }
   write(): Promise<Consumer> {
     return this.bitJson
       .write({ bitDir: this.projectPath })
@@ -145,8 +142,6 @@ export default class Consumer {
 
   async loadComponents(ids: BitId[]): Promise<Component> {
     const bitMap = await this.getBitMap();
-
-    if (!this.checkIfComponentExists(ids, bitMap)) throw new ComponentNotFound(ids);
 
     const fullDependenciesTree = {
       tree: {},
