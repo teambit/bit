@@ -47,7 +47,8 @@ export default class SourceFile extends Vinyl {
       logger.error(`could not write the file "${this.basename}" as it does not appear in the bit.map file`);
       return Promise.resolve();
     }
-    return this.write(this.path, force);
+    const bitPath = path.dirname(bitMapFiles[this.relative]);
+    return this.write(bitPath, force);
   }
 
   serialize(): Buffer {

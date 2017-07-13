@@ -64,9 +64,26 @@ describe('bit import', function () {
       const expectedLocation = path.join(helper.localScopePath, 'components', 'global', 'simple', 'impl.js');
       expect(fs.existsSync(expectedLocation)).to.be.true;
     });
-    // Prevent cases when I export a component with few files from different directories
-    // and get it in another structure during imports
-    it.skip('should write the component to the paths specified in bit.map', () => {
+
+    describe('with an existing component in bit.map', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('global/simple');
+        const bitMap = helper.readBitMap();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        bitMap['global/simple'].files['impl.js'] = 'utils/simple/impl.js';
+        helper.writeBitMap(bitMap);
+        helper.importComponent('global/simple');
+      });
+
+      // Prevent cases when I export a component with few files from different directories
+      // and get it in another structure during imports
+      it('should write the component to the paths specified in bit.map', () => {
+        const expectedLocation = path.join(helper.localScopePath, 'utils', 'simple', 'impl.js');
+        expect(fs.existsSync(expectedLocation)).to.be.true;
+      });
     });
 
     describe('with a specific path, using -p flag', () => {

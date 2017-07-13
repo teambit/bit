@@ -37,8 +37,13 @@ export default class Helper {
     return fs.readJSONSync(bitJsonPath) || {};
   }
 
-  readBitMap(bitJsonPath = path.join(this.localScopePath, '.bit.map.json')) {
-    return fs.readJSONSync(bitJsonPath) || {};
+  readBitMap(bitMapPath = path.join(this.localScopePath, '.bit.map.json')) {
+    return fs.readJSONSync(bitMapPath) || {};
+  }
+
+  writeBitMap(bitMap) {
+    const bitMapPath = path.join(this.localScopePath, '.bit.map.json');
+    return fs.writeJSONSync(bitMapPath, bitMap);
   }
 
   cleanEnv() {
