@@ -1,6 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
 import Vinyl from 'vinyl';
+import vinylFile from 'vinyl-file';
+
 import Source from './source';
 import FileSourceNotFound from '../exceptions/file-source-not-found';
 import { isString } from '../../../utils';
@@ -9,20 +11,18 @@ import logger from '../../../logger/logger';
 // todo: change the file name to source-file.
 // TODO: Remove Source?
 export default class SourceFile extends Vinyl {
+  distFilePath:?string
 
   constructor(options) {
     super(options);
   }
 
-  static load(filePaths: Object<string>): SourceFile|null {
+  static load(filePath:string, distTarget:string, cwd:string, extendedProps: object): SourceFile|null {
     try {
-      const files = Object.keys(filePaths).map((file) => {
-        return {
-          name: file,
-          content: fs.readFileSync(filePaths[file])
-        };
-      });
-      return new SourceFile(files);
+      const file = new SourceFile(vinylFile.readSync(filePath, { base: cwd }));
+      file.distFilePath = path.join(process.cwd(), distTarget, file.relative);
+      for (const k in extendedProps) file[k] = extendedProps[k];
+      return file;
     } catch (err) {
       if (err.code === 'ENOENT' && err.path) {
         throw new FileSourceNotFound(err.path);

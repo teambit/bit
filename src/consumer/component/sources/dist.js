@@ -17,17 +17,16 @@ export default class Dist extends Vinyl {
     return path.join(bitPath, DEFAULT_DIST_DIRNAME, fileName);
   }
 
-  write(bitPath: string, fileName: string, force?: boolean = true): Promise<any> {
-    const distFilePath = Dist.getFilePath(bitPath, fileName);
-    if (!force && fs.existsSync(distFilePath)) return Promise.resolve();
+  write(force?: boolean = true): Promise<any> {
+    if (!force && fs.existsSync(this.distFilePath)) return Promise.resolve();
     const distP = new Promise((resolve, reject) =>
-      fs.outputFile(distFilePath, this.buildSrcWithSourceMapAnnotation(this.basename), (err) => {
+      fs.outputFile(this.distFilePath, this.buildSrcWithSourceMapAnnotation(this.basename), (err) => {
         if (err) return reject(err);
-        return resolve(distFilePath);
+        return resolve(this.distFilePath);
       })
     );
 
-    const mappingsFilePath = distFilePath + MAP_EXTENSION;
+    const mappingsFilePath = this.distFilePath + MAP_EXTENSION;
     const sourceMapP = new Promise((resolve, reject) => {
       if (!this.mappings) return resolve();
       return fs.outputFile(mappingsFilePath, this.buildSourceMap(this.basename), (err) => {
@@ -37,7 +36,7 @@ export default class Dist extends Vinyl {
     });
 
     return Promise.all([distP, sourceMapP])
-    .then(() => distFilePath);
+    .then(() => this.distFilePath);
     // TODO - refactor to use the source map as returned value
   }
 
@@ -51,7 +50,7 @@ export default class Dist extends Vinyl {
 
   buildSrcWithSourceMapAnnotation(fileName: string) {
     return this.mappings ?
-    `${this.contents.toString()}\n\n//# sourceMappingURL=${fileName}${MAP_EXTENSION}` : this.contents.toString();
+    `${this.compiledContent.toString()}\n\n//# sourceMappingURL=${fileName}${MAP_EXTENSION}` : this.contents.toString();
   }
 
   toString() {
