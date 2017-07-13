@@ -316,7 +316,7 @@ export default class Consumer {
     const dependenciesIds = [];
     return Promise.all(componentDependencies.map((componentWithDeps) => {
       const bitPath = writeToPath || this.composeBitPath(componentWithDeps.component.id);
-      const writeComponentP = componentWithDeps.component.write(bitPath, true, true, bitMap, COMPONENT_ORIGINS.AUTHORED);
+      const writeComponentP = componentWithDeps.component.write(bitPath, true, true, bitMap, COMPONENT_ORIGINS.IMPORTED);
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         if (bitMap.isComponentExist(dependencyId) || dependenciesIds.includes(dependencyId)) {
