@@ -54,9 +54,9 @@ describe('bit import', function () {
       const depName = path.join(helper.remoteScope, 'global', 'simple');
       expect(bitJson.dependencies).to.include({ [depName]: '1' });
     });
-    it('should add the component into bit.map file', () => {
+    it('should add the component into bit.map file with the full id', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('global/simple');
+      expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple::1`);
     });
     // TODO: Validate all files exists in a folder with the component name
     it('should write the component to default path from bit.json', () => {
@@ -69,19 +69,22 @@ describe('bit import', function () {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('global/simple');
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        helper.commitComponentBarFoo();
+        helper.exportComponent('bar/foo');
         const bitMap = helper.readBitMap();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        bitMap['global/simple'].files['impl.js'] = 'utils/simple/impl.js';
+        bitMap['bar/foo'].files['foo.js'] = 'utils/foo.js';
         helper.writeBitMap(bitMap);
-        helper.importComponent('global/simple');
+        helper.importComponent('bar/foo');
       });
 
       // Prevent cases when I export a component with few files from different directories
       // and get it in another structure during imports
       it('should write the component to the paths specified in bit.map', () => {
-        const expectedLocation = path.join(helper.localScopePath, 'utils', 'simple', 'impl.js');
+        const expectedLocation = path.join(helper.localScopePath, 'utils', 'foo.js');
         expect(fs.existsSync(expectedLocation)).to.be.true;
       });
     });
@@ -121,7 +124,7 @@ describe('bit import', function () {
       expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple::1`);
     });
     it('should mark direct dependencies as "IMPORTED" in bit.map file', () => {
-      expect(bitMap['global/with-deps'].origin).to.equal('IMPORTED');
+      expect(bitMap[`${helper.remoteScope}/global/with-deps::1`].origin).to.equal('IMPORTED');
     });
     it('should mark indirect dependencies as "NESTED" in bit.map file', () => {
       expect(bitMap[`${helper.remoteScope}/global/simple::1`].origin).to.equal('NESTED');
