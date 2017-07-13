@@ -623,6 +623,7 @@ export default class Component {
     let bitJson = consumerBitJson;
     if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInPath(bitDir));
     if (!bitDir && componentMap && componentMap.rootDir) bitDir = componentMap.rootDir;
+    const files = componentMap.files;
     if (bitDir) {
       bitJson = BitJson.loadSync(bitDir, consumerBitJson);
       if (bitJson) {
@@ -633,16 +634,16 @@ export default class Component {
         // We only create those attribute in case of imported component because
         // Adding new component shouldn't generate those anymore
         // It's mainly for backward compatibility
-        // TODO: put this inside files / test files
-        implFile = bitJson.getImplBasename();
-        specsFile = bitJson.getSpecBasename();
-        impl = path.join(bitDir, bitJson.getImplBasename());
-        specs = path.join(bitDir, bitJson.getSpecBasename());
+        if (!files) {
+          implFile = bitJson.getImplBasename();
+          specsFile = bitJson.getSpecBasename();
+          impl = path.join(bitDir, bitJson.getImplBasename());
+          specs = path.join(bitDir, bitJson.getSpecBasename());
+        }
       }
     }
 
     const cwd = this.calculteEntryData(bitJson.distEntry);
-    const files = componentMap.files;
 
     const vinylFiles = Object.keys(files).map((file) => {
       const filePath = path.join(consumerPath, files[file]);

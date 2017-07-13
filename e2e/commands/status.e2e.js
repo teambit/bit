@@ -131,7 +131,7 @@ describe('bit status command', function () {
       expect(output.includes('There are no staged components')).to.be.true;
     });
   });
-  describe.skip('when a component is imported', () => {
+  describe('when a component is imported', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
