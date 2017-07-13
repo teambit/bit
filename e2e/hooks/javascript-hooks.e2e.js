@@ -253,7 +253,7 @@ describe('javascript-hooks', function () {
       });
     });
 
-    describe.skip('with dependencies', () => {
+    describe('with dependencies', () => {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
