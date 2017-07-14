@@ -8,6 +8,7 @@ const lifecycleHooks = {
   onImport: bindAction,
   onExport: bindAction,
   onModify: bindAction,
+  onBuild: bindAction,
 };
 
 module.exports = {
