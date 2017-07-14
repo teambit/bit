@@ -18,6 +18,7 @@ export type ComponentMap = {
   rootDir?: string, // needed to search for the component's bit.json. If it's undefined, the component probably don't have bit.json
   origin: ComponentOrigin,
   dependencies: string[], // needed for the bind process
+  mainDistFile?: string, // needed when there is a build process involved
 }
 
 export default class BitMap {
@@ -152,6 +153,20 @@ export default class BitMap {
     if (rootDir) {
       this.components[componentIdStr].rootDir = this._makePathRelativeToProjectRoot(rootDir);
     }
+  }
+
+  addMainDistFileToComponent(id, distFilesPaths: string[]): void {
+    if (!this.components[id]) {
+      logger.warning(`unable to find the component ${id} in bit.map file`);
+      return;
+    }
+
+    const mainDistFile = distFilesPaths.find(distFile => distFile.endsWith(this.components[id].mainFile));
+    if (!mainDistFile) {
+      logger.warning(`unable to find the main dist file of component ${id}. Dist files: ${distFilesPaths.join(', ')}`);
+      return;
+    }
+    this.components[id].mainDistFile = this._makePathRelativeToProjectRoot(mainDistFile);
   }
 
   getComponent(id: string): ComponentMap {

@@ -68,12 +68,12 @@ describe('javascript-hooks', function () {
     });
     describe.skip('with build', () => {
       before(() => {
-        helper.cleanEnv();
-        helper.runCmd('bit init');
-        helper.runCmd('bit import bit.envs/compilers/babel::5 --compiler');
-        helper.runCmd('bit create foo');
-        fs.writeFileSync(fooImplPath, fooComponentFixture);
-        helper.runCmd('bit build -i foo');
+        helper.reInitLocalScope();
+        helper.runCmd('bit config set hub_domain hub-stg.bitsrc.io'); // todo: once the new babel compiler is on prod, remove this line
+        helper.runCmd('bit import bit.envs/compilers/babel --compiler');
+        const fooES6Fixture = "import fs from 'fs'; module.exports = function foo() { return 'got foo'; };";
+        createComponent('foo', fooES6Fixture);
+        helper.runCmd('bit build foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();

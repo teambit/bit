@@ -17,7 +17,7 @@ export default class Dist extends Vinyl {
     return path.join(bitPath, DEFAULT_DIST_DIRNAME, fileName);
   }
 
-  write(force?: boolean = true): Promise<any> {
+  write(force?: boolean = true): Promise<string> {
     if (!force && fs.existsSync(this.distFilePath)) return Promise.resolve();
     const distP = new Promise((resolve, reject) =>
       fs.outputFile(this.distFilePath, this.buildSrcWithSourceMapAnnotation(this.basename), (err) => {

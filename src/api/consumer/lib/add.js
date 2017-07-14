@@ -4,9 +4,9 @@ import fs from 'fs';
 import R from 'ramda';
 import { glob, isValidIdChunk } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
-import BitMap, {ComponentOrigin} from '../../../consumer/bit-map';
+import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
-import { DEFAULT_INDEX_NAME, COMPONENT_ORIGINS } from '../../../constants';
+import { COMPONENT_ORIGINS } from '../../../constants';
 import logger from '../../../logger/logger';
 
 export default async function addAction(componentPaths: string[], id?: string, main?: string, tests?: string[]): Promise<Object> {
