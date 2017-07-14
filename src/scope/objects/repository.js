@@ -82,7 +82,7 @@ export default class Repository {
     return removeFile(this.objectPath(ref), true);
   }
 
-  removeMany(refs: Ref[]) {
+  removeMany(refs: Ref[]): Promise {
     return Promise.all(refs.map(ref => this.remove(ref)));
   }
 

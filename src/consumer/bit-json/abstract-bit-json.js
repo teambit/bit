@@ -11,8 +11,6 @@ import {
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
   DEFAULT_DIR_STRUCTURE,
-  DEFAULT_DIST_DIRNAME,
-  DEFAULT_DIST_ENTRY,
 } from '../../constants';
 
 export type AbstractBitJsonProps = {
@@ -23,8 +21,6 @@ export type AbstractBitJsonProps = {
   dependencies?: Object;
   lang?: string;
   structure?: string;
-  distTarget?: string;
-  distEntry?: string;
 };
 
 // todo: add class property of "mainFileName" where the default is DEFAULT_INDEX_NAME.
@@ -38,8 +34,6 @@ export default class AbstractBitJson {
   dependencies: {[string]: string};
   lang: string;
   structure: string;
-  distTarget: string;
-  distEntry: string;
 
   constructor({
     impl,
@@ -49,8 +43,6 @@ export default class AbstractBitJson {
     dependencies,
     lang,
     structure,
-    distTarget,
-    distEntry,
   }: AbstractBitJsonProps) {
     this.impl = impl || DEFAULT_IMPL_NAME;
     this.spec = spec || DEFAULT_SPECS_NAME;
@@ -59,8 +51,6 @@ export default class AbstractBitJson {
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
     this.lang = lang || DEFAULT_LANGUAGE;
     this.structure = structure || DEFAULT_DIR_STRUCTURE;
-    this.distTarget = distTarget || DEFAULT_DIST_DIRNAME;
-    this.distEntry = distEntry || DEFAULT_DIST_ENTRY;
   }
 
   get compilerId(): string {
@@ -135,10 +125,6 @@ export default class AbstractBitJson {
       env: {
         compiler: this.compilerId,
         tester: this.testerId,
-      },
-      dist: {
-        target: this.distTarget,
-        entry: this.distEntry,
       },
       dependencies: this.dependencies
     }, isLangPropDefault);

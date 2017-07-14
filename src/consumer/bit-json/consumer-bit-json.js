@@ -4,7 +4,7 @@ import R from 'ramda';
 import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
 import { BitJsonNotFound, BitJsonAlreadyExists } from './exceptions';
-import { BIT_JSON } from '../../constants';
+import { BIT_JSON, DEFAULT_DIST_DIRNAME, DEFAULT_DIST_ENTRY } from '../../constants';
 
 function composePath(bitPath: string) {
   return path.join(bitPath, BIT_JSON);
@@ -15,15 +15,24 @@ function hasExisting(bitPath: string): boolean {
 }
 
 export default class ConsumerBitJson extends AbstractBitJson {
-  impl: string;
-  spec: string;
-  compiler: string;
-  tester: string;
-  dependencies: {[string]: string};
-  lang: string;
-  structure: string;
   distTarget: string;
-  distEntry: string;
+  distEntry: string; // base path to copy the dist structure from
+
+  constructor({ impl, spec, compiler, tester, dependencies, lang, distTarget, distEntry }) {
+    super({ impl, spec, compiler, tester, dependencies, lang });
+    this.distTarget = distTarget || DEFAULT_DIST_DIRNAME;
+    this.distEntry = distEntry || DEFAULT_DIST_ENTRY;
+  }
+
+  toPlainObject() {
+    const superObject = super.toPlainObject();
+    return R.merge(superObject, {
+      dist: {
+        target: this.distTarget,
+        entry: this.distEntry,
+      },
+    });
+  }
 
   write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
     return new Promise((resolve, reject) => {
@@ -31,7 +40,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
         throw new BitJsonAlreadyExists();
       }
 
-      const repspond = (err, res) => {
+      const respond = (err, res) => {
         if (err) return reject(err);
         return resolve(res);
       };
@@ -39,7 +48,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       fs.writeFile(
         composePath(bitDir),
         this.toJson(),
-        repspond
+        respond
       );
     });
   }

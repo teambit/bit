@@ -15,7 +15,7 @@ export type ComponentMap = {
   files: Object, // the keys are the presentation on the model, the values are the presentation on the file system
   mainFile: string,
   testsFiles: string[],
-  rootDir?: string,
+  rootDir?: string, // needed to search for the component's bit.json. If it's undefined, the component probably don't have bit.json
   origin: ComponentOrigin,
   dependencies: string[], // needed for the bind process
 }

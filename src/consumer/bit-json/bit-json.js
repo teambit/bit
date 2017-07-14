@@ -25,13 +25,10 @@ export type BitJsonProps = {
   packageDependencies?: Object;
 };
 
+/**
+ * Component's bit.json
+ */
 export default class BitJson extends AbstractBitJson {
-  impl: string;
-  spec: string;
-  compiler: string;
-  lang: string;
-  tester: string;
-  dependencies: {[string]: string};
   packageDependencies: {[string]: string};
 
   constructor({

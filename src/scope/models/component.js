@@ -129,7 +129,7 @@ export default class Component extends BitObject {
       ));
   }
 
-  remove(repo: Repository) {
+  remove(repo: Repository): Promise {
     const objectRefs = this.versionArray;
     return repo.removeMany(objectRefs.concat([this.hash()]));
   }

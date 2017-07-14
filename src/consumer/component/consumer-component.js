@@ -600,9 +600,9 @@ export default class Component {
     });
   }
 
-  static calculteEntryData(distEntry: string):string {
-    const enrtyPath = path.join(process.cwd(), distEntry);
-    return fs.existsSync(enrtyPath) ? enrtyPath : process.cwd();
+  static calculateEntryData(distEntry: string):string {
+    const entryPath = path.join(process.cwd(), distEntry);
+    return fs.existsSync(entryPath) ? entryPath : process.cwd();
   }
   static fromString(str: string): Component {
     const object = JSON.parse(str);
@@ -610,7 +610,7 @@ export default class Component {
   }
 
   static loadFromFileSystem(bitDir: string,
-                            consumerBitJson: BitJson,
+                            consumerBitJson: ConsumerBitJson,
                             componentMap: ComponentMap,
                             id: BitId,
                             consumerPath: string): Component {
@@ -643,17 +643,17 @@ export default class Component {
       }
     }
 
-    const cwd = this.calculteEntryData(bitJson.distEntry);
+    const cwd = this.calculateEntryData(consumerBitJson.distEntry);
 
     const vinylFiles = Object.keys(files).map((file) => {
       const filePath = path.join(consumerPath, files[file]);
-      return SourceFile.load(filePath, bitJson.distTarget, cwd);
+      return SourceFile.load(filePath, consumerBitJson.distTarget, cwd);
     });
 
     // TODO: Decide about the model represntation
     componentMap.testsFiles.forEach((testFile) => {
       const filePath = path.join(consumerPath, testFile);
-      vinylFiles.push(SourceFile.load(filePath, bitJson.distTarget, cwd, { isTest: true }));
+      vinylFiles.push(SourceFile.load(filePath, consumerBitJson.distTarget, cwd, { isTest: true }));
     });
 
     return new Component({
