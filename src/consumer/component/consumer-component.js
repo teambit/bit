@@ -281,8 +281,6 @@ export default class Component {
       }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
   }
 
-
-
   async writeToComponentDir(bitDir: string, withBitJson: boolean, force?: boolean = true) {
     await mkdirp(bitDir);
     if (this.impl) await this.impl.write(bitDir, this.implFile, force);
@@ -600,10 +598,11 @@ export default class Component {
     });
   }
 
-  static calculateEntryData(distEntry: string):string {
-    const entryPath = path.join(process.cwd(), distEntry);
-    return fs.existsSync(entryPath) ? entryPath : process.cwd();
+  static calculateEntryData(distEntry: string, consumerPath: string): string {
+    const entryPath = path.join(consumerPath, distEntry);
+    return fs.existsSync(entryPath) ? entryPath : consumerPath;
   }
+
   static fromString(str: string): Component {
     const object = JSON.parse(str);
     return this.fromObject(object);
@@ -643,17 +642,17 @@ export default class Component {
       }
     }
 
-    const cwd = this.calculateEntryData(consumerBitJson.distEntry);
+    const entryDirectory = this.calculateEntryData(consumerBitJson.distEntry, consumerPath);
 
     const vinylFiles = Object.keys(files).map((file) => {
       const filePath = path.join(consumerPath, files[file]);
-      return SourceFile.load(filePath, consumerBitJson.distTarget, cwd);
+      return SourceFile.load(filePath, consumerBitJson.distTarget, entryDirectory, consumerPath);
     });
 
     // TODO: Decide about the model represntation
     componentMap.testsFiles.forEach((testFile) => {
       const filePath = path.join(consumerPath, testFile);
-      vinylFiles.push(SourceFile.load(filePath, consumerBitJson.distTarget, cwd, { isTest: true }));
+      vinylFiles.push(SourceFile.load(filePath, consumerBitJson.distTarget, entryDirectory, consumerPath, { isTest: true }));
     });
 
     return new Component({
