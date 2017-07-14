@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe('bit export command', function () {
+describe.skip('bit export command', function () {
   this.timeout(0);
   const helper = new Helper();
   const createComponent = (dir, name) => {

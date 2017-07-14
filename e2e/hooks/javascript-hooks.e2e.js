@@ -7,6 +7,7 @@ import Helper from '../e2e-helper';
 
 const helper = new Helper();
 const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";
+const fooES6Fixture = "import fs from 'fs'; module.exports = function foo() { return 'got foo'; };";
 const fooImplPath = path.join(helper.localScopePath, 'inline_components', 'global', 'foo', 'impl.js');
 
 function expectLinksInComponentLevel() {
@@ -52,8 +53,7 @@ describe('javascript-hooks', function () {
   describe('onCreate', () => {
     describe('without build', () => {
       before(() => {
-        helper.cleanEnv();
-        helper.runCmd('bit init');
+        helper.reInitLocalScope();
         createComponent('foo');
       });
       it('should create links in the component level', () => {
@@ -69,9 +69,7 @@ describe('javascript-hooks', function () {
     describe.skip('with build', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.runCmd('bit config set hub_domain hub-stg.bitsrc.io'); // todo: once the new babel compiler is on prod, remove this line
-        helper.runCmd('bit import bit.envs/compilers/babel --compiler');
-        const fooES6Fixture = "import fs from 'fs'; module.exports = function foo() { return 'got foo'; };";
+        helper.importCompiler();
         createComponent('foo', fooES6Fixture);
         helper.runCmd('bit build foo');
       });
@@ -90,8 +88,7 @@ describe('javascript-hooks', function () {
   describe('onCommit', () => {
     describe('without build', () => {
       before(() => {
-        helper.cleanEnv();
-        helper.runCmd('bit init');
+        helper.reInitLocalScope();
         createComponent('foo');
         helper.commitComponent('foo');
       });
@@ -108,12 +105,12 @@ describe('javascript-hooks', function () {
 
     describe.skip('with build', () => {
       before(() => {
-        helper.cleanEnv();
-        helper.runCmd('bit init');
-        helper.runCmd('bit import bit.envs/compilers/babel::5 --compiler');
-        helper.runCmd('bit create foo');
-        fs.writeFileSync(fooImplPath, fooComponentFixture);
-        helper.runCmd('bit commit foo commit-msg'); // does the build as well
+        helper.reInitLocalScope();
+        helper.importCompiler();
+        createComponent('foo', fooES6Fixture);
+        helper.commitComponent('foo'); // does the build as well
+        // todo: commit should run the build
+        helper.runCmd('bit build foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -130,12 +127,11 @@ describe('javascript-hooks', function () {
   describe('onExport', () => {
     describe('without build', () => {
       before(() => {
-        helper.cleanEnv();
-        helper.runCmd('bit init');
+        helper.reInitLocalScope();
         createComponent('foo');
         helper.commitComponent('foo');
-        helper.runCmd('bit init --bare', helper.remoteScopePath);
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
         helper.exportComponent('foo');
       });
       it('should create links in the component level', () => {
@@ -151,15 +147,15 @@ describe('javascript-hooks', function () {
 
     describe.skip('with build', () => {
       before(() => {
-        helper.cleanEnv();
-        helper.runCmd('bit init');
-        helper.runCmd('bit import bit.envs/compilers/babel::5 --compiler');
-        helper.runCmd('bit create foo');
-        fs.writeFileSync(fooImplPath, fooComponentFixture);
-        helper.runCmd('bit commit foo commit-msg'); // does the build as well
-        helper.runCmd('bit init --bare', helper.remoteScopePath);
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
+        helper.reInitLocalScope();
+        helper.importCompiler();
+        createComponent('foo', fooES6Fixture);
+        helper.commitComponent('foo'); // does the build as well
+        // todo: commit should run the build
+        helper.runCmd('bit build foo');
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+        helper.exportComponent('foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -176,17 +172,15 @@ describe('javascript-hooks', function () {
   describe('onImport', () => {
     describe('without build', () => {
       before(() => {
-        helper.cleanEnv();
-        helper.runCmd('bit init');
+        helper.reInitLocalScope();
         createComponent('foo');
         helper.commitComponent('foo');
-        helper.runCmd('bit init --bare', helper.remoteScopePath);
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
         helper.exportComponent('foo');
-        fs.emptyDirSync(helper.localScopePath); // a new local scope
-        helper.runCmd('bit init');
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.runCmd(`bit import @${helper.remoteScope}/global/foo`);
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('global/foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -201,19 +195,19 @@ describe('javascript-hooks', function () {
 
     describe.skip('with build', () => {
       before(() => {
-        helper.cleanEnv();
-        helper.runCmd('bit init');
-        helper.runCmd('bit import bit.envs/compilers/babel::5 --compiler');
-        helper.runCmd('bit create foo');
-        fs.writeFileSync(fooImplPath, fooComponentFixture);
-        helper.runCmd('bit commit foo commit-msg'); // does the build as well
-        helper.runCmd('bit init --bare', helper.remoteScopePath);
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
-        fs.emptyDirSync(helper.localScopePath); // a new local scope
-        helper.runCmd('bit init');
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.runCmd(`bit import @${helper.remoteScope}/global/foo`);
+        helper.reInitLocalScope();
+        helper.importCompiler();
+        createComponent('foo', fooES6Fixture);
+        helper.commitComponent('foo');
+        // todo: commit should run the build
+        helper.runCmd('bit build foo');
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+        helper.exportComponent('foo');
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('global/foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
