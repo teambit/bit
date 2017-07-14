@@ -341,7 +341,6 @@ export default class Component {
       origin,
       parent
     });
-    await bitMap.write();
     return this;
   }
 

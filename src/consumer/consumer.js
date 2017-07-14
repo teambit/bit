@@ -314,7 +314,7 @@ export default class Consumer {
   Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIds = [];
-    return Promise.all(componentDependencies.map((componentWithDeps) => {
+    const allComponentsP = componentDependencies.map((componentWithDeps) => {
       const bitPath = writeToPath || this.composeBitPath(componentWithDeps.component.id);
       const writeComponentP = componentWithDeps.component.write(bitPath, true, true, bitMap, COMPONENT_ORIGINS.IMPORTED);
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
@@ -327,8 +327,12 @@ export default class Consumer {
         const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
         return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id);
       });
+
       return Promise.all([writeComponentP, ...writeDependenciesP]);
-    }));
+    });
+    const allComponents = await Promise.all(allComponentsP);
+    await bitMap.write();
+    return allComponents;
   }
 
   async commit(id: string, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
