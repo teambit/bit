@@ -1,13 +1,15 @@
 {
   "name": "bit-javascript",
-  "version": "0.6.5-dev.2",
+  "version": "0.6.5-dev.3",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint src && flow check || true",
     "test": "jest",
     "test-watch": "jest --watch",
+    "clean": "rm -rf dist",
     "build": "babel src -d dist",
     "watch": "babel --watch src -d dist --source-maps",
+    "prepublishOnly": "npm run clean && npm run build",
     "build-debug": "babel src -d dist --source-maps"
   },
   "bin": {
