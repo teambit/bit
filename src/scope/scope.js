@@ -611,13 +611,13 @@ export default class Scope {
 
     return Promise.all(components)
       .then(componentObjects => remote.pushMany(componentObjects))
-        .then(componentObjects => Promise.all(componentIds.map(id => id))
+        .then(componentObjects => Promise.all(componentIds.map(id => this.clean(id)))
           .then(() => componentObjects.map(obj => this.importSrc(obj)))
           .then(() => {
-            return componentIds.map((id) => {
+            return Promise.all(componentIds.map((id) => {
               id.scope = remoteName;
               return this.get(id);
-            });
+            }));
           })
       );
   }
