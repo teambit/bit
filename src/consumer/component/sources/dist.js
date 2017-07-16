@@ -19,7 +19,7 @@ export default class Dist extends Vinyl {
   write(force?: boolean = true): Promise<string> {
     if (!force && fs.existsSync(this.distFilePath)) return Promise.resolve();
     const distP = new Promise((resolve, reject) =>
-      fs.outputFile(this.distFilePath, this.contents.toString(), (err) => {
+      fs.outputFile(this.distFilePath, this.contents, (err) => {
         if (err) return reject(err);
         return resolve(this.distFilePath);
       })
