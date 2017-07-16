@@ -351,13 +351,8 @@ export default class Consumer {
   async commitAll(ids: string[], message: string, force: ?bool, verbose: ?bool): Promise<Component> {
     const componentsList = new ComponentsList(this);
     let commitPendingComponents;
-    try{
-      commitPendingComponents = await componentsList.listCommitPendingComponents();
-    } catch (err){
-      console.log(err);
-      console.log(err.message);
-      throw err;
-    }
+    commitPendingComponents = await componentsList.listCommitPendingComponents();
+
     const componentsIds = commitPendingComponents.map(BitId.parse);
     if (R.isEmpty(componentsIds)) return;
 
@@ -365,13 +360,7 @@ export default class Consumer {
 
     // load components
     let components;
-    try{
-      components = await this.loadComponents(componentsIds);
-    } catch (err){
-      console.log(err);
-      console.log(err.message);
-      throw err;
-    }
+    components = await this.loadComponents(componentsIds);
 
     await this.scope
       .putMany({ consumerComponents: components, message, force, consumer: this, verbose });

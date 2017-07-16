@@ -14,10 +14,6 @@ export function commitAction({ id, message, force, verbose }:
 
 export async function commitAllAction({ message, force, verbose }:
 { message: string, force: ?bool, verbose?: bool }) {
-  try {
-    const consumer = await loadConsumer();
-    return consumer.commitAll(message, force, verbose);
-  } catch (err) {
-    return Promise.reject(err);
-  }
+  const consumer = await loadConsumer();
+  return consumer.commitAll(message, force, verbose);
 }
