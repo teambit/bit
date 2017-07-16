@@ -167,7 +167,7 @@ export default class Consumer {
       }
 
       const component = Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, id, this.getPath());
-      if (component.dependencies) return component; // if there is bit.json use if for dependencies.
+      if (component.dependencies && !R.isEmpty(component.dependencies)) return component; // if there is bit.json use if for dependencies.
       const mainFile = componentMap.files[componentMap.mainFile];
       // Check if we already calculate the dependency tree (because it is another component dependency)
       if (fullDependenciesTree.tree[id]) {
