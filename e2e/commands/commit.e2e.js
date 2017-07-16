@@ -56,6 +56,11 @@ describe('bit commit command', function () {
       });
 
       it('should create fork of the component', () => {
+        // Should change the original version origin to nested if it's required by another imported deps
+        // Should update all the deps in my own files to use the new version
+        // Should move the old version in the fs to be nested
+        // Should update the bit.map to point from the new version to the existing file
+        // Should bind from other deps to the new fs location
       });
     });
 
