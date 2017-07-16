@@ -34,7 +34,7 @@ export default async function exportAction(id?: string, remote: string, save: ?b
   // todo: improve performance. Load the remote only once, run the hook only once.
   // return Promise.all(ids.map(compId => exportComponent(consumer, compId)));
 
-  const componentsDependencies = await consumer.scope.exportAllAction(ids, remote);
+  const componentsDependencies = await consumer.scope.exportMany(ids, remote);
 
   const componentsP = componentsDependencies.map(async componentDependencies => {
     const component: ConsumerComponent = componentDependencies.component;
