@@ -595,6 +595,33 @@ export default class Scope {
     });
   }
 
+  async exportMany(ids: BitId[], remoteName: string) {
+    const remotes = await this.remotes();
+    const remote = await remotes.resolve(remoteName, this);
+
+    const componentIds = ids.map((id) => {
+      const componentId = BitId.parse(id);
+      componentId.scope = this.name;
+      return componentId;
+    });
+
+    const components = componentIds.map((id) => {
+      return this.sources.getObjects(id);
+    });
+
+    return Promise.all(components)
+      .then(componentObjects => remote.pushMany(componentObjects))
+        .then(componentObjects => Promise.all(componentIds.map(id => id))
+          .then(() => componentObjects.map(obj => this.importSrc(obj)))
+          .then(() => {
+            return componentIds.map((id) => {
+              id.scope = remoteName;
+              return this.get(id);
+            });
+          })
+      );
+  }
+
   async exportAllAction(bitIds: BitId[], remoteName: string) {
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
@@ -609,6 +636,7 @@ export default class Scope {
       bitId.scope = remoteName;
       return this.get(bitId);
     });
+
     return Promise.all(componentsP);
   }
 

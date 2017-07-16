@@ -33,6 +33,13 @@ export default class Fs {
     return this.getScope().export(componentObjects);
   }
 
+  pushMany(components: ComponentObjects[]): Promise<ComponentObjects[]> {
+    const scope = this.getScope();
+    return Promise.all(components.map((component) => {
+      return scope.export(component);
+    }));
+  }
+
   fetch(bitIds: BitIds): Promise<ComponentObjects[]> {
     return this.getScope().getObjects(bitIds)
       .then(bitsMatrix => flatten(bitsMatrix));
