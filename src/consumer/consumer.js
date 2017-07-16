@@ -204,6 +204,7 @@ export default class Consumer {
           dependencies.push(dependencyId);
         }
       });
+      // TODO: Merge all missing for all components (nested as well)
       if (!R.isEmpty(dependenciesMissingInMap)) throw new MissingDependencies([dependenciesMissingInMap]);
 
       // TODO: add the bit/ dependenices as well
