@@ -2,14 +2,13 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import Vinyl from 'vinyl';
-
-import Source from './source';
 import { DEFAULT_DIST_DIRNAME } from '../../../constants';
 
 const MAP_EXTENSION = '.map'; // TODO - move to constant !
 const DEFAULT_SOURCEMAP_VERSION = 3; // TODO - move to constant !
 
 export default class Dist extends Vinyl {
+  distFilePath:string;
   constructor(options) {
     super(options);
   }
@@ -20,7 +19,7 @@ export default class Dist extends Vinyl {
   write(force?: boolean = true): Promise<string> {
     if (!force && fs.existsSync(this.distFilePath)) return Promise.resolve();
     const distP = new Promise((resolve, reject) =>
-      fs.outputFile(this.distFilePath, this.buildSrcWithSourceMapAnnotation(this.basename), (err) => {
+      fs.outputFile(this.distFilePath, this.contents, (err) => {
         if (err) return reject(err);
         return resolve(this.distFilePath);
       })
@@ -46,11 +45,6 @@ export default class Dist extends Vinyl {
       sources: [path.join('..', fileName)],
       mappings: this.mappings
     });
-  }
-
-  buildSrcWithSourceMapAnnotation(fileName: string) {
-    return this.mappings ?
-    `${this.compiledContent.toString()}\n\n//# sourceMappingURL=${fileName}${MAP_EXTENSION}` : this.contents.toString();
   }
 
   toString() {
