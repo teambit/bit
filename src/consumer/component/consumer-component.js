@@ -215,6 +215,16 @@ export default class Component {
     }
   }
 
+  _dependenciesAsWritableObject() {
+    return R.mergeAll(Object.keys(this.dependencies)
+      .map(dependency => this.dependencies[dependency].id.toObject()));
+  }
+
+  static _dependenciesFromWritableObject(dependencies) {
+    return R.mergeAll(BitIds.fromObject(dependencies)
+      .map(dependency => ({ [dependency.toString()]: { id: dependency } })));
+  }
+
   writeBitJson(bitDir: string, force?:boolean = true): Promise<Component> {
     return new BitJson({
       version: this.version,
@@ -225,7 +235,7 @@ export default class Component {
       filesNames: this.filesNames,
       compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
-      dependencies: this.dependencies.toObject(),
+      dependencies: this._dependenciesAsWritableObject(),
       packageDependencies: this.packageDependencies
     }).write({ bitDir, override: force });
   }
@@ -542,7 +552,7 @@ export default class Component {
       filesNames: this.filesNames,
       compilerId: this.compilerId ? this.compilerId.toString() : null,
       testerId: this.testerId ? this.testerId.toString() : null,
-      dependencies: this.dependencies.toObject(),
+      dependencies: this._dependenciesAsWritableObject(),
       packageDependencies: this.packageDependencies,
       specs: this.specs ? this.specs.serialize() : null,
       impl: this.impl.serialize(),
@@ -581,7 +591,6 @@ export default class Component {
       specsResults,
       license
     } = object;
-
     return new Component({
       name,
       box,
@@ -593,7 +602,7 @@ export default class Component {
       filesNames,
       compilerId: compilerId ? BitId.parse(compilerId) : null,
       testerId: testerId ? BitId.parse(testerId) : null,
-      dependencies: BitIds.fromObject(dependencies),
+      dependencies: this._dependenciesFromWritableObject(dependencies),
       packageDependencies,
       impl: Impl.deserialize(impl),
       specs: specs ? Specs.deserialize(specs) : null,
@@ -620,7 +629,7 @@ export default class Component {
                             componentMap: ComponentMap,
                             id: BitId,
                             consumerPath: string): Component {
-    let dependencies;
+    let dependencies = {};
     let packageDependencies;
     let implFile;
     let specsFile;
@@ -633,8 +642,7 @@ export default class Component {
     if (bitDir) {
       bitJson = BitJson.loadSync(bitDir, consumerBitJson);
       if (bitJson) {
-        // Load the dependencies from bit.json
-        dependencies = BitIds.fromObject(bitJson.dependencies);
+        dependencies = this._dependenciesFromWritableObject(bitJson.dependencies);
         packageDependencies = bitJson.packageDependencies;
 
         // We only create those attribute in case of imported component because
@@ -656,7 +664,7 @@ export default class Component {
       return SourceFile.load(filePath, consumerBitJson.distTarget, entryDirectory, consumerPath);
     });
 
-    // TODO: Decide about the model represntation
+    // TODO: Decide about the model representation
     componentMap.testsFiles.forEach((testFile) => {
       const filePath = path.join(consumerPath, testFile);
       vinylFiles.push(SourceFile.load(filePath, consumerBitJson.distTarget, entryDirectory, consumerPath, { isTest: true }));

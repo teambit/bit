@@ -161,56 +161,57 @@ export default class Scope {
     consumer: Consumer,
     verbose: ?bool,
   }):
-  Promise<ComponentDependencies> { //TODO: Change the return type
+  Promise<ComponentDependencies> { // TODO: Change the return type
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
     const self = this;
-    let t = new Toposort();
-    let allDependencies = new Map();
+    const topSort = new Toposort();
+    const allDependencies = new Map();
     const consumerComponentsIdsMap = new Map();
 
-    // Concat and unique all the depedencies from all the components so we will not import
-    // the same dependecy more then once, it's mainly for performence purpose
+    // Concat and unique all the dependencies from all the components so we will not import
+    // the same dependency more then once, it's mainly for performance purpose
     consumerComponents.forEach((consumerComponent) => {
-      const componentIdString = consumerComponent.id.scope ? consumerComponent.id.toString() : BitId.parse(consumerComponent.id.changeScope(this.name).toString()).toString();
+      const componentIdString = consumerComponent.id.scope
+        ? consumerComponent.id.toString()
+        : BitId.parse(consumerComponent.id.changeScope(this.name).toString()).toString();
       // const componentIdString = consumerComponent.id.toString();
       // Store it in a map so we can take it easily from the sorted array which contain only the id
       consumerComponentsIdsMap.set(componentIdString, consumerComponent);
-      const dependenciesIdsStrings = consumerComponent.dependencies.map(dep => dep.toString());
-      t.add(componentIdString, dependenciesIdsStrings || []);
+      const dependenciesIdsStrings = Object.keys(consumerComponent.dependencies);
+      topSort.add(componentIdString, dependenciesIdsStrings || []);
     });
 
     // Sort the consumerComponents by the dependency order so we can commit those without the dependencies first
-    const soretedConsumerComponentsIds = t.sort().reverse();
+    const sortedConsumerComponentsIds = topSort.sort().reverse();
 
     const getFlattenForComponent = (consumerComponent, cache) => {
-      const flattenDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
-        const dependecyIdString = dependency.toString();
-        // Try to get the flatten dependecies from cache
-        let flattenDependencies = cache.get(dependecyIdString);
+      const flattenDependenciesP = Object.keys(consumerComponent.dependencies).map(async (dependency) => {
+        // Try to get the flatten dependencies from cache
+        let flattenDependencies = cache.get(dependency);
         if (flattenDependencies) return Promise.resolve(flattenDependencies);
 
-        // Calculate the flatten dependecies
-        const versionDependencies = await this.importDependencies([dependency]);
+        // Calculate the flatten dependencies
+        const versionDependencies = await this.importDependencies([consumerComponent.dependencies[dependency].id]);
         flattenDependencies = await flattenDependencyIds(versionDependencies, self.objects);
 
-        // Store the flatten dependecies in cache
-        cache.set(dependecyIdString, flattenDependencies);
+        // Store the flatten dependencies in cache
+        cache.set(dependency, flattenDependencies);
 
         return flattenDependencies;
       });
       return Promise.all(flattenDependenciesP);
-    }
+    };
 
-    const persistComponentsP = soretedConsumerComponentsIds.map((consumerComponentId) => async () => {
-      let consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
-      // This happens when i have a dependency which already commited
+    const persistComponentsP = sortedConsumerComponentsIds.map(consumerComponentId => async () => {
+      const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
+      // This happens when i have a dependency which already committed
       if (!consumerComponent) return Promise.resolve([]);
       consumerComponent.scope = self.name;
 
       return getFlattenForComponent(consumerComponent, allDependencies)
         .then((flattenDependencies) => {
           flattenDependencies = R.flatten(flattenDependencies);
-          const predicate = (id) => id.toString(); // TODO: should be moved to BitId class
+          const predicate = id => id.toString(); // TODO: should be moved to BitId class
           flattenDependencies = R.uniqBy(predicate)(flattenDependencies);
           return this.sources.addSource({source: consumerComponent,
                                   depIds: flattenDependencies,

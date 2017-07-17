@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
@@ -130,7 +131,7 @@ export default class Version extends BitObject {
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
       log: obj.log,
-      dependencies: this.dependencies.map(dep => dep.toString()),
+      dependencies: Object.keys(this.dependencies),
       packageDependencies: this.packageDependencies
     }, val => !!val));
   }
@@ -156,6 +157,11 @@ export default class Version extends BitObject {
   }
 
   toObject() {
+    const dependencies = {};
+    Object.keys(this.dependencies).forEach((dependency) => {
+      dependencies[dependency] = this.dependencies[dependency];
+      dependencies[dependency].id = dependencies[dependency].id.toString();
+    });
     return filterObject({
       impl: this.impl ? {
         file: this.impl.file.toString(),
@@ -193,7 +199,7 @@ export default class Version extends BitObject {
       ci: this.ci,
       specsResults: this.specsResults,
       docs: this.docs,
-      dependencies: this.dependencies.map(dep => dep.toString()),
+      dependencies,
       flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
       packageDependencies: this.packageDependencies
     }, val => !!val);
@@ -224,6 +230,17 @@ export default class Version extends BitObject {
       packageDependencies
     } = JSON.parse(contents);
 
+    const getDependencies = () => {
+      if (R.is(Array, dependencies)) { // backward compatibility
+        return R.mergeAll(dependencies.map(dependency => ({ [dependency]: { id: BitId.parse(dependency) } })));
+      }
+
+      return R.mergeAll(Object.keys(dependencies).map(dependency => ({ [dependency]: {
+        id: BitId.parse(dependencies[dependency].id),
+        relativePath: dependencies[dependency].relativePath
+      } })));
+    };
+
     return new Version({
       impl: impl ? {
         file: Ref.from(impl.file),
@@ -252,7 +269,7 @@ export default class Version extends BitObject {
       ci,
       specsResults,
       docs,
-      dependencies: BitIds.deserialize(dependencies),
+      dependencies: getDependencies(),
       flattenedDependencies: BitIds.deserialize(flattenedDependencies),
       packageDependencies,
     });

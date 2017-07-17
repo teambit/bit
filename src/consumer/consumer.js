@@ -155,7 +155,7 @@ export default class Consumer {
 
     const components = ids.map(async (id) => {
       let dependenciesTree = {};
-      const dependencies = [];
+      const dependencies = {};
 
       const componentMap = bitMap.getComponent(id.toString());
       let bitDir;
@@ -201,13 +201,13 @@ export default class Consumer {
           dependenciesPathIdMap.set(filePath, dependencyIdString);
           let dependencyId = BitId.parse(dependencyIdString);
           dependencyId = dependencyId.scope ? dependencyId : dependencyId.changeScope(this.scope.name);
-          dependencies.push(dependencyId);
+          dependencies[dependencyId] = { id: dependencyId, relativePath: filePath };
         }
       });
       // TODO: Merge all missing for all components (nested as well)
       if (!R.isEmpty(dependenciesMissingInMap)) throw new MissingDependencies([dependenciesMissingInMap]);
 
-      // TODO: add the bit/ dependenices as well
+      // TODO: add the bit/ dependencies as well
       component.dependencies = dependencies;
       component.packageDependencies = dependenciesTree.tree.packages || {};
       return component;
