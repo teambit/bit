@@ -3,8 +3,6 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import Vinyl from 'vinyl';
 import { DEFAULT_DIST_DIRNAME } from '../../../constants';
-
-const MAP_EXTENSION = '.map'; // TODO - move to constant !
 const DEFAULT_SOURCEMAP_VERSION = 3; // TODO - move to constant !
 
 export default class Dist extends Vinyl {

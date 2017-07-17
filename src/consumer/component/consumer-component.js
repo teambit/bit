@@ -265,7 +265,7 @@ export default class Component {
     }
 
     if (consumer) {
-      const componentRoot = path.join(consumer.getInlineBitsPath(), this.box, this.name);
+      const componentRoot = path.join(consumer.projectPath, this.box, this.name);
       return runBuild(componentRoot);
     }
 
@@ -399,7 +399,7 @@ export default class Component {
           });
           const specsResults = await Promise.all(specsResultsP);
           this.specsResults = specsResults.map(specRes => SpecsResults.createFromRaw(specRes));
-          if (rejectOnFailure && !this.specsResults.every((element) => (element.pass))) {
+          if (rejectOnFailure && !this.specsResults.every(element => (element.pass))) {
             return Promise.reject(new ComponentSpecsFailed());
           }
 
