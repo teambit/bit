@@ -102,7 +102,10 @@ export default class ComponentsList {
 
     const componentsIds = [...newComponents, ...modifiedComponents];
     // todo: improve performance. Get the already loaded components
-    const componentsP = componentsIds.map(id => this.consumer.loadComponent(id));
+    const componentsP = componentsIds.map(id => {
+      const bitId = BitId.parse(id);
+      return this.consumer.loadComponent(bitId);
+    });
     return Promise.all(componentsP);
   }
 

@@ -3,8 +3,6 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import Vinyl from 'vinyl';
 import { DEFAULT_DIST_DIRNAME } from '../../../constants';
-
-const MAP_EXTENSION = '.map'; // TODO - move to constant !
 const DEFAULT_SOURCEMAP_VERSION = 3; // TODO - move to constant !
 
 export default class Dist extends Vinyl {
@@ -17,26 +15,14 @@ export default class Dist extends Vinyl {
   }
 
   write(force?: boolean = true): Promise<string> {
-    if (!force && fs.existsSync(this.distFilePath)) return Promise.resolve();
-    const distP = new Promise((resolve, reject) =>
-      fs.outputFile(this.distFilePath, this.contents, (err) => {
+    const filePath = this.distFilePath;
+    return new Promise((resolve, reject) => {
+      if (!force && fs.existsSync(filePath)) return resolve();
+      return fs.outputFile(filePath, this.contents, (err, res) => {
         if (err) return reject(err);
-        return resolve(this.distFilePath);
-      })
-    );
-
-    const mappingsFilePath = this.distFilePath + MAP_EXTENSION;
-    const sourceMapP = new Promise((resolve, reject) => {
-      if (!this.mappings) return resolve();
-      return fs.outputFile(mappingsFilePath, this.buildSourceMap(this.basename), (err) => {
-        if (err) return reject(err);
-        return resolve(mappingsFilePath);
+        return resolve(filePath);
       });
     });
-
-    return Promise.all([distP, sourceMapP])
-    .then(() => this.distFilePath);
-    // TODO - refactor to use the source map as returned value
   }
 
   buildSourceMap(fileName: string) {
