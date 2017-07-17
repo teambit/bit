@@ -230,15 +230,14 @@ export default class Consumer {
     if (R.isNil(dependencies) || R.isEmpty(dependencies)) {
       if (!withEnvironments) {
         return Promise.reject(new NothingToImport());
-      } else if (R.isNil(this.testerId) || R.isNil(this.compilerId)) {
+      } else if (R.isNil(this.testerId) && R.isNil(this.compilerId)) {
         return Promise.reject(new NothingToImport());
       }
     }
-
     const componentDependenciesArr = await this.scope.getMany(dependencies, cache);
     await this.writeToComponentsDir(componentDependenciesArr);
     if (withEnvironments) {
-      const envComponents = this.scope.installEnvironment({
+      const envComponents = await this.scope.installEnvironment({
         ids: [this.testerId, this.compilerId],
         consumer: this,
         verbose
