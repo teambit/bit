@@ -6,7 +6,7 @@ import BitMap from '../../../consumer/bit-map';
 import ComponentsList from '../../../consumer/component/components-list';
 
 function writeDistFiles(consumer, component: Component): Promise<?Array<?string>> {
-  const saveDist = component.dist.map(distFile => distFile.write());
+  const saveDist = component.dists.map(distFile => distFile.write());
   return Promise.all(saveDist);
 }
 

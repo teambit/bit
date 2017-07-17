@@ -111,6 +111,7 @@ export default class SourceRepository {
       });
   }
 
+  // TODO: This should treat dist as an array
   updateDist({ source }: { source: ConsumerComponent }): Promise<any> {
     const objectRepo = this.objects();
 
@@ -138,10 +139,12 @@ export default class SourceRepository {
   : Promise<Object> {
     await consumerComponent.build({ scope: this.scope, consumer });
     const impl = consumerComponent.impl ? Source.from(bufferFrom(consumerComponent.impl.src)) : null;
-    const dist = consumerComponent.dist ? Source.from(bufferFrom(consumerComponent.dist.toString())): null;
+    const dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
+      return { name: dist.basename, relativePath: dist.relative, file: Source.from(dist.contents) };
+    }) : null;
     const specs = consumerComponent.specs ? Source.from(bufferFrom(consumerComponent.specs.src)): null;
     const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
-      return { name: file.basename, file: Source.from(file.contents) };
+      return { name: file.basename, relativePath: file.relative, file: Source.from(file.contents) };
     }) : null;
 
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
@@ -155,7 +158,7 @@ export default class SourceRepository {
       impl,
       specs,
       files,
-      dist,
+      dists,
       flattenedDeps: depIds,
       specsResults,
       message,
@@ -163,7 +166,7 @@ export default class SourceRepository {
       email,
     });
 
-    return { version, impl, specs, dist, files };
+    return { version, impl, specs, dists, files };
   }
 
   async addSource({ source, depIds, message, force, consumer, verbose }: {
@@ -178,7 +181,7 @@ export default class SourceRepository {
 
     // if a component exists in the model, add a new version. Otherwise, create a new component on them model
     const component = await this.findOrAddComponent(source);
-    const { version, impl, specs, dist, files } = await this
+    const { version, impl, specs, dists, files } = await this
       .consumerComponentToVersion({ consumerComponent: source, consumer, message, depIds, force, verbose });
     component.addVersion(version);
 
@@ -186,10 +189,10 @@ export default class SourceRepository {
       .add(version)
       .add(component)
       .add(impl)
-      .add(specs)
-      .add(dist);
+      .add(specs);
 
     if (files) files.forEach(file => objectRepo.add(file.file));
+    if (dists) dists.forEach(dist => objectRepo.add(dist.file));
 
     return component;
   }

@@ -49,6 +49,6 @@ export default class SourceFile extends Vinyl {
   }
 
   static deserialize(src): SourceFile {
-    return new SourceFile(src);
+    return new SourceFile({contents: src});
   }
 }

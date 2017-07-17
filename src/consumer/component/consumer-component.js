@@ -50,7 +50,7 @@ export type ComponentProps = {
   specs?: ?Specs|string,
   files?: ?SourceFile[]|[],
   docs?: ?Doclet[],
-  dist?: Dist,
+  dists?: ?Dist[],
   specDist?: Dist,
   specsResults?: ?SpecsResults,
   license?: ?License,
@@ -76,11 +76,13 @@ export default class Component {
   testerId: ?BitId;
   dependencies: BitIds;
   packageDependencies: Object;
+  /** @deprecated **/
   _impl: ?Impl|string;
+  /** @deprecated **/
   _specs: ?Specs|string;
   _docs: ?Doclet[];
   _files: ?SourceFile[]|[];
-  dist: ?Dist[];
+  dists: ?Dist[];
   specDist: ?Dist;
   specsResults: ?SpecsResults[];
   license: ?License;
@@ -176,7 +178,7 @@ export default class Component {
                 specs,
                 files,
                 docs,
-                dist,
+                dists,
                 specsResults,
                 license,
                 log,
@@ -199,7 +201,7 @@ export default class Component {
     this._impl = impl;
     this._files = files;
     this._docs = docs;
-    this.dist = dist;
+    this.dists = dists;
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
@@ -286,7 +288,7 @@ export default class Component {
     if (this.impl) await this.impl.write(bitDir, this.implFile, force);
     if (this.specs) await this.specs.write(bitDir, this.specsFile, force);
     if (this.files) await this.files.forEach(file => file.write(bitDir, force));
-    if (this.dist) await this.dist.write(bitDir, this.distImplFileName, force);
+    if (this.dists) await this.dists.forEach(dist => dist.write(bitDir, force));
     if (this.specsFile && this.specDist) await this.specDist.write(bitDir, this.distSpecFileName, force);
     if (withBitJson) await this.writeBitJson(bitDir, force);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
@@ -418,13 +420,13 @@ export default class Component {
 
       if (!isolated && consumer) {
         await this.build({ scope, environment, verbose, consumer });
-        const saveImplDist = this.dist ?
-          this.dist.map(file => file.write()) : Promise.resolve();
+        const saveImplDist = this.dists ?
+          this.dists.map(dist => dist.write()) : Promise.resolve();
 
         await Promise.all(saveImplDist);
 
-        const testDist = this.dist.filter(file => file.isTest);
-        return run(this.mainFileName, testDist);
+        const testDists = this.dists.filter(dist => dist.isTest);
+        return run(this.mainFileName, testDists);
       }
 
       const isolatedEnvironment = new IsolatedEnvironment(scope);
@@ -458,7 +460,7 @@ export default class Component {
     }
   }
 
-  build({ scope, environment, save, consumer, verbose }:
+  async build({ scope, environment, save, consumer, verbose }:
           { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, verbose?: bool }):
   Promise<string> { // @TODO - write SourceMap Type
     return new Promise((resolve, reject) => {
@@ -511,7 +513,7 @@ export default class Component {
             });
 
             const entryDirectory = Component.calculateEntryData(consumer.bitJson.distEntry, consumer.getPath());
-            this.dist = buildedFiles.map((file) => {
+            this.dists = buildedFiles.map((file) => {
               file.cwd = entryDirectory;
               file.distFilePath = path.join(consumer.getPath(), consumer.bitJson.distTarget, file.relative);
               return new Dist(file);
@@ -519,10 +521,10 @@ export default class Component {
 
             if (save) {
               return scope.sources.updateDist({ source: this })
-                .then(() => resolve(this.dist));
+                .then(() => resolve(this.dists));
             }
 
-            return resolve(this.dist);
+            return resolve(this.dists);
           });
         }).catch(reject);
     });
@@ -546,7 +548,7 @@ export default class Component {
       impl: this.impl.serialize(),
       files: this.files ? this.files.serialize() : null,
       docs: this.docs,
-      dist: this.dist ? this.dist.serialize() : null,
+      dists: this.dists ? this.dists.serialize() : null,
       specsResults: this.specsResults ? this.specsResults.serialize() : null,
       license: this.license ? this.license.serialize() : null,
       log: this.log
@@ -574,7 +576,7 @@ export default class Component {
       impl,
       specs,
       docs,
-      dist,
+      dists,
       files,
       specsResults,
       license
@@ -597,7 +599,7 @@ export default class Component {
       specs: specs ? Specs.deserialize(specs) : null,
       files: files ? SourceFile.deserialize(files) : null,
       docs,
-      dist: dist ? Dist.deserialize(dist) : null,
+      dists: dists ? Dist.deserialize(dists) : null,
       specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null,
       license: license ? License.deserialize(license) : null
     });
