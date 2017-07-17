@@ -505,11 +505,17 @@ export default class Component {
 
           return buildFilesP.then((buildedFiles) => {
             buildedFiles.forEach((file) => {
-              if (file && (!file.compiledContent || !isString(file.compiledContent.toString()))) {
+              if (file && (!file.contents || !isString(file.contents.toString()))) {
                 throw new Error('builder interface has to return object with a code attribute that contains string');
               }
             });
-            this.dist = buildedFiles.map(file => new Dist(file));
+
+            const entryDirectory = Component.calculateEntryData(consumer.bitJson.distEntry, consumer.getPath());
+            this.dist = buildedFiles.map((file) => {
+              file.cwd = entryDirectory;
+              file.distFilePath = path.join(consumer.getPath(), consumer.bitJson.distTarget, file.relative);
+              return new Dist(file);
+            });
 
             if (save) {
               return scope.sources.updateDist({ source: this })
