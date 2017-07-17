@@ -3,8 +3,6 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import Vinyl from 'vinyl';
 import { DEFAULT_DIST_DIRNAME } from '../../../constants';
-
-const MAP_EXTENSION = '.map'; // TODO - move to constant !
 const DEFAULT_SOURCEMAP_VERSION = 3; // TODO - move to constant !
 
 export default class Dist extends Vinyl {
@@ -25,16 +23,7 @@ export default class Dist extends Vinyl {
       })
     );
 
-    const mappingsFilePath = this.distFilePath + MAP_EXTENSION;
-    const sourceMapP = new Promise((resolve, reject) => {
-      if (!this.mappings) return resolve();
-      return fs.outputFile(mappingsFilePath, this.buildSourceMap(this.basename), (err) => {
-        if (err) return reject(err);
-        return resolve(mappingsFilePath);
-      });
-    });
-
-    return Promise.all([distP, sourceMapP])
+    return Promise.all([distP])
     .then(() => this.distFilePath);
     // TODO - refactor to use the source map as returned value
   }
