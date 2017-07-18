@@ -17,9 +17,9 @@ export default async function create(
   ): Promise<Component> {
   const consumer = await loadConsumer();
   const id = BitId.parse(idRaw);
-  const bitPath = consumer.composeBitPath(id);
+  const bitPath = consumer.composeRelativeBitPath(id);
   const defaultImpl = consumer.bitJson.getImplBasename();
-  const files = { [defaultImpl]: path.join(bitPath, defaultImpl) };
+  const files = { [defaultImpl]: defaultImpl };
   const component = Component.create({
     name: id.name,
     box: id.box,

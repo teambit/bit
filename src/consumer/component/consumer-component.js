@@ -342,7 +342,7 @@ export default class Component {
 
     const filesToAdd = {};
     this.files.forEach((file) => {
-      filesToAdd[file.basename] = path.join(bitDir, file.basename);
+      filesToAdd[file.basename] = path.join(bitDir, file.path);
     });
     bitMap.addComponent({
       componentId: this.id,
