@@ -1,5 +1,6 @@
 /** @flow */
 import R, { equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
+import path from 'path';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
 import { VersionNotFound } from '../exceptions';
@@ -157,15 +158,28 @@ export default class Component extends BitObject {
             .then((content) => {
               return {
                 name: file.name,
+                relativePath: file.relativePath,
+                dir: path.dirname(file.relativePath),
                 content
               };
             })
           )) : null;
-          const distP = version.dist ? version.dist.file.load(repository) : null;
+          const distsP = version.dists ? 
+          Promise.all(version.dists.map(dist =>
+            dist.file.load(repository)
+            .then((content) => {
+              return {
+                name: dist.name,
+                relativePath: dist.relativePath,
+                dir: path.dirname(dist.relativePath),
+                content
+              };
+            })
+          )) : null;
           const scopeMetaP = ScopeMeta.fromScopeName(scopeName).load(repository);
           const log = version.log || null;
-          return Promise.all([implP, specsP, filesP, distP, scopeMetaP])
-          .then(([impl, specs, files, dist, scopeMeta]) => {
+          return Promise.all([implP, specsP, filesP, distsP, scopeMetaP])
+          .then(([impl, specs, files, dists, scopeMeta]) => {
             return new ConsumerComponent({
               name: this.name,
               box: this.box,
@@ -183,9 +197,9 @@ export default class Component extends BitObject {
               packageDependencies: version.packageDependencies,
               impl: impl ? new Impl(impl.toString()) : null,
               specs: specs ? new Specs(specs.toString()) : null,
-              files: files ? files.map(file => new SourceFile({ path: file.name, contents: file.content.contents })) : null,
+              files: files ? files.map(file => new SourceFile({ base: file.dir, path: file.relativePath, contents: file.content.contents })) : null,
+              dists: dists ? dists.map(dist => new Dist({ base: dist.dir, path: dist.relativePath, contents: dist.content.contents })) : null,
               docs: version.docs,
-              dist: dist ? Dist.fromString(dist.toString()) : null,
               license: scopeMeta ? License.deserialize(scopeMeta.license) : null,
               specsResults:
                 version.specsResults ? SpecsResults.deserialize(version.specsResults) : null,

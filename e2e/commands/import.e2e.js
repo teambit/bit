@@ -14,6 +14,7 @@ describe('bit import', function () {
     helper.addRemoteScope();
 
     // Create remote scope with all needed components
+
     // export a new simple component
     helper.runCmd('bit create simple');
     helper.commitComponent('simple');
@@ -26,6 +27,13 @@ describe('bit import', function () {
     helper.addBitJsonDependencies(bitJsonPath, { [`@${helper.remoteScope}/global/simple`]: '1' }, { 'lodash.get': '4.4.2' });
     helper.commitComponent('with-deps');
     helper.exportComponent('with-deps');
+
+    helper.createComponent('src', 'imprel.js');
+    helper.createComponent('src', 'imprel.spec.js');
+    helper.createFile('src/utils', 'myUtil.js');
+    helper.runCmd(`bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/imprel`);
+    helper.commitComponent('imprel/imprel');
+    helper.exportComponent('imprel/imprel');
 
     // export another component with dependencies
     helper.runCmd('bit create with-deps2 -j');
@@ -64,6 +72,17 @@ describe('bit import', function () {
       const expectedLocation = path.join(helper.localScopePath, 'components', 'global', 'simple', 'impl.js');
       expect(fs.existsSync(expectedLocation)).to.be.true;
     });
+    it('should write the internal files according to their relative paths', () => {
+      const output = helper.importComponent('imprel/imprel');
+      expect(output.includes('successfully imported the following Bit components')).to.be.true;
+      expect(output.includes('imprel/imprel')).to.be.true;
+      const expectedLocationImprel = path.join(helper.localScopePath, 'components', 'imprel', 'imprel', 'imprel.js');
+      const expectedLocationImprelSpec = path.join(helper.localScopePath, 'components', 'imprel', 'imprel', 'imprel.spec.js');
+      const expectedLocationMyUtil = path.join(helper.localScopePath, 'components', 'imprel', 'imprel', 'utils', 'myUtil.js');
+      expect(fs.existsSync(expectedLocationImprel)).to.be.true;
+      expect(fs.existsSync(expectedLocationImprelSpec)).to.be.true;
+      expect(fs.existsSync(expectedLocationMyUtil)).to.be.true;
+    });
 
     describe('with an existing component in bit.map', () => {
       before(() => {
@@ -98,6 +117,10 @@ describe('bit import', function () {
       it('should write the component to the specified path', () => {
         const expectedLocation = path.join(helper.localScopePath, 'my-custom-location', 'impl.js');
         expect(fs.existsSync(expectedLocation)).to.be.true;
+      });
+
+      it('should write the internal files according to their relative paths', () => {
+
       });
     });
 
@@ -142,6 +165,10 @@ describe('bit import', function () {
         'dependencies', 'global', 'simple', helper.remoteScope, '1', 'impl.js');
       expect(fs.existsSync(depDir)).to.be.true;
     });
+
+    it('should write the dependencies according to their relative paths', () => {
+
+      });
   });
 
   describe('multiple components with the same dependency', () => {

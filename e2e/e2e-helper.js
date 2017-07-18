@@ -103,9 +103,16 @@ export default class Helper {
     return this.commitComponent();
   }
 
+  // TODO: delete and use create file below? it's not a comonent unless we add it only a file
   createComponent(namespace: string = 'bar', name: string = 'foo.js' , impl?: string) {
     const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
     const filePath = path.join(this.localScopePath, namespace, name);
+    fs.outputFileSync(filePath, fixture);
+  }
+
+  createFile(folder: string = 'bar', name: string = 'foo.js' , impl?: string) {
+    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
+    const filePath = path.join(this.localScopePath, folder, name);
     fs.outputFileSync(filePath, fixture);
   }
 

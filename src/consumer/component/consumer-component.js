@@ -297,8 +297,8 @@ export default class Component {
     await mkdirp(bitDir);
     if (this.impl) await this.impl.write(bitDir, this.implFile, force);
     if (this.specs) await this.specs.write(bitDir, this.specsFile, force);
-    if (this.files) await this.files.forEach(file => file.write(bitDir, force));
-    if (this.dists) await this.dists.forEach(dist => dist.write(bitDir, force));
+    if (this.files) await this.files.forEach(file => file.write(path.join(bitDir, file.base), force));
+    if (this.dists) await this.dists.forEach(dist => dist.write(path.join(bitDir, dist.base), force));
     if (this.specsFile && this.specDist) await this.specDist.write(bitDir, this.distSpecFileName, force);
     if (withBitJson) await this.writeBitJson(bitDir, force);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
@@ -639,6 +639,9 @@ export default class Component {
     if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInPath(bitDir));
     if (!bitDir && componentMap && componentMap.rootDir) bitDir = componentMap.rootDir;
     const files = componentMap.files;
+    // Load the base entry from the root dir in map file in case it was imported using -path
+    // Or created using bit create so we don't want all the path but only the relative one
+    let entryDirectory = componentMap.rootDir;
     if (bitDir) {
       bitJson = BitJson.loadSync(bitDir, consumerBitJson);
       if (bitJson) {
@@ -657,7 +660,7 @@ export default class Component {
       }
     }
 
-    const entryDirectory = this.calculateEntryData(consumerBitJson.distEntry, consumerPath);
+    entryDirectory = entryDirectory || this.calculateEntryData(consumerBitJson.distEntry, consumerPath);
 
     const vinylFiles = Object.keys(files).map((file) => {
       const filePath = path.join(consumerPath, files[file]);
