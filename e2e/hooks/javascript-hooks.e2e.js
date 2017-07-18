@@ -66,7 +66,7 @@ describe('javascript-hooks', function () {
         expectLinksInRootLevel();
       });
     });
-    describe.skip('with build', () => {
+    describe('with build', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.importCompiler();
@@ -102,8 +102,7 @@ describe('javascript-hooks', function () {
         expectLinksInRootLevel();
       });
     });
-
-    describe.skip('with build', () => {
+    describe('with build', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.importCompiler();
@@ -145,7 +144,7 @@ describe('javascript-hooks', function () {
       });
     });
 
-    describe.skip('with build', () => {
+    describe('with build', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.importCompiler();
@@ -192,7 +191,6 @@ describe('javascript-hooks', function () {
         expectLinksInRootLevel();
       });
     });
-
     describe.skip('with build', () => {
       before(() => {
         helper.reInitLocalScope();
@@ -219,7 +217,6 @@ describe('javascript-hooks', function () {
         expectLinksInRootLevel();
       });
     });
-
     describe.skip('with test', () => {
       before(() => {
         helper.cleanEnv();
@@ -246,7 +243,6 @@ describe('javascript-hooks', function () {
         expectLinksInRootLevel();
       });
     });
-
     describe('with dependencies', () => {
       before(() => {
         helper.cleanEnv();
