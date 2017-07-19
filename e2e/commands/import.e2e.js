@@ -206,39 +206,84 @@ describe('bit import', function () {
     });
   });
 
-  describe.skip('components with auto-resolve dependencies', () => {
+  describe('components with auto-resolve dependencies', () => {
     /**
-     * Directory structure
-     * ├── bar
-     * │   └── foo.js
-     * └── utils
-     *     └── is-string.js
+     * Directory structure of the author
+     * bar/foo.js
+     * utils/is-string.js
+     * utils/is-type.js
      *
-     * bar/foo depends on utils/is-string
+     * bar/foo depends on utils/is-string.
+     * utils/is-string depends on utils/is-type
+     *
+     * Expected structure after importing bar/foo in another project
+     * components/bar/foo/bar/foo.js
+     * components/bar/foo/utils/is-string.js (generated link file)
+     * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/utils/is-string.js
+     * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/utils/is-type.js (generated link file)
+     * components/bar/foo/bar/dependencies/utils/is-type/scope-name/version-number/utils/is-type.js
      */
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
       helper.addRemoteScope();
 
-      helper.createComponent('utils', 'is-string.js');
+      helper.createComponent('utils', 'is-type.js');
+      helper.addComponent('utils/is-type.js');
+      helper.commitComponent('utils/is-type');
+      helper.exportComponent('utils/is-type');
+
+      /** HACK (until the export is fixed) **/
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-type -p ./');
+      /** END HACK **/
+
+      const isStringFixture = "import isType from './is-type.js'; module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitComponent('utils/is-string');
-      const fixture = "import isString from '../utils/is-string.js'; module.exports = function foo() { return 'got foo'; };";
+      helper.exportComponent('utils/is-string');
+
+      /** HACK (until the export is fixed) **/
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-string -p ./');
+      /** END HACK **/
+
+      const fixture = "import isString from '../utils/is-string.js'; module.exports = function isString() { return 'got is-string'; };";
       helper.createComponentBarFoo(fixture);
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.exportComponent('utils/is-string');
-      // todo: the following export is not working currently. It doesn't find the utils/is-string in the remote scope
-      helper.exportComponent('foo/bar');
+      helper.exportComponent('bar/foo');
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
     });
 
-    it('should link utils/is-string to bar/foo', () => {
-
+    it('should keep the original directory structure of the main component', () => {
+      const expectedLocation = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'bar', 'foo.js');
+      expect(fs.existsSync(expectedLocation)).to.be.true;
+    });
+    it('should save the direct dependency nested to the main component', () => {
+      const expectedLocation = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'dependencies', 'utils',
+        'is-string', helper.remoteScope, '1', 'utils', 'is-string.js');
+      expect(fs.existsSync(expectedLocation)).to.be.true;
+    });
+    it('should save the indirect dependency nested to the main component (as opposed to nested of nested)', () => {
+      const expectedLocation = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'dependencies', 'utils',
+        'is-type', helper.remoteScope, '1', 'utils', 'is-type.js');
+      expect(fs.existsSync(expectedLocation)).to.be.true;
+    });
+    it('should link the direct dependency to its original location', () => {
+      const expectedLocation = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'utils', 'is-string.js');
+      expect(fs.existsSync(expectedLocation)).to.be.true;
+    });
+    it('should link the indirect dependency to its original location in the dependency directory', () => {
+      const expectedLocation = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'dependencies', 'utils',
+        'is-string', helper.remoteScope, '1', 'utils', 'is-type.js');
+      expect(fs.existsSync(expectedLocation)).to.be.true;
     });
   });
 

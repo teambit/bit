@@ -36,6 +36,7 @@ import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
+import { outputFile } from '../utils';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -301,11 +302,47 @@ export default class Consumer {
   }
 
   /**
+   * The following scenario will help understanding why links are needed.
+   * Component A has a dependency B. (for instance, in a.js there is a require statement to 'b.js').
+   * While importing component A, it knows about the B dependency and it saves it under 'dependencies' directory of A.
+   * The problem is that the above require is broken, because 'b.js' is not in the same place where it was originally.
+   * This function solves this issue by creating the 'b.js' file in the original location and points to the new location
+   * under 'dependencies' of A.
+   */
+  async _writeDependencyLinks(componentDependencies: ComponentDependencies[], bitMap: BitMap): Promise<any> {
+    const componentLinks = (directDependencies, parentDir) => {
+      if (!directDependencies || !Object.keys(directDependencies).length) return Promise.resolve();
+      const links = Object.keys(directDependencies).map((dep) => {
+        if (!directDependencies[dep].relativePath) return Promise.resolve();
+        const linkPath = path.join(parentDir, directDependencies[dep].relativePath);
+        const depComponentMap = bitMap.getComponent(dep);
+        const depMainFile = depComponentMap.files[depComponentMap.mainFile];
+        // todo: move to bit-javascript
+        const linkContent = `module.exports = ${depMainFile}`;
+        return outputFile(linkPath, linkContent);
+      });
+      return Promise.all(links);
+    };
+
+    const allLinksP = componentDependencies.map((componentWithDeps) => {
+      const directDeps = componentWithDeps.component.dependencies;
+      const directLinksP = componentLinks(directDeps, componentWithDeps.component.writtenPath);
+
+      const indirectLinksP = componentWithDeps.dependencies.map((dep: Component) => {
+        return componentLinks(dep.dependencies, dep.writtenPath);
+      });
+
+      return Promise.all([directLinksP, ...indirectLinksP]);
+    });
+    return Promise.all(allLinksP);
+  }
+
+  /**
    * write the component into '/component' dir (or according to the bit.map) and its
    * dependencies nested inside the component directory and under 'dependencies' dir.
    * For example: global/a has a dependency my-scope/global/b::1. The directories will be:
-   * project/root/component/global/a
-   * project/root/component/global/a/dependency/global/b/my-scope/version-num/1
+   * project/root/component/global/a/impl.js
+   * project/root/component/global/a/dependency/global/b/my-scope/1/impl.js
    *
    * In case there are some same dependencies shared between the components, it makes sure to
    * write them only once.
@@ -316,7 +353,9 @@ export default class Consumer {
     const dependenciesIds = [];
     const allComponentsP = componentDependencies.map((componentWithDeps) => {
       const bitPath = writeToPath || this.composeBitPath(componentWithDeps.component.id);
-      const writeComponentP = componentWithDeps.component.write(bitPath, true, true, bitMap, COMPONENT_ORIGINS.IMPORTED);
+      componentWithDeps.component.writtenPath = bitPath;
+      const writeComponentP = componentWithDeps.component
+        .write(bitPath, true, true, bitMap, COMPONENT_ORIGINS.IMPORTED);
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         if (bitMap.isComponentExist(dependencyId) || dependenciesIds.includes(dependencyId)) {
@@ -325,12 +364,14 @@ export default class Consumer {
         }
         dependenciesIds.push(dependencyId);
         const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
+        dep.writtenPath = depBitPath;
         return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id);
       });
 
       return Promise.all([writeComponentP, ...writeDependenciesP]);
     });
     const allComponents = await Promise.all(allComponentsP);
+    await this._writeDependencyLinks(componentDependencies, bitMap);
     await bitMap.write();
     return allComponents;
   }

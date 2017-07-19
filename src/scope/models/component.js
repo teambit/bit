@@ -164,7 +164,7 @@ export default class Component extends BitObject {
               };
             })
           )) : null;
-          const distsP = version.dists ? 
+          const distsP = version.dists ?
           Promise.all(version.dists.map(dist =>
             dist.file.load(repository)
             .then((content) => {
@@ -193,7 +193,11 @@ export default class Component extends BitObject {
               filesNames: version.files ? version.files.map(file => file.name) : null,
               compilerId: version.compiler,
               testerId: version.tester,
-              dependencies: R.mergeAll(Object.keys(version.dependencies).map(dependency => ({ [dependency]: { id: BitId.parse(dependency) } }))),
+              dependencies: R.mergeAll(Object.keys(version.dependencies)
+                .map(dependency => ({ [dependency]: {
+                  id: BitId.parse(dependency),
+                  relativePath: version.dependencies[dependency].relativePath }
+                }))),
               packageDependencies: version.packageDependencies,
               impl: impl ? new Impl(impl.toString()) : null,
               specs: specs ? new Specs(specs.toString()) : null,

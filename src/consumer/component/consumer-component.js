@@ -87,6 +87,7 @@ export default class Component {
   specsResults: ?SpecsResults[];
   license: ?License;
   log: ?Log;
+  writtenPath: ?string; // needed for generate links
 
   set impl(val: Impl) { this._impl = val; }
 
