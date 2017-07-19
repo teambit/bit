@@ -253,7 +253,9 @@ export default class Scope {
     const { component } = objects;
     await this.sources.merge(objects, true);
     const compVersion = await component.toComponentVersion(LATEST, this.name);
+    logger.debug('export on bare-scope: will try to importMany in case there are missing dependencies');
     const versions = await this.importMany([compVersion.id], true); // resolve dependencies
+    logger.debug('export on bare-scope: successfully ran importMany');
     await this.objects.persist();
     const objs = await Promise.all(versions.map(version => version.toObjects(this.objects)));
     const consumerComponent = await compVersion.toConsumer(this.objects);
@@ -264,6 +266,7 @@ export default class Scope {
   }
 
   getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: bool = false) {
+    logger.debug(`getExternalOnes, ids: ${ids.join(', ')}`);
     return this.sources.getMany(ids)
       .then((defs) => {
         const left = defs.filter((def) => {
@@ -273,6 +276,7 @@ export default class Scope {
         });
 
         if (left.length === 0) {
+          logger.debug('getExternalOnes: no more ids left, all found locally, existing the method');
           return Promise.all(defs.map((def) => {
             return def.component.toComponentVersion(
               def.id.version,
@@ -281,6 +285,7 @@ export default class Scope {
           }));
         }
 
+        logger.debug(`getExternalOnes: ${left.length} left. Fetching them from a remote`);
         return remotes
           .fetch(left.map(def => def.id), this, true)
           .then((componentObjects) => {
@@ -402,6 +407,7 @@ export default class Scope {
   }
 
   importManyOnes(ids: BitId[], cache: boolean): Promise<ComponentVersion[]> {
+    logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
@@ -579,21 +585,18 @@ export default class Scope {
       });
   }
 
-  exportAction(bitId: BitId, remoteName: string) {
+  async exportAction(bitId: BitId, remoteName: string) {
     bitId.scope = this.name;
-    return this.remotes().then((remotes) => {
-      return remotes.resolve(remoteName, this)
-        .then((remote) => {
-          return this.sources.getObjects(bitId)
-            .then(component => remote.push(component)
-              .then(objects => this.clean(bitId).then(() => objects))
-              .then(objects => this.importSrc(objects))
-              .then(() => {
-                bitId.scope = remoteName;
-                return this.get(bitId);
-              }));
-        });
-    });
+    const remotes = await this.remotes();
+    const remote = await remotes.resolve(remoteName, this);
+    const component = await this.sources.getObjects(bitId);
+    logger.debug('exportAction: successfully fetched the objects, will try to push them into the remote');
+    const objects = await remote.push(component);
+    logger.debug('exportAction: successfully pushed the objects into the remote');
+    await this.clean(bitId);
+    await this.importSrc(objects);
+    bitId.scope = remoteName;
+    return this.get(bitId);
   }
 
   async exportMany(ids: BitId[], remoteName: string) {
@@ -649,7 +652,7 @@ export default class Scope {
       .then(() => this);
   }
 
-  clean(bitId: BitId) {
+  clean(bitId: BitId): Promise<void> {
     return this.sources.clean(bitId);
   }
 

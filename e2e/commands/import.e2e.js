@@ -121,7 +121,7 @@ describe('bit import', function () {
     });
   });
 
-  describe('component with dependencies', () => {
+  describe('component/s with bit.json dependencies', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
@@ -203,6 +203,42 @@ describe('bit import', function () {
           'dependencies', 'global', 'simple', helper.remoteScope, '1', 'impl.js');
         expect(fs.existsSync(dep2Dir)).to.be.false;
       });
+    });
+  });
+
+  describe.skip('components with auto-resolve dependencies', () => {
+    /**
+     * Directory structure
+     * ├── bar
+     * │   └── foo.js
+     * └── utils
+     *     └── is-string.js
+     *
+     * bar/foo depends on utils/is-string
+     */
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+
+      helper.createComponent('utils', 'is-string.js');
+      helper.addComponent('utils/is-string.js');
+      helper.commitComponent('utils/is-string');
+      const fixture = "import isString from '../utils/is-string.js'; module.exports = function foo() { return 'got foo'; };";
+      helper.createComponentBarFoo(fixture);
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportComponent('utils/is-string');
+      // todo: the following export is not working currently. It doesn't find the utils/is-string in the remote scope
+      helper.exportComponent('foo/bar');
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+
+    it('should link utils/is-string to bar/foo', () => {
+
     });
   });
 

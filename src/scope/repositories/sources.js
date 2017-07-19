@@ -205,7 +205,7 @@ export default class SourceRepository {
     return component;
   }
 
-  clean(bitId: BitId) {
+  clean(bitId: BitId): Promise<void> {
     return this.get(bitId)
       .then((component) => {
         if (!component) return;
