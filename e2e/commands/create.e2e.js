@@ -10,7 +10,7 @@ describe('bit create', function () {
     helper.destroyEnv();
   });
 
-  describe('create simple component', () => {
+  describe.skip('create simple component', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
