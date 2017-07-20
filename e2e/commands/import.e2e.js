@@ -128,12 +128,12 @@ describe('bit import', function () {
           expect(output.includes('imprel/imprel')).to.be.true;
         });
         it('should write the internal files according to their relative paths', () => {
-          const expectedLocationImprel = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'imprel.js');
-          const expectedLocationImprelSpec = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'imprel.spec.js');
-          const expectedLocationMyUtil = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'utils', 'myUtil.js');
-          const expectedLocationImprelDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'imprel.js');
-          const expectedLocationImprelSpecDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'imprel.spec.js');
-          const expectedLocationMyUtilDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'utils', 'myUtil.js');
+          const expectedLocationImprel = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'imprel.js');
+          const expectedLocationImprelSpec = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'imprel.spec.js');
+          const expectedLocationMyUtil = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'utils', 'myUtil.js');
+          const expectedLocationImprelDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'src', 'imprel.js');
+          const expectedLocationImprelSpecDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'src', 'imprel.spec.js');
+          const expectedLocationMyUtilDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'src', 'utils', 'myUtil.js');
           expect(fs.existsSync(expectedLocationImprel)).to.be.true;
           expect(fs.existsSync(expectedLocationImprelSpec)).to.be.true;
           expect(fs.existsSync(expectedLocationMyUtil)).to.be.true;
