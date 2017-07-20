@@ -3,6 +3,7 @@
 import { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
+import glob from 'glob';
 import Helper from '../e2e-helper';
 
 describe('bit import', function () {
@@ -253,6 +254,7 @@ describe('bit import', function () {
      * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/utils/is-type.js (generated link file)
      * components/bar/foo/bar/dependencies/utils/is-type/scope-name/version-number/utils/is-type.js
      */
+    let localConsumerFiles;
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
@@ -290,30 +292,31 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
+      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
     });
 
     it('should keep the original directory structure of the main component', () => {
-      const expectedLocation = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'bar', 'foo.js');
-      expect(fs.existsSync(expectedLocation)).to.be.true;
+      const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
     });
     it('should save the direct dependency nested to the main component', () => {
-      const expectedLocation = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'dependencies', 'utils',
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
         'is-string', helper.remoteScope, '1', 'utils', 'is-string.js');
-      expect(fs.existsSync(expectedLocation)).to.be.true;
+      expect(localConsumerFiles).to.include(expectedLocation);
     });
     it('should save the indirect dependency nested to the main component (as opposed to nested of nested)', () => {
-      const expectedLocation = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'dependencies', 'utils',
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
         'is-type', helper.remoteScope, '1', 'utils', 'is-type.js');
-      expect(fs.existsSync(expectedLocation)).to.be.true;
+      expect(localConsumerFiles).to.include(expectedLocation);
     });
     it('should link the direct dependency to its original location', () => {
-      const expectedLocation = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'utils', 'is-string.js');
-      expect(fs.existsSync(expectedLocation)).to.be.true;
+      const expectedLocation = path.join('components', 'bar', 'foo', 'utils', 'is-string.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
     });
     it('should link the indirect dependency to its original location in the dependency directory', () => {
-      const expectedLocation = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'dependencies', 'utils',
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
         'is-string', helper.remoteScope, '1', 'utils', 'is-type.js');
-      expect(fs.existsSync(expectedLocation)).to.be.true;
+      expect(localConsumerFiles).to.include(expectedLocation);
     });
   });
 
