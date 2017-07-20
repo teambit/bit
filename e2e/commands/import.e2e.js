@@ -111,12 +111,42 @@ describe('bit import', function () {
       });
     });
 
-    describe.skip('with compiler and tester', () => {
-      it('should not install envs when not requested', () => {
+    describe('with compiler and tester', () => {
+      describe('with multiple files located in different directories', () => {
+        before(() => {
+          helper.importCompiler();
+          helper.createComponent('src', 'imprel.js');
+          helper.createComponent('src', 'imprel.spec.js');
+          helper.createFile('src/utils', 'myUtil.js');
+          helper.runCmd('bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/impreldist');
+          helper.commitComponent('imprel/impreldist');
+          helper.exportComponent('imprel/impreldist');
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          const output = helper.importComponent('imprel/impreldist');
+          expect(output.includes('successfully imported the following Bit components')).to.be.true;
+          expect(output.includes('imprel/imprel')).to.be.true;
+        });
+        it('should write the internal files according to their relative paths', () => {
+          const expectedLocationImprel = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'imprel.js');
+          const expectedLocationImprelSpec = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'imprel.spec.js');
+          const expectedLocationMyUtil = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'utils', 'myUtil.js');
+          const expectedLocationImprelDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'imprel.js');
+          const expectedLocationImprelSpecDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'imprel.spec.js');
+          const expectedLocationMyUtilDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'utils', 'myUtil.js');
+          expect(fs.existsSync(expectedLocationImprel)).to.be.true;
+          expect(fs.existsSync(expectedLocationImprelSpec)).to.be.true;
+          expect(fs.existsSync(expectedLocationMyUtil)).to.be.true;
+          expect(fs.existsSync(expectedLocationImprelDist)).to.be.true;
+          expect(fs.existsSync(expectedLocationImprelSpecDist)).to.be.true;
+          expect(fs.existsSync(expectedLocationMyUtilDist)).to.be.true;
+        });
       });
-      it('should install envs when requested (-e)', () => {
+      it.skip('should not install envs when not requested', () => {
       });
-      it('should create bit.json file with envs in the folder', () => {
+      it.skip('should install envs when requested (-e)', () => {
+      });
+      it.skip('should create bit.json file with envs in the folder', () => {
       });
     });
   });

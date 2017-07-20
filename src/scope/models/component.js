@@ -6,7 +6,7 @@ import { ScopeMeta } from '../models';
 import { VersionNotFound } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject } from '../../utils';
 import Version from './version';
-import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE } from '../../constants';
+import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE, DEFAULT_DIST_DIRNAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/component';
@@ -168,10 +168,11 @@ export default class Component extends BitObject {
           Promise.all(version.dists.map(dist =>
             dist.file.load(repository)
             .then((content) => {
+              const relativePathWithDist = path.join(DEFAULT_DIST_DIRNAME, dist.relativePath);
               return {
                 name: dist.name,
-                relativePath: dist.relativePath,
-                dir: path.dirname(dist.relativePath),
+                relativePath: relativePathWithDist,
+                dir: path.dirname(relativePathWithDist),
                 content
               };
             })
