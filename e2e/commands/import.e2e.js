@@ -62,9 +62,9 @@ describe('bit import', function () {
         expect(output.includes('imprel/imprel')).to.be.true;
       });
       it('should write the internal files according to their relative paths', () => {
-        const expectedLocationImprel = path.join(helper.localScopePath, 'components', 'imprel', 'imprel', 'imprel.js');
-        const expectedLocationImprelSpec = path.join(helper.localScopePath, 'components', 'imprel', 'imprel', 'imprel.spec.js');
-        const expectedLocationMyUtil = path.join(helper.localScopePath, 'components', 'imprel', 'imprel', 'utils', 'myUtil.js');
+        const expectedLocationImprel = path.join(helper.localScopePath, 'components', 'imprel', 'imprel', 'src', 'imprel.js');
+        const expectedLocationImprelSpec = path.join(helper.localScopePath, 'components', 'imprel', 'imprel', 'src', 'imprel.spec.js');
+        const expectedLocationMyUtil = path.join(helper.localScopePath, 'components', 'imprel', 'imprel', 'src', 'utils', 'myUtil.js');
         expect(fs.existsSync(expectedLocationImprel)).to.be.true;
         expect(fs.existsSync(expectedLocationImprelSpec)).to.be.true;
         expect(fs.existsSync(expectedLocationMyUtil)).to.be.true;
