@@ -60,7 +60,7 @@ export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_DIST_DIRNAME = 'dist';
 
-export const DEFAULT_DIST_ENTRY = 'src';
+export const DEFAULT_DIST_ENTRY = '';
 
 export const DEFAULT_BUNDLE_FILENAME = 'dist.js';
 
