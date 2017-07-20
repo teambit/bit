@@ -178,8 +178,7 @@ export default class Scope {
       // Store it in a map so we can take it easily from the sorted array which contain only the id
       consumerComponentsIdsMap.set(componentIdString, consumerComponent);
       const dependenciesIdsStrings = Object.keys(consumerComponent.dependencies);
-      const dependenciesIdsStringsWithoutMe = dependenciesIdsStrings.filter(id => id !== componentIdString);
-      topSort.add(componentIdString, dependenciesIdsStringsWithoutMe || []);
+      topSort.add(componentIdString, dependenciesIdsStrings || []);
     });
 
     // Sort the consumerComponents by the dependency order so we can commit those without the dependencies first

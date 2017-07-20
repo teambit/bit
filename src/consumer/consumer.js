@@ -200,9 +200,11 @@ export default class Consumer {
         } else {
           // Add the entry to cache map
           dependenciesPathIdMap.set(filePath, dependencyIdString);
-          let dependencyId = BitId.parse(dependencyIdString);
-          dependencyId = dependencyId.scope ? dependencyId : dependencyId.changeScope(this.scope.name);
-          dependencies[dependencyId] = { id: dependencyId, relativePath: filePath };
+          if (id.toString() !== dependencyIdString){
+            let dependencyId = BitId.parse(dependencyIdString);
+            dependencyId = dependencyId.scope ? dependencyId : dependencyId.changeScope(this.scope.name);
+            dependencies[dependencyId] = { id: dependencyId, relativePath: filePath };
+          }
         }
       });
       // TODO: Merge all missing for all components (nested as well)
