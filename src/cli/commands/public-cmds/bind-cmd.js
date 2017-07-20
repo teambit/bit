@@ -14,9 +14,6 @@ export default class Create extends Command {
 
   action(args: string[], { verbose }: { verbose: ?bool }): Promise<*> {
     return getDriver().then((driverObj) => {
-      // TODO: this is a quick hack to get the driver path for debugging purposes
-      // it should be part of the logging once we implement "verbose" for all commands
-      if (verbose) console.log('Driver path', driverObj.driverPath()); // eslint-disable-line
       return driverObj.getDriver(false).bind({});
     });
   }
