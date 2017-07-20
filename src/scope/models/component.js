@@ -199,6 +199,7 @@ export default class Component extends BitObject {
                   id: BitId.parse(dependency),
                   relativePath: version.dependencies[dependency].relativePath }
                 }))),
+              flattenedDependencies: version.flattenedDependencies,
               packageDependencies: version.packageDependencies,
               impl: impl ? new Impl(impl.toString()) : null,
               specs: specs ? new Specs(specs.toString()) : null,

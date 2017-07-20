@@ -45,6 +45,7 @@ export type ComponentProps = {
   compilerId?: ?BitId,
   testerId?: ?BitId,
   dependencies?: ?BitIds,
+  flattenedDependencies?: ?BitIds,
   packageDependencies?: ?Object,
   impl?: ?Impl|string,
   specs?: ?Specs|string,
@@ -75,6 +76,7 @@ export default class Component {
   compilerId: ?BitId;
   testerId: ?BitId;
   dependencies: BitIds;
+  flattenedDependencies: BitIds;
   packageDependencies: Object;
   /** @deprecated **/
   _impl: ?Impl|string;
@@ -174,6 +176,7 @@ export default class Component {
                 compilerId,
                 testerId,
                 dependencies,
+                flattenedDependencies,
                 packageDependencies,
                 impl,
                 specs,
@@ -197,6 +200,7 @@ export default class Component {
     this.compilerId = compilerId;
     this.testerId = testerId;
     this.dependencies = dependencies || new BitIds();
+    this.flattenedDependencies = flattenedDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
     this._specs = specs;
     this._impl = impl;
@@ -243,6 +247,10 @@ export default class Component {
 
   dependencies(): BitIds {
     return BitIds.fromObject(this.dependencies);
+  }
+
+  flattenedDependencies(): BitIds {
+    return BitIds.fromObject(this.flattenedDependencies);
   }
 
   buildIfNeeded({ condition, files, compiler, consumer, scope }: {
