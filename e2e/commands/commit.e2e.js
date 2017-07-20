@@ -100,22 +100,22 @@ describe('bit commit command', function () {
     });
 
     // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
-    it.skip('Should throw error if there is missing dependencies on file system', () => {
+    it('Should throw error if there is missing dependencies on file system', () => {
       const fixture = "import foo from './foo'; module.exports = function foo2() { return 'got foo'; };";
       helper.createComponent('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
       const commitAll = () => helper.commitAllComponents();
-      expect(commitAll).to.throw('Command failed: bit-dev commit -am commit-message\nfatal: The following dependencies not found on file system - "./foo"\n');
+      expect(commitAll).to.throw(`Command failed: ${helper.bitBin} commit -am commit-message\nfatal: The following dependencies not found on file system - "./foo"\n`);
     });
 
     // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
-    it.skip('Should throw error if there is untracked files dependencies', () => {
+    it('Should throw error if there is untracked files dependencies', () => {
       helper.createComponentBarFoo();
       const fixture = "import foo from './foo'; module.exports = function foo2() { return 'got foo'; };";
       helper.createComponent('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
       const commitAll = () => helper.commitAllComponents();
-      expect(commitAll).to.throw('Command failed: bit-dev commit -am commit-message\nfatal: The following dependencies not found - "bar/foo.js"\n');      
+      expect(commitAll).to.throw(`Command failed: ${helper.bitBin} commit -am commit-message\nfatal: The following dependencies not found - "bar/foo.js"\n`);      
     });
 
     it.skip('Should print more then one level of untracked files dependencies', () => {
@@ -128,7 +128,7 @@ describe('bit commit command', function () {
       helper.addComponent('bar/foo3.js');
 
       const commitAll = () => helper.commitAllComponents();
-      expect(commitAll).to.throw('Command failed: bit-dev commit -am commit-message\nfatal: The following dependencies not found - "bar/foo2.js,bar/foo.js"\n');      
+      expect(commitAll).to.throw(`Command failed: ${helper.bitBin} commit -am commit-message\nfatal: The following dependencies not found - "bar/foo2.js,bar/foo.js"\n`);      
     });
 
     // We throw this error because we don't know the packege version in this case
