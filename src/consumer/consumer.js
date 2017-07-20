@@ -303,6 +303,25 @@ export default class Consumer {
     });
   }
 
+  async _writeEntryPointsForImportedComponent(componentDependencies: ComponentDependencies[], bitMap: BitMap):
+  Promise<any> {
+    const ENTRY_POINT_FILE = 'index.js'; // todo: move to bit-javascript
+    const allLinksP = componentDependencies.map((componentWithDeps) => {
+      const componentRoot = componentWithDeps.component.writtenPath;
+      const entryPointPath = path.join(componentRoot, ENTRY_POINT_FILE);
+      let componentId = componentWithDeps.component.id.toString();
+      if (!bitMap.getComponent(componentId)) { // todo: this is a hack. bit.map should have the correct id with the scope
+        componentId = componentWithDeps.component.id.changeScope(null).toString();
+      }
+      const mainFile = bitMap.getMainFileOfComponent(componentId);
+      const relativeMainFile = path.relative(entryPointPath, mainFile);
+      const entryPointFile = `module.exports = '${relativeMainFile}';`; // todo: move to bit-javascript
+      return outputFile(entryPointPath, entryPointFile);
+    });
+    return Promise.all(allLinksP);
+  }
+
+
   /**
    * The following scenario will help understanding why links are needed.
    * Component A has a dependency B. (for instance, in a.js there is a require statement to 'b.js').
@@ -320,13 +339,13 @@ export default class Consumer {
         let resolveDepVersion = dep;
         // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
         // Actual version number, because on the bitmap we have only specific versions
-        if (directDependencies[dep].id.getVersion().latest){
+        if (directDependencies[dep].id.getVersion().latest) {
           resolveDepVersion = flattenedDependencies.resolveVersion(directDependencies[dep].id).toString();
         }
-        const depComponentMap = bitMap.getComponent(resolveDepVersion);
-        const depMainFile = depComponentMap.files[depComponentMap.mainFile];
+        const depMainFile = bitMap.getMainFileOfComponent(resolveDepVersion);
+        const relativeMainFile = path.relative(linkPath, depMainFile);
         // todo: move to bit-javascript
-        const linkContent = `module.exports = ${depMainFile}`;
+        const linkContent = `module.exports = '${relativeMainFile}';`;
         return outputFile(linkPath, linkContent);
       });
       return Promise.all(links);
@@ -381,6 +400,7 @@ export default class Consumer {
     });
     const allComponents = await Promise.all(allComponentsP);
     await this._writeDependencyLinks(componentDependencies, bitMap);
+    await this._writeEntryPointsForImportedComponent(componentDependencies, bitMap);
     await bitMap.write();
     return allComponents;
   }

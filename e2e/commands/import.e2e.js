@@ -83,6 +83,8 @@ describe('bit import', function () {
         const bitMap = helper.readBitMap();
         helper.reInitLocalScope();
         helper.addRemoteScope();
+        // todo: it should be the full-id including scope-name
+        // bitMap[`${helper.remoteScope}/bar/foo::1`].files['foo.js'] = 'utils/foo.js';
         bitMap['bar/foo'].files['foo.js'] = 'utils/foo.js';
         helper.writeBitMap(bitMap);
         helper.importComponent('bar/foo');
@@ -249,6 +251,7 @@ describe('bit import', function () {
      *
      * Expected structure after importing bar/foo in another project
      * components/bar/foo/bar/foo.js
+     * components/bar/foo/index.js (generated index file)
      * components/bar/foo/utils/is-string.js (generated link file)
      * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/utils/is-string.js
      * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/utils/is-type.js (generated link file)
@@ -297,6 +300,10 @@ describe('bit import', function () {
 
     it('should keep the original directory structure of the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should create an index.js file on the component root dir pointing to the main file', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'index.js');
       expect(localConsumerFiles).to.include(expectedLocation);
     });
     it('should save the direct dependency nested to the main component', () => {

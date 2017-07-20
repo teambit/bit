@@ -2,12 +2,10 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import logger from '../../logger/logger';
-import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON } from '../../constants';
-import InvalidBitMap from './exceptions/invalid-bit-map';
-import MissingMainFile from './exceptions/missing-main-file';
+import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_DIR } from '../../constants';
+import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile } from '../../utils';
-import { COMPONENT_ORIGINS, DEPENDENCIES_DIR } from '../../constants';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
@@ -169,8 +167,27 @@ export default class BitMap {
     this.components[id].mainDistFile = this._makePathRelativeToProjectRoot(mainDistFile);
   }
 
+  /**
+   * needed after exporting a local component
+   */
+  updateComponentScopeName(id: BitId) {
+    const oldId = id.changeScope(null);
+    if (!this.components[oldId.toString()]) return; // ignore, maybe it has been updated already
+    if (this.components[id.toString()]) {
+      throw new Error(`There is a local component ${oldId} with the same namespace and name as a remote component ${id}`);
+    }
+    this.components[id.toString()] = R.clone(this.components[oldId.toString()]);
+    delete this.components[oldId.toString()];
+  }
+
   getComponent(id: string): ComponentMap {
     return this.components[id];
+  }
+
+  getMainFileOfComponent(id: string) {
+    if (!this.components[id]) throw new MissingBitMapComponent(id);
+    const mainFile = this.components[id].mainFile;
+    return this.components[id].files[mainFile];
   }
 
   /**

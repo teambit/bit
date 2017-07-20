@@ -6,22 +6,25 @@ import loader from '../../../cli/loader';
 import { BEFORE_EXPORT } from '../../../cli/loader/loader-messages';
 import { ComponentNotFound } from '../../../scope/exceptions';
 import { LOCAL_SCOPE_NOTATION } from '../../../constants';
-import ExportWithoutThis from './exceptions/export-without-this';
+import BitMap from '../../../consumer/bit-map';
 
 export default async function exportAction(id?: string, remote: string, save: ?bool) {
+  const consumer = await loadConsumer();
+  loader.start(BEFORE_EXPORT);
+  // const bitMap = await BitMap.load(consumer.getPath());
 
   const exportComponent = async (consumer: Consumer, componentId: string) => {
     const component: ConsumerComponent = await consumer.exportAction(componentId, remote);
     if (save) {
       await consumer.bitJson.addDependency(component.id).write({ bitDir: consumer.getPath() });
       await consumer.driver.runHook('onExport', component);
+      // todo: we should probably update bit.map with the new id, which includes the scope name
+      // bitMap.updateComponentScopeName(component.id);
+      // await bitMap.write();
     }
 
     return component;
   };
-
-  const consumer = await loadConsumer();
-  loader.start(BEFORE_EXPORT);
 
   if (id) {
     return exportComponent(consumer, id);
