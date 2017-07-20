@@ -14,13 +14,13 @@ dependencies:
   pre:
     - "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
     - echo ${bithubKey} >> /home/ubuntu/.ssh/id_rsa
-    - "echo \"-----END RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"  
+    - "echo \"-----END RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
 
   override:
     - yarn
-    
+
 test:
   override:
-    - yarn test
+    - npm test
     - npm i -g
     - npm run e2e-test
