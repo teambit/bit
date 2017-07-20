@@ -47,11 +47,11 @@ export default class BitId {
     return Version.parse(this.version);
   }
 
-  toString(ignoreScope: boolean = false): string {
+  toString(ignoreScope: boolean = false, ignoreVersion: boolean = false): string {
     const { name, box, version } = this;
     const scope = this.scope;
     const componentStr = ignoreScope || !scope ? [box, name].join('/') : [scope, box, name].join('/');
-    if (version && scope) {
+    if (version && scope && !ignoreVersion) {
       return componentStr.concat(`::${version}`);
     }
 
