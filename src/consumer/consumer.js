@@ -310,12 +310,18 @@ export default class Consumer {
    * under 'dependencies' of A.
    */
   async _writeDependencyLinks(componentDependencies: ComponentDependencies[], bitMap: BitMap): Promise<any> {
-    const componentLinks = (directDependencies, parentDir) => {
+    const componentLinks = (directDependencies, flattenedDependencies, parentDir) => {
       if (!directDependencies || !Object.keys(directDependencies).length) return Promise.resolve();
       const links = Object.keys(directDependencies).map((dep) => {
         if (!directDependencies[dep].relativePath) return Promise.resolve();
         const linkPath = path.join(parentDir, directDependencies[dep].relativePath);
-        const depComponentMap = bitMap.getComponent(dep);
+        let resolveDepVersion = dep;
+        // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
+        // Actual version number, because on the bitmap we have only specific versions
+        if (directDependencies[dep].id.getVersion().latest){
+          resolveDepVersion = flattenedDependencies.resolveVersion(directDependencies[dep].id).toString();
+        }
+        const depComponentMap = bitMap.getComponent(resolveDepVersion);
         const depMainFile = depComponentMap.files[depComponentMap.mainFile];
         // todo: move to bit-javascript
         const linkContent = `module.exports = ${depMainFile}`;
@@ -326,10 +332,11 @@ export default class Consumer {
 
     const allLinksP = componentDependencies.map((componentWithDeps) => {
       const directDeps = componentWithDeps.component.dependencies;
-      const directLinksP = componentLinks(directDeps, componentWithDeps.component.writtenPath);
+      const flattenDeps = componentWithDeps.component.flattenedDependencies;
+      const directLinksP = componentLinks(directDeps, flattenDeps, componentWithDeps.component.writtenPath);
 
       const indirectLinksP = componentWithDeps.dependencies.map((dep: Component) => {
-        return componentLinks(dep.dependencies, dep.writtenPath);
+        return componentLinks(dep.dependencies, dep.flattenedDependencies, dep.writtenPath);
       });
 
       return Promise.all([directLinksP, ...indirectLinksP]);
