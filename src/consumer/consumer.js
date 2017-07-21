@@ -314,8 +314,8 @@ export default class Consumer {
         componentId = componentWithDeps.component.id.changeScope(null).toString();
       }
       const mainFile = bitMap.getMainFileOfComponent(componentId);
-      const relativeMainFile = path.relative(entryPointPath, mainFile);
-      const entryPointFile = `module.exports = '${relativeMainFile}';`; // todo: move to bit-javascript
+      const relativeMainFile = path.relative(path.dirname(entryPointPath), mainFile);
+      const entryPointFile = `module.exports = require('.${path.sep}${relativeMainFile}');`; // todo: move to bit-javascript
       return outputFile(entryPointPath, entryPointFile);
     });
     return Promise.all(allLinksP);
@@ -343,9 +343,9 @@ export default class Consumer {
           resolveDepVersion = flattenedDependencies.resolveVersion(directDependencies[dep].id).toString();
         }
         const depMainFile = bitMap.getMainFileOfComponent(resolveDepVersion);
-        const relativeMainFile = path.relative(linkPath, depMainFile);
+        const relativeMainFile = path.relative(path.dirname(linkPath), depMainFile);
         // todo: move to bit-javascript
-        const linkContent = `module.exports = '${relativeMainFile}';`;
+        const linkContent = `module.exports = require('${relativeMainFile}');`;
         return outputFile(linkPath, linkContent);
       });
       return Promise.all(links);
