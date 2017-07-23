@@ -1,3 +1,4 @@
+import path from 'path';
 import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';
 import logger from '../logger/logger';
@@ -42,8 +43,11 @@ export default class Driver {
 
   // TODO: Improve flow object return type
   getDependencyTree(cwd: string, filePath: string): Promise<Object> {
+    // This is important because without this, madge won't know to resolve files if we run the 
+    // CMD not from the root dir
+    const fullPath = path.join(cwd, filePath);
     const driver = this.getDriver(false);
-    return driver.getDependencyTree(cwd, filePath);
+    return driver.getDependencyTree(cwd, fullPath).catch(err => console.log("driver err"));
   }
 
   static load(lang) {
