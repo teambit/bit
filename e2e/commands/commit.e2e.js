@@ -99,6 +99,11 @@ describe('bit commit command', function () {
       // Import component then try to commit
     });
 
+    it.skip('Should build and test all components before commit', () => {
+      
+    });
+
+
     // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
     it('Should throw error if there is missing dependencies on file system', () => {
       const fixture = "import foo from './foo'; module.exports = function foo2() { return 'got foo'; };";
