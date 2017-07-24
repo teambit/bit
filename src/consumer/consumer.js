@@ -304,27 +304,25 @@ export default class Consumer {
     });
   }
 
-  async _writeEntryPointsForImportedComponent(componentDependencies: ComponentDependencies[], bitMap: BitMap):
+  async _writeEntryPointsForImportedComponent(component: Component, bitMap: BitMap):
   Promise<any> {
     const ENTRY_POINT_FILE = 'index.js'; // todo: move to bit-javascript
-    const allLinksP = componentDependencies.map((componentWithDeps) => {
-      const componentRoot = componentWithDeps.component.writtenPath;
-      const entryPointPath = path.join(componentRoot, ENTRY_POINT_FILE);
-      let componentId = componentWithDeps.component.id.toString();
-      if (!bitMap.getComponent(componentId)) { // todo: this is a hack. bit.map should have the correct id with the scope
-        componentId = componentWithDeps.component.id.changeScope(null).toString();
-      }
-      const mainFile = bitMap.getMainFileOfComponent(componentId);
-      let relativeMainFile = path.relative(componentRoot, mainFile);
-      // In case there is dist files, we want to point the index to the dist file not to source.
-      if (componentWithDeps.component.dist && !R.isEmpty(componentWithDeps.component.dist)){
-        logger.debug(`_writeEntryPointsForImportedComponent, Change the index file to point to dist folder`);
-        relativeMainFile = path.join(DEFAULT_DIST_DIRNAME, relativeMainFile);
-      }
-      const entryPointFile = `module.exports = require('.${path.sep}${relativeMainFile}');`; // todo: move to bit-javascript
-      return outputFile(entryPointPath, entryPointFile);
-    });
-    return Promise.all(allLinksP);
+    const componentRoot = component.writtenPath;
+    const entryPointPath = path.join(componentRoot, ENTRY_POINT_FILE);
+    let componentId = component.id.toString();
+    if (!bitMap.getComponent(componentId)) { // todo: this is a hack. bit.map should have the correct id with the scope
+      componentId = component.id.changeScope(null).toString();
+    }
+    const mainFile = bitMap.getMainFileOfComponent(componentId);
+    let relativeMainFile = path.relative(componentRoot, mainFile);
+    // In case there is dist files, we want to point the index to the dist file not to source.
+    if (component.dists && !R.isEmpty(component.dists)){
+      logger.debug(`_writeEntryPointsForImportedComponent, Change the index file to point to dist folder`);
+      relativeMainFile = path.join(DEFAULT_DIST_DIRNAME, relativeMainFile);
+      console.log(DEFAULT_DIST_DIRNAME, relativeMainFile);
+    }
+    const entryPointFile = `module.exports = require('.${path.sep}${relativeMainFile}');`; // todo: move to bit-javascript
+    return outputFile(entryPointPath, entryPointFile);
   }
 
 
@@ -399,14 +397,19 @@ export default class Consumer {
         dependenciesIds.push(dependencyId);
         const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
         dep.writtenPath = depBitPath;
-        return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id);
+        return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id)
+          .then(result => {
+            this._writeEntryPointsForImportedComponent(dep, bitMap);
+          });
       });
 
       return Promise.all([writeComponentP, ...writeDependenciesP]);
     });
     const allComponents = await Promise.all(allComponentsP);
     await this._writeDependencyLinks(componentDependencies, bitMap);
-    await this._writeEntryPointsForImportedComponent(componentDependencies, bitMap);
+    await Promise.all(componentDependencies.map((componentWithDependencies) => 
+      this._writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
+    ));
     await bitMap.write();
     return allComponents;
   }

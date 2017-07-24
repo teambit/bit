@@ -307,9 +307,16 @@ describe('bit import', function () {
     it('should create an index.js file on the component root dir pointing to the main file', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'index.js');
       expect(localConsumerFiles).to.include(expectedLocation);
-      const indexPath = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'index.js');
+      const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
       expect(indexFileContent).to.have.string('module.exports = require(\'./bar/foo.js\');', 'index file point to the wrong place');
+    });
+    it('should create an index.js file on the dependencies root dir pointing to the main file', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      const indexPath = path.join(helper.localScopePath, expectedLocation);
+      const indexFileContent = fs.readFileSync(indexPath).toString();
+      expect(indexFileContent).to.have.string('module.exports = require(\'./utils/is-string.js\');', 'dependency index file point to the wrong place');
     });
     it('should save the direct dependency nested to the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
