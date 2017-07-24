@@ -1,6 +1,5 @@
+# Bit
 
-<p align="left">
-<h1>Bit</h1>
 </p>
 <div style="text-align:left">
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="apache" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
@@ -11,58 +10,116 @@
 
 </div>
 
-Bit is a distributed and virtualized code component repository designed to be language agnostic.  
+**Bit** turns your existing source code into a collection of reusable components. You can easily develop and compose components from any application environment, without changing your source code. Bit works great for utility functions, web components (native, React, Angular etc.), small node.js modules and more.
 
-With Bit you can create and model code components on a virtualized [Scope](https://teambit.github.io/bit/bit-scope.html), using them as a dynamic API made only of the components actually used in your application.
+* **Turn any subset of files into a component** without changing your source code or file-system structure. Create multiple components with a single command.
+* **Develop and compose** components locally from any project, build and test them in any application environment.
+* **Discover components** you and your team love and trust. Measure and monitor components quality through auto-generated docs and test results.
+* **Universal control over your dependency graph.** Commit and test vast changes of dependencies and dependents at once. Bit components are also immutable.
 
-Bit components can be reused in different contexts (repositories, micro-services, packages, etc.) without the overhead of configuring and maintaining multiple repos, packages and other tools for every few lines of code.
+Bit is an Apache 2.0 open-source project, actively maintained by a full-time, venture-backed team. 
+It's also being used by popular open source communities.
 
-<p align="center">
-  <img src="https://storage.googleapis.com/bit-assets/gifs/leftpad2.gif" height="500">
-</p>
+## Supported Languages
+Bit is language agnostic. Still, It requires binding and additional programming language sensitive features for different programming languages. To do so, Bit uses language-specific drivers:
 
-## Why Bit
-
-Code components are the fundamental building blocks of any application.
-Different functionalities can and should be reused in different contexts, projects and repositories. In practice, this rarely happens. Building and maintaining an arsenal of tiny repositories and micro-packages for all your different components isn't practical. As a result, people often end up duplicating code everywhere or using vast libraries with static APIs that contain redundant code and dependencies they don’t need. This happens for a few reasons:
-
-* Initial overhead: to create a new repository and package for every small component you would have to create a VCS repository, create the package boilerplate (build, testing, etc.) and somehow make this process practical for a large set of components.
-
-* Maintenance: modifying a repository and a package takes time and forces you to go through multiple steps such as cloning, linking, debugging, committing, republishing and so on. Centralized registries also makes it hard to address the different levels of abstraction needed for multiple micro-packages. Build and install times quickly increase and dependency hell always feels near.
-
-* Discoverability: it’s hard if not impossible to organize and search multiple repositories and packages to quickly find the components you need. People often used different terms to describe the same functionality, and there is no single source of truth to search and trust.
-
-### Built for code components
-
-Bit solves all of these problems. It adds a level of abstraction on top of your source files, allowing you to create and model components in a virtualized repository. These components can be found and used individually as a dynamic API containing nothing but the code actually used in your application. Bit is designed from the ground to make code components reusable:
-
-- **Virtual Scope.** Bit uses a distributed and virtual repository called a Scope to keep and maintain all your components in a single place, while still being able to independently find, use and modify each component. You can define the components needed in your application to form a dynamic API made of these components alone, without pulling any redundant code or irrelevant dependencies.
-
-- **Component environment.** Bit lowers the overhead of creating and maintaining multiple reusable components. An isolated configurable environment uses other Bit components (compiler and tester) for transpiling and testing any component using any superset or a testing framework in any context.
-
-- **Component discovery engine.** Bit comes with an integrated search engine that uses expressive linguistic models to make your components discoverable even when you forget the exact name you gave each component. This also helps for collaborating as a team on shared Scopes.
-
-## Documentation
-
-[Docs](https://teambit.github.io/bit)
-
-[Bit Scope](https://teambit.github.io/bit/bit-scope.html)
-
-[Bit component](https://teambit.github.io/bit/bit-component.html)
-
-[Bit environment](https://teambit.github.io/bit/bit-component.html#component-environment)
-
-[Bit on the server](https://teambit.github.io/bit/bit-on-the-server.html)
-
-[CLI reference](https://teambit.github.io/bit/cli-reference.html)
-
-## Installation
-
-For our different installation methods, please visit our docs [installation section](https://teambit.github.io/bit/installation.html).
+* [bit-javascript](https://github.com/teambit/bit-javascript)
 
 ## Quick start
 
-Here is a [getting started guide](https://teambit.github.io/bit/getting-started.html).
+### Install Bit
+
+See [different install methods](https://docs.bitsrc.io/en/article/02-install-bit-on-your-computer) for different operation systems.
+
+### Initialize Bit for your project
+
+Initializing Bit on an existing project adds Bit’s virtualization.
+
+```sh
+bit init
+```
+
+### Add components
+
+Bit `add` allows to track a subset of files or directories as a reusable code component. Classic use cases would be web components (native, react, angular, etc.), utility functions or any other nodejs module.
+
+```sh
+bit add src/utils/left-pad.js
+# Tracked utils/left pad with files 
+```
+
+You can use glob patterns to track a vast amount of components at once:
+
+```sh
+bit add src/utils/*.js
+# Tracked 24 new components
+```
+
+### Commit
+
+Bit `commit`, commits changes to new and existing components in your application.
+
+To check which components were changed or added and about to be committed, you can use `bit status`:
+
+```sh
+bit status
+# New components:
+#   utils/pad-left
+# Modified components:
+#   utils/is-string
+```
+
+To commit all changes use:
+
+```sh
+bit commit -am ‘committed my first tracked code components'
+```
+
+Now all your components are staged, and ready to be pushed or used from any other project.
+
+### Export
+
+You can push staged/committed components to any remote Scope hosted on [bitsrc.io](https://bitsrc.io) or created on any machine (and connected via SSH).
+
+You can set up a free Bit Scope at Bit’s [community hub](https://bitsrc.io), and follow the [setup instructions](https://docs.bitsrc.io/en/article/07-create-a-free-bitsrc-scope).
+
+It’s also possible to easily set up a [remote scope on your own
+computer](https://teambit.github.io/bit/getting-started.html#setup-a-remote-scope).
+
+Once you have a remote scope ready, run the export command:
+
+```sh
+bit export bit.utils
+# bit.utils is your Scope name
+```
+
+### Import
+
+Bit `import` enables to instal component (as an application part) you’ve tracked in any destination on your project’s file system.
+
+Let's import the component we just created to a new project.
+
+1. Create a new project.
+2. Initialize a new scope using the bit init command.
+3. Import the component
+  ```sh
+  bit import my-scope/left-pad
+  ```
+
+The component is now it in the components directory, ready to be used in your code.
+
+**Use:**
+
+```js
+const component = require(./left-pad);
+```
+
+## Why Bit - Built for code components
+
+Because we believe code should be written once, and evolve over time. Atomic pieces of code should be composed together as lego bricks to form any functionality. Yet, as software development is being scaled, creating, finding and composing these atomic components is getting harder. Having the right tool to develop and compose components with simplicity, predictability and ease of use is the key to bringing this philosophy from theory to practice. With Bit, you can turn existing source code into a beautiful collection of reusable components- for you or your team. You can develop and compose components in any application environment, making them the perfect building blocks for your different projects.
+
+* Learn more: [Coding in the age of code components](https://blog.bitsrc.io/introducing-bit-writing-code-in-the-age-of-code-components-fd8512a9aa90)
+
 
 ## Contributing
 
