@@ -191,10 +191,12 @@ export default class SSH {
   connect(sshUrl: SSHUrl, key: ?string): Promise<SSH> {
     return new Promise((resolve, reject) => {
       try {
-        conn.on('ready', () => {
-          this.connection = conn;
-          resolve(this);
-        }).connect(this.composeConnectionObject(key));
+        conn
+          .on('error', err => reject(err))
+          .on('ready', () => {
+            this.connection = conn;
+            resolve(this);
+          }).connect(this.composeConnectionObject(key));
       } catch (e) { return reject(e); }
     });
   }
