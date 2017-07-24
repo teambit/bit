@@ -1,5 +1,5 @@
 /** @flow */
-import R, { equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
+import { is, equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
 import path from 'path';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
@@ -194,11 +194,11 @@ export default class Component extends BitObject {
               filesNames: version.files ? version.files.map(file => file.name) : null,
               compilerId: version.compiler,
               testerId: version.tester,
-              dependencies: R.mergeAll(Object.keys(version.dependencies)
-                .map(dependency => ({ [dependency]: {
-                  id: BitId.parse(dependency),
-                  relativePath: version.dependencies[dependency].relativePath }
-                }))),
+              dependencies: version.dependencies // todo: understand why sometimes the dependencies are not parsed
+                .map(dependency => ({
+                  id: is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
+                  relativePath: dependency.relativePath
+                })),
               flattenedDependencies: version.flattenedDependencies,
               packageDependencies: version.packageDependencies,
               impl: impl ? new Impl(impl.toString()) : null,

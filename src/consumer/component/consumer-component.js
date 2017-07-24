@@ -75,7 +75,7 @@ export default class Component {
   filesNames: string[];
   compilerId: ?BitId;
   testerId: ?BitId;
-  dependencies: BitIds;
+  dependencies: Array<Object>;
   flattenedDependencies: BitIds;
   packageDependencies: Object;
   /** @deprecated **/
@@ -199,7 +199,7 @@ export default class Component {
     this.filesNames = filesNames || [];
     this.compilerId = compilerId;
     this.testerId = testerId;
-    this.dependencies = dependencies || new BitIds();
+    this.dependencies = dependencies || [];
     this.flattenedDependencies = flattenedDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
     this._specs = specs;
@@ -221,13 +221,11 @@ export default class Component {
   }
 
   _dependenciesAsWritableObject() {
-    return R.mergeAll(Object.keys(this.dependencies)
-      .map(dependency => this.dependencies[dependency].id.toObject()));
+    return R.mergeAll(this.dependencies.map(dependency => dependency.id.toObject()));
   }
 
   static _dependenciesFromWritableObject(dependencies) {
-    return R.mergeAll(BitIds.fromObject(dependencies)
-      .map(dependency => ({ [dependency.toString()]: { id: dependency } })));
+    return BitIds.fromObject(dependencies).map(dependency => ({ id: dependency }));
   }
 
   writeBitJson(bitDir: string, force?:boolean = true): Promise<Component> {
@@ -638,7 +636,7 @@ export default class Component {
                             componentMap: ComponentMap,
                             id: BitId,
                             consumerPath: string): Component {
-    let dependencies = {};
+    let dependencies = [];
     let packageDependencies;
     let implFile;
     let specsFile;

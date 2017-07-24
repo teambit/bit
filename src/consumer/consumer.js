@@ -157,7 +157,7 @@ export default class Consumer {
 
     const components = ids.map(async (id) => {
       let dependenciesTree = {};
-      const dependencies = {};
+      const dependencies = [];
 
       const componentMap = bitMap.getComponent(id.toString());
       let bitDir;
@@ -175,7 +175,7 @@ export default class Consumer {
       if (fullDependenciesTree.tree[id]) {
         // If we found it in the full tree it means we already take care of the missings earlier
         dependenciesTree.missing = [];
-      } else if (driverExists){
+      } else if (driverExists) {
         // Load the dependencies through automatic dependency resolution
         dependenciesTree = await this.driver.getDependencyTree(this.getPath(), mainFile);
         Object.assign(fullDependenciesTree.tree, dependenciesTree.tree);
@@ -201,10 +201,10 @@ export default class Consumer {
         } else {
           // Add the entry to cache map
           dependenciesPathIdMap.set(filePath, dependencyIdString);
-          if (id.toString() !== dependencyIdString){
+          if (id.toString() !== dependencyIdString) {
             let dependencyId = BitId.parse(dependencyIdString);
             dependencyId = dependencyId.scope ? dependencyId : dependencyId.changeScope(this.scope.name);
-            dependencies[dependencyId] = { id: dependencyId, relativePath: filePath };
+            dependencies.push({ id: dependencyId, relativePath: filePath });
           }
         }
       });
@@ -335,18 +335,19 @@ export default class Consumer {
    * under 'dependencies' of A.
    */
   async _writeDependencyLinks(componentDependencies: ComponentDependencies[], bitMap: BitMap): Promise<any> {
-    const componentLinks = (directDependencies, flattenedDependencies, parentDir) => {
-      if (!directDependencies || !Object.keys(directDependencies).length) return Promise.resolve();
-      const links = Object.keys(directDependencies).map((dep) => {
-        if (!directDependencies[dep].relativePath) return Promise.resolve();
-        const linkPath = path.join(parentDir, directDependencies[dep].relativePath);
-        let resolveDepVersion = dep;
+    const componentLinks = (directDependencies: Array<Object>, flattenedDependencies: BitIds, parentDir) => {
+      if (!directDependencies || !directDependencies.length) return Promise.resolve();
+      const links = directDependencies.map((dep) => {
+        if (!dep.relativePath) return Promise.resolve();
+        const linkPath = path.join(parentDir, dep.relativePath);
+        let resolveDepVersion = dep.id;
         // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
         // Actual version number, because on the bitmap we have only specific versions
-        if (directDependencies[dep].id.getVersion().latest) {
-          resolveDepVersion = flattenedDependencies.resolveVersion(directDependencies[dep].id).toString();
+        if (dep.id.getVersion().latest) {
+          resolveDepVersion = flattenedDependencies.resolveVersion(dep.id).toString();
         }
         const depMainFile = bitMap.getMainFileOfComponent(resolveDepVersion);
+
         const relativeMainFile = path.relative(path.dirname(linkPath), depMainFile);
         // todo: move to bit-javascript
         const linkContent = `module.exports = require('${relativeMainFile}');`;
@@ -407,7 +408,7 @@ export default class Consumer {
     });
     const allComponents = await Promise.all(allComponentsP);
     await this._writeDependencyLinks(componentDependencies, bitMap);
-    await Promise.all(componentDependencies.map((componentWithDependencies) => 
+    await Promise.all(componentDependencies.map((componentWithDependencies) =>
       this._writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
     ));
     await bitMap.write();

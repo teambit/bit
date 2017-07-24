@@ -3,7 +3,7 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
-import { filterObject } from '../../utils';
+import { filterObject, first } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
@@ -80,7 +80,7 @@ export default class Version extends BitObject {
   ci: CiProps|{};
   specsResults: ?Results;
   docs: ?Doclet[];
-  dependencies: BitIds;
+  dependencies: Array<Object>;
   flattenedDependencies: BitIds;
   packageDependencies: {[string]: string};
 
@@ -111,7 +111,7 @@ export default class Version extends BitObject {
     this.compiler = compiler;
     this.tester = tester;
     this.log = log;
-    this.dependencies = dependencies || new BitIds();
+    this.dependencies = dependencies || [];
     this.docs = docs;
     this.ci = ci || {};
     this.specsResults = specsResults;
@@ -131,7 +131,7 @@ export default class Version extends BitObject {
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
       log: obj.log,
-      dependencies: Object.keys(this.dependencies),
+      dependencies: this.dependencies,
       packageDependencies: this.packageDependencies
     }, val => !!val));
   }
@@ -157,10 +157,9 @@ export default class Version extends BitObject {
   }
 
   toObject() {
-    const dependencies = {};
-    Object.keys(this.dependencies).forEach((dependency) => {
-      dependencies[dependency] = this.dependencies[dependency];
-      dependencies[dependency].id = dependencies[dependency].id.toString();
+    const dependencies = this.dependencies.map((dependency) => {
+      dependency.id = dependency.id.toString();
+      return dependency;
     });
     return filterObject({
       impl: this.impl ? {
@@ -229,16 +228,15 @@ export default class Version extends BitObject {
       flattenedDependencies,
       packageDependencies
     } = JSON.parse(contents);
-
     const getDependencies = () => {
-      if (R.is(Array, dependencies)) { // backward compatibility
-        return R.mergeAll(dependencies.map(dependency => ({ [dependency]: { id: BitId.parse(dependency) } })));
+      if (dependencies.length && R.is(String, first(dependencies))) { // backward compatibility
+        return dependencies.map(dependency => ({ id: BitId.parse(dependency) }));
       }
 
-      return R.mergeAll(Object.keys(dependencies).map(dependency => ({ [dependency]: {
-        id: BitId.parse(dependencies[dependency].id),
-        relativePath: dependencies[dependency].relativePath
-      } })));
+      return dependencies.map(dependency => ({
+        id: BitId.parse(dependency.id),
+        relativePath: dependency.relativePath
+      }));
     };
 
     return new Version({
