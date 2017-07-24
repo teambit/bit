@@ -239,6 +239,7 @@ describe('bit import', function () {
     });
   });
 
+  // TOOD: Should create similar case with build
   describe('components with auto-resolve dependencies', () => {
     /**
      * Directory structure of the author
@@ -306,6 +307,9 @@ describe('bit import', function () {
     it('should create an index.js file on the component root dir pointing to the main file', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'index.js');
       expect(localConsumerFiles).to.include(expectedLocation);
+      const indexPath = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'index.js');
+      const indexFileContent = fs.readFileSync(indexPath).toString();
+      expect(indexFileContent).to.have.string('module.exports = require(\'./bar/foo.js\');', 'index file point to the wrong place');
     });
     it('should save the direct dependency nested to the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',

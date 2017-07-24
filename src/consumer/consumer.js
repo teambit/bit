@@ -317,7 +317,8 @@ export default class Consumer {
       const mainFile = bitMap.getMainFileOfComponent(componentId);
       let relativeMainFile = path.relative(componentRoot, mainFile);
       // In case there is dist files, we want to point the index to the dist file not to source.
-      if (!R.isEmpty(componentWithDeps.component.dist)){
+      if (componentWithDeps.component.dist && !R.isEmpty(componentWithDeps.component.dist)){
+        logger.debug(`_writeEntryPointsForImportedComponent, Change the index file to point to dist folder`);
         relativeMainFile = path.join(DEFAULT_DIST_DIRNAME, relativeMainFile);
       }
       const entryPointFile = `module.exports = require('.${path.sep}${relativeMainFile}');`; // todo: move to bit-javascript
