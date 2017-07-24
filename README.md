@@ -44,7 +44,7 @@ bit init
 Bit `add` allows to track a subset of files or directories as a reusable code component. Classic use cases would be web components (native, react, angular, etc.), utility functions or any other nodejs module.
 
 ```sh
-bit add src/utils/left-pad.js
+bit add src/utils/pad-left.js
 # Tracked utils/left pad with files 
 ```
 
@@ -95,7 +95,7 @@ bit export bit.utils
 
 ### Import
 
-Bit `import` enables to instal component (as an application part) you’ve tracked in any destination on your project’s file system.
+Bit `import` enables to install component (as an application part) you’ve tracked in any destination on your project’s file system.
 
 Let's import the component we just created to a new project.
 
@@ -103,7 +103,7 @@ Let's import the component we just created to a new project.
 2. Initialize a new scope using the bit init command.
 3. Import the component
   ```sh
-  bit import my-scope/left-pad
+  bit import my-scope/pad-left
   ```
 
 The component is now it in the components directory, ready to be used in your code.
@@ -111,7 +111,7 @@ The component is now it in the components directory, ready to be used in your co
 **Use:**
 
 ```js
-const component = require(./left-pad);
+const component = require('./components/utils/pad-left');
 ```
 
 ## Why Bit - Built for code components
