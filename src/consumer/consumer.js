@@ -28,6 +28,7 @@ import {
   BIT_HIDDEN_DIR,
   DEPENDENCIES_DIR,
   COMPONENT_ORIGINS,
+  DEFAULT_DIST_DIRNAME
 } from '../constants';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
@@ -314,7 +315,11 @@ export default class Consumer {
         componentId = componentWithDeps.component.id.changeScope(null).toString();
       }
       const mainFile = bitMap.getMainFileOfComponent(componentId);
-      const relativeMainFile = path.relative(path.dirname(entryPointPath), mainFile);
+      let relativeMainFile = path.relative(componentRoot, mainFile);
+      // In case there is dist files, we want to point the index to the dist file not to source.
+      if (!R.isEmpty(componentWithDeps.component.dist)){
+        relativeMainFile = path.join(DEFAULT_DIST_DIRNAME, relativeMainFile);
+      }
       const entryPointFile = `module.exports = require('.${path.sep}${relativeMainFile}');`; // todo: move to bit-javascript
       return outputFile(entryPointPath, entryPointFile);
     });
