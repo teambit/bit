@@ -16,20 +16,15 @@ describe('getScopeBit', () => {
   after(() => {
     sandbox.restore();
   });
-  it('should show a component when is running outside a scope', () => {
+  it('should show a component when is running outside a scope', async () => {
     sandbox.stub(consumer, 'loadConsumer').returns(Promise.reject(new ConsumerNotFound()));
     sandbox.stub(scope, 'loadScope').returns(Promise.reject(new ScopeNotFound()));
     sandbox.stub(GlobalRemotes, 'load').returns(Promise.resolve({ toPlainObject: () => {} }));
     const showSpy = sandbox.spy();
     const resolveStub = sandbox.stub(Remotes.prototype, 'resolve').returns(Promise.resolve({ show: showSpy }));
 
-    const result = getScopeBit({ id: 'my-scope/box/name' });
-    expect(result).to.be.a('Promise');
-
-    return result
-      .then(() => {
-        expect(resolveStub.getCall(0).args[0]).to.equal('my-scope');
-        expect(showSpy.called).to.be.true;
-      });
+    await getScopeBit({ id: 'my-scope/box/name' });
+    expect(resolveStub.getCall(0).args[0]).to.equal('my-scope');
+    expect(showSpy.called).to.be.true;
   });
 });
