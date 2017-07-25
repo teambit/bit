@@ -4,7 +4,6 @@ general:
       - master
       - develop
       - stable
-      - virtualization/main
 
 machine:
   node:
