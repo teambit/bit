@@ -7,7 +7,7 @@ import paintDocumentation from './docs-template';
 
 export default (component: ConsumerComponent) => {
   const table = new Table({
-    colWidths: [20, 50],
+    colWidths: [20, 100],
     wordWrap: true,
   });
 
