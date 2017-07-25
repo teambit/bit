@@ -254,9 +254,12 @@ describe('bit import', function () {
      * components/bar/foo/bar/foo.js
      * components/bar/foo/index.js (generated index file)
      * components/bar/foo/utils/is-string.js (generated link file)
+     * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/utils/index.js (generated index file - point to is-string.js)
      * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/utils/is-string.js
      * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/utils/is-type.js (generated link file)
+     * components/bar/foo/bar/dependencies/utils/is-type/scope-name/version-number/utils/index.js (generated index file - point to is-type.js)
      * components/bar/foo/bar/dependencies/utils/is-type/scope-name/version-number/utils/is-type.js
+     * 
      */
     let localConsumerFiles;
     before(() => {
@@ -311,12 +314,19 @@ describe('bit import', function () {
       const indexFileContent = fs.readFileSync(indexPath).toString();
       expect(indexFileContent).to.have.string('module.exports = require(\'./bar/foo.js\');', 'index file point to the wrong place');
     });
-    it('should create an index.js file on the dependencies root dir pointing to the main file', () => {
+    it('should create an index.js file on the is-string dependency root dir pointing to the main file', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index.js');
       expect(localConsumerFiles).to.include(expectedLocation);
       const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
       expect(indexFileContent).to.have.string('module.exports = require(\'./utils/is-string.js\');', 'dependency index file point to the wrong place');
+    });
+    it('should create an index.js file on the is-type dependency root dir pointing to the main file', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils', 'is-type', helper.remoteScope, '1', 'index.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      const indexPath = path.join(helper.localScopePath, expectedLocation);
+      const indexFileContent = fs.readFileSync(indexPath).toString();
+      expect(indexFileContent).to.have.string('module.exports = require(\'./utils/is-type.js\');', 'dependency index file point to the wrong place');
     });
     it('should save the direct dependency nested to the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
@@ -336,6 +346,170 @@ describe('bit import', function () {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
         'is-string', helper.remoteScope, '1', 'utils', 'is-type.js');
       expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should be able to require its direct dependency and print results from all dependencies', () => {
+      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+  });
+
+  // This is one of the most important cases, because it involve a lot of working pieces from the base flow:
+  // Add, build, commit, export, import, dependency resolution, index file generation
+  describe.only('components with auto-resolve dependencies - with compiler', () => {
+    /**
+     * Directory structure of the author
+     * bar/foo.js
+     * utils/is-string.js
+     * utils/is-type.js
+     *
+     * bar/foo depends on utils/is-string.
+     * utils/is-string depends on utils/is-type
+     * 
+     * There is babel compiler defined
+     *
+     * Expected structure after importing bar/foo in another project
+     * components/bar/foo/bar/foo.js
+     * components/bar/foo/dist/bar/foo.js
+     * components/bar/foo/index.js (generated index file - point to dist/bar/foo.js)
+     * components/bar/foo/utils/is-string.js (generated link file - point to index file of is-string component)
+     * components/bar/foo/dist/utils/is-string.js (generated link file - point to index file of is-string component)
+     * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/index.js (generated index file - point to dist/is-string.js)
+     * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/utils/is-string.js
+     * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/utils/is-type.js (generated link file which enable is-string to use is-type)
+     * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/dist/utils/is-type.js (link file which enable is-string to use is-type)
+     * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/dist/utils/is-string.js (compiled version)
+     * components/bar/foo/bar/dependencies/utils/is-type/scope-name/version-number/index.js (generated index file - point to dist/is-type.js)
+     * components/bar/foo/bar/dependencies/utils/is-type/scope-name/version-number/utils/is-type.js
+     * components/bar/foo/bar/dependencies/utils/is-type/scope-name/version-number/dist/utils/is-type.js (compiled version)
+     */
+    let localConsumerFiles;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+
+      helper.importCompiler();
+
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      helper.commitComponent('utils/is-type');
+      helper.exportComponent('utils/is-type');
+
+      /** HACK (until the export is fixed) **/
+      helper.reInitLocalScope();
+      helper.importCompiler();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-type -p ./');
+      /** END HACK **/
+
+      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      helper.commitComponent('utils/is-string');
+      helper.exportComponent('utils/is-string');
+
+      /** HACK (until the export is fixed) **/
+      helper.reInitLocalScope();
+      helper.importCompiler();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-string -p ./');
+      /** END HACK **/
+
+      const fooBarFixture = "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      helper.createComponentBarFoo(fooBarFixture);
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportComponent('bar/foo');
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
+    });
+
+    it('should keep the original directory structure of the main component', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should create the dist files of the main component', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dist', 'bar', 'foo.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should create an index.js file on the component root dir pointing to the main file', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'index.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      const indexPath = path.join(helper.localScopePath, expectedLocation);
+      const indexFileContent = fs.readFileSync(indexPath).toString();
+      expect(indexFileContent).to.have.string('module.exports = require(\'./dist/bar/foo.js\');', 'index file point to the wrong place');
+    });
+    it('should create an index.js file on the is-string dependency root dir pointing to the main file', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      const indexPath = path.join(helper.localScopePath, expectedLocation);
+      const indexFileContent = fs.readFileSync(indexPath).toString();
+      expect(indexFileContent).to.have.string('module.exports = require(\'./dist/utils/is-string.js\');', 'dependency index file point to the wrong place');
+    });
+    it('should create an index.js file on the is-type dependency root dir pointing to the main file', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils', 'is-type', helper.remoteScope, '1', 'index.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      const indexPath = path.join(helper.localScopePath, expectedLocation);
+      const indexFileContent = fs.readFileSync(indexPath).toString();
+      expect(indexFileContent).to.have.string('module.exports = require(\'./dist/utils/is-type.js\');', 'dependency index file point to the wrong place');
+    });
+    it('should save the direct dependency nested to the main component', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
+        'is-string', helper.remoteScope, '1', 'utils', 'is-string.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should save the indirect dependency nested to the main component (as opposed to nested of nested)', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
+        'is-type', helper.remoteScope, '1', 'utils', 'is-type.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should add dependencies dists files to file system', () => {
+      const expectedIsTypeDistLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
+        'is-type', helper.remoteScope, '1', 'dist', 'utils', 'is-type.js');
+      const expectedIsStringDistLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
+        'is-string', helper.remoteScope, '1', 'dist', 'utils', 'is-string.js');
+      expect(localConsumerFiles).to.include(expectedIsTypeDistLocation);
+      expect(localConsumerFiles).to.include(expectedIsStringDistLocation);
+    });
+    it('should link the direct dependency to its index file from main component source folder', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'utils', 'is-string.js');
+      const linkPath = path.join(helper.localScopePath, expectedLocation);
+      const linkPathContent = fs.readFileSync(linkPath).toString();
+      const expectedPathSuffix = path.join('dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      expect(linkPathContent).to.have.string(`module.exports = require(\'../${expectedPathSuffix}\');`, 'dependency link file point to the wrong place');
+    });
+    it('should link the direct dependency to its index file from main component dist folder', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dist', 'utils', 'is-string.js');
+      const linkPath = path.join(helper.localScopePath, expectedLocation);
+      const linkPathContent = fs.readFileSync(linkPath).toString();
+      const expectedPathSuffix = path.join('dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      expect(linkPathContent).to.have.string(`module.exports = require(\'../../${expectedPathSuffix}\');`, 'dependency link file point to the wrong place');
+    });
+    it('should link the indirect dependency from dependent component source folder to its index file in the dependency directory', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
+        'is-string', helper.remoteScope, '1', 'utils', 'is-type.js');
+      const linkPath = path.join(helper.localScopePath, expectedLocation);
+      const linkPathContent = fs.readFileSync(linkPath).toString();
+      const expectedPathSuffix = path.join('is-type', helper.remoteScope, '1', 'index.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      expect(linkPathContent).to.have.string(`module.exports = require(\'../../../../${expectedPathSuffix}\');`, 'in direct dependency link file point to the wrong place');
+    });
+    it('should link the indirect dependency from dependent component dist folder to its index file in the dependency directory', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
+        'is-string', helper.remoteScope, '1', 'dist', 'utils', 'is-type.js');
+      const linkPath = path.join(helper.localScopePath, expectedLocation);
+      const linkPathContent = fs.readFileSync(linkPath).toString();
+      const expectedPathSuffix = path.join('is-type', helper.remoteScope, '1', 'index.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      expect(linkPathContent).to.have.string(`module.exports = require(\'../../../../../${expectedPathSuffix}\');`, 'in direct dependency link file point to the wrong place');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";

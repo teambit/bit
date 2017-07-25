@@ -7,6 +7,8 @@ import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './except
 import { BitId } from '../../bit-id';
 import { readFile, outputFile } from '../../utils';
 
+const SHOULD_THROW = true;
+
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
 export type ComponentMap = {
@@ -180,14 +182,27 @@ export default class BitMap {
     delete this.components[oldId.toString()];
   }
 
-  getComponent(id: string): ComponentMap {
+  getComponent(id: string, shouldThrow: boolean): ComponentMap {
+    if (!this.components[id] && shouldThrow) throw new MissingBitMapComponent(id);
     return this.components[id];
   }
 
   getMainFileOfComponent(id: string) {
-    if (!this.components[id]) throw new MissingBitMapComponent(id);
-    const mainFile = this.components[id].mainFile;
+    const component = this.getComponent(id, SHOULD_THROW);
+    const mainFile = component.mainFile;
     return this.components[id].files[mainFile];
+  }
+
+  getRootDirOfComponent(id: string){
+    const component = this.getComponent(id, SHOULD_THROW);
+    return component.rootDir;
+  }
+
+  getEntryFileOfComponent(id: string){
+    const component = this.getComponent(id, SHOULD_THROW);
+    const rootDir = component.rootDir;
+    const entryPath = path.join(rootDir, DEFAULT_INDEX_NAME);
+    return entryPath;
   }
 
   /**

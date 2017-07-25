@@ -335,23 +335,39 @@ export default class Consumer {
    * under 'dependencies' of A.
    */
   async _writeDependencyLinks(componentDependencies: ComponentDependencies[], bitMap: BitMap): Promise<any> {
-    const componentLinks = (directDependencies: Array<Object>, flattenedDependencies: BitIds, parentDir) => {
+    
+    const writeLinkFile = (componentId: string, linkPath: string) => {
+      const entryFilePath = bitMap.getEntryFileOfComponent(componentId);
+
+      const relativeEntryFilePath = path.relative(path.dirname(linkPath), entryFilePath);
+      // todo: move to bit-javascript
+      const linkContent = `module.exports = require('${relativeEntryFilePath}');`;
+
+      return outputFile(linkPath, linkContent);
+    }
+    
+    const componentLinks = (directDependencies: Array<Object>, flattenedDependencies: BitIds, parentDir: string, hasDist: boolean) => {
       if (!directDependencies || !directDependencies.length) return Promise.resolve();
       const links = directDependencies.map((dep) => {
         if (!dep.relativePath) return Promise.resolve();
         const linkPath = path.join(parentDir, dep.relativePath);
+        let distLinkPath;
+        if (hasDist){
+          distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, dep.relativePath);
+        }
         let resolveDepVersion = dep.id;
         // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
         // Actual version number, because on the bitmap we have only specific versions
         if (dep.id.getVersion().latest) {
           resolveDepVersion = flattenedDependencies.resolveVersion(dep.id).toString();
         }
-        const depMainFile = bitMap.getMainFileOfComponent(resolveDepVersion);
 
-        const relativeMainFile = path.relative(path.dirname(linkPath), depMainFile);
-        // todo: move to bit-javascript
-        const linkContent = `module.exports = require('${relativeMainFile}');`;
-        return outputFile(linkPath, linkContent);
+        // Generate a link file inside dist folder of the dependent component
+        if (hasDist){
+          writeLinkFile(resolveDepVersion, distLinkPath);
+        }
+
+        return writeLinkFile(resolveDepVersion, linkPath);
       });
       return Promise.all(links);
     };
@@ -359,10 +375,12 @@ export default class Consumer {
     const allLinksP = componentDependencies.map((componentWithDeps) => {
       const directDeps = componentWithDeps.component.dependencies;
       const flattenDeps = componentWithDeps.component.flattenedDependencies;
-      const directLinksP = componentLinks(directDeps, flattenDeps, componentWithDeps.component.writtenPath);
+      const hasDist =  componentWithDeps.component.dists && !R.isEmpty(componentWithDeps.component.dists);
+      const directLinksP = componentLinks(directDeps, flattenDeps, componentWithDeps.component.writtenPath, hasDist);
 
       const indirectLinksP = componentWithDeps.dependencies.map((dep: Component) => {
-        return componentLinks(dep.dependencies, dep.flattenedDependencies, dep.writtenPath);
+        const hasDist =  dep.dists && !R.isEmpty(dep.dists);
+        return componentLinks(dep.dependencies, dep.flattenedDependencies, dep.writtenPath, hasDist);
       });
 
       return Promise.all([directLinksP, ...indirectLinksP]);
