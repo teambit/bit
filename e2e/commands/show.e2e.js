@@ -34,7 +34,8 @@ describe('bit show command', function () {
 
       before(() => {
         output = helper.runCmd(`bit show comp/comp`);
-      })
+      });
+      
       it('should render the id correctly', () => {
         expect(output).to.have.string('ID', 'ID row is missing');
         expect(output).to.have.string('comp/comp', 'component id is wrong');
@@ -77,10 +78,69 @@ describe('bit show command', function () {
       });
     });
 
-    describe.skip('single version as json output', () => {
-      // TODO: Make more test cases here
-      it('should return correct json', () => {
+    describe.only('single version as json output', () => {
+      let output;
+      
 
+      before(() => {
+        output = JSON.parse(helper.runCmd(`bit show comp/comp -j`));
+      })
+
+      it('should include the name correctly', () => {
+        expect(output).to.include({name: 'comp'});
+      });
+
+      it('should include the namespace correctly', () => {
+        expect(output).to.include({box: 'comp'});
+      });
+
+      it.skip('should include the version correctly', () => {
+        expect(output).to.include({version: 1});
+      });
+
+      // TODO: get the version dynamically 
+      it('should include the compiler correctly', () => {
+        expect(output).to.include({compilerId: "bit.envs/compilers/babel::12"});
+      });
+
+      it('should include the language correctly', () => {
+        expect(output).to.include({lang: "javascript"});
+      });
+
+      // TODO: update when we add tester to use case
+      it('should include the tester correctly', () => {
+        expect(output).to.include({testerId: null});
+      });
+
+      it('should include the dependencies correctly', () => {
+        const dependencies = output.dependencies;
+        const depObject = {[`${helper.localScope}/utils/is-string`]:'latest'};
+        expect(dependencies).to.include(depObject);
+      });
+
+      // TODO: update when adding package deps to test case
+      it('should include the package dependencies correctly', () => {
+        const packageDependencies = output.packageDependencies;
+        expect(packageDependencies).to.be.empty;
+      });
+
+      it('should include the files correctly', () => {
+        const files = output.files;
+        const firstFileObj = files[0];
+        const secondFileObj = files[1];
+        console.log(files);
+
+        const mainFileHistory = [`${helper.localScopePath}/src/mainFile.js`];
+        // const mainFileObj = {history: mainFileHistory};
+        const utilFileHistory = [`${helper.localScopePath}/src/utils/utilFile.js`];
+        // const utilFileObj = {history: utilFileHistory};
+
+        expect(firstFileObj.history[0]).to.include(mainFileHistory);
+        expect(secondFileObj.history[0]).to.include(utilFileHistory);
+      });
+
+      it.skip('should include the main file correctly', () => {
+        expect(output).to.include({mainFile: null});
       });
     });
 
@@ -89,6 +149,7 @@ describe('bit show command', function () {
     });
   });
 
+  // TODO: Implement after export is working
   describe.skip('remote components', () => {
     describe('single version as cli output (no -v or -j flags)', () => {
       it('should render the id correctly', () => {
