@@ -16,6 +16,118 @@ describe('bit show command', function () {
   after(() => {
     helper.destroyEnv();
   });
+
+  describe.skip('local components', () => {
+    describe('single version as cli output (no -v or -j flags)', () => {
+      it('should render the id correctly', () => {
+
+      });
+
+      it('should render the language correctly', () => {
+
+      });
+
+      it('should render the language correctly', () => {
+
+      });
+
+      it('should render the tester correctly', () => {
+
+      });
+
+      it('should render the dependencies correctly', () => {
+
+      });
+
+      it('should render the package dependencies correctly', () => {
+
+      });
+
+      it('should render the files correctly', () => {
+
+      });
+    });
+
+    describe('single version as json output', () => {
+      // TODO: Make more test cases here
+      it('should return correct json', () => {
+
+      });
+    });
+
+    it('should throw an error if the -v flag provided', () => {
+
+    });
+  });
+
+  describe.skip('remote components', () => {
+    describe('single version as cli output (no -v or -j flags)', () => {
+      it('should render the id correctly', () => {
+
+      });
+
+      it('should render the language correctly', () => {
+
+      });
+
+      it('should render the language correctly', () => {
+
+      });
+
+      it('should render the tester correctly', () => {
+
+      });
+
+      it('should render the dependencies correctly', () => {
+
+      });
+
+      it('should render the package dependencies correctly', () => {
+
+      });
+    });
+
+    describe('all versions as cli output (without -j flag)', () => {
+      it('should render the id correctly', () => {
+
+      });
+
+      it('should render the language correctly', () => {
+
+      });
+
+      it('should render the language correctly', () => {
+
+      });
+
+      it('should render the tester correctly', () => {
+
+      });
+
+      it('should render the dependencies correctly', () => {
+
+      });
+
+      it('should render the package dependencies correctly', () => {
+
+      });
+    });
+
+    describe('single version as json output', () => {
+      // TODO: Make more test cases here
+      it('should return correct json', () => {
+
+      });
+    });
+
+    describe('all versions as json output', () => {
+      // TODO: Make more test cases here
+      it('should return correct json', () => {
+
+      });
+    });
+  });
+
   describe('with no docs', () => {
     before(() => {
       const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";
