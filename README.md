@@ -20,6 +20,10 @@
 Bit is an Apache 2.0 open-source project, actively maintained by a full-time, venture-backed team. 
 It's also being used by popular open source communities.
 
+<p align="center">
+  <img src="https://storage.googleapis.com/bit-docs/readme.gif" height="500">
+</p>
+
 ## Supported Languages
 Bit is language agnostic. Still, It requires binding and additional programming language sensitive features for different programming languages. To do so, Bit uses language-specific drivers:
 
