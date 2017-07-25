@@ -562,10 +562,10 @@ export default class Component {
       dependencies: this._dependenciesAsWritableObject(),
       packageDependencies: this.packageDependencies,
       specs: this.specs ? this.specs.serialize() : null,
-      impl: this.impl.serialize(),
-      files: this.files ? this.files.serialize() : null,
+      impl: this.impl ? this.impl.serialize() : null,
+      files: this.files,
       docs: this.docs,
-      dists: this.dists ? this.dists.serialize() : null,
+      dists: this.dists,
       specsResults: this.specsResults ? this.specsResults.serialize() : null,
       license: this.license ? this.license.serialize() : null,
       log: this.log
