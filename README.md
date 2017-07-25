@@ -14,7 +14,7 @@
 
 * **Turn any subset of files into a component** without changing your source code or file-system structure. Create multiple components with a single command.
 * **Develop and compose** components locally from any project, build and test them in any application environment.
-* **Discover components** you and your team love and trust. Measure and monitor components quality through auto-generated docs and test results.
+* **Discover components** you and your team love and trust. Measure and monitor component quality through auto-generated docs and test results.
 * **Universal control over your dependency graph.** Commit and test vast changes of dependencies and dependents at once. Bit components are also immutable.
 
 Bit is an Apache 2.0 open-source project, actively maintained by a full-time, venture-backed team. 
@@ -25,7 +25,7 @@ It's also being used by popular open source communities.
 </p>
 
 ## Supported Languages
-Bit is language agnostic. Still, It requires binding and additional programming language sensitive features for different programming languages. To do so, Bit uses language-specific drivers:
+Bit is language agnostic. Still, it requires binding and additional language sensitive features for different programming languages. To do this, Bit uses language-specific drivers:
 
 * [bit-javascript](https://github.com/teambit/bit-javascript)
 
@@ -45,7 +45,7 @@ bit init
 
 ### Add components
 
-Bit `add` allows to track a subset of files or directories as a reusable code component. Classic use cases would be web components (native, react, angular, etc.), utility functions or any other nodejs module.
+Bit `add` allows you to track a subset of files or directories as a reusable code component. Classic use cases would be web components (native, react, angular, etc.), utility functions or any other node.js module.
 
 ```sh
 bit add src/utils/pad-left.js
@@ -61,9 +61,9 @@ bit add src/utils/*.js
 
 ### Commit
 
-Bit `commit`, commits changes to new and existing components in your application.
+Bit `commit` commits changes to new and existing components in your application.
 
-To check which components were changed or added and about to be committed, you can use `bit status`:
+To check which components were changed or added and are about to be committed, you can use `bit status`:
 
 ```sh
 bit status
@@ -99,7 +99,7 @@ bit export bit.utils
 
 ### Import
 
-Bit `import` enables to install component (as an application part) you’ve tracked in any destination on your project’s file system.
+Bit `import` enables you to install a component as an application part in any destination on your project’s file system.
 
 Let's import the component we just created to a new project.
 
@@ -110,7 +110,7 @@ Let's import the component we just created to a new project.
   bit import my-scope/pad-left
   ```
 
-The component is now it in the components directory, ready to be used in your code.
+The component is now in the components directory, ready to be used in your code.
 
 **Use:**
 
@@ -120,7 +120,7 @@ const component = require('./components/utils/pad-left');
 
 ## Why Bit - Built for code components
 
-Because we believe code should be written once, and evolve over time. Atomic pieces of code should be composed together as lego bricks to form any functionality. Yet, as software development is being scaled, creating, finding and composing these atomic components is getting harder. Having the right tool to develop and compose components with simplicity, predictability and ease of use is the key to bringing this philosophy from theory to practice. With Bit, you can turn existing source code into a beautiful collection of reusable components- for you or your team. You can develop and compose components in any application environment, making them the perfect building blocks for your different projects.
+Because we believe code should be written once, and evolve over time. Atomic pieces of code should be composed together as lego bricks to form any functionality. Yet, as software development is being scaled, creating, finding and composing these atomic components is getting harder. Having the right tool to develop and compose components with simplicity, predictability and ease of use is the key to bringing this philosophy from theory to practice. With Bit, you can turn existing source code into a beautiful collection of reusable components for you or your team. You can develop and compose components in any application environment, making them the perfect building blocks for your different projects.
 
 * Learn more: [Coding in the age of code components](https://blog.bitsrc.io/introducing-bit-writing-code-in-the-age-of-code-components-fd8512a9aa90)
 
@@ -133,7 +133,7 @@ See [Contributing](CONTRIBUTING.md).
 
 ## Feedback
 
-Feedbacks are more than welcome: [team@bitsrc.io](mailto:team@bitsrc.io)
+Feedback is more than welcome: [team@bitsrc.io](mailto:team@bitsrc.io)
 
 ## License
 
