@@ -110,13 +110,17 @@ export default class SSH {
     });
   }
 
-  push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
-    return this.exec('_put', componentObjects.toString())
+  pushMany(manyComponentObjects: ComponentObjects[]): Promise<ComponentObjects[]> {
+    return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects))
       .then((data: string) => {
         const { payload, headers } = unpackCommand(data);
         checkVersionCompatibility(headers.version);
-        return ComponentObjects.fromString(payload);
+        return ComponentObjects.manyFromString(payload);
       });
+  }
+
+  push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
+    return this.pushMany([componentObjects]);
   }
 
   describeScope(): Promise<ScopeDescriptor> {

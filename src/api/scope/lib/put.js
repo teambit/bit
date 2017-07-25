@@ -8,6 +8,7 @@ export type ComponentObjectsInput = {
 
 export default function put({ path, componentObjects }: ComponentObjectsInput): Promise<any> {
   return loadScope(path).then((scope) => {
-    return scope.export(ComponentObjects.fromString(componentObjects));
+    const allComponents = ComponentObjects.manyFromString(componentObjects);
+    return Promise.all(allComponents.map(component => scope.export(component)));
   });
 }

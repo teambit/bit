@@ -24,6 +24,14 @@ export default class ComponentObjects {
     return ComponentObjects.fromObject(JSON.parse(str));
   }
 
+  static manyToString(componentsAndObjects: Array<{ component: Buffer, objects: Buffer[] }>) {
+    return JSON.stringify(componentsAndObjects);
+  }
+
+  static manyFromString(str: string): ComponentObjects {
+    return JSON.parse(str).map(componentObject => ComponentObjects.fromObject(componentObject));
+  }
+
   static fromObject(object: Object): ComponentObjects {
     const { component, objects } = object;
 
