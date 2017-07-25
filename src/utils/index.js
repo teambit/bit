@@ -1,5 +1,6 @@
 /** @flow */
 import first from './first';
+import bufferFrom from './buffer-from';
 import flatMap from './flat-map';
 import flatten from './flatten';
 import resolveBoolean from './resolve-boolean';
@@ -113,5 +114,6 @@ export {
   unpackCommand,
   buildCommandMessage,
   removeFromRequireCache,
-  outputFile
+  outputFile,
+  bufferFrom
 };

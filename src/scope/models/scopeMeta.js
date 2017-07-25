@@ -1,5 +1,5 @@
 import { BitObject, Ref } from '../objects';
-import bufferFrom from 'bit/buffer/from';
+import { bufferFrom } from '../../utils/buffer-from';
 
 type ScopeMetaProps = {
   name: string;

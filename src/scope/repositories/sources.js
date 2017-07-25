@@ -1,5 +1,5 @@
 /** @flow */
-import bufferFrom from 'bit/buffer/from';
+import { bufferFrom } from '../../utils/buffer-from';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';

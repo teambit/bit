@@ -13,6 +13,5 @@
         "entry": "src"
     },
     "dependencies": {
-        "bit.utils/buffer/from": "2"
     }
 }
