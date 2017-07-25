@@ -585,21 +585,6 @@ export default class Scope {
       });
   }
 
-  // todo: get red of this method, it is a private case of exportMany
-  async exportAction(bitId: BitId, remoteName: string) {
-    bitId.scope = this.name;
-    const remotes = await this.remotes();
-    const remote = await remotes.resolve(remoteName, this);
-    const component = await this.sources.getObjects(bitId);
-    logger.debug('exportAction: successfully fetched the objects, will try to push them into the remote');
-    const [objects] = await remote.push(component);
-    logger.debug('exportAction: successfully pushed the objects into the remote');
-    await this.clean(bitId);
-    await this.importSrc(objects);
-    bitId.scope = remoteName;
-    return this.get(bitId);
-  }
-
   async exportMany(ids: BitId[], remoteName: string) {
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
