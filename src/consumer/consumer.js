@@ -28,7 +28,8 @@ import {
   BIT_HIDDEN_DIR,
   DEPENDENCIES_DIR,
   COMPONENT_ORIGINS,
-  DEFAULT_DIST_DIRNAME
+  DEFAULT_DIST_DIRNAME,
+  DEFAULT_INDEX_NAME
 } from '../constants';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
@@ -306,9 +307,8 @@ export default class Consumer {
 
   async _writeEntryPointsForImportedComponent(component: Component, bitMap: BitMap):
   Promise<any> {
-    const ENTRY_POINT_FILE = 'index.js'; // todo: move to bit-javascript
     const componentRoot = component.writtenPath;
-    const entryPointPath = path.join(componentRoot, ENTRY_POINT_FILE);
+    const entryPointPath = path.join(componentRoot, DEFAULT_INDEX_NAME);
     let componentId = component.id.toString();
     if (!bitMap.getComponent(componentId)) { // todo: this is a hack. bit.map should have the correct id with the scope
       componentId = component.id.changeScope(null).toString();
