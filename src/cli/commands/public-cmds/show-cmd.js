@@ -12,7 +12,7 @@ export default class Show extends Command {
   alias = '';
   opts = [
     ['j', 'json', 'return a json version of the component'],
-    ['ver', 'versions', 'return a json of all the versions of the component'],
+    ['v', 'versions', 'return a json of all the versions of the component'],
   ];
   loader = true;
 
