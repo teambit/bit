@@ -6,56 +6,85 @@ import Helper from '../e2e-helper';
 describe('bit show command', function () {
   this.timeout(0);
   const helper = new Helper();
-  const commitFoo = (implementation) => {
-    helper.cleanEnv();
-    helper.runCmd('bit init');
-    helper.createComponentBarFoo(implementation);
-    helper.addComponentBarFoo();
-    helper.commitComponentBarFoo();
-  };
+
   after(() => {
     helper.destroyEnv();
   });
 
-  describe.skip('local components', () => {
+  describe('local component', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.importCompiler();
+
+      helper.createComponent('utils', 'is-string.js');
+      helper.addComponent('utils/is-string.js');
+      helper.commitComponent('utils/is-string');
+
+      const fooBarFixture = "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      helper.createFile('src', 'mainFile.js', fooBarFixture);
+      helper.createFile('src/utils', 'utilFile.js');
+      helper.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
+      helper.commitComponent('comp/comp');      
+    });
+
     describe('single version as cli output (no -v or -j flags)', () => {
+      let output;
+
+      before(() => {
+        output = helper.runCmd(`bit show comp/comp`);
+      })
       it('should render the id correctly', () => {
+        expect(output).to.have.string('ID', 'ID row is missing');
+        expect(output).to.have.string('comp/comp', 'component id is wrong');
+      });
 
+      it('should render the compiler correctly', () => {
+        expect(output).to.have.string('Compiler', 'Compiler row is missing');
+        expect(output).to.have.string('bit.envs/compilers/babel', 'compiler is wrong');
       });
 
       it('should render the language correctly', () => {
-
+        expect(output).to.have.string('Language', 'Language row is missing');
+        expect(output).to.have.string('javascript', 'Language is wrong');
       });
 
-      it('should render the language correctly', () => {
-
-      });
-
-      it('should render the tester correctly', () => {
-
+      it.skip('should render the tester correctly', () => {
+        expect(output).to.have.string('Tester', 'Tester row is missing');
+        expect(output).to.have.string('javascript', 'Tester is wrong');
       });
 
       it('should render the dependencies correctly', () => {
-
+        expect(output).to.have.string('Dependencies', 'Dependencies row is missing');
+        expect(output).to.have.string(`${helper.localScope}/utils/is-string::latest`, 'Dependencies are wrong');
       });
 
-      it('should render the package dependencies correctly', () => {
-
+      it.skip('should render the package dependencies correctly', () => {
+        expect(output).to.have.string('Packages', 'Packages row is missing');
+        expect(output).to.have.string('FILL WITH PACKAGE NAME', 'Packages are wrong');
       });
 
       it('should render the files correctly', () => {
+        expect(output).to.have.string('Files', 'Files row is missing');
+        expect(output).to.have.string('src/mainFile.js', 'Files are wrong');
+        expect(output).to.have.string('src/utils/utilFile.js', 'Files are wrong');
+      });
 
+      it.skip('should render the main file correctly', () => {
+        expect(output).to.have.string('Main file', 'Main file row is missing');
+        expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
     });
 
-    describe('single version as json output', () => {
+    describe.skip('single version as json output', () => {
       // TODO: Make more test cases here
       it('should return correct json', () => {
 
       });
     });
 
-    it('should throw an error if the -v flag provided', () => {
+    it.skip('should throw an error if the -v flag provided', () => {
 
     });
   });
@@ -84,6 +113,17 @@ describe('bit show command', function () {
 
       it('should render the package dependencies correctly', () => {
 
+      });
+
+      it('should render the files correctly', () => {
+        expect(output).to.have.string('Files', 'Files row is missing');
+        expect(output).to.have.string('src/mainFile.js', 'Files are wrong');
+        expect(output).to.have.string('src/utils/utilFile.js', 'Files are wrong');
+      });
+
+      it.skip('should render the main file correctly', () => {
+        expect(output).to.have.string('Main file', 'Main file row is missing');
+        expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
     });
 
