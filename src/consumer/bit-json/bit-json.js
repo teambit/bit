@@ -18,7 +18,6 @@ export function hasExisting(bitPath: string): boolean {
 export type BitJsonProps = {
   impl?: string;
   spec?: string;
-  miscFiles?: string[];
   lang?: string;
   compiler?: string;
   tester?: string;
@@ -26,20 +25,16 @@ export type BitJsonProps = {
   packageDependencies?: Object;
 };
 
+/**
+ * Component's bit.json
+ */
 export default class BitJson extends AbstractBitJson {
-  impl: string;
-  spec: string;
-  miscFiles: string[];
-  compiler: string;
-  lang: string;
-  tester: string;
-  dependencies: {[string]: string};
   packageDependencies: {[string]: string};
 
   constructor({
-    impl, spec, miscFiles, compiler, tester, dependencies, packageDependencies, lang,
+    impl, spec, compiler, tester, dependencies, packageDependencies, lang,
   }: BitJsonProps) {
-    super({ impl, spec, miscFiles, compiler, tester, dependencies, lang });
+    super({ impl, spec, compiler, tester, dependencies, lang });
     this.packageDependencies = packageDependencies || {};
   }
 
@@ -93,7 +88,6 @@ export default class BitJson extends AbstractBitJson {
     return new BitJson({
       impl: R.prop('impl', sources),
       spec: R.prop('spec', sources),
-      miscFiles: R.prop('misc', sources),
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
       dependencies,
@@ -115,31 +109,27 @@ export default class BitJson extends AbstractBitJson {
     return this.mergeWithProto(json, protoBJ);
   }
 
-  static load(dirPath: string, protoBJ?: ConsumerBitJson): Promise<BitJson> {
+  static load(dirPath?: string, protoBJ?: ConsumerBitJson): Promise<BitJson> {
     return new Promise((resolve, reject) => {
-      let thisBJ = {};
-      const bitJsonPath = composePath(dirPath);
-      if (fs.existsSync(bitJsonPath)) {
-        try {
-          thisBJ = JSON.parse(fs.readFileSync(bitJsonPath).toString('utf8'));
-        } catch (e) {
-          return reject(new InvalidBitJson(bitJsonPath));
-        }
+      try{
+        const result = this.loadSync(dirPath, protoBJ);
+        return resolve(result);
+      } catch (e) {
+        return reject(bitJsonPath);
       }
-
-      const mergedBJ = this.mergeWithProto(thisBJ, protoBJ);
-      return resolve(mergedBJ);
     });
   }
 
   static loadSync(dirPath: string, protoBJ?: ConsumerBitJson) {
     let thisBJ = {};
-    const bitJsonPath = composePath(dirPath);
-    if (fs.existsSync(bitJsonPath)) {
-      try {
-        thisBJ = JSON.parse(fs.readFileSync(bitJsonPath).toString('utf8'));
-      } catch (e) {
-        throw new InvalidBitJson(bitJsonPath);
+    if (dirPath) {
+      const bitJsonPath = composePath(dirPath);
+      if (fs.existsSync(bitJsonPath)) {
+        try {
+          thisBJ = JSON.parse(fs.readFileSync(bitJsonPath).toString('utf8'));
+        } catch (e) {
+          throw new InvalidBitJson(bitJsonPath);
+        }
       }
     }
 

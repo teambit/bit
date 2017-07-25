@@ -9,6 +9,7 @@ import { HashNotFound } from '../exceptions';
 import { resolveGroupId, mkdirp, writeFile, removeFile, allSettled, readFile, inflate } from '../../utils';
 import { Scope } from '../../scope';
 import { Component, ScopeMeta } from '../models';
+import logger from '../../logger/logger';
 
 export default class Repository {
   objects: BitObject[] = [];
@@ -53,6 +54,7 @@ export default class Repository {
         return BitObject.parseObject(fileContents, this.types);
       })
       .catch((e) => {
+        logger.debug(`Failed reading a ref file ${this.objectPath(ref)}`);
         return null;
       });
   }
@@ -80,7 +82,7 @@ export default class Repository {
     return removeFile(this.objectPath(ref), true);
   }
 
-  removeMany(refs: Ref[]) {
+  removeMany(refs: Ref[]): Promise {
     return Promise.all(refs.map(ref => this.remove(ref)));
   }
 
@@ -124,6 +126,7 @@ export default class Repository {
   }
 
   persist(): Promise<[]> {
+    logger.debug(`repository: persisting ${this.objects.length} objects`);
     // @TODO handle failures
     return Promise.all(this.objects.map(object => this.persistOne(object)));
   }
@@ -133,7 +136,9 @@ export default class Repository {
       .then((contents) => {
         const options = {};
         if (this.scope.groupName) options.gid = resolveGroupId(this.scope.groupName);
-        return writeFile(this.objectPath(object.hash()), contents, options);
+        const objectPath = this.objectPath(object.hash());
+        logger.debug(`writing an object into ${objectPath}`);
+        return writeFile(objectPath, contents, options);
       });
   }
 }

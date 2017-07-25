@@ -65,8 +65,7 @@ export default class Environment {
   bindFromDriver(component: Component) {
     const driver = Driver.load(component.lang).getDriver(false);
     if (driver) {
-      // TODO: should return this once we implement it again
-      // return driver.bindSpecificComponents({ projectRoot: this.path, components: [component] });
+      // todo: bindSpecificComponents would be better. It is not available at the moment
       return driver.bind({ projectRoot: this.path });
     }
     return Promise.resolve();
@@ -96,15 +95,6 @@ export default class Environment {
 
   getPath(): string {
     return this.path;
-  }
-
-  getImplPath(component: Component): string {
-    return path.join(this.getComponentPath(component), component.implFile);
-  }
-
-  getMiscFilesPaths(component: Component): string[] {
-    const componentPath = this.getComponentPath(component);
-    return component.miscFiles.map(misc => path.join(componentPath, misc));
   }
 
   destroy(): Promise<*> {

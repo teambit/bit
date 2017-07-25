@@ -30,7 +30,14 @@ export default class Fs {
   }
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
-    return this.getScope().export(componentObjects);
+    return this.pushMany([componentObjects]);
+  }
+
+  pushMany(components: ComponentObjects[]): Promise<ComponentObjects[]> {
+    const scope = this.getScope();
+    return Promise.all(components.map((component) => {
+      return scope.export(component);
+    }));
   }
 
   fetch(bitIds: BitIds): Promise<ComponentObjects[]> {

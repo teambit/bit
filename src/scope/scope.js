@@ -2,7 +2,7 @@
 import * as pathLib from 'path';
 import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
-import bitJs from 'bit-js';
+import Toposort from 'toposort-class';
 import { GlobalRemotes } from '../global-config';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
@@ -33,6 +33,8 @@ import {
   BEFORE_IMPORT_PUT_ON_SCOPE,
   BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
+import logger from '../logger/logger';
+import componentResolver from '../component-resolver';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -55,7 +57,7 @@ export default class Scope {
   scopeJson: ScopeJson;
   tmp: Tmp;
   path: string;
-  sources: SourcesRepository;
+  // sources: SourcesRepository; // for some reason it interferes with the IDE autocomplete
   objects: Repository;
 
   constructor(scopeProps: ScopeProps) {
@@ -85,7 +87,7 @@ export default class Scope {
   }
 
   getBitPathInComponentsDir(id: BitId): string {
-    return pathLib.join(this.getComponentsPath(), id.toPath());
+    return pathLib.join(this.getComponentsPath(), id.toFullPath());
   }
 
   remotes(): Promise<Remotes> {
@@ -123,14 +125,13 @@ export default class Scope {
       ));
   }
 
-  importDependencies(component: ConsumerComponent, bitDir: string) {
-    const bitJsonPath = pathLib.join(bitDir, BIT_JSON);
+  importDependencies(dependencies: BitId[]) {
     return new Promise((resolve, reject) => {
-      return this.importMany(component.dependencies)
+      return this.importMany(dependencies)
         .then(resolve)
         .catch((e) => {
           if (e instanceof RemoteScopeNotFound) return reject(e);
-          reject(new DependencyNotFound(e.id, bitJsonPath));
+          reject(new DependencyNotFound(e.id));
         });
     });
   }
@@ -140,10 +141,10 @@ export default class Scope {
    */
   installDrivers(driversNames: string[]) {
     const path = this.getPath();
-    return Promise.all(driversNames.map((driverName) => npmClient.install(driverName, { cwd: path })))
+    return Promise.all(driversNames.map((driverName) => npmClient.install(driverName, { cwd: path })));
   }
 
-  deleteNodeModulesDir():  Promise<*> {
+  deleteNodeModulesDir(): Promise<*> {
     return new Promise((resolve, reject) => {
       const path = this.getPath() + '/node_modules';
       fs.remove(path, (err) => {
@@ -153,46 +154,108 @@ export default class Scope {
     });
   }
 
-  put({ consumerComponent, message, force, consumer, bitDir, verbose }: {
-    consumerComponent: ConsumerComponent,
+  async putMany({ consumerComponents, message, force, consumer, verbose }: {
+    consumerComponents: ConsumerComponent[],
     message: string,
     force: ?bool,
     consumer: Consumer,
-    bitDir: string,
     verbose: ?bool,
   }):
-  Promise<ComponentDependencies> {
-    consumerComponent.scope = this.name;
+  Promise<ComponentDependencies> { // TODO: Change the return type
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
+    const self = this;
+    const topSort = new Toposort();
+    const allDependencies = new Map();
+    const consumerComponentsIdsMap = new Map();
 
-    return this.importDependencies(consumerComponent, bitDir)
-      .then((dependencies) => {
-        return flattenDependencyIds(dependencies, this.objects)
-          .then((depIds) => {
-            return this.sources.addSource({
-              source: consumerComponent, depIds, message, force, consumer, verbose,
-            })
-              .then((component) => {
-                loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-                return this.objects.persist()
-                  .then(() => component.toVersionDependencies(LATEST, this, this.name))
-                  .then(deps => deps.toConsumer(this.objects));
-              });
-          });
+    // Concat and unique all the dependencies from all the components so we will not import
+    // the same dependency more then once, it's mainly for performance purpose
+    consumerComponents.forEach((consumerComponent) => {
+      const componentIdString = consumerComponent.id.scope
+        ? consumerComponent.id.toString()
+        : BitId.parse(consumerComponent.id.changeScope(this.name).toString()).toString();
+      // const componentIdString = consumerComponent.id.toString();
+      // Store it in a map so we can take it easily from the sorted array which contain only the id
+      consumerComponentsIdsMap.set(componentIdString, consumerComponent);
+      const dependenciesIdsStrings = consumerComponent.dependencies.map(dependency => dependency.id.toString());
+      topSort.add(componentIdString, dependenciesIdsStrings || []);
+    });
+
+    // Sort the consumerComponents by the dependency order so we can commit those without the dependencies first
+    const sortedConsumerComponentsIds = topSort.sort().reverse();
+
+    const getFlattenForComponent = (consumerComponent, cache) => {
+      const flattenDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
+        // Try to get the flatten dependencies from cache
+        let flattenDependencies = cache.get(dependency.id.toString());
+        if (flattenDependencies) return Promise.resolve(flattenDependencies);
+
+        // Calculate the flatten dependencies
+        const versionDependencies = await this.importDependencies([dependency.id]);
+        flattenDependencies = await flattenDependencyIds(versionDependencies, self.objects);
+
+        // Store the flatten dependencies in cache
+        cache.set(dependency.id.toString(), flattenDependencies);
+
+        return flattenDependencies;
       });
+      return Promise.all(flattenDependenciesP);
+    };
+
+    const persistComponentsP = sortedConsumerComponentsIds.map(consumerComponentId => async () => {
+      const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
+      // This happens when i have a dependency which already committed
+      if (!consumerComponent) return Promise.resolve([]);
+      consumerComponent.scope = self.name;
+
+      return getFlattenForComponent(consumerComponent, allDependencies)
+        .then((flattenDependencies) => {
+          flattenDependencies = R.flatten(flattenDependencies);
+          const predicate = id => id.toString(); // TODO: should be moved to BitId class
+          flattenDependencies = R.uniqBy(predicate)(flattenDependencies);
+          return this.sources.addSource({source: consumerComponent,
+                                  depIds: flattenDependencies,
+                                  message,
+                                  force,
+                                  consumer,
+                                  verbose})})
+        .then((component) => {
+          loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
+          return this.objects.persist()
+            .then(() => component.toVersionDependencies(LATEST, this, this.name))
+            .then(deps => deps.toConsumer(this.objects))
+            .then(() => index(consumerComponent, this.getPath())); // todo: make sure it still works
+        });
+    });
+
+    // Run the persistence one by one not in parallel!
+    return persistComponentsP.reduce((promise, func) =>
+      promise.then(result => func().then(Array.prototype.concat.bind(result))),
+    Promise.resolve([]));
   }
 
+  // todo: rename this method. It writes into the objects directory
   importSrc(componentObjects: ComponentObjects) {
-    return this.sources.merge(componentObjects.toObjects(this.objects))
+    const objects = componentObjects.toObjects(this.objects);
+    logger.debug(`importSrc, writing into the model, Main id: ${objects.component.id()}. It might have dependencies which are going to be written too`);
+    return this.sources.merge(objects)
       .then(() => this.objects.persist());
   }
 
+  // todo: rename this method, it takes place on the remote scope only
+  /**
+   * saves a component into the objects directory of the remote scope, then, resolves its
+   * dependencies, saves them as well. Finally runs the build process if needed on an isolated
+   * environment.
+   */
   async export(componentObjects: ComponentObjects): Promise<any> {
     const objects = componentObjects.toObjects(this.objects);
     const { component } = objects;
     await this.sources.merge(objects, true);
     const compVersion = await component.toComponentVersion(LATEST, this.name);
+    logger.debug('export on bare-scope: will try to importMany in case there are missing dependencies');
     const versions = await this.importMany([compVersion.id], true); // resolve dependencies
+    logger.debug('export on bare-scope: successfully ran importMany');
     await this.objects.persist();
     const objs = await Promise.all(versions.map(version => version.toObjects(this.objects)));
     const consumerComponent = await compVersion.toConsumer(this.objects);
@@ -203,6 +266,7 @@ export default class Scope {
   }
 
   getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: bool = false) {
+    logger.debug(`getExternalOnes, ids: ${ids.join(', ')}`);
     return this.sources.getMany(ids)
       .then((defs) => {
         const left = defs.filter((def) => {
@@ -212,6 +276,7 @@ export default class Scope {
         });
 
         if (left.length === 0) {
+          logger.debug('getExternalOnes: no more ids left, all found locally, existing the method');
           return Promise.all(defs.map((def) => {
             return def.component.toComponentVersion(
               def.id.version,
@@ -220,6 +285,7 @@ export default class Scope {
           }));
         }
 
+        logger.debug(`getExternalOnes: ${left.length} left. Fetching them from a remote`);
         return remotes
           .fetch(left.map(def => def.id), this, true)
           .then((componentObjects) => {
@@ -229,8 +295,12 @@ export default class Scope {
       });
   }
 
+  /**
+   * If found locally, use them. Otherwise, fetch from remote and then, save into the model.
+   */
   getExternalMany(ids: BitId[], remotes: Remotes, localFetch: bool = true):
   Promise<VersionDependencies[]> {
+    logger.debug(`getExternalMany, planning on fetching from ${localFetch ? 'local': 'remote'} scope. Ids: ${ids.join(', ')}`);
     return this.sources.getMany(ids)
       .then((defs) => {
         const left = defs.filter((def) => {
@@ -240,6 +310,7 @@ export default class Scope {
         });
 
         if (left.length === 0) {
+          logger.debug('getExternalMany: no more ids left, all found locally, existing the method');
           // $FlowFixMe - there should be a component because there no defs without components left.
           return Promise.all(defs.map(def => def.component.toVersionDependencies(
             def.id.version,
@@ -248,15 +319,21 @@ export default class Scope {
           )));
         }
 
+        logger.debug(`getExternalMany: ${left.length} left. Fetching them from a remote`);
         return remotes
           .fetch(left.map(def => def.id), this)
           .then((componentObjects) => {
+            logger.debug('getExternalMany: writing them to the model');
             return Promise.all(componentObjects.map(compObj => this.importSrc(compObj)));
           })
           .then(() => this.getExternalMany(ids, remotes));
       });
   }
 
+  /**
+   * If the component is not in the local scope, fetch it from a remote and save into the local
+   * scope. (objects directory).
+   */
   getExternal({ id, remotes, localFetch = true }: {
     id: BitId,
     remotes: Remotes,
@@ -297,7 +374,12 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
-  importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true): Promise<VersionDependencies[]> {
+  /**
+   * If not found in the local scope, fetch from a remote scope and save into the local scope
+   */
+  async importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true):
+  Promise<VersionDependencies[]> {
+    logger.debug(`scope.importMany: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
@@ -325,6 +407,7 @@ export default class Scope {
   }
 
   importManyOnes(ids: BitId[], cache: boolean): Promise<ComponentVersion[]> {
+    logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
@@ -373,7 +456,12 @@ export default class Scope {
       });
   }
 
+  /**
+   * get multiple components from a scope, if not found in the local scope, fetch from a remote
+   * scope. Then, write them to the local scope.
+   */
   getMany(ids: BitId[], cache?: bool = true): Promise<ConsumerComponent[]> {
+    logger.debug(`scope.getMany, Ids: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
     return this.importMany(idsWithoutNils, false, cache)
@@ -497,20 +585,64 @@ export default class Scope {
       });
   }
 
-  exportAction(bitId: BitId, remoteName: string) {
-    return this.remotes().then((remotes) => {
-      return remotes.resolve(remoteName, this)
-        .then((remote) => {
-          return this.sources.getObjects(bitId)
-            .then(component => remote.push(component)
-              .then(objects => this.clean(bitId).then(() => objects))
-              .then(objects => this.importSrc(objects))
-              .then(() => {
-                bitId.scope = remoteName;
-                return this.get(bitId);
-              }));
-        });
+  // todo: get red of this method, it is a private case of exportMany
+  async exportAction(bitId: BitId, remoteName: string) {
+    bitId.scope = this.name;
+    const remotes = await this.remotes();
+    const remote = await remotes.resolve(remoteName, this);
+    const component = await this.sources.getObjects(bitId);
+    logger.debug('exportAction: successfully fetched the objects, will try to push them into the remote');
+    const [objects] = await remote.push(component);
+    logger.debug('exportAction: successfully pushed the objects into the remote');
+    await this.clean(bitId);
+    await this.importSrc(objects);
+    bitId.scope = remoteName;
+    return this.get(bitId);
+  }
+
+  async exportMany(ids: BitId[], remoteName: string) {
+    const remotes = await this.remotes();
+    const remote = await remotes.resolve(remoteName, this);
+
+    const componentIds = ids.map((id) => {
+      const componentId = BitId.parse(id);
+      componentId.scope = this.name;
+      return componentId;
     });
+
+    const components = componentIds.map((id) => {
+      return this.sources.getObjects(id);
+    });
+
+    return Promise.all(components)
+      .then(componentObjects => remote.pushMany(componentObjects))
+        .then(componentObjects => Promise.all(componentIds.map(id => this.clean(id)))
+          .then(() => componentObjects.map(obj => this.importSrc(obj)))
+          .then(() => {
+            return Promise.all(componentIds.map((id) => {
+              id.scope = remoteName;
+              return this.get(id);
+            }));
+          })
+      );
+  }
+
+  async exportAllAction(bitIds: BitId[], remoteName: string) {
+    const remotes = await this.remotes();
+    const remote = await remotes.resolve(remoteName, this);
+
+    const componentsP = bitIds.map(async (id) => {
+      const bitId = BitId.parse(id);
+      bitId.scope = this.name;
+      const component = await this.sources.getObjects(bitId);
+      const objects = await remote.push(component);
+      await this.clean(bitId);
+      await this.importSrc(objects);
+      bitId.scope = remoteName;
+      return this.get(bitId);
+    });
+
+    return Promise.all(componentsP);
   }
 
   ensureDir() {
@@ -521,7 +653,7 @@ export default class Scope {
       .then(() => this);
   }
 
-  clean(bitId: BitId) {
+  clean(bitId: BitId): Promise<void> {
     return this.sources.clean(bitId);
   }
 
@@ -529,20 +661,21 @@ export default class Scope {
    * sync method that loads the environment/(path to environment component)
    */
   loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?bool, bareScope?: ?bool }) {
-    const envDir = opts && opts.bareScope ? this.getPath() : pathLib.dirname(this.getPath());
+    // const envDir = opts && opts.bareScope ? this.getPath() : pathLib.dirname(this.getPath());
     if (opts && opts.pathOnly) {
       try {
-        return bitJs.loadExact(bitId.toString(), envDir, opts);
+        return componentResolver(bitId.toString(), this.getPath());
       } catch (e) {
         throw new ResolutionException(e.message);
       }
     }
 
     try {
-      const a = bitJs.loadExact(bitId.toString(), envDir);
-      return a;
+      const envFile = componentResolver(bitId.toString(), this.getPath());
+      logger.debug(`Requiring an environment file at ${envFile}`);
+      return require(envFile);
     } catch (e) {
-      throw new ResolutionException(e.message);
+      throw new ResolutionException(e);
     }
   }
 
@@ -571,15 +704,16 @@ export default class Scope {
   { ids: BitId[], consumer?: Consumer, verbose?: boolean }): Promise<any> {
     const installPackageDependencies = (component: ConsumerComponent) => {
       return npmClient.install(component.packageDependencies, {
-        cwd: consumer ? consumer.getBitPathInComponentsDir(component.id) :
-          this.getBitPathInComponentsDir(component.id)
+        cwd: this.getBitPathInComponentsDir(component.id)
       });
     };
 
     return this.getMany(ids)
       .then((componentDependenciesArr) => {
         const writeToProperDir = () => {
-          if (consumer) { return consumer.writeToComponentsDir(componentDependenciesArr); }
+          // todo: make sure we are ok with this decision of having the environment installed
+          // in the same place for both, the local scope and the remote scope
+          // if (consumer) { return consumer.writeToComponentsDir(componentDependenciesArr); }
           // also doing flatting for componentDependencies (need to refactor)
           return this.writeToComponentsDir(componentDependenciesArr);
           // also doing flatting for componentDependencies (need to refactor)

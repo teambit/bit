@@ -80,6 +80,11 @@ export default class Remote {
     .then(network => network.push(componentObjects));
   }
 
+  pushMany(components: ComponentObjects[]): Promise<ComponentObjects[]> {
+    return connect(this.host)
+      .then(network => network.pushMany(components));
+  }
+
   static load(name: string, host: string): Remote {
     const primary = isPrimary(name);
     if (primary) name = cleanBang(name);

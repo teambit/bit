@@ -1,11 +1,12 @@
 /** @flow */
 import Command from '../../command';
 import { exportAction } from '../../../api/consumer';
+import Component from '../../../consumer/component/consumer-component';
 
 const chalk = require('chalk');
 
 export default class Export extends Command {
-  name = 'export <id> <remote>';
+  name = 'export <remote> [id]';
   description = 'export local scope refs to a remote scope.';
   alias = 'e';
   opts = [
@@ -13,11 +14,16 @@ export default class Export extends Command {
   ];
   loader = true;
 
-  action([id, remote]: [string, string], { forget }: any): Promise<*> {
-    return exportAction(id, remote, !forget).then(() => ({ id, remote }));
+  action([remote, id]: [string, string], { forget }: any): Promise<*> {
+    return exportAction(id, remote, !forget).then(component => ({ component, remote }));
   }
 
-  report({ id, remote }: { id: string, remote: string }): string {
-    return chalk.green(`component ${id} pushed successfully to scope ${remote}`);
+  report({ component, remote }: { component: Component|Component[], remote: string }): string {
+    if (Array.isArray(component)) {
+      const header = `The following components were pushed successfully to scope ${remote}\n`;
+      const componentsList = component.map(c => c.id.toString()).join('\n');
+      return chalk.underline(header) + chalk.green(componentsList);
+    }
+    return chalk.green(`component ${component.id.toString()} pushed successfully to scope ${remote}`);
   }
 }

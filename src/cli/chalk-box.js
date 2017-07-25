@@ -8,6 +8,9 @@ c.white('     > ') + c.cyan(`${box}/${name}`);
 export const formatBit = ({ scope = '@this', box, name, version }: any): string =>
 c.white('     > ') + c.cyan(`${scope}/${box}/${name} - ${version ? version.toString() : 'latest'}`);
 
+export const formatBitString = (bit: string): string =>
+c.white('     > ') + c.cyan(`${bit}`);
+
 export const paintBitProp = (key: string, value: string): string => {
   if (!value) return '';
   return `${c.magenta(key)} -> ${value}\n`;
@@ -52,9 +55,9 @@ const paintTest = (test) => {
 };
 
 const paintStats = (results) => {
-  const statsHeader = results.pass ? c.underline.green('tests passed') : c.underline.red('tests failed');
+  const statsHeader = results.pass ? c.underline.green('\ntests passed') : c.underline.red('\ntests failed');
   const totalDuration = results.stats && results.stats.duration ?
-    `total duration - ${c.cyan(`${results.stats.duration}ms\n`)}` : '';
+    `file: ${results.specFile}\ntotal duration - ${c.cyan(`${results.stats.duration}ms\n`)}` : '';
   return `${statsHeader}\n${totalDuration}\n`;
 };
 

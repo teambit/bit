@@ -17,7 +17,7 @@ export default class Import extends Command {
     ['t', 'tester', 'import a tester environment component'],
     ['v', 'verbose', 'show a more verbose output when possible'],
     ['c', 'compiler', 'import a compiler environment component'],
-    ['p', 'prefix', 'import components into a specific directory'],
+    ['p', 'prefix <prefix>', 'import components into a specific directory'],
     ['d', 'display_dependencies', 'display the imported dependencies']
   ];
   loader = true;
@@ -28,10 +28,8 @@ export default class Import extends Command {
     tester?: bool,
     compiler?: bool,
     verbose?: bool,
-    prefix?: bool,
+    prefix?: string,
   }): Promise<any> {
-    if (prefix) { return Promise.reject(new Error('prefix option currently not supported')); }
-    // TODO - prefix returns true instead of the relevant string.
     // @TODO - import should support multiple components
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');

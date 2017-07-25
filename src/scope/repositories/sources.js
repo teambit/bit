@@ -1,4 +1,5 @@
 /** @flow */
+import bufferFrom from 'bit/buffer/from';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
@@ -9,12 +10,12 @@ import Version from '../models/version';
 import Source from '../models/source';
 import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
-import ConsumerComponent from '../../consumer/component/consumer-component';
+import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import loader from '../../cli/loader';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
-import Consumer from '../../consumer';
-import bufferFrom from 'bit/buffer/from';
+import { Consumer } from '../../consumer';
+import logger from '../../logger/logger';
 
 export type ComponentTree = {
   component: Component;
@@ -41,11 +42,13 @@ export default class SourceRepository {
     return this.objects()
       .findOne(component.hash())
       .catch(() => {
+        logger.debug(`failed finding a component with hash: ${component.hash()}`);
         return null;
       });
   }
 
   getMany(ids: BitId[]): Promise<ComponentDef[]> {
+    logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return Promise.all(
       ids.map((id) => {
         return this.get(id)
@@ -108,6 +111,7 @@ export default class SourceRepository {
       });
   }
 
+  // TODO: This should treat dist as an array
   updateDist({ source }: { source: ConsumerComponent }): Promise<any> {
     const objectRepo = this.objects();
 
@@ -124,7 +128,48 @@ export default class SourceRepository {
       });
   }
 
-  addSource({ source, depIds, message, force, consumer, verbose }: {
+  async consumerComponentToVersion({ consumerComponent, consumer, message, depIds, force, verbose }
+  : { consumerComponent: ConsumerComponent,
+      consumer: Consumer,
+      message?: string,
+      depIds?: Object,
+      force?: boolean,
+      verbose?: boolean }
+  )
+  : Promise<Object> {
+    await consumerComponent.build({ scope: this.scope, consumer });
+    const impl = consumerComponent.impl ? Source.from(bufferFrom(consumerComponent.impl.src)) : null;
+    const dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
+      return { name: dist.basename, relativePath: dist.relative, file: Source.from(dist.contents) };
+    }) : null;
+    const specs = consumerComponent.specs ? Source.from(bufferFrom(consumerComponent.specs.src)): null;
+    const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
+      return { name: file.basename, relativePath: file.relative, file: Source.from(file.contents) };
+    }) : null;
+
+    const username = globalConfig.getSync(CFG_USER_NAME_KEY);
+    const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
+
+    loader.start(BEFORE_RUNNING_SPECS);
+    const specsResults =  await consumerComponent
+      .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
+    const version = Version.fromComponent({
+      component: consumerComponent,
+      impl,
+      specs,
+      files,
+      dists,
+      flattenedDeps: depIds,
+      specsResults,
+      message,
+      username,
+      email,
+    });
+
+    return { version, impl, specs, dists, files };
+  }
+
+  async addSource({ source, depIds, message, force, consumer, verbose }: {
     source: ConsumerComponent,
     depIds: BitId[],
     message: string,
@@ -134,61 +179,33 @@ export default class SourceRepository {
   }): Promise<Component> {
     const objectRepo = this.objects();
 
-    return this.findOrAddComponent(source)
-      .then((component) => {
-        return source.build({ scope: this.scope, consumer })
-        .then(() => {
-          const impl = Source.from(bufferFrom(source.impl.src));
-          const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())): null;
-          const specs = source.specs ? Source.from(bufferFrom(source.specs.src)): null;
-          const miscFiles = source.misc && source.misc.src.length ? source.misc.src.map((misc) => {
-            return { name: misc.name, file: Source.from(misc.content) };
-          }) : null;
+    // if a component exists in the model, add a new version. Otherwise, create a new component on them model
+    const component = await this.findOrAddComponent(source);
+    const { version, impl, specs, dists, files } = await this
+      .consumerComponentToVersion({ consumerComponent: source, consumer, message, depIds, force, verbose });
+    component.addVersion(version);
 
-          const username = globalConfig.getSync(CFG_USER_NAME_KEY);
-          const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
+    objectRepo
+      .add(version)
+      .add(component)
+      .add(impl)
+      .add(specs);
 
-          loader.start(BEFORE_RUNNING_SPECS);
-          return source.runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose })
-          .then((specsResults) => {
-            const version = Version.fromComponent({
-              component: source,
-              impl,
-              specs,
-              miscFiles,
-              dist,
-              flattenedDeps: depIds,
-              specsResults,
-              message,
-              username,
-              email,
-            });
+    if (files) files.forEach(file => objectRepo.add(file.file));
+    if (dists) dists.forEach(dist => objectRepo.add(dist.file));
 
-            component.addVersion(version);
-
-            objectRepo
-              .add(version)
-              .add(component)
-              .add(impl)
-              .add(specs)
-              .add(dist);
-
-            if (miscFiles) miscFiles.forEach(misc => objectRepo.add(misc.file));
-
-            return component;
-          });
-        });
-      });
+    return component;
   }
 
   put({ component, objects }: ComponentTree) {
+    logger.debug(`sources.put, id: ${component.id()}`);
     const repo = this.objects();
     repo.add(component);
     objects.forEach(obj => repo.add(obj));
     return component;
   }
 
-  clean(bitId: BitId) {
+  clean(bitId: BitId): Promise<void> {
     return this.get(bitId)
       .then((component) => {
         if (!component) return;

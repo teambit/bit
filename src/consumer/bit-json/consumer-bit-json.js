@@ -4,7 +4,7 @@ import R from 'ramda';
 import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
 import { BitJsonNotFound, BitJsonAlreadyExists } from './exceptions';
-import { BIT_JSON } from '../../constants';
+import { BIT_JSON, DEFAULT_DIST_DIRNAME, DEFAULT_DIST_ENTRY, DEFAULT_DIR_STRUCTURE } from '../../constants';
 
 function composePath(bitPath: string) {
   return path.join(bitPath, BIT_JSON);
@@ -15,13 +15,27 @@ function hasExisting(bitPath: string): boolean {
 }
 
 export default class ConsumerBitJson extends AbstractBitJson {
-  impl: string;
-  spec: string;
-  miscFiles: string[];
-  compiler: string;
-  tester: string;
-  dependencies: {[string]: string};
-  lang: string;
+  distEntry: string;  // base path to copy the dist structure from
+  distTarget: string; // path where to store build artifacts
+  structure: string;  // directory structure template where to store imported components
+
+  constructor({ impl, spec, compiler, tester, dependencies, lang, distTarget, distEntry, structure }) {
+    super({ impl, spec, compiler, tester, dependencies, lang });
+    this.distTarget = distTarget || DEFAULT_DIST_DIRNAME;
+    this.distEntry = distEntry || DEFAULT_DIST_ENTRY;
+    this.structure = structure || DEFAULT_DIR_STRUCTURE;
+  }
+
+  toPlainObject() {
+    const superObject = super.toPlainObject();
+    return R.merge(superObject, {
+      structure: this.structure,
+      dist: {
+        target: this.distTarget,
+        entry: this.distEntry,
+      },
+    });
+  }
 
   write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
     return new Promise((resolve, reject) => {
@@ -29,7 +43,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
         throw new BitJsonAlreadyExists();
       }
 
-      const repspond = (err, res) => {
+      const respond = (err, res) => {
         if (err) return reject(err);
         return resolve(res);
       };
@@ -37,7 +51,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       fs.writeFile(
         composePath(bitDir),
         this.toJson(),
-        repspond
+        respond
       );
     });
   }
@@ -55,15 +69,17 @@ export default class ConsumerBitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object) {
-    const { sources, env, dependencies, lang } = object;
+    const { sources, env, dependencies, lang, structure, dist } = object;
     return new ConsumerBitJson({
       impl: R.propOr(undefined, 'impl', sources),
       spec: R.propOr(undefined, 'spec', sources),
-      miscFiles: R.propOr(undefined, 'misc', sources),
       compiler: R.propOr(undefined, 'compiler', env),
       tester: R.propOr(undefined, 'tester', env),
       lang,
       dependencies,
+      structure,
+      distTarget: R.propOr(undefined, 'target', dist),
+      distEntry: R.propOr(undefined, 'entry', dist),
     });
   }
 

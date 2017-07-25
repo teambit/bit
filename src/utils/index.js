@@ -54,6 +54,7 @@ import unpackCommand from './unpack-command';
 import buildCommandMessage from './build-command-message';
 import removeFromRequireCache from './remove-from-require-cache';
 import splitBy from './array-split-by';
+import outputFile from './fs-output-file';
 
 export {
   parseSSHUrl,
@@ -112,4 +113,5 @@ export {
   unpackCommand,
   buildCommandMessage,
   removeFromRequireCache,
+  outputFile
 };

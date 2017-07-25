@@ -1,18 +1,19 @@
 /** @flow */
-import { equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
+import { is, equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
+import path from 'path';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
 import { VersionNotFound } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject } from '../../utils';
 import Version from './version';
-import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE } from '../../constants';
+import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE, DEFAULT_DIST_DIRNAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
 import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
-import { Impl, Specs, Misc, Dist, License } from '../../consumer/component/sources';
+import { Impl, Specs, SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 
@@ -129,11 +130,12 @@ export default class Component extends BitObject {
       ));
   }
 
-  remove(repo: Repository) {
+  remove(repo: Repository): Promise {
     const objectRefs = this.versionArray;
     return repo.removeMany(objectRefs.concat([this.hash()]));
   }
 
+  // todo: remove the "scopeName" parameter, it seems to be not in use
   toComponentVersion(versionStr: string, scopeName: string): ComponentVersion {
     const versionNum = VersionParser
       .parse(versionStr)
@@ -148,41 +150,62 @@ export default class Component extends BitObject {
     return componentVersion
       .getVersion(repository)
         .then((version) => {
-          const implP = version.impl.file.load(repository);
+          const implP = version.impl ? version.impl.file.load(repository) : null;
           const specsP = version.specs ? version.specs.file.load(repository) : null;
-          const miscP = version.miscFiles ?
-          Promise.all(version.miscFiles.map(misc =>
-            misc.file.load(repository)
+          const filesP = version.files ?
+          Promise.all(version.files.map(file =>
+            file.file.load(repository)
             .then((content) => {
               return {
-                name: misc.name,
+                name: file.name,
+                relativePath: file.relativePath,
+                dir: path.dirname(file.relativePath),
                 content
               };
             })
           )) : null;
-          const distP = version.dist ? version.dist.file.load(repository) : null;
+          const distsP = version.dists ?
+          Promise.all(version.dists.map(dist =>
+            dist.file.load(repository)
+            .then((content) => {
+              const relativePathWithDist = path.join(DEFAULT_DIST_DIRNAME, dist.relativePath);
+              return {
+                name: dist.name,
+                relativePath: relativePathWithDist,
+                dir: path.dirname(relativePathWithDist),
+                content
+              };
+            })
+          )) : null;
           const scopeMetaP = ScopeMeta.fromScopeName(scopeName).load(repository);
           const log = version.log || null;
-          return Promise.all([implP, specsP, miscP, distP, scopeMetaP])
-          .then(([impl, specs, miscFiles, dist, scopeMeta]) => {
+          return Promise.all([implP, specsP, filesP, distsP, scopeMetaP])
+          .then(([impl, specs, files, dists, scopeMeta]) => {
             return new ConsumerComponent({
               name: this.name,
               box: this.box,
               version: componentVersion.version,
               scope: this.scope,
               lang: this.lang,
-              implFile: version.impl.name,
+              implFile: version.impl ? version.impl.name : null,
               specsFile: version.specs ? version.specs.name : null,
-              miscFiles: version.miscFiles ? version.miscFiles.map(misc => misc.name) : null,
+              mainFileName: version.mainFileName ? version.mainFileName: null,
+              testsFileNames: version.testsFileNames ? version.testsFileNames : null,
+              filesNames: version.files ? version.files.map(file => file.name) : null,
               compilerId: version.compiler,
               testerId: version.tester,
-              dependencies: version.dependencies,
+              dependencies: version.dependencies // todo: understand why sometimes the dependencies are not parsed
+                .map(dependency => ({
+                  id: is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
+                  relativePath: dependency.relativePath
+                })),
+              flattenedDependencies: version.flattenedDependencies,
               packageDependencies: version.packageDependencies,
-              impl: new Impl(impl.toString()),
+              impl: impl ? new Impl(impl.toString()) : null,
               specs: specs ? new Specs(specs.toString()) : null,
-              misc: miscFiles ? new Misc(miscFiles) : null,
+              files: files ? files.map(file => new SourceFile({ base: file.dir, path: file.relativePath, contents: file.content.contents })) : null,
+              dists: dists ? dists.map(dist => new Dist({ base: dist.dir, path: dist.relativePath, contents: dist.content.contents })) : null,
               docs: version.docs,
-              dist: dist ? Dist.fromString(dist.toString()) : null,
               license: scopeMeta ? License.deserialize(scopeMeta.license) : null,
               specsResults:
                 version.specsResults ? SpecsResults.deserialize(version.specsResults) : null,

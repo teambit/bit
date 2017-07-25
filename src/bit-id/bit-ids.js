@@ -14,6 +14,18 @@ export default class BitIds extends Array<BitId> {
     );
   }
 
+  /**
+   * Resolve an id with latest to specific version
+   * This used to get the real version from the flatten deps by the deps ids
+   *
+   * @param {BitId} idWithLatest - A bit id object with latest version
+   * @returns {BitId} - The bit id found in the array (with actual version)
+   * @memberof BitIds
+   */
+  resolveVersion(idWithLatest) {
+    return this.filter(id => idWithLatest.toString(false, true) === id.toString(false, true))[0];
+  }
+
   static deserialize(array: string[] = []) {
     return new BitIds(
       ...array.map(id => BitId.parse(id))

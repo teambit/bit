@@ -1,10 +1,12 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-const helper = new Helper();
-
 describe('bit list command', function () {
   this.timeout(0);
+  const helper = new Helper();
+  after(() => {
+    helper.destroyEnv();
+  });
   describe('when no components created', () => {
     before(() => {
       helper.cleanEnv();
@@ -19,7 +21,7 @@ describe('bit list command', function () {
     before(() => {
       helper.cleanEnv();
       helper.runCmd('bit init');
-      helper.runCmd('bit create foo');
+      helper.createComponentBarFoo();
     });
     it('should display "Total 0 components"', () => {
       const output = helper.runCmd('bit list');
@@ -30,8 +32,9 @@ describe('bit list command', function () {
     before(() => {
       helper.cleanEnv();
       helper.runCmd('bit init');
-      helper.runCmd('bit create foo');
-      helper.runCmd('bit commit foo commit-msg');
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
     });
     it('should display "Total 1 components"', () => {
       const output = helper.runCmd('bit list');

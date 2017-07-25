@@ -46,11 +46,13 @@ export default class SpecsResults {
   tests: Test[];
   stats: Stats;
   pass: bool;
+  specFile: string;
 
-  constructor({ tests, stats, pass }: Results) {
+  constructor({ tests, stats, pass, specFile }: Results) {
     this.tests = tests;
     this.stats = stats;
     this.pass = pass;
+    this.specFile = specFile;
   }
 
   serialize() {
@@ -58,6 +60,7 @@ export default class SpecsResults {
       tests: this.tests,
       stats: this.stats,
       pass: this.pass,
+      specFile: this.specFile
     };
   }
 
@@ -69,13 +72,13 @@ export default class SpecsResults {
     const pass = rawResults.pass || rawResults.tests.every(test => test.pass);
 
     const calcDuration = (endDateString, startDateString) =>
-      new Date(endDateString) - new Date(startDateString);
+    new Date(endDateString) - new Date(startDateString);
 
     const stats = {
       start: rawResults.stats.start,
       end: rawResults.stats.end,
       duration: parseInt(rawResults.stats.duration) ||
-        calcDuration(rawResults.stats.end, rawResults.stats.start)
+      calcDuration(rawResults.stats.end, rawResults.stats.start)
     };
 
     const tests = rawResults.tests.map((result) => {
@@ -84,6 +87,6 @@ export default class SpecsResults {
       return result;
     });
 
-    return new SpecsResults({ tests, stats, pass });
+    return new SpecsResults({ tests, stats, pass, specFile: rawResults.specPath });
   }
 }

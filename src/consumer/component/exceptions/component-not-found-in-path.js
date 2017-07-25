@@ -1,5 +1,5 @@
 /** @flow */
-export default class ComponentNotFoundInline extends Error {
+export default class ComponentNotFoundInPath extends Error {
   path: string;
   code: number;
 

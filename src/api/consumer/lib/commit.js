@@ -1,15 +1,19 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
-import InlineId from '../../../consumer/bit-inline-id';
 import InvalidIdOnCommit from './exceptions/invalid-id-on-commit';
 
-export default function commitAction({ id, message, force, verbose }:
+export function commitAction({ id, message, force, verbose }:
 { id: string, message: string, force: ?bool, verbose?: bool }) {
   try {
-    const componentId = InlineId.parse(id);
     return loadConsumer()
-    .then(consumer => consumer.commit(componentId, message, force, verbose));
+    .then(consumer => consumer.commit(id, message, force, verbose));
   } catch (err) {
     return Promise.reject(new InvalidIdOnCommit(id));
   }
+}
+
+export async function commitAllAction({ message, force, verbose }:
+{ message: string, force: ?bool, verbose?: bool }) {
+  const consumer = await loadConsumer();
+  return consumer.commitAll(message, force, verbose);
 }

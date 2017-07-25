@@ -3,21 +3,22 @@ import create from './lib/create';
 import remove from './lib/remove';
 import listInline from './lib/list-inline';
 import listScope from './lib/list-scope';
-import commitAction from './lib/commit';
+import { commitAction, commitAllAction } from './lib/commit';
 import status from './lib/status';
-import { buildInline, buildInlineAll } from './lib/build-inline';
+import { build, buildAll } from './lib/build';
 import modify from './lib/modify';
 import reset from './lib/reset';
 import importAction from './lib/import';
 import exportAction from './lib/export';
-import getInlineBit from './lib/get-inline-bit';
-import getScopeBit from './lib/get-scope-bit';
-import { testInline, testInlineAll } from './lib/test-inline';
+import getConsumerComponent from './lib/get-consumer-component';
+import getScopeComponent from './lib/get-scope-component';
+import { test, testAll } from './lib/test-inline';
 import getComponentLogs from './lib/get-component-logs';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import config from './lib/global-config';
 import getDriver from './lib/get-driver';
-import watchInlineComponents from './lib/watch-inline-components';
+import { watchAll } from './lib/watch';
+import add from './lib/add';
 
 export {
   init,
@@ -26,22 +27,24 @@ export {
   create,
   remove,
   listInline,
-  buildInlineAll,
+  buildAll,
   listScope,
   commitAction,
+  commitAllAction,
   status,
-  buildInline,
+  build,
   modify,
   reset,
   importAction,
-  getInlineBit,
-  getScopeBit,
+  getConsumerComponent,
+  getScopeComponent,
   getComponentLogs,
-  testInline,
-  testInlineAll,
+  test,
+  testAll,
   remoteAdd,
   remoteList,
   remoteRm,
   getDriver,
-  watchInlineComponents,
+  watchAll,
+  add,
 };

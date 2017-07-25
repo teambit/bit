@@ -3,6 +3,7 @@ import doctrine from 'doctrine';
 import exampleTagParser from './example-tag-parser';
 
 export type Doclet = {
+  filePath: string,
   name: string,
   description: string,
   args?: Array,
@@ -27,7 +28,7 @@ function formatTag(tag: Object): Object {
   return tag;
 }
 
-function extractDataRegex(doc: string, doclets: Array<Doclet>) {
+function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: string) {
   const commentsAst = doctrine.parse(doc.trim(), { unwrap: true, recoverable: true });
   if (!commentsAst) return;
 
@@ -88,16 +89,17 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>) {
     examples,
     properties,
     static: isStatic,
+    filePath
   };
   doclets.push(doclet);
 }
 
-export default function parse(data: string): Doclet|[] {
+export default function parse(data: string, filePath: string): Doclet|[] {
   const doclets: Array<Doclet> = [];
   try {
     const jsdocRegex = /[ \t]*\/\*\*\s*\n([^*]*(\*[^/])?)*\*\//g;
     const docs = data.match(jsdocRegex);
-    docs.map(doc => extractDataRegex(doc, doclets));
+    docs.map(doc => extractDataRegex(doc, doclets, filePath));
   } catch (e) {
     // never mind, ignore the doc of this source
   }

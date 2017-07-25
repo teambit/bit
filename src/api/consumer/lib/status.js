@@ -1,14 +1,20 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
-
-export type StatusRes = {
-  name: string,
-  valid: boolean,
-}
+import ComponentsList from '../../../consumer/component/components-list';
 
 export default function status(): Promise<{ inline: Component[], sources: Component[]}> {
   return loadConsumer()
-  .then(consumer => Promise.all([consumer.listInline(), consumer.scope.listStage()]))
-  .then(([inline, sources]) => ({ inline, sources }));
+  .then((consumer) => {
+    const componentsList = new ComponentsList(consumer);
+    const untrackedComponents = componentsList.listUntrackedComponents();
+    const newComponents = componentsList.listNewComponents();
+    const modifiedComponent = componentsList.listModifiedComponents();
+    const stagedComponents = componentsList.listExportPendingComponents();
+
+    return Promise.all([untrackedComponents, newComponents, modifiedComponent, stagedComponents]);
+  })
+  .then(([untrackedComponents, newComponents, modifiedComponent, stagedComponents]) => {
+    return { untrackedComponents, newComponents, modifiedComponent, stagedComponents };
+  });
 }

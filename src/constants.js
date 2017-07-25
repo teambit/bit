@@ -36,9 +36,19 @@ export const INLINE_BITS_DIRNAME = 'inline_components';
 
 export const BIT_JSON = 'bit.json';
 
+export const BIT_MAP = '.bit.map.json';
+
+export const COMPONENT_ORIGINS = {
+  IMPORTED: 'IMPORTED',
+  AUTHORED: 'AUTHORED',
+  NESTED: 'NESTED', // which is a nested dependency
+};
+
 export const REMOTE_ALIAS_SIGN = '@';
 
 export const DEFAULT_IMPL_NAME = 'impl.js';
+
+export const DEFAULT_INDEX_NAME = 'index.js'; // todo: move to bit-javascript
 
 export const DEFAULT_SPECS_NAME = 'spec.js';
 
@@ -50,11 +60,15 @@ export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_DIST_DIRNAME = 'dist';
 
+export const DEFAULT_DIST_ENTRY = '';
+
 export const DEFAULT_BUNDLE_FILENAME = 'dist.js';
 
 export const DEFAULT_BIT_VERSION = 1;
 
 export const DEFAULT_LANGUAGE = 'javascript';
+
+export const DEFAULT_DIR_STRUCTURE = `${BITS_DIRNAME}/{namespace}/{name}`;
 
 export const LATEST_BIT_VERSION = 'latest';
 
@@ -69,6 +83,8 @@ export const DEFAULT_BOX_NAME = 'global';
 export const VERSION_DELIMITER = '::';
 
 export const DEPENDENCY_MAP_FILENAME = 'dependencies.json';
+
+export const DEPENDENCIES_DIR = 'dependencies';
 
 export const BIT_EXTERNAL_DIRNAME = 'external';
 

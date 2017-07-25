@@ -1,8 +1,9 @@
 /** @flow */
+import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
-import { filterObject } from '../../utils';
+import { filterObject, first } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
@@ -17,6 +18,18 @@ type CiProps = {
   endTime: string,
 };
 
+type SourceFile = {
+  name: string,
+  path: string,
+  file: Ref
+}
+
+type DistFile = {
+  name: string,
+  path: string,
+  file: Ref
+}
+
 export type Log = {
   message: string,
   date: string,
@@ -25,7 +38,7 @@ export type Log = {
 };
 
 export type VersionProps = {
-  impl: {
+  impl?: ?{
     name: string,
     file: Ref
   };
@@ -33,14 +46,8 @@ export type VersionProps = {
     name: string,
     file: Ref
   };
-  miscFiles?: ?Array<{
-    name: string,
-    file: Ref
-  }>;
-  dist?: ?{
-    name: string,
-    file: Ref
-  };
+  files?: ?Array<SourceFile>;
+  dists?: ?Array<DistFile>;
   compiler?: ?BitId;
   tester?: ?BitId;
   log: Log;
@@ -53,37 +60,37 @@ export type VersionProps = {
 }
 
 export default class Version extends BitObject {
-  impl: {
+  /** @deprecated **/
+  impl: ?{
     name: string,
     file: Ref
   };
+  /** @deprecated **/
   specs: ?{
     name: string,
     file: Ref
   };
-  miscFiles: ?Array<{
-    name: string,
-    file: Ref
-  }>;
-  dist: ?{
-    name: string,
-    file: Ref
-  };
+  mainFileName: string;
+  testsFileNames: string[];
+  files: ?Array<SourceFile>;
+  dists: ?Array<DistFile>;
   compiler: ?BitId;
   tester: ?BitId;
   log: Log;
   ci: CiProps|{};
   specsResults: ?Results;
   docs: ?Doclet[];
-  dependencies: BitIds;
+  dependencies: Array<Object>;
   flattenedDependencies: BitIds;
   packageDependencies: {[string]: string};
 
   constructor({
     impl,
     specs,
-    miscFiles,
-    dist,
+    mainFileName,
+    testsFileNames,
+    files,
+    dists,
     compiler,
     tester,
     log,
@@ -97,12 +104,14 @@ export default class Version extends BitObject {
     super();
     this.impl = impl;
     this.specs = specs;
-    this.miscFiles = miscFiles;
-    this.dist = dist;
+    this.mainFileName = mainFileName;
+    this.testsFileNames = testsFileNames;
+    this.files = files;
+    this.dists = dists;
     this.compiler = compiler;
     this.tester = tester;
     this.log = log;
-    this.dependencies = dependencies || new BitIds();
+    this.dependencies = dependencies || [];
     this.docs = docs;
     this.ci = ci || {};
     this.specsResults = specsResults;
@@ -116,11 +125,13 @@ export default class Version extends BitObject {
     return JSON.stringify(filterObject({
       impl: obj.impl,
       specs: obj.specs,
-      miscFiles: obj.miscFiles,
+      mainFileName: obj.mainFileName,
+      testsFileNames: obj.testsFileNames,
+      files: obj.files,
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
       log: obj.log,
-      dependencies: this.dependencies.map(dep => dep.toString()),
+      dependencies: this.dependencies,
       packageDependencies: this.packageDependencies
     }, val => !!val));
   }
@@ -133,39 +144,49 @@ export default class Version extends BitObject {
   }
 
   refs(): Ref[] {
-    const miscFiles = this.miscFiles ? this.miscFiles.map(misc => misc.file) : [];
+    const files = this.files ? this.files.map(file => file.file) : [];
+    const dists = this.dists ? this.dists.map(dist => dist.file) : [];
     return [
-      this.impl.file,
+      this.impl ? this.impl.file : null,
       // $FlowFixMe
       this.specs ? this.specs.file : null,
       // $FlowFixMe (after filtering the nulls there is no problem)
-      this.dist ? this.dist.file : null,
-      ...miscFiles,
+      ...dists,
+      ...files,
     ].filter(ref => ref);
   }
 
   toObject() {
+    const dependencies = this.dependencies.map((dependency) => {
+      dependency.id = dependency.id.toString();
+      return dependency;
+    });
     return filterObject({
-      impl: {
+      impl: this.impl ? {
         file: this.impl.file.toString(),
         name: this.impl.name
-      },
+      } : null,
       specs: this.specs ? {
         file: this.specs.file.toString(),
         // $FlowFixMe
         name: this.specs.name
       }: null,
-      miscFiles: this.miscFiles ? this.miscFiles.map((miscFile) => {
+      files: this.files ? this.files.map((file) => {
         return {
-          file: miscFile.file.toString(),
-          name: miscFile.name
+          file: file.file.toString(),
+          relativePath: file.relativePath,
+          name: file.name
         };
       }) : null,
-      dist: this.dist ? {
-        file: this.dist.file.toString(),
-        // $FlowFixMe
-        name: this.dist.name
-      }: null,
+      mainFileName: this.mainFileName,
+      testsFileNames: this.testsFileNames,
+      dists: this.dists ? this.dists.map((dist) => {
+        return {
+          file: dist.file.toString(),
+          relativePath: dist.relativePath,
+          name: dist.name
+        };
+      }) : null,
       compiler: this.compiler ? this.compiler.toString(): null,
       tester: this.tester ? this.tester.toString(): null,
       log: {
@@ -177,7 +198,7 @@ export default class Version extends BitObject {
       ci: this.ci,
       specsResults: this.specsResults,
       docs: this.docs,
-      dependencies: this.dependencies.map(dep => dep.toString()),
+      dependencies,
       flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
       packageDependencies: this.packageDependencies
     }, val => !!val);
@@ -193,8 +214,10 @@ export default class Version extends BitObject {
     const {
       impl,
       specs,
-      dist,
-      miscFiles,
+      mainFileName,
+      testsFileNames,
+      dists,
+      files,
       compiler,
       tester,
       log,
@@ -205,23 +228,34 @@ export default class Version extends BitObject {
       flattenedDependencies,
       packageDependencies
     } = JSON.parse(contents);
+    const getDependencies = () => {
+      if (dependencies.length && R.is(String, first(dependencies))) { // backward compatibility
+        return dependencies.map(dependency => ({ id: BitId.parse(dependency) }));
+      }
+
+      return dependencies.map(dependency => ({
+        id: BitId.parse(dependency.id),
+        relativePath: dependency.relativePath
+      }));
+    };
 
     return new Version({
-      impl: {
+      impl: impl ? {
         file: Ref.from(impl.file),
         name: impl.name
-      },
+      } : null,
       specs: specs ? {
         file: Ref.from(specs.file),
         name: specs.name
       } : null,
-      miscFiles: miscFiles ? miscFiles.map((misc) => {
-        return { file: Ref.from(misc.file), name: misc.name };
+      mainFileName,
+      testsFileNames,
+      files: files ? files.map((file) => {
+        return { file: Ref.from(file.file), relativePath: file.relativePath, name: file.name };
       }) : null,
-      dist: dist ? {
-        file: Ref.from(dist.file),
-        name: dist.name
-      } : null,
+      dists: dists ? dists.map((dist) => {
+        return { file: Ref.from(dist.file), relativePath: dist.relativePath, name: dist.name };
+      }) : null,
       compiler: compiler ? BitId.parse(compiler) : null,
       tester: tester ? BitId.parse(tester) : null,
       log: {
@@ -233,7 +267,7 @@ export default class Version extends BitObject {
       ci,
       specsResults,
       docs,
-      dependencies: BitIds.deserialize(dependencies),
+      dependencies: getDependencies(),
       flattenedDependencies: BitIds.deserialize(flattenedDependencies),
       packageDependencies,
     });
@@ -243,8 +277,8 @@ export default class Version extends BitObject {
     component,
     impl,
     specs,
-    miscFiles,
-    dist,
+    files,
+    dists,
     flattenedDeps,
     message,
     specsResults,
@@ -252,32 +286,33 @@ export default class Version extends BitObject {
     email,
   }: {
     component: ConsumerComponent,
-    impl: Source,
+    impl: ?Source,
     specs: ?Source,
-    miscFiles: ?Array<{name: string, file: Source}>,
+    files: ?Array<SourceFile>,
     flattenedDeps: BitId[],
     message: string,
-    dist: ?Source,
+    dists: ?Array<DistFile>,
     specsResults: ?Results,
     username: ?string,
     email: ?string,
   }) {
     return new Version({
-      impl: {
+      impl: impl ? {
         file: impl.hash(),
         name: component.implFile
-      },
+      }: null,
       specs: specs ? {
         file: specs.hash(),
         name: component.specsFile
       }: null,
-      miscFiles: miscFiles ? miscFiles.map((misc) => {
-        return { file: misc.file.hash(), name: misc.name };
+      mainFileName: component.mainFileName,
+      testsFileNames: component.testsFileNames,
+      files: files ? files.map((file) => {
+        return { file: file.file.hash(), relativePath: file.relativePath, name: file.name };
       }): null,
-      dist: dist ? {
-        file: dist.hash(),
-        name: DEFAULT_BUNDLE_FILENAME,
-      }: null,
+      dists: dists ? dists.map((dist) => {
+        return { file: dist.file.hash(), relativePath: dist.relativePath, name: dist.name };
+      }): null,
       compiler: component.compilerId,
       tester: component.testerId,
       log: {

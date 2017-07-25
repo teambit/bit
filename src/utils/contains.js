@@ -1,5 +1,7 @@
 /** @flow */
 
+// todo: delete. Probably was created before "str.includes" has been part of the language
+
 /**
  * determines whether string `str` ref contains substring `searchRef`.
  * @param {string} str

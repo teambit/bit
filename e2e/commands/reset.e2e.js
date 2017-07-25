@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import Helper from '../e2e-helper';
 
-describe('bit reset', function () {
+describe.skip('bit reset', function () {
   this.timeout(0);
   let helper;
   before(() => {

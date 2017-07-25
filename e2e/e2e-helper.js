@@ -24,10 +24,26 @@ export default class Helper {
     return cmdOutput.toString();
   }
 
-  addBitJsonDependencies(bitJsonPath, dependencies) {
-    const bitJson = JSON.parse(fs.readFileSync(bitJsonPath).toString());
+  addBitJsonDependencies(bitJsonPath, dependencies, packageDependencies) {
+    const bitJson = fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
+    bitJson.dependencies = bitJson.dependencies || {};
+    bitJson.packageDependencies = bitJson.packageDependencies || {};
     Object.assign(bitJson.dependencies, dependencies);
-    fs.writeFileSync(bitJsonPath, JSON.stringify(bitJson, null, 4));
+    Object.assign(bitJson.packageDependencies, packageDependencies);
+    fs.writeJSONSync(bitJsonPath, bitJson);
+  }
+
+  readBitJson(bitJsonPath = path.join(this.localScopePath, 'bit.json')) {
+    return fs.readJSONSync(bitJsonPath) || {};
+  }
+
+  readBitMap(bitMapPath = path.join(this.localScopePath, '.bit.map.json')) {
+    return fs.readJSONSync(bitMapPath) || {};
+  }
+
+  writeBitMap(bitMap) {
+    const bitMapPath = path.join(this.localScopePath, '.bit.map.json');
+    return fs.writeJSONSync(bitMapPath, bitMap);
   }
 
   cleanEnv() {
@@ -38,5 +54,69 @@ export default class Helper {
   destroyEnv() {
     fs.removeSync(this.localScopePath);
     fs.removeSync(this.remoteScopePath);
+  }
+
+  reInitLocalScope() {
+    fs.emptyDirSync(this.localScopePath);
+    return this.runCmd('bit init');
+  }
+
+  addRemoteScope(remoteScopePath = this.remoteScopePath) {
+    return this.runCmd(`bit remote add file://${remoteScopePath}`);
+  }
+
+  reInitRemoteScope() {
+    fs.emptyDirSync(this.remoteScopePath);
+    return this.runCmd('bit init --bare', this.remoteScopePath);
+  }
+
+  commitComponent(id:string = 'bar/foo', commitMsg: string = 'commit-message') {
+    return this.runCmd(`bit commit ${id} -m ${commitMsg}`);
+  }
+
+  commitAllComponents(commitMsg: string = 'commit-message') {
+    return this.runCmd(`bit commit -am ${commitMsg}`);
+  }
+
+  exportComponent(id) {
+    return this.runCmd(`bit export @${this.remoteScope} ${id}`);
+  }
+
+  importComponent(id) {
+    return this.runCmd(`bit import @${this.remoteScope}/${id}`);
+  }
+
+  importCompiler(id: string = 'bit.envs/compilers/babel') {
+    this.runCmd('bit config set hub_domain hub-stg.bitsrc.io'); // todo: once the new babel compiler is on prod, remove this line
+    this.runCmd(`bit import ${id} --compiler`);
+  }
+
+  createComponentBarFoo(impl?: string) {
+    this.createComponent(undefined, undefined, impl);
+  }
+
+  addComponentBarFoo() {
+    return this.addComponent();
+  }
+
+  commitComponentBarFoo() {
+    return this.commitComponent();
+  }
+
+  // TODO: delete and use create file below? it's not a comonent unless we add it only a file
+  createComponent(namespace: string = 'bar', name: string = 'foo.js' , impl?: string) {
+    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
+    const filePath = path.join(this.localScopePath, namespace, name);
+    fs.outputFileSync(filePath, fixture);
+  }
+
+  createFile(folder: string = 'bar', name: string = 'foo.js' , impl?: string) {
+    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
+    const filePath = path.join(this.localScopePath, folder, name);
+    fs.outputFileSync(filePath, fixture);
+  }
+
+  addComponent(filePaths: string = "bar/foo.js") {
+    return this.runCmd(`bit add ${filePaths}`);
   }
 }
