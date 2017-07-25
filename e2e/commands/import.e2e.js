@@ -357,7 +357,7 @@ describe('bit import', function () {
 
   // This is one of the most important cases, because it involve a lot of working pieces from the base flow:
   // Add, build, commit, export, import, dependency resolution, index file generation
-  describe.only('components with auto-resolve dependencies - with compiler', () => {
+  describe('components with auto-resolve dependencies - with compiler', () => {
     /**
      * Directory structure of the author
      * bar/foo.js
