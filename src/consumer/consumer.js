@@ -221,14 +221,6 @@ export default class Consumer {
     return Promise.all(components);
   }
 
-  exportAction(rawId: string, rawRemote: string) {
-    // @TODO - move this method to api, not related to consumer
-    const bitId = BitId.parse(rawId);
-
-    return this.scope.exportAction(bitId, rawRemote)
-      .then(componentDependencies => componentDependencies.component);
-  }
-
   async importAccordingToConsumerBitJson(verbose?: bool, withEnvironments: ?bool,
                                          cache?: bool = true): Promise<> {
     const dependencies = BitIds.fromObject(this.bitJson.dependencies);
@@ -335,7 +327,7 @@ export default class Consumer {
    * under 'dependencies' of A.
    */
   async _writeDependencyLinks(componentDependencies: ComponentDependencies[], bitMap: BitMap): Promise<any> {
-    
+
     const writeLinkFile = (componentId: string, linkPath: string) => {
       const entryFilePath = bitMap.getEntryFileOfComponent(componentId);
 
@@ -345,7 +337,7 @@ export default class Consumer {
 
       return outputFile(linkPath, linkContent);
     }
-    
+
     const componentLinks = (directDependencies: Array<Object>, flattenedDependencies: BitIds, parentDir: string, hasDist: boolean) => {
       if (!directDependencies || !directDependencies.length) return Promise.resolve();
       const links = directDependencies.map((dep) => {

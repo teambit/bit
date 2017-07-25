@@ -235,7 +235,7 @@ export default class Scope {
   }
 
   // todo: rename this method. It writes into the objects directory
-  importSrc(componentObjects: ComponentObjects) {
+  importSrc(componentObjects: ComponentObjects): Promise<any> {
     const objects = componentObjects.toObjects(this.objects);
     logger.debug(`importSrc, writing into the model, Main id: ${objects.component.id()}. It might have dependencies which are going to be written too`);
     return this.sources.merge(objects)
@@ -585,64 +585,23 @@ export default class Scope {
       });
   }
 
-  // todo: get red of this method, it is a private case of exportMany
-  async exportAction(bitId: BitId, remoteName: string) {
-    bitId.scope = this.name;
-    const remotes = await this.remotes();
-    const remote = await remotes.resolve(remoteName, this);
-    const component = await this.sources.getObjects(bitId);
-    logger.debug('exportAction: successfully fetched the objects, will try to push them into the remote');
-    const [objects] = await remote.push(component);
-    logger.debug('exportAction: successfully pushed the objects into the remote');
-    await this.clean(bitId);
-    await this.importSrc(objects);
-    bitId.scope = remoteName;
-    return this.get(bitId);
-  }
-
   async exportMany(ids: BitId[], remoteName: string) {
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
-
     const componentIds = ids.map((id) => {
       const componentId = BitId.parse(id);
       componentId.scope = this.name;
       return componentId;
     });
-
-    const components = componentIds.map((id) => {
-      return this.sources.getObjects(id);
-    });
-
-    return Promise.all(components)
-      .then(componentObjects => remote.pushMany(componentObjects))
-        .then(componentObjects => Promise.all(componentIds.map(id => this.clean(id)))
-          .then(() => componentObjects.map(obj => this.importSrc(obj)))
-          .then(() => {
-            return Promise.all(componentIds.map((id) => {
-              id.scope = remoteName;
-              return this.get(id);
-            }));
-          })
-      );
-  }
-
-  async exportAllAction(bitIds: BitId[], remoteName: string) {
-    const remotes = await this.remotes();
-    const remote = await remotes.resolve(remoteName, this);
-
-    const componentsP = bitIds.map(async (id) => {
-      const bitId = BitId.parse(id);
-      bitId.scope = this.name;
-      const component = await this.sources.getObjects(bitId);
-      const objects = await remote.push(component);
-      await this.clean(bitId);
-      await this.importSrc(objects);
-      bitId.scope = remoteName;
-      return this.get(bitId);
-    });
-
-    return Promise.all(componentsP);
+    const components = componentIds.map(id => this.sources.getObjects(id));
+    const componentObjects = await Promise.all(components);
+    const componentObjectsFromRemote = await remote.pushMany(componentObjects);
+    await Promise.all(componentIds.map(id => this.clean(id)));
+    await componentObjectsFromRemote.map(obj => this.importSrc(obj));
+    return Promise.all(componentIds.map((id) => {
+      id.scope = remoteName;
+      return this.get(id);
+    }));
   }
 
   ensureDir() {
