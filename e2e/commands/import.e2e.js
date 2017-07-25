@@ -102,7 +102,7 @@ describe('bit import', function () {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.runCmd(`bit import @${helper.remoteScope}/global/simple -p my-custom-location`);
+        helper.runCmd(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
       });
       it('should write the component to the specified path', () => {
         const expectedLocation = path.join(helper.localScopePath, 'my-custom-location', 'impl.js');
@@ -169,7 +169,7 @@ describe('bit import', function () {
       helper.runCmd('bit create with-deps -j');
       const bitJsonPath = path.join(helper.localScopePath, '/components/global/with-deps/bit.json'); // TODO: Change to use the automatic deps resolver
       // add "foo" as a bit.json dependency and lodash.get as a package dependency
-      helper.addBitJsonDependencies(bitJsonPath, { [`@${helper.remoteScope}/global/simple`]: '1' }, { 'lodash.get': '4.4.2' });
+      helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/global/simple`]: '1' }, { 'lodash.get': '4.4.2' });
       helper.commitComponent('with-deps');
       helper.exportComponent('with-deps');
     });
@@ -219,7 +219,7 @@ describe('bit import', function () {
         // export another component with dependencies
         helper.runCmd('bit create with-deps2 -j');
         const deps2JsonPath = path.join(helper.localScopePath, '/components/global/with-deps2/bit.json'); // TODO: Change to use the automatic deps resolver
-        helper.addBitJsonDependencies(deps2JsonPath, { [`@${helper.remoteScope}/global/simple`]: '1' });
+        helper.addBitJsonDependencies(deps2JsonPath, { [`${helper.remoteScope}/global/simple`]: '1' });
         helper.commitComponent('with-deps2');
         helper.exportComponent('with-deps2');
 
@@ -259,7 +259,7 @@ describe('bit import', function () {
      * components/bar/foo/bar/dependencies/utils/is-string/scope-name/version-number/utils/is-type.js (generated link file)
      * components/bar/foo/bar/dependencies/utils/is-type/scope-name/version-number/utils/index.js (generated index file - point to is-type.js)
      * components/bar/foo/bar/dependencies/utils/is-type/scope-name/version-number/utils/is-type.js
-     * 
+     *
      */
     let localConsumerFiles;
     before(() => {
@@ -366,7 +366,7 @@ describe('bit import', function () {
      *
      * bar/foo depends on utils/is-string.
      * utils/is-string depends on utils/is-type
-     * 
+     *
      * There is babel compiler defined
      *
      * Expected structure after importing bar/foo in another project

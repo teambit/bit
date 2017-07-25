@@ -13,21 +13,19 @@ describe('bit install command', function () {
   });
   describe('with a component to install', () => {
     before(() => {
-      helper.cleanEnv();
-      helper.runCmd('bit init');
+      helper.reInitLocalScope();
       // export a new component "bar/foo"
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.runCmd('bit init --bare', helper.remoteScopePath);
-      helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-      helper.runCmd(`bit export @${helper.remoteScope} bar/foo`);
-      fs.emptyDirSync(helper.localScopePath); // a new local scope
-      helper.runCmd('bit init');
-      helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.exportComponent('bar/foo');
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
       // add "foo" as a bit.json dependency
       const bitJsonPath = path.join(helper.localScopePath, 'bit.json');
-      helper.addBitJsonDependencies(bitJsonPath, { [`@${helper.remoteScope}/bar/foo`]: '1' });
+      helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/bar/foo`]: '1' });
     });
     it('should display a successful message with the list of installed components', () => {
       const output = helper.runCmd('bit install');

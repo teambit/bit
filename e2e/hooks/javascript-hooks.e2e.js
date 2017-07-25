@@ -250,15 +250,14 @@ describe('javascript-hooks', function () {
         createComponent('bar', barComponentFixture);
 
         const barJsonPath = path.join(helper.localScopePath, 'components', 'global', 'bar', 'bit.json');
-        helper.addBitJsonDependencies(barJsonPath, { [`@${helper.remoteScope}/global/foo`]: '1' });
+        helper.addBitJsonDependencies(barJsonPath, { [`${helper.remoteScope}/global/foo`]: '1' });
         helper.commitComponent('bar');
         helper.exportComponent('bar');
       });
       before(() => {
-        fs.emptyDirSync(helper.localScopePath); // a new local scope
-        helper.runCmd('bit init');
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.runCmd(`bit import @${helper.remoteScope}/global/bar`);
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('global/bar');
       });
       describe('of depth=1, "bar" depends on "foo"', () => {
         it('should create links in the component level', () => {
@@ -286,14 +285,13 @@ describe('javascript-hooks', function () {
           createComponent('baz', bazComponentFixture);
 
           const bazJsonPath = path.join(helper.localScopePath, 'components', 'global', 'baz', 'bit.json');
-          helper.addBitJsonDependencies(bazJsonPath, { [`@${helper.remoteScope}/global/bar`]: '1' });
+          helper.addBitJsonDependencies(bazJsonPath, { [`${helper.remoteScope}/global/bar`]: '1' });
           helper.commitComponent('baz');
           helper.exportComponent('baz');
 
-          fs.emptyDirSync(helper.localScopePath); // a new local scope
-          helper.runCmd('bit init');
-          helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-          helper.runCmd(`bit import @${helper.remoteScope}/global/baz`);
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('global/baz');
         });
         it('should create links in the component level', () => {
           const appJs = "const baz = require('bit/global/baz'); console.log(baz());";
