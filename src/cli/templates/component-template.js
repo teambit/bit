@@ -18,7 +18,7 @@ export default (component: ConsumerComponent) => {
     compilerId ? { [c.cyan('Compiler')]: compilerId.toString() }: null,
     lang ? { [c.cyan('Language')]: lang }: null,
     testerId ? { [c.cyan('Tester')]: testerId.toString() }: null,
-    !R.isEmpty(dependencies) ? { [c.cyan('Dependencies')]: dependencies.map(id => id.toString()).join(', ') } : null,
+    !R.isEmpty(dependencies) ? { [c.cyan('Dependencies')]: dependencies.map(dependency => dependency.id.toString()).join(', ') } : null,
     !R.isEmpty(packageDependencies) ? { [c.cyan('Packages')]: Object.keys(packageDependencies).join(', ') } : null
   ].filter(x => x);
 
