@@ -3,14 +3,13 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
-import { filterObject, first } from '../../utils';
+import { filterObject, first, bufferFrom } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
 import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
-import { bufferFrom } from '../../utils/buffer-from';
 
 type CiProps = {
   error: Object,
