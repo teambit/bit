@@ -612,24 +612,6 @@ export default class Scope {
       );
   }
 
-  async exportAllAction(bitIds: BitId[], remoteName: string) {
-    const remotes = await this.remotes();
-    const remote = await remotes.resolve(remoteName, this);
-
-    const componentsP = bitIds.map(async (id) => {
-      const bitId = BitId.parse(id);
-      bitId.scope = this.name;
-      const component = await this.sources.getObjects(bitId);
-      const objects = await remote.push(component);
-      await this.clean(bitId);
-      await this.importSrc(objects);
-      bitId.scope = remoteName;
-      return this.get(bitId);
-    });
-
-    return Promise.all(componentsP);
-  }
-
   ensureDir() {
     fs.ensureDirSync(this.getComponentsPath());
     return this.tmp.ensureDir()
