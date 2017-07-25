@@ -26,6 +26,6 @@ export default class Put extends Command {
   }
 
   report(componentObjects: ComponentObjects): string {
-    return packCommand(buildCommandMessage(componentObjects.toString()));
+    return packCommand(buildCommandMessage(ComponentObjects.manyToString(componentObjects)));
   }
 }

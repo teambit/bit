@@ -125,7 +125,7 @@ export default class Scope {
       ));
   }
 
-  importDependencies(dependencies) {
+  importDependencies(dependencies: BitId[]) {
     return new Promise((resolve, reject) => {
       return this.importMany(dependencies)
         .then(resolve)
@@ -155,7 +155,7 @@ export default class Scope {
   }
 
   async putMany({ consumerComponents, message, force, consumer, verbose }: {
-    consumerComponent: ConsumerComponent,
+    consumerComponents: ConsumerComponent[],
     message: string,
     force: ?bool,
     consumer: Consumer,
@@ -177,7 +177,7 @@ export default class Scope {
       // const componentIdString = consumerComponent.id.toString();
       // Store it in a map so we can take it easily from the sorted array which contain only the id
       consumerComponentsIdsMap.set(componentIdString, consumerComponent);
-      const dependenciesIdsStrings = Object.keys(consumerComponent.dependencies);
+      const dependenciesIdsStrings = consumerComponent.dependencies.map(dependency => dependency.id.toString());
       topSort.add(componentIdString, dependenciesIdsStrings || []);
     });
 
@@ -185,17 +185,17 @@ export default class Scope {
     const sortedConsumerComponentsIds = topSort.sort().reverse();
 
     const getFlattenForComponent = (consumerComponent, cache) => {
-      const flattenDependenciesP = Object.keys(consumerComponent.dependencies).map(async (dependency) => {
+      const flattenDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
         // Try to get the flatten dependencies from cache
-        let flattenDependencies = cache.get(dependency);
+        let flattenDependencies = cache.get(dependency.id.toString());
         if (flattenDependencies) return Promise.resolve(flattenDependencies);
 
         // Calculate the flatten dependencies
-        const versionDependencies = await this.importDependencies([consumerComponent.dependencies[dependency].id]);
+        const versionDependencies = await this.importDependencies([dependency.id]);
         flattenDependencies = await flattenDependencyIds(versionDependencies, self.objects);
 
         // Store the flatten dependencies in cache
-        cache.set(dependency, flattenDependencies);
+        cache.set(dependency.id.toString(), flattenDependencies);
 
         return flattenDependencies;
       });
@@ -585,13 +585,14 @@ export default class Scope {
       });
   }
 
+  // todo: get red of this method, it is a private case of exportMany
   async exportAction(bitId: BitId, remoteName: string) {
     bitId.scope = this.name;
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
     const component = await this.sources.getObjects(bitId);
     logger.debug('exportAction: successfully fetched the objects, will try to push them into the remote');
-    const objects = await remote.push(component);
+    const [objects] = await remote.push(component);
     logger.debug('exportAction: successfully pushed the objects into the remote');
     await this.clean(bitId);
     await this.importSrc(objects);

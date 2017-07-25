@@ -30,7 +30,7 @@ export default class Fs {
   }
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
-    return this.getScope().export(componentObjects);
+    return this.pushMany([componentObjects]);
   }
 
   pushMany(components: ComponentObjects[]): Promise<ComponentObjects[]> {
