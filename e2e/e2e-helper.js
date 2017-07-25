@@ -78,12 +78,13 @@ export default class Helper {
     return this.runCmd(`bit commit -am ${commitMsg}`);
   }
 
-  exportComponent(id) {
-    return this.runCmd(`bit export @${this.remoteScope} ${id}`);
+  exportComponent(id?) {
+    if (!id) return this.runCmd(`bit export ${this.remoteScope}`);
+    return this.runCmd(`bit export ${this.remoteScope} ${id}`);
   }
 
   importComponent(id) {
-    return this.runCmd(`bit import @${this.remoteScope}/${id}`);
+    return this.runCmd(`bit import ${this.remoteScope}/${id}`);
   }
 
   importCompiler(id: string = 'bit.envs/compilers/babel') {

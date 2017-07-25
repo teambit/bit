@@ -7,7 +7,6 @@ import {
   VERSION_DELIMITER,
   LOCAL_SCOPE_NOTATION,
   NO_PLUGIN_TYPE,
-  REMOTE_ALIAS_SIGN,
 } from '../constants';
 import { isValidIdChunk, isValidScopeName } from '../utils';
 
@@ -35,12 +34,8 @@ export default class BitId {
     return new BitId({ scope: newScope, box: this.box, name: this.name, version: this.version });
   }
 
-  getScopeWithoutRemoteAnnotation() {
-    return this.scope ? this.scope.replace(REMOTE_ALIAS_SIGN, '') : this.scope;
-  }
-
   isLocal(scopeName: string) {
-    return this.scope === null || scopeName === this.getScopeWithoutRemoteAnnotation();
+    return this.scope === null || scopeName === this.scope;
   }
 
   getVersion() {

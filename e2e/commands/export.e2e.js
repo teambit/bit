@@ -30,10 +30,10 @@ describe('bit export command', function () {
       helper.runCmd('bit commit -a -m commit-msg');
       helper.runCmd('bit init --bare', helper.remoteScopePath);
       helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-      helper.runCmd(`bit export @${helper.remoteScope}`);
+      helper.exportComponent();
     });
     it('should export them all', () => {
-      const output = helper.runCmd(`bit list @${helper.remoteScope}`);
+      const output = helper.runCmd(`bit list ${helper.remoteScope}`);
       expect(output.includes('Total 4 components')).to.be.true;
       expect(output.includes('baz/foo1')).to.be.true;
       expect(output.includes('baz/foo2')).to.be.true;
@@ -55,10 +55,10 @@ describe('bit export command', function () {
       helper.runCmd('bit commit -a -m commit-msg');
       helper.runCmd('bit init --bare', helper.remoteScopePath);
       helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-      helper.runCmd(`bit export @${helper.remoteScope}`);
+      helper.exportComponent();
     });
     it('should export them all', () => {
-      const output = helper.runCmd(`bit list @${helper.remoteScope}`);
+      const output = helper.runCmd(`bit list ${helper.remoteScope}`);
       expect(output.includes('Total 2 components')).to.be.true;
       expect(output.includes('bar')).to.be.true;
       expect(output.includes('baz')).to.be.true;
