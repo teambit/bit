@@ -155,7 +155,7 @@ export default class ComponentsList {
     const listFromObjects = await this.getFromObjects();
     Object.keys(listFromObjects).forEach((id) => {
       const bitId = BitId.parse(id);
-      if (bitId.scope === this.scope.name) {
+      if (!bitId.scope || bitId.scope === this.scope.name) {
         bitId.scope = null;
         stagedComponents.push(bitId.toString());
       }

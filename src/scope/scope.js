@@ -119,11 +119,9 @@ export default class Scope {
       .then(components => this.toConsumerComponents(components));
   }
 
-  listStage() {
-    return this.objects.listComponents()
-      .then(components => this.toConsumerComponents(
-        components.filter(c => c.scope === this.name)
-      ));
+  async listStage() {
+    const components = await this.objects.listComponents();
+    return this.toConsumerComponents(components.filter(c => !c.scope || c.scope === this.name));
   }
 
   importDependencies(dependencies: BitId[]) {
@@ -174,7 +172,7 @@ export default class Scope {
     consumerComponents.forEach((consumerComponent) => {
       const componentIdString = consumerComponent.id.scope
         ? consumerComponent.id.toString()
-        : BitId.parse(consumerComponent.id.changeScope(this.name).toString()).toString();
+        : BitId.parse(consumerComponent.id.toString()).toString();
       // const componentIdString = consumerComponent.id.toString();
       // Store it in a map so we can take it easily from the sorted array which contain only the id
       consumerComponentsIdsMap.set(componentIdString, consumerComponent);
@@ -207,7 +205,7 @@ export default class Scope {
       const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
       // This happens when i have a dependency which already committed
       if (!consumerComponent) return Promise.resolve([]);
-      consumerComponent.scope = self.name;
+      // consumerComponent.scope = self.name;
 
       return getFlattenForComponent(consumerComponent, allDependencies)
         .then((flattenDependencies) => {
@@ -605,7 +603,7 @@ export default class Scope {
     const remote = await remotes.resolve(remoteName, this);
     const componentIds = ids.map((id) => {
       const componentId = BitId.parse(id);
-      componentId.scope = this.name;
+      // componentId.scope = this.name;
       return componentId;
     });
     const components = componentIds.map(id => this.sources.getObjects(id));
