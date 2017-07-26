@@ -64,4 +64,25 @@ describe('bit export command', function () {
       expect(output.includes('baz')).to.be.true;
     });
   });
+
+  describe('with dependencies', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      helper.commitComponent('utils/is-type');
+      helper.exportComponent('utils/is-type');
+      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      helper.commitComponent('utils/is-string');
+      // helper.exportComponent('utils/is-string'); // todo: currently fails, will be fixed once we change all dependencies to the remote
+    });
+    it('should not fail (for now the before statement)', () => {
+
+    });
+  });
 });
