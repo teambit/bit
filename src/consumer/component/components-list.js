@@ -45,7 +45,7 @@ export default class ComponentsList {
    */
   async getFromObjects(): Promise<Object<Version>> {
     if (!this._fromObjects) {
-      const componentsObjects = await this.scope.objects.listComponents();
+      const componentsObjects = await this.scope.objects.listComponents(false);
       const componentsVersionsP = {};
       const componentsVersions = {};
       componentsObjects.forEach((componentObjects) => {

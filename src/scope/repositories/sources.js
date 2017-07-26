@@ -5,9 +5,7 @@ import ComponentObjects from '../component-objects';
 import Scope from '../scope';
 import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
-import Component from '../models/component';
-import Version from '../models/version';
-import Source from '../models/source';
+import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
 import ConsumerComponent from '../../consumer/component';
@@ -62,9 +60,14 @@ export default class SourceRepository {
     );
   }
 
-  get(bitId: BitId): Promise<?Component> {
+  async get(bitId: BitId): Promise<?Component> {
     const component = Component.fromBitId(bitId);
-    return this.findComponent(component);
+    const foundComponent = await this.findComponent(component);
+    if (foundComponent instanceof Symlink) {
+      const realComponentId = BitId.parse(foundComponent.getRealComponentId());
+      return this.findComponent(Component.fromBitId(realComponentId));
+    }
+    return foundComponent;
   }
 
   getObjects(id: BitId): Promise<ComponentObjects> {
