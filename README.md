@@ -120,7 +120,7 @@ const component = require('./components/utils/pad-left');
 
 ## Why Bit - Built for code components
 
-Because we believe code should be written once, and evolve over time. Atomic pieces of code should be composed together as lego bricks to form any functionality. Yet, as software development is being scaled, creating, finding and composing these atomic components is getting harder. Having the right tool to develop and compose components with simplicity, predictability and ease of use is the key to bringing this philosophy from theory to practice. With Bit, you can turn existing source code into a beautiful collection of reusable components for you or your team. You can develop and compose components in any application environment, making them the perfect building blocks for your different projects.
+Atomic pieces of code should be composed together as lego bricks to form any functionality. Yet, as software development is being scaled, creating, finding and composing these atomic components is getting harder. Having the right tool to develop and compose components with simplicity, predictability and ease of use is the key to bringing this philosophy from theory to practice. With Bit, you can turn existing source code into a beautiful collection of reusable components for you or your team. You can develop and compose components in any application environment, making them the perfect building blocks for your different projects.
 
 * Learn more: [Coding in the age of code components](https://blog.bitsrc.io/introducing-bit-writing-code-in-the-age-of-code-components-fd8512a9aa90)
 
