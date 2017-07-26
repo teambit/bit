@@ -26,7 +26,7 @@ describe('bit show command', function () {
       helper.createFile('src', 'mainFile.js', fooBarFixture);
       helper.createFile('src/utils', 'utilFile.js');
       helper.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
-      helper.commitComponent('comp/comp');      
+      helper.commitComponent('comp/comp');
     });
 
     describe('single version as cli output (no -v or -j flags)', () => {
@@ -35,7 +35,7 @@ describe('bit show command', function () {
       before(() => {
         output = helper.runCmd(`bit show comp/comp`);
       });
-      
+
       it('should render the id correctly', () => {
         expect(output).to.have.string('ID', 'ID row is missing');
         expect(output).to.have.string('comp/comp', 'component id is wrong');
@@ -78,9 +78,9 @@ describe('bit show command', function () {
       });
     });
 
-    describe.only('single version as json output', () => {
+    describe('single version as json output', () => {
       let output;
-      
+
 
       before(() => {
         output = JSON.parse(helper.runCmd(`bit show comp/comp -j`));
@@ -98,7 +98,7 @@ describe('bit show command', function () {
         expect(output).to.include({version: 1});
       });
 
-      // TODO: get the version dynamically 
+      // TODO: get the version dynamically
       it('should include the compiler correctly', () => {
         expect(output).to.include({compilerId: "bit.envs/compilers/babel::12"});
       });
