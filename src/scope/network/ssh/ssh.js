@@ -11,6 +11,7 @@ import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
 import ConsumerComponent from '../../../consumer/component';
 import checkVersionCompatibilityFunction from '../check-version-compatibility';
+import logger from '../../../logger/logger';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
@@ -105,6 +106,7 @@ export default class SSH {
           })
           .stderr.on('data', (response) => {
             err = response.toString();
+            logger.error(err);
           });
       });
     });
