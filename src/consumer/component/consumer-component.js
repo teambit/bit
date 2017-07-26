@@ -611,11 +611,11 @@ export default class Component {
       testerId: testerId ? BitId.parse(testerId) : null,
       dependencies: this._dependenciesFromWritableObject(dependencies),
       packageDependencies,
-      impl: Impl.deserialize(impl),
+      impl: Impl ? Impl.deserialize(impl) : null,
       specs: specs ? Specs.deserialize(specs) : null,
-      files: files ? SourceFile.deserialize(files) : null,
+      files: files,
       docs,
-      dists: dists ? Dist.deserialize(dists) : null,
+      dists: dists,
       specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null,
       license: license ? License.deserialize(license) : null
     });
