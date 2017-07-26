@@ -170,10 +170,7 @@ export default class Scope {
     // Concat and unique all the dependencies from all the components so we will not import
     // the same dependency more then once, it's mainly for performance purpose
     consumerComponents.forEach((consumerComponent) => {
-      const componentIdString = consumerComponent.id.scope
-        ? consumerComponent.id.toString()
-        : BitId.parse(consumerComponent.id.toString()).toString();
-      // const componentIdString = consumerComponent.id.toString();
+      const componentIdString = consumerComponent.id.toString();
       // Store it in a map so we can take it easily from the sorted array which contain only the id
       consumerComponentsIdsMap.set(componentIdString, consumerComponent);
       const dependenciesIdsStrings = consumerComponent.dependencies.map(dependency => dependency.id.toString());

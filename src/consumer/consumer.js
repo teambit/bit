@@ -203,8 +203,7 @@ export default class Consumer {
           // Add the entry to cache map
           dependenciesPathIdMap.set(filePath, dependencyIdString);
           if (id.toString() !== dependencyIdString) {
-            let dependencyId = BitId.parse(dependencyIdString);
-            dependencyId = dependencyId.scope ? dependencyId : dependencyId.changeScope(this.scope.name);
+            const dependencyId = BitId.parse(dependencyIdString);
             dependencies.push({ id: dependencyId, relativePath: filePath });
           }
         }
