@@ -7,6 +7,7 @@ import { GlobalRemotes } from '../global-config';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
+import Symlink from './models/symlink';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } from '../utils';
@@ -585,6 +586,20 @@ export default class Scope {
       });
   }
 
+  /**
+   * Creates a symlink object with the local-scope which links to the real-object of the remote-scope
+   * This way, local components that have dependencies to the exported component won't break.
+   */
+  createSymlink(id, remote) {
+    const symlink = new Symlink({
+      scope: id.scope,
+      name: id.name,
+      box: id.box,
+      realScope: remote
+    });
+    return this.objects.add(symlink);
+  }
+
   async exportMany(ids: BitId[], remoteName: string) {
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
@@ -597,6 +612,7 @@ export default class Scope {
     const componentObjects = await Promise.all(components);
     const componentObjectsFromRemote = await remote.pushMany(componentObjects);
     await Promise.all(componentIds.map(id => this.clean(id)));
+    componentIds.map(id => this.createSymlink(id, remoteName));
     await componentObjectsFromRemote.map(obj => this.importSrc(obj));
     return Promise.all(componentIds.map((id) => {
       id.scope = remoteName;

@@ -8,7 +8,7 @@ import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound } from '../exceptions';
 import { resolveGroupId, mkdirp, writeFile, removeFile, allSettled, readFile, inflate } from '../../utils';
 import { Scope } from '../../scope';
-import { Component, ScopeMeta } from '../models';
+import { Component, Symlink, ScopeMeta } from '../models';
 import logger from '../../logger/logger';
 
 export default class Repository {
@@ -73,7 +73,7 @@ export default class Repository {
   listComponents(): Promise<Component[]> {
     // @TODO - write
     const filterComponents = refs =>
-      refs.filter(ref => ref instanceof Component);
+      refs.filter(ref => ref instanceof Component || ref instanceof Symlink);
 
     return this.list().then(filterComponents);
   }
