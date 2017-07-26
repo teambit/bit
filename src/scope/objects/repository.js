@@ -70,10 +70,12 @@ export default class Repository {
     });
   }
 
-  listComponents(): Promise<Component[]> {
+  listComponents(includeSymlinks: boolean = true): Promise<Component[]> {
     // @TODO - write
     const filterComponents = refs =>
-      refs.filter(ref => ref instanceof Component || ref instanceof Symlink);
+      refs.filter(ref => (includeSymlinks
+        ? ref instanceof Component || ref instanceof Symlink
+        : ref instanceof Component));
 
     return this.list().then(filterComponents);
   }
