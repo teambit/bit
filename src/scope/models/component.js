@@ -155,26 +155,16 @@ export default class Component extends BitObject {
           const filesP = version.files ?
           Promise.all(version.files.map(file =>
             file.file.load(repository)
-            .then((content) => {
-              return {
-                name: file.name,
-                relativePath: file.relativePath,
-                dir: path.dirname(file.relativePath),
-                content
-              };
-            })
+            .then((content) =>
+             new SourceFile({ base: '.', path: file.relativePath, contents: content.contents })
+            )
           )) : null;
           const distsP = version.dists ?
           Promise.all(version.dists.map(dist =>
             dist.file.load(repository)
             .then((content) => {
               const relativePathWithDist = path.join(DEFAULT_DIST_DIRNAME, dist.relativePath);
-              return {
-                name: dist.name,
-                relativePath: relativePathWithDist,
-                dir: path.dirname(relativePathWithDist),
-                content
-              };
+              return new Dist({ base: '.', path: relativePathWithDist, contents: content.contents });
             })
           )) : null;
           const scopeMetaP = ScopeMeta.fromScopeName(scopeName).load(repository);
@@ -203,8 +193,8 @@ export default class Component extends BitObject {
               packageDependencies: version.packageDependencies,
               impl: impl ? new Impl(impl.toString()) : null,
               specs: specs ? new Specs(specs.toString()) : null,
-              files: files ? files.map(file => new SourceFile({ base: file.dir, path: file.relativePath, contents: file.content.contents })) : null,
-              dists: dists ? dists.map(dist => new Dist({ base: dist.dir, path: dist.relativePath, contents: dist.content.contents })) : null,
+              files: files,
+              dists: dists,
               docs: version.docs,
               license: scopeMeta ? License.deserialize(scopeMeta.license) : null,
               specsResults:

@@ -78,7 +78,7 @@ describe('bit show command', function () {
       });
     });
 
-    describe.only('single version as json output', () => {
+    describe('single version as json output', () => {
       let output;
       
 

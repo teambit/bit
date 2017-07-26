@@ -161,7 +161,11 @@ export default class Consumer {
       const dependencies = [];
 
       const componentMap = bitMap.getComponent(id.toString());
-      let bitDir;
+      let bitDir = this.getPath();
+
+      if (componentMap && componentMap.rootDir){
+        bitDir = path.join(bitDir, componentMap.rootDir);
+      }
       // TODO: Take this from the map (the most up path of all component files)
       // TODO: Taking it from compose will not work when someone will import with -p to specific path
       if (componentMap && (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED)) {
@@ -178,7 +182,7 @@ export default class Consumer {
         dependenciesTree.missing = [];
       } else if (driverExists) {
         // Load the dependencies through automatic dependency resolution
-        dependenciesTree = await this.driver.getDependencyTree(this.getPath(), mainFile);
+        dependenciesTree = await this.driver.getDependencyTree(bitDir, mainFile);
         Object.assign(fullDependenciesTree.tree, dependenciesTree.tree);
         fullDependenciesTree.missing = fullDependenciesTree.missing.concat(dependenciesTree.missing);
         // Check if there is missing dependencies in file system
@@ -305,15 +309,14 @@ export default class Consumer {
     if (!bitMap.getComponent(componentId)) { // todo: this is a hack. bit.map should have the correct id with the scope
       componentId = component.id.changeScope(null).toString();
     }
-    const mainFile = bitMap.getMainFileOfComponent(componentId);
+    let mainFile = bitMap.getMainFileOfComponent(componentId);
     let relativeMainFile = path.relative(componentRoot, mainFile);
     // In case there is dist files, we want to point the index to the dist file not to source.
     if (component.dists && !R.isEmpty(component.dists)){
       logger.debug(`_writeEntryPointsForImportedComponent, Change the index file to point to dist folder`);
-      relativeMainFile = path.join(DEFAULT_DIST_DIRNAME, relativeMainFile);
-      console.log(DEFAULT_DIST_DIRNAME, relativeMainFile);
+      mainFile = path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
-    const entryPointFile = `module.exports = require('.${path.sep}${relativeMainFile}');`; // todo: move to bit-javascript
+    const entryPointFile = `module.exports = require('.${path.sep}${mainFile}');`; // todo: move to bit-javascript
     return outputFile(entryPointPath, entryPointFile);
   }
 
@@ -527,6 +530,7 @@ export default class Consumer {
   }
 
   static load(currentPath: string): Promise<Consumer> {
+    // TODO: Refactor - remove the new Promise((resolve, reject) it's a bad practice use Promise.reject if needed
     return new Promise((resolve, reject) => {
       const projectPath = locateConsumer(currentPath);
       if (!projectPath) return reject(new ConsumerNotFound());
