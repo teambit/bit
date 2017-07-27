@@ -62,6 +62,9 @@ export default class Helper {
   }
 
   addRemoteScope(remoteScopePath = this.remoteScopePath) {
+    if (process.env.npm_config_with_ssh) {
+      return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath}`);
+    }
     return this.runCmd(`bit remote add file://${remoteScopePath}`);
   }
 

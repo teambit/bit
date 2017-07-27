@@ -86,6 +86,8 @@ npm install -g flow-bin flow-typed
 ```
 Use "--debug" flag to watch the running commands and the output. It might be a useful tool for debugging failed e2e tests.
 
+Use "--with_ssh" flag to switch from exporting by using file-system to SSH approach. Make sure you are able to run 'ssh `whoami`@127.0.0.1' on your local.
+
 ### Lint
 
 - run eslint
