@@ -1,7 +1,6 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
-import vinylFile from 'vinyl-file';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
 import { Impl, Specs, Dist, License, SourceFile } from '../component/sources';
@@ -274,7 +273,8 @@ export default class Component {
       }
 
       // the compiler have one of the following (build/compile)
-      return Promise.resolve(compiler.compile(files));
+      const rootDistFolder = path.join(consumer.getPath(), consumer.bitJson.distTarget);
+      return Promise.resolve(compiler.compile(files, rootDistFolder));
     };
 
     if (!compiler.build && !compiler.compile) {
@@ -320,14 +320,14 @@ export default class Component {
    */
   async write(bitDir?: string, withBitJson: boolean, force?: boolean = true, bitMap?: BitMap,
               origin?: string, parent?: BitId, consumerPath?: string): Promise<Component> {
-    
+
     // Take the bitdir from the files (it will be the same for all the files of course)
     let calculatedBitDir = bitDir || this.files[0].base;
 
     // Update files base dir according to bitDir
     if (this.files && bitDir) this.files.forEach(file => file.updatePaths({newBase: bitDir}));
     if (this.dists && bitDir) this.dists.forEach(dist => dist.updatePaths({newBase: bitDir}));
-    
+
     // if bitMap parameter is empty, for instance, when it came from the scope, ignore bitMap altogether.
     // otherwise, check whether this component is in bitMap:
     // if it's there, write the files according to the paths in bit.map.
@@ -340,7 +340,7 @@ export default class Component {
       if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
 
       calculatedBitDir = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
-      
+
       this.files.forEach(file => file.updatePaths({newBase: calculatedBitDir, newRelative: componentMap.files[file.basename]} ));
       this.files.forEach(file => file.write(undefined, force));
 
@@ -351,7 +351,7 @@ export default class Component {
       // if (this.license && this.license.src) await this.license.write(bitDir, force); // todo: is it needed?
       return this;
     }
-    
+
     await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
 
     if (!this.files) {
@@ -548,12 +548,7 @@ export default class Component {
               }
             });
 
-            const entryDirectory = Component.calculateEntryData(consumer.bitJson.distEntry, consumer.getPath());
-            this.dists = buildedFiles.map((file) => {
-              file.cwd = entryDirectory;
-              file.distFilePath = path.join(consumer.getPath(), consumer.bitJson.distTarget, file.relative);
-              return new Dist(file);
-            });
+            this.dists = buildedFiles.map(file => new Dist(file));
 
             if (save) {
               return scope.sources.updateDist({ source: this })
@@ -638,11 +633,6 @@ export default class Component {
       specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null,
       license: license ? License.deserialize(license) : null
     });
-  }
-
-  static calculateEntryData(distEntry: string, consumerPath: string): string {
-    const entryPath = path.join(consumerPath, distEntry);
-    return fs.existsSync(entryPath) ? entryPath : consumerPath;
   }
 
   static fromString(str: string): Component {
