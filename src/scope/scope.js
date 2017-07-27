@@ -162,7 +162,6 @@ export default class Scope {
   }):
   Promise<ComponentDependencies> { // TODO: Change the return type
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
-    const self = this;
     const topSort = new Toposort();
     const allDependencies = new Map();
     const consumerComponentsIdsMap = new Map();
@@ -181,47 +180,44 @@ export default class Scope {
     const sortedConsumerComponentsIds = topSort.sort().reverse();
 
     const getFlattenForComponent = (consumerComponent, cache) => {
-      const flattenDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
+      const flattenedDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
         // Try to get the flatten dependencies from cache
-        let flattenDependencies = cache.get(dependency.id.toString());
-        if (flattenDependencies) return Promise.resolve(flattenDependencies);
+        let flattenedDependencies = cache.get(dependency.id.toString());
+        if (flattenedDependencies) return Promise.resolve(flattenedDependencies);
 
         // Calculate the flatten dependencies
         const versionDependencies = await this.importDependencies([dependency.id]);
-        flattenDependencies = await flattenDependencyIds(versionDependencies, self.objects);
+        flattenedDependencies = await flattenDependencyIds(versionDependencies, this.objects);
 
         // Store the flatten dependencies in cache
-        cache.set(dependency.id.toString(), flattenDependencies);
+        cache.set(dependency.id.toString(), flattenedDependencies);
 
-        return flattenDependencies;
+        return flattenedDependencies;
       });
-      return Promise.all(flattenDependenciesP);
+      return Promise.all(flattenedDependenciesP);
     };
 
     const persistComponentsP = sortedConsumerComponentsIds.map(consumerComponentId => async () => {
       const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
-      // This happens when i have a dependency which already committed
+      // This happens when there is a dependency which have been already committed
       if (!consumerComponent) return Promise.resolve([]);
-      // consumerComponent.scope = self.name;
-
-      return getFlattenForComponent(consumerComponent, allDependencies)
-        .then((flattenDependencies) => {
-          flattenDependencies = R.flatten(flattenDependencies);
-          const predicate = id => id.toString(); // TODO: should be moved to BitId class
-          flattenDependencies = R.uniqBy(predicate)(flattenDependencies);
-          return this.sources.addSource({source: consumerComponent,
-                                  depIds: flattenDependencies,
-                                  message,
-                                  force,
-                                  consumer,
-                                  verbose})})
-        .then((component) => {
-          loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-          return this.objects.persist()
-            .then(() => component.toVersionDependencies(LATEST, this, this.name))
-            .then(deps => deps.toConsumer(this.objects))
-            .then(() => index(consumerComponent, this.getPath())); // todo: make sure it still works
-        });
+      let flattenedDependencies = await getFlattenForComponent(consumerComponent, allDependencies);
+      flattenedDependencies = R.flatten(flattenedDependencies);
+      const predicate = id => id.toString(); // TODO: should be moved to BitId class
+      flattenedDependencies = R.uniqBy(predicate)(flattenedDependencies);
+      const component = await this.sources.addSource({
+        source: consumerComponent,
+        depIds: flattenedDependencies,
+        message,
+        force,
+        consumer,
+        verbose });
+      loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
+      await this.objects.persist();
+      const deps = await component.toVersionDependencies(LATEST, this, this.name);
+      await deps.toConsumer(this.objects);
+      await index(consumerComponent, this.getPath()); // todo: make sure it still works
+      return consumerComponent;
     });
 
     // Run the persistence one by one not in parallel!

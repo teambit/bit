@@ -335,7 +335,7 @@ export default class Consumer {
       const linkContent = `module.exports = require('${relativeEntryFilePath}');`;
 
       return outputFile(linkPath, linkContent);
-    }
+    };
 
     const componentLinks = (directDependencies: Array<Object>, flattenedDependencies: BitIds, parentDir: string, hasDist: boolean) => {
       if (!directDependencies || !directDependencies.length) return Promise.resolve();
@@ -343,7 +343,7 @@ export default class Consumer {
         if (!dep.relativePath) return Promise.resolve();
         const linkPath = path.join(parentDir, dep.relativePath);
         let distLinkPath;
-        if (hasDist){
+        if (hasDist) {
           distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, dep.relativePath);
         }
         let resolveDepVersion = dep.id;
@@ -354,7 +354,7 @@ export default class Consumer {
         }
 
         // Generate a link file inside dist folder of the dependent component
-        if (hasDist){
+        if (hasDist) {
           writeLinkFile(resolveDepVersion, distLinkPath);
         }
 
@@ -366,11 +366,11 @@ export default class Consumer {
     const allLinksP = componentDependencies.map((componentWithDeps) => {
       const directDeps = componentWithDeps.component.dependencies;
       const flattenDeps = componentWithDeps.component.flattenedDependencies;
-      const hasDist =  componentWithDeps.component.dists && !R.isEmpty(componentWithDeps.component.dists);
+      const hasDist = componentWithDeps.component.dists && !R.isEmpty(componentWithDeps.component.dists);
       const directLinksP = componentLinks(directDeps, flattenDeps, componentWithDeps.component.writtenPath, hasDist);
 
       const indirectLinksP = componentWithDeps.dependencies.map((dep: Component) => {
-        const hasDist =  dep.dists && !R.isEmpty(dep.dists);
+        const hasDist = dep.dists && !R.isEmpty(dep.dists);
         return componentLinks(dep.dependencies, dep.flattenedDependencies, dep.writtenPath, hasDist);
       });
 
@@ -408,7 +408,7 @@ export default class Consumer {
         const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
         dep.writtenPath = depBitPath;
         return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id)
-          .then(result => {
+          .then(() => {
             this._writeEntryPointsForImportedComponent(dep, bitMap);
           });
       });
@@ -437,20 +437,14 @@ export default class Consumer {
     return component;
   }
 
-  async commitAll(ids: string[], message: string, force: ?bool, verbose: ?bool): Promise<Component> {
+  async commitAll(message: string, force: ?bool, verbose: ?bool): Promise<Component> {
     const componentsList = new ComponentsList(this);
-    let commitPendingComponents;
-    commitPendingComponents = await componentsList.listCommitPendingComponents();
+    const commitPendingComponents = await componentsList.listCommitPendingComponents();
 
     const componentsIds = commitPendingComponents.map(BitId.parse);
-    if (R.isEmpty(componentsIds)) return;
+    if (R.isEmpty(componentsIds)) return null;
 
-    const bitMap: BitMap = await this.getBitMap();
-
-    // load components
-    let components;
-    components = await this.loadComponents(componentsIds);
-
+    const components = await this.loadComponents(componentsIds);
     await this.scope
       .putMany({ consumerComponents: components, message, force, consumer: this, verbose });
     await this.driver.runHook('onCommit', components); // todo: probably not needed as the bind happens on create
