@@ -250,11 +250,12 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDependencies);
   }
 
-  buildIfNeeded({ condition, files, compiler, consumer, scope }: {
+  buildIfNeeded({ condition, files, compiler, consumer, componentMap, scope }: {
     condition?: ?bool,
     files:File[],
     compiler: any,
     consumer?: Consumer,
+    componentMap?: ComponentMap,
     scope: Scope,
   }): Promise<?{ code: string, mappings?: string }> {
     if (!condition) { return Promise.resolve({ code: '' }); }
@@ -273,7 +274,11 @@ export default class Component {
       }
 
       // the compiler have one of the following (build/compile)
-      const rootDistFolder = path.join(consumer.getPath(), consumer.bitJson.distTarget);
+      let rootDistFolder = componentMap.rootDir || componentRoot;
+      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED){
+        rootDistFolder = path.join(consumer.getPath(), consumer.bitJson.distTarget);
+      }
+
       return Promise.resolve(compiler.compile(files, rootDistFolder));
     };
 
@@ -495,14 +500,17 @@ export default class Component {
     }
   }
 
-  async build({ scope, environment, save, consumer, verbose }:
-          { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, verbose?: bool }):
+  async build({ scope, environment, save, consumer, bitMap, verbose }:
+          { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool }):
   Promise<string> { // @TODO - write SourceMap Type
     return new Promise((resolve, reject) => {
       if (!this.compilerId) return resolve(null);
 
       // verify whether the environment is installed
       let compiler;
+      const idWithoutScope = this.id.changeScope(null);
+      const componentMap = bitMap.getComponent(idWithoutScope.toString());
+      
       try {
         compiler = scope.loadEnvironment(this.compilerId);
       } catch (err) {
@@ -537,6 +545,7 @@ export default class Component {
             compiler,
             files: this.files,
             consumer,
+            componentMap,
             scope
           });
 
