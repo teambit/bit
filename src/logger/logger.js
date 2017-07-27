@@ -8,7 +8,7 @@ const logger = new winston.Logger({
     new (winston.transports.File)({
       filename: path.join(GLOBAL_LOGS, 'debug.log'),
       json: false,
-      level: process.env.NODE_ENV === 'development' ? 'debug' : 'error'
+      level: process.env.NODE_ENV === 'production' ? 'error' : 'debug'
     }),
   ],
   exceptionHandlers: [

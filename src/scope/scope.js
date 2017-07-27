@@ -286,12 +286,12 @@ export default class Scope {
     logger.debug('exportManyBareScope: successfully ran importMany');
     await this.objects.persist();
     const objs = await Promise.all(versions.map(version => version.toObjects(this.objects)));
-    manyCompVersions.forEach(async (compVersion) => {
-      const consumerComponent = await compVersion.toConsumer(this.objects);
-      await index(consumerComponent, this.getPath());
-      await postExportHook({ id: consumerComponent.id.toString() });
-      await performCIOps(consumerComponent, this.getPath());
-    });
+    const manyConsumerComponent = await Promise
+      .all(manyCompVersions.map(compVersion => compVersion.toConsumer(this.objects)));
+    await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
+    await Promise.all(manyConsumerComponent
+      .map(consumerComponent => postExportHook({ id: consumerComponent.id.toString() })));
+    await Promise.all(manyConsumerComponent.map(consumerComponent => performCIOps(consumerComponent, this.getPath())));
     return objs;
   }
 
