@@ -301,7 +301,6 @@ export default class Component {
   }
 
   async _writeToComponentDir(bitDir: string, withBitJson: boolean, force?: boolean = true) {
-    console.log('here');
     await mkdirp(bitDir);
     if (this.impl) await this.impl.write(bitDir, this.implFile, force);
     if (this.specs) await this.specs.write(bitDir, this.specsFile, force);
