@@ -405,7 +405,10 @@ export default class Scope {
   }
 
   /**
-   * If not found in the local scope, fetch from a remote scope and save into the local scope
+   * 1. Local objects, fetch from local. (done by this.sources.getMany method)
+   * 2. Fetch flattened dependencies (done by toVersionDependencies method). If they're not locally, fetch from remote
+   * and save them locally.
+   * 3. External objects, fetch from a remote and save locally. (done by this.getExternalOnes method).
    */
   async importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true):
   Promise<VersionDependencies[]> {
@@ -624,13 +627,12 @@ export default class Scope {
     return this.objects.add(symlink);
   }
 
-  async exportMany(ids: BitId[], remoteName: string) {
+  async exportMany(ids: string[], remoteName: string) {
     logger.debug(`exportMany, ids: ${ids.join(', ')}`);
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
     const componentIds = ids.map((id) => {
       const componentId = BitId.parse(id);
-      // componentId.scope = this.name;
       return componentId;
     });
     const components = componentIds.map(id => this.sources.getObjects(id));
