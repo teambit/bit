@@ -15,7 +15,7 @@ export async function build(id: string): Promise<?Array<string>> {
   const consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
   const component: Component = await consumer.loadComponent(bitId);
-  const result = await component.build({ scope: consumer.scope, consumer });
+  const result = await component.build({ scope: consumer.scope, consumer, bitMap });
   if (result === null) return null;
   const distFilePaths = await writeDistFiles(consumer, component);
   bitMap.addMainDistFileToComponent(component.id, distFilePaths);
