@@ -289,8 +289,7 @@ export default class Scope {
     const manyConsumerComponent = await Promise
       .all(manyCompVersions.map(compVersion => compVersion.toConsumer(this.objects)));
     await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
-    await Promise.all(manyConsumerComponent
-      .map(consumerComponent => postExportHook({ id: consumerComponent.id.toString() })));
+    await postExportHook({ ids: manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString()) });
     await Promise.all(manyConsumerComponent.map(consumerComponent => performCIOps(consumerComponent, this.getPath())));
     return objs;
   }
