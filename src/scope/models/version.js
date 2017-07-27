@@ -157,8 +157,9 @@ export default class Version extends BitObject {
 
   toObject() {
     const dependencies = this.dependencies.map((dependency) => {
-      dependency.id = dependency.id.toString();
-      return dependency;
+      const dependencyClone = R.clone(dependency);
+      dependencyClone.id = dependency.id.toString();
+      return dependencyClone;
     });
     return filterObject({
       impl: this.impl ? {

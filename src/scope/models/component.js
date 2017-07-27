@@ -117,7 +117,7 @@ export default class Component extends BitObject {
   }
 
   loadVersion(version: number, repository: Repository): Promise<Version> {
-    const versionRef = this.versions[version];
+    const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound();
     return versionRef.load(repository);
   }

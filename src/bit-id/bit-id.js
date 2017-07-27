@@ -35,7 +35,7 @@ export default class BitId {
   }
 
   isLocal(scopeName: string) {
-    return this.scope === null || scopeName === this.scope;
+    return !this.scope || scopeName === this.scope;
   }
 
   getVersion() {

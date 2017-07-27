@@ -7,7 +7,7 @@ import { GlobalRemotes } from '../global-config';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
-import Symlink from './models/symlink';
+import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } from '../utils';
@@ -238,28 +238,63 @@ export default class Scope {
       .then(() => this.objects.persist());
   }
 
-  // todo: rename this method, it takes place on the remote scope only
+  /**
+   * When exporting components with dependencies to a bare-scope, some of the dependencies may be created locally and as
+   * as result their scope-name is null. Once the bare-scope gets the components, it needs to convert these scope names
+   * to the bare-scope name.
+   * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
+   */
+  _convertNonScopeToLocalScope(componentsObjects: ComponentObjects): void {
+    componentsObjects.objects.forEach((object: Ref) => {
+      if (object instanceof Version) {
+        const hashBefore = object.hash().toString();
+        object.dependencies.forEach((dependency) => {
+          if (!dependency.id.scope) dependency.id.scope = this.name;
+        });
+        object.flattenedDependencies.forEach((dependency) => {
+          if (!dependency.scope) dependency.scope = this.name;
+        });
+        const hashAfter = object.hash().toString();
+        if (hashBefore !== hashAfter) {
+          const versions = componentsObjects.component.versions;
+          Object.keys(versions).forEach((version) => {
+            if (versions[version].toString() === hashBefore) {
+              versions[version] = Ref.from(hashAfter);
+            }
+          });
+        }
+      }
+    });
+  }
+
   /**
    * saves a component into the objects directory of the remote scope, then, resolves its
    * dependencies, saves them as well. Finally runs the build process if needed on an isolated
    * environment.
    */
-  async export(componentObjects: ComponentObjects): Promise<any> {
-    const objects = componentObjects.toObjects(this.objects);
-    const { component } = objects;
-    await this.sources.merge(objects, true);
-    const compVersion = await component.toComponentVersion(LATEST, this.name);
-    logger.debug('export on bare-scope: will try to importMany in case there are missing dependencies');
-    const versions = await this.importMany([compVersion.id], true); // resolve dependencies
-    logger.debug('export on bare-scope: successfully ran importMany');
+  async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<any> {
+    const manyObjects = componentsObjects.map((componentObjects) => {
+      const componentAndObject = componentObjects.toObjects(this.objects);
+      this._convertNonScopeToLocalScope(componentAndObject);
+      return componentAndObject;
+    });
+    await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true)));
+    const manyCompVersions = await Promise
+      .all(manyObjects.map(objects => objects.component.toComponentVersion(LATEST, this.name)));
+    logger.debug('exportManyBareScope: will try to importMany in case there are missing dependencies');
+    const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id), true); // resolve dependencies
+    logger.debug('exportManyBareScope: successfully ran importMany');
     await this.objects.persist();
     const objs = await Promise.all(versions.map(version => version.toObjects(this.objects)));
-    const consumerComponent = await compVersion.toConsumer(this.objects);
-    await index(consumerComponent, this.getPath());
-    await postExportHook({ id: consumerComponent.id.toString() });
-    await performCIOps(consumerComponent, this.getPath());
-    return first(objs);
+    manyCompVersions.forEach(async (compVersion) => {
+      const consumerComponent = await compVersion.toConsumer(this.objects);
+      await index(consumerComponent, this.getPath());
+      await postExportHook({ id: consumerComponent.id.toString() });
+      await performCIOps(consumerComponent, this.getPath());
+    });
+    return objs;
   }
+
 
   getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: bool = false) {
     logger.debug(`getExternalOnes, ids: ${ids.join(', ')}`);
@@ -381,25 +416,20 @@ export default class Scope {
 
     const [externals, locals] = splitWhen(id => id.isLocal(this.name), idsWithoutNils);
 
-    return this.sources.getMany(locals)
-      .then((localDefs) => {
-        return Promise.all(localDefs.map((def) => {
-          if (!def.component) throw new ComponentNotFound(def.id.toString());
-          return def.component.toVersionDependencies(
-            def.id.version,
-            this,
-            def.id.scope,
-            withDevDependencies,
-          );
-        }))
-          .then((versionDeps) => {
-            return postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) })
-              .then(() => this.remotes()
-                .then(remotes => this.getExternalMany(externals, remotes, cache))
-                .then(externalDeps => versionDeps.concat(externalDeps))
-              );
-          });
-      });
+    const localDefs = await this.sources.getMany(locals);
+    const versionDeps = await Promise.all(localDefs.map((def) => {
+      if (!def.component) throw new ComponentNotFound(def.id.toString());
+      return def.component.toVersionDependencies(
+        def.id.version,
+        this,
+        def.id.scope,
+        withDevDependencies,
+      );
+    }));
+    await postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) });
+    const remotes = await this.remotes();
+    const externalDeps = await this.getExternalMany(externals, remotes, cache);
+    return versionDeps.concat(externalDeps);
   }
 
   importManyOnes(ids: BitId[], cache: boolean): Promise<ComponentVersion[]> {
@@ -596,6 +626,7 @@ export default class Scope {
   }
 
   async exportMany(ids: BitId[], remoteName: string) {
+    logger.debug(`exportMany, ids: ${ids.join(', ')}`);
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
     const componentIds = ids.map((id) => {
