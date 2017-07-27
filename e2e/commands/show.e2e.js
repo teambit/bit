@@ -56,7 +56,7 @@ describe('bit show command', function () {
         expect(output).to.have.string('javascript', 'Tester is wrong');
       });
 
-      it('should render the dependencies correctly', () => {
+      it.skip('should render the dependencies correctly', () => {
         expect(output).to.have.string('Dependencies', 'Dependencies row is missing');
         expect(output).to.have.string(`${helper.localScope}/utils/is-string::latest`, 'Dependencies are wrong');
       });
@@ -112,7 +112,7 @@ describe('bit show command', function () {
         expect(output).to.include({testerId: null});
       });
 
-      it('should include the dependencies correctly', () => {
+      it.skip('should include the dependencies correctly', () => {
         const dependencies = output.dependencies;
         const depObject = {[`${helper.localScope}/utils/is-string`]:'latest'};
         expect(dependencies).to.include(depObject);
@@ -229,7 +229,7 @@ describe('bit show command', function () {
     });
   });
 
-  describe('with no docs', () => {
+  describe.skip('with no docs', () => {
     before(() => {
       const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";
       commitFoo(fooComponentFixture);
@@ -243,7 +243,7 @@ describe('bit show command', function () {
       expect(output.includes('Description')).to.be.false;
     });
   });
-  describe('with docs', () => {
+  describe.skip('with docs', () => {
     before(() => {
       const fooComponentFixture = `/**
  * Adds two numbers.
