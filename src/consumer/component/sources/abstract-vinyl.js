@@ -15,9 +15,11 @@ export default class AbstractVinyl extends Vinyl {
   write(path?: string, force?: boolean = true): Promise<any> {
     const filePath = path || this.path;
     if (!force && fs.existsSync(filePath)) return Promise.resolve();
-    return fs.outputFile(filePath, this.contents, (err, res) => {
-      if (err) return Promise.reject(err);
-      return Promise.resolve(res);
+    return new Promise((resolve, reject) => {
+      fs.outputFile(filePath, this.contents, (err, res) => {
+        if (err) return reject(err);
+        return resolve(filePath);
+      });
     });
   }
 }
