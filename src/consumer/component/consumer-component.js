@@ -319,14 +319,14 @@ export default class Component {
    * It's mainly here for cases when we write from the model so this is the first point we actually have the dir
    */
   async write(bitDir?: string, withBitJson: boolean, force?: boolean = true, bitMap?: BitMap,
-              origin?: string, parent?: BitId): Promise<Component> {
+              origin?: string, parent?: BitId, consumerPath?: string): Promise<Component> {
     
     // Take the bitdir from the files (it will be the same for all the files of course)
     let calculatedBitDir = bitDir || this.files[0].base;
 
     // Update files base dir according to bitDir
-    if (this.files && bitDir) this.files.forEach(file => file.updateBase(bitDir));
-    if (this.dists && bitDir) this.dists.forEach(dist => dist.updateBase(bitDir));
+    if (this.files && bitDir) this.files.forEach(file => file.updatePaths({newBase: bitDir}));
+    if (this.dists && bitDir) this.dists.forEach(dist => dist.updatePaths({newBase: bitDir}));
     
     // if bitMap parameter is empty, for instance, when it came from the scope, ignore bitMap altogether.
     // otherwise, check whether this component is in bitMap:
@@ -339,10 +339,11 @@ export default class Component {
     if (componentMap) {
       if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
 
-      calculatedBitDir = componentMap.rootDir;
+      calculatedBitDir = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
+      
+      this.files.forEach(file => file.updatePaths({newBase: calculatedBitDir, newRelative: componentMap.files[file.basename]} ));
+      this.files.forEach(file => file.write(undefined, force));
 
-      // TODO: Check if we really need this function or just updateBase according to bitMap.rootDir instead
-      await this.files.forEach(file => file.writeUsingBitMap(componentMap.files, force));
       // todo: while refactoring the dist for the new changes, make sure it writes to the proper
       // directory. Also, write the dist paths into bit.map.
       // if (this.dist) await this.dist.write(bitDir, this.distImplFileName, force);

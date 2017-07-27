@@ -401,7 +401,7 @@ export default class Consumer {
       const bitPath = writeToPath || this.composeBitPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitPath;
       const writeComponentP = componentWithDeps.component
-        .write(bitPath, true, true, bitMap, COMPONENT_ORIGINS.IMPORTED);
+        .write(bitPath, true, true, bitMap, COMPONENT_ORIGINS.IMPORTED, undefined, this.getPath());
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         if (bitMap.isComponentExist(dependencyId) || dependenciesIds.includes(dependencyId)) {
@@ -411,7 +411,7 @@ export default class Consumer {
         dependenciesIds.push(dependencyId);
         const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
         dep.writtenPath = depBitPath;
-        return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id)
+        return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id, this.getPath())
           .then(result => {
             this._writeEntryPointsForImportedComponent(dep, bitMap);
           });

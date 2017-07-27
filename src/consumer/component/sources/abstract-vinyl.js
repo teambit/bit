@@ -5,10 +5,11 @@ import Vinyl from 'vinyl';
 
 export default class AbstractVinyl extends Vinyl {
   // Update the base path and keep the relative value to be the same
-  updateBase(newBase: string){
-    const oldRelative = this.relative;
+  updatePaths({newBase, newRelative, newCwd}: {newBase: string, newRelative?: string, newCwd?: string}){
+    const relative = newRelative || this.relative;
+    if (newCwd) this.cwd = newCwd
     this.base = newBase;
-    this.path = path.join(this.base, oldRelative);
+    this.path = path.join(this.base, relative);
   }
 
   write(path?: string, force?: boolean = true): Promise<any> {

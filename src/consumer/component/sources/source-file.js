@@ -26,14 +26,14 @@ export default class SourceFile extends AbstractVinyl {
     }
   }
 
-  writeUsingBitMap(bitMapFiles: Object<string>, force?: boolean = true) {
-    if (!bitMapFiles[this.relative]) {
-      logger.error(`could not write the file "${this.basename}" as it does not appear in the bit.map file`);
-      return Promise.resolve();
-    }
-    const bitPath = path.dirname(bitMapFiles[this.relative]);
-    return this.write(bitPath, force);
-  }
+  // writeUsingBitMap(bitMapFiles: Object<string>, force?: boolean = true) {
+  //   if (!bitMapFiles[this.relative]) {
+  //     logger.error(`could not write the file "${this.basename}" as it does not appear in the bit.map file`);
+  //     return Promise.resolve();
+  //   }
+  //   const bitPath = path.dirname(bitMapFiles[this.relative]);
+  //   return this.write(bitPath, force);
+  // }
 
   // serialize(): Buffer {
   //   return this.contents;
