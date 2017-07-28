@@ -81,9 +81,12 @@ export default class Helper {
     return this.runCmd(`bit commit -am ${commitMsg}`);
   }
 
-  exportComponent(id?) {
-    if (!id) return this.runCmd(`bit export ${this.remoteScope}`);
+  exportComponent(id) {
     return this.runCmd(`bit export ${this.remoteScope} ${id}`);
+  }
+
+  exportAllComponents() {
+    return this.runCmd(`bit export ${this.remoteScope}`);
   }
 
   importComponent(id) {

@@ -13,7 +13,6 @@ import BitIds from '../../bit-id/bit-ids';
 import docsParser, { Doclet } from '../../jsdoc/parser';
 import specsRunner from '../../specs-runner';
 import SpecsResults from '../specs-results';
-import type { Results } from '../../specs-runner/specs-runner';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment from '../../environment';
@@ -26,11 +25,9 @@ import {
   DEFAULT_BOX_NAME,
   DEFAULT_IMPL_NAME,
   DEFAULT_SPECS_NAME,
-  DEFAULT_INDEX_NAME,
-  DEFAULT_BIT_VERSION,
+  LATEST_BIT_VERSION,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
-  COMPONENT_ORIGINS
 } from '../../constants';
 
 export type ComponentProps = {
@@ -718,7 +715,7 @@ export default class Component {
       name,
       box,
       lang,
-      version: DEFAULT_BIT_VERSION,
+      version: LATEST_BIT_VERSION,
       scope: scopeName,
       implFile,
       specsFile,

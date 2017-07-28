@@ -187,6 +187,11 @@ export default class Scope {
 
         // Calculate the flatten dependencies
         const versionDependencies = await this.importDependencies([dependency.id]);
+        // Copy the exact version from flattenedDependency to dependencies
+        if (dependency.id.version === LATEST) {
+          dependency.id.version = first(versionDependencies).component.version;
+        }
+
         flattenedDependencies = await flattenDependencyIds(versionDependencies, this.objects);
 
         // Store the flatten dependencies in cache
@@ -252,6 +257,7 @@ export default class Scope {
         });
         const hashAfter = object.hash().toString();
         if (hashBefore !== hashAfter) {
+          logger.debug(`switching ${componentsObjects.component.id()} version hash from ${hashBefore} to ${hashAfter}`);
           const versions = componentsObjects.component.versions;
           Object.keys(versions).forEach((version) => {
             if (versions[version].toString() === hashBefore) {
@@ -269,6 +275,7 @@ export default class Scope {
    * environment.
    */
   async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<any> {
+    logger.debug(`exportManyBareScope: Going to save ${componentsObjects.length} components`);
     const manyObjects = componentsObjects.map((componentObjects) => {
       const componentAndObject = componentObjects.toObjects(this.objects);
       this._convertNonScopeToLocalScope(componentAndObject);
@@ -424,6 +431,7 @@ export default class Scope {
         withDevDependencies,
       );
     }));
+    logger.debug('scope.importMany: successfully fetched local components and their dependencies. Going to fetch externals');
     await postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) });
     const remotes = await this.remotes();
     const externalDeps = await this.getExternalMany(externals, remotes, cache);

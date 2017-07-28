@@ -144,7 +144,7 @@ export default class Consumer {
   }
 
   async loadComponents(ids: BitId[]): Promise<Component> {
-    const bitMap = await this.getBitMap();
+    const bitMap: BitMap = await this.getBitMap();
 
     const fullDependenciesTree = {
       tree: {},
@@ -156,11 +156,11 @@ export default class Consumer {
 
     const driverExists = this.warnForMissingDriver('Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.');
 
-    const components = ids.map(async (id) => {
+    const components = ids.map(async (id: BitId) => {
       let dependenciesTree = {};
       const dependencies = [];
 
-      const componentMap = bitMap.getComponent(id.toString());
+      const componentMap = bitMap.getComponent(id.toString(), true);
       let bitDir;
       // TODO: Take this from the map (the most up path of all component files)
       // TODO: Taking it from compose will not work when someone will import with -p to specific path
@@ -441,7 +441,7 @@ export default class Consumer {
     const componentsList = new ComponentsList(this);
     const commitPendingComponents = await componentsList.listCommitPendingComponents();
 
-    const componentsIds = commitPendingComponents.map(BitId.parse);
+    const componentsIds = commitPendingComponents.map(componentId => BitId.parse(componentId));
     if (R.isEmpty(componentsIds)) return null;
 
     const components = await this.loadComponents(componentsIds);

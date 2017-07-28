@@ -30,7 +30,7 @@ describe('bit export command', function () {
       helper.runCmd('bit commit -a -m commit-msg');
       helper.runCmd('bit init --bare', helper.remoteScopePath);
       helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-      helper.exportComponent();
+      helper.exportAllComponents();
     });
     it('should export them all', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope}`);
@@ -55,7 +55,7 @@ describe('bit export command', function () {
       helper.runCmd('bit commit -a -m commit-msg');
       helper.runCmd('bit init --bare', helper.remoteScopePath);
       helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-      helper.exportComponent();
+      helper.exportAllComponents();
     });
     it('should export them all', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope}`);
@@ -102,7 +102,7 @@ describe('bit export command', function () {
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitComponent('utils/is-string');
-      helper.exportComponent();
+      helper.exportAllComponents();
     });
     it('should export them all', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope}`);

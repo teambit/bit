@@ -128,7 +128,6 @@ describe('bit show command', function () {
         const files = output.files;
         const firstFileObj = files[0];
         const secondFileObj = files[1];
-        console.log(files);
 
         const mainFileHistory = [`${helper.localScopePath}/src/mainFile.js`];
         // const mainFileObj = {history: mainFileHistory};

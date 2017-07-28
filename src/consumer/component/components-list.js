@@ -177,7 +177,7 @@ export default class ComponentsList {
     const fromBitMap = await this.getFromBitMap();
     const ids = Object.keys(fromBitMap);
     if (withScopeName) return ids;
-    return ids.map(id => BitId.parse(id).changeScope(null).toString());
+    return ids.map(id => BitId.parse(id).toString(true, true));
   }
 
   async onFileSystemAndNotOnBitMap(): Promise<Component[]> {

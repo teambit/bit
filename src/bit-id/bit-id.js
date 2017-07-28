@@ -46,7 +46,8 @@ export default class BitId {
     const { name, box, version } = this;
     const scope = this.scope;
     const componentStr = ignoreScope || !scope ? [box, name].join('/') : [scope, box, name].join('/');
-    if (version && scope && !ignoreVersion) {
+    // when there is no scope and the version is latest, omit the version.
+    if (version && !ignoreVersion && (scope || version !== LATEST_BIT_VERSION)) {
       return componentStr.concat(`::${version}`);
     }
 
