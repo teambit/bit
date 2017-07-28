@@ -42,16 +42,17 @@ export default class BitId {
     return Version.parse(this.version);
   }
 
+  hasVersion() {
+    return this.version && this.version !== LATEST_BIT_VERSION;
+  }
+
   toString(ignoreScope: boolean = false, ignoreVersion: boolean = false): string {
     const { name, box, version } = this;
     const scope = this.scope;
     const componentStr = ignoreScope || !scope ? [box, name].join('/') : [scope, box, name].join('/');
     // when there is no scope and the version is latest, omit the version.
-    if (version && !ignoreVersion && (scope || version !== LATEST_BIT_VERSION)) {
-      return componentStr.concat(`::${version}`);
-    }
-
-    return componentStr;
+    if (ignoreVersion || (!scope && !this.hasVersion())) return componentStr;
+    return componentStr.concat(`::${version}`);
   }
 
   toObject() {

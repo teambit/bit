@@ -160,7 +160,7 @@ export default class Consumer {
       let dependenciesTree = {};
       const dependencies = [];
 
-      const componentMap = bitMap.getComponent(id.toString(), true);
+      const componentMap = bitMap.getComponent(id, true);
       let bitDir;
       // TODO: Take this from the map (the most up path of all component files)
       // TODO: Taking it from compose will not work when someone will import with -p to specific path
@@ -426,10 +426,6 @@ export default class Consumer {
 
   async commit(id: string, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
     const bitId = BitId.parse(id);
-    const bitMap: BitMap = await this.getBitMap();
-    if (!bitMap.isComponentExist(bitId)) {
-      throw new Error(`Unable to find a component ${bitId} in your bit.map file. Consider "bit add" it`);
-    }
     const component = await this.loadComponent(bitId);
     await this.scope
       .putMany({ consumerComponents: [component], message, force, consumer: this, verbose });

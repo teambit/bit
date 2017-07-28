@@ -318,7 +318,7 @@ export default class Component {
     if (!bitMap) return this.writeToComponentDir(bitDir, withBitJson, force);
 
     const idWithoutVersion = this.id.toString(false, true);
-    const componentMap = bitMap.getComponent(idWithoutVersion, false, true);
+    const componentMap = bitMap.getComponent(idWithoutVersion, false);
     if (componentMap) {
       if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
 

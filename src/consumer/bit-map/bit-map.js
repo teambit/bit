@@ -184,15 +184,18 @@ export default class BitMap {
     delete this.components[oldIdString];
   }
 
-  getComponent(id: string, shouldThrow: boolean, ignoreVersion: boolean): ComponentMap {
-    if (ignoreVersion) {
-      const idWithVersion = Object.keys(this.components)
-        .find(componentId => BitId.parse(componentId).toString(false, true) === id);
-      if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(id);
-      return this.components[idWithVersion];
+  getComponent(id: string|BitId, shouldThrow: boolean): ComponentMap {
+    if (R.is(String, id)) {
+      id = BitId.parse(id);
     }
-    if (!this.components[id] && shouldThrow) throw new MissingBitMapComponent(id);
-    return this.components[id];
+    if (id.hasVersion()) {
+      if (!this.components[id] && shouldThrow) throw new MissingBitMapComponent(id);
+      return this.components[id];
+    }
+    const idWithVersion = Object.keys(this.components)
+      .find(componentId => BitId.parse(componentId).toString(false, true) === id.toString(false, true));
+    if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(id);
+    return this.components[idWithVersion];
   }
 
   getMainFileOfComponent(id: string) {

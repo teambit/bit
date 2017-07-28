@@ -188,7 +188,7 @@ export default class Scope {
         // Calculate the flatten dependencies
         const versionDependencies = await this.importDependencies([dependency.id]);
         // Copy the exact version from flattenedDependency to dependencies
-        if (dependency.id.version === LATEST) {
+        if (!dependency.id.hasVersion()) {
           dependency.id.version = first(versionDependencies).component.version;
         }
 
