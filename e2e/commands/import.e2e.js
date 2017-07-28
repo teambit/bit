@@ -72,33 +72,6 @@ describe('bit import', function () {
       });
     });
 
-    describe('with an existing component in bit.map', () => {
-      before(() => {
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
-        helper.createComponentBarFoo();
-        helper.addComponentBarFoo();
-        helper.commitComponentBarFoo();
-        helper.exportComponent('bar/foo');
-        const bitMap = helper.readBitMap();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
-        // todo: it should be the full-id including scope-name
-        // bitMap[`${helper.remoteScope}/bar/foo::1`].files['foo.js'] = 'utils/foo.js';
-        bitMap['bar/foo'].files['foo.js'] = 'utils/foo.js';
-        helper.writeBitMap(bitMap);
-        helper.importComponent('bar/foo');
-      });
-
-      // Prevent cases when I export a component with few files from different directories
-      // and get it in another structure during imports
-      // todo: update bit.map upon export with the new id.
-      it.skip('should write the component to the paths specified in bit.map', () => {
-        const expectedLocation = path.join(helper.localScopePath, 'utils', 'foo.js');
-        expect(fs.existsSync(expectedLocation)).to.be.true;
-      });
-    });
-
     describe('with a specific path, using -p flag', () => {
       before(() => {
         helper.reInitLocalScope();
@@ -152,6 +125,31 @@ describe('bit import', function () {
       });
       it.skip('should create bit.json file with envs in the folder', () => {
       });
+    });
+  });
+
+  describe('with an existing component in bit.map', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportComponent('bar/foo');
+      const bitMap = helper.readBitMap();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      bitMap[`${helper.remoteScope}/bar/foo::1`].files['foo.js'] = 'utils/foo.js';
+      helper.writeBitMap(bitMap);
+      helper.importComponent('bar/foo');
+    });
+
+    // Prevent cases when I export a component with few files from different directories
+    // and get it in another structure during imports
+    it('should write the component to the paths specified in bit.map', () => {
+      const expectedLocation = path.join(helper.localScopePath, 'utils', 'foo.js');
+      expect(fs.existsSync(expectedLocation)).to.be.true;
     });
   });
 

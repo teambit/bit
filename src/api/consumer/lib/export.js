@@ -10,7 +10,6 @@ import BitMap from '../../../consumer/bit-map';
 export default async function exportAction(id?: string, remote: string, save: ?bool) {
   const consumer: Consumer = await loadConsumer();
   loader.start(BEFORE_EXPORT);
-  // const bitMap = await BitMap.load(consumer.getPath());
   let ids: string[];
   if (id) {
     ids = [id];
@@ -29,11 +28,12 @@ export default async function exportAction(id?: string, remote: string, save: ?b
     return component;
   });
 
-  const components = Promise.all(componentsP);
+  const components = await Promise.all(componentsP);
   // todo: make sure runHook knows to deal with array of components
   await consumer.driver.runHook('onExport', components);
   // todo: we should probably update bit.map with the new id, which includes the scope name
-  // bitMap.updateComponentScopeName(component.id);
-  // await bitMap.write();
+  const bitMap = await BitMap.load(consumer.getPath());
+  components.map(component => bitMap.updateComponentScopeName(component.id));
+  await bitMap.write();
   return components;
 }
