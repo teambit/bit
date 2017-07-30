@@ -575,6 +575,7 @@ export default class Component {
       name: this.name,
       box: this.box,
       version: this.version ? this.version.toString() : null,
+      mainFile: this.mainFileName,
       scope: this.scope,
       lang: this.lang,
       implFile: this.implFile,
