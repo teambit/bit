@@ -1,7 +1,6 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
-import vinylFile from 'vinyl-file';
 import { mkdirp, isString } from '../../utils';
 import BitJson from '../bit-json';
 import { Impl, Specs, Dist, License, SourceFile } from '../component/sources';
@@ -28,6 +27,7 @@ import {
   LATEST_BIT_VERSION,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
+  COMPONENT_ORIGINS
 } from '../../constants';
 
 export type ComponentProps = {
@@ -248,11 +248,12 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDependencies);
   }
 
-  buildIfNeeded({ condition, files, compiler, consumer, scope }: {
+  buildIfNeeded({ condition, files, compiler, consumer, componentMap, scope }: {
     condition?: ?bool,
     files:File[],
     compiler: any,
     consumer?: Consumer,
+    componentMap?: ComponentMap,
     scope: Scope,
   }): Promise<?{ code: string, mappings?: string }> {
     if (!condition) { return Promise.resolve({ code: '' }); }
@@ -271,7 +272,15 @@ export default class Component {
       }
 
       // the compiler have one of the following (build/compile)
-      return Promise.resolve(compiler.compile(files));
+      let rootDistFolder = componentRoot;
+      if (componentMap){
+        if (componentMap.rootDir) rootDistFolder = componentMap.rootDir;
+        if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+          rootDistFolder = path.join(consumer.getPath(), consumer.bitJson.distTarget);
+        }
+      }
+
+      return Promise.resolve(compiler.compile(files, rootDistFolder));
     };
 
     if (!compiler.build && !compiler.compile) {
@@ -297,32 +306,49 @@ export default class Component {
       }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
   }
 
-  async writeToComponentDir(bitDir: string, withBitJson: boolean, force?: boolean = true) {
+  async _writeToComponentDir(bitDir: string, withBitJson: boolean, force?: boolean = true) {
     await mkdirp(bitDir);
     if (this.impl) await this.impl.write(bitDir, this.implFile, force);
     if (this.specs) await this.specs.write(bitDir, this.specsFile, force);
-    if (this.files) await this.files.forEach(file => file.write(path.join(bitDir, file.base), force));
-    if (this.dists) await this.dists.forEach(dist => dist.write(path.join(bitDir, dist.base), force));
+    if (this.files) await this.files.forEach(file => file.write(undefined, force));
+    if (this.dists) await this.dists.forEach(dist => dist.write(undefined, force));
     if (this.specsFile && this.specDist) await this.specDist.write(bitDir, this.distSpecFileName, force);
     if (withBitJson) await this.writeBitJson(bitDir, force);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
     return this;
   }
 
-  async write(bitDir: string, withBitJson: boolean, force?: boolean = true, bitMap?: BitMap,
-              origin?: string, parent?: BitId): Promise<Component> {
+  /**
+   * When using this function please check if you really need to pass the bitDir or not
+   * It's better to init the files with the correct base, cwd and path than pass it here
+   * It's mainly here for cases when we write from the model so this is the first point we actually have the dir
+   */
+  async write(bitDir?: string, withBitJson: boolean, force?: boolean = true, bitMap?: BitMap,
+              origin?: string, parent?: BitId, consumerPath?: string): Promise<Component> {
+
+    // Take the bitdir from the files (it will be the same for all the files of course)
+    let calculatedBitDir = bitDir || this.files[0].base;
+
+    // Update files base dir according to bitDir
+    if (this.files && bitDir) this.files.forEach(file => file.updatePaths({newBase: bitDir}));
+    if (this.dists && bitDir) this.dists.forEach(dist => dist.updatePaths({newBase: bitDir}));
+
     // if bitMap parameter is empty, for instance, when it came from the scope, ignore bitMap altogether.
     // otherwise, check whether this component is in bitMap:
     // if it's there, write the files according to the paths in bit.map.
     // Otherwise, write to bitDir and update bitMap with the new paths.
-    if (!bitMap) return this.writeToComponentDir(bitDir, withBitJson, force);
+    if (!bitMap) return this._writeToComponentDir(calculatedBitDir, withBitJson, force);
 
     const idWithoutVersion = this.id.toString(false, true);
     const componentMap = bitMap.getComponent(idWithoutVersion, false);
     if (componentMap) {
       if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
 
-      await this.files.forEach(file => file.writeUsingBitMap(componentMap.files, force));
+      calculatedBitDir = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
+
+      this.files.forEach(file => file.updatePaths({newBase: calculatedBitDir, newRelative: componentMap.files[file.basename]} ));
+      this.files.forEach(file => file.write(undefined, force));
+
       // todo: while refactoring the dist for the new changes, make sure it writes to the proper
       // directory. Also, write the dist paths into bit.map.
       // if (this.dist) await this.dist.write(bitDir, this.distImplFileName, force);
@@ -330,15 +356,16 @@ export default class Component {
       // if (this.license && this.license.src) await this.license.write(bitDir, force); // todo: is it needed?
       return this;
     }
-    // TODO: Make sure to add the component origin arg
-    await this.writeToComponentDir(bitDir, withBitJson, force);
+
+    await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
 
     if (!this.files) {
       if (!this.impl) throw new Error('Invalid component. There are no files nor impl.js file to write');
 
       // for backward compatibility add impl.js to files.
       const implVinylFile = new SourceFile({
-        path: path.join(bitDir, this.implFile),
+        base: calculatedBitDir,
+        path: path.join(calculatedBitDir, this.implFile),
         contents: new Buffer(this.impl.src)
       });
       this.files = [implVinylFile];
@@ -346,14 +373,14 @@ export default class Component {
 
     const filesToAdd = {};
     this.files.forEach((file) => {
-      filesToAdd[file.basename] = path.join(bitDir, file.path);
+      filesToAdd[file.basename] = file.relative;
     });
     bitMap.addComponent({
       componentId: this.id,
       componentPaths: filesToAdd,
       mainFile: this.mainFileName,
       testsFiles: this.testsFileNames,
-      rootDir: bitDir,
+      rootDir: calculatedBitDir,
       origin,
       parent
     });
@@ -474,14 +501,17 @@ export default class Component {
     }
   }
 
-  async build({ scope, environment, save, consumer, verbose }:
-          { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, verbose?: bool }):
+  async build({ scope, environment, save, consumer, bitMap, verbose }:
+          { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool }):
   Promise<string> { // @TODO - write SourceMap Type
     return new Promise((resolve, reject) => {
       if (!this.compilerId) return resolve(null);
 
       // verify whether the environment is installed
       let compiler;
+      const idWithoutScope = this.id.changeScope(null);
+      const componentMap = bitMap && bitMap.getComponent(idWithoutScope.toString());
+      
       try {
         compiler = scope.loadEnvironment(this.compilerId);
       } catch (err) {
@@ -516,6 +546,7 @@ export default class Component {
             compiler,
             files: this.files,
             consumer,
+            componentMap,
             scope
           });
 
@@ -526,12 +557,7 @@ export default class Component {
               }
             });
 
-            const entryDirectory = Component.calculateEntryData(consumer.bitJson.distEntry, consumer.getPath());
-            this.dists = buildedFiles.map((file) => {
-              file.cwd = entryDirectory;
-              file.distFilePath = path.join(consumer.getPath(), consumer.bitJson.distTarget, file.relative);
-              return new Dist(file);
-            });
+            this.dists = buildedFiles.map(file => new Dist(file));
 
             if (save) {
               return scope.sources.updateDist({ source: this })
@@ -618,11 +644,6 @@ export default class Component {
     });
   }
 
-  static calculateEntryData(distEntry: string, consumerPath: string): string {
-    const entryPath = path.join(consumerPath, distEntry);
-    return fs.existsSync(entryPath) ? entryPath : consumerPath;
-  }
-
   static fromString(str: string): Component {
     const object = JSON.parse(str);
     return this.fromObject(object);
@@ -640,13 +661,18 @@ export default class Component {
     let impl;
     let specs;
     let bitJson = consumerBitJson;
+    let bitDirFullPath = bitDir || consumerPath;
     if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInPath(bitDir));
-    if (!bitDir && componentMap && componentMap.rootDir) bitDir = componentMap.rootDir;
+    if (!bitDir && componentMap && componentMap.rootDir) {
+      bitDir = componentMap.rootDir;
+      bitDirFullPath = path.join(consumerPath, bitDir);
+    }
     const files = componentMap.files;
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
-    let entryDirectory = componentMap.rootDir;
-    if (bitDir) {
+    // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
+    // (like dependencies)
+    if (bitDir && bitDir !== consumerPath) {
       bitJson = BitJson.loadSync(bitDir, consumerBitJson);
       if (bitJson) {
         dependencies = this._dependenciesFromWritableObject(bitJson.dependencies);
@@ -664,17 +690,15 @@ export default class Component {
       }
     }
 
-    entryDirectory = entryDirectory || this.calculateEntryData(consumerBitJson.distEntry, consumerPath);
-
     const vinylFiles = Object.keys(files).map((file) => {
-      const filePath = path.join(consumerPath, files[file]);
-      return SourceFile.load(filePath, consumerBitJson.distTarget, entryDirectory, consumerPath);
+      const filePath = path.join(bitDirFullPath, files[file]);
+      return SourceFile.load(filePath, consumerBitJson.distTarget, bitDirFullPath, consumerPath);
     });
 
     // TODO: Decide about the model representation
     componentMap.testsFiles.forEach((testFile) => {
-      const filePath = path.join(consumerPath, testFile);
-      vinylFiles.push(SourceFile.load(filePath, consumerBitJson.distTarget, entryDirectory, consumerPath, { isTest: true }));
+      const filePath = path.join(bitDirFullPath, testFile);
+      vinylFiles.push(SourceFile.load(filePath, consumerBitJson.distTarget, bitDirFullPath, consumerPath, { isTest: true }));
     });
 
     return new Component({
@@ -694,20 +718,21 @@ export default class Component {
     });
   }
 
-  static create({ scopeName, name, box, withSpecs, files, consumerBitJson }:{
+  static create({ scopeName, name, box, withSpecs, files, consumerBitJson, bitPath, consumerPath }:{
     consumerBitJson: ConsumerBitJson,
     name: string,
     box: string,
     scopeName?: ?string,
     withSpecs?: ?boolean,
   }, scope: Scope): Component {
-    const implFile = consumerBitJson.getImplBasename();
     const specsFile = consumerBitJson.getSpecBasename();
     const compilerId = BitId.parse(consumerBitJson.compilerId);
     const testerId = BitId.parse(consumerBitJson.testerId);
     const lang = consumerBitJson.lang;
     const implVinylFile = new SourceFile({
-      path: files['impl.js'],
+      cwd: consumerPath,
+      base: path.join(consumerPath, bitPath),
+      path: path.join(consumerPath, bitPath, files['impl.js']),
       contents: new Buffer(Impl.create(name, compilerId, scope).src)
     });
 
@@ -717,12 +742,10 @@ export default class Component {
       lang,
       version: LATEST_BIT_VERSION,
       scope: scopeName,
-      implFile,
       specsFile,
       files: [implVinylFile],
       compilerId,
       testerId,
-      impl: Impl.create(name, compilerId, scope),
       specs: withSpecs ? Specs.create(name, testerId, scope) : undefined,
     });
   }
