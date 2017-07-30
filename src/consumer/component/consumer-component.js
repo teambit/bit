@@ -27,6 +27,7 @@ import {
   LATEST_BIT_VERSION,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
+  COMPONENT_ORIGINS
 } from '../../constants';
 
 export type ComponentProps = {
@@ -271,9 +272,12 @@ export default class Component {
       }
 
       // the compiler have one of the following (build/compile)
-      let rootDistFolder = componentMap.rootDir || componentRoot;
-      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED){
-        rootDistFolder = path.join(consumer.getPath(), consumer.bitJson.distTarget);
+      let rootDistFolder = componentRoot;
+      if (componentMap){
+        if (componentMap.rootDir) rootDistFolder = componentMap.rootDir;
+        if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+          rootDistFolder = path.join(consumer.getPath(), consumer.bitJson.distTarget);
+        }
       }
 
       return Promise.resolve(compiler.compile(files, rootDistFolder));
@@ -506,7 +510,7 @@ export default class Component {
       // verify whether the environment is installed
       let compiler;
       const idWithoutScope = this.id.changeScope(null);
-      const componentMap = bitMap.getComponent(idWithoutScope.toString());
+      const componentMap = bitMap && bitMap.getComponent(idWithoutScope.toString());
       
       try {
         compiler = scope.loadEnvironment(this.compilerId);
