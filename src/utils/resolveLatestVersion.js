@@ -5,35 +5,18 @@
  * @param {string} id
  * @returns {string}
  */
-import R from 'ramda';
-import {
-  VERSION_DELIMITER,
-  LATEST
-} from '../constants';
+import maxBy from 'lodash.maxby';
+import { BitId } from '../bit-id';
 
-const findLatest = (component , bitIds, idWithLatest) => {
-  const bitArr = {};
-  Object.keys(bitIds).forEach((id) => {
-    const bit = id.split('::');
-    if (bitArr[bit[0]]) {
-      bitArr[bit[0]].push(bit[1]);
-    } else {
-      bitArr[bit[0]]= [bit[1]];
-    }
-  });
-  const id = bitArr[component];
-  const maxVersion = R.apply(Math.max, id);
-  return id ? `${component}::${maxVersion}`: idWithLatest;
-};
+export default function getLatestVersionNumber(bitIds: BitId[] | string[], bitId: string | BitId) {
+  const getParsed = (id) => (typeof id === 'string') ? BitId.parse(id) : id;
+  const getString = (id) => (typeof id === 'string') ? id : id.toString(false, true);
 
-export default function getLatestVersionNumber(bitIds: Array<Object>, idWithLatest: string) {
-  const componentId = idWithLatest.split(VERSION_DELIMITER);
-  if (componentId.length < 2 || componentId[1] !== LATEST) return idWithLatest;
-  return findLatest(componentId[0], bitIds, idWithLatest);
+  const componentId = getParsed(bitId);
+  if (!componentId.getVersion().latest) return bitId;
+  const maxByFunc = searchId => (id) => {
+    if (getString(searchId) === getString(id)) return getParsed(id).getVersion();
+    return -1;
+  };
+  return maxBy(bitIds, maxByFunc(bitId));
 }
-
-
-/*
- const a = ['bit.nodejs/models/scope::1','bit.nodejs/models/scope::2','bit.nodejs/models/scope::3'];
- getLatestVersionNumber(a,'bit.nodejs/models/scope::latest')
- */
