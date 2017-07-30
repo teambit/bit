@@ -216,6 +216,9 @@ export default class SourceRepository {
       });
   }
 
+  /**
+   * Adds the objects into scope.object array, in-memory. It doesn't save anything to the file-system.
+   */
   merge({ component, objects }: ComponentTree, inScope: boolean = false): Promise<Component> {
     if (inScope) component.scope = this.scope.name;
     return this.findComponent(component).then((existingComponent) => {

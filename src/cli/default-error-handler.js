@@ -28,6 +28,7 @@ import ExportWithoutThis from '../api/consumer/lib/exceptions/export-without-thi
 import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
 import { MissingMainFile, MissingBitMapComponent } from '../consumer/bit-map/exceptions';
+import logger from '../logger/logger';
 
 const errorsMap: [[Error, (err: Error) => string]] = [
   [ ConsumerAlreadyExists, () => 'there\'s already a scope' ],
@@ -70,5 +71,6 @@ export default (err: Error): ?string => {
 
   if (!error) return null;
   const [, func] = error;
+  logger.error(`User gets the following error: ${func(err)}`);
   return chalk.red(func(err));
 };

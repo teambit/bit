@@ -24,7 +24,7 @@ export default class Symlink extends BitObject {
   }
 
   id(): string {
-    return [this.scope, this.box, this.name].join('/');
+    return [this.box, this.name].join('/');
   }
 
   getRealComponentId() {

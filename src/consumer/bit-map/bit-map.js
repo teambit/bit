@@ -172,19 +172,30 @@ export default class BitMap {
   /**
    * needed after exporting a local component
    */
-  updateComponentScopeName(id: BitId) {
-    const oldId = id.changeScope(null);
-    if (!this.components[oldId.toString()]) return; // ignore, maybe it has been updated already
-    if (this.components[id.toString()]) {
-      throw new Error(`There is a local component ${oldId} with the same namespace and name as a remote component ${id}`);
+  updateComponentScopeName(id: BitId): void {
+    const oldIdString = id.toString(true, true);
+    const newIdString = id.toString();
+    logger.debug(`bit-map: updating a component name from ${oldIdString} to ${newIdString}`);
+    if (!this.components[oldIdString]) return; // ignore, maybe it has been updated already
+    if (this.components[newIdString]) {
+      throw new Error(`There is a local component ${oldIdString} with the same namespace and name as a remote component ${newIdString}`);
     }
-    this.components[id.toString()] = R.clone(this.components[oldId.toString()]);
-    delete this.components[oldId.toString()];
+    this.components[newIdString] = R.clone(this.components[oldIdString]);
+    delete this.components[oldIdString];
   }
 
-  getComponent(id: string, shouldThrow: boolean): ComponentMap {
-    if (!this.components[id] && shouldThrow) throw new MissingBitMapComponent(id);
-    return this.components[id];
+  getComponent(id: string|BitId, shouldThrow: boolean): ComponentMap {
+    if (R.is(String, id)) {
+      id = BitId.parse(id);
+    }
+    if (id.hasVersion()) {
+      if (!this.components[id] && shouldThrow) throw new MissingBitMapComponent(id);
+      return this.components[id];
+    }
+    const idWithVersion = Object.keys(this.components)
+      .find(componentId => BitId.parse(componentId).toString(false, true) === id.toString(false, true));
+    if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(id);
+    return this.components[idWithVersion];
   }
 
   getMainFileOfComponent(id: string) {

@@ -155,7 +155,7 @@ export default class ComponentsList {
     const listFromObjects = await this.getFromObjects();
     Object.keys(listFromObjects).forEach((id) => {
       const bitId = BitId.parse(id);
-      if (bitId.scope === this.scope.name) {
+      if (!bitId.scope || bitId.scope === this.scope.name) {
         bitId.scope = null;
         stagedComponents.push(bitId.toString());
       }
@@ -177,7 +177,7 @@ export default class ComponentsList {
     const fromBitMap = await this.getFromBitMap();
     const ids = Object.keys(fromBitMap);
     if (withScopeName) return ids;
-    return ids.map(id => BitId.parse(id).changeScope(null).toString());
+    return ids.map(id => BitId.parse(id).toString(true, true));
   }
 
   async onFileSystemAndNotOnBitMap(): Promise<Component[]> {

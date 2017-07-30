@@ -35,22 +35,24 @@ export default class BitId {
   }
 
   isLocal(scopeName: string) {
-    return this.scope === null || scopeName === this.scope;
+    return !this.scope || scopeName === this.scope;
   }
 
   getVersion() {
     return Version.parse(this.version);
   }
 
+  hasVersion() {
+    return this.version && this.version !== LATEST_BIT_VERSION;
+  }
+
   toString(ignoreScope: boolean = false, ignoreVersion: boolean = false): string {
     const { name, box, version } = this;
     const scope = this.scope;
     const componentStr = ignoreScope || !scope ? [box, name].join('/') : [scope, box, name].join('/');
-    if (version && scope && !ignoreVersion) {
-      return componentStr.concat(`::${version}`);
-    }
-
-    return componentStr;
+    // when there is no scope and the version is latest, omit the version.
+    if (ignoreVersion || (!scope && !this.hasVersion())) return componentStr;
+    return componentStr.concat(`::${version}`);
   }
 
   toObject() {

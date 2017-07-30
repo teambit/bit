@@ -7,7 +7,7 @@ import { GlobalRemotes } from '../global-config';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
-import Symlink from './models/symlink';
+import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } from '../utils';
@@ -119,11 +119,9 @@ export default class Scope {
       .then(components => this.toConsumerComponents(components));
   }
 
-  listStage() {
-    return this.objects.listComponents()
-      .then(components => this.toConsumerComponents(
-        components.filter(c => c.scope === this.name)
-      ));
+  async listStage() {
+    const components = await this.objects.listComponents();
+    return this.toConsumerComponents(components.filter(c => !c.scope || c.scope === this.name));
   }
 
   importDependencies(dependencies: BitId[]) {
@@ -164,7 +162,6 @@ export default class Scope {
   }):
   Promise<ComponentDependencies> { // TODO: Change the return type
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
-    const self = this;
     const topSort = new Toposort();
     const allDependencies = new Map();
     const consumerComponentsIdsMap = new Map();
@@ -172,10 +169,7 @@ export default class Scope {
     // Concat and unique all the dependencies from all the components so we will not import
     // the same dependency more then once, it's mainly for performance purpose
     consumerComponents.forEach((consumerComponent) => {
-      const componentIdString = consumerComponent.id.scope
-        ? consumerComponent.id.toString()
-        : BitId.parse(consumerComponent.id.changeScope(this.name).toString()).toString();
-      // const componentIdString = consumerComponent.id.toString();
+      const componentIdString = consumerComponent.id.toString();
       // Store it in a map so we can take it easily from the sorted array which contain only the id
       consumerComponentsIdsMap.set(componentIdString, consumerComponent);
       const dependenciesIdsStrings = consumerComponent.dependencies.map(dependency => dependency.id.toString());
@@ -186,47 +180,49 @@ export default class Scope {
     const sortedConsumerComponentsIds = topSort.sort().reverse();
 
     const getFlattenForComponent = (consumerComponent, cache) => {
-      const flattenDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
+      const flattenedDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
         // Try to get the flatten dependencies from cache
-        let flattenDependencies = cache.get(dependency.id.toString());
-        if (flattenDependencies) return Promise.resolve(flattenDependencies);
+        let flattenedDependencies = cache.get(dependency.id.toString());
+        if (flattenedDependencies) return Promise.resolve(flattenedDependencies);
 
         // Calculate the flatten dependencies
         const versionDependencies = await this.importDependencies([dependency.id]);
-        flattenDependencies = await flattenDependencyIds(versionDependencies, self.objects);
+        // Copy the exact version from flattenedDependency to dependencies
+        if (!dependency.id.hasVersion()) {
+          dependency.id.version = first(versionDependencies).component.version;
+        }
+
+        flattenedDependencies = await flattenDependencyIds(versionDependencies, this.objects);
 
         // Store the flatten dependencies in cache
-        cache.set(dependency.id.toString(), flattenDependencies);
+        cache.set(dependency.id.toString(), flattenedDependencies);
 
-        return flattenDependencies;
+        return flattenedDependencies;
       });
-      return Promise.all(flattenDependenciesP);
+      return Promise.all(flattenedDependenciesP);
     };
 
     const persistComponentsP = sortedConsumerComponentsIds.map(consumerComponentId => async () => {
       const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
-      // This happens when i have a dependency which already committed
+      // This happens when there is a dependency which have been already committed
       if (!consumerComponent) return Promise.resolve([]);
-      consumerComponent.scope = self.name;
-
-      return getFlattenForComponent(consumerComponent, allDependencies)
-        .then((flattenDependencies) => {
-          flattenDependencies = R.flatten(flattenDependencies);
-          const predicate = id => id.toString(); // TODO: should be moved to BitId class
-          flattenDependencies = R.uniqBy(predicate)(flattenDependencies);
-          return this.sources.addSource({source: consumerComponent,
-                                  depIds: flattenDependencies,
-                                  message,
-                                  force,
-                                  consumer,
-                                  verbose})})
-        .then((component) => {
-          loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-          return this.objects.persist()
-            .then(() => component.toVersionDependencies(LATEST, this, this.name))
-            .then(deps => deps.toConsumer(this.objects))
-            .then(() => index(consumerComponent, this.getPath())); // todo: make sure it still works
-        });
+      let flattenedDependencies = await getFlattenForComponent(consumerComponent, allDependencies);
+      flattenedDependencies = R.flatten(flattenedDependencies);
+      const predicate = id => id.toString(); // TODO: should be moved to BitId class
+      flattenedDependencies = R.uniqBy(predicate)(flattenedDependencies);
+      const component = await this.sources.addSource({
+        source: consumerComponent,
+        depIds: flattenedDependencies,
+        message,
+        force,
+        consumer,
+        verbose });
+      loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
+      await this.objects.persist();
+      const deps = await component.toVersionDependencies(LATEST, this, this.name);
+      await deps.toConsumer(this.objects);
+      await index(consumerComponent, this.getPath()); // todo: make sure it still works
+      return consumerComponent;
     });
 
     // Run the persistence one by one not in parallel!
@@ -243,28 +239,64 @@ export default class Scope {
       .then(() => this.objects.persist());
   }
 
-  // todo: rename this method, it takes place on the remote scope only
+  /**
+   * When exporting components with dependencies to a bare-scope, some of the dependencies may be created locally and as
+   * as result their scope-name is null. Once the bare-scope gets the components, it needs to convert these scope names
+   * to the bare-scope name.
+   * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
+   */
+  _convertNonScopeToLocalScope(componentsObjects: ComponentObjects): void {
+    componentsObjects.objects.forEach((object: Ref) => {
+      if (object instanceof Version) {
+        const hashBefore = object.hash().toString();
+        object.dependencies.forEach((dependency) => {
+          if (!dependency.id.scope) dependency.id.scope = this.name;
+        });
+        object.flattenedDependencies.forEach((dependency) => {
+          if (!dependency.scope) dependency.scope = this.name;
+        });
+        const hashAfter = object.hash().toString();
+        if (hashBefore !== hashAfter) {
+          logger.debug(`switching ${componentsObjects.component.id()} version hash from ${hashBefore} to ${hashAfter}`);
+          const versions = componentsObjects.component.versions;
+          Object.keys(versions).forEach((version) => {
+            if (versions[version].toString() === hashBefore) {
+              versions[version] = Ref.from(hashAfter);
+            }
+          });
+        }
+      }
+    });
+  }
+
   /**
    * saves a component into the objects directory of the remote scope, then, resolves its
    * dependencies, saves them as well. Finally runs the build process if needed on an isolated
    * environment.
    */
-  async export(componentObjects: ComponentObjects): Promise<any> {
-    const objects = componentObjects.toObjects(this.objects);
-    const { component } = objects;
-    await this.sources.merge(objects, true);
-    const compVersion = await component.toComponentVersion(LATEST, this.name);
-    logger.debug('export on bare-scope: will try to importMany in case there are missing dependencies');
-    const versions = await this.importMany([compVersion.id], true); // resolve dependencies
-    logger.debug('export on bare-scope: successfully ran importMany');
+  async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<any> {
+    logger.debug(`exportManyBareScope: Going to save ${componentsObjects.length} components`);
+    const manyObjects = componentsObjects.map((componentObjects) => {
+      const componentAndObject = componentObjects.toObjects(this.objects);
+      this._convertNonScopeToLocalScope(componentAndObject);
+      return componentAndObject;
+    });
+    await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true)));
+    const manyCompVersions = await Promise
+      .all(manyObjects.map(objects => objects.component.toComponentVersion(LATEST, this.name)));
+    logger.debug('exportManyBareScope: will try to importMany in case there are missing dependencies');
+    const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id), true); // resolve dependencies
+    logger.debug('exportManyBareScope: successfully ran importMany');
     await this.objects.persist();
     const objs = await Promise.all(versions.map(version => version.toObjects(this.objects)));
-    const consumerComponent = await compVersion.toConsumer(this.objects);
-    await index(consumerComponent, this.getPath());
-    await postExportHook({ id: consumerComponent.id.toString() });
-    await performCIOps(consumerComponent, this.getPath());
-    return first(objs);
+    const manyConsumerComponent = await Promise
+      .all(manyCompVersions.map(compVersion => compVersion.toConsumer(this.objects)));
+    await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
+    await postExportHook({ ids: manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString()) });
+    await Promise.all(manyConsumerComponent.map(consumerComponent => performCIOps(consumerComponent, this.getPath())));
+    return objs;
   }
+
 
   getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: bool = false) {
     logger.debug(`getExternalOnes, ids: ${ids.join(', ')}`);
@@ -376,7 +408,10 @@ export default class Scope {
   }
 
   /**
-   * If not found in the local scope, fetch from a remote scope and save into the local scope
+   * 1. Local objects, fetch from local. (done by this.sources.getMany method)
+   * 2. Fetch flattened dependencies (done by toVersionDependencies method). If they're not locally, fetch from remote
+   * and save them locally.
+   * 3. External objects, fetch from a remote and save locally. (done by this.getExternalOnes method).
    */
   async importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true):
   Promise<VersionDependencies[]> {
@@ -386,25 +421,21 @@ export default class Scope {
 
     const [externals, locals] = splitWhen(id => id.isLocal(this.name), idsWithoutNils);
 
-    return this.sources.getMany(locals)
-      .then((localDefs) => {
-        return Promise.all(localDefs.map((def) => {
-          if (!def.component) throw new ComponentNotFound(def.id.toString());
-          return def.component.toVersionDependencies(
-            def.id.version,
-            this,
-            def.id.scope,
-            withDevDependencies,
-          );
-        }))
-          .then((versionDeps) => {
-            return postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) })
-              .then(() => this.remotes()
-                .then(remotes => this.getExternalMany(externals, remotes, cache))
-                .then(externalDeps => versionDeps.concat(externalDeps))
-              );
-          });
-      });
+    const localDefs = await this.sources.getMany(locals);
+    const versionDeps = await Promise.all(localDefs.map((def) => {
+      if (!def.component) throw new ComponentNotFound(def.id.toString());
+      return def.component.toVersionDependencies(
+        def.id.version,
+        this,
+        def.id.scope,
+        withDevDependencies,
+      );
+    }));
+    logger.debug('scope.importMany: successfully fetched local components and their dependencies. Going to fetch externals');
+    await postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) });
+    const remotes = await this.remotes();
+    const externalDeps = await this.getExternalMany(externals, remotes, cache);
+    return versionDeps.concat(externalDeps);
   }
 
   importManyOnes(ids: BitId[], cache: boolean): Promise<ComponentVersion[]> {
@@ -600,12 +631,12 @@ export default class Scope {
     return this.objects.add(symlink);
   }
 
-  async exportMany(ids: BitId[], remoteName: string) {
+  async exportMany(ids: string[], remoteName: string) {
+    logger.debug(`exportMany, ids: ${ids.join(', ')}`);
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
     const componentIds = ids.map((id) => {
       const componentId = BitId.parse(id);
-      componentId.scope = this.name;
       return componentId;
     });
     const components = componentIds.map(id => this.sources.getObjects(id));

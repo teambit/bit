@@ -127,11 +127,11 @@ export default class Version extends BitObject {
       mainFileName: obj.mainFileName,
       testsFileNames: obj.testsFileNames,
       files: obj.files,
-      compiler: this.compiler ? this.compiler.toString(): null,
-      tester: this.tester ? this.tester.toString(): null,
+      compiler: obj.compiler,
+      tester: obj.tester,
       log: obj.log,
-      dependencies: this.dependencies,
-      packageDependencies: this.packageDependencies
+      dependencies: obj.dependencies,
+      packageDependencies: obj.packageDependencies
     }, val => !!val));
   }
 
@@ -157,8 +157,9 @@ export default class Version extends BitObject {
 
   toObject() {
     const dependencies = this.dependencies.map((dependency) => {
-      dependency.id = dependency.id.toString();
-      return dependency;
+      const dependencyClone = R.clone(dependency);
+      dependencyClone.id = dependency.id.toString();
+      return dependencyClone;
     });
     return filterObject({
       impl: this.impl ? {

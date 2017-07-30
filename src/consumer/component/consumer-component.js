@@ -12,7 +12,6 @@ import BitIds from '../../bit-id/bit-ids';
 import docsParser, { Doclet } from '../../jsdoc/parser';
 import specsRunner from '../../specs-runner';
 import SpecsResults from '../specs-results';
-import type { Results } from '../../specs-runner/specs-runner';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment from '../../environment';
@@ -25,11 +24,9 @@ import {
   DEFAULT_BOX_NAME,
   DEFAULT_IMPL_NAME,
   DEFAULT_SPECS_NAME,
-  DEFAULT_INDEX_NAME,
-  DEFAULT_BIT_VERSION,
+  LATEST_BIT_VERSION,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
-  COMPONENT_ORIGINS
 } from '../../constants';
 
 export type ComponentProps = {
@@ -338,8 +335,8 @@ export default class Component {
     // Otherwise, write to bitDir and update bitMap with the new paths.
     if (!bitMap) return this._writeToComponentDir(calculatedBitDir, withBitJson, force);
 
-    const idWithoutScope = this.id.changeScope(null);
-    const componentMap = bitMap.getComponent(idWithoutScope.toString());
+    const idWithoutVersion = this.id.toString(false, true);
+    const componentMap = bitMap.getComponent(idWithoutVersion, false);
     if (componentMap) {
       if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
 
@@ -737,7 +734,7 @@ export default class Component {
       name,
       box,
       lang,
-      version: DEFAULT_BIT_VERSION,
+      version: LATEST_BIT_VERSION,
       scope: scopeName,
       specsFile,
       files: [implVinylFile],

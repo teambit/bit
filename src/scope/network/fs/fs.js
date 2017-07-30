@@ -35,9 +35,7 @@ export default class Fs {
 
   pushMany(components: ComponentObjects[]): Promise<ComponentObjects[]> {
     const scope = this.getScope();
-    return Promise.all(components.map((component) => {
-      return scope.export(component);
-    }));
+    return scope.exportManyBareScope(components);
   }
 
   fetch(bitIds: BitIds): Promise<ComponentObjects[]> {

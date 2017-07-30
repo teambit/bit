@@ -26,7 +26,7 @@ describe('bit show command', function () {
       helper.createFile('src', 'mainFile.js', fooBarFixture);
       helper.createFile('src/utils', 'utilFile.js');
       helper.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
-      helper.commitComponent('comp/comp');      
+      helper.commitComponent('comp/comp');
     });
 
     describe('single version as cli output (no -v or -j flags)', () => {
@@ -35,7 +35,7 @@ describe('bit show command', function () {
       before(() => {
         output = helper.runCmd(`bit show comp/comp`);
       });
-      
+
       it('should render the id correctly', () => {
         expect(output).to.have.string('ID', 'ID row is missing');
         expect(output).to.have.string('comp/comp', 'component id is wrong');
@@ -56,7 +56,7 @@ describe('bit show command', function () {
         expect(output).to.have.string('javascript', 'Tester is wrong');
       });
 
-      it('should render the dependencies correctly', () => {
+      it.skip('should render the dependencies correctly', () => {
         expect(output).to.have.string('Dependencies', 'Dependencies row is missing');
         expect(output).to.have.string(`${helper.localScope}/utils/is-string::latest`, 'Dependencies are wrong');
       });
@@ -80,7 +80,7 @@ describe('bit show command', function () {
 
     describe('single version as json output', () => {
       let output;
-      
+
 
       before(() => {
         output = JSON.parse(helper.runCmd(`bit show comp/comp -j`));
@@ -98,7 +98,7 @@ describe('bit show command', function () {
         expect(output).to.include({version: 1});
       });
 
-      // TODO: get the version dynamically 
+      // TODO: get the version dynamically
       it('should include the compiler correctly', () => {
         expect(output).to.include({compilerId: "bit.envs/compilers/babel::12"});
       });
@@ -112,7 +112,7 @@ describe('bit show command', function () {
         expect(output).to.include({testerId: null});
       });
 
-      it('should include the dependencies correctly', () => {
+      it.skip('should include the dependencies correctly', () => {
         const dependencies = output.dependencies;
         const depObject = {[`${helper.localScope}/utils/is-string`]:'latest'};
         expect(dependencies).to.include(depObject);
@@ -128,7 +128,6 @@ describe('bit show command', function () {
         const files = output.files;
         const firstFileObj = files[0];
         const secondFileObj = files[1];
-        console.log(files);
 
         const mainFileHistory = [`${helper.localScopePath}/src/mainFile.js`];
         // const mainFileObj = {history: mainFileHistory};
@@ -229,7 +228,7 @@ describe('bit show command', function () {
     });
   });
 
-  describe('with no docs', () => {
+  describe.skip('with no docs', () => {
     before(() => {
       const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";
       commitFoo(fooComponentFixture);
@@ -243,7 +242,7 @@ describe('bit show command', function () {
       expect(output.includes('Description')).to.be.false;
     });
   });
-  describe('with docs', () => {
+  describe.skip('with docs', () => {
     before(() => {
       const fooComponentFixture = `/**
  * Adds two numbers.

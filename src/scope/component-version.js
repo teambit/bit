@@ -6,6 +6,7 @@ import Scope from './scope';
 import Repository from './objects/repository';
 import VersionDependencies from './version-dependencies';
 import ComponentObjects from './component-objects';
+import logger from '../logger/logger';
 
 export default class ComponentVersion {
   component: Component;
@@ -43,6 +44,10 @@ export default class ComponentVersion {
     return this.getVersion(scope.objects)
       .then((version) => {
         if (!version) {
+          logger.debug(`toVersionDependencies, component ${this.component.id().toString()}, version ${this.version} not found, going to fetch from a remote`);
+          if (this.component.scope === scope.name) { // it should have been fetched locally, since it wasn't found, this is an error
+            throw new Error(`Version ${this.version} of ${this.component.id().toString()} was not found in scope ${scope.name}`);
+          }
           return scope.remotes()
             .then((remotes) => {
               const src = this.id;
@@ -51,6 +56,7 @@ export default class ComponentVersion {
             });
         }
 
+        logger.debug(`toVersionDependencies, component ${this.component.id().toString()}, version ${this.version} found, going to collect its dependencies`);
         return version.collectDependencies(scope, withDependencies)
           .then(dependencies => new VersionDependencies(this, dependencies, source));
       });

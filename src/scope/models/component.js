@@ -18,7 +18,7 @@ import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 
 export type ComponentProps = {
-  scope: string;
+  scope?: string;
   box?: string;
   name: string;
   versions?: {[number]: Ref};
@@ -34,7 +34,7 @@ export default class Component extends BitObject {
 
   constructor(props: ComponentProps) {
     super();
-    this.scope = props.scope;
+    this.scope = props.scope || null;
     this.name = props.name;
     this.box = props.box || DEFAULT_BOX_NAME;
     this.versions = props.versions || {};
@@ -95,7 +95,7 @@ export default class Component extends BitObject {
   }
 
   id(): string {
-    return [this.scope, this.box, this.name].join('/');
+    return this.scope ? [this.scope, this.box, this.name].join('/') : [this.box, this.name].join('/');
   }
 
   toObject() {
@@ -117,7 +117,7 @@ export default class Component extends BitObject {
   }
 
   loadVersion(version: number, repository: Repository): Promise<Version> {
-    const versionRef = this.versions[version];
+    const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound();
     return versionRef.load(repository);
   }
@@ -167,7 +167,7 @@ export default class Component extends BitObject {
               return new Dist({ base: '.', path: relativePathWithDist, contents: content.contents });
             })
           )) : null;
-          const scopeMetaP = ScopeMeta.fromScopeName(scopeName).load(repository);
+          const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
           const log = version.log || null;
           return Promise.all([implP, specsP, filesP, distsP, scopeMetaP])
           .then(([impl, specs, files, dists, scopeMeta]) => {
@@ -196,7 +196,7 @@ export default class Component extends BitObject {
               files: files,
               dists: dists,
               docs: version.docs,
-              license: scopeMeta ? License.deserialize(scopeMeta.license) : null,
+              license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
               specsResults:
                 version.specsResults ? SpecsResults.deserialize(version.specsResults) : null,
               log,

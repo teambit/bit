@@ -72,32 +72,6 @@ describe('bit import', function () {
       });
     });
 
-    describe('with an existing component in bit.map', () => {
-      before(() => {
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
-        helper.createComponentBarFoo();
-        helper.addComponentBarFoo();
-        helper.commitComponentBarFoo();
-        helper.exportComponent('bar/foo');
-        const bitMap = helper.readBitMap();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
-        // todo: it should be the full-id including scope-name
-        // bitMap[`${helper.remoteScope}/bar/foo::1`].files['foo.js'] = 'utils/foo.js';
-        bitMap['bar/foo'].files['foo.js'] = 'utils/foo.js';
-        helper.writeBitMap(bitMap);
-        helper.importComponent('bar/foo');
-      });
-
-      // Prevent cases when I export a component with few files from different directories
-      // and get it in another structure during imports
-      it('should write the component to the paths specified in bit.map', () => {
-        const expectedLocation = path.join(helper.localScopePath, 'utils', 'foo.js');
-        expect(fs.existsSync(expectedLocation)).to.be.true;
-      });
-    });
-
     describe('with a specific path, using -p flag', () => {
       before(() => {
         helper.reInitLocalScope();
@@ -151,6 +125,31 @@ describe('bit import', function () {
       });
       it.skip('should create bit.json file with envs in the folder', () => {
       });
+    });
+  });
+
+  describe('with an existing component in bit.map', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportComponent('bar/foo');
+      const bitMap = helper.readBitMap();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      bitMap[`${helper.remoteScope}/bar/foo::1`].files['foo.js'] = 'utils/foo.js';
+      helper.writeBitMap(bitMap);
+      helper.importComponent('bar/foo');
+    });
+
+    // Prevent cases when I export a component with few files from different directories
+    // and get it in another structure during imports
+    it('should write the component to the paths specified in bit.map', () => {
+      const expectedLocation = path.join(helper.localScopePath, 'utils', 'foo.js');
+      expect(fs.existsSync(expectedLocation)).to.be.true;
     });
   });
 
@@ -239,7 +238,6 @@ describe('bit import', function () {
     });
   });
 
-  // TOOD: Should create similar case with build
   describe('components with auto-resolve dependencies', () => {
     /**
      * Directory structure of the author
@@ -266,37 +264,17 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
       helper.addRemoteScope();
-
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      helper.commitComponent('utils/is-type');
-      helper.exportComponent('utils/is-type');
-
-      /** HACK (until the export is fixed) **/
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.importComponent('utils/is-type -p ./');
-      /** END HACK **/
-
       const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
-      helper.commitComponent('utils/is-string');
-      helper.exportComponent('utils/is-string');
-
-      /** HACK (until the export is fixed) **/
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.importComponent('utils/is-string -p ./');
-      /** END HACK **/
-
       const fooBarFixture = "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
-      helper.exportComponent('bar/foo');
-
+      helper.commitAllComponents();
+      helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
@@ -389,41 +367,18 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
       helper.addRemoteScope();
-
       helper.importCompiler();
-
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      helper.commitComponent('utils/is-type');
-      helper.exportComponent('utils/is-type');
-
-      /** HACK (until the export is fixed) **/
-      helper.reInitLocalScope();
-      helper.importCompiler();
-      helper.addRemoteScope();
-      helper.importComponent('utils/is-type -p ./');
-      /** END HACK **/
-
       const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
-      helper.commitComponent('utils/is-string');
-      helper.exportComponent('utils/is-string');
-
-      /** HACK (until the export is fixed) **/
-      helper.reInitLocalScope();
-      helper.importCompiler();
-      helper.addRemoteScope();
-      helper.importComponent('utils/is-string -p ./');
-      /** END HACK **/
-
       const fooBarFixture = "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
-      helper.exportComponent('bar/foo');
-
+      helper.commitAllComponents();
+      helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');

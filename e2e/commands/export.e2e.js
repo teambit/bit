@@ -30,7 +30,7 @@ describe('bit export command', function () {
       helper.runCmd('bit commit -a -m commit-msg');
       helper.runCmd('bit init --bare', helper.remoteScopePath);
       helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-      helper.exportComponent();
+      helper.exportAllComponents();
     });
     it('should export them all', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope}`);
@@ -55,7 +55,7 @@ describe('bit export command', function () {
       helper.runCmd('bit commit -a -m commit-msg');
       helper.runCmd('bit init --bare', helper.remoteScopePath);
       helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-      helper.exportComponent();
+      helper.exportAllComponents();
     });
     it('should export them all', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope}`);
@@ -79,10 +79,36 @@ describe('bit export command', function () {
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitComponent('utils/is-string');
-      // helper.exportComponent('utils/is-string'); // todo: currently fails, will be fixed once we change all dependencies to the remote
+      helper.exportComponent('utils/is-string');
     });
-    it('should not fail (for now the before statement)', () => {
+    it('should export them successfully', () => {
+      const output = helper.runCmd(`bit list ${helper.remoteScope}`);
+      expect(output.includes('Total 2 components')).to.be.true;
+      expect(output.includes('utils/is-type')).to.be.true;
+      expect(output.includes('utils/is-string')).to.be.true;
+    });
+  });
 
+  describe('with dependencies and export-all', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      helper.commitComponent('utils/is-type');
+      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      helper.commitComponent('utils/is-string');
+      helper.exportAllComponents();
+    });
+    it('should export them all', () => {
+      const output = helper.runCmd(`bit list ${helper.remoteScope}`);
+      expect(output.includes('Total 2 components')).to.be.true;
+      expect(output.includes('utils/is-type')).to.be.true;
+      expect(output.includes('utils/is-string')).to.be.true;
     });
   });
 });
