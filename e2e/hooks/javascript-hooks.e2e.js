@@ -44,7 +44,7 @@ describe('javascript-hooks', function () {
     helper.destroyEnv();
   });
   describe('onCreate', () => {
-    describe('without build', () => {
+    describe.skip('without build', () => {
       before(() => {
         helper.reInitLocalScope();
         createComponent('foo');
@@ -79,7 +79,7 @@ describe('javascript-hooks', function () {
   });
 
   describe('onCommit', () => {
-    describe('without build', () => {
+    describe.skip('without build', () => {
       before(() => {
         helper.reInitLocalScope();
         createComponent('foo');
@@ -95,7 +95,7 @@ describe('javascript-hooks', function () {
         expectLinksInRootLevel();
       });
     });
-    describe('with build', () => {
+    describe.skip('with build', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.importCompiler();
@@ -117,7 +117,7 @@ describe('javascript-hooks', function () {
   });
 
   describe('onExport', () => {
-    describe('without build', () => {
+    describe.skip('without build', () => {
       before(() => {
         helper.reInitLocalScope();
         createComponent('foo');
@@ -137,7 +137,7 @@ describe('javascript-hooks', function () {
       });
     });
 
-    describe('with build', () => {
+    describe.skip('with build', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.importCompiler();
@@ -236,7 +236,7 @@ describe('javascript-hooks', function () {
         expectLinksInRootLevel();
       });
     });
-    describe('with dependencies', () => {
+    describe.skip('with dependencies', () => {
       before(() => {
         helper.cleanEnv();
         helper.runCmd('bit init');
