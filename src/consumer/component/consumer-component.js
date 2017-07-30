@@ -670,7 +670,9 @@ export default class Component {
     const files = componentMap.files;
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
-    if (bitDir) {
+    // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
+    // (like dependencies)
+    if (bitDir && bitDir !== consumerPath) {
       bitJson = BitJson.loadSync(bitDir, consumerBitJson);
       if (bitJson) {
         dependencies = this._dependenciesFromWritableObject(bitJson.dependencies);
