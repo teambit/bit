@@ -162,7 +162,7 @@ describe('javascript-hooks', function () {
   });
 
   describe('onImport', () => {
-    describe('without build', () => {
+    describe.skip('without build', () => {
       before(() => {
         helper.reInitLocalScope();
         createComponent('foo');
