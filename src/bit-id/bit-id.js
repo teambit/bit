@@ -56,7 +56,7 @@ export default class BitId {
   }
 
   toObject() {
-    const key = [this.scope, this.box, this.name].join('/');
+    const key = this.scope ? [this.scope, this.box, this.name].join('/') : [this.box, this.name].join('/');;
     const value = this.version;
 
     return { [key]: value };
