@@ -56,6 +56,11 @@ describe('bit show command', function () {
         expect(output).to.have.string('javascript', 'Tester is wrong');
       });
 
+      it('should render the main file correctly', () => {
+        expect(output).to.have.string('Main file', 'Main file row is missing');
+        expect(output).to.have.string('mainFile.js', 'Main file is wrong');
+      });
+
       it('should render the dependencies correctly', () => {
         expect(output).to.have.string('Dependencies', 'Dependencies row is missing');
         // TODO: Should be concrete version after we resolve the dep version
@@ -112,6 +117,10 @@ describe('bit show command', function () {
       // TODO: update when we add tester to use case
       it('should include the tester correctly', () => {
         expect(output).to.include({testerId: null});
+      });
+
+      it('should render the main file correctly', () => {
+        expect(output).to.include({mainFile: 'mainFile.js'});
       });
 
       it('should include the dependencies correctly', () => {
