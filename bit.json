@@ -1,17 +1,46 @@
 {
-    "structure": "components/{namespace}/{name}",
     "sources": {
         "impl": "impl.js",
         "spec": "spec.js"
     },
     "env": {
-        "compiler": "bit.envs/compilers/flow",
-        "tester": "bit.envs/testers/mocha"
-    },
-    "dist": {
-        "target": "dist",
-        "entry": "src"
+        "compiler": "none",
+        "tester": "none"
     },
     "dependencies": {
+        "ranm8.utilities/object/has-own-property": "1",
+        "ranm8.utilities/array/first": "1",
+        "ranm8.utilities/object/values": "1",
+        "ranm8.utilities/fs/list-directories": "1",
+        "ranm8.utilities/string/clean-char": "1",
+        "ranm8.utilities/string/contains": "1",
+        "ranm8.utilities/string/to-base64": "1",
+        "ranm8.utilities/ssh/parse-url": "1",
+        "ranm8.utilities/map/to-object": "1",
+        "ranm8.utilities/fs/dir-path-parser": "1",
+        "ranm8.utilities/encryption/sha1": "1",
+        "ranm8.utilities/number/is-number": "1",
+        "ranm8.utilities/object/foreach": "1",
+        "ranm8.utilities/object/to-tuple-array": "1",
+        "ranm8.utilities/number/is-numeric": "1",
+        "ranm8.utilities/string/is-string": "1",
+        "ranm8.utilities/array/diff": "1",
+        "ranm8.utilities/array/split-by": "1",
+        "ranm8.utilities/buffer/from": "1",
+        "ranm8.utilities/fs/propogate-until": "1",
+        "ranm8.utilities/array/flatten": "1",
+        "ranm8.utilities/object/filter": "1",
+        "ranm8.utilities/object/empty": "1",
+        "ranm8.utilities/array/flat-map": "1",
+        "ranm8.utilities/string/from-base64": "1",
+        "ranm8.utilities/fs/is-dir-empty": "1",
+        "ranm8.utilities/string/clean-bang": "1",
+        "ranm8.utilities/fs/current-dir-name": "1",
+        "ranm8.utilities/buffer/to-read-stream": "1"
+    },
+    "structure": "components/{namespace}/{name}",
+    "dist": {
+        "target": "dist",
+        "entry": ""
     }
 }
