@@ -27,7 +27,8 @@ import {
   LATEST_BIT_VERSION,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
-  COMPONENT_ORIGINS
+  COMPONENT_ORIGINS,
+  DEFAULT_DIST_DIRNAME
 } from '../../constants';
 
 export type ComponentProps = {
@@ -272,9 +273,9 @@ export default class Component {
       }
 
       // the compiler have one of the following (build/compile)
-      let rootDistFolder = componentRoot;
-      if (componentMap){
-        if (componentMap.rootDir) rootDistFolder = componentMap.rootDir;
+      let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
+      if (componentMap) {
+        if (componentMap.rootDir) rootDistFolder = path.join(consumer.getPath(), componentMap.rootDir, DEFAULT_DIST_DIRNAME);
         if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
           rootDistFolder = path.join(consumer.getPath(), consumer.bitJson.distTarget);
         }
@@ -288,8 +289,8 @@ export default class Component {
     }
 
     if (consumer) {
-      const componentRoot = path.join(consumer.projectPath, this.box, this.name);
-      return runBuild(componentRoot);
+     // const componentRoot = path.join(consumer.projectPath, this.box, this.name);
+      return runBuild(consumer.getPath());
     }
 
     const isolatedEnvironment = new IsolatedEnvironment(scope);
@@ -509,8 +510,8 @@ export default class Component {
 
       // verify whether the environment is installed
       let compiler;
-      const idWithoutScope = this.id.changeScope(null);
-      const componentMap = bitMap && bitMap.getComponent(idWithoutScope.toString());
+      /*const idWithoutScope = this.id.changeScope(null);*/
+      const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
       try {
         compiler = scope.loadEnvironment(this.compilerId);
