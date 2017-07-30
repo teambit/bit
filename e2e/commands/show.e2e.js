@@ -56,9 +56,10 @@ describe('bit show command', function () {
         expect(output).to.have.string('javascript', 'Tester is wrong');
       });
 
-      it.skip('should render the dependencies correctly', () => {
+      it('should render the dependencies correctly', () => {
         expect(output).to.have.string('Dependencies', 'Dependencies row is missing');
-        expect(output).to.have.string(`${helper.localScope}/utils/is-string::latest`, 'Dependencies are wrong');
+        // TODO: Should be concrete version after we resolve the dep version
+        expect(output).to.have.string(`utils/is-string`, 'Dependencies are wrong');
       });
 
       it.skip('should render the package dependencies correctly', () => {
@@ -94,6 +95,7 @@ describe('bit show command', function () {
         expect(output).to.include({box: 'comp'});
       });
 
+      // TODO: Check again after this commit merged: 6ee69fab36f5b9f31fa576216c6bf22808d0d459
       it.skip('should include the version correctly', () => {
         expect(output).to.include({version: 1});
       });
@@ -112,9 +114,10 @@ describe('bit show command', function () {
         expect(output).to.include({testerId: null});
       });
 
-      it.skip('should include the dependencies correctly', () => {
+      it('should include the dependencies correctly', () => {
         const dependencies = output.dependencies;
-        const depObject = {[`${helper.localScope}/utils/is-string`]:'latest'};
+        // TODO: Should be concrete version after we resolve the dep version
+        const depObject = {[`utils/is-string`]:'latest'};
         expect(dependencies).to.include(depObject);
       });
 
