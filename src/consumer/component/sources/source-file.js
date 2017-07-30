@@ -5,7 +5,6 @@ import vinylFile from 'vinyl-file';
 import FileSourceNotFound from '../exceptions/file-source-not-found';
 import logger from '../../../logger/logger';
 
-// TODO: Remove Source?
 export default class SourceFile extends AbstractVinyl {
   // TODO: remove this distFilePath?
   distFilePath: ?string;
@@ -25,21 +24,4 @@ export default class SourceFile extends AbstractVinyl {
       return null;
     }
   }
-
-  // writeUsingBitMap(bitMapFiles: Object<string>, force?: boolean = true) {
-  //   if (!bitMapFiles[this.relative]) {
-  //     logger.error(`could not write the file "${this.basename}" as it does not appear in the bit.map file`);
-  //     return Promise.resolve();
-  //   }
-  //   const bitPath = path.dirname(bitMapFiles[this.relative]);
-  //   return this.write(bitPath, force);
-  // }
-
-  // serialize(): Buffer {
-  //   return this.contents;
-  // }
-
-  // static deserialize(src): SourceFile {
-  //   return new SourceFile({contents: src});
-  // }
 }

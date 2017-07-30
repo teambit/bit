@@ -12,27 +12,4 @@ export default class Dist extends AbstractVinyl {
   static getFilePath(bitPath: string, fileName: string) {
     return path.join(bitPath, DEFAULT_DIST_DIRNAME, fileName);
   }
-
-  // toString() {
-  //   return JSON.stringify(this.serialize());
-  // }
-
-  // TODO: This is probably not needed any more
-  // If yes, it might be without the JSON.parse
-  // It should also be consistence with source-file.js
-  // static fromString(str: string) {
-  //   try {
-  //     return Dist.deserialize(JSON.parse(str));
-  //   } catch (e) {
-  //     return Dist.deserialize({ src: str });
-  //   }
-  // }
-
-  // serialize() {
-  //   return this.contents;
-  // }
-
-  // static deserialize(src): Dist {
-  //   return new Dist({contents: src});
-  // }
 }
