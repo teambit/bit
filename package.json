@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "^0.6.5-dev.4",
+    "bit-javascript": "^0.6.5-dev.5",
     "buffer-from": "^0.1.1",
     "camelcase": "^4.0.0",
     "chalk": "^1.1.3",

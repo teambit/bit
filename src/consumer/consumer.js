@@ -148,7 +148,11 @@ export default class Consumer {
 
     const fullDependenciesTree = {
       tree: {},
-      missing: []
+      missing: {
+        files: [],
+        packages: [],
+        bits: []
+      }
     };
     // Map to store the id's of paths we already found in bit.map
     // It's aim is to reduce the search in the bit.map for dependencies ids because it's an expensive operation
@@ -179,15 +183,21 @@ export default class Consumer {
       // Check if we already calculate the dependency tree (because it is another component dependency)
       if (fullDependenciesTree.tree[id]) {
         // If we found it in the full tree it means we already take care of the missings earlier
-        dependenciesTree.missing = [];
+        dependenciesTree.missing = {
+          files: [],
+          packages: [],
+          bits: []
+        };
       } else if (driverExists) {
         // Load the dependencies through automatic dependency resolution
         dependenciesTree = await this.driver.getDependencyTree(bitDir, mainFile);
         Object.assign(fullDependenciesTree.tree, dependenciesTree.tree);
-        fullDependenciesTree.missing = fullDependenciesTree.missing.concat(dependenciesTree.missing);
+        if (dependenciesTree.missing.files) fullDependenciesTree.missing.files = fullDependenciesTree.missing.files.concat(dependenciesTree.missing.files);
+        if (dependenciesTree.missing.packages) fullDependenciesTree.missing.packages = fullDependenciesTree.missing.packages.concat(dependenciesTree.missing.packages);
+        if (dependenciesTree.missing.bits) fullDependenciesTree.missing.bits = fullDependenciesTree.missing.bits.concat(dependenciesTree.missing.bits);
         // Check if there is missing dependencies in file system
         // TODO: Decide if we want to throw error once there is missing or only in the end
-        if (!R.isEmpty(dependenciesTree.missing)) throw (new MissingDependenciesOnFs(dependenciesTree.missing));
+        if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) throw (new MissingDependenciesOnFs(dependenciesTree.missing.files));
       }
 
       // We only care of the relevant sub tree from now on
