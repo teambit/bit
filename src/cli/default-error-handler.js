@@ -46,7 +46,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ PermissionDenied, () => 'fatal: permission to scope was denied'],
   [ RemoteNotFound, err => `fatal: remote "${chalk.bold(err.name)}" was not found`],
   [ NetworkError, err => `fatal: remote failed with error: "${chalk.bold(err.remoteErr)}"`],
-  [ MergeConflict, err => `error: Merge conflict occurred when exporting the component ${err.id}.\nTo resolve it, please modify the latest version of the remote component, and only then export your changes.`],
+  [ MergeConflict, err => `error: Merge conflict occurred when exporting the component ${err.id}.\nTo resolve it, please import the latest version of the remote component, and only then export your changes.`],
   [ UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
   [ ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init --bare`'],
   [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit'],
