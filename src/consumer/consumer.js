@@ -146,8 +146,6 @@ export default class Consumer {
   async loadComponents(ids: BitId[]): Promise<Component> {
     const bitMap: BitMap = await this.getBitMap();
 
-    const allComponentsIdsFromBitMap = Object.keys(bitMap.getAllComponents());
-
     const fullDependenciesTree = {
       tree: {},
       missing: {
@@ -165,7 +163,7 @@ export default class Consumer {
     const components = ids.map(async (id: BitId) => {
       let dependenciesTree = {};
       const dependencies = [];
-      const idWithConcreteVersionString = getLatestVersionNumber(allComponentsIdsFromBitMap, id);
+      const idWithConcreteVersionString = getLatestVersionNumber(Object.keys(bitMap.getAllComponents()), id.toString());
       const idWithConcreteVersion = BitId.parse(idWithConcreteVersionString);
 
       const componentMap = bitMap.getComponent(idWithConcreteVersion, true);
