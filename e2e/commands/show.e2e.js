@@ -126,8 +126,8 @@ describe('bit show command', function () {
       it('should include the dependencies correctly', () => {
         const dependencies = output.dependencies;
         // TODO: Should be concrete version after we resolve the dep version
-        const depObject = {[`utils/is-string`]:'latest'};
-        expect(dependencies).to.include(depObject);
+        const depObject = { id: 'utils/is-string', relativePath: 'utils/is-string.js' };
+        expect(dependencies[0]).to.include(depObject);
       });
 
       // TODO: update when adding package deps to test case
