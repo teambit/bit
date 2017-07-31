@@ -59,7 +59,7 @@ describe('javascript-hooks', function () {
         expectLinksInRootLevel();
       });
     });
-    describe('with build', () => {
+    describe.skip('with build', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.importCompiler();

@@ -56,7 +56,7 @@ import buildCommandMessage from './build-command-message';
 import removeFromRequireCache from './remove-from-require-cache';
 import splitBy from './array/split-by';
 import outputFile from './fs-output-file';
-
+import getLatestVersionNumber from './resolveLatestVersion';
 export {
   parseSSHUrl,
   splitBy,
@@ -115,5 +115,6 @@ export {
   buildCommandMessage,
   removeFromRequireCache,
   outputFile,
-  bufferFrom
+  bufferFrom,
+  getLatestVersionNumber
 };
