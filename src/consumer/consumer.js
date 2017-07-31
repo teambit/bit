@@ -38,7 +38,7 @@ import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { outputFile } from '../utils';
+import { outputFile, getLatestVersionNumber } from '../utils';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -163,8 +163,10 @@ export default class Consumer {
     const components = ids.map(async (id: BitId) => {
       let dependenciesTree = {};
       const dependencies = [];
+      const idWithConcreteVersionString = getLatestVersionNumber(Object.keys(bitMap.getAllComponents()), id.toString());
+      const idWithConcreteVersion = BitId.parse(idWithConcreteVersionString);
 
-      const componentMap = bitMap.getComponent(id, true);
+      const componentMap = bitMap.getComponent(idWithConcreteVersion, true);
       let bitDir = this.getPath();
 
       if (componentMap && componentMap.rootDir){
@@ -173,15 +175,15 @@ export default class Consumer {
       // TODO: Take this from the map (the most up path of all component files)
       // TODO: Taking it from compose will not work when someone will import with -p to specific path
       if (componentMap && (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED)) {
-        bitDir = this.composeBitPath(id);
-        return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, id, this.getPath());
+        bitDir = this.composeBitPath(idWithConcreteVersion);
+        return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
       }
 
-      const component = Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, id, this.getPath());
+      const component = Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
       if (component.dependencies && !R.isEmpty(component.dependencies)) return component; // if there is bit.json use if for dependencies.
       const mainFile = componentMap.files[componentMap.mainFile];
       // Check if we already calculate the dependency tree (because it is another component dependency)
-      if (fullDependenciesTree.tree[id]) {
+      if (fullDependenciesTree.tree[idWithConcreteVersion]) {
         // If we found it in the full tree it means we already take care of the missings earlier
         dependenciesTree.missing = {
           files: [],
@@ -216,7 +218,7 @@ export default class Consumer {
         } else {
           // Add the entry to cache map
           dependenciesPathIdMap.set(filePath, dependencyIdString);
-          if (id.toString() !== dependencyIdString) {
+          if (idWithConcreteVersion.toString() !== dependencyIdString) {
             const dependencyId = BitId.parse(dependencyIdString);
             dependencies.push({ id: dependencyId, relativePath: filePath });
           }
