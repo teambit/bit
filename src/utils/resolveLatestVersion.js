@@ -1,8 +1,9 @@
 /** @flow */
 /**
- * Retrieve latest bit version from latest to number
- * @param {Array<BitIds>} arr
- * @param {string} id
+ * Retrive bitId with the highest version from a list according to provided id
+ * @description will return the provided id if it's not with latest, if the list contains id without version / with the latest version it will return it
+ * @param {BitId[] | string[]} bitIds
+ * @param { string | BitId } bitId
  * @returns {string}
  */
 import maxBy from 'lodash.maxby';
