@@ -38,7 +38,7 @@ function createComponent(name, impl) {
 }
 
 // todo: once the bind is implemented, make it work
-describe.only('javascript-hooks', function () {
+describe('javascript-hooks', function () {
   this.timeout(0);
   after(() => {
     helper.destroyEnv();
