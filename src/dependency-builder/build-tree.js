@@ -1,6 +1,7 @@
 // TODO: This should be exported as a bit component
 
 // @flow
+import path from 'path';
 import madge from 'madge';
 import findPackage from 'find-package';
 import R from 'ramda';
@@ -69,12 +70,54 @@ function groupDependencyTree(tree, cwd) {
 }
 
 /**
- * Function for fetching dependecy tree of file or dir
+ * Group missing dependencies by types (files, bits, packages)
+ * @param {Array} missing list of missing paths to group
+ * @returns {Function} function which group the dependencies
+ */
+const byPathType = R.groupBy((missing) => {
+  return missing.startsWith('bit/') ? 'bits' :
+         missing.startsWith('.') ? 'files' :
+         'packages';
+});
+
+/**
+ * Get an import statement path to node package and return the package name
+ *
+ * @param {string} packagePath import statement path
+ * @returns {string} name of the package
+ */
+function resolveMissingPackageName(packagePath) {
+  const packagePathArr = packagePath.split(path.sep);
+  // Regular package without path. example - import _ from 'lodash'
+  if (packagePathArr.length === 1) return packagePath;
+  // Scoped package. example - import getSymbolIterator from '@angular/core/src/util.d.ts';
+  if (packagePathArr[0].startsWith('@')) return path.join(packagePathArr[0], packagePathArr[1]);
+  // Regular package with internal path. example import something from 'mypackage/src/util/isString'
+  return packagePathArr[0];
+}
+
+/**
+ * Run over each entry in the missing array and transform the missing from list of paths
+ * to object with missing types
+ *
+ * @param {Array} missings
+ * @returns new object with grouped missings
+ */
+function groupMissings(missings) {
+  const groups = byPathType(missings);
+  groups.packages = groups.packages ? groups.packages.map(resolveMissingPackageName) : undefined;
+
+  return groups;
+}
+
+
+/**
+ * Function for fetching dependency tree of file or dir
  * @param cwd working directory
  * @param filePath path of the file to calculate the dependecies
  * @return {Promise<{missing, tree}>}
  */
 export default function getDependecyTree(cwd: string, filePath: string): Promise<*> {
   return madge(filePath, { baseDir: cwd, includeNpm: true })
-    .then((res) => ({ missing: res.skipped, tree: groupDependencyTree(res.tree, cwd) }))
+    .then((res) => ({ missing: groupMissings(res.skipped), tree: groupDependencyTree(res.tree, cwd) }))
 }
