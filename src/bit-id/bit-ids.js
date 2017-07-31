@@ -1,7 +1,7 @@
 /** @flow */
 import { mergeAll } from 'ramda';
 import { BitId } from '../bit-id';
-import { forEach } from '../utils';
+import { forEach, getLatestVersionNumber } from '../utils';
 
 export default class BitIds extends Array<BitId> {
   serialize(): string[] {
@@ -23,7 +23,7 @@ export default class BitIds extends Array<BitId> {
    * @memberof BitIds
    */
   resolveVersion(idWithLatest) {
-    return this.filter(id => idWithLatest.toString(false, true) === id.toString(false, true))[0];
+    return getLatestVersionNumber(this, idWithLatest);
   }
 
   static deserialize(array: string[] = []) {
