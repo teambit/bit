@@ -510,7 +510,6 @@ export default class Component {
 
       // verify whether the environment is installed
       let compiler;
-      /*const idWithoutScope = this.id.changeScope(null);*/
       const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
       try {
