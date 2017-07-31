@@ -87,7 +87,7 @@ const byPathType = R.groupBy((missing) => {
  * @returns {string} name of the package
  */
 function resolveMissingPackageName(packagePath) {
-  const packagePathArr = packagePath.split(path.sep);
+  const packagePathArr = packagePath.split(path.sep); // TODO: make sure this is working on windows
   // Regular package without path. example - import _ from 'lodash'
   if (packagePathArr.length === 1) return packagePath;
   // Scoped package. example - import getSymbolIterator from '@angular/core/src/util.d.ts';
