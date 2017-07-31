@@ -22,6 +22,9 @@ export default class Add extends Command {
     namespace:?string
   }): Promise<*> {
     // todo: the specs parameter should be an array, it is currently a string
+    if (namespace && id) {
+      return Promise.reject('You can use either [id] or [namespace] to add a particular component');
+    }
     const testsArray = tests ? [tests] : [];
     return add(path, id, main, namespace, testsArray);
   }

@@ -98,7 +98,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
             dirName = path.dirname(absPath);
           }
           const lastDir = R.last(dirName.split(path.sep));
-          parsedId = getValidBitId(lastDir, pathParsed.name);
+          parsedId = getValidBitId(namespace || lastDir, pathParsed.name);
         }
 
         const files = { [pathParsed.base]: relativeFilePath };
@@ -136,8 +136,10 @@ export default async function addAction(componentPaths: string[], id?: string, m
   let added = [];
   if (isMultipleComponents) {
     logger.debug('bit add - multiple components');
-    const addedP = Object.keys(componentPathsStats).map(onePath => addOneComponent({
-      [onePath]: componentPathsStats[onePath]}, bitMap, consumer));
+    const addedP = Object.keys(componentPathsStats).map(onePath => {
+      return addOneComponent({
+      [onePath]: componentPathsStats[onePath]}, bitMap, consumer)
+  });
     added = await Promise.all(addedP);
   } else {
     logger.debug('bit add - one component');
