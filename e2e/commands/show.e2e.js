@@ -78,7 +78,7 @@ describe('bit show command', function () {
         expect(output).to.have.string('src/utils/utilFile.js', 'Files are wrong');
       });
 
-      it.skip('should render the main file correctly', () => {
+      it('should render the main file correctly', () => {
         expect(output).to.have.string('Main file', 'Main file row is missing');
         expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
@@ -150,8 +150,9 @@ describe('bit show command', function () {
         expect(secondFileObj.history[0]).to.include(utilFileHistory);
       });
 
-      it.skip('should include the main file correctly', () => {
-        expect(output).to.include({mainFile: null});
+      // TODO: change this to src/mainFile.js once we change the main file to store relative instead of path
+      it('should include the main file correctly', () => {
+        expect(output).to.include({ mainFile: 'mainFile.js' });
       });
     });
 
