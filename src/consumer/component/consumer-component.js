@@ -511,7 +511,7 @@ export default class Component {
       let compiler;
       const idWithoutScope = this.id.changeScope(null);
       const componentMap = bitMap && bitMap.getComponent(idWithoutScope.toString());
-      
+
       try {
         compiler = scope.loadEnvironment(this.compilerId);
       } catch (err) {
@@ -705,6 +705,8 @@ export default class Component {
     return new Component({
       name: id.name,
       box: id.box,
+      scope: id.scope,
+      version: id.version,
       lang: bitJson.lang,
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
