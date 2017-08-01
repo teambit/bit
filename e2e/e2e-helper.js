@@ -13,6 +13,9 @@ export default class Helper {
     this.localScopePath = path.join(this.e2eDir, this.localScope);
     this.remoteScopePath = path.join(this.e2eDir, this.remoteScope);
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
+    this.envScope = v4();
+    this.envScopePath = path.join(this.e2eDir, this.envScope);
+    this.compilerCreated = false;
   }
 
   runCmd(cmd, cwd = this.localScopePath) {
@@ -93,8 +96,36 @@ export default class Helper {
     return this.runCmd(`bit import ${this.remoteScope}/${id}`);
   }
 
-  importCompiler(id: string = 'bit.envs/compilers/babel3') {
-    this.runCmd('bit config set hub_domain hub-stg.bitsrc.io'); // todo: once the new babel compiler is on prod, remove this line
+  createCompiler() {
+    if (!this.compilerCreated) {
+      const tempScope = v4();
+      const tempScopePath = path.join(this.e2eDir, tempScope);
+      fs.emptyDirSync(tempScopePath);
+      this.runCmd('bit init', tempScopePath);
+      this.runCmd('bit create compilers/babel3 -j', tempScopePath);
+      const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
+      const destDir = path.join(tempScopePath, 'components', 'compilers', 'babel3');
+      const impl = fs.readFileSync(path.join(sourceDir, 'impl.js'), 'utf-8');
+      fs.writeFileSync(path.join(destDir, 'impl.js'), impl);
+      const bitJson = fs.readFileSync(path.join(sourceDir, 'bit.json'), 'utf-8');
+      fs.writeFileSync(path.join(destDir, 'bit.json'), bitJson);
+      this.runCmd('bit commit compilers/babel3 -m msg', tempScopePath);
+
+      fs.emptyDirSync(this.envScopePath);
+      this.runCmd('bit init --bare', this.envScopePath);
+      this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
+
+      this.runCmd(`bit export ${this.envScope} compilers/babel3`, tempScopePath);
+      this.addRemoteScope(this.envScopePath);
+      this.compilerCreated = true;
+    }
+  }
+
+  importCompiler(id?) {
+    if (!id) {
+      id = `${this.envScope}/compilers/babel3`;
+      this.createCompiler();
+    }
     this.runCmd(`bit import ${id} --compiler`);
   }
 
