@@ -86,7 +86,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
             dirName = path.dirname(absPath);
           }
           const lastDir = R.last(dirName.split(path.sep));
-          parsedId = getValidBitId(namespace || lastDir, pathParsed.name);
+          parsedId = BitId.getValidBitId(namespace || lastDir, pathParsed.name);
         }
 
         const files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
