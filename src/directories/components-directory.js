@@ -69,7 +69,7 @@ export default class ComponentsDirectory extends LinksDirectory {
           namespace: dependencyId.box,
         });
 
-        const dependencyMainFile = dependency.mainDistFile || dependency.files[dependency.mainFile];
+        const dependencyMainFile = dependency.mainDistFile || dependency.mainFile;
         const destFile = path.join(
           this.rootPath,
           dependencyMainFile,

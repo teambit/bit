@@ -56,8 +56,7 @@ export default class BitModuleDirectory extends LinksDirectory {
         namespace: componentIdParsed.box,
       });
 
-      const mainFile = componentsMap[componentId].mainFile;
-      const mainFilePath = componentsMap[componentId].mainDistFile || componentsMap[componentId].files[mainFile];
+      const mainFilePath = componentsMap[componentId].mainDistFile || componentsMap[componentId].mainFile;
 
       if (!mainFilePath) {
         // todo: log a warning
