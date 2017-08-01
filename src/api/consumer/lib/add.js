@@ -9,7 +9,7 @@ import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import logger from '../../../logger/logger';
 
-export default async function addAction(componentPaths: string[], id?: string, main?: string, tests?: string[]): Promise<Object> {
+export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[]): Promise<Object> {
 
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
     if (!componentPath) return componentPath;
@@ -84,7 +84,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         });
 
         if (!parsedId) {
-          parsedId = getValidBitId(oneBeforeLastDir, lastDir);
+          parsedId = getValidBitId( namespace || oneBeforeLastDir, lastDir);
         }
         return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
       } else { // is file
@@ -98,7 +98,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
             dirName = path.dirname(absPath);
           }
           const lastDir = R.last(dirName.split(path.sep));
-          parsedId = getValidBitId(lastDir, pathParsed.name);
+          parsedId = getValidBitId(namespace || lastDir, pathParsed.name);
         }
 
         const files = { [pathParsed.base]: relativeFilePath };
@@ -112,7 +112,6 @@ export default async function addAction(componentPaths: string[], id?: string, m
     });
 
     const mapValues = await Promise.all(mapValuesP);
-
     if (mapValues.length === 1) return addToBitMap(mapValues[0]);
 
     const files = R.mergeAll(mapValues.map(value => value.files));
@@ -137,8 +136,10 @@ export default async function addAction(componentPaths: string[], id?: string, m
   let added = [];
   if (isMultipleComponents) {
     logger.debug('bit add - multiple components');
-    const addedP = Object.keys(componentPathsStats).map(onePath => addOneComponent({
-      [onePath]: componentPathsStats[onePath]}, bitMap, consumer));
+    const addedP = Object.keys(componentPathsStats).map(onePath => {
+      return addOneComponent({
+      [onePath]: componentPathsStats[onePath]}, bitMap, consumer)
+  });
     added = await Promise.all(addedP);
   } else {
     logger.debug('bit add - one component');

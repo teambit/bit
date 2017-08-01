@@ -126,4 +126,9 @@ export default class Helper {
   addComponent(filePaths: string = "bar/foo.js") {
     return this.runCmd(`bit add ${filePaths}`);
   }
+
+  addComponentWithOptions(filePaths: string = 'bar/foo.js', options:? Object) {
+    const value = Object.keys(options).map(key => `-${key} ${options[key] }`).join(' ')
+    return this.runCmd(`bit add ${filePaths} ${value}`);
+  }
 }
