@@ -152,7 +152,7 @@ describe('bit show command', function () {
 
       // TODO: change this to src/mainFile.js once we change the main file to store relative instead of path
       it('should include the main file correctly', () => {
-        expect(output).to.include({ mainFile: 'mainFile.js' });
+        expect(output).to.include({ mainFile: 'src/mainFile.js' });
       });
     });
 
