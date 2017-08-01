@@ -181,7 +181,7 @@ export default class Consumer {
 
       const component = Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
       if (component.dependencies && !R.isEmpty(component.dependencies)) return component; // if there is bit.json use if for dependencies.
-      const mainFile = componentMap.files[componentMap.mainFile];
+      const mainFile = componentMap.mainFile;
       // Check if we already calculate the dependency tree (because it is another component dependency)
       if (fullDependenciesTree.tree[idWithConcreteVersion]) {
         // If we found it in the full tree it means we already take care of the missings earlier
@@ -321,7 +321,6 @@ export default class Consumer {
       componentId = component.id.changeScope(null).toString();
     }
     let mainFile = bitMap.getMainFileOfComponent(componentId);
-    let relativeMainFile = path.relative(componentRoot, mainFile);
     // In case there is dist files, we want to point the index to the dist file not to source.
     if (component.dists && !R.isEmpty(component.dists)){
       logger.debug(`_writeEntryPointsForImportedComponent, Change the index file to point to dist folder`);
