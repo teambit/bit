@@ -85,7 +85,7 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo2');
       expect(bitMap).not.to.have.property('bar/foo2.exclude.js');
     });
-    it.only('When excluding dir ,bit component should not appear in bitmap', () => {
+    it('When excluding dir ,bit component should not appear in bitmap', () => {
       helper.createComponent('bar', 'foo1.js');
       helper.createComponent('bar', 'foo2.js');
       helper.createComponent('bar/x', 'foo2.exclude.js');
