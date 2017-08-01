@@ -344,7 +344,7 @@ export default class Component {
 
       calculatedBitDir = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
 
-      this.files.forEach(file => file.updatePaths({ newBase: calculatedBitDir, newRelative: componentMap.files[file.basename] }));
+      this.files.forEach(file => {file.updatePaths({ newBase: calculatedBitDir }));
       this.files.forEach(file => file.write(undefined, force));
 
       // todo: while refactoring the dist for the new changes, make sure it writes to the proper
