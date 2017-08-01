@@ -129,8 +129,6 @@ export default class BitMap {
     parent?: BitId,
     rootDir?: string
   }): void {
-    console.log('files : ', JSON.stringify(files));
-    console.log('mainFile : ', mainFile);
     const isDependency = origin && origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = (origin === COMPONENT_ORIGINS.AUTHORED) ?
       componentId.changeScope(null).toString() : componentId.toString();
