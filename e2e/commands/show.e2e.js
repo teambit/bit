@@ -58,7 +58,7 @@ describe('bit show command', function () {
 
       it('should render the main file correctly', () => {
         expect(output).to.have.string('Main file', 'Main file row is missing');
-        expect(output).to.have.string('mainFile.js', 'Main file is wrong');
+        expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
 
       it('should render the dependencies correctly', () => {
@@ -120,7 +120,7 @@ describe('bit show command', function () {
       });
 
       it('should render the main file correctly', () => {
-        expect(output).to.include({mainFile: 'mainFile.js'});
+        expect(output).to.include({mainFile: 'src/mainFile.js'});
       });
 
       it('should include the dependencies correctly', () => {
