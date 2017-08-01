@@ -726,6 +726,7 @@ export default class Component {
       path: path.join(consumerPath, bitPath, files['impl.js']),
       contents: new Buffer(Impl.create(name, compilerId, scope).src)
     });
+    implVinylFile.test = false;
 
     return new Component({
       name,
