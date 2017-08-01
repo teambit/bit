@@ -32,7 +32,7 @@ describe('bit add command', function () {
       helper.createComponent('bar', file1);
       helper.createComponent('bar', file2);
       const addCmd = () => helper.addComponentWithOptions('bar', { 'n': 'test' });
-      expect(addCmd).to.throw(`fatal: the main file index.js was not found in the files list ${file1} ,${file2}`);
+      expect(addCmd).to.throw(`fatal: the main file index.js was not found in the files list bar/${file1}, bar/${file2}`);
     });
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
       helper.createComponent('bar', 'foo2.js');

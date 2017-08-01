@@ -58,7 +58,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ ExportWithoutThis, err => `Error: Missing local scope annotation when exporting ${err.id}. Please run 'bit export ${LOCAL_SCOPE_NOTATION}/${err.id} ${err.remote}'`],
   [ ResolutionException, e => e.message],
   [ DriverNotFound, err => `fatal: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(err.lang)} set in your bit.json file.`],
-  [ MissingMainFile, err => `fatal: the main file ${chalk.bold(err.mainFile)} was not found in the files list ${chalk.bold(err.files.join(' ,'))}`],
+  [ MissingMainFile, err => `fatal: the main file ${chalk.bold(err.mainFile)} was not found in the files list ${chalk.bold(err.files.join(', '))}`],
   [ MissingBitMapComponent, err => `fatal: the component ${chalk.bold(err.id)} was not found in the bit.map file`],
   [ invalidIdOnCommit, err => `error - Unable to commit. ${chalk.bold(err.id)} not found.
 Run \`bit status\` command to list all components available for commit.`]

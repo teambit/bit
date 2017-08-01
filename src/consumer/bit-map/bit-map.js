@@ -92,7 +92,7 @@ export default class BitMap {
     // Search the base name of the main file and transfer to relativePath
     if (!mainFileFromFiles){
       mainFileFromFiles = R.find(R.propEq('name', baseMainFile))(files);
-      baseMainFile = mainFileFromFiles.relativePath;
+      baseMainFile = mainFileFromFiles ? mainFileFromFiles.relativePath : baseMainFile;
     }
 
     // When there is more then one file and the main file not found there
