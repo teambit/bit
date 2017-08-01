@@ -26,7 +26,7 @@ describe('bit commit command', function () {
     });
 
     it('should print warning if the a driver is not installed', () => {
-      
+
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
       helper.createComponent('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
@@ -100,7 +100,7 @@ describe('bit commit command', function () {
     });
 
     it.skip('Should build and test all components before commit', () => {
-      
+
     });
 
 
@@ -120,20 +120,20 @@ describe('bit commit command', function () {
       helper.createComponent('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
       const commitAll = () => helper.commitAllComponents();
-      expect(commitAll).to.throw(`Command failed: ${helper.bitBin} commit -am commit-message\nfatal: The following dependencies not found - "bar/foo.js"\n`);      
+      expect(commitAll).to.throw(`Command failed: ${helper.bitBin} commit -am commit-message\nfatal: The following dependencies not found - "bar/foo.js"\n`);
     });
 
     it.skip('Should print more then one level of untracked files dependencies', () => {
       helper.createComponentBarFoo();
       const foo2fixture = "import foo from './foo'; module.exports = function foo2() { return 'got foo'; };";
       helper.createComponent('bar', 'foo2.js', foo2fixture);
-      
+
       const foo3fixture = "import foo2 from './foo2'; module.exports = function foo3() { return 'got foo'; };";
       helper.createComponent('bar', 'foo3.js', foo3fixture);
       helper.addComponent('bar/foo3.js');
 
       const commitAll = () => helper.commitAllComponents();
-      expect(commitAll).to.throw(`Command failed: ${helper.bitBin} commit -am commit-message\nfatal: The following dependencies not found - "bar/foo2.js,bar/foo.js"\n`);      
+      expect(commitAll).to.throw(`Command failed: ${helper.bitBin} commit -am commit-message\nfatal: The following dependencies not found - "bar/foo2.js,bar/foo.js"\n`);
     });
 
     // We throw this error because we don't know the packege version in this case

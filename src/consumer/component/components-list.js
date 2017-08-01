@@ -34,6 +34,15 @@ export default class ComponentsList {
     version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
     // todo: once we know to auto-resolve dependencies, figure out if it should be part of the comparison. Currently, it is ignored.
     version.flattenedDependencies = componentFromModel.flattenedDependencies;
+    // dependencies from the FS don't have an exact version, copy the version from the model
+    version.dependencies.forEach((dependency) => {
+      const idWithoutVersion = dependency.id.toString(false, true);
+      const dependencyFromModel = componentFromModel.dependencies
+        .find(modelDependency => modelDependency.id.toString(false, true) === idWithoutVersion);
+      if (dependencyFromModel) {
+        dependency.id = dependencyFromModel.id;
+      }
+    });
 
     return componentFromModel.hash().hash !== version.hash().hash;
   }
