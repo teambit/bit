@@ -57,4 +57,47 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('test/foo2');
     });
   });
+  describe('add component with exclude', () => {
+    beforeEach(() => {
+      helper.reInitLocalScope();
+    });
+    it('bitMap should not contain component if all files are excluded', () => {
+      helper.createComponent('bar', 'foo1.js');
+      helper.addComponentWithOptions('bar/foo1.js', { 'e': 'bar/foo1.js' });
+      const bitMap = helper.readBitMap();
+      expect(bitMap).not.to.have.property('bar/foo1');
+    });
+    it('bitMap should only contain bits that have files', () => {
+      helper.createComponent('bar', 'foo1.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.addComponentWithOptions('bar/foo1.js bar/foo2.js', { 'e': 'bar/foo2.js' });
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar/foo1');
+      expect(bitMap).not.to.have.property('bar/foo2');
+    });
+    it('When adding folder bitMap should not contain excluded glob *.exclude.js', () => {
+      helper.createComponent('bar', 'foo1.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo2.exclude.js');
+      helper.addComponentWithOptions('bar/*.js', { 'e': 'bar/*.exclude.js' });
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar/foo1');
+      expect(bitMap).to.have.property('bar/foo2');
+      expect(bitMap).not.to.have.property('bar/foo2.exclude.js');
+    });
+    it.only('When excluding dir ,bit component should not appear in bitmap', () => {
+      helper.createComponent('bar', 'foo1.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar/x', 'foo2.exclude.js');
+      helper.addComponentWithOptions('bar/*', { 'e': 'bar/x/*' });
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar/foo1');
+      expect(bitMap).to.have.property('bar/foo2');
+      expect(bitMap).not.to.have.property('bar/x');
+    });
+    it.skip('bitMap should contain files that are not excluded ', () => {});
+    it.skip('bitMap should contain tests that are not excluded ', () => {});
+    it.skip('bitMap should contain bit even if all test files are excluded ', () => {});
+
+  });
 });
