@@ -97,7 +97,7 @@ describe('bit add command', function () {
     });
     it.skip('bitMap should contain files that are not excluded ', () => {});
     it.skip('bitMap should contain tests that are not excluded ', () => {});
-    it.skip('bitMap should contain bit even if all test files are excluded ', () => {});
+    it.skip('bitMap should contain component even if all test files are excluded ', () => {});
 
   });
 });
