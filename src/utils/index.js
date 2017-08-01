@@ -26,6 +26,7 @@ import parseSSHUrl from './parse-ssh-url';
 import listDirectories from './fs-list-directories';
 import isDirEmptySync from './is-dir-empty-sync';
 import isDirEmpty from './is-dir-empty';
+import isDir from './is-dir';
 import writeFile from './fs-write-file';
 import readFile from './fs-read-file';
 import immutableUnshift from './immutable-unshift';
@@ -92,6 +93,7 @@ export {
   contains,
   removeContainingDirIfEmpty,
   isBitUrl,
+  isDir,
   mapObject,
   resolveHomePath,
   propogateUntil,

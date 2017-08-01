@@ -89,7 +89,7 @@ describe('bit import', function () {
     });
 
     describe('with compiler and tester', () => {
-      describe('with multiple files located in different directories', () => {
+      describe.only('with multiple files located in different directories', () => {
         before(() => {
           helper.importCompiler();
           helper.createComponent('src', 'imprel.js');
