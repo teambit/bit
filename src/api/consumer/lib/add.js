@@ -9,7 +9,7 @@ import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import logger from '../../../logger/logger';
 
-export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[]): Promise<Object> {
+export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[]): Promise<Object> {
 
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
     if (!componentPath) return componentPath;
@@ -23,7 +23,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
     const markTestsFiles = (files, relativeTests) => {
       relativeTests.forEach(testPath => {
-        const file = R.find(R.propEq('relativePath', testPath))(files); 
+        const file = R.find(R.propEq('relativePath', testPath))(files);
         if (file){
           file.test = true;
         } else { // Support case when a user didn't enter the test file into the files
@@ -41,6 +41,37 @@ export default async function addAction(componentPaths: string[], id?: string, m
                             origin: COMPONENT_ORIGINS.AUTHORED });
       return { id: componentId.toString(), files };
     };
+
+    const getValidBitId = (box: string, name: string): BitId => {
+      // replace any invalid character with a dash character
+      const makeValidIdChunk = (chunk) => {
+        const invalidChars = /[^$\-_!.a-z0-9]+/g;
+        const replaceUpperCaseWithDash = chunk.trim().split(/(?=[A-Z])/).join('-').toLowerCase();
+        return replaceUpperCaseWithDash.replace(invalidChars, '-');
+      };
+
+      if (!isValidIdChunk(name)) name = makeValidIdChunk(name);
+      if (!isValidIdChunk(box)) box = makeValidIdChunk(box);
+
+      return new BitId({ name, box });
+    };
+
+    async function getExcludedFiles(excluded){
+      const files = {};
+      await excluded.forEach(async componentPath => {
+        if (isDirectory(componentPath)) {
+          const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
+          const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
+          matches.forEach((match) =>  files[match] = match);
+          return files;
+        } else { // is file
+          const relativeFilePath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
+          files[relativeFilePath] = relativeFilePath
+          return  files;
+        }
+      });
+      return files;
+    }
 
     let parsedId: BitId;
     let componentExists = false;
@@ -99,9 +130,28 @@ export default async function addAction(componentPaths: string[], id?: string, m
       }
     });
 
-    const mapValues = await Promise.all(mapValuesP);
+    var mapValues = await Promise.all(mapValuesP);
+
+    //FILTER - remove impl/test files
+    if (exclude){
+      const resolvedExcludedFiles = await getExcludedFiles(exclude);
+      mapValues.forEach(mapVal => {
+        Object.keys(mapVal.files).forEach(key => {
+          if (resolvedExcludedFiles[mapVal.files[key]]){
+            delete mapVal.files[key];
+          }
+        })
+        mapVal.testsFiles = mapVal.testsFiles.filter(x=>!resolvedExcludedFiles[x])
+      });
+    }
+
+    const componentId = mapValues[0].componentId;
+    mapValues = mapValues.filter(x => !(Object.keys(x.files).length === 0));
+
+    if (mapValues.length === 0) return ({ id: componentId, files:[] });
     if (mapValues.length === 1) return addToBitMap(mapValues[0]);
 
+    const files = R.mergeAll(mapValues.map(value => value.files));
     const files = mapValues.reduce((a, b) => {
       return a.concat(b.files);
     }, []);
@@ -128,8 +178,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
     logger.debug('bit add - multiple components');
     const addedP = Object.keys(componentPathsStats).map(onePath => {
       return addOneComponent({
-      [onePath]: componentPathsStats[onePath]}, bitMap, consumer)
-  });
+        [onePath]: componentPathsStats[onePath]}, bitMap, consumer)
+    });
     added = await Promise.all(addedP);
   } else {
     logger.debug('bit add - one component');
