@@ -463,7 +463,7 @@ export default class Consumer {
     const component = await this.loadComponent(bitId);
     await this.scope
       .putMany({ consumerComponents: [component], message, force, consumer: this, verbose });
-    await this.driver.runHook('onCommit', [component]); // todo: probably not needed as the bind happens on create
+    // await this.driver.runHook('onCommit', [component]); // todo: probably not needed as the bind happens on create
     return component;
   }
 
@@ -477,7 +477,7 @@ export default class Consumer {
     const components = await this.loadComponents(componentsIds);
     await this.scope
       .putMany({ consumerComponents: components, message, force, consumer: this, verbose });
-    await this.driver.runHook('onCommit', components); // todo: probably not needed as the bind happens on create
+    // await this.driver.runHook('onCommit', components); // todo: probably not needed as the bind happens on create
     return components;
   }
 

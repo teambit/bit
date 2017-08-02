@@ -66,10 +66,10 @@ export default function importAction(
             envDependencies,
             consumer,
           })
-          .then(warnings => consumer.driver.runHook('onImport',
-            { components: dependencies, projectRoot: performOnDir },
-            { dependencies, envDependencies, warnings })
-        ));
+          // .then(warnings => consumer.driver.runHook('onImport',
+          //   { components: dependencies, projectRoot: performOnDir },
+          //   { dependencies, envDependencies, warnings })
+        );
     });
 }
 
