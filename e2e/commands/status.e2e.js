@@ -14,15 +14,9 @@ describe('bit status command', function () {
     });
     it('should indicate that there are no components', () => {
       const output = helper.runCmd('bit status');
-      expect(output.includes('There are no untracked components')).to.be.true;
       expect(output.includes('There are no new components')).to.be.true;
       expect(output.includes('There are no modified components')).to.be.true;
       expect(output.includes('There are no staged components')).to.be.true;
-    });
-  });
-  describe.skip('when a component is created in the configured components directory but not added', () => {
-    it('should display that component as an untracked component', () => {
-      // todo: implement
     });
   });
   describe('when a component is created and added but not committed', () => {
@@ -38,9 +32,6 @@ describe('bit status command', function () {
 
       expect(output.includes('New Components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
-    });
-    it('should not display that component as untracked', () => {
-      expect(output.includes('There are no untracked components')).to.be.true;
     });
     it('should not display that component as modified', () => {
       expect(output.includes('There are no modified components')).to.be.true;
@@ -63,9 +54,6 @@ describe('bit status command', function () {
 
       expect(output.includes('Staged Components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
-    });
-    it('should not display that component as untracked', () => {
-      expect(output.includes('There are no untracked components')).to.be.true;
     });
     it('should not display that component as modified', () => {
       expect(output.includes('There are no modified components')).to.be.true;
@@ -99,9 +87,6 @@ describe('bit status command', function () {
       expect(output.includes('Staged Components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
-    it('should not display that component as untracked', () => {
-      expect(output.includes('There are no untracked components')).to.be.true;
-    });
     it('should not display that component as new', () => {
       expect(output.includes('There are no new components')).to.be.true;
     });
@@ -117,9 +102,6 @@ describe('bit status command', function () {
       helper.addRemoteScope();
       helper.exportComponent('bar/foo');
       output = helper.runCmd('bit status');
-    });
-    it('should not display that component as untracked', () => {
-      expect(output.includes('There are no untracked components')).to.be.true;
     });
     it('should not display that component as new', () => {
       expect(output.includes('There are no new components')).to.be.true;
@@ -146,9 +128,6 @@ describe('bit status command', function () {
       helper.importComponent('bar/foo');
       output = helper.runCmd('bit status');
     });
-    it('should not display that component as untracked', () => {
-      expect(output.includes('There are no untracked components')).to.be.true;
-    });
     it('should not display that component as new', () => {
       expect(output.includes('There are no new components')).to.be.true;
     });
@@ -173,9 +152,6 @@ describe('bit status command', function () {
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
       output = helper.runCmd('bit status');
-    });
-    it('should not display any component as untracked', () => {
-      expect(output.includes('There are no untracked components')).to.be.true;
     });
     it('should not display any component as new', () => {
       expect(output.includes('There are no new components')).to.be.true;
