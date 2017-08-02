@@ -430,7 +430,7 @@ export default class Component {
               testerFilePath,
               testerId: this.testerId,
               implDistPath: mainFile,
-              specDistPath: testFile.distFilePath,
+              specDistPath: testFile.path,
             });
           });
           const specsResults = await Promise.all(specsResultsP);
@@ -472,20 +472,12 @@ export default class Component {
           return isolatedEnvironment.importE2E(this.id.toString());
         })
         .then((component) => {
-          const componentPath = isolatedEnvironment.getComponentPath(component);
           return component.build({ scope, environment, verbose }).then(() => {
-            const specDistWrite = component.specDist ?
-              component.specDist.write(componentPath, this.specsFile) : Promise.resolve();
-            return specDistWrite.then(() => {
-              const implDistPath = this.compilerId ?
-                Dist.getFilePath(componentPath, this.implFile) :
-                path.join(componentPath, this.implFile);
-
-              const specDistPath = this.compilerId ?
-                Dist.getFilePath(componentPath, this.specsFile) :
-                path.join(componentPath, this.specsFile);
-
-              return run({ implDistPath, specDistPath }).then((results) => {
+            const specDistWrite = component.dists ?
+              component.dists.map(file => file.write()) : Promise.resolve();
+            return Promise.all(specDistWrite).then(() => {
+              const testFiles = component.dists.filter(file => file.test);
+              return run(component.mainFile, testFiles).then((results) => {
                 return isolatedEnvironment.destroy().then(() => results);
               });
             });

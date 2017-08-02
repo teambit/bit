@@ -32,6 +32,6 @@ export default async function create(
   const bitMap = await BitMap.load(consumer.getPath());
   await component.write(undefined, withBitJson, force, bitMap, COMPONENT_ORIGINS.AUTHORED);
   await bitMap.write();
-  await consumer.driver.runHook('onCreate', component);
+  // await consumer.driver.runHook('onCreate', component);
   return component;
 }
