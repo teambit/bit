@@ -42,8 +42,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
       return { id: componentId.toString(), files };
     };
 
-    async function getAllFiles(excluded){
-      const filesArr = await Promise.all(excluded.map(async componentPath => {
+    async function getAllFiles(files: string[]){
+      const filesArr = await Promise.all(files.map(async componentPath => {
         const files = {};
         if (isGlob(componentPath)){
           const matches = await glob(componentPath);
@@ -58,10 +58,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         }
         return files;
       }));
-      return filesArr.reduce((acc, x) => {
-        for (var key in x) acc[key] = x[key];
-        return acc;
-      }, {});
+      return R.mergeAll(filesArr);
     }
 
     let parsedId: BitId;
@@ -127,12 +124,12 @@ export default async function addAction(componentPaths: string[], id?: string, m
       const resolvedExcludedFiles =  await getAllFiles(exclude);
       mapValues.forEach(mapVal => {
         mapVal.files=mapVal.files.filter(key => !resolvedExcludedFiles[key.relativePath] );
-        mapVal.testsFiles = mapVal.testsFiles.filter(x=>!resolvedExcludedFiles[x])
+        mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles[testFile])
       });
     }
 
     const componentId = mapValues[0].componentId;
-    mapValues = mapValues.filter(x => !(Object.keys(x.files).length === 0));
+    mapValues = mapValues.filter(mapVal => !(Object.keys(mapVal.files).length === 0));
 
     if (mapValues.length === 0) return ({ id: componentId, files:[] });
     if (mapValues.length === 1) return addToBitMap(mapValues[0]);
