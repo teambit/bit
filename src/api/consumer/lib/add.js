@@ -42,20 +42,6 @@ export default async function addAction(componentPaths: string[], id?: string, m
       return { id: componentId.toString(), files };
     };
 
-    const getValidBitId = (box: string, name: string): BitId => {
-      // replace any invalid character with a dash character
-      const makeValidIdChunk = (chunk) => {
-        const invalidChars = /[^$\-_!.a-z0-9]+/g;
-        const replaceUpperCaseWithDash = chunk.trim().split(/(?=[A-Z])/).join('-').toLowerCase();
-        return replaceUpperCaseWithDash.replace(invalidChars, '-');
-      };
-
-      if (!isValidIdChunk(name)) name = makeValidIdChunk(name);
-      if (!isValidIdChunk(box)) box = makeValidIdChunk(box);
-
-      return new BitId({ name, box });
-    };
-
     async function getExcludedFiles(excluded){
       const files = {};
       await excluded.forEach(async componentPath => {
