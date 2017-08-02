@@ -93,6 +93,16 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo2');
       expect(bitMap).not.to.have.property('bar/foo2.exclude.js');
     });
+    it('Bitmap should not conatin all files in excluded list', () => {
+      helper.createComponent('bar', 'foo1.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo2.exclude.js');
+      helper.addComponentWithOptions('bar/*.js', { 'e': 'bar/*.exclude.js,bar/foo2.js' });
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar/foo1');
+      expect(bitMap).not.to.have.property('bar/foo2');
+      expect(bitMap).not.to.have.property('bar/foo2.exclude.js');
+    });
     it('When excluding dir ,bit component should not appear in bitmap', () => {
       helper.createComponent('bar', 'foo1.js');
       helper.createComponent('bar', 'foo2.js');
