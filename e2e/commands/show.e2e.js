@@ -107,7 +107,7 @@ describe('bit show command', function () {
 
       // TODO: get the version dynamically
       it('should include the compiler correctly', () => {
-        expect(output).to.include({compilerId: "bit.envs/compilers/babel3::1"});
+        expect(output).to.include({compilerId: "bit.envs/compilers/babel4::1"});
       });
 
       it('should include the language correctly', () => {
