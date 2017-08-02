@@ -8,7 +8,7 @@ import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import logger from '../../../logger/logger';
-
+import isGlob from 'is-glob';
 export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[]): Promise<Object> {
 
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
@@ -42,10 +42,13 @@ export default async function addAction(componentPaths: string[], id?: string, m
       return { id: componentId.toString(), files };
     };
 
-    async function getExcludedFiles(excluded){
-      const files = {};
-      await excluded.forEach(async componentPath => {
-        if (isDir(componentPath)) {
+    async function getAllFiles(excluded){
+      const filesArr = await Promise.all(excluded.map(async componentPath => {
+        const files = {};
+        if (isGlob(componentPath)){
+          const matches = await glob(componentPath);
+          matches.forEach((match) =>  files[match] = match);
+        } else if (isDir(componentPath)) {
           const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
           const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
           matches.forEach((match) =>  files[match] = match);
@@ -53,8 +56,12 @@ export default async function addAction(componentPaths: string[], id?: string, m
           const relativeFilePath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
           files[relativeFilePath] = relativeFilePath
         }
-      });
-      return files;
+        return files;
+      }));
+      return filesArr.reduce((acc, x) => {
+        for (var key in x) acc[key] = x[key];
+        return acc;
+      }, {});
     }
 
     let parsedId: BitId;
@@ -117,7 +124,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
     var mapValues = await Promise.all(mapValuesP);
 
     if (exclude){
-      const resolvedExcludedFiles = await getExcludedFiles(exclude);
+      const resolvedExcludedFiles =  await getAllFiles(exclude);
       mapValues.forEach(mapVal => {
         mapVal.files=mapVal.files.filter(key => !resolvedExcludedFiles[key.relativePath] );
         mapVal.testsFiles = mapVal.testsFiles.filter(x=>!resolvedExcludedFiles[x])
