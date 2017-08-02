@@ -1,7 +1,9 @@
 // covers also init, create, commit, import and export commands
 
-import { expect } from 'chai';
+import chai,{ expect } from 'chai';
 import Helper from '../e2e-helper';
+const assertArrays = require('chai-arrays');
+chai.use(assertArrays);
 
 describe('bit add command', function () {
   this.timeout(0);
@@ -41,7 +43,13 @@ describe('bit add command', function () {
     });
     it.skip('Bitmap should contain multipule files for component with more than one file', ()=>{});
     it.skip('Bitmap should contain impl files and test files  in diffrent fields', ()=>{});
-    it.skip('Bitmap origin should be AUTHORED', ()=>{});
+    it('Bitmap origin should be AUTHORED', ()=>{
+      helper.createComponent('bar', 'foo1.js');
+      helper.addComponent('bar/foo1.js');
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar/foo1');
+      expect(bitMap['bar/foo1'].origin).to.equal('AUTHORED')
+    });
     it.skip('Bitmap mainFile should point to correct mainFile', ()=>{});
   });
   describe('add multipule components', () => {
@@ -95,7 +103,22 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo2');
       expect(bitMap).not.to.have.property('bar/x');
     });
-    it.skip('bitMap should contain files that are not excluded ', () => {});
+    it('bitMap should contain files that are not excluded ', () => {
+      helper.createComponent('bar', 'foo1.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo3.js');
+      helper.addComponentWithOptions('bar/foo1.js bar/foo2.js bar/foo3.js -i bar/foo -m bar/foo1.js', { 'e': 'bar/foo2.js' });
+      const bitMap = helper.readBitMap();
+      const files = bitMap['bar/foo'].files;
+      const expectedArray = [{ relativePath: 'bar/foo1.js', test: false, name: 'foo1.js' },
+        { relativePath: 'bar/foo3.js', test: false, name: 'foo3.js' }]
+      expect(bitMap).to.have.property('bar/foo');
+      expect(files).to.be.array();
+      expect(files).to.be.ofSize(2);
+      expect(files[0]).to.deep.equal(expectedArray[0]);
+      expect(files[1]).to.deep.equal(expectedArray[1]);
+
+    });
     it.skip('bitMap should contain tests that are not excluded ', () => {});
     it.skip('bitMap should contain component even if all test files are excluded ', () => {});
 

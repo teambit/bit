@@ -82,6 +82,7 @@
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.2.0",
     "chai": "^3.5.0",
+    "chai-arrays": "^1.0.0",
     "eslint-config-airbnb": "^13.0.0",
     "eslint-config-airbnb-flow": "^1.0.2",
     "eslint-plugin-flowtype": "^2.25.0",
