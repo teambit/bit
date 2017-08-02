@@ -154,6 +154,22 @@ export default class Consumer {
         bits: []
       }
     };
+
+    /**
+     * Run over the deps tree recursively to build the full deps tree for component
+     * @param {Object} tree - which contain direct deps for each file
+     * @param {string} file - file to calculate deps for
+     */
+    const traverseDepsTreeRecursive = (tree, file) => {
+      const deps = tree[file].files;
+      if (!deps || R.isEmpty(deps)) return [];
+      const allDeps = deps.reduce((dpesSoFar, dep) => {
+        const nextDeps = traverseDepsTreeRecursive(tree, dep);
+        return dpesSoFar.concat(nextDeps);
+      }, deps);
+      return R.uniq(allDeps);
+    };
+
     // Map to store the id's of paths we already found in bit.map
     // It's aim is to reduce the search in the bit.map for dependencies ids because it's an expensive operation
     const dependenciesPathIdMap = new Map();
@@ -204,7 +220,7 @@ export default class Consumer {
 
       // We only care of the relevant sub tree from now on
       // We can be sure it's now exists because it's happen after the assign in case it was missing
-      dependenciesTree.tree = fullDependenciesTree.tree[mainFile] || {};
+      dependenciesTree.tree.files = traverseDepsTreeRecursive(fullDependenciesTree.tree, mainFile) || {};
 
       const dependenciesMissingInMap = [];
       const files = dependenciesTree.tree.files || [];
