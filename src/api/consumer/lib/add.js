@@ -59,15 +59,13 @@ export default async function addAction(componentPaths: string[], id?: string, m
     async function getExcludedFiles(excluded){
       const files = {};
       await excluded.forEach(async componentPath => {
-        if (isDirectory(componentPath)) {
+        if (isDir(componentPath)) {
           const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
           const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
           matches.forEach((match) =>  files[match] = match);
-          return files;
         } else { // is file
           const relativeFilePath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
           files[relativeFilePath] = relativeFilePath
-          return  files;
         }
       });
       return files;
@@ -132,15 +130,10 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
     var mapValues = await Promise.all(mapValuesP);
 
-    //FILTER - remove impl/test files
     if (exclude){
       const resolvedExcludedFiles = await getExcludedFiles(exclude);
       mapValues.forEach(mapVal => {
-        Object.keys(mapVal.files).forEach(key => {
-          if (resolvedExcludedFiles[mapVal.files[key]]){
-            delete mapVal.files[key];
-          }
-        })
+        mapVal.files=mapVal.files.filter(key => !resolvedExcludedFiles[key.relativePath] );
         mapVal.testsFiles = mapVal.testsFiles.filter(x=>!resolvedExcludedFiles[x])
       });
     }
@@ -151,11 +144,9 @@ export default async function addAction(componentPaths: string[], id?: string, m
     if (mapValues.length === 0) return ({ id: componentId, files:[] });
     if (mapValues.length === 1) return addToBitMap(mapValues[0]);
 
-    const files = R.mergeAll(mapValues.map(value => value.files));
     const files = mapValues.reduce((a, b) => {
       return a.concat(b.files);
     }, []);
-    const componentId = mapValues[0].componentId;
 
     return addToBitMap({ componentId, files, mainFile: main, testsFiles: tests });
   }

@@ -38,7 +38,7 @@ export default class Add extends Command {
         return title;
       } else{
         const title = chalk.underline(`Tracking component ${chalk.bold(result.id)}:\n`);
-        const files = Object.keys(result.files).map(file => chalk.green(`added ${result.files[file]}`));
+        const files = result.files.map(file => chalk.green(`added ${file.relativePath}`));
         return title + files.join('\n');
       }
 
