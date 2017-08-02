@@ -16,7 +16,7 @@ dependencies:
     - "echo \"-----END RSA PRIVATE KEY-----\" >> /home/ubuntu/.ssh/id_rsa"
 
   override:
-    - yarn
+    - npm install
 
 test:
   override:
