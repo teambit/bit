@@ -14,6 +14,7 @@ import Consumer from '../consumer';
 
 export default class ComponentsList {
   consumer: Consumer;
+  _bitMap: Object;
   _fromFileSystem: Promise<string[]>;
   _fromBitMap: Object;
   _fromObjects: Promise<Object<Version>>;
@@ -199,11 +200,16 @@ export default class ComponentsList {
     const { staticParts, dynamicParts } = this.consumer.dirStructure.componentsDirStructure;
     const asterisks = Array(dynamicParts.length).fill('*'); // e.g. ['*', '*', '*']
     const cwd = path.join(this.consumer.getPath(), ...staticParts);
+    const bitMap = await this.getbitMap();
     const idsFromBitMap = await this.idsFromBitMap();
     const idsFromBitMapWithoutScope = await this.idsFromBitMap(false);
     const files = await this.globP(path.join(...asterisks), { cwd });
     const componentsP = [];
     files.forEach((componentDynamicDirStr) => {
+      const rootDir = path.join(...staticParts, componentDynamicDirStr);
+      // This is an imported components
+      const componentFromBitMap = bitMap.getComponentObjectByRootPath(rootDir);
+      if (!R.isEmpty(componentFromBitMap)) return;
       const componentDynamicDir = componentDynamicDirStr.split(path.sep);
       const bitIdObj = {};
       // combine componentDynamicDir (e.g. ['array', 'sort']) and dynamicParts
@@ -249,9 +255,17 @@ export default class ComponentsList {
 
   async getFromBitMap(): Object {
     if (!this._fromBitMap) {
-      const bitMap = await BitMap.load(this.consumer.getPath());
+      const bitMap = await this.getbitMap();
       this._fromBitMap = bitMap.getAllComponents();
     }
     return this._fromBitMap;
+  }
+
+  async getbitMap(): Object {
+    if (!this._bitMap) {
+      const bitMap = await BitMap.load(this.consumer.getPath());
+      this._bitMap = bitMap;
+    }
+    return this._bitMap;
   }
 }
