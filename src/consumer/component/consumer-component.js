@@ -576,7 +576,7 @@ export default class Component {
       files: this.files,
       docs: this.docs,
       dists: this.dists,
-      specsResults: this.specsResults ? this.specsResults.serialize() : null,
+      specsResults: this.specsResults ? this.specsResults.map(res => res.serialize()) : null,
       license: this.license ? this.license.serialize() : null,
       log: this.log
     };
