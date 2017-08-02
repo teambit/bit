@@ -128,7 +128,16 @@ export default class Helper {
   }
 
   addComponentWithOptions(filePaths: string = 'bar/foo.js', options:? Object) {
-    const value = Object.keys(options).map(key => `-${key} ${options[key] }`).join(' ')
+    const value = Object.keys(options).map(key => `-${key} ${options[key]}`).join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`);
+  }
+
+  showComponent(id: string = "bar/foo") {
+    return this.runCmd(`bit show ${id}`);
+  }
+
+  showComponentWithOptions(id: string = "bar/foo", options:? Object) {
+    const value = Object.keys(options).map(key => `-${key} ${options[key]}`).join(' ');
+    return this.runCmd(`bit show ${id} ${value}`);
   }
 }
