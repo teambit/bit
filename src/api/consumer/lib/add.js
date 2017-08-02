@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
-import { glob, isValidIdChunk } from '../../../utils';
+import { glob, isValidIdChunk, isDir } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
@@ -17,41 +17,29 @@ export default async function addAction(componentPaths: string[], id?: string, m
     return absPath.replace(`${projectRoot}${path.sep}`, '');
   }
 
-  function isDirectory(userPath: string): boolean {
-    let stat;
-    try {
-      stat = fs.lstatSync(userPath);
-    } catch (err) {
-      throw new Error(`The path ${userPath} doesn't exist`);
-    }
-    return stat.isDirectory();
-  }
-
   // todo: remove the logic of fixing the absolute paths, it is already done in BitMap class
   async function addOneComponent(componentPathsStats: Object, bitMap: BitMap, consumer: Consumer,
                                  keepDirectoryName: boolean = false) {
 
+    const markTestsFiles = (files, relativeTests) => {
+      relativeTests.forEach(testPath => {
+        const file = R.find(R.propEq('relativePath', testPath))(files); 
+        if (file){
+          file.test = true;
+        } else { // Support case when a user didn't enter the test file into the files
+          files.push({relativePath: testPath, test: true, name: path.basename(testPath)});
+        }
+      });
+      return files;
+    }
+
     const addToBitMap = ({ componentId, files, mainFile, testsFiles }): { id: string, files: string[] } => {
       const relativeTests = testsFiles ?
         tests.map(spec => getPathRelativeToProjectRoot(spec, consumer.getPath())) : [];
-      bitMap.addComponent({ componentId, componentPaths: files, mainFile,
-        testsFiles: relativeTests, origin: COMPONENT_ORIGINS.AUTHORED });
+      files = markTestsFiles(files, relativeTests);
+      bitMap.addComponent({ componentId, files, mainFile,
+                            origin: COMPONENT_ORIGINS.AUTHORED });
       return { id: componentId.toString(), files };
-    };
-
-
-    const getValidBitId = (box: string, name: string): BitId => {
-      // replace any invalid character with a dash character
-      const makeValidIdChunk = (chunk) => {
-        const invalidChars = /[^$\-_!.a-z0-9]+/g;
-        const replaceUpperCaseWithDash = chunk.trim().split(/(?=[A-Z])/).join('-').toLowerCase();
-        return replaceUpperCaseWithDash.replace(invalidChars, '-');
-      };
-
-      if (!isValidIdChunk(name)) name = makeValidIdChunk(name);
-      if (!isValidIdChunk(box)) box = makeValidIdChunk(box);
-
-      return new BitId({ name, box });
     };
 
     let parsedId: BitId;
@@ -63,7 +51,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
     const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
 
-      if (componentPathsStats[componentPath].isDirectory) {
+      if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
         const absoluteComponentPath = path.resolve(componentPath);
         const splitPath = absoluteComponentPath.split(path.sep);
@@ -73,18 +61,18 @@ export default async function addAction(componentPaths: string[], id?: string, m
         const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
         if (!matches.length) throw new Error(`The directory ${relativeComponentPath} is empty, nothing to add`);
 
-        const files = {};
-        matches.forEach((match) => {
-          if (keepDirectoryName) {
-            files[match] = match;
-          } else {
-            const stripMainDir = match.replace(`${relativeComponentPath}${path.sep}`, '');
-            files[stripMainDir] = match;
-          }
-        });
+        const files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
+        // matches.forEach((match) => {
+        //   if (keepDirectoryName) {
+        //     files[match] = match;
+        //   } else {
+        //     const stripMainDir = match.replace(`${relativeComponentPath}${path.sep}`, '');
+        //     files[stripMainDir] = match;
+        //   }
+        // });
 
         if (!parsedId) {
-          parsedId = getValidBitId( namespace || oneBeforeLastDir, lastDir);
+          parsedId = BitId.getValidBitId(namespace || oneBeforeLastDir, lastDir);
         }
         return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
       } else { // is file
@@ -98,10 +86,10 @@ export default async function addAction(componentPaths: string[], id?: string, m
             dirName = path.dirname(absPath);
           }
           const lastDir = R.last(dirName.split(path.sep));
-          parsedId = getValidBitId(namespace || lastDir, pathParsed.name);
+          parsedId = BitId.getValidBitId(namespace || lastDir, pathParsed.name);
         }
 
-        const files = { [pathParsed.base]: relativeFilePath };
+        const files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
 
         if (componentExists) {
           return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
@@ -114,7 +102,9 @@ export default async function addAction(componentPaths: string[], id?: string, m
     const mapValues = await Promise.all(mapValuesP);
     if (mapValues.length === 1) return addToBitMap(mapValues[0]);
 
-    const files = R.mergeAll(mapValues.map(value => value.files));
+    const files = mapValues.reduce((a, b) => {
+      return a.concat(b.files);
+    }, []);
     const componentId = mapValues[0].componentId;
 
     return addToBitMap({ componentId, files, mainFile: main, testsFiles: tests });
@@ -126,7 +116,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
   const componentPathsStats = {};
   componentPaths.forEach((componentPath) => {
     componentPathsStats[componentPath] = {
-      isDirectory: isDirectory(componentPath)
+      isDir: isDir(componentPath)
     };
   });
 
@@ -145,7 +135,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
     logger.debug('bit add - one component');
     // when a user enters more than one directory, he would like to keep the directories names
     // so then when a component is imported, it will write the files into the original directories
-    const isPathDirectory = c => c.isDirectory;
+    const isPathDirectory = c => c.isDir;
     const onlyDirs = R.filter(isPathDirectory, componentPathsStats);
     keepDirectoriesName = Object.keys(onlyDirs).length > 1;
     const addedOne = await addOneComponent(componentPathsStats, bitMap, consumer, keepDirectoriesName);

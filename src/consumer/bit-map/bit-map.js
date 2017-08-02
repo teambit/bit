@@ -1,6 +1,8 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
+import find from 'lodash.find';
+import pickBy from 'lodash.pickby';
 import logger from '../../logger/logger';
 import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_DIR } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
@@ -14,7 +16,6 @@ export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 export type ComponentMap = {
   files: Object, // the keys are the presentation on the model, the values are the presentation on the file system
   mainFile: string,
-  testsFiles: string[],
   rootDir?: string, // needed to search for the component's bit.json. If it's undefined, the component probably don't have bit.json
   origin: ComponentOrigin,
   dependencies: string[], // needed for the bind process
@@ -80,13 +81,22 @@ export default class BitMap {
   }
 
   _getMainFile(mainFile: string, componentMap: ComponentMap) {
-    const baseMainFile = mainFile ? path.basename(mainFile) : DEFAULT_INDEX_NAME;
-    if (!componentMap.files[baseMainFile]) {
-      const files = Object.keys(componentMap.files);
-      // when a user didn't enter the mainFile but there is only one file, that file is the main file
-      if (!mainFile && files.length === 1) return files[0];
-      throw new MissingMainFile(baseMainFile, files);
+    let baseMainFile = mainFile || DEFAULT_INDEX_NAME;
+    const files = componentMap.files;
+    // Take the file path as main in case there is only one file
+    if (!mainFile && files.length === 1) return files[0].relativePath;
+
+    // Search the relativePath of the main file
+    let mainFileFromFiles = R.find(R.propEq('relativePath', baseMainFile))(files);
+
+    // Search the base name of the main file and transfer to relativePath
+    if (!mainFileFromFiles){
+      mainFileFromFiles = R.find(R.propEq('name', baseMainFile))(files);
+      baseMainFile = mainFileFromFiles ? mainFileFromFiles.relativePath : baseMainFile;
     }
+
+    // When there is more then one file and the main file not found there
+    if (!mainFileFromFiles) throw new MissingMainFile(baseMainFile, files.map((file) => file.relativePath));
     return baseMainFile;
   }
 
@@ -111,11 +121,10 @@ export default class BitMap {
     }
   }
 
-  addComponent({ componentId, componentPaths, mainFile, testsFiles, origin, parent, rootDir }: {
+  addComponent({ componentId, files, mainFile, origin, parent, rootDir }: {
     componentId: BitId,
-    componentPaths: Object<string>,
+    files: Object[],
     mainFile?: string,
-    testsFiles?: string[],
     origin?: ComponentOrigin,
     parent?: BitId,
     rootDir?: string
@@ -128,27 +137,23 @@ export default class BitMap {
       if (!parent) throw new Error(`Unable to add indirect dependency ${componentId}, without "parent" parameter`);
       this.addDependencyToParent(parent, componentIdStr);
     }
-    this._validateAndFixPaths(componentPaths, isDependency);
+    // TODO: Check if we really need this, or should be moved to add?
+    // this._validateAndFixPaths(componentPaths, isDependency);
+
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
-      if (componentPaths) {
-        const allPaths = R.merge(this.components[componentIdStr].files, componentPaths);
-        this.components[componentIdStr].files = allPaths;
-      }
+
+      // TODO: merge with previous
+      this.components[componentIdStr].files = files;
+
       if (mainFile) {
-        this.components[componentIdStr].mainFile = this
-          ._getMainFile(mainFile, this.components[componentIdStr]);
-      }
-      if (testsFiles && testsFiles.length) {
-        const allTestsFiles = testsFiles.concat(this.components[componentIdStr].testsFiles);
-        this.components[componentIdStr].testsFiles = R.uniq(allTestsFiles);
+        this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
       }
     } else {
-      this.components[componentIdStr] = { files: componentPaths };
+      this.components[componentIdStr] = { files };
       this.components[componentIdStr].origin = origin;
 
       this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
-      this.components[componentIdStr].testsFiles = testsFiles && testsFiles.length ? testsFiles : [];
     }
     if (rootDir) {
       this.components[componentIdStr].rootDir = this._makePathRelativeToProjectRoot(rootDir);
@@ -200,8 +205,7 @@ export default class BitMap {
 
   getMainFileOfComponent(id: string) {
     const component = this.getComponent(id, SHOULD_THROW);
-    const mainFile = component.mainFile;
-    return this.components[id].files[mainFile];
+    return component.mainFile;
   }
 
   getRootDirOfComponent(id: string){
@@ -228,11 +232,7 @@ export default class BitMap {
    * @memberof BitMap
    */
   getComponentObjectByPath(path: string): Object<string, ComponentMap> {
-    return R.pickBy(R.compose(
-                      R.contains(path),
-                      R.values(),
-                      R.prop('files')),
-                    this.components);
+    return pickBy(this.components, (componentObject, componentId) => find(componentObject.files, (file) => file.relativePath === path));
   }
 
   /**

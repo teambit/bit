@@ -26,6 +26,7 @@ import parseSSHUrl from './ssh/parse-url';
 import listDirectories from './fs/list-directories';
 import isDirEmptySync from './is-dir-empty-sync';
 import isDirEmpty from './fs/is-dir-empty';
+import isDir from './is-dir';
 import writeFile from './fs-write-file';
 import readFile from './fs-read-file';
 import immutableUnshift from './immutable-unshift';
@@ -57,6 +58,7 @@ import removeFromRequireCache from './remove-from-require-cache';
 import splitBy from './array/split-by';
 import outputFile from './fs-output-file';
 import getLatestVersionNumber from './resolveLatestVersion';
+
 export {
   parseSSHUrl,
   splitBy,
@@ -92,6 +94,7 @@ export {
   contains,
   removeContainingDirIfEmpty,
   isBitUrl,
+  isDir,
   mapObject,
   resolveHomePath,
   propogateUntil,

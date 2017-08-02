@@ -143,11 +143,11 @@ export default class SourceRepository {
     await consumerComponent.build({ scope: this.scope, consumer });
     const impl = consumerComponent.impl ? Source.from(bufferFrom(consumerComponent.impl.src)) : null;
     const dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
-      return { name: dist.basename, relativePath: dist.relative, file: Source.from(dist.contents) };
+      return { name: dist.basename, relativePath: dist.relative, file: Source.from(dist.contents), test: dist.test };
     }) : null;
     const specs = consumerComponent.specs ? Source.from(bufferFrom(consumerComponent.specs.src)): null;
     const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
-      return { name: file.basename, relativePath: file.relative, file: Source.from(file.contents) };
+      return { name: file.basename, relativePath: file.relative, file: Source.from(file.contents), test: file.test };
     }) : null;
 
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);

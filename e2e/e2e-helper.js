@@ -93,7 +93,7 @@ export default class Helper {
     return this.runCmd(`bit import ${this.remoteScope}/${id}`);
   }
 
-  importCompiler(id: string = 'bit.envs/compilers/babel3') {
+  importCompiler(id: string = 'bit.envs/compilers/babel4') {
     this.runCmd('bit config set hub_domain hub-stg.bitsrc.io'); // todo: once the new babel compiler is on prod, remove this line
     this.runCmd(`bit import ${id} --compiler`);
   }

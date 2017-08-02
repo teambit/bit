@@ -1,5 +1,5 @@
 {
-    "ranm8.utilities/object/has-own-property::1": {
+    "love/object/has-own-property::1": {
         "files": {
             "has-own-property.js": "src/utils/object/has-own-property.js"
         },
@@ -7,7 +7,7 @@
         "mainFile": "has-own-property.js",
         "testsFiles": []
     },
-    "ranm8.utilities/array/first::1": {
+    "love/array/first::1": {
         "files": {
             "first.js": "src/utils/array/first.js"
         },
@@ -15,7 +15,7 @@
         "mainFile": "first.js",
         "testsFiles": []
     },
-    "ranm8.utilities/object/values::1": {
+    "love/object/values::1": {
         "files": {
             "values.js": "src/utils/object/values.js"
         },
@@ -23,7 +23,7 @@
         "mainFile": "values.js",
         "testsFiles": []
     },
-    "ranm8.utilities/fs/list-directories::1": {
+    "love/fs/list-directories::1": {
         "files": {
             "list-directories.js": "src/utils/fs/list-directories.js"
         },
@@ -31,7 +31,7 @@
         "mainFile": "list-directories.js",
         "testsFiles": []
     },
-    "ranm8.utilities/string/clean-char::1": {
+    "love/string/clean-char::1": {
         "files": {
             "clean-char.js": "src/utils/string/clean-char.js"
         },
@@ -39,7 +39,7 @@
         "mainFile": "clean-char.js",
         "testsFiles": []
     },
-    "ranm8.utilities/string/contains::1": {
+    "love/string/contains::1": {
         "files": {
             "contains.js": "src/utils/string/contains.js"
         },
@@ -47,7 +47,7 @@
         "mainFile": "contains.js",
         "testsFiles": []
     },
-    "ranm8.utilities/string/to-base64::1": {
+    "love/string/to-base64::1": {
         "files": {
             "to-base64.js": "src/utils/string/to-base64.js"
         },
@@ -55,7 +55,7 @@
         "mainFile": "to-base64.js",
         "testsFiles": []
     },
-    "ranm8.utilities/ssh/parse-url::1": {
+    "love/ssh/parse-url::1": {
         "files": {
             "parse-url.js": "src/utils/ssh/parse-url.js"
         },
@@ -63,7 +63,7 @@
         "mainFile": "parse-url.js",
         "testsFiles": []
     },
-    "ranm8.utilities/map/to-object::1": {
+    "love/map/to-object::1": {
         "files": {
             "to-object.js": "src/utils/map/to-object.js"
         },
@@ -71,7 +71,7 @@
         "mainFile": "to-object.js",
         "testsFiles": []
     },
-    "ranm8.utilities/fs/dir-path-parser::1": {
+    "love/fs/dir-path-parser::1": {
         "files": {
             "dir-path-parser.js": "src/utils/fs/dir-path-parser.js"
         },
@@ -79,7 +79,7 @@
         "mainFile": "dir-path-parser.js",
         "testsFiles": []
     },
-    "ranm8.utilities/encryption/sha1::1": {
+    "love/encryption/sha1::1": {
         "files": {
             "sha1.js": "src/utils/encryption/sha1.js"
         },
@@ -87,7 +87,7 @@
         "mainFile": "sha1.js",
         "testsFiles": []
     },
-    "ranm8.utilities/number/is-number::1": {
+    "love/number/is-number::1": {
         "files": {
             "is-number.js": "src/utils/number/is-number.js"
         },
@@ -95,7 +95,7 @@
         "mainFile": "is-number.js",
         "testsFiles": []
     },
-    "ranm8.utilities/object/foreach::1": {
+    "love/object/foreach::1": {
         "files": {
             "foreach.js": "src/utils/object/foreach.js"
         },
@@ -103,7 +103,7 @@
         "mainFile": "foreach.js",
         "testsFiles": []
     },
-    "ranm8.utilities/object/to-tuple-array::1": {
+    "love/object/to-tuple-array::1": {
         "files": {
             "to-tuple-array.js": "src/utils/object/to-tuple-array.js"
         },
@@ -111,7 +111,7 @@
         "mainFile": "to-tuple-array.js",
         "testsFiles": []
     },
-    "ranm8.utilities/number/is-numeric::1": {
+    "love/number/is-numeric::1": {
         "files": {
             "is-numeric.js": "src/utils/number/is-numeric.js"
         },
@@ -119,7 +119,7 @@
         "mainFile": "is-numeric.js",
         "testsFiles": []
     },
-    "ranm8.utilities/string/is-string::1": {
+    "love/string/is-string::1": {
         "files": {
             "is-string.js": "src/utils/string/is-string.js"
         },
@@ -127,7 +127,7 @@
         "mainFile": "is-string.js",
         "testsFiles": []
     },
-    "ranm8.utilities/array/diff::1": {
+    "love/array/diff::1": {
         "files": {
             "diff.js": "src/utils/array/diff.js"
         },
@@ -135,7 +135,7 @@
         "mainFile": "diff.js",
         "testsFiles": []
     },
-    "ranm8.utilities/array/split-by::1": {
+    "love/array/split-by::1": {
         "files": {
             "split-by.js": "src/utils/array/split-by.js"
         },
@@ -143,7 +143,7 @@
         "mainFile": "split-by.js",
         "testsFiles": []
     },
-    "ranm8.utilities/buffer/from::1": {
+    "love/buffer/from::1": {
         "files": {
             "from.js": "src/utils/buffer/from.js"
         },
@@ -151,7 +151,7 @@
         "mainFile": "from.js",
         "testsFiles": []
     },
-    "ranm8.utilities/fs/propogate-until::1": {
+    "love/fs/propogate-until::1": {
         "files": {
             "propogate-until.js": "src/utils/fs/propogate-until.js"
         },
@@ -159,7 +159,7 @@
         "mainFile": "propogate-until.js",
         "testsFiles": []
     },
-    "ranm8.utilities/array/flatten::1": {
+    "love/array/flatten::1": {
         "files": {
             "flatten.js": "src/utils/array/flatten.js"
         },
@@ -167,7 +167,7 @@
         "mainFile": "flatten.js",
         "testsFiles": []
     },
-    "ranm8.utilities/object/filter::1": {
+    "love/object/filter::1": {
         "files": {
             "filter.js": "src/utils/object/filter.js"
         },
@@ -175,7 +175,7 @@
         "mainFile": "filter.js",
         "testsFiles": []
     },
-    "ranm8.utilities/object/empty::1": {
+    "love/object/empty::1": {
         "files": {
             "empty.js": "src/utils/object/empty.js"
         },
@@ -183,7 +183,7 @@
         "mainFile": "empty.js",
         "testsFiles": []
     },
-    "ranm8.utilities/array/flat-map::1": {
+    "love/array/flat-map::1": {
         "files": {
             "flat-map.js": "src/utils/array/flat-map.js"
         },
@@ -191,7 +191,7 @@
         "mainFile": "flat-map.js",
         "testsFiles": []
     },
-    "ranm8.utilities/string/from-base64::1": {
+    "love/string/from-base64::1": {
         "files": {
             "from-base64.js": "src/utils/string/from-base64.js"
         },
@@ -199,7 +199,7 @@
         "mainFile": "from-base64.js",
         "testsFiles": []
     },
-    "ranm8.utilities/fs/is-dir-empty::1": {
+    "love/fs/is-dir-empty::1": {
         "files": {
             "is-dir-empty.js": "src/utils/fs/is-dir-empty.js"
         },
@@ -207,7 +207,7 @@
         "mainFile": "is-dir-empty.js",
         "testsFiles": []
     },
-    "ranm8.utilities/string/clean-bang::1": {
+    "love/string/clean-bang::1": {
         "files": {
             "clean-bang.js": "src/utils/string/clean-bang.js"
         },
@@ -215,7 +215,7 @@
         "mainFile": "clean-bang.js",
         "testsFiles": []
     },
-    "ranm8.utilities/fs/current-dir-name::1": {
+    "love/fs/current-dir-name::1": {
         "files": {
             "current-dir-name.js": "src/utils/fs/current-dir-name.js"
         },
@@ -223,7 +223,7 @@
         "mainFile": "current-dir-name.js",
         "testsFiles": []
     },
-    "ranm8.utilities/buffer/to-read-stream::1": {
+    "love/buffer/to-read-stream::1": {
         "files": {
             "to-read-stream.js": "src/utils/buffer/to-read-stream.js"
         },

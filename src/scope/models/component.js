@@ -179,8 +179,7 @@ export default class Component extends BitObject {
               lang: this.lang,
               implFile: version.impl ? version.impl.name : null,
               specsFile: version.specs ? version.specs.name : null,
-              mainFileName: version.mainFileName ? version.mainFileName: null,
-              testsFileNames: version.testsFileNames ? version.testsFileNames : null,
+              mainFile: version.mainFile ? version.mainFile: null,
               filesNames: version.files ? version.files.map(file => file.name) : null,
               compilerId: version.compiler,
               testerId: version.tester,
@@ -193,8 +192,8 @@ export default class Component extends BitObject {
               packageDependencies: version.packageDependencies,
               impl: impl ? new Impl(impl.toString()) : null,
               specs: specs ? new Specs(specs.toString()) : null,
-              files: files,
-              dists: dists,
+              files,
+              dists,
               docs: version.docs,
               license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
               specsResults:

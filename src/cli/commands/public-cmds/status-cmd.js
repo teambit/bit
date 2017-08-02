@@ -21,13 +21,8 @@ export default class Status extends Command {
     return status();
   }
 
-  report({ untrackedComponents, newComponents, modifiedComponent, stagedComponents }
+  report({ newComponents, modifiedComponent, stagedComponents }
   : { inline: StatusObj[], sources: StatusObj[] }): string {
-    const untrackedComponentsOutput = immutableUnshift(
-      untrackedComponents.map(formatBitString),
-      untrackedComponents.length ? chalk.underline.white('Untracked Components') : chalk.green('There are no untracked components')
-    ).join('\n');
-
     const newComponentsOutput = immutableUnshift(
       newComponents.map(formatBitString),
       newComponents.length ? chalk.underline.white('New Components') : chalk.green('There are no new components')
@@ -44,7 +39,7 @@ export default class Status extends Command {
     ).join('\n');
 
     // todo: new and modified components should be in the same section "Modified Components"
-    return [untrackedComponentsOutput, newComponentsOutput, modifiedComponentOutput, stagedComponentsOutput].join(
+    return [newComponentsOutput, modifiedComponentOutput, stagedComponentsOutput].join(
       chalk.underline('\n                         \n')
     + chalk.white('\n'));
   }

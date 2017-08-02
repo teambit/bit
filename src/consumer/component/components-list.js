@@ -44,6 +44,9 @@ export default class ComponentsList {
       }
     });
 
+    // uncomment to easily understand why two components are considered as modified
+    // console.log('componentFromModel', componentFromModel.id());
+    // console.log('version', version.id());
     return componentFromModel.hash().hash !== version.hash().hash;
   }
 
@@ -59,7 +62,11 @@ export default class ComponentsList {
       const componentsVersions = {};
       componentsObjects.forEach((componentObjects) => {
         const latestVersionRef = componentObjects.versions[componentObjects.latest()];
-        componentsVersionsP[componentObjects.id()] = this.scope.getObject(latestVersionRef.hash);
+        const ObjId = new BitId({ scope: componentObjects.scope,
+          box: componentObjects.box,
+          name: componentObjects.name,
+          version: componentObjects.scope ? componentObjects.latest() : null });
+        componentsVersionsP[ObjId.toString()] = this.scope.getObject(latestVersionRef.hash);
       });
 
       const allVersions = await Promise.all(R.values(componentsVersionsP));
@@ -90,13 +97,12 @@ export default class ComponentsList {
     const modifiedComponents = [];
     Object.keys(objectComponents).forEach(async (id) => {
       const bitId = BitId.parse(id);
-      const newId = bitId.changeScope(null);
-      const componentFromFS = objFromFileSystem[newId.toString()];
+      const componentFromFS = objFromFileSystem[bitId.toString()];
 
       if (componentFromFS) {
         const isModified = await this.isComponentModified(objectComponents[id], componentFromFS);
         if (isModified) {
-          modifiedComponents.push(newId.toString());
+          modifiedComponents.push(bitId.toString(true, true));
         }
       } else {
         logger.warn(`a component ${id} exists in the model but not on the file system`);
@@ -186,7 +192,7 @@ export default class ComponentsList {
     const fromBitMap = await this.getFromBitMap();
     const ids = Object.keys(fromBitMap);
     if (withScopeName) return ids;
-    return ids.map(id => BitId.parse(id).toString(true, true));
+    return ids.map(id => BitId.parse(id).toString(true, false));
   }
 
   async onFileSystemAndNotOnBitMap(): Promise<Component[]> {

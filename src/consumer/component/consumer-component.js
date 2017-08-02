@@ -68,8 +68,7 @@ export default class Component {
   implFile: ?string;
   /** @deprecated **/
   specsFile: ?string;
-  mainFileName: string;
-  testsFileNames: string[];
+  mainFile: string;
   filesNames: string[];
   compilerId: ?BitId;
   testerId: ?BitId;
@@ -168,8 +167,7 @@ export default class Component {
                 lang,
                 implFile,
                 specsFile,
-                mainFileName,
-                testsFileNames,
+                mainFile,
                 filesNames,
                 compilerId,
                 testerId,
@@ -192,8 +190,7 @@ export default class Component {
     this.lang = lang || DEFAULT_LANGUAGE;
     this.implFile = implFile || DEFAULT_IMPL_NAME;
     this.specsFile = specsFile || DEFAULT_SPECS_NAME;
-    this.mainFileName = mainFileName;
-    this.testsFileNames = testsFileNames || [];
+    this.mainFile = mainFile;
     this.filesNames = filesNames || [];
     this.compilerId = compilerId;
     this.testerId = testerId;
@@ -347,7 +344,7 @@ export default class Component {
 
       calculatedBitDir = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
 
-      this.files.forEach(file => file.updatePaths({newBase: calculatedBitDir, newRelative: componentMap.files[file.basename]} ));
+      this.files.forEach(file => file.updatePaths({ newBase: calculatedBitDir }));
       this.files.forEach(file => file.write(undefined, force));
 
       // todo: while refactoring the dist for the new changes, make sure it writes to the proper
@@ -372,15 +369,12 @@ export default class Component {
       this.files = [implVinylFile];
     }
 
-    const filesToAdd = {};
-    this.files.forEach((file) => {
-      filesToAdd[file.basename] = file.relative;
-    });
+    const filesForBitMap = this.files.map((file) => { return { name: file.basename, relativePath: file.relative, test: file.test }; });
+
     bitMap.addComponent({
       componentId: this.id,
-      componentPaths: filesToAdd,
-      mainFile: this.mainFileName,
-      testsFiles: this.testsFileNames,
+      files: filesForBitMap,
+      mainFile: this.mainFile,
       rootDir: calculatedBitDir,
       origin,
       parent
@@ -409,7 +403,7 @@ export default class Component {
       return Promise.resolve();
     };
 
-    const testFiles = this.files.filter(file => file.isTest);
+    const testFiles = this.files.filter(file => file.test);
     if (!this.testerId || !testFiles) return null;
 
     let testerFilePath;
@@ -467,8 +461,8 @@ export default class Component {
 
         await Promise.all(saveImplDist);
 
-        const testDists = this.dists.filter(dist => dist.isTest);
-        return run(this.mainFileName, testDists);
+        const testDists = this.dists.filter(dist => dist.test);
+        return run(this.mainFile, testDists);
       }
 
       const isolatedEnvironment = new IsolatedEnvironment(scope);
@@ -575,7 +569,7 @@ export default class Component {
       name: this.name,
       box: this.box,
       version: this.version ? this.version.toString() : null,
-      mainFile: this.mainFileName,
+      mainFile: this.mainFile,
       scope: this.scope,
       lang: this.lang,
       implFile: this.implFile,
@@ -691,15 +685,9 @@ export default class Component {
       }
     }
 
-    const vinylFiles = Object.keys(files).map((file) => {
-      const filePath = path.join(bitDirFullPath, files[file]);
-      return SourceFile.load(filePath, consumerBitJson.distTarget, bitDirFullPath, consumerPath);
-    });
-
-    // TODO: Decide about the model representation
-    componentMap.testsFiles.forEach((testFile) => {
-      const filePath = path.join(bitDirFullPath, testFile);
-      vinylFiles.push(SourceFile.load(filePath, consumerBitJson.distTarget, bitDirFullPath, consumerPath, { isTest: true }));
+    const vinylFiles = files.map((file) => {
+      const filePath = path.join(bitDirFullPath, file.relativePath);
+      return SourceFile.load(filePath, consumerBitJson.distTarget, bitDirFullPath, consumerPath, {test: file.test});
     });
 
     return new Component({
@@ -710,7 +698,7 @@ export default class Component {
       lang: bitJson.lang,
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
-      mainFileName: componentMap.mainFile,
+      mainFile: componentMap.mainFile,
       files: vinylFiles || [],
       dependencies,
       packageDependencies,
@@ -738,6 +726,7 @@ export default class Component {
       path: path.join(consumerPath, bitPath, files['impl.js']),
       contents: new Buffer(Impl.create(name, compilerId, scope).src)
     });
+    implVinylFile.test = false;
 
     return new Component({
       name,

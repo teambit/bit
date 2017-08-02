@@ -111,4 +111,24 @@ describe('bit export command', function () {
       expect(output.includes('utils/is-string')).to.be.true;
     });
   });
+
+  describe('with multiple versions', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportComponent('bar/foo');
+      helper.commitComponent('bar/foo');
+      helper.exportComponent('bar/foo');
+    });
+    it('should export it with no errors', () => {
+      const output = helper.runCmd(`bit list ${helper.remoteScope}`);
+      expect(output.includes('Total 1 components')).to.be.true;
+      expect(output.includes('bar/foo')).to.be.true;
+      expect(output.includes('2')).to.be.true; // this is the version
+    });
+  });
 });

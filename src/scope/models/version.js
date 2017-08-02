@@ -20,12 +20,14 @@ type CiProps = {
 type SourceFile = {
   name: string,
   path: string,
+  test: boolean,
   file: Ref
 }
 
 type DistFile = {
   name: string,
   path: string,
+  test: boolean,
   file: Ref
 }
 
@@ -69,8 +71,7 @@ export default class Version extends BitObject {
     name: string,
     file: Ref
   };
-  mainFileName: string;
-  testsFileNames: string[];
+  mainFile: string;
   files: ?Array<SourceFile>;
   dists: ?Array<DistFile>;
   compiler: ?BitId;
@@ -86,8 +87,7 @@ export default class Version extends BitObject {
   constructor({
     impl,
     specs,
-    mainFileName,
-    testsFileNames,
+    mainFile,
     files,
     dists,
     compiler,
@@ -103,8 +103,7 @@ export default class Version extends BitObject {
     super();
     this.impl = impl;
     this.specs = specs;
-    this.mainFileName = mainFileName;
-    this.testsFileNames = testsFileNames;
+    this.mainFile = mainFile;
     this.files = files;
     this.dists = dists;
     this.compiler = compiler;
@@ -124,8 +123,7 @@ export default class Version extends BitObject {
     return JSON.stringify(filterObject({
       impl: obj.impl,
       specs: obj.specs,
-      mainFileName: obj.mainFileName,
-      testsFileNames: obj.testsFileNames,
+      mainFile: obj.mainFile,
       files: obj.files,
       compiler: obj.compiler,
       tester: obj.tester,
@@ -175,16 +173,17 @@ export default class Version extends BitObject {
         return {
           file: file.file.toString(),
           relativePath: file.relativePath,
-          name: file.name
+          name: file.name,
+          test: file.test
         };
       }) : null,
-      mainFileName: this.mainFileName,
-      testsFileNames: this.testsFileNames,
+      mainFile: this.mainFile,
       dists: this.dists ? this.dists.map((dist) => {
         return {
           file: dist.file.toString(),
           relativePath: dist.relativePath,
-          name: dist.name
+          name: dist.name,
+          test: dist.test
         };
       }) : null,
       compiler: this.compiler ? this.compiler.toString(): null,
@@ -214,8 +213,7 @@ export default class Version extends BitObject {
     const {
       impl,
       specs,
-      mainFileName,
-      testsFileNames,
+      mainFile,
       dists,
       files,
       compiler,
@@ -248,13 +246,12 @@ export default class Version extends BitObject {
         file: Ref.from(specs.file),
         name: specs.name
       } : null,
-      mainFileName,
-      testsFileNames,
+      mainFile,
       files: files ? files.map((file) => {
-        return { file: Ref.from(file.file), relativePath: file.relativePath, name: file.name };
+        return { file: Ref.from(file.file), relativePath: file.relativePath, name: file.name, test: file.test };
       }) : null,
       dists: dists ? dists.map((dist) => {
-        return { file: Ref.from(dist.file), relativePath: dist.relativePath, name: dist.name };
+        return { file: Ref.from(dist.file), relativePath: dist.relativePath, name: dist.name, test: dist.test };
       }) : null,
       compiler: compiler ? BitId.parse(compiler) : null,
       tester: tester ? BitId.parse(tester) : null,
@@ -305,13 +302,12 @@ export default class Version extends BitObject {
         file: specs.hash(),
         name: component.specsFile
       }: null,
-      mainFileName: component.mainFileName,
-      testsFileNames: component.testsFileNames,
+      mainFile: component.mainFile,
       files: files ? files.map((file) => {
-        return { file: file.file.hash(), relativePath: file.relativePath, name: file.name };
+        return { file: file.file.hash(), relativePath: file.relativePath, name: file.name, test: file.test };
       }): null,
       dists: dists ? dists.map((dist) => {
-        return { file: dist.file.hash(), relativePath: dist.relativePath, name: dist.name };
+        return { file: dist.file.hash(), relativePath: dist.relativePath, name: dist.name, test: dist.test };
       }): null,
       compiler: component.compilerId,
       tester: component.testerId,
