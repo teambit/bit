@@ -220,10 +220,10 @@ export default class Consumer {
 
       // We only care of the relevant sub tree from now on
       // We can be sure it's now exists because it's happen after the assign in case it was missing
-      dependenciesTree.tree.files = traverseDepsTreeRecursive(fullDependenciesTree.tree, mainFile) || {};
+      const files = traverseDepsTreeRecursive(fullDependenciesTree.tree, mainFile).concat(mainFile) || [mainFile];
+      const packages = {};
 
       const dependenciesMissingInMap = [];
-      const files = dependenciesTree.tree.files || [];
       files.forEach((filePath) => {
         // Trying to get the idString from map first
         const dependencyIdString = dependenciesPathIdMap.get(filePath) || bitMap.getComponentIdByPath(filePath);
@@ -237,6 +237,10 @@ export default class Consumer {
           if (idWithConcreteVersion.toString() !== dependencyIdString) {
             const dependencyId = BitId.parse(dependencyIdString);
             dependencies.push({ id: dependencyId, relativePath: filePath });
+          } else {
+            // Take package deps from all files
+            const currentPackagesDeps = dependenciesTree.tree[filePath].packages;
+            Object.assign(packages, currentPackagesDeps);
           }
         }
       });
@@ -245,7 +249,7 @@ export default class Consumer {
 
       // TODO: add the bit/ dependencies as well
       component.dependencies = dependencies;
-      component.packageDependencies = dependenciesTree.tree.packages || {};
+      component.packageDependencies = packages;
       return component;
     });
 
