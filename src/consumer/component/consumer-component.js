@@ -430,7 +430,7 @@ export default class Component {
               testerFilePath,
               testerId: this.testerId,
               implDistPath: mainFile,
-              specDistPath: testFile.distFilePath,
+              specDistPath: testFile.path,
             });
           });
           const specsResults = await Promise.all(specsResultsP);
@@ -476,8 +476,8 @@ export default class Component {
             const specDistWrite = component.dists ?
               component.dists.map(file => file.write()) : Promise.resolve();
             return Promise.all(specDistWrite).then(() => {
-              const testFiles = component.dists.filter(file => file.isTest);
-              return run({ mainFile: component.mainFileName, distTestFiles: testFiles }).then((results) => {
+              const testFiles = component.dists.filter(file => file.test);
+              return run(component.mainFile, testFiles).then((results) => {
                 return isolatedEnvironment.destroy().then(() => results);
               });
             });
