@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import find from 'lodash.find';
-import pickBy from 'lodash.pickBy';
+import pickBy from 'lodash.pickby';
 import logger from '../../logger/logger';
 import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_DIR } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
