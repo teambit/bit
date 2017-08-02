@@ -15,6 +15,26 @@ describe('bit export command', function () {
   after(() => {
     helper.destroyEnv();
   });
+  describe('of one component', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.exportComponent('bar/foo');
+    });
+    it('should not write the exported component into bit.json', () => {
+      const bitJson = helper.readBitJson();
+      expect(bitJson.dependencies).not.to.have.property(`${helper.remoteScope}/bar/foo`);
+    });
+    it('should write the exported component into bit.map', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo::1`);
+    });
+  });
   describe('with multiple components, each has one file', () => {
     before(() => {
       helper.cleanEnv();
