@@ -227,12 +227,27 @@ export default class BitMap {
    *    componentId: component
    * }
    *
+   * @param {string} rootPath relative to consumer - as stored in bit.map files object
+   * @returns {Object<string, ComponentMap>}
+   * @memberof BitMap
+   */
+  getComponentObjectByPath(filePath: string): Object<string, ComponentMap> {
+    return pickBy(this.components, (componentObject, componentId) => find(componentObject.files, (file) => file.relativePath ===filePath));
+  }
+
+  /**
+   *
+   * Return the full component object by a root path for the component, means:
+   * {
+   *    componentId: component
+   * }
+   * 
    * @param {string} path relative to consumer - as stored in bit.map files object
    * @returns {Object<string, ComponentMap>}
    * @memberof BitMap
    */
-  getComponentObjectByPath(path: string): Object<string, ComponentMap> {
-    return pickBy(this.components, (componentObject, componentId) => find(componentObject.files, (file) => file.relativePath === path));
+  getComponentObjectByRootPath(rootPath: string): Object<string, ComponentMap> {
+    return pickBy(this.components, componentObject => componentObject.rootDir === rootPath);
   }
 
   /**
