@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import sinon from 'sinon';
 
 let logSpy;
-let errorSpy
+let errorSpy;
 
 describe('bit commit command', function () {
   this.timeout(0);
