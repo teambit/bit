@@ -22,7 +22,14 @@ describe('bit show command', function () {
       helper.addComponent('utils/is-string.js');
       helper.commitComponent('utils/is-string');
 
-      const fooBarFixture = "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      const lodashGetPackageJsonFixture = JSON.stringify({
+        name: 'lodash.get',
+        version: '4.4.2'
+      });
+      helper.createFile('node_modules/lodash.get', 'index.js');
+      helper.createFile('node_modules/lodash.get', 'package.json', lodashGetPackageJsonFixture);
+
+      const fooBarFixture = "const isString = require('../utils/is-string.js'); const get = require('lodash.get'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('src', 'mainFile.js', fooBarFixture);
       helper.createFile('src/utils', 'utilFile.js');
       helper.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
@@ -67,9 +74,9 @@ describe('bit show command', function () {
         expect(output).to.have.string(`utils/is-string`, 'Dependencies are wrong');
       });
 
-      it.skip('should render the package dependencies correctly', () => {
+      it('should render the package dependencies correctly', () => {
         expect(output).to.have.string('Packages', 'Packages row is missing');
-        expect(output).to.have.string('FILL WITH PACKAGE NAME', 'Packages are wrong');
+        expect(output).to.have.string('lodash.get', 'Packages are wrong');
       });
 
       it('should render the files correctly', () => {
@@ -133,7 +140,8 @@ describe('bit show command', function () {
       // TODO: update when adding package deps to test case
       it('should include the package dependencies correctly', () => {
         const packageDependencies = output.packageDependencies;
-        expect(packageDependencies).to.be.empty;
+        const depObject = { 'lodash.get': '4.4.2' };
+        expect(packageDependencies).to.include(depObject);
       });
 
       it('should include the files correctly', () => {
