@@ -185,7 +185,7 @@ export default class Consumer {
       const componentMap = bitMap.getComponent(idWithConcreteVersion, true);
       let bitDir = this.getPath();
 
-      if (componentMap && componentMap.rootDir){
+      if (componentMap && componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
       // TODO: Take this from the map (the most up path of all component files)
@@ -458,26 +458,12 @@ export default class Consumer {
     return allComponents;
   }
 
-  async commit(id: string, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
-    const bitId = BitId.parse(id);
-    const component = await this.loadComponent(bitId);
-    await this.scope
-      .putMany({ consumerComponents: [component], message, force, consumer: this, verbose });
-    // await this.driver.runHook('onCommit', [component]); // todo: probably not needed as the bind happens on create
-    return component;
-  }
-
-  async commitAll(message: string, force: ?bool, verbose: ?bool): Promise<Component> {
-    const componentsList = new ComponentsList(this);
-    const commitPendingComponents = await componentsList.listCommitPendingComponents();
-
-    const componentsIds = commitPendingComponents.map(componentId => BitId.parse(componentId));
-    if (R.isEmpty(componentsIds)) return null;
-
+  async commit(ids: BitId[], message: string, force: ?bool, verbose: ?bool): Promise<Component[]> {
+    logger.debug(`committing the following components: ${ids.join(', ')}`);
+    const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const components = await this.loadComponents(componentsIds);
     await this.scope
       .putMany({ consumerComponents: components, message, force, consumer: this, verbose });
-    // await this.driver.runHook('onCommit', components); // todo: probably not needed as the bind happens on create
     return components;
   }
 

@@ -16,7 +16,7 @@ export default function getLatestVersionNumber(bitIds: BitId[] | string[], bitId
   const componentId = getParsed(bitId);
   if (!componentId.getVersion().latest) return bitId;
   const maxByFunc = searchId => (id) => {
-    if (getString(searchId) === getString(id)){
+    if (getString(searchId) === getString(id)) {
       const version = getParsed(id).getVersion();
       if (version.latest) return 10000000;
       return version.versionNum;

@@ -81,6 +81,18 @@ describe('bit commit command', function () {
     });
   });
 
+  describe('commit non-exist component', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+    });
+    it.skip('should not commit another component', () => { // todo: must be fixed ASAP
+      const output = helper.commitComponent('non-exist-comp');
+      expect(output.includes('component bar/foo committed successfully')).to.be.false;
+    });
+  });
+
   describe('commit all components', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
@@ -159,7 +171,7 @@ describe('bit commit command', function () {
       const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
-      
+
       const mainFileFixture = "const isString = require('./utils/is-string.js'); const second = require('./second.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       const secondFileFixture = "const isString = require('./utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('', 'main.js', mainFileFixture);
