@@ -86,7 +86,7 @@ export default class Consumer {
     return this._dirStructure;
   }
 
-  async getBitMap(): BitMap {
+  async getBitMap(): Promise<BitMap> {
     if (!this._bitMap) {
       this._bitMap = await BitMap.load(this.getPath());
     }
@@ -256,18 +256,32 @@ export default class Consumer {
     return Promise.all(components);
   }
 
-  async importAccordingToConsumerBitJson(verbose?: bool, withEnvironments: ?bool,
-                                         cache?: bool = true): Promise<> {
-    const dependencies = BitIds.fromObject(this.bitJson.dependencies);
-    if (R.isNil(dependencies) || R.isEmpty(dependencies)) {
+  async importAccordingToBitJsonAndBitMap(verbose?: bool, withEnvironments: ?bool,
+                                          cache?: bool = true): Promise<> {
+    const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
+    const bitMap = await this.getBitMap();
+    const componentsFromBitMap = bitMap.getAllComponents(COMPONENT_ORIGINS.AUTHORED);
+
+    if ((R.isNil(dependenciesFromBitJson) || R.isEmpty(dependenciesFromBitJson)) && R.isEmpty(componentsFromBitMap)) {
       if (!withEnvironments) {
         return Promise.reject(new NothingToImport());
       } else if (R.isNil(this.testerId) && R.isNil(this.compilerId)) {
         return Promise.reject(new NothingToImport());
       }
     }
-    const componentDependenciesArr = await this.scope.getMany(dependencies, cache);
-    await this.writeToComponentsDir(componentDependenciesArr);
+    let componentsAndDependenciesBitJson;
+    let componentsAndDependenciesBitMap;
+    if (dependenciesFromBitJson) {
+      componentsAndDependenciesBitJson = await this.scope.getMany(dependenciesFromBitJson, cache);
+      await this.writeToComponentsDir(componentsAndDependenciesBitJson);
+    }
+    if (componentsFromBitMap) {
+      const componentsIds = Object.keys(componentsFromBitMap);
+      const componentsIdsParsed = componentsIds.map(id => BitId.parse(id));
+      componentsAndDependenciesBitMap = await this.scope.getMany(componentsIdsParsed, cache);
+      await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false);
+    }
+    const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     if (withEnvironments) {
       const envComponents = await this.scope.installEnvironment({
         ids: [this.testerId, this.compilerId],
@@ -275,11 +289,11 @@ export default class Consumer {
         verbose
       });
       return {
-        dependencies: componentDependenciesArr,
+        dependencies: componentsAndDependencies,
         envDependencies: envComponents,
       };
     }
-    return { dependencies: componentDependenciesArr };
+    return { dependencies: componentsAndDependencies };
   }
 
   async importSpecificComponents(rawIds: ?string[], cache?: boolean, writeToPath?: string) {
@@ -297,7 +311,7 @@ export default class Consumer {
   Promise<{ dependencies: ComponentDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
-      return this.importAccordingToConsumerBitJson(verbose, withEnvironments, cache);
+      return this.importAccordingToBitJsonAndBitMap(verbose, withEnvironments, cache);
     }
     return this.importSpecificComponents(rawIds, cache, writeToPath);
   }
@@ -414,7 +428,7 @@ export default class Consumer {
   }
 
   /**
-   * write the component into '/component' dir (or according to the bit.map) and its
+   * write the components into '/component' dir (or according to the bit.map) and its
    * dependencies nested inside the component directory and under 'dependencies' dir.
    * For example: global/a has a dependency my-scope/global/b::1. The directories will be:
    * project/root/component/global/a/impl.js
@@ -423,15 +437,15 @@ export default class Consumer {
    * In case there are some same dependencies shared between the components, it makes sure to
    * write them only once.
    */
-  async writeToComponentsDir(componentDependencies: ComponentDependencies[], writeToPath?: string):
-  Promise<Component[]> {
+  async writeToComponentsDir(componentDependencies: ComponentDependencies[], writeToPath?: string,
+                             force?: boolean = true): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIds = [];
     const allComponentsP = componentDependencies.map((componentWithDeps) => {
       const bitPath = writeToPath || this.composeBitPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitPath;
       const writeComponentP = componentWithDeps.component
-        .write(bitPath, true, true, bitMap, COMPONENT_ORIGINS.IMPORTED, undefined, this.getPath());
+        .write(bitPath, true, force, bitMap, COMPONENT_ORIGINS.IMPORTED, undefined, this.getPath());
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         if (bitMap.isComponentExist(dependencyId) || dependenciesIds.includes(dependencyId)) {
@@ -441,7 +455,7 @@ export default class Consumer {
         dependenciesIds.push(dependencyId);
         const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
         dep.writtenPath = depBitPath;
-        return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id, this.getPath())
+        return dep.write(depBitPath, true, force, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id, this.getPath())
           .then(() => {
             this._writeEntryPointsForImportedComponent(dep, bitMap);
           });
