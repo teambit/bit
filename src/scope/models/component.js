@@ -156,7 +156,7 @@ export default class Component extends BitObject {
           Promise.all(version.files.map(file =>
             file.file.load(repository)
             .then((content) =>
-             new SourceFile({ base: '.', path: file.relativePath, contents: content.contents })
+             new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test })
             )
           )) : null;
           const distsP = version.dists ?
@@ -164,7 +164,7 @@ export default class Component extends BitObject {
             dist.file.load(repository)
             .then((content) => {
               const relativePathWithDist = path.join(DEFAULT_DIST_DIRNAME, dist.relativePath);
-              return new Dist({ base: '.', path: relativePathWithDist, contents: content.contents });
+              return new Dist({ base: '.', path: relativePathWithDist, contents: content.contents, test: dist.test });
             })
           )) : null;
           const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
