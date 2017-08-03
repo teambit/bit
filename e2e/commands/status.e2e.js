@@ -220,4 +220,32 @@ describe('bit status command', function () {
       expect(output.includes('utils/is-string')).to.be.true;
     });
   });
+  describe('when a component is exported, modified and the project cloned somewhere else', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.exportComponent('bar/foo');
+      helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
+      helper.mimicGitCloneLocalProject();
+      output = helper.runCmd('bit status');
+    });
+    it('should display that component as a modified component', () => {
+      // this also makes sure that bit install does not override existing files
+      expect(output.includes('There are no modified components')).to.be.false;
+
+      expect(output.includes('Modified Components')).to.be.true;
+      expect(output.includes('bar/foo')).to.be.true;
+    });
+    it('should not display that component as staged', () => {
+      expect(output.includes('There are no staged components')).to.be.true;
+    });
+    it('should not display that component as new', () => {
+      expect(output.includes('There are no new components')).to.be.true;
+    });
+  });
 });

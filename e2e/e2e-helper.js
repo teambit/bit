@@ -73,6 +73,14 @@ export default class Helper {
     return this.runCmd('bit init --bare', this.remoteScopePath);
   }
 
+  mimicGitCloneLocalProject() {
+    fs.removeSync(path.join(this.localScopePath, '.bit'));
+    fs.removeSync(path.join(this.localScopePath, 'components'));
+    this.runCmd('bit init');
+    this.addRemoteScope();
+    this.runCmd('bit install');
+  }
+
   commitComponent(id:string = 'bar/foo', commitMsg: string = 'commit-message') {
     return this.runCmd(`bit commit ${id} -m ${commitMsg}`);
   }
