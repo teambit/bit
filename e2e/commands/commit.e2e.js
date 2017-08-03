@@ -115,6 +115,9 @@ describe('bit commit command', function () {
 
     });
 
+    it.skip('Should commit nothing if only some of the commits worked', () => {
+
+    });
 
     // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
     it('Should throw error if there is missing dependencies on file system', () => {
