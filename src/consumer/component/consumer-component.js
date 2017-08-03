@@ -408,69 +408,65 @@ export default class Component {
   async build({ scope, environment, save, consumer, bitMap, verbose }:
           { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool }):
   Promise<string> { // @TODO - write SourceMap Type
-    return new Promise(async (resolve, reject) => {
-      if (!this.compilerId) return resolve(null);
+  
+    if (!this.compilerId) return Promise.resolve(null);
 
-      // verify whether the environment is installed
-      let compiler;
-      const componentMap = bitMap && bitMap.getComponent(this.id.toString());
+    // verify whether the environment is installed
+    let compiler;
+    const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
-      try {
-        compiler = await scope.loadEnvironment(this.compilerId);
-      } catch (err) {
-        if (err instanceof ResolutionException) {
-          environment = true;
-          // todo: once we agree about this approach, get rid of the environment variable
-        } else {
-          return reject(err);
-        }
+    try {
+      compiler = await scope.loadEnvironment(this.compilerId);
+    } catch (err) {
+      if (err instanceof ResolutionException) {
+        environment = true;
+        // todo: once we agree about this approach, get rid of the environment variable
+      } else {
+        return Promise.reject(err);
+      }
+    }
+
+    const installEnvironmentIfNeeded = async (): Promise<any> => {
+      if (environment) {
+        return scope.installEnvironment({
+          ids: [this.compilerId],
+          consumer,
+          verbose,
+        });
       }
 
-      const installEnvironmentIfNeeded = (): Promise<any> => {
-        if (environment) {
-          return scope.installEnvironment({
-            ids: [this.compilerId],
-            consumer,
-            verbose,
-          });
-        }
+      return Promise.resolve();
+    };
 
-        return Promise.resolve();
-      };
+    await installEnvironmentIfNeeded();
 
-      return installEnvironmentIfNeeded()
-        .then(async () => {
-          if (!compiler) {
-            compiler = await scope.loadEnvironment(this.compilerId);
-          }
-          // todo: what files should be built?
-          const buildFilesP = this.buildIfNeeded({
-            condition: !!this.compilerId,
-            compiler,
-            files: this.files,
-            consumer,
-            componentMap,
-            scope
-          });
-
-          return buildFilesP.then((buildedFiles) => {
-            buildedFiles.forEach((file) => {
-              if (file && (!file.contents || !isString(file.contents.toString()))) {
-                throw new Error('builder interface has to return object with a code attribute that contains string');
-              }
-            });
-
-            this.dists = buildedFiles.map(file => new Dist(file));
-
-            if (save) {
-              return scope.sources.updateDist({ source: this })
-                .then(() => resolve(this.dists));
-            }
-
-            return resolve(this.dists);
-          });
-        }).catch(reject);
+    if (!compiler) {
+      compiler = await scope.loadEnvironment(this.compilerId);
+    }
+    // todo: what files should be built?
+    const buildedFiles = await this.buildIfNeeded({
+      condition: !!this.compilerId,
+      compiler,
+      files: this.files,
+      consumer,
+      componentMap,
+      scope
     });
+
+    // return buildFilesP.then((buildedFiles) => {
+    buildedFiles.forEach((file) => {
+      if (file && (!file.contents || !isString(file.contents.toString()))) {
+        throw new Error('builder interface has to return object with a code attribute that contains string');
+      }
+    });
+
+    this.dists = buildedFiles.map(file => new Dist(file));
+
+    if (save) {
+      await scope.sources.updateDist({ source: this });
+    }
+
+    return (this.dists);
   }
 
   toObject(): Object {
