@@ -15,6 +15,8 @@ export default class Create extends Command {
     ['f', 'force', 'override an existing component']
   ];
 
+  private = true;
+
   action([id, ]: [string], { specs, json, force }: any): Promise<*> {
     return create(id, specs, json, force);
   }
