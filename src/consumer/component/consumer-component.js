@@ -408,7 +408,7 @@ export default class Component {
 
     let testerFilePath;
     try {
-      testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
+      testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
     } catch (err) {
       if (err instanceof ResolutionException) {
         environment = true;
@@ -419,7 +419,7 @@ export default class Component {
     await installEnvironmentsIfNeeded();
     try {
       if (!testerFilePath) {
-        testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
+        testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
       }
 
       const run = async (mainFile: string, distTestFiles: Dist[]) => {
@@ -491,7 +491,7 @@ export default class Component {
   async build({ scope, environment, save, consumer, bitMap, verbose }:
           { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool }):
   Promise<string> { // @TODO - write SourceMap Type
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (!this.compilerId) return resolve(null);
 
       // verify whether the environment is installed
@@ -499,7 +499,7 @@ export default class Component {
       const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
       try {
-        compiler = scope.loadEnvironment(this.compilerId);
+        compiler = await scope.loadEnvironment(this.compilerId);
       } catch (err) {
         if (err instanceof ResolutionException) {
           environment = true;
@@ -522,9 +522,9 @@ export default class Component {
       };
 
       return installEnvironmentIfNeeded()
-        .then(() => {
+        .then(async () => {
           if (!compiler) {
-            compiler = scope.loadEnvironment(this.compilerId);
+            compiler = await scope.loadEnvironment(this.compilerId);
           }
           // todo: what files should be built?
           const buildFilesP = this.buildIfNeeded({
