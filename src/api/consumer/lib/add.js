@@ -23,7 +23,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
     const markTestsFiles = (files, relativeTests) => {
       relativeTests.forEach(testPath => {
-        const file = R.find(R.propEq('relativePath', testPath))(files); 
+        const file = R.find(R.propEq('relativePath', testPath))(files);
         if (file){
           file.test = true;
         } else { // Support case when a user didn't enter the test file into the files
@@ -76,7 +76,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
         }
         return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
       } else { // is file
-        const pathParsed = path.parse(componentPath);
+        var resolvedPath = path.resolve(componentPath);//
+        const pathParsed = path.parse(resolvedPath);
         const relativeFilePath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
 
         if (!parsedId) {
