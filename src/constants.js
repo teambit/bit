@@ -193,3 +193,11 @@ export const SKIP_UPDATE_FLAG = '--skip-update';
 export const LICENSE_FILENAME = 'LICENSE';
 
 export const ISOLATED_ENV_ROOT = 'environment';
+
+
+/**
+ * bit add consts
+ */
+export const FILE_NAME = '{FILE_NAME}';
+export const PARENT_FOLDER = '{PARENT_FOLDER}';
+export const REGEX =/{([^}]+)}/g;
