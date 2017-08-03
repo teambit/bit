@@ -123,8 +123,8 @@ export default class Helper {
     fs.outputFileSync(filePath, fixture);
   }
 
-  addComponent(filePaths: string = "bar/foo.js") {
-    return this.runCmd(`bit add ${filePaths}`);
+  addComponent(filePaths: string = "bar/foo.js", cwd = this.localScopePath) {
+    return this.runCmd(`bit add ${filePaths}`, cwd);
   }
 
   addComponentWithOptions(filePaths: string = 'bar/foo.js', options:? Object) {

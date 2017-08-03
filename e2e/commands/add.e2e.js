@@ -1,6 +1,7 @@
 // covers also init, create, commit, import and export commands
 
 import { expect } from 'chai';
+import path from 'path';
 import Helper from '../e2e-helper';
 
 describe('bit add command', function () {
@@ -19,6 +20,14 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('bar/foo2');
     });
+    it('Add component from subdir  ../someFile ', () => {
+      const barPath  = path.join(helper.localScopePath, 'bar/x');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar/x', 'foo1.js');
+      helper.addComponent('../foo2.js', barPath);
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar/foo2');
+    });
     it('Should add component with namespace flag to bitmap with correct name', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.addComponentWithOptions('bar/foo2.js', { 'n': 'test' });
@@ -34,6 +43,7 @@ describe('bit add command', function () {
       const addCmd = () => helper.addComponentWithOptions('bar', { 'n': 'test' });
       expect(addCmd).to.throw(`fatal: the main file index.js was not found in the files list bar/${file1}, bar/${file2}`);
     });
+
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
       helper.createComponent('bar', 'foo2.js');
       const addCmd = () => helper.addComponentWithOptions('bar/foo2.js', { 'n': 'test', 'i': 'jaja' });
