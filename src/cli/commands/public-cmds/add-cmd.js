@@ -11,29 +11,37 @@ export default class Add extends Command {
     ['i', 'id <name>', 'component id, if not specified the name will be '],
     ['m', 'main <file>', 'implementation/index file name'],
     ['t', 'tests <file...>', 'spec/test file name'],
-    ['n', 'namespace <namespace>', 'component namespace']
+    ['n', 'namespace <namespace>', 'component namespace'],
+    ['e', 'exclude <file...>', 'exclude file name'],
   ];
   loader = true;
 
-  action([path]: [string[]], { id, main, tests, namespace }: {
+  action([path]: [string[]], { id, main, tests, namespace, exclude }: {
     id: ?string,
     main: ?string,
     tests: ?string[],
-    namespace:?string
+    namespace:?string,
+    exclude:?String
   }): Promise<*> {
-    // todo: the specs parameter should be an array, it is currently a string
     if (namespace && id) {
       return Promise.reject('You can use either [id] or [namespace] to add a particular component');
     }
     const testsArray = tests ? [tests] : [];
-    return add(path, id, main, namespace, testsArray);
+    const exludedFiles = exclude ? this.splitList(exclude): undefined ;
+    return add(path, id, main, namespace, testsArray, exludedFiles);
   }
 
   report(results: Array<{ id: string, files: string[] }>): string {
     return results.map(result => {
-      const title = chalk.underline(`Tracking component ${chalk.bold(result.id)}:\n`);
-      const files = result.files.map(file => chalk.green(`added ${file.relativePath}`));
-      return title + files.join('\n');
+      if (result.files.length === 0) {
+        const title = chalk.underline.red(`Not Tracking component ${chalk.bold(result.id)}: No files to track!!!`);
+        return title;
+      } else{
+        const title = chalk.underline(`Tracking component ${chalk.bold(result.id)}:\n`);
+        const files = result.files.map(file => chalk.green(`added ${file.relativePath}`));
+        return title + files.join('\n');
+      }
+
     }).join('\n\n');
   }
 }

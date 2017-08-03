@@ -140,6 +140,34 @@ describe('bit status command', function () {
       expect(output.includes('There are no new components')).to.be.true;
     });
   });
+  describe('when a component is exported, modified and then committed', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.exportComponent('bar/foo');
+      // modify the component
+      helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
+      helper.commitComponentBarFoo();
+      output = helper.runCmd('bit status');
+    });
+    it('should not display that component as modified', () => {
+      expect(output.includes('There are no modified components')).to.be.true;
+    });
+    it('should display that component as a staged component with version 2', () => {
+      expect(output.includes('There are no staged components')).to.be.false;
+
+      expect(output.includes('Staged Components')).to.be.true;
+      expect(output.includes('bar/foo::2')).to.be.true;
+    });
+    it('should not display that component as new', () => {
+      expect(output.includes('There are no new components')).to.be.true;
+    });
+  });
   describe('when a component is imported', () => {
     let output;
     before(() => {

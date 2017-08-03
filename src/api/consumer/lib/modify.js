@@ -21,8 +21,8 @@ export default function modify({ id, no_env, verbose }: {
         return Promise.all(c.dependencies.map((dep) => {
           const componentDir = consumer.getBitPathInComponentsDir(dep.id);
           return dep.write(componentDir, true);
-        })).then(() => c.component.write(inlineBitPath, true))
-          .then(component => consumer.driver.runHook('onModify', { component }, component));
+        })).then(() => c.component.write(inlineBitPath, true));
+          // .then(component => consumer.driver.runHook('onModify', { component }, component));
       });
     });
 }

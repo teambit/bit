@@ -53,8 +53,10 @@ export default class BitMap {
     return !!this.components[componentId];
   }
 
-  getAllComponents(): Object<string> {
-    return this.components;
+  getAllComponents(origin?: ComponentOrigin): Object<string> {
+    if (!origin) return this.components;
+    const isOriginMatch = component => component.origin === origin;
+    return R.filter(isOriginMatch, this.components);
   }
 
   _makePathRelativeToProjectRoot(pathToChange: string): string {
@@ -241,7 +243,7 @@ export default class BitMap {
    * {
    *    componentId: component
    * }
-   * 
+   *
    * @param {string} path relative to consumer - as stored in bit.map files object
    * @returns {Object<string, ComponentMap>}
    * @memberof BitMap

@@ -86,7 +86,7 @@ export default class Consumer {
     return this._dirStructure;
   }
 
-  async getBitMap(): BitMap {
+  async getBitMap(): Promise<BitMap> {
     if (!this._bitMap) {
       this._bitMap = await BitMap.load(this.getPath());
     }
@@ -154,6 +154,22 @@ export default class Consumer {
         bits: []
       }
     };
+
+    /**
+     * Run over the deps tree recursively to build the full deps tree for component
+     * @param {Object} tree - which contain direct deps for each file
+     * @param {string} file - file to calculate deps for
+     */
+    const traverseDepsTreeRecursive = (tree, file) => {
+      const deps = tree[file].files;
+      if (!deps || R.isEmpty(deps)) return [];
+      const allDeps = deps.reduce((dpesSoFar, dep) => {
+        const nextDeps = traverseDepsTreeRecursive(tree, dep);
+        return dpesSoFar.concat(nextDeps);
+      }, deps);
+      return R.uniq(allDeps);
+    };
+
     // Map to store the id's of paths we already found in bit.map
     // It's aim is to reduce the search in the bit.map for dependencies ids because it's an expensive operation
     const dependenciesPathIdMap = new Map();
@@ -169,7 +185,7 @@ export default class Consumer {
       const componentMap = bitMap.getComponent(idWithConcreteVersion, true);
       let bitDir = this.getPath();
 
-      if (componentMap && componentMap.rootDir){
+      if (componentMap && componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
       // TODO: Take this from the map (the most up path of all component files)
@@ -204,10 +220,10 @@ export default class Consumer {
 
       // We only care of the relevant sub tree from now on
       // We can be sure it's now exists because it's happen after the assign in case it was missing
-      dependenciesTree.tree = fullDependenciesTree.tree[mainFile] || {};
+      const files = traverseDepsTreeRecursive(fullDependenciesTree.tree, mainFile).concat(mainFile) || [mainFile];
+      const packages = {};
 
       const dependenciesMissingInMap = [];
-      const files = dependenciesTree.tree.files || [];
       files.forEach((filePath) => {
         // Trying to get the idString from map first
         const dependencyIdString = dependenciesPathIdMap.get(filePath) || bitMap.getComponentIdByPath(filePath);
@@ -221,6 +237,10 @@ export default class Consumer {
           if (idWithConcreteVersion.toString() !== dependencyIdString) {
             const dependencyId = BitId.parse(dependencyIdString);
             dependencies.push({ id: dependencyId, relativePath: filePath });
+          } else {
+            // Take package deps from all files
+            const currentPackagesDeps = dependenciesTree.tree[filePath].packages;
+            Object.assign(packages, currentPackagesDeps);
           }
         }
       });
@@ -229,25 +249,39 @@ export default class Consumer {
 
       // TODO: add the bit/ dependencies as well
       component.dependencies = dependencies;
-      component.packageDependencies = dependenciesTree.tree.packages || {};
+      component.packageDependencies = packages;
       return component;
     });
 
     return Promise.all(components);
   }
 
-  async importAccordingToConsumerBitJson(verbose?: bool, withEnvironments: ?bool,
-                                         cache?: bool = true): Promise<> {
-    const dependencies = BitIds.fromObject(this.bitJson.dependencies);
-    if (R.isNil(dependencies) || R.isEmpty(dependencies)) {
+  async importAccordingToBitJsonAndBitMap(verbose?: bool, withEnvironments: ?bool,
+                                          cache?: bool = true): Promise<> {
+    const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
+    const bitMap = await this.getBitMap();
+    const componentsFromBitMap = bitMap.getAllComponents(COMPONENT_ORIGINS.AUTHORED);
+
+    if ((R.isNil(dependenciesFromBitJson) || R.isEmpty(dependenciesFromBitJson)) && R.isEmpty(componentsFromBitMap)) {
       if (!withEnvironments) {
         return Promise.reject(new NothingToImport());
       } else if (R.isNil(this.testerId) && R.isNil(this.compilerId)) {
         return Promise.reject(new NothingToImport());
       }
     }
-    const componentDependenciesArr = await this.scope.getMany(dependencies, cache);
-    await this.writeToComponentsDir(componentDependenciesArr);
+    let componentsAndDependenciesBitJson;
+    let componentsAndDependenciesBitMap;
+    if (dependenciesFromBitJson) {
+      componentsAndDependenciesBitJson = await this.scope.getMany(dependenciesFromBitJson, cache);
+      await this.writeToComponentsDir(componentsAndDependenciesBitJson);
+    }
+    if (componentsFromBitMap) {
+      const componentsIds = Object.keys(componentsFromBitMap);
+      const componentsIdsParsed = componentsIds.map(id => BitId.parse(id));
+      componentsAndDependenciesBitMap = await this.scope.getMany(componentsIdsParsed, cache);
+      await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false);
+    }
+    const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     if (withEnvironments) {
       const envComponents = await this.scope.installEnvironment({
         ids: [this.testerId, this.compilerId],
@@ -255,11 +289,11 @@ export default class Consumer {
         verbose
       });
       return {
-        dependencies: componentDependenciesArr,
+        dependencies: componentsAndDependencies,
         envDependencies: envComponents,
       };
     }
-    return { dependencies: componentDependenciesArr };
+    return { dependencies: componentsAndDependencies };
   }
 
   async importSpecificComponents(rawIds: ?string[], cache?: boolean, writeToPath?: string) {
@@ -277,7 +311,7 @@ export default class Consumer {
   Promise<{ dependencies: ComponentDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
-      return this.importAccordingToConsumerBitJson(verbose, withEnvironments, cache);
+      return this.importAccordingToBitJsonAndBitMap(verbose, withEnvironments, cache);
     }
     return this.importSpecificComponents(rawIds, cache, writeToPath);
   }
@@ -394,7 +428,7 @@ export default class Consumer {
   }
 
   /**
-   * write the component into '/component' dir (or according to the bit.map) and its
+   * write the components into '/component' dir (or according to the bit.map) and its
    * dependencies nested inside the component directory and under 'dependencies' dir.
    * For example: global/a has a dependency my-scope/global/b::1. The directories will be:
    * project/root/component/global/a/impl.js
@@ -403,15 +437,15 @@ export default class Consumer {
    * In case there are some same dependencies shared between the components, it makes sure to
    * write them only once.
    */
-  async writeToComponentsDir(componentDependencies: ComponentDependencies[], writeToPath?: string):
-  Promise<Component[]> {
+  async writeToComponentsDir(componentDependencies: ComponentDependencies[], writeToPath?: string,
+                             force?: boolean = true): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIds = [];
     const allComponentsP = componentDependencies.map((componentWithDeps) => {
       const bitPath = writeToPath || this.composeBitPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitPath;
       const writeComponentP = componentWithDeps.component
-        .write(bitPath, true, true, bitMap, COMPONENT_ORIGINS.IMPORTED, undefined, this.getPath());
+        .write(bitPath, true, force, bitMap, COMPONENT_ORIGINS.IMPORTED, undefined, this.getPath());
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         if (bitMap.isComponentExist(dependencyId) || dependenciesIds.includes(dependencyId)) {
@@ -421,7 +455,7 @@ export default class Consumer {
         dependenciesIds.push(dependencyId);
         const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
         dep.writtenPath = depBitPath;
-        return dep.write(depBitPath, true, true, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id, this.getPath())
+        return dep.write(depBitPath, true, force, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id, this.getPath())
           .then(() => {
             this._writeEntryPointsForImportedComponent(dep, bitMap);
           });
@@ -438,26 +472,12 @@ export default class Consumer {
     return allComponents;
   }
 
-  async commit(id: string, message: string, force: ?bool, verbose: ?bool): Promise<Component> {
-    const bitId = BitId.parse(id);
-    const component = await this.loadComponent(bitId);
-    await this.scope
-      .putMany({ consumerComponents: [component], message, force, consumer: this, verbose });
-    await this.driver.runHook('onCommit', [component]); // todo: probably not needed as the bind happens on create
-    return component;
-  }
-
-  async commitAll(message: string, force: ?bool, verbose: ?bool): Promise<Component> {
-    const componentsList = new ComponentsList(this);
-    const commitPendingComponents = await componentsList.listCommitPendingComponents();
-
-    const componentsIds = commitPendingComponents.map(componentId => BitId.parse(componentId));
-    if (R.isEmpty(componentsIds)) return null;
-
+  async commit(ids: BitId[], message: string, force: ?bool, verbose: ?bool): Promise<Component[]> {
+    logger.debug(`committing the following components: ${ids.join(', ')}`);
+    const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const components = await this.loadComponents(componentsIds);
     await this.scope
       .putMany({ consumerComponents: components, message, force, consumer: this, verbose });
-    await this.driver.runHook('onCommit', components); // todo: probably not needed as the bind happens on create
     return components;
   }
 
