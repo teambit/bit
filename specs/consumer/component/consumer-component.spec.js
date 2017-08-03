@@ -4,7 +4,7 @@ import ConsumerComponent from '../../../src/consumer/component/consumer-componen
 import BitId from '../../../src/bit-id/bit-id';
 import Impl from '../../../src/consumer/component/sources/impl';
 
-describe('ConsumerComponent', () => {
+describe.skip('ConsumerComponent', () => {
   describe('build', () => {
     let consumerComponent;
     before(() => {
