@@ -12,9 +12,9 @@ import path from 'path';
  * ```
  */
 export default function calculateFileInfo(relativePath: string) {
-  const fileInfo =path.parse(relativePath)
+  const fileInfo =path.parse(relativePath);
   const fullPath = path.dirname(relativePath);
   const rootDir = path.dirname(fullPath);
-  const parentDir = path.relative(rootDir, fullPath)
-  return {parent: parentDir, fileName: fileInfo.name};
+  const parentDir = path.relative(rootDir, fullPath);
+  return { parent: parentDir, fileName: fileInfo.name };
 }
