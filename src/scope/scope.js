@@ -246,15 +246,29 @@ export default class Scope {
    * to the bare-scope name.
    * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
    */
-  _convertNonScopeToLocalScope(componentsObjects: ComponentObjects): void {
+  _convertNonScopeToCorrectScope(componentsObjects: ComponentObjects, remoteScope: string): void {
+
+    const changeScopeIfNeeded = (dependencyId) => {
+      if (!dependencyId.scope) {
+        const depId = ComponentModel.fromBitId(dependencyId);
+        // todo: use 'load' for async and switch the foreach with map.
+        const dependencyObject = this.objects.loadSync(depId.hash());
+        if (dependencyObject instanceof Symlink) {
+          dependencyId.scope = dependencyObject.realScope;
+        } else {
+          dependencyId.scope = remoteScope;
+        }
+      }
+    };
+
     componentsObjects.objects.forEach((object: Ref) => {
       if (object instanceof Version) {
         const hashBefore = object.hash().toString();
         object.dependencies.forEach((dependency) => {
-          if (!dependency.id.scope) dependency.id.scope = this.name;
+          changeScopeIfNeeded(dependency.id);
         });
         object.flattenedDependencies.forEach((dependency) => {
-          if (!dependency.scope) dependency.scope = this.name;
+          changeScopeIfNeeded(dependency);
         });
         const hashAfter = object.hash().toString();
         if (hashBefore !== hashAfter) {
@@ -277,11 +291,7 @@ export default class Scope {
    */
   async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<any> {
     logger.debug(`exportManyBareScope: Going to save ${componentsObjects.length} components`);
-    const manyObjects = componentsObjects.map((componentObjects) => {
-      const componentAndObject = componentObjects.toObjects(this.objects);
-      this._convertNonScopeToLocalScope(componentAndObject);
-      return componentAndObject;
-    });
+    const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
     await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true)));
     const manyCompVersions = await Promise
       .all(manyObjects.map(objects => objects.component.toComponentVersion(LATEST, this.name)));
@@ -642,7 +652,16 @@ export default class Scope {
     });
     const components = componentIds.map(id => this.sources.getObjects(id));
     const componentObjects = await Promise.all(components);
-    const componentObjectsFromRemote = await remote.pushMany(componentObjects);
+
+    const manyObjectsP = componentObjects.map(async (componentObject) => {
+      const componentAndObject = componentObject.toObjects(this.objects);
+      this._convertNonScopeToCorrectScope(componentAndObject, remoteName);
+      const componentBuffer = await componentAndObject.component.compress();
+      const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
+      return new ComponentObjects(componentBuffer, objectsBuffer);
+    });
+    const manyObjects = await Promise.all(manyObjectsP);
+    const componentObjectsFromRemote = await remote.pushMany(manyObjects);
     await Promise.all(componentIds.map(id => this.clean(id)));
     componentIds.map(id => this.createSymlink(id, remoteName));
     await componentObjectsFromRemote.map(obj => this.importSrc(obj));
@@ -671,9 +690,9 @@ export default class Scope {
     // const envDir = opts && opts.bareScope ? this.getPath() : pathLib.dirname(this.getPath());
     if (!bitId) throw new ResolutionException();
     const envComponent = (await this.get(bitId)).component;
-    const mainFile = (envComponent.dists && !R.isEmpty(envComponent.dists)) ? path.join(DEFAULT_DIST_DIRNAME, envComponent.mainFile) 
+    const mainFile = (envComponent.dists && !R.isEmpty(envComponent.dists)) ? path.join(DEFAULT_DIST_DIRNAME, envComponent.mainFile)
                                                                            : envComponent.mainFile;
-   
+
     if (opts && opts.pathOnly) {
       try {
         return componentResolver(bitId.toString(), mainFile, this.getPath());

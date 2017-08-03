@@ -176,4 +176,32 @@ describe('bit export command', function () {
       expect(output.includes('2')).to.be.true; // this is the version
     });
   });
+
+  describe('with dependencies on a different scope', () => {
+    let anotherScope;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      helper.commitComponent('utils/is-type');
+      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      helper.commitComponent('utils/is-string');
+      helper.exportComponent('utils/is-type');
+
+      const { scopeName, scopePath } = helper.getNewBareScope();
+      anotherScope = scopeName;
+      helper.addRemoteScope(scopePath);
+      helper.exportComponent('utils/is-string', scopeName);
+    });
+    it('should fetch the dependency from a different scope and successfully export the component', () => {
+      const output = helper.runCmd(`bit list ${anotherScope}`);
+      expect(output.includes('Total 1 components')).to.be.true;
+      expect(output.includes('utils/is-string')).to.be.true;
+    });
+  });
 });

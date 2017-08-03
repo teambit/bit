@@ -61,16 +61,25 @@ export default class Helper {
     return this.runCmd('bit init');
   }
 
-  addRemoteScope(remoteScopePath = this.remoteScopePath) {
+  addRemoteScope(remoteScopePath = this.remoteScopePath, localScopePath = this.localScopePath) {
     if (process.env.npm_config_with_ssh) {
-      return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath}`);
+      return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath}`, localScopePath);
     }
-    return this.runCmd(`bit remote add file://${remoteScopePath}`);
+    return this.runCmd(`bit remote add file://${remoteScopePath}`, localScopePath);
   }
 
   reInitRemoteScope() {
     fs.emptyDirSync(this.remoteScopePath);
     return this.runCmd('bit init --bare', this.remoteScopePath);
+  }
+
+  getNewBareScope() {
+    const scopeName = v4();
+    const scopePath = path.join(this.e2eDir, scopeName);
+    fs.emptyDirSync(scopePath);
+    this.runCmd('bit init --bare', scopePath);
+    this.addRemoteScope(this.remoteScopePath, scopePath);
+    return { scopeName, scopePath };
   }
 
   mimicGitCloneLocalProject() {
@@ -89,8 +98,8 @@ export default class Helper {
     return this.runCmd(`bit commit -am ${commitMsg}`);
   }
 
-  exportComponent(id) {
-    return this.runCmd(`bit export ${this.remoteScope} ${id}`);
+  exportComponent(id, scope = this.remoteScope) {
+    return this.runCmd(`bit export ${scope} ${id}`);
   }
 
   exportAllComponents() {
