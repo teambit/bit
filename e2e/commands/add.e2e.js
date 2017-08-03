@@ -1,6 +1,7 @@
 // covers also init, create, commit, import and export commands
 
 import chai,{ expect } from 'chai';
+import path from 'path';
 import Helper from '../e2e-helper';
 const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
