@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import sinon from 'sinon';
 
 let logSpy;
-let errorSpy
+let errorSpy;
 
 describe('bit commit command', function () {
   this.timeout(0);
@@ -81,6 +81,18 @@ describe('bit commit command', function () {
     });
   });
 
+  describe('commit non-exist component', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+    });
+    it('should not commit another component', () => {
+      const commit = () => helper.commitComponent('non-exist-comp');
+      expect(commit).to.throw('Command failed: bit-dev commit non-exist-comp -m commit-message\nerror - Unable to commit. non-exist-comp not found.\nRun `bit status` command to list all components available for commit.\n');
+    });
+  });
+
   describe('commit all components', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
@@ -149,6 +161,31 @@ describe('bit commit command', function () {
     it.skip('should add the correct dependencies to each component', () => {
       // Make sure the use case contain dependenceis from all types -
       // Packages, files and bits
+    });
+
+    it('should add dependencies for files which are not the main files', () => {
+      helper.reInitLocalScope();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+
+      const mainFileFixture = "const isString = require('./utils/is-string.js'); const second = require('./second.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      const secondFileFixture = "const isString = require('./utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      helper.createFile('', 'main.js', mainFileFixture);
+      helper.createFile('', 'second.js', secondFileFixture);
+      helper.addComponentWithOptions('main.js second.js', { 'm': 'main.js', 'i': 'comp/comp' });
+
+      helper.commitAllComponents();
+
+      const output = helper.showComponentWithOptions('comp/comp', {j: ''});
+      const dependencies = JSON.parse(output).dependencies;
+      const depObject = { id: 'utils/is-string', relativePath: 'utils/is-string.js' };
+      const depObject1 = { id: 'utils/is-type', relativePath: 'utils/is-type.js' };
+      expect(dependencies[0]).to.include(depObject);
+      expect(dependencies[1]).to.include(depObject1);
     });
 
     it.skip('should persist all models in the scope', () => {

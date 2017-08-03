@@ -12,7 +12,7 @@ import { flattenDependencies } from '../../../scope/flatten-dependencies';
 
 const key = R.compose(R.head, R.keys);
 
-export default function importAction(
+export default async function importAction(
   { ids, tester, compiler, verbose, prefix, environment }: {
     ids: string,
     tester: ?bool,
@@ -21,56 +21,45 @@ export default function importAction(
     prefix: ?string,
     environment: ?bool,
   }): Promise<Bit[]> {
-  function importEnvironment(consumer: Consumer) {
+  async function importEnvironment(consumer: Consumer) {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
 
     // TODO - import environment on multiple environments
-    return consumer.importEnvironment(ids[0], verbose)
-    .then((envDependencies) => {
-      function writeToBitJsonIfNeeded() {
-        if (compiler) {
-          consumer.bitJson.compilerId = envDependencies[0].id.toString();
-          return consumer.bitJson.write({ bitDir: consumer.getPath() });
-        }
-
-        if (tester) {
-          consumer.bitJson.testerId = envDependencies[0].id.toString();
-          return consumer.bitJson.write({ bitDir: consumer.getPath() });
-        }
-
-        return Promise.resolve(true);
+    const envDependencies = await consumer.importEnvironment(ids[0], verbose);
+    function writeToBitJsonIfNeeded() {
+      if (compiler) {
+        consumer.bitJson.compilerId = envDependencies[0].id.toString();
+        return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
-      return writeToBitJsonIfNeeded()
-      .then(() => ({ envDependencies }));
-    });
+      if (tester) {
+        consumer.bitJson.testerId = envDependencies[0].id.toString();
+        return consumer.bitJson.write({ bitDir: consumer.getPath() });
+      }
+
+      return Promise.resolve(true);
+    }
+    await writeToBitJsonIfNeeded();
+    return { envDependencies };
   }
 
   const performOnDir = process.cwd();
+  const consumer: Consumer = await Consumer.ensure(performOnDir);
+  await consumer.scope.ensureDir();
+  if (tester || compiler) { return importEnvironment(consumer); }
+  const cache = false;
+  const { dependencies, envDependencies } = await consumer.import(ids, verbose, environment, cache, prefix);
+  const bitIds = dependencies.map(R.path(['component', 'id']));
+  if (!R.isEmpty(ids)) { // not needed when importing from bit.json/bit.map
+    await consumer.bitJson.addDependencies(bitIds).write({ bitDir: consumer.getPath() });
+  }
 
-  return Consumer.ensure(performOnDir)
-    .then(consumer => consumer.scope.ensureDir().then(() => consumer))
-    .then((consumer: Consumer) => {
-      if (tester || compiler) { return importEnvironment(consumer); }
-      const cache = false;
-      return consumer.import(ids, verbose, environment, cache, prefix)          // from here replace with bit-scope-client.fetch
-        .then(({ dependencies, envDependencies }) => {                  //
-          const bitIds = dependencies.map(R.path(['component', 'id'])); //
-          return consumer.bitJson.addDependencies(bitIds)               //
-          .write({ bitDir: consumer.getPath() })                        //
-          .then(() => ({ dependencies, envDependencies }));             // here we should return { dependencies, envDependencies: [] }
-        })
-        .then(({ dependencies, envDependencies }) =>
-          warnForPackageDependencies({
-            dependencies: flattenDependencies(dependencies),
-            envDependencies,
-            consumer,
-          })
-          .then(warnings => consumer.driver.runHook('onImport',
-            { components: dependencies, projectRoot: performOnDir },
-            { dependencies, envDependencies, warnings })
-        ));
-    });
+  const warnings = await warnForPackageDependencies({
+    dependencies: flattenDependencies(dependencies),
+    envDependencies,
+    consumer,
+  });
+  return { dependencies, envDependencies, warnings };
 }
 
 const getSemverType = (str): ?string => {
@@ -100,7 +89,7 @@ function compatibleWith(a: { [string]: string }, b: { [string]: string, }): bool
   return false;
 }
 
-const warnForPackageDependencies = ({ dependencies, consumer }) => {
+const warnForPackageDependencies = ({ dependencies, consumer }): Promise<Object> => {
   const warnings = {
     notInPackageJson: [],
     notInNodeModules: [],

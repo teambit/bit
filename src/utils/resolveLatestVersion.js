@@ -16,12 +16,16 @@ export default function getLatestVersionNumber(bitIds: BitId[] | string[], bitId
   const componentId = getParsed(bitId);
   if (!componentId.getVersion().latest) return bitId;
   const maxByFunc = searchId => (id) => {
-    if (getString(searchId) === getString(id)){
+    if (getString(searchId) === getString(id)) {
       const version = getParsed(id).getVersion();
       if (version.latest) return 10000000;
       return version.versionNum;
     }
     return -1;
   };
-  return maxBy(bitIds, maxByFunc(bitId));
+  let result = maxBy(bitIds, maxByFunc(bitId));
+  // A case when the bitId provided doesn't exists in the array it will just return one of them
+  // So we want to make sure it won't return this wrong result
+  if (getString(result) !== getString(bitId)) result = bitId;
+  return result;
 }

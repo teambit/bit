@@ -14,8 +14,8 @@ export default function reset({ id }: { id: string }) {
         .then((c: ComponentDependencies) => {
           const inlineId = new InlineId({ box: bitId.box, name: bitId.name });
           const inlineBitPath = inlineId.composeBitPath(consumer.getPath());
-          return c.component.write(inlineBitPath, true)
-            .then(component => consumer.driver.runHook('onModify', { component }, component));
+          return c.component.write(inlineBitPath, true);
+            // .then(component => consumer.driver.runHook('onModify', { component }, component));
         });
     });
 }

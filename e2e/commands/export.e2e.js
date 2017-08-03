@@ -15,6 +15,26 @@ describe('bit export command', function () {
   after(() => {
     helper.destroyEnv();
   });
+  describe('of one component', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.exportComponent('bar/foo');
+    });
+    it('should not write the exported component into bit.json', () => {
+      const bitJson = helper.readBitJson();
+      expect(bitJson.dependencies).not.to.have.property(`${helper.remoteScope}/bar/foo`);
+    });
+    it('should write the exported component into bit.map', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo::1`);
+    });
+  });
   describe('with multiple components, each has one file', () => {
     before(() => {
       helper.cleanEnv();
@@ -123,6 +143,31 @@ describe('bit export command', function () {
       helper.exportComponent('bar/foo');
       helper.commitComponent('bar/foo');
       helper.exportComponent('bar/foo');
+    });
+    it('should export it with no errors', () => {
+      const output = helper.runCmd(`bit list ${helper.remoteScope}`);
+      expect(output.includes('Total 1 components')).to.be.true;
+      expect(output.includes('bar/foo')).to.be.true;
+      expect(output.includes('2')).to.be.true; // this is the version
+    });
+  });
+
+  describe('after import', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportComponent('bar/foo');
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+
+      helper.commitComponentBarFoo();
+      helper.exportComponent(`${helper.remoteScope}/bar/foo`);
     });
     it('should export it with no errors', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope}`);

@@ -20,7 +20,7 @@ export async function build(id: string): Promise<?Array<string>> {
   const distFilePaths = await writeDistFiles(consumer, component);
   bitMap.addMainDistFileToComponent(component.id, distFilePaths);
   await bitMap.write();
-  await consumer.driver.runHook('onBuild', [component]);
+  // await consumer.driver.runHook('onBuild', [component]);
   return distFilePaths;
 }
 
@@ -49,6 +49,6 @@ export async function buildAll(): Promise<Object> {
     componentsObj[component.component] = component.buildResults;
   });
   await bitMap.write();
-  await consumer.driver.runHook('onBuild', allComponents);
+  // await consumer.driver.runHook('onBuild', allComponents);
   return componentsObj;
 }

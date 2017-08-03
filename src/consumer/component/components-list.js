@@ -129,10 +129,7 @@ export default class ComponentsList {
     const fromObjects = await this.getFromObjects();
     const ids = Object.keys(fromObjects);
     if (withScope) return ids;
-    return ids.map((id) => {
-      const bitId = BitId.parse(id);
-      return bitId.changeScope(null).toString();
-    });
+    return ids.map(id => BitId.parse(id).toString(true, true));
   }
 
   /**
@@ -164,16 +161,24 @@ export default class ComponentsList {
 
   /**
    * Components from the model where the scope is local are pending for export
+   * Also, components that their model version is higher than their bit.map version.
    * @return {Promise<string[]>}
    */
   async listExportPendingComponents(): Promise<string[]> {
     const stagedComponents = [];
     const listFromObjects = await this.getFromObjects();
+    const listFromFileSystem = await this.getFromFileSystem();
     Object.keys(listFromObjects).forEach((id) => {
-      const bitId = BitId.parse(id);
-      if (!bitId.scope || bitId.scope === this.scope.name) {
-        bitId.scope = null;
-        stagedComponents.push(bitId.toString());
+      const modelBitId = BitId.parse(id);
+      if (!modelBitId.scope || modelBitId.scope === this.scope.name) {
+        modelBitId.scope = null;
+        stagedComponents.push(modelBitId.toString());
+      } else {
+        const similarFileSystemComponent = listFromFileSystem
+          .find(component => component.id.toString(false, true) === modelBitId.toString(false, true));
+        if (similarFileSystemComponent && modelBitId.version > similarFileSystemComponent.version) {
+          stagedComponents.push(modelBitId.toString());
+        }
       }
     });
     return stagedComponents;
@@ -193,7 +198,7 @@ export default class ComponentsList {
     const fromBitMap = await this.getFromBitMap();
     const ids = Object.keys(fromBitMap);
     if (withScopeName) return ids;
-    return ids.map(id => BitId.parse(id).toString(true, false));
+    return ids.map(id => BitId.parse(id).toString(true, true));
   }
 
   async onFileSystemAndNotOnBitMap(): Promise<Component[]> {
