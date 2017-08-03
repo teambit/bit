@@ -39,7 +39,7 @@ import allSettled from './promise-all-settled';
 import values from './object/values';
 import glob from './glob';
 import inflate from './zlib-inflate';
-import mapToObject from './map/to-object'; 
+import mapToObject from './map/to-object';
 import objectToTupleArray from './object/to-tuple-array';
 import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
 import deflate from './zlib-deflate';
@@ -58,7 +58,7 @@ import removeFromRequireCache from './remove-from-require-cache';
 import splitBy from './array/split-by';
 import outputFile from './fs-output-file';
 import getLatestVersionNumber from './resolveLatestVersion';
-
+import calculateFileInfo from './fs/file-info';
 export {
   parseSSHUrl,
   splitBy,
@@ -119,5 +119,6 @@ export {
   removeFromRequireCache,
   outputFile,
   bufferFrom,
-  getLatestVersionNumber
+  getLatestVersionNumber,
+  calculateFileInfo
 };
