@@ -101,21 +101,34 @@ export default class Helper {
       const tempScope = v4();
       const tempScopePath = path.join(this.e2eDir, tempScope);
       fs.emptyDirSync(tempScopePath);
+      console.log(tempScopePath);
+
       this.runCmd('bit init', tempScopePath);
-      this.runCmd('bit create compilers/babel3 -j', tempScopePath);
+    
       const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
-      const destDir = path.join(tempScopePath, 'components', 'compilers', 'babel3');
-      const impl = fs.readFileSync(path.join(sourceDir, 'impl.js'), 'utf-8');
-      fs.writeFileSync(path.join(destDir, 'impl.js'), impl);
-      const bitJson = fs.readFileSync(path.join(sourceDir, 'bit.json'), 'utf-8');
-      fs.writeFileSync(path.join(destDir, 'bit.json'), bitJson);
-      this.runCmd('bit commit compilers/babel3 -m msg', tempScopePath);
+      const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
+      fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
+
+      const babelCorePackageJson = { name: 'babel-core', version: '6.25.0' };
+      const babelPluginTransformObjectRestSpreadPackageJson = { name: 'babel-plugin-transform-object-rest-spread', version: '6.23.0' };
+      const babelPresetLatestPackageJson = { name: 'babel-preset-latest', version: '6.24.1' };
+      const vinylPackageJson = { name: 'vinyl', version: '2.1.0' };
+
+      const nodeModulesDir = path.join(tempScopePath, 'node_modules');
+  
+      ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'package.json'), babelCorePackageJson);
+      ensureAndWriteJson(path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'package.json'), babelPluginTransformObjectRestSpreadPackageJson);
+      ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'package.json'), babelPresetLatestPackageJson);
+      ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'package.json'), vinylPackageJson);
+
+      this.runCmd('bit add compiler.js -i compilers/babel', tempScopePath);
+      this.runCmd('bit commit compilers/babel -m msg', tempScopePath);
 
       fs.emptyDirSync(this.envScopePath);
       this.runCmd('bit init --bare', this.envScopePath);
       this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
 
-      this.runCmd(`bit export ${this.envScope} compilers/babel3`, tempScopePath);
+      this.runCmd(`bit export ${this.envScope} compilers/babel`, tempScopePath);
       this.addRemoteScope(this.envScopePath);
       this.compilerCreated = true;
     }
@@ -123,7 +136,7 @@ export default class Helper {
 
   importCompiler(id?) {
     if (!id) {
-      id = `${this.envScope}/compilers/babel3`;
+      id = `${this.envScope}/compilers/babel`;
       this.createCompiler();
     }
     this.runCmd(`bit import ${id} --compiler`);
@@ -162,4 +175,9 @@ export default class Helper {
     const value = Object.keys(options).map(key => `-${key} ${options[key] }`).join(' ')
     return this.runCmd(`bit add ${filePaths} ${value}`);
   }
+}
+
+function ensureAndWriteJson(filePath, fileContent){
+  fs.ensureFileSync(filePath);
+  fs.ensureFileSync(filePath, fileContent);
 }
