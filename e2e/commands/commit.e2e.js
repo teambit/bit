@@ -89,7 +89,7 @@ describe('bit commit command', function () {
     });
     it('should not commit another component', () => {
       const commit = () => helper.commitComponent('non-exist-comp');
-      expect(commit).to.throw('Command failed: bit-dev commit non-exist-comp -m commit-message\nerror - Unable to commit. non-exist-comp not found.\nRun `bit status` command to list all components available for commit.\n');
+      expect(commit).to.throw(`Command failed: ${helper.bitBin} commit non-exist-comp -m commit-message\nerror - Unable to commit. non-exist-comp not found.\nRun \`bit status\` command to list all components available for commit.\n`);
     });
   });
 
