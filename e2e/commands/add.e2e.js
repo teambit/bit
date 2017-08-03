@@ -50,6 +50,22 @@ describe('bit add command', function () {
       const addCmd = () => helper.addComponentWithOptions('bar/foo2.js', { 'n': 'test', 'i': 'jaja' });
       expect(addCmd).to.throw(`You can use either [id] or [namespace] to add a particular component`);
     });
+    it('Should modify bitmap when adding component again', () => {
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo1.js');
+      helper.addComponentWithOptions('bar/foo2.js', { 'i': 'test' });
+      const bitMap1 = helper.readBitMap();
+      const files1 = bitMap1['global/test'].files;
+      expect(bitMap1).to.have.property('global/test');
+      expect(files1).to.be.array();
+      expect(files1).to.be.ofSize(1);
+      helper.addComponentWithOptions('bar/foo2.js bar/foo1.js', { 'i': 'test', 'm': 'bar/foo1.js' });
+      const bitMap2 = helper.readBitMap();
+      const files2 = bitMap2['global/test'].files;
+      expect(bitMap2).to.have.property('global/test');
+      expect(files2).to.be.array();
+      expect(files2).to.be.ofSize(2);
+    });
     it.skip('Bitmap should contain multipule files for component with more than one file', ()=>{});
     it.skip('Bitmap should contain impl files and test files  in diffrent fields', ()=>{});
     it('Bitmap origin should be AUTHORED', ()=>{
