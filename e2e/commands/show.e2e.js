@@ -50,7 +50,7 @@ describe('bit show command', function () {
 
       it('should render the compiler correctly', () => {
         expect(output).to.have.string('Compiler', 'Compiler row is missing');
-        expect(output).to.have.string('bit.envs/compilers/babel', 'compiler is wrong');
+        expect(output).to.have.string(`${helper.envScope}/compilers/babel`, 'compiler is wrong');
       });
 
       it('should render the language correctly', () => {
@@ -114,7 +114,7 @@ describe('bit show command', function () {
 
       // TODO: get the version dynamically
       it('should include the compiler correctly', () => {
-        expect(output).to.include({compilerId: `bit.envs/compilers/babel4${VERSION_DELIMITER}1`});
+        expect(output).to.include({compilerId: `${helper.envScope}/compilers/babel${VERSION_DELIMITER}1`});
       });
 
       it('should include the language correctly', () => {
