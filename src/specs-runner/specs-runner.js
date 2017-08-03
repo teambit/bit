@@ -11,12 +11,12 @@ export type Tester = {
   modules: Object;
 }
 
-function run({ testerFilePath, testerId, implDistPath, specDistPath }: {
+function run({ testerFilePath, testerId, mainFile, testFilePath }: {
   scope: Scope,
   testerFilePath: string,
   testerId: Object,
-  implDistPath: string,
-  specDistPath: string
+  mainFile: string,
+  testFilePath: string
 }) {
   function getDebugPort(): ?number {
     const debugPortArgName = '--debug-brk';
@@ -37,8 +37,8 @@ function run({ testerFilePath, testerId, implDistPath, specDistPath }: {
       execArgv: openPort ? [`--debug=${openPort.toString()}`] : [],
       silent: false,
       env: {
-        __impl__: implDistPath,
-        __specs__: specDistPath,
+        __mainFile__: mainFile,
+        __testFilePath__: testFilePath,
         __tester__: testerFilePath,
         __testerId__: testerId.toString()
       }

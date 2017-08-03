@@ -39,14 +39,6 @@ export type Log = {
 };
 
 export type VersionProps = {
-  impl?: ?{
-    name: string,
-    file: Ref
-  };
-  specs?: ?{
-    name: string,
-    file: Ref
-  };
   files?: ?Array<SourceFile>;
   dists?: ?Array<DistFile>;
   compiler?: ?BitId;
@@ -61,16 +53,6 @@ export type VersionProps = {
 }
 
 export default class Version extends BitObject {
-  /** @deprecated **/
-  impl: ?{
-    name: string,
-    file: Ref
-  };
-  /** @deprecated **/
-  specs: ?{
-    name: string,
-    file: Ref
-  };
   mainFile: string;
   files: ?Array<SourceFile>;
   dists: ?Array<DistFile>;
@@ -85,8 +67,6 @@ export default class Version extends BitObject {
   packageDependencies: {[string]: string};
 
   constructor({
-    impl,
-    specs,
     mainFile,
     files,
     dists,
@@ -101,8 +81,6 @@ export default class Version extends BitObject {
     packageDependencies
   }: VersionProps) {
     super();
-    this.impl = impl;
-    this.specs = specs;
     this.mainFile = mainFile;
     this.files = files;
     this.dists = dists;
@@ -121,8 +99,6 @@ export default class Version extends BitObject {
     const obj = this.toObject();
 
     return JSON.stringify(filterObject({
-      impl: obj.impl,
-      specs: obj.specs,
       mainFile: obj.mainFile,
       files: obj.files,
       compiler: obj.compiler,
@@ -144,10 +120,6 @@ export default class Version extends BitObject {
     const files = this.files ? this.files.map(file => file.file) : [];
     const dists = this.dists ? this.dists.map(dist => dist.file) : [];
     return [
-      this.impl ? this.impl.file : null,
-      // $FlowFixMe
-      this.specs ? this.specs.file : null,
-      // $FlowFixMe (after filtering the nulls there is no problem)
       ...dists,
       ...files,
     ].filter(ref => ref);
@@ -160,15 +132,6 @@ export default class Version extends BitObject {
       return dependencyClone;
     });
     return filterObject({
-      impl: this.impl ? {
-        file: this.impl.file.toString(),
-        name: this.impl.name
-      } : null,
-      specs: this.specs ? {
-        file: this.specs.file.toString(),
-        // $FlowFixMe
-        name: this.specs.name
-      }: null,
       files: this.files ? this.files.map((file) => {
         return {
           file: file.file.toString(),
@@ -211,8 +174,6 @@ export default class Version extends BitObject {
 
   static parse(contents) {
     const {
-      impl,
-      specs,
       mainFile,
       dists,
       files,
@@ -238,14 +199,6 @@ export default class Version extends BitObject {
     };
 
     return new Version({
-      impl: impl ? {
-        file: Ref.from(impl.file),
-        name: impl.name
-      } : null,
-      specs: specs ? {
-        file: Ref.from(specs.file),
-        name: specs.name
-      } : null,
       mainFile,
       files: files ? files.map((file) => {
         return { file: Ref.from(file.file), relativePath: file.relativePath, name: file.name, test: file.test };
@@ -272,8 +225,6 @@ export default class Version extends BitObject {
 
   static fromComponent({
     component,
-    impl,
-    specs,
     files,
     dists,
     flattenedDeps,
@@ -283,8 +234,6 @@ export default class Version extends BitObject {
     email,
   }: {
     component: ConsumerComponent,
-    impl: ?Source,
-    specs: ?Source,
     files: ?Array<SourceFile>,
     flattenedDeps: BitId[],
     message: string,
@@ -294,14 +243,6 @@ export default class Version extends BitObject {
     email: ?string,
   }) {
     return new Version({
-      impl: impl ? {
-        file: impl.hash(),
-        name: component.implFile
-      }: null,
-      specs: specs ? {
-        file: specs.hash(),
-        name: component.specsFile
-      }: null,
       mainFile: component.mainFile,
       files: files ? files.map((file) => {
         return { file: file.file.hash(), relativePath: file.relativePath, name: file.name, test: file.test };

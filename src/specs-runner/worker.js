@@ -3,8 +3,8 @@
 const serializeError = require('serialize-error');
 
 try {
-  const implFilePath = process.env.__impl__;
-  const specsFilePath = process.env.__specs__;
+  const mainFilePath = process.env.__mainFile__;
+  const testFilePath = process.env.__testFilePath__;
   const testerFilePath = process.env.__tester__;
 
   const mockery = require('mockery');
@@ -17,7 +17,7 @@ try {
   const tester = require(testerFilePath);
 
   // define the __impl__ global
-  global.__impl__ = implFilePath;
+  global.__impl__ = mainFilePath;
 
   // register globals
   if (tester.globals) {
@@ -41,10 +41,10 @@ try {
     process.exit(1);
   }
 
-  tester.run(specsFilePath)
+  tester.run(testFilePath)
   .then((results) => {
     mockery.disable();
-    results.specPath = specsFilePath;
+    results.specPath = testFilePath;
     return process.send({ type: 'results', payload: results });
   })
   .catch((err) => {

@@ -18,7 +18,6 @@ import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
 import NetworkError from '../scope/network/exceptions/network-error';
 import UnexpectedNetworkError from '../scope/network/exceptions/unexpected-network-error';
-import MissingImpl from '../consumer/component/exceptions/missing-impl';
 import MergeConflict from '../scope/exceptions/merge-conflict';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import { ScopeNotFound, ResolutionException, ComponentNotFound, DependencyNotFound } from '../scope/exceptions';
@@ -35,7 +34,6 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ ConsumerNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`' ],
   [ BitAlreadyExistExternaly, err => `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${err.bitName}" to modify the current component or "bit create -f ${err.bitName}"!`],
   [ PluginNotFound, err => `fatal: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`],
-  [ MissingImpl, err => `fatal: The impl file in path "${err.implPath}" does not exist, please check the bit.json or implementation file`],
   [ FileSourceNotFound, err => `fatal: the file "${err.path}" was not found!`],
   [ ProtocolNotSupported, () => 'fatal: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'],
   [ RemoteScopeNotFound, err => `fatal: remote scope "${chalk.bold(err)}" not found.`],

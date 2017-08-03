@@ -13,7 +13,7 @@ import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
 import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
-import { Impl, Specs, SourceFile, Dist, License } from '../../consumer/component/sources';
+import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 
@@ -150,8 +150,6 @@ export default class Component extends BitObject {
     return componentVersion
       .getVersion(repository)
         .then((version) => {
-          const implP = version.impl ? version.impl.file.load(repository) : null;
-          const specsP = version.specs ? version.specs.file.load(repository) : null;
           const filesP = version.files ?
           Promise.all(version.files.map(file =>
             file.file.load(repository)
@@ -169,18 +167,15 @@ export default class Component extends BitObject {
           )) : null;
           const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
           const log = version.log || null;
-          return Promise.all([implP, specsP, filesP, distsP, scopeMetaP])
-          .then(([impl, specs, files, dists, scopeMeta]) => {
+          return Promise.all([filesP, distsP, scopeMetaP])
+          .then(([files, dists, scopeMeta]) => {
             return new ConsumerComponent({
               name: this.name,
               box: this.box,
               version: componentVersion.version,
               scope: this.scope,
               lang: this.lang,
-              implFile: version.impl ? version.impl.name : null,
-              specsFile: version.specs ? version.specs.name : null,
               mainFile: version.mainFile ? version.mainFile: null,
-              filesNames: version.files ? version.files.map(file => file.name) : null,
               compilerId: version.compiler,
               testerId: version.tester,
               dependencies: version.dependencies // todo: understand why sometimes the dependencies are not parsed
@@ -190,8 +185,6 @@ export default class Component extends BitObject {
                 })),
               flattenedDependencies: version.flattenedDependencies,
               packageDependencies: version.packageDependencies,
-              impl: impl ? new Impl(impl.toString()) : null,
-              specs: specs ? new Specs(specs.toString()) : null,
               files,
               dists,
               docs: version.docs,
