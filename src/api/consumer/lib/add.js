@@ -2,13 +2,14 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
-import { glob, isValidIdChunk, isDir } from '../../../utils';
+import { glob, isValidIdChunk, isDir, calculateFileInfo } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
-import { COMPONENT_ORIGINS } from '../../../constants';
+import { COMPONENT_ORIGINS, FILE_NAME, PARENT_FOLDER, REGEX } from '../../../constants';
 import logger from '../../../logger/logger';
 import isGlob from 'is-glob';
+
 export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[]): Promise<Object> {
 
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
@@ -21,24 +22,38 @@ export default async function addAction(componentPaths: string[], id?: string, m
   async function addOneComponent(componentPathsStats: Object, bitMap: BitMap, consumer: Consumer,
                                  keepDirectoryName: boolean = false) {
 
+
+    function updateTestFilesAccordingToDsl(files,domainSpecificStrings) {
+      if (domainSpecificStrings) {
+        domainSpecificStrings.forEach(dsl => {
+          files.forEach(file => {
+            const fileInfo = calculateFileInfo(file.relativePath)
+            var generatedFile =  dsl.replace(FILE_NAME,fileInfo.fileName);
+            generatedFile = generatedFile.replace(PARENT_FOLDER,fileInfo.parent);
+            if (fs.existsSync(generatedFile)) files.push({relativePath: generatedFile, test: true, name: path.basename(generatedFile)});
+          })
+        })
+      }
+      return files;
+    }
     const markTestsFiles = (files, relativeTests) => {
-      relativeTests.forEach(testPath => {
-        const file = R.find(R.propEq('relativePath', testPath))(files);
-        if (file){
-          file.test = true;
-        } else { // Support case when a user didn't enter the test file into the files
-          files.push({relativePath: testPath, test: true, name: path.basename(testPath)});
-        }
-      });
+       relativeTests.forEach(testPath => {
+          const file = R.find(R.propEq('relativePath', testPath))(files);
+          if (file){
+            file.test = true;
+          } else { // Support case when a user didn't enter the test file into the files
+            files.push({relativePath: testPath, test: true, name: path.basename(testPath)});
+          }
+        });
+
       return files;
     }
 
     const addToBitMap = ({ componentId, files, mainFile, testsFiles }): { id: string, files: string[] } => {
-      const relativeTests = testsFiles ?
-        tests.map(spec => getPathRelativeToProjectRoot(spec, consumer.getPath())) : [];
-      files = markTestsFiles(files, relativeTests);
+      const relativeTests = testsFiles || [];
+      files = markTestsFiles(files, relativeTests, domainSpecificTestFiles);
       bitMap.addComponent({ componentId, files, mainFile,
-                            origin: COMPONENT_ORIGINS.AUTHORED });
+        origin: COMPONENT_ORIGINS.AUTHORED });
       return { id: componentId.toString(), files };
     };
 
@@ -68,19 +83,23 @@ export default async function addAction(componentPaths: string[], id?: string, m
       parsedId = BitId.parse(id);
     }
 
-    const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
+    const domainSpecificTestFiles = tests.filter(file => file.match(REGEX));
+    const testFiles = tests.filter(file => !file.match(REGEX));
+    tests = Object.keys(await getAllFiles(testFiles)).map( (item) => item);
 
+    const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
         const absoluteComponentPath = path.resolve(componentPath);
         const splitPath = absoluteComponentPath.split(path.sep);
         const lastDir = splitPath[splitPath.length-1];
-        const oneBeforeLastDir = splitPath[splitPath.length-2];
+        const nameSpaceOrDir = namespace || splitPath[splitPath.length-2];
 
         const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
         if (!matches.length) throw new Error(`The directory ${relativeComponentPath} is empty, nothing to add`);
 
-        const files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
+        let files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
+        files = updateTestFilesAccordingToDsl(files,domainSpecificTestFiles);
         // matches.forEach((match) => {
         //   if (keepDirectoryName) {
         //     files[match] = match;
@@ -91,7 +110,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         // });
 
         if (!parsedId) {
-          parsedId = BitId.getValidBitId(namespace || oneBeforeLastDir, lastDir);
+          parsedId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
         }
         return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
       } else { // is file
@@ -105,12 +124,13 @@ export default async function addAction(componentPaths: string[], id?: string, m
             const absPath = path.resolve(componentPath);
             dirName = path.dirname(absPath);
           }
-          const lastDir = R.last(dirName.split(path.sep));
-          parsedId = BitId.getValidBitId(namespace || lastDir, pathParsed.name);
+          const nameSpaceOrlastDir = namespace || R.last(dirName.split(path.sep));
+          parsedId = BitId.getValidBitId(nameSpaceOrlastDir, pathParsed.name);
         }
 
-        const files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
+        let files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
 
+        files = updateTestFilesAccordingToDsl(files,domainSpecificTestFiles);
         if (componentExists) {
           return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
         }
