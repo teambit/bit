@@ -40,7 +40,7 @@ import values from './object/values';
 import glob from './glob';
 import inflate from './zlib-inflate';
 import mapToObject from './map/to-object'; 
-import objectToTupleArray from './object-to-tuple-array';
+import objectToTupleArray from './object/to-tuple-array';
 import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
 import deflate from './zlib-deflate';
 import sha1 from './encryption/sha1';
