@@ -10,7 +10,7 @@ export default class Add extends Command {
   opts = [
     ['i', 'id <name>', 'component id, if not specified the name will be '],
     ['m', 'main <file>', 'implementation/index file name'],
-    ['t', 'tests <file...>', 'spec/test file name'],
+    ['t', 'tests <file...>', 'spec/test file name or dsl (tests/{PARENT_FOLDER}/{FILE_NAME})'],
     ['n', 'namespace <namespace>', 'component namespace'],
     ['e', 'exclude <file...>', 'exclude file name'],
   ];
@@ -21,12 +21,13 @@ export default class Add extends Command {
     main: ?string,
     tests: ?string[],
     namespace:?string,
-    exclude:?String
+    exclude:?string,
   }): Promise<*> {
     if (namespace && id) {
       return Promise.reject('You can use either [id] or [namespace] to add a particular component');
     }
-    const testsArray = tests ? [tests] : [];
+
+    const testsArray = tests ? this.splitList(tests) : [];
     const exludedFiles = exclude ? this.splitList(exclude): undefined ;
     return add(path, id, main, namespace, testsArray, exludedFiles);
   }
