@@ -430,7 +430,7 @@ export default class Consumer {
   /**
    * write the components into '/component' dir (or according to the bit.map) and its
    * dependencies nested inside the component directory and under 'dependencies' dir.
-   * For example: global/a has a dependency my-scope/global/b::1. The directories will be:
+   * For example: global/a has a dependency my-scope/global/b@1. The directories will be:
    * project/root/component/global/a/impl.js
    * project/root/component/global/a/dependency/global/b/my-scope/1/impl.js
    *

@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import ConsumerComponent from '../../../src/consumer/component/consumer-component';
 import BitId from '../../../src/bit-id/bit-id';
 import Impl from '../../../src/consumer/component/sources/impl';
+import { VERSION_DELIMITER } from '../../../src/constants';
 
 describe('ConsumerComponent', () => {
   describe('build', () => {
@@ -43,7 +44,7 @@ describe('ConsumerComponent', () => {
           throw new Error('Promise should fail');
         })
         .catch((err) => {
-          expect(err).to.eql('"scope/box/name::2" does not have a valid compiler interface, it has to expose a build method');
+          expect(err).to.eql(`"scope/box/name${VERSION_DELIMITER}2" does not have a valid compiler interface, it has to expose a build method`);
         });
     });
 

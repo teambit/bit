@@ -52,7 +52,7 @@ export default class BitId {
     const componentStr = ignoreScope || !scope ? [box, name].join('/') : [scope, box, name].join('/');
     // when there is no scope and the version is latest, omit the version.
     if (ignoreVersion || (!scope && !this.hasVersion())) return componentStr;
-    return componentStr.concat(`::${version}`);
+    return componentStr.concat(`${VERSION_DELIMITER}${version}`);
   }
 
   toObject() {

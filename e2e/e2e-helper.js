@@ -3,6 +3,7 @@ import path from 'path';
 import childProcess from 'child_process';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
+import { VERSION_DELIMITER } from '../src/constants';
 
 export default class Helper {
   constructor() {
@@ -149,3 +150,5 @@ export default class Helper {
     return this.runCmd(`bit show ${id} ${value}`);
   }
 }
+
+export { VERSION_DELIMITER };

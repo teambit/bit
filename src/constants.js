@@ -78,7 +78,7 @@ export const SPACE_DELIMITER = ' ';
 
 export const DEFAULT_BOX_NAME = 'global';
 
-export const VERSION_DELIMITER = '::';
+export const VERSION_DELIMITER = '@';
 
 export const DEPENDENCY_MAP_FILENAME = 'dependencies.json';
 
