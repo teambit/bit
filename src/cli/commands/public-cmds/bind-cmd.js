@@ -10,6 +10,7 @@ export default class Create extends Command {
   opts = [
     ['v', 'verbose', 'showing the driver path'],
   ];
+  private = true;
   loader = true;
 
   action(args: string[], { verbose }: { verbose: ?bool }): Promise<*> {

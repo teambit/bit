@@ -13,6 +13,7 @@ export default class Modify extends Command {
     ['v', 'verbose', 'showing npm verbose output for inspection'],
   ];
   loader = true;
+  private = true;
 
   action([id, ]: [string, ], { no_env, verbose }: { no_env?: bool, verbose?: bool }): Promise<Bit> {
     return modify({ id, no_env, verbose })

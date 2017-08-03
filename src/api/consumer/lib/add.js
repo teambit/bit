@@ -8,8 +8,8 @@ import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import logger from '../../../logger/logger';
-
-export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[]): Promise<Object> {
+import isGlob from 'is-glob';
+export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[]): Promise<Object> {
 
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
     if (!componentPath) return componentPath;
@@ -23,7 +23,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
     const markTestsFiles = (files, relativeTests) => {
       relativeTests.forEach(testPath => {
-        const file = R.find(R.propEq('relativePath', testPath))(files); 
+        const file = R.find(R.propEq('relativePath', testPath))(files);
         if (file){
           file.test = true;
         } else { // Support case when a user didn't enter the test file into the files
@@ -41,6 +41,25 @@ export default async function addAction(componentPaths: string[], id?: string, m
                             origin: COMPONENT_ORIGINS.AUTHORED });
       return { id: componentId.toString(), files };
     };
+
+    async function getAllFiles(files: string[]){
+      const filesArr = await Promise.all(files.map(async componentPath => {
+        const files = {};
+        if (isGlob(componentPath)){
+          const matches = await glob(componentPath);
+          matches.forEach((match) =>  files[match] = match);
+        } else if (isDir(componentPath)) {
+          const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
+          const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
+          matches.forEach((match) =>  files[match] = match);
+        } else { // is file
+          const relativeFilePath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
+          files[relativeFilePath] = relativeFilePath
+        }
+        return files;
+      }));
+      return R.mergeAll(filesArr);
+    }
 
     let parsedId: BitId;
     let componentExists = false;
@@ -76,7 +95,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
         }
         return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
       } else { // is file
-        const pathParsed = path.parse(componentPath);
+        var resolvedPath = path.resolve(componentPath);
+        const pathParsed = path.parse(resolvedPath);
         const relativeFilePath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
 
         if (!parsedId) {
@@ -99,13 +119,25 @@ export default async function addAction(componentPaths: string[], id?: string, m
       }
     });
 
-    const mapValues = await Promise.all(mapValuesP);
+    var mapValues = await Promise.all(mapValuesP);
+
+    if (exclude){
+      const resolvedExcludedFiles =  await getAllFiles(exclude);
+      mapValues.forEach(mapVal => {
+        mapVal.files=mapVal.files.filter(key => !resolvedExcludedFiles[key.relativePath] );
+        mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles[testFile])
+      });
+    }
+
+    const componentId = mapValues[0].componentId;
+    mapValues = mapValues.filter(mapVal => !(Object.keys(mapVal.files).length === 0));
+
+    if (mapValues.length === 0) return ({ id: componentId, files:[] });
     if (mapValues.length === 1) return addToBitMap(mapValues[0]);
 
     const files = mapValues.reduce((a, b) => {
       return a.concat(b.files);
     }, []);
-    const componentId = mapValues[0].componentId;
 
     return addToBitMap({ componentId, files, mainFile: main, testsFiles: tests });
   }
@@ -128,8 +160,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
     logger.debug('bit add - multiple components');
     const addedP = Object.keys(componentPathsStats).map(onePath => {
       return addOneComponent({
-      [onePath]: componentPathsStats[onePath]}, bitMap, consumer)
-  });
+        [onePath]: componentPathsStats[onePath]}, bitMap, consumer)
+    });
     added = await Promise.all(addedP);
   } else {
     logger.debug('bit add - one component');

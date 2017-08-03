@@ -21,4 +21,8 @@ export default class Cmd {
   handleError(): ?string {
     return null;
   }
+
+  splitList(val) {
+    return val.split(',');
+  }
 }

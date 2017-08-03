@@ -7,14 +7,13 @@ export default function status(): Promise<{ inline: Component[], sources: Compon
   return loadConsumer()
   .then((consumer) => {
     const componentsList = new ComponentsList(consumer);
-    const untrackedComponents = componentsList.listUntrackedComponents();
     const newComponents = componentsList.listNewComponents();
     const modifiedComponent = componentsList.listModifiedComponents();
     const stagedComponents = componentsList.listExportPendingComponents();
 
-    return Promise.all([untrackedComponents, newComponents, modifiedComponent, stagedComponents]);
+    return Promise.all([newComponents, modifiedComponent, stagedComponents]);
   })
-  .then(([untrackedComponents, newComponents, modifiedComponent, stagedComponents]) => {
-    return { untrackedComponents, newComponents, modifiedComponent, stagedComponents };
+  .then(([newComponents, modifiedComponent, stagedComponents]) => {
+    return { newComponents, modifiedComponent, stagedComponents };
   });
 }

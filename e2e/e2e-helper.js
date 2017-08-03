@@ -76,6 +76,14 @@ export default class Helper {
     return this.runCmd('bit init --bare', this.remoteScopePath);
   }
 
+  mimicGitCloneLocalProject() {
+    fs.removeSync(path.join(this.localScopePath, '.bit'));
+    fs.removeSync(path.join(this.localScopePath, 'components'));
+    this.runCmd('bit init');
+    this.addRemoteScope();
+    this.runCmd('bit install');
+  }
+
   commitComponent(id:string = 'bar/foo', commitMsg: string = 'commit-message') {
     return this.runCmd(`bit commit ${id} -m ${commitMsg}`);
   }
@@ -167,13 +175,22 @@ export default class Helper {
     fs.outputFileSync(filePath, fixture);
   }
 
-  addComponent(filePaths: string = "bar/foo.js") {
-    return this.runCmd(`bit add ${filePaths}`);
+  addComponent(filePaths: string = "bar/foo.js", cwd = this.localScopePath) {
+    return this.runCmd(`bit add ${filePaths}`, cwd);
   }
 
   addComponentWithOptions(filePaths: string = 'bar/foo.js', options:? Object) {
-    const value = Object.keys(options).map(key => `-${key} ${options[key] }`).join(' ')
+    const value = Object.keys(options).map(key => `-${key} ${options[key]}`).join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`);
+  }
+
+  showComponent(id: string = "bar/foo") {
+    return this.runCmd(`bit show ${id}`);
+  }
+
+  showComponentWithOptions(id: string = "bar/foo", options:? Object) {
+    const value = Object.keys(options).map(key => `-${key} ${options[key]}`).join(' ');
+    return this.runCmd(`bit show ${id} ${value}`);
   }
 }
 

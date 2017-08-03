@@ -1,4 +1,4 @@
-import isString from './is-string';
+import isString from './string/is-string';
 
 const validationRegExp = /^@?[$\-_!.a-z0-9]+$/;
 

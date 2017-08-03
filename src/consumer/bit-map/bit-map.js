@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import find from 'lodash.find';
-import pickBy from 'lodash.pickBy';
+import pickBy from 'lodash.pickby';
 import logger from '../../logger/logger';
 import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_DIR } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
@@ -53,8 +53,10 @@ export default class BitMap {
     return !!this.components[componentId];
   }
 
-  getAllComponents(): Object<string> {
-    return this.components;
+  getAllComponents(origin?: ComponentOrigin): Object<string> {
+    if (!origin) return this.components;
+    const isOriginMatch = component => component.origin === origin;
+    return R.filter(isOriginMatch, this.components);
   }
 
   _makePathRelativeToProjectRoot(pathToChange: string): string {
@@ -227,12 +229,27 @@ export default class BitMap {
    *    componentId: component
    * }
    *
+   * @param {string} rootPath relative to consumer - as stored in bit.map files object
+   * @returns {Object<string, ComponentMap>}
+   * @memberof BitMap
+   */
+  getComponentObjectByPath(filePath: string): Object<string, ComponentMap> {
+    return pickBy(this.components, (componentObject, componentId) => find(componentObject.files, (file) => file.relativePath ===filePath));
+  }
+
+  /**
+   *
+   * Return the full component object by a root path for the component, means:
+   * {
+   *    componentId: component
+   * }
+   *
    * @param {string} path relative to consumer - as stored in bit.map files object
    * @returns {Object<string, ComponentMap>}
    * @memberof BitMap
    */
-  getComponentObjectByPath(path: string): Object<string, ComponentMap> {
-    return pickBy(this.components, (componentObject, componentId) => find(componentObject.files, (file) => file.relativePath === path));
+  getComponentObjectByRootPath(rootPath: string): Object<string, ComponentMap> {
+    return pickBy(this.components, componentObject => componentObject.rootDir === rootPath);
   }
 
   /**

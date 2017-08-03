@@ -22,8 +22,6 @@ import type { ComponentMap } from '../bit-map/bit-map';
 
 import {
   DEFAULT_BOX_NAME,
-  DEFAULT_IMPL_NAME,
-  DEFAULT_SPECS_NAME,
   LATEST_BIT_VERSION,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
@@ -37,25 +35,17 @@ export type ComponentProps = {
   version?: ?number,
   scope?: ?string,
   lang?: string,
-  implFile?: ?string,
-  specsFile?: ?string,
-  filesNames?: ?string[],
   compilerId?: ?BitId,
   testerId?: ?BitId,
   dependencies?: ?BitIds,
   flattenedDependencies?: ?BitIds,
   packageDependencies?: ?Object,
-  impl?: ?Impl|string,
-  specs?: ?Specs|string,
   files?: ?SourceFile[]|[],
   docs?: ?Doclet[],
   dists?: ?Dist[],
-  specDist?: Dist,
   specsResults?: ?SpecsResults,
   license?: ?License,
   log?: ?Log,
-  testsFiles:File[];
-
 }
 
 export default class Component {
@@ -64,55 +54,19 @@ export default class Component {
   version: ?number;
   scope: ?string;
   lang: string;
-  /** @deprecated **/
-  implFile: ?string;
-  /** @deprecated **/
-  specsFile: ?string;
   mainFile: string;
-  filesNames: string[];
   compilerId: ?BitId;
   testerId: ?BitId;
   dependencies: Array<Object>;
   flattenedDependencies: BitIds;
   packageDependencies: Object;
-  /** @deprecated **/
-  _impl: ?Impl|string;
-  /** @deprecated **/
-  _specs: ?Specs|string;
   _docs: ?Doclet[];
   _files: ?SourceFile[]|[];
   dists: ?Dist[];
-  specDist: ?Dist;
   specsResults: ?SpecsResults[];
   license: ?License;
   log: ?Log;
   writtenPath: ?string; // needed for generate links
-
-  set impl(val: Impl) { this._impl = val; }
-
-  get impl(): ?Impl {
-    if (!this._impl) return null;
-
-    if (isString(this._impl)) {
-      // $FlowFixMe
-      this._impl = Impl.load(this._impl);
-    }
-    // $FlowFixMe
-    return this._impl;
-  }
-
-  set specs(val: Specs) { this._specs = val; }
-
-  get specs(): ?Specs {
-    if (!this._specs) return null;
-
-    if (isString(this._specs)) {
-      // $FlowFixMe
-      this._specs = Specs.load(this._specs);
-    }
-    // $FlowFixMe
-    return this._specs;
-  }
 
   set files(val: ?SourceFile[]) { this._files = val; }
 
@@ -148,34 +102,18 @@ export default class Component {
     return this._docs;
   }
 
-  get distImplFileName(): string {
-    // todo: what files should be built?
-    const baseImplName = path.parse(this.implFile).name;
-    return `${baseImplName}.${this.getFileExtension()}`;
-  }
-
-  get distSpecFileName(): string {
-    const baseSpecName = path.parse(this.specsFile).name;
-    return `${baseSpecName}.${this.getFileExtension()}`;
-  }
-
   constructor({
                 name,
                 box,
                 version,
                 scope,
                 lang,
-                implFile,
-                specsFile,
                 mainFile,
-                filesNames,
                 compilerId,
                 testerId,
                 dependencies,
                 flattenedDependencies,
                 packageDependencies,
-                impl,
-                specs,
                 files,
                 docs,
                 dists,
@@ -188,17 +126,12 @@ export default class Component {
     this.version = version;
     this.scope = scope;
     this.lang = lang || DEFAULT_LANGUAGE;
-    this.implFile = implFile || DEFAULT_IMPL_NAME;
-    this.specsFile = specsFile || DEFAULT_SPECS_NAME;
     this.mainFile = mainFile;
-    this.filesNames = filesNames || [];
     this.compilerId = compilerId;
     this.testerId = testerId;
     this.dependencies = dependencies || [];
     this.flattenedDependencies = flattenedDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
-    this._specs = specs;
-    this._impl = impl;
     this._files = files;
     this._docs = docs;
     this.dists = dists;
@@ -227,10 +160,7 @@ export default class Component {
     return new BitJson({
       version: this.version,
       scope: this.scope,
-      impl: this.implFile,
-      spec: this.specsFile,
       lang: this.lang,
-      filesNames: this.filesNames,
       compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this._dependenciesAsWritableObject(),
@@ -258,7 +188,7 @@ export default class Component {
 
     const runBuild = (componentRoot: string): Promise<any> => {
       const metaData = {
-        entry: this.implFile,
+        entry: this.mainFile,
         files: this.files,
         root: componentRoot,
         packageDependencies: this.packageDependencies,
@@ -306,11 +236,8 @@ export default class Component {
 
   async _writeToComponentDir(bitDir: string, withBitJson: boolean, force?: boolean = true) {
     await mkdirp(bitDir);
-    if (this.impl) await this.impl.write(bitDir, this.implFile, force);
-    if (this.specs) await this.specs.write(bitDir, this.specsFile, force);
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists) await this.dists.forEach(dist => dist.write(undefined, force));
-    if (this.specsFile && this.specDist) await this.specDist.write(bitDir, this.distSpecFileName, force);
     if (withBitJson) await this.writeBitJson(bitDir, force);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
     return this;
@@ -357,17 +284,7 @@ export default class Component {
 
     await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
 
-    if (!this.files) {
-      if (!this.impl) throw new Error('Invalid component. There are no files nor impl.js file to write');
-
-      // for backward compatibility add impl.js to files.
-      const implVinylFile = new SourceFile({
-        base: calculatedBitDir,
-        path: path.join(calculatedBitDir, this.implFile),
-        contents: new Buffer(this.impl.src)
-      });
-      this.files = [implVinylFile];
-    }
+    if (!this.files) throw new Error('Invalid component. There are no files to write');
 
     const filesForBitMap = this.files.map((file) => { return { name: file.basename, relativePath: file.relative, test: file.test }; });
 
@@ -404,11 +321,11 @@ export default class Component {
     };
 
     const testFiles = this.files.filter(file => file.test);
-    if (!this.testerId || !testFiles) return null;
+    if (!this.testerId || !testFiles || R.isEmpty(testFiles)) return null;
 
     let testerFilePath;
     try {
-      testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
+      testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
     } catch (err) {
       if (err instanceof ResolutionException) {
         environment = true;
@@ -419,7 +336,7 @@ export default class Component {
     await installEnvironmentsIfNeeded();
     try {
       if (!testerFilePath) {
-        testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
+        testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
       }
 
       const run = async (mainFile: string, distTestFiles: Dist[]) => {
@@ -429,8 +346,8 @@ export default class Component {
               scope,
               testerFilePath,
               testerId: this.testerId,
-              implDistPath: mainFile,
-              specDistPath: testFile.distFilePath,
+              mainFile,
+              testFilePath: testFile.path,
             });
           });
           const specsResults = await Promise.all(specsResultsP);
@@ -456,10 +373,10 @@ export default class Component {
 
       if (!isolated && consumer) {
         await this.build({ scope, environment, verbose, consumer });
-        const saveImplDist = this.dists ?
+        const saveDists = this.dists ?
           this.dists.map(dist => dist.write()) : Promise.resolve();
 
-        await Promise.all(saveImplDist);
+        await Promise.all(saveDists);
 
         const testDists = this.dists.filter(dist => dist.test);
         return run(this.mainFile, testDists);
@@ -472,20 +389,12 @@ export default class Component {
           return isolatedEnvironment.importE2E(this.id.toString());
         })
         .then((component) => {
-          const componentPath = isolatedEnvironment.getComponentPath(component);
           return component.build({ scope, environment, verbose }).then(() => {
-            const specDistWrite = component.specDist ?
-              component.specDist.write(componentPath, this.specsFile) : Promise.resolve();
-            return specDistWrite.then(() => {
-              const implDistPath = this.compilerId ?
-                Dist.getFilePath(componentPath, this.implFile) :
-                path.join(componentPath, this.implFile);
-
-              const specDistPath = this.compilerId ?
-                Dist.getFilePath(componentPath, this.specsFile) :
-                path.join(componentPath, this.specsFile);
-
-              return run({ implDistPath, specDistPath }).then((results) => {
+            const specDistWrite = component.dists ?
+              component.dists.map(file => file.write()) : Promise.resolve();
+            return Promise.all(specDistWrite).then(() => {
+              const testFilesList = component.dists.filter(file => file.test);
+              return run(component.mainFile, testFilesList).then((results) => {
                 return isolatedEnvironment.destroy().then(() => results);
               });
             });
@@ -499,7 +408,7 @@ export default class Component {
   async build({ scope, environment, save, consumer, bitMap, verbose }:
           { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool }):
   Promise<string> { // @TODO - write SourceMap Type
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (!this.compilerId) return resolve(null);
 
       // verify whether the environment is installed
@@ -507,7 +416,7 @@ export default class Component {
       const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
       try {
-        compiler = scope.loadEnvironment(this.compilerId);
+        compiler = await scope.loadEnvironment(this.compilerId);
       } catch (err) {
         if (err instanceof ResolutionException) {
           environment = true;
@@ -530,9 +439,9 @@ export default class Component {
       };
 
       return installEnvironmentIfNeeded()
-        .then(() => {
+        .then(async () => {
           if (!compiler) {
-            compiler = scope.loadEnvironment(this.compilerId);
+            compiler = await scope.loadEnvironment(this.compilerId);
           }
           // todo: what files should be built?
           const buildFilesP = this.buildIfNeeded({
@@ -572,19 +481,14 @@ export default class Component {
       mainFile: this.mainFile,
       scope: this.scope,
       lang: this.lang,
-      implFile: this.implFile,
-      specsFile: this.specsFile,
-      filesNames: this.filesNames,
       compilerId: this.compilerId ? this.compilerId.toString() : null,
       testerId: this.testerId ? this.testerId.toString() : null,
       dependencies: this.dependencies.map(dep => Object.assign({}, dep, { id: dep.id.toString() })), //this._dependenciesAsWritableObject(),
       packageDependencies: this.packageDependencies,
-      specs: this.specs ? this.specs.serialize() : null,
-      impl: this.impl ? this.impl.serialize() : null,
       files: this.files,
       docs: this.docs,
       dists: this.dists,
-      specsResults: this.specsResults ? this.specsResults.serialize() : null,
+      specsResults: this.specsResults ? this.specsResults.map(res => res.serialize()) : null,
       license: this.license ? this.license.serialize() : null,
       log: this.log
     };
@@ -601,15 +505,10 @@ export default class Component {
       version,
       scope,
       lang,
-      implFile,
-      specsFile,
-      filesNames,
       compilerId,
       testerId,
       dependencies,
       packageDependencies,
-      impl,
-      specs,
       docs,
       dists,
       files,
@@ -622,15 +521,10 @@ export default class Component {
       version: parseInt(version),
       scope,
       lang,
-      implFile,
-      specsFile,
-      filesNames,
       compilerId: compilerId ? BitId.parse(compilerId) : null,
       testerId: testerId ? BitId.parse(testerId) : null,
       dependencies: dependencies.map(dep => Object.assign({}, dep, { id: BitId.parse(dep.id) })), //this._dependenciesFromWritableObject(dependencies),
       packageDependencies,
-      impl: Impl ? Impl.deserialize(impl) : null,
-      specs: specs ? Specs.deserialize(specs) : null,
       files,
       docs,
       dists,
@@ -651,10 +545,6 @@ export default class Component {
                             consumerPath: string): Component {
     let dependencies = [];
     let packageDependencies;
-    let implFile;
-    let specsFile;
-    let impl;
-    let specs;
     let bitJson = consumerBitJson;
     let bitDirFullPath = bitDir || consumerPath;
     if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInPath(bitDir));
@@ -672,16 +562,6 @@ export default class Component {
       if (bitJson) {
         dependencies = this._dependenciesFromWritableObject(bitJson.dependencies);
         packageDependencies = bitJson.packageDependencies;
-
-        // We only create those attribute in case of imported component because
-        // Adding new component shouldn't generate those anymore
-        // It's mainly for backward compatibility
-        if (!files) {
-          implFile = bitJson.getImplBasename();
-          specsFile = bitJson.getSpecBasename();
-          impl = path.join(bitDir, bitJson.getImplBasename());
-          specs = path.join(bitDir, bitJson.getSpecBasename());
-        }
       }
     }
 
@@ -702,10 +582,6 @@ export default class Component {
       files: vinylFiles || [],
       dependencies,
       packageDependencies,
-      implFile,
-      specsFile,
-      impl,
-      specs
     });
   }
 

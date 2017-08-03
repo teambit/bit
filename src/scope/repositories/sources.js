@@ -141,11 +141,9 @@ export default class SourceRepository {
   )
   : Promise<Object> {
     await consumerComponent.build({ scope: this.scope, consumer });
-    const impl = consumerComponent.impl ? Source.from(bufferFrom(consumerComponent.impl.src)) : null;
     const dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
       return { name: dist.basename, relativePath: dist.relative, file: Source.from(dist.contents), test: dist.test };
     }) : null;
-    const specs = consumerComponent.specs ? Source.from(bufferFrom(consumerComponent.specs.src)): null;
     const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
       return { name: file.basename, relativePath: file.relative, file: Source.from(file.contents), test: file.test };
     }) : null;
@@ -154,12 +152,10 @@ export default class SourceRepository {
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
     loader.start(BEFORE_RUNNING_SPECS);
-    const specsResults =  await consumerComponent
+    const specsResults = await consumerComponent
       .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
     const version = Version.fromComponent({
       component: consumerComponent,
-      impl,
-      specs,
       files,
       dists,
       flattenedDeps: depIds,
@@ -169,7 +165,7 @@ export default class SourceRepository {
       email,
     });
 
-    return { version, impl, specs, dists, files };
+    return { version, dists, files };
   }
 
   async addSource({ source, depIds, message, force, consumer, verbose }: {
@@ -184,15 +180,13 @@ export default class SourceRepository {
 
     // if a component exists in the model, add a new version. Otherwise, create a new component on them model
     const component = await this.findOrAddComponent(source);
-    const { version, impl, specs, dists, files } = await this
+    const { version, dists, files } = await this
       .consumerComponentToVersion({ consumerComponent: source, consumer, message, depIds, force, verbose });
     component.addVersion(version);
 
     objectRepo
       .add(version)
       .add(component)
-      .add(impl)
-      .add(specs);
 
     if (files) files.forEach(file => objectRepo.add(file.file));
     if (dists) dists.forEach(dist => objectRepo.add(dist.file));

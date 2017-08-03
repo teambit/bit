@@ -1,17 +1,17 @@
 {
-    "structure": "components/{namespace}/{name}",
     "sources": {
         "impl": "impl.js",
         "spec": "spec.js"
     },
     "env": {
-        "compiler": "bit.envs/compilers/flow",
-        "tester": "bit.envs/testers/mocha"
-    },
-    "dist": {
-        "target": "dist",
-        "entry": "src"
+        "compiler": "none",
+        "tester": "none"
     },
     "dependencies": {
+    },
+    "structure": "components/{namespace}/{name}",
+    "dist": {
+        "target": "dist",
+        "entry": ""
     }
 }

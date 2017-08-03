@@ -1,6 +1,7 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs-extra';
+import path from 'path';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
 import { GlobalRemotes } from '../global-config';
@@ -11,7 +12,7 @@ import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } from '../utils';
-import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, BIT_JSON } from '../constants';
+import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, BIT_JSON, DEFAULT_DIST_DIRNAME } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
 import { RemoteScopeNotFound } from './network/exceptions';
@@ -481,7 +482,7 @@ export default class Scope {
       });
   }
 
-  get(id: BitId): Promise<ConsumerComponent> {
+  async get(id: BitId): Promise<ConsumerComponent> {
     return this.import(id)
       .then((versionDependencies) => {
         return versionDependencies.toConsumer(this.objects);
@@ -604,7 +605,7 @@ export default class Scope {
       });
   }
 
-  getOne(id: BitId): Promise<ComponentVersion> {
+  async getOne(id: BitId): Promise<ComponentVersion> {
     if (!id.isLocal(this.name)) {
       return this.remotes()
         .then(remotes => this.getExternalOne({ id, remotes, localFetch: true }));
@@ -666,18 +667,23 @@ export default class Scope {
   /**
    * sync method that loads the environment/(path to environment component)
    */
-  loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?bool, bareScope?: ?bool }) {
+  async loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?bool, bareScope?: ?bool }): Promise<> {
     // const envDir = opts && opts.bareScope ? this.getPath() : pathLib.dirname(this.getPath());
+    if (!bitId) throw new ResolutionException();
+    const envComponent = (await this.get(bitId)).component;
+    const mainFile = (envComponent.dists && !R.isEmpty(envComponent.dists)) ? path.join(DEFAULT_DIST_DIRNAME, envComponent.mainFile) 
+                                                                           : envComponent.mainFile;
+   
     if (opts && opts.pathOnly) {
       try {
-        return componentResolver(bitId.toString(), this.getPath());
+        return componentResolver(bitId.toString(), mainFile, this.getPath());
       } catch (e) {
         throw new ResolutionException(e.message);
       }
     }
 
     try {
-      const envFile = componentResolver(bitId.toString(), this.getPath());
+      const envFile = componentResolver(bitId.toString(), mainFile, this.getPath());
       logger.debug(`Requiring an environment file at ${envFile}`);
       return require(envFile);
     } catch (e) {
