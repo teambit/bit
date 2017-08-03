@@ -1,4 +1,4 @@
-import fromBase64 from './from-base64';
+import fromBase64 from './string/from-base64';
 
 module.exports = function unpackCmd(str) {
   try {

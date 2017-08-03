@@ -1,5 +1,5 @@
 /** @flow */
-import forEach from './foreach';
+import forEach from './object/foreach';
 
 export default function objectToStringifiedTupleArray(obj: {[string|number]: any}): [string|number][] {
   const arr = [];
