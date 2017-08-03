@@ -138,7 +138,7 @@ export default class Helper {
 
       fs.emptyDirSync(this.envScopePath);
       this.runCmd('bit init --bare', this.envScopePath);
-      this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
+      this.runCmd(`bit remote add file://${this.envScopePath} -g`, tempScopePath);
 
       this.runCmd(`bit export ${this.envScope} compilers/babel`, tempScopePath);
       this.addRemoteScope(this.envScopePath);
