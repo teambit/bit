@@ -109,7 +109,6 @@ export default class Helper {
       const tempScope = v4();
       const tempScopePath = path.join(this.e2eDir, tempScope);
       fs.emptyDirSync(tempScopePath);
-      console.log(tempScopePath);
 
       this.runCmd('bit init', tempScopePath);
     
@@ -128,6 +127,11 @@ export default class Helper {
       ensureAndWriteJson(path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'package.json'), babelPluginTransformObjectRestSpreadPackageJson);
       ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'package.json'), babelPresetLatestPackageJson);
       ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'package.json'), vinylPackageJson);
+
+      ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'index.js'), '');
+      ensureAndWriteJson(path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'index.js'), '');
+      ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'index.js'), '');
+      ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'index.js'), '');
 
       this.runCmd('bit add compiler.js -i compilers/babel', tempScopePath);
       this.runCmd('bit commit compilers/babel -m msg', tempScopePath);
@@ -194,7 +198,7 @@ export default class Helper {
   }
 }
 
-function ensureAndWriteJson(filePath, fileContent){
+function ensureAndWriteJson(filePath, fileContent) {
   fs.ensureFileSync(filePath);
-  fs.ensureFileSync(filePath, fileContent);
+  fs.writeJsonSync(filePath, fileContent);
 }
