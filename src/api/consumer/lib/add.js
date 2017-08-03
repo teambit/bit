@@ -95,7 +95,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
         }
         return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
       } else { // is file
-        const pathParsed = path.parse(componentPath);
+        var resolvedPath = path.resolve(componentPath);
+        const pathParsed = path.parse(resolvedPath);
         const relativeFilePath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
 
         if (!parsedId) {
