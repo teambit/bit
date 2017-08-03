@@ -24,9 +24,9 @@ export async function build(id: string): Promise<?Array<string>> {
   return distFilePaths;
 }
 
-async function buildAllResults(components, consumer) {
+async function buildAllResults(components, consumer, bitMap) {
   return components.map(async (component) => {
-    const result = await component.build({ scope: consumer.scope, consumer });
+    const result = await component.build({ scope: consumer.scope, consumer, bitMap });
     const bitId = new BitId({ box: component.box, name: component.name });
     if (result === null) {
       return { component: bitId.toString(), buildResults: null };
@@ -42,7 +42,7 @@ export async function buildAll(): Promise<Object> {
   const bitMap = await BitMap.load(consumer.getPath());
   const componentsList = new ComponentsList(consumer);
   const newAndModifiedComponents = await componentsList.newAndModifiedComponents();
-  const buildAllP = await buildAllResults(newAndModifiedComponents, consumer);
+  const buildAllP = await buildAllResults(newAndModifiedComponents, consumer, bitMap);
   const allComponents = await Promise.all(buildAllP);
   const componentsObj = {};
   allComponents.forEach((component) => {

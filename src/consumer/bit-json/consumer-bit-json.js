@@ -4,7 +4,7 @@ import R from 'ramda';
 import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
 import { BitJsonNotFound, BitJsonAlreadyExists } from './exceptions';
-import { BIT_JSON, DEFAULT_DIST_DIRNAME, DEFAULT_DIST_ENTRY, DEFAULT_DIR_STRUCTURE } from '../../constants';
+import { BIT_JSON, DEFAULT_DIST_DIRNAME, DEFAULT_DIR_STRUCTURE } from '../../constants';
 
 function composePath(bitPath: string) {
   return path.join(bitPath, BIT_JSON);
@@ -15,14 +15,12 @@ function hasExisting(bitPath: string): boolean {
 }
 
 export default class ConsumerBitJson extends AbstractBitJson {
-  distEntry: string;  // base path to copy the dist structure from
   distTarget: string; // path where to store build artifacts
   structure: string;  // directory structure template where to store imported components
 
-  constructor({ impl, spec, compiler, tester, dependencies, lang, distTarget, distEntry, structure }) {
+  constructor({ impl, spec, compiler, tester, dependencies, lang, distTarget, structure }) {
     super({ impl, spec, compiler, tester, dependencies, lang });
     this.distTarget = distTarget || DEFAULT_DIST_DIRNAME;
-    this.distEntry = distEntry || DEFAULT_DIST_ENTRY;
     this.structure = structure || DEFAULT_DIR_STRUCTURE;
   }
 
@@ -32,7 +30,6 @@ export default class ConsumerBitJson extends AbstractBitJson {
       structure: this.structure,
       dist: {
         target: this.distTarget,
-        entry: this.distEntry,
       },
     });
   }
@@ -79,7 +76,6 @@ export default class ConsumerBitJson extends AbstractBitJson {
       dependencies,
       structure,
       distTarget: R.propOr(undefined, 'target', dist),
-      distEntry: R.propOr(undefined, 'entry', dist),
     });
   }
 

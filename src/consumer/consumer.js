@@ -14,7 +14,8 @@ import {
   ConsumerNotFound,
   NothingToImport,
   MissingDependencies,
-  MissingDependenciesOnFs
+  MissingDependenciesOnFs,
+  MissingPackageDependenciesOnFs
 } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
@@ -216,6 +217,7 @@ export default class Consumer {
         // Check if there is missing dependencies in file system
         // TODO: Decide if we want to throw error once there is missing or only in the end
         if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) throw (new MissingDependenciesOnFs(dependenciesTree.missing.files));
+        if (dependenciesTree.missing.packages && !R.isEmpty(dependenciesTree.missing.packages)) throw (new MissingPackageDependenciesOnFs(dependenciesTree.missing.packages));
       }
 
       // We only care of the relevant sub tree from now on

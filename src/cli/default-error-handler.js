@@ -10,7 +10,8 @@ import {
   ConsumerNotFound,
   ComponentSpecsFailed,
   MissingDependencies,
-  MissingDependenciesOnFs
+  MissingDependenciesOnFs,
+  MissingPackageDependenciesOnFs
 } from '../consumer/exceptions';
 import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
@@ -50,6 +51,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit'],
   [ MissingDependencies, (err) => `fatal: The following dependencies not found - "${chalk.bold(err.dependencies.join())}"`],
   [ MissingDependenciesOnFs, (err) => `fatal: The following dependencies not found on file system - "${chalk.bold(err.dependencies.join())}"`],
+  [ MissingPackageDependenciesOnFs, (err) => `fatal: The following package dependencies not found on file system - "${chalk.bold(err.packageDependencies.join())}"`],
   [ NothingToImport, () => 'there is nothing to import'],
   [ InvalidIdChunk, err => `invalid id part in "${chalk.bold(err.id)}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]`],
   [ InvalidBitJson, err => `error: ${chalk.bold(err.path)} is not a valid JSON file.`],

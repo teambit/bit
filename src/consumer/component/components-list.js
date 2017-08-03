@@ -96,7 +96,7 @@ export default class ComponentsList {
     }, {});
 
     const modifiedComponents = [];
-    Object.keys(objectComponents).forEach(async (id) => {
+    const calculateModified = Object.keys(objectComponents).map(async (id) => {
       const bitId = BitId.parse(id);
       const componentFromFS = objFromFileSystem[bitId.toString()];
 
@@ -108,7 +108,9 @@ export default class ComponentsList {
       } else {
         logger.warn(`a component ${id} exists in the model but not on the file system`);
       }
+      return Promise.resolve();
     });
+    await Promise.all(calculateModified);
     return modifiedComponents;
   }
 
