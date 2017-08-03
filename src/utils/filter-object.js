@@ -1,5 +1,5 @@
 /** @flow */
-import forEach from './foreach';
+import forEach from './object/foreach';
 
 /**
  *
