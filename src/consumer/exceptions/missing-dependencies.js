@@ -1,11 +1,9 @@
 /** @flow */
 export default class MissingDependencies extends Error {
-  dependencies: string[];
-  code: number;
+  components: Object;
 
-  constructor(dependencies: string[]) {
+  constructor(components) {
     super();
-    this.code = 127;
-    this.dependencies = dependencies;
+    this.components = components;
   }
 }

@@ -3,6 +3,8 @@ import R from 'ramda';
 import { loadConsumer } from '../../../consumer';
 import InvalidIdOnCommit from './exceptions/invalid-id-on-commit';
 import ComponentsList from '../../../consumer/component/components-list';
+import {  MissingDependencies } from '../../../consumer/exceptions';
+import logger from '../../../logger/logger';
 
 export async function commitAction({ id, message, force, verbose }:
 { id: string, message: string, force: ?bool, verbose?: bool }) {
@@ -11,6 +13,9 @@ export async function commitAction({ id, message, force, verbose }:
     const components = await consumer.commit([id], message, force, verbose);
     return R.head(components);
   } catch (err) {
+    if (err instanceof MissingDependencies) return Promise.reject(err)
+    logger.info('real error during commit:', err.message);
+    // TODO: should be changes, we don't want this to be always the error, it should propagate from the below layer
     return Promise.reject(new InvalidIdOnCommit(id));
   }
 }

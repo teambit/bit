@@ -4,8 +4,6 @@ import NothingToImport from './nothing-to-import';
 import ComponentSpecsFailed from './component-specs-failed';
 import DriverNotFound from './driver-not-found';
 import MissingDependencies from './missing-dependencies';
-import MissingDependenciesOnFs from './missing-dependencies-fs';
-import MissingPackageDependenciesOnFs from './missing-package-dependencies-fs';
 
 export {
   ConsumerNotFound,
@@ -13,7 +11,5 @@ export {
   NothingToImport,
   ComponentSpecsFailed,
   DriverNotFound,
-  MissingDependencies,
-  MissingDependenciesOnFs,
-  MissingPackageDependenciesOnFs
+  MissingDependencies
 };

@@ -199,6 +199,7 @@ export default class Consumer {
       const component = Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
       if (component.dependencies && !R.isEmpty(component.dependencies)) return component; // if there is bit.json use if for dependencies.
       const mainFile = componentMap.mainFile;
+      component.missingDependencies = {};
       // Check if we already calculate the dependency tree (because it is another component dependency)
       if (fullDependenciesTree.tree[idWithConcreteVersion]) {
         // If we found it in the full tree it means we already take care of the missings earlier
@@ -214,10 +215,12 @@ export default class Consumer {
         if (dependenciesTree.missing.files) fullDependenciesTree.missing.files = fullDependenciesTree.missing.files.concat(dependenciesTree.missing.files);
         if (dependenciesTree.missing.packages) fullDependenciesTree.missing.packages = fullDependenciesTree.missing.packages.concat(dependenciesTree.missing.packages);
         if (dependenciesTree.missing.bits) fullDependenciesTree.missing.bits = fullDependenciesTree.missing.bits.concat(dependenciesTree.missing.bits);
+        
         // Check if there is missing dependencies in file system
-        // TODO: Decide if we want to throw error once there is missing or only in the end
-        if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) throw (new MissingDependenciesOnFs(dependenciesTree.missing.files));
-        if (dependenciesTree.missing.packages && !R.isEmpty(dependenciesTree.missing.packages)) throw (new MissingPackageDependenciesOnFs(dependenciesTree.missing.packages));
+        // Add missingDependenciesOnFs to component
+        if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) component.missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
+        // Add missingPackagesDependenciesOnFs to component
+        if (dependenciesTree.missing.packages && !R.isEmpty(dependenciesTree.missing.packages)) component.missingDependencies.missingPackagesDependenciesOnFs = dependenciesTree.missing.packages;
       }
 
       // We only care of the relevant sub tree from now on
@@ -246,8 +249,8 @@ export default class Consumer {
           }
         }
       });
-      // TODO: Merge all missing for all components (nested as well)
-      if (!R.isEmpty(dependenciesMissingInMap)) throw new MissingDependencies([dependenciesMissingInMap]);
+      // Add untrackedDependencies to component
+      if (!R.isEmpty(dependenciesMissingInMap)) component.missingDependencies.untrackedDependencies = dependenciesMissingInMap;
 
       // TODO: add the bit/ dependencies as well
       component.dependencies = dependencies;
@@ -478,8 +481,15 @@ export default class Consumer {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const components = await this.loadComponents(componentsIds);
-    await this.scope
-      .putMany({ consumerComponents: components, message, force, consumer: this, verbose });
+    
+    // Run over the components to check if there is missing depenedencies
+    // If there is at least one we won't commit anything
+    const componentsWithMissingDeps = components.filter((component) => {
+      return (component.missingDependencies && !R.isEmpty(component.missingDependencies));
+    });
+    if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
+
+    await this.scope.putMany({ consumerComponents: components, message, force, consumer: this, verbose });
     return components;
   }
 
