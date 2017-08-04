@@ -119,7 +119,7 @@ describe('bit commit command', function () {
 
     });
 
-    describe.only('missing dependencies errors', () => {
+    describe('missing dependencies errors', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
