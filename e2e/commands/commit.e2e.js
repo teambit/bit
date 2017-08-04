@@ -119,37 +119,60 @@ describe('bit commit command', function () {
 
     });
 
-    // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
-    it('Should throw error if there is missing dependencies on file system', () => {
-      const fixture = "import foo from './foo'; module.exports = function foo2() { return 'got foo'; };";
-      helper.createComponent('bar', 'foo2.js', fixture);
-      helper.addComponent('bar/foo2.js');
-      const commitAll = () => helper.commitAllComponents();
-      expect(commitAll).to.throw(`Command failed: ${helper.bitBin} commit -am commit-message\nfatal: The following dependencies not found on file system - "./foo"\n`);
+    describe.only('missing dependencies errors', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        const fileAfixture = 'import a2 from \'./a2\'; import a3 from \'./a3\'';
+        helper.createFile('src', 'a.js', fileAfixture);
+        const fileA2fixture = 'import a3 from \'./a3\';import pdackage from \'package\';import missingfs from \'./missing-fs\';import untracked from \'./untracked.js\';';
+        helper.createFile('src', 'a2.js', fileA2fixture);
+        const fileBfixture = 'import b3 from \'./b3\';import pdackage from \'package2\';import missingfs from \'./missing-fs2\';import untracked from \'./untracked2.js\';';
+        helper.createFile('src', 'b.js', fileBfixture);
+        
+        helper.createFile('src', 'untracked.js');
+        helper.createFile('src', 'untracked2.js');
+        
+        helper.addComponentWithOptions('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
+        helper.addComponent('src/b.js');
+
+        const commitAll = () => helper.commitAllComponents();
+        try {
+          commitAll();
+        } catch (err) {
+          output = err.toString();
+        }
+      });
+
+      // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
+      it('Should print that there is missing dependencies', () => {
+        expect(output).to.have.string('fatal: The following dependencies not found:');
+      });
+
+      it('Should print the components name with missing dependencies', () => {
+        expect(output).to.have.string('@this/comp/a - latest');
+        expect(output).to.have.string('@this/src/b - latest');
+      });
+
+      it('Should print that there is missing dependencies on file system (nested)', () => {
+        expect(output).to.have.string('./a3');
+        expect(output).to.have.string('./missing-fs');
+        expect(output).to.have.string('./b3');
+        expect(output).to.have.string('./missing-fs2');
+      });
+
+      // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
+      it('Should print that there is missing package dependencies on file system (nested)', () => {
+        expect(output).to.have.string('package');
+        expect(output).to.have.string('package2');
+      });
+
+      it('Should print that there is untracked dependencies on file system (nested)', () => {
+        expect(output).to.have.string('src/untracked.js');
+        expect(output).to.have.string('src/untracked2.js');
+      });
     });
 
-    // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
-    it('Should throw error if there is untracked files dependencies', () => {
-      helper.createComponentBarFoo();
-      const fixture = "import foo from './foo'; module.exports = function foo2() { return 'got foo'; };";
-      helper.createComponent('bar', 'foo2.js', fixture);
-      helper.addComponent('bar/foo2.js');
-      const commitAll = () => helper.commitAllComponents();
-      expect(commitAll).to.throw(`Command failed: ${helper.bitBin} commit -am commit-message\nfatal: The following dependencies not found - "bar/foo.js"\n`);
-    });
-
-    it.skip('Should print more then one level of untracked files dependencies', () => {
-      helper.createComponentBarFoo();
-      const foo2fixture = "import foo from './foo'; module.exports = function foo2() { return 'got foo'; };";
-      helper.createComponent('bar', 'foo2.js', foo2fixture);
-
-      const foo3fixture = "import foo2 from './foo2'; module.exports = function foo3() { return 'got foo'; };";
-      helper.createComponent('bar', 'foo3.js', foo3fixture);
-      helper.addComponent('bar/foo3.js');
-
-      const commitAll = () => helper.commitAllComponents();
-      expect(commitAll).to.throw(`Command failed: ${helper.bitBin} commit -am commit-message\nfatal: The following dependencies not found - "bar/foo2.js,bar/foo.js"\n`);
-    });
 
     // We throw this error because we don't know the packege version in this case
     it.skip('should throw error if there is missing package dependency', () => {
