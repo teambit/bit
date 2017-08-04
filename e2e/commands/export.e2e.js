@@ -78,7 +78,7 @@ describe('bit export command', function () {
       helper.exportAllComponents();
     });
     it('should export them all', () => {
-      const output = helper.runCmd(`bit list ${helper.remoteScope}`);
+      const output = helper.runCmd(`bit list ${helper.remoteScope} --bare`);
       expect(output.includes('Total 2 components')).to.be.true;
       expect(output.includes('bar')).to.be.true;
       expect(output.includes('baz')).to.be.true;
