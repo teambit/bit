@@ -22,29 +22,66 @@ export default async function addAction(componentPaths: string[], id?: string, m
   async function addOneComponent(componentPathsStats: Object, bitMap: BitMap, consumer: Consumer,
                                  keepDirectoryName: boolean = false) {
 
+    //remove excluded files from file list
+    async function removeExcludedFiles (mapValues, excludedList){
+      const resolvedExcludedFiles = await getAllFiles(excludedList);
+      mapValues.forEach(mapVal => {
+        mapVal.files=mapVal.files.filter(key => !resolvedExcludedFiles[key.relativePath] );
+        mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles[testFile])
+      });
+    }
 
-    function updateTestFilesAccordingToDsl(files,domainSpecificStrings) {
+    //Split tests array according to glob or dsl
+    function splitTestAccordingToPattern(tests){
+      const domainSpecificTestFiles =[];
+      const globArray =[];
+      tests.forEach(file => file.match(REGEX)? domainSpecificTestFiles.push(file) : globArray.push(file));
+      return ({ domainSpecificTestFiles: domainSpecificTestFiles, testFiles: globArray })
+    }
+
+    //update test files according to dsl
+    function updateFilesAccordingToDsl(files,domainSpecificStrings) {
+      const newFilesArr = files;
       if (domainSpecificStrings) {
         domainSpecificStrings.forEach(dsl => {
           files.forEach(file => {
             const fileInfo = calculateFileInfo(file.relativePath)
-            var generatedFile =  dsl.replace(FILE_NAME,fileInfo.fileName);
-            generatedFile = generatedFile.replace(PARENT_FOLDER,fileInfo.parent);
-            if (fs.existsSync(generatedFile)) files.push({relativePath: generatedFile, test: true, name: path.basename(generatedFile)});
+            var generatedFile = dsl.replace(new RegExp(FILE_NAME,'g'),fileInfo.fileName);
+            generatedFile = generatedFile.replace(new RegExp(PARENT_FOLDER,'g'),fileInfo.parent);
+            if (fs.existsSync(generatedFile)) newFilesArr.push({relativePath: generatedFile, test: true, name: path.basename(generatedFile)});
           })
         })
       }
-      return files;
+      return newFilesArr;
+    }
+    //used for updating main file if exists or dosent exists
+    function addMainFileToFiles(files,mainFile) {
+      if (mainFile && mainFile.match(REGEX)) {
+          files.forEach(file => {
+            const fileInfo = calculateFileInfo(file.relativePath)
+            let generatedFile = mainFile.replace(new RegExp(FILE_NAME,'g'),fileInfo.fileName);
+            generatedFile = generatedFile.replace(new RegExp(PARENT_FOLDER,'g'),fileInfo.parent);
+            const foundFile = R.find(R.propEq('relativePath', generatedFile))(files);
+            if (foundFile) {
+              mainFile = foundFile.relativePath;
+            }
+            if (fs.existsSync(generatedFile) && !foundFile) {
+              files.push({ relativePath: generatedFile, test: false, name: path.basename(generatedFile) });
+              mainFile = generatedFile
+            }
+          });
+      }
+      return mainFile;
     }
     const markTestsFiles = (files, relativeTests) => {
-       relativeTests.forEach(testPath => {
-          const file = R.find(R.propEq('relativePath', testPath))(files);
-          if (file){
-            file.test = true;
-          } else { // Support case when a user didn't enter the test file into the files
-            files.push({relativePath: testPath, test: true, name: path.basename(testPath)});
-          }
-        });
+      relativeTests.forEach(testPath => {
+        const file = R.find(R.propEq('relativePath', testPath))(files);
+        if (file){
+          file.test = true;
+        } else { // Support case when a user didn't enter the test file into the files
+          files.push({relativePath: testPath, test: true, name: path.basename(testPath)});
+        }
+      });
 
       return files;
     }
@@ -63,7 +100,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         if (isGlob(componentPath)){
           const matches = await glob(componentPath);
           matches.forEach((match) =>  files[match] = match);
-        } else if (isDir(componentPath)) {
+        } else if (fs.existsSync(componentPath) && isDir(componentPath)) {
           const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
           const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
           matches.forEach((match) =>  files[match] = match);
@@ -83,8 +120,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
       parsedId = BitId.parse(id);
     }
 
-    const domainSpecificTestFiles = tests.filter(file => file.match(REGEX));
-    const testFiles = tests.filter(file => !file.match(REGEX));
+    const { domainSpecificTestFiles, testFiles } = splitTestAccordingToPattern(tests);
     tests = Object.keys(await getAllFiles(testFiles)).map( (item) => item);
 
     const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
@@ -99,7 +135,10 @@ export default async function addAction(componentPaths: string[], id?: string, m
         if (!matches.length) throw new Error(`The directory ${relativeComponentPath} is empty, nothing to add`);
 
         let files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
-        files = updateTestFilesAccordingToDsl(files,domainSpecificTestFiles);
+
+        //mark or add test files according to dsl
+        files = updateFilesAccordingToDsl(files,domainSpecificTestFiles);
+        const resolvedMainFile = addMainFileToFiles(files,main);
         // matches.forEach((match) => {
         //   if (keepDirectoryName) {
         //     files[match] = match;
@@ -112,7 +151,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
         if (!parsedId) {
           parsedId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
         }
-        return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
+
+        return { componentId: parsedId, files, mainFile: resolvedMainFile, testsFiles: tests };
       } else { // is file
         var resolvedPath = path.resolve(componentPath);
         const pathParsed = path.parse(resolvedPath);
@@ -130,24 +170,23 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
         let files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
 
-        files = updateTestFilesAccordingToDsl(files,domainSpecificTestFiles);
+        //mark or add test files according to dsl
+        files = updateFilesAccordingToDsl(files,domainSpecificTestFiles);
+        const resolvedMainFile = addMainFileToFiles(files,main);
+
         if (componentExists) {
-          return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
+          return { componentId: parsedId, files, mainFile: resolvedMainFile, testsFiles: tests };
         }
 
         return { componentId: parsedId, files, mainFile: relativeFilePath, testsFiles: tests };
       }
     });
 
+
     var mapValues = await Promise.all(mapValuesP);
 
-    if (exclude){
-      const resolvedExcludedFiles =  await getAllFiles(exclude);
-      mapValues.forEach(mapVal => {
-        mapVal.files=mapVal.files.filter(key => !resolvedExcludedFiles[key.relativePath] );
-        mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles[testFile])
-      });
-    }
+    //remove files that are excluded
+    if (exclude) await removeExcludedFiles(mapValues,exclude);
 
     const componentId = mapValues[0].componentId;
     mapValues = mapValues.filter(mapVal => !(Object.keys(mapVal.files).length === 0));
@@ -194,6 +233,5 @@ export default async function addAction(componentPaths: string[], id?: string, m
     added.push(addedOne);
   }
   await bitMap.write();
-
   return added;
 }
