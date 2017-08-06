@@ -94,7 +94,7 @@ describe('bit add command', function () {
     it('Define dynamic main file ', () => {
       helper.createComponent('bar', 'bar.js');
       helper.createComponent('bar', 'foo1.js');
-      helper.addComponentWithOptions('bar/', { 'm':`${PARENT_FOLDER}/${PARENT_FOLDER}.js`, 'n': 'test' });
+      helper.addComponentWithOptions('bar/', { 'm':'{PARENT_FOLDER}/${PARENT_FOLDER}.js', 'n': 'test' });
       const bitMap = helper.readBitMap();
       const mainFile = bitMap['test/bar'].mainFile;
       expect(bitMap).to.have.property('test/bar');
@@ -103,7 +103,7 @@ describe('bit add command', function () {
     it('Should add component with spec file from another dir according to dsl', () => {
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('test', 'foo.spec.js');
-      helper.addComponentWithOptions('bar/foo.js', {'t': `test/${FILE_NAME}.spec.js` });
+      helper.addComponentWithOptions('bar/foo.js', {'t': 'test/${FILE_NAME}.spec.js' });
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(2);
@@ -117,7 +117,7 @@ describe('bit add command', function () {
       helper.createComponent('bar', 'foo3.js');
       helper.createComponent('test', 'foo.spec.js');
       helper.createComponent('test', 'foo2.spec.js');
-      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/${FILE_NAME}.spec.js` });
+      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/{FILE_NAME}.spec.js` });
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(5);
@@ -132,7 +132,7 @@ describe('bit add command', function () {
       helper.createComponent('test/bar', 'foo.spec.js');
       helper.createComponent('test/bar', 'foo2.spec.js');
       helper.createComponent('test', 'foo2.spec.js');
-      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/${PARENT_FOLDER}/${FILE_NAME}.spec.js,test/${FILE_NAME}.spec.js` });
+      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,test/{FILE_NAME}.spec.js` });
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(6);
@@ -148,7 +148,7 @@ describe('bit add command', function () {
       helper.createComponent('test/bar', 'foo.spec.js');
       helper.createComponent('test/bar', 'foo2.spec.js');
       helper.createComponent('test', 'foo2.spec.js');
-      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/${PARENT_FOLDER}/${FILE_NAME}.spec.js,test/*.spec.js` });
+      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,test/*.spec.js` });
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(6);
@@ -165,7 +165,7 @@ describe('bit add command', function () {
       helper.createComponent('test/bar', 'foo.spec.js');
       helper.createComponent('test/bar', 'foo2.spec.js');
       helper.createComponent('test', 'foo2.spec.js');
-      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/${PARENT_FOLDER}/${FILE_NAME}.spec.js,test/*.spec.js`,'e': 'test/*.spec.js' });
+      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,test/*.spec.js`,'e': 'test/*.spec.js' });
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(5);
