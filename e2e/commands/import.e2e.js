@@ -91,7 +91,7 @@ describe('bit import', function () {
     describe('with compiler and tester', () => {
       describe('with multiple files located in different directories', () => {
         before(() => {
-          helper.importCompiler('bit.envs/compilers/babel4'); // TODO: should be pass nothing once it working
+          helper.importCompiler('bit.envs/compilers/babel5'); // TODO: should be pass nothing once it working
           helper.createComponent('src', 'imprel.js');
           helper.createComponent('src', 'imprel.spec.js');
           helper.createFile('src/utils', 'myUtil.js');
@@ -366,7 +366,7 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
       helper.addRemoteScope();
-      helper.importCompiler('bit.envs/compilers/babel4'); // TODO: should be pass nothing once it working
+      helper.importCompiler('bit.envs/compilers/babel5'); // TODO: should be pass nothing once it working
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
