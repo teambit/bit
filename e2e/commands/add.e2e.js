@@ -4,7 +4,7 @@ import chai,{ expect } from 'chai';
 import path from 'path';
 const assertArrays = require('chai-arrays');
 import Helper from '../e2e-helper';
-import {FILE_NAME, PARENT_FOLDER} from '../../src/constants';
+import { FILE_NAME, PARENT_FOLDER } from '../../src/constants';
 chai.use(assertArrays);
 
 describe('bit add command', function () {
@@ -90,6 +90,15 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('test/foo1');
       expect(bitMap).to.have.property('test/foo2');
+    });
+    it('Define dynamic main file ', () => {
+      helper.createComponent('bar', 'bar.js');
+      helper.createComponent('bar', 'foo1.js');
+      helper.addComponentWithOptions('bar/', { 'm':`${PARENT_FOLDER}/${PARENT_FOLDER}.js`, 'n': 'test' });
+      const bitMap = helper.readBitMap();
+      const mainFile = bitMap['test/bar'].mainFile;
+      expect(bitMap).to.have.property('test/bar');
+      expect(mainFile).to.equal('bar/bar.js');
     });
     it('Should add component with spec file from another dir according to dsl', () => {
       helper.createComponent('bar', 'foo.js');
@@ -228,14 +237,14 @@ describe('bit add command', function () {
       expect(files[0]).to.deep.equal(expectedArray[0]);
       expect(files[1]).to.deep.equal(expectedArray[1]);
     });
-    it.skip('bitMap should contain tests that are not excluded ', () => {});
+    it.skip('bitMap should contain tests that are not excluded', () => {});
     it('bitMap should contain component even if all test files are excluded ', () => {
       helper.createComponent('bar', 'foo1.js');
       helper.createComponent('bar', 'foo2.spec.js');
-      helper.addComponentWithOptions('bar/foo1.js', { 't': 'bar/foo2.spec.js', 'e': 'bar/foo3.spec.js' });
+      helper.addComponentWithOptions('bar/foo1.js', { 't': 'bar/foo2.spec.js', 'e': 'bar/foo2.spec.js' });
       const bitMap = helper.readBitMap();
-      const files = bitMap['bar/foo'].files;
-      expect(bitMap).to.have.property('bar/foo');
+      const files = bitMap['bar/foo1'].files;
+      expect(bitMap).to.have.property('bar/foo1');
       expect(files).to.be.ofSize(1);
     });
 
