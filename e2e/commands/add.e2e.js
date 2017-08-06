@@ -4,7 +4,6 @@ import chai,{ expect } from 'chai';
 import path from 'path';
 const assertArrays = require('chai-arrays');
 import Helper from '../e2e-helper';
-import { FILE_NAME, PARENT_FOLDER } from '../../src/constants';
 chai.use(assertArrays);
 
 describe('bit add command', function () {
@@ -88,13 +87,13 @@ describe('bit add command', function () {
       helper.createComponent('bar', 'foo1.js');
       helper.addComponentWithOptions('bar/*', { 'n': 'test' });
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('test/foo1');
+      expect(bitMap).to.have.property('test/foo1§');
       expect(bitMap).to.have.property('test/foo2');
     });
     it('Define dynamic main file ', () => {
       helper.createComponent('bar', 'bar.js');
       helper.createComponent('bar', 'foo1.js');
-      helper.addComponentWithOptions('bar/', { 'm':'{PARENT_FOLDER}/${PARENT_FOLDER}.js', 'n': 'test' });
+      helper.addComponentWithOptions('bar', { 'm':'{PARENT_FOLDER}/{PARENT_FOLDER}.js', 'n': 'test' });
       const bitMap = helper.readBitMap();
       const mainFile = bitMap['test/bar'].mainFile;
       expect(bitMap).to.have.property('test/bar');
