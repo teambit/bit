@@ -2,7 +2,7 @@
 import c from 'chalk';
 import SpecsResults from '../consumer/specs-results/specs-results';
 
-export const formatInlineBit = ({ box, name }: any): string =>
+export const formatNewBit = ({ box, name }: any): string =>
 c.white('     > ') + c.cyan(`${box}/${name}`);
 
 export const formatBit = ({ scope, box, name, version }: any): string =>

@@ -84,9 +84,10 @@ export default class ComponentsList {
    * Components that are in the model (either, committed from a local scope or imported), and were
    * changed in the file system
    *
+   * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
    * @return {Promise<string[]>}
    */
-  async listModifiedComponents(): Promise<string[]> {
+  async listModifiedComponents(load: boolean = false): Promise<string[] | ConsumerComponent[]> {
     const [objectComponents, fileSystemComponents] = await Promise
       .all([this.getFromObjects(), this.getFromFileSystem()]);
 
@@ -103,7 +104,11 @@ export default class ComponentsList {
       if (componentFromFS) {
         const isModified = await this.isComponentModified(objectComponents[id], componentFromFS);
         if (isModified) {
-          modifiedComponents.push(bitId.toString(true, true));
+          if (load) {
+            modifiedComponents.push(componentFromFS);
+          } else {
+            modifiedComponents.push(bitId.toString(true, true));
+          }
         }
       } else {
         logger.warn(`a component ${id} exists in the model but not on the file system`);
@@ -116,15 +121,11 @@ export default class ComponentsList {
 
   async newAndModifiedComponents(): Promise<Component[]> {
     const [newComponents, modifiedComponents] = await Promise
-      .all([this.listNewComponents(), this.listModifiedComponents()]);
+      .all([this.listNewComponents(true), this.listModifiedComponents(true)]);
 
-    const componentsIds = [...newComponents, ...modifiedComponents];
-    // todo: improve performance. Get the already loaded components
-    const componentsP = componentsIds.map(id => {
-      const bitId = BitId.parse(id);
-      return this.consumer.loadComponent(bitId);
-    });
-    return Promise.all(componentsP);
+    const components = [...newComponents, ...modifiedComponents];
+
+    return Promise.all(components);
   }
 
   async idsFromObjects(withScope: boolean = true): Promise<string[]> {
@@ -136,18 +137,28 @@ export default class ComponentsList {
 
   /**
    * Components that are registered in bit.map but have never been committed
-   *
-   * @return {Promise.<string[]>}
+   * 
+   * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
+   * @return {Promise.<string[] | ConsumerComponent[]>}
+   * @memberof ComponentsList
    */
-  async listNewComponents(): Promise<string[]> {
+  async listNewComponents(load: boolean = false): Promise<string[] | ConsumerComponent[]> {
     const idsFromBitMap = await this.idsFromBitMap(false);
     const idsFromObjects = await this.idsFromObjects(false);
-    const newComponents = [];
+    let newComponents = [];
     idsFromBitMap.forEach((id) => {
       if (!idsFromObjects.includes(id)) {
         newComponents.push(id);
       }
     });
+    if (load) {
+      const componentsP = newComponents.map((id) => {
+        const bitId = BitId.parse(id);
+        return this.consumer.loadComponent(bitId);
+      });
+
+      newComponents = await Promise.all(componentsP);
+    }
     return newComponents;
   }
   /**

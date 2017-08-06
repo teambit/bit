@@ -3,7 +3,8 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { status } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
-import { formatBit, formatInlineBit, formatBitString } from '../../chalk-box';
+import { formatBit, formatBitString, formatNewBit } from '../../chalk-box';
+import missingDepsTemplate from '../../templates/missing-dependencies-template';
 
 type StatusObj = {
   name: string,
@@ -21,15 +22,15 @@ export default class Status extends Command {
     return status();
   }
 
-  report({ newComponents, modifiedComponent, stagedComponents }
+  report({ newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps }
   : { inline: StatusObj[], sources: StatusObj[] }): string {
     const newComponentsOutput = immutableUnshift(
-      newComponents.map(formatBitString),
+      newComponents.map(formatNewBit),
       newComponents.length ? chalk.underline.white('New Components') : chalk.green('There are no new components')
     ).join('\n');
 
     const modifiedComponentOutput = immutableUnshift(
-      modifiedComponent.map(formatBitString),
+      modifiedComponent.map(formatNewBit),
       modifiedComponent.length ? chalk.underline.white('Modified Components') : chalk.green('There are no modified components')
     ).join('\n');
 
@@ -38,8 +39,10 @@ export default class Status extends Command {
       stagedComponents.length ? chalk.underline.white('Staged Components') : chalk.green('There are no staged components')
     ).join('\n');
 
+    const componentsWithMissingDepsOutput = missingDepsTemplate(componentsWithMissingDeps);
+
     // todo: new and modified components should be in the same section "Modified Components"
-    return [newComponentsOutput, modifiedComponentOutput, stagedComponentsOutput].join(
+    return [newComponentsOutput, modifiedComponentOutput, stagedComponentsOutput, componentsWithMissingDepsOutput].join(
       chalk.underline('\n                         \n')
     + chalk.white('\n'));
   }
