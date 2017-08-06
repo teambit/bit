@@ -198,4 +198,5 @@ export const ISOLATED_ENV_ROOT = 'environment';
 /**
  * bit add consts
  */
+
 export const REGEX_PATTERN =/{([^}]+)}/g;

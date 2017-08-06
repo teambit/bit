@@ -11,7 +11,6 @@ import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
 import logger from '../../../logger/logger';
 import isGlob from 'is-glob';
 
-
 export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[]): Promise<Object> {
 
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
@@ -50,8 +49,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
             const fileInfo = calculateFileInfo(file.relativePath)
             const generatedFile = format(dsl, fileInfo);
             if (fs.existsSync(generatedFile)) newFilesArr.push({relativePath: generatedFile, test: true, name: path.basename(generatedFile)});
-          })
-        })
+          });
+        });
       }
       return newFilesArr;
     }

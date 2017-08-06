@@ -17,4 +17,5 @@ export default function calculateFileInfo(relativePath: string) {
   const rootDir = path.dirname(fullPath);
   const parentDir = path.relative(rootDir, fullPath);
   return { PARENT_FOLDER: parentDir, FILE_NAME: fileInfo.name };
+
 }
