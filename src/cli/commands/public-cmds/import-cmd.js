@@ -11,9 +11,8 @@ import { ComponentDependencies } from '../../../scope';
 export default class Import extends Command {
   name = 'import [ids...]';
   description = 'import a component';
-  alias = '';
+  alias = 'i';
   opts = [
-    ['s', 'save', '(save into bit.json). Deprecated! It always saves into bit.json'],
     ['t', 'tester', 'import a tester environment component'],
     ['v', 'verbose', 'show a more verbose output when possible'],
     ['c', 'compiler', 'import a compiler environment component'],
@@ -22,9 +21,8 @@ export default class Import extends Command {
   ];
   loader = true;
 
-  action([ids, ]: [string[], ], { save, tester, compiler, verbose, prefix, display_dependencies }:
+  action([ids, ]: [string[], ], { tester, compiler, verbose, prefix, display_dependencies }:
   {
-    save?: bool,
     tester?: bool,
     compiler?: bool,
     verbose?: bool,
@@ -33,12 +31,6 @@ export default class Import extends Command {
     // @TODO - import should support multiple components
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
-    }
-    if (!ids.length) {
-      console.log(chalk.yellow('\nwarning - using "bit import" without Ids is deprecated. Please use "bit install" instead\n')); // eslint-disable-line
-    }
-    if (save) {
-      console.log(chalk.yellow('\nwarning - using "--save" flag is deprecated. Please omit the flag, and it will save into bit.json anyway\n')); // eslint-disable-line
     }
 
     return importAction({ ids, tester, compiler, verbose, prefix, environment: false })
