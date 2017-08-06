@@ -189,10 +189,8 @@ export default class Consumer {
       if (componentMap && componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
-      // TODO: Take this from the map (the most up path of all component files)
-      // TODO: Taking it from compose will not work when someone will import with -p to specific path
+
       if (componentMap && (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED)) {
-        bitDir = this.composeBitPath(idWithConcreteVersion);
         return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
       }
 
