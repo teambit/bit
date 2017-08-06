@@ -102,7 +102,7 @@ describe('bit add command', function () {
     it('Should add component with spec file from another dir according to dsl', () => {
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('test', 'foo.spec.js');
-      helper.addComponentWithOptions('bar/foo.js', {'t': 'test/${FILE_NAME}.spec.js' });
+      helper.addComponentWithOptions('bar/foo.js', {'t': 'test/{FILE_NAME}.spec.js' });
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(2);
