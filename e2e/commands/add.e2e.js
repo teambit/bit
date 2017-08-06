@@ -87,7 +87,7 @@ describe('bit add command', function () {
       helper.createComponent('bar', 'foo1.js');
       helper.addComponentWithOptions('bar/*', { 'n': 'test' });
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('test/foo1§');
+      expect(bitMap).to.have.property('test/foo1');
       expect(bitMap).to.have.property('test/foo2');
     });
     it('Define dynamic main file ', () => {
