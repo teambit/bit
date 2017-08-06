@@ -194,6 +194,17 @@ export default class SourceRepository {
     return component;
   }
 
+  putAdditionalVersion(component, version, message) {
+    version.log = {
+      message,
+      username: globalConfig.getSync(CFG_USER_NAME_KEY),
+      email: globalConfig.getSync(CFG_USER_EMAIL_KEY),
+      date: Date.now().toString()
+    };
+    component.addVersion(version);
+    return this.put({ component, objects: [version] });
+  }
+
   put({ component, objects }: ComponentTree) {
     logger.debug(`sources.put, id: ${component.id()}`);
     const repo = this.objects();

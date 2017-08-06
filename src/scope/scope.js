@@ -221,6 +221,7 @@ export default class Scope {
       loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
       await this.objects.persist();
       const deps = await component.toVersionDependencies(LATEST, this, this.name);
+      consumerComponent.version = deps.component.version;
       await deps.toConsumer(this.objects);
       await index(consumerComponent, this.getPath()); // todo: make sure it still works
       return consumerComponent;
@@ -764,6 +765,37 @@ export default class Scope {
             });
           });
       });
+  }
+
+  async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: ConsumerComponent[]) {
+    const componentsObjects = await this.sources.getMany(componentsToUpdate);
+    const componentsToUpdateP = componentsObjects.map(async (componentObjects) => {
+      const component = componentObjects.component;
+      const latestVersion = await component.loadVersion(component.latest(), this.objects);
+      let wasUpdated = false;
+      latestVersion.dependencies.forEach((dependency) => {
+        const committedComponentId = committedComponents.find(committedComponent => committedComponent
+          .id.toString(false, true) === dependency.id.toString(false, true));
+        if (committedComponentId && committedComponentId.version > dependency.id.version) {
+          dependency.id.version = committedComponentId.version;
+          const flattenDependencyToUpdate = latestVersion.flattenedDependencies
+            .find(flattenDependency => flattenDependency.toString(false, true) === dependency.id.toString(false, true));
+          flattenDependencyToUpdate.version = committedComponentId.version;
+          wasUpdated = true;
+        }
+      });
+      if (wasUpdated) {
+        const message = 'bump dependencies versions';
+        return this.sources.putAdditionalVersion(componentObjects.component, latestVersion, message);
+      }
+      return null;
+    });
+    const updatedComponentsAll = await Promise.all(componentsToUpdateP);
+    const updatedComponents = removeNils(updatedComponentsAll);
+    if (!R.isEmpty(updatedComponents)) {
+      await this.objects.persist();
+    }
+    return updatedComponents;
   }
 
   runComponentSpecs({ bitId, consumer, environment, save, verbose, isolated }: {

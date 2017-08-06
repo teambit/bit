@@ -147,7 +147,7 @@ describe('bit import', function () {
     // Prevent cases when I export a component with few files from different directories
     // and get it in another structure during imports (for example under components folder instead of original folder)
     it('should write the component to the paths specified in bit.map', () => {
-      const expectedLocation = path.join(helper.localScopePath, 'bar', 'foo.js');      
+      const expectedLocation = path.join(helper.localScopePath, 'bar', 'foo.js');
       expect(fs.existsSync(expectedLocation)).to.be.true;
     });
   });
@@ -470,6 +470,52 @@ describe('bit import', function () {
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+  });
+
+
+  describe('after committing dependencies only (not dependents)', () => {
+    /**
+     * Directory structure of the author
+     * bar/foo.js
+     * utils/is-string.js
+     * utils/is-type.js
+     *
+     * bar/foo depends on utils/is-string.
+     * utils/is-string depends on utils/is-type
+     *
+     * We change the dependency is-type implementation. When committing this change, we expect all dependent of is-type
+     * to be updated as well so then their 'dependencies' attribute includes the latest version of is-type.
+     * In this case, is-string should be updated to include is-type with v2.
+     */
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      helper.commitAllComponents();
+
+      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+      helper.commitComponent('utils/is-type');
+      // notice how is-string is not manually committed again!
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-string');
+    });
+    it('should use the updated dependencies and print the results from the latest versions', () => {
+      const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      // notice the "v2" (!)
+      expect(result.trim()).to.equal('got is-type v2 and got is-string');
     });
   });
 

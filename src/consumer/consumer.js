@@ -477,6 +477,19 @@ export default class Consumer {
     return allComponents;
   }
 
+  async bumpDependenciesVersions(committedComponents: Component[]) {
+    const bitMap = await this.getBitMap();
+    const authoredComponents = bitMap.getAllComponents(COMPONENT_ORIGINS.AUTHORED);
+    if (!authoredComponents) return null;
+    const committedComponentsWithoutVersions = committedComponents
+      .map(committedComponent => committedComponent.id.toString(false, true));
+    const authoredComponentsIds = Object.keys(authoredComponents).map(id => BitId.parse(id));
+    // if a committed component is in authored array, remove it from the array as it has already been committed with the correct version
+    const componentsToUpdate = authoredComponentsIds.filter(component => !committedComponentsWithoutVersions
+      .includes(component.toString(false, true)));
+    return this.scope.bumpDependenciesVersions(componentsToUpdate, committedComponents);
+  }
+
   async commit(ids: BitId[], message: string, force: ?bool, verbose: ?bool): Promise<Component[]> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
@@ -489,7 +502,10 @@ export default class Consumer {
     });
     if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
 
-    await this.scope.putMany({ consumerComponents: components, message, force, consumer: this, verbose });
+    const committedComponents = await this.scope
+       .putMany({ consumerComponents: components, message, force, consumer: this, verbose });
+    await this.bumpDependenciesVersions(committedComponents);
+
     return components;
   }
 
