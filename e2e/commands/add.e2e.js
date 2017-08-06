@@ -2,8 +2,8 @@
 
 import chai,{ expect } from 'chai';
 import path from 'path';
-import Helper from '../e2e-helper';
 const assertArrays = require('chai-arrays');
+import Helper from '../e2e-helper';
 chai.use(assertArrays);
 
 describe('bit add command', function () {
@@ -74,7 +74,7 @@ describe('bit add command', function () {
       helper.addComponent('bar/foo1.js');
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('bar/foo1');
-      expect(bitMap['bar/foo1'].origin).to.equal('AUTHORED')
+      expect(bitMap['bar/foo1'].origin).to.equal('AUTHORED');
     });
     it.skip('Bitmap mainFile should point to correct mainFile', ()=>{});
   });
@@ -89,6 +89,88 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('test/foo1');
       expect(bitMap).to.have.property('test/foo2');
+    });
+    it('Define dynamic main file ', () => {
+      helper.createComponent('bar', 'bar.js');
+      helper.createComponent('bar', 'foo1.js');
+      helper.addComponentWithOptions('bar', { 'm':'{PARENT_FOLDER}/{PARENT_FOLDER}.js', 'n': 'test' });
+      const bitMap = helper.readBitMap();
+      const mainFile = bitMap['test/bar'].mainFile;
+      expect(bitMap).to.have.property('test/bar');
+      expect(mainFile).to.equal('bar/bar.js');
+    });
+    it('Should add component with spec file from another dir according to dsl', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('test', 'foo.spec.js');
+      helper.addComponentWithOptions('bar/foo.js', {'t': 'test/{FILE_NAME}.spec.js' });
+      const bitMap = helper.readBitMap();
+      const files = bitMap["bar/foo"].files;
+      expect(files).to.be.ofSize(2);
+      expect(files).to.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(bitMap).to.have.property('bar/foo');
+    });
+    it('Should add dir files with spec from dsl when test files are flattened', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo3.js');
+      helper.createComponent('test', 'foo.spec.js');
+      helper.createComponent('test', 'foo2.spec.js');
+      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/{FILE_NAME}.spec.js` });
+      const bitMap = helper.readBitMap();
+      const files = bitMap["bar/foo"].files;
+      expect(files).to.be.ofSize(5);
+      expect(files).to.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(bitMap).to.have.property('bar/foo');
+    });
+    it('Should add dir files with spec from multipule dsls when test files are placed in same structure', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo3.js');
+      helper.createComponent('test/bar', 'foo.spec.js');
+      helper.createComponent('test/bar', 'foo2.spec.js');
+      helper.createComponent('test', 'foo2.spec.js');
+      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,test/{FILE_NAME}.spec.js` });
+      const bitMap = helper.readBitMap();
+      const files = bitMap["bar/foo"].files;
+      expect(files).to.be.ofSize(6);
+      expect(files).to.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(bitMap).to.have.property('bar/foo');
+    });
+    it('Should add dir files with spec from dsl and glob pattern', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo3.js');
+      helper.createComponent('test/bar', 'foo.spec.js');
+      helper.createComponent('test/bar', 'foo2.spec.js');
+      helper.createComponent('test', 'foo2.spec.js');
+      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,test/*.spec.js` });
+      const bitMap = helper.readBitMap();
+      const files = bitMap["bar/foo"].files;
+      expect(files).to.be.ofSize(6);
+      expect(files).to.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(bitMap).to.have.property('bar/foo');
+    });
+
+    it('Should add dir files with spec from dsl and glob pattern and exclude', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo3.js');
+      helper.createComponent('test/bar', 'foo.spec.js');
+      helper.createComponent('test/bar', 'foo2.spec.js');
+      helper.createComponent('test', 'foo2.spec.js');
+      helper.addComponentWithOptions('bar/', { 'i': 'bar/foo' ,'m': 'bar/foo.js',  't': `test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,test/*.spec.js`,'e': 'test/*.spec.js' });
+      const bitMap = helper.readBitMap();
+      const files = bitMap["bar/foo"].files;
+      expect(files).to.be.ofSize(5);
+      expect(files).to.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(bitMap).to.have.property('bar/foo');
     });
   });
   describe('add component with exclude', () => {
@@ -153,10 +235,17 @@ describe('bit add command', function () {
       expect(files).to.be.ofSize(2);
       expect(files[0]).to.deep.equal(expectedArray[0]);
       expect(files[1]).to.deep.equal(expectedArray[1]);
-
     });
-    it.skip('bitMap should contain tests that are not excluded ', () => {});
-    it.skip('bitMap should contain component even if all test files are excluded ', () => {});
+    it.skip('bitMap should contain tests that are not excluded', () => {});
+    it('bitMap should contain component even if all test files are excluded ', () => {
+      helper.createComponent('bar', 'foo1.js');
+      helper.createComponent('bar', 'foo2.spec.js');
+      helper.addComponentWithOptions('bar/foo1.js', { 't': 'bar/foo2.spec.js', 'e': 'bar/foo2.spec.js' });
+      const bitMap = helper.readBitMap();
+      const files = bitMap['bar/foo1'].files;
+      expect(bitMap).to.have.property('bar/foo1');
+      expect(files).to.be.ofSize(1);
+    });
 
   });
 });

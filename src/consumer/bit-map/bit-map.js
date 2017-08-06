@@ -84,7 +84,7 @@ export default class BitMap {
 
   _getMainFile(mainFile: string, componentMap: ComponentMap) {
     let baseMainFile = mainFile || DEFAULT_INDEX_NAME;
-    const files = componentMap.files;
+    const files = componentMap.files.filter(file => !file.test);
     // Take the file path as main in case there is only one file
     if (!mainFile && files.length === 1) return files[0].relativePath;
 

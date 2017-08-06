@@ -2,13 +2,15 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
-import { glob, isValidIdChunk, isDir } from '../../../utils';
+import format from 'string-format';
+import { glob, isValidIdChunk, isDir, calculateFileInfo } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
-import { COMPONENT_ORIGINS } from '../../../constants';
+import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
 import logger from '../../../logger/logger';
 import isGlob from 'is-glob';
+
 export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[]): Promise<Object> {
 
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
@@ -21,6 +23,55 @@ export default async function addAction(componentPaths: string[], id?: string, m
   async function addOneComponent(componentPathsStats: Object, bitMap: BitMap, consumer: Consumer,
                                  keepDirectoryName: boolean = false) {
 
+    //remove excluded files from file list
+    async function removeExcludedFiles (mapValues, excludedList){
+      const resolvedExcludedFiles = await getAllFiles(excludedList);
+      mapValues.forEach(mapVal => {
+        mapVal.files = mapVal.files.filter(key => !resolvedExcludedFiles[key.relativePath] );
+        mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles[testFile])
+      });
+    }
+
+    //Split tests array according to glob or dsl
+    function splitTestAccordingToPattern(tests){
+      const domainSpecificTestFiles =[];
+      const globArray =[];
+      tests.forEach(file => file.match(REGEX_PATTERN) ? domainSpecificTestFiles.push(file) : globArray.push(file));
+      return ({ domainSpecificTestFiles: domainSpecificTestFiles, testFiles: globArray })
+    }
+
+    //update test files according to dsl
+    function updateFilesAccordingToDsl(files,domainSpecificStrings) {
+      const newFilesArr = files;
+      if (domainSpecificStrings) {
+        domainSpecificStrings.forEach(dsl => {
+          files.forEach(file => {
+            const fileInfo = calculateFileInfo(file.relativePath)
+            const generatedFile = format(dsl, fileInfo);
+            if (fs.existsSync(generatedFile)) newFilesArr.push({relativePath: generatedFile, test: true, name: path.basename(generatedFile)});
+          });
+        });
+      }
+      return newFilesArr;
+    }
+    //used for updating main file if exists or dosent exists
+    function addMainFileToFiles(files,mainFile) {
+      if (mainFile && mainFile.match(REGEX_PATTERN)) {
+          files.forEach(file => {
+            const fileInfo = calculateFileInfo(file.relativePath)
+            const generatedFile = format(mainFile, fileInfo);
+            const foundFile = R.find(R.propEq('relativePath', generatedFile))(files);
+            if (foundFile) {
+              mainFile = foundFile.relativePath;
+            }
+            if (fs.existsSync(generatedFile) && !foundFile) {
+              files.push({ relativePath: generatedFile, test: false, name: path.basename(generatedFile) });
+              mainFile = generatedFile
+            }
+          });
+      }
+      return mainFile;
+    }
     const markTestsFiles = (files, relativeTests) => {
       relativeTests.forEach(testPath => {
         const file = R.find(R.propEq('relativePath', testPath))(files);
@@ -30,15 +81,15 @@ export default async function addAction(componentPaths: string[], id?: string, m
           files.push({relativePath: testPath, test: true, name: path.basename(testPath)});
         }
       });
+
       return files;
     }
 
     const addToBitMap = ({ componentId, files, mainFile, testsFiles }): { id: string, files: string[] } => {
-      const relativeTests = testsFiles ?
-        tests.map(spec => getPathRelativeToProjectRoot(spec, consumer.getPath())) : [];
-      files = markTestsFiles(files, relativeTests);
+      const relativeTests = testsFiles || [];
+      files = markTestsFiles(files, relativeTests, domainSpecificTestFiles);
       bitMap.addComponent({ componentId, files, mainFile,
-                            origin: COMPONENT_ORIGINS.AUTHORED });
+        origin: COMPONENT_ORIGINS.AUTHORED });
       return { id: componentId.toString(), files };
     };
 
@@ -48,7 +99,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         if (isGlob(componentPath)){
           const matches = await glob(componentPath);
           matches.forEach((match) =>  files[match] = match);
-        } else if (isDir(componentPath)) {
+        } else if (fs.existsSync(componentPath) && isDir(componentPath)) {
           const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
           const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
           matches.forEach((match) =>  files[match] = match);
@@ -68,19 +119,25 @@ export default async function addAction(componentPaths: string[], id?: string, m
       parsedId = BitId.parse(id);
     }
 
-    const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
+    const { domainSpecificTestFiles, testFiles } = splitTestAccordingToPattern(tests);
+    tests = Object.keys(await getAllFiles(testFiles)).map( (item) => item);
 
+    const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
         const absoluteComponentPath = path.resolve(componentPath);
         const splitPath = absoluteComponentPath.split(path.sep);
         const lastDir = splitPath[splitPath.length-1];
-        const oneBeforeLastDir = splitPath[splitPath.length-2];
+        const nameSpaceOrDir = namespace || splitPath[splitPath.length-2];
 
         const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
         if (!matches.length) throw new Error(`The directory ${relativeComponentPath} is empty, nothing to add`);
 
-        const files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
+        let files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
+
+        //mark or add test files according to dsl
+        files = updateFilesAccordingToDsl(files,domainSpecificTestFiles);
+        const resolvedMainFile = addMainFileToFiles(files,main);
         // matches.forEach((match) => {
         //   if (keepDirectoryName) {
         //     files[match] = match;
@@ -91,9 +148,10 @@ export default async function addAction(componentPaths: string[], id?: string, m
         // });
 
         if (!parsedId) {
-          parsedId = BitId.getValidBitId(namespace || oneBeforeLastDir, lastDir);
+          parsedId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
         }
-        return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
+
+        return { componentId: parsedId, files, mainFile: resolvedMainFile, testsFiles: tests };
       } else { // is file
         var resolvedPath = path.resolve(componentPath);
         const pathParsed = path.parse(resolvedPath);
@@ -105,29 +163,29 @@ export default async function addAction(componentPaths: string[], id?: string, m
             const absPath = path.resolve(componentPath);
             dirName = path.dirname(absPath);
           }
-          const lastDir = R.last(dirName.split(path.sep));
-          parsedId = BitId.getValidBitId(namespace || lastDir, pathParsed.name);
+          const nameSpaceOrlastDir = namespace || R.last(dirName.split(path.sep));
+          parsedId = BitId.getValidBitId(nameSpaceOrlastDir, pathParsed.name);
         }
 
-        const files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
+        let files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
+
+        //mark or add test files according to dsl
+        files = updateFilesAccordingToDsl(files,domainSpecificTestFiles);
+        const resolvedMainFile = addMainFileToFiles(files,main);
 
         if (componentExists) {
-          return { componentId: parsedId, files, mainFile: main, testsFiles: tests };
+          return { componentId: parsedId, files, mainFile: resolvedMainFile, testsFiles: tests };
         }
 
         return { componentId: parsedId, files, mainFile: relativeFilePath, testsFiles: tests };
       }
     });
 
+
     var mapValues = await Promise.all(mapValuesP);
 
-    if (exclude){
-      const resolvedExcludedFiles =  await getAllFiles(exclude);
-      mapValues.forEach(mapVal => {
-        mapVal.files=mapVal.files.filter(key => !resolvedExcludedFiles[key.relativePath] );
-        mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles[testFile])
-      });
-    }
+    //remove files that are excluded
+    if (exclude) await removeExcludedFiles(mapValues,exclude);
 
     const componentId = mapValues[0].componentId;
     mapValues = mapValues.filter(mapVal => !(Object.keys(mapVal.files).length === 0));
@@ -174,6 +232,5 @@ export default async function addAction(componentPaths: string[], id?: string, m
     added.push(addedOne);
   }
   await bitMap.write();
-
   return added;
 }
