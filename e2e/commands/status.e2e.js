@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
 describe('bit status command', function () {
   this.timeout(0);
@@ -162,7 +162,7 @@ describe('bit status command', function () {
       expect(output.includes('There are no staged components')).to.be.false;
 
       expect(output.includes('Staged Components')).to.be.true;
-      expect(output.includes('bar/foo::2')).to.be.true;
+      expect(output.includes(`bar/foo${VERSION_DELIMITER}2`)).to.be.true;
     });
     it('should not display that component as new', () => {
       expect(output.includes('There are no new components')).to.be.true;

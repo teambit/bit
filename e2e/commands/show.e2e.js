@@ -1,7 +1,7 @@
 // covers also init, create, commit commands and the js-doc parser
 
 import { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
 describe('bit show command', function () {
   this.timeout(0);
@@ -114,7 +114,7 @@ describe('bit show command', function () {
 
       // TODO: get the version dynamically
       it('should include the compiler correctly', () => {
-        expect(output).to.include({compilerId: `${helper.envScope}/compilers/babel::1`});
+        expect(output).to.include({compilerId: `${helper.envScope}/compilers/babel${VERSION_DELIMITER}1`});
       });
 
       it('should include the language correctly', () => {

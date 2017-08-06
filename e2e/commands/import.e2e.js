@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import glob from 'glob';
-import Helper from '../e2e-helper';
+import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
 describe('bit import', function () {
   this.timeout(0);
@@ -39,7 +39,7 @@ describe('bit import', function () {
     });
     it('should add the component into bit.map file with the full id', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple::1`);
+      expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple${VERSION_DELIMITER}1`);
     });
     // TODO: Validate all files exists in a folder with the component name
     it('should write the component to default path from bit.json', () => {
@@ -183,13 +183,13 @@ describe('bit import', function () {
       });
 
       it('should add all missing components to bit.map file', () => {
-        expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple::1`);
+        expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple${VERSION_DELIMITER}1`);
       });
       it('should mark direct dependencies as "IMPORTED" in bit.map file', () => {
-        expect(bitMap[`${helper.remoteScope}/global/with-deps::1`].origin).to.equal('IMPORTED');
+        expect(bitMap[`${helper.remoteScope}/global/with-deps${VERSION_DELIMITER}1`].origin).to.equal('IMPORTED');
       });
       it('should mark indirect dependencies as "NESTED" in bit.map file', () => {
-        expect(bitMap[`${helper.remoteScope}/global/simple::1`].origin).to.equal('NESTED');
+        expect(bitMap[`${helper.remoteScope}/global/simple${VERSION_DELIMITER}1`].origin).to.equal('NESTED');
       });
       it.skip('should not add existing components to bit.map file', () => {
       });

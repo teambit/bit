@@ -3,7 +3,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
 const helper = new Helper();
 const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";
@@ -350,7 +350,7 @@ describe.skip('javascript-hooks', function () {
       describe('importing a specific version', () => {
         before(() => {
           prepareCleanLocalEnv();
-          helper.runCmd(`bit import @${helper.remoteScope}/global/foo::1`);
+          helper.runCmd(`bit import @${helper.remoteScope}/global/foo${VERSION_DELIMITER}1`);
         });
         it('should create links in the component level of that specific version', () => {
           const appJs = "const foo = require('bit/global/foo'); console.log(foo());";

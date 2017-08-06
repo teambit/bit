@@ -3,7 +3,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
 describe('bit export command', function () {
   this.timeout(0);
@@ -32,7 +32,7 @@ describe('bit export command', function () {
     });
     it('should write the exported component into bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo::1`);
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo${VERSION_DELIMITER}1`);
     });
   });
   describe('with multiple components, each has one file', () => {

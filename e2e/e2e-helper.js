@@ -3,6 +3,7 @@ import path from 'path';
 import childProcess from 'child_process';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
+import { VERSION_DELIMITER } from '../src/constants';
 
 export default class Helper {
   constructor() {
@@ -210,3 +211,5 @@ function ensureAndWriteJson(filePath, fileContent) {
   fs.ensureFileSync(filePath);
   fs.writeJsonSync(filePath, fileContent);
 }
+
+export { VERSION_DELIMITER };
