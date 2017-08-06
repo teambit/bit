@@ -27,21 +27,22 @@ export default class Add extends Command {
       return Promise.reject('You can use either [id] or [namespace] to add a particular component');
     }
     const testsArray = tests ? [tests] : [];
-    const exludedFiles = exclude ? this.splitList(exclude): undefined ;
+    const exludedFiles = exclude ? this.splitList(exclude): undefined;
     return add(path, id, main, namespace, testsArray, exludedFiles);
   }
 
   report(results: Array<{ id: string, files: string[] }>): string {
-    return results.map(result => {
-      if (result.files.length === 0) {
-        const title = chalk.underline.red(`Not Tracking component ${chalk.bold(result.id)}: No files to track!!!`);
-        return title;
-      } else{
-        const title = chalk.underline(`Tracking component ${chalk.bold(result.id)}:\n`);
-        const files = result.files.map(file => chalk.green(`added ${file.relativePath}`));
-        return title + files.join('\n');
-      }
+    if (results.length > 1) {
+      return chalk.green(`Tracked ${results.length} new components`);
+    }
 
+    return results.map((result) => {
+      if (result.files.length === 0) {
+        return chalk.underline.red(`Could not track component ${chalk.bold(result.id)}: no files to track`);
+      } 
+      const title = chalk.underline(`Tracking component ${chalk.bold(result.id)}:\n`);
+      const files = result.files.map(file => chalk.green(`added ${file.relativePath}`));
+      return title + files.join('\n');
     }).join('\n\n');
   }
 }
