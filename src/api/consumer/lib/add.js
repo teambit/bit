@@ -2,13 +2,15 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
+import format from 'string-format';
 import { glob, isValidIdChunk, isDir, calculateFileInfo } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
-import { COMPONENT_ORIGINS, FILE_NAME, PARENT_FOLDER, REGEX } from '../../../constants';
+import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
 import logger from '../../../logger/logger';
 import isGlob from 'is-glob';
+
 
 export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[]): Promise<Object> {
 
@@ -26,7 +28,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
     async function removeExcludedFiles (mapValues, excludedList){
       const resolvedExcludedFiles = await getAllFiles(excludedList);
       mapValues.forEach(mapVal => {
-        mapVal.files=mapVal.files.filter(key => !resolvedExcludedFiles[key.relativePath] );
+        mapVal.files = mapVal.files.filter(key => !resolvedExcludedFiles[key.relativePath] );
         mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles[testFile])
       });
     }
@@ -35,7 +37,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
     function splitTestAccordingToPattern(tests){
       const domainSpecificTestFiles =[];
       const globArray =[];
-      tests.forEach(file => file.match(REGEX)? domainSpecificTestFiles.push(file) : globArray.push(file));
+      tests.forEach(file => file.match(REGEX_PATTERN) ? domainSpecificTestFiles.push(file) : globArray.push(file));
       return ({ domainSpecificTestFiles: domainSpecificTestFiles, testFiles: globArray })
     }
 
@@ -46,8 +48,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         domainSpecificStrings.forEach(dsl => {
           files.forEach(file => {
             const fileInfo = calculateFileInfo(file.relativePath)
-            var generatedFile = dsl.replace(new RegExp(FILE_NAME,'g'),fileInfo.fileName);
-            generatedFile = generatedFile.replace(new RegExp(PARENT_FOLDER,'g'),fileInfo.parent);
+            const generatedFile = format(dsl, fileInfo);
             if (fs.existsSync(generatedFile)) newFilesArr.push({relativePath: generatedFile, test: true, name: path.basename(generatedFile)});
           })
         })
@@ -56,11 +57,10 @@ export default async function addAction(componentPaths: string[], id?: string, m
     }
     //used for updating main file if exists or dosent exists
     function addMainFileToFiles(files,mainFile) {
-      if (mainFile && mainFile.match(REGEX)) {
+      if (mainFile && mainFile.match(REGEX_PATTERN)) {
           files.forEach(file => {
             const fileInfo = calculateFileInfo(file.relativePath)
-            let generatedFile = mainFile.replace(new RegExp(FILE_NAME,'g'),fileInfo.fileName);
-            generatedFile = generatedFile.replace(new RegExp(PARENT_FOLDER,'g'),fileInfo.parent);
+            const generatedFile = format(mainFile, fileInfo);
             const foundFile = R.find(R.propEq('relativePath', generatedFile))(files);
             if (foundFile) {
               mainFile = foundFile.relativePath;
