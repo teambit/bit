@@ -33,6 +33,7 @@ export default class Add extends Command {
   }
 
   report(results: Array<{ id: string, files: string[] }>): string {
+
     if (results.length > 1) {
       return chalk.green(`Tracked ${results.length} new components`);
     }
