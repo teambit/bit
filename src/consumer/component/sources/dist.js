@@ -12,4 +12,15 @@ export default class Dist extends AbstractVinyl {
   static getFilePath(bitPath: string, fileName: string) {
     return path.join(bitPath, DEFAULT_DIST_DIRNAME, fileName);
   }
+
+  static loadFromParsedString(parsedString: Object) {
+    if (!parsedString) return;
+    const opts = super.loadFromParsedString(parsedString);
+    return new Dist(opts);
+  }
+
+  static loadFromParsedStringArray(arr: Object[]) {
+    if (!arr) return;
+    return arr.map(this.loadFromParsedString);
+  }
 }

@@ -24,4 +24,15 @@ export default class SourceFile extends AbstractVinyl {
       return null;
     }
   }
+
+  static loadFromParsedString(parsedString: Object) {
+    if (!parsedString) return;
+    const opts = super.loadFromParsedString(parsedString);
+    return new SourceFile(opts);
+  }
+
+  static loadFromParsedStringArray(arr: Object[]) {
+    if (!arr) return;
+    return arr.map(this.loadFromParsedString);
+  }
 }

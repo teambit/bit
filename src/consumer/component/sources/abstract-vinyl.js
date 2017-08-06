@@ -22,4 +22,19 @@ export default class AbstractVinyl extends Vinyl {
       });
     });
   }
+
+  static loadFromParsedString(parsedString: Object) {
+    if (!parsedString) return;
+    return {
+      cwd: parsedString._cwd,
+      path: parsedString.history[parsedString.history.length - 1],
+      base: parsedString._base,
+      contents: parsedString._contents,
+    };
+  }
+
+  static loadFromParsedStringArray(arr: Object[]) {
+    if (!arr) return;
+    return arr.map(this.loadFromParsedString);
+  }
 }

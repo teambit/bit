@@ -506,6 +506,7 @@ export default class Component {
       dependencies,
       packageDependencies,
       docs,
+      mainFile,
       dists,
       files,
       specsResults,
@@ -521,6 +522,7 @@ export default class Component {
       testerId: testerId ? BitId.parse(testerId) : null,
       dependencies: dependencies.map(dep => Object.assign({}, dep, { id: BitId.parse(dep.id) })), //this._dependenciesFromWritableObject(dependencies),
       packageDependencies,
+      mainFile,
       files,
       docs,
       dists,
@@ -531,6 +533,8 @@ export default class Component {
 
   static fromString(str: string): Component {
     const object = JSON.parse(str);
+    object.files = SourceFile.loadFromParsedStringArray(object.files);
+    object.dists = Dist.loadFromParsedStringArray(object.dists);
     return this.fromObject(object);
   }
 
