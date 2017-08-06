@@ -41,34 +41,49 @@ export default async function addAction(componentPaths: string[], id?: string, m
     }
 
     //update test files according to dsl
-    function updateFilesAccordingToDsl(files,domainSpecificStrings) {
+    async function updateFilesAccordingToDsl(files,domainSpecificStrings) {
       const newFilesArr = files;
       if (domainSpecificStrings) {
-        domainSpecificStrings.forEach(dsl => {
-          files.forEach(file => {
+        const fileList = await domainSpecificStrings.map(dsl => {
+          const fileList = files.map(async file => {
             const fileInfo = calculateFileInfo(file.relativePath)
             const generatedFile = format(dsl, fileInfo);
-            if (fs.existsSync(generatedFile)) newFilesArr.push({relativePath: generatedFile, test: true, name: path.basename(generatedFile)});
+            const resolvedFiles = await getAllFiles([generatedFile]);
+            return resolvedFiles
+            //
           });
+          return Promise.all(fileList);
         });
+        const fileListRes = R.flatten(await Promise.all(fileList));
+        const resolvedFileList = R.uniq(fileListRes);
+        resolvedFileList.forEach(file => {
+          Object.keys(file).forEach(key => {
+            const fileIndex =  R.findIndex(R.propEq('relativePath', key))(files);
+            if (fileIndex > -1) {
+              files[fileIndex].test = true;
+            }else{
+              if (fs.existsSync(file[key])) newFilesArr.push({relativePath: file[key], test: true, name: path.basename(file[key])});
+            }
+          })
+        })
       }
       return newFilesArr;
     }
     //used for updating main file if exists or dosent exists
     function addMainFileToFiles(files,mainFile) {
       if (mainFile && mainFile.match(REGEX_PATTERN)) {
-          files.forEach(file => {
-            const fileInfo = calculateFileInfo(file.relativePath)
-            const generatedFile = format(mainFile, fileInfo);
-            const foundFile = R.find(R.propEq('relativePath', generatedFile))(files);
-            if (foundFile) {
-              mainFile = foundFile.relativePath;
-            }
-            if (fs.existsSync(generatedFile) && !foundFile) {
-              files.push({ relativePath: generatedFile, test: false, name: path.basename(generatedFile) });
-              mainFile = generatedFile
-            }
-          });
+        files.forEach(file => {
+          const fileInfo = calculateFileInfo(file.relativePath)
+          const generatedFile = format(mainFile, fileInfo);
+          const foundFile = R.find(R.propEq('relativePath', generatedFile))(files);
+          if (foundFile) {
+            mainFile = foundFile.relativePath;
+          }
+          if (fs.existsSync(generatedFile) && !foundFile) {
+            files.push({ relativePath: generatedFile, test: false, name: path.basename(generatedFile) });
+            mainFile = generatedFile
+          }
+        });
       }
       return mainFile;
     }
@@ -87,7 +102,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
     const addToBitMap = ({ componentId, files, mainFile, testsFiles }): { id: string, files: string[] } => {
       const relativeTests = testsFiles || [];
-      files = markTestsFiles(files, relativeTests, domainSpecificTestFiles);
+      files = markTestsFiles(files, relativeTests);
       bitMap.addComponent({ componentId, files, mainFile,
         origin: COMPONENT_ORIGINS.AUTHORED });
       return { id: componentId.toString(), files };
@@ -133,10 +148,10 @@ export default async function addAction(componentPaths: string[], id?: string, m
         const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
         if (!matches.length) throw new Error(`The directory ${relativeComponentPath} is empty, nothing to add`);
 
-        let files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
+        const files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
 
         //mark or add test files according to dsl
-        files = updateFilesAccordingToDsl(files,domainSpecificTestFiles);
+        const newFileArr = await updateFilesAccordingToDsl(files,domainSpecificTestFiles);
         const resolvedMainFile = addMainFileToFiles(files,main);
         // matches.forEach((match) => {
         //   if (keepDirectoryName) {
@@ -151,7 +166,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
           parsedId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
         }
 
-        return { componentId: parsedId, files, mainFile: resolvedMainFile, testsFiles: tests };
+        return { componentId: parsedId, files: newFileArr, mainFile: resolvedMainFile, testsFiles: tests };
       } else { // is file
         var resolvedPath = path.resolve(componentPath);
         const pathParsed = path.parse(resolvedPath);
@@ -167,17 +182,17 @@ export default async function addAction(componentPaths: string[], id?: string, m
           parsedId = BitId.getValidBitId(nameSpaceOrlastDir, pathParsed.name);
         }
 
-        let files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
+        const  files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
 
         //mark or add test files according to dsl
-        files = updateFilesAccordingToDsl(files,domainSpecificTestFiles);
+        const newFileArr  = await updateFilesAccordingToDsl(files,domainSpecificTestFiles);
         const resolvedMainFile = addMainFileToFiles(files,main);
 
         if (componentExists) {
-          return { componentId: parsedId, files, mainFile: resolvedMainFile, testsFiles: tests };
+          return { componentId: parsedId, files: newFileArr, mainFile: resolvedMainFile, testsFiles: tests };
         }
 
-        return { componentId: parsedId, files, mainFile: relativeFilePath, testsFiles: tests };
+        return { componentId: parsedId, files: newFileArr, mainFile: relativeFilePath, testsFiles: tests };
       }
     });
 

@@ -110,6 +110,20 @@ describe('bit add command', function () {
       expect(files).to.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
+    it('Glob and dsl Should add component to bitmap ', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('test', 'foo.spec.js');
+      helper.createComponent('test2', 'foo1.spec.js');
+      helper.addComponentWithOptions('bar/foo.js', {'t': 'test/{FILE_NAME}.spec.js,test2/*.spec.js' });
+      const bitMap = helper.readBitMap();
+      const files = bitMap["bar/foo"].files;
+      expect(files).to.be.ofSize(3);
+      expect(files).to.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(files).to.include({ relativePath: 'test2/foo1.spec.js', test: true, name: 'foo1.spec.js' });
+      expect(bitMap).to.have.property('bar/foo');
+    });
+
     it('Should add dir files with spec from dsl when test files are flattened', () => {
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('bar', 'foo2.js');
