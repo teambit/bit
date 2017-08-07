@@ -48,8 +48,9 @@ export default async function addAction(componentPaths: string[], id?: string, m
         uniqFileList.forEach(file => {
           Object.keys(file).forEach(key => {
             const fileIndex =  R.findIndex(R.propEq('relativePath', key))(files);
-             (fileIndex > -1) ? files[fileIndex].test = true :
-              if (fs.existsSync(file[key])) newFilesArr.push({relativePath: file[key], test: true, name: path.basename(file[key])});
+             if (fileIndex > -1)
+               files[fileIndex].test = true
+             else if (fs.existsSync(file[key])) newFilesArr.push({relativePath: file[key], test: true, name: path.basename(file[key])});
           });
         })
       return newFilesArr;
