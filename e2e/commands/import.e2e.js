@@ -91,7 +91,7 @@ describe('bit import', function () {
     describe('with compiler and tester', () => {
       describe('with multiple files located in different directories', () => {
         before(() => {
-          helper.importCompiler('bit.envs/compilers/babel5'); // TODO: should be pass nothing once it working
+          helper.importCompiler('bit.env/compilers/babel'); // TODO: should be pass nothing once it working
           helper.createComponent('src', 'imprel.js');
           helper.createComponent('src', 'imprel.spec.js');
           helper.createFile('src/utils', 'myUtil.js');
@@ -104,7 +104,7 @@ describe('bit import', function () {
           expect(output.includes('successfully imported the following Bit components')).to.be.true;
           expect(output.includes('imprel/imprel')).to.be.true;
         });
-        it('should write the internal files according to their relative paths', () => {
+        it.only('should write the internal files according to their relative paths', () => {
           const expectedLocationImprel = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'imprel.js');
           const expectedLocationImprelSpec = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'imprel.spec.js');
           const expectedLocationMyUtil = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'utils', 'myUtil.js');
@@ -366,7 +366,7 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
       helper.addRemoteScope();
-      helper.importCompiler('bit.envs/compilers/babel5'); // TODO: should be pass nothing once it working
+      helper.importCompiler('bit.env/compilers/babel'); // TODO: should be pass nothing once it working
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
