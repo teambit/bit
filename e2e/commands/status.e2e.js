@@ -220,6 +220,32 @@ describe('bit status command', function () {
       expect(output.includes('utils/is-string')).to.be.true;
     });
   });
+  describe('when a component has an imported dependency', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      helper.commitComponent('utils/is-type');
+      helper.exportComponent('utils/is-type');
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-type');
+
+      const isStringFixture = "import isType from '../components/utils/is-type'; module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      output = helper.runCmd('bit status');
+    });
+    it('should not display missing files for the imported component', () => {
+      expect(output).to.not.have.string('The following files dependencies are not tracked by bit');
+      expect(output).to.not.have.string('components/utils/is-type/index.js');
+      expect(output).to.not.have.string('components/utils/is-type/utils/is-type.js');
+    });
+  });
   describe('when a component is exported, modified and the project cloned somewhere else', () => {
     let output;
     before(() => {
