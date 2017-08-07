@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.0] - 2017-08-07
+### BREAKING CHANGES
+
+- Upgrade: Bit now works with a new set of APIs and data models for the code component and scope consumer.
+- Important: Bit is not backward compatible with remote scopes running older versions of Bit.
+
 ## [0.6.4] - 2017-06-25
 
 ## [0.6.4-rc.1] - 2017-06-07
