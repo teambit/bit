@@ -21,7 +21,6 @@ export default function status(): Promise<{ inline: Component[], sources: Compon
     const componentsWithMissingDeps = newAndModified.filter((component) => {
       return (component.missingDependencies && !R.isEmpty(component.missingDependencies));
     });
-    console.log('componentsWithMissingDeps', componentsWithMissingDeps.length);
 
     return { newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps };
   });
