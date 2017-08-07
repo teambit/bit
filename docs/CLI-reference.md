@@ -306,7 +306,7 @@ Modify a component that is in your local scope.
 
 `bit modify @this/<component ID>`
 
-Mofidy a remote component.
+Modify a remote component.
 
 `bit modify <component ID>`
 
