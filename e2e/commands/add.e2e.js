@@ -22,7 +22,7 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('bar/foo2');
     });
-    it.only('Should trim testFiles spaces', () => {
+    it('Should trim testFiles spaces', () => {
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('bar', 'foo.spec.js');
       helper.addComponentWithOptions('bar/foo.js', { 't': 'bar/foo.spec.js       ' });
