@@ -33,7 +33,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
     }
 
     //update test files according to dsl
-    async function updateFilesAccordingToDsl(files,testFiles) {
+    async function updateTestFilesAccordingToDsl(files,testFiles) {
       const newFilesArr = files;
         const fileList = testFiles.map(dsl => {
           const fileList = files.map(file => {
@@ -123,7 +123,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         const files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
 
         //mark or add test files according to dsl
-        const newFileArrWithTests = await updateFilesAccordingToDsl(files,tests);
+        const newFileArrWithTests = await updateTestFilesAccordingToDsl(files,tests);
         const resolvedMainFile = addMainFileToFiles(files,main);
         // matches.forEach((match) => {
         //   if (keepDirectoryName) {
@@ -157,7 +157,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         const  files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
 
         //mark or add test files according to dsl
-        const newFileArrWithTests  = await updateFilesAccordingToDsl(files,tests);
+        const newFileArrWithTests  = await updateTestFilesAccordingToDsl(files,tests);
         const resolvedMainFile = addMainFileToFiles(files,main);
 
         if (componentExists) {

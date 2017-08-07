@@ -62,7 +62,7 @@ const paintStats = (results) => {
 };
 
 export const paintSpecsResults = (results: SpecsResults[]): string => {
-  return results.map(speResult => (speResult.tests)? paintStats(speResult) + speResult.tests.map(paintTest).join('\n') :'');
+  return results.map(specResult => (specResult.tests)? paintStats(specResult) + specResult.tests.map(paintTest).join('\n') :'');
 }
 
 
