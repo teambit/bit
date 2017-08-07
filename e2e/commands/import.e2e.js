@@ -104,7 +104,7 @@ describe('bit import', function () {
           expect(output.includes('successfully imported the following Bit components')).to.be.true;
           expect(output.includes('imprel/imprel')).to.be.true;
         });
-        it.only('should write the internal files according to their relative paths', () => {
+        it('should write the internal files according to their relative paths', () => {
           const expectedLocationImprel = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'imprel.js');
           const expectedLocationImprelSpec = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'imprel.spec.js');
           const expectedLocationMyUtil = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'utils', 'myUtil.js');
