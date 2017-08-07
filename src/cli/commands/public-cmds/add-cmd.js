@@ -26,8 +26,7 @@ export default class Add extends Command {
     if (namespace && id) {
       return Promise.reject('You can use either [id] or [namespace] to add a particular component');
     }
-
-    const testsArray = tests ? this.splitList(tests) : [];
+    const testsArray = tests ? this.splitList(tests).map(filePath => filePath.trim()) : [];
     const exludedFiles = exclude ? this.splitList(exclude): undefined ;
     return add(path, id, main, namespace, testsArray, exludedFiles);
   }

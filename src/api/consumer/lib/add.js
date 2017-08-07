@@ -32,41 +32,26 @@ export default async function addAction(componentPaths: string[], id?: string, m
       });
     }
 
-    //Split tests array according to glob or dsl
-    function splitTestAccordingToPattern(tests){
-      const domainSpecificTestFiles =[];
-      const globArray =[];
-      tests.forEach(file => file.match(REGEX_PATTERN) ? domainSpecificTestFiles.push(file) : globArray.push(file));
-      return ({ domainSpecificTestFiles: domainSpecificTestFiles, testFiles: globArray })
-    }
-
     //update test files according to dsl
-    async function updateFilesAccordingToDsl(files,domainSpecificStrings) {
+    async function updateFilesAccordingToDsl(files,testFiles) {
       const newFilesArr = files;
-      if (domainSpecificStrings) {
-        const fileList = await domainSpecificStrings.map(dsl => {
-          const fileList = files.map(async file => {
+        const fileList = testFiles.map(dsl => {
+          const fileList = files.map(file => {
             const fileInfo = calculateFileInfo(file.relativePath)
             const generatedFile = format(dsl, fileInfo);
-            const resolvedFiles = await getAllFiles([generatedFile]);
-            return resolvedFiles
-            //
+            return getAllFiles([generatedFile]);
           });
           return Promise.all(fileList);
         });
         const fileListRes = R.flatten(await Promise.all(fileList));
-        const resolvedFileList = R.uniq(fileListRes);
-        resolvedFileList.forEach(file => {
+        const uniqFileList = R.uniq(fileListRes);
+        uniqFileList.forEach(file => {
           Object.keys(file).forEach(key => {
             const fileIndex =  R.findIndex(R.propEq('relativePath', key))(files);
-            if (fileIndex > -1) {
-              files[fileIndex].test = true;
-            }else{
+             (fileIndex > -1) ? files[fileIndex].test = true :
               if (fs.existsSync(file[key])) newFilesArr.push({relativePath: file[key], test: true, name: path.basename(file[key])});
-            }
-          })
+          });
         })
-      }
       return newFilesArr;
     }
     //used for updating main file if exists or dosent exists
@@ -87,22 +72,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
       }
       return mainFile;
     }
-    const markTestsFiles = (files, relativeTests) => {
-      relativeTests.forEach(testPath => {
-        const file = R.find(R.propEq('relativePath', testPath))(files);
-        if (file){
-          file.test = true;
-        } else { // Support case when a user didn't enter the test file into the files
-          files.push({relativePath: testPath, test: true, name: path.basename(testPath)});
-        }
-      });
 
-      return files;
-    }
-
-    const addToBitMap = ({ componentId, files, mainFile, testsFiles }): { id: string, files: string[] } => {
-      const relativeTests = testsFiles || [];
-      files = markTestsFiles(files, relativeTests);
+    const addToBitMap = ({ componentId, files, mainFile }): { id: string, files: string[] } => {
       bitMap.addComponent({ componentId, files, mainFile,
         origin: COMPONENT_ORIGINS.AUTHORED });
       return { id: componentId.toString(), files };
@@ -134,8 +105,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
       parsedId = BitId.parse(id);
     }
 
-    const { domainSpecificTestFiles, testFiles } = splitTestAccordingToPattern(tests);
-    tests = Object.keys(await getAllFiles(testFiles)).map( (item) => item);
+    //const { domainSpecificTestFiles, testFiles } = splitTestAccordingToPattern(tests);
+    //tests = Object.keys(await getAllFiles(testFiles)).map( (item) => item);
 
     const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
       if (componentPathsStats[componentPath].isDir) {
@@ -151,7 +122,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         const files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
 
         //mark or add test files according to dsl
-        const newFileArr = await updateFilesAccordingToDsl(files,domainSpecificTestFiles);
+        const newFileArrWithTests = await updateFilesAccordingToDsl(files,tests);
         const resolvedMainFile = addMainFileToFiles(files,main);
         // matches.forEach((match) => {
         //   if (keepDirectoryName) {
@@ -166,7 +137,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
           parsedId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
         }
 
-        return { componentId: parsedId, files: newFileArr, mainFile: resolvedMainFile, testsFiles: tests };
+        return { componentId: parsedId, files: newFileArrWithTests, mainFile: resolvedMainFile, testsFiles: tests };
       } else { // is file
         var resolvedPath = path.resolve(componentPath);
         const pathParsed = path.parse(resolvedPath);
@@ -185,14 +156,14 @@ export default async function addAction(componentPaths: string[], id?: string, m
         const  files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
 
         //mark or add test files according to dsl
-        const newFileArr  = await updateFilesAccordingToDsl(files,domainSpecificTestFiles);
+        const newFileArrWithTests  = await updateFilesAccordingToDsl(files,tests);
         const resolvedMainFile = addMainFileToFiles(files,main);
 
         if (componentExists) {
-          return { componentId: parsedId, files: newFileArr, mainFile: resolvedMainFile, testsFiles: tests };
+          return { componentId: parsedId, files: newFileArrWithTests, mainFile: resolvedMainFile, testsFiles: tests };
         }
 
-        return { componentId: parsedId, files: newFileArr, mainFile: relativeFilePath, testsFiles: tests };
+        return { componentId: parsedId, files: newFileArrWithTests, mainFile: relativeFilePath, testsFiles: tests };
       }
     });
 
@@ -212,7 +183,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
       return a.concat(b.files);
     }, []);
 
-    return addToBitMap({ componentId, files, mainFile: main, testsFiles: tests });
+    return addToBitMap({ componentId, files, mainFile: main });
   }
 
   const consumer: Consumer = await loadConsumer();
