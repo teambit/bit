@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.1] - 2017-08-07
+Improve resolving packages dependencies for ts files
+
 ## [0.10.0] - 2017-08-07
 ### BREAKING CHANGES
 
