@@ -208,7 +208,7 @@ export default class Consumer {
         };
       } else if (driverExists) {
         // Load the dependencies through automatic dependency resolution
-        dependenciesTree = await this.driver.getDependencyTree(bitDir, mainFile);
+        dependenciesTree = await this.driver.getDependencyTree(bitDir, this.getPath(), mainFile);
         Object.assign(fullDependenciesTree.tree, dependenciesTree.tree);
         if (dependenciesTree.missing.files) fullDependenciesTree.missing.files = fullDependenciesTree.missing.files.concat(dependenciesTree.missing.files);
         if (dependenciesTree.missing.packages) fullDependenciesTree.missing.packages = fullDependenciesTree.missing.packages.concat(dependenciesTree.missing.packages);

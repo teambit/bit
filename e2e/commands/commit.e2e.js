@@ -206,7 +206,7 @@ describe('bit commit command', function () {
 
       helper.commitAllComponents();
 
-      const output = helper.showComponentWithOptions('comp/comp', {j: ''});
+      const output = helper.showComponentWithOptions('comp/comp', { j: '' });
       const dependencies = JSON.parse(output).dependencies;
       const depObject = { id: 'utils/is-string', relativePath: 'utils/is-string.js' };
       const depObject1 = { id: 'utils/is-type', relativePath: 'utils/is-type.js' };
