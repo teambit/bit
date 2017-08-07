@@ -20,6 +20,5 @@ dependencies:
 
 test:
   override:
-    - npm test
     - npm i -g
     - npm run e2e-test
