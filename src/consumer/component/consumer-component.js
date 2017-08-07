@@ -374,13 +374,14 @@ export default class Component {
       if (!isolated && consumer) {
         await this.build({ scope, environment, verbose, consumer });
         const saveDists = this.dists ?
-          this.dists.map(dist => dist.write()) : Promise.resolve();
+          this.dists.map(dist => dist.write()) : [Promise.resolve()];
 
         await Promise.all(saveDists);
 
-        const testDists = this.dists.filter(dist => dist.test);
+        const testDists = this.dists ? this.dists.filter(dist => dist.test) : this.files.filter(file => file.test);
         return run(this.mainFile, testDists);
       }
+
 
       const isolatedEnvironment = new IsolatedEnvironment(scope);
 
@@ -408,7 +409,6 @@ export default class Component {
   async build({ scope, environment, save, consumer, bitMap, verbose }:
           { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool }):
   Promise<string> { // @TODO - write SourceMap Type
-  
     if (!this.compilerId) return Promise.resolve(null);
 
     // verify whether the environment is installed

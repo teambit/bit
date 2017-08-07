@@ -1,8 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import { test, testAll } from '../../../api/consumer';
-import { testInScope } from '../../../api/scope';
-import { paintSpecsResults, paintAllSpecsResults } from '../../chalk-box';
+import { paintAllSpecsResults } from '../../chalk-box';
 
 export default class Test extends Command {
   name = 'test [id]';
@@ -24,10 +23,8 @@ export default class Test extends Command {
   }
 
   report(results: any): string {
-    if (results && Array.isArray(results)) {
-      return results.map(res => paintSpecsResults(res));
-    }
-
-    return 'couldn\'t get test results...';
+    if (results && Array.isArray(results)) return paintAllSpecsResults(results);
+    if (results && typeof (results) === 'object') return paintAllSpecsResults([results]);
+    return "couldn't get test results...";
   }
 }
