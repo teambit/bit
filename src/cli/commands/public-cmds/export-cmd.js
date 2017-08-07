@@ -6,7 +6,7 @@ import Component from '../../../consumer/component/consumer-component';
 const chalk = require('chalk');
 
 export default class Export extends Command {
-  name = 'export <remote> [id]';
+  name = 'export <remote> [id...]';
   description = 'export local scope refs to a remote scope.';
   alias = 'e';
   opts = [
@@ -14,8 +14,8 @@ export default class Export extends Command {
   ];
   loader = true;
 
-  action([remote, id]: [string, string], { forget }: any): Promise<*> {
-    return exportAction(id, remote, !forget).then(component => ({ component, remote }));
+  action([remote, ids]: [string, string[]], { forget }: any): Promise<*> {
+    return exportAction(ids, remote, !forget).then(component => ({ component, remote }));
   }
 
   report({ component, remote }: { component: Component|Component[], remote: string }): string {
