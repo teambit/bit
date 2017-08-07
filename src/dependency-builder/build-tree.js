@@ -3,6 +3,7 @@
 // @flow
 import path from 'path';
 import madge from 'madge';
+import fs from 'fs';
 import findPackage from 'find-package';
 import R from 'ramda';
 
@@ -97,19 +98,55 @@ function resolveMissingPackageName(packagePath) {
 }
 
 /**
+ * Recursivly search for node module inside node_modules dir
+ * This function propegate up until it get's to the root provided then stops
+ *
+ * @param {string} nmPath - package name
+ * @param {string} workingDir - dir to start searching of
+ * @param {string} root - path to dir to stop the search
+ * @returns The resolved path for the package directory
+ */
+function resolveModulePath(nmPath, workingDir, root) {
+  const pathToCheck = path.resolve(workingDir, 'node_modules', nmPath);
+
+  if (fs.existsSync(pathToCheck)) {
+    return pathToCheck;
+  }
+
+  if (workingDir === root) {
+    return null;
+  }
+
+  return resolveModulePath(nmPath, path.dirname(workingDir), root);
+}
+
+/**
  * Run over each entry in the missing array and transform the missing from list of paths
  * to object with missing types
  *
  * @param {Array} missings
  * @returns new object with grouped missings
  */
-function groupMissings(missings) {
+function groupMissings(missings, cwd, consumerPath) {
   const groups = byPathType(missings);
-  groups.packages = groups.packages ? groups.packages.map(resolveMissingPackageName) : undefined;
+  const packages = groups.packages ? groups.packages.map(resolveMissingPackageName) : [];
+  // This is a hack to solve problems that madge has with packages for type script files
+  // It see them as missing even if they are exists
+  const foundedPackages = {};
+  const missingPackages = [];
+  packages.forEach((packageName) => {
+    const resolvedPath = resolveModulePath(packageName, cwd, consumerPath);
+    if (!resolvedPath) {
+      return missingPackages.push(packageName);
+    }
+    const packageWithVersion = resloveNodePackage(resolvedPath);
+    return packageWithVersion ? Object.assign(foundedPackages, packageWithVersion) :
+                                missingPackages.push(packageWithVersion);
+  });
+  groups.packages = missingPackages;
 
-  return groups;
+  return { groups, foundedPackages };
 }
-
 
 /**
  * Function for fetching dependency tree of file or dir
@@ -117,7 +154,22 @@ function groupMissings(missings) {
  * @param filePath path of the file to calculate the dependecies
  * @return {Promise<{missing, tree}>}
  */
-export default function getDependecyTree(cwd: string, filePath: string): Promise<*> {
+export default function getDependecyTree(cwd: string, consumerPath: string, filePath: string): Promise<*> {
   return madge(filePath, { baseDir: cwd, includeNpm: true })
-    .then((res) => ({ missing: groupMissings(res.skipped), tree: groupDependencyTree(res.tree, cwd) }))
+    .then((res) => {
+      const { groups, foundedPackages } = groupMissings(res.skipped, cwd, consumerPath);
+      const relativeFilePath = path.relative(cwd, filePath);
+      const tree = groupDependencyTree(res.tree, cwd);
+      // Merge manually found packages with madge founded packages
+      if (foundedPackages && !R.isEmpty(foundedPackages)) {
+        // Madge found packages so we need to merge them with the manual
+        if (tree[relativeFilePath].packages) {
+          Object.assign(tree[relativeFilePath].packages, foundedPackages);
+        // There is only manually found packages
+        } else {
+          tree[relativeFilePath].packages = foundedPackages;
+        }
+      }
+      return { missing: groups, tree };
+    });
 }
