@@ -133,5 +133,8 @@ const warnForPackageDependencies = ({ dependencies, consumer }): Promise<Object>
     }, dep.packageDependencies);
   });
 
+  // Remove duplicates warnings for missing packages
+  warnings.notInBoth = R.uniq(warnings.notInBoth);
+
   return Promise.resolve(warnings);
 };

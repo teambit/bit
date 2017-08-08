@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - Fix conflicts when import from bit.json more than one component with the same nested deps
+- Remove duplicates from missing packages (during import) warning
 
 ## [0.10.3] - 2017-08-08
 
