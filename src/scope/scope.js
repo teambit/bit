@@ -698,7 +698,9 @@ export default class Scope {
 
     if (opts && opts.pathOnly) {
       try {
-        return componentResolver(bitId.toString(), mainFile, this.getPath());
+        const envPath = componentResolver(bitId.toString(), mainFile, this.getPath());
+        if (fs.existsSync(envPath)) return envPath;
+        throw new Error(`Unable to find an env component ${bitId.toString()}`);
       } catch (e) {
         throw new ResolutionException(e.message);
       }

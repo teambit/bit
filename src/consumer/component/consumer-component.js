@@ -19,6 +19,7 @@ import type { Log } from '../../scope/models/version';
 import { ResolutionException } from '../../scope/exceptions';
 import BitMap from '../bit-map';
 import type { ComponentMap } from '../bit-map/bit-map';
+import logger from '../../logger/logger';
 
 import {
   DEFAULT_BOX_NAME,
@@ -328,6 +329,7 @@ export default class Component {
       testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
     } catch (err) {
       if (err instanceof ResolutionException) {
+        logger.debug(`Unable to find tester ${this.testerId}, will try to import it`);
         environment = true;
         // todo: once we agree about this approach, get rid of the environment variable
       } else throw err;
