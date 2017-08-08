@@ -152,6 +152,117 @@ describe('bit import', function () {
     });
   });
 
+  describe('import from bit json', () => {
+    let bitJsonPath; 
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      bitJsonPath = path.join(helper.localScopePath, '/components/global/with-deps/bit.json');
+    });
+    describe('components with shared nested deps', () => {
+      let myBitJsonPath;
+      let localConsumerFiles;
+      before(() => {
+        helper.createFile('', 'level1.js');
+        const level0Fixture = `import a from './level1'`;
+        helper.createFile('', 'level0.js', level0Fixture);
+        helper.addComponentWithOptions('level0.js', { i: 'dep/level0' });
+        helper.addComponentWithOptions('level1.js', { i: 'dep/level1' });
+        const fileFixture = `import a from './level0'`;
+        helper.createFile('', 'file1.js', fileFixture);
+        helper.createFile('', 'file2.js', fileFixture);
+        helper.addComponentWithOptions('file1.js', { i: 'comp/comp1' });
+        helper.addComponentWithOptions('file2.js', { i: 'comp/comp2' });
+        helper.commitAllComponents();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        myBitJsonPath = path.join(helper.localScopePath, 'bit.json');
+        helper.addBitJsonDependencies(myBitJsonPath, { [`${helper.remoteScope}/comp/comp1`]: '1', [`${helper.remoteScope}/comp/comp2`]: '1' });
+        output = helper.runCmd('bit import');
+        localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
+      });
+      it('should print the imported component correctly', () => {
+        expect(output).to.have.string(`${helper.remoteScope}/comp/comp1`);
+        expect(output).to.have.string(`${helper.remoteScope}/comp/comp2`);
+      });
+
+      it('should create an index.js file on the first component root dir pointing to the main file', () => {
+        const expectedLocation = path.join('components', 'comp', 'comp1', 'index.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+        const indexPath = path.join(helper.localScopePath, expectedLocation);
+        const indexFileContent = fs.readFileSync(indexPath).toString();
+        expect(indexFileContent).to.have.string('module.exports = require(\'./file1.js\');', 'index file point to the wrong place');
+      });
+
+      it('should create an index.js file on the second component root dir pointing to the main file', () => {
+        const expectedLocation = path.join('components', 'comp', 'comp2', 'index.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+        const indexPath = path.join(helper.localScopePath, expectedLocation);
+        const indexFileContent = fs.readFileSync(indexPath).toString();
+        expect(indexFileContent).to.have.string('module.exports = require(\'./file2.js\');', 'index file point to the wrong place');
+      });
+
+      it('should link the level0 dep from the first comp to first comp dep folder', () => {
+        const expectedLocation = path.join('components', 'comp', 'comp1', 'level0.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+        const linkFilePath = path.join(helper.localScopePath, expectedLocation);
+        const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
+        const requireLink = `dependencies/dep/level0/${helper.remoteScope}/1/index.js`;
+        expect(linkFilePathContent).to.have.string(`module.exports = require('${requireLink}');`, 'link file point to the wrong place');
+      });
+
+      it('should link the level0 dep from the second comp to first comp dep folder', () => {
+        const expectedLocation = path.join('components', 'comp', 'comp2', 'level0.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+        const linkFilePath = path.join(helper.localScopePath, expectedLocation);
+        const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
+        const requireLink = `../comp1/dependencies/dep/level0/${helper.remoteScope}/1/index.js`;
+        expect(linkFilePathContent).to.have.string(`module.exports = require('${requireLink}');`, 'link file point to the wrong place');
+      });
+
+      it('should create an index.js file on the level0 dependency root dir pointing to the main file', () => {
+        const expectedLocation = path.join('components', 'comp', 'comp1', 'dependencies', 'dep', 'level0', helper.remoteScope, '1', 'index.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+        const indexPath = path.join(helper.localScopePath, expectedLocation);
+        const indexFileContent = fs.readFileSync(indexPath).toString();
+        expect(indexFileContent).to.have.string('module.exports = require(\'./level0.js\');', 'dependency index file point to the wrong place');
+      });
+
+      it('should create an index.js file on the level1 dependency root dir pointing to the main file', () => {
+        const expectedLocation = path.join('components', 'comp', 'comp1', 'dependencies', 'dep', 'level1', helper.remoteScope, '1', 'index.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+        const indexPath = path.join(helper.localScopePath, expectedLocation);
+        const indexFileContent = fs.readFileSync(indexPath).toString();
+        expect(indexFileContent).to.have.string('module.exports = require(\'./level1.js\');', 'dependency index file point to the wrong place');
+      });
+
+      it('should save the direct dependency nested to the first component', () => {
+        const expectedLocation = path.join('components', 'comp', 'comp1', 'dependencies', 'dep',
+          'level0', helper.remoteScope, '1', 'level0.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+      });
+
+      it('should save the indirect dependency nested to the first component (as opposed to nested of nested)', () => {
+        const expectedLocation = path.join('components', 'comp', 'comp1', 'dependencies', 'dep',
+          'level1', helper.remoteScope, '1', 'level1.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+      });
+
+      it('should link the level1 dep from the level0 dep', () => {
+        const expectedLocation = path.join('components', 'comp', 'comp1', 'dependencies', 'dep',
+          'level0', helper.remoteScope, '1', 'level1.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+        const linkFilePath = path.join(helper.localScopePath, expectedLocation);
+        const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
+        const requireLink = `../../../level1/${helper.remoteScope}/1/index.js`;
+        expect(linkFilePathContent).to.have.string(`module.exports = require('${requireLink}');`, 'link file point to the wrong place');
+      });
+    });
+  });
+
   describe('component/s with bit.json dependencies', () => {
     before(() => {
       helper.reInitLocalScope();

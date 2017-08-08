@@ -463,13 +463,22 @@ export default class Consumer {
         .write(bitPath, true, force, bitMap, COMPONENT_ORIGINS.IMPORTED, undefined, this.getPath());
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
-        if (bitMap.isComponentExist(dependencyId) || dependenciesIds.includes(dependencyId)) {
-          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists`);
+        const depFromBitMap = bitMap.getComponent(dependencyId, false);
+        if (depFromBitMap) {
+          dep.writtenPath = depFromBitMap.rootDir;
+          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map`);
           return Promise.resolve();
         }
-        dependenciesIds.push(dependencyId);
+
+        if (dependenciesIds[dependencyId]) {
+          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
+          dep.writtenPath = dependenciesIds[dependencyId];
+          return Promise.resolve();
+        }
+        
         const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
         dep.writtenPath = depBitPath;
+        dependenciesIds[dependencyId] = depBitPath;
         return dep.write(depBitPath, true, force, bitMap, COMPONENT_ORIGINS.NESTED, componentWithDeps.component.id, this.getPath())
           .then(() => {
             this._writeEntryPointsForImportedComponent(dep, bitMap);
