@@ -199,7 +199,7 @@ describe('bit commit command', function () {
       helper.addComponent('utils/is-string.js');
 
       const mainFileFixture = "const isString = require('./utils/is-string.js'); const second = require('./second.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
-      const secondFileFixture = "const isString = require('./utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      const secondFileFixture = "const isType = require('./utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('', 'main.js', mainFileFixture);
       helper.createFile('', 'second.js', secondFileFixture);
       helper.addComponentWithOptions('main.js second.js', { 'm': 'main.js', 'i': 'comp/comp' });
@@ -210,8 +210,8 @@ describe('bit commit command', function () {
       const dependencies = JSON.parse(output).dependencies;
       const depObject = { id: 'utils/is-string', relativePath: 'utils/is-string.js' };
       const depObject1 = { id: 'utils/is-type', relativePath: 'utils/is-type.js' };
-      expect(dependencies[0]).to.include(depObject);
-      expect(dependencies[1]).to.include(depObject1);
+      expect(dependencies[1]).to.include(depObject);
+      expect(dependencies[0]).to.include(depObject1);
     });
 
     it.skip('should persist all models in the scope', () => {
