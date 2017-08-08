@@ -1,11 +1,13 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
+import path from 'path';
 import searchIndex from 'search-index';
 import serverlessIndex from '../../src/search/serverless-index';
 
 describe('SeverLessIndex', () => {
   describe('initializeIndex', () => {
-    it('should initial the index using search-index lib with some default settings', () => {
+
+    it.only('should initial the index using search-index lib with some default settings', () => {
       // this hack was taken from: https://github.com/sinonjs/sinon/issues/562#issuecomment-164522794
       // it is needed because search-index library returns a function, not object.
       const myStubbedModule = (moduleName) => {
@@ -18,9 +20,9 @@ describe('SeverLessIndex', () => {
       };
       myStubbedModule('search-index');
       const result = serverlessIndex.initializeIndex('test_path');
-
+      const osPath = path.normalize('test_path/search_index');
       sinon.assert.calledWith(searchIndex, {
-        indexPath: 'test_path/search_index',
+        indexPath: osPath,
         logLevel: 'error',
         stopwords: []
       });
