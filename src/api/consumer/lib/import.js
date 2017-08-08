@@ -5,7 +5,7 @@ import R from 'ramda';
 import path from 'path';
 import semver from 'semver';
 import Bit from '../../../consumer/component';
-import Consumer from '../../../consumer/consumer';
+import { Consumer, loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 import { flattenDependencies } from '../../../scope/flatten-dependencies';
@@ -43,9 +43,7 @@ export default async function importAction(
     return { envDependencies };
   }
 
-  const performOnDir = process.cwd();
-  const consumer: Consumer = await Consumer.ensure(performOnDir);
-  await consumer.scope.ensureDir();
+  const consumer: Consumer = await loadConsumer();
   if (tester || compiler) { return importEnvironment(consumer); }
   const cache = false;
   const { dependencies, envDependencies } = await consumer.import(ids, verbose, environment, cache, prefix);

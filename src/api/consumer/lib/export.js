@@ -7,13 +7,10 @@ import { BEFORE_EXPORT } from '../../../cli/loader/loader-messages';
 import { ComponentNotFound } from '../../../scope/exceptions';
 import BitMap from '../../../consumer/bit-map';
 
-export default async function exportAction(id?: string, remote: string, save: ?bool) {
+export default async function exportAction(ids?: string[], remote: string, save: ?bool) {
   const consumer: Consumer = await loadConsumer();
   loader.start(BEFORE_EXPORT);
-  let ids: string[];
-  if (id) {
-    ids = [id];
-  } else { // export all
+  if (!ids || !ids.length) { // export all
     const componentsList = new ComponentsList(consumer);
     ids = await componentsList.listExportPendingComponents();
   }

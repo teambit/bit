@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix memory leak when exporting a big amount of components
+- fix running import command from a non-root directory
+- support specifying multiple ids using export command 
+
 ## [0.10.2] - 2017-08-07
 Improve resolving packages dependencies for ts files
 

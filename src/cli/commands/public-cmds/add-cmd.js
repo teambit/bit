@@ -26,14 +26,12 @@ export default class Add extends Command {
     if (namespace && id) {
       return Promise.reject('You can use either [id] or [namespace] to add a particular component');
     }
-
-    const testsArray = tests ? this.splitList(tests) : [];
-    const exludedFiles = exclude ? this.splitList(exclude): undefined ;
+    const testsArray = tests ? this.splitList(tests).map(filePath => filePath.trim()) : [];
+    const exludedFiles = exclude ? this.splitList(exclude).map(filePath => filePath.trim()) : undefined;
     return add(path, id, main, namespace, testsArray, exludedFiles);
   }
 
   report(results: Array<{ id: string, files: string[] }>): string {
-
     if (results.length > 1) {
       return chalk.green(`Tracked ${results.length} new components`);
     }

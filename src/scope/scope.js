@@ -665,11 +665,13 @@ export default class Scope {
     const componentObjectsFromRemote = await remote.pushMany(manyObjects);
     await Promise.all(componentIds.map(id => this.clean(id)));
     componentIds.map(id => this.createSymlink(id, remoteName));
-    await componentObjectsFromRemote.map(obj => this.importSrc(obj));
-    return Promise.all(componentIds.map((id) => {
-      id.scope = remoteName;
-      return this.get(id);
+    await Promise.all(componentObjectsFromRemote.map((obj) => {
+      const objects = obj.toObjects(this.objects);
+      return this.sources.merge(objects);
     }));
+    await this.objects.persist();
+    const idsWithRemoteScope = componentIds.map(id => id.changeScope(remoteName));
+    return await this.getMany(idsWithRemoteScope);
   }
 
   ensureDir() {

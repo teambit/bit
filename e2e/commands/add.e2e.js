@@ -22,6 +22,18 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('bar/foo2');
     });
+    it('Should trim testFiles spaces', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo.spec.js');
+      helper.addComponentWithOptions('bar/foo.js', { 't': 'bar/foo.spec.js       ' });
+      const bitMap = helper.readBitMap();
+      const files = bitMap["bar/foo"].files;
+      const expectTestFile = { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' };
+      expect(bitMap).to.have.property('bar/foo');
+      expect(files).to.be.array();
+      expect(files).to.be.ofSize(2);
+      expect(files).to.include(expectTestFile);
+    });
     it('Add component from subdir  ../someFile ', () => {
       const barPath  = path.join(helper.localScopePath, 'bar/x');
       helper.createComponent('bar', 'foo2.js');

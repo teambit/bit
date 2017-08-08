@@ -473,7 +473,6 @@ describe('bit import', function () {
     });
   });
 
-
   describe('after committing dependencies only (not dependents)', () => {
     /**
      * Directory structure of the author
@@ -516,6 +515,29 @@ describe('bit import', function () {
       const result = helper.runCmd('node app.js');
       // notice the "v2" (!)
       expect(result.trim()).to.equal('got is-type v2 and got is-string');
+    });
+  });
+
+  describe('to an inner directory (not consumer root)', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+
+      const pathToRunImportFrom = path.join(helper.localScopePath, 'utils');
+      fs.ensureDirSync(pathToRunImportFrom);
+      helper.runCmd(`bit import ${helper.remoteScope}/bar/foo`, pathToRunImportFrom);
+    });
+    it('should import to the consumer root directory as if the command was running from the root', () => {
+      const expectedLocation = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'bar', 'foo.js');
+      expect(fs.existsSync(expectedLocation)).to.be.true;
     });
   });
 

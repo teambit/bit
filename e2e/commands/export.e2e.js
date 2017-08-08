@@ -85,6 +85,27 @@ describe('bit export command', function () {
     });
   });
 
+  describe('with specifying multiple components in the CLI', () => {
+    before(() => {
+      helper.cleanEnv();
+      helper.runCmd('bit init');
+      createComponent('bar', 'foo1');
+      createComponent('bar', 'foo2');
+      helper.runCmd('bit add bar/foo1.js');
+      helper.runCmd('bit add bar/foo2.js');
+      helper.commitAllComponents();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.exportComponent('bar/foo1 bar/foo2');
+    });
+    it('should export them all', () => {
+      const output = helper.runCmd(`bit list ${helper.remoteScope} --bare`);
+      expect(output.includes('Total 2 components')).to.be.true;
+      expect(output.includes('bar/foo1')).to.be.true;
+      expect(output.includes('bar/foo2')).to.be.true;
+    });
+  });
+
   describe('with dependencies', () => {
     before(() => {
       helper.reInitLocalScope();
