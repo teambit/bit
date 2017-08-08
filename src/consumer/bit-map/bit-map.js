@@ -229,7 +229,7 @@ export default class BitMap {
    *    componentId: component
    * }
    *
-   * @param {string} rootPath relative to consumer - as stored in bit.map files object
+   * @param {string} filePath relative to root dir - as stored in bit.map files object
    * @returns {Object<string, ComponentMap>}
    * @memberof BitMap
    */
