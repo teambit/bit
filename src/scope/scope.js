@@ -690,7 +690,7 @@ export default class Scope {
    * sync method that loads the environment/(path to environment component)
    */
   async loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?bool, bareScope?: ?bool }): Promise<> {
-    // const envDir = opts && opts.bareScope ? this.getPath() : pathLib.dirname(this.getPath());
+    logger.debug(`scope.loadEnvironment, id: ${bitId}`);
     if (!bitId) throw new ResolutionException();
     const envComponent = (await this.get(bitId)).component;
     const mainFile = (envComponent.dists && !R.isEmpty(envComponent.dists)) ? path.join(DEFAULT_DIST_DIRNAME, envComponent.mainFile)
@@ -738,6 +738,7 @@ export default class Scope {
 
   installEnvironment({ ids, consumer, verbose }:
   { ids: BitId[], consumer?: Consumer, verbose?: boolean }): Promise<any> {
+    logger.debug(`scope.installEnvironment, ids: ${ids.join(', ')}`);
     const installPackageDependencies = (component: ConsumerComponent) => {
       return npmClient.install(component.packageDependencies, {
         cwd: this.getBitPathInComponentsDir(component.id)

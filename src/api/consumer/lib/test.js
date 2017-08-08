@@ -6,8 +6,9 @@ import Bit from '../../../consumer/component';
 
 export async function test(id: string, verbose: boolean = true): Promise<Bit> {
   const consumer: Consumer = await loadConsumer();
-  const component = await  consumer.loadComponent(BitId.parse(id))
-  const result = await consumer.runComponentSpecs(BitId.parse(id), verbose)
+  const idParsed = BitId.parse(id);
+  const component = await consumer.loadComponent(idParsed);
+  const result = await consumer.runComponentSpecs(idParsed, verbose);
   return  { specs: result, component };
 }
 

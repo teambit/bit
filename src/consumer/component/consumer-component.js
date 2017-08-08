@@ -336,6 +336,7 @@ export default class Component {
     }
 
     await installEnvironmentsIfNeeded();
+    logger.debug('Environment are installed.');
     try {
       if (!testerFilePath) {
         testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
@@ -374,6 +375,7 @@ export default class Component {
       };
 
       if (!isolated && consumer) {
+        logger.debug('Building the component before running the tests');
         await this.build({ scope, environment, verbose, consumer });
         const saveDists = this.dists ?
           this.dists.map(dist => dist.write()) : [Promise.resolve()];

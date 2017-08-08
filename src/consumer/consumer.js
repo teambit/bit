@@ -139,12 +139,12 @@ export default class Consumer {
   }
 
   async loadComponent(id: BitId): Promise<Component> {
-    logger.debug(`loading a consumer-component ${id} from the file-system`);
     const components = await this.loadComponents([id]);
     return components[0];
   }
 
   async loadComponents(ids: BitId[]): Promise<Component> {
+    logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
     const bitMap: BitMap = await this.getBitMap();
 
     const fullDependenciesTree = {
@@ -245,7 +245,7 @@ export default class Consumer {
         if (dependenciesTree.missing.files) fullDependenciesTree.missing.files = fullDependenciesTree.missing.files.concat(dependenciesTree.missing.files);
         if (dependenciesTree.missing.packages) fullDependenciesTree.missing.packages = fullDependenciesTree.missing.packages.concat(dependenciesTree.missing.packages);
         if (dependenciesTree.missing.bits) fullDependenciesTree.missing.bits = fullDependenciesTree.missing.bits.concat(dependenciesTree.missing.bits);
-        
+
         // Check if there is missing dependencies in file system
         // Add missingDependenciesOnFs to component
         if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) component.missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
@@ -475,7 +475,7 @@ export default class Consumer {
           dep.writtenPath = dependenciesIds[dependencyId];
           return Promise.resolve();
         }
-        
+
         const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
         dep.writtenPath = depBitPath;
         dependenciesIds[dependencyId] = depBitPath;
@@ -513,7 +513,7 @@ export default class Consumer {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const components = await this.loadComponents(componentsIds);
-    
+
     // Run over the components to check if there is missing depenedencies
     // If there is at least one we won't commit anything
     const componentsWithMissingDeps = components.filter((component) => {
