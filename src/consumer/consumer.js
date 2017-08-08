@@ -160,15 +160,47 @@ export default class Consumer {
      * Run over the deps tree recursively to build the full deps tree for component
      * @param {Object} tree - which contain direct deps for each file
      * @param {string} file - file to calculate deps for
+     * @param {string} entryComponentId - component id for the entry of traversing - used to know which of the files are part of that component
      */
-    const traverseDepsTreeRecursive = (tree, file) => {
-      const deps = tree[file].files;
-      if (!deps || R.isEmpty(deps)) return [];
-      const allDeps = deps.reduce((dpesSoFar, dep) => {
-        const nextDeps = traverseDepsTreeRecursive(tree, dep);
-        return dpesSoFar.concat(nextDeps);
-      }, deps);
-      return R.uniq(allDeps);
+    const traverseDepsTreeRecursive = (tree, file, entryComponentId) => {
+      let componentsDeps = [];
+      const packagesDeps = {};
+      let missingDeps = [];
+
+      // Don't traverse generated authored components (from the same reasons above):
+      let componentId = bitMap.getComponentIdByPath(file);
+      // console.log('found authored componentId', componentId);
+      if (!componentId) {
+        // Check if its a generated index file
+        if (path.basename(file) === DEFAULT_INDEX_NAME) {
+          const indexDir = path.dirname(file);
+          componentId = bitMap.getComponentIdByRootPath(indexDir);
+        }
+
+        if (!componentId) {
+          missingDeps.push(file);
+          return ({ componentsDeps, packagesDeps, missingDeps });
+        }
+      }
+      if (componentId === entryComponentId) {
+        const currPackagesDeps = tree[file].packages;
+        if (currPackagesDeps && !R.isEmpty(currPackagesDeps)) {
+          Object.assign(packagesDeps, currPackagesDeps);
+        }
+        const allFilesDpes = tree[file].files;
+        if (!allFilesDpes || R.isEmpty(allFilesDpes)) return { componentsDeps, packagesDeps, missingDeps };
+        const recursiveResults = allFilesDpes.map(fileDep => traverseDepsTreeRecursive(tree, fileDep, entryComponentId));
+        recursiveResults.forEach((result) => {
+          componentsDeps = componentsDeps.concat(result.componentsDeps);
+          missingDeps = missingDeps.concat(result.missingDeps);
+          Object.assign(packagesDeps, result.packagesDeps);
+        });
+        return { componentsDeps, packagesDeps, missingDeps };
+      }
+
+      const parsedComponentId = BitId.parse(componentId);
+      const currComponentDeps = [{ id: parsedComponentId, relativePath: file }];
+      return ({ componentsDeps: currComponentDeps, packagesDeps: {}, missingDeps: [] });
     };
 
     // Map to store the id's of paths we already found in bit.map
@@ -179,7 +211,7 @@ export default class Consumer {
 
     const components = ids.map(async (id: BitId) => {
       let dependenciesTree = {};
-      const dependencies = [];
+      let dependencies = [];
       const idWithConcreteVersionString = getLatestVersionNumber(Object.keys(bitMap.getAllComponents()), id.toString());
       const idWithConcreteVersion = BitId.parse(idWithConcreteVersionString);
 
@@ -223,32 +255,12 @@ export default class Consumer {
 
       // We only care of the relevant sub tree from now on
       // We can be sure it's now exists because it's happen after the assign in case it was missing
-      const files = traverseDepsTreeRecursive(fullDependenciesTree.tree, mainFile).concat(mainFile) || [mainFile];
-      const packages = {};
+      const traversedDeps = traverseDepsTreeRecursive(fullDependenciesTree.tree, mainFile, idWithConcreteVersion.toString());
+      dependencies = traversedDeps.componentsDeps;
+      const packages = traversedDeps.packagesDeps;
+      const missingDependencies = traversedDeps.missingDeps;
 
-      const dependenciesMissingInMap = [];
-      files.forEach((filePath) => {
-        // Trying to get the idString from map first
-        const dependencyIdString = dependenciesPathIdMap.get(filePath) || bitMap.getComponentIdByPath(filePath);
-
-        // Check if there is missing dependencies (dependencies which exist in file system but not added to bit.map)
-        if (!dependencyIdString) {
-          dependenciesMissingInMap.push(filePath);
-        } else {
-          // Add the entry to cache map
-          dependenciesPathIdMap.set(filePath, dependencyIdString);
-          if (idWithConcreteVersion.toString() !== dependencyIdString) {
-            const dependencyId = BitId.parse(dependencyIdString);
-            dependencies.push({ id: dependencyId, relativePath: filePath });
-          } else {
-            // Take package deps from all files
-            const currentPackagesDeps = dependenciesTree.tree[filePath].packages;
-            Object.assign(packages, currentPackagesDeps);
-          }
-        }
-      });
-      // Add untrackedDependencies to component
-      if (!R.isEmpty(dependenciesMissingInMap)) component.missingDependencies.untrackedDependencies = dependenciesMissingInMap;
+      if (!R.isEmpty(missingDependencies)) component.missingDependencies.untrackedDependencies = missingDependencies;
 
       // TODO: add the bit/ dependencies as well
       component.dependencies = dependencies;
