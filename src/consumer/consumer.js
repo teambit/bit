@@ -364,19 +364,28 @@ export default class Consumer {
   async _writeEntryPointsForImportedComponent(component: Component, bitMap: BitMap):
   Promise<any> {
     const componentRoot = component.writtenPath;
-    const entryPointPath = path.join(componentRoot, DEFAULT_INDEX_NAME);
     let componentId = component.id.toString();
     if (!bitMap.getComponent(componentId)) { // todo: this is a hack. bit.map should have the correct id with the scope
       componentId = component.id.changeScope(null).toString();
     }
-    let mainFile = bitMap.getMainFileOfComponent(componentId);
+    let mainFile = bitMap.getMainFileOfComponent(componentId); // TODO: get main dist in case it exists?
     // In case there is dist files, we want to point the index to the dist file not to source.
-    if (component.dists && !R.isEmpty(component.dists)){
+    if (component.dists && !R.isEmpty(component.dists)) {
       logger.debug(`_writeEntryPointsForImportedComponent, Change the index file to point to dist folder`);
       mainFile = path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
-    const entryPointFile = `module.exports = require('.${path.sep}${mainFile}');`; // todo: move to bit-javascript
-    return outputFile(entryPointPath, entryPointFile);
+    let entryPointFileContent = `module.exports = require('.${path.sep}${mainFile}');` // todo: move to bit-javascript
+    let indexName = path.parse(DEFAULT_INDEX_NAME).name; // Move to bit-javascript
+    
+    // TODO: This is a hack to support angular material case, it should be re implemented in a better way
+    if (path.extname(mainFile) === '.ts') {
+      indexName = 'index.ts'; // Move to bit-javascript
+      entryPointFileContent = `export * from '.${path.sep}${mainFile}'`;
+    }
+    
+    entryPointFileContent = `${entryPointFileContent.substring(0, entryPointFileContent.lastIndexOf('.'))}'`;
+    const entryPointPath = path.join(componentRoot, indexName);
+    return outputFile(entryPointPath, entryPointFileContent);
   }
 
 
@@ -391,12 +400,21 @@ export default class Consumer {
   async _writeDependencyLinks(componentDependencies: ComponentDependencies[], bitMap: BitMap): Promise<any> {
 
     const writeLinkFile = (componentId: string, linkPath: string) => {
-      const entryFilePath = bitMap.getEntryFileOfComponent(componentId);
+      const rootDir = bitMap.getRootDirOfComponent(componentId);
+      const mainFile = bitMap.getMainFileOfComponent(componentId);
+      let entryFilePath = path.join(rootDir, DEFAULT_INDEX_NAME);
+      let relativeEntryFilePath = path.relative(path.dirname(linkPath), entryFilePath);
+      let linkContent = `module.exports = require('${relativeEntryFilePath}');`;
 
-      const relativeEntryFilePath = path.relative(path.dirname(linkPath), entryFilePath);
       // todo: move to bit-javascript
-      const linkContent = `module.exports = require('${relativeEntryFilePath}');`;
-
+      // TODO: This is a hack to support angular material case, it should be re implemented in a better way
+      if (path.extname(mainFile) === '.ts') {
+        entryFilePath = path.join(rootDir, 'index.ts'); // Move to bit-javascript
+        relativeEntryFilePath = path.relative(path.dirname(linkPath), entryFilePath);        
+        linkContent = `export * from '${relativeEntryFilePath}'`;
+      }
+      linkContent = `${linkContent.substring(0, linkContent.lastIndexOf('.'))}'`;
+    
       return outputFile(linkPath, linkContent);
     };
 
