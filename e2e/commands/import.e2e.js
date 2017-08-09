@@ -263,6 +263,62 @@ describe('bit import', function () {
     });
   });
 
+  describe.only('component which require another component\'s internal (not main) file', () => {
+    describe('javascript without compiler', () => {
+      let localConsumerFiles;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+
+        const isTypeInternalFixture = "module.exports = function isType() { return 'got is-type'; };";
+        helper.createComponent('utils', 'is-type-internal.js', isTypeInternalFixture);
+        const isTypeMainFixture = "module.exports = require('./is-type-internal');";
+        helper.createComponent('utils', 'is-type-main.js', isTypeMainFixture);
+        helper.addComponentWithOptions('utils/is-type-internal.js utils/is-type-main.js', {m: 'utils/is-type-main.js', i: 'utils/is-type'});
+
+        const isStringInternalFixture = "const isType = require('./is-type-internal.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+        helper.createComponent('utils', 'is-string-internal.js', isStringInternalFixture);
+        const isStringMainFixture = "const isType = require('./is-type-main.js'); module.exports = require('./is-string-internal');";
+        helper.createComponent('utils', 'is-string-main.js', isStringMainFixture);
+        helper.addComponentWithOptions('utils/is-string-internal.js utils/is-string-main.js', {m: 'utils/is-string-main.js', i: 'utils/is-string'});
+        
+
+        helper.commitAllComponents();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string');
+        localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
+        console.log(localConsumerFiles);
+      });
+
+      it('create a link file to the dependency main file', () => {
+        const expectedLocation = path.join('components', 'utils', 'is-string', 'utils', 'is-type-main.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+        const linkPath = path.join(helper.localScopePath, expectedLocation);
+        const linkFileContent = fs.readFileSync(linkPath).toString();
+        const requirePath = `../dependencies/utils/is-type/${helper.remoteScope}/1/index.js`;
+        expect(linkFileContent).to.have.string(`module.exports = require('${requirePath}');`, 'link file point to the wrong place');
+      });
+
+      it('create a link file to the dependency internal file', () => {
+        const expectedLocation = path.join('components', 'utils', 'is-string', 'utils', 'is-type-internal.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+        const linkPath = path.join(helper.localScopePath, expectedLocation);
+        const linkFileContent = fs.readFileSync(linkPath).toString();
+        const requirePath = `../dependencies/utils/is-type/${helper.remoteScope}/1/utils/is-type/is-type-internal.js`;
+        expect(linkFileContent).to.have.string(`module.exports = require('${requirePath}');`, 'link file point to the wrong place');
+      });
+    });
+
+    describe.skip('javascript with compiler', () => {
+    });
+
+    describe.skip('typescript without compiler', () => {
+    });
+  });
+
   describe('component/s with bit.json dependencies', () => {
     before(() => {
       helper.reInitLocalScope();
