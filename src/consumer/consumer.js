@@ -57,6 +57,7 @@ export default class Consumer {
   _driver: Driver;
   _bitMap: BitMap;
   _dirStructure: DirStructure;
+  componentsCache: Object;
 
   constructor({ projectPath, bitJson, scope, created = false }: ConsumerProps) {
     this.projectPath = projectPath;
@@ -64,6 +65,7 @@ export default class Consumer {
     this.created = created;
     this.scope = scope;
     this.warnForMissingDriver();
+    this.componentsCache = {};
   }
 
   get testerId(): ?BitId {
@@ -146,6 +148,18 @@ export default class Consumer {
 
   async loadComponents(ids: BitId[]): Promise<Component> {
     logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
+    const alreadyLoadedComponents = [];
+    const idsToProcess = [];
+    ids.forEach((id) => {
+      if (this.componentsCache[id.toString()]) {
+        logger.debug(`the component ${id.toString()} has been already loaded, use the cached component`);
+        alreadyLoadedComponents.push(this.componentsCache[id.toString()]);
+      } else {
+        idsToProcess.push(id);
+      }
+    });
+    if (!idsToProcess.length) return alreadyLoadedComponents;
+
     const bitMap: BitMap = await this.getBitMap();
 
     const fullDependenciesTree = {
@@ -157,13 +171,22 @@ export default class Consumer {
       }
     };
 
+    const depsTreeCache = {};
+
     /**
      * Run over the deps tree recursively to build the full deps tree for component
      * @param {Object} tree - which contain direct deps for each file
      * @param {string} file - file to calculate deps for
      * @param {string} entryComponentId - component id for the entry of traversing - used to know which of the files are part of that component
      */
-    const traverseDepsTreeRecursive = (tree, file, entryComponentId) => {
+    const traverseDepsTreeRecursive = (tree: Object, file: string, entryComponentId: string): Object => {
+      const depsTreeCacheId = `${file}@${entryComponentId}`;
+      if (depsTreeCache[depsTreeCacheId] === null) return {}; // todo: cyclomatic dependency
+      if (depsTreeCache[depsTreeCacheId]) {
+        return depsTreeCache[depsTreeCacheId];
+      }
+      depsTreeCache[depsTreeCacheId] = null; // mark as started
+
       const packagesDeps = {};
       let missingDeps = [];
 
@@ -178,6 +201,7 @@ export default class Consumer {
 
         if (!componentId) {
           missingDeps.push(file);
+          depsTreeCache[depsTreeCacheId] = { componentsDeps: {}, packagesDeps, missingDeps };
           return ({ componentsDeps: {}, packagesDeps, missingDeps });
         }
       }
@@ -187,7 +211,10 @@ export default class Consumer {
           Object.assign(packagesDeps, currPackagesDeps);
         }
         const allFilesDpes = tree[file].files;
-        if (!allFilesDpes || R.isEmpty(allFilesDpes)) return { componentsDeps: {}, packagesDeps, missingDeps };
+        if (!allFilesDpes || R.isEmpty(allFilesDpes)) {
+          depsTreeCache[depsTreeCacheId] = { componentsDeps: {}, packagesDeps, missingDeps };
+          return { componentsDeps: {}, packagesDeps, missingDeps };
+        }
         const recursiveResults = allFilesDpes.map(fileDep => traverseDepsTreeRecursive(tree, fileDep, entryComponentId));
         const currComponentsDeps = {};
         recursiveResults.forEach((result) => {
@@ -205,22 +232,19 @@ export default class Consumer {
           missingDeps = missingDeps.concat(result.missingDeps);
           Object.assign(packagesDeps, result.packagesDeps);
         });
+        depsTreeCache[depsTreeCacheId] = { componentsDeps: currComponentsDeps, packagesDeps, missingDeps };
         return { componentsDeps: currComponentsDeps, packagesDeps, missingDeps };
       }
 
       const currComponentsDeps = { [componentId]: [{ entryRelativePath: file, relativePath: file }] };
+      depsTreeCache[depsTreeCacheId] = { componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] };
       return ({ componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] });
     };
 
-    // Map to store the id's of paths we already found in bit.map
-    // It's aim is to reduce the search in the bit.map for dependencies ids because it's an expensive operation
-    const dependenciesPathIdMap = new Map();
-
     const driverExists = this.warnForMissingDriver('Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.');
 
-    const components = ids.map(async (id: BitId) => {
+    const components = idsToProcess.map(async (id: BitId) => {
       let dependenciesTree = {};
-      let dependencies = [];
       const idWithConcreteVersionString = getLatestVersionNumber(Object.keys(bitMap.getAllComponents()), id.toString());
       const idWithConcreteVersion = BitId.parse(idWithConcreteVersionString);
 
@@ -266,7 +290,7 @@ export default class Consumer {
       // We can be sure it's now exists because it's happen after the assign in case it was missing
       const traversedDeps = traverseDepsTreeRecursive(fullDependenciesTree.tree, mainFile, idWithConcreteVersion.toString());
       const traveresedCompDeps = traversedDeps.componentsDeps;
-      dependencies = Object.keys(traveresedCompDeps).map((depId) => {
+      const dependencies = Object.keys(traveresedCompDeps).map((depId) => {
         return { id: BitId.parse(depId), relativePaths: traveresedCompDeps[depId] };
       });
       const packages = traversedDeps.packagesDeps;
@@ -281,7 +305,15 @@ export default class Consumer {
       return component;
     });
 
-    return Promise.all(components);
+    const allComponents = [];
+    for (const componentP of components) { // load the components one after another (not in parallel).
+      const component = await componentP;
+      this.componentsCache[component.id.toString()] = component;
+      logger.debug(`Finished loading the component, ${component.id.toString()}`);
+      allComponents.push(component);
+    }
+
+    return allComponents;
   }
 
   async importAccordingToBitJsonAndBitMap(verbose?: bool, withEnvironments: ?bool,
