@@ -30,7 +30,8 @@ import {
   DEPENDENCIES_DIR,
   COMPONENT_ORIGINS,
   DEFAULT_DIST_DIRNAME,
-  DEFAULT_INDEX_NAME
+  DEFAULT_INDEX_NAME,
+  DEFAULT_INDEX_TS_NAME
 } from '../constants';
 import { Scope, ComponentDependencies } from '../scope';
 import BitInlineId from './bit-inline-id';
@@ -373,6 +374,23 @@ export default class Consumer {
     });
   }
 
+  // todo: move to bit-javascript
+  _getIndexFileName(mainFile: string): string {
+    if (path.extname(mainFile) === '.ts') {
+      return DEFAULT_INDEX_TS_NAME;
+    }
+    return DEFAULT_INDEX_NAME;
+  }
+
+  // todo: move to bit-javascript
+  _getLinkContent(mainFile: string, filePath: string): string {
+    filePath = filePath.substring(0, filePath.lastIndexOf('.')); // remove the extension
+    if (path.extname(mainFile) === '.ts') {
+      return `export * from '${filePath}';`;
+    }
+    return `module.exports = require('${filePath}');`;
+  }
+
   async _writeEntryPointsForImportedComponent(component: Component, bitMap: BitMap):
   Promise<any> {
     const componentRoot = component.writtenPath;
@@ -383,25 +401,14 @@ export default class Consumer {
     let mainFile = bitMap.getMainFileOfComponent(componentId); // TODO: get main dist in case it exists?
     // In case there is dist files, we want to point the index to the dist file not to source.
     if (component.dists && !R.isEmpty(component.dists)) {
-      logger.debug(`_writeEntryPointsForImportedComponent, Change the index file to point to dist folder`);
+      logger.debug('_writeEntryPointsForImportedComponent, Change the index file to point to dist folder');
       mainFile = path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
-    let entryPointFileContent = `module.exports = require('.${path.sep}${mainFile}');`; // todo: move to bit-javascript
-    let indexName = DEFAULT_INDEX_NAME; // Move to bit-javascript
-
-    // TODO: This is a hack to support angular material case, it should be re implemented in a better way
-    if (path.extname(mainFile) === '.ts') {
-      indexName = 'index.ts'; // Move to bit-javascript
-      entryPointFileContent = `export * from '.${path.sep}${mainFile}'`;
-      entryPointFileContent = `${entryPointFileContent.substring(0, entryPointFileContent.lastIndexOf('.'))}';`;
-    } else {
-      entryPointFileContent = `${entryPointFileContent.substring(0, entryPointFileContent.lastIndexOf('.'))}');`;
-    }
-
+    const indexName = this._getIndexFileName(mainFile); // Move to bit-javascript
+    const entryPointFileContent = this._getLinkContent(mainFile, `.${path.sep}${mainFile}`);
     const entryPointPath = path.join(componentRoot, indexName);
     return outputFile(entryPointPath, entryPointFileContent);
   }
-
 
   /**
    * The following scenario will help understanding why links are needed.
@@ -412,33 +419,20 @@ export default class Consumer {
    * under 'dependencies' of A.
    */
   async _writeDependencyLinks(componentDependencies: ComponentDependencies[], bitMap: BitMap): Promise<any> {
-
     const writeLinkFile = (componentId: string, linkPath: string, relativePathInDependency: string) => {
       const rootDir = bitMap.getRootDirOfComponent(componentId);
       const mainFile = bitMap.getMainFileOfComponent(componentId);
       let actualFilePath = path.join(rootDir, relativePathInDependency);
       if (relativePathInDependency === mainFile) {
-        actualFilePath = path.join(rootDir, DEFAULT_INDEX_NAME);
+        actualFilePath = path.join(rootDir, this._getIndexFileName(mainFile));
       }
-      let relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
-      let linkContent = `module.exports = require('${relativeFilePath}');`;
-
-      // todo: move to bit-javascript
-      // TODO: This is a hack to support angular material case, it should be re implemented in a better way
-      if (path.extname(linkPath) === '.ts') {
-        relativeFilePath = relativeFilePath.replace('.js', '.ts'); // Move to bit-javascript
-        linkContent = `export * from '${relativeFilePath}'`;
-        // Remove file extension from link content (require statement)
-        linkContent = `${linkContent.substring(0, linkContent.lastIndexOf('.'))}';`;
-      } else {
-        // Remove file extension from link content (require statement)
-        linkContent = `${linkContent.substring(0, linkContent.lastIndexOf('.'))}');`;
-      }
-      
+      const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
+      const linkContent = this._getLinkContent(mainFile, relativeFilePath);
       return outputFile(linkPath, linkContent);
     };
 
-    const componentLink = async (resolveDepVersion: string, entryRelativePath: string, relativePathInDependency: string, parentDir: string, hasDist: boolean) => {
+    const componentLink = async (resolveDepVersion: string, entryRelativePath: string, relativePathInDependency: string,
+                                 parentDir: string, hasDist: boolean) => {
       const linkPath = path.join(parentDir, entryRelativePath);
       let distLinkPath;
       if (hasDist) {
@@ -451,9 +445,10 @@ export default class Consumer {
       }
 
       return writeLinkFile(resolveDepVersion, linkPath, relativePathInDependency);
-    }
+    };
 
-    const componentLinks = (directDependencies: Array<Object>, flattenedDependencies: BitIds, parentDir: string, hasDist: boolean) => {
+    const componentLinks = (directDependencies: Array<Object>, flattenedDependencies: BitIds, parentDir: string,
+                            hasDist: boolean) => {
       if (!directDependencies || !directDependencies.length) return Promise.resolve();
       const links = directDependencies.map((dep) => {
         if (!dep.relativePath && (!dep.relativePaths || R.isEmpty(dep.relativePaths))) return Promise.resolve();
