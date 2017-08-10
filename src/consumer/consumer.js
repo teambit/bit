@@ -374,16 +374,16 @@ export default class Consumer {
       logger.debug(`_writeEntryPointsForImportedComponent, Change the index file to point to dist folder`);
       mainFile = path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
-    let entryPointFileContent = `module.exports = require('.${path.sep}${mainFile}');` // todo: move to bit-javascript
-    let indexName = path.parse(DEFAULT_INDEX_NAME).name; // Move to bit-javascript
-    
+    let entryPointFileContent = `module.exports = require('.${path.sep}${mainFile}');`; // todo: move to bit-javascript
+    let indexName = DEFAULT_INDEX_NAME; // Move to bit-javascript
+
     // TODO: This is a hack to support angular material case, it should be re implemented in a better way
     if (path.extname(mainFile) === '.ts') {
       indexName = 'index.ts'; // Move to bit-javascript
       entryPointFileContent = `export * from '.${path.sep}${mainFile}'`;
     }
-    
-    entryPointFileContent = `${entryPointFileContent.substring(0, entryPointFileContent.lastIndexOf('.'))}'`;
+
+    entryPointFileContent = `${entryPointFileContent.substring(0, entryPointFileContent.lastIndexOf('.'))}');`;
     const entryPointPath = path.join(componentRoot, indexName);
     return outputFile(entryPointPath, entryPointFileContent);
   }
@@ -410,11 +410,11 @@ export default class Consumer {
       // TODO: This is a hack to support angular material case, it should be re implemented in a better way
       if (path.extname(mainFile) === '.ts') {
         entryFilePath = path.join(rootDir, 'index.ts'); // Move to bit-javascript
-        relativeEntryFilePath = path.relative(path.dirname(linkPath), entryFilePath);        
+        relativeEntryFilePath = path.relative(path.dirname(linkPath), entryFilePath);
         linkContent = `export * from '${relativeEntryFilePath}'`;
       }
-      linkContent = `${linkContent.substring(0, linkContent.lastIndexOf('.'))}'`;
-    
+      linkContent = `${linkContent.substring(0, linkContent.lastIndexOf('.'))}');`;
+
       return outputFile(linkPath, linkContent);
     };
 
