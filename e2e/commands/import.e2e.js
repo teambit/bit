@@ -263,7 +263,7 @@ describe('bit import', function () {
     });
   });
 
-  describe.only('component which require another component\'s internal (not main) file', () => {
+  describe('component which require another component\'s internal (not main) file', () => {
     describe('javascript without compiler', () => {
       let localConsumerFiles;
       before(() => {
@@ -290,7 +290,6 @@ describe('bit import', function () {
         helper.addRemoteScope();
         helper.importComponent('utils/is-string');
         localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
-        console.log(localConsumerFiles);
       });
 
       it('create a link file to the dependency main file', () => {
@@ -307,7 +306,7 @@ describe('bit import', function () {
         expect(localConsumerFiles).to.include(expectedLocation);
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkFileContent = fs.readFileSync(linkPath).toString();
-        const requirePath = `../dependencies/utils/is-type/${helper.remoteScope}/1/utils/is-type/is-type-internal`;
+        const requirePath = `../dependencies/utils/is-type/${helper.remoteScope}/1/utils/is-type-internal`;
         expect(linkFileContent).to.have.string(`module.exports = require('${requirePath}');`, 'link file point to the wrong place');
       });
     });
@@ -349,7 +348,7 @@ describe('bit import', function () {
         bitMap = helper.readBitMap();
       });
 
-      it('should add all missing components to bit.map file', () => {
+      it.only('should add all missing components to bit.map file', () => {
         expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple${VERSION_DELIMITER}1`);
       });
       it('should mark direct dependencies as "IMPORTED" in bit.map file', () => {
