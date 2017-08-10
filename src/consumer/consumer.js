@@ -428,9 +428,13 @@ export default class Consumer {
       if (path.extname(linkPath) === '.ts') {
         relativeFilePath = relativeFilePath.replace('.js', '.ts'); // Move to bit-javascript
         linkContent = `export * from '${relativeFilePath}'`;
+        // Remove file extension from link content (require statement)
+        linkContent = `${linkContent.substring(0, linkContent.lastIndexOf('.'))}';`;
+      } else {
+        // Remove file extension from link content (require statement)
+        linkContent = `${linkContent.substring(0, linkContent.lastIndexOf('.'))}');`;
       }
-      // Remove file extension from link content (require statement)
-      linkContent = `${linkContent.substring(0, linkContent.lastIndexOf('.'))}');`;
+      
       return outputFile(linkPath, linkContent);
     };
 
