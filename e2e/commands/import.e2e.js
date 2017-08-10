@@ -298,7 +298,7 @@ describe('bit import', function () {
         expect(localConsumerFiles).to.include(expectedLocation);
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkFileContent = fs.readFileSync(linkPath).toString();
-        const requirePath = `../dependencies/utils/is-type/${helper.remoteScope}/1/index.js`;
+        const requirePath = `../dependencies/utils/is-type/${helper.remoteScope}/1/index`;
         expect(linkFileContent).to.have.string(`module.exports = require('${requirePath}');`, 'link file point to the wrong place');
       });
 
@@ -307,7 +307,7 @@ describe('bit import', function () {
         expect(localConsumerFiles).to.include(expectedLocation);
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkFileContent = fs.readFileSync(linkPath).toString();
-        const requirePath = `../dependencies/utils/is-type/${helper.remoteScope}/1/utils/is-type/is-type-internal.js`;
+        const requirePath = `../dependencies/utils/is-type/${helper.remoteScope}/1/utils/is-type/is-type-internal`;
         expect(linkFileContent).to.have.string(`module.exports = require('${requirePath}');`, 'link file point to the wrong place');
       });
     });
