@@ -393,9 +393,11 @@ export default class Consumer {
     if (path.extname(mainFile) === '.ts') {
       indexName = 'index.ts'; // Move to bit-javascript
       entryPointFileContent = `export * from '.${path.sep}${mainFile}'`;
+      entryPointFileContent = `${entryPointFileContent.substring(0, entryPointFileContent.lastIndexOf('.'))}';`;
+    } else {
+      entryPointFileContent = `${entryPointFileContent.substring(0, entryPointFileContent.lastIndexOf('.'))}');`;
     }
 
-    entryPointFileContent = `${entryPointFileContent.substring(0, entryPointFileContent.lastIndexOf('.'))}');`;
     const entryPointPath = path.join(componentRoot, indexName);
     return outputFile(entryPointPath, entryPointFileContent);
   }
@@ -438,7 +440,7 @@ export default class Consumer {
       if (hasDist) {
         distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, entryRelativePath);
       }
-      
+
       // Generate a link file inside dist folder of the dependent component
       if (hasDist) {
         writeLinkFile(resolveDepVersion, distLinkPath, relativePathInDependency);
