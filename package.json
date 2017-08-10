@@ -8,7 +8,6 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "gulp lint && flow check",
     "test": "gulp test",
-    "postinstall": "bitjs import",
     "e2e-test": "mocha --compilers js:babel-core/register ./e2e/**/*.e2e.js",
     "clean": "rm -rf dist",
     "build": "babel src specs -d dist",
