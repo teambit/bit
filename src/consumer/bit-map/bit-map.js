@@ -234,7 +234,12 @@ export default class BitMap {
    * @memberof BitMap
    */
   getComponentObjectByPath(filePath: string): Object<string, ComponentMap> {
-    return pickBy(this.components, (componentObject, componentId) => find(componentObject.files, (file) => file.relativePath === filePath));
+    return pickBy(this.components, (componentObject, componentId) => {
+      const rootDir = componentObject.rootDir;
+      return find(componentObject.files, (file) => {
+        return (file.relativePath === filePath || (rootDir && path.join(rootDir, file.relativePath) === filePath));
+      });
+    });
   }
 
   /**

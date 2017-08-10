@@ -181,7 +181,8 @@ export default class Component extends BitObject {
               dependencies: version.dependencies // todo: understand why sometimes the dependencies are not parsed
                 .map(dependency => ({
                   id: is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
-                  relativePath: dependency.relativePath
+                  // After the || is backward compatibility stuff
+                  relativePaths: dependency.relativePaths || [{ entryRelativePath: dependency.relativePath, relativePath: dependency.relativePath }]
                 })),
               flattenedDependencies: version.flattenedDependencies,
               packageDependencies: version.packageDependencies,

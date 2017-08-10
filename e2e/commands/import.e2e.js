@@ -263,6 +263,61 @@ describe('bit import', function () {
     });
   });
 
+  describe('component which require another component\'s internal (not main) file', () => {
+    describe('javascript without compiler', () => {
+      let localConsumerFiles;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+
+        const isTypeInternalFixture = "module.exports = function isType() { return 'got is-type'; };";
+        helper.createComponent('utils', 'is-type-internal.js', isTypeInternalFixture);
+        const isTypeMainFixture = "module.exports = require('./is-type-internal');";
+        helper.createComponent('utils', 'is-type-main.js', isTypeMainFixture);
+        helper.addComponentWithOptions('utils/is-type-internal.js utils/is-type-main.js', {m: 'utils/is-type-main.js', i: 'utils/is-type'});
+
+        const isStringInternalFixture = "const isType = require('./is-type-internal.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+        helper.createComponent('utils', 'is-string-internal.js', isStringInternalFixture);
+        const isStringMainFixture = "const isType = require('./is-type-main.js'); module.exports = require('./is-string-internal');";
+        helper.createComponent('utils', 'is-string-main.js', isStringMainFixture);
+        helper.addComponentWithOptions('utils/is-string-internal.js utils/is-string-main.js', {m: 'utils/is-string-main.js', i: 'utils/is-string'});
+        
+
+        helper.commitAllComponents();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string');
+        localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
+      });
+
+      it('create a link file to the dependency main file', () => {
+        const expectedLocation = path.join('components', 'utils', 'is-string', 'utils', 'is-type-main.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+        const linkPath = path.join(helper.localScopePath, expectedLocation);
+        const linkFileContent = fs.readFileSync(linkPath).toString();
+        const requirePath = `../dependencies/utils/is-type/${helper.remoteScope}/1/index`;
+        expect(linkFileContent).to.have.string(`module.exports = require('${requirePath}');`, 'link file point to the wrong place');
+      });
+
+      it('create a link file to the dependency internal file', () => {
+        const expectedLocation = path.join('components', 'utils', 'is-string', 'utils', 'is-type-internal.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+        const linkPath = path.join(helper.localScopePath, expectedLocation);
+        const linkFileContent = fs.readFileSync(linkPath).toString();
+        const requirePath = `../dependencies/utils/is-type/${helper.remoteScope}/1/utils/is-type-internal`;
+        expect(linkFileContent).to.have.string(`module.exports = require('${requirePath}');`, 'link file point to the wrong place');
+      });
+    });
+
+    describe.skip('javascript with compiler', () => {
+    });
+
+    describe.skip('typescript without compiler', () => {
+    });
+  });
+
   describe('component/s with bit.json dependencies', () => {
     before(() => {
       helper.reInitLocalScope();
@@ -275,12 +330,15 @@ describe('bit import', function () {
       helper.exportComponent('simple');
 
       // export a new component with dependencies
-      helper.runCmd('bit create with-deps -j');
-      const bitJsonPath = path.join(helper.localScopePath, '/components/global/with-deps/bit.json'); // TODO: Change to use the automatic deps resolver
+      // helper.runCmd('bit create with-deps -j');
+      // const bitJsonPath = path.join(helper.localScopePath, '/components/global/with-deps/bit.json'); // TODO: Change to use the automatic deps resolver
       // add "foo" as a bit.json dependency and lodash.get as a package dependency
-      helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/global/simple`]: '1' }, { 'lodash.get': '4.4.2' });
-      helper.commitComponent('with-deps');
-      helper.exportComponent('with-deps');
+      // helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/global/simple`]: '1' }, { 'lodash.get': '4.4.2' });
+      const withDepsFixture = 'import a from "./components/global/simple/impl.js"; ';
+      helper.createFile('', 'with-deps.js', withDepsFixture);
+      helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });
+      helper.commitAllComponents();
+      helper.exportComponent('comp/with-deps');
     });
 
     describe('with one dependency', () => {
@@ -289,7 +347,7 @@ describe('bit import', function () {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        output = helper.importComponent('global/with-deps');
+        output = helper.importComponent('comp/with-deps');
         bitMap = helper.readBitMap();
       });
 
@@ -297,7 +355,7 @@ describe('bit import', function () {
         expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple${VERSION_DELIMITER}1`);
       });
       it('should mark direct dependencies as "IMPORTED" in bit.map file', () => {
-        expect(bitMap[`${helper.remoteScope}/global/with-deps${VERSION_DELIMITER}1`].origin).to.equal('IMPORTED');
+        expect(bitMap[`${helper.remoteScope}/comp/with-deps${VERSION_DELIMITER}1`].origin).to.equal('IMPORTED');
       });
       it('should mark indirect dependencies as "NESTED" in bit.map file', () => {
         expect(bitMap[`${helper.remoteScope}/global/simple${VERSION_DELIMITER}1`].origin).to.equal('NESTED');
@@ -306,12 +364,12 @@ describe('bit import', function () {
       });
       it.skip('should create bit.json file with all the dependencies in the folder', () => {
       });
-      it('should print warning for missing package dependencies', () => {
+      it.skip('should print warning for missing package dependencies', () => {
         expect(output.includes('Missing the following package dependencies. Please install and add to package.json')).to.be.true;
         expect(output.includes('lodash.get: 4.4.2')).to.be.true;
       });
       it('should write the dependency nested to the parent component', () => {
-        const depDir = path.join(helper.localScopePath, 'components', 'global', 'with-deps',
+        const depDir = path.join(helper.localScopePath, 'components', 'comp', 'with-deps',
           'dependencies', 'global', 'simple', helper.remoteScope, '1', 'impl.js');
         expect(fs.existsSync(depDir)).to.be.true;
       });
@@ -325,23 +383,25 @@ describe('bit import', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
 
+        helper.importComponent('global/simple');
+
         // export another component with dependencies
-        helper.runCmd('bit create with-deps2 -j');
-        const deps2JsonPath = path.join(helper.localScopePath, '/components/global/with-deps2/bit.json'); // TODO: Change to use the automatic deps resolver
-        helper.addBitJsonDependencies(deps2JsonPath, { [`${helper.remoteScope}/global/simple`]: '1' });
-        helper.commitComponent('with-deps2');
-        helper.exportComponent('with-deps2');
+        const withDeps2Fixture = 'import a from "./components/global/simple/impl.js"; ';
+        helper.createFile('', 'with-deps2.js', withDeps2Fixture);
+        helper.addComponentWithOptions('with-deps2.js', { i: 'comp/with-deps2' });
+        helper.commitAllComponents();
+        helper.exportComponent('comp/with-deps2');
 
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('global/with-deps');
-        helper.importComponent('global/with-deps2');
+        helper.importComponent('comp/with-deps');
+        helper.importComponent('comp/with-deps2');
       });
       it('should not write again to the file system the same dependency that imported by another component', () => {
-        const depDir = path.join(helper.localScopePath, 'components', 'global', 'with-deps',
+        const depDir = path.join(helper.localScopePath, 'components', 'comp', 'with-deps',
           'dependencies', 'global', 'simple', helper.remoteScope, '1', 'impl.js');
         expect(fs.existsSync(depDir)).to.be.true;
-        const dep2Dir = path.join(helper.localScopePath, 'components', 'global', 'with-deps2',
+        const dep2Dir = path.join(helper.localScopePath, 'components', 'comp', 'with-deps2',
           'dependencies', 'global', 'simple', helper.remoteScope, '1', 'impl.js');
         expect(fs.existsSync(dep2Dir)).to.be.false;
       });

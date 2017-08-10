@@ -208,10 +208,13 @@ describe('bit commit command', function () {
 
       const output = helper.showComponentWithOptions('comp/comp', { j: '' });
       const dependencies = JSON.parse(output).dependencies;
-      const depObject = { id: 'utils/is-string', relativePath: 'utils/is-string.js' };
-      const depObject1 = { id: 'utils/is-type', relativePath: 'utils/is-type.js' };
-      expect(dependencies[1]).to.include(depObject);
-      expect(dependencies[0]).to.include(depObject1);
+      const depPaths = [{ entryRelativePath: 'utils/is-type.js', relativePath: 'utils/is-type.js' }];
+      const depObject = { id: 'utils/is-type', relativePaths: depPaths };
+      const depPaths1 = [{ entryRelativePath: 'utils/is-string.js', relativePath: 'utils/is-string.js' }];
+      const depObject1 = { id: 'utils/is-string', relativePaths: depPaths1 };
+      
+      expect(dependencies[0].relativePaths[0]).to.include(depPaths[0]);
+      expect(dependencies[1].relativePaths[0]).to.include(depPaths1[0]);
     });
 
     it.skip('should persist all models in the scope', () => {

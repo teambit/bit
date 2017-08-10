@@ -163,23 +163,21 @@ export default class Consumer {
      * @param {string} entryComponentId - component id for the entry of traversing - used to know which of the files are part of that component
      */
     const traverseDepsTreeRecursive = (tree, file, entryComponentId) => {
-      let componentsDeps = [];
       const packagesDeps = {};
       let missingDeps = [];
 
       // Don't traverse generated authored components (from the same reasons above):
       let componentId = bitMap.getComponentIdByPath(file);
-      // console.log('found authored componentId', componentId);
       if (!componentId) {
         // Check if its a generated index file
-        if (path.basename(file) === DEFAULT_INDEX_NAME) {
+        if (path.basename(file) === DEFAULT_INDEX_NAME || path.basename(file) === 'index.ts') {
           const indexDir = path.dirname(file);
           componentId = bitMap.getComponentIdByRootPath(indexDir);
         }
 
         if (!componentId) {
           missingDeps.push(file);
-          return ({ componentsDeps, packagesDeps, missingDeps });
+          return ({ componentsDeps: {}, packagesDeps, missingDeps });
         }
       }
       if (componentId === entryComponentId) {
@@ -188,19 +186,29 @@ export default class Consumer {
           Object.assign(packagesDeps, currPackagesDeps);
         }
         const allFilesDpes = tree[file].files;
-        if (!allFilesDpes || R.isEmpty(allFilesDpes)) return { componentsDeps, packagesDeps, missingDeps };
+        if (!allFilesDpes || R.isEmpty(allFilesDpes)) return { componentsDeps: {}, packagesDeps, missingDeps };
         const recursiveResults = allFilesDpes.map(fileDep => traverseDepsTreeRecursive(tree, fileDep, entryComponentId));
+        const currComponentsDeps = {};
         recursiveResults.forEach((result) => {
-          componentsDeps = componentsDeps.concat(result.componentsDeps);
+          // componentsDeps = componentsDeps.concat(result.componentsDeps);
+          if (result.componentsDeps && !R.isEmpty(result.componentsDeps)) {
+            Object.keys(result.componentsDeps).forEach((currId) => {
+              const resultPaths = result.componentsDeps[currId];
+              if (currComponentsDeps[currId]) {
+                currComponentsDeps[currId] = currComponentsDeps[currId].concat(resultPaths);
+              } else {
+                currComponentsDeps[currId] = resultPaths;
+              }
+            });
+          }
           missingDeps = missingDeps.concat(result.missingDeps);
           Object.assign(packagesDeps, result.packagesDeps);
         });
-        return { componentsDeps, packagesDeps, missingDeps };
+        return { componentsDeps: currComponentsDeps, packagesDeps, missingDeps };
       }
 
-      const parsedComponentId = BitId.parse(componentId);
-      const currComponentDeps = [{ id: parsedComponentId, relativePath: file }];
-      return ({ componentsDeps: currComponentDeps, packagesDeps: {}, missingDeps: [] });
+      const currComponentsDeps = { [componentId]: [{ entryRelativePath: file, relativePath: file }] };
+      return ({ componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] });
     };
 
     // Map to store the id's of paths we already found in bit.map
@@ -256,9 +264,13 @@ export default class Consumer {
       // We only care of the relevant sub tree from now on
       // We can be sure it's now exists because it's happen after the assign in case it was missing
       const traversedDeps = traverseDepsTreeRecursive(fullDependenciesTree.tree, mainFile, idWithConcreteVersion.toString());
-      dependencies = traversedDeps.componentsDeps;
+      const traveresedCompDeps = traversedDeps.componentsDeps;
+      dependencies = Object.keys(traveresedCompDeps).map((depId) => {
+        return { id: BitId.parse(depId), relativePaths: traveresedCompDeps[depId] };
+      });
       const packages = traversedDeps.packagesDeps;
       const missingDependencies = traversedDeps.missingDeps;
+
 
       if (!R.isEmpty(missingDependencies)) component.missingDependencies.untrackedDependencies = missingDependencies;
 
@@ -399,34 +411,46 @@ export default class Consumer {
    */
   async _writeDependencyLinks(componentDependencies: ComponentDependencies[], bitMap: BitMap): Promise<any> {
 
-    const writeLinkFile = (componentId: string, linkPath: string) => {
+    const writeLinkFile = (componentId: string, linkPath: string, relativePathInDependency: string) => {
       const rootDir = bitMap.getRootDirOfComponent(componentId);
       const mainFile = bitMap.getMainFileOfComponent(componentId);
-      let entryFilePath = path.join(rootDir, DEFAULT_INDEX_NAME);
-      let relativeEntryFilePath = path.relative(path.dirname(linkPath), entryFilePath);
-      let linkContent = `module.exports = require('${relativeEntryFilePath}');`;
+      let actualFilePath = path.join(rootDir, relativePathInDependency);
+      if (relativePathInDependency === mainFile) {
+        actualFilePath = path.join(rootDir, DEFAULT_INDEX_NAME);
+      }
+      let relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
+      let linkContent = `module.exports = require('${relativeFilePath}');`;
 
       // todo: move to bit-javascript
       // TODO: This is a hack to support angular material case, it should be re implemented in a better way
-      if (path.extname(mainFile) === '.ts') {
-        entryFilePath = path.join(rootDir, 'index.ts'); // Move to bit-javascript
-        relativeEntryFilePath = path.relative(path.dirname(linkPath), entryFilePath);
-        linkContent = `export * from '${relativeEntryFilePath}'`;
+      if (path.extname(relativeFilePath) === '.ts') {
+        relativeFilePath = relativeFilePath.replace('.js', '.ts'); // Move to bit-javascript
+        linkContent = `export * from '${relativeFilePath}'`;
       }
+      // Remove file extension from link content (require statement)
       linkContent = `${linkContent.substring(0, linkContent.lastIndexOf('.'))}');`;
-
       return outputFile(linkPath, linkContent);
     };
+
+    const componentLink = async (resolveDepVersion: string, entryRelativePath: string, relativePathInDependency: string, parentDir: string, hasDist: boolean) => {
+      const linkPath = path.join(parentDir, entryRelativePath);
+      let distLinkPath;
+      if (hasDist) {
+        distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, entryRelativePath);
+      }
+      
+      // Generate a link file inside dist folder of the dependent component
+      if (hasDist) {
+        writeLinkFile(resolveDepVersion, distLinkPath, relativePathInDependency);
+      }
+
+      return writeLinkFile(resolveDepVersion, linkPath, relativePathInDependency);
+    }
 
     const componentLinks = (directDependencies: Array<Object>, flattenedDependencies: BitIds, parentDir: string, hasDist: boolean) => {
       if (!directDependencies || !directDependencies.length) return Promise.resolve();
       const links = directDependencies.map((dep) => {
-        if (!dep.relativePath) return Promise.resolve();
-        const linkPath = path.join(parentDir, dep.relativePath);
-        let distLinkPath;
-        if (hasDist) {
-          distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, dep.relativePath);
-        }
+        if (!dep.relativePath && (!dep.relativePaths || R.isEmpty(dep.relativePaths))) return Promise.resolve();
         let resolveDepVersion = dep.id;
         // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
         // Actual version number, because on the bitmap we have only specific versions
@@ -434,12 +458,10 @@ export default class Consumer {
           resolveDepVersion = flattenedDependencies.resolveVersion(dep.id).toString();
         }
 
-        // Generate a link file inside dist folder of the dependent component
-        if (hasDist) {
-          writeLinkFile(resolveDepVersion, distLinkPath);
-        }
-
-        return writeLinkFile(resolveDepVersion, linkPath);
+        const currLinks = dep.relativePaths.map((relativePath) => {
+          return componentLink(resolveDepVersion, relativePath.entryRelativePath, relativePath.relativePath, parentDir, hasDist);
+        });
+        return Promise.all(currLinks);
       });
       return Promise.all(links);
     };
