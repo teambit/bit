@@ -425,7 +425,7 @@ export default class Consumer {
 
       // todo: move to bit-javascript
       // TODO: This is a hack to support angular material case, it should be re implemented in a better way
-      if (path.extname(relativeFilePath) === '.ts') {
+      if (path.extname(linkPath) === '.ts') {
         relativeFilePath = relativeFilePath.replace('.js', '.ts'); // Move to bit-javascript
         linkContent = `export * from '${relativeFilePath}'`;
       }
