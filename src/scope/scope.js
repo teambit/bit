@@ -518,6 +518,30 @@ export default class Scope {
       });
   }
 
+  async getManyWithAllVersions(ids: BitId[], cache?: bool = true): Promise<ConsumerComponent[]> {
+    logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
+    const idsWithoutNils = removeNils(ids);
+    if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
+    const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, false, cache);
+
+    const allVersionsP = versionDependenciesArr.map((versionDependencies) => {
+      const versions = versionDependencies.component.component.listVersions();
+      const idsWithAllVersions = versions.map((version) => {
+        const versionId = versionDependencies.component.id;
+        versionId.version = version.toString();
+        return versionId;
+      });
+      return this.importManyOnes(idsWithAllVersions);
+    });
+    await Promise.all(allVersionsP);
+
+    return Promise.all(
+      versionDependenciesArr.map(versionDependencies =>
+        versionDependencies.toConsumer(this.objects)
+      )
+    );
+  }
+
   // @TODO optimize ASAP
   modify({ bitId, consumer, no_env, verbose }: {
     bitId: BitId,

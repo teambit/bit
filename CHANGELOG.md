@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix a bug when exporting version 3 of a component after importing version 2
 - bug fix - install test environment if not exist upon bit test
 - Fix conflicts when import from bit.json more than one component with the same nested deps
 - Remove duplicates from missing packages (during import) warning

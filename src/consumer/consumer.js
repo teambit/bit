@@ -300,13 +300,13 @@ export default class Consumer {
     let componentsAndDependenciesBitJson;
     let componentsAndDependenciesBitMap;
     if (dependenciesFromBitJson) {
-      componentsAndDependenciesBitJson = await this.scope.getMany(dependenciesFromBitJson, cache);
+      componentsAndDependenciesBitJson = await this.scope.getManyWithAllVersions(dependenciesFromBitJson, cache);
       await this.writeToComponentsDir(componentsAndDependenciesBitJson);
     }
     if (componentsFromBitMap) {
       const componentsIds = Object.keys(componentsFromBitMap);
       const componentsIdsParsed = componentsIds.map(id => BitId.parse(id));
-      componentsAndDependenciesBitMap = await this.scope.getMany(componentsIdsParsed, cache);
+      componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsIdsParsed, cache);
       await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
@@ -328,7 +328,7 @@ export default class Consumer {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
-    const componentDependenciesArr = await this.scope.getMany(bitIds, cache);
+    const componentDependenciesArr = await this.scope.getManyWithAllVersions(bitIds, cache);
     await this.writeToComponentsDir(componentDependenciesArr, writeToPath);
     return { dependencies: componentDependenciesArr };
   }
