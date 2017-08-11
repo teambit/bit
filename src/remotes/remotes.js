@@ -8,6 +8,7 @@ import ComponentObjects from '../scope/component-objects';
 import remoteResolver from './remote-resolver/remote-resolver';
 import { GlobalRemotes } from '../global-config';
 import Scope from '../scope/scope';
+import logger from '../logger/logger';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -29,8 +30,7 @@ export default class Remotes extends Map<string, Remote> {
       });
   }
 
-  fetch(ids: BitId[], thisScope: Scope, withoutDeps: boolean = false):
-  Promise<ComponentObjects[]> {
+  async fetch(ids: BitId[], thisScope: Scope, withoutDeps: boolean = false): Promise<ComponentObjects[]> {
     // TODO - Transfer the fetch logic into the ssh module,
     // in order to close the ssh connection in the end of the multifetch instead of one fetch
     const byScope = groupBy(prop('scope'));
@@ -48,8 +48,10 @@ export default class Remotes extends Map<string, Remote> {
       }
     });
 
-    return Promise.all(promises)
-      .then(bits => flatten(bits));
+    logger.debug('[-] Running fetch or fetchOnes on a remote');
+    const bits = await Promise.all(promises);
+    logger.debug('[-] Returning from a remote');
+    return flatten(bits);
   }
 
   toPlainObject() {

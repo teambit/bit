@@ -24,10 +24,10 @@ logger.exitAfterFlush = (code: number = 0) => {
   let msg;
   if (code === 0) {
     level = 'info';
-    msg = 'the command has been completed successfully';
+    msg = '[*] the command has been completed successfully';
   } else {
     level = 'error';
-    msg = `the command has been terminated with an error code ${code}`;
+    msg = `[*] the command has been terminated with an error code ${code}`;
   }
   logger.log(level, msg, () => {
     let numFlushes = 0;

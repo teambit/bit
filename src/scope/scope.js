@@ -518,6 +518,9 @@ export default class Scope {
       });
   }
 
+  // todo: improve performance by finding all versions needed and fetching them in one request from the server
+  // currently it goes to the server twice. First, it asks for the last version of each id, and then it goes again to
+  // ask for the older versions.
   async getManyWithAllVersions(ids: BitId[], cache?: bool = true): Promise<ConsumerComponent[]> {
     logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
@@ -527,6 +530,7 @@ export default class Scope {
     const allVersionsP = versionDependenciesArr.map((versionDependencies) => {
       const versions = versionDependencies.component.component.listVersions();
       const idsWithAllVersions = versions.map((version) => {
+        if (version === versionDependencies.component.version) return null; // imported already
         const versionId = versionDependencies.component.id;
         versionId.version = version.toString();
         return versionId;

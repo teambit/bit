@@ -44,7 +44,7 @@ function execAction(command, concrete, args) {
   // $FlowFixMe
   const opts = getOpts(concrete, command.opts);
   const relevantArgs = args.slice(0, args.length - 1);
-  logger.info(`started a new command: "${command.name}" with the following data:`, { args: relevantArgs, opts });
+  logger.info(`[*] started a new command: "${command.name}" with the following data:`, { args: relevantArgs, opts });
   if (command.loader) {
     loader.on();
   }
