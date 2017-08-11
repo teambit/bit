@@ -691,6 +691,7 @@ export default class Scope {
     });
     const manyObjects = await Promise.all(manyObjectsP);
     const componentObjectsFromRemote = await remote.pushMany(manyObjects);
+    logger.debug('exportMany: successfully pushed all ids to the bare-scope, going to save them back to local scope');
     await Promise.all(componentIds.map(id => this.clean(id)));
     componentIds.map(id => this.createSymlink(id, remoteName));
     await Promise.all(componentObjectsFromRemote.map((obj) => {

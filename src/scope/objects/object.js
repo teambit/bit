@@ -6,8 +6,11 @@ import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import Ref from './ref';
 
 function parse(buffer: Buffer, types: {[string]: Function}): BitObject {
-  const [headers, contents] = buffer.toString().split(NULL_BYTE);
+  const firstNullByteLocation = buffer.indexOf(NULL_BYTE);
+  const headers = buffer.slice(0, firstNullByteLocation).toString();
+  const contents = buffer.slice(firstNullByteLocation+1, buffer.length);
   const [type, ] = headers.split(SPACE_DELIMITER);
+
   return types[type].parse(contents);
 }
 

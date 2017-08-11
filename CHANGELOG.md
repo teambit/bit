@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support exporting binary files
 - fix a bug when importing version 2 of a component while version 1 has been imported before
 - fix a bug when exporting version 3 of a component after importing version 2
 - bug fix - install test environment if not exist upon bit test

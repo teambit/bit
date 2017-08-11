@@ -9,7 +9,7 @@ export default class Source extends BitObject {
   }
 
   id() {
-    return this.contents.toString();
+    return this.contents;
   }
 
   toBuffer() {
@@ -20,8 +20,8 @@ export default class Source extends BitObject {
     return this.contents.toString();
   }
 
-  static parse(contents: string): Source {
-    return new Source(new Buffer(contents));
+  static parse(contents: Buffer): Source {
+    return new Source(contents);
   }
 
   static from(buffer: Buffer): Source {

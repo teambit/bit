@@ -245,10 +245,31 @@ describe('bit export command', function () {
       helper.exportComponent(`${helper.remoteScope}/bar/foo`);
     });
     it('should export it with no errors', () => {
-      const output = helper.runCmd(`bit list ${helper.remoteScope}`);
+      const output = helper.listRemoteScope();
       expect(output.includes('Total 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
       expect(output.includes('3')).to.be.true; // this is the version
+    });
+  });
+
+  describe('with a PNG file', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
+      const destPngFile = path.join(helper.localScopePath, 'bar', 'png_fixture.png');
+      fs.copySync(sourcePngFile, destPngFile);
+      helper.runCmd('bit add bar -m foo.js -i bar/foo');
+      helper.commitAllComponents();
+
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.exportAllComponents();
+    });
+    it('should export it with no errors', () => {
+      const output = helper.listRemoteScope();
+      expect(output.includes('Total 1 components')).to.be.true;
+      expect(output.includes('bar/foo')).to.be.true;
     });
   });
 });

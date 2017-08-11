@@ -77,6 +77,10 @@ export default class Helper {
     return this.runCmd('bit init --bare', this.remoteScopePath);
   }
 
+  listRemoteScope() {
+    return this.runCmd(`bit list ${this.remoteScope} --bare`);
+  }
+
   getNewBareScope() {
     const scopeName = v4();
     const scopePath = path.join(this.e2eDir, scopeName);
@@ -116,13 +120,13 @@ export default class Helper {
 
   createCompiler() {
     if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
-    
+
     const tempScope = v4() + '-temp';
     const tempScopePath = path.join(this.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
     this.runCmd('bit init', tempScopePath);
-  
+
     const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
     fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
