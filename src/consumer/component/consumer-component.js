@@ -251,13 +251,13 @@ export default class Component {
    */
   async write(bitDir?: string, withBitJson: boolean, force?: boolean = true, bitMap?: BitMap,
               origin?: string, parent?: BitId, consumerPath?: string): Promise<Component> {
-
+    logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     // Take the bitdir from the files (it will be the same for all the files of course)
-    let calculatedBitDir = bitDir || this.files[0].base;
+    const calculatedBitDir = bitDir || this.files[0].base;
 
     // Update files base dir according to bitDir
-    if (this.files && bitDir) this.files.forEach(file => file.updatePaths({newBase: bitDir}));
-    if (this.dists && bitDir) this.dists.forEach(dist => dist.updatePaths({newBase: bitDir}));
+    if (this.files && bitDir) this.files.forEach(file => file.updatePaths({ newBase: bitDir }));
+    if (this.dists && bitDir) this.dists.forEach(dist => dist.updatePaths({ newBase: bitDir }));
 
     // if bitMap parameter is empty, for instance, when it came from the scope, ignore bitMap altogether.
     // otherwise, check whether this component is in bitMap:
@@ -267,12 +267,13 @@ export default class Component {
 
     const idWithoutVersion = this.id.toString(false, true);
     const componentMap = bitMap.getComponent(idWithoutVersion, false);
+    if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
+    let rootDir;
     if (componentMap) {
-      if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
+      logger.debug('component is in bit.map, write the files according to bit.map');
+      const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
 
-      calculatedBitDir = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
-
-      this.files.forEach(file => file.updatePaths({ newBase: calculatedBitDir }));
+      this.files.forEach(file => file.updatePaths({ newBase }));
       this.files.forEach(file => file.write(undefined, force));
 
       // todo: while refactoring the dist for the new changes, make sure it writes to the proper
@@ -280,23 +281,25 @@ export default class Component {
       // if (this.dist) await this.dist.write(bitDir, this.distImplFileName, force);
       // if (withBitJson) await this.writeBitJson(bitDir, force); // todo: is it needed?
       // if (this.license && this.license.src) await this.license.write(bitDir, force); // todo: is it needed?
-      return this;
+      rootDir = componentMap.rootDir;
+    } else {
+      await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
+      rootDir = calculatedBitDir;
     }
 
-    await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
-
-    if (!this.files) throw new Error('Invalid component. There are no files to write');
-
-    const filesForBitMap = this.files.map((file) => { return { name: file.basename, relativePath: file.relative, test: file.test }; });
+    const filesForBitMap = this.files.map((file) => {
+      return { name: file.basename, relativePath: file.relative, test: file.test };
+    });
 
     bitMap.addComponent({
       componentId: this.id,
       files: filesForBitMap,
       mainFile: this.mainFile,
-      rootDir: calculatedBitDir,
+      rootDir,
       origin,
       parent
     });
+    logger.debug('component has been written successfully');
     return this;
   }
 

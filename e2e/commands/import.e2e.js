@@ -806,6 +806,41 @@ describe('bit import', function () {
     });
   });
 
+  describe('v2 of a component when v1 has been imported already', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      const isTypeFixtureV1 = "module.exports = function isType() { return 'got is-type v1'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixtureV1);
+      helper.addComponent('utils/is-type.js');
+      helper.commitComponent('utils/is-type');
+      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+      helper.commitComponent('utils/is-type');
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-type@1');
+      helper.importComponent('utils/is-type@2');
+    });
+    it('should imported v2 successfully and print the result from the latest version', () => {
+      const appJsFixture = "const isType = require('./components/utils/is-type'); console.log(isType());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type v2'); // notice the "v2"
+    });
+    it('should update the existing record in bit.map', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@2`);
+    });
+    it('should not create a new record in bit.map', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@1`);
+    });
+  });
+
   describe.skip('Import compiler', () => {
     before(() => {
       helper.reInitLocalScope();

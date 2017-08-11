@@ -123,6 +123,17 @@ export default class BitMap {
     }
   }
 
+  deleteOlderVersionsOfComponent(componentId: BitId): void {
+    const allVersions = Object.keys(this.components)
+      .filter(id => BitId.parse(id).toString(false, true) === componentId.toString(false, true));
+    allVersions.forEach((version) => {
+      if (version !== componentId.toString()) {
+        logger.debug(`BitMap: deleting an older version ${version} of an existing component ${componentId.toString()}`);
+        delete this.components[version];
+      }
+    });
+  }
+
   addComponent({ componentId, files, mainFile, origin, parent, rootDir }: {
     componentId: BitId,
     files: Object[],
@@ -133,7 +144,7 @@ export default class BitMap {
   }): void {
     const isDependency = origin && origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = (origin === COMPONENT_ORIGINS.AUTHORED) ?
-      componentId.changeScope(null).toString() : componentId.toString();
+      componentId.toString(true) : componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
     if (isDependency) {
       if (!parent) throw new Error(`Unable to add indirect dependency ${componentId}, without "parent" parameter`);
@@ -159,6 +170,10 @@ export default class BitMap {
     }
     if (rootDir) {
       this.components[componentIdStr].rootDir = this._makePathRelativeToProjectRoot(rootDir);
+    }
+    if (origin === COMPONENT_ORIGINS.IMPORTED) {
+      // if there are older versions, the user is updating an existing component, delete old ones from bit.map
+      this.deleteOlderVersionsOfComponent(componentId);
     }
   }
 
