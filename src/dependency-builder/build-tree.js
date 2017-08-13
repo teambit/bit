@@ -135,6 +135,8 @@ function groupMissings(missings, cwd, consumerPath) {
   const foundedPackages = {};
   const missingPackages = [];
   packages.forEach((packageName) => {
+    // Don't add the same package twice
+    if (R.contains(packageName, missingPackages)) return;
     const resolvedPath = resolveModulePath(packageName, cwd, consumerPath);
     if (!resolvedPath) {
       return missingPackages.push(packageName);
