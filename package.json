@@ -9,6 +9,7 @@
     "lint": "gulp lint && flow check",
     "test": "gulp test",
     "e2e-test": "mocha --compilers js:babel-core/register ./e2e/**/*.e2e.js",
+    "e2e-test-circle": "mocha --compilers js:babel-core/register --reporter mocha-junit-reporter ./e2e/**/*.e2e.js",
     "clean": "rm -rf dist",
     "build": "babel src specs -d dist",
     "watch": "babel --watch bin src specs -d dist --source-maps",
@@ -101,6 +102,7 @@
     "gulp-sourcemaps": "^2.2.0",
     "gulp-sync": "^0.1.4",
     "mocha": "^3.4.2",
+    "mocha-junit-reporter": "^1.13.0",
     "run-sequence": "^1.2.2",
     "sinon": "^1.17.7"
   },
