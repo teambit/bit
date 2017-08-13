@@ -236,7 +236,7 @@ export default class Consumer {
         return { componentsDeps: currComponentsDeps, packagesDeps, missingDeps };
       }
 
-      const currComponentsDeps = { [componentId]: [{ entryRelativePath: file, relativePath: file }] };
+      const currComponentsDeps = { [componentId]: [{ sourceRelativePath: file, destinationRelativePath: file }] };
       depsTreeCache[depsTreeCacheId] = { componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] };
       return ({ componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] });
     };
@@ -463,12 +463,12 @@ export default class Consumer {
       return outputFile(linkPath, linkContent);
     };
 
-    const componentLink = async (resolveDepVersion: string, entryRelativePath: string, relativePathInDependency: string,
+    const componentLink = async (resolveDepVersion: string, sourceRelativePath: string, relativePathInDependency: string,
                                  parentDir: string, hasDist: boolean) => {
-      const linkPath = path.join(parentDir, entryRelativePath);
+      const linkPath = path.join(parentDir, sourceRelativePath);
       let distLinkPath;
       if (hasDist) {
-        distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, entryRelativePath);
+        distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, sourceRelativePath);
       }
 
       // Generate a link file inside dist folder of the dependent component
@@ -492,7 +492,7 @@ export default class Consumer {
         }
 
         const currLinks = dep.relativePaths.map((relativePath) => {
-          return componentLink(resolveDepVersion, relativePath.entryRelativePath, relativePath.relativePath, parentDir, hasDist);
+          return componentLink(resolveDepVersion, relativePath.sourceRelativePath, relativePath.destinationRelativePath, parentDir, hasDist);
         });
         return Promise.all(currLinks);
       });
