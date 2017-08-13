@@ -134,7 +134,7 @@ describe('bit show command', function () {
         const dependencies = output.dependencies;
         console.log('dependencies', JSON.stringify(dependencies));
         // TODO: Should be concrete version after we resolve the dep version
-        const depPaths = [{ entryRelativePath: 'utils/is-string.js', relativePath: 'utils/is-string.js' }];
+        const depPaths = [{ sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' }];
         const depObject = { id: 'utils/is-string', relativePaths: depPaths };
         expect(dependencies[0].relativePaths[0]).to.include(depPaths[0]);
       });
