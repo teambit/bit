@@ -137,12 +137,12 @@ export default class ComponentsList {
 
   /**
    * Components that are registered in bit.map but have never been committed
-   * 
+   *
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
-   * @return {Promise.<string[] | ConsumerComponent[]>}
+   * @return {Promise.<string[] | Component[]>}
    * @memberof ComponentsList
    */
-  async listNewComponents(load: boolean = false): Promise<string[] | ConsumerComponent[]> {
+  async listNewComponents(load: boolean = false): Promise<string[] | Component[]> {
     const idsFromBitMap = await this.idsFromBitMap(false);
     const idsFromObjects = await this.idsFromObjects(false);
     let newComponents = [];
@@ -152,12 +152,8 @@ export default class ComponentsList {
       }
     });
     if (load) {
-      const componentsP = newComponents.map((id) => {
-        const bitId = BitId.parse(id);
-        return this.consumer.loadComponent(bitId);
-      });
-
-      newComponents = await Promise.all(componentsP);
+      const componentsIds = newComponents.map(id => BitId.parse(id));
+      newComponents = await this.consumer.loadComponents(componentsIds);
     }
     return newComponents;
   }
@@ -258,7 +254,7 @@ export default class ComponentsList {
    * Finds all components that are saved in the file system.
    * Components might be stored in the default component directory and also might be outside
    * of that directory, in which case the bit.map is used to find them
-   * @return {Promise<ConsumerComponent[]>}
+   * @return {Promise<Component[]>}
    */
   async getFromFileSystem(): Promise<Component[]> {
     if (!this._fromFileSystem) {
