@@ -22,6 +22,7 @@ test:
   override:
     - npm test
     - npm i -g
-    - npm run e2e-test-circle
+    - npm run e2e-test-circle:
         environment:
           MOCHA_FILE: $CIRCLE_TEST_REPORTS/junit/test-results.xml
+
