@@ -24,7 +24,7 @@ const byType = R.groupBy((dependecies) => {
  * @param {any} packageFullPath full path to the package
  * @returns {Object} name and version of the package
  */
-function resloveNodePackage(packageFullPath) {
+function resolveNodePackage(packageFullPath) {
   let result = {};
   const packageInfo = findPackage(packageFullPath);
   result[packageInfo.name] = packageInfo.version;
@@ -45,7 +45,7 @@ function groupDependencyList(list, cwd) {
   let groups = byType(list);
   if (groups.packages) {
     const packages = groups.packages.reduce((res, packagePath) => {
-      const packageWithVersion = resloveNodePackage(`${cwd}/${packagePath}`);
+      const packageWithVersion = resolveNodePackage(`${cwd}/${packagePath}`);
       return Object.assign(res, packageWithVersion);
     }, {});
     groups.packages = packages;
@@ -141,7 +141,7 @@ function groupMissings(missings, cwd, consumerPath) {
     if (!resolvedPath) {
       return missingPackages.push(packageName);
     }
-    const packageWithVersion = resloveNodePackage(resolvedPath);
+    const packageWithVersion = resolveNodePackage(resolvedPath);
     return packageWithVersion ? Object.assign(foundedPackages, packageWithVersion) :
                                 missingPackages.push(packageWithVersion);
   });
