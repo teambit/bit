@@ -16,7 +16,6 @@ export default class Build extends Command {
   ];
 
   action([id]: string[], { save, environment, verbose }: {
-    inline: ?bool,
     save: ?bool,
     environment: ?bool,
     verbose: ?bool,

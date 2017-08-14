@@ -1,6 +1,6 @@
 /** @flow */
 import R from 'ramda';
-import ComponentDependencies from './component-dependencies';
+import ComponentWithDependencies from './component-dependencies';
 import ComponentVersion from './component-version';
 import ComponentObjects from './component-objects';
 import Repository from './objects/repository';
@@ -22,11 +22,11 @@ export default class VersionDependencies {
     return R.concat([componentId], dependenciesIds);
   }
 
-  toConsumer(repo: Repository): Promise<ComponentDependencies> {
+  toConsumer(repo: Repository): Promise<ComponentWithDependencies> {
     const dependenciesP = Promise.all(this.dependencies.map(dep => dep.toConsumer(repo)));
     const componentP = this.component.toConsumer(repo);
     return Promise.all([componentP, dependenciesP])
-      .then(([component, dependencies]) => new ComponentDependencies({
+      .then(([component, dependencies]) => new ComponentWithDependencies({
         component,
         dependencies
       }));

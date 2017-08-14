@@ -2,7 +2,7 @@
 import Command from '../../command';
 import { importAction } from '../../../api/consumer';
 import Component from '../../../consumer/component';
-import { ComponentDependencies } from '../../../scope';
+import { ComponentWithDependencies } from '../../../scope';
 import Import from './import-cmd';
 
 export default class Install extends Command {
@@ -29,7 +29,7 @@ export default class Install extends Command {
   }
 
   report({ dependencies, envDependencies, warnings }: {
-    dependencies?: ComponentDependencies[],
+    dependencies?: ComponentWithDependencies[],
     envDependencies?: Component[],
     warnings?: {
       notInPackageJson: [],

@@ -5,7 +5,7 @@ import { BitId } from '../../../bit-id';
 import BitMap from '../../../consumer/bit-map';
 import ComponentsList from '../../../consumer/component/components-list';
 
-function writeDistFiles(consumer, component: Component): Promise<?Array<?string>> {
+function writeDistFiles(component: Component): Promise<?Array<?string>> {
   const saveDist = component.dists.map(distFile => distFile.write());
   return Promise.all(saveDist);
 }
@@ -17,7 +17,7 @@ export async function build(id: string): Promise<?Array<string>> {
   const component: Component = await consumer.loadComponent(bitId);
   const result = await component.build({ scope: consumer.scope, consumer, bitMap });
   if (result === null) return null;
-  const distFilePaths = await writeDistFiles(consumer, component);
+  const distFilePaths = await writeDistFiles(component);
   bitMap.addMainDistFileToComponent(component.id, distFilePaths);
   await bitMap.write();
   // await consumer.driver.runHook('onBuild', [component]);
@@ -31,12 +31,11 @@ async function buildAllResults(components, consumer, bitMap) {
     if (result === null) {
       return { component: bitId.toString(), buildResults: null };
     }
-    const buildResults = await writeDistFiles(consumer, component);
+    const buildResults = await writeDistFiles(component);
     return { component: bitId.toString(), buildResults };
   });
 }
 
-// todo: seems to be broken, also, add to bit.map
 export async function buildAll(): Promise<Object> {
   const consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());

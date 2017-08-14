@@ -4,7 +4,6 @@ import ConsumerComponent from '../../../consumer/component/consumer-component';
 import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
 import { BEFORE_EXPORT } from '../../../cli/loader/loader-messages';
-import { ComponentNotFound } from '../../../scope/exceptions';
 import BitMap from '../../../consumer/bit-map';
 
 export default async function exportAction(ids?: string[], remote: string, save: ?bool) {

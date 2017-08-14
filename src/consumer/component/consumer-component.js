@@ -249,8 +249,9 @@ export default class Component {
    * It's better to init the files with the correct base, cwd and path than pass it here
    * It's mainly here for cases when we write from the model so this is the first point we actually have the dir
    */
-  async write(bitDir?: string, withBitJson: boolean, force?: boolean = true, bitMap?: BitMap,
-              origin?: string, parent?: BitId, consumerPath?: string): Promise<Component> {
+  async write({ bitDir, withBitJson = true, force = true, bitMap, origin, parent, consumerPath }: { bitDir?: string,
+    withBitJson?: boolean, force?: boolean, bitMap?: BitMap, origin?: string, parent?: BitId, consumerPath?: string }):
+  Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     // Take the bitdir from the files (it will be the same for all the files of course)
     const calculatedBitDir = bitDir || this.files[0].base;
@@ -450,8 +451,7 @@ export default class Component {
     if (!compiler) {
       compiler = await scope.loadEnvironment(this.compilerId);
     }
-    // todo: what files should be built?
-    const buildedFiles = await this.buildIfNeeded({
+    const builtFiles = await this.buildIfNeeded({
       condition: !!this.compilerId,
       compiler,
       files: this.files,
@@ -461,13 +461,13 @@ export default class Component {
     });
 
     // return buildFilesP.then((buildedFiles) => {
-    buildedFiles.forEach((file) => {
+    builtFiles.forEach((file) => {
       if (file && (!file.contents || !isString(file.contents.toString()))) {
         throw new Error('builder interface has to return object with a code attribute that contains string');
       }
     });
 
-    this.dists = buildedFiles.map(file => new Dist(file));
+    this.dists = builtFiles.map(file => new Dist(file));
 
     if (save) {
       await scope.sources.updateDist({ source: this });

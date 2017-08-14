@@ -5,7 +5,6 @@ import { ConsumerNotFound } from '../../../consumer/exceptions';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_LIST } from '../../../cli/loader/loader-messages';
 import Remotes from '../../../remotes/remotes';
-import { GlobalRemotes } from '../../../global-config';
 
 export default function list({ scopeName, cache }:
 { scopeName?: string, cache?: bool }): Promise<string[]> {

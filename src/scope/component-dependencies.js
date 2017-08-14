@@ -1,8 +1,7 @@
 /** @flow */
 import Component from '../consumer/component';
 
-// todo: change the name to ComponentAndDependencies.
-export default class ComponentDependencies {
+export default class ComponentWithDependencies {
   component: Component;
   dependencies: Component[];
 

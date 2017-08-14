@@ -3,14 +3,9 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { status } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
-import { formatBit, formatBitString, formatNewBit } from '../../chalk-box';
+import { formatBitString, formatNewBit } from '../../chalk-box';
 import missingDepsTemplate from '../../templates/missing-dependencies-template';
 
-type StatusObj = {
-  name: string,
-  box: string,
-  valid: boolean
-};
 
 export default class Status extends Command {
   name = 'status';
@@ -18,12 +13,11 @@ export default class Status extends Command {
   alias = 's';
   opts = [];
 
-  action(): Promise<{ inline: StatusObj[], source: StatusObj[] }> {
+  action(): Promise<Object> {
     return status();
   }
 
-  report({ newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps }
-  : { inline: StatusObj[], sources: StatusObj[] }): string {
+  report({ newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps }: Object): string {
     const newComponentsOutput = immutableUnshift(
       newComponents.map(formatNewBit),
       newComponents.length ? chalk.underline.white('New Components') : chalk.green('There are no new components')
@@ -41,7 +35,6 @@ export default class Status extends Command {
 
     const componentsWithMissingDepsOutput = missingDepsTemplate(componentsWithMissingDeps);
 
-    // todo: new and modified components should be in the same section "Modified Components"
     return [newComponentsOutput, modifiedComponentOutput, stagedComponentsOutput, componentsWithMissingDepsOutput].join(
       chalk.underline('\n                         \n')
     + chalk.white('\n'));

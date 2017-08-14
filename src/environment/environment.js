@@ -42,7 +42,7 @@ export default class Environment {
   _writeToEnvironmentDir(components: Component[]): Promise<Component[]> {
     return Promise.all(components.map((component) => {
       const bitPath = this.getComponentPath(component);
-      return component.write(bitPath, true);
+      return component.write({ bitDir: bitPath });
     }));
   }
 
@@ -65,7 +65,6 @@ export default class Environment {
   bindFromDriver(component: Component) {
     const driver = Driver.load(component.lang).getDriver(false);
     if (driver) {
-      // todo: bindSpecificComponents would be better. It is not available at the moment
       return driver.bind({ projectRoot: this.path });
     }
     return Promise.resolve();
@@ -90,7 +89,7 @@ export default class Environment {
   }
 
   getComponentPath(component: Component): string {
-    return path.join(this.path, BITS_DIRNAME, component.id.toPath());
+    return path.join(this.path, BITS_DIRNAME, component.id.toFullPath());
   }
 
   getPath(): string {

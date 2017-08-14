@@ -1,5 +1,4 @@
 /** @flow */
-import path from 'path';
 import { loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
@@ -30,7 +29,7 @@ export default async function create(
     consumerPath: consumer.getPath()
   }, consumer.scope);
   const bitMap = await BitMap.load(consumer.getPath());
-  await component.write(undefined, withBitJson, force, bitMap, COMPONENT_ORIGINS.AUTHORED);
+  await component.write({ withBitJson, force, bitMap, origin: COMPONENT_ORIGINS.AUTHORED });
   await bitMap.write();
   // await consumer.driver.runHook('onCreate', component);
   return component;

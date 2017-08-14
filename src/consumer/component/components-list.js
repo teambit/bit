@@ -1,9 +1,5 @@
 /** @flow */
-// this class should also help with the performance of status/commit/export commands.
-// common data of components-lists are cached.
-
 import path from 'path';
-import glob from 'glob';
 import R from 'ramda';
 import Version from '../../scope/models/version';
 import Component from '../component';
@@ -11,6 +7,7 @@ import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import BitMap from '../bit-map/bit-map';
 import Consumer from '../consumer';
+import { glob } from '../../utils';
 
 export default class ComponentsList {
   consumer: Consumer;
@@ -33,7 +30,6 @@ export default class ComponentsList {
       { consumerComponent: componentFromFileSystem, consumer: this.consumer});
 
     version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
-    // todo: once we know to auto-resolve dependencies, figure out if it should be part of the comparison. Currently, it is ignored.
     version.flattenedDependencies = componentFromModel.flattenedDependencies;
     // dependencies from the FS don't have an exact version, copy the version from the model
     version.dependencies.forEach((dependency) => {
@@ -192,16 +188,6 @@ export default class ComponentsList {
     return stagedComponents;
   }
 
-  // todo: replace with utils/glob it's already implemented there
-  globP(pattern, options): Promise {
-    return new Promise((resolve, reject) => {
-      glob(pattern, options, (err, files) => {
-        if (err) return reject(err);
-        return resolve(files);
-      });
-    });
-  }
-
   async idsFromBitMap(withScopeName = true) {
     const fromBitMap = await this.getFromBitMap();
     const ids = Object.keys(fromBitMap);
@@ -216,7 +202,7 @@ export default class ComponentsList {
     const bitMap = await this.getbitMap();
     const idsFromBitMap = await this.idsFromBitMap();
     const idsFromBitMapWithoutScope = await this.idsFromBitMap(false);
-    const files = await this.globP(path.join(...asterisks), { cwd });
+    const files = await glob(path.join(...asterisks), { cwd });
     const componentsP = [];
     files.forEach((componentDynamicDirStr) => {
       const rootDir = path.join(...staticParts, componentDynamicDirStr);
@@ -239,14 +225,6 @@ export default class ComponentsList {
       }
     });
     return Promise.all(componentsP);
-  }
-
-  /**
-   * components that are on FS and not on bit.map
-   */
-  async listUntrackedComponents(): Promise<string[]> {
-    const untrackedComponents = await this.onFileSystemAndNotOnBitMap();
-    return untrackedComponents.map(component => component.id.toString());
   }
 
   /**

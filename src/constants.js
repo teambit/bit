@@ -32,8 +32,6 @@ export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
 export const BITS_DIRNAME = 'components';
 
-export const INLINE_BITS_DIRNAME = 'inline_components';
-
 export const BIT_JSON = 'bit.json';
 
 export const BIT_MAP = '.bit.map.json';

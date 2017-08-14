@@ -328,11 +328,6 @@ describe('bit import', function () {
       helper.commitComponent('simple');
       helper.exportComponent('simple');
 
-      // export a new component with dependencies
-      // helper.runCmd('bit create with-deps -j');
-      // const bitJsonPath = path.join(helper.localScopePath, '/components/global/with-deps/bit.json'); // TODO: Change to use the automatic deps resolver
-      // add "foo" as a bit.json dependency and lodash.get as a package dependency
-      // helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/global/simple`]: '1' }, { 'lodash.get': '4.4.2' });
       const withDepsFixture = 'import a from "./components/global/simple/impl.js"; ';
       helper.createFile('', 'with-deps.js', withDepsFixture);
       helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });

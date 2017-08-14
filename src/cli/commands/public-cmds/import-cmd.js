@@ -6,7 +6,7 @@ import { importAction } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
 import { formatBit, paintHeader } from '../../chalk-box';
 import Component from '../../../consumer/component';
-import { ComponentDependencies } from '../../../scope';
+import { ComponentWithDependencies } from '../../../scope';
 
 export default class Import extends Command {
   name = 'import [ids...]';
@@ -38,7 +38,7 @@ export default class Import extends Command {
   }
 
   report({ dependencies, envDependencies, warnings, display_dependencies }: {
-    dependencies?: ComponentDependencies[],
+    dependencies?: ComponentWithDependencies[],
     envDependencies?: Component[],
     warnings?: {
       notInPackageJson: [],

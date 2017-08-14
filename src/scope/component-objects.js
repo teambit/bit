@@ -11,7 +11,7 @@ export default class ComponentObjects {
     this.objects = objects;
   }
 
-  // @TODO opitimize ASAP.
+  // @TODO optimize ASAP.
   toString(): string {
     return JSON.stringify({
       component: this.component,
@@ -19,7 +19,7 @@ export default class ComponentObjects {
     });
   }
 
-  // @TODO opitimize ASAP.
+  // @TODO optimize ASAP.
   static fromString(str: string): ComponentObjects {
     return ComponentObjects.fromObject(JSON.parse(str));
   }

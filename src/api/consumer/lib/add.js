@@ -38,7 +38,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
       const newFilesArr = files;
         const fileList = testFiles.map(dsl => {
           const fileList = files.map(file => {
-            const fileInfo = calculateFileInfo(file.relativePath)
+            const fileInfo = calculateFileInfo(file.relativePath);
             const generatedFile = format(dsl, fileInfo);
             return getAllFiles([generatedFile]);
           });
@@ -50,17 +50,19 @@ export default async function addAction(componentPaths: string[], id?: string, m
           Object.keys(file).forEach(key => {
             const fileIndex =  R.findIndex(R.propEq('relativePath', key))(files);
              if (fileIndex > -1)
-               files[fileIndex].test = true
-             else if (fs.existsSync(file[key])) newFilesArr.push({relativePath: file[key], test: true, name: path.basename(file[key])});
+               files[fileIndex].test = true;
+             else if (fs.existsSync(file[key])) {
+               newFilesArr.push({relativePath: file[key], test: true, name: path.basename(file[key])});
+             }
           });
-        })
+        });
       return newFilesArr;
     }
-    //used for updating main file if exists or dosent exists
+    // used for updating main file if exists or doesn't exists
     function addMainFileToFiles(files,mainFile) {
       if (mainFile && mainFile.match(REGEX_PATTERN)) {
         files.forEach(file => {
-          const fileInfo = calculateFileInfo(file.relativePath)
+          const fileInfo = calculateFileInfo(file.relativePath);
           const generatedFile = format(mainFile, fileInfo);
           const foundFile = R.find(R.propEq('relativePath', generatedFile))(files);
           if (foundFile) {
@@ -170,7 +172,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
     });
 
 
-    var mapValues = await Promise.all(mapValuesP);
+    let mapValues = await Promise.all(mapValuesP);
 
     //remove files that are excluded
     if (exclude) await removeExcludedFiles(mapValues,exclude);

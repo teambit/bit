@@ -68,35 +68,14 @@ export default class BitId {
   }
 
   toObject() {
-    const key = this.scope ? [this.scope, this.box, this.name].join('/') : [this.box, this.name].join('/');;
+    const key = this.scope ? [this.scope, this.box, this.name].join('/') : [this.box, this.name].join('/');
     const value = this.version;
 
     return { [key]: value };
   }
 
-  toPath() {
-    // todo: change according to the resolve-conflict strategy
-    return path.join(this.box, this.name, this.scope, this.version);
-  }
-
   toFullPath() {
     return path.join(this.box, this.name, this.scope, this.version);
-  }
-
-  /**
-   * Transfer the bit id to a format suitable for dependecny entery in the bit.json
-   * something like this:
-   * {
-   * "bit.utils/object/foreach": "1"
-   * }
-   *
-   * @returns
-   * @memberof BitId
-   */
-  toDependencyEntry() {
-    return {
-      [path.join(this.box, this.name, this.scope)] : this.version
-    }
   }
 
   static parse(id: ?string, realScopeName: ?string, version: string = LATEST_BIT_VERSION): ?BitId {
@@ -107,9 +86,9 @@ export default class BitId {
       version = newVersion;
     }
 
-    const splited = id.split('/');
-    if (splited.length === 3) {
-      const [scope, box, name] = splited;
+    const idSplit = id.split('/');
+    if (idSplit.length === 3) {
+      const [scope, box, name] = idSplit;
       if (scope === LOCAL_SCOPE_NOTATION && !realScopeName) {
         throw new Error('real scope name is required in bitId.parse with @this notation');
       }
@@ -127,13 +106,8 @@ export default class BitId {
       });
     }
 
-    if (splited.length === 2) {
-      // todo: are we good with this decision?
-      // We won't be able to use an empty box for a remote scope anymore.
-      // On the other hand, if we keep the old logic of [scope, name].
-      // How do we know if it's a scope or box?
-      // (before removing the inline-components, we required to specify the scope)
-      const [box, name] = splited;
+    if (idSplit.length === 2) {
+      const [box, name] = idSplit;
       if (!isValidIdChunk(name) || !isValidScopeName(box)) {
         // $FlowFixMe
         throw new InvalidIdChunk(`${box}/${name}`);
@@ -146,8 +120,8 @@ export default class BitId {
       });
     }
 
-    if (splited.length === 1) {
-      const [name] = splited;
+    if (idSplit.length === 1) {
+      const [name] = idSplit;
       if (!isValidIdChunk(name)) {
         // $FlowFixMe
         throw new InvalidIdChunk(name);

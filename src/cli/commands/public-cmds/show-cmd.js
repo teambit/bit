@@ -17,7 +17,7 @@ export default class Show extends Command {
   loader = true;
 
   action([id, ]: [string], { json, versions }:
-  { inline: ?bool, json: ?bool, versions: ?bool }): Promise<*> {
+  { json: ?bool, versions: ?bool }): Promise<*> {
     function getBitComponent(allVersions: ?bool) {
       const bitId = BitId.parse(id);
       if (bitId.isLocal()) return getConsumerComponent({ id });

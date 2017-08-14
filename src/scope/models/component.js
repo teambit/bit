@@ -135,18 +135,17 @@ export default class Component extends BitObject {
     return repo.removeMany(objectRefs.concat([this.hash()]));
   }
 
-  // todo: remove the "scopeName" parameter, it seems to be not in use
-  toComponentVersion(versionStr: string, scopeName: string): ComponentVersion {
+  toComponentVersion(versionStr: string): ComponentVersion {
     const versionNum = VersionParser
       .parse(versionStr)
       .resolve(this.listVersions());
 
     if (!this.versions[versionNum]) throw new Error(`the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`);
-    return new ComponentVersion(this, versionNum, scopeName);
+    return new ComponentVersion(this, versionNum);
   }
 
   toConsumerComponent(versionStr: string, scopeName: string, repository: Repository) {
-    const componentVersion = this.toComponentVersion(versionStr, scopeName);
+    const componentVersion = this.toComponentVersion(versionStr);
     return componentVersion
       .getVersion(repository)
         .then((version) => {
@@ -207,7 +206,7 @@ export default class Component extends BitObject {
   }
 
   toVersionDependencies(version: string, scope: Scope, source: string, withDevDependencies?: bool) {
-    const versionComp = this.toComponentVersion(version, scope.name);
+    const versionComp = this.toComponentVersion(version);
     return versionComp.toVersionDependencies(scope, source, withDevDependencies);
   }
 

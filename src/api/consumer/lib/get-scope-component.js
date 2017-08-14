@@ -6,7 +6,6 @@ import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_SHOW } from '../../../cli/loader/loader-messages';
 import { ScopeNotFound } from '../../../scope/exceptions';
 import Remotes from '../../../remotes/remotes';
-import { GlobalRemotes } from '../../../global-config';
 
 export default function getScopeComponent({ id, allVersions, scopePath }:
 { id: string, allVersions: ?bool, scopePath: ?string }) {
@@ -39,7 +38,7 @@ export default function getScopeComponent({ id, allVersions, scopePath }:
         return consumer.scope.remotes()
         .then(remotes =>
           remotes.resolve(bitId.scope, consumer.scope)
-          .then((remote) => remoteShow(remote, bitId))
+          .then(remote => remoteShow(remote, bitId))
         );
       }
 
@@ -51,7 +50,7 @@ export default function getScopeComponent({ id, allVersions, scopePath }:
       if (err instanceof ScopeNotFound) {
         const bitId = BitId.parse(id);
         return Remotes.getScopeRemote(bitId.scope)
-          .then((remote) => remoteShow(remote, bitId))
+          .then(remote => remoteShow(remote, bitId))
           .catch(e => Promise.reject(e));
       }
       throw err;
