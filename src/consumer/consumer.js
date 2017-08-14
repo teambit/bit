@@ -315,7 +315,7 @@ export default class Consumer {
       allComponents.push(component);
     }
 
-    return allComponents;
+    return allComponents.concat(alreadyLoadedComponents);
   }
 
   async importAccordingToBitJsonAndBitMap(verbose?: bool, withEnvironments: ?bool,
