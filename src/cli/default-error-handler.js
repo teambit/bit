@@ -24,6 +24,7 @@ import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exce
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import ExportWithoutThis from '../api/consumer/lib/exceptions/export-without-this';
 import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
+import PathNotExists from '../api/consumer/lib/exceptions/path-not-exists';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
 import { MissingMainFile, MissingBitMapComponent } from '../consumer/bit-map/exceptions';
 import logger from '../logger/logger';
@@ -61,6 +62,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ DriverNotFound, err => `fatal: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(err.lang)} set in your bit.json file.`],
   [ MissingMainFile, err => `fatal: the main file ${chalk.bold(err.mainFile)} was not found in the files list ${chalk.bold(err.files.join(', '))}`],
   [ MissingBitMapComponent, err => `fatal: the component ${chalk.bold(err.id)} was not found in the bit.map file`],
+  [ PathNotExists, err => `fatal: the file "${chalk.bold(err.path)}" was not found`],
   [ invalidIdOnCommit, err => `error - Unable to commit. ${chalk.bold(err.id)} not found.
 Run \`bit status\` command to list all components available for commit.`]
 ];

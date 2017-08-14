@@ -63,6 +63,10 @@ describe('bit add command', function () {
       const addCmd = () => helper.addComponentWithOptions('bar/foo2.js', { 'n': 'test', 'i': 'jaja' });
       expect(addCmd).to.throw(`You can use either [id] or [namespace] to add a particular component`);
     });
+    it('Should throw error msg if trying to add non existing file', () => {
+      const addCmd = () => helper.addComponent('non-existing-file.js');
+      expect(addCmd).to.throw(`fatal: the file "non-existing-file.js" was not found`);
+    });
     it('Should modify bitmap when adding component again', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.createComponent('bar', 'foo1.js');

@@ -3,13 +3,14 @@ import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
 import format from 'string-format';
-import { glob, isValidIdChunk, isDir, calculateFileInfo } from '../../../utils';
+import { glob, isValidIdChunk, isDir, calculateFileInfo, existsSync } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
 import logger from '../../../logger/logger';
 import isGlob from 'is-glob';
+import PathNotExists from './exceptions/path-not-exists'
 
 export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[]): Promise<Object> {
 
@@ -192,6 +193,9 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
   const componentPathsStats = {};
   componentPaths.forEach((componentPath) => {
+    if (!existsSync(componentPath)){
+      throw new PathNotExists(componentPath);
+    }
     componentPathsStats[componentPath] = {
       isDir: isDir(componentPath)
     };
