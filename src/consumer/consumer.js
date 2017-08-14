@@ -243,7 +243,7 @@ export default class Consumer {
 
       if (!destination) {
         const depRootDir = bitMap.getRootDirOfComponent(componentId);
-        destination = path.relative(depRootDir, file);
+        destination = depRootDir ? path.relative(depRootDir, file) : file;
       }
 
       const currComponentsDeps = { [componentId]: [{ sourceRelativePath: file, destinationRelativePath: destination }] };
