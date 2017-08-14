@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - bug fix - install test environment if not exist upon bit test
 - Fix conflicts when import from bit.json more than one component with the same nested deps
 - Remove duplicates from missing packages (during import) warning
+- improve error on adding non existing file
 
 ## [0.10.3] - 2017-08-08
 
