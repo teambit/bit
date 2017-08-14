@@ -229,7 +229,9 @@ export default class Consumer {
               }
             });
           }
-          missingDeps = missingDeps.concat(result.missingDeps);
+          if (result.missingDeps && !R.isEmpty(result.missingDeps)){
+            missingDeps = missingDeps.concat(result.missingDeps);
+          }
           Object.assign(packagesDeps, result.packagesDeps);
         });
         depsTreeCache[depsTreeCacheId] = { componentsDeps: currComponentsDeps, packagesDeps, missingDeps };
