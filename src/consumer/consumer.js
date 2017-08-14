@@ -189,6 +189,7 @@ export default class Consumer {
 
       const packagesDeps = {};
       let missingDeps = [];
+      let destination;
 
       // Don't traverse generated authored components (from the same reasons above):
       let componentId = bitMap.getComponentIdByPath(file);
@@ -197,6 +198,8 @@ export default class Consumer {
         if (path.basename(file) === DEFAULT_INDEX_NAME || path.basename(file) === 'index.ts') {
           const indexDir = path.dirname(file);
           componentId = bitMap.getComponentIdByRootPath(indexDir);
+          // Refer to the main file in case the source component required the index of the imported
+          destination = bitMap.getMainFileOfComponent(componentId);
         }
 
         if (!componentId) {
@@ -238,7 +241,12 @@ export default class Consumer {
         return { componentsDeps: currComponentsDeps, packagesDeps, missingDeps };
       }
 
-      const currComponentsDeps = { [componentId]: [{ sourceRelativePath: file, destinationRelativePath: file }] };
+      if (!destination) {
+        const depRootDir = bitMap.getRootDirOfComponent(componentId);
+        destination = path.relative(depRootDir, file);
+      }
+
+      const currComponentsDeps = { [componentId]: [{ sourceRelativePath: file, destinationRelativePath: destination }] };
       depsTreeCache[depsTreeCacheId] = { componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] };
       return ({ componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] });
     };
