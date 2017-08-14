@@ -24,8 +24,8 @@ export default async function exportAction(ids?: string[], remote: string, save:
       // add to bit.json only if the component is already there. So then the version will be updated. It's applicable
       // mainly when a component was imported first. For authored components, no need to save them in bit.json, they are
       // already in bit.map
-      if (bitJsonDependencies
-          .find(bitJsonDependency => bitJsonDependency.toString(false, true) === component.id.toString(false, true))) {
+      if (bitJsonDependencies.find(bitJsonDependency => bitJsonDependency
+          .toStringWithoutVersion() === component.id.toStringWithoutVersion())) {
         await consumer.bitJson.addDependency(component.id).write({ bitDir: consumer.getPath() });
       }
     }

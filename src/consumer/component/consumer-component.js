@@ -265,7 +265,7 @@ export default class Component {
     // Otherwise, write to bitDir and update bitMap with the new paths.
     if (!bitMap) return this._writeToComponentDir(calculatedBitDir, withBitJson, force);
 
-    const idWithoutVersion = this.id.toString(false, true);
+    const idWithoutVersion = this.id.toStringWithoutVersion();
     const componentMap = bitMap.getComponent(idWithoutVersion, false);
     if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
     let rootDir;

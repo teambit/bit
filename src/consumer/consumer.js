@@ -584,11 +584,11 @@ export default class Consumer {
     const authoredComponents = bitMap.getAllComponents(COMPONENT_ORIGINS.AUTHORED);
     if (!authoredComponents) return null;
     const committedComponentsWithoutVersions = committedComponents
-      .map(committedComponent => committedComponent.id.toString(false, true));
+      .map(committedComponent => committedComponent.id.toStringWithoutVersion());
     const authoredComponentsIds = Object.keys(authoredComponents).map(id => BitId.parse(id));
     // if a committed component is in authored array, remove it from the array as it has already been committed with the correct version
     const componentsToUpdate = authoredComponentsIds.filter(component => !committedComponentsWithoutVersions
-      .includes(component.toString(false, true)));
+      .includes(component.toStringWithoutVersion()));
     return this.scope.bumpDependenciesVersions(componentsToUpdate, committedComponents);
   }
 

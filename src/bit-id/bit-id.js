@@ -55,6 +55,18 @@ export default class BitId {
     return componentStr.concat(`${VERSION_DELIMITER}${version}`);
   }
 
+  toStringWithoutScope() {
+    return this.toString(true);
+  }
+
+  toStringWithoutVersion() {
+    return this.toString(false, true);
+  }
+
+  toStringWithoutScopeAndVersion() {
+    return this.toString(true, true);
+  }
+
   toObject() {
     const key = this.scope ? [this.scope, this.box, this.name].join('/') : [this.box, this.name].join('/');;
     const value = this.version;

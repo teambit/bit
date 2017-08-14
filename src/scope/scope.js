@@ -809,11 +809,12 @@ export default class Scope {
       let wasUpdated = false;
       latestVersion.dependencies.forEach((dependency) => {
         const committedComponentId = committedComponents.find(committedComponent => committedComponent
-          .id.toString(false, true) === dependency.id.toString(false, true));
+          .id.toStringWithoutVersion() === dependency.id.toStringWithoutVersion());
         if (committedComponentId && committedComponentId.version > dependency.id.version) {
           dependency.id.version = committedComponentId.version;
           const flattenDependencyToUpdate = latestVersion.flattenedDependencies
-            .find(flattenDependency => flattenDependency.toString(false, true) === dependency.id.toString(false, true));
+            .find(flattenDependency => flattenDependency
+              .toStringWithoutVersion() === dependency.id.toStringWithoutVersion());
           flattenDependencyToUpdate.version = committedComponentId.version;
           wasUpdated = true;
         }

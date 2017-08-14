@@ -37,9 +37,9 @@ export default class ComponentsList {
     version.flattenedDependencies = componentFromModel.flattenedDependencies;
     // dependencies from the FS don't have an exact version, copy the version from the model
     version.dependencies.forEach((dependency) => {
-      const idWithoutVersion = dependency.id.toString(false, true);
+      const idWithoutVersion = dependency.id.toStringWithoutVersion();
       const dependencyFromModel = componentFromModel.dependencies
-        .find(modelDependency => modelDependency.id.toString(false, true) === idWithoutVersion);
+        .find(modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion);
       if (dependencyFromModel) {
         dependency.id = dependencyFromModel.id;
       }
@@ -106,7 +106,7 @@ export default class ComponentsList {
           if (load) {
             modifiedComponents.push(componentFromFS);
           } else {
-            modifiedComponents.push(bitId.toString(true, true));
+            modifiedComponents.push(bitId.toStringWithoutScopeAndVersion());
           }
         }
       } else {
@@ -131,7 +131,7 @@ export default class ComponentsList {
     const fromObjects = await this.getFromObjects();
     const ids = Object.keys(fromObjects);
     if (withScope) return ids;
-    return ids.map(id => BitId.parse(id).toString(true, true));
+    return ids.map(id => BitId.parse(id).toStringWithoutScopeAndVersion());
   }
 
   /**
@@ -183,7 +183,7 @@ export default class ComponentsList {
         stagedComponents.push(modelBitId.toString());
       } else {
         const similarFileSystemComponent = listFromFileSystem
-          .find(component => component.id.toString(false, true) === modelBitId.toString(false, true));
+          .find(component => component.id.toStringWithoutVersion() === modelBitId.toStringWithoutVersion());
         if (similarFileSystemComponent && modelBitId.version > similarFileSystemComponent.version) {
           stagedComponents.push(modelBitId.toString());
         }
@@ -206,7 +206,7 @@ export default class ComponentsList {
     const fromBitMap = await this.getFromBitMap();
     const ids = Object.keys(fromBitMap);
     if (withScopeName) return ids;
-    return ids.map(id => BitId.parse(id).toString(true, true));
+    return ids.map(id => BitId.parse(id).toStringWithoutScopeAndVersion());
   }
 
   async onFileSystemAndNotOnBitMap(): Promise<Component[]> {

@@ -125,7 +125,7 @@ export default class BitMap {
 
   deleteOlderVersionsOfComponent(componentId: BitId): void {
     const allVersions = Object.keys(this.components)
-      .filter(id => BitId.parse(id).toString(false, true) === componentId.toString(false, true));
+      .filter(id => BitId.parse(id).toStringWithoutVersion() === componentId.toStringWithoutVersion());
     allVersions.forEach((version) => {
       if (version !== componentId.toString() && version.origin !== COMPONENT_ORIGINS.NESTED) {
         logger.debug(`BitMap: deleting an older version ${version} of an existing component ${componentId.toString()}`);
@@ -144,7 +144,7 @@ export default class BitMap {
   }): void {
     const isDependency = origin && origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = (origin === COMPONENT_ORIGINS.AUTHORED) ?
-      componentId.toString(true) : componentId.toString();
+      componentId.toStringWithoutScope() : componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
     if (isDependency) {
       if (!parent) throw new Error(`Unable to add indirect dependency ${componentId}, without "parent" parameter`);
@@ -199,8 +199,8 @@ export default class BitMap {
    */
   updateComponentId(id: BitId): void {
     const newIdString = id.toString();
-    const olderComponentsIds = Object.keys(this.components)
-      .filter(componentId => BitId.parse(componentId).toString(true, true) === id.toString(true, true)
+    const olderComponentsIds = Object.keys(this.components).filter(componentId => BitId
+      .parse(componentId).toStringWithoutScopeAndVersion() === id.toStringWithoutScopeAndVersion()
       && componentId !== newIdString
       && this.components[componentId].origin !== COMPONENT_ORIGINS.NESTED);
 
@@ -209,7 +209,7 @@ export default class BitMap {
       return;
     }
     if (olderComponentsIds.length > 1) {
-      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toString(true, true)} and they 
+      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
       are authored or imported. This scenario is not supported`);
     }
     const olderComponentId = R.head(olderComponentsIds);
@@ -227,7 +227,7 @@ export default class BitMap {
       return this.components[id];
     }
     const idWithVersion = Object.keys(this.components)
-      .find(componentId => BitId.parse(componentId).toString(false, true) === id.toString(false, true));
+      .find(componentId => BitId.parse(componentId).toStringWithoutVersion() === id.toStringWithoutVersion());
     if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(id);
     return this.components[idWithVersion];
   }

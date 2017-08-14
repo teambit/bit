@@ -11,18 +11,18 @@ export default class SourcesDependencyMap extends DependencyMap {
   }
 
   get(bitId: BitId): BitId[] {
-    return super.get(bitId.toString(true));
+    return super.get(bitId.toStringWithoutScope());
   }
 
   setBit(id: BitId, bits: Bit[]) {
-    super.set(id.toString(true), new BitIds(...bits.map(bit => bit.getId())));
+    super.set(id.toStringWithoutScope(), new BitIds(...bits.map(bit => bit.getId())));
     return this;
   }
 
   toObject() {
     const obj = {};
     this.forEach((bitIds, bitId) => {
-      obj[bitId.toString(true)] = bitIds.map(dependency => dependency.toString());
+      obj[bitId.toStringWithoutScope()] = bitIds.map(dependency => dependency.toString());
     });
     return obj;
   }
