@@ -29,6 +29,6 @@ describe('ListScope', () => {
           expect(resolveStub.getCall(0).args[0]).to.equal('non-exists-scope');
           expect(listSpy.called).to.be.true;
         });
-    });
+    }).timeout(5000);
   });
 });
