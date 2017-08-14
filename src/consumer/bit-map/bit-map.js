@@ -127,7 +127,7 @@ export default class BitMap {
     const allVersions = Object.keys(this.components)
       .filter(id => BitId.parse(id).toString(false, true) === componentId.toString(false, true));
     allVersions.forEach((version) => {
-      if (version !== componentId.toString()) {
+      if (version !== componentId.toString() && version.origin !== COMPONENT_ORIGINS.NESTED) {
         logger.debug(`BitMap: deleting an older version ${version} of an existing component ${componentId.toString()}`);
         delete this.components[version];
       }
@@ -192,18 +192,30 @@ export default class BitMap {
   }
 
   /**
-   * needed after exporting a local component
+   * needed after exporting a component.
+   * We don't support export of nested components, only authored or imported. For authored/imported components, could be
+   * in the file-system only one instance with the same box-name and component-name. As a result, we can strip the
+   * scope-name and the version, find the older version in bit.map and update the id with the new one.
    */
-  updateComponentScopeName(id: BitId): void {
-    const oldIdString = id.toString(true, true);
+  updateComponentId(id: BitId): void {
     const newIdString = id.toString();
-    logger.debug(`bit-map: updating a component name from ${oldIdString} to ${newIdString}`);
-    if (!this.components[oldIdString]) return; // ignore, maybe it has been updated already
-    if (this.components[newIdString]) {
-      throw new Error(`There is a local component ${oldIdString} with the same namespace and name as a remote component ${newIdString}`);
+    const olderComponentsIds = Object.keys(this.components)
+      .filter(componentId => BitId.parse(componentId).toString(true, true) === id.toString(true, true)
+      && componentId !== newIdString
+      && this.components[componentId].origin !== COMPONENT_ORIGINS.NESTED);
+
+    if (!olderComponentsIds.length) {
+      logger.debug(`bit-map: no need to update ${newIdString}`);
+      return;
     }
-    this.components[newIdString] = R.clone(this.components[oldIdString]);
-    delete this.components[oldIdString];
+    if (olderComponentsIds.length > 1) {
+      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toString(true, true)} and they 
+      are authored or imported. This scenario is not supported`);
+    }
+    const olderComponentId = R.head(olderComponentsIds);
+    logger.debug(`BitMap: updating an older component ${olderComponentId} with a newer component ${newIdString}`);
+    this.components[newIdString] = R.clone(this.components[olderComponentId]);
+    delete this.components[olderComponentId];
   }
 
   getComponent(id: string|BitId, shouldThrow: boolean): ComponentMap {

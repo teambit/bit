@@ -90,7 +90,6 @@ export default class ComponentsList {
   async listModifiedComponents(load: boolean = false): Promise<string[] | ConsumerComponent[]> {
     const [objectComponents, fileSystemComponents] = await Promise
       .all([this.getFromObjects(), this.getFromFileSystem()]);
-
     const objFromFileSystem = fileSystemComponents.reduce((components, component) => {
       components[component.id.toString()] = component;
       return components;
@@ -151,7 +150,7 @@ export default class ComponentsList {
         newComponents.push(id);
       }
     });
-    if (load) {
+    if (load && newComponents.length) {
       const componentsIds = newComponents.map(id => BitId.parse(id));
       newComponents = await this.consumer.loadComponents(componentsIds);
     }

@@ -33,11 +33,8 @@ export default async function exportAction(ids?: string[], remote: string, save:
   });
 
   const components = await Promise.all(componentsP);
-  // todo: make sure runHook knows to deal with array of components
-  // await consumer.driver.runHook('onExport', components);
-  // todo: we should probably update bit.map with the new id, which includes the scope name
   const bitMap = await BitMap.load(consumer.getPath());
-  components.map(component => bitMap.updateComponentScopeName(component.id));
+  components.map(component => bitMap.updateComponentId(component.id));
   await bitMap.write();
   return components;
 }
