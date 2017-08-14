@@ -1,9 +1,11 @@
 // covers also init, create, commit, import and export commands
 
-import chai,{ expect } from 'chai';
+import chai, { expect } from 'chai';
 import path from 'path';
-const assertArrays = require('chai-arrays');
 import Helper from '../e2e-helper';
+
+const assertArrays = require('chai-arrays');
+
 chai.use(assertArrays);
 
 describe('bit add command', function () {
@@ -83,7 +85,7 @@ describe('bit add command', function () {
       expect(files2).to.be.array();
       expect(files2).to.be.ofSize(2);
     });
-    it.skip('Bitmap should contain multipule files for component with more than one file', ()=>{});
+    it.skip('Bitmap should contain multiple files for component with more than one file', ()=>{});
     it.skip('Bitmap should contain impl files and test files  in diffrent fields', ()=>{});
     it('Bitmap origin should be AUTHORED', ()=>{
       helper.createComponent('bar', 'foo1.js');
@@ -93,8 +95,9 @@ describe('bit add command', function () {
       expect(bitMap['bar/foo1'].origin).to.equal('AUTHORED');
     });
     it.skip('Bitmap mainFile should point to correct mainFile', ()=>{});
+    it.skip('should not allow adding a component with an existing box-name and component-name', () => {});
   });
-  describe('add multipule components', () => {
+  describe('add multiple components', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
@@ -154,7 +157,7 @@ describe('bit add command', function () {
       expect(files).to.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
-    it('Should add dir files with spec from multipule dsls when test files are placed in same structure', () => {
+    it('Should add dir files with spec from multiple dsls when test files are placed in same structure', () => {
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('bar', 'foo2.js');
       helper.createComponent('bar', 'foo3.js');
@@ -231,7 +234,7 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo2');
       expect(bitMap).not.to.have.property('bar/foo2.exclude.js');
     });
-    it('Bitmap should not conatin all files in excluded list', () => {
+    it('Bitmap should not contain all files in excluded list', () => {
       helper.createComponent('bar', 'foo1.js');
       helper.createComponent('bar', 'foo2.js');
       helper.createComponent('bar', 'foo2.exclude.js');

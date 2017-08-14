@@ -248,7 +248,7 @@ export default class Consumer {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
 
-      if (componentMap && (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED)) {
+      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
       }
 
