@@ -7,8 +7,9 @@ import { FsScopeNotLoaded } from '../exceptions';
 import { flatten } from '../../../utils';
 import type { ScopeDescriptor } from '../../scope';
 import { searchAdapter } from '../../../search';
+import type { Network } from '../network';
 
-export default class Fs {
+export default class Fs implements Network {
   scopePath: string;
   scope: ?Scope;
 

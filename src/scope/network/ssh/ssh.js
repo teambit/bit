@@ -12,6 +12,7 @@ import type { ScopeDescriptor } from '../../scope';
 import ConsumerComponent from '../../../consumer/component';
 import checkVersionCompatibilityFunction from '../check-version-compatibility';
 import logger from '../../../logger/logger';
+import type { Network } from '../network';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
@@ -34,11 +35,12 @@ function errorHandler(code, err) {
     parsedError = JSON.parse(err);
   } catch (e) {
     // be greacfull when can't parse error message
+    logger.error(`ssh: failed parsing error as JSON, error: ${err}`);
   }
 
   switch (code) {
     default:
-      return new UnexpectedNetworkError();
+      return new UnexpectedNetworkError(parsedError ? parsedError.message : err);
     case 127:
       return new ComponentNotFound((parsedError && parsedError.id) || err);
     case 128:
@@ -59,7 +61,7 @@ export type SSHProps = {
   host: string
 };
 
-export default class SSH {
+export default class SSH implements Network {
   connection: any;
   path: string;
   username: string;
@@ -78,6 +80,7 @@ export default class SSH {
   }
 
   exec(commandName: string, payload: any): Promise<any> {
+    logger.debug(`ssh: going to run a remote command ${commandName}, path: ${this.path}`);
     return new Promise((resolve, reject) => {
       let res = '';
       let err;
@@ -86,8 +89,11 @@ export default class SSH {
         absolutePath(this.path || ''),
         commandName === '_put' ? null : payload
       );
-
-      this.connection.exec(cmd, (e, stream) => {
+      this.connection.exec(cmd, (error, stream) => {
+        if (error) {
+          logger.error('ssh, exec returns an error: ', error);
+          return reject(error);
+        }
         if (commandName === '_put') {
           stream.stdin.write(toBase64(payload));
           stream.stdin.end();
@@ -96,17 +102,17 @@ export default class SSH {
           .on('data', (response) => {
             res += response.toString();
           })
-          .on('close', (code) => {
+          .on('close', (code, signal) => {
             if (commandName === '_put') res = res.replace(payload, '');
+            logger.debug(`ssh: returned with code: ${code}, signal: ${signal}.`);
+            this.connection.end();
             return code && code !== 0 ?
               reject(errorHandler(code, err)) :
               resolve(clean(res));
-              // TODO: close the connection from somewhere else
-              // this.connection.end();
           })
           .stderr.on('data', (response) => {
             err = response.toString();
-            logger.error(err);
+            logger.error(`ssh: got an error, ${err}`);
           });
       });
     });
