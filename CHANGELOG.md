@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Remove duplicates from missing packages (during import) warning
 - improve error on adding non existing file
 - improve support for imported components as dependencies of authored components
+- auto-resolve dependencies for imported components
 
 ## [0.10.3] - 2017-08-08
 
