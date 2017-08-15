@@ -627,13 +627,13 @@ describe('bit import', function () {
       helper.reInitRemoteScope();
       helper.addRemoteScope();
       helper.importCompiler('bit.env/compilers/babel'); // TODO: should be pass nothing once it working
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      const isTypeFixture = "export default function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      const isStringFixture = "import isType from './is-type.js'; export default function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
-      const fooBarFixture = "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      const fooBarFixture = "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
       helper.commitAllComponents();
@@ -726,7 +726,7 @@ describe('bit import', function () {
       expect(linkPathContent).to.have.string(`module.exports = require(\'../../../../../${expectedPathSuffix}\');`, 'in direct dependency link file point to the wrong place');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
-      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
