@@ -299,7 +299,7 @@ export default class Scope {
     const manyCompVersions = await Promise
       .all(manyObjects.map(objects => objects.component.toComponentVersion(LATEST)));
     logger.debug('exportManyBareScope: will try to importMany in case there are missing dependencies');
-    const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id), true); // resolve dependencies
+    const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id)); // resolve dependencies
     logger.debug('exportManyBareScope: successfully ran importMany');
     await this.objects.persist();
     const objs = await Promise.all(versions.map(version => version.toObjects(this.objects)));
@@ -422,7 +422,7 @@ export default class Scope {
    * and save them locally.
    * 3. External objects, fetch from a remote and save locally. (done by this.getExternalOnes method).
    */
-  async importMany(ids: BitIds, withDevDependencies?: bool, cache: boolean = true):
+  async importMany(ids: BitIds, withEnvironments?: boolean, cache: boolean = true):
   Promise<VersionDependencies[]> {
     logger.debug(`scope.importMany: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
@@ -437,7 +437,7 @@ export default class Scope {
         def.id.version,
         this,
         def.id.scope,
-        withDevDependencies,
+        withEnvironments,
       );
     }));
     logger.debug('scope.importMany: successfully fetched local components and their dependencies. Going to fetch externals');
