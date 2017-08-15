@@ -121,7 +121,7 @@ export default class Scope {
   }
 
   async listStage() {
-    const components = await this.objects.listComponents();
+    const components = await this.objects.listComponents(false);
     return this.toConsumerComponents(components.filter(c => !c.scope || c.scope === this.name));
   }
 
