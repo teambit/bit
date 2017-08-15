@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.4] - 2017-08-15
+
 - bug fix - component stays in "staged components" section after the second export
 - support exporting binary files
 - fix a bug when importing version 2 of a component while version 1 has been imported before
