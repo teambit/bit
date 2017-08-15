@@ -182,7 +182,7 @@ export default class Consumer {
           const indexDir = path.dirname(file);
           componentId = bitMap.getComponentIdByRootPath(indexDir);
           // Refer to the main file in case the source component required the index of the imported
-          destination = bitMap.getMainFileOfComponent(componentId);
+          if (componentId) destination = bitMap.getMainFileOfComponent(componentId);
         }
 
         if (!componentId) {
