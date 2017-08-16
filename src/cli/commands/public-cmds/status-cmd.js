@@ -20,17 +20,17 @@ export default class Status extends Command {
   report({ newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps }: Object): string {
     const newComponentsOutput = immutableUnshift(
       newComponents.map(formatNewBit),
-      newComponents.length ? chalk.underline.white('New Components') : chalk.green('There are no new components')
+      newComponents.length ? chalk.underline.white('new components') : chalk.green('no new components')
     ).join('\n');
 
     const modifiedComponentOutput = immutableUnshift(
       modifiedComponent.map(formatNewBit),
-      modifiedComponent.length ? chalk.underline.white('Modified Components') : chalk.green('There are no modified components')
+      modifiedComponent.length ? chalk.underline.white('modified components') : chalk.green('no modified components')
     ).join('\n');
 
     const stagedComponentsOutput = immutableUnshift(
       stagedComponents.map(formatBitString),
-      stagedComponents.length ? chalk.underline.white('Staged Components') : chalk.green('There are no staged components')
+      stagedComponents.length ? chalk.underline.white('staged components') : chalk.green('no staged components')
     ).join('\n');
 
     const componentsWithMissingDepsOutput = missingDepsTemplate(componentsWithMissingDeps);
