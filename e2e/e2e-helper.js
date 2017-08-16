@@ -167,6 +167,10 @@ export default class Helper {
     this.runCmd(`bit import ${id} --compiler`);
   }
 
+  importTester(id) {
+    this.runCmd(`bit import ${id} --tester`);
+  }
+
   createComponentBarFoo(impl?: string) {
     this.createComponent(undefined, undefined, impl);
   }
@@ -201,6 +205,10 @@ export default class Helper {
     return this.runCmd(`bit add ${filePaths} ${value}`);
   }
 
+  testComponent(id) {
+    return this.runCmd(`bit test ${id}`);
+  }
+
   showComponent(id: string = "bar/foo") {
     return this.runCmd(`bit show ${id}`);
   }
@@ -208,6 +216,25 @@ export default class Helper {
   showComponentWithOptions(id: string = "bar/foo", options:? Object) {
     const value = Object.keys(options).map(key => `-${key} ${options[key]}`).join(' ');
     return this.runCmd(`bit show ${id} ${value}`);
+  }
+
+  /**
+   * Sometimes many tests need to do the exact same steps to init the local-scope, such as importing compiler/tester.
+   * To make it faster, use this method before all tests, and then use getClonedLocalScope method to restore from the
+   * cloned scope.
+   */
+  cloneLocalScope() {
+    const clonedScope = v4();
+    const clonedScopePath = path.join(this.e2eDir, clonedScope);
+    if (this.debugMode) console.log(`cloning a scope from ${this.localScopePath} to ${clonedScopePath}`);
+    fs.copySync(this.localScopePath, clonedScopePath);
+    return clonedScopePath;
+  }
+
+  getClonedLocalScope(clonedScopePath) {
+    fs.removeSync(this.localScopePath);
+    if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.localScopePath}`);
+    fs.copySync(clonedScopePath, this.localScopePath);
   }
 }
 
