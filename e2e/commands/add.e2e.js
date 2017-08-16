@@ -72,7 +72,7 @@ describe('bit add command', function () {
     });
     it('Should throw error msg if trying to add non existing file', () => {
       const addCmd = () => helper.addComponent('non-existing-file.js');
-      expect(addCmd).to.throw(`Error: The path non-existing-file.js doesn't exist`);
+      expect(addCmd).to.throw(`fatal: the file "non-existing-file.js" was not found`);
     });
     it('Should modify bitmap when adding component again', () => {
       const file1 = path.normalize('bar/foo2.js');
