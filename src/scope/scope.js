@@ -29,7 +29,6 @@ import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
-import { Driver } from '../driver';
 import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
   BEFORE_IMPORT_PUT_ON_SCOPE,
@@ -133,24 +132,6 @@ export default class Scope {
           if (e instanceof RemoteScopeNotFound) return reject(e);
           reject(new DependencyNotFound(e.id));
         });
-    });
-  }
-
-  /**
-   * Install drivers in the scope level
-   */
-  installDrivers(driversNames: string[]) {
-    const path = this.getPath();
-    return Promise.all(driversNames.map((driverName) => npmClient.install(driverName, { cwd: path })));
-  }
-
-  deleteNodeModulesDir(): Promise<*> {
-    return new Promise((resolve, reject) => {
-      const path = this.getPath() + '/node_modules';
-      fs.remove(path, (err) => {
-        if (err) return reject(err);
-        return resolve();
-      });
     });
   }
 
@@ -581,6 +562,7 @@ export default class Scope {
   }
 
   loadComponent(id: BitId): Promise<ConsumerComponent> {
+    logger.debug(`scope.loadComponent, id: ${id}`);
     if (!id.isLocal(this.name)) {
       throw new Error('cannot load bit from remote scope, please import first');
     }
@@ -783,7 +765,7 @@ export default class Scope {
     return updatedComponents;
   }
 
-  runComponentSpecs({ bitId, consumer, environment, save, verbose, isolated }: {
+  async runComponentSpecs({ bitId, consumer, environment, save, verbose, isolated }: {
     bitId: BitId,
     consumer?: ?Consumer,
     environment?: ?bool,
@@ -795,28 +777,18 @@ export default class Scope {
       throw new Error('cannot run specs on remote component');
     }
 
-    return this.loadComponent(bitId)
-      .then((component) => {
-        const driver = Driver.load(component.lang);
-        return this.installDrivers([driver.driverName()])
-          .then(() => {
-            return component.runSpecs({
-              scope: this,
-              consumer,
-              environment,
-              save,
-              verbose,
-              isolated,
-            });
-          })
-          .then((specsResults) => {
-            return this.deleteNodeModulesDir()
-              .then(() => specsResults)
-          });
-      });
+    const component = await this.loadComponent(bitId);
+    return component.runSpecs({
+      scope: this,
+      consumer,
+      environment,
+      save,
+      verbose,
+      isolated,
+    });
   }
 
-  build({ bitId, environment, save, consumer, verbose }: {
+  async build({ bitId, environment, save, consumer, verbose }: {
     bitId: BitId,
     environment?: ?bool,
     save?: ?bool,
@@ -826,16 +798,8 @@ export default class Scope {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run build on remote component');
     }
-
-    return this.loadComponent(bitId)
-      .then((component) => {
-        const driver = Driver.load(component.lang);
-        return this.installDrivers([driver.driverName()])
-          .then(() => {
-            return component.build({ scope: this, environment, save, consumer, verbose });
-          })
-          .then(() => this.deleteNodeModulesDir());
-      });
+    const component = await this.loadComponent(bitId);
+    return component.build({ scope: this, environment, save, consumer, verbose });
   }
 
   static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {

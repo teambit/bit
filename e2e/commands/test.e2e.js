@@ -1,14 +1,16 @@
+// covers also ci-update command
+
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
 const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-const isTypeSpecFixture = pass => `const expect = require('chai').expect;
+const isTypeSpecFixture = testShouldPass => `const expect = require('chai').expect;
 const isType = require('./is-type.js');
 
 describe('isType', () => {
   it('should display "got is-type"', () => {
-    expect(isType())${pass ? '' : '.not'}.to.equal('got is-type');
+    expect(isType())${testShouldPass ? '' : '.not'}.to.equal('got is-type');
   });
 });`;
 
@@ -22,7 +24,7 @@ describe('bit test command', function () {
     clonedScopePath = helper.cloneLocalScope();
   });
   after(() => {
-    // helper.destroyEnv();
+    helper.destroyEnv();
     fs.removeSync(clonedScopePath);
   });
   describe('when there are no tests', () => {
@@ -78,6 +80,10 @@ describe('bit test command', function () {
     });
     it('should import the tester and run the tests successfully', () => {
       const output = helper.testComponent('utils/is-type');
+      expect(output).to.have.string('tests passed');
+    });
+    it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
+      const output = helper.runCmd(`bit ci-update ${helper.remoteScope}/utils/is-type`, helper.remoteScopePath);
       expect(output).to.have.string('tests passed');
     });
   });
