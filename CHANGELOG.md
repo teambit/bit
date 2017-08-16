@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 - Improve log files (rotate, color, prettyPrint)
+- Support define dependencies for imported components
+- bug fixes for export command
 
 ## [0.10.4] - 2017-08-15
 
