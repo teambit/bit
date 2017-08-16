@@ -194,7 +194,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
   const bitMap = await BitMap.load(consumer.getPath());
 
   const componentPathsStats = {};
-  const resolvedComponentPaths = await Promise.all(componentPaths.map(componentPath=> glob(componentPaths)));
+  const resolvedComponentPaths = await Promise.all(componentPaths.map(componentPath=> glob(componentPath)));
   const flattendFiles = R.flatten(resolvedComponentPaths);
   if(!R.isEmpty(flattendFiles)) {
     flattendFiles.forEach((componentPath) => {
