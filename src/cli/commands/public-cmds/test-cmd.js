@@ -18,8 +18,8 @@ export default class Test extends Command {
     environment: ?bool,
     verbose: ?bool,
   }): Promise<any> {
-    if (!id) return testAll();
-    return test(id);
+    if (!id) return testAll(verbose);
+    return test(id, verbose);
   }
 
   report(results: any): string {
