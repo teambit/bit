@@ -34,20 +34,30 @@ export default class Export extends Command {
     return commitAction({ id, message, force, verbose });
   }
 
-  report(c: Component|Component[]): string {
-    const output = (component) => {
-      const componentName = `${component.box}/${component.name}`;
-      return chalk.green(`component ${chalk.bold(componentName)} committed successfully`);
-    };
-
-    if (Array.isArray(c)) {
-      return c.map(oneComponent => output(oneComponent)).join('\n');
+  report(components: Component|Component[]): string {
+    if (!components) return chalk.yellow('nothing to commit');
+    if (!Array.isArray(components)) components = [components];
+    
+    function joinComponents(comps) {
+      return comps.map(comp => comp.id.toString().replace('@1', '')).join(', ');
     }
 
-    if (!c) {
-      return chalk.green(`There is nothing to commit`);
+    function outputIfExists(comps, label, breakBefore) {
+      if (comps.length !== 0) {
+        let str = '';
+        if (breakBefore) str = '\n';
+        str += `${chalk.cyan(label)} ${joinComponents(comps)}`;
+        return str;
+      }
+
+      return '';
     }
 
-    return output(c);
+    const changedComponents = components.filter(component => component.version > 1);
+    const addedComponents = components.filter(component => component.version === 1);
+
+    return chalk.green(`${components.length} components committed`) + chalk.gray(` | ${addedComponents.length} added, ${changedComponents.length} changed\n`)
+      + outputIfExists(addedComponents, 'added components: ')
+      + outputIfExists(changedComponents, 'changed components: ', true);
   }
 }
