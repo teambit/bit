@@ -13,9 +13,11 @@ dependencies:
 
 test:
   override:
-    - npm test
+    - npm run test-circle:
+        environment:
+          MOCHA_FILE: $CIRCLE_TEST_REPORTS/junit/unit-test-results.xml
     - npm i -g
     - npm run e2e-test-circle:
         environment:
-          MOCHA_FILE: $CIRCLE_TEST_REPORTS/junit/test-results.xml
+          MOCHA_FILE: $CIRCLE_TEST_REPORTS/junit/e2e-test-results.xml
 

@@ -11,6 +11,4 @@ fs.readdirSync(tasksDir).forEach(filename => gulp.task(
   require(path.join(__dirname, tasksDir, filename))
 ));
 
-gulp.task('test', gulpsync.sync(['build-tests', 'test-runner']));
-gulp.task('e2e-test', gulpsync.sync(['e2e-test-runner']));
 gulp.task('default', done => runSequence('lint', 'test', 'clean', 'build', done));
