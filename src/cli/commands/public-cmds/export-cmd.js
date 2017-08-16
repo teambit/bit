@@ -7,7 +7,7 @@ const chalk = require('chalk');
 
 export default class Export extends Command {
   name = 'export <remote> [id...]';
-  description = 'export local scope refs to a remote scope.';
+  description = 'export components to a remote scope.';
   alias = 'e';
   opts = [
     ['f', 'forget', 'do not save to bit.json after export']
@@ -20,10 +20,9 @@ export default class Export extends Command {
 
   report({ component, remote }: { component: Component|Component[], remote: string }): string {
     if (Array.isArray(component)) {
-      const header = `The following components were pushed successfully to scope ${remote}\n`;
-      const componentsList = component.map(c => c.id.toString()).join('\n');
-      return chalk.underline(header) + chalk.green(componentsList);
+      return chalk.green(`exported ${component.length} components to scope ${chalk.bold(remote)}`);
     }
-    return chalk.green(`component ${component.id.toString()} pushed successfully to scope ${remote}`);
+
+    return chalk.green(`exported component ${chalk.bold(component.id.toString())} to scope ${chalk.bold(remote)}`);
   }
 }

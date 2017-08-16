@@ -6,7 +6,7 @@ import { paintLog } from '../../chalk-box';
 
 export default class Show extends Command {
   name = 'log <id>';
-  description = 'log a component version messages';
+  description = 'show components(s) commit history.';
   alias = '';
   opts = [];
 

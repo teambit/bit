@@ -14,9 +14,9 @@ describe('bit status command', function () {
     });
     it('should indicate that there are no components', () => {
       const output = helper.runCmd('bit status');
-      expect(output.includes('There are no new components')).to.be.true;
-      expect(output.includes('There are no modified components')).to.be.true;
-      expect(output.includes('There are no staged components')).to.be.true;
+      expect(output.includes('no new components')).to.be.true;
+      expect(output.includes('no modified components')).to.be.true;
+      expect(output.includes('no staged components')).to.be.true;
     });
   });
   describe('when a component is created and added but not committed', () => {
@@ -28,16 +28,16 @@ describe('bit status command', function () {
       output = helper.runCmd('bit status');
     });
     it('should display that component as a new component', () => {
-      expect(output.includes('There are no new components')).to.be.false;
+      expect(output.includes('no new components')).to.be.false;
 
-      expect(output.includes('New Components')).to.be.true;
+      expect(output.includes('new components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
     it('should not display that component as modified', () => {
-      expect(output.includes('There are no modified components')).to.be.true;
+      expect(output.includes('no modified components')).to.be.true;
     });
     it('should not display that component as staged', () => {
-      expect(output.includes('There are no staged components')).to.be.true;
+      expect(output.includes('no staged components')).to.be.true;
     });
   });
   describe('when a component is created, added and committed', () => {
@@ -50,16 +50,16 @@ describe('bit status command', function () {
       output = helper.runCmd('bit status');
     });
     it('should display that component as a staged component', () => {
-      expect(output.includes('There are no staged components')).to.be.false;
+      expect(output.includes('no staged components')).to.be.false;
 
-      expect(output.includes('Staged Components')).to.be.true;
+      expect(output.includes('staged components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
     it('should not display that component as modified', () => {
-      expect(output.includes('There are no modified components')).to.be.true;
+      expect(output.includes('no modified components')).to.be.true;
     });
     it('should not display that component as new', () => {
-      expect(output.includes('There are no new components')).to.be.true;
+      expect(output.includes('no new components')).to.be.true;
     });
   });
   describe('when a component is modified after commit', () => {
@@ -74,21 +74,21 @@ describe('bit status command', function () {
       output = helper.runCmd('bit status');
     });
     it('should display that component as a modified component', () => {
-      expect(output.includes('There are no modified components')).to.be.false;
+      expect(output.includes('no modified components')).to.be.false;
 
-      expect(output.includes('Modified Components')).to.be.true;
+      expect(output.includes('modified components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
     it('should display that component as a staged component (?)', () => {
       // todo: currently, it shows the component also as staged, because practically, it is export pending as well.
       // are we good with it?
-      expect(output.includes('There are no staged components')).to.be.false;
+      expect(output.includes('no staged components')).to.be.false;
 
-      expect(output.includes('Staged Components')).to.be.true;
+      expect(output.includes('staged components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
     it('should not display that component as new', () => {
-      expect(output.includes('There are no new components')).to.be.true;
+      expect(output.includes('new components')).to.be.true;
     });
   });
   describe('when a component is created, added, committed and exported', () => {
@@ -104,13 +104,13 @@ describe('bit status command', function () {
       output = helper.runCmd('bit status');
     });
     it('should not display that component as new', () => {
-      expect(output.includes('There are no new components')).to.be.true;
+      expect(output.includes('no new components')).to.be.true;
     });
     it('should not display that component as modified', () => {
-      expect(output.includes('There are no modified components')).to.be.true;
+      expect(output.includes('no modified components')).to.be.true;
     });
     it('should not display that component as staged', () => {
-      expect(output.includes('There are no staged components')).to.be.true;
+      expect(output.includes('no staged components')).to.be.true;
     });
   });
   describe('when a component is modified after export', () => {
@@ -128,16 +128,16 @@ describe('bit status command', function () {
       output = helper.runCmd('bit status');
     });
     it('should display that component as a modified component', () => {
-      expect(output.includes('There are no modified components')).to.be.false;
+      expect(output.includes('no modified components')).to.be.false;
 
-      expect(output.includes('Modified Components')).to.be.true;
+      expect(output.includes('modified components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
     it('should not display that component as staged', () => {
-      expect(output.includes('There are no staged components')).to.be.true;
+      expect(output.includes('no staged components')).to.be.true;
     });
     it('should not display that component as new', () => {
-      expect(output.includes('There are no new components')).to.be.true;
+      expect(output.includes('no new components')).to.be.true;
     });
   });
   describe('when a component is exported, modified and then committed', () => {
@@ -156,16 +156,16 @@ describe('bit status command', function () {
       output = helper.runCmd('bit status');
     });
     it('should not display that component as modified', () => {
-      expect(output.includes('There are no modified components')).to.be.true;
+      expect(output.includes('no modified components')).to.be.true;
     });
     it('should display that component as a staged component with version 2', () => {
-      expect(output.includes('There are no staged components')).to.be.false;
+      expect(output.includes('no staged components')).to.be.false;
 
-      expect(output.includes('Staged Components')).to.be.true;
+      expect(output.includes('staged components')).to.be.true;
       expect(output.includes(`bar/foo${VERSION_DELIMITER}2`)).to.be.true;
     });
     it('should not display that component as new', () => {
-      expect(output.includes('There are no new components')).to.be.true;
+      expect(output.includes('no new components')).to.be.true;
     });
   });
   describe('when a component is exported, modified, committed and then exported again', () => {
@@ -184,13 +184,13 @@ describe('bit status command', function () {
       output = helper.runCmd('bit status');
     });
     it('should not display that component as modified', () => {
-      expect(output.includes('There are no modified components')).to.be.true;
+      expect(output.includes('no modified components')).to.be.true;
     });
     it('should not display that component as staged', () => {
-      expect(output.includes('There are no staged components')).to.be.true;
+      expect(output.includes('no staged components')).to.be.true;
     });
     it('should not display that component as new', () => {
-      expect(output.includes('There are no new components')).to.be.true;
+      expect(output.includes('no new components')).to.be.true;
     });
   });
   describe('when a component is imported', () => {
@@ -209,13 +209,13 @@ describe('bit status command', function () {
       output = helper.runCmd('bit status');
     });
     it('should not display that component as new', () => {
-      expect(output.includes('There are no new components')).to.be.true;
+      expect(output.includes('no new components')).to.be.true;
     });
     it('should not display that component as modified', () => {
-      expect(output.includes('There are no modified components')).to.be.true;
+      expect(output.includes('no modified components')).to.be.true;
     });
     it('should not display that component as staged', () => {
-      expect(output.includes('There are no staged components')).to.be.true;
+      expect(output.includes('no staged components')).to.be.true;
     });
   });
   describe('when a component has a dependency and both were committed', () => {
@@ -234,13 +234,13 @@ describe('bit status command', function () {
       output = helper.runCmd('bit status');
     });
     it('should not display any component as new', () => {
-      expect(output.includes('There are no new components')).to.be.true;
+      expect(output.includes('no new components')).to.be.true;
     });
     it('should not display any component as modified', () => {
-      expect(output.includes('There are no modified components')).to.be.true;
+      expect(output.includes('no modified components')).to.be.true;
     });
     it('should display both components as staged', () => {
-      expect(output.includes('Staged Components')).to.be.true;
+      expect(output.includes('staged components')).to.be.true;
       expect(output.includes('utils/is-type')).to.be.true;
       expect(output.includes('utils/is-string')).to.be.true;
     });
@@ -287,16 +287,16 @@ describe('bit status command', function () {
     });
     it('should display that component as a modified component', () => {
       // this also makes sure that bit install does not override existing files
-      expect(output.includes('There are no modified components')).to.be.false;
+      expect(output.includes('no modified components')).to.be.false;
 
-      expect(output.includes('Modified Components')).to.be.true;
+      expect(output.includes('modified components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
     it('should not display that component as staged', () => {
-      expect(output.includes('There are no staged components')).to.be.true;
+      expect(output.includes('no staged components')).to.be.true;
     });
     it('should not display that component as new', () => {
-      expect(output.includes('There are no new components')).to.be.true;
+      expect(output.includes('no new components')).to.be.true;
     });
   });
 });

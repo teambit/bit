@@ -6,7 +6,7 @@ const chalk = require('chalk');
 
 export default class Build extends Command {
   name = 'build [id]';
-  description = 'uses the compiler defined in the bit.json in order to return the compiled version of the component';
+  description = 'build any set of components with configured compiler (component compiler or as defined in bit.json)';
   alias = '';
   //TODO: Need to send parameters (non of them are used)
   opts = [
