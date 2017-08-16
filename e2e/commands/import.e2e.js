@@ -836,7 +836,7 @@ describe('bit import', function () {
     });
   });
 
-  describe.skip('after adding dependencies to an imported component', () => {
+  describe('after adding dependencies to an imported component', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
