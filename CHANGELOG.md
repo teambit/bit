@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- improved commit, add, export and status outputs
+- imporved bit help
 
 ## [0.10.5] - 2017-08-16
 - improved commit, add, export and status outputs
