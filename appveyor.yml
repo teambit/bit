@@ -55,6 +55,7 @@ build_script:
     .\scripts\build-windows-installer.bat
 
 test_script:
+  - npm i
   - npm test
   - npm run e2e-test
 
