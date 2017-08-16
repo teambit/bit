@@ -83,10 +83,12 @@ export default class BitMap {
   }
 
   _getMainFile(mainFile: string, componentMap: ComponentMap) {
-    let baseMainFile = mainFile || DEFAULT_INDEX_NAME;
+    //added to resolve path in diffrent os
+    const resolvedPath = (mainFile) ? path.normalize(mainFile) : undefined;
+    let baseMainFile = resolvedPath || DEFAULT_INDEX_NAME;
     const files = componentMap.files.filter(file => !file.test);
     // Take the file path as main in case there is only one file
-    if (!mainFile && files.length === 1) return files[0].relativePath;
+    if (!resolvedPath && files.length === 1) return files[0].relativePath;
 
     // Search the relativePath of the main file
     let mainFileFromFiles = R.find(R.propEq('relativePath', baseMainFile))(files);

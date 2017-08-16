@@ -38,6 +38,7 @@ install:
 
     $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
 - npm install -g bit-bin
+
 build_script:
 - ps: >-
     mv .\package.json .\package.json.bak
@@ -50,6 +51,12 @@ build_script:
 
     .\scripts\build-windows-installer.bat
 
+
+test_script:
+  - npm i
+  - npm run build
+  - npm test
+  - npm run e2e-test
 
 artifacts:
 - path: distribution/windows/artifacts/*.msi
