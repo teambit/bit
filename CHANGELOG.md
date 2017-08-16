@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- Improve log files (rotate, color, prettyPrint)
 
 ## [0.10.4] - 2017-08-15
 

@@ -8,11 +8,28 @@ const logger = new winston.Logger({
     new (winston.transports.File)({
       filename: path.join(GLOBAL_LOGS, 'debug.log'),
       json: false,
-      level: process.env.NODE_ENV === 'production' ? 'error' : 'debug'
+      level: process.env.NODE_ENV === 'production' ? 'error' : 'debug',
+      maxsize: 10 * 1024 * 1024, // 10MB
+      maxFiles: 10,
+      colorize: true,
+      prettyPrint: true,
+      // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order. 
+      // The filename will always have the most recent log lines. The larger the appended number, the older the log file
+      tailable: true 
     }),
   ],
   exceptionHandlers: [
-    new winston.transports.File({ filename: path.join(GLOBAL_LOGS, 'exceptions.log'), json: false })
+    new winston.transports.File({ 
+      filename: path.join(GLOBAL_LOGS, 'exceptions.log'), 
+      json: false,
+      maxsize: 10 * 1024 * 1024, // 10MB
+      maxFiles: 10,
+      colorize: true,
+      prettyPrint: true,
+      // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order. 
+      // The filename will always have the most recent log lines. The larger the appended number, the older the log file
+      tailable: true 
+    })
   ],
   exitOnError: false
 });
