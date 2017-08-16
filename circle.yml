@@ -13,6 +13,7 @@ dependencies:
 
 test:
   override:
+    - npm run build
     - npm run test-circle:
         environment:
           MOCHA_FILE: $CIRCLE_TEST_REPORTS/junit/unit-test-results.xml
