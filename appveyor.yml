@@ -36,7 +36,7 @@ install:
 - ps: $fileContent += "-----END RSA PRIVATE KEY-----" + "`n"
 - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
 - ps: >-
-    Install-Product node $env:6
+    Install-Product node 6
 
     $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
 - npm i
