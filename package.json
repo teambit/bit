@@ -14,7 +14,7 @@
     "build": "babel src specs -d dist",
     "watch": "babel --watch bin src specs -d dist --source-maps",
     "build-debug": "babel src specs -d dist --source-maps",
-    "prepublishOnly": "npm run clean && npm run build",
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "bin": {
     "bit": "bin/bit.js"
