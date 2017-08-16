@@ -27,6 +27,8 @@ environment:
     secure: y7mz8E9mkcwCaCVvFs9WX+5k8jg+t8HwFpZhMYlYEfZhdnFH1U7gWCJTi+zVLiT9
   matrix:
   - ruby_version: Ruby23-x64
+  nodejs_version: "6"
+
 install:
 - ps: $key = $env:gitkey #just the key contents, copied from notepad, into the environment variable on the UI
 - ps: $fileContent = "-----BEGIN RSA PRIVATE KEY-----" + "`n"
