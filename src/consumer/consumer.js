@@ -204,11 +204,14 @@ export default class Consumer {
         }
         const rootDir = bitMap.getRootDirOfComponent(componentId);
         const recursiveResults = allFilesDpes.map((fileDep) => {
+          let relativeToConsumerFileDep = fileDep;
           // Change the dependencies files to be relative to current consumer
           // We are not just using path.resolve(rootDir, fileDep) because this might not work when running 
           // bit commands not from root, because resolve take by default the process.cwd
-          const fullFileDep = path.resolve(this.getPath(), rootDir, fileDep);
-          const relativeToConsumerFileDep = path.relative(this.getPath(), fullFileDep);
+          if (rootDir) {
+            const fullFileDep = path.resolve(this.getPath(), rootDir, fileDep);
+            relativeToConsumerFileDep = path.relative(this.getPath(), fullFileDep);
+          }
           return traverseDepsTreeRecursive(tree, relativeToConsumerFileDep, entryComponentId, fileDep);
         });
         const currComponentsDeps = {};
