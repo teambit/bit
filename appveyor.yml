@@ -52,6 +52,7 @@ build_script:
 
 test_script:
   - npm i
+  - npm i -g
   - npm run build
   - npm test
   - npm run e2e-test
