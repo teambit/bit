@@ -10,7 +10,7 @@ import bareListTemplate from '../../templates/bare-list-template';
 
 export default class List extends Command {
   name = 'list [scope]';
-  description = 'list all scope components';
+  description = 'list components on a local or a remote scope.';
   alias = 'ls';
   opts = [
     ['ids', 'ids', 'components ids to list'],

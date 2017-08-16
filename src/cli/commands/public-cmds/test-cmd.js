@@ -5,7 +5,7 @@ import { paintAllSpecsResults } from '../../chalk-box';
 
 export default class Test extends Command {
   name = 'test [id]';
-  description = 'run component(s) unit tests';
+  description = 'test any set of components with configured tester (component tester or as defined in bit.json)';
   alias = 't';
   opts = [
     ['e', 'environment', 'also pre install the required environment bit before running the build'],
