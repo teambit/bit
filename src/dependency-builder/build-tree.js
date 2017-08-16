@@ -45,7 +45,7 @@ function groupDependencyList(list, cwd) {
   let groups = byType(list);
   if (groups.packages) {
     const packages = groups.packages.reduce((res, packagePath) => {
-      const packageWithVersion = resolveNodePackage(`${cwd}/${packagePath}`);
+      const packageWithVersion = resolveNodePackage(path.join(cwd, packagePath));
       return Object.assign(res, packageWithVersion);
     }, {});
     groups.packages = packages;
@@ -150,6 +150,16 @@ function groupMissings(missings, cwd, consumerPath) {
   return { groups, foundedPackages };
 }
 
+function normalizePaths(tree) {
+  const modifiedPathTree = {};
+  Object.keys(tree).forEach((key) => {
+    const normalizedPathArr = tree[key].map(keyPath => path.normalize(keyPath));
+    const name = path.normalize(key);
+    modifiedPathTree[name] = normalizedPathArr;
+  });
+  return modifiedPathTree;
+}
+
 /**
  * Function for fetching dependency tree of file or dir
  * @param cwd working directory
@@ -159,15 +169,16 @@ function groupMissings(missings, cwd, consumerPath) {
 export default function getDependecyTree(cwd: string, consumerPath: string, filePath: string): Promise<*> {
   return madge(filePath, { baseDir: cwd, includeNpm: true })
     .then((res) => {
+      const normalizedTree = normalizePaths(res.tree);
       const { groups, foundedPackages } = groupMissings(res.skipped, cwd, consumerPath);
       const relativeFilePath = path.relative(cwd, filePath);
-      const tree = groupDependencyTree(res.tree, cwd);
+      const tree = groupDependencyTree(normalizedTree, cwd);
       // Merge manually found packages with madge founded packages
       if (foundedPackages && !R.isEmpty(foundedPackages)) {
         // Madge found packages so we need to merge them with the manual
         if (tree[relativeFilePath].packages) {
           Object.assign(tree[relativeFilePath].packages, foundedPackages);
-        // There is only manually found packages
+          // There is only manually found packages
         } else {
           tree[relativeFilePath].packages = foundedPackages;
         }
