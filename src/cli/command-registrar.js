@@ -2,6 +2,8 @@
 import serializeError from 'serialize-error';
 import commander from 'commander';
 import chalk from 'chalk';
+import { readFileSync } from 'fs';
+import path from 'path';
 import type Command from './command';
 import defaultHandleError from './default-error-handler';
 import { empty, first, isNumeric } from '../utils';
@@ -141,7 +143,9 @@ export default class CommandRegistrar {
   outputHelp() {
     const args = process.argv.slice(2);
     if (!args.length) {
-      commander.help();
+      // @TODO replace back to commander help and override help method
+      // commander.help();
+      console.log(require('./templates/help'));
       return this;
     }
 
