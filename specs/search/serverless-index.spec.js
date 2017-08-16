@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
+import path from 'path';
 import searchIndex from 'search-index';
 import serverlessIndex from '../../src/search/serverless-index';
 
@@ -20,7 +21,7 @@ describe('SeverLessIndex', () => {
       const result = serverlessIndex.initializeIndex('test_path');
 
       sinon.assert.calledWith(searchIndex, {
-        indexPath: 'test_path/search_index',
+        indexPath: path.normalize('test_path/search_index'),
         logLevel: 'error',
         stopwords: []
       });
