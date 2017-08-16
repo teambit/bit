@@ -13,7 +13,7 @@ describe('bit import', function () {
     helper.destroyEnv();
   });
 
-  describe.only('stand alone component (without dependencies)', () => {
+  describe('stand alone component (without dependencies)', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
@@ -89,7 +89,7 @@ describe('bit import', function () {
     });
 
     describe('with compiler and tester', () => {
-      describe.only('with multiple files located in different directories', () => {
+      describe('with multiple files located in different directories', () => {
         before(() => {
           helper.importCompiler('bit.env/compilers/babel'); // TODO: should be pass nothing once it working
           helper.createComponent('src', 'imprel.js');
