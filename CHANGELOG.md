@@ -6,11 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
-- improved commit, add, export and status outputs
-- imporved bit help
 
 ## [0.10.5] - 2017-08-16
-
+- improved commit, add, export and status outputs
+- imporved bit help
 - Improve log files (rotate, color, prettyPrint)
 - Support define dependencies for imported components
 - bug fixes for export command
