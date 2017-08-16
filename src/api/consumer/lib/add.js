@@ -194,18 +194,24 @@ export default async function addAction(componentPaths: string[], id?: string, m
   const bitMap = await BitMap.load(consumer.getPath());
 
   const componentPathsStats = {};
-  componentPaths.forEach((componentPath) => {
-    if (!existsSync(componentPath)){
-      throw new PathNotExists(componentPath);
-    }
-    componentPathsStats[componentPath] = {
-      isDir: isDir(componentPath)
-    };
-  });
+  const resolvedComponentPaths = await Promise.all(componentPaths.map(componentPath=> glob(componentPaths)));
+  const flattendFiles = R.flatten(resolvedComponentPaths);
+  if(!R.isEmpty(flattendFiles)) {
+    flattendFiles.forEach((componentPath) => {
+      if (!existsSync(componentPath)) {
+        throw new PathNotExists(componentPath);
+      }
+      componentPathsStats[componentPath] = {
+        isDir: isDir(componentPath)
+      };
+    });
+  } else {
+    throw new PathNotExists(componentPaths);
+  }
 
   let keepDirectoriesName = false;
   // if a user entered multiple paths and entered an id, he wants all these paths to be one component
-  const isMultipleComponents = componentPaths.length > 1 && !id;
+  const isMultipleComponents = Object.keys(componentPathsStats).length > 1 && !id;
   let added = [];
   if (isMultipleComponents) {
     logger.debug('bit add - multiple components');

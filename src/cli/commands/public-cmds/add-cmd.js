@@ -1,5 +1,6 @@
 /** @flow */
 import chalk from 'chalk';
+import path from 'path';
 import Command from '../../command';
 import { add } from '../../../api/consumer';
 
@@ -16,7 +17,7 @@ export default class Add extends Command {
   ];
   loader = true;
 
-  action([path]: [string[]], { id, main, tests, namespace, exclude }: {
+  action([paths]: [string[]], { id, main, tests, namespace, exclude }: {
     id: ?string,
     main: ?string,
     tests: ?string[],
@@ -26,9 +27,11 @@ export default class Add extends Command {
     if (namespace && id) {
       return Promise.reject('You can use either [id] or [namespace] to add a particular component');
     }
-    const testsArray = tests ? this.splitList(tests).map(filePath => filePath.trim()) : [];
-    const exludedFiles = exclude ? this.splitList(exclude).map(filePath => filePath.trim()) : undefined;
-    return add(path, id, main, namespace, testsArray, exludedFiles);
+
+    const normalizedPathes = paths.map(p => path.normalize(p));
+    const testsArray = tests ? this.splitList(tests).map(filePath => path.normalize(filePath.trim())) : [];
+    const exludedFiles = exclude ? this.splitList(exclude).map(filePath => path.normalize(filePath.trim())) : undefined;
+    return add(normalizedPathes, id, (main) ? path.normalize(main): undefined, namespace, testsArray, exludedFiles);
   }
 
   report(results: Array<{ id: string, files: string[] }>): string {
