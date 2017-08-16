@@ -71,6 +71,6 @@ export const paintAllSpecsResults = (results: Array<*>): string => {
   return results.map((result) => {
     const componentId = c.bold(`${result.component.box}/${result.component.name}: `);
     if (result.specs) return componentId + paintSpecsResults(result.specs);
-    return c.bold.red(`${componentId}couldn't get test results...`);
+    return c.bold(`There are no tests for ${componentId}`);
   }).join('\n');
 };
