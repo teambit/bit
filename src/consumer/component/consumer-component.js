@@ -306,12 +306,12 @@ export default class Component {
 
   async runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose, isolated }: {
     scope: Scope,
-    rejectOnFailure?: bool,
+    rejectOnFailure?: boolean,
     consumer?: Consumer,
-    environment?: bool,
-    save?: bool,
-    verbose?: bool,
-    isolated?: bool,
+    environment?: boolean,
+    save?: boolean,
+    verbose?: boolean,
+    isolated?: boolean,
   }): Promise<?Results> {
     const installEnvironmentsIfNeeded = (): Promise<any> => {
       if (environment) {
