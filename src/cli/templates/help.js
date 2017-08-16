@@ -2,10 +2,10 @@ const chalk = require('chalk');
 
 module.exports = `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
 
-bit is a free and open source tool for turning components from existing source-code to a collection of reusable components. 
-Easily share, reuse, maintain and discover code components from any project.
+${chalk.grey('bit is a free and open source tool for turning components from existing source-code to a collection of reusable components.')}
+${chalk.grey('Easily share, reuse, maintain and discover code components from any project.')}
 
-Bit documantation: https://docs.bitsrc.io
+${chalk.grey('Bit documantation: https://docs.bitsrc.io')}
 
 ${chalk.underline('start a working area')}
   ${chalk.cyan('init')}    create or reinitialize an empty Bit scope or reinitialize an existing one

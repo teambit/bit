@@ -56,7 +56,7 @@ export default class Export extends Command {
     const changedComponents = components.filter(component => component.version > 1);
     const addedComponents = components.filter(component => component.version === 1);
 
-    return chalk.green(`${components.length} components committed, ${addedComponents.length} added, ${changedComponents.length} changed\n`) 
+    return chalk.green(`${components.length} components committed`) + chalk.gray(` | ${addedComponents.length} added, ${changedComponents.length} changed\n`)
       + outputIfExists(addedComponents, 'added components: ')
       + outputIfExists(changedComponents, 'changed components: ', true);
   }
