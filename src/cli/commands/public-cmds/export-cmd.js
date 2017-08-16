@@ -7,7 +7,7 @@ const chalk = require('chalk');
 
 export default class Export extends Command {
   name = 'export <remote> [id...]';
-  description = 'export local scope refs to a remote scope.';
+  description = 'export components to a remote scope.';
   alias = 'e';
   opts = [
     ['f', 'forget', 'do not save to bit.json after export']

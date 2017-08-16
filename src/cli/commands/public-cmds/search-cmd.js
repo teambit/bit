@@ -11,7 +11,7 @@ import { BEFORE_REMOTE_SEARCH } from '../../../cli/loader/loader-messages';
 
 export default class Search extends Command {
   name = 'search <query...>';
-  description = 'search for components';
+  description = 'search for components by desired functionallity.';
   alias = '';
   opts = [
     ['s', 'scope <scopename>', 'search in scope'],

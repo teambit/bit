@@ -7,7 +7,7 @@ const { MODULES_CACHE_DIR } = require('../../../constants');
 
 export default class ClearCache extends Command {
   name = 'clear-cache';
-  description = 'Clears the modules cache folder';
+  description = 'clears Bit\'s cache from current working machine';
   alias = 'cc';
   opts = [];
   loader = false;

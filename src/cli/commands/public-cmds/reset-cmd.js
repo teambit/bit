@@ -5,7 +5,7 @@ import { reset } from '../../../api/consumer';
 
 export default class Reset extends Command {
   name = 'reset <id>';
-  description = 'reset a component (revert the last local commit)';
+  description = 'revert a component version to previous one.';
   alias = '';
   opts = [];
   loader = true;

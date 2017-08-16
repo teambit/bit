@@ -11,7 +11,7 @@ ${chalk.underline('start a working area')}
   ${chalk.cyan('init')}    create or reinitialize an empty Bit scope or reinitialize an existing one
 
 ${chalk.underline('add, modify and control components')}
-  ${chalk.cyan('add')}     add any subset of files to be tracked as components
+  ${chalk.cyan('add')}     add any subset of files to be tracked as a component(s).
   ${chalk.cyan('status')}  show the working area component(s) status.
   ${chalk.cyan('commit')}  record component changes and lock versions.
   ${chalk.cyan('mv')}      move a component to a different filesystem path.

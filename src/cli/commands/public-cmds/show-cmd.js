@@ -8,7 +8,7 @@ import{ BitId } from '../../../bit-id';
 
 export default class Show extends Command {
   name = 'show <id>';
-  description = 'show a component';
+  description = 'show component overview.';
   alias = '';
   opts = [
     ['j', 'json', 'return a json version of the component'],

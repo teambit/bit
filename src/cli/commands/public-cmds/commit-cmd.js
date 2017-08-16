@@ -7,7 +7,7 @@ const chalk = require('chalk');
 
 export default class Export extends Command {
   name = 'commit [id]';
-  description = 'commit a component to the local scope and add a log message';
+  description = 'record component changes and lock versions.';
   alias = 'c';
   opts = [
     ['m', 'message <message>', 'commit message'],

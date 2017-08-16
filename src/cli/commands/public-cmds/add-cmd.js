@@ -5,7 +5,7 @@ import { add } from '../../../api/consumer';
 
 export default class Add extends Command {
   name = 'add <path...>';
-  description = 'Track a new component (add to bit.map file)';
+  description = 'add any subset of files to be tracked as a component(s)';
   alias = 'a';
   opts = [
     ['i', 'id <name>', 'component id, if not specified the name will be '],

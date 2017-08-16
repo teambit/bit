@@ -9,7 +9,7 @@ import missingDepsTemplate from '../../templates/missing-dependencies-template';
 
 export default class Status extends Command {
   name = 'status';
-  description = 'show modifications status';
+  description = 'show the working area component(s) status.';
   alias = 's';
   opts = [];
 
