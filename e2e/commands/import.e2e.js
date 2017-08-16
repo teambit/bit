@@ -13,7 +13,7 @@ describe('bit import', function () {
     helper.destroyEnv();
   });
 
-  describe('stand alone component (without dependencies)', () => {
+  describe.only('stand alone component (without dependencies)', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
@@ -34,7 +34,7 @@ describe('bit import', function () {
     });
     it('should add the component to bit.json file', () => {
       const bitJson = helper.readBitJson();
-      const depName = path.join(helper.remoteScope, 'global', 'simple');
+      const depName = [helper.remoteScope, 'global', 'simple'].join('/');
       expect(bitJson.dependencies).to.include({ [depName]: '1' });
     });
     it('should add the component into bit.map file with the full id', () => {
@@ -89,7 +89,7 @@ describe('bit import', function () {
     });
 
     describe('with compiler and tester', () => {
-      describe('with multiple files located in different directories', () => {
+      describe.only('with multiple files located in different directories', () => {
         before(() => {
           helper.importCompiler('bit.env/compilers/babel'); // TODO: should be pass nothing once it working
           helper.createComponent('src', 'imprel.js');
