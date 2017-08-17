@@ -147,7 +147,7 @@ describe('bit add command', function () {
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('test', 'foo.spec.js');
       helper.createComponent('test2', 'foo1.spec.js');
-      helper.addComponentWithOptions('bar/foo.js', {'t': 'test/{FILE_NAME}.spec.js,test2/*.spec.js' });
+      helper.addComponentWithOptions(path.normalize('bar/foo.js'), {'t': path.normalize("test/{FILE_NAME}.spec.js,test2/*.spec.js")});
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(3);

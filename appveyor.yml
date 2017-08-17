@@ -42,6 +42,7 @@ install:
 - npm i
 - npm run build
 - npm install -g
+- bit config set ssh_key_file c:\users\appveyor\.ssh\id_rsa
 build_script:
 - ps: >-
     mv .\package.json .\package.json.bak

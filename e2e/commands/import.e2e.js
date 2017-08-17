@@ -4,9 +4,10 @@ import { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import glob from 'glob';
+import normalize from 'normalize-path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
-describe.only('bit import', function () {
+describe('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -641,7 +642,7 @@ describe.only('bit import', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
-      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
+      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(file =>path.normalize(file));
     });
 
     it('should keep the original directory structure of the main component', () => {
@@ -696,7 +697,7 @@ describe.only('bit import', function () {
       const expectedLocation = path.join('components', 'bar', 'foo', 'utils', 'is-string.js');
       const linkPath = path.join(helper.localScopePath, expectedLocation);
       const linkPathContent = fs.readFileSync(linkPath).toString();
-      const expectedPathSuffix = path.join('dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index');
+      const expectedPathSuffix = normalize(path.join('dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index'));
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(`module.exports = require(\'../${expectedPathSuffix}\');`, 'dependency link file point to the wrong place');
     });
@@ -704,7 +705,7 @@ describe.only('bit import', function () {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dist', 'utils', 'is-string.js');
       const linkPath = path.join(helper.localScopePath, expectedLocation);
       const linkPathContent = fs.readFileSync(linkPath).toString();
-      const expectedPathSuffix = path.join('dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index');
+      const expectedPathSuffix = normalize(path.join('dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index'));
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(`module.exports = require(\'../../${expectedPathSuffix}\');`, 'dependency link file point to the wrong place');
     });
@@ -713,7 +714,7 @@ describe.only('bit import', function () {
         'is-string', helper.remoteScope, '1', 'utils', 'is-type.js');
       const linkPath = path.join(helper.localScopePath, expectedLocation);
       const linkPathContent = fs.readFileSync(linkPath).toString();
-      const expectedPathSuffix = path.join('is-type', helper.remoteScope, '1', 'index');
+      const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'index'));
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(`module.exports = require(\'../../../../${expectedPathSuffix}\');`, 'in direct dependency link file point to the wrong place');
     });
@@ -722,7 +723,7 @@ describe.only('bit import', function () {
         'is-string', helper.remoteScope, '1', 'dist', 'utils', 'is-type.js');
       const linkPath = path.join(helper.localScopePath, expectedLocation);
       const linkPathContent = fs.readFileSync(linkPath).toString();
-      const expectedPathSuffix = path.join('is-type', helper.remoteScope, '1', 'index');
+      const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'index'));
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(`module.exports = require(\'../../../../../${expectedPathSuffix}\');`, 'in direct dependency link file point to the wrong place');
     });
