@@ -340,7 +340,7 @@ export default class Component {
     }
 
     await installEnvironmentsIfNeeded();
-    logger.debug('Environment are installed.');
+    logger.debug('Environment components are installed.');
     try {
       if (!testerFilePath) {
         testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
@@ -390,25 +390,25 @@ export default class Component {
         return run(this.mainFile, testDists);
       }
 
-
       const isolatedEnvironment = new IsolatedEnvironment(scope);
-
-      return isolatedEnvironment.create()
-        .then(() => {
-          return isolatedEnvironment.importE2E(this.id.toString());
-        })
-        .then((component) => {
-          return component.build({ scope, environment, verbose }).then(() => {
-            const specDistWrite = component.dists ?
-              component.dists.map(file => file.write()) : Promise.resolve();
-            return Promise.all(specDistWrite).then(() => {
-              const testFilesList = component.dists.filter(file => file.test);
-              return run(component.mainFile, testFilesList).then((results) => {
-                return isolatedEnvironment.destroy().then(() => results);
-              });
-            });
-          });
-        }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
+      try {
+        await isolatedEnvironment.create();
+        const component = await isolatedEnvironment.importE2E(this.id.toString());
+        logger.debug(`the component ${this.id.toString()} has been imported successfully into an isolated environment`);
+        await component.build({ scope, environment, verbose });
+        if (component.dists) {
+          const specDistWrite = component.dists.map(file => file.write());
+          await Promise.all(specDistWrite);
+        }
+        const testFilesList = component.dists ? component.dists.filter(dist => dist.test)
+          : component.files.filter(file => file.test);
+        const results = await run(component.mainFile, testFilesList);
+        await isolatedEnvironment.destroy();
+        return results;
+      } catch (e) {
+        await isolatedEnvironment.destroy();
+        return Promise.reject(e);
+      }
     } catch (err) {
       return Promise.reject(err);
     }
@@ -418,6 +418,7 @@ export default class Component {
           { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool }):
   Promise<string> { // @TODO - write SourceMap Type
     if (!this.compilerId) return Promise.resolve(null);
+    logger.debug('consumer-component.build, compilerId found, start building');
 
     // verify whether the environment is installed
     let compiler;
