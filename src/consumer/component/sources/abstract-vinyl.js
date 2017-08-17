@@ -25,11 +25,12 @@ export default class AbstractVinyl extends Vinyl {
 
   static loadFromParsedString(parsedString: Object) {
     if (!parsedString) return;
+    const contents = Buffer.isBuffer(parsedString._contents) ? parsedString._contents : new Buffer(parsedString._contents);
     return {
       cwd: parsedString._cwd,
       path: parsedString.history[parsedString.history.length - 1],
       base: parsedString._base,
-      contents: parsedString._contents,
+      contents,
     };
   }
 
