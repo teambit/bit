@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
+import normalize from 'normalize-path';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import {
   ConsumerAlreadyExists,
@@ -206,7 +207,7 @@ export default class Consumer {
         const recursiveResults = allFilesDpes.map((fileDep) => {
           let relativeToConsumerFileDep = fileDep;
           // Change the dependencies files to be relative to current consumer
-          // We are not just using path.resolve(rootDir, fileDep) because this might not work when running 
+          // We are not just using path.resolve(rootDir, fileDep) because this might not work when running
           // bit commands not from root, because resolve take by default the process.cwd
           if (rootDir) {
             const fullFileDep = path.resolve(this.getPath(), rootDir, fileDep);
@@ -423,9 +424,9 @@ export default class Consumer {
   _getLinkContent(mainFile: string, filePath: string): string {
     filePath = filePath.substring(0, filePath.lastIndexOf('.')); // remove the extension
     if (path.extname(mainFile) === '.ts') {
-      return `export * from '${filePath}';`;
+      return `export * from '${normalize(filePath)}';`;
     }
-    return `module.exports = require('${filePath}');`;
+    return `module.exports = require('${normalize(filePath)}');`;
   }
 
   async _writeEntryPointsForImportedComponent(component: Component, bitMap: BitMap):

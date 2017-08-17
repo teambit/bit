@@ -53,6 +53,7 @@
     "mkdirp": "^0.5.1",
     "mockery": "^2.0.0",
     "needle": "^1.4.3",
+    "normalize-path": "^2.1.1",
     "ora": "^1.1.0",
     "porter-stemmer": "^0.9.1",
     "ramda": "^0.23.0",
