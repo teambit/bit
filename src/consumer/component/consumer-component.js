@@ -20,6 +20,8 @@ import { ResolutionException } from '../../scope/exceptions';
 import BitMap from '../bit-map';
 import type { ComponentMap } from '../bit-map/bit-map';
 import logger from '../../logger/logger';
+import loader from '../../cli/loader';
+import { BEFORE_IMPORT_ENVIRONMENT } from '../../cli/loader/loader-messages';
 
 import {
   DEFAULT_BOX_NAME,
@@ -313,8 +315,11 @@ export default class Component {
     verbose?: boolean,
     isolated?: boolean,
   }): Promise<?Results> {
+    // TODO: The same function exactly exists in this file under build function
+    // Should merge them to one
     const installEnvironmentsIfNeeded = (): Promise<any> => {
       if (environment) {
+        loader.start(BEFORE_IMPORT_ENVIRONMENT);
         return scope.installEnvironment({
           ids: [this.compilerId, this.testerId],
           consumer,
@@ -437,6 +442,7 @@ export default class Component {
 
     const installEnvironmentIfNeeded = async (): Promise<any> => {
       if (environment) {
+        loader.start(BEFORE_IMPORT_ENVIRONMENT);
         return scope.installEnvironment({
           ids: [this.compilerId],
           consumer,
