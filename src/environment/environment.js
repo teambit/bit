@@ -11,6 +11,7 @@ import { Component } from '../consumer/component/consumer-component';
 import { BITS_DIRNAME, ISOLATED_ENV_ROOT } from '../constants';
 import { Driver } from '../driver';
 import { mkdirp } from '../utils';
+import logger from '../logger/logger';
 
 export default class Environment {
   path: string;
@@ -19,6 +20,7 @@ export default class Environment {
   constructor(scope: Scope) {
     this.scope = scope;
     this.path = path.join(scope.getPath(), ISOLATED_ENV_ROOT, v4());
+    logger.debug(`creating a new isolated environment at ${this.path}`);
   }
 
   create(): Promise<> {
@@ -100,6 +102,7 @@ export default class Environment {
     return new Promise((resolve, reject) => {
       fs.remove(this.path, (err) => {
         if (err) return reject(err);
+        logger.debug(`destroying the isolated environment at ${this.path}`);
         return resolve();
       });
     });
