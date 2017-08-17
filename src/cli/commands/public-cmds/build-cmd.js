@@ -14,6 +14,7 @@ export default class Build extends Command {
     ['s', 'save', 'for running build and save the results in the model'],
     ['v', 'verbose', 'showing npm verbose output for inspection'],
   ];
+  loader = true;
 
   action([id]: string[], { save, environment, verbose }: {
     save: ?bool,
