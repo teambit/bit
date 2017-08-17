@@ -315,6 +315,8 @@ export default class Component {
     verbose?: boolean,
     isolated?: boolean,
   }): Promise<?Results> {
+    // TODO: The same function exactly exists in this file under build function
+    // Should merge them to one
     const installEnvironmentsIfNeeded = (): Promise<any> => {
       if (environment) {
         loader.start(BEFORE_IMPORT_ENVIRONMENT);
