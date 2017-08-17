@@ -104,7 +104,7 @@ describe('bit commit command', function () {
       helper.addComponentBarFoo();
       let output = helper.commitAllComponents();
       output = helper.commitAllComponents();
-      expect(output.includes('There is nothing to commit')).to.be.true;
+      expect(output.includes('nothing to commit')).to.be.true;
     });
 
     it.skip('Should print there is nothing to commit after import only', () => {

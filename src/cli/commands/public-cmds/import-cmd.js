@@ -10,7 +10,7 @@ import { ComponentWithDependencies } from '../../../scope';
 
 export default class Import extends Command {
   name = 'import [ids...]';
-  description = 'import a component';
+  description = 'import components into your current working area.';
   alias = 'i';
   opts = [
     ['t', 'tester', 'import a tester environment component'],
