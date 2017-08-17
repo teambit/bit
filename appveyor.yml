@@ -56,8 +56,8 @@ build_script:
 
 test_script:
   - npm i
-  - npm test
-  - npm run e2e-test
+  - npm test:appveyor
+  - npm run e2e-test:appveyor
 
 artifacts:
 - path: distribution/windows/artifacts/*.msi
