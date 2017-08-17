@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
-describe('bit import', function () {
+describe.only('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -182,7 +182,7 @@ describe('bit import', function () {
         myBitJsonPath = path.join(helper.localScopePath, 'bit.json');
         helper.addBitJsonDependencies(myBitJsonPath, { [`${helper.remoteScope}/comp/comp1`]: '1', [`${helper.remoteScope}/comp/comp2`]: '1' });
         output = helper.runCmd('bit import');
-        localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
+        localConsumerFiles = (glob.sync(path.normalize('**/*.js'), { cwd: helper.localScopePath })).map(x => path.normalize(x));
       });
       it('should print the imported component correctly', () => {
         expect(output).to.have.string(`${helper.remoteScope}/comp/comp1`);
@@ -288,7 +288,7 @@ describe('bit import', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         helper.importComponent('utils/is-string');
-        localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
+        localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(x=>path.normalize(x));
       });
 
       it('create a link file to the dependency main file', () => {
@@ -442,7 +442,7 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
-      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
+      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(file=>path.normalize(file));
     });
 
     it('should keep the original directory structure of the main component', () => {
@@ -537,7 +537,7 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
-      localConsumerFiles = glob.sync('**/*.ts', { cwd: helper.localScopePath });
+      localConsumerFiles = glob.sync('**/*.ts', { cwd: helper.localScopePath }).map(file => path.normalize(file));
     });
 
     it('should keep the original directory structure of the main component', () => {
@@ -549,21 +549,21 @@ describe('bit import', function () {
       expect(localConsumerFiles).to.include(expectedLocation);
       const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
-      expect(indexFileContent).to.have.string('export * from \'./bar/foo\';', 'index file point to the wrong place');
+      expect(indexFileContent).to.have.string(`export * from \'./bar/foo\';`, 'index file point to the wrong place');
     });
     it('should create an index.ts file on the is-string dependency root dir pointing to the main file', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index.ts');
       expect(localConsumerFiles).to.include(expectedLocation);
       const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
-      expect(indexFileContent).to.have.string('export * from \'./utils/is-string\';', 'dependency index file point to the wrong place');
+      expect(indexFileContent).to.have.string(`export * from \'./utils/is-string\';`, 'dependency index file point to the wrong place');
     });
     it('should create an index.ts file on the is-type dependency root dir pointing to the main file', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils', 'is-type', helper.remoteScope, '1', 'index.ts');
       expect(localConsumerFiles).to.include(expectedLocation);
       const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
-      expect(indexFileContent).to.have.string('export * from \'./utils/is-type\';', 'dependency index file point to the wrong place');
+      expect(indexFileContent).to.have.string(`export * from \'./utils/is-type\';`, 'dependency index file point to the wrong place');
     });
     it('should save the direct dependency nested to the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils',
@@ -654,12 +654,13 @@ describe('bit import', function () {
     });
     it('should create an index.js file on the component root dir pointing to the main file', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'index.js');
+      console.log(expectedLocation)
       expect(localConsumerFiles).to.include(expectedLocation);
       const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
       expect(indexFileContent).to.have.string('module.exports = require(\'./dist/bar/foo\');', 'index file point to the wrong place');
     });
-    it('should create an index.js file on the is-string dependency root dir pointing to the main file', () => {
+    it('shoul create an index.js file on the is-string dependency root dir pointing to the main file', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index.js');
       expect(localConsumerFiles).to.include(expectedLocation);
       const indexPath = path.join(helper.localScopePath, expectedLocation);
