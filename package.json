@@ -102,6 +102,7 @@
     "gulp-sourcemaps": "^2.2.0",
     "gulp-sync": "^0.1.4",
     "mocha": "^3.4.2",
+    "mocha-appveyor-reporter": "^0.4.0",
     "mocha-circleci-reporter": "0.0.2",
     "mocha-junit-reporter": "^1.13.0",
     "run-sequence": "^1.2.2",
