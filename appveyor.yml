@@ -56,7 +56,7 @@ build_script:
 
 test_script:
   - npm i
-  - npm test:appveyor
+  - npm run test:appveyor
   - npm run e2e-test:appveyor
 
 artifacts:
