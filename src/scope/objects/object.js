@@ -83,6 +83,7 @@ export default class BitObject {
    * indexing method
    */
   hash(): Ref {
+    // console.log(`sha ${sha1(this.id())}, id ${this.id()}`); // uncomment when debugging hash issues
     return new Ref(sha1(this.id()));
   }
 

@@ -194,7 +194,7 @@ export default class Version extends BitObject {
 
       return dependencies.map(dependency => ({
         id: BitId.parse(dependency.id),
-        relativePaths: dependency.relativePaths || [{ sourceRelativePath: dependency.relativePath, destinationRelativePath: dependency.relativePath }]
+        relativePaths: dependency.relativePaths
       }));
     };
 
