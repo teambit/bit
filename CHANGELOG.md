@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- fix the local and remote search
 - support deleting files from a component
 - fix the internal ci-update command where an environment has a tester without a compiler 
 - improved commit, add, export and status outputs
