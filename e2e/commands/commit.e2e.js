@@ -89,7 +89,7 @@ describe('bit commit command', function () {
     });
     it('should not commit another component', () => {
       const commit = () => helper.commitComponent('non-exist-comp');
-      expect(commit).to.throw(`Command failed: ${helper.bitBin} commit non-exist-comp -m commit-message\nerror - Unable to commit. non-exist-comp not found.\nRun \`bit status\` command to list all components available for commit.\n`);
+      expect(commit).to.throw('the component global/non-exist-comp was not found in the bit.map file');
     });
   });
 
@@ -129,10 +129,10 @@ describe('bit commit command', function () {
         helper.createFile('src', 'a2.js', fileA2fixture);
         const fileBfixture = 'import b3 from \'./b3\';import pdackage from \'package2\';import missingfs from \'./missing-fs2\';import untracked from \'./untracked2.js\';';
         helper.createFile('src', 'b.js', fileBfixture);
-        
+
         helper.createFile('src', 'untracked.js');
         helper.createFile('src', 'untracked2.js');
-        
+
         helper.addComponentWithOptions('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js');
 
@@ -212,7 +212,7 @@ describe('bit commit command', function () {
       const depObject = { id: 'utils/is-type', relativePaths: depPaths };
       const depPaths1 = [{ sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' }];
       const depObject1 = { id: 'utils/is-string', relativePaths: depPaths1 };
-      
+
       expect(dependencies[0].relativePaths[0]).to.include(depPaths[0]);
       expect(dependencies[1].relativePaths[0]).to.include(depPaths1[0]);
     });

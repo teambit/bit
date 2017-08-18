@@ -206,7 +206,7 @@ export default class Consumer {
         const recursiveResults = allFilesDpes.map((fileDep) => {
           let relativeToConsumerFileDep = fileDep;
           // Change the dependencies files to be relative to current consumer
-          // We are not just using path.resolve(rootDir, fileDep) because this might not work when running 
+          // We are not just using path.resolve(rootDir, fileDep) because this might not work when running
           // bit commands not from root, because resolve take by default the process.cwd
           if (rootDir) {
             const fullFileDep = path.resolve(this.getPath(), rootDir, fileDep);
@@ -260,11 +260,17 @@ export default class Consumer {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
 
-      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-        return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
+      const component = Component.loadFromFileSystem({ bitDir,
+        consumerBitJson: this.bitJson,
+        componentMap,
+        id: idWithConcreteVersion,
+        consumerPath: this.getPath(),
+        bitMap
+      });
+      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.NESTED) { // no need to resolve dependencies
+        return component;
       }
 
-      const component = Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
       if (component.dependencies && !R.isEmpty(component.dependencies)) return component; // if there is bit.json use if for dependencies.
       const mainFile = componentMap.mainFile;
       component.missingDependencies = {};
@@ -300,9 +306,9 @@ export default class Consumer {
       });
       const packages = traversedDeps.packagesDeps;
       const missingDependencies = traversedDeps.missingDeps;
-
-
       if (!R.isEmpty(missingDependencies)) component.missingDependencies.untrackedDependencies = missingDependencies;
+
+      if (bitMap.hasChanged) await bitMap.write();
 
       // TODO: add the bit/ dependencies as well
       component.dependencies = dependencies;

@@ -196,6 +196,10 @@ export default class Helper {
     fs.outputFileSync(filePath, fixture);
   }
 
+  deleteFile(relativePathToLocalScope: string) {
+    return fs.removeSync(path.join(this.localScopePath, relativePathToLocalScope));
+  }
+
   addComponent(filePaths: string = "bar/foo.js", cwd = this.localScopePath) {
     return this.runCmd(`bit add ${filePaths}`, cwd);
   }
