@@ -60,11 +60,11 @@ export default class Consumer {
   }
 
   get testerId(): ?BitId {
-    return BitId.parse(this.bitJson.testerId, this.scope);
+    return BitId.parse(this.bitJson.testerId);
   }
 
   get compilerId(): ?BitId {
-    return BitId.parse(this.bitJson.compilerId, this.scope);
+    return BitId.parse(this.bitJson.compilerId);
   }
 
   get driver(): Driver {
@@ -370,7 +370,7 @@ export default class Consumer {
   async importSpecificComponents(rawIds: ?string[], cache?: boolean, writeToPath?: string) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
-    const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
+    const bitIds = rawIds.map(raw => BitId.parse(raw));
     const componentDependenciesArr = await this.scope.getManyWithAllVersions(bitIds, cache);
     await this.writeToComponentsDir(componentDependenciesArr, writeToPath);
     return { dependencies: componentDependenciesArr };
@@ -389,7 +389,7 @@ export default class Consumer {
 
   importEnvironment(rawId: ?string, verbose?: bool) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
-    const bitId = BitId.parse(rawId, this.scope.name);
+    const bitId = BitId.parse(rawId);
     return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose })
       .then((envDependencies) => {
         // todo: do we need the environment in bit.map?

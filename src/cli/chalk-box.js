@@ -6,7 +6,7 @@ export const formatNewBit = ({ box, name }: any): string =>
 c.white('     > ') + c.cyan(`${box}/${name}`);
 
 export const formatBit = ({ scope, box, name, version }: any): string =>
-c.white('     > ') + c.cyan(`${scope || '@this'}/${box}/${name} - ${version ? version.toString() : 'latest'}`);
+c.white('     > ') + c.cyan(`${scope ? scope + '/' : ''}${box}/${name} - ${version ? version.toString() : 'latest'}`);
 
 export const formatBitString = (bit: string): string =>
 c.white('     > ') + c.cyan(`${bit}`);

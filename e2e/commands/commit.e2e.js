@@ -150,8 +150,8 @@ describe('bit commit command', function () {
       });
 
       it('Should print the components name with missing dependencies', () => {
-        expect(output).to.have.string('@this/comp/a - latest');
-        expect(output).to.have.string('@this/src/b - latest');
+        expect(output).to.have.string('comp/a - latest');
+        expect(output).to.have.string('src/b - latest');
       });
 
       it('Should print that there is missing dependencies on file system (nested)', () => {

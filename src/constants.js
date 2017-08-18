@@ -84,8 +84,6 @@ export const DEPENDENCIES_DIR = 'dependencies';
 
 export const BIT_EXTERNAL_DIRNAME = 'external';
 
-export const LOCAL_SCOPE_NOTATION = '@this';
-
 export const DEFAULT_REMOTES = {};
 
 export const DEFAULT_DEPENDENCIES = {};

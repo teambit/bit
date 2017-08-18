@@ -12,7 +12,7 @@ export default function buildInScope({ id, environment, save, verbose, scopePath
     return loadScope(scopePath || process.cwd())
       .catch(newErr => Promise.reject(initialError || newErr))
       .then((scope: Scope) => {
-        const bitId = BitId.parse(id, scope.name);
+        const bitId = BitId.parse(id);
         return scope.build({ bitId, environment, save, verbose });
       })
       .catch(e => Promise.reject(e));
@@ -21,7 +21,7 @@ export default function buildInScope({ id, environment, save, verbose, scopePath
   function loadFromConsumer() {
     return loadConsumer()
     .then((consumer) => {
-      const bitId = BitId.parse(id, consumer.scope.name);
+      const bitId = BitId.parse(id);
       return consumer.scope.build({ bitId, environment, save, consumer, verbose });
     });
   }

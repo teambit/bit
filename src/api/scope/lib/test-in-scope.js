@@ -12,7 +12,7 @@ export default function testInScope({ id, environment, save, verbose, scopePath 
     return loadScope(scopePath || process.cwd())
       .catch(newErr => Promise.reject(initialError || newErr))
       .then((scope) => {
-        const bitId = BitId.parse(id, scope.name);
+        const bitId = BitId.parse(id);
         return scope.runComponentSpecs({
           bitId,
           environment,
@@ -27,7 +27,7 @@ export default function testInScope({ id, environment, save, verbose, scopePath 
   function loadFromConsumer() {
     return loadConsumer()
       .then((consumer) => {
-        const bitId = BitId.parse(id, consumer.scope.name);
+        const bitId = BitId.parse(id);
         return consumer.scope.runComponentSpecs({
           consumer,
           bitId,
