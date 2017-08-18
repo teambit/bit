@@ -213,6 +213,10 @@ export default class Helper {
     return this.runCmd(`bit test ${id}`);
   }
 
+  searchComponent(args) {
+    return this.runCmd(`bit search ${args}`);
+  }
+
   showComponent(id: string = "bar/foo") {
     return this.runCmd(`bit show ${id}`);
   }
