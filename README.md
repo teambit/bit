@@ -49,7 +49,7 @@ Bit `add` allows you to track a subset of files or directories as a reusable cod
 
 ```sh
 bit add src/utils/pad-left.js
-# Tracked utils/left pad with files 
+# Tracked utils/pad-left with files 
 ```
 
 You can use glob patterns to track a vast amount of components at once:
