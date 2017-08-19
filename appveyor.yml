@@ -39,38 +39,16 @@ install:
     Install-Product node 6
 
     $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
+
+build_script:
 - npm i
 - npm run build
 - npm install -g
+- ls c:\users\appveyor\.ssh\
+- type config set ssh_key_file c:\users\appveyor\.ssh\id_rsa
 - bit config set ssh_key_file c:\users\appveyor\.ssh\id_rsa
-build_script:
-- ps: >-
-    mv .\package.json .\package.json.bak
-
-    Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Where-Object {$_ -notmatch 'gitbook-cli'} | Set-Content package.json
-
-    .\scripts\node-installer.ps1
-
-    .\scripts\build-dist.ps1
-
-    .\scripts\build-windows-installer.bat
 
 test_script:
-  - npm i
   - npm run test:appveyor
   - npm run e2e-test:appveyor
 
-artifacts:
-- path: distribution/windows/artifacts/*.msi
-  name: Installer
-- path: artifacts\bit.${VERSION}.nupkg
-  name: nupkg
-deploy_script:
-- ps: >-
-    $VERSION= $(node -p -e "require('./package.json').version")
-
-    .\scripts\deploy-windows.ps1 -Repo bit-msi -File bit-${VERSION}-unsigned.msi -Source artifacts\bit-${VERSION}-unsigned.msi -ENVIRONMENT development -ReleaseServer $env:ReleaseServerDevelopment -Method msi
-
-    .\scripts\build-chocolatey.ps1
-
-    .\scripts\deploy-windows.ps1 -Repo bit-nuget -File bit.${VERSION}.nupkg -Source artifacts\bit.${VERSION}.nupkg -ENVIRONMENT development -ReleaseServer $env:ReleaseServerDevelopment -Method nupkg
