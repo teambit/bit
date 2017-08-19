@@ -89,7 +89,7 @@ describe('bit commit command', function () {
     });
     it('should not commit another component', () => {
       const commit = () => helper.commitComponent('non-exist-comp');
-      expect(commit).to.throw(`Command failed: ${helper.bitBin} commit non-exist-comp -m commit-message\nerror - Unable to commit. non-exist-comp not found.\nRun \`bit status\` command to list all components available for commit.\n`);
+      expect(commit).to.throw('the component global/non-exist-comp was not found in the bit.map file');
     });
   });
 
@@ -150,8 +150,8 @@ describe('bit commit command', function () {
       });
 
       it('Should print the components name with missing dependencies', () => {
-        expect(output).to.have.string('@this/comp/a - latest');
-        expect(output).to.have.string('@this/src/b - latest');
+        expect(output).to.have.string('comp/a - latest');
+        expect(output).to.have.string('src/b - latest');
       });
 
       it('Should print that there is missing dependencies on file system (nested)', () => {

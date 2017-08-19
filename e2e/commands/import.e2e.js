@@ -863,7 +863,7 @@ describe('bit import', function () {
       helper.addRemoteScope();
       helper.importComponent('utils/is-string');
     });
-    it('should recognized the modified imported component and print results from its new dependencies', () => {
+    it('should recognize the modified imported component and print results from its new dependencies', () => {
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');

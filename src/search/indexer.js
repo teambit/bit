@@ -1,9 +1,10 @@
 /** @flow */
-import path from 'path';
 import { Readable } from 'stream';
 import { stemmer } from 'porter-stemmer';
 import Component from '../consumer/component';
 import serverlessIndex from './serverless-index';
+import logger from '../logger/logger';
+
 const isWin = require('os').platform() === 'win32';
 
 export type Doc = {
@@ -104,8 +105,9 @@ function index(component: Component, scopePath: string): Promise<Component> {
   try {
     localIndex = serverlessIndex.initializeIndex(scopePath);
     return addToLocalIndex(component);
-  } catch (e) {
-    console.warn(e); // eslint-disable-line // TODO - handle this error
+  } catch (err) {
+    logger.error(`search.indexer found an issue while indexing. Error: ${err}`);
+    console.warn(err); // eslint-disable-line // TODO - handle this error
     return Promise.resolve(component);
   }
 }

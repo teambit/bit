@@ -61,11 +61,11 @@ export default class Consumer {
   }
 
   get testerId(): ?BitId {
-    return BitId.parse(this.bitJson.testerId, this.scope);
+    return BitId.parse(this.bitJson.testerId);
   }
 
   get compilerId(): ?BitId {
-    return BitId.parse(this.bitJson.compilerId, this.scope);
+    return BitId.parse(this.bitJson.compilerId);
   }
 
   get driver(): Driver {
@@ -261,11 +261,17 @@ export default class Consumer {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
 
-      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-        return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
+      const component = Component.loadFromFileSystem({ bitDir,
+        consumerBitJson: this.bitJson,
+        componentMap,
+        id: idWithConcreteVersion,
+        consumerPath: this.getPath(),
+        bitMap
+      });
+      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.NESTED) { // no need to resolve dependencies
+        return component;
       }
 
-      const component = Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
       if (component.dependencies && !R.isEmpty(component.dependencies)) return component; // if there is bit.json use if for dependencies.
       const mainFile = componentMap.mainFile;
       component.missingDependencies = {};
@@ -301,9 +307,9 @@ export default class Consumer {
       });
       const packages = traversedDeps.packagesDeps;
       const missingDependencies = traversedDeps.missingDeps;
-
-
       if (!R.isEmpty(missingDependencies)) component.missingDependencies.untrackedDependencies = missingDependencies;
+
+      if (bitMap.hasChanged) await bitMap.write();
 
       // TODO: add the bit/ dependencies as well
       component.dependencies = dependencies;
@@ -365,7 +371,7 @@ export default class Consumer {
   async importSpecificComponents(rawIds: ?string[], cache?: boolean, writeToPath?: string) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
-    const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
+    const bitIds = rawIds.map(raw => BitId.parse(raw));
     const componentDependenciesArr = await this.scope.getManyWithAllVersions(bitIds, cache);
     await this.writeToComponentsDir(componentDependenciesArr, writeToPath);
     return { dependencies: componentDependenciesArr };
@@ -384,7 +390,7 @@ export default class Consumer {
 
   importEnvironment(rawId: ?string, verbose?: bool) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
-    const bitId = BitId.parse(rawId, this.scope.name);
+    const bitId = BitId.parse(rawId);
     return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose })
       .then((envDependencies) => {
         // todo: do we need the environment in bit.map?

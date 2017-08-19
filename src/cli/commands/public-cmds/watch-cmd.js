@@ -9,6 +9,7 @@ export default class Create extends Command {
   opts = [
     ['v', 'verbose', 'showing npm verbose output for inspection'],
   ];
+  loader = true;
 
   action(args: string[], { verbose } : {
     verbose: ?bool,

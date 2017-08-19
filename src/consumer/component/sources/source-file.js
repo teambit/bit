@@ -9,7 +9,8 @@ export default class SourceFile extends AbstractVinyl {
   // TODO: remove this distFilePath?
   distFilePath: ?string;
 
-  static load(filePath: string, distTarget: string, base: string = consumerPath, consumerPath: string, extendedProps: Object): SourceFile|null {
+  static load(filePath: string, distTarget: string, base: string = consumerPath, consumerPath: string,
+              extendedProps: Object): SourceFile|null {
     try {
       const file = new SourceFile(vinylFile.readSync(filePath, { base, cwd: consumerPath }));
       // TODO: remove this distFilePath?
@@ -21,7 +22,7 @@ export default class SourceFile extends AbstractVinyl {
       if (err.code === 'ENOENT' && err.path) {
         throw new FileSourceNotFound(err.path);
       }
-      return null;
+      throw err;
     }
   }
 

@@ -18,9 +18,11 @@ import IsolatedEnvironment from '../../environment';
 import type { Log } from '../../scope/models/version';
 import { ResolutionException } from '../../scope/exceptions';
 import BitMap from '../bit-map';
-import type { ComponentMap } from '../bit-map/bit-map';
+import type { ComponentMap, ComponentMapFile } from '../bit-map/bit-map';
 import logger from '../../logger/logger';
-
+import loader from '../../cli/loader';
+import { BEFORE_IMPORT_ENVIRONMENT } from '../../cli/loader/loader-messages';
+import FileSourceNotFound from './exceptions/file-source-not-found';
 import {
   DEFAULT_BOX_NAME,
   LATEST_BIT_VERSION,
@@ -313,8 +315,11 @@ export default class Component {
     verbose?: boolean,
     isolated?: boolean,
   }): Promise<?Results> {
+    // TODO: The same function exactly exists in this file under build function
+    // Should merge them to one
     const installEnvironmentsIfNeeded = (): Promise<any> => {
       if (environment) {
+        loader.start(BEFORE_IMPORT_ENVIRONMENT);
         return scope.installEnvironment({
           ids: [this.compilerId, this.testerId],
           consumer,
@@ -437,6 +442,7 @@ export default class Component {
 
     const installEnvironmentIfNeeded = async (): Promise<any> => {
       if (environment) {
+        loader.start(BEFORE_IMPORT_ENVIRONMENT);
         return scope.installEnvironment({
           ids: [this.compilerId],
           consumer,
@@ -546,37 +552,50 @@ export default class Component {
     return this.fromObject(object);
   }
 
-  static loadFromFileSystem(bitDir: string,
-                            consumerBitJson: ConsumerBitJson,
-                            componentMap: ComponentMap,
-                            id: BitId,
-                            consumerPath: string): Component {
+  static loadFromFileSystem({ bitDir, consumerBitJson, componentMap, id, consumerPath, bitMap }: { bitDir: string,
+    consumerBitJson: ConsumerBitJson, componentMap: ComponentMap, id: BitId, consumerPath: string, bitMap: BitMap }):
+  Component {
     let dependencies = [];
     let packageDependencies;
     let bitJson = consumerBitJson;
-    let bitDirFullPath = bitDir || consumerPath;
-    if (bitDir && !fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInPath(bitDir));
-    if (!bitDir && componentMap && componentMap.rootDir) {
-      bitDir = componentMap.rootDir;
-      bitDirFullPath = path.join(consumerPath, bitDir);
-    }
+    const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
+      const sourceFiles = [];
+      const filesKeysToDelete = [];
+      files.forEach((file, key) => {
+        const filePath = path.join(bitDir, file.relativePath);
+        try {
+          const sourceFile = SourceFile
+            .load(filePath, consumerBitJson.distTarget, bitDir, consumerPath, { test: file.test });
+          sourceFiles.push(sourceFile);
+        } catch (err) {
+          if (!(err instanceof FileSourceNotFound)) throw err;
+          logger.warn(`a file ${filePath} will be deleted from bit.map as it does not exist on the file system`);
+          filesKeysToDelete.push(key);
+        }
+      });
+      if (filesKeysToDelete.length && !sourceFiles.length) {
+        throw new Error(`invalid component ${id}, all files were deleted, please remove the component using bit remove command`);
+      }
+      if (filesKeysToDelete.length) {
+        filesKeysToDelete.forEach(key => files.splice(key, 1));
+        bitMap.hasChanged = true;
+      }
+
+      return sourceFiles;
+    };
+    if (!fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInPath(bitDir));
     const files = componentMap.files;
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
-    if (bitDir && bitDir !== consumerPath) {
+    if (bitDir !== consumerPath) {
       bitJson = BitJson.loadSync(bitDir, consumerBitJson);
       if (bitJson) {
         dependencies = this._dependenciesFromWritableObject(bitJson.dependencies);
         packageDependencies = bitJson.packageDependencies;
       }
     }
-
-    const vinylFiles = files.map((file) => {
-      const filePath = path.join(bitDirFullPath, file.relativePath);
-      return SourceFile.load(filePath, consumerBitJson.distTarget, bitDirFullPath, consumerPath, {test: file.test});
-    });
 
     return new Component({
       name: id.name,
@@ -587,7 +606,7 @@ export default class Component {
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,
-      files: vinylFiles || [],
+      files: getLoadedFiles(files),
       dependencies,
       packageDependencies,
     });

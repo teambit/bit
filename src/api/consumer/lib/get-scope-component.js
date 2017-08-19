@@ -12,8 +12,7 @@ export default function getScopeComponent({ id, allVersions, scopePath }:
   function loadFromScope() {
     return loadScope(scopePath || process.cwd())
       .then((scope) => {
-        const localScopeName = scope.name;
-        const bitId = BitId.parse(id, localScopeName);
+        const bitId = BitId.parse(id);
         if (allVersions) { return scope.loadAllVersions(bitId); }
         return scope.loadRemoteComponent(bitId);
       });
@@ -29,7 +28,7 @@ export default function getScopeComponent({ id, allVersions, scopePath }:
   return loadConsumer()
     .then((consumer) => {
       const localScopeName = consumer.scope.name;
-      const bitId = BitId.parse(id, localScopeName);
+      const bitId = BitId.parse(id);
       if (!bitId.isLocal(localScopeName)) {
         if (allVersions) {
           return Promise.reject(new Error('cant list all versions of a remote scope'));

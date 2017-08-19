@@ -17,11 +17,7 @@
     "build": "babel src specs -d dist",
     "watch": "babel --watch bin src specs -d dist --source-maps",
     "build-debug": "babel src specs -d dist --source-maps",
-    "prepublishOnly": "npm run clean && npm run build",
-    "docs:prepare": "gitbook install",
-    "docs:watch": "npm run docs:prepare && gitbook serve",
-    "docs:build": "npm run docs:prepare && rm -rf _book && gitbook build",
-    "docs:publish": "npm run docs:build && cd _book && git init && git commit --allow-empty -m 'Update docs' && git checkout -b gh-pages && git add . && git commit -am 'Update docs' && git push git@github.com:teambit/bit gh-pages --force"
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "bin": {
     "bit": "bin/bit.js"
@@ -62,7 +58,7 @@
     "regenerator-runtime": "^0.10.5",
     "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",
-    "search-index": "^0.9.15",
+    "search-index": "^0.13.0",
     "semver": "^5.3.0",
     "serialize-error": "^2.1.0",
     "ssh2": "^0.5.4",
@@ -95,7 +91,6 @@
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-react": "^6.7.1",
     "flow-bin": "^0.41.0",
-    "gitbook-cli": "^2.3.0",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-clean": "^0.3.2",
