@@ -271,6 +271,33 @@ describe('bit status command', function () {
       expect(output).to.not.have.string('components/utils/is-type/utils/is-type.js');
     });
   });
+  describe('when a component with multi files and dependency is imported', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      helper.commitComponent('utils/is-type');
+
+      const isStringInternalFixture = "import isType from './is-type'; module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createFile('utils', 'is-string-internal.js', isStringInternalFixture);
+      const isStringFixture = "import iString from './is-string-internal';";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponentWithOptions('utils/is-string.js utils/is-string-internal.js', { m: 'utils/is-string.js', i: 'utils/is-string' });
+      helper.commitComponent('utils/is-string');
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-string');
+      output = helper.runCmd('bit status');
+    });
+    it('should not show imported component as modified', () => {
+      expect(output.includes('no modified components')).to.be.true;
+    });
+  });
   describe('when a component is exported, modified and the project cloned somewhere else', () => {
     let output;
     before(() => {
