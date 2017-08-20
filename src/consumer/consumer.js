@@ -203,14 +203,23 @@ export default class Consumer {
           return { componentsDeps: {}, packagesDeps, missingDeps };
         }
         const rootDir = bitMap.getRootDirOfComponent(componentId);
+        const rootDirFullPath = rootDir ? path.join(this.getPath(), rootDir) : this.getPath();
         const recursiveResults = allFilesDpes.map((fileDep) => {
           let relativeToConsumerFileDep = fileDep;
           // Change the dependencies files to be relative to current consumer
           // We are not just using path.resolve(rootDir, fileDep) because this might not work when running
           // bit commands not from root, because resolve take by default the process.cwd
           if (rootDir) {
-            const fullFileDep = path.resolve(this.getPath(), rootDir, fileDep);
+            const fullFileDep = path.resolve(rootDirFullPath, fileDep);
+            // const fullFileDep = path.resolve(rootDirFullPath, fileDep);
+            // relativeToConsumerFileDep = path.relative(rootDirFullPath, fullFileDep);
             relativeToConsumerFileDep = path.relative(this.getPath(), fullFileDep);
+            // In case it's another file of the same component we need it to be relative to the rootDir of the current component (and not to consumer)
+            // there for We use the original fileDep.
+            // We need it to be relative to the rootDir because this is how it will be represented in the tree since we passed this root dir to madge earlier
+            if (relativeToConsumerFileDep.startsWith(rootDir)) {
+              relativeToConsumerFileDep = fileDep;
+            }
           }
           return traverseDepsTreeRecursive(tree, relativeToConsumerFileDep, entryComponentId, fileDep);
         });
@@ -238,7 +247,7 @@ export default class Consumer {
 
       if (!destination) {
         const depRootDir = bitMap.getRootDirOfComponent(componentId);
-        destination = depRootDir ? path.relative(depRootDir, file) : file;
+        destination = depRootDir && file.startsWith(depRootDir) ? path.relative(depRootDir, file) : file;
       }
 
       const currComponentsDeps = { [componentId]: [{ sourceRelativePath: originFilePath || file, destinationRelativePath: destination }] };
@@ -271,7 +280,6 @@ export default class Consumer {
         return component;
       }
 
-      if (component.dependencies && !R.isEmpty(component.dependencies)) return component; // if there is bit.json use if for dependencies.
       const mainFile = componentMap.mainFile;
       component.missingDependencies = {};
       // Check if we already calculate the dependency tree (because it is another component dependency)
