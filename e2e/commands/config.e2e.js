@@ -7,7 +7,7 @@ describe('bit config', function () {
   this.timeout(0);
   const helper = new Helper();
 
-  describe.only('set, get, delete configs', () => {
+  describe('set, get, delete configs', () => {
     let setOutput;
     let getOutput;
     let delOutput;
