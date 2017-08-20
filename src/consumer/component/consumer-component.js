@@ -555,7 +555,6 @@ export default class Component {
   static loadFromFileSystem({ bitDir, consumerBitJson, componentMap, id, consumerPath, bitMap }: { bitDir: string,
     consumerBitJson: ConsumerBitJson, componentMap: ComponentMap, id: BitId, consumerPath: string, bitMap: BitMap }):
   Component {
-    let dependencies = [];
     let packageDependencies;
     let bitJson = consumerBitJson;
     const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
@@ -592,7 +591,6 @@ export default class Component {
     if (bitDir !== consumerPath) {
       bitJson = BitJson.loadSync(bitDir, consumerBitJson);
       if (bitJson) {
-        dependencies = this._dependenciesFromWritableObject(bitJson.dependencies);
         packageDependencies = bitJson.packageDependencies;
       }
     }
@@ -607,8 +605,7 @@ export default class Component {
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,
       files: getLoadedFiles(files),
-      dependencies,
-      packageDependencies,
+      packageDependencies
     });
   }
 
