@@ -50,7 +50,8 @@ export default class Environment {
 
   importDependencies(component: Component): Promise<Component[]> {
     if (!component.dependencies || !component.dependencies.length) return Promise.resolve([]);
-    return this.scope.getMany(component.dependencies).then((componentDependenciesArr) => {
+    const depsIds = component.dependencies.map(dep => dep.id);
+    return this.scope.getMany(depsIds).then((componentDependenciesArr) => {
       const components = flattenDependencies(componentDependenciesArr);
       return this._writeToEnvironmentDir(components);
     });
