@@ -2,10 +2,12 @@ version: 1.0.{build}
 image: Visual Studio 2015
 
 build_script:
-  - "npm i"
-  - "npm run build"
-  - "npm install -g"
-  - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
+  - ps: >-
+      mv .\package.json .\package.json.bak
+      Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Where-Object {$_ -notmatch 'gitbook-cli'} | Set-Content package.json
+      .\scripts\node-installer.ps1
+      .\scripts\build-dist.ps1
+      .\scripts\build-windows-installer.bat
 
 environment:
     priv_key:
@@ -38,6 +40,10 @@ install:
   - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
   - ps: Install-Product node 6
+  - "npm i"
+  - "npm run build"
+  - "npm install -g"
+  - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
 
 test_script:
   - npm run test:appveyor
@@ -50,12 +56,6 @@ artifacts:
   name: nupkg
 
 deploy_script:
-- ps: >-
-    mv .\package.json .\package.json.bak
-    Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Where-Object {$_ -notmatch 'gitbook-cli'} | Set-Content package.json
-    .\scripts\node-installer.ps1
-    .\scripts\build-dist.ps1
-    .\scripts\build-windows-installer.bat
 - ps: >-
     $VERSION= $(node -p -e "require('./package.json').version")
     .\scripts\deploy-windows.ps1 -Repo bit-msi -File bit-${VERSION}-unsigned.msi -Source artifacts\bit-${VERSION}-unsigned.msi -ENVIRONMENT development -ReleaseServer $env:ReleaseServerDevelopment -Method msi
