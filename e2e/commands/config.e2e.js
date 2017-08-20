@@ -12,7 +12,7 @@ describe('bit config', function () {
     helper = new Helper();
   });
 
-  it.only('should not throw an error (on linux)', () => {
+  it('should not throw an error (on linux)', () => {
     helper.reInitLocalScope();
     const output = helper.runCmd('bit config');
     expect(output).to.be.equal('\n');
