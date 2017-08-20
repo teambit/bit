@@ -7,7 +7,7 @@ build_script:
   - "npm run build"
   - "npm install -g"
   - "ls c:\\users\\appveyor\\.ssh\\"
-  - "type config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
+  - "type  c:\\users\\appveyor\\.ssh\\id_rsa"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
 environment:
   matrix:
