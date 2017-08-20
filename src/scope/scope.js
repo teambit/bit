@@ -737,6 +737,7 @@ export default class Scope {
     const componentsObjects = await this.sources.getMany(componentsToUpdate);
     const componentsToUpdateP = componentsObjects.map(async (componentObjects) => {
       const component = componentObjects.component;
+      if (!component) return null;
       const latestVersion = await component.loadVersion(component.latest(), this.objects);
       let wasUpdated = false;
       latestVersion.dependencies.forEach((dependency) => {
