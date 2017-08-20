@@ -37,7 +37,7 @@ describe('bit search', function () {
   });
   describe('in the hub', () => {
     it('should find the flow compiler', () => {
-      const output = helper.searchComponent('flow -s bit.env');
+      const output = helper.searchComponent('flow -s bit.envs');
       expect(output).to.have.string('compilers/flow');
     });
   });

@@ -20,7 +20,7 @@ describe('bit test command', function () {
   let clonedScopePath;
   before(() => {
     helper.reInitLocalScope();
-    helper.importTester('bit.env/testers/mocha');
+    helper.importTester('bit.envs/testers/mocha');
     clonedScopePath = helper.cloneLocalScope();
   });
   after(() => {
