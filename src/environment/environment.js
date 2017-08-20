@@ -65,14 +65,6 @@ export default class Environment {
     }));
   }
 
-  bindFromDriver(component: Component) {
-    const driver = Driver.load(component.lang).getDriver(false);
-    if (driver) {
-      return driver.bind({ projectRoot: this.path });
-    }
-    return Promise.resolve();
-  }
-
   /**
    * import a component end to end. Including importing the dependencies and installing the npm
    * packages.
@@ -85,7 +77,6 @@ export default class Environment {
       return this.importDependencies(component).then((dependencies) => {
         const components = dependencies.concat(component);
         return this.installNpmPackages(components)
-          .then(() => this.bindFromDriver(component))
           .then(() => component);
       });
     });
