@@ -3,6 +3,7 @@ branches:
     - master
     - windowsNode
 build_script:
+  - "echo $env:priv_key"
   - "npm i"
   - "npm run build"
   - "npm install -g"
