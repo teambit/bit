@@ -19,7 +19,7 @@ environment:
 image: "Visual Studio 2015"
 install:
   - ps: $fileContent = "-----BEGIN RSA PRIVATE KEY-----`n"
-  - ps: $fileContent += $env:priv_key.Replace(' ', "`n")
+  - ps: $fileContent += $env:priv_key
   - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
   -
