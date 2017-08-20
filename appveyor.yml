@@ -6,7 +6,6 @@ build_script:
   - "npm run build"
   - "npm install -g"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
-  - npm
 
 environment:
     priv_key:
