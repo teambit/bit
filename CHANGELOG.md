@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix the internal ci-update command where an environment has a tester without a compiler 
 - improved commit, add, export and status outputs
 - improved bit help
+- fix bit config command for linux
 
 ## [0.10.5] - 2017-08-16
 - improved commit, add, export and status outputs

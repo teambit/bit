@@ -17,7 +17,7 @@ function getDirectory(): string {
 }
 
 function getCacheDirectory(): string {
-  if (process.platform === 'darwin') {
+  if (process.platform === 'darwin' || process.platform === 'linux') {
     return path.join(userHome, 'Library', 'Caches', 'Bit');
   }
 
