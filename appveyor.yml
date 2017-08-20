@@ -5,9 +5,8 @@ build_script:
   - "npm i"
   - "npm run build"
   - "npm install -g"
-  - "ls c:\\users\\appveyor\\.ssh\\"
-  - "type config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
+  - npm
 
 environment:
     priv_key:
@@ -42,3 +41,7 @@ install:
   - ps: "ls c:\\users\\appveyor\\.ssh\\"
   - ps: "type  c:\\users\\appveyor\\.ssh\\id_rsa"
   - ps: Install-Product node 6
+
+test_script:
+  - npm run test:appveyor
+  - npm run e2e-test:appveyor
