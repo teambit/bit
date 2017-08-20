@@ -4,7 +4,12 @@ image: Visual Studio 2015
 branches:
   only:
     - master
-    - windowsNode
+
+build_script:
+  - "npm i"
+  - "npm run build"
+  - "npm install -g"
+  - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
 
 environment:
     priv_key:
@@ -37,12 +42,6 @@ install:
   - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
   - ps: Install-Product node 6
-
-build_script:
-  - "npm i"
-  - "npm run build"
-  - "npm install -g"
-  - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
 
 test_script:
   - npm run test:appveyor
