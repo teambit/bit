@@ -1,9 +1,6 @@
 version: 1.0.{build}
 image: Visual Studio 2015
 
-branches:
-  only:
-    - master
 
 build_script:
   - "npm i"
