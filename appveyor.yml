@@ -1,6 +1,36 @@
+version: 1.0.{build}
+image: Visual Studio 2015
+
 environment:
   priv_key:
     secure: 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
+   token:
+      secure: 0a4USjGKxWeE8xz4tO5MnQ==
+    releaseUser:
+      secure: 0a4USjGKxWeE8xz4tO5MnQ==
+    releasePassword:
+      secure: tR01IIjMw35fBOFhTQd9jw==
+    repoUser:
+      secure: B5rIxIs4O8RRe0ml9e87+A==
+    repoPassword:
+      secure: tR01IIjMw35fBOFhTQd9jw==
+    ruby_version:
+      secure: k41GeNhYWLfPG/Fir8TGhA==
+    ENVIRONMENT:
+      secure: 0MX/69qK7Z1yjELPC8wOCw==
+    ReleaseServerDevelopment:
+      secure: UHrmNjH6IaU79OhRU9ina1f5jPX1EXBlsm9w+QfqWA/jNLPx4t+XMottVjJHZVtr
+    ReleaseServerStable:
+      secure: y7mz8E9mkcwCaCVvFs9WX+5k8jg+t8HwFpZhMYlYEfZhdnFH1U7gWCJTi+zVLiT9
+    matrix:
+    - ruby_version: Ruby23-x64
+build_script:
+  - "npm i"
+  - "npm run build"
+  - "npm install -g"
+  - "ls c:\\users\\appveyor\\.ssh\\"
+  - "type config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
+  - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
 
 install:
   - ps: $fileContent = "-----BEGIN RSA PRIVATE KEY-----`n"
