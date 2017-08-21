@@ -191,11 +191,11 @@ describe('bit export command', function () {
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
 
-      helper.createFile(path.join('components', 'bar', 'foo', 'bar'), 'foo.js', 'console.log(v2)');
+      helper.createFile(path.join('components', 'bar', 'foo', 'bar'), 'foo.js', 'console.log("got foo v2")');
       helper.commitComponentBarFoo();
       helper.exportComponent(`${helper.remoteScope}/bar/foo`); // v2
 
-      helper.createFile(path.join('components', 'bar', 'foo', 'bar'), 'foo.js', 'console.log(v3)');
+      helper.createFile(path.join('components', 'bar', 'foo', 'bar'), 'foo.js', 'console.log("got foo v3")');
       helper.commitComponentBarFoo();
       helper.exportComponent(`${helper.remoteScope}/bar/foo`); // v3
     });
@@ -277,6 +277,32 @@ describe('bit export command', function () {
 
       helper.commitComponentBarFoo(); // v3
       helper.exportComponent(`${helper.remoteScope}/bar/foo`);
+    });
+    it('should export it with no errors', () => {
+      const output = helper.listRemoteScope();
+      expect(output.includes('Total 1 components')).to.be.true;
+      expect(output.includes('bar/foo')).to.be.true;
+      expect(output.includes('3')).to.be.true; // this is the version
+    });
+  });
+
+  describe('exporting version 3 of a component as an author', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createComponent('bar', 'foo.js', 'console.log("got foo v1")');
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo(); // v1
+      helper.exportComponent('bar/foo');
+
+      helper.createComponent('bar', 'foo.js', 'console.log("got foo v2")');
+      helper.commitComponentBarFoo(); // v2
+      helper.exportComponent('bar/foo');
+
+      helper.createComponent('bar', 'foo.js', 'console.log("got foo v3")');
+      helper.commitComponentBarFoo(); // v3
+      helper.exportComponent('bar/foo');
     });
     it('should export it with no errors', () => {
       const output = helper.listRemoteScope();
