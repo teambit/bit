@@ -59,6 +59,12 @@ const paintTest = (test) => {
   return test.pass ? successTest(test) : failureTest(test);
 };
 
+// Failures which are not on tests, for example on before blocks
+const paintGeneralFailure = (failure) => {
+  return `❌   ${c.white(failure.title)} - ${c.cyan(`${failure.duration}ms`)}
+    ${c.red(failure.err.message)}`;
+};
+
 const paintStats = (results) => {
   const statsHeader = results.pass ? c.underline.green('\ntests passed') : c.underline.red('\ntests failed');
   const totalDuration = results.stats && results.stats.duration ?
@@ -67,18 +73,22 @@ const paintStats = (results) => {
 };
 
 export const paintSpecsResults = (results: SpecsResults[]): string => {
-  return results.map(specResult => (specResult.tests)? paintStats(specResult) + specResult.tests.map(paintTest).join('\n') :'');
-}
+  return results.map((specResult) => {
+    const stats = paintStats(specResult);
+    const tests = (specResult.tests) ? `${specResult.tests.map(paintTest).join('\n')}\n` : '';
+    const failures = (specResult.failures) ? `${specResult.failures.map(paintGeneralFailure).join('\n')}\n` : '';
+    const final = tests || failures ? (stats + tests + failures) : '';
+    return final;
+  });
+};
 
 
 export const paintAllSpecsResults = (results: Array<*>): string => {
   if (results.length === 0) return c.red('There are no components to test');
   return results.map((result) => {
-    if (result.missingTester) return paintMissingTester(result.component)
+    if (result.missingTester) return paintMissingTester(result.component);
     const componentId = c.bold(`${result.component.box}/${result.component.name}: `);
     if (result.specs) return componentId + paintSpecsResults(result.specs);
     return c.bold(`There are no tests for ${componentId}`);
   }).join('\n');
 };
-
-
