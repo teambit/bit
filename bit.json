@@ -1,17 +1,11 @@
 {
-    "sources": {
-        "impl": "impl.js",
-        "spec": "spec.js"
-    },
     "env": {
         "compiler": "none",
         "tester": "none"
     },
-    "dependencies": {
-    },
+    "dependencies": {},
     "structure": "components/{namespace}/{name}",
     "dist": {
-        "target": "dist",
-        "entry": ""
+        "target": "dist"
     }
 }

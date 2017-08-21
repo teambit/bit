@@ -111,10 +111,6 @@ export default class AbstractBitJson {
 
     return filterObject({
       lang: this.lang,
-      sources: {
-        impl: this.getImplBasename(),
-        spec: this.getSpecBasename(),
-      },
       env: {
         compiler: this.compilerId,
         tester: this.testerId,
