@@ -38,7 +38,7 @@ export default class Status extends Command {
       });
 
       if (!missing) return formatNewBit(component) + '... ' + chalk.green('ok');
-      return formatNewBit(component)  + '... ' + chalk.red('missing dependencies') + formatMissing(missing);
+      return formatNewBit(component) + '... ' + chalk.red('missing dependencies') + formatMissing(missing);
     }
 
     const newComponentsOutput = immutableUnshift(

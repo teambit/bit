@@ -50,7 +50,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit'],
   [ MissingDependencies, (err) => {
     const missingDepsColored = missingDepsTemplate(err.components);
-    return `fatal: The following dependencies not found:\n${missingDepsColored}`;
+    return `fatal: following component dependencies were not found\n${missingDepsColored}`;
   }],
   [ NothingToImport, () => 'there is nothing to import'],
   [ InvalidIdChunk, err => `invalid id part in "${chalk.bold(err.id)}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]`],
