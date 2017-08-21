@@ -50,6 +50,11 @@ const failureTest = (test) => {
     ${c.red(test.err.message)}`;
 };
 
+const paintMissingTester = (component): string => {
+  const componentId = c.bold(`${component.box}/${component.name}`);
+  return c.bold.red(`There is no tester for ${componentId}`);
+};
+
 const paintTest = (test) => {
   return test.pass ? successTest(test) : failureTest(test);
 };
@@ -69,8 +74,11 @@ export const paintSpecsResults = (results: SpecsResults[]): string => {
 export const paintAllSpecsResults = (results: Array<*>): string => {
   if (results.length === 0) return c.red('There are no components to test');
   return results.map((result) => {
+    if (result.missingTester) return paintMissingTester(result.component)
     const componentId = c.bold(`${result.component.box}/${result.component.name}: `);
     if (result.specs) return componentId + paintSpecsResults(result.specs);
     return c.bold(`There are no tests for ${componentId}`);
   }).join('\n');
 };
+
+
