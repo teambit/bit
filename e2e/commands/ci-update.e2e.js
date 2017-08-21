@@ -1,8 +1,4 @@
-// covers also init, create, commit, modify commands
-
 import { expect } from 'chai';
-import path from 'path';
-import fs from 'fs-extra';
 import Helper from '../e2e-helper';
 
 const fileSpecFixture = testShouldPass => `const expect = require('chai').expect;
