@@ -554,10 +554,8 @@ export default class Consumer {
   }
 
   static async createWithExistingScope(consumerPath: string, scope: Scope): Promise<Consumer> {
-    console.log('createWithExistingScope', consumerPath);
     if (pathHasConsumer(consumerPath)) return Promise.reject(new ConsumerAlreadyExists());
     const bitJson = await ConsumerBitJson.ensure(consumerPath);
-    console.log('wrote bit.json');
     return new Consumer({
       projectPath: consumerPath,
       created: true,
