@@ -211,7 +211,7 @@ describe('bit import', function () {
         expect(localConsumerFiles).to.include(expectedLocation);
         const linkFilePath = path.join(helper.localScopePath, expectedLocation);
         const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
-        const requireLink = `dependencies/dep/level0/${helper.remoteScope}/1/index`;
+        const requireLink = `./dependencies/dep/level0/${helper.remoteScope}/1/index`;
         expect(linkFilePathContent).to.have.string(`module.exports = require('${requireLink}');`, 'link file point to the wrong place');
       });
 

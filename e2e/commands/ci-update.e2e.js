@@ -17,7 +17,7 @@ describe('bit ci-update', function () {
     helper.destroyEnv();
   });
 
-  describe.skip('component with nested dependencies', () => {
+  describe('component with nested dependencies', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();

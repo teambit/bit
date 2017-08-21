@@ -20,7 +20,7 @@ function runAndUpdateCI({ id, scopePath }: { id: string, scopePath: string }): P
 
   try {
     // define options
-    const environment = true;
+    const environment = false; // the environments are installed automatically when missing
     const save = true;
     const verbose = true;
 
