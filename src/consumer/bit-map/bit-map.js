@@ -89,30 +89,32 @@ export default class BitMap {
     });
   }
 
+  // todo - need to move to bit-javascript
   _searchMainFile(baseMainFile: string, files: ComponentMapFile[]) {
     let newBaseMainFile;
     // Search the relativePath of the main file
     let mainFileFromFiles = R.find(R.propEq('relativePath', baseMainFile))(files);
     // Search the base name of the main file and transfer to relativePath
     if (!mainFileFromFiles) {
-      mainFileFromFiles = R.find(R.propEq('name', baseMainFile))(files) || R.find(R.propEq('name', DEFAULT_INDEX_TS_NAME))(files); //search for index.ts if didnt find index.js
+      mainFileFromFiles = R.find(R.propEq('name', baseMainFile))(files);
       newBaseMainFile = mainFileFromFiles ? mainFileFromFiles.relativePath : baseMainFile;
     }
-    return { mainFileFromFiles, baseMainFile:newBaseMainFile ? newBaseMainFile : baseMainFile };
+    return { mainFileFromFiles, baseMainFile: newBaseMainFile || baseMainFile };
   }
   _getMainFile(mainFile: string, componentMap: ComponentMap) {
     const files = componentMap.files.filter(file => !file.test);
     // Take the file path as main in case there is only one file
     if (!mainFile && files.length === 1) return files[0].relativePath;
 
-    let { mainFileFromFiles, baseMainFile } = this._searchMainFile(mainFile, files)
-    || this._searchMainFile(DEFAULT_INDEX_NAME, files)
-    || this._searchMainFile(DEFAULT_INDEX_TS_NAME, files);
+    // search main file (index.js or index.ts in case no ain file was entered - move to bit-javascript
+    let searchResult = this._searchMainFile(mainFile, files)
+    if (!searchResult.mainFileFromFiles) searchResult = this._searchMainFile(DEFAULT_INDEX_NAME, files)
+    if (!searchResult.mainFileFromFiles) searchResult = this._searchMainFile(DEFAULT_INDEX_TS_NAME, files);
 
 
     // When there is more then one file and the main file not found there
-    if (!mainFileFromFiles) throw new MissingMainFile(baseMainFile, files.map((file) => file.relativePath));
-    return baseMainFile;
+    if (!searchResult.mainFileFromFiles) throw new MissingMainFile(searchResult.baseMainFile, files.map((file) => file.relativePath));
+    return searchResult.baseMainFile;
   }
 
   addDependencyToParent(parent: BitId, dependency: string): void {
