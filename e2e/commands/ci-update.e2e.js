@@ -14,7 +14,7 @@ describe('bit ci-update', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    // helper.destroyEnv();
+    helper.destroyEnv();
   });
 
   describe.skip('component with nested dependencies', () => {
