@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - improved commit, add, export and status outputs
 - improved bit help
 - fix bit config command for linux
+- improve readme
+- improve outputs
+- improve windows support for import command
 
 ## [0.10.5] - 2017-08-16
 - improved commit, add, export and status outputs

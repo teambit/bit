@@ -174,7 +174,7 @@ export default class Component extends BitObject {
               version: componentVersion.version,
               scope: this.scope,
               lang: this.lang,
-              mainFile: version.mainFile ? version.mainFile: null,
+              mainFile: version.mainFile ? path.normalize(version.mainFile): null,
               compilerId: version.compiler,
               testerId: version.tester,
               dependencies: version.dependencies // todo: understand why sometimes the dependencies are not parsed

@@ -1,6 +1,7 @@
 // covers also ci-update command
 
 import fs from 'fs-extra';
+import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
@@ -38,6 +39,7 @@ describe('bit test command', function () {
       expect(output).to.have.string('There are no tests for utils/is-type');
     });
   });
+
   describe('when tests are passed', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
@@ -86,5 +88,27 @@ describe('bit test command', function () {
       const output = helper.runCmd(`bit ci-update ${helper.remoteScope}/utils/is-type`, helper.remoteScopePath);
       expect(output).to.have.string('tests passed');
     });
+  });
+});
+describe('bit component with no tester', function () {
+  this.timeout(0);
+  const helper = new Helper();
+  beforeEach(() => {
+    helper.reInitLocalScope();
+  });
+  after(() => {
+    helper.destroyEnv();
+  });
+  it('Should return not tester message when running test on all components', () => {
+    helper.createComponent('bar', 'foo.js');
+    helper.addComponent(path.join('bar', 'foo.js'));
+    const output = helper.testComponent();
+    expect(output).to.have.string('There is no tester for bar/foo');
+  });
+  it('Should return not tester message when running test on single component', () => {
+    helper.createComponent('bar', 'foo.js');
+    helper.addComponent(path.join('bar', 'foo.js'));
+    const output = helper.testComponent('bar/foo');
+    expect(output).to.have.string('There is no tester for bar/foo');
   });
 });

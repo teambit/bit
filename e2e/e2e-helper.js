@@ -210,7 +210,7 @@ export default class Helper {
   }
 
   testComponent(id) {
-    return this.runCmd(`bit test ${id}`);
+    return this.runCmd(`bit test ${ id ? id : ''}`);
   }
 
   searchComponent(args) {
