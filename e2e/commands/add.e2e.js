@@ -52,7 +52,34 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('test/foo2');
     });
-
+    it('Should add bar with index.ts as mainfile if no main file specified', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'index.ts');
+      helper.addComponentWithOptions('bar', { 'n': 'test' });
+      const bitMap = helper.readBitMap();
+      const mainFile = bitMap['test/bar'].mainFile;
+      expect(bitMap).to.have.property('test/bar');
+      expect(mainFile).to.equal(path.normalize('bar/index.ts'));
+    });
+    it('Should add bar with index.js as mainfile if no main file specified', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'index.js');
+      helper.addComponentWithOptions('bar', { 'n': 'test' });
+      const bitMap = helper.readBitMap();
+      const mainFile = bitMap['test/bar'].mainFile;
+      expect(bitMap).to.have.property('test/bar');
+      expect(mainFile).to.equal(path.normalize('bar/index.js'));
+    });
+    it('Should add bar with index.js as mainfile if no main file specified and dir hase both index.ts and index.js', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'index.js');
+      helper.createComponent('bar', 'index.ts');
+      helper.addComponentWithOptions('bar', { 'n': 'test' });
+      const bitMap = helper.readBitMap();
+      const mainFile = bitMap['test/bar'].mainFile;
+      expect(bitMap).to.have.property('test/bar');
+      expect(mainFile).to.equal(path.normalize('bar/index.js'));
+    });
     it('Should throw error when no index file is found', () => {
       const file1= 'foo1.js'
       const file2= 'foo2.js'
@@ -60,9 +87,8 @@ describe('bit add command', function () {
       const file2Path = path.normalize(`bar/${file2}`);
       helper.createComponent('bar', file1);
       helper.createComponent('bar', file2);
-
       const addCmd = () => helper.addComponentWithOptions('bar', { 'n': 'test' });
-      expect(addCmd).to.throw(`fatal: the main file index.js was not found in the files list ${file1Path}, ${file2Path}`);
+      expect(addCmd).to.throw(`Command failed: ${helper.bitBin} add bar -n test\nfatal: the main file index.ts was not found in the files list ${file1Path}, ${file2Path}`);
     });
 
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
