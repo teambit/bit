@@ -1,6 +1,7 @@
 version: 1.0.{build}
 image: Visual Studio 2015
 
+skip_branch_with_pr: true
 
 environment:
   priv_key:
