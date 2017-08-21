@@ -7,7 +7,7 @@ import { BEFORE_RESET_ACTION } from '../../../cli/loader/loader-messages';
 export default function reset({ id }: { id: string }) {
   return loadConsumer()
     .then((consumer) => {
-      const bitId = BitId.parse(id, consumer.scope.name);
+      const bitId = BitId.parse(id);
       loader.start(BEFORE_RESET_ACTION);
       return consumer.scope.reset({ bitId, consumer })
         .then((c: ComponentDependencies) => {

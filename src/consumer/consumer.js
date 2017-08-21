@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
+import normalize from 'normalize-path';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import {
   ConsumerAlreadyExists,
@@ -60,11 +61,11 @@ export default class Consumer {
   }
 
   get testerId(): ?BitId {
-    return BitId.parse(this.bitJson.testerId, this.scope);
+    return BitId.parse(this.bitJson.testerId);
   }
 
   get compilerId(): ?BitId {
-    return BitId.parse(this.bitJson.compilerId, this.scope);
+    return BitId.parse(this.bitJson.compilerId);
   }
 
   get driver(): Driver {
@@ -203,14 +204,23 @@ export default class Consumer {
           return { componentsDeps: {}, packagesDeps, missingDeps };
         }
         const rootDir = bitMap.getRootDirOfComponent(componentId);
+        const rootDirFullPath = rootDir ? path.join(this.getPath(), rootDir) : this.getPath();
         const recursiveResults = allFilesDpes.map((fileDep) => {
           let relativeToConsumerFileDep = fileDep;
           // Change the dependencies files to be relative to current consumer
-          // We are not just using path.resolve(rootDir, fileDep) because this might not work when running 
+          // We are not just using path.resolve(rootDir, fileDep) because this might not work when running
           // bit commands not from root, because resolve take by default the process.cwd
           if (rootDir) {
-            const fullFileDep = path.resolve(this.getPath(), rootDir, fileDep);
+            const fullFileDep = path.resolve(rootDirFullPath, fileDep);
+            // const fullFileDep = path.resolve(rootDirFullPath, fileDep);
+            // relativeToConsumerFileDep = path.relative(rootDirFullPath, fullFileDep);
             relativeToConsumerFileDep = path.relative(this.getPath(), fullFileDep);
+            // In case it's another file of the same component we need it to be relative to the rootDir of the current component (and not to consumer)
+            // there for We use the original fileDep.
+            // We need it to be relative to the rootDir because this is how it will be represented in the tree since we passed this root dir to madge earlier
+            if (relativeToConsumerFileDep.startsWith(rootDir)) {
+              relativeToConsumerFileDep = fileDep;
+            }
           }
           return traverseDepsTreeRecursive(tree, relativeToConsumerFileDep, entryComponentId, fileDep);
         });
@@ -238,7 +248,7 @@ export default class Consumer {
 
       if (!destination) {
         const depRootDir = bitMap.getRootDirOfComponent(componentId);
-        destination = depRootDir ? path.relative(depRootDir, file) : file;
+        destination = depRootDir && file.startsWith(depRootDir) ? path.relative(depRootDir, file) : file;
       }
 
       const currComponentsDeps = { [componentId]: [{ sourceRelativePath: originFilePath || file, destinationRelativePath: destination }] };
@@ -260,12 +270,17 @@ export default class Consumer {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
 
-      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-        return Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
+      const component = Component.loadFromFileSystem({ bitDir,
+        consumerBitJson: this.bitJson,
+        componentMap,
+        id: idWithConcreteVersion,
+        consumerPath: this.getPath(),
+        bitMap
+      });
+      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.NESTED) { // no need to resolve dependencies
+        return component;
       }
 
-      const component = Component.loadFromFileSystem(bitDir, this.bitJson, componentMap, idWithConcreteVersion, this.getPath());
-      if (component.dependencies && !R.isEmpty(component.dependencies)) return component; // if there is bit.json use if for dependencies.
       const mainFile = componentMap.mainFile;
       component.missingDependencies = {};
       // Check if we already calculate the dependency tree (because it is another component dependency)
@@ -300,9 +315,9 @@ export default class Consumer {
       });
       const packages = traversedDeps.packagesDeps;
       const missingDependencies = traversedDeps.missingDeps;
-
-
       if (!R.isEmpty(missingDependencies)) component.missingDependencies.untrackedDependencies = missingDependencies;
+
+      if (bitMap.hasChanged) await bitMap.write();
 
       // TODO: add the bit/ dependencies as well
       component.dependencies = dependencies;
@@ -364,7 +379,7 @@ export default class Consumer {
   async importSpecificComponents(rawIds: ?string[], cache?: boolean, writeToPath?: string) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
-    const bitIds = rawIds.map(raw => BitId.parse(raw, this.scope.name));
+    const bitIds = rawIds.map(raw => BitId.parse(raw));
     const componentDependenciesArr = await this.scope.getManyWithAllVersions(bitIds, cache);
     await this.writeToComponentsDir(componentDependenciesArr, writeToPath);
     return { dependencies: componentDependenciesArr };
@@ -383,7 +398,7 @@ export default class Consumer {
 
   importEnvironment(rawId: ?string, verbose?: bool) {
     if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
-    const bitId = BitId.parse(rawId, this.scope.name);
+    const bitId = BitId.parse(rawId);
     return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose })
       .then((envDependencies) => {
         // todo: do we need the environment in bit.map?
@@ -423,9 +438,9 @@ export default class Consumer {
   _getLinkContent(mainFile: string, filePath: string): string {
     filePath = filePath.substring(0, filePath.lastIndexOf('.')); // remove the extension
     if (path.extname(mainFile) === '.ts') {
-      return `export * from '${filePath}';`;
+      return `export * from '${normalize(filePath)}';`;
     }
-    return `module.exports = require('${filePath}');`;
+    return `module.exports = require('${normalize(filePath)}');`;
   }
 
   async _writeEntryPointsForImportedComponent(component: Component, bitMap: BitMap):

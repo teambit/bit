@@ -17,7 +17,7 @@ function getDirectory(): string {
 }
 
 function getCacheDirectory(): string {
-  if (process.platform === 'darwin') {
+  if (process.platform === 'darwin' || process.platform === 'linux') {
     return path.join(userHome, 'Library', 'Caches', 'Bit');
   }
 
@@ -83,8 +83,6 @@ export const DEPENDENCY_MAP_FILENAME = 'dependencies.json';
 export const DEPENDENCIES_DIR = 'dependencies';
 
 export const BIT_EXTERNAL_DIRNAME = 'external';
-
-export const LOCAL_SCOPE_NOTATION = '@this';
 
 export const DEFAULT_REMOTES = {};
 

@@ -12,6 +12,7 @@ export default class Status extends Command {
   description = 'show the working area component(s) status.';
   alias = 's';
   opts = [];
+  loader = true;
 
   action(): Promise<Object> {
     return status();

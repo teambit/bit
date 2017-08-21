@@ -6,7 +6,7 @@ import { searchAdapter } from '../../../search';
 import { formatter } from '../../../search/searcher';
 import { Doc } from '../../../search/indexer';
 import loader from '../../../cli/loader';
-import { LOCAL_SCOPE_NOTATION, SEARCH_DOMAIN } from '../../../constants';
+import { SEARCH_DOMAIN } from '../../../constants';
 import { BEFORE_REMOTE_SEARCH } from '../../../cli/loader/loader-messages';
 
 export default class Search extends Command {
@@ -21,16 +21,16 @@ export default class Search extends Command {
 
   action([query, ]: [string[], ], { scope, reindex }: { scope: string, reindex: boolean }) {
     const queryStr = query.join(' ');
-    if (!scope) { // web search
-      const url = `https://${SEARCH_DOMAIN}/search/?q=${queryStr}`;
-      return requestify.get(url).then((response) => {
-        const body = response.getBody();
-        return Promise.resolve(body.payload.hits);
-      });
-    }
-    if (scope !== LOCAL_SCOPE_NOTATION) {
+    if (scope) {
       loader.start(BEFORE_REMOTE_SEARCH({ scope, queryStr })); // eslint-disable-line
-      return searchAdapter.searchRemotely(queryStr, scope, reindex);
+      return searchAdapter.searchRemotely(queryStr, scope, reindex)
+        .catch(() => { // web search
+          const url = `https://${SEARCH_DOMAIN}/search/?q=${queryStr}`;
+          return requestify.get(url).then((response) => {
+            const body = response.getBody();
+            return Promise.resolve(body.payload.hits);
+          });
+        });
     }
 
     return searchAdapter.searchLocally(queryStr, reindex);

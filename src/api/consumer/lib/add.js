@@ -36,22 +36,23 @@ export default async function addAction(componentPaths: string[], id?: string, m
     //update test files according to dsl
     async function updateTestFilesAccordingToDsl(files,testFiles) {
       const newFilesArr = files;
-        const fileList = testFiles.map(dsl => {
-          const fileList = files.map(file => {
+        const fileList = await testFiles.map(async dsl => {
+          const fileList = await files.map(async file => {
             const fileInfo = calculateFileInfo(file.relativePath);
             const generatedFile = format(dsl, fileInfo);
-            return getAllFiles([generatedFile]);
+            const matches = await glob(generatedFile);
+            return matches ?  getAllFiles(matches) :  getAllFiles([generatedFile]) ;
           });
           return Promise.all(fileList);
         });
         const fileListRes = R.flatten(await Promise.all(fileList));
-        const uniqFileList = R.uniq(fileListRes);
+        const uniqFileList = R.uniq(fileListRes).filter(obj => !R.isEmpty(obj));
         uniqFileList.forEach(file => {
           Object.keys(file).forEach(key => {
-            const fileIndex =  R.findIndex(R.propEq('relativePath', key))(files);
+            const fileIndex = R.findIndex(R.propEq('relativePath',file[key]))(newFilesArr);
              if (fileIndex > -1)
-               files[fileIndex].test = true;
-             else if (fs.existsSync(file[key])) {
+               newFilesArr[fileIndex].test = true;
+             else if (fs.existsSync(key)) {
                newFilesArr.push({relativePath: file[key], test: true, name: path.basename(file[key])});
              }
           });
@@ -86,8 +87,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
     async function getAllFiles(files: string[]){
       const filesArr = await Promise.all(files.map(async componentPath => {
         const files = {};
-        if (isGlob(componentPath)){
-          const matches = await glob(componentPath);
+        const matches = await glob(componentPath);
+        if (matches){
           matches.forEach((match) =>  files[match] = match);
         } else if (fs.existsSync(componentPath) && isDir(componentPath)) {
           const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
@@ -194,18 +195,24 @@ export default async function addAction(componentPaths: string[], id?: string, m
   const bitMap = await BitMap.load(consumer.getPath());
 
   const componentPathsStats = {};
-  componentPaths.forEach((componentPath) => {
-    if (!existsSync(componentPath)){
-      throw new PathNotExists(componentPath);
-    }
-    componentPathsStats[componentPath] = {
-      isDir: isDir(componentPath)
-    };
-  });
+  const resolvedComponentPaths = await Promise.all(componentPaths.map(componentPath=> glob(componentPath)));
+  const flattendFiles = R.flatten(resolvedComponentPaths);
+  if(!R.isEmpty(flattendFiles)) {
+    flattendFiles.forEach((componentPath) => {
+      if (!existsSync(componentPath)) {
+        throw new PathNotExists(componentPath);
+      }
+      componentPathsStats[componentPath] = {
+        isDir: isDir(componentPath)
+      };
+    });
+  } else {
+    throw new PathNotExists(componentPaths);
+  }
 
   let keepDirectoriesName = false;
   // if a user entered multiple paths and entered an id, he wants all these paths to be one component
-  const isMultipleComponents = componentPaths.length > 1 && !id;
+  const isMultipleComponents = Object.keys(componentPathsStats).length > 1 && !id;
   let added = [];
   if (isMultipleComponents) {
     logger.debug('bit add - multiple components');

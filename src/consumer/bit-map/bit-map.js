@@ -13,8 +13,14 @@ const SHOULD_THROW = true;
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
+export type ComponentMapFile = {
+  name: string,
+  relativePath: string,
+  test: string
+}
+
 export type ComponentMap = {
-  files: Object, // the keys are the presentation on the model, the values are the presentation on the file system
+  files: ComponentMapFile[],
   mainFile: string,
   rootDir?: string, // needed to search for the component's bit.json. If it's undefined, the component probably don't have bit.json
   origin: ComponentOrigin,
@@ -30,6 +36,7 @@ export default class BitMap {
     this.projectRoot = projectRoot;
     this.mapPath = mapPath;
     this.components = components;
+    this.hasChanged = false;
   }
 
   static async load(dirPath: string): BitMap {
@@ -92,7 +99,7 @@ export default class BitMap {
     let mainFileFromFiles = R.find(R.propEq('relativePath', baseMainFile))(files);
 
     // Search the base name of the main file and transfer to relativePath
-    if (!mainFileFromFiles){
+    if (!mainFileFromFiles) {
       mainFileFromFiles = R.find(R.propEq('name', baseMainFile))(files);
       baseMainFile = mainFileFromFiles ? mainFileFromFiles.relativePath : baseMainFile;
     }
@@ -136,7 +143,7 @@ export default class BitMap {
 
   addComponent({ componentId, files, mainFile, origin, parent, rootDir }: {
     componentId: BitId,
-    files: Object[],
+    files: ComponentMapFile[],
     mainFile?: string,
     origin?: ComponentOrigin,
     parent?: BitId,
@@ -288,7 +295,7 @@ export default class BitMap {
    * Return a component id as listed in bit.map file
    * by a root path of the component
    *
-   * @param {string} path relative to consumer - as stored in bit.map files object
+   * @param {string} rootPath relative to consumer - as stored in bit.map files object
    * @returns {string} component id
    * @memberof BitMap
    */

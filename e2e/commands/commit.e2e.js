@@ -89,7 +89,7 @@ describe('bit commit command', function () {
     });
     it('should not commit another component', () => {
       const commit = () => helper.commitComponent('non-exist-comp');
-      expect(commit).to.throw(`Command failed: ${helper.bitBin} commit non-exist-comp -m commit-message\nerror - Unable to commit. non-exist-comp not found.\nRun \`bit status\` command to list all components available for commit.\n`);
+      expect(commit).to.throw('the component global/non-exist-comp was not found in the bit.map file');
     });
   });
 
@@ -129,10 +129,10 @@ describe('bit commit command', function () {
         helper.createFile('src', 'a2.js', fileA2fixture);
         const fileBfixture = 'import b3 from \'./b3\';import pdackage from \'package2\';import missingfs from \'./missing-fs2\';import untracked from \'./untracked2.js\';';
         helper.createFile('src', 'b.js', fileBfixture);
-        
+
         helper.createFile('src', 'untracked.js');
         helper.createFile('src', 'untracked2.js');
-        
+
         helper.addComponentWithOptions('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js');
 
@@ -150,8 +150,8 @@ describe('bit commit command', function () {
       });
 
       it('Should print the components name with missing dependencies', () => {
-        expect(output).to.have.string('@this/comp/a - latest');
-        expect(output).to.have.string('@this/src/b - latest');
+        expect(output).to.have.string('comp/a - latest');
+        expect(output).to.have.string('src/b - latest');
       });
 
       it('Should print that there is missing dependencies on file system (nested)', () => {
@@ -168,8 +168,8 @@ describe('bit commit command', function () {
       });
 
       it('Should print that there is untracked dependencies on file system (nested)', () => {
-        expect(output).to.have.string('src/untracked.js');
-        expect(output).to.have.string('src/untracked2.js');
+        expect(output).to.have.string(path.normalize('src/untracked.js'));
+        expect(output).to.have.string(path.normalize('src/untracked2.js'));
       });
     });
 
@@ -208,11 +208,11 @@ describe('bit commit command', function () {
 
       const output = helper.showComponentWithOptions('comp/comp', { j: '' });
       const dependencies = JSON.parse(output).dependencies;
-      const depPaths = [{ sourceRelativePath: 'utils/is-type.js', destinationRelativePath: 'utils/is-type.js' }];
+      const depPaths = [{ sourceRelativePath: path.normalize('utils/is-type.js'), destinationRelativePath: path.normalize('utils/is-type.js') }];
       const depObject = { id: 'utils/is-type', relativePaths: depPaths };
-      const depPaths1 = [{ sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' }];
+      const depPaths1 = [{ sourceRelativePath: path.normalize('utils/is-string.js'), destinationRelativePath: path.normalize('utils/is-string.js') }];
       const depObject1 = { id: 'utils/is-string', relativePaths: depPaths1 };
-      
+
       expect(dependencies[0].relativePaths[0]).to.include(depPaths[0]);
       expect(dependencies[1].relativePaths[0]).to.include(depPaths1[0]);
     });

@@ -1,7 +1,7 @@
 /** @flow */
 // import serverlessIndex from './serverless-index';
 import indexer from './indexer';
-import searcher from './searcher';
+import { search } from './searcher';
 import { loadConsumer } from '../consumer';
 import { loadScope } from '../scope';
 
@@ -18,14 +18,14 @@ function searchLocally(queryStr: string, reindex: boolean = false): Promise<any>
           return indexer.indexAll(scopePath, components);
         })
         .then(() => {
-          resolve(searcher.search(queryStr, scopePath));
+          resolve(search(queryStr, scopePath));
         })
         .catch(reject);
     } else {
       loadConsumer()
         .then((consumer) => {
           scopePath = consumer.scope.path;
-          resolve(searcher.search(queryStr, scopePath));
+          resolve(search(queryStr, scopePath));
         });
     }
   });
@@ -57,11 +57,11 @@ function scopeSearch(path: string, query: string, reindex: boolean): Promise<any
           return indexer.indexAll(path, components);
         })
         .then(() => {
-          resolve(searcher.search(query, path));
+          resolve(search(query, path));
         })
         .catch(reject);
     } else {
-      resolve(searcher.search(query, path));
+      resolve(search(query, path));
     }
   });
 }

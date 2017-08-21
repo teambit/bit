@@ -196,7 +196,11 @@ export default class Helper {
     fs.outputFileSync(filePath, fixture);
   }
 
-  addComponent(filePaths: string = "bar/foo.js", cwd = this.localScopePath) {
+  deleteFile(relativePathToLocalScope: string) {
+    return fs.removeSync(path.join(this.localScopePath, relativePathToLocalScope));
+  }
+
+  addComponent(filePaths: string = path.normalize("bar/foo.js"), cwd = this.localScopePath) {
     return this.runCmd(`bit add ${filePaths}`, cwd);
   }
 
@@ -207,6 +211,10 @@ export default class Helper {
 
   testComponent(id) {
     return this.runCmd(`bit test ${id}`);
+  }
+
+  searchComponent(args) {
+    return this.runCmd(`bit search ${args}`);
   }
 
   showComponent(id: string = "bar/foo") {

@@ -8,16 +8,9 @@ import logger from '../../../logger/logger';
 
 export async function commitAction({ id, message, force, verbose }:
 { id: string, message: string, force: ?bool, verbose?: bool }) {
-  try {
-    const consumer = await loadConsumer();
-    const components = await consumer.commit([id], message, force, verbose);
-    return R.head(components);
-  } catch (err) {
-    if (err instanceof MissingDependencies) return Promise.reject(err);
-    logger.info('real error during commit:', err.message);
-    // TODO: should be changes, we don't want this to be always the error, it should propagate from the below layer
-    return Promise.reject(new InvalidIdOnCommit(id));
-  }
+  const consumer = await loadConsumer();
+  const components = await consumer.commit([id], message, force, verbose);
+  return R.head(components);
 }
 
 export async function commitAllAction({ message, force, verbose }:

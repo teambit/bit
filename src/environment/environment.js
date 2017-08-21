@@ -33,7 +33,7 @@ export default class Environment {
   }
 
   importComponent(rawId: string): Promise<Component> {
-    const bitId = BitId.parse(rawId, this.scope.name);
+    const bitId = BitId.parse(rawId);
     return this.scope.get(bitId)
       .then((component) => {
         return this._writeToEnvironmentDir([component.component])
