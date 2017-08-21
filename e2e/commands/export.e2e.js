@@ -177,7 +177,7 @@ describe('bit export command', function () {
     });
   });
 
-  describe('after import', () => {
+  describe('imported (v1), exported (v2) and then exported again (v3)', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
@@ -185,20 +185,23 @@ describe('bit export command', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.exportComponent('bar/foo');
+      helper.exportComponent('bar/foo'); // v1
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
 
+      helper.createFile(path.join('components', 'bar', 'foo', 'bar'), 'foo.js', 'console.log(v2)');
       helper.commitComponentBarFoo();
-      helper.exportComponent(`${helper.remoteScope}/bar/foo`);
+      helper.exportComponent(`${helper.remoteScope}/bar/foo`); // v2
+
+      helper.createFile(path.join('components', 'bar', 'foo', 'bar'), 'foo.js', 'console.log(v3)');
+      helper.commitComponentBarFoo();
+      helper.exportComponent(`${helper.remoteScope}/bar/foo`); // v3
     });
     it('should export it with no errors', () => {
-      const output = helper.runCmd(`bit list ${helper.remoteScope}`);
-      expect(output.includes('Total 1 components')).to.be.true;
-      expect(output.includes('bar/foo')).to.be.true;
-      expect(output.includes('2')).to.be.true; // this is the version
+      const output = helper.listRemoteScope();
+      expect(output.includes(`${helper.remoteScope}/bar/foo@3`)).to.be.true;
     });
   });
 

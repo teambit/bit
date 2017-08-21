@@ -638,7 +638,7 @@ export default class Scope {
     }));
     await this.objects.persist();
     const idsWithRemoteScope = componentIds.map(id => id.changeScope(remoteName));
-    return this.getMany(idsWithRemoteScope);
+    return this.getManyWithAllVersions(idsWithRemoteScope);
   }
 
   ensureDir() {

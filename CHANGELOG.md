@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- fix an error when importing a component, exporting it, modifying and exporting again (v3)
 - fix links generation when importing from a non-consumer root path
 - fix ci-update command to generate links when necessary
 - windows support
