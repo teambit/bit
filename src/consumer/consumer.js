@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
+import normalize from 'normalize-path';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import {
   ConsumerAlreadyExists,
@@ -437,9 +438,9 @@ export default class Consumer {
   _getLinkContent(mainFile: string, filePath: string): string {
     filePath = filePath.substring(0, filePath.lastIndexOf('.')); // remove the extension
     if (path.extname(mainFile) === '.ts') {
-      return `export * from '${filePath}';`;
+      return `export * from '${normalize(filePath)}';`;
     }
-    return `module.exports = require('${filePath}');`;
+    return `module.exports = require('${normalize(filePath)}');`;
   }
 
   async _writeEntryPointsForImportedComponent(component: Component, bitMap: BitMap):
