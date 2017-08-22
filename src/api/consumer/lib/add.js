@@ -11,6 +11,7 @@ import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
 import logger from '../../../logger/logger';
 import isGlob from 'is-glob';
 import PathNotExists from './exceptions/path-not-exists'
+import EmptyDirectory from './exceptions/empty-directory';
 
 export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[]): Promise<Object> {
 
@@ -122,7 +123,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         const nameSpaceOrDir = namespace || splitPath[splitPath.length-2];
 
         const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
-        if (!matches.length) throw new Error(`The directory ${relativeComponentPath} is empty, nothing to add`);
+        if (!matches.length) throw new EmptyDirectory();
 
         const files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
 
