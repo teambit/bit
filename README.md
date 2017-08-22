@@ -1,6 +1,6 @@
 # Bit
+[![Bit communit hub](https://storage.googleapis.com/bit-assets/Github/readme-github-2.jpg)](http://bitsrc.io)
 
-</p>
 <div style="text-align:left">
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="apache" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="https://github.com/teambit/bit/blob/master/CONTRIBUTING.md"><img alt="prs" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
@@ -10,11 +10,9 @@
 
 </div>
 
-**Bit** enables you to organize components throughout your source code into shared collections, and use them across applications, projects and teams. You can turn any library into a dynamic collection of individually reusable components in seconds, while components can be discovered, maintained and shared from any project or application.
+* **[Watch The Video](https://www.youtube.com/watch?v=vm_oOghNEYs)**
 
-* **[Watch Demo](https://www.youtube.com/watch?v=vm_oOghNEYs)**
-
-* **[Community](https://bitsrc.io/)**
+**Bit** - Organize reusable components from your existing source-code into shared-collections. Shared collections are like "playlists" that allow you to share your components with you team, and install or update individual components from any project. You and your team can find and use these components, collaborate, get updates, and stay in sync.
 
 Bit works great for React or Angular components, Node modules, utility functions and more.
 
