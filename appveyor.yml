@@ -55,6 +55,7 @@ test_script:
   - npm run e2e-test:appveyor
 
 after_test:
+- ps: >-
     .\scripts\node-installer.ps1
 
     .\scripts\build-dist.ps1
