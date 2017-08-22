@@ -11,7 +11,10 @@ import { BitId } from '../bit-id';
 
 export default function getLatestVersionNumber(bitIds: BitId[] | string[], bitId: string | BitId) {
   const getParsed = (id) => (typeof id === 'string') ? BitId.parse(id) : id;
-  const getString = (id, ignoreScope = false, ignoreVersion = true) => (typeof id === 'string') ? BitId.parse(id).toString(ignoreScope, ignoreVersion) : id.toString(ignoreScope, ignoreVersion);
+  const getString = (id, ignoreScope = false, ignoreVersion = true) => {
+    if (!id) return undefined;
+    return (typeof id === 'string') ? BitId.parse(id).toString(ignoreScope, ignoreVersion) : id.toString(ignoreScope, ignoreVersion);
+  };
 
   const componentId = getParsed(bitId);
   if (!componentId.getVersion().latest) return bitId;
