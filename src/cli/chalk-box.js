@@ -52,7 +52,7 @@ const failureTest = (test) => {
 
 const paintMissingTester = (component): string => {
   const componentId = c.bold(`${component.box}/${component.name}`);
-  return c.bold.red(`There is no tester for ${componentId}`);
+  return c.bold.red(`tester for component: ${componentId} is not defined`);
 };
 
 const paintTest = (test) => {

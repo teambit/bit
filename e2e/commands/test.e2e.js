@@ -165,12 +165,12 @@ describe('bit component with no tester', function () {
     helper.createComponent('bar', 'foo.js');
     helper.addComponent(path.join('bar', 'foo.js'));
     const output = helper.testComponent();
-    expect(output).to.have.string('tests are not defined for component: bar/foo');
+    expect(output).to.have.string('tester for component: bar/foo is not defined');
   });
   it('Should return not tester message when running test on single component', () => {
     helper.createComponent('bar', 'foo.js');
     helper.addComponent(path.join('bar', 'foo.js'));
     const output = helper.testComponent('bar/foo');
-    expect(output).to.have.string('tests are not defined for component: bar/foo');
+    expect(output).to.have.string('tester for component: bar/foo is not defined');
   });
 });
