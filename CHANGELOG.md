@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - improve readme
 - improve outputs
 - improve windows support for import command
+- exception when using `bit test` or `bit build` before adding first components
 
 
 ## [0.10.5] - 2017-08-16
