@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - support deleting files from a component
 - fix the internal ci-update command where an environment has a tester without a compiler 
 - improved commit, add, export and status outputs
+- support general failures on bit test (like on before)
 - improved bit help
 - fix bit config command for linux
 - improve readme
