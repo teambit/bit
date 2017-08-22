@@ -14,15 +14,18 @@ export default class Add extends Command {
     ['t', 'tests <file...>', 'spec/test file name or dsl (tests/{PARENT_FOLDER}/{FILE_NAME})'],
     ['n', 'namespace <namespace>', 'component namespace'],
     ['e', 'exclude <file...>', 'exclude file name'],
+    ['o', 'override <boolean>', 'override existing component if exists (default = false)'],
+
   ];
   loader = true;
 
-  action([paths]: [string[]], { id, main, tests, namespace, exclude }: {
+  action([paths]: [string[]], { id, main, tests, namespace, exclude, override }: {
     id: ?string,
     main: ?string,
     tests: ?string[],
     namespace:?string,
     exclude:?string,
+    override:?boolean
   }): Promise<*> {
     if (namespace && id) {
       return Promise.reject('You can use either [id] or [namespace] to add a particular component');
@@ -31,7 +34,7 @@ export default class Add extends Command {
     const normalizedPathes = paths.map(p => path.normalize(p));
     const testsArray = tests ? this.splitList(tests).map(filePath => path.normalize(filePath.trim())) : [];
     const exludedFiles = exclude ? this.splitList(exclude).map(filePath => path.normalize(filePath.trim())) : undefined;
-    return add(normalizedPathes, id, (main) ? path.normalize(main): undefined, namespace, testsArray, exludedFiles);
+    return add(normalizedPathes, id, main ? path.normalize(main) : undefined, namespace, testsArray, exludedFiles, override || false);
   }
 
   report(results: Array<{ id: string, files: string[] }>): string {
