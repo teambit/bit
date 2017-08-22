@@ -34,9 +34,9 @@ describe('bit test command', function () {
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
     });
-    it('should indicate that there are no tests', () => {
+    it.only('should indicate that there are no tests', () => {
       const output = helper.testComponent('utils/is-type');
-      expect(output).to.have.string('There are no tests for utils/is-type');
+      expect(output).to.have.string('tests are not defined for component: utils/is-type');
     });
   });
 
