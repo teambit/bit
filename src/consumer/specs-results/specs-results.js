@@ -10,6 +10,11 @@ type Test = {
   err: ?ErrorObj,
   duration: number
 }
+type Failure = {
+  title: string,
+  err: ?ErrorObj,
+  duration: number
+}
 
 type Stats = {
   start: string,
@@ -46,12 +51,14 @@ export default class SpecsResults {
   tests: Test[];
   stats: Stats;
   pass: bool;
+  failures: Failure[];
   specFile: string;
 
-  constructor({ tests, stats, pass, specFile }: Results) {
+  constructor({ tests, stats, pass, failures, specFile }: Results) {
     this.tests = tests;
     this.stats = stats;
     this.pass = pass;
+    this.failures = failures;
     this.specFile = specFile;
   }
 
@@ -60,6 +67,7 @@ export default class SpecsResults {
       tests: this.tests,
       stats: this.stats,
       pass: this.pass,
+      failures: this.failures,
       specFile: this.specFile
     };
   }
@@ -69,7 +77,8 @@ export default class SpecsResults {
   }
 
   static createFromRaw(rawResults: ResultsProps): SpecsResults {
-    const pass = rawResults.pass || rawResults.tests.every(test => test.pass);
+    const hasFailures = rawResults.failures && rawResults.failures.length;
+    const pass = rawResults.pass || (rawResults.tests.every(test => test.pass) && !hasFailures);
 
     const calcDuration = (endDateString, startDateString) =>
     new Date(endDateString) - new Date(startDateString);
@@ -87,6 +96,12 @@ export default class SpecsResults {
       return result;
     });
 
-    return new SpecsResults({ tests, stats, pass, specFile: rawResults.specPath });
+    const failures = rawResults.failures.map((failure) => {
+      failure.duration = parseInt(failure.duration);
+      // $FlowFixMe
+      return failure;
+    });
+
+    return new SpecsResults({ tests, stats, pass, failures, specFile: rawResults.specPath });
   }
 }
