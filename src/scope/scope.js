@@ -219,7 +219,7 @@ export default class Scope {
    */
   writeComponentToModel(componentObjects: ComponentObjects): Promise<any> {
     const objects = componentObjects.toObjects(this.objects);
-    logger.debug(`importSrc, writing into the model, Main id: ${objects.component.id()}. It might have dependencies which are going to be written too`);
+    logger.debug(`writeComponentToModel, writing into the model, Main id: ${objects.component.id()}. It might have dependencies which are going to be written too`);
     return this.sources.merge(objects)
       .then(() => this.objects.persist());
   }
