@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - improve readme
 - improve outputs
 - improve windows support for import command
+- add new flag to bit add to override or append files to bit component
 
 ## [0.10.5] - 2017-08-16
 - improved commit, add, export and status outputs
