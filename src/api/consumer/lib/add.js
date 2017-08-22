@@ -11,9 +11,9 @@ import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
 import logger from '../../../logger/logger';
 import isGlob from 'is-glob';
 import PathNotExists from './exceptions/path-not-exists'
+import EmptyDirectory from './exceptions/empty-directory';
 
-export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[]): Promise<Object> {
-
+export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[], override: boolean): Promise<Object> {
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
     if (!componentPath) return componentPath;
     const absPath = path.resolve(componentPath);
@@ -36,27 +36,27 @@ export default async function addAction(componentPaths: string[], id?: string, m
     //update test files according to dsl
     async function updateTestFilesAccordingToDsl(files,testFiles) {
       const newFilesArr = files;
-        const fileList = await testFiles.map(async dsl => {
-          const fileList = await files.map(async file => {
-            const fileInfo = calculateFileInfo(file.relativePath);
-            const generatedFile = format(dsl, fileInfo);
-            const matches = await glob(generatedFile);
-            return matches ?  getAllFiles(matches) :  getAllFiles([generatedFile]) ;
-          });
-          return Promise.all(fileList);
+      const fileList = await testFiles.map(async dsl => {
+        const fileList = await files.map(async file => {
+          const fileInfo = calculateFileInfo(file.relativePath);
+          const generatedFile = format(dsl, fileInfo);
+          const matches = await glob(generatedFile);
+          return matches ?  getAllFiles(matches) :  getAllFiles([generatedFile]) ;
         });
-        const fileListRes = R.flatten(await Promise.all(fileList));
-        const uniqFileList = R.uniq(fileListRes).filter(obj => !R.isEmpty(obj));
-        uniqFileList.forEach(file => {
-          Object.keys(file).forEach(key => {
-            const fileIndex = R.findIndex(R.propEq('relativePath',file[key]))(newFilesArr);
-             if (fileIndex > -1)
-               newFilesArr[fileIndex].test = true;
-             else if (fs.existsSync(key)) {
-               newFilesArr.push({relativePath: file[key], test: true, name: path.basename(file[key])});
-             }
-          });
+        return Promise.all(fileList);
+      });
+      const fileListRes = R.flatten(await Promise.all(fileList));
+      const uniqFileList = R.uniq(fileListRes).filter(obj => !R.isEmpty(obj));
+      uniqFileList.forEach(file => {
+        Object.keys(file).forEach(key => {
+          const fileIndex = R.findIndex(R.propEq('relativePath',file[key]))(newFilesArr);
+          if (fileIndex > -1)
+            newFilesArr[fileIndex].test = true;
+          else if (fs.existsSync(key)) {
+            newFilesArr.push({relativePath: file[key], test: true, name: path.basename(file[key])});
+          }
         });
+      });
       return newFilesArr;
     }
     // used for updating main file if exists or doesn't exists
@@ -80,8 +80,8 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
     const addToBitMap = ({ componentId, files, mainFile }): { id: string, files: string[] } => {
       bitMap.addComponent({ componentId, files, mainFile,
-        origin: COMPONENT_ORIGINS.AUTHORED });
-      return { id: componentId.toString(), files };
+        origin: COMPONENT_ORIGINS.AUTHORED ,override});
+      return { id: componentId.toString(), files: bitMap.getComponent(componentId).files };
     };
 
     async function getAllFiles(files: string[]){
@@ -122,7 +122,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
         const nameSpaceOrDir = namespace || splitPath[splitPath.length-2];
 
         const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
-        if (!matches.length) throw new Error(`The directory ${relativeComponentPath} is empty, nothing to add`);
+        if (!matches.length) throw new EmptyDirectory();
 
         const files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
 

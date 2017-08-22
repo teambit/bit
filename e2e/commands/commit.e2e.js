@@ -146,12 +146,12 @@ describe('bit commit command', function () {
 
       // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
       it('Should print that there is missing dependencies', () => {
-        expect(output).to.have.string('fatal: The following dependencies not found:');
+        expect(output).to.have.string('fatal: following component dependencies were not found');
       });
 
       it('Should print the components name with missing dependencies', () => {
-        expect(output).to.have.string('comp/a - latest');
-        expect(output).to.have.string('src/b - latest');
+        expect(output).to.have.string('comp/a');
+        expect(output).to.have.string('src/b');
       });
 
       it('Should print that there is missing dependencies on file system (nested)', () => {

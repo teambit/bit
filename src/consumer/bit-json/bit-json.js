@@ -84,7 +84,8 @@ export default class BitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object): BitJson {
-    const { sources, env, dependencies, packageDependencies, lang } = object;
+    const { sources = {}, env, dependencies, packageDependencies, lang } = object;
+    
     return new BitJson({
       impl: R.prop('impl', sources),
       spec: R.prop('spec', sources),
