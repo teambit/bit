@@ -172,9 +172,11 @@ export default class BitMap {
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
 
-      // TODO: merge with previous
-      console.log(override);
-      override ? this.components[componentIdStr].files =files : this.components[componentIdStr].files = R.unionWith(R.eqBy(R.prop('relativePath')), this.components[componentIdStr].files, files);
+      if (override) {
+        this.components[componentIdStr].files =files;
+      } else {
+        this.components[componentIdStr].files = R.unionWith(R.eqBy(R.prop('relativePath')), files, this.components[componentIdStr].files);
+      }
 
       if (mainFile) {
         this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
