@@ -2,7 +2,7 @@
 import R from 'ramda';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
-import { RemoteScopeNotFound, UnexpectedNetworkError, PermissionDenied } from '../exceptions';
+import { RemoteScopeNotFound, UnexpectedNetworkError, PermissionDenied, SSHInvalidResponse } from '../exceptions';
 import MergeConflict from '../../exceptions/merge-conflict';
 import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
@@ -120,10 +120,19 @@ export default class SSH implements Network {
     });
   }
 
+  _unpack(data) {
+    try {
+      return unpackCommand(data);
+    } catch (err) {
+      logger.error(`unpackCommand found on error "${err}", while paring the following string: ${data}`);
+      throw new SSHInvalidResponse(data);
+    }
+  }
+
   pushMany(manyComponentObjects: ComponentObjects[]): Promise<ComponentObjects[]> {
     return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects))
       .then((data: string) => {
-        const { payload, headers } = unpackCommand(data);
+        const { payload, headers } = this._unpack(data);
         checkVersionCompatibility(headers.version);
         return ComponentObjects.manyFromString(payload);
       });
@@ -136,7 +145,7 @@ export default class SSH implements Network {
   describeScope(): Promise<ScopeDescriptor> {
     return this.exec('_scope')
       .then((data) => {
-        const { payload, headers } = unpackCommand(data);
+        const { payload, headers } = this._unpack(data);
         checkVersionCompatibility(headers.version);
         return payload;
       })
@@ -148,7 +157,7 @@ export default class SSH implements Network {
   list() {
     return this.exec('_list')
       .then((str: string) => {
-        const { payload, headers } = unpackCommand(str);
+        const { payload, headers } = this._unpack(str);
         checkVersionCompatibility(headers.version);
         return rejectNils(payload.map((c) => {
           return c ? ConsumerComponent.fromString(c) : null;
@@ -159,7 +168,7 @@ export default class SSH implements Network {
   search(query: string, reindex: boolean) {
     return this.exec('_search', { query, reindex: reindex.toString() })
       .then((data) => {
-        const { payload, headers } = unpackCommand(data);
+        const { payload, headers } = this._unpack(data);
         checkVersionCompatibility(headers.version);
         return payload;
       });
@@ -168,7 +177,7 @@ export default class SSH implements Network {
   show(id: BitId) {
     return this.exec('_show', id.toString())
       .then((str: string) => {
-        const { payload, headers } = unpackCommand(str);
+        const { payload, headers } = this._unpack(str);
         checkVersionCompatibility(headers.version);
         return str ? ConsumerComponent.fromString(payload) : null;
       });
@@ -180,7 +189,7 @@ export default class SSH implements Network {
     if (noDeps) options = '-n';
     return this.exec(`_fetch ${options}`, ids)
       .then((str: string) => {
-        const { payload, headers } = unpackCommand(str);
+        const { payload, headers } = this._unpack(str);
         checkVersionCompatibility(headers.version);
         return payload.map((raw) => {
           return ComponentObjects.fromString(raw);

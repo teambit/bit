@@ -5,6 +5,7 @@ import SSHConnectionError from './ssh-connection-error';
 import PermissionDenied from './permission-denied';
 import NetworkError from './network-error';
 import UnexpectedNetworkError from './unexpected-network-error';
+import SSHInvalidResponse from './ssh-invalid-response';
 
 export {
   ProtocolNotSupported,
@@ -13,5 +14,6 @@ export {
   PermissionDenied,
   FsScopeNotLoaded,
   RemoteScopeNotFound,
-  SSHConnectionError
+  SSHConnectionError,
+  SSHInvalidResponse
 };

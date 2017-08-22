@@ -14,12 +14,16 @@ import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
-import NetworkError from '../scope/network/exceptions/network-error';
-import UnexpectedNetworkError from '../scope/network/exceptions/unexpected-network-error';
+import {
+  NetworkError,
+  UnexpectedNetworkError,
+  SSHInvalidResponse,
+  ProtocolNotSupported,
+  RemoteScopeNotFound
+} from '../scope/network/exceptions';
 import MergeConflict from '../scope/exceptions/merge-conflict';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import { ScopeNotFound, ResolutionException, ComponentNotFound, DependencyNotFound } from '../scope/exceptions';
-import { ProtocolNotSupported, RemoteScopeNotFound } from '../scope/network/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
 import PathNotExists from '../api/consumer/lib/exceptions/path-not-exists';
@@ -48,6 +52,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ NetworkError, err => `fatal: remote failed with error: "${chalk.bold(err.remoteErr)}"`],
   [ MergeConflict, err => `error: Merge conflict occurred when exporting the component ${err.id}.\nTo resolve it, please import the latest version of the remote component, and only then export your changes.`],
   [ UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
+  [ SSHInvalidResponse, () => 'fatal: received an invalid response from the remote SSH server'],
   [ ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init --bare`'],
   [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit'],
   [ MissingDependencies, (err) => {
