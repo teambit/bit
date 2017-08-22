@@ -870,6 +870,43 @@ describe('bit import', function () {
     });
   });
 
+  describe('import component is-type as a dependency of is-string and then import is-type directly', () => {
+    let localConsumerFiles;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-string');
+      helper.importComponent('utils/is-type');
+      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
+    });
+    it('should rewrite is-type directly into "components" directory', () => {
+      const expectedLocation = path.join('components', 'utils', 'is-type', 'utils', 'is-type.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should update the existing record of is-type in bit.map from NESTED to IMPORTED', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@1`);
+      expect(bitMap[`${helper.remoteScope}/utils/is-type@1`].origin).to.equal('IMPORTED');
+    });
+    it('should not break the is-string component', () => {
+      const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type and got is-string');
+    });
+  });
+
   describe.skip('Import compiler', () => {
     before(() => {
       helper.reInitLocalScope();

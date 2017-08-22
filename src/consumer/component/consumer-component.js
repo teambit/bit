@@ -270,7 +270,15 @@ export default class Component {
     const componentMap = bitMap.getComponent(idWithoutVersion, false);
     if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
     let rootDir;
-    if (componentMap) {
+
+    if (componentMap && origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+      // when a user imports a component that was a dependency before, write the component directly into the components
+      // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
+      await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
+      // todo: remove from the file system
+      rootDir = calculatedBitDir;
+      bitMap.removeComponent(this.id.toString());
+    } else if (componentMap) {
       logger.debug('component is in bit.map, write the files according to bit.map');
       const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
 

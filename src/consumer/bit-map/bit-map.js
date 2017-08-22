@@ -192,6 +192,10 @@ export default class BitMap {
     }
   }
 
+  removeComponent(id: string) {
+    delete this.components[id];
+  }
+
   addMainDistFileToComponent(id, distFilesPaths: string[]): void {
     if (!this.components[id]) {
       logger.warning(`unable to find the component ${id} in bit.map file`);
