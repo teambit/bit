@@ -140,12 +140,17 @@ export default class CommandRegistrar {
     this.commands.forEach(cmd => register(cmd, commander));
   }
 
+  printHelp() {
+    console.log(require('./templates/help'));
+    return this;
+  }
+
   outputHelp() {
     const args = process.argv.slice(2);
     if (!args.length) {
       // @TODO replace back to commander help and override help method
       // commander.help();
-      console.log(require('./templates/help'));
+      this.printHelp();
       return this;
     }
 
@@ -165,10 +170,16 @@ export default class CommandRegistrar {
   }
 
   run() {
+    const args = process.argv.slice(2);
+    if (args[0] && args[0] === '--help') {
+      this.printHelp();
+      return this;
+    }
+
     this.registerBaseCommand();
-    this.registerCommands();
-    commander.parse(process.argv);
+    this.registerCommands();    
     this.outputHelp();
+    commander.parse(process.argv);
 
     return this;
   }

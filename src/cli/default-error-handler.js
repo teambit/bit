@@ -25,6 +25,7 @@ import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-comm
 import PathNotExists from '../api/consumer/lib/exceptions/path-not-exists';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
 import { MissingMainFile, MissingBitMapComponent } from '../consumer/bit-map/exceptions';
+import EmptyDirectory from '../api/consumer/lib/exceptions/empty-directory';
 import logger from '../logger/logger';
 
 import missingDepsTemplate from './templates/missing-dependencies-template';
@@ -40,6 +41,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: [scope]/[box]/<name>'],
   [ ComponentNotFound, err => `fatal: component with id "${chalk.bold(err.id)}" was not found`],
   [ DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found.`],
+  [ EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
   [ ComponentNotFoundInPath, err => `fatal: component in path "${chalk.bold(err.path)}" was not found`],
   [ PermissionDenied, () => 'fatal: permission to scope was denied'],
   [ RemoteNotFound, err => `fatal: remote "${chalk.bold(err.name)}" was not found`],
@@ -50,7 +52,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [ ComponentSpecsFailed, () => 'component\'s specs does not pass, fix them and commit'],
   [ MissingDependencies, (err) => {
     const missingDepsColored = missingDepsTemplate(err.components);
-    return `fatal: The following dependencies not found:\n${missingDepsColored}`;
+    return `fatal: following component dependencies were not found\n${missingDepsColored}`;
   }],
   [ NothingToImport, () => 'there is nothing to import'],
   [ InvalidIdChunk, err => `invalid id part in "${chalk.bold(err.id)}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]`],
