@@ -90,30 +90,33 @@ export default class BitMap {
   }
 
   // todo - need to move to bit-javascript
-  _searchMainFile(baseMainFile: string, files: ComponentMapFile[]) {
+  _searchMainFile(baseMainFile: string, files: ComponentMapFile[], originalMainFile: string) {
     let newBaseMainFile;
     // Search the relativePath of the main file
     let mainFileFromFiles = R.find(R.propEq('relativePath', baseMainFile))(files);
     // Search the base name of the main file and transfer to relativePath
-    if (!mainFileFromFiles) {
+    if (R.isNil(mainFileFromFiles)) {
       mainFileFromFiles = R.find(R.propEq('name', baseMainFile))(files);
       newBaseMainFile = mainFileFromFiles ? mainFileFromFiles.relativePath : baseMainFile;
+      return { mainFileFromFiles, baseMainFile: newBaseMainFile || baseMainFile };
     }
-    return { mainFileFromFiles, baseMainFile: newBaseMainFile || baseMainFile };
+    return  { mainFileFromFiles, baseMainFile: originalMainFile };
   }
   _getMainFile(mainFile: string, componentMap: ComponentMap) {
     const files = componentMap.files.filter(file => !file.test);
     // Take the file path as main in case there is only one file
     if (!mainFile && files.length === 1) return files[0].relativePath;
-
     // search main file (index.js or index.ts in case no ain file was entered - move to bit-javascript
-    let searchResult = this._searchMainFile(mainFile, files)
-    if (!searchResult.mainFileFromFiles) searchResult = this._searchMainFile(DEFAULT_INDEX_NAME, files)
-    if (!searchResult.mainFileFromFiles) searchResult = this._searchMainFile(DEFAULT_INDEX_TS_NAME, files);
+    let searchResult = this._searchMainFile(mainFile, files, mainFile)
+    if (!searchResult.mainFileFromFiles) searchResult = this._searchMainFile(DEFAULT_INDEX_NAME, files, mainFile)
+    if (!searchResult.mainFileFromFiles) searchResult = this._searchMainFile(DEFAULT_INDEX_TS_NAME, files, mainFile);
 
 
     // When there is more then one file and the main file not found there
-    if (!searchResult.mainFileFromFiles) throw new MissingMainFile(searchResult.baseMainFile, files.map((file) => file.relativePath));
+    if (R.isNil(searchResult.mainFileFromFiles)) {
+      const mainFileString = mainFile || (DEFAULT_INDEX_NAME + ' or '+ DEFAULT_INDEX_TS_NAME);
+      throw new MissingMainFile(mainFileString, files.map((file) => file.relativePath));
+    }
     return searchResult.baseMainFile;
   }
 
