@@ -53,10 +53,6 @@ export default class Environment {
     return componentWithDependencies.component;
   }
 
-  getComponentPath(component: Component): string {
-    return path.join(this.path, BITS_DIRNAME, component.id.toFullPath());
-  }
-
   getPath(): string {
     return this.path;
   }
