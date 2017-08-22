@@ -70,15 +70,11 @@ export const paintSpecsResults = (results: SpecsResults[]): string => {
   return results.map(specResult => (specResult.tests)? paintStats(specResult) + specResult.tests.map(paintTest).join('\n') :'');
 }
 
-
 export const paintAllSpecsResults = (results: Array<*>): string => {
   if (results.length === 0) return c.red('There are no components to test');
   return results.map((result) => {
-    if (result.missingTester) return paintMissingTester(result.component)
-    const componentId = c.bold(`${result.component.box}/${result.component.name}: `);
+    const componentId = c.bold(`${result.component.box}/${result.component.name}`);
     if (result.specs) return componentId + paintSpecsResults(result.specs);
-    return c.bold(`There are no tests for ${componentId}`);
+    return c.yellow(`tests are not defined for component: ${componentId}`);
   }).join('\n');
 };
-
-
