@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- fix ci-update command when there are tester and compiler to use the same isolated-environment
+- fix an error when importing a component, exporting it, modifying and exporting again (v3)
+- fix links generation when importing from a non-consumer root path
+- fix ci-update command to generate links when necessary
 - windows support
 - fix Error: "Cannot find module './build/Release/DTraceProviderBindings'" when installing via Yarn
 - fix the local and remote search
@@ -18,6 +22,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - help flags adjusted to new help
 - missing dependencies formatted on commit
 - sources no longer part of bit.json's defaults
+- improve readme
+- improve outputs
+- improve windows support for import command
+
 
 ## [0.10.5] - 2017-08-16
 - improved commit, add, export and status outputs

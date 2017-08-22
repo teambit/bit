@@ -70,6 +70,7 @@ export default class Component {
   license: ?License;
   log: ?Log;
   writtenPath: ?string; // needed for generate links
+  isolatedEnvironment: IsolatedEnvironment;
 
   set files(val: ?SourceFile[]) { this._files = val; }
 
@@ -179,7 +180,7 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDependencies);
   }
 
-  buildIfNeeded({ condition, files, compiler, consumer, componentMap, scope }: {
+  async buildIfNeeded({ condition, files, compiler, consumer, componentMap, scope }: {
     condition?: ?bool,
     files:File[],
     compiler: any,
@@ -218,23 +219,20 @@ export default class Component {
       return Promise.reject(`"${this.compilerId.toString()}" does not have a valid compiler interface, it has to expose a build method`);
     }
 
-    if (consumer) {
-     // const componentRoot = path.join(consumer.projectPath, this.box, this.name);
-      return runBuild(consumer.getPath());
-    }
+    if (consumer) return runBuild(consumer.getPath());
+    if (this.isolatedEnvironment) return runBuild(this.writtenPath);
 
     const isolatedEnvironment = new IsolatedEnvironment(scope);
-
-    return isolatedEnvironment.create()
-      .then(() => {
-        return isolatedEnvironment.importE2E(this.id.toString());
-      })
-      .then((component) => {
-        const componentRoot = isolatedEnvironment.getComponentPath(component);
-        return runBuild(componentRoot).then((result) => {
-          return isolatedEnvironment.destroy().then(() => result);
-        });
-      }).catch(e => isolatedEnvironment.destroy().then(() => Promise.reject(e)));
+    try {
+      await isolatedEnvironment.create();
+      const component = await isolatedEnvironment.importE2E(this.id.toString());
+      const result = await runBuild(component.writtenPath);
+      await isolatedEnvironment.destroy();
+      return result;
+    } catch (err) {
+      await isolatedEnvironment.destroy();
+      return Promise.reject(err);
+    }
   }
 
   async _writeToComponentDir(bitDir: string, withBitJson: boolean, force?: boolean = true) {
@@ -399,7 +397,9 @@ export default class Component {
       try {
         await isolatedEnvironment.create();
         const component = await isolatedEnvironment.importE2E(this.id.toString());
+        component.isolatedEnvironment = isolatedEnvironment;
         logger.debug(`the component ${this.id.toString()} has been imported successfully into an isolated environment`);
+
         await component.build({ scope, environment, verbose });
         if (component.dists) {
           const specDistWrite = component.dists.map(file => file.write());
@@ -536,7 +536,7 @@ export default class Component {
       testerId: testerId ? BitId.parse(testerId) : null,
       dependencies: dependencies.map(dep => Object.assign({}, dep, { id: BitId.parse(dep.id) })), //this._dependenciesFromWritableObject(dependencies),
       packageDependencies,
-      mainFile,
+      mainFile: path.normalize(mainFile),
       files,
       docs,
       dists,

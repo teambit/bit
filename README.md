@@ -10,19 +10,23 @@
 
 </div>
 
-**Bit** turns your existing source code into a collection of reusable components. You can easily develop and compose components from any application environment, without changing your source code. Bit works great for utility functions, web components (native, React, Angular etc.), small node.js modules and more.
+**Bit** enables you to organize components throughout your source code into shared collections, and use them across applications, projects and teams. You can turn any library into a dynamic collection of individually reusable components in seconds, while components can be discovered, maintained and shared from any project or application.
 
-* **Turn any subset of files into a component** without changing your source code or file-system structure. Create multiple components with a single command.
-* **Develop and compose** components locally from any project, build and test them in any application environment.
-* **Discover components** you and your team love and trust. Measure and monitor component quality through auto-generated docs and test results.
-* **Universal control over your dependency graph.** Commit and test vast changes of dependencies and dependents at once. Bit components are also immutable.
+* **[Watch Demo](https://www.youtube.com/watch?v=vm_oOghNEYs)**
 
-Bit is an Apache 2.0 open-source project, actively maintained by a full-time, venture-backed team. 
-It's also being used by popular open source communities.
+* **[Community](https://bitsrc.io/)**
 
-<p align="center">
-  <img src="https://storage.googleapis.com/bit-docs/readme.gif" height="500">
-</p>
+Bit works great for React or Angular components, Node modules, utility functions and more.
+
+* **Turn any existing subset of files into a reusable component** without changing your source code or file structure. Turn any bulk of source code into a shared collection of components using simple commands.
+
+* **Great discoverability for components** you and your team love and trust. Determine and monitor component quality through auto-generated docs and test results.
+
+* **Gain universal control over your dependency graph**. Commit and test vast dependency changes at once. Build and test any component in any application environment. 
+
+* ***Coming soon:*** Install components with the tools you love - NPM, Yarn or Bit. Create and update components in seconds from any project using Bit, and use the tool of you choice to install them.
+
+Bit is an open-source collaborative project, actively maintained by a full-time venture-backed team and used by organizations and open source teams.
 
 ## Supported Languages
 Bit is language agnostic. Still, it requires binding and additional language sensitive features for different programming languages. To do this, Bit uses language-specific drivers:
@@ -48,7 +52,7 @@ bit init
 Bit `add` allows you to track a subset of files or directories as a reusable code component. Classic use cases would be web components (native, react, angular, etc.), utility functions or any other node.js module.
 
 ```sh
-bit add src/utils/pad-left.js
+bit add src/utils/left-pad.js
 # Tracked utils/pad-left with files 
 ```
 
@@ -68,7 +72,7 @@ To check which components were changed or added and are about to be committed, y
 ```sh
 bit status
 # New components:
-#   utils/pad-left
+#   utils/left-pad
 # Modified components:
 #   utils/is-string
 ```
@@ -93,8 +97,8 @@ computer](https://teambit.github.io/bit/getting-started.html#setup-a-remote-scop
 Once you have a remote scope ready, run the export command:
 
 ```sh
-bit export bit.utils
-# bit.utils is your Scope name
+bit export username.scope_name
+# username.scope_name is your Scope name
 ```
 
 ### Import
@@ -106,8 +110,9 @@ Let's import the component we just created to a new project.
 1. Create a new project.
 2. Initialize a new scope using the bit init command.
 3. Import the component
+
   ```sh
-  bit import my-scope/pad-left
+  bit import username.scope_name/utils/left-pad
   ```
 
 The component is now in the components directory, ready to be used in your code.
@@ -115,12 +120,19 @@ The component is now in the components directory, ready to be used in your code.
 **Use:**
 
 ```js
-const component = require('./components/utils/pad-left');
+const component = require('./components/utils/left-pad');
+# 'components' is the default location for imported components
 ```
 
-## Why Bit - Built for code components
+## Why Bit
 
-Atomic pieces of code should be composed together as lego bricks to form any functionality. Yet, as software development is being scaled, creating, finding and composing these atomic components is getting harder. Having the right tool to develop and compose components with simplicity, predictability and ease of use is the key to bringing this philosophy from theory to practice. With Bit, you can turn existing source code into a beautiful collection of reusable components for you or your team. You can develop and compose components in any application environment, making them the perfect building blocks for your different projects.
+Building software out of smaller components [makes for better software](https://addyosmani.com/first/). 
+Today, this becomes truer than ever before- entire applications are built using React or Angular components, and independent functionalities are scattered across repositories and microservices.
+ 
+Still, as developers, we often struggle to organize, find and share our existing components of code to build new things.
+However, organizing and making our existing source-code components reusable - within a single project or across projects and teams - can become a real problem. To solve this, Bit allows us to turn any part of our source-code into a beautiful collection of reusable components with 2-3 simple commands. 
+
+This means we can create and organize a playlist-like collection of our favorite components, and use the ones we need wherever we need them. Bit has many more features, from collaboration to component CI, but the best way to learn more is simply to get started.
 
 * Learn more: [Coding in the age of code components](https://blog.bitsrc.io/introducing-bit-writing-code-in-the-age-of-code-components-fd8512a9aa90)
 
@@ -133,7 +145,7 @@ See [Contributing](CONTRIBUTING.md).
 
 ## Feedback
 
-Feedback is more than welcome: [team@bitsrc.io](mailto:team@bitsrc.io)
+Feedbacks are more than welcome: [team@bitsrc.io](mailto:team@bitsrc.io)
 
 ## License
 

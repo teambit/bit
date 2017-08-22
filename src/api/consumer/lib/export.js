@@ -3,15 +3,17 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import ConsumerComponent from '../../../consumer/component/consumer-component';
 import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
-import { BEFORE_EXPORT } from '../../../cli/loader/loader-messages';
+import { BEFORE_EXPORT,BEFORE_EXPORTS } from '../../../cli/loader/loader-messages';
 import BitMap from '../../../consumer/bit-map';
 
 export default async function exportAction(ids?: string[], remote: string, save: ?bool) {
   const consumer: Consumer = await loadConsumer();
-  loader.start(BEFORE_EXPORT);
-  if (!ids || !ids.length) { // export all
+  if (!ids || !ids.length) {// export all
     const componentsList = new ComponentsList(consumer);
     ids = await componentsList.listExportPendingComponents();
+    (ids.length > 1) ? loader.start(BEFORE_EXPORTS) : loader.start(BEFORE_EXPORT);
+  } else {
+    loader.start(BEFORE_EXPORT) //show single export
   }
   // todo: what happens when some failed? we might consider avoid Promise.all
   const componentsDependencies = await consumer.scope.exportMany(ids, remote);

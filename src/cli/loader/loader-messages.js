@@ -12,3 +12,4 @@ export const BEFORE_IMPORT_PUT_ON_SCOPE = 'importing components';
 export const BEFORE_PERSISTING_PUT_ON_SCOPE = 'persisting...';
 export const BEFORE_INSTALL_NPM_DEPENDENCIES = 'ensuring package dependencies (with npm)';
 export const BEFORE_EXPORT = 'exporting component';
+export const BEFORE_EXPORTS = 'exporting components';
