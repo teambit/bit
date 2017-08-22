@@ -81,7 +81,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
     const addToBitMap = ({ componentId, files, mainFile }): { id: string, files: string[] } => {
       bitMap.addComponent({ componentId, files, mainFile,
         origin: COMPONENT_ORIGINS.AUTHORED });
-      return { id: componentId.toString(), files };
+      return { id: componentId.toString(), files: bitMap.getComponent(componentId).files };
     };
 
     async function getAllFiles(files: string[]){

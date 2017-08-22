@@ -172,7 +172,7 @@ export default class BitMap {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
 
       // TODO: merge with previous
-      this.components[componentIdStr].files = files;
+      this.components[componentIdStr].files = R.unionWith(R.eqBy(R.prop('relativePath')), this.components[componentIdStr].files, files);
 
       if (mainFile) {
         this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
