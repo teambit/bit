@@ -326,4 +326,19 @@ describe('bit add command', function () {
     });
 
   });
+  describe('with multiple index files', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('bar', 'index.js');
+      helper.createFile('bar', 'foo.js');
+      helper.createFile(path.join('bar', 'exceptions'), 'some-exception.js');
+      helper.createFile(path.join('bar', 'exceptions'), 'index.js');
+      helper.addComponentWithOptions('bar', { i: 'bar/foo' });
+    });
+    it('should identify the closest index file as the main file', () => {
+      const bitMap = helper.readBitMap();
+      const expectedMainFile = path.join('bar', 'index.js');
+      expect(bitMap['bar/foo'].mainFile).to.equal(expectedMainFile);
+    });
+  });
 });

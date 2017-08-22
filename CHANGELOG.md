@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- improvement - when there are several potential main files, `bit add` selects the one that is closer to the root
 - show a friendly error when SSH returns an invalid response
 - fix an error when there are multiple open SSH connections
 - update bit.map and the file system when a nested component is re-imported individually 

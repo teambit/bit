@@ -96,19 +96,25 @@ export default class BitMap {
     let mainFileFromFiles = R.find(R.propEq('relativePath', baseMainFile))(files);
     // Search the base name of the main file and transfer to relativePath
     if (R.isNil(mainFileFromFiles)) {
-      mainFileFromFiles = R.find(R.propEq('name', baseMainFile))(files);
+      const potentialMainFiles = files.filter(file => file.name === baseMainFile);
+      if (potentialMainFiles.length) {
+        // when there are several files that met the criteria, choose the closer to the root
+        const sortByNumOfDirs = (a, b) => a.relativePath.split(path.sep).length - b.relativePath.split(path.sep).length;
+        potentialMainFiles.sort(sortByNumOfDirs);
+        mainFileFromFiles = R.head(potentialMainFiles);
+      }
       newBaseMainFile = mainFileFromFiles ? mainFileFromFiles.relativePath : baseMainFile;
       return { mainFileFromFiles, baseMainFile: newBaseMainFile || baseMainFile };
     }
-    return  { mainFileFromFiles, baseMainFile: originalMainFile };
+    return { mainFileFromFiles, baseMainFile: originalMainFile };
   }
   _getMainFile(mainFile: string, componentMap: ComponentMap) {
     const files = componentMap.files.filter(file => !file.test);
     // Take the file path as main in case there is only one file
     if (!mainFile && files.length === 1) return files[0].relativePath;
     // search main file (index.js or index.ts in case no ain file was entered - move to bit-javascript
-    let searchResult = this._searchMainFile(mainFile, files, mainFile)
-    if (!searchResult.mainFileFromFiles) searchResult = this._searchMainFile(DEFAULT_INDEX_NAME, files, mainFile)
+    let searchResult = this._searchMainFile(mainFile, files, mainFile);
+    if (!searchResult.mainFileFromFiles) searchResult = this._searchMainFile(DEFAULT_INDEX_NAME, files, mainFile);
     if (!searchResult.mainFileFromFiles) searchResult = this._searchMainFile(DEFAULT_INDEX_TS_NAME, files, mainFile);
 
 
