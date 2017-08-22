@@ -12,8 +12,7 @@ import logger from '../../../logger/logger';
 import isGlob from 'is-glob';
 import PathNotExists from './exceptions/path-not-exists'
 
-export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[]): Promise<Object> {
-
+export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[], override: boolean): Promise<Object> {
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
     if (!componentPath) return componentPath;
     const absPath = path.resolve(componentPath);
@@ -80,7 +79,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
     const addToBitMap = ({ componentId, files, mainFile }): { id: string, files: string[] } => {
       bitMap.addComponent({ componentId, files, mainFile,
-        origin: COMPONENT_ORIGINS.AUTHORED });
+        origin: COMPONENT_ORIGINS.AUTHORED ,override});
       return { id: componentId.toString(), files: bitMap.getComponent(componentId).files };
     };
 

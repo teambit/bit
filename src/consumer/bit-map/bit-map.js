@@ -149,13 +149,14 @@ export default class BitMap {
     });
   }
 
-  addComponent({ componentId, files, mainFile, origin, parent, rootDir }: {
+  addComponent({ componentId, files, mainFile, origin, parent, rootDir, override }: {
     componentId: BitId,
     files: ComponentMapFile[],
     mainFile?: string,
     origin?: ComponentOrigin,
     parent?: BitId,
-    rootDir?: string
+    rootDir?: string,
+    override: boolean
   }): void {
     const isDependency = origin && origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = (origin === COMPONENT_ORIGINS.AUTHORED) ?
@@ -172,7 +173,8 @@ export default class BitMap {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
 
       // TODO: merge with previous
-      this.components[componentIdStr].files = R.unionWith(R.eqBy(R.prop('relativePath')), this.components[componentIdStr].files, files);
+      console.log(override);
+      override ? this.components[componentIdStr].files =files : this.components[componentIdStr].files = R.unionWith(R.eqBy(R.prop('relativePath')), this.components[componentIdStr].files, files);
 
       if (mainFile) {
         this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
