@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- fix an error when there are multiple open SSH connections
 - update bit.map and the file system when a nested component is re-imported individually 
 - fix ci-update command when there are tester and compiler to use the same isolated-environment
 - fix an error when importing a component, exporting it, modifying and exporting again (v3)

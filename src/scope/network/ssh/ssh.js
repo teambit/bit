@@ -105,7 +105,9 @@ export default class SSH implements Network {
           .on('close', (code, signal) => {
             if (commandName === '_put') res = res.replace(payload, '');
             logger.debug(`ssh: returned with code: ${code}, signal: ${signal}.`);
-            this.connection.end();
+            // DO NOT CLOSE THE CONNECTION (using this.connection.end()), it causes bugs when there are several open
+            // connections. Same bugs occur when running "this.connection.end()" on "end" event. There is no point to
+            // run it on 'exit' event, it never reach there.
             return code && code !== 0 ?
               reject(errorHandler(code, err)) :
               resolve(clean(res));
