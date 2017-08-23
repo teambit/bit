@@ -212,14 +212,16 @@ export default class SSH implements Network {
   }
 
   connect(sshUrl: SSHUrl, key: ?string): Promise<SSH> {
+    const sshConfig = this.composeConnectionObject(key)
     return new Promise((resolve, reject) => {
+      if (!sshConfig.privateKey) reject('Could not authenticate\nPlease make sure you have configured ssh access and permissions to the remote scope');
       try {
         conn
           .on('error', err => reject(err))
           .on('ready', () => {
             this.connection = conn;
             resolve(this);
-          }).connect(this.composeConnectionObject(key));
+          }).connect(sshConfig);
       } catch (e) { return reject(e); }
     });
   }
