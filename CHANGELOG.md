@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+
+## [0.10.6] - 2017-08-23
+
 - fixed remote add exceptions to human-friendly errors
 - improvement - when there are several potential main files, `bit add` selects the one that is closer to the root
 - show a friendly error when SSH returns an invalid response
@@ -33,6 +36,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - improve windows support for import command
 - exception when using `bit test` or `bit build` before adding first components
 - add new flag to bit add to override or append files to bit component
+- update bit-javascript dependency
 
 
 ## [0.10.5] - 2017-08-16
