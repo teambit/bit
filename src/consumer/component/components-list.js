@@ -42,8 +42,13 @@ export default class ComponentsList {
     });
 
     // uncomment to easily understand why two components are considered as modified
-    // console.log('componentFromModel', componentFromModel.id());
-    // console.log('version', version.id());
+    // if (componentFromModel.hash().hash !== version.hash().hash) {
+    //   console.log('-------------------componentFromModel------------------------');
+    //   console.log(componentFromModel.id());
+    //   console.log('------------------------version------------------------------');
+    //   console.log(version.id());
+    //   console.log('-------------------------END---------------------------------');
+    // }
     return componentFromModel.hash().hash !== version.hash().hash;
   }
 
