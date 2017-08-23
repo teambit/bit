@@ -2,7 +2,7 @@ pipeline {
 	agent any
 	stages {
 		stage('build linux') {
-			steps {  
+			steps {
 				sh("npm i")
 				sh("npm run build")
 				sh("npm i -g --unsafe")
@@ -22,6 +22,7 @@ pipeline {
 					notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb","deb")
 					notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/development/bit/${currentVersion}/bit-${currentVersion}-1.noarch.rpm","yum")
 					notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-tar/development/bit/${currentVersion}/bit-${currentVersion}-tar.gz","tar")
+					notifyReleaseServer("${VERSION}","http://bit-npm/stable/bit.npm","npm")
 				}
 
 			}
