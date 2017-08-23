@@ -2,13 +2,14 @@
 
 import chai, { expect } from 'chai';
 import path from 'path';
+import normalize from 'normalize-path';
 import Helper from '../e2e-helper';
 
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit add command', function () {
+describe.only('bit add command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -72,8 +73,8 @@ describe('bit add command', function () {
     it('Should throw error when no index file is found', () => {
       const file1= 'foo1.js'
       const file2= 'foo2.js'
-      const file1Path = (`bar/${file1}`);
-      const file2Path = (`bar/${file2}`);
+      const file1Path = path.normalize(`bar/${file1}`);
+      const file2Path = path.normalize(`bar/${file2}`);
       helper.createComponent('bar', file1);
       helper.createComponent('bar', file2);
 
@@ -337,7 +338,7 @@ describe('bit add command', function () {
     });
     it('should identify the closest index file as the main file', () => {
       const bitMap = helper.readBitMap();
-      const expectedMainFile = path.join('bar', 'index.js');
+      const expectedMainFile = normalize(path.join('bar', 'index.js'));
       expect(bitMap['bar/foo'].mainFile).to.equal(expectedMainFile);
     });
   });
