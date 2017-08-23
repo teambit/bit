@@ -5,6 +5,9 @@ import Component from '../../../consumer/component';
 import { ComponentWithDependencies } from '../../../scope';
 import Import from './import-cmd';
 
+/**
+ * @deprecated
+ */
 export default class Install extends Command {
   name = 'install';
   description = 'install bit components from bit.json file';
