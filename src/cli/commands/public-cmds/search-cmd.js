@@ -38,7 +38,7 @@ export default class Search extends Command {
 
   report(searchResults: Array<Doc|*>): string {
     if (!searchResults.length) {
-      return chalk.red('No Results');
+      return chalk.yellow('no results found');
     }
     return chalk.green(searchResults.map(formatter).join('\n'));
   }
