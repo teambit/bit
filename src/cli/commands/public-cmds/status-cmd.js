@@ -34,7 +34,8 @@ export default class Status extends Command {
 
     function format(component) {
       const missing = componentsWithMissingDeps.find((missingComp) => {
-        return missingComp.id.toString() === component.id.toString();
+        const compId = component.id ? component.id.toString() : component;
+        return missingComp.id.toString() === compId;
       });
 
       if (!missing) return formatNewBit(component) + '... ' + chalk.green('ok');
