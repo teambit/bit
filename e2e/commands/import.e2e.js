@@ -7,7 +7,7 @@ import glob from 'glob';
 import normalize from 'normalize-path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
-describe.only('bit import', function () {
+describe('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
