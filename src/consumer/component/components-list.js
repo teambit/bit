@@ -8,12 +8,13 @@ import logger from '../../logger/logger';
 import BitMap from '../bit-map/bit-map';
 import Consumer from '../consumer';
 import { glob } from '../../utils';
+import { COMPONENT_ORIGINS } from '../../constants';
 
 export default class ComponentsList {
   consumer: Consumer;
   _bitMap: Object;
   _fromFileSystem: Promise<string[]>;
-  _fromBitMap: Object;
+  _fromBitMap: Object = {};
   _fromObjects: Promise<Object<Version>>;
   constructor(consumer: Consumer) {
     this.consumer = consumer;
@@ -89,8 +90,15 @@ export default class ComponentsList {
    * @return {Promise<string[]>}
    */
   async listModifiedComponents(load: boolean = false): Promise<string[] | ConsumerComponent[]> {
+    const getAuthoredAndImportedFromFS = async () => {
+      let [authored, imported] = await Promise.all([this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED), this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED)]);
+      authored = authored || [];
+      imported = imported || [];
+      return authored.concat(imported);
+    };
+
     const [objectComponents, fileSystemComponents] = await Promise
-      .all([this.getFromObjects(), this.getFromFileSystem()]);
+      .all([this.getFromObjects(), getAuthoredAndImportedFromFS()]);
     const objFromFileSystem = fileSystemComponents.reduce((components, component) => {
       components[component.id.toString()] = component;
       return components;
@@ -193,8 +201,8 @@ export default class ComponentsList {
     return stagedComponents;
   }
 
-  async idsFromBitMap(withScopeName = true) {
-    const fromBitMap = await this.getFromBitMap();
+  async idsFromBitMap(withScopeName = true, origin) {
+    const fromBitMap = await this.getFromBitMap(origin);
     const ids = Object.keys(fromBitMap);
     if (withScopeName) return ids;
     return ids.map(id => BitId.parse(id).toStringWithoutScopeAndVersion());
@@ -238,9 +246,9 @@ export default class ComponentsList {
    * of that directory, in which case the bit.map is used to find them
    * @return {Promise<Component[]>}
    */
-  async getFromFileSystem(): Promise<Component[]> {
+  async getFromFileSystem(origin): Promise<Component[]> {
     if (!this._fromFileSystem) {
-      const idsFromBitMap = await this.idsFromBitMap();
+      const idsFromBitMap = await this.idsFromBitMap(undefined, origin);
       const parsedBitIds = idsFromBitMap.map((id) => BitId.parse(id));
       const registeredComponentsP = await this.consumer.loadComponents(parsedBitIds);
       const unRegisteredComponentsP = await this.onFileSystemAndNotOnBitMap();
@@ -249,12 +257,13 @@ export default class ComponentsList {
     return this._fromFileSystem;
   }
 
-  async getFromBitMap(): Object {
-    if (!this._fromBitMap) {
+  async getFromBitMap(origin): Object {
+    const cacheKeyName = origin || 'all';
+    if (!this._fromBitMap[cacheKeyName]) {
       const bitMap = await this.getbitMap();
-      this._fromBitMap = bitMap.getAllComponents();
+      this._fromBitMap[cacheKeyName] = bitMap.getAllComponents(origin);
     }
-    return this._fromBitMap;
+    return this._fromBitMap[cacheKeyName];
   }
 
   async getbitMap(): Object {
