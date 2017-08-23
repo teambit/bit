@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- change back Madge version to the NPM package as it now supports TypeScript
 
 ## [0.10.3-rc.1] - 2017-08-16
 - Improve windows support

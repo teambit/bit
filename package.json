@@ -45,7 +45,7 @@
     "require-from-string": "^1.2.1",
     "stack-trace": "0.0.9",
     "toposort-class": "^1.0.1",
-    "madge": "^1.6.0",
+    "madge": "^2.0.0",
     "find-package": "^1.0.0",
     "user-home": "^2.0.0"
   },
