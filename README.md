@@ -12,7 +12,7 @@
 
 * **[Watch The Video](https://www.youtube.com/watch?v=vm_oOghNEYs)**
 
-**Bit** - Organize reusable components from your existing source-code into shared-collections. Shared collections are like "playlists" that allow you to share your components with you team, and install or update individual components from any project. You and your team can find and use these components, collaborate, get updates, and stay in sync.
+Organize reusable components from your existing source-code into shared-collections. Shared collections are like "playlists" that allow you to share your components with your team, and install or update individual components from any project while keeping maintainance curated and easy. You and your team can find and use these components, collaborate, get updates, and stay in sync.
 
 Bit works great for React or Angular components, Node modules, utility functions and more.
 
