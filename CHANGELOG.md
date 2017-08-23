@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.10.6] - 2017-08-23
 
+- windows support
+- support auto updating of bit for npm installation
+- support deleting files from a component
+- improved bit help
+- fix bit config command for linux
+- update bit-javascript dependency
 - fixed remote add exceptions to human-friendly errors
 - improvement - when there are several potential main files, `bit add` selects the one that is closer to the root
 - show a friendly error when SSH returns an invalid response
@@ -18,15 +24,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix an error when importing a component, exporting it, modifying and exporting again (v3)
 - fix links generation when importing from a non-consumer root path
 - fix ci-update command to generate links when necessary
-- windows support
 - fix Error: "Cannot find module './build/Release/DTraceProviderBindings'" when installing via Yarn
 - fix the local and remote search
-- support deleting files from a component
 - fix the internal ci-update command where an environment has a tester without a compiler 
 - improved commit, add, export and status outputs
 - support general failures on bit test (like on before)
-- improved bit help
-- fix bit config command for linux
 - status output with missing dependencies 
 - help flags adjusted to new help
 - missing dependencies formatted on commit
@@ -36,7 +38,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - improve windows support for import command
 - exception when using `bit test` or `bit build` before adding first components
 - add new flag to bit add to override or append files to bit component
-- update bit-javascript dependency
 
 
 ## [0.10.5] - 2017-08-16
