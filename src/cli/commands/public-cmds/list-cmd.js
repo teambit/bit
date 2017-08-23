@@ -36,14 +36,14 @@ export default class List extends Command {
     bare?: bool,
   }): string {
     function decideHeaderSentence() {
-      if (!scope) return `Total ${components.length} components in local scope`;
-      return `Total ${components.length} components in ${scope}`;
+      if (!scope) return `found ${components.length} components in local scope`;
+      return chalk.white(`found ${components.length} components in ${chalk.bold(scope)}\n`);
     }
 
     if (R.isEmpty(components)) { return chalk.white(`${decideHeaderSentence()}`); }
     if (ids) return JSON.stringify(components.map(c => c.id.toString()));
     // TODO - use a cheaper list for ids flag (do not fetch versions at all) @!IMPORTANT
-    return paintHeader(decideHeaderSentence()) +
+    return decideHeaderSentence() +
     (bare ? bareListTemplate(components) : listTemplate(components));
   }
 }

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe('bit list command', function () {
+describe.only('bit list command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -12,9 +12,9 @@ describe('bit list command', function () {
       helper.cleanEnv();
       helper.runCmd('bit init');
     });
-    it('should display "Total 0 components"', () => {
+    it('should display "found 0 components"', () => {
       const output = helper.runCmd('bit list');
-      expect(output.includes('Total 0 components')).to.be.true;
+      expect(output.includes('found 0 components')).to.be.true;
     });
   });
   describe('when a component is created but not committed', () => {
@@ -23,9 +23,9 @@ describe('bit list command', function () {
       helper.runCmd('bit init');
       helper.createComponentBarFoo();
     });
-    it('should display "Total 0 components"', () => {
+    it('should display "found 0 components"', () => {
       const output = helper.runCmd('bit list');
-      expect(output.includes('Total 0 components')).to.be.true;
+      expect(output.includes('found 0 components')).to.be.true;
     });
   });
   describe('when a component is created and committed', () => {
@@ -36,9 +36,9 @@ describe('bit list command', function () {
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
     });
-    it('should display "Total 1 components"', () => {
+    it('should display "found 1 components"', () => {
       const output = helper.runCmd('bit list');
-      expect(output.includes('Total 1 components')).to.be.true;
+      expect(output.includes('found 1 components')).to.be.true;
     });
   });
 });
