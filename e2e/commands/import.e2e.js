@@ -878,17 +878,17 @@ describe('bit import', function () {
       helper.addRemoteScope();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponent(path.normalize('utils/is-type.js'));
       const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponent(path.normalize('utils/is-string.js'));
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('utils/is-string');
       helper.importComponent('utils/is-type');
-      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath });
+      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(file => path.normalize(file));
     });
     it('should rewrite is-type directly into "components" directory', () => {
       const expectedLocation = path.join('components', 'utils', 'is-type', 'utils', 'is-type.js');
