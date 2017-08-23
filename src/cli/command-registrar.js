@@ -170,11 +170,15 @@ export default class CommandRegistrar {
   }
 
   run() {
-    // override commander to print custom help
-    commander.Command.prototype.outputHelp = () => this.printHelp();
-    
+    const args = process.argv.slice(2);
+    if (args[0] && args[0] === '--help') {
+      this.printHelp();
+      return this;
+    }
+
     this.registerBaseCommand();
     this.registerCommands();    
+    this.outputHelp();
     commander.parse(process.argv);
 
     return this;
