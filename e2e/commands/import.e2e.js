@@ -7,7 +7,7 @@ import glob from 'glob';
 import normalize from 'normalize-path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
-describe('bit import', function () {
+describe.only('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -28,7 +28,7 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       const output = helper.importComponent('global/simple');
-      expect(output.includes('successfully imported the following Bit components')).to.be.true;
+      expect(output.includes('successfully imported one component')).to.be.true;
       expect(output.includes('global/simple')).to.be.true;
     });
     it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {
@@ -60,7 +60,7 @@ describe('bit import', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         const output = helper.importComponent('imprel/imprel');
-        expect(output.includes('successfully imported the following Bit components')).to.be.true;
+        expect(output.includes('successfully imported one component')).to.be.true;
         expect(output.includes('imprel/imprel')).to.be.true;
       });
       it('should write the internal files according to their relative paths', () => {
@@ -102,7 +102,7 @@ describe('bit import', function () {
           helper.reInitLocalScope();
           helper.addRemoteScope();
           const output = helper.importComponent('imprel/impreldist');
-          expect(output.includes('successfully imported the following Bit components')).to.be.true;
+          expect(output.includes('successfully imported one component')).to.be.true;
           expect(output.includes('imprel/imprel')).to.be.true;
         });
         it('should write the internal files according to their relative paths', () => {
