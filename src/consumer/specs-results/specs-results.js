@@ -79,6 +79,7 @@ export default class SpecsResults {
   static createFromRaw(rawResults: ResultsProps): SpecsResults {
     const hasFailures = rawResults.failures && rawResults.failures.length;
     const pass = rawResults.pass || (rawResults.tests.every(test => test.pass) && !hasFailures);
+    let failures;
 
     const calcDuration = (endDateString, startDateString) =>
     new Date(endDateString) - new Date(startDateString);
@@ -96,11 +97,13 @@ export default class SpecsResults {
       return result;
     });
 
-    const failures = rawResults.failures.map((failure) => {
-      failure.duration = parseInt(failure.duration);
-      // $FlowFixMe
-      return failure;
-    });
+    if (hasFailures) {
+      failures = rawResults.failures.map((failure) => {
+        failure.duration = parseInt(failure.duration);
+        // $FlowFixMe
+        return failure;
+      });
+    }
 
     return new SpecsResults({ tests, stats, pass, failures, specFile: rawResults.specPath });
   }
