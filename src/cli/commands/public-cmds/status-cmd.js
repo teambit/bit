@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { status } from '../../../api/consumer';
-import { immutableUnshift, forEach } from '../../../utils';
+import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import missingDepsTemplate from '../../templates/missing-dependencies-template';
 
@@ -38,8 +38,10 @@ export default class Status extends Command {
         return missingComp.id.toString() === compId;
       });
 
+      // @TODO component must not be a string
+      if (isString(component)) return formatBitString(component) + '... ' + chalk.green('ok');
       if (!missing) return formatNewBit(component) + '... ' + chalk.green('ok');
-      return formatNewBit(component)  + '... ' + chalk.red('missing dependencies') + formatMissing(missing);
+      return formatNewBit(component) + '... ' + chalk.red('missing dependencies') + formatMissing(missing);
     }
 
     const newComponentsOutput = immutableUnshift(
