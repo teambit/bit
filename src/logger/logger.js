@@ -13,22 +13,22 @@ const logger = new winston.Logger({
       maxFiles: 10,
       colorize: true,
       prettyPrint: true,
-      // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order. 
+      // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
       // The filename will always have the most recent log lines. The larger the appended number, the older the log file
-      tailable: true 
+      tailable: true
     }),
   ],
   exceptionHandlers: [
-    new winston.transports.File({ 
-      filename: path.join(GLOBAL_LOGS, 'exceptions.log'), 
+    new winston.transports.File({
+      filename: path.join(GLOBAL_LOGS, 'exceptions.log'),
       json: false,
       maxsize: 10 * 1024 * 1024, // 10MB
       maxFiles: 10,
       colorize: true,
       prettyPrint: true,
-      // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order. 
+      // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
       // The filename will always have the most recent log lines. The larger the appended number, the older the log file
-      tailable: true 
+      tailable: true
     })
   ],
   exitOnError: false
@@ -36,15 +36,15 @@ const logger = new winston.Logger({
 
 // @credit Kegsay from https://github.com/winstonjs/winston/issues/228
 // it solves an issue when exiting the code explicitly and the log file is not written
-logger.exitAfterFlush = (code: number = 0) => {
+logger.exitAfterFlush = (code: number = 0, commandName: string) => {
   let level;
   let msg;
   if (code === 0) {
     level = 'info';
-    msg = '[*] the command has been completed successfully';
+    msg = `[*] the command ${commandName} has been completed successfully`;
   } else {
     level = 'error';
-    msg = `[*] the command has been terminated with an error code ${code}`;
+    msg = `[*] the command ${commandName} has been terminated with an error code ${code}`;
   }
   logger.log(level, msg, () => {
     let numFlushes = 0;
