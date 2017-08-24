@@ -11,14 +11,14 @@ import loader from './loader';
 import logger from '../logger/logger';
 
 
-function logAndExit(msg: string) {
-  process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush());
+function logAndExit(msg: string, commandName) {
+  process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(0, commandName));
 }
 
-function logErrAndExit(msg: Error|string) {
+function logErrAndExit(msg: Error|string, commandName: string) {
   if (msg.code) throw msg;
   console.error(msg); // eslint-disable-line
-  logger.exitAfterFlush(1);
+  logger.exitAfterFlush(1, commandName);
 }
 
 function parseSubcommandFromArgs(args: [any]) {
@@ -54,23 +54,23 @@ function execAction(command, concrete, args) {
   command.action(relevantArgs, opts)
     .then((data) => {
       loader.off();
-      return logAndExit(command.report(data));
+      return logAndExit(command.report(data), command.name);
     })
     .catch((err) => {
       logger.error(err);
       loader.off();
       const errorHandled = defaultHandleError(err) || command.handleError(err);
 
-      if (command.private) return serializeErrAndExit(err);
-      if (!command.private && errorHandled) return logErrAndExit(errorHandled);
-      return logErrAndExit(err);
+      if (command.private) return serializeErrAndExit(err, command.name);
+      if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
+      return logErrAndExit(err, command.name);
     });
 }
 
-function serializeErrAndExit(err) {
+function serializeErrAndExit(err, commandName) {
   process.stderr.write(JSON.stringify(serializeError(err)));
   const code = err.code && isNumeric(err.code) ? err.code : 1;
-  return logger.exitAfterFlush(code);
+  return logger.exitAfterFlush(code, commandName);
 }
 
 // @TODO add help for subcommands
@@ -177,7 +177,7 @@ export default class CommandRegistrar {
     }
 
     this.registerBaseCommand();
-    this.registerCommands();    
+    this.registerCommands();
     this.outputHelp();
     commander.parse(process.argv);
 

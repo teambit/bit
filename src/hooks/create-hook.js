@@ -17,7 +17,10 @@ const createHook = (hookNameKey: string, methodName: string): () => Promise<any>
           }
           logger.debug(`Running the ${hookNameKey} hook with destUrl: ${destUrl}, and data: ${data}`);
           return client[methodName](destUrl, data)
-          .then(() => resolve())
+          .then(() => {
+            logger.debug(`Successfully ran hook ${hookNameKey}`);
+            return resolve();
+          })
           .catch((err) => {
             logger.warn(`Failed running the hook ${hookNameKey}. Error: ${err}`);
             return resolve();

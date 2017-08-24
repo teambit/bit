@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { remoteList, remoteAdd, remoteRm } from '../../../api/consumer';
 import { forEach, empty } from '../../../utils';
+import RemoteUndefined from '../exceptions/remote-undefined';
 
 export default class Remote extends Command {
   name = 'remote';
@@ -40,7 +41,12 @@ class RemoteAdd extends Command {
   ];
 
   action([url, ]: [string, ], { global }: { global: boolean }): Promise<any> {
-    return remoteAdd(url, global);
+    try {
+      if (!url) return Promise.reject(new RemoteUndefined());
+      return remoteAdd(url, global);      
+    } catch (err) {
+      return Promise.reject(err);
+    }
   }
 
   report({ name, host }: { name: string, host: string }): string {

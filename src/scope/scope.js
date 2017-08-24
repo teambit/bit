@@ -269,6 +269,7 @@ export default class Scope {
   }
 
   /**
+   * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
    * saves a component into the objects directory of the remote scope, then, resolves its
    * dependencies, saves them as well. Finally runs the build process if needed on an isolated
    * environment.

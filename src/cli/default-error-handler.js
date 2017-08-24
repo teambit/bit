@@ -31,10 +31,11 @@ import FileSourceNotFound from '../consumer/component/exceptions/file-source-not
 import { MissingMainFile, MissingBitMapComponent } from '../consumer/bit-map/exceptions';
 import EmptyDirectory from '../api/consumer/lib/exceptions/empty-directory';
 import logger from '../logger/logger';
-
+import RemoteUndefined from './commands/exceptions/remote-undefined';
 import missingDepsTemplate from './templates/missing-dependencies-template';
 
 const errorsMap: [[Error, (err: Error) => string]] = [
+  [ RemoteUndefined, () => chalk.red('fatal: remote url must be defined. please use: `ssh://`, `file://` or `bit://` protocols to define remote access') ],
   [ ConsumerAlreadyExists, () => 'there\'s already a scope' ],
   [ ConsumerNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`' ],
   [ BitAlreadyExistExternaly, err => `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${err.bitName}" to modify the current component or "bit create -f ${err.bitName}"!`],
