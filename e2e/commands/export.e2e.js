@@ -54,7 +54,7 @@ describe('bit export command', function () {
     });
     it('should export them all', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope}`);
-      expect(output.includes('Total 4 components')).to.be.true;
+      expect(output.includes('found 4 components')).to.be.true;
       expect(output.includes('baz/foo1')).to.be.true;
       expect(output.includes('baz/foo2')).to.be.true;
       expect(output.includes('bar/foo1')).to.be.true;
@@ -79,7 +79,7 @@ describe('bit export command', function () {
     });
     it('should export them all', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope} --bare`);
-      expect(output.includes('Total 2 components')).to.be.true;
+      expect(output.includes('found 2 components')).to.be.true;
       expect(output.includes('bar')).to.be.true;
       expect(output.includes('baz')).to.be.true;
     });
@@ -100,13 +100,13 @@ describe('bit export command', function () {
     });
     it('should export them all', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope} --bare`);
-      expect(output.includes('Total 2 components')).to.be.true;
+      expect(output.includes('found 2 components')).to.be.true;
       expect(output.includes('bar/foo1')).to.be.true;
       expect(output.includes('bar/foo2')).to.be.true;
     });
     it('bit list locally should display 2 components', () => {
       const output = helper.runCmd('bit list');
-      expect(output.includes('Total 2 components in local scope')).to.be.true;
+      expect(output.includes('found 2 components in local scope')).to.be.true;
     });
   });
 
@@ -128,7 +128,7 @@ describe('bit export command', function () {
     });
     it('should export them successfully', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope}`);
-      expect(output.includes('Total 2 components')).to.be.true;
+      expect(output.includes('found 2 components')).to.be.true;
       expect(output.includes('utils/is-type')).to.be.true;
       expect(output.includes('utils/is-string')).to.be.true;
     });
@@ -151,7 +151,7 @@ describe('bit export command', function () {
     });
     it('should export them all', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope}`);
-      expect(output.includes('Total 2 components')).to.be.true;
+      expect(output.includes('found 2 components')).to.be.true;
       expect(output.includes('utils/is-type')).to.be.true;
       expect(output.includes('utils/is-string')).to.be.true;
     });
@@ -171,7 +171,7 @@ describe('bit export command', function () {
     });
     it('should export it with no errors', () => {
       const output = helper.runCmd(`bit list ${helper.remoteScope}`);
-      expect(output.includes('Total 1 components')).to.be.true;
+      expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
       expect(output.includes('2')).to.be.true; // this is the version
     });
@@ -255,7 +255,7 @@ describe('bit export command', function () {
     });
     it('should fetch the dependency from a different scope and successfully export the component', () => {
       const output = helper.runCmd(`bit list ${anotherScope}`);
-      expect(output.includes('Total 1 components')).to.be.true;
+      expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('utils/is-string')).to.be.true;
     });
   });
@@ -280,7 +280,7 @@ describe('bit export command', function () {
     });
     it('should export it with no errors', () => {
       const output = helper.listRemoteScope();
-      expect(output.includes('Total 1 components')).to.be.true;
+      expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
       expect(output.includes('3')).to.be.true; // this is the version
     });
@@ -306,7 +306,7 @@ describe('bit export command', function () {
     });
     it('should export it with no errors', () => {
       const output = helper.listRemoteScope();
-      expect(output.includes('Total 1 components')).to.be.true;
+      expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
       expect(output.includes('3')).to.be.true; // this is the version
     });
@@ -328,7 +328,7 @@ describe('bit export command', function () {
     });
     it('should export it with no errors', () => {
       const output = helper.listRemoteScope();
-      expect(output.includes('Total 1 components')).to.be.true;
+      expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
   });
