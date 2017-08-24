@@ -93,6 +93,30 @@ describe('bit commit command', function () {
     });
   });
 
+  describe('commit back', () => {
+    // This is specifically export more than one component since it's different case for the
+    // resolveLatestVersion.js - getLatestVersionNumber function
+    describe('commit component after exporting 2 components', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+        helper.createFile('', 'file.js');
+        helper.createFile('', 'file2.js');
+        helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
+        helper.addComponentWithOptions('file2.js', { i: 'comp/comp2' });
+        helper.commitAllComponents();
+        helper.exportAllComponents();
+        helper.createFile('', 'file.js', 'console.log()');
+        output = helper.commitAllComponents();
+      });
+      it('should commit the component', () => {
+        expect(output).to.have.string('1 components committed');
+      });
+    });
+  });
+
   describe('commit all components', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
