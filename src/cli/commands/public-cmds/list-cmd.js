@@ -35,7 +35,7 @@ export default class List extends Command {
     bare?: bool,
   }): string {
     function decideHeaderSentence() {
-      if (!scope) return `found ${components.length} components in local scope`;
+      if (!scope) return `found ${components.length} components in local scope\n`;
       return chalk.white(`found ${components.length} components in ${chalk.bold(scope)}\n`);
     }
 
