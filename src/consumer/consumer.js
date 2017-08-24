@@ -437,30 +437,37 @@ export default class Consumer {
   async writeToComponentsDir(componentDependencies: ComponentWithDependencies[], writeToPath?: string,
                              force?: boolean = true): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
-    const dependenciesIds = [];
-    const allComponentsP = componentDependencies.map((componentWithDeps) => {
-      const bitPath = writeToPath || this.composeBitPath(componentWithDeps.component.id);
-      componentWithDeps.component.writtenPath = bitPath;
-      const writeComponentP = componentWithDeps.component
-        .write({ bitDir: bitPath, force, bitMap, origin: COMPONENT_ORIGINS.IMPORTED, consumerPath: this.getPath() });
+    const dependenciesIdsCache = [];
+
+    const writeComponentsP = componentDependencies.map((componentWithDeps) => {
+      const bitDir = writeToPath || this.composeBitPath(componentWithDeps.component.id);
+      componentWithDeps.component.writtenPath = bitDir;
+      return componentWithDeps.component
+        .write({ bitDir, force, bitMap, origin: COMPONENT_ORIGINS.IMPORTED, consumerPath: this.getPath() });
+    });
+    const writtenComponents = await Promise.all(writeComponentsP);
+
+    const allDependenciesP = componentDependencies.map((componentWithDeps) => {
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         const depFromBitMap = bitMap.getComponent(dependencyId, false);
         if (depFromBitMap) {
           dep.writtenPath = depFromBitMap.rootDir;
           logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map`);
+          bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve();
         }
 
-        if (dependenciesIds[dependencyId]) {
+        if (dependenciesIdsCache[dependencyId]) {
           logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
-          dep.writtenPath = dependenciesIds[dependencyId];
+          dep.writtenPath = dependenciesIdsCache[dependencyId];
+          bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve();
         }
 
-        const depBitPath = path.join(bitPath, DEPENDENCIES_DIR, dep.id.toFullPath());
+        const depBitPath = path.join(componentWithDeps.component.writtenPath, DEPENDENCIES_DIR, dep.id.toFullPath());
         dep.writtenPath = depBitPath;
-        dependenciesIds[dependencyId] = depBitPath;
+        dependenciesIdsCache[dependencyId] = depBitPath;
         return dep.write({ bitDir: depBitPath,
           force,
           bitMap,
@@ -470,15 +477,16 @@ export default class Consumer {
           .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap));
       });
 
-      return Promise.all([writeComponentP, ...writeDependenciesP]);
+      return Promise.all(writeDependenciesP);
     });
-    const allComponents = await Promise.all(allComponentsP);
+    const writtenDependencies = await Promise.all(allDependenciesP);
+
     await linkGenerator.writeDependencyLinks(componentDependencies, bitMap, this.getPath());
     await Promise.all(componentDependencies.map(componentWithDependencies =>
       linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
     ));
     await bitMap.write();
-    return allComponents;
+    return [...writtenComponents, ...writtenDependencies];
   }
 
   async bumpDependenciesVersions(committedComponents: Component[]) {
