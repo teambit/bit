@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe.only('bit list command', function () {
+describe('bit list command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
