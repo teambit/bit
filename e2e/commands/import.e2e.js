@@ -870,6 +870,51 @@ describe('bit import', function () {
     });
   });
 
+  describe('import the same component ("is-type") as an indirect dependency (of "is-string") and as a direct dependency', () => {
+    let localConsumerFiles;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent(path.normalize('utils/is-type.js'));
+      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent(path.normalize('utils/is-string.js'));
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      const bitJson = helper.readBitJson();
+      bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '1';
+      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '1';
+      helper.writeBitJson(bitJson);
+      helper.runCmd('bit import');
+      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(file => path.normalize(file));
+    });
+    it('should write is-type directly in components directory', () => {
+      const expectedLocation = path.join('components', 'utils', 'is-type', 'utils', 'is-type.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should not write is-type in the dependencies directory of is-string', () => {
+      const expectedLocation = path.join('components', 'utils', 'is-string', 'dependencies', 'utils',
+        'is-type', helper.remoteScope, '1', 'utils', 'is-type.js');
+      expect(localConsumerFiles).to.not.include(expectedLocation);
+    });
+    it('should show is-type as a dependency of is-string in bit.map', () => {
+      const bitMap = helper.readBitMap();
+      const isTypeDependency = `${helper.remoteScope}/utils/is-type@1`;
+      expect(bitMap[`${helper.remoteScope}/utils/is-string@1`].dependencies).to.include(isTypeDependency);
+    });
+    it('should successfully require is-type dependency and print the results from both components', () => {
+      const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type and got is-string');
+    });
+  });
+
   describe('import component is-type as a dependency of is-string and then import is-type directly', () => {
     let localConsumerFiles;
     before(() => {

@@ -34,10 +34,10 @@ function _exec(command,cb) {
     if (cb) cb();
   });
 }
-  
+
 function runUpdate(updateCommand){
   var previousCommand = 'bit ' + process.argv.slice(2).join(' ');
-  
+
   _askUser(function (shouldUpdate) {
     if (shouldUpdate) _exec(updateCommand, function() { _exec(previousCommand)});
     else _exec(previousCommand)
@@ -68,7 +68,7 @@ function getUpdateCommand() {
   if (constants.BIT_INSTALL_METHOD === 'brew') return 'brew update && brew upgrade bit';
   if (constants.BIT_INSTALL_METHOD === 'yum') return 'yum clean all && yum upgrade bit -y';
   if (constants.BIT_INSTALL_METHOD === 'deb') return 'sudo apt-get update && sudo apt-get install bit';
-  if (constants.BIT_INSTALL_METHOD === 'npm') return 'npm upgrade --global bit';
+  if (constants.BIT_INSTALL_METHOD === 'npm') return 'npm install --global bit-bin';
   if (constants.BIT_INSTALL_METHOD === 'choco') return 'choco upgrade bit';
 }
 
