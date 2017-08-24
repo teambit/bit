@@ -544,7 +544,7 @@ export default class Component {
       testerId: testerId ? BitId.parse(testerId) : null,
       dependencies: dependencies.map(dep => Object.assign({}, dep, { id: BitId.parse(dep.id) })), //this._dependenciesFromWritableObject(dependencies),
       packageDependencies,
-      mainFile: path.normalize(mainFile),
+      mainFile,
       files,
       docs,
       dists,

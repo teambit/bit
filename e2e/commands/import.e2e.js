@@ -289,7 +289,7 @@ describe('bit import', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         helper.importComponent('utils/is-string');
-        localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(x=>path.normalize(x));
+        localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(x => path.normalize(x));
       });
 
       it('create a link file to the dependency main file', () => {
@@ -443,7 +443,7 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
-      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(file=>path.normalize(file));
+      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(file => path.normalize(file));
     });
 
     it('should keep the original directory structure of the main component', () => {
@@ -642,7 +642,7 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
-      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(file =>path.normalize(file));
+      localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(file => path.normalize(file));
     });
 
     it('should keep the original directory structure of the main component', () => {
