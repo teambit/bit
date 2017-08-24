@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - deprecated install command
 - added `--environment` option for `bit import` 
 - reformatted `bit import` output (components, dependencies, environments)
+- remove duplication for missing packages warning
 
 ## [0.10.6] - 2017-08-23
 

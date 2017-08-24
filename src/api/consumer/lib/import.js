@@ -119,15 +119,15 @@ const warnForPackageDependencies = ({ dependencies, consumer }): Promise<Object>
       const compatibleWithPackgeJson = compatibleWith(packageDep, packageJsonDependencies);
       const compatibleWithNodeModules = compatibleWith(packageDep, nodeModules);
 
-      if (!compatibleWithPackgeJson && !compatibleWithNodeModules) {
+      if (!compatibleWithPackgeJson && !compatibleWithNodeModules && !R.contains(packageDep, warnings.notInBoth)) {
         warnings.notInBoth.push(packageDep);
       }
 
-      if (!compatibleWithPackgeJson && compatibleWithNodeModules) {
+      if (!compatibleWithPackgeJson && compatibleWithNodeModules && !R.contains(packageDep, warnings.notInPackageJson)) {
         warnings.notInPackageJson.push(packageDep);
       }
 
-      if (compatibleWithPackgeJson && !compatibleWithNodeModules) {
+      if (compatibleWithPackgeJson && !compatibleWithNodeModules && !R.contains(packageDep, warnings.notInNodeModules)) {
         warnings.notInNodeModules.push(packageDep);
       }
     }, dep.packageDependencies);
