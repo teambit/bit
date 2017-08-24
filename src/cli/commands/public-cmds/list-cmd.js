@@ -14,13 +14,12 @@ export default class List extends Command {
   alias = 'ls';
   opts = [
     ['ids', 'ids', 'components ids to list'],
-    ['c', 'cache', 'also show cached components in scope (works for local scopes)'],
     ['b', 'bare', 'show bare output (more details, less pretty)'],
   ];
   loader = true;
 
-  action([scopeName]: string[], { ids, cache, bare }: { ids?: bool, cache?: bool, bare?: bool }): Promise<any> {
-    return listScope({ scopeName, cache })
+  action([scopeName]: string[], { ids, bare }: { ids?: bool, cache?: bool, bare?: bool }): Promise<any> {
+    return listScope({ scopeName, cache: true })
     .then(components => ({
       components,
       scope: scopeName,
@@ -36,14 +35,14 @@ export default class List extends Command {
     bare?: bool,
   }): string {
     function decideHeaderSentence() {
-      if (!scope) return `Total ${components.length} components in local scope`;
-      return `Total ${components.length} components in ${scope}`;
+      if (!scope) return `found ${components.length} components in local scope`;
+      return chalk.white(`found ${components.length} components in ${chalk.bold(scope)}\n`);
     }
 
     if (R.isEmpty(components)) { return chalk.white(`${decideHeaderSentence()}`); }
     if (ids) return JSON.stringify(components.map(c => c.id.toString()));
     // TODO - use a cheaper list for ids flag (do not fetch versions at all) @!IMPORTANT
-    return paintHeader(decideHeaderSentence()) +
+    return decideHeaderSentence() +
     (bare ? bareListTemplate(components) : listTemplate(components));
   }
 }
