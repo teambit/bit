@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 - `bit import` from bit.json does not write to the file-system a dependency when it is also a direct import
 - bug fix - export would hang when the ssh server were existing before closing
+- don't calculate nested deps when calculating modified component during bit status / commit
 
 ## [0.10.6] - 2017-08-23
 
