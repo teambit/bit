@@ -22,7 +22,7 @@ pipeline {
 					notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-deb/development/bit/${currentVersion}/bit_${currentVersion}_all.deb","deb")
 					notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-yum/development/bit/${currentVersion}/bit-${currentVersion}-1.noarch.rpm","yum")
 					notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-tar/development/bit/${currentVersion}/bit-${currentVersion}-tar.gz","tar")
-					notifyReleaseServer("${VERSION}","http://bit-npm/stable/bit.npm","npm")
+					notifyReleaseServer(currentVersion,releaseServer,"http://bit-npm/stable/bit.npm","npm")
 				}
 
 			}

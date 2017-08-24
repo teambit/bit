@@ -102,6 +102,12 @@ export default class SSH implements Network {
           .on('data', (response) => {
             res += response.toString();
           })
+          .on('exit', (code) => {
+            logger.error(`ssh: server had been exiting before closing. Exit code: ${code}`);
+            return code && code !== 0 ?
+              reject(errorHandler(code, err)) :
+              resolve(clean(res));
+          })
           .on('close', (code, signal) => {
             if (commandName === '_put') res = res.replace(payload, '');
             logger.debug(`ssh: returned with code: ${code}, signal: ${signal}.`);

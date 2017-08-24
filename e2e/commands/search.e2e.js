@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe('bit search', function () {
+describe.skip('bit search', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
