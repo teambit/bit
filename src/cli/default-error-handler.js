@@ -60,7 +60,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     const missingDepsColored = missingDepsTemplate(err.components);
     return `fatal: following component dependencies were not found\n${missingDepsColored}`;
   }],
-  [ NothingToImport, () => 'there is nothing to import'],
+  [ NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [componentId]` or configure components in bit.json')],
   [ InvalidIdChunk, err => `invalid id part in "${chalk.bold(err.id)}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]`],
   [ InvalidBitJson, err => `error: ${chalk.bold(err.path)} is not a valid JSON file.`],
   [ ResolutionException, e => e.message],

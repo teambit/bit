@@ -29,8 +29,7 @@ describe('bit install command', function () {
     });
     it('should display a successful message with the list of installed components', () => {
       const output = helper.runCmd('bit install');
-      expect(output.includes('successfully imported the following Bit components')).to.be.true;
-      expect(output.includes('bar/foo')).to.be.true;
+      expect(output.includes('successfully imported one component')).to.be.true;
     });
   });
   describe('with a component in bit.map', () => {
@@ -49,8 +48,7 @@ describe('bit install command', function () {
     });
     it('should display a successful message with the list of installed components', () => {
       const output = helper.runCmd('bit install');
-      expect(output.includes('successfully imported the following Bit components')).to.be.true;
-      expect(output.includes('bar/foo')).to.be.true;
+      expect(output.includes('successfully imported one component')).to.be.true;
     });
   });
 });
