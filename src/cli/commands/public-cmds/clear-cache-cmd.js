@@ -7,7 +7,7 @@ const { MODULES_CACHE_DIR } = require('../../../constants');
 
 export default class ClearCache extends Command {
   name = 'clear-cache';
-  description = 'clears Bit\'s cache from current working machine';
+  description = 'clears bit\'s cache from current working machine';
   alias = 'cc';
   opts = [];
   loader = false;
@@ -19,6 +19,6 @@ export default class ClearCache extends Command {
   }
 
   report(): string {
-    return chalk.green('Cache was cleared');
+    return chalk.green('cache cleared');
   }
 }
