@@ -14,13 +14,12 @@ export default class List extends Command {
   alias = 'ls';
   opts = [
     ['ids', 'ids', 'components ids to list'],
-    ['c', 'cache', 'also show cached components in scope (works for local scopes)'],
     ['b', 'bare', 'show bare output (more details, less pretty)'],
   ];
   loader = true;
 
-  action([scopeName]: string[], { ids, cache, bare }: { ids?: bool, cache?: bool, bare?: bool }): Promise<any> {
-    return listScope({ scopeName, cache })
+  action([scopeName]: string[], { ids, bare }: { ids?: bool, cache?: bool, bare?: bool }): Promise<any> {
+    return listScope({ scopeName, cache: true })
     .then(components => ({
       components,
       scope: scopeName,

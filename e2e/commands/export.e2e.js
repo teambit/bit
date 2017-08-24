@@ -104,9 +104,9 @@ describe('bit export command', function () {
       expect(output.includes('bar/foo1')).to.be.true;
       expect(output.includes('bar/foo2')).to.be.true;
     });
-    it('bit list locally should display 0 components', () => {
+    it('bit list locally should display 2 components', () => {
       const output = helper.runCmd('bit list');
-      expect(output.includes('found 0 components in local scope')).to.be.true;
+      expect(output.includes('found 2 components in local scope')).to.be.true;
     });
   });
 
