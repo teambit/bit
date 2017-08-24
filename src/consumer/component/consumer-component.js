@@ -180,13 +180,14 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDependencies);
   }
 
-  async buildIfNeeded({ condition, files, compiler, consumer, componentMap, scope }: {
-    condition?: ?bool,
+  async buildIfNeeded({ condition, files, compiler, consumer, componentMap, scope, verbose }: {
+    condition?: ?boolean,
     files:File[],
     compiler: any,
     consumer?: Consumer,
     componentMap?: ComponentMap,
     scope: Scope,
+    verbose: boolean,
   }): Promise<?{ code: string, mappings?: string }> {
     if (!condition) { return Promise.resolve({ code: '' }); }
 
@@ -225,7 +226,7 @@ export default class Component {
     const isolatedEnvironment = new IsolatedEnvironment(scope);
     try {
       await isolatedEnvironment.create();
-      const component = await isolatedEnvironment.importE2E(this.id.toString());
+      const component = await isolatedEnvironment.importE2E(this.id.toString(), verbose);
       const result = await runBuild(component.writtenPath);
       await isolatedEnvironment.destroy();
       return result;
@@ -404,7 +405,7 @@ export default class Component {
       const isolatedEnvironment = new IsolatedEnvironment(scope);
       try {
         await isolatedEnvironment.create();
-        const component = await isolatedEnvironment.importE2E(this.id.toString());
+        const component = await isolatedEnvironment.importE2E(this.id.toString(), verbose);
         component.isolatedEnvironment = isolatedEnvironment;
         logger.debug(`the component ${this.id.toString()} has been imported successfully into an isolated environment`);
 
