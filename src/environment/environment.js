@@ -28,10 +28,10 @@ export default class Environment {
     this.consumer = await Consumer.createWithExistingScope(this.path, this.scope);
   }
 
-  installNpmPackages(components: Component[]): Promise<*> {
+  installNpmPackages(components: Component[], verbose: boolean): Promise<*> {
     return Promise.all(components.map((component) => {
       if (R.isEmpty(component.packageDependencies)) return Promise.resolve();
-      return npmClient.install(component.packageDependencies, { cwd: component.writtenPath });
+      return npmClient.install(component.packageDependencies, { cwd: component.writtenPath }, verbose);
     }));
   }
 
@@ -42,14 +42,14 @@ export default class Environment {
    * @param rawId
    * @return {Promise.<Component>}
    */
-  async importE2E(rawId: string): Promise<Component> {
+  async importE2E(rawId: string, verbose: boolean): Promise<Component> {
     const bitId = BitId.parse(rawId);
     const componentDependenciesArr = await this.scope.getMany([bitId]);
     await this.consumer.writeToComponentsDir(componentDependenciesArr);
     const componentWithDependencies: ComponentWithDependencies = R.head(componentDependenciesArr);
     const componentWithDependenciesFlatten = [componentWithDependencies.component,
       ...componentWithDependencies.dependencies];
-    await this.installNpmPackages(componentWithDependenciesFlatten);
+    await this.installNpmPackages(componentWithDependenciesFlatten, verbose);
     return componentWithDependencies.component;
   }
 

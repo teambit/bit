@@ -49,8 +49,7 @@ const serializeOption = (bool, optName) => {
   return camelCaseToOptionCase(optName);
 };
 
-const installAction = (modules: string[] | string | {[string]: number|string}, userOpts?: Options
-) => {
+const installAction = (modules: string[] | string | {[string]: number|string}, userOpts?: Options, verbose: boolean) => {
   const options = merge(defaults, userOpts);
   const flags = pipe(
     mapObjIndexed(serializeOption),
@@ -69,9 +68,19 @@ const installAction = (modules: string[] | string | {[string]: number|string}, u
 
   return new Promise((resolve, reject) => {
     fs.ensureDirSync(path.join(options.cwd, 'node_modules'));
-    return exec(`npm install${serializedModules}${serializedFlags}`,
-    { cwd: options.cwd }, (error, stdout, stderr) => {
+    const commandToExecute = `npm install${serializedModules}${serializedFlags}`;
+    return exec(commandToExecute, { cwd: options.cwd }, (error, stdout, stderr) => {
       if (error) return reject(error);
+      // This is an hack until we will upgrade to npm5 (don't know the exact version)
+      // In npm5 they improved the output to be something like: 
+      // npm added 125, removed 32, updated 148 and moved 5 packages.
+      // see more info here: 
+      // https://github.com/npm/npm/pull/15914
+      // https://github.com/npm/npm/issues/10732
+      // if (!verbose) {
+        stdout = `successfully ran ${commandToExecute}`;
+      // }
+
       return resolve({ stdout, stderr });
     });
   });

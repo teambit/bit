@@ -711,7 +711,7 @@ export default class Scope {
     const installPackageDependencies = (component: ConsumerComponent) => {
       return npmClient.install(component.packageDependencies, {
         cwd: this.getBitPathInComponentsDir(component.id)
-      });
+      }, verbose);
     };
 
     return this.getMany(ids)
