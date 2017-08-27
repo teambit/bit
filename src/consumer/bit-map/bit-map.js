@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
+import normalize from 'normalize-path';
 import R from 'ramda';
 import find from 'lodash.find';
 import pickBy from 'lodash.pickby';
