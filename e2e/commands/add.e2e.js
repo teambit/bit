@@ -1,6 +1,7 @@
 // covers also init, create, commit, import and export commands
 
 import chai, { expect } from 'chai';
+import normalize from 'normalize-path';
 import path from 'path';
 import Helper from '../e2e-helper';
 
@@ -32,7 +33,7 @@ describe('bit add command', function () {
       helper.addComponentWithOptions(osComponentName, { 't': `${osFilePathName}       ` });
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo'].files;
-      const expectTestFile = { relativePath: osFilePathName, test: true, name: 'foo.spec.js' };
+      const expectTestFile = { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' };
       expect(bitMap).to.have.property('bar/foo');
       expect(files).to.be.array();
       expect(files).to.be.ofSize(2);
@@ -126,7 +127,7 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const mainFile = bitMap['test/bar'].mainFile;
       expect(bitMap).to.have.property('test/bar');
-      expect(mainFile).to.equal(expectedRes);
+      expect(mainFile).to.equal('bar/bar.js');
     });
     it('Should add component with spec file from another dir according to dsl', () => {
       const dslOs = path.normalize('test/{FILE_NAME}.spec.js');
@@ -136,8 +137,8 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(2);
-      expect(files).to.include({ relativePath: path.normalize('bar/foo.js'), test: false, name: 'foo.js' });
-      expect(files).to.include({ relativePath: path.normalize('test/foo.spec.js'), test: true, name: 'foo.spec.js' });
+      expect(files).to.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Glob and dsl Should add component to bitmap ', () => {
@@ -148,9 +149,9 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(3);
-      expect(files).to.include({ relativePath: path.normalize('bar/foo.js'), test: false, name: 'foo.js' });
-      expect(files).to.include({ relativePath: path.normalize('test/foo.spec.js'), test: true, name: 'foo.spec.js' });
-      expect(files).to.include({ relativePath: path.normalize('test2/foo1.spec.js'), test: true, name: 'foo1.spec.js' });
+      expect(files).to.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(files).to.include({ relativePath: 'test2/foo1.spec.js', test: true, name: 'foo1.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
 
@@ -164,8 +165,8 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(5);
-      expect(files).to.include({ relativePath: path.normalize('bar/foo.js'), test: false, name: 'foo.js' });
-      expect(files).to.include({ relativePath: path.normalize('test/foo.spec.js'), test: true, name: 'foo.spec.js' });
+      expect(files).to.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Should add dir files with spec from multiple dsls when test files are placed in same structure', () => {
@@ -179,9 +180,9 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(6);
-      expect(files).to.include({ relativePath: path.normalize('test/bar/foo2.spec.js'), test: true, name: 'foo2.spec.js' });
-      expect(files).to.include({ relativePath: path.normalize('test/foo2.spec.js'), test: true, name: 'foo2.spec.js' });
-      expect(files).to.include({ relativePath: path.normalize('test/bar/foo.spec.js'), test: true, name: 'foo.spec.js' });
+      expect(files).to.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Should add dir files with spec from dsl and glob pattern', () => {
@@ -195,9 +196,8 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(6);
-      expect(files).to.include({ relativePath: path.normalize('test/bar/foo2.spec.js'), test: true, name: 'foo2.spec.js' });
-      expect(files).to.include({ relativePath: path.normalize('test/foo2.spec.js'), test: true, name: 'foo2.spec.js' });
-      expect(files).to.include({ relativePath: path.normalize('test/bar/foo.spec.js'), test: true, name: 'foo.spec.js' });
+      expect(files).to.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
 
@@ -212,8 +212,8 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(5);
-      expect(files).to.include({ relativePath: path.normalize('test/bar/foo2.spec.js'), test: true, name: 'foo2.spec.js' });
-      expect(files).to.include({ relativePath: path.normalize('test/bar/foo.spec.js'), test: true, name: 'foo.spec.js' });
+      expect(files).to.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Should modify bitmap when adding component again when specifing id', () => {
@@ -306,8 +306,8 @@ describe('bit add command', function () {
       helper.addComponentWithOptions(`${path.normalize('bar/foo1.js')} ${path.normalize('bar/foo2.js')} ${path.normalize('bar/foo3.js')}  -i bar/foo -m ${path.normalize('bar/foo1.js')}`, { 'e': 'bar/foo2.js' });
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo'].files;
-      const expectedArray = [{ relativePath: path.normalize('bar/foo1.js'), test: false, name: 'foo1.js' },
-        { relativePath: path.normalize('bar/foo3.js'), test: false, name: 'foo3.js' }]
+      const expectedArray = [{ relativePath: 'bar/foo1.js', test: false, name: 'foo1.js' },
+        { relativePath: 'bar/foo3.js', test: false, name: 'foo3.js' }]
       expect(bitMap).to.have.property('bar/foo');
       expect(files).to.be.array();
       expect(files).to.be.ofSize(2);
@@ -337,7 +337,7 @@ describe('bit add command', function () {
     });
     it('should identify the closest index file as the main file', () => {
       const bitMap = helper.readBitMap();
-      const expectedMainFile = path.join('bar', 'index.js');
+      const expectedMainFile = normalize(path.join('bar', 'index.js'));
       expect(bitMap['bar/foo'].mainFile).to.equal(expectedMainFile);
     });
   });
