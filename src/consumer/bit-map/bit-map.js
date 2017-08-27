@@ -229,7 +229,7 @@ export default class BitMap {
       this.components[componentIdStr].mainFile = this._getMainFile(path.normalize(mainFile), this.components[componentIdStr]);
     }
     if (rootDir) {
-      this.components[componentIdStr].rootDir = this._makePathRelativeToProjectRoot(rootDir);
+      this.components[componentIdStr].rootDir = normalize(this._makePathRelativeToProjectRoot(rootDir));
     }
     if (origin === COMPONENT_ORIGINS.IMPORTED) {
       // if there are older versions, the user is updating an existing component, delete old ones from bit.map
