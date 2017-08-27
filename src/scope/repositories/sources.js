@@ -1,4 +1,5 @@
 /** @flow */
+import normalize from 'normalize-path';
 import { bufferFrom } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
@@ -142,10 +143,10 @@ export default class SourceRepository {
   : Promise<Object> {
     await consumerComponent.build({ scope: this.scope, consumer });
     const dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
-      return { name: dist.basename, relativePath: dist.relative, file: Source.from(dist.contents), test: dist.test };
+      return { name: dist.basename, relativePath: normalize(dist.relative), file: Source.from(dist.contents), test: dist.test };
     }) : null;
     const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
-      return { name: file.basename, relativePath: file.relative, file: Source.from(file.contents), test: file.test };
+      return { name: file.basename, relativePath: normalize(file.relative), file: Source.from(file.contents), test: file.test };
     }) : null;
 
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
@@ -154,6 +155,8 @@ export default class SourceRepository {
     loader.start(BEFORE_RUNNING_SPECS);
     const specsResults = await consumerComponent
       .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
+
+    consumerComponent.mainFile = normalize(consumerComponent.mainFile);
     const version = Version.fromComponent({
       component: consumerComponent,
       files,
