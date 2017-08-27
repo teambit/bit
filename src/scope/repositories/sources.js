@@ -1,4 +1,5 @@
 /** @flow */
+import normalize from 'normalize-path';
 import { bufferFrom } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
@@ -157,7 +158,7 @@ export default class SourceRepository {
       forHashOnly?: boolean }
   ): Promise<Object> {
     const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
-      return { name: file.basename, relativePath: file.relative, file: Source.from(file.contents), test: file.test };
+      return { name: file.basename, relativePath: normalize(file.relative), file: Source.from(file.contents), test: file.test };
     }) : null;
 
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
