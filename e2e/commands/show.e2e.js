@@ -64,7 +64,7 @@ describe('bit show command', function () {
 
       it('should render the main file correctly', () => {
         expect(output).to.have.string('Main file', 'Main file row is missing');
-        expect(output).to.have.string(path.normalize('src/mainFile.js'), 'Main file is wrong');
+        expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
 
       it('should render the dependencies correctly', () => {
@@ -80,13 +80,13 @@ describe('bit show command', function () {
 
       it('should render the files correctly', () => {
         expect(output).to.have.string('Files', 'Files row is missing');
-        expect(output).to.have.string(path.normalize('src/mainFile.js'), 'Files are wrong');
-        expect(output).to.have.string(path.normalize('src/utils/utilFile.js'), 'Files are wrong');
+        expect(output).to.have.string('src/mainFile.js', 'Files are wrong');
+        expect(output).to.have.string('src/utils/utilFile.js', 'Files are wrong');
       });
 
       it('should render the main file correctly', () => {
         expect(output).to.have.string('Main file', 'Main file row is missing');
-        expect(output).to.have.string(path.normalize('src/mainFile.js'), 'Main file is wrong');
+        expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
     });
 
