@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
+import normalize from 'normalize-path';
 import R from 'ramda';
 import find from 'lodash.find';
 import pickBy from 'lodash.pickby';
@@ -53,6 +54,11 @@ export default class BitMap {
       logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will probably create a new one if needed`);
       components = {};
     }
+    //convert components to os specific paths
+    Object.keys(components).forEach((key) => {
+      components[key].files.forEach(file => file.relativePath = path.normalize(file.relativePath));
+      components[key].mainFile = path.normalize(components[key].mainFile);
+    });
     return new BitMap(dirPath, mapPath, components);
   }
 
@@ -342,8 +348,17 @@ export default class BitMap {
     return R.keys(componentObject)[0];
   }
 
+
+  modifyComponentsToLinuxPath(components:Object) {
+    Object.keys(components).forEach((key) => {
+      components[key].files.forEach(file => file.relativePath = normalize(file.relativePath));
+      components[key].mainFile = normalize(components[key].mainFile);
+    });
+  }
+
   write(): Promise<> {
     logger.debug('writing to bit.map');
+    this.modifyComponentsToLinuxPath(this.components);
     return outputFile(this.mapPath, JSON.stringify(this.components, null, 4));
   }
 }
