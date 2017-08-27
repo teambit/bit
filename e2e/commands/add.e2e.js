@@ -60,13 +60,13 @@ describe('bit add command', function () {
       const files = bitMap['bar/foo'].files;
       expect(bitMap).to.have.property('bar/foo');
       expect(files).to.be.ofSize(1);
-      expect(files).to.include({ relativePath: path.normalize('bar/foo.js'), test: false, name: 'foo.js' });
+      expect(files).to.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
       helper.addComponentWithOptions('bar/boo1.js', { 'i': 'bar/foo' , 'o': true });
       const bitMap2 = helper.readBitMap();
       const files2 = bitMap2['bar/foo'].files;
       expect(bitMap2).to.have.property('bar/foo');
       expect(files2).to.be.ofSize(1);
-      expect(files2).to.include({ relativePath: path.normalize('bar/boo1.js'), test: false, name: 'boo1.js' });
+      expect(files2).to.include({ relativePath: 'bar/boo1.js', test: false, name: 'boo1.js' });
     });
 
     it('Should throw error when no index file is found', () => {
