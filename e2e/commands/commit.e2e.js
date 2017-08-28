@@ -197,6 +197,7 @@ describe('bit commit command', function () {
         }
       });
 
+      // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
       it('Should print that there is missing dependencies', () => {
         expect(output).to.have.string('fatal: following component dependencies were not found');
       });
@@ -213,6 +214,7 @@ describe('bit commit command', function () {
         expect(output).to.have.string('./missing-fs2');
       });
 
+      // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
       it('Should print that there is missing package dependencies on file system (nested)', () => {
         expect(output).to.have.string('package');
         expect(output).to.have.string('package2');
@@ -259,8 +261,10 @@ describe('bit commit command', function () {
 
       const output = helper.showComponentWithOptions('comp/comp', { j: '' });
       const dependencies = JSON.parse(output).dependencies;
-      const depPathsIsString = { sourceRelativePath: path.normalize('utils/is-string.js'), destinationRelativePath: path.normalize('utils/is-string.js') };
-      const depPathsIsType = { sourceRelativePath: path.normalize('utils/is-type.js'), destinationRelativePath: path.normalize('utils/is-type.js') };
+      const depPaths = [{ sourceRelativePath: 'utils/is-type.js', destinationRelativePath: 'utils/is-type.js' }];
+      const depObject = { id: 'utils/is-type', relativePaths: depPaths };
+      const depPaths1 = [{ sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' }];
+      const depObject1 = { id: 'utils/is-string', relativePaths: depPaths1 };
 
       expect(dependencies.find(dep => dep.id === 'utils/is-string').relativePaths[0]).to.deep.equal(depPathsIsString);
       expect(dependencies.find(dep => dep.id === 'utils/is-type').relativePaths[0]).to.deep.equal(depPathsIsType);
