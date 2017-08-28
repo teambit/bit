@@ -538,10 +538,10 @@ describe('bit import', function () {
       const isTypeFixture = "export = isType; function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.ts', isTypeFixture);
       helper.addComponent('utils/is-type.ts');
-      const isStringFixture = "import * as isType from './is-type.ts'; export = isString; function isString() { return isType() +  ' and got is-string'; };";
+      const isStringFixture = "import * as isType from './is-type'; export = isString; function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.ts', isStringFixture);
       helper.addComponent('utils/is-string.ts');
-      const fooBarFixture = "import * as isString from '../utils/is-string.ts'; export = foo; function foo() { return isString() + ' and got foo'; };";
+      const fooBarFixture = "import * as isString from '../utils/is-string'; export = foo; function foo() { return isString() + ' and got foo'; };";
       helper.createComponent('bar', 'foo.ts', fooBarFixture);
       helper.addComponent('bar/foo.ts');
       helper.commitAllComponents();
