@@ -20,7 +20,7 @@ export default class Export extends Command {
   }
 
   report({ component, remote }: { component: Component|Component[], remote: string }): string {
-    if (R.isEmpty(component)) return chalk.green(`No components to export to scope ${chalk.bold(remote)}`);
+    if (R.isEmpty(component)) return chalk.green(`no components to export to scope ${chalk.bold(remote)}`);
     if (Array.isArray(component)) {
       return chalk.green(`exported ${component.length} components to scope ${chalk.bold(remote)}`);
     }

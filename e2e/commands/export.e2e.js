@@ -164,7 +164,7 @@ describe('bit export command', function () {
     });
     it('should print nothing to export', () => {
       const output = helper.exportAllComponents();
-      expect(output).to.include(`No components to export to scope ${helper.remoteScope}`);
+      expect(output).to.include(`no components to export to scope ${helper.remoteScope}`);
     });
   });
   describe('with multiple versions', () => {
