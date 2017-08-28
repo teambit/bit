@@ -156,7 +156,17 @@ describe('bit export command', function () {
       expect(output.includes('utils/is-string')).to.be.true;
     });
   });
-
+  describe('with no components to export', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+    });
+    it('should export them all', () => {
+      const output = helper.exportAllComponents();
+      expect(output).to.include(`No components to export to scope ${helper.remoteScope}`);
+    });
+  });
   describe('with multiple versions', () => {
     before(() => {
       helper.reInitLocalScope();
