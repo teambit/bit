@@ -8,15 +8,19 @@ import { VERSION_DELIMITER } from '../src/constants';
 export default class Helper {
   constructor() {
     this.debugMode = !!process.env.npm_config_debug;
-    this.localScope = v4() + '-local';
     this.remoteScope = v4() + '-remote';
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
-    this.localScopePath = path.join(this.e2eDir, this.localScope);
+    this.setLocalScope();
     this.remoteScopePath = path.join(this.e2eDir, this.remoteScope);
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
     this.envScope = v4() + '-env';
     this.envScopePath = path.join(this.e2eDir, this.envScope);
     this.compilerCreated = false;
+  }
+
+  setLocalScope() {
+    this.localScope = `${v4()}-local`;
+    this.localScopePath = path.join(this.e2eDir, this.localScope);
   }
 
   runCmd(cmd, cwd = this.localScopePath) {
@@ -67,6 +71,13 @@ export default class Helper {
 
   reInitLocalScope() {
     fs.emptyDirSync(this.localScopePath);
+    return this.runCmd('bit init');
+  }
+
+  initNewLocalScope() {
+    fs.removeSync(this.localScopePath);
+    this.setLocalScope();
+    fs.ensureDirSync(this.localScopePath);
     return this.runCmd('bit init');
   }
 
