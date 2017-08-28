@@ -130,6 +130,7 @@ describe('bit import', function () {
   });
 
   describe('with an existing component in bit.map', () => {
+    let localConsumerFiles;
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
@@ -143,13 +144,23 @@ describe('bit import', function () {
       helper.addRemoteScope();
       helper.writeBitMap(bitMap);
       helper.importComponent('bar/foo');
+      localConsumerFiles = (glob.sync(path.normalize('**/*.js'), { cwd: helper.localScopePath })).map(x => path.normalize(x));
     });
-
     // Prevent cases when I export a component with few files from different directories
     // and get it in another structure during imports (for example under components folder instead of original folder)
     it('should write the component to the paths specified in bit.map', () => {
-      const expectedLocation = path.join(helper.localScopePath, 'bar', 'foo.js');
-      expect(fs.existsSync(expectedLocation)).to.be.true;
+      const expectedLocation = path.join('bar', 'foo.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should not write any file into components directory', () => {
+      localConsumerFiles.forEach((fileName) => {
+        expect(fileName.startsWith('components')).to.be.false;
+      });
+    });
+    it('should not create any link file', () => {
+      localConsumerFiles.forEach((fileName) => {
+        expect(fileName.includes('index.js')).to.be.false;
+      });
     });
   });
 

@@ -282,6 +282,7 @@ export default class Component {
     } else if (componentMap) {
       logger.debug('component is in bit.map, write the files according to bit.map');
       const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
+      this.writtenPath = newBase;
 
       this.files.forEach(file => file.updatePaths({ newBase }));
       this.files.forEach(file => file.write(undefined, force));
