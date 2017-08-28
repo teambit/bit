@@ -243,16 +243,14 @@ export default class ComponentsList {
   /**
    * Finds all components that are saved in the file system.
    * Components might be stored in the default component directory and also might be outside
-   * of that directory, in which case the bit.map is used to find them
+   * of that directory. The bit.map is used to find them all
    * @return {Promise<Component[]>}
    */
   async getFromFileSystem(origin): Promise<Component[]> {
     if (!this._fromFileSystem) {
       const idsFromBitMap = await this.idsFromBitMap(undefined, origin);
-      const parsedBitIds = idsFromBitMap.map((id) => BitId.parse(id));
-      const registeredComponentsP = await this.consumer.loadComponents(parsedBitIds);
-      const unRegisteredComponentsP = await this.onFileSystemAndNotOnBitMap();
-      this._fromFileSystem = Promise.all([...registeredComponentsP, ...unRegisteredComponentsP]);
+      const parsedBitIds = idsFromBitMap.map(id => BitId.parse(id));
+      this._fromFileSystem = await this.consumer.loadComponents(parsedBitIds);
     }
     return this._fromFileSystem;
   }

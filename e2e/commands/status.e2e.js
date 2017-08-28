@@ -1,3 +1,4 @@
+import path from 'path';
 import { expect } from 'chai';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
@@ -13,6 +14,19 @@ describe('bit status command', function () {
       helper.runCmd('bit init');
     });
     it('should indicate that there are no components', () => {
+      const output = helper.runCmd('bit status');
+      expect(output.includes('no new components')).to.be.true;
+      expect(output.includes('no modified components')).to.be.true;
+      expect(output.includes('no staged components')).to.be.true;
+    });
+  });
+  describe('when a component is created in components directory but not added', () => {
+    before(() => {
+      helper.cleanEnv();
+      helper.runCmd('bit init');
+      helper.createFile(path.join('components', 'bar'), 'foo.js');
+    });
+    it('should indicate that there are no components and should not throw an error', () => {
       const output = helper.runCmd('bit status');
       expect(output.includes('no new components')).to.be.true;
       expect(output.includes('no modified components')).to.be.true;

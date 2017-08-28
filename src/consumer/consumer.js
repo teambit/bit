@@ -128,7 +128,7 @@ export default class Consumer {
     return components[0];
   }
 
-  async loadComponents(ids: BitId[]): Promise<Component> {
+  async loadComponents(ids: BitId[]): Promise<Component[]> {
     logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
     const alreadyLoadedComponents = [];
     const idsToProcess = [];

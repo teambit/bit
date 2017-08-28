@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- bug fix - status command shows an error when components directory has an unreferenced (from bit.map) component
 - avoid generating links for author components
 - `bit import` from bit.json does not write to the file-system a dependency when it is also a direct import
 - bug fix - export would hang when the ssh server were existing before closing
