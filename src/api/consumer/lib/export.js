@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import { Consumer, loadConsumer } from '../../../consumer';
 import ConsumerComponent from '../../../consumer/component/consumer-component';
 import ComponentsList from '../../../consumer/component/components-list';
@@ -16,6 +17,7 @@ export default async function exportAction(ids?: string[], remote: string, save:
     loader.start(BEFORE_EXPORT) //show single export
   }
   // todo: what happens when some failed? we might consider avoid Promise.all
+  if (R.isEmpty(ids)) return {};
   const componentsDependencies = await consumer.scope.exportMany(ids, remote);
 
   const bitJsonDependencies = consumer.bitJson.getDependencies();
