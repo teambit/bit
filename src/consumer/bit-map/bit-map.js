@@ -220,13 +220,13 @@ export default class BitMap {
         this.components[componentIdStr].files = R.unionWith(R.eqBy(R.prop('relativePath')), files, this.components[componentIdStr].files);
       }
       if (mainFile) {
-        this.components[componentIdStr].mainFile = this._getMainFile(path.normalize(mainFile), this.components[componentIdStr]);
+        this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
       }
     } else {
       this.components[componentIdStr] = { files };
       this.components[componentIdStr].origin = origin;
 
-      this.components[componentIdStr].mainFile = this._getMainFile(mainFile ? path.normalize(mainFile) : mainFile, this.components[componentIdStr]);
+      this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
     }
     if (rootDir) {
       const root = this._makePathRelativeToProjectRoot(rootDir)

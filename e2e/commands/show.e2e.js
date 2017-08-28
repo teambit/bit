@@ -126,14 +126,14 @@ describe('bit show command', function () {
       });
 
       it('should render the main file correctly', () => {
-        expect(output).to.include({mainFile: path.normalize('src/mainFile.js')});
+        expect(output).to.include({mainFile: 'src/mainFile.js'});
       });
 
       it('should include the dependencies correctly', () => {
         const dependencies = output.dependencies;
         console.log('dependencies', JSON.stringify(dependencies));
         // TODO: Should be concrete version after we resolve the dep version
-        const depPaths = [{ sourceRelativePath: path.normalize('utils/is-string.js'), destinationRelativePath: path.normalize('utils/is-string.js') }];
+        const depPaths = [{ sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' }];
         const depObject = { id: 'utils/is-string', relativePaths: depPaths };
         expect(dependencies[0].relativePaths[0]).to.include(depPaths[0]);
       });
@@ -150,9 +150,9 @@ describe('bit show command', function () {
         const firstFileObj = files[0];
         const secondFileObj = files[1];
 
-        const mainFileHistory = [path.normalize(`${helper.localScopePath}/src/mainFile.js`)];
+        const mainFileHistory = [`${helper.localScopePath}/src/mainFile.js`];
         // const mainFileObj = {history: mainFileHistory};
-        const utilFileHistory = [path.normalize(`${helper.localScopePath}/src/utils/utilFile.js`)];
+        const utilFileHistory = [`${helper.localScopePath}/src/utils/utilFile.js`];
         // const utilFileObj = {history: utilFileHistory};
 
         expect(firstFileObj.history[0]).to.include(mainFileHistory);
@@ -161,7 +161,7 @@ describe('bit show command', function () {
 
       // TODO: change this to src/mainFile.js once we change the main file to store relative instead of path
       it('should include the main file correctly', () => {
-        expect(output).to.include({ mainFile: path.normalize('src/mainFile.js') });
+        expect(output).to.include({ mainFile: 'src/mainFile.js' });
       });
     });
 
