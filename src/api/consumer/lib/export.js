@@ -17,7 +17,8 @@ export default async function exportAction(ids?: string[], remote: string, save:
     loader.start(BEFORE_EXPORT) //show single export
   }
   // todo: what happens when some failed? we might consider avoid Promise.all
-  if (R.isEmpty(ids)) return {};
+  //in case we dont have anything to export
+  if (R.isEmpty(ids)) return [];
   const componentsDependencies = await consumer.scope.exportMany(ids, remote);
 
   const bitJsonDependencies = consumer.bitJson.getDependencies();
