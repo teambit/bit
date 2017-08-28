@@ -4,7 +4,8 @@ import R from 'ramda';
 import {
   DEFAULT_DIST_DIRNAME,
   DEFAULT_INDEX_NAME,
-  DEFAULT_INDEX_TS_NAME
+  DEFAULT_INDEX_TS_NAME,
+  COMPONENT_ORIGINS
 } from '../../constants';
 import { outputFile } from '../../utils';
 import logger from '../../logger/logger';
@@ -92,6 +93,8 @@ async function writeDependencyLinks(componentDependencies: ComponentWithDependen
   };
 
   const allLinksP = componentDependencies.map((componentWithDeps) => {
+    const componentMap = bitMap.getComponent(componentWithDeps.component.id);
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
     const directDeps = componentWithDeps.component.dependencies;
     const flattenDeps = componentWithDeps.component.flattenedDependencies;
     const hasDist = componentWithDeps.component.dists && !R.isEmpty(componentWithDeps.component.dists);
@@ -111,6 +114,8 @@ async function writeDependencyLinks(componentDependencies: ComponentWithDependen
 async function writeEntryPointsForImportedComponent(component: Component, bitMap: BitMap): Promise<any> {
   const componentRoot = component.writtenPath;
   const componentId = component.id.toString();
+  const componentMap = bitMap.getComponent(componentId);
+  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
   let mainFile = bitMap.getMainFileOfComponent(componentId); // TODO: get main dist in case it exists?
   // In case there is dist files, we want to point the index to the dist file not to source.
   if (component.dists && !R.isEmpty(component.dists)) {
