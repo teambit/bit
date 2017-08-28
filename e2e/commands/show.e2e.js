@@ -153,7 +153,7 @@ describe('bit show command', function () {
         //path.pathNormalizeToLinux is used because the test check the vinyl objects
         const mainFileHistory = [path.normalize(`${helper.localScopePath}/src/mainFile.js`)];
         // const mainFileObj = {history: mainFileHistory};
-        const utilFileHistory = [path.normalize(`${helper.localScopePath}/src/utils/utilFile.js`)];
+        const utilFileHistory = [`${helper.localScopePath}/src/utils/utilFile.js`];
         // const utilFileObj = {history: utilFileHistory};
         expect(firstFileObj.history[0]).to.include(mainFileHistory);
         expect(secondFileObj.history[0]).to.include(utilFileHistory);

@@ -238,6 +238,7 @@ describe('bit commit command', function () {
         }
       });
 
+      // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
       it('Should print that there is missing dependencies', () => {
         expect(output).to.have.string('fatal: following component dependencies were not found');
       });
@@ -254,6 +255,7 @@ describe('bit commit command', function () {
         expect(output).to.have.string('./missing-fs2');
       });
 
+      // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
       it('Should print that there is missing package dependencies on file system (nested)', () => {
         expect(output).to.have.string('package');
         expect(output).to.have.string('package2');
