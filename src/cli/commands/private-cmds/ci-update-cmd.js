@@ -25,6 +25,7 @@ export default class CiUpdate extends Command {
 
 
   report({specsResults,buildResults, component, save}): string {
+    component
     if (!specsResults && !buildResults) { return 'no results found'; }
 
     if (specsResults instanceof Error) {
@@ -38,7 +39,7 @@ export default class CiUpdate extends Command {
       ci.specResults = specsResults;
       ci.mainDistFile = component.calculateMainDistFile();
       ci.component = component;
-      ci.cwd = buildResults ? path.resolve(buildResults["0"].base, '..') : path.resolve(specsResults["0"].specFile, '..');
+      ci.cwd = component.writtenPath;
       ci.buildResults = buildResults;
       outputJsonFile(save, ci);
     }

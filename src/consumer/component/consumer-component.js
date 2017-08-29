@@ -180,7 +180,7 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDependencies);
   }
 
-  async buildIfNeeded({ condition, files, compiler, consumer, componentMap, scope, verbose, directory, keep }: {
+  async buildIfNeeded({ condition, files, compiler, consumer, componentMap, scope, verbose, directory, keep, ciComponent }: {
     condition?: ?boolean,
     files:File[],
     compiler: any,
@@ -189,7 +189,8 @@ export default class Component {
     scope: Scope,
     verbose: boolean,
     directory: ?string,
-    keep: ?boolean
+    keep: ?boolean,
+    ciComponent: any
   }): Promise<?{ code: string, mappings?: string }> {
     if (!condition) { return Promise.resolve({ code: '' }); }
 
@@ -229,6 +230,7 @@ export default class Component {
     try {
       await isolatedEnvironment.create();
       const component = await isolatedEnvironment.importE2E(this.id.toString(), verbose);
+      ciComponent.comp = component;
       const result = await runBuild(component.writtenPath);
       if (!keep) await isolatedEnvironment.destroy();
       return result;
@@ -435,8 +437,8 @@ export default class Component {
     }
   }
 
-  async build({ scope, environment, save, consumer, bitMap, verbose, directory, keep }:
-          { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool, directory: ?string, keep:?boolean }):
+  async build({ scope, environment, save, consumer, bitMap, verbose, directory, keep, ciComponent }:
+          { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool, directory: ?string, keep:?boolean, ciComponent: any }):
   Promise<string> { // @TODO - write SourceMap Type
     if (!this.compilerId) return Promise.resolve(null);
     logger.debug('consumer-component.build, compilerId found, start building');
@@ -482,7 +484,8 @@ export default class Component {
       componentMap,
       scope,
       directory,
-      keep
+      keep,
+      ciComponent
     });
 
     // return buildFilesP.then((buildedFiles) => {
