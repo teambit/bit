@@ -226,16 +226,14 @@ describe('bit commit command', function () {
       const secondFileFixture = "const isType = require('./utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('', 'main.js', mainFileFixture);
       helper.createFile('', 'second.js', secondFileFixture);
-      helper.addComponentWithOptions('main.js second.js', { 'm': 'main.js', 'i': 'comp/comp' });
+      helper.addComponentWithOptions('main.js second.js', { m: 'main.js', i: 'comp/comp' });
 
       helper.commitAllComponents();
 
       const output = helper.showComponentWithOptions('comp/comp', { j: '' });
       const dependencies = JSON.parse(output).dependencies;
       const depPaths = [{ sourceRelativePath: path.normalize('utils/is-type.js'), destinationRelativePath: path.normalize('utils/is-type.js') }];
-      const depObject = { id: 'utils/is-type', relativePaths: depPaths };
       const depPaths1 = [{ sourceRelativePath: path.normalize('utils/is-string.js'), destinationRelativePath: path.normalize('utils/is-string.js') }];
-      const depObject1 = { id: 'utils/is-string', relativePaths: depPaths1 };
 
       expect(dependencies[0].relativePaths[0]).to.include(depPaths[0]);
       expect(dependencies[1].relativePaths[0]).to.include(depPaths1[0]);
