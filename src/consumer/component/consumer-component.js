@@ -272,27 +272,29 @@ export default class Component {
     if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
     let rootDir;
 
-    if (componentMap && origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      // when a user imports a component that was a dependency before, write the component directly into the components
-      // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
-      await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
-      // todo: remove from the file system
-      rootDir = calculatedBitDir;
-      bitMap.removeComponent(this.id.toString());
-    } else if (componentMap) {
-      logger.debug('component is in bit.map, write the files according to bit.map');
-      const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
-      this.writtenPath = newBase;
+    if (componentMap) {
+      if (origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+        // when a user imports a component that was a dependency before, write the component directly into the components
+        // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
+        await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
+        // todo: remove from the file system
+        rootDir = calculatedBitDir;
+        bitMap.removeComponent(this.id.toString());
+      } else {
+        logger.debug('component is in bit.map, write the files according to bit.map');
+        const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
+        this.writtenPath = newBase;
+        origin = componentMap.origin;
+        this.files.forEach(file => file.updatePaths({ newBase }));
+        this.files.forEach(file => file.write(undefined, force));
 
-      this.files.forEach(file => file.updatePaths({ newBase }));
-      this.files.forEach(file => file.write(undefined, force));
-
-      // todo: while refactoring the dist for the new changes, make sure it writes to the proper
-      // directory. Also, write the dist paths into bit.map.
-      // if (this.dist) await this.dist.write(bitDir, this.distImplFileName, force);
-      // if (withBitJson) await this.writeBitJson(bitDir, force); // todo: is it needed?
-      // if (this.license && this.license.src) await this.license.write(bitDir, force); // todo: is it needed?
-      rootDir = componentMap.rootDir;
+        // todo: while refactoring the dist for the new changes, make sure it writes to the proper
+        // directory. Also, write the dist paths into bit.map.
+        // if (this.dist) await this.dist.write(bitDir, this.distImplFileName, force);
+        // if (withBitJson) await this.writeBitJson(bitDir, force); // todo: is it needed?
+        // if (this.license && this.license.src) await this.license.write(bitDir, force); // todo: is it needed?
+        rootDir = componentMap.rootDir;
+      }
     } else {
       await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
       rootDir = calculatedBitDir;

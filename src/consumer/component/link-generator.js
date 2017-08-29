@@ -93,7 +93,7 @@ async function writeDependencyLinks(componentDependencies: ComponentWithDependen
   };
 
   const allLinksP = componentDependencies.map((componentWithDeps) => {
-    const componentMap = bitMap.getComponent(componentWithDeps.component.id);
+    const componentMap = bitMap.getComponent(componentWithDeps.component.id, true);
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
     const directDeps = componentWithDeps.component.dependencies;
     const flattenDeps = componentWithDeps.component.flattenedDependencies;

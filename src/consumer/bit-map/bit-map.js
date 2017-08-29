@@ -168,8 +168,7 @@ export default class BitMap {
     override: boolean
   }): void {
     const isDependency = origin && origin === COMPONENT_ORIGINS.NESTED;
-    const componentIdStr = (origin === COMPONENT_ORIGINS.AUTHORED) ?
-      componentId.toStringWithoutScope() : componentId.toString();
+    const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
     if (isDependency) {
       if (!parent) throw new Error(`Unable to add indirect dependency ${componentId}, without "parent" parameter`);

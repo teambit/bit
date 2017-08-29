@@ -18,8 +18,8 @@ export default class Helper {
     this.compilerCreated = false;
   }
 
-  setLocalScope() {
-    this.localScope = `${v4()}-local`;
+  setLocalScope(localScope?: string) {
+    this.localScope = localScope || `${v4()}-local`;
     this.localScopePath = path.join(this.e2eDir, this.localScope);
   }
 
@@ -74,8 +74,10 @@ export default class Helper {
     return this.runCmd('bit init');
   }
 
-  initNewLocalScope() {
-    fs.removeSync(this.localScopePath);
+  initNewLocalScope(deleteCurrentScope = true) {
+    if (deleteCurrentScope) {
+      fs.removeSync(this.localScopePath);
+    }
     this.setLocalScope();
     fs.ensureDirSync(this.localScopePath);
     return this.runCmd('bit init');

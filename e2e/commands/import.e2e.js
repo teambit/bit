@@ -1010,6 +1010,55 @@ describe('bit import', function () {
     });
   });
 
+  describe('import component with dependencies, modify and export, then author import the updated version', () => {
+    let localConsumerFiles;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      const authorScope = helper.localScope;
+
+      helper.initNewLocalScope(false);
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-string');
+      // modify the component
+      const isStringModifiedFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
+      const componentPath = path.join('components', 'utils', 'is-string', 'utils');
+      helper.createComponent(componentPath, 'is-string.js', isStringModifiedFixture);
+      helper.commitComponent('utils/is-string');
+      helper.exportComponent(`${helper.remoteScope}/utils/is-string@2`);
+
+      fs.removeSync(helper.localScopePath);
+      helper.setLocalScope(authorScope);
+      helper.importComponent('utils/is-string');
+      localConsumerFiles = (glob.sync(path.normalize('**/*.js'), { cwd: helper.localScopePath })).map(x => path.normalize(x));
+    });
+    it('should update the author original component successfully', () => {
+      const appJsFixture = "const isString = require('./utils/is-string'); console.log(isString());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type and got is-string v2');
+    });
+    it('should not write any file into components directory', () => {
+      localConsumerFiles.forEach((fileName) => {
+        expect(fileName.startsWith('components')).to.be.false;
+      });
+    });
+    it('should not create any link file', () => {
+      localConsumerFiles.forEach((fileName) => {
+        expect(fileName.includes('index.js')).to.be.false;
+      });
+    });
+  });
+
   describe.skip('Import compiler', () => {
     before(() => {
       helper.reInitLocalScope();
