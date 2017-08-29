@@ -31,10 +31,10 @@ export default class Add extends Command {
       return Promise.reject('You can use either [id] or [namespace] to add a particular component');
     }
 
-    const normalizedPathes = paths.map(p => path.normalize(p));
+    const normalizedPaths = paths.map(p => path.normalize(p));
     const testsArray = tests ? this.splitList(tests).map(filePath => path.normalize(filePath.trim())) : [];
-    const exludedFiles = exclude ? this.splitList(exclude).map(filePath => path.normalize(filePath.trim())) : undefined;
-    return add(normalizedPathes, id, main ? path.normalize(main) : undefined, namespace, testsArray, exludedFiles, override || false);
+    const excludedFiles = exclude ? this.splitList(exclude).map(filePath => path.normalize(filePath.trim())) : undefined;
+    return add(normalizedPaths, id, main ? path.normalize(main) : undefined, namespace, testsArray, excludedFiles, override || false);
   }
 
   report(results: Array<{ id: string, files: string[] }>): string {

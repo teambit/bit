@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
+import normalize from 'normalize-path';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import {
   ConsumerAlreadyExists,
@@ -249,7 +250,7 @@ export default class Consumer {
         destination = depRootDir && file.startsWith(depRootDir) ? path.relative(depRootDir, file) : file;
       }
 
-      const currComponentsDeps = { [componentId]: [{ sourceRelativePath: originFilePath || file, destinationRelativePath: destination }] };
+      const currComponentsDeps = { [componentId]: [{ sourceRelativePath: normalize(originFilePath) || file, destinationRelativePath: normalize(destination) }] };
       depsTreeCache[depsTreeCacheId] = { componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] };
       return ({ componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] });
     };
