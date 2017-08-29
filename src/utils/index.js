@@ -60,7 +60,6 @@ import outputFile from './fs-output-file';
 import getLatestVersionNumber from './resolveLatestVersion';
 import calculateFileInfo from './fs/file-info';
 import outputJsonFile from './fs-output-json-sync';
-
 export {
   parseSSHUrl,
   splitBy,
