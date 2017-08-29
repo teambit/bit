@@ -55,10 +55,10 @@ export default class BitMap {
       components = {};
     }
     //convert components to os specific paths
-    Object.keys(components).forEach((key) => {
+  /*  Object.keys(components).forEach((key) => {
       components[key].files.forEach(file => file.relativePath = path.normalize(file.relativePath));
       components[key].mainFile = path.normalize(components[key].mainFile);
-    });
+    });*/
     return new BitMap(dirPath, mapPath, components);
   }
 

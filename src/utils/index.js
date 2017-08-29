@@ -59,6 +59,7 @@ import splitBy from './array/split-by';
 import outputFile from './fs-output-file';
 import getLatestVersionNumber from './resolveLatestVersion';
 import calculateFileInfo from './fs/file-info';
+import { pathNormalize, pathJoin } from './path';
 export {
   parseSSHUrl,
   splitBy,
@@ -120,5 +121,7 @@ export {
   outputFile,
   bufferFrom,
   getLatestVersionNumber,
-  calculateFileInfo
+  calculateFileInfo,
+  pathNormalize,
+  pathJoin
 };
