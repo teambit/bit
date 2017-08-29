@@ -71,6 +71,7 @@ export default class Component {
   log: ?Log;
   writtenPath: ?string; // needed for generate links
   isolatedEnvironment: IsolatedEnvironment;
+  missingDependencies: Object;
 
   set files(val: ?SourceFile[]) { this._files = val; }
 

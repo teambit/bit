@@ -3,6 +3,10 @@ import path from 'path';
 import R from 'ramda';
 import { DEFAULT_INDEX_NAME, DEFAULT_INDEX_TS_NAME } from '../../constants';
 import BitMap from '../bit-map/bit-map';
+import type { ComponentMap } from '../bit-map/bit-map';
+import { BitId } from '../../bit-id';
+import Component from '../component';
+import { Driver } from '../../driver';
 
 const depsTreeCache = {};
 
@@ -11,16 +15,13 @@ const depsTreeCache = {};
  * @param {Object} tree - which contain direct deps for each file
  * @param {string} file - file to calculate deps for
  * @param {string} entryComponentId - component id for the entry of traversing - used to know which of the files are part of that component
+ * @param {BitMap} bitMap
  * @param {string} consumerPath
  * @param {string} originFilePath - The original filePath as written in the dependent import statement - this important while committing imported components
- * @param {BitMap} bitMap
+
  */
-export default function traverseDepsTreeRecursive(tree: Object,
-                                                  file: string,
-                                                  entryComponentId: string,
-                                                  bitMap: BitMap,
-                                                  consumerPath: string,
-                                                  originFilePath?: string): Object {
+function traverseDepsTreeRecursive(tree: Object, file: string, entryComponentId: string, bitMap: BitMap,
+                                   consumerPath: string, originFilePath?: string): Object {
   const depsTreeCacheId = `${file}@${entryComponentId}`;
   if (depsTreeCache[depsTreeCacheId] === null) return {}; // todo: cyclomatic dependency
   if (depsTreeCache[depsTreeCacheId]) {
@@ -109,4 +110,41 @@ export default function traverseDepsTreeRecursive(tree: Object,
   const currComponentsDeps = { [componentId]: [{ sourceRelativePath: originFilePath || file, destinationRelativePath: destination }] };
   depsTreeCache[depsTreeCacheId] = { componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] };
   return ({ componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] });
+}
+
+export default async function loadDependenciesForComponent(component: Component,
+                                                           componentMap: ComponentMap,
+                                                           bitDir: string,
+                                                           driver: Driver,
+                                                           bitMap: BitMap,
+                                                           consumerPath: string,
+                                                           idWithConcreteVersionString: string) {
+  const mainFile = componentMap.mainFile;
+  component.missingDependencies = {};
+
+  // find the dependencies (internal files and packages) through automatic dependency resolution
+  const dependenciesTree = await driver.getDependencyTree(bitDir, consumerPath, mainFile);
+  if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) {
+    component.missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
+  }
+  if (dependenciesTree.missing.packages && !R.isEmpty(dependenciesTree.missing.packages)) {
+    component.missingDependencies.missingPackagesDependenciesOnFs = dependenciesTree.missing.packages;
+  }
+
+  // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
+  // they are referred as "missing/untracked components" and the user should add them later on in order to commit
+  const traversedDeps = traverseDepsTreeRecursive(dependenciesTree.tree, mainFile, idWithConcreteVersionString,
+    bitMap, consumerPath);
+  const traversedCompDeps = traversedDeps.componentsDeps;
+  const dependencies = Object.keys(traversedCompDeps).map((depId) => {
+    return { id: BitId.parse(depId), relativePaths: traversedCompDeps[depId] };
+  });
+  const packages = traversedDeps.packagesDeps;
+  const missingDependencies = traversedDeps.missingDeps;
+  if (!R.isEmpty(missingDependencies)) component.missingDependencies.untrackedDependencies = missingDependencies;
+
+  component.dependencies = dependencies;
+  component.packageDependencies = packages;
+
+  return component;
 }

@@ -30,7 +30,7 @@ import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { getLatestVersionNumber } from '../utils';
 import * as linkGenerator from './component/link-generator';
-import traverseDepsTreeRecursive from './component/dependencies-resolver';
+import loadDependenciesForComponent from './component/dependencies-resolver';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -162,40 +162,12 @@ export default class Consumer {
         consumerPath: this.getPath(),
         bitMap
       });
+      if (bitMap.hasChanged) await bitMap.write();
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) { // no need to resolve dependencies
         return component;
       }
-
-      const mainFile = componentMap.mainFile;
-      component.missingDependencies = {};
-
-      // find the dependencies (internal files and packages) through automatic dependency resolution
-      const dependenciesTree = await this.driver.getDependencyTree(bitDir, this.getPath(), mainFile);
-      if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) {
-        component.missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
-      }
-      if (dependenciesTree.missing.packages && !R.isEmpty(dependenciesTree.missing.packages)) {
-        component.missingDependencies.missingPackagesDependenciesOnFs = dependenciesTree.missing.packages;
-      }
-
-      // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
-      // they are referred as "missing/untracked components" and the user should add them later on in order to commit
-      const traversedDeps = traverseDepsTreeRecursive(dependenciesTree.tree, mainFile, idWithConcreteVersionString,
-        bitMap, this.getPath());
-      const traversedCompDeps = traversedDeps.componentsDeps;
-      const dependencies = Object.keys(traversedCompDeps).map((depId) => {
-        return { id: BitId.parse(depId), relativePaths: traversedCompDeps[depId] };
-      });
-      const packages = traversedDeps.packagesDeps;
-      const missingDependencies = traversedDeps.missingDeps;
-      if (!R.isEmpty(missingDependencies)) component.missingDependencies.untrackedDependencies = missingDependencies;
-
-      if (bitMap.hasChanged) await bitMap.write();
-
-      component.dependencies = dependencies;
-      component.packageDependencies = packages;
-
-      return component;
+      return loadDependenciesForComponent(component, componentMap, bitDir, this.driver, bitMap, this.getPath(),
+        idWithConcreteVersionString);
     });
 
     const allComponents = [];
