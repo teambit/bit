@@ -1,9 +1,7 @@
 /** @flow */
 import Command from '../../command';
-import path from 'path';
 import { outputJsonFile } from '../../../utils';
 import { ciUpdateAction } from '../../../api/scope';
-import SpecsResults from '../../../consumer/specs-results/specs-results';
 import { paintCiResults } from '../../chalk-box';
 
 export default class CiUpdate extends Command {
