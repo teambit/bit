@@ -13,7 +13,10 @@ export default function buildInScope({ id, environment, save, verbose, scopePath
       .catch(newErr => Promise.reject(initialError || newErr))
       .then((scope: Scope) => {
         const bitId = BitId.parse(id);
-        return scope.build({ bitId, environment, save, verbose, directory, keep });
+         return scope.loadComponent(bitId).then(component=>{
+          return  scope.build({ bitId, environment, save, verbose, directory, keep }).then(buildResults => ({component, buildResults}));
+        })
+
       })
       .catch(e => Promise.reject(e));
   }

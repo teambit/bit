@@ -526,6 +526,12 @@ export default class Component {
     return JSON.stringify(this.toObject());
   }
 
+  calculateMainDistFile(): string {
+    if (this.dists && !R.isEmpty(this.dists)) {
+      return path.join(DEFAULT_DIST_DIRNAME, this.mainFile);
+    }
+    return this.mainFile;
+  }
   static fromObject(object: Object): Component {
     const {
       name,

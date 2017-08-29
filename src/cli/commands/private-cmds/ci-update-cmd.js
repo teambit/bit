@@ -1,8 +1,10 @@
 /** @flow */
 import Command from '../../command';
+import path from 'path';
+import { outputJsonFile } from '../../../utils';
 import { ciUpdateAction } from '../../../api/scope';
 import SpecsResults from '../../../consumer/specs-results/specs-results';
-import { paintSpecsResults } from '../../chalk-box';
+import { paintCiResults } from '../../chalk-box';
 
 export default class CiUpdate extends Command {
   name = 'ci-update <id> [scopePath]';
@@ -18,16 +20,29 @@ export default class CiUpdate extends Command {
 
   action([id, scopePath]: [string, ?string, ], { verbose, testDir, save , keep = false }: { verbose: ?boolean, testDir: ?string, save: ?string, keep:boolean }): Promise<any> {
     verbose = true; // During ci-update we always want to see verbose outputs
-    return ciUpdateAction(id, scopePath || process.cwd(), verbose, testDir, keep);
+    return ciUpdateAction(id, scopePath || process.cwd(), verbose, testDir, keep).then(({specsResults,buildResults, component}) => ({specsResults,buildResults, component, save}));
   }
 
-  report(maybeSpecsResults: SpecsResults|Error): string {
-    if (!maybeSpecsResults) { return 'no results found'; }
 
-    if (maybeSpecsResults instanceof Error) {
-      return maybeSpecsResults.message;
+  report({specsResults,buildResults, component, save}): string {
+    if (!specsResults && !buildResults) { return 'no results found'; }
+
+    if (specsResults instanceof Error) {
+      return specsResults.message;
+    }
+    if (buildResults instanceof Error) {
+      return buildResults.message;
+    }
+    if (save) {
+      const ci ={};
+      ci.specResults = specsResults;
+      ci.mainDistFile = component.calculateMainDistFile();
+      ci.component = component;
+      ci.cwd = buildResults ? path.resolve(buildResults["0"].base, '..') : path.resolve(specsResults["0"].specFile, '..');
+      ci.buildResults = buildResults;
+      outputJsonFile(save, ci);
     }
 
-    return paintSpecsResults(maybeSpecsResults);
+    return paintCiResults({ specsResults, buildResults });
   }
 }
