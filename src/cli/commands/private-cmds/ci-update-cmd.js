@@ -10,12 +10,15 @@ export default class CiUpdate extends Command {
   alias = '';
   opts = [
     ['v', 'verbose', 'showing npm verbose output for inspection'],
+    ['t', 'testDir <file>', 'directory to run ci-update'],
+    ['k', 'keep', 'keep test environment after run (default false)'],
+    ['s', 'save <file>', 'save ci results   to file system']
   ];
   private = true;
 
-  action([id, scopePath]: [string, ?string, ], { verbose }: { verbose: ?boolean }): Promise<any> {
+  action([id, scopePath]: [string, ?string, ], { verbose, testDir, save , keep = false }: { verbose: ?boolean, testDir: ?string, save: ?string, keep:boolean }): Promise<any> {
     verbose = true; // During ci-update we always want to see verbose outputs
-    return ciUpdateAction(id, scopePath || process.cwd(), verbose);
+    return ciUpdateAction(id, scopePath || process.cwd(), verbose, testDir, keep);
   }
 
   report(maybeSpecsResults: SpecsResults|Error): string {

@@ -17,9 +17,9 @@ export default class Environment {
   scope: Scope;
   consumer: Consumer;
 
-  constructor(scope: Scope) {
+  constructor(scope: Scope, ciDir: string) {
     this.scope = scope;
-    this.path = path.join(scope.getPath(), ISOLATED_ENV_ROOT, v4());
+    this.path = ciDir || path.join(scope.getPath(), ISOLATED_ENV_ROOT, v4());
     logger.debug(`creating a new isolated environment at ${this.path}`);
   }
 

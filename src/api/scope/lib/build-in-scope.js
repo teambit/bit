@@ -5,15 +5,15 @@ import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import logger from '../../../logger/logger';
 
-export default function buildInScope({ id, environment, save, verbose, scopePath }:
-{ id: string, environment: ?bool, save: ?bool, verbose: ?bool, scopePath: string }) {
+export default function buildInScope({ id, environment, save, verbose, scopePath, directory, keep }:
+{ id: string, environment: ?bool, save: ?bool, verbose: ?bool, scopePath: string, directory: ?string, keep:boolean }) {
   logger.debug(`buildInScope, id: ${id}, scopePath: ${scopePath}`);
   function loadFromScope(initialError: ?Error) {
     return loadScope(scopePath || process.cwd())
       .catch(newErr => Promise.reject(initialError || newErr))
       .then((scope: Scope) => {
         const bitId = BitId.parse(id);
-        return scope.build({ bitId, environment, save, verbose });
+        return scope.build({ bitId, environment, save, verbose, directory, keep });
       })
       .catch(e => Promise.reject(e));
   }

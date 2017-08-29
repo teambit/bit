@@ -181,7 +181,7 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDependencies);
   }
 
-  async buildIfNeeded({ condition, files, compiler, consumer, componentMap, scope, verbose }: {
+  async buildIfNeeded({ condition, files, compiler, consumer, componentMap, scope, verbose, directory, keep }: {
     condition?: ?boolean,
     files:File[],
     compiler: any,
@@ -189,6 +189,8 @@ export default class Component {
     componentMap?: ComponentMap,
     scope: Scope,
     verbose: boolean,
+    directory: ?string,
+    keep: ?boolean
   }): Promise<?{ code: string, mappings?: string }> {
     if (!condition) { return Promise.resolve({ code: '' }); }
 
@@ -224,12 +226,12 @@ export default class Component {
     if (consumer) return runBuild(consumer.getPath());
     if (this.isolatedEnvironment) return runBuild(this.writtenPath);
 
-    const isolatedEnvironment = new IsolatedEnvironment(scope);
+    const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
     try {
       await isolatedEnvironment.create();
       const component = await isolatedEnvironment.importE2E(this.id.toString(), verbose);
       const result = await runBuild(component.writtenPath);
-      await isolatedEnvironment.destroy();
+      if (!keep) await isolatedEnvironment.destroy();
       return result;
     } catch (err) {
       await isolatedEnvironment.destroy();
@@ -317,7 +319,7 @@ export default class Component {
     return this;
   }
 
-  async runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose, isolated }: {
+  async runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose, isolated, directory, keep }: {
     scope: Scope,
     rejectOnFailure?: boolean,
     consumer?: Consumer,
@@ -325,6 +327,8 @@ export default class Component {
     save?: boolean,
     verbose?: boolean,
     isolated?: boolean,
+    directory?: string,
+    keep?: boolean
   }): Promise<?Results> {
     // TODO: The same function exactly exists in this file under build function
     // Should merge them to one
@@ -406,7 +410,7 @@ export default class Component {
         return run(this.mainFile, testDists);
       }
 
-      const isolatedEnvironment = new IsolatedEnvironment(scope);
+      const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
       try {
         await isolatedEnvironment.create();
         const component = await isolatedEnvironment.importE2E(this.id.toString(), verbose);
@@ -421,7 +425,7 @@ export default class Component {
         const testFilesList = component.dists ? component.dists.filter(dist => dist.test)
           : component.files.filter(file => file.test);
         const results = await run(component.mainFile, testFilesList);
-        await isolatedEnvironment.destroy();
+        if (!keep) await isolatedEnvironment.destroy();
         return results;
       } catch (e) {
         await isolatedEnvironment.destroy();
@@ -432,8 +436,8 @@ export default class Component {
     }
   }
 
-  async build({ scope, environment, save, consumer, bitMap, verbose }:
-          { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool }):
+  async build({ scope, environment, save, consumer, bitMap, verbose, directory, keep }:
+          { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool, directory: ?string, keep:?boolean }):
   Promise<string> { // @TODO - write SourceMap Type
     if (!this.compilerId) return Promise.resolve(null);
     logger.debug('consumer-component.build, compilerId found, start building');
@@ -477,7 +481,9 @@ export default class Component {
       files: this.files,
       consumer,
       componentMap,
-      scope
+      scope,
+      directory,
+      keep
     });
 
     // return buildFilesP.then((buildedFiles) => {
