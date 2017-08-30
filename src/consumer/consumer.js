@@ -29,7 +29,7 @@ import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { getLatestVersionNumber } from '../utils';
+import { getLatestVersionNumber, pathRelative } from '../utils';
 import * as linkGenerator from './component/link-generator';
 
 export type ConsumerProps = {
@@ -212,7 +212,7 @@ export default class Consumer {
             const fullFileDep = path.resolve(rootDirFullPath, fileDep);
             // const fullFileDep = path.resolve(rootDirFullPath, fileDep);
             // relativeToConsumerFileDep = path.relative(rootDirFullPath, fullFileDep);
-            relativeToConsumerFileDep = path.relative(this.getPath(), fullFileDep);
+            relativeToConsumerFileDep = pathRelative(this.getPath(), fullFileDep);
             // In case it's another file of the same component we need it to be relative to the rootDir of the current component (and not to consumer)
             // there for We use the original fileDep.
             // We need it to be relative to the rootDir because this is how it will be represented in the tree since we passed this root dir to madge earlier
