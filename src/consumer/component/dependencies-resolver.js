@@ -9,78 +9,94 @@ import Component from '../component';
 import { Driver } from '../../driver';
 
 /**
- * Run over the deps tree recursively to build the full deps tree for component
- * @param {Object} tree - which contain direct deps for each file
- * @param files
+ * Given the tree of file dependencies from the driver, find the components of these files.
+ * Each dependency file has a path, use bit.map to search for the component name by that path.
+ * If the component is found, add it to "componentsDeps". Otherwise, add it to "untrackedDeps".
+ * For the found components, add their sourceRelativePath and destinationRelativePath, it being used later on for
+ * generating links upon import.
+ *
+ * @param {Object} tree - contains direct deps for each file
+ * @param {string[]} files - component files to search
  * @param {string} entryComponentId - component id for the entry of traversing - used to know which of the files are part of that component
  * @param {BitMap} bitMap
  * @param {string} consumerPath
  */
-function traverseDepsTree(tree: Object, files: string[], entryComponentId: string, bitMap: BitMap, consumerPath: string): Object {
+function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponentId: string, bitMap: BitMap,
+                                   consumerPath: string): Object {
   const packagesDeps = {};
   const componentsDeps = [];
-  const missingDeps = [];
+  const untrackedDeps = [];
 
   const entryComponentMap = bitMap.getComponent(entryComponentId);
 
   files.forEach((file) => {
-    const allFilesDeps = tree[file].files;
-    if (!allFilesDeps || R.isEmpty(allFilesDeps)) {
-      return;
+    const currentPackagesDeps = tree[file].packages;
+    if (currentPackagesDeps && !R.isEmpty(currentPackagesDeps)) {
+      Object.assign(packagesDeps, currentPackagesDeps);
     }
+    const allFilesDeps = tree[file].files;
+    if (!allFilesDeps || R.isEmpty(allFilesDeps)) return;
     allFilesDeps.forEach((fileDep) => {
       const rootDir = entryComponentMap.rootDir;
       // Change the dependencies files to be relative to current consumer
-      // We are not just using path.resolve(rootDir, fileDep) because this might not work when running
+      // We can't use path.resolve(rootDir, fileDep) because this might not work when running
       // bit commands not from root, because resolve take by default the process.cwd
+      let fileDepRelative = fileDep;
       if (rootDir) {
         const rootDirFullPath = path.join(consumerPath, rootDir);
         const fullFileDep = path.resolve(rootDirFullPath, fileDep);
         const relativeToConsumerFileDep = path.relative(consumerPath, fullFileDep);
-        if (!relativeToConsumerFileDep.startsWith(rootDir)) fileDep = relativeToConsumerFileDep;
+        if (!relativeToConsumerFileDep.startsWith(rootDir)) fileDepRelative = relativeToConsumerFileDep;
       }
       let destination;
-      let componentId = bitMap.getComponentIdByPath(fileDep);
+      let componentId = bitMap.getComponentIdByPath(fileDepRelative);
       if (!componentId) {
         // Check if its a generated index file
-        if (path.basename(fileDep) === DEFAULT_INDEX_NAME || path.basename(fileDep) === DEFAULT_INDEX_TS_NAME) {
-          const indexDir = path.dirname(fileDep);
+        if (path.basename(fileDepRelative) === DEFAULT_INDEX_NAME || path.basename(fileDepRelative) === DEFAULT_INDEX_TS_NAME) {
+          const indexDir = path.dirname(fileDepRelative);
           componentId = bitMap.getComponentIdByRootPath(indexDir);
           // Refer to the main file in case the source component required the index of the imported
           if (componentId) destination = bitMap.getMainFileOfComponent(componentId);
         }
 
+        // the file dependency doesn't have any counterpart component. Add it to untrackedDeps
         if (!componentId) {
-          missingDeps.push(fileDep);
+          untrackedDeps.push(fileDepRelative);
           return;
         }
       }
-      if (componentId === entryComponentId) {
-        const currentPackagesDeps = tree[file].packages;
-        if (currentPackagesDeps && !R.isEmpty(currentPackagesDeps)) {
-          Object.assign(packagesDeps, currentPackagesDeps);
-        }
-        return;
-      }
-      if (!destination) {
-        const depRootDir = bitMap.getRootDirOfComponent(componentId);
-        destination = depRootDir && fileDep.startsWith(depRootDir) ? path.relative(depRootDir, fileDep) : fileDep;
-      }
 
-      const depsPaths = { sourceRelativePath: fileDep, destinationRelativePath: destination };
+      // happens when in the same component one file requires another one. In this case, there is noting to do
+      if (componentId === entryComponentId) return;
+
+      // found a dependency component. Add it to componentsDeps
+      const depRootDir = bitMap.getRootDirOfComponent(componentId);
+      if (!destination) {
+        destination = depRootDir && fileDepRelative.startsWith(depRootDir) ? path.relative(depRootDir, fileDepRelative) : fileDepRelative;
+      }
+      // when there is no rootDir for the current dependency (it happens when it's AUTHORED), keep the original path
+      const sourceRelativePath = depRootDir ? fileDepRelative : fileDep;
+
+      const depsPaths = { sourceRelativePath, destinationRelativePath: destination };
       const currentComponentsDeps = { [componentId]: [depsPaths] };
 
       if (componentsDeps[componentId]) {
+        // it is another file of an already existing component. Just add the new path
         componentsDeps[componentId].push(depsPaths);
       } else {
         Object.assign(componentsDeps, currentComponentsDeps);
       }
     });
   });
-  return { componentsDeps, packagesDeps, missingDeps };
+  return { componentsDeps, packagesDeps, untrackedDeps };
 }
 
-function mergeDependencyTrees(depTrees) {
+/**
+ * Merge the dependencies-trees we got from all files to one big dependency-tree
+ * @param depTrees
+ * @return {{missing: {packages: Array, files: Array}, tree: {}}}
+ */
+function mergeDependencyTrees(depTrees: Object): Object {
   const dependencyTree = {
     missing: { packages: [], files: [] },
     tree: {}
@@ -95,16 +111,33 @@ function mergeDependencyTrees(depTrees) {
   return dependencyTree;
 }
 
+/**
+ * Load components and packages dependencies for a component. The process is as follows:
+ * 1) Use the language driver to parse the component files and find for each file its dependencies.
+ * 2) The results we get from the driver per file tells us what are the files and packages that depend on our file.
+ * and also whether there are missing packages and files.
+ * 3) Using the information from the driver, we go over each one of the dependencies files and find its counterpart
+ * component. The way how we find it, is by using the bit.map file which has a mapping between the component name and
+ * the file paths.
+ * 4) If we find a component to the file dependency, we add it to component.dependencies. Otherwise, it's added to
+ * component.missingDependencies.untrackedDependencies
+ * 5) Similarly, when we find the packages dependencies, they are added to component.packageDependencies. Otherwise,
+ * they're added to component.missingDependencies.missingPackagesDependenciesOnFs
+ * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
+ * component.missingDependencies.missingDependenciesOnFs
+ */
 export default async function loadDependenciesForComponent(component: Component,
                                                            componentMap: ComponentMap,
                                                            bitDir: string,
                                                            driver: Driver,
                                                            bitMap: BitMap,
                                                            consumerPath: string,
-                                                           idWithConcreteVersionString: string) {
+                                                           idWithConcreteVersionString: string): Promise<Component> {
   component.missingDependencies = {};
+  const files = componentMap.files
+    .filter(file => !file.test) // for now, don't resolve dependencies for test files (we might change it later on)
+    .map(file => file.relativePath);
   // find the dependencies (internal files and packages) through automatic dependency resolution
-  const files = componentMap.files.map(file => file.relativePath);
   const treesP = files.map(file => driver.getDependencyTree(bitDir, consumerPath, file));
   const trees = await Promise.all(treesP);
   const dependenciesTree = trees.length === 1 ? R.head(trees) : mergeDependencyTrees(trees);
@@ -115,14 +148,14 @@ export default async function loadDependenciesForComponent(component: Component,
     component.missingDependencies.missingPackagesDependenciesOnFs = dependenciesTree.missing.packages;
   }
   // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
-  // they are referred as "missing/untracked components" and the user should add them later on in order to commit
-  const traversedDeps = traverseDepsTree(dependenciesTree.tree, files, idWithConcreteVersionString, bitMap, consumerPath);
+  // they are referred as "untracked components" and the user should add them later on in order to commit
+  const traversedDeps = findComponentsOfDepsFiles(dependenciesTree.tree, files, idWithConcreteVersionString, bitMap, consumerPath);
   const traversedCompDeps = traversedDeps.componentsDeps;
   component.dependencies = Object.keys(traversedCompDeps).map((depId) => {
     return { id: BitId.parse(depId), relativePaths: traversedCompDeps[depId] };
   });
-  const missingDependencies = traversedDeps.missingDeps;
-  if (!R.isEmpty(missingDependencies)) component.missingDependencies.untrackedDependencies = missingDependencies;
+  const untrackedDependencies = traversedDeps.untrackedDeps;
+  if (!R.isEmpty(untrackedDependencies)) component.missingDependencies.untrackedDependencies = untrackedDependencies;
   component.packageDependencies = traversedDeps.packagesDeps;
 
   return component;

@@ -12,6 +12,7 @@ import logger from '../../logger/logger';
 import { ComponentWithDependencies } from '../../scope';
 import Component from '../component';
 import BitMap from '../bit-map/bit-map';
+import { BitIds } from '../../bit-id';
 
 // todo: move to bit-javascript
 function _getIndexFileName(mainFile: string): string {
@@ -53,6 +54,7 @@ async function writeDependencyLinks(componentDependencies: ComponentWithDependen
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
 
     const linkContent = _getLinkContent(mainFile, relativeFilePath);
+    logger.debug(`writeLinkFile, on ${linkPath}`);
     return outputFile(linkPath, linkContent);
   };
 
@@ -94,7 +96,11 @@ async function writeDependencyLinks(componentDependencies: ComponentWithDependen
 
   const allLinksP = componentDependencies.map((componentWithDeps) => {
     const componentMap = bitMap.getComponent(componentWithDeps.component.id, true);
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+      logger.debug(`writeDependencyLinks, ignoring a component ${componentWithDeps.component.id} as it is an author component`);
+      return Promise.resolve();
+    }
+    logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
     const directDeps = componentWithDeps.component.dependencies;
     const flattenDeps = componentWithDeps.component.flattenedDependencies;
     const hasDist = componentWithDeps.component.dists && !R.isEmpty(componentWithDeps.component.dists);
