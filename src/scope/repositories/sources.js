@@ -1,6 +1,5 @@
 /** @flow */
-import normalize from 'normalize-path';
-import { bufferFrom } from '../../utils';
+import { bufferFrom, pathNormalizeToLinux } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
@@ -158,7 +157,7 @@ export default class SourceRepository {
       forHashOnly?: boolean }
   ): Promise<Object> {
     const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
-      return { name: file.basename, relativePath: normalize(file.relative), file: Source.from(file.contents), test: file.test };
+      return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), file: Source.from(file.contents), test: file.test };
     }) : null;
 
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
@@ -176,6 +175,7 @@ export default class SourceRepository {
         .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
     }
 
+    consumerComponent.mainFile = pathNormalizeToLinux(consumerComponent.mainFile);
     const version = Version.fromComponent({
       component: consumerComponent,
       files,
