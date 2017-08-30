@@ -41,18 +41,24 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
       if (processedFiles.includes(fileDep)) return;
       processedFiles.push(fileDep);
       const rootDir = entryComponentMap.rootDir;
-      // Change the dependencies files to be relative to current consumer
-      // We can't use path.resolve(rootDir, fileDep) because this might not work when running
-      // bit commands not from root, because resolve take by default the process.cwd
-      let fileDepRelative = fileDep;
+
+      let fileDepRelative: string;
+      let componentId: string;
+      let destination: string;
       if (rootDir) {
+        // Change the dependencies files to be relative to current consumer
+        // We can't use path.resolve(rootDir, fileDep) because this might not work when running
+        // bit commands not from root, because resolve take by default the process.cwd
         const rootDirFullPath = path.join(consumerPath, rootDir);
         const fullFileDep = path.resolve(rootDirFullPath, fileDep);
-        const relativeToConsumerFileDep = path.relative(consumerPath, fullFileDep);
-        if (!relativeToConsumerFileDep.startsWith(rootDir)) fileDepRelative = relativeToConsumerFileDep;
+        fileDepRelative = path.relative(consumerPath, fullFileDep);
+        componentId = bitMap.getComponentIdByPath(fileDepRelative);
       }
-      let destination;
-      let componentId = bitMap.getComponentIdByPath(fileDepRelative);
+      if (!componentId) {
+        fileDepRelative = fileDep;
+        componentId = bitMap.getComponentIdByPath(fileDepRelative);
+      }
+
       if (!componentId) {
         // Check if its a generated index file
         if (path.basename(fileDepRelative) === DEFAULT_INDEX_NAME || path.basename(fileDepRelative) === DEFAULT_INDEX_TS_NAME) {

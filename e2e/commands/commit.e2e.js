@@ -118,7 +118,7 @@ describe('bit commit command', function () {
     });
   });
 
-  describe.only('commit imported component with new dependency to another imported component', () => {
+  describe('commit imported component with new dependency to another imported component', () => {
     let output;
     let showOutput;
     before(() => {
@@ -135,8 +135,8 @@ describe('bit commit command', function () {
       helper.addRemoteScope();
       helper.importComponent('comp/comp');
       helper.importComponent('comp/comp2');
-      const filefixture = `var a = require('../../comp/comp2/file2')`;
-      helper.createFile('components/comp/comp', 'file.js', filefixture);
+      const fileFixture = "var a = require('../../comp/comp2/file2')";
+      helper.createFile('components/comp/comp', 'file.js', fileFixture);
       output = helper.commitComponent('comp/comp');
       showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
     });
