@@ -17,3 +17,6 @@ export  function pathRelative(from: string, to: string, toLinux:boolean = true):
 export  function pathResolve(arr:[], toLinux:boolean = true): string {
   return toLinux ? normalize(path.resolve(arr.join(','))) : path.resolve(arr);
 }
+export  function pathRelative(from: string, to: string, toLinux:boolean = true): string {
+  return toLinux ? normalize(path.relative(from, to)) : path.relative(from, to);
+}
