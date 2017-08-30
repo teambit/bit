@@ -1,6 +1,5 @@
 /** @flow */
-import normalize from 'normalize-path';
-import { bufferFrom } from '../../utils';
+import { bufferFrom, pathNormalizeToLinux } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
@@ -143,10 +142,10 @@ export default class SourceRepository {
   : Promise<Object> {
     await consumerComponent.build({ scope: this.scope, consumer });
     const dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
-      return { name: dist.basename, relativePath: normalize(dist.relative), file: Source.from(dist.contents), test: dist.test };
+      return { name: dist.basename, relativePath: pathNormalizeToLinux(dist.relative), file: Source.from(dist.contents), test: dist.test };
     }) : null;
     const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
-      return { name: file.basename, relativePath: normalize(file.relative), file: Source.from(file.contents), test: file.test };
+      return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), file: Source.from(file.contents), test: file.test };
     }) : null;
 
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
@@ -156,7 +155,7 @@ export default class SourceRepository {
     const specsResults = await consumerComponent
       .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
 
-    consumerComponent.mainFile = normalize(consumerComponent.mainFile);
+    consumerComponent.mainFile = pathNormalizeToLinux(consumerComponent.mainFile);
     const version = Version.fromComponent({
       component: consumerComponent,
       files,

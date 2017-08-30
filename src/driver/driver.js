@@ -2,7 +2,7 @@ import path from 'path';
 import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';
 import logger from '../logger/logger';
-
+import { pathNormalizeToLinux } from '../utils';
 export default class Driver {
   lang: string;
   driver: Object;
@@ -41,13 +41,26 @@ export default class Driver {
     return driver.lifecycleHooks[hookName](param).then(() => returnValue);
   }
 
+  convertDependenciesTreeToLinux(depTree: Object):  Promise<Object> {
+    Object.keys(depTree.tree).forEach(key => {
+      const normalizedKey = pathNormalizeToLinux(key);
+      const treeElement =depTree.tree[key];
+      treeElement.files =  treeElement.files ?  treeElement.files.map(treeFile => pathNormalizeToLinux(treeFile)) : [];
+      depTree.tree[normalizedKey] = treeElement;
+      if (key !== normalizedKey) delete depTree.tree[key];
+
+    });
+    return depTree;
+  }
   // TODO: Improve flow object return type
   getDependencyTree(cwd: string, consumerPath: string, filePath: string): Promise<Object> {
     // This is important because without this, madge won't know to resolve files if we run the
     // CMD not from the root dir
     const fullPath = path.join(cwd, filePath);
     const driver = this.getDriver(false);
-    return driver.getDependencyTree(cwd, consumerPath, fullPath);
+    return driver.getDependencyTree(cwd, consumerPath, fullPath).then(dependenciesTree => {
+      return this.convertDependenciesTreeToLinux(dependenciesTree);
+    });
   }
 
   static load(lang) {
