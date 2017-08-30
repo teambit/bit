@@ -117,6 +117,26 @@ describe('bit commit command', function () {
     });
   });
 
+  describe.only('commit imported component without changing the component', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createFile('', 'file.js');
+      helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('comp/comp');
+      output = helper.commitComponent('comp/comp');
+    });
+    it('should print nothing to commit', () => {
+      expect(output).to.have.string('nothing to commit');
+    });
+  });
+
   describe('commit all components', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
