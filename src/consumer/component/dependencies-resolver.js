@@ -8,108 +8,91 @@ import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
 
-const depsTreeCache = {};
-
 /**
  * Run over the deps tree recursively to build the full deps tree for component
  * @param {Object} tree - which contain direct deps for each file
- * @param {string} file - file to calculate deps for
+ * @param files
  * @param {string} entryComponentId - component id for the entry of traversing - used to know which of the files are part of that component
  * @param {BitMap} bitMap
  * @param {string} consumerPath
- * @param {string} originFilePath - The original filePath as written in the dependent import statement - this important while committing imported components
-
  */
-function traverseDepsTreeRecursive(tree: Object, file: string, entryComponentId: string, bitMap: BitMap,
-                                   consumerPath: string, originFilePath?: string): Object {
-  const depsTreeCacheId = `${file}@${entryComponentId}`;
-  if (depsTreeCache[depsTreeCacheId] === null) return {}; // todo: cyclomatic dependency
-  if (depsTreeCache[depsTreeCacheId]) {
-    return depsTreeCache[depsTreeCacheId];
-  }
-  depsTreeCache[depsTreeCacheId] = null; // mark as started
-
+function traverseDepsTree(tree: Object, files: string[], entryComponentId: string, bitMap: BitMap, consumerPath: string): Object {
   const packagesDeps = {};
-  let missingDeps = [];
-  let destination;
+  const componentsDeps = [];
+  const missingDeps = [];
 
-  // Don't traverse generated authored components (from the same reasons above):
-  let componentId = bitMap.getComponentIdByPath(file);
-  if (!componentId) {
-    // Check if its a generated index file
-    if (path.basename(file) === DEFAULT_INDEX_NAME || path.basename(file) === DEFAULT_INDEX_TS_NAME) {
-      const indexDir = path.dirname(file);
-      componentId = bitMap.getComponentIdByRootPath(indexDir);
-      // Refer to the main file in case the source component required the index of the imported
-      if (componentId) destination = bitMap.getMainFileOfComponent(componentId);
-    }
+  const entryComponentMap = bitMap.getComponent(entryComponentId);
 
-    if (!componentId) {
-      missingDeps.push(file);
-      depsTreeCache[depsTreeCacheId] = { componentsDeps: {}, packagesDeps, missingDeps };
-      return ({ componentsDeps: {}, packagesDeps, missingDeps });
-    }
-  }
-  if (componentId === entryComponentId) {
-    const currPackagesDeps = tree[file].packages;
-    if (currPackagesDeps && !R.isEmpty(currPackagesDeps)) {
-      Object.assign(packagesDeps, currPackagesDeps);
-    }
+  files.forEach((file) => {
     const allFilesDeps = tree[file].files;
     if (!allFilesDeps || R.isEmpty(allFilesDeps)) {
-      depsTreeCache[depsTreeCacheId] = { componentsDeps: {}, packagesDeps, missingDeps };
-      return { componentsDeps: {}, packagesDeps, missingDeps };
+      return;
     }
-    const rootDir = bitMap.getRootDirOfComponent(componentId);
-    const rootDirFullPath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
-    const recursiveResults = allFilesDeps.map((fileDep) => {
-      let relativeToConsumerFileDep = fileDep;
+    allFilesDeps.forEach((fileDep) => {
+      const rootDir = entryComponentMap.rootDir;
       // Change the dependencies files to be relative to current consumer
       // We are not just using path.resolve(rootDir, fileDep) because this might not work when running
       // bit commands not from root, because resolve take by default the process.cwd
       if (rootDir) {
+        const rootDirFullPath = path.join(consumerPath, rootDir);
         const fullFileDep = path.resolve(rootDirFullPath, fileDep);
-        // const fullFileDep = path.resolve(rootDirFullPath, fileDep);
-        // relativeToConsumerFileDep = path.relative(rootDirFullPath, fullFileDep);
-        relativeToConsumerFileDep = path.relative(consumerPath, fullFileDep);
-        // In case it's another file of the same component we need it to be relative to the rootDir of the current component (and not to consumer)
-        // there for We use the original fileDep.
-        // We need it to be relative to the rootDir because this is how it will be represented in the tree since we passed this root dir to madge earlier
-        if (relativeToConsumerFileDep.startsWith(rootDir)) {
-          relativeToConsumerFileDep = fileDep;
+        const relativeToConsumerFileDep = path.relative(consumerPath, fullFileDep);
+        if (!relativeToConsumerFileDep.startsWith(rootDir)) fileDep = relativeToConsumerFileDep;
+      }
+      let destination;
+      let componentId = bitMap.getComponentIdByPath(fileDep);
+      if (!componentId) {
+        // Check if its a generated index file
+        if (path.basename(fileDep) === DEFAULT_INDEX_NAME || path.basename(fileDep) === DEFAULT_INDEX_TS_NAME) {
+          const indexDir = path.dirname(fileDep);
+          componentId = bitMap.getComponentIdByRootPath(indexDir);
+          // Refer to the main file in case the source component required the index of the imported
+          if (componentId) destination = bitMap.getMainFileOfComponent(componentId);
+        }
+
+        if (!componentId) {
+          missingDeps.push(fileDep);
+          return;
         }
       }
-      return traverseDepsTreeRecursive(tree, relativeToConsumerFileDep, entryComponentId, bitMap, consumerPath, fileDep);
-    });
-    const currComponentsDeps = {};
-    recursiveResults.forEach((result) => {
-      if (result.componentsDeps && !R.isEmpty(result.componentsDeps)) {
-        Object.keys(result.componentsDeps).forEach((currId) => {
-          const resultPaths = result.componentsDeps[currId];
-          if (currComponentsDeps[currId]) {
-            currComponentsDeps[currId] = currComponentsDeps[currId].concat(resultPaths);
-          } else {
-            currComponentsDeps[currId] = resultPaths;
-          }
-        });
+      if (componentId === entryComponentId) {
+        const currentPackagesDeps = tree[file].packages;
+        if (currentPackagesDeps && !R.isEmpty(currentPackagesDeps)) {
+          Object.assign(packagesDeps, currentPackagesDeps);
+        }
+        return;
       }
-      if (result.missingDeps && !R.isEmpty(result.missingDeps)) {
-        missingDeps = missingDeps.concat(result.missingDeps);
+      if (!destination) {
+        const depRootDir = bitMap.getRootDirOfComponent(componentId);
+        destination = depRootDir && fileDep.startsWith(depRootDir) ? path.relative(depRootDir, fileDep) : fileDep;
       }
-      Object.assign(packagesDeps, result.packagesDeps);
+
+      const depsPaths = { sourceRelativePath: fileDep, destinationRelativePath: destination };
+      const currentComponentsDeps = { [componentId]: [depsPaths] };
+
+      if (componentsDeps[componentId]) {
+        componentsDeps[componentId].push(depsPaths);
+      } else {
+        Object.assign(componentsDeps, currentComponentsDeps);
+      }
     });
-    depsTreeCache[depsTreeCacheId] = { componentsDeps: currComponentsDeps, packagesDeps, missingDeps };
-    return { componentsDeps: currComponentsDeps, packagesDeps, missingDeps };
-  }
+  });
+  return { componentsDeps, packagesDeps, missingDeps };
+}
 
-  if (!destination) {
-    const depRootDir = bitMap.getRootDirOfComponent(componentId);
-    destination = depRootDir && file.startsWith(depRootDir) ? path.relative(depRootDir, file) : file;
-  }
-
-  const currComponentsDeps = { [componentId]: [{ sourceRelativePath: originFilePath || file, destinationRelativePath: destination }] };
-  depsTreeCache[depsTreeCacheId] = { componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] };
-  return ({ componentsDeps: currComponentsDeps, packagesDeps: {}, missingDeps: [] });
+function mergeDependencyTrees(depTrees) {
+  const dependencyTree = {
+    missing: { packages: [], files: [] },
+    tree: {}
+  };
+  Object.keys(depTrees).forEach(dep => {
+    if (depTrees[dep].missing.packages.length) dependencyTree.missing.packages.push(...depTrees[dep].missing.packages);
+    if (depTrees[dep].missing.files && depTrees[dep].missing.files.length) dependencyTree.missing.files.push(...depTrees[dep].missing.files);
+    Object.assign(dependencyTree.tree, depTrees[dep].tree);
+  });
+  dependencyTree.missing.packages = R.uniq(dependencyTree.missing.packages);
+  dependencyTree.missing.files = R.uniq(dependencyTree.missing.files);
+  return dependencyTree;
 }
 
 export default async function loadDependenciesForComponent(component: Component,
@@ -119,32 +102,28 @@ export default async function loadDependenciesForComponent(component: Component,
                                                            bitMap: BitMap,
                                                            consumerPath: string,
                                                            idWithConcreteVersionString: string) {
-  const mainFile = componentMap.mainFile;
   component.missingDependencies = {};
-
   // find the dependencies (internal files and packages) through automatic dependency resolution
-  const dependenciesTree = await driver.getDependencyTree(bitDir, consumerPath, mainFile);
+  const files = componentMap.files.map(file => file.relativePath);
+  const treesP = files.map(file => driver.getDependencyTree(bitDir, consumerPath, file));
+  const trees = await Promise.all(treesP);
+  const dependenciesTree = trees.length === 1 ? R.head(trees) : mergeDependencyTrees(trees);
   if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) {
     component.missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
   }
   if (dependenciesTree.missing.packages && !R.isEmpty(dependenciesTree.missing.packages)) {
     component.missingDependencies.missingPackagesDependenciesOnFs = dependenciesTree.missing.packages;
   }
-
   // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
   // they are referred as "missing/untracked components" and the user should add them later on in order to commit
-  const traversedDeps = traverseDepsTreeRecursive(dependenciesTree.tree, mainFile, idWithConcreteVersionString,
-    bitMap, consumerPath);
+  const traversedDeps = traverseDepsTree(dependenciesTree.tree, files, idWithConcreteVersionString, bitMap, consumerPath);
   const traversedCompDeps = traversedDeps.componentsDeps;
-  const dependencies = Object.keys(traversedCompDeps).map((depId) => {
+  component.dependencies = Object.keys(traversedCompDeps).map((depId) => {
     return { id: BitId.parse(depId), relativePaths: traversedCompDeps[depId] };
   });
-  const packages = traversedDeps.packagesDeps;
   const missingDependencies = traversedDeps.missingDeps;
   if (!R.isEmpty(missingDependencies)) component.missingDependencies.untrackedDependencies = missingDependencies;
-
-  component.dependencies = dependencies;
-  component.packageDependencies = packages;
+  component.packageDependencies = traversedDeps.packagesDeps;
 
   return component;
 }
