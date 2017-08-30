@@ -3,7 +3,7 @@ import path from 'path';
 import R from 'ramda';
 import { DEFAULT_INDEX_NAME, DEFAULT_INDEX_TS_NAME } from '../../constants';
 import BitMap from '../bit-map/bit-map';
-import type { ComponentMap } from '../bit-map/bit-map';
+import type { ComponentMap, ComponentMapFile } from '../bit-map/bit-map';
 import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
@@ -96,17 +96,24 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
 
 /**
  * Merge the dependencies-trees we got from all files to one big dependency-tree
- * @param depTrees
+ * @param {Object} depTrees
+ * @param {ComponentMapFile[]} files
  * @return {{missing: {packages: Array, files: Array}, tree: {}}}
  */
-function mergeDependencyTrees(depTrees: Object): Object {
+function mergeDependencyTrees(depTrees: Object, files: ComponentMapFile[]): Object {
+  if (depTrees.length === 1) return R.head(depTrees);
+  if (depTrees.length !== files.length) throw new Error(`Error occurred while resolving dependencies, num of files: ${files.length}, num of resolved dependencies: ${depTrees.length}`);
   const dependencyTree = {
     missing: { packages: [], files: [] },
     tree: {}
   };
-  Object.keys(depTrees).forEach(dep => {
-    if (depTrees[dep].missing.packages.length) dependencyTree.missing.packages.push(...depTrees[dep].missing.packages);
-    if (depTrees[dep].missing.files && depTrees[dep].missing.files.length) dependencyTree.missing.files.push(...depTrees[dep].missing.files);
+  Object.keys(depTrees).forEach((dep, key) => { // the keys of depTrees are parallel to the files
+    if (depTrees[dep].missing.packages.length && !files[key].test) { // ignore package dependencies of tests for now
+      dependencyTree.missing.packages.push(...depTrees[dep].missing.packages);
+    }
+    if (depTrees[dep].missing.files && depTrees[dep].missing.files.length) {
+      dependencyTree.missing.files.push(...depTrees[dep].missing.files);
+    }
     Object.assign(dependencyTree.tree, depTrees[dep].tree);
   });
   dependencyTree.missing.packages = R.uniq(dependencyTree.missing.packages);
@@ -137,13 +144,11 @@ export default async function loadDependenciesForComponent(component: Component,
                                                            consumerPath: string,
                                                            idWithConcreteVersionString: string): Promise<Component> {
   component.missingDependencies = {};
-  const files = componentMap.files
-    .filter(file => !file.test) // for now, don't resolve dependencies for test files (we might change it later on)
-    .map(file => file.relativePath);
+  const files = componentMap.files.map(file => file.relativePath);
   // find the dependencies (internal files and packages) through automatic dependency resolution
   const treesP = files.map(file => driver.getDependencyTree(bitDir, consumerPath, file));
   const trees = await Promise.all(treesP);
-  const dependenciesTree = trees.length === 1 ? R.head(trees) : mergeDependencyTrees(trees);
+  const dependenciesTree = mergeDependencyTrees(trees, componentMap.files);
   if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) {
     component.missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
   }
