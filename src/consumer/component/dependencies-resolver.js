@@ -29,6 +29,7 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
 
   const entryComponentMap = bitMap.getComponent(entryComponentId);
 
+  const processedFiles = [];
   files.forEach((file) => {
     const currentPackagesDeps = tree[file].packages;
     if (currentPackagesDeps && !R.isEmpty(currentPackagesDeps)) {
@@ -37,6 +38,8 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
     const allFilesDeps = tree[file].files;
     if (!allFilesDeps || R.isEmpty(allFilesDeps)) return;
     allFilesDeps.forEach((fileDep) => {
+      if (processedFiles.includes(fileDep)) return;
+      processedFiles.push(fileDep);
       const rootDir = entryComponentMap.rootDir;
       // Change the dependencies files to be relative to current consumer
       // We can't use path.resolve(rootDir, fileDep) because this might not work when running
