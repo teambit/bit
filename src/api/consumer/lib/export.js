@@ -25,7 +25,8 @@ export default async function exportAction(ids?: string[], remote: string, save:
       const match = idsFromBitMap.find(idStr => {
         return parsedId.toString() === BitId.parse(idStr).toStringWithoutScopeAndVersion();
       });
-      return match || id;
+      if (match) return BitId.parse(match).toStringWithoutVersion();
+      return id;
     });
     loader.start(BEFORE_EXPORT); //show single export
   }
