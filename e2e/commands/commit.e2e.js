@@ -140,7 +140,7 @@ describe('bit commit command', function () {
       output = helper.commitComponent('comp/comp');
       showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
     });
-    it.only('should commit the component', () => {
+    it('should commit the component', () => {
       expect(output).to.have.string('1 components committed');
     });
     it('should write the dependency to the component model ', () => {
