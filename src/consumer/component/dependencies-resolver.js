@@ -7,6 +7,7 @@ import type { ComponentMap, ComponentMapFile } from '../bit-map/bit-map';
 import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
+import { pathNormalizeToLinux } from '../../utils'
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -51,7 +52,7 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
         // bit commands not from root, because resolve take by default the process.cwd
         const rootDirFullPath = path.join(consumerPath, rootDir);
         const fullFileDep = path.resolve(rootDirFullPath, fileDep);
-        fileDepRelative = path.relative(consumerPath, fullFileDep);
+        fileDepRelative = pathNormalizeToLinux(path.relative(consumerPath, fullFileDep));
         componentId = bitMap.getComponentIdByPath(fileDepRelative);
       }
       if (!componentId) {

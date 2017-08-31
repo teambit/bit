@@ -175,7 +175,7 @@ export default class Consumer {
       let destination;
 
       // Don't traverse generated authored components (from the same reasons above):
-      let componentId = bitMap.getComponentIdByPath(file);
+      let componentId = bitMap.getComponentIdByPath(pathNormalizeToLinux(file));
       if (!componentId) {
         // Check if its a generated index file
         if (path.basename(file) === DEFAULT_INDEX_NAME || path.basename(file) === 'index.ts') {
