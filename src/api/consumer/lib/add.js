@@ -3,13 +3,12 @@ import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
 import format from 'string-format';
-import { glob, isValidIdChunk, isDir, calculateFileInfo, existsSync } from '../../../utils';
+import { glob, isValidIdChunk, isDir, calculateFileInfo, existsSync, pathNormalizeToLinux, pathJoinLinux, pathResolve } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
 import logger from '../../../logger/logger';
-import isGlob from 'is-glob';
 import PathNotExists from './exceptions/path-not-exists'
 import EmptyDirectory from './exceptions/empty-directory';
 
@@ -89,17 +88,18 @@ export default async function addAction(componentPaths: string[], id?: string, m
         const files = {};
         const matches = await glob(componentPath);
         if (matches){
-          matches.forEach((match) =>  files[match] = match);
+          matches.forEach((match) =>  files[pathNormalizeToLinux(match)] = pathNormalizeToLinux(match));
         } else if (fs.existsSync(componentPath) && isDir(componentPath)) {
           const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
-          const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
-          matches.forEach((match) =>  files[match] = match);
+          const matches = await glob(pathJoinLinux(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
+          matches.forEach((match) => files[pathNormalizeToLinux(match)] = pathNormalizeToLinux(match));
         } else { // is file
-          const relativeFilePath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
+          const relativeFilePath = pathNormalizeToLinux(getPathRelativeToProjectRoot(componentPath, consumer.getPath()));
           files[relativeFilePath] = relativeFilePath
         }
         return files;
       }));
+
       return R.mergeAll(filesArr);
     }
 
@@ -116,7 +116,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
     const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
-        const absoluteComponentPath = path.resolve(componentPath);
+        const absoluteComponentPath = pathResolve(componentPath, false);
         const splitPath = absoluteComponentPath.split(path.sep);
         const lastDir = splitPath[splitPath.length-1];
         const nameSpaceOrDir = namespace || splitPath[splitPath.length-2];
@@ -124,11 +124,10 @@ export default async function addAction(componentPaths: string[], id?: string, m
         const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
         if (!matches.length) throw new EmptyDirectory();
 
-        const files = matches.map(match => { return { relativePath: match, test: false, name: path.basename(match) }});
-
+        const files = matches.map(match => { return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) }});
         //mark or add test files according to dsl
         const newFileArrWithTests = await updateTestFilesAccordingToDsl(files,tests);
-        const resolvedMainFile = addMainFileToFiles(files,main);
+        const resolvedMainFile = addMainFileToFiles(files, pathNormalizeToLinux(main));
         // matches.forEach((match) => {
         //   if (keepDirectoryName) {
         //     files[match] = match;
@@ -158,7 +157,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
           parsedId = BitId.getValidBitId(nameSpaceOrlastDir, pathParsed.name);
         }
 
-        const  files = [{ relativePath: relativeFilePath, test: false, name: path.basename(relativeFilePath) }];
+        const  files = [{ relativePath: pathNormalizeToLinux(relativeFilePath), test: false, name: path.basename(relativeFilePath) }];
 
         //mark or add test files according to dsl
         const newFileArrWithTests  = await updateTestFilesAccordingToDsl(files,tests);

@@ -70,8 +70,8 @@ describe('delete files from a component', function () {
     });
     it('should not show the deleted file in bit show command', () => {
       const output = helper.showComponent('bar/foo');
-      expect(output).to.have.string(path.join('bar', 'foo.js'));
-      expect(output).not.to.have.string(path.join('bar','baz.js'));
+      expect(output).to.have.string('bar/foo.js');
+      expect(output).not.to.have.string('bar/baz.js');
     });
   });
 });

@@ -8,7 +8,7 @@
   dependencies:
     acorn "^5.0.3"
     css "^2.2.1"
-    normalize-path "^2.1.1"
+    pathNormalizeToLinux-path "^2.1.1"
     source-map "^0.5.6"
     through2 "^2.0.3"
 
@@ -16,7 +16,7 @@
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@gulp-sourcemaps/map-sources/-/map-sources-1.0.0.tgz#890ae7c5d8c877f6d384860215ace9d7ec945bda"
   dependencies:
-    normalize-path "^2.0.1"
+    pathNormalizeToLinux-path "^2.0.1"
     through2 "^2.0.3"
 
 JSONStream@^1.2.1:
@@ -112,7 +112,7 @@ anymatch@^1.3.0:
   resolved "https://registry.yarnpkg.com/anymatch/-/anymatch-1.3.2.tgz#553dcb8f91e3c889845dfdba34c77721b90b9d7a"
   dependencies:
     micromatch "^2.1.5"
-    normalize-path "^2.0.0"
+    pathNormalizeToLinux-path "^2.0.0"
 
 app-module-path@~1.1.0:
   version "1.1.0"
@@ -3231,7 +3231,7 @@ is-function-x@^3.1.0:
   dependencies:
     has-to-string-tag-x "^1.4.0"
     is-primitive "^2.0.0"
-    normalize-space-x "^1.3.2"
+    pathNormalizeToLinux-space-x "^1.3.2"
     replace-comments-x "^1.0.1"
     to-string-tag-x "^1.4.0"
 
@@ -4089,7 +4089,7 @@ meow@^3.1.0, meow@^3.3.0, meow@^3.5.0:
     loud-rejection "^1.0.0"
     map-obj "^1.0.1"
     minimist "^1.1.3"
-    normalize-package-data "^2.3.4"
+    pathNormalizeToLinux-package-data "^2.3.4"
     object-assign "^4.0.1"
     read-pkg-up "^1.0.1"
     redent "^1.0.0"
@@ -4114,7 +4114,7 @@ micromatch@^2.1.5, micromatch@^2.3.7:
     is-extglob "^1.0.0"
     is-glob "^2.0.1"
     kind-of "^3.0.2"
-    normalize-path "^2.0.1"
+    pathNormalizeToLinux-path "^2.0.1"
     object.omit "^2.0.0"
     parse-glob "^3.0.4"
     regex-cache "^0.4.2"
@@ -4372,24 +4372,24 @@ nopt@^4.0.1:
     abbrev "1"
     osenv "^0.1.4"
 
-normalize-package-data@^2.3.2, normalize-package-data@^2.3.4:
+pathNormalizeToLinux-package-data@^2.3.2, pathNormalizeToLinux-package-data@^2.3.4:
   version "2.4.0"
-  resolved "https://registry.yarnpkg.com/normalize-package-data/-/normalize-package-data-2.4.0.tgz#12f95a307d58352075a04907b84ac8be98ac012f"
+  resolved "https://registry.yarnpkg.com/pathNormalizeToLinux-package-data/-/pathNormalizeToLinux-package-data-2.4.0.tgz#12f95a307d58352075a04907b84ac8be98ac012f"
   dependencies:
     hosted-git-info "^2.1.4"
     is-builtin-module "^1.0.0"
     semver "2 || 3 || 4 || 5"
     validate-npm-package-license "^3.0.1"
 
-normalize-path@^2.0.0, normalize-path@^2.0.1, normalize-path@^2.1.1:
+pathNormalizeToLinux-path@^2.0.0, pathNormalizeToLinux-path@^2.0.1, pathNormalizeToLinux-path@^2.1.1:
   version "2.1.1"
-  resolved "https://registry.yarnpkg.com/normalize-path/-/normalize-path-2.1.1.tgz#1ab28b556e198363a8c1a6f7e6fa20137fe6aed9"
+  resolved "https://registry.yarnpkg.com/pathNormalizeToLinux-path/-/pathNormalizeToLinux-path-2.1.1.tgz#1ab28b556e198363a8c1a6f7e6fa20137fe6aed9"
   dependencies:
     remove-trailing-separator "^1.0.1"
 
-normalize-space-x@^1.3.2:
+pathNormalizeToLinux-space-x@^1.3.2:
   version "1.3.2"
-  resolved "https://registry.yarnpkg.com/normalize-space-x/-/normalize-space-x-1.3.2.tgz#f4e3984aea6cb9e26cf584224051ad0f18277498"
+  resolved "https://registry.yarnpkg.com/pathNormalizeToLinux-space-x/-/pathNormalizeToLinux-space-x-1.3.2.tgz#f4e3984aea6cb9e26cf584224051ad0f18277498"
   dependencies:
     trim-x "^1.0.2"
     white-space-x "^2.0.2"
@@ -4915,7 +4915,7 @@ read-pkg@^1.0.0:
   resolved "https://registry.yarnpkg.com/read-pkg/-/read-pkg-1.1.0.tgz#f5ffaa5ecd29cb31c0474bca7d756b6bb29e3f28"
   dependencies:
     load-json-file "^1.0.0"
-    normalize-package-data "^2.3.2"
+    pathNormalizeToLinux-package-data "^2.3.2"
     path-type "^1.0.0"
 
 read-pkg@^2.0.0:
@@ -4923,7 +4923,7 @@ read-pkg@^2.0.0:
   resolved "https://registry.yarnpkg.com/read-pkg/-/read-pkg-2.0.0.tgz#8ef1c0623c6a6db0dc6713c4bfac46332b2368f8"
   dependencies:
     load-json-file "^2.0.0"
-    normalize-package-data "^2.3.2"
+    pathNormalizeToLinux-package-data "^2.3.2"
     path-type "^2.0.0"
 
 readable-stream@1.1:
