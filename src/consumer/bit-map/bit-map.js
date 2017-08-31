@@ -1,14 +1,13 @@
 import path from 'path';
 import fs from 'fs-extra';
-import normalize from 'normalize-path';
 import R from 'ramda';
 import find from 'lodash.find';
 import pickBy from 'lodash.pickby';
 import logger from '../../logger/logger';
-import { BIT_MAP, DEFAULT_INDEX_NAME, DEFAULT_INDEX_TS_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_DIR } from '../../constants';
+import { BIT_MAP, DEFAULT_INDEX_NAME, DEFAULT_INDEX_TS_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_DIR, DEFAULT_SEPARATOR } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId } from '../../bit-id';
-import { readFile, outputFile } from '../../utils';
+import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux } from '../../utils';
 
 const SHOULD_THROW = true;
 
@@ -56,8 +55,8 @@ export default class BitMap {
     }
     //convert components to os specific paths
   /*  Object.keys(components).forEach((key) => {
-      components[key].files.forEach(file => file.relativePath = path.normalize(file.relativePath));
-      components[key].mainFile = path.normalize(components[key].mainFile);
+      components[key].files.forEach(file => file.relativePath = path.pathNormalizeToLinux(file.relativePath));
+      components[key].mainFile = path.pathNormalizeToLinux(components[key].mainFile);
     });*/
     return new BitMap(dirPath, mapPath, components);
   }
@@ -105,7 +104,7 @@ export default class BitMap {
       const potentialMainFiles = files.filter(file => file.name === baseMainFile);
       if (potentialMainFiles.length) {
         // when there are several files that met the criteria, choose the closer to the root
-        const sortByNumOfDirs = (a, b) => a.relativePath.split(path.sep).length - b.relativePath.split(path.sep).length;
+        const sortByNumOfDirs = (a, b) => a.relativePath.split(DEFAULT_SEPARATOR).length - b.relativePath.split(DEFAULT_SEPARATOR).length;
         potentialMainFiles.sort(sortByNumOfDirs);
         mainFileFromFiles = R.head(potentialMainFiles);
       }
@@ -127,7 +126,7 @@ export default class BitMap {
     // When there is more then one file and the main file not found there
     if (R.isNil(searchResult.mainFileFromFiles)) {
       const mainFileString = mainFile || (DEFAULT_INDEX_NAME + ' or '+ DEFAULT_INDEX_TS_NAME);
-      throw new MissingMainFile(mainFileString, files.map((file) => file.relativePath));
+      throw new MissingMainFile(mainFileString, files.map((file) =>path.normalize(file.relativePath)));
     }
     return searchResult.baseMainFile;
   }
@@ -193,17 +192,17 @@ export default class BitMap {
       }
 
       if (mainFile) {
-        this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
+        this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), this.components[componentIdStr]);
       }
     } else {
       this.components[componentIdStr] = { files };
       this.components[componentIdStr].origin = origin;
 
-      this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
+      this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), this.components[componentIdStr]);
     }
     if (rootDir) {
       const root = this._makePathRelativeToProjectRoot(rootDir)
-      this.components[componentIdStr].rootDir = root ? normalize(root) : root;
+      this.components[componentIdStr].rootDir = root ? pathNormalizeToLinux(root) : root;
     }
     if (origin === COMPONENT_ORIGINS.IMPORTED) {
       // if there are older versions, the user is updating an existing component, delete old ones from bit.map
@@ -302,7 +301,7 @@ export default class BitMap {
     return pickBy(this.components, (componentObject, componentId) => {
       const rootDir = componentObject.rootDir;
       return find(componentObject.files, (file) => {
-        return (file.relativePath === filePath || (rootDir && path.join(rootDir, file.relativePath) === filePath));
+        return (file.relativePath === filePath || (rootDir && pathJoinLinux(rootDir, file.relativePath) === filePath));
       });
     });
   }
@@ -351,8 +350,8 @@ export default class BitMap {
 
   modifyComponentsToLinuxPath(components:Object) {
     Object.keys(components).forEach((key) => {
-      components[key].files.forEach(file => file.relativePath = normalize(file.relativePath));
-      components[key].mainFile = normalize(components[key].mainFile);
+      components[key].files.forEach(file => file.relativePath = pathNormalizeToLinux(file.relativePath));
+      components[key].mainFile = pathNormalizeToLinux(components[key].mainFile);
     });
   }
 

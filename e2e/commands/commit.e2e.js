@@ -221,8 +221,8 @@ describe('bit commit command', function () {
       });
 
       it('Should print that there is untracked dependencies on file system (nested)', () => {
-        expect(output).to.have.string(path.normalize('src/untracked.js'));
-        expect(output).to.have.string(path.normalize('src/untracked2.js'));
+        expect(output).to.have.string('src/untracked.js');
+        expect(output).to.have.string('src/untracked2.js');
       });
     });
 

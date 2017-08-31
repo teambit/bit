@@ -21,7 +21,7 @@ describe('bit add command', function () {
     });
     it('Should add component to bitmap with folder as default namespace', () => {
       helper.createComponent('bar', 'foo2.js');
-      helper.addComponent('bar/foo2.js');
+      helper.addComponent(path.normalize('bar/foo2.js'));
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('bar/foo2');
     });
@@ -257,7 +257,7 @@ describe('bit add command', function () {
     });
     it('bitMap should not contain component if all files are excluded', () => {
       helper.createComponent('bar', 'foo1.js');
-      helper.addComponentWithOptions('bar/foo1.js', { 'e': 'bar/foo1.js' });
+      helper.addComponentWithOptions(path.normalize('bar/foo1.js'), { 'e': 'bar/foo1.js' });
       const bitMap = helper.readBitMap();
       expect(bitMap).not.to.have.property('bar/foo1');
     });

@@ -59,7 +59,7 @@ import splitBy from './array/split-by';
 import outputFile from './fs-output-file';
 import getLatestVersionNumber from './resolveLatestVersion';
 import calculateFileInfo from './fs/file-info';
-import { pathNormalizeToLinux, pathJoin, pathRelative } from './path';
+import { pathNormalizeToLinux, pathJoinLinux, pathRelative, pathResolve, pathJoinOs } from './path';
 export {
   parseSSHUrl,
   splitBy,
@@ -123,6 +123,8 @@ export {
   getLatestVersionNumber,
   calculateFileInfo,
   pathNormalizeToLinux,
-  pathJoin,
-  pathRelative
+  pathJoinLinux,
+  pathRelative,
+  pathResolve,
+  pathJoinOs
 };
