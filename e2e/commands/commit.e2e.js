@@ -6,6 +6,7 @@ import { expect } from 'chai';
 import Helper from '../e2e-helper';
 import chalk from 'chalk';
 import sinon from 'sinon';
+import glob from 'glob';
 
 let logSpy;
 let errorSpy;
@@ -114,6 +115,37 @@ describe('bit commit command', function () {
       it('should commit the component', () => {
         expect(output).to.have.string('1 components committed');
       });
+    });
+  });
+
+  describe('commit imported component with new dependency to another imported component', () => {
+    let output;
+    let showOutput;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createFile('', 'file.js');
+      helper.createFile('', 'file2.js');
+      helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
+      helper.addComponentWithOptions('file2.js', { i: 'comp/comp2' });
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('comp/comp');
+      helper.importComponent('comp/comp2');
+      const fileFixture = "var a = require('../../comp/comp2/file2')";
+      helper.createFile('components/comp/comp', 'file.js', fileFixture);
+      output = helper.commitComponent('comp/comp');
+      showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
+    });
+    it('should commit the component', () => {
+      expect(output).to.have.string('1 components committed');
+    });
+    it('should write the dependency to the component model ', () => {
+      const deps = showOutput.dependencies;
+      expect(deps.length).to.equal(1);
     });
   });
 
