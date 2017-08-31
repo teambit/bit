@@ -232,7 +232,7 @@ describe('bit status command', function () {
       expect(output.includes('no staged components')).to.be.true;
     });
   });
-  describe.only('when a component is imported committed and modified again', () => {
+  describe('when a component is imported committed and modified again', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
@@ -252,10 +252,14 @@ describe('bit status command', function () {
       helper.createFile('components/comp/comp', 'file.js', filefixture2);
       output = helper.runCmd('bit status');
     });
-    it('should display that component as modified', () => {
-      // expect(output.includes('no modified components')).to.be.false;
-      expect(output).to.not.have.string('no modified components');
-      expect(output).to.have.string('modified components\n     > 72d025bb-314c-4c9d-a9d8-63e1c08d5872-remote/comp/comp@2');
+    it('should not display that component as new', () => {
+      expect(output.includes('no new components')).to.be.true;
+    });
+    it('should display that component as a modified component', () => {
+      expect(output.includes('no modified components')).to.be.false;
+
+      expect(output.includes('modified components')).to.be.true;
+      expect(output.includes('comp/comp')).to.be.true;
     });
   });
 

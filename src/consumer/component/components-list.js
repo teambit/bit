@@ -89,7 +89,7 @@ export default class ComponentsList {
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
    * @return {Promise<string[]>}
    */
-  async listModifiedComponents(load: boolean = false): Promise<string[] | ConsumerComponent[]> {
+  async listModifiedComponents(load: boolean = false): Promise<string[] | Component[]> {
     const getAuthoredAndImportedFromFS = async () => {
       let [authored, imported] = await Promise.all([this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED), this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED)]);
       authored = authored || [];
@@ -100,14 +100,14 @@ export default class ComponentsList {
     const [objectComponents, fileSystemComponents] = await Promise
       .all([this.getFromObjects(), getAuthoredAndImportedFromFS()]);
     const objFromFileSystem = fileSystemComponents.reduce((components, component) => {
-      components[component.id.toString()] = component;
+      components[component.id.toStringWithoutVersion()] = component;
       return components;
     }, {});
 
     const modifiedComponents = [];
     const calculateModified = Object.keys(objectComponents).map(async (id) => {
       const bitId = BitId.parse(id);
-      const componentFromFS = objFromFileSystem[bitId.toString()];
+      const componentFromFS = objFromFileSystem[bitId.toStringWithoutVersion()];
 
       if (componentFromFS) {
         const isModified = await this.isComponentModified(objectComponents[id], componentFromFS);
@@ -212,7 +212,7 @@ export default class ComponentsList {
     const { staticParts, dynamicParts } = this.consumer.dirStructure.componentsDirStructure;
     const asterisks = Array(dynamicParts.length).fill('*'); // e.g. ['*', '*', '*']
     const cwd = path.join(this.consumer.getPath(), ...staticParts);
-    const bitMap = await this.getbitMap();
+    const bitMap = await this.getBitMap();
     const idsFromBitMap = await this.idsFromBitMap();
     const idsFromBitMapWithoutScope = await this.idsFromBitMap(false);
     const files = await glob(path.join(...asterisks), { cwd });
@@ -258,16 +258,15 @@ export default class ComponentsList {
   async getFromBitMap(origin): Object {
     const cacheKeyName = origin || 'all';
     if (!this._fromBitMap[cacheKeyName]) {
-      const bitMap = await this.getbitMap();
+      const bitMap = await this.getBitMap();
       this._fromBitMap[cacheKeyName] = bitMap.getAllComponents(origin);
     }
     return this._fromBitMap[cacheKeyName];
   }
 
-  async getbitMap(): Object {
+  async getBitMap(): Object {
     if (!this._bitMap) {
-      const bitMap = await BitMap.load(this.consumer.getPath());
-      this._bitMap = bitMap;
+      this._bitMap = await BitMap.load(this.consumer.getPath());
     }
     return this._bitMap;
   }
