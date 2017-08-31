@@ -17,12 +17,12 @@ describe('bit create', function () {
       helper.addRemoteScope();
     });
     it('Should write the correct files to fs', () => {
-        helper.runCmd('bit create simple');
-        const dirpath = path.join(helper.localScopePath, 'components', 'global', 'simple');
-        const files = fs.readdirSync(dirpath);
-        expect(files).to.include('impl.js');
-        // Make sure there is no other files/dirs created
-        expect(files.length).to.equal(1);
+      helper.runCmd('bit create simple');
+      const dirpath = path.join(helper.localScopePath, 'components', 'global', 'simple');
+      const files = fs.readdirSync(dirpath);
+      expect(files).to.include('impl.js');
+      // Make sure there is no other files/dirs created
+      expect(files.length).to.equal(1);
     });
   });
 });

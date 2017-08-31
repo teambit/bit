@@ -118,20 +118,14 @@ describe('bit commit command', function () {
     });
   });
 
-  describe.only('commit imported component without changing the component', () => {
+  describe('commit already committed component without changing it', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
-      helper.createFile('', 'file.js');
-      helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
       helper.commitAllComponents();
-      helper.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.importComponent('comp/comp');
-      output = helper.commitComponent('comp/comp');
+      output = helper.commitComponent('bar/foo');
     });
     it('should print nothing to commit', () => {
       expect(output).to.have.string('nothing to commit');
