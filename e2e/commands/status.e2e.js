@@ -232,6 +232,37 @@ describe('bit status command', function () {
       expect(output.includes('no staged components')).to.be.true;
     });
   });
+  describe('when a component is imported committed and modified again', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createFile('', 'file.js');
+      helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('comp/comp');
+      const filefixture = '//some change to file';
+      helper.createFile('components/comp/comp', 'file.js', filefixture);
+      helper.commitComponent('comp/comp');
+      const filefixture2 = '//some other change to file';
+      helper.createFile('components/comp/comp', 'file.js', filefixture2);
+      output = helper.runCmd('bit status');
+    });
+    it('should not display that component as new', () => {
+      expect(output.includes('no new components')).to.be.true;
+    });
+    it('should display that component as a modified component', () => {
+      expect(output.includes('no modified components')).to.be.false;
+
+      expect(output.includes('modified components')).to.be.true;
+      expect(output.includes('comp/comp')).to.be.true;
+    });
+  });
+
   describe('when a component has a dependency and both were committed', () => {
     let output;
     before(() => {
