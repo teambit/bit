@@ -47,9 +47,9 @@ describe('bit export command', function () {
       helper.runCmd('bit add bar/foo2.js');
       helper.runCmd('bit add baz/foo1.js');
       helper.runCmd('bit add baz/foo2.js');
-      helper.runCmd('bit commit -a -m commit-msg');
-      helper.runCmd('bit init --bare', helper.remoteScopePath);
-      helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+      helper.commitAllComponents();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
       helper.exportAllComponents();
     });
     it('should export them all', () => {
@@ -72,9 +72,9 @@ describe('bit export command', function () {
       createComponent('baz', 'foo2');
       helper.runCmd('bit add bar -m foo1.js');
       helper.runCmd('bit add baz -m foo1.js');
-      helper.runCmd('bit commit -a -m commit-msg');
-      helper.runCmd('bit init --bare', helper.remoteScopePath);
-      helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+      helper.commitAllComponents();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
       helper.exportAllComponents();
     });
     it('should export them all', () => {
@@ -176,7 +176,7 @@ describe('bit export command', function () {
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
       helper.exportComponent('bar/foo');
-      helper.commitComponent('bar/foo');
+      helper.commitComponent('bar/foo -f');
       helper.exportComponent('bar/foo');
     });
     it('should export it with no errors', () => {
@@ -232,7 +232,7 @@ describe('bit export command', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('utils/is-string');
-      helper.commitComponent(`${helper.remoteScope}/utils/is-string`);
+      helper.commitComponent(`${helper.remoteScope}/utils/is-string -f`);
       helper.exportComponent(`${helper.remoteScope}/utils/is-string`);
     });
 

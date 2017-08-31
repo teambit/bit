@@ -349,6 +349,51 @@ export default class Consumer {
     return this.scope.bumpDependenciesVersions(componentsToUpdate, committedComponents);
   }
 
+  /**
+   * Check whether a model representation and file-system representation of the same component is the same.
+   * The way how it is done is by converting the file-system representation of the component into
+   * a Version object. Once this is done, we have two Version objects, and we can compare their hashes
+   */
+  async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
+    const { version } = await this.scope.sources.consumerComponentToVersion(
+      { consumerComponent: componentFromFileSystem, consumer: this });
+
+    version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
+    version.flattenedDependencies = componentFromModel.flattenedDependencies;
+    // dependencies from the FS don't have an exact version, copy the version from the model
+    version.dependencies.forEach((dependency) => {
+      const idWithoutVersion = dependency.id.toStringWithoutVersion();
+      const dependencyFromModel = componentFromModel.dependencies
+        .find(modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion);
+      if (dependencyFromModel) {
+        dependency.id = dependencyFromModel.id;
+      }
+    });
+
+    // uncomment to easily understand why two components are considered as modified
+    // if (componentFromModel.hash().hash !== version.hash().hash) {
+    //   console.log('-------------------componentFromModel------------------------');
+    //   console.log(componentFromModel.id());
+    //   console.log('------------------------version------------------------------');
+    //   console.log(version.id());
+    //   console.log('-------------------------END---------------------------------');
+    // }
+    return componentFromModel.hash().hash !== version.hash().hash;
+  }
+
+  /**
+   * @see isComponentModified for the implementation of the comparison
+   */
+  async isComponentModifiedById(id: string): Promise<boolean> {
+    const idParsed = BitId.parse(id);
+    const componentFromModel = await this.scope.sources.get(idParsed);
+    if (!componentFromModel) return true; // the component was never committed
+    const latestVersionRef = componentFromModel.versions[componentFromModel.latest()];
+    const versionFromModel = await this.scope.getObject(latestVersionRef.hash);
+    const componentFromFileSystem = await this.loadComponent(idParsed);
+    return this.isComponentModified(versionFromModel, componentFromFileSystem);
+  }
+
   async commit(ids: BitId[], message: string, force: ?bool, verbose: ?bool): Promise<Component[]> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));

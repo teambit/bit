@@ -12,7 +12,7 @@ export default class Export extends Command {
   opts = [
     ['m', 'message <message>', 'commit message'],
     ['a', 'all', 'commit all new and modified components'],
-    ['f', 'force', 'forcely commit even if specs fails'],
+    ['f', 'force', 'forcely commit even if specs fails and even when component was not changed'],
     ['v', 'verbose', 'show specs output on commit'],
   ];
   loader = true;
@@ -37,7 +37,7 @@ export default class Export extends Command {
   report(components: Component|Component[]): string {
     if (!components) return chalk.yellow('nothing to commit');
     if (!Array.isArray(components)) components = [components];
-    
+
     function joinComponents(comps) {
       return comps.map(comp => comp.id.toString().replace('@1', '')).join(', ');
     }
