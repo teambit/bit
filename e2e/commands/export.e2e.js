@@ -203,11 +203,11 @@ describe('bit export command', function () {
 
       helper.createFile(path.join('components', 'bar', 'foo', 'bar'), 'foo.js', 'console.log("got foo v2")');
       helper.commitComponentBarFoo();
-      helper.exportComponent(`${helper.remoteScope}/bar/foo`); // v2
+      helper.exportComponent('bar/foo'); // v2
 
       helper.createFile(path.join('components', 'bar', 'foo', 'bar'), 'foo.js', 'console.log("got foo v3")');
       helper.commitComponentBarFoo();
-      helper.exportComponent(`${helper.remoteScope}/bar/foo`); // v3
+      helper.exportComponent('bar/foo'); // v3
     });
     it('should export it with no errors', () => {
       const output = helper.listRemoteScope();
