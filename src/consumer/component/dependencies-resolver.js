@@ -54,10 +54,6 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
         fileDepRelative = path.relative(consumerPath, fullFileDep);
         componentId = bitMap.getComponentIdByPath(fileDepRelative);
       }
-      if (!componentId) {
-        fileDepRelative = fileDep;
-        componentId = bitMap.getComponentIdByPath(fileDepRelative);
-      }
 
       if (!componentId) {
         // Check if its a generated index file
@@ -66,6 +62,11 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
           componentId = bitMap.getComponentIdByRootPath(indexDir);
           // Refer to the main file in case the source component required the index of the imported
           if (componentId) destination = bitMap.getMainFileOfComponent(componentId);
+        }
+
+        if (!componentId) {
+          fileDepRelative = fileDep;
+          componentId = bitMap.getComponentIdByPath(fileDepRelative);
         }
 
         // the file dependency doesn't have any counterpart component. Add it to untrackedDeps
