@@ -42,7 +42,7 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
       processedFiles.push(fileDep);
       const rootDir = entryComponentMap.rootDir;
 
-      let fileDepRelative: string;
+      let fileDepRelative: string = fileDep;
       let componentId: string;
       let destination: string;
       if (rootDir) {
@@ -53,6 +53,8 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
         const fullFileDep = path.resolve(rootDirFullPath, fileDep);
         fileDepRelative = path.relative(consumerPath, fullFileDep);
         componentId = bitMap.getComponentIdByPath(fileDepRelative);
+      } else {
+        fileDepRelative = fileDep;
       }
 
       if (!componentId) {
@@ -65,7 +67,6 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
         }
 
         if (!componentId) {
-          fileDepRelative = fileDep;
           componentId = bitMap.getComponentIdByPath(fileDepRelative);
         }
 
