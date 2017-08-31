@@ -90,7 +90,7 @@ You can push staged/committed components to any remote Scope hosted on [bitsrc.i
 You can set up a free Bit Scope at Bit’s [community hub](https://bitsrc.io), and follow the [setup instructions](https://docs.bitsrc.io/en/article/07-create-a-free-bitsrc-scope).
 
 It’s also possible to easily set up a [remote scope on your own
-computer](https://teambit.github.io/bit/getting-started.html#setup-a-remote-scope).
+computer](https://docs.bitsrc.io/en/article/set-up-remote-bit-scope).
 
 Once you have a remote scope ready, run the export command:
 
