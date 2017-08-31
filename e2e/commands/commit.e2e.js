@@ -118,6 +118,20 @@ describe('bit commit command', function () {
     });
   });
 
+  describe('commit already committed component without changing it', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitAllComponents();
+      output = helper.commitComponent('bar/foo');
+    });
+    it('should print nothing to commit', () => {
+      expect(output).to.have.string('nothing to commit');
+    });
+  });
+
   describe('commit imported component with new dependency to another imported component', () => {
     describe('require the main file of the imported component', () => {
       let output;

@@ -1,14 +1,15 @@
 /** @flow */
 import R from 'ramda';
-import { loadConsumer } from '../../../consumer';
-import InvalidIdOnCommit from './exceptions/invalid-id-on-commit';
+import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
-import {  MissingDependencies } from '../../../consumer/exceptions';
-import logger from '../../../logger/logger';
 
 export async function commitAction({ id, message, force, verbose }:
 { id: string, message: string, force: ?bool, verbose?: bool }) {
-  const consumer = await loadConsumer();
+  const consumer: Consumer = await loadConsumer();
+  if (!force) {
+    const isModified = await consumer.isComponentModifiedById(id);
+    if (!isModified) return null;
+  }
   const components = await consumer.commit([id], message, force, verbose);
   return R.head(components);
 }

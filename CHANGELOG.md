@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 - allow export specific components without specifying the scope-name
+- avoid committing unmodified components unless `--force` flag is being used
 - resolve dependencies from all component files regardless whether they are referenced from the main file
 - bug fix - author was not able to update his/her component in case it was changed in other scope
 - bug fix - status command shows an error when components directory has an unreferenced (from bit.map) component

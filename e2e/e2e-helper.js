@@ -116,7 +116,7 @@ export default class Helper {
     this.runCmd('bit install');
   }
 
-  commitComponent(id:string = 'bar/foo', commitMsg: string = 'commit-message') {
+  commitComponent(id:string, commitMsg: string = 'commit-message') {
     return this.runCmd(`bit commit ${id} -m ${commitMsg}`);
   }
 
@@ -198,7 +198,7 @@ export default class Helper {
   }
 
   commitComponentBarFoo() {
-    return this.commitComponent();
+    return this.commitComponent('bar/foo');
   }
 
   // TODO: delete and use create file below? it's not a comonent unless we add it only a file
