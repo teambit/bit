@@ -303,7 +303,7 @@ describe('bit import', function () {
         localConsumerFiles = glob.sync('**/*.js', { cwd: helper.localScopePath }).map(x=>path.normalize(x));
       });
 
-      it('create a link file to the dependency main file', () => {
+      it('should create a link file to the dependency main file', () => {
         const expectedLocation = path.join('components', 'utils', 'is-string', 'utils', 'is-type-main.js');
         expect(localConsumerFiles).to.include(expectedLocation);
         const linkPath = path.join(helper.localScopePath, expectedLocation);
@@ -312,7 +312,7 @@ describe('bit import', function () {
         expect(linkFileContent).to.have.string(`module.exports = require('${requirePath}');`, 'link file point to the wrong place');
       });
 
-      it('create a link file to the dependency internal file', () => {
+      it('should create a link file to the dependency internal file', () => {
         const expectedLocation = path.join('components', 'utils', 'is-string', 'utils', 'is-type-internal.js');
         expect(localConsumerFiles).to.include(expectedLocation);
         const linkPath = path.join(helper.localScopePath, expectedLocation);

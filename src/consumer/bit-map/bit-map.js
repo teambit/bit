@@ -268,7 +268,7 @@ export default class BitMap {
     return component.mainFile;
   }
 
-  getRootDirOfComponent(id: string){
+  getRootDirOfComponent(id: string) {
     const component = this.getComponent(id, SHOULD_THROW);
     return component.rootDir;
   }
