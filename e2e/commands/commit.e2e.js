@@ -6,6 +6,7 @@ import { expect } from 'chai';
 import Helper from '../e2e-helper';
 import chalk from 'chalk';
 import sinon from 'sinon';
+import glob from 'glob';
 
 let logSpy;
 let errorSpy;
@@ -117,13 +118,74 @@ describe('bit commit command', function () {
     });
   });
 
-  describe('commit all components', () => {
-    beforeEach(() => {
-      helper.reInitLocalScope();
+  describe('commit imported component with new dependency to another imported component', () => {
+    describe('require the main file of the imported component', () => {
+      let output;
+      let showOutput;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+        helper.createFile('', 'file.js');
+        helper.createFile('', 'file2.js');
+        helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
+        helper.addComponentWithOptions('file2.js', { i: 'comp/comp2' });
+        helper.commitAllComponents();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('comp/comp');
+        helper.importComponent('comp/comp2');
+        const fileFixture = "var a = require('../../comp/comp2/file2')";
+        helper.createFile('components/comp/comp', 'file.js', fileFixture);
+        output = helper.commitComponent('comp/comp');
+        showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
+      });
+      it('should commit the component', () => {
+        expect(output).to.have.string('1 components committed');
+      });
+      it('should write the dependency to the component model ', () => {
+        const deps = showOutput.dependencies;
+        expect(deps.length).to.equal(1);
+      });
     });
 
+    describe('require the index file of the imported component', () => {
+      let output;
+      let showOutput;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+        helper.createFile('', 'file.js');
+        helper.createFile('', 'file2.js');
+        helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
+        helper.addComponentWithOptions('file2.js', { i: 'comp/comp2' });
+        helper.commitAllComponents();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('comp/comp');
+        helper.importComponent('comp/comp2');
+        const fileFixture = "var a = require('../../comp/comp2')";
+        helper.createFile('components/comp/comp', 'file.js', fileFixture);
+        output = helper.commitComponent('comp/comp');
+        showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
+      });
+      it('should commit the component', () => {
+        expect(output).to.have.string('1 components committed');
+      });
+      it('should write the dependency to the component model ', () => {
+        const deps = showOutput.dependencies;
+        expect(deps.length).to.equal(1);
+      });
+    });
+  });
+
+  describe('commit all components', () => {
     it('Should print there is nothing to commit right after success commit all', () => {
       // Create component and try to commit twice
+      helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       let output = helper.commitAllComponents();
@@ -168,7 +230,6 @@ describe('bit commit command', function () {
         }
       });
 
-      // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
       it('Should print that there is missing dependencies', () => {
         expect(output).to.have.string('fatal: following component dependencies were not found');
       });
@@ -185,7 +246,6 @@ describe('bit commit command', function () {
         expect(output).to.have.string('./missing-fs2');
       });
 
-      // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
       it('Should print that there is missing package dependencies on file system (nested)', () => {
         expect(output).to.have.string('package');
         expect(output).to.have.string('package2');
@@ -226,19 +286,43 @@ describe('bit commit command', function () {
       const secondFileFixture = "const isType = require('./utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('', 'main.js', mainFileFixture);
       helper.createFile('', 'second.js', secondFileFixture);
-      helper.addComponentWithOptions('main.js second.js', { 'm': 'main.js', 'i': 'comp/comp' });
+      helper.addComponentWithOptions('main.js second.js', { m: 'main.js', i: 'comp/comp' });
 
       helper.commitAllComponents();
 
       const output = helper.showComponentWithOptions('comp/comp', { j: '' });
       const dependencies = JSON.parse(output).dependencies;
-      const depPaths = [{ sourceRelativePath: path.normalize('utils/is-type.js'), destinationRelativePath: path.normalize('utils/is-type.js') }];
-      const depObject = { id: 'utils/is-type', relativePaths: depPaths };
-      const depPaths1 = [{ sourceRelativePath: path.normalize('utils/is-string.js'), destinationRelativePath: path.normalize('utils/is-string.js') }];
-      const depObject1 = { id: 'utils/is-string', relativePaths: depPaths1 };
+      const depPathsIsString = { sourceRelativePath: path.normalize('utils/is-string.js'), destinationRelativePath: path.normalize('utils/is-string.js') };
+      const depPathsIsType = { sourceRelativePath: path.normalize('utils/is-type.js'), destinationRelativePath: path.normalize('utils/is-type.js') };
 
-      expect(dependencies[0].relativePaths[0]).to.include(depPaths[0]);
-      expect(dependencies[1].relativePaths[0]).to.include(depPaths1[0]);
+      expect(dependencies.find(dep => dep.id === 'utils/is-string').relativePaths[0]).to.deep.equal(depPathsIsString);
+      expect(dependencies.find(dep => dep.id === 'utils/is-type').relativePaths[0]).to.deep.equal(depPathsIsType);
+    });
+
+    it('should add dependencies for non-main files regardless whether they are required from the main file', () => {
+      helper.reInitLocalScope();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+
+      const mainFileFixture = "const isString = require('./utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      const secondFileFixture = "const isType = require('./utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      helper.createFile('', 'main.js', mainFileFixture);
+      helper.createFile('', 'second.js', secondFileFixture);
+      helper.addComponentWithOptions('main.js second.js', { m: 'main.js', i: 'comp/comp' });
+
+      helper.commitAllComponents();
+
+      const output = helper.showComponentWithOptions('comp/comp', { j: '' });
+      const dependencies = JSON.parse(output).dependencies;
+      const depPathsIsString = { sourceRelativePath: path.normalize('utils/is-string.js'), destinationRelativePath: path.normalize('utils/is-string.js') };
+      const depPathsIsType = { sourceRelativePath: path.normalize('utils/is-type.js'), destinationRelativePath: path.normalize('utils/is-type.js') };
+
+      expect(dependencies.find(dep => dep.id === 'utils/is-string').relativePaths[0]).to.deep.equal(depPathsIsString);
+      expect(dependencies.find(dep => dep.id === 'utils/is-type').relativePaths[0]).to.deep.equal(depPathsIsType);
     });
 
     it.skip('should persist all models in the scope', () => {
