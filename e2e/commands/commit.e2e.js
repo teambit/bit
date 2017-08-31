@@ -307,6 +307,9 @@ describe('bit commit command', function () {
       const depPaths1 = [{ sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' }];
       const depObject1 = { id: 'utils/is-string', relativePaths: depPaths1 };
 
+      const depPathsIsString = { sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' };
+      const depPathsIsType = { sourceRelativePath: 'utils/is-type.js', destinationRelativePath: 'utils/is-type.js' };
+
       expect(dependencies.find(dep => dep.id === 'utils/is-string').relativePaths[0]).to.deep.equal(depPathsIsString);
       expect(dependencies.find(dep => dep.id === 'utils/is-type').relativePaths[0]).to.deep.equal(depPathsIsType);
     });
@@ -330,8 +333,8 @@ describe('bit commit command', function () {
 
       const output = helper.showComponentWithOptions('comp/comp', { j: '' });
       const dependencies = JSON.parse(output).dependencies;
-      const depPathsIsString = { sourceRelativePath: path.normalize('utils/is-string.js'), destinationRelativePath: path.normalize('utils/is-string.js') };
-      const depPathsIsType = { sourceRelativePath: path.normalize('utils/is-type.js'), destinationRelativePath: path.normalize('utils/is-type.js') };
+      const depPathsIsString = { sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' };
+      const depPathsIsType = { sourceRelativePath: 'utils/is-type.js', destinationRelativePath: 'utils/is-type.js' };
 
       expect(dependencies.find(dep => dep.id === 'utils/is-string').relativePaths[0]).to.deep.equal(depPathsIsString);
       expect(dependencies.find(dep => dep.id === 'utils/is-type').relativePaths[0]).to.deep.equal(depPathsIsType);
