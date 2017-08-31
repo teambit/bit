@@ -67,6 +67,7 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
         }
 
         if (!componentId) {
+          fileDepRelative = fileDep;
           componentId = bitMap.getComponentIdByPath(fileDepRelative);
         }
 
