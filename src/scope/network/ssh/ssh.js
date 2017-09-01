@@ -1,4 +1,5 @@
 /** @flow */
+import SSH2 from 'ssh2';
 import R from 'ramda';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
@@ -14,11 +15,11 @@ import checkVersionCompatibilityFunction from '../check-version-compatibility';
 import logger from '../../../logger/logger';
 import type { Network } from '../network';
 
+
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
-const Client = require('ssh2').Client;
 
-const conn = new Client();
+const conn: SSH2 = new SSH2();
 
 function absolutePath(path: string) {
   if (!path.startsWith('/')) return `~/${path}`;
@@ -62,7 +63,7 @@ export type SSHProps = {
 };
 
 export default class SSH implements Network {
-  connection: any;
+  connection: ?SSH2;
   path: string;
   username: string;
   port: number;
@@ -213,7 +214,10 @@ export default class SSH implements Network {
       username: this.username,
       host: this.host,
       port: this.port,
-      privateKey: keyGetter(key)
+      privateKey: keyGetter(key),
+      debug: (str) => {
+        // logger.debug(`SSH2: ${str}`); // uncomment to get the debug messages from ssh2 library
+      }
     };
   }
 

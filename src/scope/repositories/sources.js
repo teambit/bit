@@ -36,13 +36,15 @@ export default class SourceRepository {
     return this.scope.objects;
   }
 
-  findComponent(component: Component): Promise<?Component> {
-    return this.objects()
-      .findOne(component.hash())
-      .catch(() => {
-        logger.debug(`failed finding a component with hash: ${component.hash()}`);
-        return null;
-      });
+  async findComponent(component: Component): Promise<?Component> {
+    try {
+      const foundComponent = this.objects().findOne(component.hash());
+      if (foundComponent) return foundComponent;
+    } catch (err) {
+      logger.error(`findComponent got an error ${err}`);
+    }
+    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash()}`);
+    return null;
   }
 
   getMany(ids: BitId[]): Promise<ComponentDef[]> {
