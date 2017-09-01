@@ -341,4 +341,53 @@ describe('bit add command', function () {
       expect(bitMap['bar/foo'].mainFile).to.equal(expectedMainFile);
     });
   });
+  describe('adding files to an imported component', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportComponent('bar/foo');
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+    describe('outside the component rootDir', () => {
+      let output;
+      before(() => {
+        helper.createFile('bar', 'foo2.js');
+        try {
+          helper.addComponentWithOptions(path.join('bar', 'foo2.js'), { i: 'bar/foo' });
+        } catch (err) {
+          output = err.message;
+        }
+      });
+      it('should throw an error', () => {
+        expect(output).to.have.string('Error: unable to add file');
+      });
+    });
+    describe('inside the component rootDir', () => {
+      before(() => {
+        const barFooPath = path.join('components', 'bar', 'foo', 'bar');
+        helper.createFile(barFooPath, 'foo2.js');
+        helper.addComponentWithOptions(path.join(barFooPath, 'foo2.js'), { i: 'bar/foo' });
+      });
+      it('should add the new file to the existing imported component', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap[`${helper.remoteScope}/bar/foo@1`].files).to.be.ofSize(2);
+      });
+      it('should not add it as a new component', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).not.to.have.property('bar/foo');
+      });
+      it('should mark the component as modified', () => {
+        const output = helper.runCmd('bit status');
+        expect(output.includes('no modified components')).to.be.false;
+        expect(output.includes('modified components')).to.be.true;
+        expect(output.includes('bar/foo')).to.be.true;
+      });
+    });
+  });
 });

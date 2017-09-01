@@ -56,10 +56,6 @@ export default class BitMap {
     return new BitMap(dirPath, mapPath, components);
   }
 
-  isComponentExist(componentId: string): boolean {
-    return !!this.components[componentId];
-  }
-
   getAllComponents(origin?: ComponentOrigin): Object<string> {
     if (!origin) return this.components;
     const isOriginMatch = component => component.origin === origin;
@@ -158,6 +154,37 @@ export default class BitMap {
     });
   }
 
+  _changeFilesPathAccordingToItsRootDir(existingRootDir, files) {
+    files.forEach((file) => {
+      const newRelativePath = path.relative(existingRootDir, file.relativePath);
+      if (newRelativePath.startsWith('..')) {
+        // this is forbidden for security reasons. Allowing files to be written outside the components directory may
+        // result in overriding OS files.
+        throw new Error(`unable to add file ${file.relativePath} because it's located outside the component root dir ${existingRootDir}`);
+      }
+      file.relativePath = newRelativePath;
+    });
+  }
+
+  /**
+   * When the given id doesn't include scope-name, there might be a similar component in bit.map with scope-name, use it
+   * only when the origin is imported or author, as we don't allow to update nested component.
+   */
+  getExistingComponentId(componentIdStr: string): string|boolean {
+    if (this.components[componentIdStr]) return componentIdStr;
+    if (BitId.parse(componentIdStr).scope) return false; // given id has scope, it should have been an exact match
+    const foundId = Object.keys(this.components).find((component) => {
+      return BitId.parse(component).toStringWithoutScopeAndVersion() === componentIdStr;
+    });
+    if (!foundId) return false;
+    if (this.components[foundId].origin === COMPONENT_ORIGINS.NESTED) {
+      throw new Error(`One of your dependencies (${foundId}) has already the same namespace and name. 
+      If you're trying to add a new component, please choose a new namespace or name.
+      If you're trying to update a dependency component, please re-import it individually`);
+    }
+    return foundId;
+  }
+
   addComponent({ componentId, files, mainFile, origin, parent, rootDir, override }: {
     componentId: BitId,
     files: ComponentMapFile[],
@@ -179,13 +206,13 @@ export default class BitMap {
 
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
-
+      const existingRootDir = this.components[componentIdStr].rootDir;
+      if (existingRootDir) this._changeFilesPathAccordingToItsRootDir(existingRootDir, files);
       if (override) {
-        this.components[componentIdStr].files =files;
+        this.components[componentIdStr].files = files;
       } else {
         this.components[componentIdStr].files = R.unionWith(R.eqBy(R.prop('relativePath')), files, this.components[componentIdStr].files);
       }
-
       if (mainFile) {
         this.components[componentIdStr].mainFile = this._getMainFile(mainFile, this.components[componentIdStr]);
       }

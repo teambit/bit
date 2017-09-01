@@ -106,7 +106,9 @@ export default async function addAction(componentPaths: string[], id?: string, m
     let parsedId: BitId;
     let componentExists = false;
     if (id) {
-      componentExists = bitMap.isComponentExist(id);
+      const existingComponentId = bitMap.getExistingComponentId(id);
+      componentExists = !!existingComponentId;
+      if (componentExists) id = existingComponentId;
       parsedId = BitId.parse(id);
     }
 
@@ -144,7 +146,7 @@ export default async function addAction(componentPaths: string[], id?: string, m
 
         return { componentId: parsedId, files: newFileArrWithTests, mainFile: resolvedMainFile, testsFiles: tests };
       } else { // is file
-        var resolvedPath = path.resolve(componentPath);
+        const resolvedPath = path.resolve(componentPath);
         const pathParsed = path.parse(resolvedPath);
         const relativeFilePath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
 

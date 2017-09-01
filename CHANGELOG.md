@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- support adding new files to imported components
 - avoid running the build and test processes upon `bit status`
 - allow export specific components without specifying the scope-name
 - avoid committing unmodified components unless `--force` flag is being used
