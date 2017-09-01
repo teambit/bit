@@ -278,7 +278,7 @@ describe('bit export command', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo(); // v1
-      helper.commitComponentBarFoo(); // v2
+      helper.commitComponent('bar/foo -f'); // v2
       helper.exportComponent('bar/foo');
 
       helper.reInitLocalScope();
@@ -290,9 +290,7 @@ describe('bit export command', function () {
     });
     it('should export it with no errors', () => {
       const output = helper.listRemoteScope();
-      expect(output.includes('found 1 components')).to.be.true;
-      expect(output.includes('bar/foo')).to.be.true;
-      expect(output.includes('3')).to.be.true; // this is the version
+      expect(output.includes(`${helper.remoteScope}/bar/foo@3`)).to.be.true;
     });
   });
 
@@ -340,6 +338,31 @@ describe('bit export command', function () {
       const output = helper.listRemoteScope();
       expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
+    });
+  });
+
+  describe('export a component, do not modify it and export again to the same scope', () => {
+    let output;
+    let errorOutput;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportComponent('bar/foo');
+      try {
+        output = helper.exportComponent('bar/foo');
+      } catch (err) {
+        errorOutput = err.message;
+      }
+    });
+    it('should not export the component', () => {
+      expect(output).to.be.undefined;
+    });
+    it('should throw an error saying the component was already exported', () => {
+      expect(errorOutput.includes('has been already exported')).to.be.true;
     });
   });
 });
