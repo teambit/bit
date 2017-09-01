@@ -356,7 +356,7 @@ export default class Consumer {
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
     const { version } = await this.scope.sources.consumerComponentToVersion(
-      { consumerComponent: componentFromFileSystem, consumer: this });
+      { consumerComponent: componentFromFileSystem, consumer: this, forHashOnly: true });
 
     version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
     version.flattenedDependencies = componentFromModel.flattenedDependencies;

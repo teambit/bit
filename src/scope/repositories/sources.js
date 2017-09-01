@@ -131,19 +131,29 @@ export default class SourceRepository {
       });
   }
 
-  async consumerComponentToVersion({ consumerComponent, consumer, message, depIds, force, verbose }
+  /**
+   * Given a consumer-component object, returns the Version representation.
+   * Useful for saving into the model or calculation the hash for comparing with other Version object.
+   *
+   * @param consumerComponent
+   * @param consumer
+   * @param message
+   * @param depIds
+   * @param force
+   * @param verbose
+   * @param forHashOnly - when the Version object is needed for hash calculation (e.g. when checking whether a component
+   * is modified), only the data for Version.id() is relevant because hash is based on id().
+   * @return {Promise.<{version: Version, dists: *, files: *}>}
+   */
+  async consumerComponentToVersion({ consumerComponent, consumer, message, depIds, force, verbose, forHashOnly = false }
   : { consumerComponent: ConsumerComponent,
       consumer: Consumer,
       message?: string,
       depIds?: Object,
       force?: boolean,
-      verbose?: boolean }
-  )
-  : Promise<Object> {
-    await consumerComponent.build({ scope: this.scope, consumer });
-    const dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
-      return { name: dist.basename, relativePath: dist.relative, file: Source.from(dist.contents), test: dist.test };
-    }) : null;
+      verbose?: boolean,
+      forHashOnly?: boolean }
+  ): Promise<Object> {
     const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
       return { name: file.basename, relativePath: file.relative, file: Source.from(file.contents), test: file.test };
     }) : null;
@@ -151,9 +161,18 @@ export default class SourceRepository {
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
-    loader.start(BEFORE_RUNNING_SPECS);
-    const specsResults = await consumerComponent
-      .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
+    let dists;
+    let specsResults;
+    if (!forHashOnly) { // for Hash calculation no need for dists and specsResults
+      await consumerComponent.build({ scope: this.scope, consumer });
+      dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
+        return { name: dist.basename, relativePath: dist.relative, file: Source.from(dist.contents), test: dist.test };
+      }) : null;
+      loader.start(BEFORE_RUNNING_SPECS);
+      specsResults = await consumerComponent
+        .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
+    }
+
     const version = Version.fromComponent({
       component: consumerComponent,
       files,
