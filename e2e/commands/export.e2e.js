@@ -17,13 +17,10 @@ describe('bit export command', function () {
   });
   describe('of one component', () => {
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportComponent('bar/foo');
     });
     it('should not write the exported component into bit.json', () => {
@@ -37,8 +34,7 @@ describe('bit export command', function () {
   });
   describe('with multiple components, each has one file', () => {
     before(() => {
-      helper.cleanEnv();
-      helper.runCmd('bit init');
+      helper.setNewLocalAndRemoteScopes();
       createComponent('bar', 'foo1');
       createComponent('bar', 'foo2');
       createComponent('baz', 'foo1');
@@ -48,8 +44,6 @@ describe('bit export command', function () {
       helper.runCmd('bit add baz/foo1.js');
       helper.runCmd('bit add baz/foo2.js');
       helper.commitAllComponents();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportAllComponents();
     });
     it('should export them all', () => {
@@ -64,8 +58,7 @@ describe('bit export command', function () {
 
   describe('with multiple components, each has multiple files', () => {
     before(() => {
-      helper.cleanEnv();
-      helper.runCmd('bit init');
+      helper.setNewLocalAndRemoteScopes();
       createComponent('bar', 'foo1');
       createComponent('bar', 'foo2');
       createComponent('baz', 'foo1');
@@ -73,8 +66,6 @@ describe('bit export command', function () {
       helper.runCmd('bit add bar -m foo1.js');
       helper.runCmd('bit add baz -m foo1.js');
       helper.commitAllComponents();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportAllComponents();
     });
     it('should export them all', () => {
@@ -87,15 +78,12 @@ describe('bit export command', function () {
 
   describe('with specifying multiple components in the CLI', () => {
     before(() => {
-      helper.cleanEnv();
-      helper.runCmd('bit init');
+      helper.setNewLocalAndRemoteScopes();
       createComponent('bar', 'foo1');
       createComponent('bar', 'foo2');
       helper.runCmd('bit add bar/foo1.js');
       helper.runCmd('bit add bar/foo2.js');
       helper.commitAllComponents();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportComponent('bar/foo1 bar/foo2');
     });
     it('should export them all', () => {
@@ -112,9 +100,7 @@ describe('bit export command', function () {
 
   describe('with dependencies', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
@@ -136,9 +122,7 @@ describe('bit export command', function () {
 
   describe('with dependencies and export-all', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
@@ -158,9 +142,7 @@ describe('bit export command', function () {
   });
   describe('with no components to export', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
     });
     it('should print nothing to export', () => {
       const output = helper.exportAllComponents();
@@ -169,9 +151,7 @@ describe('bit export command', function () {
   });
   describe('with multiple versions', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
@@ -189,9 +169,7 @@ describe('bit export command', function () {
 
   describe('imported (v1), exported (v2) and then exported again (v3)', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
@@ -217,9 +195,7 @@ describe('bit export command', function () {
 
   describe('after import with dependencies', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
@@ -245,9 +221,7 @@ describe('bit export command', function () {
   describe('with dependencies on a different scope', () => {
     let anotherScope;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
@@ -272,9 +246,7 @@ describe('bit export command', function () {
 
   describe('exporting version 3 of a component after importing version 2', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo(); // v1
@@ -296,9 +268,7 @@ describe('bit export command', function () {
 
   describe('exporting version 3 of a component as an author', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponent('bar', 'foo.js', 'console.log("got foo v1")');
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo(); // v1
@@ -322,16 +292,13 @@ describe('bit export command', function () {
 
   describe('with a PNG file', () => {
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       const destPngFile = path.join(helper.localScopePath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       helper.runCmd('bit add bar -m foo.js -i bar/foo');
       helper.commitAllComponents();
-
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportAllComponents();
     });
     it('should export it with no errors', () => {
@@ -345,9 +312,7 @@ describe('bit export command', function () {
     let output;
     let errorOutput;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();

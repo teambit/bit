@@ -12,9 +12,7 @@ describe('bit create', function () {
 
   describe.skip('create simple component', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
     });
     it('Should write the correct files to fs', () => {
       helper.runCmd('bit create simple');

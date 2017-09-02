@@ -13,13 +13,11 @@ describe('bit install command', function () {
   });
   describe('with a component in bit.json', () => {
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       // export a new component "bar/foo"
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportComponent('bar/foo');
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -34,12 +32,10 @@ describe('bit install command', function () {
   });
   describe('with a component in bit.map', () => {
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportComponent('bar/foo');
       const bitMap = helper.readBitMap();
       helper.reInitLocalScope();

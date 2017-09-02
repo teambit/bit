@@ -6,6 +6,7 @@ import { v4 } from 'uuid';
 import { VERSION_DELIMITER } from '../src/constants';
 
 export default class Helper {
+  cache: Object;
   constructor() {
     this.debugMode = !!process.env.npm_config_debug;
     this.remoteScope = v4() + '-remote';
@@ -67,11 +68,36 @@ export default class Helper {
   destroyEnv() {
     fs.removeSync(this.localScopePath);
     fs.removeSync(this.remoteScopePath);
+    if (this.cache) {
+      fs.removeSync(this.cache.localScopePath);
+      fs.removeSync(this.cache.remoteScopePath);
+    }
   }
 
   reInitLocalScope() {
     fs.emptyDirSync(this.localScopePath);
     return this.runCmd('bit init');
+  }
+
+  setNewLocalAndRemoteScopes() {
+    if (!this.cache) {
+      this.reInitLocalScope();
+      this.reInitRemoteScope();
+      this.addRemoteScope();
+      this.cache = {
+        localScopePath: path.join(this.e2eDir, v4()),
+        remoteScopePath: path.join(this.e2eDir, v4())
+      };
+      if (this.debugMode) console.log(`not in the cache. cloning a scope from ${this.localScopePath} to ${this.cache.localScopePath}`);
+      fs.copySync(this.localScopePath, this.cache.localScopePath);
+      fs.copySync(this.remoteScopePath, this.cache.remoteScopePath);
+    } else {
+      if (this.debugMode) console.log(`cloning a scope from ${this.cache.localScopePath} to ${this.localScopePath}`);
+      fs.removeSync(this.localScopePath);
+      fs.removeSync(this.remoteScopePath);
+      fs.copySync(this.cache.localScopePath, this.localScopePath);
+      fs.copySync(this.cache.remoteScopePath, this.remoteScopePath);
+    }
   }
 
   initNewLocalScope(deleteCurrentScope = true) {

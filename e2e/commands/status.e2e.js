@@ -108,12 +108,10 @@ describe('bit status command', function () {
   describe('when a component is created, added, committed and exported', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportComponent('bar/foo');
       output = helper.runCmd('bit status');
     });
@@ -130,12 +128,10 @@ describe('bit status command', function () {
   describe('when a component is modified after export', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportComponent('bar/foo');
       // modify the component
       helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
@@ -157,12 +153,10 @@ describe('bit status command', function () {
   describe('when a component is exported, modified and then committed', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportComponent('bar/foo');
       // modify the component
       helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
@@ -185,12 +179,10 @@ describe('bit status command', function () {
   describe('when a component is exported, modified, committed and then exported again', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportComponent('bar/foo');
       helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
       helper.commitComponentBarFoo();
@@ -210,12 +202,10 @@ describe('bit status command', function () {
   describe('when a component is imported', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportComponent('bar/foo');
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -235,9 +225,7 @@ describe('bit status command', function () {
   describe('when a component is imported committed and modified again', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createFile('', 'file.js');
       helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
       helper.commitAllComponents();
@@ -266,9 +254,7 @@ describe('bit status command', function () {
   describe('when a component has a dependency and both were committed', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
@@ -293,9 +279,7 @@ describe('bit status command', function () {
   describe('when a component has an imported dependency', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
@@ -319,9 +303,7 @@ describe('bit status command', function () {
   describe('when a component with multi files and dependency is imported', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
@@ -346,12 +328,10 @@ describe('bit status command', function () {
   describe('when a component is exported, modified and the project cloned somewhere else', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
       helper.exportComponent('bar/foo');
       helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
       helper.mimicGitCloneLocalProject();

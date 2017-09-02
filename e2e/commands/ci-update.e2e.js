@@ -19,10 +19,8 @@ describe('bit ci-update', function () {
 
   describe('component with tester and nested dependencies', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.importTester('bit.envs/testers/mocha');
-      helper.addRemoteScope();
       const level1Fixture = "module.exports = function level1() { return 'level1'; };";
       helper.createFile('', 'level1.js', level1Fixture);
       const level0Fixture = `var level1 = require('./level1'); module.exports = function level0() { return 'level0 ' + level1(); };`;
@@ -43,11 +41,9 @@ describe('bit ci-update', function () {
   });
   describe('component with compiler, tester and nested dependencies', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.importCompiler('bit.envs/compilers/babel');
       helper.importTester('bit.envs/testers/mocha');
-      helper.addRemoteScope();
       const level1Fixture = "module.exports = function level1() { return 'level1'; };";
       helper.createFile('', 'level1.js', level1Fixture);
       const level0Fixture = `var level1 = require('./level1'); module.exports = function level0() { return 'level0 ' + level1(); };`;

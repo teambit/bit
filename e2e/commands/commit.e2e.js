@@ -100,9 +100,7 @@ describe('bit commit command', function () {
     describe('commit component after exporting 2 components', () => {
       let output;
       before(() => {
-        helper.reInitLocalScope();
-        helper.reInitRemoteScope();
-        helper.addRemoteScope();
+        helper.setNewLocalAndRemoteScopes();
         helper.createFile('', 'file.js');
         helper.createFile('', 'file2.js');
         helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
@@ -137,9 +135,7 @@ describe('bit commit command', function () {
       let output;
       let showOutput;
       before(() => {
-        helper.reInitLocalScope();
-        helper.reInitRemoteScope();
-        helper.addRemoteScope();
+        helper.setNewLocalAndRemoteScopes();
         helper.createFile('', 'file.js');
         helper.createFile('', 'file2.js');
         helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
@@ -168,9 +164,7 @@ describe('bit commit command', function () {
       let output;
       let showOutput;
       before(() => {
-        helper.reInitLocalScope();
-        helper.reInitRemoteScope();
-        helper.addRemoteScope();
+        helper.setNewLocalAndRemoteScopes();
         helper.createFile('', 'file.js');
         helper.createFile('', 'file2.js');
         helper.addComponentWithOptions('file.js', { i: 'comp/comp' });

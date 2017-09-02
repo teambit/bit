@@ -14,9 +14,7 @@ describe('bit show command', function () {
 
   describe('local component', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.importCompiler();
 
       helper.createComponent('utils', 'is-string.js');

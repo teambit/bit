@@ -16,10 +16,7 @@ describe('bit import', function () {
 
   describe('stand alone component (without dependencies)', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
-
+      helper.setNewLocalAndRemoteScopes();
       // export a new simple component
       helper.runCmd('bit create simple');
       helper.commitComponent('simple');
@@ -132,9 +129,7 @@ describe('bit import', function () {
   describe('with an existing component in bit.map', () => {
     let localConsumerFiles;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
@@ -168,9 +163,7 @@ describe('bit import', function () {
     let bitJsonPath;
     let output;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       bitJsonPath = path.join(helper.localScopePath, '/components/global/with-deps/bit.json');
     });
     describe('components with shared nested deps', () => {
@@ -279,9 +272,7 @@ describe('bit import', function () {
     describe('javascript without compiler', () => {
       let localConsumerFiles;
       before(() => {
-        helper.reInitLocalScope();
-        helper.reInitRemoteScope();
-        helper.addRemoteScope();
+        helper.setNewLocalAndRemoteScopes();
 
         const isTypeInternalFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.createComponent('utils', 'is-type-internal.js', isTypeInternalFixture);
@@ -331,9 +322,7 @@ describe('bit import', function () {
 
   describe('component/s with bit.json dependencies', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
 
       // export a new simple component
       helper.runCmd('bit create simple');
@@ -437,9 +426,7 @@ describe('bit import', function () {
      */
     let localConsumerFiles;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
@@ -532,9 +519,7 @@ describe('bit import', function () {
      */
     let localConsumerFiles;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "export = isType; function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.ts', isTypeFixture);
       helper.addComponent('utils/is-type.ts');
@@ -635,9 +620,7 @@ describe('bit import', function () {
      */
     let localConsumerFiles;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.importCompiler('bit.envs/compilers/babel'); // TODO: should be pass nothing once it working
       const isTypeFixture = "export default function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
@@ -760,9 +743,7 @@ describe('bit import', function () {
      * In this case, is-string should be updated to include is-type with v2.
      */
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
@@ -792,9 +773,7 @@ describe('bit import', function () {
 
   describe('to an inner directory (not consumer root)', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
@@ -850,9 +829,7 @@ describe('bit import', function () {
 
   describe('after adding dependencies to an imported component', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isStringWithNoDepsFixture = "module.exports = function isString() { return 'got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringWithNoDepsFixture);
       helper.addComponent('utils/is-string.js');
@@ -884,9 +861,7 @@ describe('bit import', function () {
   describe('import the same component ("is-type") as an indirect dependency (of "is-string") and as a direct dependency', () => {
     let localConsumerFiles;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent(path.normalize('utils/is-type.js'));
@@ -929,9 +904,7 @@ describe('bit import', function () {
   describe('import component is-type as a dependency of is-string and then import is-type directly', () => {
     let localConsumerFiles;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent(path.normalize('utils/is-type.js'));
@@ -966,9 +939,7 @@ describe('bit import', function () {
   describe('import component with dependencies from scope A, modify and export them to scope B, then import to a new local scope', () => {
     let scopeB;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
@@ -1013,9 +984,7 @@ describe('bit import', function () {
   describe('import component with dependencies, modify and export, then author import the updated version', () => {
     let localConsumerFiles;
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
