@@ -153,9 +153,13 @@ export default class SourceRepository {
       message?: string,
       depIds?: Object,
       force?: boolean,
-      verbose?: boolean,
-      forHashOnly?: boolean }
-  ): Promise<Object> {
+      verbose?: boolean }
+  )
+  : Promise<Object> {
+    await consumerComponent.build({ scope: this.scope, consumer });
+    const dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
+      return { name: dist.basename, relativePath: pathNormalizeToLinux(dist.relative), file: Source.from(dist.contents), test: dist.test };
+    }) : null;
     const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), file: Source.from(file.contents), test: file.test };
     }) : null;
@@ -163,17 +167,9 @@ export default class SourceRepository {
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
-    let dists;
-    let specsResults;
-    if (!forHashOnly) { // for Hash calculation no need for dists and specsResults
-      await consumerComponent.build({ scope: this.scope, consumer });
-      dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
-        return { name: dist.basename, relativePath: dist.relative, file: Source.from(dist.contents), test: dist.test };
-      }) : null;
-      loader.start(BEFORE_RUNNING_SPECS);
-      specsResults = await consumerComponent
-        .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
-    }
+    loader.start(BEFORE_RUNNING_SPECS);
+    const specsResults = await consumerComponent
+      .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
 
     consumerComponent.mainFile = pathNormalizeToLinux(consumerComponent.mainFile);
     const version = Version.fromComponent({
