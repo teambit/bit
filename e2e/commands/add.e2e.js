@@ -39,7 +39,7 @@ describe('bit add command', function () {
       expect(files).to.be.ofSize(2);
       expect(files).to.include(expectTestFile);
     });
-    it.only('Should add to bitmap file that it was genarated comment', () => {
+    it('Should add to bitmap file that it was genarated comment', () => {
       const osComponentName = path.normalize('bar/foo.js');
       const osFilePathName = path.normalize('bar/foo.spec.js');
       helper.createComponent('bar', 'foo.js');
