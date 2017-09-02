@@ -371,7 +371,6 @@ export default class BitMap {
 
   write(): Promise<> {
     logger.debug('writing to bit.map');
-    if (!fs.existsSync(this.mapPath)) return outputFile(this.mapPath, AUTO_GENERATED_MSG + JSON.stringify(this.components, null, 4));
-    return outputFile(this.mapPath, JSON.stringify(this.components, null, 4));
+    return outputFile(this.mapPath, AUTO_GENERATED_MSG + JSON.stringify(this.components, null, 4));
   }
 }
