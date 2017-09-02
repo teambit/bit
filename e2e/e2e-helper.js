@@ -2,6 +2,7 @@ import os from 'os';
 import path from 'path';
 import childProcess from 'child_process';
 import fs from 'fs-extra';
+import json from 'comment-json';
 import { v4 } from 'uuid';
 import { VERSION_DELIMITER } from '../src/constants';
 
@@ -51,8 +52,9 @@ export default class Helper {
     return fs.writeJSONSync(bitJsonPath, bitJson);
   }
 
-  readBitMap(bitMapPath = path.join(this.localScopePath, '.bit.map.json')) {
-    return fs.readJSONSync(bitMapPath) || {};
+  readBitMap(bitMapPath = path.join(this.localScopePath, '.bit.map.json'),withoutComment = true) {
+    const map = fs.readFileSync(bitMapPath) || {};
+    return json.parse(map.toString('utf8'),  null, withoutComment);
   }
 
   writeBitMap(bitMap) {
