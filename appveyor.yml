@@ -37,9 +37,6 @@ install:
   - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
   - ps: Install-Product node 6
-  - "npm i"
-  - "npm run build"
-  - "npm install -g"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
   - ps: $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
 
@@ -61,6 +58,7 @@ after_test:
 
     .\scripts\build-windows-installer.bat
 
+
 artifacts:
 - path: distribution/windows/artifacts/*.msi
   name: Installer
@@ -75,3 +73,5 @@ deploy_script:
     .\scripts\build-chocolatey.ps1
 
     .\scripts\deploy-windows.ps1 -Repo bit-nuget -File bit.${VERSION}.nupkg -Source artifacts\bit.${VERSION}.nupkg -ENVIRONMENT development -ReleaseServer $env:ReleaseServerDevelopment -Method nupkg
+    $VERSION= $(node -p -e "require('./package.json').version")
+    mv distribution\winMsibin\Release\Bit.msi  ..\..\artifacts\bit-$VERSION-unsigned.msi
