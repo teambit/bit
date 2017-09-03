@@ -37,7 +37,6 @@ install:
   - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
   - ps: Install-Product node 6
-  - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
   - ps: $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
 
 build_script:
