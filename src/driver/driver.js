@@ -58,9 +58,7 @@ export default class Driver {
     // CMD not from the root dir
     const fullPath = path.join(cwd, filePath);
     const driver = this.getDriver(false);
-    return driver.getDependencyTree(cwd, consumerPath, fullPath).then(dependenciesTree => {
-      return this.convertDependenciesTreeToLinux(dependenciesTree);
-    });
+    return driver.getDependencyTree(cwd, consumerPath, fullPath).then(this.convertDependenciesTreeToLinux);
   }
 
   static load(lang) {

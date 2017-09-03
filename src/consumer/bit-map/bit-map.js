@@ -53,11 +53,7 @@ export default class BitMap {
       logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will probably create a new one if needed`);
       components = {};
     }
-    //convert components to os specific paths
-  /*  Object.keys(components).forEach((key) => {
-      components[key].files.forEach(file => file.relativePath = path.pathNormalizeToLinux(file.relativePath));
-      components[key].mainFile = path.pathNormalizeToLinux(components[key].mainFile);
-    });*/
+
     return new BitMap(dirPath, mapPath, components);
   }
 
@@ -122,7 +118,7 @@ export default class BitMap {
     // When there is more then one file and the main file not found there
     if (R.isNil(searchResult.mainFileFromFiles)) {
       const mainFileString = mainFile || (DEFAULT_INDEX_NAME + ' or '+ DEFAULT_INDEX_TS_NAME);
-      throw new MissingMainFile(mainFileString, files.map((file) =>path.normalize(file.relativePath)));
+      throw new MissingMainFile(mainFileString, files.map((file) => path.normalize(file.relativePath)));
     }
     return searchResult.baseMainFile;
   }
