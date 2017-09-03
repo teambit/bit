@@ -50,16 +50,17 @@ test_script:
   - ECHO "assas"
 
 after_test:
+- ps:  mkdir artifacts
 - ps: >-
-    mkdir artifacts
     .\scripts\node-installer.ps1
 
     .\scripts\build-dist.ps1
 
     .\scripts\build-windows-installer.bat
 - ps: dir distribution\
-- ps: $VERSION= $(node -p -e "require('./package.json').version")
-- ps: mv distribution\winMsibin\Release\Bit.msi  ..\..\artifacts\bit-$VERSION-unsigned.msi
+- ps: dir distribution\winMsibin\
+- ps: dir distribution\winMsibin\Release\
+- ps: mv distribution\winMsibin\Release\Bit.msi  ..\..\artifacts\bit-$(node -p -e "require('./package.json').version")-unsigned.msi
 - ps: dir  ..\..\
 
 artifacts:
