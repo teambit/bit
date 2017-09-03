@@ -50,9 +50,7 @@ build_script:
     Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Where-Object {$_ -notmatch 'gitbook-cli'} | Set-Content package.json
 
 
-test_script:
-  - npm run test:appveyor
-  - npm run e2e-test:appveyor
+
 
 after_test:
 - ps: >-
