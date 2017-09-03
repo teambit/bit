@@ -46,7 +46,7 @@
     <Exec Command="node $(BitDistPath)\scripts\set-installation-method.js $([System.IO.Path]::GetFullPath($(BitDistPath)))/package.json msi" />
 
      <!-- Get Bit version -->
-    <Exec Command="node $(BitDistPath)\bin\bit.js --version" ConsoleToMSBuild="true">
+    <Exec Command="node $(BitDistPath)\bin\bit.js -V" ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="BitVersion" />
     </Exec>
        <Exec
