@@ -5,7 +5,8 @@ import {
   DEFAULT_DIST_DIRNAME,
   DEFAULT_INDEX_NAME,
   DEFAULT_INDEX_TS_NAME,
-  COMPONENT_ORIGINS
+  COMPONENT_ORIGINS,
+  AUTO_GENERATED_MSG
 } from '../../constants';
 import { outputFile } from '../../utils';
 import logger from '../../logger/logger';
@@ -131,7 +132,7 @@ async function writeEntryPointsForImportedComponent(component: Component, bitMap
   const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = _getLinkContent(mainFile, `.${path.sep}${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
-  return outputFile(entryPointPath, entryPointFileContent);
+  return outputFile(entryPointPath, AUTO_GENERATED_MSG + entryPointFileContent);
 }
 
 export { writeEntryPointsForImportedComponent, writeDependencyLinks };
