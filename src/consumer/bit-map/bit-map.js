@@ -3,8 +3,9 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import find from 'lodash.find';
 import pickBy from 'lodash.pickby';
+import json from 'comment-json';
 import logger from '../../logger/logger';
-import { BIT_MAP, DEFAULT_INDEX_NAME, DEFAULT_INDEX_TS_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_DIR, DEFAULT_SEPARATOR } from '../../constants';
+import { BIT_MAP, DEFAULT_INDEX_NAME, DEFAULT_INDEX_TS_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_DIR, AUTO_GENERATED_MSG, DEFAULT_SEPARATOR } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux } from '../../utils';
@@ -45,7 +46,7 @@ export default class BitMap {
     if (fs.existsSync(mapPath)) {
       try {
         const mapFileContent = await readFile(mapPath);
-        components = JSON.parse(mapFileContent.toString('utf8'));
+        components = json.parse(mapFileContent.toString('utf8'),  null, true);
       } catch (e) {
         throw new InvalidBitMap(mapPath);
       }
@@ -381,6 +382,6 @@ export default class BitMap {
   write(): Promise<> {
     logger.debug('writing to bit.map');
     this.modifyComponentsToLinuxPath(this.components);
-    return outputFile(this.mapPath, JSON.stringify(this.components, null, 4));
+    return outputFile(this.mapPath, AUTO_GENERATED_MSG + JSON.stringify(this.components, null, 4));
   }
 }

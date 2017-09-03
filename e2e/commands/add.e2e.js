@@ -4,7 +4,8 @@ import chai, { expect } from 'chai';
 import normalize from 'normalize-path';
 import path from 'path';
 import Helper from '../e2e-helper';
-
+import fs from 'fs';
+import { AUTO_GENERATED_MSG } from '../../src/constants'
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
@@ -38,6 +39,15 @@ describe('bit add command', function () {
       expect(files).to.be.array();
       expect(files).to.be.ofSize(2);
       expect(files).to.include(expectTestFile);
+    });
+    it('Should add to bitmap file that it was genarated comment', () => {
+      const osComponentName = path.normalize('bar/foo.js');
+      const osFilePathName = path.normalize('bar/foo.spec.js');
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo.spec.js');
+      helper.addComponentWithOptions(osComponentName, { 't': `${osFilePathName}       ` });
+      const bitMap = fs.readFileSync(path.join(helper.localScopePath, '.bit.map.json')).toString( )
+      expect(bitMap).to.have.string(AUTO_GENERATED_MSG);
     });
     it('Add component from subdir  ../someFile ', () => {
       const barPath  = path.join(helper.localScopePath, 'bar/x');

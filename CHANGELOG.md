@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Remove the npm tree output for component ci flow
 - add verbosity option to some places
 - improve windows support
+- added auto generated msg to bitmap and all generated link files
 
 
 ## [0.10.6] - 2017-08-23

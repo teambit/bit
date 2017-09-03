@@ -6,10 +6,11 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import normalize from 'normalize-path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
-
+import { AUTO_GENERATED_MSG } from '../../src/constants';
 describe('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
+
   after(() => {
     helper.destroyEnv();
   });
@@ -217,6 +218,12 @@ describe('bit import', function () {
         const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
         const requireLink = `./dependencies/dep/level0/${helper.remoteScope}/1/index`;
         expect(linkFilePathContent).to.have.string(`module.exports = require('${requireLink}');`, 'link file point to the wrong place');
+      });
+      it('should add to link file msg that explains that it was generated', () => {
+        const expectedLocation = path.join('components', 'comp', 'comp1', 'index.js');
+        const linkFilePath = path.join(helper.localScopePath, expectedLocation);
+        const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
+        expect(linkFilePathContent).to.have.string(AUTO_GENERATED_MSG);
       });
 
       it('should link the level0 dep from the second comp to first comp dep folder', () => {
