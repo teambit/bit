@@ -51,7 +51,7 @@ test_script:
 
 after_test:
 - ps: >-
-     mkdir artifacts
+    mkdir artifacts
     .\scripts\node-installer.ps1
 
     .\scripts\build-dist.ps1
