@@ -14,5 +14,4 @@ rm bit-bin-$VERSION.tgz
 npm install --no-optional
 npm run build
 npm prune --production
-npm install --production --no-optional
 mv scripts/windows/bit.cmd bin/

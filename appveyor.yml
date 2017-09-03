@@ -57,9 +57,9 @@ after_test:
     .\scripts\build-dist.ps1
 
     .\scripts\build-windows-installer.bat
-- ps: dir distribution\winMsibin
+- ps: dir distribution\
 - ps: $VERSION= $(node -p -e "require('./package.json').version")
-- ps: mv distribution\winMsibin\Release\Bit.msi  ..\..\artifacts\bit-$VERSION-unsigned.msi
+- ps: mv distribution\windows\distribution\winMsibin\Release\Bit.msi  ..\..\artifacts\bit-$VERSION-unsigned.msi
 
 artifacts:
 - path: distribution/windows/artifacts/*.msi
