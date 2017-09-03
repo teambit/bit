@@ -62,9 +62,11 @@ after_test:
 - ps: dir distribution\winMsibin\Release\
 - ps: mv distribution\winMsibin\Release\Bit.msi  ..\..\artifacts\bit-$(node -p -e "require('./package.json').version")-unsigned.msi
 - ps: dir  ..\..\
+- ps: dir  ..\..\artifacts
+- ps: dir  artifacts
 
 artifacts:
-- path: distribution/windows/artifacts/*.msi
+- path: artifacts/*.msi
   name: Installer
 - path: artifacts\bit.${VERSION}.nupkg
   name: nupkg
