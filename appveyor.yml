@@ -57,12 +57,8 @@ after_test:
     .\scripts\build-dist.ps1
 
     .\scripts\build-windows-installer.bat
-- ps: dir distribution\
-- ps: dir distribution\winMsibin\
-- ps: dir distribution\winMsibin\Release\
-- ps: mv distribution\winMsibin\Release\Bit.msi  ..\artifacts\bit-$(node -p -e "require('./package.json').version")-unsigned.msi
-- ps: dir  ..\
-- ps: dir  ..\artifacts
+
+ps:  .\scripts\copyArtifacts.bat
 
 artifacts:
 - path: artifacts/*.msi
