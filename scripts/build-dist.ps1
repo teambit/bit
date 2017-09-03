@@ -12,7 +12,6 @@ cd distribution/windows
 tar -xzf bit-bin-$VERSION.tgz --strip 1
 rm bit-bin-$VERSION.tgz
 npm install --no-optional
-bit import
 npm run build
 npm prune --production
 npm install --production --no-optional
