@@ -46,7 +46,7 @@
     <Exec Command="node $(BitDistPath)\scripts\set-installation-method.js $([System.IO.Path]::GetFullPath($(BitDistPath)))/package.json msi" />
 
      <!-- Get Bit version -->
-    <Exec Command="node $(BitDistPath)\bin\bit.js --version" ConsoleToMSBuild="true">
+    <Exec Command="node $(BitDistPath)\bin\bit.js -V" ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="BitVersion" />
     </Exec>
        <Exec
@@ -57,7 +57,7 @@
         </Exec>
     <!-- WiX doesn't allow extra stuff in the version number, so we omit the
          date/time for nightly builds here -->
- 
+
     <PropertyGroup>
       <DefineConstants>$(DefineConstants);BitDistPath=$(BitDistPath);BitVersion=$(BitShortVersion)</DefineConstants>
     </PropertyGroup>
@@ -73,11 +73,5 @@
       ToolPath="$(WixToolPath)"
     />
   </Target>
-  <Target Name="AfterBuild">
-    <!-- Rename installer to bit-[version]-unsigned.msi -->
-    <Copy
-      SourceFiles="$(OutputPath)\Bit.msi"
-      DestinationFiles="$(BitDistPath)\artifacts\bit-$(BitVersion)-unsigned.msi"
-    />
-  </Target>
+
 </Project>
