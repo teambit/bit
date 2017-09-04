@@ -153,13 +153,9 @@ export default class SourceRepository {
       message?: string,
       depIds?: Object,
       force?: boolean,
-      verbose?: boolean }
-  )
-  : Promise<Object> {
-    await consumerComponent.build({ scope: this.scope, consumer });
-    const dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
-      return { name: dist.basename, relativePath: pathNormalizeToLinux(dist.relative), file: Source.from(dist.contents), test: dist.test };
-    }) : null;
+      verbose?: boolean,
+      forHashOnly?: boolean }
+  ): Promise<Object> {
     const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), file: Source.from(file.contents), test: file.test };
     }) : null;
@@ -167,9 +163,17 @@ export default class SourceRepository {
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
-    loader.start(BEFORE_RUNNING_SPECS);
-    const specsResults = await consumerComponent
-      .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
+    let dists;
+    let specsResults;
+    if (!forHashOnly) { // for Hash calculation no need for dists and specsResults
+      await consumerComponent.build({ scope: this.scope, consumer });
+      dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
+        return { name: dist.basename, relativePath: pathNormalizeToLinux(dist.relative), file: Source.from(dist.contents), test: dist.test };
+      }) : null;
+      loader.start(BEFORE_RUNNING_SPECS);
+      specsResults = await consumerComponent
+        .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
+    }
 
     consumerComponent.mainFile = pathNormalizeToLinux(consumerComponent.mainFile);
     const version = Version.fromComponent({
@@ -204,7 +208,7 @@ export default class SourceRepository {
 
     objectRepo
       .add(version)
-      .add(component)
+      .add(component);
 
     if (files) files.forEach(file => objectRepo.add(file.file));
     if (dists) dists.forEach(dist => objectRepo.add(dist.file));
