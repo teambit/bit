@@ -20,6 +20,9 @@ const LINKS_CONTENT_TEMPLATES = {
   js: 'module.exports = require(\'{filePath}\');',
   ts: 'export * from \'{filePath}\';',
   css: '@import \'{filePath}.css\';',
+  scss: '@import \'{filePath}.scss\';',
+  sass: '@import \'{filePath}.sass\';',
+  less: '@import \'{filePath}.less\';'
 }
 
 // todo: move to bit-javascript
