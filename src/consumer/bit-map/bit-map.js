@@ -116,7 +116,7 @@ export default class BitMap {
       // TODO: can be improved - stop loop if finding main file
       DEFAULT_INDEX_EXTS.forEach((ext) => {
         if (!searchResult.mainFileFromFiles) {
-          const mainFileNameToSearch = `DEFAULT_INDEX_NAME.${ext}`;
+          const mainFileNameToSearch = `${DEFAULT_INDEX_NAME}.${ext}`;
           searchResult = this._searchMainFile(mainFileNameToSearch, files, mainFile);
         }
       });
@@ -124,7 +124,7 @@ export default class BitMap {
 
     // When there is more then one file and the main file not found there
     if (R.isNil(searchResult.mainFileFromFiles)) {
-      const mainFileString = mainFile || (`DEFAULT_INDEX_NAME.[${DEFAULT_INDEX_EXTS.join()}]`);
+      const mainFileString = mainFile || (`${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join()}]`);
       throw new MissingMainFile(mainFileString, files.map(file => path.normalize(file.relativePath)));
     }
     return searchResult.baseMainFile;
