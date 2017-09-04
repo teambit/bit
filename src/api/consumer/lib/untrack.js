@@ -1,6 +1,6 @@
 /** @flow */
 import includes from "lodash.includes";
-import R from "Ramda";
+import R from "ramda";
 import BitMap from "../../../consumer/bit-map";
 import {loadConsumer, Consumer} from "../../../consumer";
 import ComponentsList from "../../../consumer/component/components-list";

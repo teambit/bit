@@ -1,6 +1,6 @@
 /** @flow */
 import chalk from 'chalk';
-import R from 'Ramda';
+import R from 'ramda';
 import Command from '../../command';
 import { untrack } from '../../../api/consumer';
 
