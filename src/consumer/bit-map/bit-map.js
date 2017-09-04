@@ -124,7 +124,7 @@ export default class BitMap {
 
     // When there is more then one file and the main file not found there
     if (R.isNil(searchResult.mainFileFromFiles)) {
-      const mainFileString = mainFile || (`${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join()}]`);
+      const mainFileString = mainFile || (`${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`);
       throw new MissingMainFile(mainFileString, files.map(file => path.normalize(file.relativePath)));
     }
     return searchResult.baseMainFile;
