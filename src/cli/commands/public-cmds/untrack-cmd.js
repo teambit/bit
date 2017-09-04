@@ -20,7 +20,7 @@ export default class Untrack extends Command {
       unRemovableComponents: Array<string>,
       missingComponents: Array<string>
     }):string {
-    let msg = [];
+    const msg = [];
     if (R.isEmpty(untrackedComponents) && R.isEmpty(unRemovableComponents) && R.isEmpty(missingComponents)) {
       return chalk.underline.red('no components untracked');
     }
