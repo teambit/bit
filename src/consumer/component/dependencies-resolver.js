@@ -7,7 +7,7 @@ import type { ComponentMap, ComponentMapFile } from '../bit-map/bit-map';
 import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
-import { pathNormalizeToLinux } from '../../utils'
+import { pathNormalizeToLinux, pathRelative } from '../../utils'
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -85,7 +85,7 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
       // found a dependency component. Add it to componentsDeps
       const depRootDir = bitMap.getRootDirOfComponent(componentId);
       if (!destination) {
-        destination = depRootDir && fileDepRelative.startsWith(depRootDir) ? path.relative(depRootDir, fileDepRelative) : fileDepRelative;
+        destination = depRootDir && fileDepRelative.startsWith(depRootDir) ? pathRelative(depRootDir, fileDepRelative) : fileDepRelative;
       }
       // when there is no rootDir for the current dependency (it happens when it's AUTHORED), keep the original path
       const sourceRelativePath = depRootDir ? fileDepRelative : fileDep;
