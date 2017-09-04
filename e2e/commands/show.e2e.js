@@ -64,7 +64,7 @@ describe('bit show command', function () {
 
       it('should render the main file correctly', () => {
         expect(output).to.have.string('Main file', 'Main file row is missing');
-        expect(output).to.have.string(path.normalize('src/mainFile.js'), 'Main file is wrong');
+        expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
 
       it('should render the dependencies correctly', () => {
@@ -80,13 +80,13 @@ describe('bit show command', function () {
 
       it('should render the files correctly', () => {
         expect(output).to.have.string('Files', 'Files row is missing');
-        expect(output).to.have.string(path.normalize('src/mainFile.js'), 'Files are wrong');
-        expect(output).to.have.string(path.normalize('src/utils/utilFile.js'), 'Files are wrong');
+        expect(output).to.have.string('src/mainFile.js', 'Files are wrong');
+        expect(output).to.have.string('src/utils/utilFile.js', 'Files are wrong');
       });
 
       it('should render the main file correctly', () => {
         expect(output).to.have.string('Main file', 'Main file row is missing');
-        expect(output).to.have.string(path.normalize('src/mainFile.js'), 'Main file is wrong');
+        expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
     });
 
@@ -126,14 +126,14 @@ describe('bit show command', function () {
       });
 
       it('should render the main file correctly', () => {
-        expect(output).to.include({mainFile: path.normalize('src/mainFile.js')});
+        expect(output).to.include({mainFile: 'src/mainFile.js'});
       });
 
       it('should include the dependencies correctly', () => {
         const dependencies = output.dependencies;
         console.log('dependencies', JSON.stringify(dependencies));
         // TODO: Should be concrete version after we resolve the dep version
-        const depPaths = [{ sourceRelativePath: path.normalize('utils/is-string.js'), destinationRelativePath: path.normalize('utils/is-string.js') }];
+        const depPaths = [{ sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' }];
         const depObject = { id: 'utils/is-string', relativePaths: depPaths };
         expect(dependencies[0].relativePaths[0]).to.include(depPaths[0]);
       });
@@ -150,18 +150,18 @@ describe('bit show command', function () {
         const firstFileObj = files[0];
         const secondFileObj = files[1];
 
+        //path.pathNormalizeToLinux is used because the test check the vinyl objects
         const mainFileHistory = [path.normalize(`${helper.localScopePath}/src/mainFile.js`)];
         // const mainFileObj = {history: mainFileHistory};
         const utilFileHistory = [path.normalize(`${helper.localScopePath}/src/utils/utilFile.js`)];
         // const utilFileObj = {history: utilFileHistory};
-
         expect(firstFileObj.history[0]).to.include(mainFileHistory);
         expect(secondFileObj.history[0]).to.include(utilFileHistory);
       });
 
       // TODO: change this to src/mainFile.js once we change the main file to store relative instead of path
       it('should include the main file correctly', () => {
-        expect(output).to.include({ mainFile: path.normalize('src/mainFile.js') });
+        expect(output).to.include({ mainFile: 'src/mainFile.js' });
       });
     });
 

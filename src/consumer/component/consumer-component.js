@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
-import { mkdirp, isString } from '../../utils';
+import { mkdirp, isString, pathNormalizeToLinux } from '../../utils';
 import BitJson from '../bit-json';
 import { Impl, Specs, Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -302,7 +302,7 @@ export default class Component {
     }
 
     const filesForBitMap = this.files.map((file) => {
-      return { name: file.basename, relativePath: file.relative, test: file.test };
+      return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
 
     bitMap.addComponent({
@@ -549,7 +549,7 @@ export default class Component {
       testerId: testerId ? BitId.parse(testerId) : null,
       dependencies: dependencies.map(dep => Object.assign({}, dep, { id: BitId.parse(dep.id) })), //this._dependenciesFromWritableObject(dependencies),
       packageDependencies,
-      mainFile: path.normalize(mainFile),
+      mainFile,
       files,
       docs,
       dists,

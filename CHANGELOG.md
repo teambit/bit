@@ -18,14 +18,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `bit import` from bit.json does not write to the file-system a dependency when it is also a direct import
 - bug fix - export would hang when the ssh server were existing before closing
 - don't calculate nested deps when calculating modified component during bit status / commit
-- fixed exception thrown in `bit ls` after exporting components 
+- fixed exception thrown in `bit ls` after exporting components
 - removed `--cache` flag from `bit ls`
 - deprecated install command
-- added `--environment` option for `bit import` 
+- added `--environment` option for `bit import`
 - reformatted `bit import` output (components, dependencies, environments)
 - remove duplication for missing packages warning
 - Remove the npm tree output for component ci flow
 - add verbosity option to some places
+- improve windows support
 - added auto generated msg to bitmap and all generated link files
 
 
@@ -41,17 +42,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - improvement - when there are several potential main files, `bit add` selects the one that is closer to the root
 - show a friendly error when SSH returns an invalid response
 - fix an error when there are multiple open SSH connections
-- update bit.map and the file system when a nested component is re-imported individually 
+- update bit.map and the file system when a nested component is re-imported individually
 - fix ci-update command when there are tester and compiler to use the same isolated-environment
 - fix an error when importing a component, exporting it, modifying and exporting again (v3)
 - fix links generation when importing from a non-consumer root path
 - fix ci-update command to generate links when necessary
 - fix Error: "Cannot find module './build/Release/DTraceProviderBindings'" when installing via Yarn
 - fix the local and remote search
-- fix the internal ci-update command where an environment has a tester without a compiler 
+- fix the internal ci-update command where an environment has a tester without a compiler
 - improved commit, add, export and status outputs
 - support general failures on bit test (like on before)
-- status output with missing dependencies 
+- status output with missing dependencies
 - help flags adjusted to new help
 - missing dependencies formatted on commit
 - sources no longer part of bit.json's defaults
@@ -86,7 +87,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - fix memory leak when exporting a big amount of components
 - fix running import command from a non-root directory
-- support specifying multiple ids using export command 
+- support specifying multiple ids using export command
 - fix the auto creating dependencies during commit
 - performance improvement for status and commit
 
@@ -116,7 +117,7 @@ Improve resolving packages dependencies for ts files
 - update "bit-javascript" dependency to 0.6.4
 ## [0.6.3-rc.3] - 2017-06-15
 
-- `bit test` shows the error stack in case of a fatal error 
+- `bit test` shows the error stack in case of a fatal error
 - add logger
 - support debug-mode for e2e tests
 
@@ -127,7 +128,7 @@ Improve resolving packages dependencies for ts files
 
 ## [0.6.3-rc.1] - 2017-06-06
 
-- support running e2e tests in a dev environment where `bit` command is different (such as bit-dev) 
+- support running e2e tests in a dev environment where `bit` command is different (such as bit-dev)
 - `bit import` no longer uses the internal cache objects to retrieve remote bit-components.
 - avoid corrupted data in a scope when dependencies somehow are not being resolved.
 - allow `bit init` when there is a bit.json file without the `source` or `env` attributes.

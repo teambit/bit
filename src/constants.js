@@ -2,7 +2,6 @@
 import cliSpinners from 'cli-spinners';
 import os from 'os';
 import path from 'path';
-
 const userHome = require('user-home');
 const packageFile = require('../package.json');
 
@@ -66,6 +65,8 @@ export const DEFAULT_BIT_VERSION = 1;
 export const DEFAULT_LANGUAGE = 'javascript';
 
 export const DEFAULT_DIR_STRUCTURE = `${BITS_DIRNAME}/{namespace}/{name}`;
+
+export const DEFAULT_SEPARATOR = '/';
 
 export const LATEST_BIT_VERSION = 'latest';
 

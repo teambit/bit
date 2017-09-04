@@ -3,7 +3,6 @@ import serializeError from 'serialize-error';
 import commander from 'commander';
 import chalk from 'chalk';
 import { readFileSync } from 'fs';
-import path from 'path';
 import type Command from './command';
 import defaultHandleError from './default-error-handler';
 import { empty, first, isNumeric } from '../utils';
