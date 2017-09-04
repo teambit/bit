@@ -1,31 +1,40 @@
 /** @flow */
-import includes from 'lodash.includes';
-import BitMap from '../../../consumer/bit-map';
-import { loadConsumer, Consumer } from '../../../consumer';
-import ComponentsList from '../../../consumer/component/components-list';
+import includes from "lodash.includes";
+import R from "Ramda";
+import BitMap from "../../../consumer/bit-map";
+import {loadConsumer, Consumer} from "../../../consumer";
+import ComponentsList from "../../../consumer/component/components-list";
 
 
-export default async function untrack(componentPaths: string[]): Promise<Object> {
+export default async function untrack(componentIds: string[]): Promise<Object> {
 
-  const componentsToUntrack = componentPaths;
+  const untrackedComponents = [];
   const consumer: Consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents(true);
-  const modifiedComponent = await componentsList.listModifiedComponents(true);
   const stagedComponents = await componentsList.listExportPendingComponents();
+  const modifiedComponent = await componentsList.listModifiedComponents(true);
 
-  //remove added components
+  //find missing
+  const  missing = componentIds.filter(id => !bitMap.getComponent(id,false))
+
+  //remove new components
   newComponents.forEach(newComp => {
-    if (includes(componentPaths,newComp.id.toString())) bitMap.removeComponent(newComp.id.toString())
+    if (includes(componentIds,newComp.id.toString()) || R.isEmpty(componentIds)) {
+      untrackedComponents.push(newComp.id.toString())
+      bitMap.removeComponent(newComp.id.toString())
+    }
   });
 
-  //remove staged components only if is local component and not imported
-  stagedComponents.forEach(newComp => {
-    if (includes(componentPaths,newComp.id.toString())) bitMap.removeComponent(newComp.id.toString())
-  });
+  //check if ids are staged
+  const unRemovableStagedComponents = stagedComponents.filter(component => includes(componentIds,component));
 
+  //check if ids are modified
+  const unRemovableModifiedComponents = modifiedComponent.filter(component => includes(componentIds,component));
+  const unremovableMerged = unRemovableStagedComponents.concat(unRemovableModifiedComponents);
 
-return null;
+  await bitMap.write();
+  return { untrackedComponents, unRemovableComponents: unremovableMerged, missingComponents: missing } ;
 
 }
