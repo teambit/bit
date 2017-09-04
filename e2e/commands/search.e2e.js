@@ -1,14 +1,14 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe.skip('bit search', function () {
+describe('bit search', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
   });
   // todo: for some reason, this doesn't work when installing bit using yarn, other search (scope/hub) do work
-  describe.skip('in a local scope', () => {
+  describe('in a local scope', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
@@ -35,7 +35,7 @@ describe.skip('bit search', function () {
       expect(output).to.have.string('bar/foo');
     });
   });
-  describe('in the hub', () => {
+  describe.skip('in the hub', () => {
     it('should find the flow compiler', () => {
       const output = helper.searchComponent('flow -s bit.envs');
       expect(output).to.have.string('compilers/flow');
