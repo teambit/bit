@@ -20,17 +20,13 @@ export default async function untrack(componentIds: string[]): Promise<Object> {
     return { untrackedComponents: newComponents, unRemovableComponents, missingComponents: missing } ;
   }
   componentIds.forEach(componentId => {
-    if(includes(newComponents,componentId)) untrackedComponents.push(componentId);
-    bitMap.removeComponent(componentId);
+    if (includes(newComponents, componentId)) {
+      untrackedComponents.push(componentId);
+      bitMap.removeComponent(componentId);
+    } else {
+      (bitMap.getComponent(componentId, false)) ? unRemovableComponents.push(componentId) : missing.push(componentId);
+    }
   });
-
-  //find missing
-  missing = componentIds.filter(id => !bitMap.getComponent(id,false));
-  //find untrackable
-  const merged = untrackedComponents.concat(missing);
-  unRemovableComponents = merged.filter( componentId => (componentIds.indexOf(componentId) < 0) );
-
-
   await bitMap.write();
   return { untrackedComponents, unRemovableComponents, missingComponents: missing } ;
 
