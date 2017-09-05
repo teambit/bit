@@ -16,6 +16,7 @@ ${chalk.underline('add, modify and control components')}
   ${chalk.cyan('commit')}  record component changes and lock versions.
   ${chalk.cyan('mv')}      move a component to a different filesystem path.
   ${chalk.cyan('reset')}   revert a component version to previous one.
+  ${chalk.cyan('untrack')} untrack a new component(s).
 
 ${chalk.underline('collaborate and share components')}
   ${chalk.cyan('import')}  import components into your current working area.

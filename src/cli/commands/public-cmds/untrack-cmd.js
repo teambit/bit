@@ -6,7 +6,7 @@ import { untrack } from '../../../api/consumer';
 
 export default class Untrack extends Command {
   name = 'untrack [ids...]';
-  description = 'untrack new components';
+  description = 'untrack a new component(s)';
   alias = 'u';
   opts = [];
   loader = true;
