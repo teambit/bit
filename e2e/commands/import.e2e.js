@@ -87,10 +87,16 @@ describe('bit import', function () {
       });
     });
 
-    describe('with compiler and tester', () => {
+    describe('with compiler and tests', () => {
       describe('with multiple files located in different directories', () => {
+        const expectedLocationImprel = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'imprel.js');
+        const expectedLocationImprelSpec = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'imprel.spec.js');
+        const expectedLocationMyUtil = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'utils', 'myUtil.js');
+        const expectedLocationImprelDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'src', 'imprel.js');
+        const expectedLocationImprelSpecDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'src', 'imprel.spec.js');
+        const expectedLocationMyUtilDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'src', 'utils', 'myUtil.js');
         before(() => {
-          helper.importCompiler('bit.envs/compilers/babel'); // TODO: should be pass nothing once it working
+          helper.importCompiler();
           helper.createComponent('src', 'imprel.js');
           helper.createComponent('src', 'imprel.spec.js');
           helper.createFile('src/utils', 'myUtil.js');
@@ -104,18 +110,29 @@ describe('bit import', function () {
           expect(output.includes('imprel/imprel')).to.be.true;
         });
         it('should write the internal files according to their relative paths', () => {
-          const expectedLocationImprel = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'imprel.js');
-          const expectedLocationImprelSpec = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'imprel.spec.js');
-          const expectedLocationMyUtil = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'src', 'utils', 'myUtil.js');
-          const expectedLocationImprelDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'src', 'imprel.js');
-          const expectedLocationImprelSpecDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'src', 'imprel.spec.js');
-          const expectedLocationMyUtilDist = path.join(helper.localScopePath, 'components', 'imprel', 'impreldist', 'dist', 'src', 'utils', 'myUtil.js');
           expect(fs.existsSync(expectedLocationImprel)).to.be.true;
           expect(fs.existsSync(expectedLocationImprelSpec)).to.be.true;
           expect(fs.existsSync(expectedLocationMyUtil)).to.be.true;
+        });
+        it('should write the dist files in the component root dir', () => {
           expect(fs.existsSync(expectedLocationImprelDist)).to.be.true;
           expect(fs.existsSync(expectedLocationImprelSpecDist)).to.be.true;
           expect(fs.existsSync(expectedLocationMyUtilDist)).to.be.true;
+        });
+        describe('when a project is cloned somewhere else', () => {
+          before(() => {
+            helper.mimicGitCloneLocalProject();
+          });
+          it('should write the internal files according to their relative paths', () => {
+            expect(fs.existsSync(expectedLocationImprel)).to.be.true;
+            expect(fs.existsSync(expectedLocationImprelSpec)).to.be.true;
+            expect(fs.existsSync(expectedLocationMyUtil)).to.be.true;
+          });
+          it('should write the dist files in the component root dir', () => {
+            expect(fs.existsSync(expectedLocationImprelDist)).to.be.true;
+            expect(fs.existsSync(expectedLocationImprelSpecDist)).to.be.true;
+            expect(fs.existsSync(expectedLocationMyUtilDist)).to.be.true;
+          });
         });
       });
       it.skip('should not install envs when not requested', () => {
@@ -544,7 +561,7 @@ describe('bit import', function () {
       expect(localConsumerFiles).to.include(expectedLocation);
       const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
-      expect(indexFileContent).to.have.string('module.exports = require(\'./bar/foo\');', 'index file point to the wrong place');      
+      expect(indexFileContent).to.have.string('module.exports = require(\'./bar/foo\');', 'index file point to the wrong place');
     });
     it('should create an index.css file on the style dependency root dir pointing to the main file', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'style', 'style', helper.remoteScope, '1', 'index.css');
@@ -692,7 +709,7 @@ describe('bit import', function () {
     let localConsumerFiles;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.importCompiler('bit.envs/compilers/babel'); // TODO: should be pass nothing once it working
+      helper.importCompiler();
       const isTypeFixture = "export default function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
