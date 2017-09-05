@@ -289,7 +289,10 @@ export default class Component {
         logger.debug('component is in bit.map, write the files according to bit.map');
         const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
         this.writtenPath = newBase;
-        origin = componentMap.origin;
+        if (origin !== COMPONENT_ORIGINS.NESTED && origin !== componentMap.origin) {
+          logger.debug(`changing origin from ${origin} to ${componentMap.origin}`);
+          origin = componentMap.origin;
+        }
         this.files.forEach(file => file.updatePaths({ newBase }));
         this.files.forEach(file => file.write(undefined, force));
 
