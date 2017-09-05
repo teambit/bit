@@ -503,6 +503,70 @@ describe('bit import', function () {
     });
   });
 
+  describe('components with auto-resolve dependencies using css', () => {
+    /**
+     * Directory structure of the author
+     * bar/foo.js
+     * style/style.css
+     *
+     * bar/foo depends on style/style.css.
+     *
+     * Expected structure after importing bar/foo in another project
+     * components/bar/foo/bar/foo.js
+     * components/bar/foo/index.js (generated index file)
+     * components/bar/foo/style/style.css (generated link file)
+     * components/bar/foo/bar/dependencies/style/style/scope-name/version-number/style/index.css (generated index file - point to is-string.js)
+     * components/bar/foo/bar/dependencies/style/style/scope-name/version-number/style/style.css
+     *
+     */
+    let localConsumerFiles;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponent('style', 'style.css');
+      helper.addComponent('style/style.css');
+      const fooBarFixture = "const style = require('../style/style.css');";
+      helper.createComponent('bar', 'foo.js', fooBarFixture);
+      helper.addComponent('bar/foo.js');
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+      localConsumerFiles = glob.sync('**/*.*', { cwd: helper.localScopePath }).map(file => path.normalize(file));
+    });
+
+    it('should keep the original directory structure of the main component', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should create an index.js file on the component root dir pointing to the main file', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'index.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      const indexPath = path.join(helper.localScopePath, expectedLocation);
+      const indexFileContent = fs.readFileSync(indexPath).toString();
+      expect(indexFileContent).to.have.string('module.exports = require(\'./bar/foo\');', 'index file point to the wrong place');      
+    });
+    it('should create an index.css file on the style dependency root dir pointing to the main file', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'style', 'style', helper.remoteScope, '1', 'index.css');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      const indexPath = path.join(helper.localScopePath, expectedLocation);
+      const indexFileContent = fs.readFileSync(indexPath).toString();
+      expect(indexFileContent).to.have.string(`@import \'./style/style.css\';`, 'dependency index file point to the wrong place');
+    });
+    it('should save the style dependency nested to the main component', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'dependencies', 'style',
+        'style', helper.remoteScope, '1', 'style', 'style.css');
+      expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should link the style dependency to its original location', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'style', 'style.css');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      const indexPath = path.join(helper.localScopePath, expectedLocation);
+      const indexFileContent = fs.readFileSync(indexPath).toString();
+      expect(indexFileContent).to.have.string(`@import \'../dependencies/style/style/${helper.remoteScope}/1/index.css\';`, 'dependency link file point to the wrong place');
+    });
+  });
+
   describe('components with auto-resolve dependencies using TypeScript', () => {
     /**
      * Directory structure of the author
