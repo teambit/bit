@@ -7,7 +7,8 @@ import type { ComponentMap, ComponentMapFile } from '../bit-map/bit-map';
 import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
-import { pathNormalizeToLinux, pathRelative } from '../../utils'
+import { pathNormalizeToLinux, pathRelative, getWithoutExt } from '../../utils';
+
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -60,7 +61,8 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
 
       if (!componentId) {
         // Check if its a generated index file
-        if (path.basename(fileDepRelative) === DEFAULT_INDEX_NAME || path.basename(fileDepRelative) === DEFAULT_INDEX_TS_NAME) {
+        const fileDepWithoutExt = getWithoutExt(path.basename(fileDepRelative));
+        if (fileDepWithoutExt === DEFAULT_INDEX_NAME) {
           const indexDir = path.dirname(fileDepRelative);
           componentId = bitMap.getComponentIdByRootPath(indexDir);
           // Refer to the main file in case the source component required the index of the imported

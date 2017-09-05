@@ -5,7 +5,7 @@ import find from 'lodash.find';
 import pickBy from 'lodash.pickby';
 import json from 'comment-json';
 import logger from '../../logger/logger';
-import { BIT_MAP, DEFAULT_INDEX_NAME, DEFAULT_INDEX_TS_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_DIR, AUTO_GENERATED_MSG, DEFAULT_SEPARATOR } from '../../constants';
+import { BIT_MAP, DEFAULT_INDEX_NAME, DEFAULT_INDEX_TS_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_DIR, AUTO_GENERATED_MSG, DEFAULT_SEPARATOR, DEFAULT_INDEX_EXTS } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux } from '../../utils';
@@ -112,14 +112,20 @@ export default class BitMap {
     if (!mainFile && files.length === 1) return files[0].relativePath;
     // search main file (index.js or index.ts in case no ain file was entered - move to bit-javascript
     let searchResult = this._searchMainFile(mainFile, files, mainFile);
-    if (!searchResult.mainFileFromFiles) searchResult = this._searchMainFile(DEFAULT_INDEX_NAME, files, mainFile);
-    if (!searchResult.mainFileFromFiles) searchResult = this._searchMainFile(DEFAULT_INDEX_TS_NAME, files, mainFile);
-
+    if (!searchResult.mainFileFromFiles) {
+      // TODO: can be improved - stop loop if finding main file
+      DEFAULT_INDEX_EXTS.forEach((ext) => {
+        if (!searchResult.mainFileFromFiles) {
+          const mainFileNameToSearch = `${DEFAULT_INDEX_NAME}.${ext}`;
+          searchResult = this._searchMainFile(mainFileNameToSearch, files, mainFile);
+        }
+      });
+    }
 
     // When there is more then one file and the main file not found there
     if (R.isNil(searchResult.mainFileFromFiles)) {
-      const mainFileString = mainFile || (DEFAULT_INDEX_NAME + ' or '+ DEFAULT_INDEX_TS_NAME);
-      throw new MissingMainFile(mainFileString, files.map((file) => path.normalize(file.relativePath)));
+      const mainFileString = mainFile || (`${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`);
+      throw new MissingMainFile(mainFileString, files.map(file => path.normalize(file.relativePath)));
     }
     return searchResult.baseMainFile;
   }

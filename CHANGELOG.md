@@ -29,8 +29,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - add verbosity option to some places
 - improve windows support
 - added auto generated msg to bitmap and all generated link files
+- support css/less/scss/sass as main file
 - add untrack command
-
 
 ## [0.10.6] - 2017-08-23
 
