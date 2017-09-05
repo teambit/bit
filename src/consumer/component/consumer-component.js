@@ -325,7 +325,7 @@ export default class Component {
 
     if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
 
-    if (origin === COMPONENT_ORIGINS.AUTHORED && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && origin === COMPONENT_ORIGINS.IMPORTED) {
       // when a component was AUTHORED and it is imported now, keep the 'AUTHORED' as the origin. Otherwise, the bit.map
       // file will be different for the author and other developers on the same project
       logger.debug(`changing origin from ${origin} back to the original ${componentMap.origin}`);
