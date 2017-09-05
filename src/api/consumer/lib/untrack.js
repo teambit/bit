@@ -7,29 +7,29 @@ import ComponentsList from "../../../consumer/component/components-list";
 
 
 export default async function untrack(componentIds: string[]): Promise<Object> {
-  const untrackedComponents = [];
+  var untrackedComponents = [];
   var missing = [] ,unRemovableComponents = [];
   const consumer: Consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
   const componentsList = new ComponentsList(consumer);
-  const newComponents = await componentsList.listNewComponents(true);
+  const newComponents = (await componentsList.listNewComponents(true)).map(componentId => componentId.id.toString());
 
-  //remove new components
-  newComponents.forEach(newComp => {
-    if (includes(componentIds,newComp.id.toString()) || R.isEmpty(componentIds)) {
-      untrackedComponents.push(newComp.id.toString());
-      bitMap.removeComponent(newComp.id.toString());
-    }
-  });
+  if(R.isEmpty(componentIds)) {
+    newComponents.forEach(componentId => bitMap.removeComponent(componentId));
+    untrackedComponents = newComponents;
+  } else {
+    componentIds.forEach(componentId => {
+      if(includes(newComponents,componentId)) untrackedComponents.push(componentId);
+      bitMap.removeComponent(componentId);
+    });
 
-  if (!R.isEmpty(componentIds)) {
     //find missing
     missing = componentIds.filter(id => !bitMap.getComponent(id,false));
-
     //find untrackable
     const merged = untrackedComponents.concat(missing);
     unRemovableComponents = merged.filter( componentId => (componentIds.indexOf(componentId) < 0) );
   }
+
   await bitMap.write();
   return { untrackedComponents, unRemovableComponents, missingComponents: missing } ;
 
