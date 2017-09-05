@@ -1,5 +1,5 @@
 import { BitObject, Ref } from '../objects';
-import { bufferFrom } from '../../utils';
+import { bufferFrom, getStringifyArgs } from '../../utils';
 
 type ScopeMetaProps = {
   name: string;
@@ -23,16 +23,17 @@ export default class ScopeMeta extends BitObject {
     };
   }
 
-  toString(): string {
-    return JSON.stringify(this.toObject());
+  toString(pretty: boolean): string {
+    const args = getStringifyArgs(pretty);
+    return JSON.stringify(this.toObject(), ...args);
   }
 
   id(): Object {
     return this.name;
   }
 
-  toBuffer(): Buffer {
-    return bufferFrom(this.toString());
+  toBuffer(pretty): Buffer {
+    return bufferFrom(this.toString(pretty));
   }
 
   static fromScopeName(name: string): Ref {

@@ -45,6 +45,7 @@ import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
 import deflate from './zlib-deflate';
 import sha1 from './encryption/sha1';
 import isString from './string/is-string';
+import getStringifyArgs from './string/get-stringify-args';
 import isNumeric from './number/is-numeric';
 import diff from './array/diff';
 import filterObject from './filter-object';
@@ -72,6 +73,7 @@ export {
   rmDir,
   filterObject,
   isString,
+  getStringifyArgs,
   isNumeric,
   inflate,
   diff,

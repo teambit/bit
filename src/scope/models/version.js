@@ -3,7 +3,7 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
-import { filterObject, first, bufferFrom } from '../../utils';
+import { filterObject, first, bufferFrom, getStringifyArgs } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
@@ -166,9 +166,10 @@ export default class Version extends BitObject {
     }, val => !!val);
   }
 
-  toBuffer(): Buffer {
+  toBuffer(pretty: boolean): Buffer {
     const obj = this.toObject();
-    const str = JSON.stringify(obj);
+    const args = getStringifyArgs(pretty);
+    const str = JSON.stringify(obj, ...args);
     return bufferFrom(str);
   }
 
