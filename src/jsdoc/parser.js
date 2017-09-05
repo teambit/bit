@@ -40,6 +40,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: string)
   const examples = [];
   const properties = [];
   let name = '';
+  let render = '';
 
   for (const tag of commentsAst.tags) {
     switch (tag.title) {
@@ -75,6 +76,9 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: string)
       case 'property':
         properties.push(formatTag(tag));
         break;
+      case 'render':
+        name = tag.render;
+        break;
       default:
         break;
     }
@@ -87,6 +91,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: string)
     returns,
     access,
     examples,
+    render,
     properties,
     static: isStatic,
     filePath
