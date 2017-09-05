@@ -155,7 +155,7 @@ export default class BitMap {
     const allVersions = Object.keys(this.components)
       .filter(id => BitId.parse(id).toStringWithoutVersion() === componentId.toStringWithoutVersion());
     allVersions.forEach((version) => {
-      if (version !== componentId.toString() && version.origin !== COMPONENT_ORIGINS.NESTED) {
+      if (version !== componentId.toString() && this.components[version].origin !== COMPONENT_ORIGINS.NESTED) {
         logger.debug(`BitMap: deleting an older version ${version} of an existing component ${componentId.toString()}`);
         delete this.components[version];
       }
@@ -231,7 +231,7 @@ export default class BitMap {
       this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), this.components[componentIdStr]);
     }
     if (rootDir) {
-      const root = this._makePathRelativeToProjectRoot(rootDir)
+      const root = this._makePathRelativeToProjectRoot(rootDir);
       this.components[componentIdStr].rootDir = root ? pathNormalizeToLinux(root) : root;
     }
     if (origin === COMPONENT_ORIGINS.IMPORTED) {
