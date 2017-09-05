@@ -7,11 +7,13 @@ export default class CatObject extends Command {
   description = 'cat a bit object by hash';
   private = true;
   alias = '';
-  opts = [];
+  opts = [
+    ['p', 'pretty', 'pretty print for the objects'],
+  ];
 
-  action([hash, ]: [string, ]): Promise<any> {
+  action([hash, ]: [string, ], { pretty }: { messprettyge: boolean }): Promise<any> {
     // @TODO - import should support multiple bits
-    return catObject(hash);
+    return catObject(hash, pretty);
   }
 
   report(file: any): string {

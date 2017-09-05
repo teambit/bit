@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.10.7-rc.4",
+  "version": "0.10.7-rc.5",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
@@ -46,6 +46,7 @@
     "is-glob": "^3.1.0",
     "jfs": "^0.2.6",
     "lodash.find": "^4.6.0",
+    "lodash.includes": "^4.3.0",
     "lodash.maxby": "^4.6.0",
     "lodash.pickby": "^4.6.0",
     "loud-rejection": "^1.6.0",

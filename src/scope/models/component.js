@@ -4,7 +4,7 @@ import path from 'path';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
 import { VersionNotFound } from '../exceptions';
-import { forEach, empty, mapObject, values, diff, filterObject } from '../../utils';
+import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
 import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE, DEFAULT_DIST_DIRNAME } from '../../constants';
 import BitId from '../../bit-id/bit-id';
@@ -201,8 +201,9 @@ export default class Component extends BitObject {
     return values(this.versions);
   }
 
-  toBuffer() {
-    return new Buffer(JSON.stringify(this.toObject()));
+  toBuffer(pretty: boolean) {
+    const args = getStringifyArgs(pretty);
+    return new Buffer(JSON.stringify(this.toObject(), ...args));
   }
 
   toVersionDependencies(version: string, scope: Scope, source: string, withDevDependencies?: bool) {

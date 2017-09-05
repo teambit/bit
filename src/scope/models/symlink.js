@@ -1,6 +1,8 @@
 /** @flow */
 import { BitObject } from '../objects';
 import { DEFAULT_BOX_NAME } from '../../constants';
+import { getStringifyArgs } from '../../utils';
+
 
 export type SymlinkProp = {
   scope: string;
@@ -45,8 +47,9 @@ export default class Symlink extends BitObject {
     };
   }
 
-  toBuffer() {
-    return new Buffer(JSON.stringify(this.toObject()));
+  toBuffer(pretty: boolean) {
+    const args = getStringifyArgs(pretty);
+    return new Buffer(JSON.stringify(this.toObject(), ...args));
   }
 
   static from(props: SymlinkProp) {

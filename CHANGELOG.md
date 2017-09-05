@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- fix the search according to search-index v0.13.0 changes
 - prevent exporting a component when the same version has been exported already to the same remote scope
 - support adding new files to imported components
 - avoid running the build and test processes upon `bit status`
@@ -28,7 +29,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - add verbosity option to some places
 - improve windows support
 - added auto generated msg to bitmap and all generated link files
-
+- support css/less/scss/sass as main file
+- add untrack command
 
 ## [0.10.6] - 2017-08-23
 

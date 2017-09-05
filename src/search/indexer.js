@@ -69,10 +69,7 @@ function addAllToLocalIndex(components: Array<Component>): Promise<string> {
       docStream
         .pipe(indexInstance.defaultPipeline())
         .pipe(indexInstance.add())
-        .on('data', (d) => {
-          // this function needs to be called if you want to listen for the end event
-        })
-        .on('end', () => {
+        .on('finish', () => {
           resolve('The indexing has been completed');
         });
     });
@@ -90,10 +87,7 @@ function addToLocalIndex(component: Component): Promise<Component> {
       docStream
         .pipe(indexInstance.defaultPipeline())
         .pipe(indexInstance.add())
-        .on('data', (d) => {
-          // this function needs to be called if you want to listen for the end event
-        })
-        .on('end', () => {
+        .on('finish', () => {
           resolve(component);
         });
     });
@@ -115,6 +109,7 @@ function index(component: Component, scopePath: string): Promise<Component> {
 function indexAll(path: string, components: Component[]): Promise<any> {
   return new Promise((resolve, reject) => {
     if (!components) return reject('The scope is empty');
+    logger.debug(`indexing all, scope path ${path}`);
     serverlessIndex.deleteDb(path);
     localIndex = serverlessIndex.initializeIndex(path);
     const results = addAllToLocalIndex(components);

@@ -1,6 +1,7 @@
 import path from 'path';
 import normalize from 'normalize-path';
 import R from 'ramda';
+import format from 'string-format';
 import {
   DEFAULT_DIST_DIRNAME,
   DEFAULT_INDEX_NAME,
@@ -8,31 +9,37 @@ import {
   COMPONENT_ORIGINS,
   AUTO_GENERATED_MSG
 } from '../../constants';
-import { outputFile } from '../../utils';
+import { outputFile, getWithoutExt, pathJoinLinux } from '../../utils';
 import logger from '../../logger/logger';
 import { ComponentWithDependencies } from '../../scope';
 import Component from '../component';
 import BitMap from '../bit-map/bit-map';
 import { BitIds } from '../../bit-id';
 
+const LINKS_CONTENT_TEMPLATES = {
+  js: 'module.exports = require(\'{filePath}\');',
+  ts: 'export * from \'{filePath}\';',
+  css: '@import \'{filePath}.css\';',
+  scss: '@import \'{filePath}.scss\';',
+  sass: '@import \'{filePath}.sass\';',
+  less: '@import \'{filePath}.less\';'
+}
+
 // todo: move to bit-javascript
 function _getIndexFileName(mainFile: string): string {
-  if (path.extname(mainFile) === '.ts') {
-    return DEFAULT_INDEX_TS_NAME;
-  }
-  return DEFAULT_INDEX_NAME;
+  return `${DEFAULT_INDEX_NAME}${path.extname(mainFile)}`;
 }
 
 // todo: move to bit-javascript
 function _getLinkContent(mainFile: string, filePath: string): string {
   if (!filePath.startsWith('.')) {
-    filePath = `.${path.sep}${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
+    filePath = `./${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
   }
-  filePath = filePath.substring(0, filePath.lastIndexOf('.')); // remove the extension
-  if (path.extname(mainFile) === '.ts') {
-    return `export * from '${normalize(filePath)}';`;
-  }
-  return `module.exports = require('${normalize(filePath)}');`;
+  filePath = getWithoutExt(filePath); // remove the extension
+  const mainFileExt = (path.extname(mainFile)).replace('.','');
+  console.log(path.extname(mainFileExt));
+  const template = LINKS_CONTENT_TEMPLATES[mainFileExt];
+  return format(template, {filePath: normalize(filePath)});
 }
 
 /**
@@ -127,10 +134,10 @@ async function writeEntryPointsForImportedComponent(component: Component, bitMap
   // In case there is dist files, we want to point the index to the dist file not to source.
   if (component.dists && !R.isEmpty(component.dists)) {
     logger.debug('_writeEntryPointsForImportedComponent, Change the index file to point to dist folder');
-    mainFile = path.join(DEFAULT_DIST_DIRNAME, mainFile);
+    mainFile = pathJoinLinux(DEFAULT_DIST_DIRNAME, mainFile);
   }
   const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
-  const entryPointFileContent = _getLinkContent(mainFile, `.${path.sep}${mainFile}`);
+  const entryPointFileContent = _getLinkContent(mainFile, `./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
   return outputFile(entryPointPath, AUTO_GENERATED_MSG + entryPointFileContent);
 }

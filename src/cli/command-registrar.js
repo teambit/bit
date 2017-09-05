@@ -157,7 +157,7 @@ export default class CommandRegistrar {
     const cmdList = this.commands.map(cmd => first(cmd.name.split(' ')));
     const aliasList = this.commands.map(cmd => first(cmd.alias.split(' ')));
 
-    if (cmdList.indexOf(subcommand) === -1 && aliasList.indexOf(subcommand) === -1 && subcommand !== '-V') {
+    if (cmdList.indexOf(subcommand) === -1 && aliasList.indexOf(subcommand) === -1 && subcommand !== '-V' && subcommand !== '--version') {
       process.stdout.write(
         chalk.yellow(
           `warning: no command named '${chalk.bold(subcommand)}' was found...\nsee 'bit --help' for additional information.\n`)
