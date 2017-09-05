@@ -34,6 +34,7 @@ import Watch from './commands/public-cmds/watch-cmd';
 import Add from './commands/public-cmds/add-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
 import Move from './commands/public-cmds/move-cmd';
+import Remove from './commands/public-cmds/remove-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -69,6 +70,7 @@ export default function registerCommands(): CommandRegistrar {
     new Watch(),
     new Add(),
     new Untrack(),
-    new Move()
+    new Move(),
+    new Remove()
   ]);
 }
