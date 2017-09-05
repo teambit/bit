@@ -77,7 +77,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: string)
         properties.push(formatTag(tag));
         break;
       case 'render':
-        name = tag.render;
+        render = tag.description;
         break;
       default:
         break;
