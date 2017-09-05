@@ -2,6 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import searchIndex from 'search-index';
+import logger from '../logger/logger';
 
 const indexName = 'search_index';
 const logLevel = 'error';
@@ -13,6 +14,7 @@ function getIndexPath(scopePath: string) {
 
 function deleteDb(scopePath: string) {
   const indexPath = getIndexPath(scopePath);
+  logger.debug(`deleting index-search at ${indexPath}`);
   if (!scopePath || !indexPath) return;
   fs.removeSync(indexPath);
 }
