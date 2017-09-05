@@ -769,13 +769,15 @@ export default class Scope {
     return updatedComponents;
   }
 
-  async runComponentSpecs({ bitId, consumer, environment, save, verbose, isolated }: {
+  async runComponentSpecs({ bitId, consumer, environment, save, verbose, isolated, directory, keep }: {
     bitId: BitId,
     consumer?: ?Consumer,
     environment?: ?bool,
     save?: ?bool,
     verbose?: ?bool,
     isolated?: bool,
+    directory?: string,
+    keep?: boolean
   }): Promise<?any> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run specs on remote component');
@@ -789,21 +791,26 @@ export default class Scope {
       save,
       verbose,
       isolated,
+      directory,
+      keep
     });
   }
 
-  async build({ bitId, environment, save, consumer, verbose }: {
+  async build({ bitId, environment, save, consumer, verbose, directory, keep, ciComponent }: {
     bitId: BitId,
     environment?: ?bool,
     save?: ?bool,
     consumer?: Consumer,
-    verbose?: ?bool
+    verbose?: ?bool,
+    directory: ?string,
+    keep: ?boolean,
+    ciComponent: any,
   }): Promise<string> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run build on remote component');
     }
     const component = await this.loadComponent(bitId);
-    return component.build({ scope: this, environment, save, consumer, verbose });
+    return component.build({ scope: this, environment, save, consumer, verbose, directory, keep, ciComponent });
   }
 
   static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {

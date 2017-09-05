@@ -5,8 +5,8 @@ import { loadScope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import logger from '../../../logger/logger';
 
-export default function testInScope({ id, environment, save, verbose, scopePath }: {
-  id: string, environment?: ?bool, save?: ?bool, verbose?: ?bool, scopePath: string }) {
+export default function testInScope({ id, environment, save, verbose, scopePath, directory, keep }: {
+  id: string, environment?: ?bool, save?: ?bool, verbose?: ?bool, scopePath: string, directory?: string, keep?: boolean }) {
   logger.debug(`testInScope, id: ${id}, scopePath: ${scopePath}`);
   function loadFromScope(initialError: ?Error) {
     return loadScope(scopePath || process.cwd())
@@ -19,6 +19,8 @@ export default function testInScope({ id, environment, save, verbose, scopePath 
           save,
           verbose,
           isolated: true,
+          directory,
+          keep
         });
       })
       .catch(e => Promise.reject(e));

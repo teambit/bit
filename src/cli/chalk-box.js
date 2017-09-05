@@ -76,6 +76,7 @@ const paintStats = (results) => {
 };
 
 export const paintSpecsResults = (results: SpecsResults[]): string => {
+  if (!results) return '';
   return results.map((specResult) => {
     const stats = paintStats(specResult);
     const tests = (specResult.tests) ? `${specResult.tests.map(paintTest).join('\n')}\n` : '';
@@ -93,4 +94,14 @@ export const paintAllSpecsResults = (results: Array<*>): string => {
     if (result.specs) return componentId + paintSpecsResults(result.specs);
     return c.yellow(`tests are not defined for component: ${componentId}`);
   }).join('\n');
+};
+export const paintBuildResults = (buildResults: []): string => {
+  if (buildResults) {
+    const statsHeader = c.underline.green('\nbuilded Files:\n')
+    return statsHeader + buildResults.map(file => `${c.cyan(`${file.path}`)}`).join('\n');
+  }
+  return '';
+};
+export const paintCiResults = ({ buildResults, specsResults }): string => {
+  return paintBuildResults(buildResults) + paintSpecsResults(specsResults);
 };
