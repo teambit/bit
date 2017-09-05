@@ -17,6 +17,7 @@ import config from './lib/global-config';
 import getDriver from './lib/get-driver';
 import { watchAll } from './lib/watch';
 import add from './lib/add';
+import untrack from './lib/untrack';
 
 export {
   init,
@@ -43,4 +44,5 @@ export {
   getDriver,
   watchAll,
   add,
+  untrack
 };

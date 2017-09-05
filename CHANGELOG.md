@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - improve windows support
 - added auto generated msg to bitmap and all generated link files
 - support css/less/scss/sass as main file
-
+- add untrack command
 
 ## [0.10.6] - 2017-08-23
 
