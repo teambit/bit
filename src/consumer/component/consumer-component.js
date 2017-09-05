@@ -247,7 +247,23 @@ export default class Component {
     if (this.dists) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
+    logger.debug('component has been written successfully');
     return this;
+  }
+
+  _addComponentToBitMap(bitMap, rootDir, origin, parent) {
+    const filesForBitMap = this.files.map((file) => {
+      return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
+    });
+
+    bitMap.addComponent({
+      componentId: this.id,
+      files: filesForBitMap,
+      mainFile: this.mainFile,
+      rootDir,
+      origin,
+      parent
+    });
   }
 
   /**
@@ -275,52 +291,47 @@ export default class Component {
     const idWithoutVersion = this.id.toStringWithoutVersion();
     const componentMap = bitMap.getComponent(idWithoutVersion, false);
     if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
-    let rootDir;
 
-    if (componentMap) {
-      if (origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-        // when a user imports a component that was a dependency before, write the component directly into the components
-        // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
-        await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
-        // todo: remove from the file system
-        rootDir = calculatedBitDir;
-        bitMap.removeComponent(this.id.toString());
-      } else {
-        logger.debug('component is in bit.map, write the files according to bit.map');
-        const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
-        this.writtenPath = newBase;
-        if (origin !== COMPONENT_ORIGINS.NESTED && origin !== componentMap.origin) {
-          logger.debug(`changing origin from ${origin} to ${componentMap.origin}`);
-          origin = componentMap.origin;
-        }
-        this.files.forEach(file => file.updatePaths({ newBase }));
-        this.files.forEach(file => file.write(undefined, force));
-
-        // todo: while refactoring the dist for the new changes, make sure it writes to the proper
-        // directory. Also, write the dist paths into bit.map.
-        // if (this.dist) await this.dist.write(bitDir, this.distImplFileName, force);
-        // if (withBitJson) await this.writeBitJson(bitDir, force); // todo: is it needed?
-        // if (this.license && this.license.src) await this.license.write(bitDir, force); // todo: is it needed?
-        rootDir = componentMap.rootDir;
-      }
-    } else {
+    if (!componentMap) {
+      // if there is no componentMap, the component is new to this project and should be written to bit.map
       await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
-      rootDir = calculatedBitDir;
+      this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
+      return this;
     }
 
-    const filesForBitMap = this.files.map((file) => {
-      return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
-    });
+    // when there is componentMap, this component (with this version or other version) is already part of the project.
+    // There are several options as to what was the origin before and what is the origin now and according to this,
+    // we update/remove/don't-touch the record in bit.map.
+    // The current origin can't be AUTHORED because when the author create a component for the first time,
+    // componentMap doesn't exist. So we have left with two options:
+    // 1) current origin is IMPORTED - If the version is the same as before, don't update bit.map. Otherwise, update.
+    // one exception is where the origin was NESTED before, in this case, remove the current record and add a new one.
+    // 2) current origin is NESTED - the version can't be the same as before (otherwise it would be ignored before and
+    // never reach this function, see @writeToComponentsDir). Therefore, always add to bit.map.
+    if (origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+      // when a user imports a component that was a dependency before, write the component directly into the components
+      // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
+      await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
+      // todo: remove from the file system
+      bitMap.removeComponent(this.id.toString());
+      this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
+      return this;
+    }
+    logger.debug('component is in bit.map, write the files according to bit.map');
+    const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
+    this.writtenPath = newBase;
+    this.files.forEach(file => file.updatePaths({ newBase }));
+    await this._writeToComponentDir(newBase, withBitJson, force);
 
-    bitMap.addComponent({
-      componentId: this.id,
-      files: filesForBitMap,
-      mainFile: this.mainFile,
-      rootDir,
-      origin,
-      parent
-    });
-    logger.debug('component has been written successfully');
+    if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
+
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && origin === COMPONENT_ORIGINS.IMPORTED) {
+      // when a component was AUTHORED and it is imported now, keep the 'AUTHORED' as the origin. Otherwise, the bit.map
+      // file will be different for the author and other developers on the same project
+      logger.debug(`changing origin from ${origin} back to the original ${componentMap.origin}`);
+      origin = componentMap.origin;
+    }
+    this._addComponentToBitMap(bitMap, componentMap.rootDir, origin, parent);
     return this;
   }
 

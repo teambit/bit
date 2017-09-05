@@ -258,6 +258,10 @@ export default class BitMap {
     this.components[id].mainDistFile = this._makePathRelativeToProjectRoot(mainDistFile);
   }
 
+  isExistWithSameVersion(id: BitId) {
+    return id.hasVersion() && this.components[id.toString()];
+  }
+
   /**
    * needed after exporting a component.
    * We don't support export of nested components, only authored or imported. For authored/imported components, could be

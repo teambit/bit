@@ -12,7 +12,8 @@ import logger from '../../../logger/logger';
 import PathNotExists from './exceptions/path-not-exists'
 import EmptyDirectory from './exceptions/empty-directory';
 
-export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string, tests?: string[], exclude?: string[], override: boolean): Promise<Object> {
+export default async function addAction(componentPaths: string[], id?: string, main?: string, namespace:?string,
+                                        tests?: string[], exclude?: string[], override: boolean): Promise<Object> {
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
     if (!componentPath) return componentPath;
     const absPath = path.resolve(componentPath);
