@@ -4,7 +4,6 @@ import { BitId } from '../../../bit-id';
 import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import logger from '../../../logger/logger';
-import Component from '../../../consumer/component';
 
 export default function buildInScope({ id, environment, save, verbose, scopePath, directory, keep }:
   { id: string, environment: ?bool, save: ?bool, verbose: ?bool, scopePath: string, directory: ?string, keep:boolean }) {
@@ -15,8 +14,8 @@ export default function buildInScope({ id, environment, save, verbose, scopePath
       .catch(newErr => Promise.reject(initialError || newErr))
       .then((scope: Scope) => {
         const bitId = BitId.parse(id);
-        var ciComponent ={};
-        return  scope.build({ bitId, environment, save, verbose, directory, keep, ciComponent }).then(buildResults => ({component: ciComponent.comp, buildResults}));
+        var ciComponent = {};
+        return scope.build({ bitId, environment, save, verbose, directory, keep, ciComponent }).then(buildResults => ({ component: ciComponent.comp, buildResults }));
       })
       .catch(e => Promise.reject(e));
   }

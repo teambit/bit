@@ -10,20 +10,19 @@ export default class CiUpdate extends Command {
   alias = '';
   opts = [
     ['v', 'verbose', 'showing npm verbose output for inspection'],
-    ['t', 'testDir <file>', 'directory to run ci-update'],
+    ['d', 'directory [file]', 'directory to run ci-update'],
     ['k', 'keep', 'keep test environment after run (default false)'],
-    ['s', 'save <file>', 'save ci results   to file system']
+    ['o', 'output [file]', 'save ci results to file system']
   ];
   private = true;
 
-  action([id, scopePath]: [string, ?string, ], { verbose, testDir, save , keep = false }: { verbose: ?boolean, testDir: ?string, save: ?string, keep:boolean }): Promise<any> {
+  action([id, scopePath]: [string, ?string, ], { verbose, directory, output, keep = false }: { verbose: ?boolean, directory: ?string, output: ?string, keep:boolean }): Promise<any> {
     verbose = true; // During ci-update we always want to see verbose outputs
-    return ciUpdateAction(id, scopePath || process.cwd(), verbose, testDir, keep).then(({specsResults,buildResults, component}) => ({specsResults,buildResults, component, save}));
+    return ciUpdateAction(id, scopePath || process.cwd(), verbose, directory, keep).then(({ specsResults, buildResults, component }) => ({ specsResults, buildResults, component, output }));
   }
 
 
-  report({specsResults,buildResults, component, save}): string {
-    component
+  report({ specsResults, buildResults, component, output }): string {
     if (!specsResults && !buildResults) { return 'no results found'; }
 
     if (specsResults instanceof Error) {
@@ -32,14 +31,14 @@ export default class CiUpdate extends Command {
     if (buildResults instanceof Error) {
       return buildResults.message;
     }
-    if (save) {
-      const ci ={};
+    if (output) {
+      const ci = {};
       ci.specResults = specsResults;
       ci.mainDistFile = component.calculateMainDistFile();
       ci.component = component;
       ci.cwd = component.writtenPath;
       ci.buildResults = buildResults;
-      outputJsonFile(save, ci);
+      outputJsonFile(output, ci);
     }
 
     return paintCiResults({ specsResults, buildResults });

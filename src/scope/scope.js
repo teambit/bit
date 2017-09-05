@@ -510,7 +510,7 @@ export default class Scope {
 
     const allVersionsP = versionDependenciesArr.map((versionDependencies) => {
       const versions = versionDependencies.component.component.listVersions();
-      const idsWithAllVersions = versions.map((version) => {
+      const idsWithAllVersions = vØbersions.map((version) => {
         if (version === versionDependencies.component.version) return null; // imported already
         const versionId = versionDependencies.component.id;
         versionId.version = version.toString();

@@ -530,6 +530,8 @@ export default class Component {
     return JSON.stringify(this.toObject());
   }
 
+  // TODO: This need to be calculated by the result of the compiling process (in bit map or in the model).
+  // because it might be that the compiler will change the mainFile name (for example replace main.ts by main.js)
   calculateMainDistFile(): string {
     if (this.dists && !R.isEmpty(this.dists)) {
       return path.join(DEFAULT_DIST_DIRNAME, this.mainFile);
