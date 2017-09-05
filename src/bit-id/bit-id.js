@@ -131,36 +131,6 @@ export default class BitId {
     throw new InvalidBitId();
   }
 
-  static isValidBitId(id: string) {
-    var version = '0';
-    if (!id || id === NO_PLUGIN_TYPE) { return false; }
-    if (id.includes(VERSION_DELIMITER)) {
-      const [newId, newVersion] = id.split(VERSION_DELIMITER);
-      id = newId;
-      version = newVersion;
-    }
-
-    const idSplit = id.split('/');
-    if (idSplit.length === 3) {
-      const [scope, box, name] = idSplit;
-      if (!isValidIdChunk(name) || !isValidIdChunk(box) || !isValidScopeName(scope)) return false;
-      return true;
-    }
-
-    if (idSplit.length === 2) {
-      const [box, name] = idSplit;
-      if (!isValidIdChunk(name) || !isValidScopeName(box)) return false;
-      return true;
-    }
-
-    if (idSplit.length === 1) {
-      const [name] = idSplit;
-      if (!isValidIdChunk(name)) return false;
-      return true;
-    }
-
-    return false;
-  }
   static getValidBitId(box: string, name: string): BitId {
     // replace any invalid character with a dash character
     const makeValidIdChunk = (chunk) => {
