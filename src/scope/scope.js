@@ -538,6 +538,43 @@ export default class Scope {
     return Promise.all(versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects)));
   }
 
+  remove({ bitId, consumer }: { bitId: BitId, consumer?: Consumer}): Promise<consumerComponent> {
+    if (!bitId.isLocal(this.name)) {
+      return Promise.reject('you can not reset a remote component');
+    }
+    return this.sources.get(bitId)
+      .then((component) => {
+        if (!component) throw new ComponentNotFound(bitId.toString());
+        const allVersions = component.listVersions();
+        if (allVersions.length > 1) {
+          const lastVersion = component.latest();
+          bitId.version = lastVersion.toString();
+          return consumer.removeFromComponents(bitId, true).then(() => {
+            bitId.version = (lastVersion - 1).toString();
+            return this.get(bitId).then((consumerComponent) => {
+              const ref = component.versions[lastVersion];
+              return this.objects.remove(ref).then(() => { // todo: remove also all deps of that ref
+                delete component.versions[lastVersion];
+                return this.objects.persist();
+
+              }).then(() => consumerComponent);
+            });
+          });
+        }
+        return this.sources.get(bitId)
+          .then( component => {
+            const lastVersion = component.latest();
+            const ref = component.versions[lastVersion];
+            console.log(this.objects)
+            return this.objects.remove(ref).then((ref) => {
+              delete component.versions[lastVersion];
+              this.objects.add(component);
+              return this.objects.persist()
+            });
+          })
+        // .then(() => this.clean(bitId).then(() => consumerComponent)));
+      });
+  }
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
     if (!bitId.isLocal(this.name)) {
       return Promise.reject('you can not reset a remote component');
