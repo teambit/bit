@@ -39,17 +39,14 @@ export default class Fs implements Network {
     return scope.exportManyBareScope(components);
   }
 
-  fetch(bitIds: BitIds): Promise<ComponentObjects[]> {
+  fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
+    if (noDependencies) return this.getScope().manyOneObjects(bitIds);
     return this.getScope().getObjects(bitIds)
       .then(bitsMatrix => flatten(bitsMatrix));
   }
 
   fetchAll(ids: BitIds): Promise<ComponentObjects[]> {
     return this.getScope().getObjects(ids);
-  }
-
-  fetchOnes(bitIds: BitIds): Promise<ComponentObjects[]> {
-    return this.getScope().manyOneObjects(bitIds);
   }
 
   list(): Promise<[]> {
