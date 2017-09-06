@@ -36,19 +36,13 @@ export default class Remotes extends Map<string, Remote> {
     const byScope = groupBy(prop('scope'));
     const promises = [];
     forEach(byScope(ids), (scopeIds, scopeName) => {
-      if (!withoutDeps) {
-        promises.push(
-          this.resolve(scopeName, thisScope)
-            .then(remote => remote.fetch(scopeIds))
-        );
-      } else {
-        promises.push(
-          this.resolve(scopeName, thisScope)
-            .then(remote => remote.fetchOnes(scopeIds)));
-      }
+      promises.push(
+        this.resolve(scopeName, thisScope)
+          .then(remote => remote.fetch(scopeIds, withoutDeps))
+      );
     });
 
-    logger.debug('[-] Running fetch or fetchOnes on a remote');
+    logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps}) on a remote`);
     const bits = await Promise.all(promises);
     logger.debug('[-] Returning from a remote');
     return flatten(bits);

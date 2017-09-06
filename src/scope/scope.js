@@ -406,8 +406,7 @@ export default class Scope {
    * and save them locally.
    * 3. External objects, fetch from a remote and save locally. (done by this.getExternalOnes method).
    */
-  async importMany(ids: BitIds, withEnvironments?: boolean, cache: boolean = true):
-  Promise<VersionDependencies[]> {
+  async importMany(ids: BitIds, withEnvironments?: boolean, cache: boolean = true): Promise<VersionDependencies[]> {
     logger.debug(`scope.importMany: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
@@ -431,27 +430,22 @@ export default class Scope {
     return versionDeps.concat(externalDeps);
   }
 
-  importManyOnes(ids: BitId[], cache: boolean): Promise<ComponentVersion[]> {
+  async importManyOnes(ids: BitId[], cache: boolean): Promise<ComponentVersion[]> {
     logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
     const [externals, locals] = splitBy(idsWithoutNils, id => id.isLocal(this.name));
 
-    return this.sources.getMany(locals)
-      .then((localDefs) => {
-        return Promise.all(localDefs.map((def) => {
-          if (!def.component) throw new ComponentNotFound(def.id.toString());
-          return def.component.toComponentVersion(def.id.version);
-        }))
-          .then((componentVersionArr) => {
-            return postImportHook({ ids: componentVersionArr.map(cv => cv.id.toString()) })
-              .then(() => this.remotes()
-                .then(remotes => this.getExternalOnes(externals, remotes, cache))
-                .then(externalDeps => componentVersionArr.concat(externalDeps))
-              );
-          });
-      });
+    const localDefs = await this.sources.getMany(locals);
+    const componentVersionArr = await Promise.all(localDefs.map((def) => {
+      if (!def.component) throw new ComponentNotFound(def.id.toString());
+      return def.component.toComponentVersion(def.id.version);
+    }));
+    await postImportHook({ ids: componentVersionArr.map(cv => cv.id.toString()) });
+    const remotes = await this.remotes();
+    const externalDeps = await this.getExternalOnes(externals, remotes, cache);
+    return componentVersionArr.concat(externalDeps);
   }
 
   manyOneObjects(ids: BitId[]): Promise<ComponentObjects[]> {
@@ -621,9 +615,9 @@ export default class Scope {
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
     const componentIds = ids.map(id => BitId.parse(id));
-    const components = componentIds.map(id => this.sources.getObjects(id));
-    const componentObjects = await Promise.all(components);
-    const manyObjectsP = componentObjects.map(async (componentObject) => {
+    const componentObjectsP = componentIds.map(id => this.sources.getObjects(id));
+    const componentObjects = await Promise.all(componentObjectsP);
+    const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(this.objects);
       this._convertNonScopeToCorrectScope(componentAndObject, remoteName);
       const componentBuffer = await componentAndObject.component.compress();

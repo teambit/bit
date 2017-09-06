@@ -12,5 +12,4 @@ export interface Network {
   list(): Promise<ComponentObjects[]>;
   search(query: string, reindex: boolean): Promise<string>;
   show(bitId: BitId): Promise<>;
-  fetchOnes(bitIds: BitIds): Promise<ComponentObjects[]>;
 }

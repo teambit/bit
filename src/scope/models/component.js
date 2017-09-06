@@ -16,6 +16,7 @@ import ComponentVersion from '../component-version';
 import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
+import logger from '../../logger/logger';
 
 export type ComponentProps = {
   scope?: string;
@@ -116,10 +117,12 @@ export default class Component extends BitObject {
     };
   }
 
-  loadVersion(version: number, repository: Repository): Promise<Version> {
+  async loadVersion(version: number, repository: Repository): Promise<Version> {
     const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound();
-    return versionRef.load(repository);
+    const versionLoaded = await versionRef.load(repository);
+    if (!versionLoaded) logger.warn(`loadVersion, failed loading version ${version} of ${this.id()}`);
+    return versionLoaded;
   }
 
   collectObjects(repo: Repository): Promise<ComponentObjects> {
