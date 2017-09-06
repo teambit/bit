@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import { bufferFrom, pathNormalizeToLinux } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
@@ -64,10 +65,17 @@ export default class SourceRepository {
 
   async get(bitId: BitId): Promise<?Component> {
     const component = Component.fromBitId(bitId);
-    const foundComponent = await this.findComponent(component);
+    let foundComponent = await this.findComponent(component);
     if (foundComponent instanceof Symlink) {
       const realComponentId = BitId.parse(foundComponent.getRealComponentId());
-      return this.findComponent(Component.fromBitId(realComponentId));
+      foundComponent = this.findComponent(Component.fromBitId(realComponentId));
+    }
+
+    // This is to take care of case when the component is exists in the scope, but the requested version is missing
+    if (foundComponent &&
+        !bitId.getVersion().latest &&
+        !R.contains(bitId.getVersion().versionNum, foundComponent.listVersions())) {
+      return null;
     }
     return foundComponent;
   }
