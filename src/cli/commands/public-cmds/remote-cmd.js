@@ -1,5 +1,6 @@
 /** @flow */
 import chalk from 'chalk';
+import Table from 'cli-table2';
 import Command from '../../command';
 import { remoteList, remoteAdd, remoteRm } from '../../../api/consumer';
 import { forEach, empty } from '../../../utils';
@@ -24,11 +25,20 @@ export default class Remote extends Command {
 
   report(remotes: {[string]: string}): string {
     if (empty(remotes)) return chalk.red('no configured remotes found in scope');
-    const resArr = ['scope name | host'];
-    forEach(remotes, (host, name) => {
-      resArr.push(`${name} | ${host}`);
+
+    const table = new Table({
+      head: [chalk.cyan('scope name'), chalk.cyan('host')],
+      colWidths: [30, 100],
+      // The soft wrap here won't really work because there is no spaces in the hostname
+      // See here: https://github.com/jamestalmage/cli-table2/issues/18
+      wordWrap: true 
     });
-    return resArr.join('\n');
+
+    forEach(remotes, (host, name) => {
+      table.push([name, host]);
+    });
+
+    return table.toString();
   }
 }
 
