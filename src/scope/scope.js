@@ -276,7 +276,7 @@ export default class Scope {
    * dependencies, saves them as well. Finally runs the build process if needed on an isolated
    * environment.
    */
-  async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<any> {
+  async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<ComponentObjects[]> {
     logger.debug(`exportManyBareScope: Going to save ${componentsObjects.length} components`);
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
     await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true)));
@@ -625,15 +625,16 @@ export default class Scope {
       return new ComponentObjects(componentBuffer, objectsBuffer);
     });
     const manyObjects = await Promise.all(manyObjectsP);
-    const componentObjectsFromRemote = await remote.pushMany(manyObjects);
-    logger.debug('exportMany: successfully pushed all ids to the bare-scope, going to save them back to local scope');
+    try {
+      await remote.pushMany(manyObjects);
+      logger.debug('exportMany: successfully pushed all ids to the bare-scope, going to save them back to local scope');
+    } catch (err) {
+      logger.warn('exportMany: failed pushing ids to the bare-scope');
+      return Promise.reject(err);
+    }
+
     await Promise.all(componentIds.map(id => this.clean(id)));
     componentIds.map(id => this.createSymlink(id, remoteName));
-    await Promise.all(componentObjectsFromRemote.map((obj) => {
-      const objects = obj.toObjects(this.objects);
-      return this.sources.merge(objects);
-    }));
-    await this.objects.persist();
     const idsWithRemoteScope = componentIds.map(id => id.changeScope(remoteName));
     return this.getManyWithAllVersions(idsWithRemoteScope);
   }

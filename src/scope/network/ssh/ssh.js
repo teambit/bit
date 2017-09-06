@@ -141,7 +141,7 @@ export default class SSH implements Network {
       .then((data: string) => {
         const { payload, headers } = this._unpack(data);
         checkVersionCompatibility(headers.version);
-        return ComponentObjects.manyFromString(payload);
+        return Promise.resolve();
       });
   }
 
