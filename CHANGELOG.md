@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - write dist files on import according to .bit.map.json
 - improve bit remote output (put it in a table)
 - fix but with export when the remote has dependency in the wrong version
+- support jsx extension in main file of component
 
 ## [0.10.6] - 2017-08-23
 
