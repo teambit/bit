@@ -43,7 +43,8 @@ jobs:
     working_directory: ~/bit
     steps:
       - run: mkdir ~/junit
-      - run: 
+      - run:
+          name: Run unit tests
           command: npm run test-circle
           environment:
             MOCHA_FILE: junit/unit-test-results.xml
@@ -60,6 +61,7 @@ jobs:
     steps:
       - run: mkdir ~/junit
       - run: 
+          name: Run e2e tests
           command: npm run e2e-test-circle
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
