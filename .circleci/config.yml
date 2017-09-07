@@ -94,18 +94,18 @@ jobs:
       - restore_cache:
             keys:
               - builded-{{ checksum ".circle-sha" }}
-      - run: mkdir ~/junit
+      - run: mkdir junit
       - run:
           name: Run unit tests
           command: npm run test-circle  
           environment:
-            MOCHA_FILE: ~/junit/unit-test-results.xml
+            MOCHA_FILE: junit/unit-test-results.xml
           when: always
-      - run: ls ~/junit
+      - run: ls junit
       - store_test_results:
-          path: ~/junit
+          path: junit
       - store_artifacts:
-          path: ~/junit
+          path: junit
   
   e2e_test:
     docker:
