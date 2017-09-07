@@ -142,8 +142,8 @@ workflows:
       - checkout_code
       - set_ssh_key
       - install_npm_deps:
-        requires:
-            - checkout_code
+          requires:
+              - checkout_code
       - build:
           requires:
             - install_npm_deps
