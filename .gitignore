@@ -52,14 +52,10 @@ jspm_packages
 # idea
 .idea/
 
-#flow configuration
-.flowconfig
-
 #output
 dist/
 dist-legacy/
 flow-typed/
-
 
 #distrubution
 distribution/
@@ -73,7 +69,6 @@ nodeBin
 # bit directories
 .bit
 components
-inline_components
 
 # DS_Store
 .DS_Store
