@@ -6,9 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+
+## [0.10.7] - 2017-09-07
+
+- improve windows support
+- add bit untrack command
+- support css/less/scss/sass as main file
+- support jsx extension in main file of component
+- support adding new files to imported components
+- deprecated install command
 - fix the search according to search-index v0.13.0 changes
 - prevent exporting a component when the same version has been exported already to the same remote scope
-- support adding new files to imported components
 - avoid running the build and test processes upon `bit status`
 - allow export specific components without specifying the scope-name
 - avoid committing unmodified components unless `--force` flag is being used
@@ -21,23 +29,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - don't calculate nested deps when calculating modified component during bit status / commit
 - fixed exception thrown in `bit ls` after exporting components
 - removed `--cache` flag from `bit ls`
-- deprecated install command
 - added `--environment` option for `bit import`
 - reformatted `bit import` output (components, dependencies, environments)
 - remove duplication for missing packages warning
 - Remove the npm tree output for component ci flow
 - add verbosity option to some places
-- improve windows support
 - added auto generated msg to bitmap and all generated link files
-- support css/less/scss/sass as main file
-- add untrack command
 - fix warning on bit --version command
 - support render tag in js docs
 - bug fix - imported components were deleted from bit.map when importing nested components of the same scope and name
 - write dist files on import according to .bit.map.json
 - improve bit remote output (put it in a table)
 - fix but with export when the remote has dependency in the wrong version
-- support jsx extension in main file of component
 
 ## [0.10.6] - 2017-08-23
 
