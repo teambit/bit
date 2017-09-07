@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - improve windows support
 - add bit untrack command
-- support css/less/scss/sass as main file
-- support jsx extension in main file of component
+- support CSS/less/sass/sass as main file
+- support jsx extension as the main file of a component
 - support adding new files to imported components
 - deprecated install command
 - fix the search according to search-index v0.13.0 changes
@@ -21,13 +21,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - allow export specific components without specifying the scope-name
 - avoid committing unmodified components unless `--force` flag is being used
 - resolve dependencies from all component files regardless whether they are referenced from the main file
-- bug fix - author was not able to update his/her component in case it was changed in other scope
+- bug fix - the author was not able to update his/her component in case it was changed in another scope
 - bug fix - status command shows an error when components directory has an unreferenced (from bit.map) component
 - avoid generating links for author components
 - `bit import` from bit.json does not write to the file-system a dependency when it is also a direct import
-- bug fix - export would hang when the ssh server were existing before closing
-- don't calculate nested deps when calculating modified component during bit status / commit
-- fixed exception thrown in `bit ls` after exporting components
+- bug fix - export would hang when the ssh server was existing before closing
+- don't calculate nested deps when calculating modified component during bit status/commit
+- fixed exception is thrown in `bit ls` after exporting components
 - removed `--cache` flag from `bit ls`
 - added `--environment` option for `bit import`
 - reformatted `bit import` output (components, dependencies, environments)
@@ -35,12 +35,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Remove the npm tree output for component ci flow
 - add verbosity option to some places
 - added auto generated msg to bitmap and all generated link files
-- fix warning on bit --version command
+- fix a warning on the bit --version command
 - support render tag in js docs
 - bug fix - imported components were deleted from bit.map when importing nested components of the same scope and name
 - write dist files on import according to .bit.map.json
 - improve bit remote output (put it in a table)
-- fix but with export when the remote has dependency in the wrong version
+- fix but with export when the remote has a dependency in the wrong version
 
 ## [0.10.6] - 2017-08-23
 
