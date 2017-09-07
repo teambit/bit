@@ -150,7 +150,7 @@ jobs:
       # - attach_workspace:
       #     at: /usr/local/lib
       - run: mkdir ~/junit
-      - run: npm run link
+      - run: npm link
       - run: 
           name: Run e2e tests
           command: npm run e2e-test-circle
