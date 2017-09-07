@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+
 - support move command for moving files/directories of a component to a new location
+- fix export of large amount of data
 
 ## [0.10.7] - 2017-09-07
 
