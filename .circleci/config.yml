@@ -82,30 +82,6 @@ jobs:
           key: builded-{{ checksum ".circle-sha" }}
           paths:
             - ~/bit
-   
-  global_install:
-    docker:
-      - image: circleci/node:6.10.3
-    working_directory: ~/bit
-    steps:
-      - run:
-          name: save SHA to a file
-          command: echo $CIRCLE_SHA1 > .circle-sha
-      - restore_cache:
-            keys:
-              - builded-{{ checksum ".circle-sha" }}
-      - run:
-          name: Insatll bit globaly
-          command: 'sudo npm install -g'
-      - save_cache:
-          key: global-bit-{{ checksum ".circle-sha" }}
-          paths:
-            - /usr/local/lib/node_modules
-      # - persist_to_workspace:
-      #     root: /usr/local/lib
-      #     paths:
-      #       - node/*
-      #       - node_modules/*
 
   unit_test:
     docker:
@@ -135,15 +111,15 @@ jobs:
       - image: circleci/node:6.10.3
     working_directory: ~/bit
     environment:
+      # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
-      # PATH: ~/.npm-global/bin:$PATH
     steps:
       - run: echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
       - run:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
       - run:
-          name: create global npm directory (to not need sudo for npm link)
+          name: create global npm directory (to avoid using sudo for npm link)
           command: mkdir ~/.npm-global
       - restore_cache:
           keys:
@@ -151,20 +127,10 @@ jobs:
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
-      # - restore_cache:
-      #     keys:
-      #       - global-bit-{{ checksum ".circle-sha" }}
-      # - attach_workspace:
-      #     at: /usr/local/lib
       - run: mkdir ~/junit
       - run: 
           name: npm link
           command: npm link
-          # environment:
-          #   NPM_CONFIG_PREFIX: ~/.npm-global
-      # - run: echo $NPM_CONFIG_PREFIX
-      - run: echo $PATH
-      # - run: export PATH=~/.npm-global/bin:$PATH
       - run: 
           name: Run e2e tests
           command: npm run e2e-test-circle
@@ -191,11 +157,7 @@ workflows:
       - unit_test:
           requires:
             - build
-      # - global_install:
-      #     requires:
-      #       - build
       - e2e_test:
           requires:
-            # - global_install
             - build
             - set_ssh_key
