@@ -96,7 +96,7 @@ jobs:
               - builded-{{ checksum ".circle-sha" }}
       - run:
           name: Insatll bit globaly
-          command: 'npm install -g'
+          command: 'sudo npm install -g'
       - persist_to_workspace:
           root: /usr/local/lib
           paths:
