@@ -9,26 +9,11 @@ import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_
   DEFAULT_SEPARATOR, DEFAULT_INDEX_EXTS } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId } from '../../bit-id';
-import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux, isDir } from '../../utils';
+import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux } from '../../utils';
+import ComponentMap from './component-map';
+import type { ComponentMapFile, ComponentOrigin } from './component-map';
 
 const SHOULD_THROW = true;
-
-export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
-
-export type ComponentMapFile = {
-  name: string,
-  relativePath: string,
-  test: string
-}
-
-export type ComponentMap = {
-  files: ComponentMapFile[],
-  mainFile: string,
-  rootDir?: string, // needed to search for the component's bit.json. If it's undefined, the component probably don't have bit.json
-  origin: ComponentOrigin,
-  dependencies: string[], // needed for the bind process
-  mainDistFile?: string, // needed when there is a build process involved
-}
 
 export default class BitMap {
   projectRoot: string;
@@ -43,23 +28,25 @@ export default class BitMap {
 
   static async load(dirPath: string): BitMap {
     const mapPath = path.join(dirPath, BIT_MAP);
-    let components;
+    const components = {};
     if (fs.existsSync(mapPath)) {
       try {
         const mapFileContent = await readFile(mapPath);
-        components = json.parse(mapFileContent.toString('utf8'),  null, true);
+        const componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
+        Object.keys(componentsJson).forEach((componentId) => {
+          components[componentId] = ComponentMap.fromJson(componentsJson[componentId]);
+        });
       } catch (e) {
         throw new InvalidBitMap(mapPath);
       }
     } else {
       logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will probably create a new one if needed`);
-      components = {};
     }
 
     return new BitMap(dirPath, mapPath, components);
   }
 
-  getAllComponents(origin?: ComponentOrigin): Object<string> {
+  getAllComponents(origin?: ComponentOrigin): Object<ComponentMap> {
     if (!origin) return this.components;
     const isOriginMatch = component => component.origin === origin;
     return R.filter(isOriginMatch, this.components);
@@ -163,26 +150,6 @@ export default class BitMap {
     });
   }
 
-  _getPathWithoutRootDir(rootDir, filePath) {
-    const newPath = path.relative(rootDir, filePath);
-    if (newPath.startsWith('..')) {
-      // this is forbidden for security reasons. Allowing files to be written outside the components directory may
-      // result in overriding OS files.
-      throw new Error(`unable to add file ${filePath} because it's located outside the component root dir ${rootDir}`);
-    }
-    return newPath;
-  }
-
-  _changeFilesPathAccordingToItsRootDir(existingRootDir, files) {
-    const changes = [];
-    files.forEach((file) => {
-      const newPath = this._getPathWithoutRootDir(existingRootDir, file.relativePath);
-      changes.push({ from: file.relativePath, to: newPath });
-      file.relativePath = newPath;
-    });
-    return changes;
-  }
-
   /**
    * When the given id doesn't include scope-name, there might be a similar component in bit.map with scope-name, use it
    * only when the origin is imported or author, as we don't allow to update nested component.
@@ -224,7 +191,7 @@ export default class BitMap {
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
       const existingRootDir = this.components[componentIdStr].rootDir;
-      if (existingRootDir) this._changeFilesPathAccordingToItsRootDir(existingRootDir, files);
+      if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
       if (override) {
         this.components[componentIdStr].files = files;
       } else {
@@ -402,55 +369,5 @@ export default class BitMap {
     logger.debug('writing to bit.map');
     this.modifyComponentsToLinuxPath(this.components);
     return outputFile(this.mapPath, AUTO_GENERATED_MSG + JSON.stringify(this.components, null, 4));
-  }
-
-  _findFileOfComponentMap(componentMap: ComponentMap, fileName: string): ComponentMapFile {
-    return componentMap.files.find((file) => {
-      const filePath = componentMap.rootDir ? path.join(componentMap.rootDir, file.relativePath) : file.relativePath;
-      return filePath === fileName;
-    });
-  }
-
-  _updateFileLocation(componentMap, fileFrom, fileTo) {
-    const currentFile = this._findFileOfComponentMap(componentMap, fileFrom);
-    if (!currentFile) throw new Error(`the file ${fileFrom} is untracked`);
-    const rootDir = componentMap.rootDir;
-    const newLocation = rootDir ? this._getPathWithoutRootDir(rootDir, fileTo) : fileTo;
-    logger.debug(`updating file location from ${currentFile.relativePath} to ${newLocation}`);
-    if (componentMap.mainFile === currentFile.relativePath) componentMap.mainFile = newLocation;
-    const changes = [{ from: currentFile.relativePath, to: newLocation }];
-    currentFile.relativePath = newLocation;
-    return changes;
-  }
-
-  _updateDirLocation(componentMap, dirFrom, dirTo) {
-    const changes = [];
-    const rootDir = componentMap.rootDir;
-    if (rootDir && rootDir === dirFrom) {
-      componentMap.rootDir = dirTo;
-      return this._changeFilesPathAccordingToItsRootDir(dirTo, componentMap.files);
-    }
-    let areFilesChanged = false;
-    componentMap.files.forEach((file) => {
-      const filePath = rootDir ? path.join(rootDir, file.relativePath) : file.relativePath;
-      if (filePath.startsWith(dirFrom)) {
-        areFilesChanged = true;
-        const fileTo = filePath.replace(dirFrom, dirTo);
-        const newLocation = rootDir ? this._getPathWithoutRootDir(rootDir, fileTo) : fileTo;
-        logger.debug(`updating file location from ${file.relativePath} to ${newLocation}`);
-        if (componentMap.mainFile === file.relativePath) componentMap.mainFile = newLocation;
-        changes.push({ from: file.relativePath, to: newLocation });
-        file.relativePath = newLocation;
-      }
-    });
-    if (!areFilesChanged) {
-      throw new Error(`neither one of the files use the directory ${dirFrom}`);
-    }
-    return changes;
-  }
-
-  updatePathLocation(componentMap, from, to) {
-    if (isDir(from)) return this._updateDirLocation(componentMap, from, to);
-    return this._updateFileLocation(componentMap, from, to);
   }
 }

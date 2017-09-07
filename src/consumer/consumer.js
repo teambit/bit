@@ -451,7 +451,7 @@ export default class Consumer {
     const toRelative = this.getPathRelativeToConsumer(to);
 
     if (fromExists && !toExists) { // user would like to physically move the file
-      const changes = bitMap.updatePathLocation(componentMap, fromRelative, toRelative);
+      const changes = componentMap.updatePathLocation(fromRelative, toRelative);
       fs.moveSync(from, to);
       await bitMap.write();
       return changes;
