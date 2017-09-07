@@ -1,0 +1,163 @@
+version: 2
+jobs:
+  checkout_code:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - checkout
+      - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - save_cache:
+          key: repo-{{ checksum ".circle-sha" }}
+          paths:
+            - ~/bit
+
+  set_ssh_key:
+    docker:
+        - image: circleci/node:6.10.3
+    working_directory: ~/.ssh
+    steps:
+      - run: "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
+      - run: echo ${bithubKey} >> id_rsa
+      - run: "echo \"-----END RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
+      - save_cache:
+          key: bitsrc-ssh-key
+          paths:
+            - ~/.ssh/id_rsa
+
+  install_npm_deps:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - restore_cache:
+          keys:
+            - repo-{{ checksum ".circle-sha" }}
+      - restore_cache:
+          keys:
+            # Find a cache corresponding to this specific package.json checksum
+            # when this file is changed, this key will fail
+            - npm-deps-{{ checksum "package.json" }}
+            # Find the most recent cache used from any branch
+            - npm-deps
+      - run:
+          name: Insatll npm dependencies
+          command: 'npm install'
+      - save_cache:
+          key: npm-deps-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+      - save_cache:
+          key: npm-deps
+          paths:
+            - node_modules
+
+  build:
+     docker:
+       - image: circleci/node:6.10.3
+     working_directory: ~/bit
+     steps:
+      - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - restore_cache:
+          keys:
+            - repo-{{ checksum ".circle-sha" }}
+      - restore_cache:
+          keys:
+            # Find a cache corresponding to this specific package.json checksum
+            # when this file is changed, this key will fail
+            - npm-deps-{{ checksum "package.json" }}
+            # Find the most recent cache used from any branch
+            - npm-deps
+      - run: 
+          name: Build bit source code
+          command: npm run build
+      - save_cache:
+          key: builded-{{ checksum ".circle-sha" }}
+          paths:
+            - ~/bit
+
+  unit_test:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - restore_cache:
+            keys:
+              - builded-{{ checksum ".circle-sha" }}
+      - run: mkdir junit
+      - run:
+          name: Run unit tests
+          command: npm run test-circle  
+          environment:
+            MOCHA_FILE: junit/unit-test-results.xml
+          when: always
+      - store_test_results:
+          path: junit
+      - store_artifacts:
+          path: junit
+  
+  e2e_test:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+    steps:
+      - run: echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - run:
+          name: create global npm directory (to avoid using sudo for npm link)
+          command: mkdir ~/.npm-global
+      - restore_cache:
+          keys:
+            - bitsrc-ssh-key
+      - restore_cache:
+          keys:
+            - builded-{{ checksum ".circle-sha" }}
+      - run: mkdir junit
+      - run: 
+          name: npm link
+          command: npm link
+      - run: 
+          name: Run e2e tests
+          command: npm run e2e-test-circle
+          environment:
+            MOCHA_FILE: junit/e2e-test-results.xml
+          when: always
+      - store_test_results:
+          path: junit
+      - store_artifacts:
+          path: junit
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - checkout_code
+      - set_ssh_key
+      - install_npm_deps:
+          requires:
+              - checkout_code
+      - build:
+          requires:
+            - install_npm_deps
+      - unit_test:
+          requires:
+            - build
+      - e2e_test:
+          requires:
+            - build
+            - set_ssh_key
