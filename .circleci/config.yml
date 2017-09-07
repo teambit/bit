@@ -1,8 +1,91 @@
 version: 2
 jobs:
-   build:
+  checkout_code:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - checkout
+
+  set_ssh_key:
+    docker:
+        - image: circleci/node:6.10.3
+    working_directory: ~/.ssh
+    steps:
+      - run: "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
+      - run: echo ${bithubKey} >> ~/.ssh/id_rsa
+      - run: "echo \"-----END RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
+
+  build:
      docker:
        - image: circleci/node:6.10.3
+     working_directory: ~/bit
      steps:
-       - checkout
-       - run: echo "hello world"
+      - run:
+          name: Insatll npm dependencies
+          command: 'npm install'
+      - run: 
+          name: Build bit source code
+          command: npm run build
+   
+  global_install:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - run:
+          name: Insatll bit globaly
+          command: 'npm install -g'
+    
+  unit_test:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - run: mkdir ~/junit
+      - run:
+          name: Run unit tests
+          command: npm run test-circle
+          environment:
+            MOCHA_FILE: junit/unit-test-results.xml
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+  
+  e2e_test:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - run: mkdir ~/junit
+      - run: 
+          name: Run e2e tests
+          command: npm run e2e-test-circle
+          environment:
+            MOCHA_FILE: junit/e2e-test-results.xml
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - checkout_code
+      - build:
+          requires:
+            - checkout_code
+      - unit_test:
+          requires:
+            - build
+      - global_install:
+          requires:
+            - build
+      - e2e_test:
+          requires:
+            - global-install
+            - set-ssh-key
