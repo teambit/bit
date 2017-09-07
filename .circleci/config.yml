@@ -6,6 +6,13 @@ jobs:
     working_directory: ~/bit
     steps:
       - checkout
+      - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - save_cache:
+          key: repo-{{ checksum ".circle-sha" }}
+          paths:
+            - ~/bit
 
   set_ssh_key:
     docker:
@@ -13,8 +20,36 @@ jobs:
     working_directory: ~/.ssh
     steps:
       - run: "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
-      - run: echo ${bithubKey} >> ~/.ssh/id_rsa
+      - run: echo ${bithubKey} >> id_rsa
       - run: "echo \"-----END RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
+      - save_cache:
+          key: bitsrc-ssh-key
+          paths:
+            - ~/.ssh/id_rsa
+
+  install_npm_deps:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - restore_cache:
+          keys:
+            # Find a cache corresponding to this specific package.json checksum
+            # when this file is changed, this key will fail
+            - npm-deps-{{ checksum "package.json" }}
+            # Find the most recent cache used from any branch
+            - npm-deps
+      - run:
+          name: Insatll npm dependencies
+          command: 'npm install'
+      - save_cache:
+          key: npm-deps-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+      - save_cache:
+          key: npm-deps
+          paths:
+            - node_modules
 
   build:
      docker:
@@ -22,11 +57,18 @@ jobs:
      working_directory: ~/bit
      steps:
       - run:
-          name: Insatll npm dependencies
-          command: 'npm install'
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - restore_cache:
+          keys:
+            - repo-{{ checksum ".circle-sha" }}
       - run: 
           name: Build bit source code
           command: npm run build
+      - save_cache:
+          key: builded-{{ checksum ".circle-sha" }}
+          paths:
+            - ~/bit
    
   global_install:
     docker:
@@ -34,14 +76,31 @@ jobs:
     working_directory: ~/bit
     steps:
       - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - restore_cache:
+            keys:
+              - builded-{{ checksum ".circle-sha" }}
+      - run:
           name: Insatll bit globaly
           command: 'npm install -g'
-    
+      - persist_to_workspace:
+          root: /usr/local/lib
+          paths:
+            - node/*
+            - node_modules/*
+
   unit_test:
     docker:
       - image: circleci/node:6.10.3
     working_directory: ~/bit
     steps:
+      - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - restore_cache:
+            keys:
+              - builded-{{ checksum ".circle-sha" }}
       - run: mkdir ~/junit
       - run:
           name: Run unit tests
@@ -59,6 +118,11 @@ jobs:
       - image: circleci/node:6.10.3
     working_directory: ~/bit
     steps:
+      - restore_cache:
+          keys:
+            - bitsrc-ssh-key
+      - attach_workspace:
+          at: /usr/local/lib
       - run: mkdir ~/junit
       - run: 
           name: Run e2e tests
@@ -77,9 +141,12 @@ workflows:
     jobs:
       - checkout_code
       - set_ssh_key
+      - install_npm_deps:
+        requires:
+            - checkout_code
       - build:
           requires:
-            - checkout_code
+            - install_npm_deps
       - unit_test:
           requires:
             - build
