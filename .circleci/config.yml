@@ -76,6 +76,7 @@ workflows:
   build_and_test:
     jobs:
       - checkout_code
+      - set_ssh_key
       - build:
           requires:
             - checkout_code
