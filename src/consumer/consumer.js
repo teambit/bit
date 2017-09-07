@@ -441,7 +441,6 @@ export default class Consumer {
   async movePaths({ id, from, to }: { id: BitId, from: string, to: string }) {
     const bitMap = await this.getBitMap();
     const componentMap = bitMap.getComponent(id, true);
-
     const fromExists = fs.existsSync(from);
     const toExists = fs.existsSync(to);
     if (fromExists && toExists) throw new Error(`unable to move because both paths from (${from}) and to (${to}) already exist`);
@@ -449,15 +448,13 @@ export default class Consumer {
 
     const fromRelative = this.getPathRelativeToConsumer(from);
     const toRelative = this.getPathRelativeToConsumer(to);
-
-    if (fromExists && !toExists) { // user would like to physically move the file
-      const changes = componentMap.updatePathLocation(fromRelative, toRelative);
+    const changes = componentMap.updatePathLocation(fromRelative, toRelative, fromExists);
+    if (fromExists && !toExists) {
+      // user would like to physically move the file. Otherwise (!fromExists and toExists), user would like to only update bit.map
       fs.moveSync(from, to);
-      await bitMap.write();
-      return changes;
-    } else if (!fromExists && toExists) { // user already moved the file. Only update bit.map
-      // todo: implement
     }
+    await bitMap.write();
+    return changes;
   }
 
   static create(projectPath: string = process.cwd()): Promise<Consumer> {

@@ -100,8 +100,9 @@ export default class ComponentMap {
     return changes;
   }
 
-  updatePathLocation(from, to) {
-    if (isDir(from)) return this._updateDirLocation(from, to);
+  updatePathLocation(from: string, to: string, fromExists: boolean): Array<Object> {
+    const isPathDir = fromExists ? isDir(from) : isDir(to);
+    if (isPathDir) return this._updateDirLocation(from, to);
     return this._updateFileLocation(from, to);
   }
 }
