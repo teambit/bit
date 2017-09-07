@@ -143,10 +143,14 @@ jobs:
             - bitsrc-ssh-key
       - restore_cache:
           keys:
-            - global-bit-{{ checksum ".circle-sha" }}
+            - builded-{{ checksum ".circle-sha" }}
+      # - restore_cache:
+      #     keys:
+      #       - global-bit-{{ checksum ".circle-sha" }}
       # - attach_workspace:
       #     at: /usr/local/lib
       - run: mkdir ~/junit
+      - run: npm run link
       - run: 
           name: Run e2e tests
           command: npm run e2e-test-circle
@@ -173,10 +177,10 @@ workflows:
       - unit_test:
           requires:
             - build
-      - global_install:
-          requires:
-            - build
+      # - global_install:
+      #     requires:
+      #       - build
       - e2e_test:
           requires:
-            - global_install
+            # - global_install
             - set_ssh_key
