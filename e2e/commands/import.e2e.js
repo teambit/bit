@@ -584,9 +584,10 @@ describe('bit import', function () {
     });
   });
 
-  describe('components with auto-resolve dependencies using TypeScript', () => {
+  describe.only('components with auto-resolve dependencies using TypeScript', () => {
     // Skipping this test on appveyor because it's fail due to madge issues
-    if (process.env.APPVEYOR) {
+    console.log('process.env.APPVEYOR:', process.env.APPVEYOR);
+    if (process.env.APPVEYOR === 'True') {
       this.skip;
     }
     /**
