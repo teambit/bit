@@ -32,6 +32,12 @@ jobs:
       - image: circleci/node:6.10.3
     working_directory: ~/bit
     steps:
+      - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - restore_cache:
+          keys:
+            - repo-{{ checksum ".circle-sha" }}
       - restore_cache:
           keys:
             # Find a cache corresponding to this specific package.json checksum
