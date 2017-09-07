@@ -87,5 +87,5 @@ workflows:
             - build
       - e2e_test:
           requires:
-            - global-install
-            - set-ssh-key
+            - global_install
+            - set_ssh_key
