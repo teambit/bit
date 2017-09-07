@@ -238,8 +238,8 @@ describe('JSDoc Parser', () => {
         expect(doclets).to.be.an('array');
       });
       it('should find only public functions', () => {
-        expect(doclets.find(doclet => doclet.name === 'publicFunc')).not.to.be.empty;
-        expect(doclets.find(doclet => doclet.name === 'privateFunc')).to.be.empty;
+        expect(doclets.find(doclet => doclet.name === 'publicFunc')).not.to.be.undefined;
+        expect(doclets.find(doclet => doclet.name === 'privateFunc')).to.be.undefined;
       });
     });
 
