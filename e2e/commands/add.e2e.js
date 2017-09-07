@@ -38,7 +38,7 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo');
       expect(files).to.be.array();
       expect(files).to.be.ofSize(2);
-      expect(files).to.include(expectTestFile);
+      expect(files).to.deep.include(expectTestFile);
     });
     it('Should add to bitmap file that it was genarated comment', () => {
       const osComponentName = path.normalize('bar/foo.js');
@@ -71,13 +71,13 @@ describe('bit add command', function () {
       const files = bitMap['bar/foo'].files;
       expect(bitMap).to.have.property('bar/foo');
       expect(files).to.be.ofSize(1);
-      expect(files).to.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.deep.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
       helper.addComponentWithOptions('bar/boo1.js', { 'i': 'bar/foo' , 'o': true });
       const bitMap2 = helper.readBitMap();
       const files2 = bitMap2['bar/foo'].files;
       expect(bitMap2).to.have.property('bar/foo');
       expect(files2).to.be.ofSize(1);
-      expect(files2).to.include({ relativePath: 'bar/boo1.js', test: false, name: 'boo1.js' });
+      expect(files2).to.deep.include({ relativePath: 'bar/boo1.js', test: false, name: 'boo1.js' });
     });
 
     it('Should throw error when no index file is found', () => {
@@ -147,8 +147,8 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(2);
-      expect(files).to.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
-      expect(files).to.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.deep.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Glob and dsl Should add component to bitmap ', () => {
@@ -159,9 +159,9 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(3);
-      expect(files).to.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
-      expect(files).to.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
-      expect(files).to.include({ relativePath: 'test2/foo1.spec.js', test: true, name: 'foo1.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.deep.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'test2/foo1.spec.js', test: true, name: 'foo1.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
 
@@ -175,8 +175,8 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(5);
-      expect(files).to.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
-      expect(files).to.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.deep.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Should add dir files with spec from multiple dsls when test files are placed in same structure', () => {
@@ -190,9 +190,9 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(6);
-      expect(files).to.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
-      expect(files).to.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
-      expect(files).to.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Should add dir files with spec from dsl and glob pattern', () => {
@@ -206,8 +206,8 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(6);
-      expect(files).to.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
-      expect(files).to.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
 
@@ -222,8 +222,8 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const files = bitMap["bar/foo"].files;
       expect(files).to.be.ofSize(5);
-      expect(files).to.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
-      expect(files).to.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Should modify bitmap when adding component again when specifing id', () => {
