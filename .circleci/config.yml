@@ -97,11 +97,15 @@ jobs:
       - run:
           name: Insatll bit globaly
           command: 'sudo npm install -g'
-      - persist_to_workspace:
-          root: /usr/local/lib
+      - save_cache:
+          key: global-bit-{{ checksum ".circle-sha" }}
           paths:
-            - node/*
-            - node_modules/*
+            - /usr/local/lib/node_modules
+      # - persist_to_workspace:
+      #     root: /usr/local/lib
+      #     paths:
+      #       - node/*
+      #       - node_modules/*
 
   unit_test:
     docker:
@@ -134,8 +138,11 @@ jobs:
       - restore_cache:
           keys:
             - bitsrc-ssh-key
-      - attach_workspace:
-          at: /usr/local/lib
+      - restore_cache:
+          keys:
+            - global-bit-{{ checksum ".circle-sha" }}
+      # - attach_workspace:
+      #     at: /usr/local/lib
       - run: mkdir ~/junit
       - run: 
           name: Run e2e tests
