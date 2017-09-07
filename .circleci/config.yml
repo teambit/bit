@@ -99,7 +99,7 @@ jobs:
           name: Run unit tests
           command: npm run test-circle
           environment:
-            MOCHA_FILE: junit/unit-test-results.xml
+            MOCHA_FILE: ~/junit/unit-test-results.xml
           when: always
       - store_test_results:
           path: ~/junit
@@ -135,7 +135,7 @@ jobs:
           name: Run e2e tests
           command: npm run e2e-test-circle
           environment:
-            MOCHA_FILE: junit/e2e-test-results.xml
+            MOCHA_FILE: ~/junit/e2e-test-results.xml
           when: always
       - store_test_results:
           path: ~/junit
