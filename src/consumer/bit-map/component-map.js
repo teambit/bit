@@ -2,7 +2,7 @@
 import path from 'path';
 import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS } from '../../constants';
-import { isDir } from '../../utils';
+import { isDir, pathNormalizeToLinux } from '../../utils';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
@@ -56,6 +56,7 @@ export default class ComponentMap {
   }
 
   _findFile(fileName: string): ComponentMapFile {
+    fileName = pathNormalizeToLinux(fileName);
     return this.files.find((file) => {
       const filePath = this.rootDir ? path.join(this.rootDir, file.relativePath) : file.relativePath;
       return filePath === fileName;
