@@ -97,10 +97,11 @@ jobs:
       - run: mkdir ~/junit
       - run:
           name: Run unit tests
-          command: npm run test-circle
+          command: npm run test-circle  
           environment:
             MOCHA_FILE: ~/junit/unit-test-results.xml
           when: always
+      - run: ls ~/junit
       - store_test_results:
           path: ~/junit
       - store_artifacts:
