@@ -1,0 +1,10 @@
+[ignore]
+.*node_modules/bit-scope-client
+.*node_modules/bit-javascript
+.*node_modules/bit-js
+
+[include]
+
+[libs]
+
+[options]
