@@ -16,7 +16,7 @@ describe('bit move command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.runCmd('bit move bar/foo bar/foo.js utils/foo.js');
+      helper.runCmd(`bit move bar/foo ${oldPath} ${newPath}`);
     });
     it('should move physically the file', () => {
       const localConsumerFiles = helper.getConsumerJSFiles();
@@ -25,11 +25,11 @@ describe('bit move command', function () {
     });
     it('should update the file path in bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap['bar/foo'].files[0].relativePath).to.equal(newPath);
+      expect(bitMap['bar/foo'].files[0].relativePath).to.equal('utils/foo.js');
     });
     it('should update the mainFile of bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap['bar/foo'].mainFile).to.equal(newPath);
+      expect(bitMap['bar/foo'].mainFile).to.equal('utils/foo.js');
     });
   });
   describe('move a directory', () => {
@@ -38,7 +38,7 @@ describe('bit move command', function () {
       helper.createFile('bar', 'foo1.js');
       helper.createFile('bar', 'foo2.js');
       helper.createFile('bar', 'foo1.spec.js');
-      helper.addComponentWithOptions('bar', { i: 'bar/foo', t: 'bar/foo1.spec.js', m: 'bar/foo1.js' });
+      helper.addComponentWithOptions('bar', { i: 'bar/foo', t: path.normalize('bar/foo1.spec.js'), m: path.normalize('bar/foo1.js') });
       helper.runCmd('bit move bar/foo bar utils');
     });
     it('should move physically the directory', () => {
@@ -55,9 +55,8 @@ describe('bit move command', function () {
       });
     });
     it('should update the mainFile of bit.map', () => {
-      const newPath = path.join('utils', 'foo1.js');
       const bitMap = helper.readBitMap();
-      expect(bitMap['bar/foo'].mainFile).to.equal(newPath);
+      expect(bitMap['bar/foo'].mainFile).to.equal('utils/foo1.js');
     });
   });
   describe('when the file was moved already', () => {
@@ -71,7 +70,7 @@ describe('bit move command', function () {
       helper.addComponentBarFoo();
       fs.moveSync(path.join(helper.localScopePath, oldPath), path.join(helper.localScopePath, newPath));
       filesBeforeMove = helper.getConsumerJSFiles();
-      helper.runCmd('bit move bar/foo bar/foo.js utils/foo.js');
+      helper.runCmd(`bit move bar/foo ${oldPath} ${newPath}`);
       filesAfterMove = helper.getConsumerJSFiles();
     });
     it('should not physically move any file', () => {
@@ -79,11 +78,11 @@ describe('bit move command', function () {
     });
     it('should update the file path in bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap['bar/foo'].files[0].relativePath).to.equal(newPath);
+      expect(bitMap['bar/foo'].files[0].relativePath).to.equal('utils/foo.js');
     });
     it('should update the mainFile of bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap['bar/foo'].mainFile).to.equal(newPath);
+      expect(bitMap['bar/foo'].mainFile).to.equal('utils/foo.js');
     });
   });
   describe('when the source and destination files do not exist', () => {
@@ -115,7 +114,7 @@ describe('bit move command', function () {
       fs.copySync(path.join(helper.localScopePath, fromPath), path.join(helper.localScopePath, toPath));
       filesBeforeMove = helper.getConsumerJSFiles();
       try {
-        helper.runCmd('bit move bar/foo bar/foo.js utils/foo.js');
+        helper.runCmd(`bit move bar/foo ${fromPath} ${toPath}`);
       } catch (err) {
         output = err.message;
       }
