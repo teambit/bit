@@ -138,6 +138,9 @@ jobs:
       - run:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
+      - run:
+          name: create global npm directory (to not need sudo for npm link)
+          command: mkdir ~/.npm-global
       - restore_cache:
           keys:
             - bitsrc-ssh-key
@@ -150,7 +153,11 @@ jobs:
       # - attach_workspace:
       #     at: /usr/local/lib
       - run: mkdir ~/junit
-      - run: npm link
+      - run: 
+          name: npm link
+          command: npm link
+          environment:
+            NPM_CONFIG_PREFIX: ~/.npm-global
       - run: 
           name: Run e2e tests
           command: npm run e2e-test-circle
