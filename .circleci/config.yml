@@ -134,6 +134,8 @@ jobs:
     docker:
       - image: circleci/node:6.10.3
     working_directory: ~/bit
+    environment:
+      NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - run:
           name: save SHA to a file
@@ -156,8 +158,10 @@ jobs:
       - run: 
           name: npm link
           command: npm link
-          environment:
-            NPM_CONFIG_PREFIX: ~/.npm-global
+          # environment:
+          #   NPM_CONFIG_PREFIX: ~/.npm-global
+      - run: echo $NPM_CONFIG_PREFIX
+      - run: which bit
       - run: 
           name: Run e2e tests
           command: npm run e2e-test-circle
