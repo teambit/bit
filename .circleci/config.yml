@@ -128,7 +128,7 @@ jobs:
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
-      - run: mkdir ~/junit
+      - run: mkdir junit
       - run: 
           name: npm link
           command: npm link
@@ -136,12 +136,12 @@ jobs:
           name: Run e2e tests
           command: npm run e2e-test-circle
           environment:
-            MOCHA_FILE: ~/junit/e2e-test-results.xml
+            MOCHA_FILE: junit/e2e-test-results.xml
           when: always
       - store_test_results:
-          path: ~/junit
+          path: junit
       - store_artifacts:
-          path: ~/junit
+          path: junit
 
 workflows:
   version: 2
