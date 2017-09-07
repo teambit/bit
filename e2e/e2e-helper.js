@@ -1,3 +1,4 @@
+import glob from 'glob';
 import os from 'os';
 import path from 'path';
 import childProcess from 'child_process';
@@ -142,6 +143,11 @@ export default class Helper {
     this.runCmd('bit init');
     this.addRemoteScope();
     this.runCmd('bit install');
+  }
+
+  getConsumerJSFiles() {
+    return (glob.sync(path.normalize('**/*.js'), { cwd: this.localScopePath }))
+      .map(x => path.normalize(x));
   }
 
   commitComponent(id:string, commitMsg: string = 'commit-message') {

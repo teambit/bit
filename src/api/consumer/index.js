@@ -18,6 +18,7 @@ import getDriver from './lib/get-driver';
 import { watchAll } from './lib/watch';
 import add from './lib/add';
 import untrack from './lib/untrack';
+import move from './lib/move';
 
 export {
   init,
@@ -44,5 +45,6 @@ export {
   getDriver,
   watchAll,
   add,
-  untrack
+  untrack,
+  move
 };
