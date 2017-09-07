@@ -1,5 +1,8 @@
 {
-  "extends": ["airbnb", "airbnb-flow"],
+  "extends": ["airbnb", "plugin:flowtype/recommended"],
+  "plugins": [
+    "flowtype"
+  ],
   "rules": {
     "arrow-body-style": [0, "as-needed"],
     "camelcase": [0],
