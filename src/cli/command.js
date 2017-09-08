@@ -9,14 +9,14 @@ export default class Cmd {
   private: ?boolean;
   loader: ?boolean;
 
+  // eslint-disable-next-line no-unused-vars
   action(params: any, opts: { [string]: any }): Promise<{ [string]: any }> {
-    // eslint-disable-line
     console.log('"action" method not implemented on this command');
     return new Promise(resolve => resolve({}));
   }
 
+  // eslint-disable-next-line no-unused-vars
   report(data: any): string {
-    // eslint-disable-line
     return '"report" method not implemented on this command';
   }
 
