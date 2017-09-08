@@ -7,6 +7,7 @@
     "dev-link": "node ./scripts/establish-dev-link.js $1",
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint ./src/**/*.js ./specs/**/*.js && flow check",
+    "format": "prettier-eslint src/**/*.js specs/**/*.js --write",
     "test": "mocha --compilers js:babel-core/register ./specs/**/*.spec.js",
     "test:appveyor": "mocha --compilers js:babel-core/register --reporter mocha-appveyor-reporter ./specs/**/*.spec.js",
     "test-circle": "mocha --compilers js:babel-core/register --reporter mocha-circleci-reporter ./specs/**/*.spec.js",
@@ -97,6 +98,7 @@
     "mocha-appveyor-reporter": "^0.4.0",
     "mocha-circleci-reporter": "0.0.2",
     "mocha-junit-reporter": "^1.13.0",
+    "prettier-eslint-cli": "^4.3.0",
     "sinon": "^3.2.1"
   },
   "optionalDependencies": {
