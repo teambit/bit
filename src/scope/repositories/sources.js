@@ -17,13 +17,13 @@ import { Consumer } from '../../consumer';
 import logger from '../../logger/logger';
 
 export type ComponentTree = {
-  component: Component;
-  objects: BitObject[];
+  component: Component,
+  objects: BitObject[]
 };
 
 export type ComponentDef = {
-  id: BitId;
-  component: ?Component;
+  id: BitId,
+  component: ?Component
 };
 
 export default class SourceRepository {
@@ -52,8 +52,7 @@ export default class SourceRepository {
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return Promise.all(
       ids.map((id) => {
-        return this.get(id)
-        .then((component) => {
+        return this.get(id).then((component) => {
           return {
             id,
             component
@@ -72,9 +71,11 @@ export default class SourceRepository {
     }
 
     // This is to take care of case when the component is exists in the scope, but the requested version is missing
-    if (foundComponent &&
-        !bitId.getVersion().latest &&
-        !R.contains(bitId.getVersion().versionNum, foundComponent.listVersions())) {
+    if (
+      foundComponent &&
+      !bitId.getVersion().latest &&
+      !R.contains(bitId.getVersion().versionNum, foundComponent.listVersions())
+    ) {
       return null;
     }
     return foundComponent;
@@ -89,56 +90,46 @@ export default class SourceRepository {
 
   findOrAddComponent(props: ComponentProps): Promise<Component> {
     const comp = Component.from(props);
-    return this.findComponent(comp)
-      .then((component) => {
-        if (!component) return comp;
-        return component;
-      });
+    return this.findComponent(comp).then((component) => {
+      if (!component) return comp;
+      return component;
+    });
   }
 
-  modifyCIProps({ source, ciProps }:
-  { source: ConsumerComponent, ciProps: Object }): Promise<any> {
+  modifyCIProps({ source, ciProps }: { source: ConsumerComponent, ciProps: Object }): Promise<any> {
     const objectRepo = this.objects();
 
-    return this.findOrAddComponent(source)
-      .then((component) => {
-        return component.loadVersion(component.latest(), objectRepo)
-        .then((version) => {
-          version.setCIProps(ciProps);
-          return objectRepo.persistOne(version);
-        });
+    return this.findOrAddComponent(source).then((component) => {
+      return component.loadVersion(component.latest(), objectRepo).then((version) => {
+        version.setCIProps(ciProps);
+        return objectRepo.persistOne(version);
       });
+    });
   }
 
-  modifySpecsResults({ source, specsResults }:
-  { source: ConsumerComponent, specsResults?: any }): Promise<any> {
+  modifySpecsResults({ source, specsResults }: { source: ConsumerComponent, specsResults?: any }): Promise<any> {
     const objectRepo = this.objects();
 
-    return this.findOrAddComponent(source)
-      .then((component) => {
-        return component.loadVersion(component.latest(), objectRepo)
-        .then((version) => {
-          version.setSpecsResults(specsResults);
-          return objectRepo.persistOne(version);
-        });
+    return this.findOrAddComponent(source).then((component) => {
+      return component.loadVersion(component.latest(), objectRepo).then((version) => {
+        version.setSpecsResults(specsResults);
+        return objectRepo.persistOne(version);
       });
+    });
   }
 
   // TODO: This should treat dist as an array
   updateDist({ source }: { source: ConsumerComponent }): Promise<any> {
     const objectRepo = this.objects();
 
-    return this.findOrAddComponent(source)
-      .then((component) => {
-        return component.loadVersion(component.latest(), objectRepo)
-        .then((version) => {
-          const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())): null;
-          version.setDist(dist);
-          objectRepo.add(dist)
-          .add(version);
-          return objectRepo.persist();
-        });
+    return this.findOrAddComponent(source).then((component) => {
+      return component.loadVersion(component.latest(), objectRepo).then((version) => {
+        const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())) : null;
+        version.setDist(dist);
+        objectRepo.add(dist).add(version);
+        return objectRepo.persist();
       });
+    });
   }
 
   /**
@@ -155,32 +146,61 @@ export default class SourceRepository {
    * is modified), only the data for Version.id() is relevant because hash is based on id().
    * @return {Promise.<{version: Version, dists: *, files: *}>}
    */
-  async consumerComponentToVersion({ consumerComponent, consumer, message, depIds, force, verbose, forHashOnly = false }
-  : { consumerComponent: ConsumerComponent,
-      consumer: Consumer,
-      message?: string,
-      depIds?: Object,
-      force?: boolean,
-      verbose?: boolean,
-      forHashOnly?: boolean }
-  ): Promise<Object> {
-    const files = consumerComponent.files && consumerComponent.files.length ? consumerComponent.files.map((file) => {
-      return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), file: Source.from(file.contents), test: file.test };
-    }) : null;
+  async consumerComponentToVersion({
+    consumerComponent,
+    consumer,
+    message,
+    depIds,
+    force,
+    verbose,
+    forHashOnly = false
+  }: {
+    consumerComponent: ConsumerComponent,
+    consumer: Consumer,
+    message?: string,
+    depIds?: Object,
+    force?: boolean,
+    verbose?: boolean,
+    forHashOnly?: boolean
+  }): Promise<Object> {
+    const files =
+      consumerComponent.files && consumerComponent.files.length
+        ? consumerComponent.files.map((file) => {
+          return {
+            name: file.basename,
+            relativePath: pathNormalizeToLinux(file.relative),
+            file: Source.from(file.contents),
+            test: file.test
+          };
+        })
+        : null;
 
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
     let dists;
     let specsResults;
-    if (!forHashOnly) { // for Hash calculation no need for dists and specsResults
+    if (!forHashOnly) {
+      // for Hash calculation no need for dists and specsResults
       await consumerComponent.build({ scope: this.scope, consumer });
-      dists = consumerComponent.dists && consumerComponent.dists.length ? consumerComponent.dists.map((dist) => {
-        return { name: dist.basename, relativePath: pathNormalizeToLinux(dist.relative), file: Source.from(dist.contents), test: dist.test };
-      }) : null;
+      dists =
+        consumerComponent.dists && consumerComponent.dists.length
+          ? consumerComponent.dists.map((dist) => {
+            return {
+              name: dist.basename,
+              relativePath: pathNormalizeToLinux(dist.relative),
+              file: Source.from(dist.contents),
+              test: dist.test
+            };
+          })
+          : null;
       loader.start(BEFORE_RUNNING_SPECS);
-      specsResults = await consumerComponent
-        .runSpecs({ scope: this.scope, rejectOnFailure: !force, consumer, verbose });
+      specsResults = await consumerComponent.runSpecs({
+        scope: this.scope,
+        rejectOnFailure: !force,
+        consumer,
+        verbose
+      });
     }
 
     consumerComponent.mainFile = pathNormalizeToLinux(consumerComponent.mainFile);
@@ -192,31 +212,42 @@ export default class SourceRepository {
       specsResults,
       message,
       username,
-      email,
+      email
     });
 
     return { version, dists, files };
   }
 
-  async addSource({ source, depIds, message, force, consumer, verbose }: {
+  async addSource({
+    source,
+    depIds,
+    message,
+    force,
+    consumer,
+    verbose
+  }: {
     source: ConsumerComponent,
     depIds: BitId[],
     message: string,
-    force: ?bool,
+    force: ?boolean,
     consumer: Consumer,
-    verbose?: bool,
+    verbose?: boolean
   }): Promise<Component> {
     const objectRepo = this.objects();
 
     // if a component exists in the model, add a new version. Otherwise, create a new component on them model
     const component = await this.findOrAddComponent(source);
-    const { version, dists, files } = await this
-      .consumerComponentToVersion({ consumerComponent: source, consumer, message, depIds, force, verbose });
+    const { version, dists, files } = await this.consumerComponentToVersion({
+      consumerComponent: source,
+      consumer,
+      message,
+      depIds,
+      force,
+      verbose
+    });
     component.addVersion(version);
 
-    objectRepo
-      .add(version)
-      .add(component);
+    objectRepo.add(version).add(component);
 
     if (files) files.forEach(file => objectRepo.add(file.file));
     if (dists) dists.forEach(dist => objectRepo.add(dist.file));
@@ -244,11 +275,10 @@ export default class SourceRepository {
   }
 
   clean(bitId: BitId): Promise<void> {
-    return this.get(bitId)
-      .then((component) => {
-        if (!component) return;
-        component.remove(this.objects());
-      });
+    return this.get(bitId).then((component) => {
+      if (!component) return;
+      component.remove(this.objects());
+    });
   }
 
   /**

@@ -10,7 +10,9 @@ const paintExample = (example) => {
 };
 
 const paintExamples = (examples) => {
-  if (R.isEmpty(examples) || R.isNil(examples)) { return ''; }
+  if (R.isEmpty(examples) || R.isNil(examples)) {
+    return '';
+  }
 
   return `\n${paintHeader('Examples')}\n${examples.map(paintExample).join('\n')}`;
 };
@@ -18,20 +20,28 @@ const paintExamples = (examples) => {
 export const paintDoc = (doc: Doclet) => {
   const docsTable = new Table({
     colWidths: [20, 50],
-    wordWrap: true,
+    wordWrap: true
   });
 
   const { name, description, args, returns } = doc;
 
   const painArg = (arg) => {
-    if (!arg.type && !arg.name) { return ''; }
-    if (!arg.type) { return `${arg.name}`; }
+    if (!arg.type && !arg.name) {
+      return '';
+    }
+    if (!arg.type) {
+      return `${arg.name}`;
+    }
     return `${arg.name}: ${arg.type}`;
   };
 
   const painDescription = (arg) => {
-    if (!arg.type) { return ''; }
-    if (arg.type && !arg.description) { return arg.type; }
+    if (!arg.type) {
+      return '';
+    }
+    if (arg.type && !arg.description) {
+      return arg.type;
+    }
     return `${arg.type} -> ${arg.description}`;
   };
 
@@ -47,8 +57,7 @@ export const paintDoc = (doc: Doclet) => {
   return docsTable + paintExamples(doc.examples);
 };
 
-
-export default (docs: ?Doclet[]) => {
+export default (docs: ?(Doclet[])) => {
   if (R.isEmpty(docs) || R.isNil(docs)) {
     return '\nNo documentation found';
   }

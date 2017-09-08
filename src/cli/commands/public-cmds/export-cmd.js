@@ -10,16 +10,14 @@ export default class Export extends Command {
   name = 'export <remote> [id...]';
   description = 'export components to a remote scope.';
   alias = 'e';
-  opts = [
-    ['f', 'forget', 'do not save to bit.json after export']
-  ];
+  opts = [['f', 'forget', 'do not save to bit.json after export']];
   loader = true;
 
   action([remote, ids]: [string, string[]], { forget }: any): Promise<*> {
     return exportAction(ids, remote, !forget).then(component => ({ component, remote }));
   }
 
-  report({ component, remote }: { component: Component|Component[], remote: string }): string {
+  report({ component, remote }: { component: Component | Component[], remote: string }): string {
     if (R.isEmpty(component)) return chalk.green(`no components to export to scope ${chalk.bold(remote)}`);
     if (Array.isArray(component)) {
       return chalk.green(`exported ${component.length} components to scope ${chalk.bold(remote)}`);

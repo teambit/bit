@@ -13,7 +13,9 @@ describe('export', () => {
     sandbox.restore();
   });
   xit('should throw a ComponentNotFound error if the component-id does include "@this" annotation', () => {
-    sandbox.stub(consumer, 'loadConsumer').returns(Promise.resolve({ exportAction: () => Promise.reject(new ComponentNotFound()) }));
+    sandbox
+      .stub(consumer, 'loadConsumer')
+      .returns(Promise.resolve({ exportAction: () => Promise.reject(new ComponentNotFound()) }));
     return exportAction('@this/box/name', 'my.remote')
       .then(() => expect.fail('should not be here'))
       .catch((err) => {

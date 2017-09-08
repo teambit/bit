@@ -22,11 +22,10 @@ function searchLocally(queryStr: string, reindex: boolean = false): Promise<any>
         })
         .catch(reject);
     } else {
-      loadConsumer()
-        .then((consumer) => {
-          scopePath = consumer.scope.path;
-          resolve(search(queryStr, scopePath));
-        });
+      loadConsumer().then((consumer) => {
+        scopePath = consumer.scope.path;
+        resolve(search(queryStr, scopePath));
+      });
     }
   });
 }
@@ -35,14 +34,13 @@ function searchRemotely(queryStr: string, scope: string, reindex: boolean = fals
   return new Promise((resolve, reject) => {
     loadConsumer()
       .then((consumer) => {
-        return consumer.scope.remotes()
-          .then(remotes =>
-            remotes.resolve(scope, consumer.scope.name)
-              .then((remote) => {
-                resolve(remote.search(queryStr, reindex));
-              })
-          );
-      }).catch(reject);
+        return consumer.scope.remotes().then(remotes =>
+          remotes.resolve(scope, consumer.scope.name).then((remote) => {
+            resolve(remote.search(queryStr, reindex));
+          })
+        );
+      })
+      .catch(reject);
   });
 }
 
@@ -69,5 +67,5 @@ function scopeSearch(path: string, query: string, reindex: boolean): Promise<any
 module.exports = {
   searchLocally,
   searchRemotely,
-  scopeSearch,
+  scopeSearch
 };

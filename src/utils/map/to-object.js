@@ -12,7 +12,7 @@
  *  // => { key: 'val', foo: 'bar' }
  * ```
  */
-export default function mapToObject(map: Map<any, any>): {[string|number]: any} {
+export default function mapToObject(map: Map<any, any>): { [string | number]: any } {
   const object = {};
   map.forEach((val, key) => {
     object[key.toString()] = val;

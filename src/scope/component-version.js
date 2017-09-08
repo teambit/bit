@@ -22,8 +22,7 @@ export default class ComponentVersion {
   }
 
   flattenedDependencies(repository: Repository): Promise<BitId[]> {
-    return this.getVersion(repository)
-      .then(version => version.flattenedDependencies);
+    return this.getVersion(repository).then(version => version.flattenedDependencies);
   }
 
   toId() {
@@ -39,27 +38,34 @@ export default class ComponentVersion {
     return this.toId();
   }
 
-  toVersionDependencies(scope: Scope, source: string, withEnvironments?: bool):
-  Promise<VersionDependencies> {
-    return this.getVersion(scope.objects)
-      .then((version) => {
-        if (!version) {
-          logger.debug(`toVersionDependencies, component ${this.component.id().toString()}, version ${this.version} not found, going to fetch from a remote`);
-          if (this.component.scope === scope.name) { // it should have been fetched locally, since it wasn't found, this is an error
-            throw new Error(`Version ${this.version} of ${this.component.id().toString()} was not found in scope ${scope.name}`);
-          }
-          return scope.remotes()
-            .then((remotes) => {
-              const src = this.id;
-              src.scope = source;
-              return scope.getExternal({ id: src, remotes, localFetch: false, withEnvironments });
-            });
+  toVersionDependencies(scope: Scope, source: string, withEnvironments?: boolean): Promise<VersionDependencies> {
+    return this.getVersion(scope.objects).then((version) => {
+      if (!version) {
+        logger.debug(
+          `toVersionDependencies, component ${this.component.id().toString()}, version ${this
+            .version} not found, going to fetch from a remote`
+        );
+        if (this.component.scope === scope.name) {
+          // it should have been fetched locally, since it wasn't found, this is an error
+          throw new Error(
+            `Version ${this.version} of ${this.component.id().toString()} was not found in scope ${scope.name}`
+          );
         }
+        return scope.remotes().then((remotes) => {
+          const src = this.id;
+          src.scope = source;
+          return scope.getExternal({ id: src, remotes, localFetch: false, withEnvironments });
+        });
+      }
 
-        logger.debug(`toVersionDependencies, component ${this.component.id().toString()}, version ${this.version} found, going to collect its dependencies`);
-        return version.collectDependencies(scope, withEnvironments)
-          .then(dependencies => new VersionDependencies(this, dependencies, source));
-      });
+      logger.debug(
+        `toVersionDependencies, component ${this.component.id().toString()}, version ${this
+          .version} found, going to collect its dependencies`
+      );
+      return version
+        .collectDependencies(scope, withEnvironments)
+        .then(dependencies => new VersionDependencies(this, dependencies, source));
+    });
   }
 
   toConsumer(repo: Repository) {
@@ -68,15 +74,17 @@ export default class ComponentVersion {
 
   toObjects(repo: Repository): Promise<ComponentObjects> {
     return this.getVersion(repo)
-      .then(version => Promise.all([
-        this.component.asRaw(repo),
-        version.collectRaw(repo),
-        version.asRaw(repo),
-        repo.getScopeMetaObject()
-      ]))
-      .then(([compObject, objects, version, scopeMeta]) => new ComponentObjects(
-        compObject,
-        objects.concat([version, scopeMeta])
-      ));
+      .then(version =>
+        Promise.all([
+          this.component.asRaw(repo),
+          version.collectRaw(repo),
+          version.asRaw(repo),
+          repo.getScopeMetaObject()
+        ])
+      )
+      .then(
+        ([compObject, objects, version, scopeMeta]) =>
+          new ComponentObjects(compObject, objects.concat([version, scopeMeta]))
+      );
   }
 }

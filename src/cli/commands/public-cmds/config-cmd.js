@@ -8,23 +8,19 @@ export default class Config extends Command {
   name = 'config';
   description = 'global config management';
   alias = '';
-  commands = [
-    new ConfigSet(),
-    new ConfigDel(),
-    new ConfigGet(),
-    new ConfigList()
-  ];
-  opts = [
-  ];
+  commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
+  opts = [];
 
   action(): Promise<any> {
     return config.list();
   }
 
-  report(conf: {[string]: string}): string {
-    return objectToTupleArray(conf).map((tuple) => {
-      return tuple.join('     ');
-    }).join('\n');
+  report(conf: { [string]: string }): string {
+    return objectToTupleArray(conf)
+      .map((tuple) => {
+        return tuple.join('     ');
+      })
+      .join('\n');
   }
 }
 
@@ -32,14 +28,13 @@ class ConfigSet extends Command {
   name = 'set <key> <val>';
   description = 'set a global configuration';
   alias = '';
-  opts = [
-  ];
+  opts = [];
 
   action([key, value]: [string, string]): Promise<any> {
     return config.set(key, value);
   }
 
-  report(conf: {[string]: string}): string {
+  report(conf: { [string]: string }): string {
     return 'added configuration successfully';
   }
 }
@@ -48,8 +43,7 @@ class ConfigGet extends Command {
   name = 'get <key>';
   description = 'get a global configuration';
   alias = '';
-  opts = [
-  ];
+  opts = [];
 
   action([key]: [string]): Promise<any> {
     return config.get(key);
@@ -70,10 +64,12 @@ class ConfigList extends Command {
     return config.list();
   }
 
-  report(conf: {[string]: string}): string {
-    return objectToTupleArray(conf).map((tuple) => {
-      return tuple.join('     ');
-    }).join('\n');
+  report(conf: { [string]: string }): string {
+    return objectToTupleArray(conf)
+      .map((tuple) => {
+        return tuple.join('     ');
+      })
+      .join('\n');
   }
 }
 
@@ -87,8 +83,7 @@ class ConfigDel extends Command {
     return config.del(key);
   }
 
-  report(conf: {[string]: string}): string {
+  report(conf: { [string]: string }): string {
     return 'deleted successfully';
   }
 }
-

@@ -16,35 +16,50 @@ export default class Import extends Command {
     ['t', 'tester', 'import a tester environment component'],
     ['v', 'verbose', 'show a more verbose output when possible'],
     ['c', 'compiler', 'import a compiler environment component'],
-    ['e', 'environment', 'install development environment dependencies (compiler and tester)'],    
+    ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
     ['p', 'prefix <prefix>', 'import components into a specific directory'],
     ['d', 'display_dependencies', 'display the imported dependencies']
   ];
   loader = true;
 
-  action([ids, ]: [string[], ], { tester, compiler, verbose, prefix, display_dependencies, environment }:
-  {
-    tester?: bool,
-    compiler?: bool,
-    verbose?: bool,
-    prefix?: string,
-  }): Promise<any> {
+  action(
+    [ids]: [string[]],
+    {
+      tester,
+      compiler,
+      verbose,
+      prefix,
+      display_dependencies,
+      environment
+    }: {
+      tester?: boolean,
+      compiler?: boolean,
+      verbose?: boolean,
+      prefix?: string
+    }
+  ): Promise<any> {
     // @TODO - import should support multiple components
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
     }
 
-    return importAction({ ids, tester, compiler, verbose, prefix, environment })
-      .then(importResults => R.assoc('display_dependencies', display_dependencies, importResults));
+    return importAction({ ids, tester, compiler, verbose, prefix, environment }).then(importResults =>
+      R.assoc('display_dependencies', display_dependencies, importResults)
+    );
   }
 
-  report({ dependencies, envDependencies, warnings, display_dependencies }: {
+  report({
+    dependencies,
+    envDependencies,
+    warnings,
+    display_dependencies
+  }: {
     dependencies?: ComponentWithDependencies[],
     envDependencies?: Component[],
     warnings?: {
       notInPackageJson: [],
       notInNodeModules: [],
-      notInBoth:[],
+      notInBoth: []
     }
   }): string {
     let dependenciesOutput;
@@ -53,7 +68,7 @@ export default class Import extends Command {
     if (dependencies && !R.isEmpty(dependencies)) {
       const components = dependencies.map(R.prop('component'));
       const peerDependencies = R.flatten(dependencies.map(R.prop('dependencies')));
-      
+
       let componentDependenciesOutput = '';
       if (components.length === 1) {
         componentDependenciesOutput = immutableUnshift(
@@ -64,15 +79,16 @@ export default class Import extends Command {
         componentDependenciesOutput = immutableUnshift(
           components.map(formatPlainComponentItem),
           chalk.green(`successfully imported ${components.length} components`)
-        ).join('\n');  
+        ).join('\n');
       }
 
-      const peerDependenciesOutput = (peerDependencies && !R.isEmpty(peerDependencies)
-      && display_dependencies) ?
-      immutableUnshift(
-        R.uniq(peerDependencies.map(formatPlainComponentItem)),
-        chalk.green(`\n\nsuccessfully imported ${components.length} component dependencies`)
-      ).join('\n') : '';
+      const peerDependenciesOutput =
+        peerDependencies && !R.isEmpty(peerDependencies) && display_dependencies
+          ? immutableUnshift(
+            R.uniq(peerDependencies.map(formatPlainComponentItem)),
+            chalk.green(`\n\nsuccessfully imported ${components.length} component dependencies`)
+          ).join('\n')
+          : '';
 
       dependenciesOutput = componentDependenciesOutput + peerDependenciesOutput;
     }
@@ -100,7 +116,9 @@ export default class Import extends Command {
       let output = '\n';
 
       if (!R.isEmpty(warnings.notInBoth)) {
-        output += chalk.red.underline('\nerror - missing the following package dependencies. please install and add to package.json.\n');
+        output += chalk.red.underline(
+          '\nerror - missing the following package dependencies. please install and add to package.json.\n'
+        );
         output += chalk.red(`${warnings.notInBoth.map(logObject).join('\n')}\n`);
       }
 

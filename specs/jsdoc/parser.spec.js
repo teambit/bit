@@ -78,16 +78,29 @@ describe('JSDoc Parser', () => {
       });
       it('should recognize the constructor', () => {
         const doclet = doclets[0];
-        expect(doclet).to.have.property('name').that.equals('constructor');
-        expect(doclet).to.have.property('description').that.equals('Create a point.');
-        expect(doclet).to.have.property('access').that.equals('public');
+        expect(doclet)
+          .to.have.property('name')
+          .that.equals('constructor');
+        expect(doclet)
+          .to.have.property('description')
+          .that.equals('Create a point.');
+        expect(doclet)
+          .to.have.property('access')
+          .that.equals('public');
         expect(doclet).to.have.property('static').that.is.false;
-        expect(doclet).to.have.property('returns').that.is.an('object').that.is.empty;
-        expect(doclet).to.have.property('examples').that.is.an('array').that.is.empty;
+        expect(doclet)
+          .to.have.property('returns')
+          .that.is.an('object').that.is.empty;
+        expect(doclet)
+          .to.have.property('examples')
+          .that.is.an('array').that.is.empty;
       });
-      it('should extract the constructor\'s args correctly', () => {
+      it("should extract the constructor's args correctly", () => {
         const doclet = doclets[0];
-        expect(doclet).to.have.property('args').that.is.an('array').with.lengthOf(2);
+        expect(doclet)
+          .to.have.property('args')
+          .that.is.an('array')
+          .with.lengthOf(2);
         const args = doclet.args;
         for (const arg of args) {
           expect(arg).to.include.keys('name', 'type', 'description');
@@ -100,23 +113,42 @@ describe('JSDoc Parser', () => {
       });
       it('should recognize the getX method', () => {
         const doclet = doclets[1];
-        expect(doclet).to.have.property('name').that.equals('getX');
-        expect(doclet).to.have.property('description').that.equals('Get the x value.');
-        expect(doclet).to.have.property('access').that.equals('public');
+        expect(doclet)
+          .to.have.property('name')
+          .that.equals('getX');
+        expect(doclet)
+          .to.have.property('description')
+          .that.equals('Get the x value.');
+        expect(doclet)
+          .to.have.property('access')
+          .that.equals('public');
         expect(doclet).to.have.property('static').that.is.false;
-        expect(doclet).to.have.property('returns').that.is.an('object').that.is.not.empty;
-        expect(doclet).to.have.property('examples').that.is.an('array').that.is.empty;
-        expect(doclet).to.have.property('args').that.is.an('array').that.is.empty;
+        expect(doclet)
+          .to.have.property('returns')
+          .that.is.an('object').that.is.not.empty;
+        expect(doclet)
+          .to.have.property('examples')
+          .that.is.an('array').that.is.empty;
+        expect(doclet)
+          .to.have.property('args')
+          .that.is.an('array').that.is.empty;
       });
       it('should recognize the getY method', () => {
         const doclet = doclets[2];
-        expect(doclet).to.have.property('name').that.equals('getY');
-        expect(doclet).to.have.property('description').that.equals('Get the y value.');
+        expect(doclet)
+          .to.have.property('name')
+          .that.equals('getY');
+        expect(doclet)
+          .to.have.property('description')
+          .that.equals('Get the y value.');
       });
       it('should recognize the fromString method as the last doclet', () => {
-        const doclet = doclets[doclets.length-1];
-        expect(doclet).to.have.property('name').that.equals('fromString');
-        expect(doclet).to.have.property('description')
+        const doclet = doclets[doclets.length - 1];
+        expect(doclet)
+          .to.have.property('name')
+          .that.equals('fromString');
+        expect(doclet)
+          .to.have.property('description')
           .that.equals('Convert a string containing two comma-separated numbers into a point.');
       });
     });
@@ -129,17 +161,32 @@ describe('JSDoc Parser', () => {
         doclets = parser(variableDeclaration);
       });
       it('should be an array of one Doclet', () => {
-        expect(doclets).to.be.an('array').and.to.have.lengthOf(1);
+        expect(doclets)
+          .to.be.an('array')
+          .and.to.have.lengthOf(1);
       });
       it('should parse the doc correctly', () => {
         const doclet = doclets[0];
-        expect(doclet).to.have.property('name').that.equals('add');
-        expect(doclet).to.have.property('description').that.equals('Adds two numbers.');
-        expect(doclet).to.have.property('access').that.equals('public');
+        expect(doclet)
+          .to.have.property('name')
+          .that.equals('add');
+        expect(doclet)
+          .to.have.property('description')
+          .that.equals('Adds two numbers.');
+        expect(doclet)
+          .to.have.property('access')
+          .that.equals('public');
         expect(doclet).to.have.property('static').that.is.false;
-        expect(doclet).to.have.property('returns').that.is.an('object').that.is.not.empty;
-        expect(doclet).to.have.property('examples').that.is.an('array').that.is.not.empty;
-        expect(doclet).to.have.property('args').that.is.an('array').that.have.lengthOf(2);
+        expect(doclet)
+          .to.have.property('returns')
+          .that.is.an('object').that.is.not.empty;
+        expect(doclet)
+          .to.have.property('examples')
+          .that.is.an('array').that.is.not.empty;
+        expect(doclet)
+          .to.have.property('args')
+          .that.is.an('array')
+          .that.have.lengthOf(2);
       });
     });
 
@@ -148,9 +195,13 @@ describe('JSDoc Parser', () => {
       before(() => {
         const file = path.join(__dirname, 'fixtures', 'variousParamTypes.js');
         const doclets = parser(fs.readFileSync(file).toString());
-        expect(doclets).to.be.an('array').and.to.have.lengthOf(1);
+        expect(doclets)
+          .to.be.an('array')
+          .and.to.have.lengthOf(1);
         const doclet = doclets[0];
-        expect(doclet).to.have.property('args').that.is.an('array').that.is.not.empty;
+        expect(doclet)
+          .to.have.property('args')
+          .that.is.an('array').that.is.not.empty;
         args = doclet.args;
       });
       it('should recognize "*" as "*"', () => {
@@ -191,16 +242,30 @@ describe('JSDoc Parser', () => {
       it('should parse the file with no errors', () => {
         const file = path.join(__dirname, 'fixtures', 'flowTypeFile.js');
         const doclets = parser(fs.readFileSync(file).toString());
-        expect(doclets).to.be.an('array').and.to.have.lengthOf(1);
+        expect(doclets)
+          .to.be.an('array')
+          .and.to.have.lengthOf(1);
         const doclet = doclets[0];
 
-        expect(doclet).to.have.property('name').that.equals('first');
-        expect(doclet).to.have.property('description').that.equals('returns the first element of an array reference.');
-        expect(doclet).to.have.property('access').that.equals('public');
+        expect(doclet)
+          .to.have.property('name')
+          .that.equals('first');
+        expect(doclet)
+          .to.have.property('description')
+          .that.equals('returns the first element of an array reference.');
+        expect(doclet)
+          .to.have.property('access')
+          .that.equals('public');
         expect(doclet).to.have.property('static').that.is.false;
-        expect(doclet).to.have.property('returns').that.is.an('object').that.is.not.empty;
-        expect(doclet).to.have.property('examples').that.is.an('array').that.is.not.empty;
-        expect(doclet).to.have.property('args').that.is.an('array').that.is.not.empty;
+        expect(doclet)
+          .to.have.property('returns')
+          .that.is.an('object').that.is.not.empty;
+        expect(doclet)
+          .to.have.property('examples')
+          .that.is.an('array').that.is.not.empty;
+        expect(doclet)
+          .to.have.property('args')
+          .that.is.an('array').that.is.not.empty;
       });
     });
 
@@ -209,7 +274,9 @@ describe('JSDoc Parser', () => {
       before(() => {
         const file = path.join(__dirname, 'fixtures', 'descriptionTag.js');
         doclets = parser(fs.readFileSync(file).toString());
-        expect(doclets).to.be.an('array').and.to.have.lengthOf(3);
+        expect(doclets)
+          .to.be.an('array')
+          .and.to.have.lengthOf(3);
       });
       it('should ignore an invalid description', () => {
         const doclet = doclets[0];
@@ -252,7 +319,10 @@ describe('JSDoc Parser', () => {
       });
       it('should parse the property tag correctly', () => {
         const doclet = doclets[0];
-        expect(doclet).to.have.property('properties').that.is.an('array').that.have.lengthOf(5);
+        expect(doclet)
+          .to.have.property('properties')
+          .that.is.an('array')
+          .that.have.lengthOf(5);
         expect(doclet.properties[0].name).to.equal('defaults');
         expect(doclet.properties[0].type).to.equal('object');
         expect(doclet.properties[0].description).to.equal('The default values for parties.');

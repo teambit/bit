@@ -44,13 +44,13 @@ export type ComponentProps = {
   dependencies?: ?BitIds,
   flattenedDependencies?: ?BitIds,
   packageDependencies?: ?Object,
-  files?: ?SourceFile[]|[],
-  docs?: ?Doclet[],
-  dists?: ?Dist[],
+  files?: ?(SourceFile[]) | [],
+  docs?: ?(Doclet[]),
+  dists?: ?(Dist[]),
   specsResults?: ?SpecsResults,
   license?: ?License,
-  log?: ?Log,
-}
+  log?: ?Log
+};
 
 export default class Component {
   name: string;
@@ -64,19 +64,21 @@ export default class Component {
   dependencies: Array<Object>;
   flattenedDependencies: BitIds;
   packageDependencies: Object;
-  _docs: ?Doclet[];
-  _files: ?SourceFile[]|[];
-  dists: ?Dist[];
-  specsResults: ?SpecsResults[];
+  _docs: ?(Doclet[]);
+  _files: ?(SourceFile[]) | [];
+  dists: ?(Dist[]);
+  specsResults: ?(SpecsResults[]);
   license: ?License;
   log: ?Log;
   writtenPath: ?string; // needed for generate links
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: Object;
 
-  set files(val: ?SourceFile[]) { this._files = val; }
+  set files(val: ?(SourceFile[])) {
+    this._files = val;
+  }
 
-  get files(): ?SourceFile[] {
+  get files(): ?(SourceFile[]) {
     if (!this._files) return null;
     if (this._files instanceof Array) return this._files;
 
@@ -98,35 +100,38 @@ export default class Component {
       scope: this.scope,
       box: this.box,
       name: this.name,
-      version: this.version ? this.version.toString() : null,
+      version: this.version ? this.version.toString() : null
     });
   }
 
-  get docs(): ?Doclet[] {
-    if (!this._docs) this._docs = this.files ?
-      R.flatten(this.files.map(file => docsParser(file.contents.toString(), file.relative))) : [];
+  get docs(): ?(Doclet[]) {
+    if (!this._docs) {
+      this._docs = this.files
+        ? R.flatten(this.files.map(file => docsParser(file.contents.toString(), file.relative)))
+        : [];
+    }
     return this._docs;
   }
 
   constructor({
-                name,
-                box,
-                version,
-                scope,
-                lang,
-                mainFile,
-                compilerId,
-                testerId,
-                dependencies,
-                flattenedDependencies,
-                packageDependencies,
-                files,
-                docs,
-                dists,
-                specsResults,
-                license,
-                log,
-              }: ComponentProps) {
+    name,
+    box,
+    version,
+    scope,
+    lang,
+    mainFile,
+    compilerId,
+    testerId,
+    dependencies,
+    flattenedDependencies,
+    packageDependencies,
+    files,
+    docs,
+    dists,
+    specsResults,
+    license,
+    log
+  }: ComponentProps) {
     this.name = name;
     this.box = box || DEFAULT_BOX_NAME;
     this.version = version;
@@ -162,7 +167,7 @@ export default class Component {
     return BitIds.fromObject(dependencies).map(dependency => ({ id: dependency }));
   }
 
-  writeBitJson(bitDir: string, force?:boolean = true): Promise<Component> {
+  writeBitJson(bitDir: string, force?: boolean = true): Promise<Component> {
     return new BitJson({
       version: this.version,
       scope: this.scope,
@@ -182,9 +187,20 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDependencies);
   }
 
-  async buildIfNeeded({ condition, files, compiler, consumer, componentMap, scope, verbose, directory, keep, ciComponent }: {
+  async buildIfNeeded({
+    condition,
+    files,
+    compiler,
+    consumer,
+    componentMap,
+    scope,
+    verbose,
+    directory,
+    keep,
+    ciComponent
+  }: {
     condition?: ?boolean,
-    files:File[],
+    files: File[],
     compiler: any,
     consumer?: Consumer,
     componentMap?: ComponentMap,
@@ -194,7 +210,9 @@ export default class Component {
     keep: ?boolean,
     ciComponent: any
   }): Promise<?{ code: string, mappings?: string }> {
-    if (!condition) { return Promise.resolve({ code: '' }); }
+    if (!condition) {
+      return Promise.resolve({ code: '' });
+    }
 
     const runBuild = (componentRoot: string): Promise<any> => {
       const metaData = {
@@ -212,7 +230,9 @@ export default class Component {
       // the compiler have one of the following (build/compile)
       let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
       if (componentMap) {
-        if (componentMap.rootDir) rootDistFolder = path.join(consumer.getPath(), componentMap.rootDir, DEFAULT_DIST_DIRNAME);
+        if (componentMap.rootDir) {
+          rootDistFolder = path.join(consumer.getPath(), componentMap.rootDir, DEFAULT_DIST_DIRNAME);
+        }
         if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
           rootDistFolder = path.join(consumer.getPath(), consumer.bitJson.distTarget);
         }
@@ -222,7 +242,9 @@ export default class Component {
     };
 
     if (!compiler.build && !compiler.compile) {
-      return Promise.reject(`"${this.compilerId.toString()}" does not have a valid compiler interface, it has to expose a build method`);
+      return Promise.reject(
+        `"${this.compilerId.toString()}" does not have a valid compiler interface, it has to expose a build method`
+      );
     }
 
     if (consumer) return runBuild(consumer.getPath());
@@ -272,9 +294,23 @@ export default class Component {
    * It's better to init the files with the correct base, cwd and path than pass it here
    * It's mainly here for cases when we write from the model so this is the first point we actually have the dir
    */
-  async write({ bitDir, withBitJson = true, force = true, bitMap, origin, parent, consumerPath }: { bitDir?: string,
-    withBitJson?: boolean, force?: boolean, bitMap?: BitMap, origin?: string, parent?: BitId, consumerPath?: string }):
-  Promise<Component> {
+  async write({
+    bitDir,
+    withBitJson = true,
+    force = true,
+    bitMap,
+    origin,
+    parent,
+    consumerPath
+  }: {
+    bitDir?: string,
+    withBitJson?: boolean,
+    force?: boolean,
+    bitMap?: BitMap,
+    origin?: string,
+    parent?: BitId,
+    consumerPath?: string
+  }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     // Take the bitdir from the files (it will be the same for all the files of course)
     const calculatedBitDir = bitDir || this.files[0].base;
@@ -336,7 +372,17 @@ export default class Component {
     return this;
   }
 
-  async runSpecs({ scope, rejectOnFailure, consumer, environment, save, verbose, isolated, directory, keep }: {
+  async runSpecs({
+    scope,
+    rejectOnFailure,
+    consumer,
+    environment,
+    save,
+    verbose,
+    isolated,
+    directory,
+    keep
+  }: {
     scope: Scope,
     rejectOnFailure?: boolean,
     consumer?: Consumer,
@@ -391,12 +437,12 @@ export default class Component {
               testerFilePath,
               testerId: this.testerId,
               mainFile,
-              testFilePath: testFile.path,
+              testFilePath: testFile.path
             });
           });
           const specsResults = await Promise.all(specsResultsP);
           this.specsResults = specsResults.map(specRes => SpecsResults.createFromRaw(specRes));
-          if (rejectOnFailure && !this.specsResults.every(element => (element.pass))) {
+          if (rejectOnFailure && !this.specsResults.every(element => element.pass)) {
             return Promise.reject(new ComponentSpecsFailed());
           }
 
@@ -418,8 +464,7 @@ export default class Component {
       if (!isolated && consumer) {
         logger.debug('Building the component before running the tests');
         await this.build({ scope, environment, verbose, consumer });
-        const saveDists = this.dists ?
-          this.dists.map(dist => dist.write()) : [Promise.resolve()];
+        const saveDists = this.dists ? this.dists.map(dist => dist.write()) : [Promise.resolve()];
 
         await Promise.all(saveDists);
 
@@ -439,7 +484,8 @@ export default class Component {
           const specDistWrite = component.dists.map(file => file.write());
           await Promise.all(specDistWrite);
         }
-        const testFilesList = component.dists ? component.dists.filter(dist => dist.test)
+        const testFilesList = component.dists
+          ? component.dists.filter(dist => dist.test)
           : component.files.filter(file => file.test);
         const results = await run(component.mainFile, testFilesList);
         if (!keep) await isolatedEnvironment.destroy();
@@ -453,9 +499,28 @@ export default class Component {
     }
   }
 
-  async build({ scope, environment, save, consumer, bitMap, verbose, directory, keep, ciComponent }:
-          { scope: Scope, environment?: bool, save?: bool, consumer?: Consumer, bitMap?: BitMap, verbose?: bool, directory: ?string, keep:?boolean, ciComponent: any }):
-  Promise<string> { // @TODO - write SourceMap Type
+  async build({
+    scope,
+    environment,
+    save,
+    consumer,
+    bitMap,
+    verbose,
+    directory,
+    keep,
+    ciComponent
+  }: {
+    scope: Scope,
+    environment?: boolean,
+    save?: boolean,
+    consumer?: Consumer,
+    bitMap?: BitMap,
+    verbose?: boolean,
+    directory: ?string,
+    keep: ?boolean,
+    ciComponent: any
+  }): Promise<string> {
+    // @TODO - write SourceMap Type
     if (!this.compilerId) return Promise.resolve(null);
     logger.debug('consumer-component.build, compilerId found, start building');
 
@@ -480,7 +545,7 @@ export default class Component {
         return scope.installEnvironment({
           ids: [this.compilerId],
           consumer,
-          verbose,
+          verbose
         });
       }
 
@@ -517,7 +582,7 @@ export default class Component {
       await scope.sources.updateDist({ source: this });
     }
 
-    return (this.dists);
+    return this.dists;
   }
 
   toObject(): Object {
@@ -530,7 +595,7 @@ export default class Component {
       lang: this.lang,
       compilerId: this.compilerId ? this.compilerId.toString() : null,
       testerId: this.testerId ? this.testerId.toString() : null,
-      dependencies: this.dependencies.map(dep => Object.assign({}, dep, { id: dep.id.toString() })), //this._dependenciesAsWritableObject(),
+      dependencies: this.dependencies.map(dep => Object.assign({}, dep, { id: dep.id.toString() })), // this._dependenciesAsWritableObject(),
       packageDependencies: this.packageDependencies,
       files: this.files,
       docs: this.docs,
@@ -579,7 +644,7 @@ export default class Component {
       lang,
       compilerId: compilerId ? BitId.parse(compilerId) : null,
       testerId: testerId ? BitId.parse(testerId) : null,
-      dependencies: dependencies.map(dep => Object.assign({}, dep, { id: BitId.parse(dep.id) })), //this._dependenciesFromWritableObject(dependencies),
+      dependencies: dependencies.map(dep => Object.assign({}, dep, { id: BitId.parse(dep.id) })), // this._dependenciesFromWritableObject(dependencies),
       packageDependencies,
       mainFile,
       files,
@@ -597,9 +662,21 @@ export default class Component {
     return this.fromObject(object);
   }
 
-  static loadFromFileSystem({ bitDir, consumerBitJson, componentMap, id, consumerPath, bitMap }: { bitDir: string,
-    consumerBitJson: ConsumerBitJson, componentMap: ComponentMap, id: BitId, consumerPath: string, bitMap: BitMap }):
-  Component {
+  static loadFromFileSystem({
+    bitDir,
+    consumerBitJson,
+    componentMap,
+    id,
+    consumerPath,
+    bitMap
+  }: {
+    bitDir: string,
+    consumerBitJson: ConsumerBitJson,
+    componentMap: ComponentMap,
+    id: BitId,
+    consumerPath: string,
+    bitMap: BitMap
+  }): Component {
     let packageDependencies;
     let bitJson = consumerBitJson;
     const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
@@ -608,8 +685,9 @@ export default class Component {
       files.forEach((file, key) => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
-          const sourceFile = SourceFile
-            .load(filePath, consumerBitJson.distTarget, bitDir, consumerPath, { test: file.test });
+          const sourceFile = SourceFile.load(filePath, consumerBitJson.distTarget, bitDir, consumerPath, {
+            test: file.test
+          });
           sourceFiles.push(sourceFile);
         } catch (err) {
           if (!(err instanceof FileSourceNotFound)) throw err;
@@ -618,7 +696,9 @@ export default class Component {
         }
       });
       if (filesKeysToDelete.length && !sourceFiles.length) {
-        throw new Error(`invalid component ${id}, all files were deleted, please remove the component using bit remove command`);
+        throw new Error(
+          `invalid component ${id}, all files were deleted, please remove the component using bit remove command`
+        );
       }
       if (filesKeysToDelete.length) {
         filesKeysToDelete.forEach(key => files.splice(key, 1));
@@ -654,13 +734,25 @@ export default class Component {
     });
   }
 
-  static create({ scopeName, name, box, withSpecs, files, consumerBitJson, bitPath, consumerPath }:{
-    consumerBitJson: ConsumerBitJson,
-    name: string,
-    box: string,
-    scopeName?: ?string,
-    withSpecs?: ?boolean,
-  }, scope: Scope): Component {
+  static create(
+    {
+      scopeName,
+      name,
+      box,
+      withSpecs,
+      files,
+      consumerBitJson,
+      bitPath,
+      consumerPath
+    }: {
+      consumerBitJson: ConsumerBitJson,
+      name: string,
+      box: string,
+      scopeName?: ?string,
+      withSpecs?: ?boolean
+    },
+    scope: Scope
+  ): Component {
     const specsFile = consumerBitJson.getSpecBasename();
     const compilerId = BitId.parse(consumerBitJson.compilerId);
     const testerId = BitId.parse(consumerBitJson.testerId);
@@ -683,7 +775,7 @@ export default class Component {
       files: [implVinylFile],
       compilerId,
       testerId,
-      specs: withSpecs ? Specs.create(name, testerId, scope) : undefined,
+      specs: withSpecs ? Specs.create(name, testerId, scope) : undefined
     });
   }
 }

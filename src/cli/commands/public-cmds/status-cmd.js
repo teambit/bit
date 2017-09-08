@@ -6,7 +6,6 @@ import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import missingDepsTemplate from '../../templates/missing-dependencies-template';
 
-
 export default class Status extends Command {
   name = 'status';
   description = 'show the working area component(s) status.';
@@ -25,11 +24,16 @@ export default class Status extends Command {
         return chalk.yellow(`\n       ${label}: `) + chalk.white(array.join(', '));
       }
 
-      return '       '  +
-        formatMissingStr(missingComponent.missingDependencies.untrackedDependencies, 'untracked file dependencies') +
-        formatMissingStr(missingComponent.missingDependencies.missingPackagesDependenciesOnFs, 'missing packages dependencies') +
-        formatMissingStr(missingComponent.missingDependencies.missingDependenciesOnFs, 'non-existing dependency files') + 
-        '\n';
+      return `       ${formatMissingStr(
+        missingComponent.missingDependencies.untrackedDependencies,
+        'untracked file dependencies'
+      )}${formatMissingStr(
+        missingComponent.missingDependencies.missingPackagesDependenciesOnFs,
+        'missing packages dependencies'
+      )}${formatMissingStr(
+        missingComponent.missingDependencies.missingDependenciesOnFs,
+        'non-existing dependency files'
+      )}\n`;
     }
 
     function format(component) {
@@ -39,9 +43,9 @@ export default class Status extends Command {
       });
 
       // @TODO component must not be a string
-      if (isString(component)) return formatBitString(component) + '... ' + chalk.green('ok');
-      if (!missing) return formatNewBit(component) + '... ' + chalk.green('ok');
-      return formatNewBit(component) + '... ' + chalk.red('missing dependencies') + formatMissing(missing);
+      if (isString(component)) return `${formatBitString(component)}... ${chalk.green('ok')}`;
+      if (!missing) return `${formatNewBit(component)}... ${chalk.green('ok')}`;
+      return `${formatNewBit(component)}... ${chalk.red('missing dependencies')}${formatMissing(missing)}`;
     }
 
     const newComponentsOutput = immutableUnshift(
@@ -63,7 +67,7 @@ export default class Status extends Command {
     ).join('\n');
 
     return [newComponentsOutput, modifiedComponentOutput, stagedComponentsOutput].join(
-      chalk.underline('\n                         \n')
-    + chalk.white('\n'));
+      chalk.underline('\n                         \n') + chalk.white('\n')
+    );
   }
 }

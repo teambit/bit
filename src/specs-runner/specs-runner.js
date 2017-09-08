@@ -6,12 +6,17 @@ import Scope from '../scope/scope';
 import { Results } from '../consumer/specs-results';
 
 export type Tester = {
-  run: (filePath: string) => Promise<Results>;
-  globals: Object;
-  modules: Object;
-}
+  run: (filePath: string) => Promise<Results>,
+  globals: Object,
+  modules: Object
+};
 
-function run({ testerFilePath, testerId, mainFile, testFilePath }: {
+function run({
+  testerFilePath,
+  testerId,
+  mainFile,
+  testFilePath
+}: {
   scope: Scope,
   testerFilePath: string,
   testerId: Object,
@@ -24,7 +29,9 @@ function run({ testerFilePath, testerId, mainFile, testFilePath }: {
       const execArgv = process.execArgv.map(arg => arg.split('='));
       const execArgvObj = R.fromPairs(execArgv);
       if (execArgvObj[debugPortArgName]) return parseInt(execArgvObj[debugPortArgName]);
-    } catch (e) { return null; }
+    } catch (e) {
+      return null;
+    }
 
     return null;
   }
@@ -60,5 +67,5 @@ function run({ testerFilePath, testerId, mainFile, testFilePath }: {
 }
 
 export default {
-  run,
+  run
 };

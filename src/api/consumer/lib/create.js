@@ -13,21 +13,24 @@ export default async function create(
   withSpecs: boolean = false,
   withBitJson: boolean = false,
   force: boolean = false
-  ): Promise<Component> {
+): Promise<Component> {
   const consumer = await loadConsumer();
   const id = BitId.parse(idRaw);
   const bitPath = consumer.composeRelativeBitPath(id);
   const defaultImpl = consumer.bitJson.getImplBasename();
   const files = { [defaultImpl]: defaultImpl };
-  const component = Component.create({
-    name: id.name,
-    box: id.box,
-    withSpecs,
-    files,
-    consumerBitJson: consumer.bitJson,
-    bitPath,
-    consumerPath: consumer.getPath()
-  }, consumer.scope);
+  const component = Component.create(
+    {
+      name: id.name,
+      box: id.box,
+      withSpecs,
+      files,
+      consumerBitJson: consumer.bitJson,
+      bitPath,
+      consumerPath: consumer.getPath()
+    },
+    consumer.scope
+  );
   const bitMap = await BitMap.load(consumer.getPath());
   await component.write({ withBitJson, force, bitMap, origin: COMPONENT_ORIGINS.AUTHORED });
   await bitMap.write();

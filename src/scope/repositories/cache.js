@@ -8,7 +8,5 @@ export default class Cache extends Repository {
     return path.join(super.getPath(), BIT_CACHE_DIRNAME);
   }
 
-  set(name: string, buffer: Buffer) {
-
-  }
+  set(name: string, buffer: Buffer) {}
 }

@@ -50,16 +50,12 @@ export function remove(name: string, global: boolean) {
 
 export function list(global: boolean) {
   if (global) {
-    return GlobalRemotes.load()
-      .then(globalRemotes => globalRemotes.toPlainObject());
+    return GlobalRemotes.load().then(globalRemotes => globalRemotes.toPlainObject());
   }
 
   return loadScope().then((scope) => {
-    return scope.remotes()
-      .then(remotes => remotes.toPlainObject());
+    return scope.remotes().then(remotes => remotes.toPlainObject());
   });
 }
 
-export function refresh() {
-
-}
+export function refresh() {}

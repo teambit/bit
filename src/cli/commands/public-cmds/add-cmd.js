@@ -14,19 +14,28 @@ export default class Add extends Command {
     ['t', 'tests <file...>', 'spec/test file name or dsl (tests/{PARENT_FOLDER}/{FILE_NAME})'],
     ['n', 'namespace <namespace>', 'component namespace'],
     ['e', 'exclude <file...>', 'exclude file name'],
-    ['o', 'override <boolean>', 'override existing component if exists (default = false)'],
-
+    ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ];
   loader = true;
 
-  action([paths]: [string[]], { id, main, tests, namespace, exclude, override }: {
-    id: ?string,
-    main: ?string,
-    tests: ?string[],
-    namespace:?string,
-    exclude:?string,
-    override:?boolean
-  }): Promise<*> {
+  action(
+    [paths]: [string[]],
+    {
+      id,
+      main,
+      tests,
+      namespace,
+      exclude,
+      override
+    }: {
+      id: ?string,
+      main: ?string,
+      tests: ?(string[]),
+      namespace: ?string,
+      exclude: ?string,
+      override: ?boolean
+    }
+  ): Promise<*> {
     if (namespace && id) {
       return Promise.reject('You can use either [id] or [namespace] to add a particular component');
     }
@@ -34,7 +43,15 @@ export default class Add extends Command {
     const normalizedPathes = paths.map(p => path.normalize(p));
     const testsArray = tests ? this.splitList(tests).map(filePath => path.normalize(filePath.trim())) : [];
     const exludedFiles = exclude ? this.splitList(exclude).map(filePath => path.normalize(filePath.trim())) : undefined;
-    return add(normalizedPathes, id, main ? path.normalize(main) : undefined, namespace, testsArray, exludedFiles, override || false);
+    return add(
+      normalizedPathes,
+      id,
+      main ? path.normalize(main) : undefined,
+      namespace,
+      testsArray,
+      exludedFiles,
+      override || false
+    );
   }
 
   report(results: Array<{ id: string, files: string[] }>): string {
@@ -42,13 +59,15 @@ export default class Add extends Command {
       return chalk.green(`tracking ${results.length} new components`);
     }
 
-    return results.map((result) => {
-      if (result.files.length === 0) {
-        return chalk.underline.red(`could not track component ${chalk.bold(result.id)}: no files to track`);
-      }
-      const title = chalk.underline(`tracking component ${chalk.bold(result.id)}:\n`);
-      const files = result.files.map(file => chalk.green(`added ${file.relativePath}`));
-      return title + files.join('\n');
-    }).join('\n\n');
+    return results
+      .map((result) => {
+        if (result.files.length === 0) {
+          return chalk.underline.red(`could not track component ${chalk.bold(result.id)}: no files to track`);
+        }
+        const title = chalk.underline(`tracking component ${chalk.bold(result.id)}:\n`);
+        const files = result.files.map(file => chalk.green(`added ${file.relativePath}`));
+        return title + files.join('\n');
+      })
+      .join('\n\n');
   }
 }

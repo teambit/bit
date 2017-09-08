@@ -12,15 +12,15 @@ export type ScopeJsonProps = {
   name: string,
   resolverPath?: string,
   license?: string,
-  groupName: ?string;
-  remotes?: { name: string, url: string };
+  groupName: ?string,
+  remotes?: { name: string, url: string }
 };
 
 export class ScopeJson {
   _name: string;
   resolverPath: ?string;
   license: ?string;
-  remotes: {[string]: string};
+  remotes: { [string]: string };
   groupName: string;
 
   constructor({ name, remotes, resolverPath, license, groupName }: ScopeJsonProps) {
@@ -33,11 +33,13 @@ export class ScopeJson {
 
   set name(suggestedName: string) {
     suggestedName = suggestedName.toLowerCase();
-    const cleanName = suggestedName.split('')
+    const cleanName = suggestedName
+      .split('')
       .map((char) => {
         if (/^[$\-_!.a-z0-9]+$/.test(char)) return char;
         return '';
-      }).join('');
+      })
+      .join('');
 
     if (!cleanName) {
       throw new Error('scope name created by directory name have to contains at least one character or number');

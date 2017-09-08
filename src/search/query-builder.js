@@ -11,13 +11,13 @@ const boost = {
   functionNames: 2,
   tokenizedFunctionNames: 2,
   minDescription: 1,
-  stemmedMinDescription: 0.5,
+  stemmedMinDescription: 0.5
 };
 
 function queryItem(field, queryStr): Object {
   return {
     AND: { [field]: queryStr.toLowerCase().split(' ') },
-    BOOST: boost[field],
+    BOOST: boost[field]
   };
 }
 

@@ -1,56 +1,56 @@
 /** @flow */
 type ErrorObj = {
   message: string,
-  stack: string,
-}
+  stack: string
+};
 
 type Test = {
   title: string,
-  pass: bool,
+  pass: boolean,
   err: ?ErrorObj,
   duration: number
-}
+};
 type Failure = {
   title: string,
   err: ?ErrorObj,
   duration: number
-}
+};
 
 type Stats = {
   start: string,
   end: string,
   duration: number
-}
+};
 
 export type Results = {
   tests: Test[],
   stats: Stats,
-  pass: bool
-}
+  pass: boolean
+};
 
 type TestProps = {
   title: string,
-  pass: bool,
+  pass: boolean,
   err: ?ErrorObj,
-  duration: number|string
-}
+  duration: number | string
+};
 
 type StatsProps = {
   start: string,
   end: string,
-  duration: ?number|string
-}
+  duration: ?number | string
+};
 
 export type ResultsProps = {
   tests: TestProps[],
   stats: StatsProps,
-  pass: ?bool
-}
+  pass: ?boolean
+};
 
 export default class SpecsResults {
   tests: Test[];
   stats: Stats;
-  pass: bool;
+  pass: boolean;
   failures: Failure[];
   specFile: string;
 
@@ -81,14 +81,12 @@ export default class SpecsResults {
     const pass = rawResults.pass || (rawResults.tests.every(test => test.pass) && !hasFailures);
     let failures;
 
-    const calcDuration = (endDateString, startDateString) =>
-    new Date(endDateString) - new Date(startDateString);
+    const calcDuration = (endDateString, startDateString) => new Date(endDateString) - new Date(startDateString);
 
     const stats = {
       start: rawResults.stats.start,
       end: rawResults.stats.end,
-      duration: parseInt(rawResults.stats.duration) ||
-      calcDuration(rawResults.stats.end, rawResults.stats.start)
+      duration: parseInt(rawResults.stats.duration) || calcDuration(rawResults.stats.end, rawResults.stats.start)
     };
 
     const tests = rawResults.tests.map((result) => {

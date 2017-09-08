@@ -21,11 +21,21 @@ export type Doc = {
   stemmedMinDescription: string
 };
 
-const stem = (sentence: string): string => sentence.split(' ').map(stemmer).join(' ');
+const stem = (sentence: string): string =>
+  sentence
+    .split(' ')
+    .map(stemmer)
+    .join(' ');
 let localIndex;
 
 function tokenizeStr(str: string): string {
-  return str.trim().split(/(?=[A-Z])/).join(' ').toLowerCase().split(/ |_|-/).join(' ');
+  return str
+    .trim()
+    .split(/(?=[A-Z])/)
+    .join(' ')
+    .toLowerCase()
+    .split(/ |_|-/)
+    .join(' ');
 }
 
 /**
@@ -95,7 +105,7 @@ function addToLocalIndex(component: Component): Promise<Component> {
 }
 
 function index(component: Component, scopePath: string): Promise<Component> {
-  //if (isWin) return Promise.resolve(component);
+  // if (isWin) return Promise.resolve(component);
   try {
     localIndex = serverlessIndex.initializeIndex(scopePath);
     return addToLocalIndex(component);

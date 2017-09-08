@@ -24,11 +24,10 @@ describe('ListScope', () => {
       const result = listScope({ scopeName: 'non-exists-scope' });
       expect(result).to.be.a('Promise');
 
-      return result
-        .then(() => {
-          expect(resolveStub.getCall(0).args[0]).to.equal('non-exists-scope');
-          expect(listSpy.called).to.be.true;
-        });
+      return result.then(() => {
+        expect(resolveStub.getCall(0).args[0]).to.equal('non-exists-scope');
+        expect(listSpy.called).to.be.true;
+      });
     }).timeout(5000);
   });
 });

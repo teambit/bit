@@ -16,24 +16,22 @@ export function hasExisting(bitPath: string): boolean {
 }
 
 export type BitJsonProps = {
-  impl?: string;
-  spec?: string;
-  lang?: string;
-  compiler?: string;
-  tester?: string;
-  dependencies?: Object;
-  packageDependencies?: Object;
+  impl?: string,
+  spec?: string,
+  lang?: string,
+  compiler?: string,
+  tester?: string,
+  dependencies?: Object,
+  packageDependencies?: Object
 };
 
 /**
  * Component's bit.json
  */
 export default class BitJson extends AbstractBitJson {
-  packageDependencies: {[string]: string};
+  packageDependencies: { [string]: string };
 
-  constructor({
-    impl, spec, compiler, tester, dependencies, packageDependencies, lang,
-  }: BitJsonProps) {
+  constructor({ impl, spec, compiler, tester, dependencies, packageDependencies, lang }: BitJsonProps) {
     super({ impl, spec, compiler, tester, dependencies, lang });
     this.packageDependencies = packageDependencies || {};
   }
@@ -65,11 +63,7 @@ export default class BitJson extends AbstractBitJson {
         return resolve(res);
       };
 
-      fs.writeFile(
-        composePath(bitDir),
-        this.toJson(),
-        repspond
-      );
+      fs.writeFile(composePath(bitDir), this.toJson(), repspond);
     });
   }
 
@@ -80,12 +74,14 @@ export default class BitJson extends AbstractBitJson {
       typeof this.testerId !== 'string' ||
       (this.lang && typeof this.testerId !== 'string') ||
       (this.getDependencies() && typeof this.getDependencies() !== 'object')
-    ) throw new InvalidBitJson(bitJsonPath);
+    ) {
+      throw new InvalidBitJson(bitJsonPath);
+    }
   }
 
   static fromPlainObject(object: Object): BitJson {
     const { sources = {}, env, dependencies, packageDependencies, lang } = object;
-    
+
     return new BitJson({
       impl: R.prop('impl', sources),
       spec: R.prop('spec', sources),
@@ -93,7 +89,7 @@ export default class BitJson extends AbstractBitJson {
       tester: R.prop('tester', env),
       dependencies,
       lang,
-      packageDependencies,
+      packageDependencies
     });
   }
 
@@ -101,9 +97,7 @@ export default class BitJson extends AbstractBitJson {
     const plainProtoBJ = protoBJ ? protoBJ.toPlainObject() : {};
     delete plainProtoBJ.dependencies;
 
-    return BitJson.fromPlainObject(
-      R.merge(plainProtoBJ, json)
-    );
+    return BitJson.fromPlainObject(R.merge(plainProtoBJ, json));
   }
 
   static create(json = {}, protoBJ: ConsumerBitJson) {
@@ -112,7 +106,7 @@ export default class BitJson extends AbstractBitJson {
 
   static load(dirPath?: string, protoBJ?: ConsumerBitJson): Promise<BitJson> {
     return new Promise((resolve, reject) => {
-      try{
+      try {
         const result = this.loadSync(dirPath, protoBJ);
         return resolve(result);
       } catch (e) {

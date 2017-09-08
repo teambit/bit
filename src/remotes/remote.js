@@ -42,27 +42,19 @@ export default class Remote {
   }
 
   list(): Promise<[]> {
-    return this
-      .connect()
-      .then(network => network.list());
+    return this.connect().then(network => network.list());
   }
 
   search(query: string, reindex: boolean): Promise<any> {
-    return this
-      .connect()
-      .then(network => network.search(query, reindex));
+    return this.connect().then(network => network.search(query, reindex));
   }
 
   show(bitId: BitId): Promise<> {
-    return this
-      .connect()
-      .then(network => network.show(bitId));
+    return this.connect().then(network => network.show(bitId));
   }
 
   fetch(bitIds: BitId[], withoutDeps: boolean): Promise<ComponentObjects[]> {
-    return this
-      .connect()
-      .then(network => network.fetch(bitIds, withoutDeps));
+    return this.connect().then(network => network.fetch(bitIds, withoutDeps));
   }
 
   validate() {
@@ -70,13 +62,11 @@ export default class Remote {
   }
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
-    return connect(this.host)
-    .then(network => network.push(componentObjects));
+    return connect(this.host).then(network => network.push(componentObjects));
   }
 
   pushMany(components: ComponentObjects[]): Promise<ComponentObjects[]> {
-    return connect(this.host)
-      .then(network => network.pushMany(components));
+    return connect(this.host).then(network => network.pushMany(components));
   }
 
   static load(name: string, host: string): Remote {

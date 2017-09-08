@@ -12,7 +12,7 @@ import forEach from './object/foreach';
  *  clean({ foo: null, bar: 'foo' }) // => { bar: 'foo' }
  * ```
  */
-export default function clean(obj: {[any]: any}) {
+export default function clean(obj: { [any]: any }) {
   const newObj = {};
 
   forEach(obj, (val, key) => {

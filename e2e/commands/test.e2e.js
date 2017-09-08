@@ -89,7 +89,9 @@ describe('bit test command', function () {
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.createComponent('utils', 'is-type.spec.js', isTypeSpecFixture(true));
       helper.createComponent('utils', 'is-type-before-fail.spec.js', isTypeBeforeFailSpecFixture);
-      helper.addComponentWithOptions('utils/is-type.js', { t: 'utils/is-type.spec.js,utils/is-type-before-fail.spec.js' });
+      helper.addComponentWithOptions('utils/is-type.js', {
+        t: 'utils/is-type.spec.js,utils/is-type-before-fail.spec.js'
+      });
       output = helper.testComponent('utils/is-type');
       outputLines = output.split('\n');
     });

@@ -10,25 +10,25 @@ export default class Show extends Command {
   alias = '';
   opts = [];
 
-  action([id, ]: [string]): Promise<*> {
-    return getComponentLogs(id)
-    .then(logs =>
-      R.reverse(R.values(logs))
-      .map(R.evolve(
-        {
+  action([id]: [string]): Promise<*> {
+    return getComponentLogs(id).then(logs =>
+      R.reverse(R.values(logs)).map(
+        R.evolve({
           date: n => new Date(parseInt(n)).toLocaleString()
-        }
-      ))
+        })
+      )
     );
   }
 
-  report(logs: Array<{
-    message: string,
-    hash: string,
-    date: string,
-    username: ?string,
-    email: ?string
-  }>): string {
+  report(
+    logs: Array<{
+      message: string,
+      hash: string,
+      date: string,
+      username: ?string,
+      email: ?string
+    }>
+  ): string {
     return logs.map(paintLog).join('\n');
   }
 }

@@ -99,7 +99,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: string)
   doclets.push(doclet);
 }
 
-export default function parse(data: string, filePath: string): Doclet|[] {
+export default function parse(data: string, filePath: string): Doclet | [] {
   const doclets: Array<Doclet> = [];
   try {
     const jsdocRegex = /[ \t]*\/\*\*\s*\n([^*]*(\*[^/])?)*\*\//g;

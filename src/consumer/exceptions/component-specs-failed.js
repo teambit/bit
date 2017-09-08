@@ -1,3 +1,2 @@
 /** @flow */
-export default class ComponentSpecsFailed extends Error {
-}
+export default class ComponentSpecsFailed extends Error {}

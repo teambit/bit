@@ -5,9 +5,9 @@ import { writeFile, readFile } from '../utils';
 import { Remotes, Remote } from '../remotes';
 
 export default class GlobalRemotes {
-  remotes: {[string]: string};
+  remotes: { [string]: string };
 
-  constructor(remotes: {[string]: string}) {
+  constructor(remotes: { [string]: string }) {
     this.remotes = remotes;
   }
 
@@ -44,8 +44,7 @@ export default class GlobalRemotes {
       .catch((err) => {
         if (err.code !== 'ENOENT') return err;
         const globalRemotes = new GlobalRemotes({});
-        return globalRemotes.write()
-          .then(() => globalRemotes);
+        return globalRemotes.write().then(() => globalRemotes);
       });
   }
 }

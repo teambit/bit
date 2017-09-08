@@ -5,7 +5,6 @@ import Source from './source';
 import { LICENSE_FILENAME } from '../../../constants';
 
 export default class License extends Source {
-
   write(bitPath: string, force?: boolean = true): Promise<any> {
     const filePath = path.join(bitPath, LICENSE_FILENAME);
     if (!force && fs.existsSync(filePath)) return Promise.resolve();
@@ -24,5 +23,4 @@ export default class License extends Source {
   static deserialize(str: string) {
     return new License(str);
   }
-
 }

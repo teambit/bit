@@ -39,8 +39,6 @@ const numOfResultsPerPage = 15;
 //   });
 // }
 
-
-
 /**
  * Sort by the score. If the score is equal, sort by the length of the name.
  * @param {Array<any>} results
@@ -53,8 +51,9 @@ function sortSearchResults(results: Array<any>): Array<any> {
   });
 }
 
-function formatter(doc: Doc|*): string {
-  if (doc.owner && typeof doc.owner === 'string' && typeof doc.scope === 'string') { // from web search
+function formatter(doc: Doc | *): string {
+  if (doc.owner && typeof doc.owner === 'string' && typeof doc.scope === 'string') {
+    // from web search
     return `> ${doc.owner}.${doc.scope}/${doc.box}/${doc.name}`;
   }
   return `> ${doc.box}/${doc.name}`;
@@ -73,15 +72,18 @@ function search(queryStr: string, path: string): Promise<Doc[]> {
     const searchResults = [];
     const query = buildQuery(queryStr);
     return index.then((indexInstance) => {
-      indexInstance.search({
-        query,
-        pageSize: numOfResultsPerPage
-      }).on('data', function (data) {
-        searchResults.push(data);
-      }).on('end', function () {
-        const searchResultsSorted = sortSearchResults(searchResults);
-        return resolve(searchResultsSorted.map(result => result.document));
-      });
+      indexInstance
+        .search({
+          query,
+          pageSize: numOfResultsPerPage
+        })
+        .on('data', function (data) {
+          searchResults.push(data);
+        })
+        .on('end', function () {
+          const searchResultsSorted = sortSearchResults(searchResults);
+          return resolve(searchResultsSorted.map(result => result.document));
+        });
     });
   });
 }

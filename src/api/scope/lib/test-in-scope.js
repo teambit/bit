@@ -5,8 +5,23 @@ import { loadScope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import logger from '../../../logger/logger';
 
-export default function testInScope({ id, environment, save, verbose, scopePath, directory, keep }: {
-  id: string, environment?: ?bool, save?: ?bool, verbose?: ?bool, scopePath: string, directory?: string, keep?: boolean }) {
+export default function testInScope({
+  id,
+  environment,
+  save,
+  verbose,
+  scopePath,
+  directory,
+  keep
+}: {
+  id: string,
+  environment?: ?boolean,
+  save?: ?boolean,
+  verbose?: ?boolean,
+  scopePath: string,
+  directory?: string,
+  keep?: boolean
+}) {
   logger.debug(`testInScope, id: ${id}, scopePath: ${scopePath}`);
   function loadFromScope(initialError: ?Error) {
     return loadScope(scopePath || process.cwd())
@@ -27,25 +42,23 @@ export default function testInScope({ id, environment, save, verbose, scopePath,
   }
 
   function loadFromConsumer() {
-    return loadConsumer()
-      .then((consumer) => {
-        const bitId = BitId.parse(id);
-        return consumer.scope.runComponentSpecs({
-          consumer,
-          bitId,
-          environment,
-          save,
-          verbose,
-          isolated: true,
-        });
+    return loadConsumer().then((consumer) => {
+      const bitId = BitId.parse(id);
+      return consumer.scope.runComponentSpecs({
+        consumer,
+        bitId,
+        environment,
+        save,
+        verbose,
+        isolated: true
       });
+    });
   }
 
   if (scopePath) return loadFromScope();
 
-  return loadFromConsumer()
-    .catch((err) => {
-      if (!(err instanceof ConsumerNotFound)) throw err;
-      return loadFromScope(err);
-    });
+  return loadFromConsumer().catch((err) => {
+    if (!(err instanceof ConsumerNotFound)) throw err;
+    return loadFromScope(err);
+  });
 }

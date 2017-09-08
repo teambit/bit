@@ -5,11 +5,11 @@ import { deflate, inflate, sha1 } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import Ref from './ref';
 
-function parse(buffer: Buffer, types: {[string]: Function}): BitObject {
+function parse(buffer: Buffer, types: { [string]: Function }): BitObject {
   const firstNullByteLocation = buffer.indexOf(NULL_BYTE);
   const headers = buffer.slice(0, firstNullByteLocation).toString();
-  const contents = buffer.slice(firstNullByteLocation+1, buffer.length);
-  const [type, ] = headers.split(SPACE_DELIMITER);
+  const contents = buffer.slice(firstNullByteLocation + 1, buffer.length);
+  const [type] = headers.split(SPACE_DELIMITER);
 
   return types[type].parse(contents);
 }
@@ -23,7 +23,8 @@ export default class BitObject {
     throw new Error('toBuffer() was not implemented...');
   }
 
-  static parse(data: *) { // eslint-disable-line no-unused-vars
+  static parse(data: *) {
+    // eslint-disable-line no-unused-vars
     throw new Error('parse() was not implemented...');
   }
 
@@ -53,10 +54,7 @@ export default class BitObject {
   }
 
   collectRaw(repo: Repository): Promise<Buffer[]> {
-    return Promise.all(this
-      .collectRefs(repo)
-      .map(ref => ref.loadRaw(repo)
-    ));
+    return Promise.all(this.collectRefs(repo).map(ref => ref.loadRaw(repo)));
   }
 
   asRaw(repo: Repository): Promise<Buffer> {
@@ -95,12 +93,11 @@ export default class BitObject {
     return Buffer.concat([new Buffer(this.header), this.toBuffer()]);
   }
 
-  static parseObject(fileContents: Buffer, types: {[string]: Function}): Promise<BitObject> {
-    return inflate(fileContents)
-      .then(buffer => parse(buffer, types));
+  static parseObject(fileContents: Buffer, types: { [string]: Function }): Promise<BitObject> {
+    return inflate(fileContents).then(buffer => parse(buffer, types));
   }
 
-  static parseSync(fileContents: Buffer, types: {[string]: Function}): BitObject {
+  static parseSync(fileContents: Buffer, types: { [string]: Function }): BitObject {
     const buffer = inflateSync(fileContents);
     return parse(buffer, types);
   }

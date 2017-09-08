@@ -11,15 +11,19 @@ export default class Untrack extends Command {
   opts = [];
   loader = true;
 
-  action([components]: [string[]]):Promise<*> {
+  action([components]: [string[]]): Promise<*> {
     return untrack(components || []);
   }
 
-  report({ untrackedComponents, unRemovableComponents, missingComponents }:
-    { untrackedComponents: Array<string>,
-      unRemovableComponents: Array<string>,
-      missingComponents: Array<string>
-    }):string {
+  report({
+    untrackedComponents,
+    unRemovableComponents,
+    missingComponents
+  }: {
+    untrackedComponents: Array<string>,
+    unRemovableComponents: Array<string>,
+    missingComponents: Array<string>
+  }): string {
     const msg = [];
     if (R.isEmpty(untrackedComponents) && R.isEmpty(unRemovableComponents) && R.isEmpty(missingComponents)) {
       return chalk.underline.red('no components untracked');
@@ -29,7 +33,9 @@ export default class Untrack extends Command {
       msg.push(title + untrackedComponents.map(result => chalk.green(result)).join('\n'));
     }
     if (!R.isEmpty(unRemovableComponents)) {
-      msg.push(chalk.red(`error: unable to untrack ${unRemovableComponents.join(', ')}, please use the bit remove command.\n`));
+      msg.push(
+        chalk.red(`error: unable to untrack ${unRemovableComponents.join(', ')}, please use the bit remove command.\n`)
+      );
     }
     if (!R.isEmpty(missingComponents)) {
       msg.push(chalk.red(`fatal: component ${missingComponents.join(', ')} did not match any component.`));

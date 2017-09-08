@@ -13,9 +13,9 @@ import logger from '../../logger/logger';
 
 export default class Repository {
   objects: BitObject[] = [];
-  _cache: {[string]: BitObject} = {};
+  _cache: { [string]: BitObject } = {};
   scope: Scope;
-  types: {[string]: Function};
+  types: { [string]: Function };
 
   constructor(scope: Scope, objectTypes: Function[] = []) {
     this.scope = scope;
@@ -38,8 +38,7 @@ export default class Repository {
   }
 
   getScopeMetaObject(): Promise<Buffer> {
-    return this.getLicense()
-      .then(license => ScopeMeta.fromObject({ license, name: this.scope.name }).compress());
+    return this.getLicense().then(license => ScopeMeta.fromObject({ license, name: this.scope.name }).compress());
   }
 
   objectPath(ref: Ref): string {
@@ -64,8 +63,7 @@ export default class Repository {
       return glob(path.join('*', '*'), { cwd: this.getPath() }, (err, matches) => {
         if (err) reject(err);
         const refs = matches.map(str => str.replace(path.sep, ''));
-        return Promise.all(refs.map(ref => this.load(ref)))
-        .then(resolve);
+        return Promise.all(refs.map(ref => this.load(ref))).then(resolve);
       });
     });
   }
@@ -73,9 +71,9 @@ export default class Repository {
   listComponents(includeSymlinks: boolean = true): Promise<Component[]> {
     // @TODO - write
     const filterComponents = refs =>
-      refs.filter(ref => (includeSymlinks
-        ? ref instanceof Component || ref instanceof Symlink
-        : ref instanceof Component));
+      refs.filter(
+        ref => (includeSymlinks ? ref instanceof Component || ref instanceof Symlink : ref instanceof Component)
+      );
 
     return this.list().then(filterComponents);
   }
@@ -136,14 +134,12 @@ export default class Repository {
   }
 
   persistOne(object: BitObject): Promise<boolean> {
-    return object.compress()
-      .then((contents) => {
-        const options = {};
-        if (this.scope.groupName) options.gid = resolveGroupId(this.scope.groupName);
-        const objectPath = this.objectPath(object.hash());
-        logger.debug(`writing an object into ${objectPath}`);
-        return writeFile(objectPath, contents, options);
-      });
+    return object.compress().then((contents) => {
+      const options = {};
+      if (this.scope.groupName) options.gid = resolveGroupId(this.scope.groupName);
+      const objectPath = this.objectPath(object.hash());
+      logger.debug(`writing an object into ${objectPath}`);
+      return writeFile(objectPath, contents, options);
+    });
   }
 }
-

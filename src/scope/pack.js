@@ -1,5 +1,3 @@
 /** @flow */
 
-export default class Pack {
-
-}
+export default class Pack {}

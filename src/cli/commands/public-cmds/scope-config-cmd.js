@@ -8,23 +8,19 @@ export default class ScopeConfig extends Command {
   name = 'scope-config';
   description = 'scope config management';
   alias = '';
-  commands = [
-    new ScopeConfigSet(),
-    new ScopeConfigDel(),
-    new ScopeConfigGet(),
-    new ScopeConfigList()
-  ];
-  opts = [
-  ];
+  commands = [new ScopeConfigSet(), new ScopeConfigDel(), new ScopeConfigGet(), new ScopeConfigList()];
+  opts = [];
 
   action(): Promise<any> {
     return scopeConfig.list();
   }
 
-  report(conf: {[string]: string}): string {
-    return objectToStringifiedTupleArray(conf).map((tuple) => {
-      return tuple.join('     ');
-    }).join('\n');
+  report(conf: { [string]: string }): string {
+    return objectToStringifiedTupleArray(conf)
+      .map((tuple) => {
+        return tuple.join('     ');
+      })
+      .join('\n');
   }
 }
 
@@ -51,7 +47,7 @@ class ScopeConfigGet extends Command {
   private = true;
   opts = [];
 
-  action([key, ]: [string, ]): Promise<any> {
+  action([key]: [string]): Promise<any> {
     return scopeConfig.get(key);
   }
 
@@ -70,10 +66,12 @@ class ScopeConfigList extends Command {
     return scopeConfig.list();
   }
 
-  report(conf: {[string]: any}): string {
-    return objectToStringifiedTupleArray(conf).map((tuple) => {
-      return tuple.join('     ');
-    }).join('\n');
+  report(conf: { [string]: any }): string {
+    return objectToStringifiedTupleArray(conf)
+      .map((tuple) => {
+        return tuple.join('     ');
+      })
+      .join('\n');
   }
 }
 
@@ -87,8 +85,7 @@ class ScopeConfigDel extends Command {
     return scopeConfig.del(key);
   }
 
-  report(conf: {[string]: string}): string {
+  report(conf: { [string]: string }): string {
     return 'deleted successfully';
   }
 }
-

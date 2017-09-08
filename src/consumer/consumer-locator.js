@@ -19,8 +19,7 @@ function composeBitJsonPath(path: string) {
  * determine whether given path has a consumer
  */
 export function pathHasConsumer(path: string) {
-  return fs.existsSync(composeBitHiddenDirPath(path)) &&
-  fs.existsSync(composeBitJsonPath(path));
+  return fs.existsSync(composeBitHiddenDirPath(path)) && fs.existsSync(composeBitJsonPath(path));
 }
 
 /**

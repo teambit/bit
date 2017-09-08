@@ -25,9 +25,7 @@ export default class Dependency {
     //   .persist();
   }
 
-  flatten() {
-
-  }
+  flatten() {}
 
   static load(depName: string, version: string) {
     if (!depName) throw new InvalidDependency();

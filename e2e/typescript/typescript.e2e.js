@@ -39,7 +39,16 @@ describe.skip('typescript', function () {
     });
     it('should keep the file name impl.js after commit', () => {
       helper.runCmd('bit commit foo commit-msg');
-      const distPath = path.join(helper.localScopePath, 'components', 'global', 'foo', helper.localScope, '1', 'dist', 'impl.js');
+      const distPath = path.join(
+        helper.localScopePath,
+        'components',
+        'global',
+        'foo',
+        helper.localScope,
+        '1',
+        'dist',
+        'impl.js'
+      );
       expect(fs.existsSync(distPath)).to.be.true;
     });
   });

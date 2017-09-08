@@ -3,6 +3,7 @@ import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';
 import logger from '../logger/logger';
 import { pathNormalizeToLinux } from '../utils';
+
 export default class Driver {
   lang: string;
   driver: Object;
@@ -41,14 +42,13 @@ export default class Driver {
     return driver.lifecycleHooks[hookName](param).then(() => returnValue);
   }
 
-  convertDependenciesTreeToLinux(depTree: Object):  Promise<Object> {
-    Object.keys(depTree.tree).forEach(key => {
+  convertDependenciesTreeToLinux(depTree: Object): Promise<Object> {
+    Object.keys(depTree.tree).forEach((key) => {
       const normalizedKey = pathNormalizeToLinux(key);
-      const treeElement =depTree.tree[key];
-      treeElement.files =  treeElement.files ?  treeElement.files.map(treeFile => pathNormalizeToLinux(treeFile)) : [];
+      const treeElement = depTree.tree[key];
+      treeElement.files = treeElement.files ? treeElement.files.map(treeFile => pathNormalizeToLinux(treeFile)) : [];
       depTree.tree[normalizedKey] = treeElement;
       if (key !== normalizedKey) delete depTree.tree[key];
-
     });
     return depTree;
   }

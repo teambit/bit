@@ -5,7 +5,6 @@ import BitId from '../../../bit-id';
 import { Scope } from '../../../scope';
 
 export default class Impl extends Source {
-
   static create(name: string, compilerId: BitId, scope: Scope): Impl {
     function getTemplate() {
       try {

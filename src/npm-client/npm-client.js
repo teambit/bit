@@ -38,7 +38,7 @@ const defaults = {
   ignoreScripts: false,
   legacyBundling: false,
   noOptional: false,
-  noShrinkwrap: false,
+  noShrinkwrap: false
 };
 
 const camelCaseToOptionCase = optName => '--' + decamelize(optName, '-'); // eslint-disable-line
@@ -49,19 +49,19 @@ const serializeOption = (bool, optName) => {
   return camelCaseToOptionCase(optName);
 };
 
-const installAction = (modules: string[] | string | {[string]: number|string}, userOpts?: Options, verbose: boolean) => {
+const installAction = (
+  modules: string[] | string | { [string]: number | string },
+  userOpts?: Options,
+  verbose: boolean
+) => {
   const options = merge(defaults, userOpts);
-  const flags = pipe(
-    mapObjIndexed(serializeOption),
-    rejectNils,
-    values,
-  )(options);
+  const flags = pipe(mapObjIndexed(serializeOption), rejectNils, values)(options);
 
   // taking care of object case
   modules = is(Object, modules) && !Array.isArray(modules) ? objectToArray(modules) : modules;
   // taking care of string and no modules cases
   // $FlowFixMe
-  modules = Array.isArray(modules) ? modules : (modules && [modules] || []); // eslint-disable-line
+  modules = Array.isArray(modules) ? modules : (modules && [modules]) || []; // eslint-disable-line
 
   const serializedModules = modules && modules.length > 0 ? ` ${modules.join(' ')}` : '';
   const serializedFlags = flags && flags.length > 0 ? ` ${flags.join(' ')}` : '';
@@ -72,13 +72,13 @@ const installAction = (modules: string[] | string | {[string]: number|string}, u
     return exec(commandToExecute, { cwd: options.cwd }, (error, stdout, stderr) => {
       if (error) return reject(error);
       // This is an hack until we will upgrade to npm5 (don't know the exact version)
-      // In npm5 they improved the output to be something like: 
+      // In npm5 they improved the output to be something like:
       // npm added 125, removed 32, updated 148 and moved 5 packages.
-      // see more info here: 
+      // see more info here:
       // https://github.com/npm/npm/pull/15914
       // https://github.com/npm/npm/issues/10732
       // if (!verbose) {
-        stdout = `successfully ran ${commandToExecute}`;
+      stdout = `successfully ran ${commandToExecute}`;
       // }
 
       return resolve({ stdout, stderr });
@@ -93,5 +93,5 @@ const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) =>
 
 export default {
   install: installAction,
-  printResults,
+  printResults
 };

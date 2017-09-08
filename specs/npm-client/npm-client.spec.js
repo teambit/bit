@@ -6,11 +6,13 @@ import npmClient from '../../src/npm-client';
 describe('npmClient.install()', () => {
   const execSpy = sinon.spy();
   const childProcessMock = {
-    exec: execSpy,
+    exec: execSpy
   };
 
   const fsMock = {
-    ensureDirSync: () => { return null; }
+    ensureDirSync: () => {
+      return null;
+    }
   };
 
   before(() => {

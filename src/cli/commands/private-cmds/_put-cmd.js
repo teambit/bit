@@ -11,7 +11,7 @@ export default class Put extends Command {
   alias = '';
   opts = [];
 
-  action([path, ]: [string, string]): Promise<any> {
+  action([path]: [string, string]): Promise<any> {
     let data = '';
     return new Promise((resolve, reject) => {
       process.stdin
@@ -20,7 +20,8 @@ export default class Put extends Command {
         })
         .on('end', () => {
           return put({ componentObjects: fromBase64(data.toString()), path: fromBase64(path) })
-            .then(resolve).catch(reject);
+            .then(resolve)
+            .catch(reject);
         });
     });
   }

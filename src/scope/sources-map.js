@@ -53,7 +53,7 @@ export class SourcesMap extends Map<string, BitIds> {
     return writeFile(this.getPath(), JSON.stringify(this.toObject()));
   }
 
-  static load(json: {[string]: string[]}, scope: Scope): SourcesMap {
+  static load(json: { [string]: string[] }, scope: Scope): SourcesMap {
     const matrix = [];
     forEach(json, (val, key) => {
       matrix.push([key, val.map(bitDep => BitId.parse(bitDep))]);

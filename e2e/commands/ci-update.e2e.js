@@ -23,11 +23,13 @@ describe('bit ci-update', function () {
       helper.importTester('bit.envs/testers/mocha');
       const level1Fixture = "module.exports = function level1() { return 'level1'; };";
       helper.createFile('', 'level1.js', level1Fixture);
-      const level0Fixture = `var level1 = require('./level1'); module.exports = function level0() { return 'level0 ' + level1(); };`;
+      const level0Fixture =
+        "var level1 = require('./level1'); module.exports = function level0() { return 'level0 ' + level1(); };";
       helper.createFile('', 'level0.js', level0Fixture);
       helper.addComponentWithOptions('level0.js', { i: 'dep/level0' });
       helper.addComponentWithOptions('level1.js', { i: 'dep/level1' });
-      const fileFixture = `var level0 = require('./level0'); module.exports = function comp() { return 'comp ' + level0()};`;
+      const fileFixture =
+        "var level0 = require('./level0'); module.exports = function comp() { return 'comp ' + level0()};";
       helper.createFile('', 'file.js', fileFixture);
       helper.createFile('', 'file.spec.js', fileSpecFixture(true));
       helper.addComponentWithOptions('file.js', { i: 'comp/comp', t: 'file.spec.js' });
@@ -46,11 +48,13 @@ describe('bit ci-update', function () {
       helper.importTester('bit.envs/testers/mocha');
       const level1Fixture = "module.exports = function level1() { return 'level1'; };";
       helper.createFile('', 'level1.js', level1Fixture);
-      const level0Fixture = `var level1 = require('./level1'); module.exports = function level0() { return 'level0 ' + level1(); };`;
+      const level0Fixture =
+        "var level1 = require('./level1'); module.exports = function level0() { return 'level0 ' + level1(); };";
       helper.createFile('', 'level0.js', level0Fixture);
       helper.addComponentWithOptions('level0.js', { i: 'dep/level0' });
       helper.addComponentWithOptions('level1.js', { i: 'dep/level1' });
-      const fileFixture = `var level0 = require('./level0'); module.exports = function comp() { return 'comp ' + level0()};`;
+      const fileFixture =
+        "var level0 = require('./level0'); module.exports = function comp() { return 'comp ' + level0()};";
       helper.createFile('', 'file.js', fileFixture);
       helper.createFile('', 'file.spec.js', fileSpecFixture(true));
       helper.addComponentWithOptions('file.js', { i: 'comp/comp', t: 'file.spec.js' });

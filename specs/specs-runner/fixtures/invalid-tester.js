@@ -1,7 +1,7 @@
-function compile(src) { //eslint-disable-line
-
+function compile(src) {
+  //eslint-disable-line
 }
 
 module.exports = {
-  compile,
+  compile
 };

@@ -8,9 +8,9 @@ export async function test(id: string, verbose: boolean = true): Promise<Bit> {
   const consumer: Consumer = await loadConsumer();
   const idParsed = BitId.parse(id);
   const component = await consumer.loadComponent(idParsed);
-  if (!component.testerId) return { component, missingTester:true }
+  if (!component.testerId) return { component, missingTester: true };
   const result = await consumer.runComponentSpecs(idParsed, verbose);
-  return  { specs: result, component };
+  return { specs: result, component };
 }
 
 export async function testAll(verbose: boolean = true): Promise<Bit> {
@@ -19,11 +19,10 @@ export async function testAll(verbose: boolean = true): Promise<Bit> {
   const newAndModifiedComponents = await componentsList.newAndModifiedComponents();
   const specsResults = newAndModifiedComponents.map(async (component) => {
     if (!component.testerId) {
-      return { component, missingTester:true }
-    } else {
-      const result = await component.runSpecs({scope: consumer.scope, consumer, verbose});
-      return { specs: result, component };
+      return { component, missingTester: true };
     }
+    const result = await component.runSpecs({ scope: consumer.scope, consumer, verbose });
+    return { specs: result, component };
   });
 
   return Promise.all(specsResults);

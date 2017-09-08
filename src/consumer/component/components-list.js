@@ -21,7 +21,6 @@ export default class ComponentsList {
     this.scope = consumer.scope;
   }
 
-
   /**
    * List all objects where the id is the object-id and the value is the Version object
    * It is useful when checking for modified components where the most important data is the Ref.
@@ -33,10 +32,12 @@ export default class ComponentsList {
       const componentsVersions = {};
       componentsObjects.forEach((componentObjects) => {
         const latestVersionRef = componentObjects.versions[componentObjects.latest()];
-        const ObjId = new BitId({ scope: componentObjects.scope,
+        const ObjId = new BitId({
+          scope: componentObjects.scope,
           box: componentObjects.box,
           name: componentObjects.name,
-          version: componentObjects.scope ? componentObjects.latest() : null });
+          version: componentObjects.scope ? componentObjects.latest() : null
+        });
         componentsVersionsP[ObjId.toString()] = this.scope.getObject(latestVersionRef.hash);
       });
 
@@ -59,14 +60,19 @@ export default class ComponentsList {
    */
   async listModifiedComponents(load: boolean = false): Promise<string[] | Component[]> {
     const getAuthoredAndImportedFromFS = async () => {
-      let [authored, imported] = await Promise.all([this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED), this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED)]);
+      let [authored, imported] = await Promise.all([
+        this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED),
+        this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED)
+      ]);
       authored = authored || [];
       imported = imported || [];
       return authored.concat(imported);
     };
 
-    const [objectComponents, fileSystemComponents] = await Promise
-      .all([this.getFromObjects(), getAuthoredAndImportedFromFS()]);
+    const [objectComponents, fileSystemComponents] = await Promise.all([
+      this.getFromObjects(),
+      getAuthoredAndImportedFromFS()
+    ]);
     const objFromFileSystem = fileSystemComponents.reduce((components, component) => {
       components[component.id.toStringWithoutVersion()] = component;
       return components;
@@ -96,8 +102,10 @@ export default class ComponentsList {
   }
 
   async newAndModifiedComponents(): Promise<Component[]> {
-    const [newComponents, modifiedComponents] = await Promise
-      .all([this.listNewComponents(true), this.listModifiedComponents(true)]);
+    const [newComponents, modifiedComponents] = await Promise.all([
+      this.listNewComponents(true),
+      this.listModifiedComponents(true)
+    ]);
 
     const components = [...newComponents, ...modifiedComponents];
 
@@ -139,8 +147,10 @@ export default class ComponentsList {
    * @return {Promise<string[]>}
    */
   async listCommitPendingComponents(): Promise<string[]> {
-    const [newComponents, modifiedComponents] = await Promise
-      .all([this.listNewComponents(), this.listModifiedComponents()]);
+    const [newComponents, modifiedComponents] = await Promise.all([
+      this.listNewComponents(),
+      this.listModifiedComponents()
+    ]);
     return [...newComponents, ...modifiedComponents];
   }
 
@@ -159,8 +169,9 @@ export default class ComponentsList {
         modelBitId.scope = null;
         stagedComponents.push(modelBitId.toString());
       } else {
-        const similarFileSystemComponent = listFromFileSystem
-          .find(component => component.id.toStringWithoutVersion() === modelBitId.toStringWithoutVersion());
+        const similarFileSystemComponent = listFromFileSystem.find(
+          component => component.id.toStringWithoutVersion() === modelBitId.toStringWithoutVersion()
+        );
         if (similarFileSystemComponent && modelBitId.version > similarFileSystemComponent.version) {
           stagedComponents.push(modelBitId.toString());
         }
@@ -200,8 +211,7 @@ export default class ComponentsList {
         bitIdObj[key] = dir;
       });
       const parsedId = new BitId(bitIdObj);
-      if (!idsFromBitMap.includes(parsedId.toString())
-        && !idsFromBitMapWithoutScope.includes(parsedId.toString())) {
+      if (!idsFromBitMap.includes(parsedId.toString()) && !idsFromBitMapWithoutScope.includes(parsedId.toString())) {
         componentsP.push(this.consumer.loadComponent(parsedId));
       }
     });

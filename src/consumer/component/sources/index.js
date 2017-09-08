@@ -5,11 +5,4 @@ import Dist from './dist';
 import License from './license';
 import SourceFile from './source-file';
 
-export {
-  Impl,
-  Specs,
-  Source,
-  Dist,
-  License,
-  SourceFile,
-};
+export { Impl, Specs, Source, Dist, License, SourceFile };

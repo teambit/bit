@@ -11,7 +11,7 @@ import forEach from '../object/foreach';
  *  objectToTupleArray({foo: 'bar', bar: 'foo'}) // => [['foo', 'bar'], ['bar', 'foo']]
  * ```
  */
-export default function objectToTupleArray(obj: {[string]: any}): [string, any][] {
+export default function objectToTupleArray(obj: { [string]: any }): [string, any][] {
   const arr = [];
   forEach(obj, (val, key) => {
     arr.push([key, val]);

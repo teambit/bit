@@ -19,18 +19,18 @@ import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 
 export type ComponentProps = {
-  scope?: string;
-  box?: string;
-  name: string;
-  versions?: {[number]: Ref};
-  lang?: string;
+  scope?: string,
+  box?: string,
+  name: string,
+  versions?: { [number]: Ref },
+  lang?: string
 };
 
 export default class Component extends BitObject {
   scope: string;
   name: string;
   box: string;
-  versions: {[number]: Ref};
+  versions: { [number]: Ref };
   lang: string;
 
   constructor(props: ComponentProps) {
@@ -51,10 +51,7 @@ export default class Component extends BitObject {
   }
 
   compatibleWith(component: Component) {
-    const differnece = diff(
-      Object.keys(this.versions),
-      Object.keys(component.versions
-    ));
+    const differnece = diff(Object.keys(this.versions), Object.keys(component.versions));
 
     const comparableObject = filterObject(this.versions, (val, key) => !differnece.includes(key));
     return equals(component.versions, comparableObject);
@@ -65,10 +62,8 @@ export default class Component extends BitObject {
     return Math.max(...this.listVersions());
   }
 
-  collectLogs(repo: Repository):
-  Promise<{[number]: {message: string, date: string, hash: string}}> {
-    return repo.findMany(this.versionArray)
-    .then((versions) => {
+  collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } }> {
+    return repo.findMany(this.versionArray).then((versions) => {
       const indexedLogs = fromPairs(zip(keys(this.versions), map(prop('log'), versions)));
       const indexedHashes = mapObjIndexed(ref => objOf('hash', ref.toString()), this.versions);
       return mergeWith(merge, indexedLogs, indexedHashes);
@@ -77,8 +72,7 @@ export default class Component extends BitObject {
 
   collectVersions(repo: Repository): Promise<ConsumerComponent> {
     return Promise.all(
-      this.listVersions()
-      .map((versionNum) => {
+      this.listVersions().map((versionNum) => {
         return this.toConsumerComponent(String(versionNum), this.scope, repo);
       })
     );
@@ -100,7 +94,7 @@ export default class Component extends BitObject {
   }
 
   toObject() {
-    function versions(vers: {[number]: Ref}) {
+    function versions(vers: { [number]: Ref }) {
       const obj = {};
       forEach(vers, (ref, version) => {
         obj[version] = ref.toString();
@@ -113,7 +107,7 @@ export default class Component extends BitObject {
       name: this.name,
       scope: this.scope,
       versions: versions(this.versions),
-      lang: this.lang,
+      lang: this.lang
     };
   }
 
@@ -126,11 +120,9 @@ export default class Component extends BitObject {
   }
 
   collectObjects(repo: Repository): Promise<ComponentObjects> {
-    return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
-      .then(([rawComponent, objects]) => new ComponentObjects(
-        rawComponent,
-        objects
-      ));
+    return Promise.all([this.asRaw(repo), this.collectRaw(repo)]).then(
+      ([rawComponent, objects]) => new ComponentObjects(rawComponent, objects)
+    );
   }
 
   remove(repo: Repository): Promise {
@@ -139,65 +131,70 @@ export default class Component extends BitObject {
   }
 
   toComponentVersion(versionStr: string): ComponentVersion {
-    const versionNum = VersionParser
-      .parse(versionStr)
-      .resolve(this.listVersions());
+    const versionNum = VersionParser.parse(versionStr).resolve(this.listVersions());
 
-    if (!this.versions[versionNum]) throw new Error(`the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`);
+    if (!this.versions[versionNum]) {
+      throw new Error(`the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`);
+    }
     return new ComponentVersion(this, versionNum);
   }
 
   toConsumerComponent(versionStr: string, scopeName: string, repository: Repository) {
     const componentVersion = this.toComponentVersion(versionStr);
-    return componentVersion
-      .getVersion(repository)
-        .then((version) => {
-          const filesP = version.files ?
-          Promise.all(version.files.map(file =>
-            file.file.load(repository)
-            .then((content) =>
-             new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test })
-            )
-          )) : null;
-          const distsP = version.dists ?
-          Promise.all(version.dists.map(dist =>
-            dist.file.load(repository)
-            .then((content) => {
+    return componentVersion.getVersion(repository).then((version) => {
+      const filesP = version.files
+        ? Promise.all(
+          version.files.map(file =>
+            file.file
+              .load(repository)
+              .then(
+                content =>
+                  new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test })
+              )
+          )
+        )
+        : null;
+      const distsP = version.dists
+        ? Promise.all(
+          version.dists.map(dist =>
+            dist.file.load(repository).then((content) => {
               const relativePathWithDist = path.join(DEFAULT_DIST_DIRNAME, dist.relativePath);
               return new Dist({ base: '.', path: relativePathWithDist, contents: content.contents, test: dist.test });
             })
-          )) : null;
-          const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
-          const log = version.log || null;
-          return Promise.all([filesP, distsP, scopeMetaP])
-          .then(([files, dists, scopeMeta]) => {
-            return new ConsumerComponent({
-              name: this.name,
-              box: this.box,
-              version: componentVersion.version,
-              scope: this.scope,
-              lang: this.lang,
-              mainFile: version.mainFile || null,
-              compilerId: version.compiler,
-              testerId: version.tester,
-              dependencies: version.dependencies // todo: understand why sometimes the dependencies are not parsed
-                .map(dependency => ({
-                  id: is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
-                  // After the || is backward compatibility stuff
-                  relativePaths: dependency.relativePaths || [{ sourceRelativePath: dependency.relativePath, destinationRelativePath: dependency.relativePath }]
-                })),
-              flattenedDependencies: version.flattenedDependencies,
-              packageDependencies: version.packageDependencies,
-              files,
-              dists,
-              docs: version.docs,
-              license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
-              specsResults:
-                version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
-              log,
-            });
-          });
+          )
+        )
+        : null;
+      const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
+      const log = version.log || null;
+      return Promise.all([filesP, distsP, scopeMetaP]).then(([files, dists, scopeMeta]) => {
+        return new ConsumerComponent({
+          name: this.name,
+          box: this.box,
+          version: componentVersion.version,
+          scope: this.scope,
+          lang: this.lang,
+          mainFile: version.mainFile || null,
+          compilerId: version.compiler,
+          testerId: version.tester,
+          dependencies: version.dependencies // todo: understand why sometimes the dependencies are not parsed
+            .map(dependency => ({
+              id: is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
+              // After the || is backward compatibility stuff
+              relativePaths: dependency.relativePaths || [
+                { sourceRelativePath: dependency.relativePath, destinationRelativePath: dependency.relativePath }
+              ]
+            })),
+          flattenedDependencies: version.flattenedDependencies,
+          packageDependencies: version.packageDependencies,
+          files,
+          dists,
+          docs: version.docs,
+          license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
+          specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
+          log
         });
+      });
+    });
   }
 
   refs(): Ref[] {
@@ -209,7 +206,7 @@ export default class Component extends BitObject {
     return new Buffer(JSON.stringify(this.toObject(), ...args));
   }
 
-  toVersionDependencies(version: string, scope: Scope, source: string, withDevDependencies?: bool) {
+  toVersionDependencies(version: string, scope: Scope, source: string, withDevDependencies?: boolean) {
     const versionComp = this.toComponentVersion(version);
     return versionComp.toVersionDependencies(scope, source, withDevDependencies);
   }
@@ -221,7 +218,7 @@ export default class Component extends BitObject {
       box: rawComponent.box,
       scope: rawComponent.scope,
       versions: mapObject(rawComponent.versions, val => Ref.from(val)),
-      lang: rawComponent.lang,
+      lang: rawComponent.lang
     });
   }
 

@@ -35,7 +35,7 @@ export default class SourcesJson extends Map<BitId, BitIds> {
     return writeFile(this.getPath(), this.toJson());
   }
 
-  static load(json: {[string]: string[]}, sources: Source) {
+  static load(json: { [string]: string[] }, sources: Source) {
     const tuples = [];
 
     forEach(json, (bitIds, bitId) => {

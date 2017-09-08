@@ -10,14 +10,13 @@ class ResolverSet extends Command {
   private = true;
   opts = [];
 
-  action([resolverPath, ]: [string, ]): Promise<any> {
+  action([resolverPath]: [string]): Promise<any> {
     if (!resolverPath) {
       // @TODO mandatory arguments do not work for sub commands - please fix !
       throw new Error('resolverPath is mandatory');
     }
 
-    return setResolver(process.cwd(), resolverPath)
-    .then(() => resolverPath);
+    return setResolver(process.cwd(), resolverPath).then(() => resolverPath);
   }
 
   report(resolverPath): string {
@@ -45,10 +44,7 @@ export default class Resolver extends Command {
   description = 'get or set remote resolver to scope';
   alias = '';
   opts = [];
-  commands = [
-    new ResolverSet(),
-    new ResolverReset()
-  ];
+  commands = [new ResolverSet(), new ResolverReset()];
   private = true;
 
   action(): Promise<any> {

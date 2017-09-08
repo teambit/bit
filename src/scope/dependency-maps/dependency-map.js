@@ -48,7 +48,7 @@ export class DependencyMap extends Map<string, BitIds> {
     return this;
   }
 
-  static load(json: {[string]: string[]}, repository: Repository): DependencyMap {
+  static load(json: { [string]: string[] }, repository: Repository): DependencyMap {
     const matrix = [];
     forEach(json, (val, key) => {
       matrix.push([key, val.map(bitDep => BitId.parse(bitDep.id))]);

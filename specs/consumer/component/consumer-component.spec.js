@@ -10,20 +10,20 @@ describe.skip('ConsumerComponent', () => {
     let consumerComponent;
     before(() => {
       const bitId = new BitId({ scope: 'scope', box: 'box', name: 'name', version: 2 });
-      consumerComponent = new ConsumerComponent(
-        { name: 'component-name',
-          box: 'box',
-          version: 1,
-          scope: 'myScope',
-          implFile: '',
-          specsFile: '',
-          compilerId: bitId,
-          testerId: bitId,
-          dependencies: {},
-          packageDependencies: {},
-          impl: 'impl',
-          specs: 'specs'
-        });
+      consumerComponent = new ConsumerComponent({
+        name: 'component-name',
+        box: 'box',
+        version: 1,
+        scope: 'myScope',
+        implFile: '',
+        specsFile: '',
+        compilerId: bitId,
+        testerId: bitId,
+        dependencies: {},
+        packageDependencies: {},
+        impl: 'impl',
+        specs: 'specs'
+      });
       sinon.stub(Impl, ['load']).returns('impl');
     });
 
@@ -36,7 +36,11 @@ describe.skip('ConsumerComponent', () => {
     });
 
     it('should throw an error for a mismatch compiler interface', () => {
-      const scope = { loadEnvironment: () => { return {}; } };
+      const scope = {
+        loadEnvironment: () => {
+          return {};
+        }
+      };
       const result = consumerComponent.build({ scope });
       expect(result).to.be.a('Promise');
       return result
@@ -44,19 +48,23 @@ describe.skip('ConsumerComponent', () => {
           throw new Error('Promise should fail');
         })
         .catch((err) => {
-          expect(err).to.eql(`"scope/box/name${VERSION_DELIMITER}2" does not have a valid compiler interface, it has to expose a build method`);
+          expect(err).to.eql(
+            `"scope/box/name${VERSION_DELIMITER}2" does not have a valid compiler interface, it has to expose a build method`
+          );
         });
     });
 
     xit('should NOT throw an error for a correct compiler interface', () => {
-      const scope = { loadEnvironment: () => { return { compile: () => '' }; } };
+      const scope = {
+        loadEnvironment: () => {
+          return { compile: () => '' };
+        }
+      };
       const result = consumerComponent.build({ scope });
       expect(result).to.be.a('Promise');
-      return result
-        .then()
-        .catch(() => {
-          throw new Error('Promise should succeed');
-        });
+      return result.then().catch(() => {
+        throw new Error('Promise should succeed');
+      });
     });
   });
 });
