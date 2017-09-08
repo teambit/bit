@@ -8,12 +8,12 @@ export function pathJoinLinux(...paths): string {
 export function pathJoinOs(...paths): string {
   return path.join(paths);
 }
-export function pathNormalizeToLinux(pathToNormalize:string): string {
+export function pathNormalizeToLinux(pathToNormalize: string): string {
   return pathToNormalize ? normalize(pathToNormalize) : pathToNormalize;
 }
-export function pathRelative(from: string, to: string, toLinux:boolean = true): string {
+export function pathRelative(from: string, to: string, toLinux: boolean = true): string {
   return toLinux ? normalize(path.relative(from, to)) : path.relative(from, to);
 }
-export function pathResolve(arr:[], toLinux:boolean = true): string {
+export function pathResolve(arr: [], toLinux: boolean = true): string {
   return toLinux ? normalize(path.resolve(arr.join(','))) : path.resolve(arr);
 }

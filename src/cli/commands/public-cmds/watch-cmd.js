@@ -6,14 +6,17 @@ export default class Create extends Command {
   name = 'watch';
   description = 'watch components and perform `build` on changes';
   alias = 'w';
-  opts = [
-    ['v', 'verbose', 'showing npm verbose output for inspection'],
-  ];
+  opts = [['v', 'verbose', 'showing npm verbose output for inspection']];
   loader = true;
 
-  action(args: string[], { verbose } : {
-    verbose: ?bool,
-  }): Promise<*> {
+  action(
+    args: string[],
+    {
+      verbose
+    }: {
+      verbose: ?boolean
+    }
+  ): Promise<*> {
     return watchAll(verbose);
   }
 

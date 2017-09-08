@@ -1,7 +1,6 @@
 import R from 'ramda';
 import { DEFAULT_DIR_STRUCTURE } from '../../constants';
 
-
 export default class BitStructure {
   structureStr: string;
   constructor(structure?: string) {
@@ -29,13 +28,16 @@ export default class BitStructure {
     const staticParts = [];
     const dynamicParts = [];
     dirStructure.split('/').forEach((dir) => {
-      if (dir.startsWith('{') && dir.endsWith('}')) { // this is a variable
+      if (dir.startsWith('{') && dir.endsWith('}')) {
+        // this is a variable
         const dirStripped = dir.replace(/[{}]/g, '');
         const componentPart = this._getComponentStructurePart(dirStructure, dirStripped);
         dynamicParts.push(componentPart);
       } else {
         // todo: create a new exception class
-        if (!R.isEmpty(dynamicParts)) throw new Error(`${dirStructure} is invalid, a static directory can not be after the dynamic part`);
+        if (!R.isEmpty(dynamicParts)) {
+          throw new Error(`${dirStructure} is invalid, a static directory can not be after the dynamic part`);
+        }
         staticParts.push(dir);
       }
     });

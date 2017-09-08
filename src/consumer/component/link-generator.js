@@ -17,14 +17,14 @@ import BitMap from '../bit-map/bit-map';
 import { BitIds } from '../../bit-id';
 
 const LINKS_CONTENT_TEMPLATES = {
-  js: 'module.exports = require(\'{filePath}\');',
-  ts: 'export * from \'{filePath}\';',
-  jsx: 'export * from \'{filePath}\';',
-  css: '@import \'{filePath}.css\';',
-  scss: '@import \'{filePath}.scss\';',
-  sass: '@import \'{filePath}.sass\';',
-  less: '@import \'{filePath}.less\';'
-}
+  js: "module.exports = require('{filePath}');",
+  ts: "export * from '{filePath}';",
+  jsx: "export * from '{filePath}';",
+  css: "@import '{filePath}.css';",
+  scss: "@import '{filePath}.scss';",
+  sass: "@import '{filePath}.sass';",
+  less: "@import '{filePath}.less';"
+};
 
 // todo: move to bit-javascript
 function _getIndexFileName(mainFile: string): string {
@@ -37,10 +37,10 @@ function _getLinkContent(mainFile: string, filePath: string): string {
     filePath = `./${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
   }
   filePath = getWithoutExt(filePath); // remove the extension
-  const mainFileExt = (path.extname(mainFile)).replace('.','');
+  const mainFileExt = path.extname(mainFile).replace('.', '');
   console.log(path.extname(mainFileExt));
   const template = LINKS_CONTENT_TEMPLATES[mainFileExt];
-  return format(template, {filePath: normalize(filePath)});
+  return format(template, { filePath: normalize(filePath) });
 }
 
 /**
@@ -51,8 +51,11 @@ function _getLinkContent(mainFile: string, filePath: string): string {
  * This function solves this issue by creating the 'b.js' file in the original location and points to the new location
  * under 'dependencies' of A.
  */
-async function writeDependencyLinks(componentDependencies: ComponentWithDependencies[], bitMap: BitMap,
-                                    consumerPath: string): Promise<any> {
+async function writeDependencyLinks(
+  componentDependencies: ComponentWithDependencies[],
+  bitMap: BitMap,
+  consumerPath: string
+): Promise<any> {
   const writeLinkFile = (componentId: string, linkPath: string, relativePathInDependency: string) => {
     const rootDir = path.join(consumerPath, bitMap.getRootDirOfComponent(componentId));
     const mainFile = bitMap.getMainFileOfComponent(componentId);
@@ -67,8 +70,13 @@ async function writeDependencyLinks(componentDependencies: ComponentWithDependen
     return outputFile(linkPath, linkContent);
   };
 
-  const componentLink = async (resolveDepVersion: string, sourceRelativePath: string, relativePathInDependency: string,
-                               parentDir: string, hasDist: boolean) => {
+  const componentLink = async (
+    resolveDepVersion: string,
+    sourceRelativePath: string,
+    relativePathInDependency: string,
+    parentDir: string,
+    hasDist: boolean
+  ) => {
     const linkPath = path.join(parentDir, sourceRelativePath);
     let distLinkPath;
     if (hasDist) {
@@ -83,8 +91,12 @@ async function writeDependencyLinks(componentDependencies: ComponentWithDependen
     return writeLinkFile(resolveDepVersion, linkPath, relativePathInDependency);
   };
 
-  const componentLinks = (directDependencies: Array<Object>, flattenedDependencies: BitIds, parentDir: string,
-                          hasDist: boolean) => {
+  const componentLinks = (
+    directDependencies: Array<Object>,
+    flattenedDependencies: BitIds,
+    parentDir: string,
+    hasDist: boolean
+  ) => {
     if (!directDependencies || !directDependencies.length) return Promise.resolve();
     const links = directDependencies.map((dep) => {
       if (!dep.relativePath && (!dep.relativePaths || R.isEmpty(dep.relativePaths))) return Promise.resolve();
@@ -96,7 +108,13 @@ async function writeDependencyLinks(componentDependencies: ComponentWithDependen
       }
 
       const currLinks = dep.relativePaths.map((relativePath) => {
-        return componentLink(resolveDepVersion, relativePath.sourceRelativePath, relativePath.destinationRelativePath, parentDir, hasDist);
+        return componentLink(
+          resolveDepVersion,
+          relativePath.sourceRelativePath,
+          relativePath.destinationRelativePath,
+          parentDir,
+          hasDist
+        );
       });
       return Promise.all(currLinks);
     });
@@ -106,7 +124,9 @@ async function writeDependencyLinks(componentDependencies: ComponentWithDependen
   const allLinksP = componentDependencies.map((componentWithDeps) => {
     const componentMap = bitMap.getComponent(componentWithDeps.component.id, true);
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      logger.debug(`writeDependencyLinks, ignoring a component ${componentWithDeps.component.id} as it is an author component`);
+      logger.debug(
+        `writeDependencyLinks, ignoring a component ${componentWithDeps.component.id} as it is an author component`
+      );
       return Promise.resolve();
     }
     logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
@@ -124,7 +144,6 @@ async function writeDependencyLinks(componentDependencies: ComponentWithDependen
   });
   return Promise.all(allLinksP);
 }
-
 
 async function writeEntryPointsForImportedComponent(component: Component, bitMap: BitMap): Promise<any> {
   const componentRoot = component.writtenPath;

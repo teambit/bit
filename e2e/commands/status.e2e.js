@@ -258,7 +258,8 @@ describe('bit status command', function () {
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      const isStringFixture =
+        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
@@ -289,7 +290,8 @@ describe('bit status command', function () {
       helper.addRemoteScope();
       helper.importComponent('utils/is-type');
 
-      const isStringFixture = "import isType from '../components/utils/is-type'; module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      const isStringFixture =
+        "import isType from '../components/utils/is-type'; module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       output = helper.runCmd('bit status');
@@ -309,11 +311,15 @@ describe('bit status command', function () {
       helper.addComponent('utils/is-type.js');
       helper.commitComponent('utils/is-type');
 
-      const isStringInternalFixture = "import isType from './is-type'; module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      const isStringInternalFixture =
+        "import isType from './is-type'; module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string-internal.js', isStringInternalFixture);
       const isStringFixture = "import iString from './is-string-internal';";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
-      helper.addComponentWithOptions('utils/is-string.js utils/is-string-internal.js', { m: 'utils/is-string.js', i: 'utils/is-string' });
+      helper.addComponentWithOptions('utils/is-string.js utils/is-string-internal.js', {
+        m: 'utils/is-string.js',
+        i: 'utils/is-string'
+      });
       helper.commitComponent('utils/is-string');
       helper.exportAllComponents();
       helper.reInitLocalScope();

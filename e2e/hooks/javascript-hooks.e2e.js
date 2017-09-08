@@ -246,7 +246,8 @@ describe.skip('javascript-hooks', function () {
         helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
         helper.exportComponent('foo');
 
-        const barComponentFixture = "const foo = require('bit/global/foo'); module.exports = function bar() { return 'got bar and ' + foo(); };";
+        const barComponentFixture =
+          "const foo = require('bit/global/foo'); module.exports = function bar() { return 'got bar and ' + foo(); };";
         createComponent('bar', barComponentFixture);
 
         const barJsonPath = path.join(helper.localScopePath, 'components', 'global', 'bar', 'bit.json');
@@ -281,7 +282,8 @@ describe.skip('javascript-hooks', function () {
       });
       describe('of depth=2, "baz" depends on "bar" that depends on "foo"', () => {
         before(() => {
-          const bazComponentFixture = "const bar = require('bit/global/bar'); module.exports = function baz() { return 'got baz and ' + bar(); };";
+          const bazComponentFixture =
+            "const bar = require('bit/global/bar'); module.exports = function baz() { return 'got baz and ' + bar(); };";
           createComponent('baz', bazComponentFixture);
 
           const bazJsonPath = path.join(helper.localScopePath, 'components', 'global', 'baz', 'bit.json');

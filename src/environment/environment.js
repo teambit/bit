@@ -29,10 +29,12 @@ export default class Environment {
   }
 
   installNpmPackages(components: Component[], verbose: boolean): Promise<*> {
-    return Promise.all(components.map((component) => {
-      if (R.isEmpty(component.packageDependencies)) return Promise.resolve();
-      return npmClient.install(component.packageDependencies, { cwd: component.writtenPath }, verbose);
-    }));
+    return Promise.all(
+      components.map((component) => {
+        if (R.isEmpty(component.packageDependencies)) return Promise.resolve();
+        return npmClient.install(component.packageDependencies, { cwd: component.writtenPath }, verbose);
+      })
+    );
   }
 
   /**
@@ -47,8 +49,10 @@ export default class Environment {
     const componentDependenciesArr = await this.scope.getMany([bitId]);
     await this.consumer.writeToComponentsDir(componentDependenciesArr);
     const componentWithDependencies: ComponentWithDependencies = R.head(componentDependenciesArr);
-    const componentWithDependenciesFlatten = [componentWithDependencies.component,
-      ...componentWithDependencies.dependencies];
+    const componentWithDependenciesFlatten = [
+      componentWithDependencies.component,
+      ...componentWithDependencies.dependencies
+    ];
     await this.installNpmPackages(componentWithDependenciesFlatten, verbose);
     return componentWithDependencies.component;
   }

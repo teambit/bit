@@ -20,4 +20,3 @@ describe('query-builder', () => {
     });
   });
 });
-

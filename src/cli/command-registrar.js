@@ -9,12 +9,11 @@ import { empty, first, isNumeric } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
 
-
 function logAndExit(msg: string, commandName) {
   process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(0, commandName));
 }
 
-function logErrAndExit(msg: Error|string, commandName: string) {
+function logErrAndExit(msg: Error | string, commandName: string) {
   if (msg.code) throw msg;
   console.error(msg); // eslint-disable-line
   logger.exitAfterFlush(1, commandName);
@@ -30,7 +29,7 @@ function parseCommandName(commandName: string) {
   return first(commandName.split(' '));
 }
 
-function getOpts(c, opts: [[string, string, string]]): {[string]: boolean|string} {
+function getOpts(c, opts: [[string, string, string]]): { [string]: boolean | string } {
   const options = {};
 
   opts.forEach(([, name]) => {
@@ -50,7 +49,8 @@ function execAction(command, concrete, args) {
     loader.on();
   }
 
-  command.action(relevantArgs, opts)
+  command
+    .action(relevantArgs, opts)
     .then((data) => {
       loader.off();
       return logAndExit(command.report(data), command.name);
@@ -157,10 +157,18 @@ export default class CommandRegistrar {
     const cmdList = this.commands.map(cmd => first(cmd.name.split(' ')));
     const aliasList = this.commands.map(cmd => first(cmd.alias.split(' ')));
 
-    if (cmdList.indexOf(subcommand) === -1 && aliasList.indexOf(subcommand) === -1 && subcommand !== '-V' && subcommand !== '--version') {
+    if (
+      cmdList.indexOf(subcommand) === -1 &&
+      aliasList.indexOf(subcommand) === -1 &&
+      subcommand !== '-V' &&
+      subcommand !== '--version'
+    ) {
       process.stdout.write(
         chalk.yellow(
-          `warning: no command named '${chalk.bold(subcommand)}' was found...\nsee 'bit --help' for additional information.\n`)
+          `warning: no command named '${chalk.bold(
+            subcommand
+          )}' was found...\nsee 'bit --help' for additional information.\n`
+        )
       );
       return this;
     }

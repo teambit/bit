@@ -10,7 +10,7 @@ export type ComponentMapFile = {
   name: string,
   relativePath: string,
   test: string
-}
+};
 
 export type ComponentMapData = {
   files: ComponentMapFile[],
@@ -18,8 +18,8 @@ export type ComponentMapData = {
   rootDir?: string, // needed to search for the component's bit.json. If it's undefined, the component probably don't have bit.json
   origin: ComponentOrigin,
   dependencies: string[], // needed for the bind process
-  mainDistFile?: string, // needed when there is a build process involved
-}
+  mainDistFile?: string // needed when there is a build process involved
+};
 
 export default class ComponentMap {
   constructor({ files, mainFile, rootDir, origin, dependencies, mainDistFile }: ComponentMapData) {
@@ -107,4 +107,3 @@ export default class ComponentMap {
     return this._updateFileLocation(from, to);
   }
 }
-

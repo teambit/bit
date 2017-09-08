@@ -5,7 +5,6 @@ import createTemplate from '../templates/specs.default-template';
 import { Scope } from '../../../scope';
 
 export default class Specs extends Source {
-
   static create(name: string, testerId: BitId, scope: Scope): Specs {
     function getTemplate() {
       try {

@@ -20,5 +20,5 @@ export {
   ScopeAlreadyExists,
   BitNotInScope,
   ResolutionException,
-  DependencyNotFound,
+  DependencyNotFound
 };

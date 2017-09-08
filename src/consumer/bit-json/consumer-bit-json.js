@@ -16,7 +16,7 @@ function hasExisting(bitPath: string): boolean {
 
 export default class ConsumerBitJson extends AbstractBitJson {
   distTarget: string; // path where to store build artifacts
-  structure: string;  // directory structure template where to store imported components
+  structure: string; // directory structure template where to store imported components
 
   constructor({ impl, spec, compiler, tester, dependencies, lang, distTarget, structure }) {
     super({ impl, spec, compiler, tester, dependencies, lang });
@@ -29,8 +29,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
     return R.merge(superObject, {
       structure: this.structure,
       dist: {
-        target: this.distTarget,
-      },
+        target: this.distTarget
+      }
     });
   }
 
@@ -45,11 +45,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
         return resolve(res);
       };
 
-      fs.writeFile(
-        composePath(bitDir),
-        this.toJson(),
-        respond
-      );
+      fs.writeFile(composePath(bitDir), this.toJson(), respond);
     });
   }
 
@@ -75,7 +71,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       lang,
       dependencies,
       structure,
-      distTarget: R.propOr(undefined, 'target', dist),
+      distTarget: R.propOr(undefined, 'target', dist)
     });
   }
 

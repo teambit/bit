@@ -7,7 +7,7 @@ export default (components: ConsumerComponent[]) => {
   const table = new Table({
     head: [c.cyan('ID'), c.cyan('Version')],
     colWidths: [46, 9],
-    wordWrap: true,
+    wordWrap: true
   });
 
   function tablizeComponent(component) {

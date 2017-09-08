@@ -9,9 +9,9 @@ type Loader = {
   off: () => ?Loader,
   start: (text: ?string) => ?Loader,
   stop: () => ?Loader,
-  setText: (string) => ?Loader,
+  setText: string => ?Loader,
   get: () => ?Loader
-}
+};
 
 const start = (text: ?string): Loader => {
   if (_loader) {
@@ -45,13 +45,12 @@ const off = (): Loader => {
 };
 
 const loader: Loader = {
-  on: on,
-  off: off,
-  stop: stop,
-  start: start,
-  setText: setText,
-  get: get,
+  on,
+  off,
+  stop,
+  start,
+  setText,
+  get
 };
 
 export default loader;
-

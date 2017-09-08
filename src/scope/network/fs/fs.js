@@ -41,7 +41,8 @@ export default class Fs implements Network {
 
   fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
     if (noDependencies) return this.getScope().manyOneObjects(bitIds);
-    return this.getScope().getObjects(bitIds)
+    return this.getScope()
+      .getObjects(bitIds)
       .then(bitsMatrix => flatten(bitsMatrix));
   }
 
@@ -58,13 +59,11 @@ export default class Fs implements Network {
   }
 
   show(bitId: BitId): Promise<> {
-    return this.getScope()
-    .loadComponent(bitId);
+    return this.getScope().loadComponent(bitId);
   }
 
   connect() {
-    return loadScope(this.scopePath)
-    .then((scope) => {
+    return loadScope(this.scopePath).then((scope) => {
       this.scope = scope;
       return this;
     });

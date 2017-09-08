@@ -28,7 +28,8 @@ describe('bit show command', function () {
       helper.createFile('node_modules/lodash.get', 'index.js');
       helper.createFile('node_modules/lodash.get', 'package.json', lodashGetPackageJsonFixture);
 
-      const fooBarFixture = "const isString = require('../utils/is-string.js'); const get = require('lodash.get'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      const fooBarFixture =
+        "const isString = require('../utils/is-string.js'); const get = require('lodash.get'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('src', 'mainFile.js', fooBarFixture);
       helper.createFile('src/utils', 'utilFile.js');
       helper.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
@@ -39,7 +40,7 @@ describe('bit show command', function () {
       let output;
 
       before(() => {
-        output = helper.runCmd(`bit show comp/comp`);
+        output = helper.runCmd('bit show comp/comp');
       });
 
       it('should render the id correctly', () => {
@@ -70,7 +71,7 @@ describe('bit show command', function () {
       it('should render the dependencies correctly', () => {
         expect(output).to.have.string('Dependencies', 'Dependencies row is missing');
         // TODO: Should be concrete version after we resolve the dep version
-        expect(output).to.have.string(`utils/is-string`, 'Dependencies are wrong');
+        expect(output).to.have.string('utils/is-string', 'Dependencies are wrong');
       });
 
       it('should render the package dependencies correctly', () => {
@@ -93,40 +94,39 @@ describe('bit show command', function () {
     describe('single version as json output', () => {
       let output;
 
-
       before(() => {
-        output = JSON.parse(helper.runCmd(`bit show comp/comp -j`));
-      })
+        output = JSON.parse(helper.runCmd('bit show comp/comp -j'));
+      });
 
       it('should include the name correctly', () => {
-        expect(output).to.include({name: 'comp'});
+        expect(output).to.include({ name: 'comp' });
       });
 
       it('should include the namespace correctly', () => {
-        expect(output).to.include({box: 'comp'});
+        expect(output).to.include({ box: 'comp' });
       });
 
       // TODO: Check again after this commit merged: 6ee69fab36f5b9f31fa576216c6bf22808d0d459
       it.skip('should include the version correctly', () => {
-        expect(output).to.include({version: 1});
+        expect(output).to.include({ version: 1 });
       });
 
       // TODO: get the version dynamically
       it('should include the compiler correctly', () => {
-        expect(output).to.include({compilerId: `${helper.envScope}/compilers/babel${VERSION_DELIMITER}1`});
+        expect(output).to.include({ compilerId: `${helper.envScope}/compilers/babel${VERSION_DELIMITER}1` });
       });
 
       it('should include the language correctly', () => {
-        expect(output).to.include({lang: "javascript"});
+        expect(output).to.include({ lang: 'javascript' });
       });
 
       // TODO: update when we add tester to use case
       it('should include the tester correctly', () => {
-        expect(output).to.include({testerId: null});
+        expect(output).to.include({ testerId: null });
       });
 
       it('should render the main file correctly', () => {
-        expect(output).to.include({mainFile: 'src/mainFile.js'});
+        expect(output).to.include({ mainFile: 'src/mainFile.js' });
       });
 
       it('should include the dependencies correctly', () => {
@@ -150,7 +150,7 @@ describe('bit show command', function () {
         const firstFileObj = files[0];
         const secondFileObj = files[1];
 
-        //path.pathNormalizeToLinux is used because the test check the vinyl objects
+        // path.pathNormalizeToLinux is used because the test check the vinyl objects
         const mainFileHistory = [path.normalize(`${helper.localScopePath}/src/mainFile.js`)];
         // const mainFileObj = {history: mainFileHistory};
         const utilFileHistory = [path.normalize(`${helper.localScopePath}/src/utils/utilFile.js`)];
@@ -165,37 +165,23 @@ describe('bit show command', function () {
       });
     });
 
-    it.skip('should throw an error if the -v flag provided', () => {
-
-    });
+    it.skip('should throw an error if the -v flag provided', () => {});
   });
 
   // TODO: Implement after export is working
   describe.skip('remote components', () => {
     describe('single version as cli output (no -v or -j flags)', () => {
-      it('should render the id correctly', () => {
+      it('should render the id correctly', () => {});
 
-      });
+      it('should render the language correctly', () => {});
 
-      it('should render the language correctly', () => {
+      it('should render the language correctly', () => {});
 
-      });
+      it('should render the tester correctly', () => {});
 
-      it('should render the language correctly', () => {
+      it('should render the dependencies correctly', () => {});
 
-      });
-
-      it('should render the tester correctly', () => {
-
-      });
-
-      it('should render the dependencies correctly', () => {
-
-      });
-
-      it('should render the package dependencies correctly', () => {
-
-      });
+      it('should render the package dependencies correctly', () => {});
 
       it('should render the files correctly', () => {
         expect(output).to.have.string('Files', 'Files row is missing');
@@ -210,43 +196,27 @@ describe('bit show command', function () {
     });
 
     describe('all versions as cli output (without -j flag)', () => {
-      it('should render the id correctly', () => {
+      it('should render the id correctly', () => {});
 
-      });
+      it('should render the language correctly', () => {});
 
-      it('should render the language correctly', () => {
+      it('should render the language correctly', () => {});
 
-      });
+      it('should render the tester correctly', () => {});
 
-      it('should render the language correctly', () => {
+      it('should render the dependencies correctly', () => {});
 
-      });
-
-      it('should render the tester correctly', () => {
-
-      });
-
-      it('should render the dependencies correctly', () => {
-
-      });
-
-      it('should render the package dependencies correctly', () => {
-
-      });
+      it('should render the package dependencies correctly', () => {});
     });
 
     describe('single version as json output', () => {
       // TODO: Make more test cases here
-      it('should return correct json', () => {
-
-      });
+      it('should return correct json', () => {});
     });
 
     describe('all versions as json output', () => {
       // TODO: Make more test cases here
-      it('should return correct json', () => {
-
-      });
+      it('should return correct json', () => {});
     });
   });
 

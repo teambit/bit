@@ -2,8 +2,8 @@ import { BitObject, Ref } from '../objects';
 import { bufferFrom, getStringifyArgs } from '../../utils';
 
 type ScopeMetaProps = {
-  name: string;
-  license: string;
+  name: string,
+  license: string
 };
 
 export default class ScopeMeta extends BitObject {
@@ -19,7 +19,7 @@ export default class ScopeMeta extends BitObject {
   toObject(): Object {
     return {
       license: this.license,
-      name: this.name,
+      name: this.name
     };
   }
 
@@ -40,7 +40,7 @@ export default class ScopeMeta extends BitObject {
     return ScopeMeta.fromObject({ name }).hash();
   }
 
-  static parse(propsStr: string|Buffer): ScopeMeta {
+  static parse(propsStr: string | Buffer): ScopeMeta {
     return this.fromObject(JSON.parse(propsStr));
   }
 

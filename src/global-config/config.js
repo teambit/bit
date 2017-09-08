@@ -43,8 +43,7 @@ export default class Config extends Map<string, string> {
       .catch((err) => {
         if (err.code !== 'ENOENT') return err;
         const config = new Config([]);
-        return config.write()
-          .then(() => config);
+        return config.write().then(() => config);
       });
   }
 }

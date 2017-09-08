@@ -13,8 +13,7 @@ export default class List extends Command {
   action([path, args]: [string, string]): Promise<any> {
     const { headers } = unpackCommand(args);
     // validateVersion(headers)
-    return scopeList(fromBase64(path))
-    .then(components => components.map(c => c.toString()));
+    return scopeList(fromBase64(path)).then(components => components.map(c => c.toString()));
   }
 
   report(str: string): string {

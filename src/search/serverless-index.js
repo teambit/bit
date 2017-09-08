@@ -20,7 +20,8 @@ function deleteDb(scopePath: string) {
 }
 
 function initializeIndex(scopePath: string): Promise<any> {
-  if (!index) { // static var to make sure the index is not instantiated twice
+  if (!index) {
+    // static var to make sure the index is not instantiated twice
     const indexOptions = {
       indexPath: getIndexPath(scopePath),
       logLevel,
@@ -41,5 +42,5 @@ function initializeIndex(scopePath: string): Promise<any> {
 module.exports = {
   deleteDb,
   getIndexPath,
-  initializeIndex,
+  initializeIndex
 };

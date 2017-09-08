@@ -9,7 +9,7 @@ export default class RefershScope extends Command {
   opts = [];
   private = true;
 
-  action([scopePath, ]: [string, ?string]): Promise<any> {
+  action([scopePath]: [string, ?string]): Promise<any> {
     return refreshScope(scopePath || process.cwd());
   }
 

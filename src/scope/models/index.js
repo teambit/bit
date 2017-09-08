@@ -11,5 +11,5 @@ module.exports = {
   ScopeMeta,
   Source,
   Version,
-  Symlink,
+  Symlink
 };

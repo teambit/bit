@@ -9,17 +9,24 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 import { flattenDependencies } from '../../../scope/flatten-dependencies';
+
 const key = R.compose(R.head, R.keys);
 
-export default async function importAction(
-  { ids, tester, compiler, verbose, prefix, environment }: {
-    ids: string,
-    tester: ?bool,
-    compiler: ?bool,
-    verbose: ?bool,
-    prefix: ?string,
-    environment: ?bool,
-  }): Promise<Bit[]> {
+export default async function importAction({
+  ids,
+  tester,
+  compiler,
+  verbose,
+  prefix,
+  environment
+}: {
+  ids: string,
+  tester: ?boolean,
+  compiler: ?boolean,
+  verbose: ?boolean,
+  prefix: ?string,
+  environment: ?boolean
+}): Promise<Bit[]> {
   async function importEnvironment(consumer: Consumer) {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
 
@@ -43,18 +50,21 @@ export default async function importAction(
   }
 
   const consumer: Consumer = await loadConsumer();
-  if (tester || compiler) { return importEnvironment(consumer); }
+  if (tester || compiler) {
+    return importEnvironment(consumer);
+  }
   const cache = false;
   const { dependencies, envDependencies } = await consumer.import(ids, verbose, environment, cache, prefix);
   const bitIds = dependencies.map(R.path(['component', 'id']));
-  if (!R.isEmpty(ids)) { // not needed when importing from bit.json/bit.map
+  if (!R.isEmpty(ids)) {
+    // not needed when importing from bit.json/bit.map
     await consumer.bitJson.addDependencies(bitIds).write({ bitDir: consumer.getPath() });
   }
 
   const warnings = await warnForPackageDependencies({
     dependencies: flattenDependencies(dependencies),
     envDependencies,
-    consumer,
+    consumer
   });
   return { dependencies, envDependencies, warnings };
 }
@@ -65,7 +75,7 @@ const getSemverType = (str): ?string => {
   return null;
 };
 
-function compatibleWith(a: { [string]: string }, b: { [string]: string, }): bool {
+function compatibleWith(a: { [string]: string }, b: { [string]: string }): boolean {
   const depName = key(a);
   if (!b[depName]) return false; // dependency does not exist - return false
   const bVersion = b[depName];
@@ -73,11 +83,17 @@ function compatibleWith(a: { [string]: string }, b: { [string]: string, }): bool
   const aType = getSemverType(aVersion);
   const bType = getSemverType(bVersion);
   if (!aType || !bType) return false; // in case one of the versions is invalid - return false
-  if (aType === 'V' && bType === 'V') { return semver.eq(aVersion, bVersion); }
-  if (aType === 'V' && bType === 'R') { return semver.satisfies(aVersion, bVersion); }
-  if (aType === 'R' && bType === 'V') { return semver.satisfies(bVersion, aVersion); }
+  if (aType === 'V' && bType === 'V') {
+    return semver.eq(aVersion, bVersion);
+  }
+  if (aType === 'V' && bType === 'R') {
+    return semver.satisfies(aVersion, bVersion);
+  }
+  if (aType === 'R' && bType === 'V') {
+    return semver.satisfies(bVersion, aVersion);
+  }
   if (aType === 'R' && bType === 'R') {
-    if (aVersion.startsWith('^') && (bVersion.startsWith('^'))) {
+    if (aVersion.startsWith('^') && bVersion.startsWith('^')) {
       const aMajorVersion = parseInt(aVersion[1], 10);
       const bMajorVersion = parseInt(bVersion[1], 10);
       if (aMajorVersion === bMajorVersion) return true;
@@ -90,27 +106,27 @@ const warnForPackageDependencies = ({ dependencies, consumer }): Promise<Object>
   const warnings = {
     notInPackageJson: [],
     notInNodeModules: [],
-    notInBoth: [],
+    notInBoth: []
   };
 
   const projectDir = consumer.getPath();
   const getPackageJson = (dir) => {
     try {
       return fs.readJSONSync(path.join(dir, 'package.json'));
-    } catch (e) { return {}; } // do we want to inform the use that he has no package.json
+    } catch (e) {
+      return {};
+    } // do we want to inform the use that he has no package.json
   };
   const packageJson = getPackageJson(projectDir);
-  const packageJsonDependencies = R.merge(
-    packageJson.dependencies || {}, packageJson.devDependencies || {}
-  );
+  const packageJsonDependencies = R.merge(packageJson.dependencies || {}, packageJson.devDependencies || {});
 
   const getNameAndVersion = pj => ({ [pj.name]: pj.version });
   const nodeModules = R.mergeAll(
-    glob.sync(path.join(projectDir, 'node_modules', '*'))
-    .map(R.compose(getNameAndVersion, getPackageJson))
+    glob.sync(path.join(projectDir, 'node_modules', '*')).map(R.compose(getNameAndVersion, getPackageJson))
   );
 
-  dependencies.forEach((dep) => { //eslint-disable-line
+  dependencies.forEach((dep) => {
+    //eslint-disable-line
     if (!dep.packageDependencies || R.isEmpty(dep.packageDependencies)) return null;
 
     R.forEachObjIndexed((packageDepVersion, packageDepName) => {
@@ -122,11 +138,19 @@ const warnForPackageDependencies = ({ dependencies, consumer }): Promise<Object>
         warnings.notInBoth.push(packageDep);
       }
 
-      if (!compatibleWithPackgeJson && compatibleWithNodeModules && !R.contains(packageDep, warnings.notInPackageJson)) {
+      if (
+        !compatibleWithPackgeJson &&
+        compatibleWithNodeModules &&
+        !R.contains(packageDep, warnings.notInPackageJson)
+      ) {
         warnings.notInPackageJson.push(packageDep);
       }
 
-      if (compatibleWithPackgeJson && !compatibleWithNodeModules && !R.contains(packageDep, warnings.notInNodeModules)) {
+      if (
+        compatibleWithPackgeJson &&
+        !compatibleWithNodeModules &&
+        !R.contains(packageDep, warnings.notInNodeModules)
+      ) {
         warnings.notInNodeModules.push(packageDep);
       }
     }, dep.packageDependencies);

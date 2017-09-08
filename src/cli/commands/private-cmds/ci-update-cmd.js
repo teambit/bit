@@ -16,14 +16,29 @@ export default class CiUpdate extends Command {
   ];
   private = true;
 
-  action([id, scopePath]: [string, ?string, ], { verbose, directory, output, keep = false }: { verbose: ?boolean, directory: ?string, output: ?string, keep:boolean }): Promise<any> {
+  action(
+    [id, scopePath]: [string, ?string],
+    {
+      verbose,
+      directory,
+      output,
+      keep = false
+    }: { verbose: ?boolean, directory: ?string, output: ?string, keep: boolean }
+  ): Promise<any> {
     verbose = true; // During ci-update we always want to see verbose outputs
-    return ciUpdateAction(id, scopePath || process.cwd(), verbose, directory, keep).then(({ specsResults, buildResults, component }) => ({ specsResults, buildResults, component, output }));
+    return ciUpdateAction(
+      id,
+      scopePath || process.cwd(),
+      verbose,
+      directory,
+      keep
+    ).then(({ specsResults, buildResults, component }) => ({ specsResults, buildResults, component, output }));
   }
 
-
   report({ specsResults, buildResults, component, output }): string {
-    if (!specsResults && !buildResults) { return 'no results found'; }
+    if (!specsResults && !buildResults) {
+      return 'no results found';
+    }
 
     if (specsResults instanceof Error) {
       return specsResults.message;

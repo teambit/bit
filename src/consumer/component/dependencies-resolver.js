@@ -10,7 +10,6 @@ import Component from '../component';
 import { Driver } from '../../driver';
 import { pathNormalizeToLinux, pathRelative, getWithoutExt } from '../../utils';
 
-
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
  * Each dependency file has a path, use bit.map to search for the component name by that path.
@@ -24,8 +23,13 @@ import { pathNormalizeToLinux, pathRelative, getWithoutExt } from '../../utils';
  * @param {BitMap} bitMap
  * @param {string} consumerPath
  */
-function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponentId: string, bitMap: BitMap,
-                                   consumerPath: string): Object {
+function findComponentsOfDepsFiles(
+  tree: Object,
+  files: string[],
+  entryComponentId: string,
+  bitMap: BitMap,
+  consumerPath: string
+): Object {
   const packagesDeps = {};
   const componentsDeps = [];
   const untrackedDeps = [];
@@ -88,7 +92,10 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
       // found a dependency component. Add it to componentsDeps
       const depRootDir = bitMap.getRootDirOfComponent(componentId);
       if (!destination) {
-        destination = depRootDir && fileDepRelative.startsWith(depRootDir) ? pathRelative(depRootDir, fileDepRelative) : fileDepRelative;
+        destination =
+          depRootDir && fileDepRelative.startsWith(depRootDir)
+            ? pathRelative(depRootDir, fileDepRelative)
+            : fileDepRelative;
       }
       // when there is no rootDir for the current dependency (it happens when it's AUTHORED), keep the original path
       const sourceRelativePath = depRootDir ? fileDepRelative : fileDep;
@@ -115,13 +122,19 @@ function findComponentsOfDepsFiles(tree: Object, files: string[], entryComponent
  */
 function mergeDependencyTrees(depTrees: Object, files: ComponentMapFile[]): Object {
   if (depTrees.length === 1) return R.head(depTrees);
-  if (depTrees.length !== files.length) throw new Error(`Error occurred while resolving dependencies, num of files: ${files.length}, num of resolved dependencies: ${depTrees.length}`);
+  if (depTrees.length !== files.length) {
+    throw new Error(
+      `Error occurred while resolving dependencies, num of files: ${files.length}, num of resolved dependencies: ${depTrees.length}`
+    );
+  }
   const dependencyTree = {
     missing: { packages: [], files: [] },
     tree: {}
   };
-  Object.keys(depTrees).forEach((dep, key) => { // the keys of depTrees are parallel to the files
-    if (depTrees[dep].missing.packages.length && !files[key].test) { // ignore package dependencies of tests for now
+  Object.keys(depTrees).forEach((dep, key) => {
+    // the keys of depTrees are parallel to the files
+    if (depTrees[dep].missing.packages.length && !files[key].test) {
+      // ignore package dependencies of tests for now
       dependencyTree.missing.packages.push(...depTrees[dep].missing.packages);
     }
     if (depTrees[dep].missing.files && depTrees[dep].missing.files.length) {
@@ -149,13 +162,15 @@ function mergeDependencyTrees(depTrees: Object, files: ComponentMapFile[]): Obje
  * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
  * component.missingDependencies.missingDependenciesOnFs
  */
-export default async function loadDependenciesForComponent(component: Component,
-                                                           componentMap: ComponentMap,
-                                                           bitDir: string,
-                                                           driver: Driver,
-                                                           bitMap: BitMap,
-                                                           consumerPath: string,
-                                                           idWithConcreteVersionString: string): Promise<Component> {
+export default async function loadDependenciesForComponent(
+  component: Component,
+  componentMap: ComponentMap,
+  bitDir: string,
+  driver: Driver,
+  bitMap: BitMap,
+  consumerPath: string,
+  idWithConcreteVersionString: string
+): Promise<Component> {
   component.missingDependencies = {};
   const files = componentMap.files.map(file => file.relativePath);
   // find the dependencies (internal files and packages) through automatic dependency resolution
@@ -170,7 +185,13 @@ export default async function loadDependenciesForComponent(component: Component,
   }
   // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
   // they are referred as "untracked components" and the user should add them later on in order to commit
-  const traversedDeps = findComponentsOfDepsFiles(dependenciesTree.tree, files, idWithConcreteVersionString, bitMap, consumerPath);
+  const traversedDeps = findComponentsOfDepsFiles(
+    dependenciesTree.tree,
+    files,
+    idWithConcreteVersionString,
+    bitMap,
+    consumerPath
+  );
   const traversedCompDeps = traversedDeps.componentsDeps;
   component.dependencies = Object.keys(traversedCompDeps).map((depId) => {
     return { id: BitId.parse(depId), relativePaths: traversedCompDeps[depId] };

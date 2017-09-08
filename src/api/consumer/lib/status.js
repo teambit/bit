@@ -14,7 +14,7 @@ export default async function status(): Promise<Object> {
   // If there is at least one we won't commit anything
   const newAndModified = newComponents.concat(modifiedComponent);
   const componentsWithMissingDeps = newAndModified.filter((component) => {
-    return (component.missingDependencies && !R.isEmpty(component.missingDependencies));
+    return component.missingDependencies && !R.isEmpty(component.missingDependencies);
   });
 
   return { newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps };

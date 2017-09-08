@@ -4,16 +4,17 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import ConsumerComponent from '../../../consumer/component/consumer-component';
 import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
-import { BEFORE_EXPORT,BEFORE_EXPORTS } from '../../../cli/loader/loader-messages';
+import { BEFORE_EXPORT, BEFORE_EXPORTS } from '../../../cli/loader/loader-messages';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import IdExportedAlready from './exceptions/id-exported-already';
 
 async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string) {
   const componentsList = new ComponentsList(consumer);
-  if (!ids || !ids.length) { // export all
+  if (!ids || !ids.length) {
+    // export all
     const exportPendingComponents = await componentsList.listExportPendingComponents();
-    (exportPendingComponents.length > 1) ? loader.start(BEFORE_EXPORTS) : loader.start(BEFORE_EXPORT);
+    exportPendingComponents.length > 1 ? loader.start(BEFORE_EXPORTS) : loader.start(BEFORE_EXPORT);
     return exportPendingComponents;
   }
   const componentsFromBitMap = await componentsList.getFromBitMap();
@@ -23,7 +24,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
   const idsToExport = ids.map((id) => {
     const parsedId = BitId.parse(id);
     if (parsedId.scope) return id;
-    const match = idsFromBitMap.find(idStr => {
+    const match = idsFromBitMap.find((idStr) => {
       return parsedId.toString() === BitId.parse(idStr).toStringWithoutScopeAndVersion();
     });
     if (match) {
@@ -39,11 +40,11 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
     }
     return id;
   });
-  loader.start(BEFORE_EXPORT); //show single export
+  loader.start(BEFORE_EXPORT); // show single export
   return idsToExport;
 }
 
-export default async function exportAction(ids?: string[], remote: string, save: ?bool) {
+export default async function exportAction(ids?: string[], remote: string, save: ?boolean) {
   const consumer: Consumer = await loadConsumer();
   const idsToExport = await getComponentsToExport(ids, consumer, remote);
   // todo: what happens when some failed? we might consider avoid Promise.all
@@ -51,14 +52,17 @@ export default async function exportAction(ids?: string[], remote: string, save:
   if (R.isEmpty(idsToExport)) return [];
   const componentsDependencies = await consumer.scope.exportMany(idsToExport, remote);
   const bitJsonDependencies = consumer.bitJson.getDependencies();
-  const componentsP = componentsDependencies.map(async componentDependencies => {
+  const componentsP = componentsDependencies.map(async (componentDependencies) => {
     const component: ConsumerComponent = componentDependencies.component;
     if (save) {
       // add to bit.json only if the component is already there. So then the version will be updated. It's applicable
       // mainly when a component was imported first. For authored components, no need to save them in bit.json, they are
       // already in bit.map
-      if (bitJsonDependencies.find(bitJsonDependency => bitJsonDependency
-          .toStringWithoutVersion() === component.id.toStringWithoutVersion())) {
+      if (
+        bitJsonDependencies.find(
+          bitJsonDependency => bitJsonDependency.toStringWithoutVersion() === component.id.toStringWithoutVersion()
+        )
+      ) {
         await consumer.bitJson.addDependency(component.id).write({ bitDir: consumer.getPath() });
       }
     }

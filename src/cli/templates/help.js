@@ -2,7 +2,9 @@ const chalk = require('chalk');
 
 module.exports = `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
 
-${chalk.grey('bit is a free and open source tool for turning components from existing source-code to a collection of reusable components.')}
+${chalk.grey(
+    'bit is a free and open source tool for turning components from existing source-code to a collection of reusable components.'
+  )}
 ${chalk.grey('Easily share, reuse, maintain and discover code components from any project.')}
 
 ${chalk.grey('Bit documantation: https://docs.bitsrc.io')}
@@ -32,11 +34,15 @@ ${chalk.underline('examine component history and state')}
   ${chalk.cyan('show')}    show component overview.  
 
 ${chalk.underline('component envrionment operations')}
-  ${chalk.cyan('build')}   build any set of components with configured compiler (component compiler or as defined in bit.json)
-  ${chalk.cyan('test')}    test any set of components with configured tester (component tester or as defined in bit.json)
+  ${chalk.cyan(
+    'build'
+  )}   build any set of components with configured compiler (component compiler or as defined in bit.json)
+  ${chalk.cyan(
+    'test'
+  )}    test any set of components with configured tester (component tester or as defined in bit.json)
 
 ${chalk.underline('general purpose commands')}
   ${chalk.cyan('config')}  global config management
   ${chalk.cyan('cc')}      clears Bit's cache from current working machine
 
-${chalk.grey('please use \'bit <command> --help\' for more information and guides on specific commands.')}`;
+${chalk.grey("please use 'bit <command> --help' for more information and guides on specific commands.")}`;

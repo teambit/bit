@@ -24,10 +24,9 @@ export default class Remotes extends Map<string, Remote> {
   resolve(scopeName: string, thisScope?: Scope): Promise<Remote> {
     const remote = super.get(scopeName);
     if (remote) return Promise.resolve(remote);
-    return remoteResolver(scopeName, thisScope)
-      .then((scopeHost) => {
-        return new Remote(scopeHost, scopeName);
-      });
+    return remoteResolver(scopeName, thisScope).then((scopeHost) => {
+      return new Remote(scopeHost, scopeName);
+    });
   }
 
   async fetch(ids: BitId[], thisScope: Scope, withoutDeps: boolean = false): Promise<ComponentObjects[]> {
@@ -36,10 +35,7 @@ export default class Remotes extends Map<string, Remote> {
     const byScope = groupBy(prop('scope'));
     const promises = [];
     forEach(byScope(ids), (scopeIds, scopeName) => {
-      promises.push(
-        this.resolve(scopeName, thisScope)
-          .then(remote => remote.fetch(scopeIds, withoutDeps))
-      );
+      promises.push(this.resolve(scopeName, thisScope).then(remote => remote.fetch(scopeIds, withoutDeps)));
     });
 
     logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps}) on a remote`);
@@ -66,7 +62,7 @@ export default class Remotes extends Map<string, Remote> {
       .then(remotes => Remotes.load(remotes).resolve(scopeName));
   }
 
-  static load(remotes: {[string]: string}): Remotes {
+  static load(remotes: { [string]: string }): Remotes {
     const models = [];
 
     if (!remotes) return new Remotes();

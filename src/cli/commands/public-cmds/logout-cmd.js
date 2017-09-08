@@ -13,7 +13,7 @@ export default class Logout extends Command {
     return new Promise(resolve => resolve(m));
   }
 
-  report(data: {string: any}): string {
+  report(data: { string: any }): string {
     return '';
   }
 }

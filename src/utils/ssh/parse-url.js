@@ -34,9 +34,7 @@ export default function parseSSHUrl(str: string): SSHUrl {
     str = str.slice(str.indexOf('@') + 1);
   }
   if (str.indexOf(':') !== -1) {
-    const [potentialPort, potentialPath] = str
-      .slice(str.indexOf(':') + 1)
-      .split(':');
+    const [potentialPort, potentialPath] = str.slice(str.indexOf(':') + 1).split(':');
 
     const maybePort = parseInt(potentialPort);
     if (!isNaN(maybePort) && isNumber(maybePort)) {

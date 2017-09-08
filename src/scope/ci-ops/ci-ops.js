@@ -11,9 +11,9 @@ function defaultCIFunc(id: string, scopePath: string) {
     cwd: scopePath,
     env: {
       __id__: id,
-      __scope__: scopePath,
+      __scope__: scopePath
     },
-    stdio: [ 'ignore', 'ignore', 'ignore' ]
+    stdio: ['ignore', 'ignore', 'ignore']
   });
 
   child.unref();
@@ -29,8 +29,10 @@ export default (component: ConsumerComponent, scopePath: string) => {
   let ciFunc;
 
   if (!ciFuncPath) ciFunc = defaultCIFunc;
-  // $FlowFixMe
-  else ciFunc = require(ciFuncPath);
+  else {
+    // $FlowFixMe
+    ciFunc = require(ciFuncPath);
+  }
 
   ciFunc(id, scopePath);
   return component;

@@ -3,12 +3,10 @@ import { GlobalConfig } from '../../../global-config';
 import Config from '../../../global-config/config';
 
 export function set(key: string, val: string): Promise<Config> {
-  return GlobalConfig.load()
-    .then((config) => {
-      config.set(key, val);
-      return config.write()
-        .then(() => config);
-    });
+  return GlobalConfig.load().then((config) => {
+    config.set(key, val);
+    return config.write().then(() => config);
+  });
 }
 
 export function setSync(key: string, val: string): Config {
@@ -19,12 +17,10 @@ export function setSync(key: string, val: string): Config {
 }
 
 export function del(key: string): Promise<Config> {
-  return GlobalConfig.load()
-    .then((config) => {
-      config.delete(key);
-      return config.write()
-        .then(() => config);
-    });
+  return GlobalConfig.load().then((config) => {
+    config.delete(key);
+    return config.write().then(() => config);
+  });
 }
 
 export function delSync(key: string): Config {
@@ -35,10 +31,9 @@ export function delSync(key: string): Config {
 }
 
 export function get(key: string): Promise<?string> {
-  return GlobalConfig.load()
-    .then((config) => {
-      return config.get(key);
-    });
+  return GlobalConfig.load().then((config) => {
+    return config.get(key);
+  });
 }
 
 export function getSync(key: string): ?string {
@@ -47,8 +42,7 @@ export function getSync(key: string): ?string {
 }
 
 export function list(): Promise<any> {
-  return GlobalConfig.load()
-    .then(config => config.toPlainObject());
+  return GlobalConfig.load().then(config => config.toPlainObject());
 }
 
 export function listSync(): any {

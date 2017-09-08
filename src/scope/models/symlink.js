@@ -3,12 +3,11 @@ import { BitObject } from '../objects';
 import { DEFAULT_BOX_NAME } from '../../constants';
 import { getStringifyArgs } from '../../utils';
 
-
 export type SymlinkProp = {
-  scope: string;
-  box?: string;
-  name: string;
-  realScope: string;
+  scope: string,
+  box?: string,
+  name: string,
+  realScope: string
 };
 
 export default class Symlink extends BitObject {

@@ -13,8 +13,7 @@ export default class Login extends Command {
     return new Promise(resolve => resolve(m));
   }
 
-  report(data: {string: any}): string {
+  report(data: { string: any }): string {
     return '';
   }
-
 }

@@ -9,36 +9,29 @@ import {
   DEFAULT_SPECS_NAME,
   DEFAULT_DEPENDENCIES,
   NO_PLUGIN_TYPE,
-  DEFAULT_LANGUAGE,
+  DEFAULT_LANGUAGE
 } from '../../constants';
 
 export type AbstractBitJsonProps = {
-  impl?: string;
-  spec?: string;
-  compiler?: string;
-  tester?: string;
-  dependencies?: Object;
-  lang?: string;
+  impl?: string,
+  spec?: string,
+  compiler?: string,
+  tester?: string,
+  dependencies?: Object,
+  lang?: string
 };
 
 export default class AbstractBitJson {
-  /** @deprecated **/
+  /** @deprecated * */
   impl: string;
-  /** @deprecated **/
+  /** @deprecated * */
   spec: string;
   compiler: string;
   tester: string;
-  dependencies: {[string]: string};
+  dependencies: { [string]: string };
   lang: string;
 
-  constructor({
-    impl,
-    spec,
-    compiler,
-    tester,
-    dependencies,
-    lang,
-  }: AbstractBitJsonProps) {
+  constructor({ impl, spec, compiler, tester, dependencies, lang }: AbstractBitJsonProps) {
     this.impl = impl || DEFAULT_IMPL_NAME;
     this.spec = spec || DEFAULT_SPECS_NAME;
     this.compiler = compiler || DEFAULT_COMPILER_ID;
@@ -116,20 +109,26 @@ export default class AbstractBitJson {
         return null;
       }
 
-      return filterObject({
-        impl: self.getImplBasename(),
-        spec: self.getSpecBasename()
-      }, val => val);
+      return filterObject(
+        {
+          impl: self.getImplBasename(),
+          spec: self.getSpecBasename()
+        },
+        val => val
+      );
     }
 
-    return filterObject({
-      lang: this.lang,
-      env: {
-        compiler: this.compilerId,
-        tester: this.testerId,
+    return filterObject(
+      {
+        lang: this.lang,
+        env: {
+          compiler: this.compilerId,
+          tester: this.testerId
+        },
+        dependencies: this.dependencies
       },
-      dependencies: this.dependencies
-    }, isLangPropDefaultOrNull);
+      isLangPropDefaultOrNull
+    );
   }
 
   toJson(readable: boolean = true) {

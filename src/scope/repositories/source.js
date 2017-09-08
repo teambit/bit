@@ -32,8 +32,7 @@ export default class Source extends Repository {
   }
 
   listVersions(bitId: BitId): number[] {
-    return listDirectories(this.composeVersionsPath(bitId.name, bitId.box))
-      .map(version => parseInt(version));
+    return listDirectories(this.composeVersionsPath(bitId.name, bitId.box)).map(version => parseInt(version));
   }
 
   resolveVersion(id: BitId) {
@@ -43,11 +42,15 @@ export default class Source extends Repository {
   loadSource(id: BitId): Promise<Bit> {
     try {
       const version = this.resolveVersion(id);
-      return Bit.load(this.composeSourcePath({
-        name: id.name,
-        box: id.box,
-        version
-      }), id.name, this.scope.name);
+      return Bit.load(
+        this.composeSourcePath({
+          name: id.name,
+          box: id.box,
+          version
+        }),
+        id.name,
+        this.scope.name
+      );
     } catch (err) {
       throw new SourceNotFound(id);
     }
@@ -78,7 +81,7 @@ export default class Source extends Repository {
     return path.join(this.getPath(), box, name);
   }
 
-  composeSourcePath({ name, box = 'global', version }: {name: string, box?: string, version: number }) {
+  composeSourcePath({ name, box = 'global', version }: { name: string, box?: string, version: number }) {
     return path.join(this.getPath(), box, name, version.toString());
   }
 }

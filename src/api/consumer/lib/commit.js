@@ -3,8 +3,17 @@ import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 
-export async function commitAction({ id, message, force, verbose }:
-{ id: string, message: string, force: ?bool, verbose?: bool }) {
+export async function commitAction({
+  id,
+  message,
+  force,
+  verbose
+}: {
+  id: string,
+  message: string,
+  force: ?boolean,
+  verbose?: boolean
+}) {
   const consumer: Consumer = await loadConsumer();
   if (!force) {
     const isModified = await consumer.isComponentModifiedById(id);
@@ -14,8 +23,15 @@ export async function commitAction({ id, message, force, verbose }:
   return R.head(components);
 }
 
-export async function commitAllAction({ message, force, verbose }:
-{ message: string, force: ?bool, verbose?: bool }) {
+export async function commitAllAction({
+  message,
+  force,
+  verbose
+}: {
+  message: string,
+  force: ?boolean,
+  verbose?: boolean
+}) {
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const commitPendingComponents = await componentsList.listCommitPendingComponents();

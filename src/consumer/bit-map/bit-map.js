@@ -5,8 +5,16 @@ import find from 'lodash.find';
 import pickBy from 'lodash.pickby';
 import json from 'comment-json';
 import logger from '../../logger/logger';
-import { BIT_MAP, DEFAULT_INDEX_NAME, BIT_JSON, COMPONENT_ORIGINS, DEPENDENCIES_DIR, AUTO_GENERATED_MSG,
-  DEFAULT_SEPARATOR, DEFAULT_INDEX_EXTS } from '../../constants';
+import {
+  BIT_MAP,
+  DEFAULT_INDEX_NAME,
+  BIT_JSON,
+  COMPONENT_ORIGINS,
+  DEPENDENCIES_DIR,
+  AUTO_GENERATED_MSG,
+  DEFAULT_SEPARATOR,
+  DEFAULT_INDEX_EXTS
+} from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux } from '../../utils';
@@ -85,7 +93,8 @@ export default class BitMap {
       const potentialMainFiles = files.filter(file => file.name === baseMainFile);
       if (potentialMainFiles.length) {
         // when there are several files that met the criteria, choose the closer to the root
-        const sortByNumOfDirs = (a, b) => a.relativePath.split(DEFAULT_SEPARATOR).length - b.relativePath.split(DEFAULT_SEPARATOR).length;
+        const sortByNumOfDirs = (a, b) =>
+          a.relativePath.split(DEFAULT_SEPARATOR).length - b.relativePath.split(DEFAULT_SEPARATOR).length;
         potentialMainFiles.sort(sortByNumOfDirs);
         mainFileFromFiles = R.head(potentialMainFiles);
       }
@@ -112,7 +121,7 @@ export default class BitMap {
 
     // When there is more then one file and the main file not found there
     if (R.isNil(searchResult.mainFileFromFiles)) {
-      const mainFileString = mainFile || (`${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`);
+      const mainFileString = mainFile || `${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`;
       throw new MissingMainFile(mainFileString, files.map(file => path.normalize(file.relativePath)));
     }
     return searchResult.baseMainFile;
@@ -140,8 +149,9 @@ export default class BitMap {
   }
 
   deleteOlderVersionsOfComponent(componentId: BitId): void {
-    const allVersions = Object.keys(this.components)
-      .filter(id => BitId.parse(id).toStringWithoutVersion() === componentId.toStringWithoutVersion());
+    const allVersions = Object.keys(this.components).filter(
+      id => BitId.parse(id).toStringWithoutVersion() === componentId.toStringWithoutVersion()
+    );
     allVersions.forEach((version) => {
       if (version !== componentId.toString() && this.components[version].origin !== COMPONENT_ORIGINS.NESTED) {
         logger.debug(`BitMap: deleting an older version ${version} of an existing component ${componentId.toString()}`);
@@ -154,7 +164,7 @@ export default class BitMap {
    * When the given id doesn't include scope-name, there might be a similar component in bit.map with scope-name, use it
    * only when the origin is imported or author, as we don't allow to update nested component.
    */
-  getExistingComponentId(componentIdStr: string): string|boolean {
+  getExistingComponentId(componentIdStr: string): string | boolean {
     if (this.components[componentIdStr]) return componentIdStr;
     if (BitId.parse(componentIdStr).scope) return false; // given id has scope, it should have been an exact match
     const foundId = Object.keys(this.components).find((component) => {
@@ -169,7 +179,15 @@ export default class BitMap {
     return foundId;
   }
 
-  addComponent({ componentId, files, mainFile, origin, parent, rootDir, override }: {
+  addComponent({
+    componentId,
+    files,
+    mainFile,
+    origin,
+    parent,
+    rootDir,
+    override
+  }: {
     componentId: BitId,
     files: ComponentMapFile[],
     mainFile?: string,
@@ -195,16 +213,26 @@ export default class BitMap {
       if (override) {
         this.components[componentIdStr].files = files;
       } else {
-        this.components[componentIdStr].files = R.unionWith(R.eqBy(R.prop('relativePath')), files, this.components[componentIdStr].files);
+        this.components[componentIdStr].files = R.unionWith(
+          R.eqBy(R.prop('relativePath')),
+          files,
+          this.components[componentIdStr].files
+        );
       }
       if (mainFile) {
-        this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), this.components[componentIdStr]);
+        this.components[componentIdStr].mainFile = this._getMainFile(
+          pathNormalizeToLinux(mainFile),
+          this.components[componentIdStr]
+        );
       }
     } else {
       this.components[componentIdStr] = { files };
       this.components[componentIdStr].origin = origin;
 
-      this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), this.components[componentIdStr]);
+      this.components[componentIdStr].mainFile = this._getMainFile(
+        pathNormalizeToLinux(mainFile),
+        this.components[componentIdStr]
+      );
     }
     if (rootDir) {
       const root = this._makePathRelativeToProjectRoot(rootDir);
@@ -246,10 +274,12 @@ export default class BitMap {
    */
   updateComponentId(id: BitId): void {
     const newIdString = id.toString();
-    const olderComponentsIds = Object.keys(this.components).filter(componentId => BitId
-      .parse(componentId).toStringWithoutScopeAndVersion() === id.toStringWithoutScopeAndVersion()
-    && componentId !== newIdString
-    && this.components[componentId].origin !== COMPONENT_ORIGINS.NESTED);
+    const olderComponentsIds = Object.keys(this.components).filter(
+      componentId =>
+        BitId.parse(componentId).toStringWithoutScopeAndVersion() === id.toStringWithoutScopeAndVersion() &&
+        componentId !== newIdString &&
+        this.components[componentId].origin !== COMPONENT_ORIGINS.NESTED
+    );
 
     if (!olderComponentsIds.length) {
       logger.debug(`bit-map: no need to update ${newIdString}`);
@@ -265,7 +295,7 @@ export default class BitMap {
     delete this.components[olderComponentId];
   }
 
-  getComponent(id: string|BitId, shouldThrow: boolean): ComponentMap {
+  getComponent(id: string | BitId, shouldThrow: boolean): ComponentMap {
     if (R.is(String, id)) {
       id = BitId.parse(id);
     }
@@ -273,8 +303,9 @@ export default class BitMap {
       if (!this.components[id] && shouldThrow) throw new MissingBitMapComponent(id);
       return this.components[id];
     }
-    const idWithVersion = Object.keys(this.components)
-      .find(componentId => BitId.parse(componentId).toStringWithoutVersion() === id.toStringWithoutVersion());
+    const idWithVersion = Object.keys(this.components).find(
+      componentId => BitId.parse(componentId).toStringWithoutVersion() === id.toStringWithoutVersion()
+    );
     if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(id);
     return this.components[idWithVersion];
   }
@@ -289,7 +320,7 @@ export default class BitMap {
     return component.rootDir;
   }
 
-  getEntryFileOfComponent(id: string){
+  getEntryFileOfComponent(id: string) {
     const component = this.getComponent(id, SHOULD_THROW);
     const rootDir = component.rootDir;
     const entryPath = path.join(rootDir, DEFAULT_INDEX_NAME);
@@ -308,10 +339,10 @@ export default class BitMap {
    * @memberof BitMap
    */
   getComponentObjectByPath(filePath: string): Object<string, ComponentMap> {
-    return pickBy(this.components, (componentObject, componentId) => {
+    return pickBy(this.components, (componentObject, componentId) => {
       const rootDir = componentObject.rootDir;
       return find(componentObject.files, (file) => {
-        return (file.relativePath === filePath || (rootDir && pathJoinLinux(rootDir, file.relativePath) === filePath));
+        return file.relativePath === filePath || (rootDir && pathJoinLinux(rootDir, file.relativePath) === filePath);
       });
     });
   }
@@ -328,7 +359,7 @@ export default class BitMap {
    * @memberof BitMap
    */
   getComponentObjectByRootPath(rootPath: string): Object<string, ComponentMap> {
-    return pickBy(this.components, componentObject => componentObject.rootDir === rootPath);
+    return pickBy(this.components, componentObject => componentObject.rootDir === rootPath);
   }
 
   /**
@@ -357,10 +388,9 @@ export default class BitMap {
     return R.keys(componentObject)[0];
   }
 
-
-  modifyComponentsToLinuxPath(components:Object) {
+  modifyComponentsToLinuxPath(components: Object) {
     Object.keys(components).forEach((key) => {
-      components[key].files.forEach(file => file.relativePath = pathNormalizeToLinux(file.relativePath));
+      components[key].files.forEach(file => (file.relativePath = pathNormalizeToLinux(file.relativePath)));
       components[key].mainFile = pathNormalizeToLinux(components[key].mainFile);
     });
   }

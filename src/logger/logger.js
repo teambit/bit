@@ -5,7 +5,7 @@ import { GLOBAL_LOGS } from '../constants';
 
 const logger = new winston.Logger({
   transports: [
-    new (winston.transports.File)({
+    new winston.transports.File({
       filename: path.join(GLOBAL_LOGS, 'debug.log'),
       json: false,
       level: process.env.NODE_ENV === 'production' ? 'error' : 'debug',
@@ -16,7 +16,7 @@ const logger = new winston.Logger({
       // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
       // The filename will always have the most recent log lines. The larger the appended number, the older the log file
       tailable: true
-    }),
+    })
   ],
   exceptionHandlers: [
     new winston.transports.File({

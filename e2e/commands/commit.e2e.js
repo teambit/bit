@@ -23,38 +23,34 @@ describe('bit commit command', function () {
     errorSpy = sinon.spy(console, 'error');
   });
   describe.skip('commit one component', () => {
-    it('should throw error if the bit id does not exists', () => {
-    });
+    it('should throw error if the bit id does not exists', () => {});
 
     it('should print warning if the a driver is not installed', () => {
-
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
       helper.createComponent('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
       const output = helper.commitAllComponents();
       // var myargs = logSpy.getCalls()[4].args
       // console.log("args", myargs);
-      expect( logSpy.calledWith('Warning: Bit is not be able calculate the dependencies tree. Please install bit-javascript driver and run commit again.\n') ).to.be.true;
+      expect(
+        logSpy.calledWith(
+          'Warning: Bit is not be able calculate the dependencies tree. Please install bit-javascript driver and run commit again.\n'
+        )
+      ).to.be.true;
     });
 
-    it('should persist the model in the scope', () => {
-    });
+    it('should persist the model in the scope', () => {});
 
-    it('should run the onCommit hook', () => {
-    });
+    it('should run the onCommit hook', () => {});
 
-    it('should throw error if the build failed', () => {
-    });
+    it('should throw error if the build failed', () => {});
 
-    it('should throw error if the tests failed', () => {
-    });
+    it('should throw error if the tests failed', () => {});
 
     describe.skip('commit imported component', () => {
-      it('should index the component', () => {
-      });
+      it('should index the component', () => {});
 
-      it('should write the full id to bit map (include scope and version)', () => {
-      });
+      it('should write the full id to bit map (include scope and version)', () => {});
 
       it('should create fork of the component', () => {
         // Should change the original version origin to nested if it's required by another imported deps
@@ -66,19 +62,16 @@ describe('bit commit command', function () {
     });
 
     describe.skip('commit added component', () => {
-      it('should index the component', () => {
-      });
+      it('should index the component', () => {});
 
       it('should successfuly commit if there is no special error', () => {
         // Validate output
         // Validate model
       });
 
-      it('Should throw error if there is tracked files dependencies which not commited yet', () => {
-      });
+      it('Should throw error if there is tracked files dependencies which not commited yet', () => {});
 
-      it('should add the correct dependencies to each component', () => {
-      });
+      it('should add the correct dependencies to each component', () => {});
     });
   });
 
@@ -205,23 +198,21 @@ describe('bit commit command', function () {
       // Import component then try to commit
     });
 
-    it.skip('Should build and test all components before commit', () => {
+    it.skip('Should build and test all components before commit', () => {});
 
-    });
-
-    it.skip('Should commit nothing if only some of the commits worked', () => {
-
-    });
+    it.skip('Should commit nothing if only some of the commits worked', () => {});
 
     describe('missing dependencies errors', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
-        const fileAfixture = 'import a2 from \'./a2\'; import a3 from \'./a3\'';
+        const fileAfixture = "import a2 from './a2'; import a3 from './a3'";
         helper.createFile('src', 'a.js', fileAfixture);
-        const fileA2fixture = 'import a3 from \'./a3\';import pdackage from \'package\';import missingfs from \'./missing-fs\';import untracked from \'./untracked.js\';';
+        const fileA2fixture =
+          "import a3 from './a3';import pdackage from 'package';import missingfs from './missing-fs';import untracked from './untracked.js';";
         helper.createFile('src', 'a2.js', fileA2fixture);
-        const fileBfixture = 'import b3 from \'./b3\';import pdackage from \'package2\';import missingfs from \'./missing-fs2\';import untracked from \'./untracked2.js\';';
+        const fileBfixture =
+          "import b3 from './b3';import pdackage from 'package2';import missingfs from './missing-fs2';import untracked from './untracked2.js';";
         helper.createFile('src', 'b.js', fileBfixture);
 
         helper.createFile('src', 'untracked.js');
@@ -267,16 +258,12 @@ describe('bit commit command', function () {
       });
     });
 
-
     // We throw this error because we don't know the packege version in this case
-    it.skip('should throw error if there is missing package dependency', () => {
-    });
+    it.skip('should throw error if there is missing package dependency', () => {});
 
-    it.skip('should index all components', () => {
-    });
+    it.skip('should index all components', () => {});
 
-    it.skip('should commit the components in the correct order', () => {
-    });
+    it.skip('should commit the components in the correct order', () => {});
 
     it.skip('should add the correct dependencies to each component', () => {
       // Make sure the use case contain dependenceis from all types -
@@ -288,12 +275,15 @@ describe('bit commit command', function () {
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      const isStringFixture =
+        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
 
-      const mainFileFixture = "const isString = require('./utils/is-string.js'); const second = require('./second.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
-      const secondFileFixture = "const isType = require('./utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      const mainFileFixture =
+        "const isString = require('./utils/is-string.js'); const second = require('./second.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      const secondFileFixture =
+        "const isType = require('./utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('', 'main.js', mainFileFixture);
       helper.createFile('', 'second.js', secondFileFixture);
       helper.addComponentWithOptions('main.js second.js', { m: 'main.js', i: 'comp/comp' });
@@ -307,7 +297,10 @@ describe('bit commit command', function () {
       const depPaths1 = [{ sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' }];
       const depObject1 = { id: 'utils/is-string', relativePaths: depPaths1 };
 
-      const depPathsIsString = { sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' };
+      const depPathsIsString = {
+        sourceRelativePath: 'utils/is-string.js',
+        destinationRelativePath: 'utils/is-string.js'
+      };
       const depPathsIsType = { sourceRelativePath: 'utils/is-type.js', destinationRelativePath: 'utils/is-type.js' };
 
       expect(dependencies.find(dep => dep.id === 'utils/is-string').relativePaths[0]).to.deep.equal(depPathsIsString);
@@ -319,12 +312,15 @@ describe('bit commit command', function () {
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      const isStringFixture = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      const isStringFixture =
+        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
 
-      const mainFileFixture = "const isString = require('./utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
-      const secondFileFixture = "const isType = require('./utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      const mainFileFixture =
+        "const isString = require('./utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      const secondFileFixture =
+        "const isType = require('./utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('', 'main.js', mainFileFixture);
       helper.createFile('', 'second.js', secondFileFixture);
       helper.addComponentWithOptions('main.js second.js', { m: 'main.js', i: 'comp/comp' });
@@ -333,17 +329,18 @@ describe('bit commit command', function () {
 
       const output = helper.showComponentWithOptions('comp/comp', { j: '' });
       const dependencies = JSON.parse(output).dependencies;
-      const depPathsIsString = { sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' };
+      const depPathsIsString = {
+        sourceRelativePath: 'utils/is-string.js',
+        destinationRelativePath: 'utils/is-string.js'
+      };
       const depPathsIsType = { sourceRelativePath: 'utils/is-type.js', destinationRelativePath: 'utils/is-type.js' };
 
       expect(dependencies.find(dep => dep.id === 'utils/is-string').relativePaths[0]).to.deep.equal(depPathsIsString);
       expect(dependencies.find(dep => dep.id === 'utils/is-type').relativePaths[0]).to.deep.equal(depPathsIsType);
     });
 
-    it.skip('should persist all models in the scope', () => {
-    });
+    it.skip('should persist all models in the scope', () => {});
 
-    it.skip('should run the onCommit hook', () => {
-    });
+    it.skip('should run the onCommit hook', () => {});
   });
 });

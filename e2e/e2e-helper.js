@@ -11,12 +11,12 @@ export default class Helper {
   cache: Object;
   constructor() {
     this.debugMode = !!process.env.npm_config_debug;
-    this.remoteScope = v4() + '-remote';
+    this.remoteScope = `${v4()}-remote`;
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
     this.setLocalScope();
     this.remoteScopePath = path.join(this.e2eDir, this.remoteScope);
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
-    this.envScope = v4() + '-env';
+    this.envScope = `${v4()}-env`;
     this.envScopePath = path.join(this.e2eDir, this.envScope);
     this.compilerCreated = false;
   }
@@ -53,9 +53,9 @@ export default class Helper {
     return fs.writeJSONSync(bitJsonPath, bitJson);
   }
 
-  readBitMap(bitMapPath = path.join(this.localScopePath, '.bit.map.json'),withoutComment = true) {
+  readBitMap(bitMapPath = path.join(this.localScopePath, '.bit.map.json'), withoutComment = true) {
     const map = fs.readFileSync(bitMapPath) || {};
-    return json.parse(map.toString('utf8'),  null, withoutComment);
+    return json.parse(map.toString('utf8'), null, withoutComment);
   }
 
   writeBitMap(bitMap) {
@@ -91,7 +91,9 @@ export default class Helper {
         localScopePath: path.join(this.e2eDir, v4()),
         remoteScopePath: path.join(this.e2eDir, v4())
       };
-      if (this.debugMode) console.log(`not in the cache. cloning a scope from ${this.localScopePath} to ${this.cache.localScopePath}`);
+      if (this.debugMode) {
+        console.log(`not in the cache. cloning a scope from ${this.localScopePath} to ${this.cache.localScopePath}`);
+      }
       fs.copySync(this.localScopePath, this.cache.localScopePath);
       fs.copySync(this.remoteScopePath, this.cache.remoteScopePath);
     } else {
@@ -146,11 +148,10 @@ export default class Helper {
   }
 
   getConsumerJSFiles() {
-    return (glob.sync(path.normalize('**/*.js'), { cwd: this.localScopePath }))
-      .map(x => path.normalize(x));
+    return glob.sync(path.normalize('**/*.js'), { cwd: this.localScopePath }).map(x => path.normalize(x));
   }
 
-  commitComponent(id:string, commitMsg: string = 'commit-message') {
+  commitComponent(id: string, commitMsg: string = 'commit-message') {
     return this.runCmd(`bit commit ${id} -m ${commitMsg}`);
   }
 
@@ -173,7 +174,7 @@ export default class Helper {
   createCompiler() {
     if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
 
-    const tempScope = v4() + '-temp';
+    const tempScope = `${v4()}-temp`;
     const tempScopePath = path.join(this.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
@@ -184,14 +185,20 @@ export default class Helper {
     fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
 
     const babelCorePackageJson = { name: 'babel-core', version: '6.25.0' };
-    const babelPluginTransformObjectRestSpreadPackageJson = { name: 'babel-plugin-transform-object-rest-spread', version: '6.23.0' };
+    const babelPluginTransformObjectRestSpreadPackageJson = {
+      name: 'babel-plugin-transform-object-rest-spread',
+      version: '6.23.0'
+    };
     const babelPresetLatestPackageJson = { name: 'babel-preset-latest', version: '6.24.1' };
     const vinylPackageJson = { name: 'vinyl', version: '2.1.0' };
 
     const nodeModulesDir = path.join(tempScopePath, 'node_modules');
 
     ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'package.json'), babelCorePackageJson);
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'package.json'), babelPluginTransformObjectRestSpreadPackageJson);
+    ensureAndWriteJson(
+      path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'package.json'),
+      babelPluginTransformObjectRestSpreadPackageJson
+    );
     ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'package.json'), babelPresetLatestPackageJson);
     ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'package.json'), vinylPackageJson);
 
@@ -236,13 +243,13 @@ export default class Helper {
   }
 
   // TODO: delete and use create file below? it's not a comonent unless we add it only a file
-  createComponent(namespace: string = 'bar', name: string = 'foo.js' , impl?: string) {
+  createComponent(namespace: string = 'bar', name: string = 'foo.js', impl?: string) {
     const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
     const filePath = path.join(this.localScopePath, namespace, name);
     fs.outputFileSync(filePath, fixture);
   }
 
-  createFile(folder: string = 'bar', name: string = 'foo.js' , impl?: string) {
+  createFile(folder: string = 'bar', name: string = 'foo.js', impl?: string) {
     const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
     const filePath = path.join(this.localScopePath, folder, name);
     fs.outputFileSync(filePath, fixture);
@@ -252,32 +259,36 @@ export default class Helper {
     return fs.removeSync(path.join(this.localScopePath, relativePathToLocalScope));
   }
 
-  addComponent(filePaths: string = path.normalize("bar/foo.js"), cwd = this.localScopePath) {
+  addComponent(filePaths: string = path.normalize('bar/foo.js'), cwd = this.localScopePath) {
     return this.runCmd(`bit add ${filePaths}`, cwd);
   }
-  untrackComponent(id: string='', cwd = this.localScopePath) {
+  untrackComponent(id: string = '', cwd = this.localScopePath) {
     return this.runCmd(`bit untrack ${id}`, cwd);
   }
 
-  addComponentWithOptions(filePaths: string = 'bar/foo.js', options:? Object) {
-    const value = Object.keys(options).map(key => `-${key} ${options[key]}`).join(' ');
+  addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`);
   }
 
   testComponent(id) {
-    return this.runCmd(`bit test ${ id ? id : ''}`);
+    return this.runCmd(`bit test ${id || ''}`);
   }
 
   searchComponent(args) {
     return this.runCmd(`bit search ${args}`);
   }
 
-  showComponent(id: string = "bar/foo") {
+  showComponent(id: string = 'bar/foo') {
     return this.runCmd(`bit show ${id}`);
   }
 
-  showComponentWithOptions(id: string = "bar/foo", options:? Object) {
-    const value = Object.keys(options).map(key => `-${key} ${options[key]}`).join(' ');
+  showComponentWithOptions(id: string = 'bar/foo', options: ?Object) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
     return this.runCmd(`bit show ${id} ${value}`);
   }
 

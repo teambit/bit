@@ -16,9 +16,9 @@ describe('Indexer', () => {
       expect(indexer.tokenizeStr('Foo')).to.equal('foo');
     });
     it('should tokenize various combinations', () => {
-      expect(indexer.tokenizeStr('CamelCase-with-hyphen_and_underscore'))
-        .to.equal('camel case with hyphen and underscore');
+      expect(indexer.tokenizeStr('CamelCase-with-hyphen_and_underscore')).to.equal(
+        'camel case with hyphen and underscore'
+      );
     });
   });
 });
-

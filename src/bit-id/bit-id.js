@@ -2,18 +2,14 @@
 import path from 'path';
 import Version from '../version';
 import { InvalidBitId, InvalidIdChunk } from './exceptions';
-import {
-  LATEST_BIT_VERSION,
-  VERSION_DELIMITER,
-  NO_PLUGIN_TYPE,
-} from '../constants';
+import { LATEST_BIT_VERSION, VERSION_DELIMITER, NO_PLUGIN_TYPE } from '../constants';
 import { isValidIdChunk, isValidScopeName } from '../utils';
 
 export type BitIdProps = {
-  scope?: string;
-  box?: string;
-  name: string;
-  version: string;
+  scope?: string,
+  box?: string,
+  name: string,
+  version: string
 };
 
 export default class BitId {
@@ -78,7 +74,9 @@ export default class BitId {
   }
 
   static parse(id: ?string, version: string = LATEST_BIT_VERSION): ?BitId {
-    if (!id || id === NO_PLUGIN_TYPE) { return null; }
+    if (!id || id === NO_PLUGIN_TYPE) {
+      return null;
+    }
     if (id.includes(VERSION_DELIMITER)) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
       id = newId;
@@ -135,7 +133,11 @@ export default class BitId {
     // replace any invalid character with a dash character
     const makeValidIdChunk = (chunk) => {
       const invalidChars = /[^$\-_!.a-z0-9]+/g;
-      const replaceUpperCaseWithDash = chunk.trim().split(/(?=[A-Z])/).join('-').toLowerCase();
+      const replaceUpperCaseWithDash = chunk
+        .trim()
+        .split(/(?=[A-Z])/)
+        .join('-')
+        .toLowerCase();
       return replaceUpperCaseWithDash.replace(invalidChars, '-');
     };
 

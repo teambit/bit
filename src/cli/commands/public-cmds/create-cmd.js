@@ -17,7 +17,7 @@ export default class Create extends Command {
 
   private = true;
 
-  action([id, ]: [string], { specs, json, force }: any): Promise<*> {
+  action([id]: [string], { specs, json, force }: any): Promise<*> {
     return create(id, specs, json, force);
   }
 

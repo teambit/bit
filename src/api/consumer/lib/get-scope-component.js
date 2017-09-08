@@ -7,15 +7,23 @@ import { BEFORE_REMOTE_SHOW } from '../../../cli/loader/loader-messages';
 import { ScopeNotFound } from '../../../scope/exceptions';
 import Remotes from '../../../remotes/remotes';
 
-export default function getScopeComponent({ id, allVersions, scopePath }:
-{ id: string, allVersions: ?bool, scopePath: ?string }) {
+export default function getScopeComponent({
+  id,
+  allVersions,
+  scopePath
+}: {
+  id: string,
+  allVersions: ?boolean,
+  scopePath: ?string
+}) {
   function loadFromScope() {
-    return loadScope(scopePath || process.cwd())
-      .then((scope) => {
-        const bitId = BitId.parse(id);
-        if (allVersions) { return scope.loadAllVersions(bitId); }
-        return scope.loadRemoteComponent(bitId);
-      });
+    return loadScope(scopePath || process.cwd()).then((scope) => {
+      const bitId = BitId.parse(id);
+      if (allVersions) {
+        return scope.loadAllVersions(bitId);
+      }
+      return scope.loadRemoteComponent(bitId);
+    });
   }
 
   const remoteShow = (remote, bitId) => {
@@ -23,7 +31,9 @@ export default function getScopeComponent({ id, allVersions, scopePath }:
     return remote.show(bitId);
   };
 
-  if (scopePath) { return loadFromScope(); }
+  if (scopePath) {
+    return loadFromScope();
+  }
 
   return loadConsumer()
     .then((consumer) => {
@@ -34,18 +44,21 @@ export default function getScopeComponent({ id, allVersions, scopePath }:
           return Promise.reject(new Error('cant list all versions of a remote scope'));
         }
 
-        return consumer.scope.remotes()
-        .then(remotes =>
-          remotes.resolve(bitId.scope, consumer.scope)
-          .then(remote => remoteShow(remote, bitId))
-        );
+        return consumer.scope
+          .remotes()
+          .then(remotes => remotes.resolve(bitId.scope, consumer.scope).then(remote => remoteShow(remote, bitId)));
       }
 
-      if (allVersions) { return consumer.scope.loadAllVersions(bitId); }
+      if (allVersions) {
+        return consumer.scope.loadAllVersions(bitId);
+      }
       return consumer.scope.loadComponent(bitId);
-    }).catch((err) => { // TODO - handle relevant error error
+    })
+    .catch((err) => {
+      // TODO - handle relevant error error
       return loadFromScope();
-    }).catch((err) => {
+    })
+    .catch((err) => {
       if (err instanceof ScopeNotFound) {
         const bitId = BitId.parse(id);
         return Remotes.getScopeRemote(bitId.scope)

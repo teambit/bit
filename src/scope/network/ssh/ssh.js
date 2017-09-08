@@ -15,7 +15,6 @@ import checkVersionCompatibilityFunction from '../check-version-compatibility';
 import logger from '../../../logger/logger';
 import type { Network } from '../network';
 
-
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
 
@@ -85,11 +84,7 @@ export default class SSH implements Network {
     return new Promise((resolve, reject) => {
       let res = '';
       let err;
-      const cmd = this.buildCmd(
-        commandName,
-        absolutePath(this.path || ''),
-        commandName === '_put' ? null : payload
-      );
+      const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), commandName === '_put' ? null : payload);
       this.connection.exec(cmd, (error, stream) => {
         if (error) {
           logger.error('ssh, exec returns an error: ', error);
@@ -105,9 +100,7 @@ export default class SSH implements Network {
           })
           .on('exit', (code) => {
             logger.error(`ssh: server had been exiting before closing. Exit code: ${code}`);
-            return code && code !== 0 ?
-              reject(errorHandler(code, err)) :
-              resolve(clean(res));
+            return code && code !== 0 ? reject(errorHandler(code, err)) : resolve(clean(res));
           })
           .on('close', (code, signal) => {
             if (commandName === '_put') res = res.replace(payload, '');
@@ -115,9 +108,7 @@ export default class SSH implements Network {
             // DO NOT CLOSE THE CONNECTION (using this.connection.end()), it causes bugs when there are several open
             // connections. Same bugs occur when running "this.connection.end()" on "end" event. There is no point to
             // run it on 'exit' event, it never reach there.
-            return code && code !== 0 ?
-              reject(errorHandler(code, err)) :
-              resolve(clean(res));
+            return code && code !== 0 ? reject(errorHandler(code, err)) : resolve(clean(res));
           })
           .stderr.on('data', (response) => {
             err = response.toString();
@@ -137,12 +128,11 @@ export default class SSH implements Network {
   }
 
   pushMany(manyComponentObjects: ComponentObjects[]): Promise<ComponentObjects[]> {
-    return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects))
-      .then((data: string) => {
-        const { payload, headers } = this._unpack(data);
-        checkVersionCompatibility(headers.version);
-        return Promise.resolve();
-      });
+    return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects)).then((data: string) => {
+      const { payload, headers } = this._unpack(data);
+      checkVersionCompatibility(headers.version);
+      return Promise.resolve();
+    });
   }
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
@@ -162,46 +152,44 @@ export default class SSH implements Network {
   }
 
   list() {
-    return this.exec('_list')
-      .then((str: string) => {
-        const { payload, headers } = this._unpack(str);
-        checkVersionCompatibility(headers.version);
-        return rejectNils(payload.map((c) => {
+    return this.exec('_list').then((str: string) => {
+      const { payload, headers } = this._unpack(str);
+      checkVersionCompatibility(headers.version);
+      return rejectNils(
+        payload.map((c) => {
           return c ? ConsumerComponent.fromString(c) : null;
-        }));
-      });
+        })
+      );
+    });
   }
 
   search(query: string, reindex: boolean) {
-    return this.exec('_search', { query, reindex: reindex.toString() })
-      .then((data) => {
-        const { payload, headers } = this._unpack(data);
-        checkVersionCompatibility(headers.version);
-        return payload;
-      });
+    return this.exec('_search', { query, reindex: reindex.toString() }).then((data) => {
+      const { payload, headers } = this._unpack(data);
+      checkVersionCompatibility(headers.version);
+      return payload;
+    });
   }
 
   show(id: BitId) {
-    return this.exec('_show', id.toString())
-      .then((str: string) => {
-        const { payload, headers } = this._unpack(str);
-        checkVersionCompatibility(headers.version);
-        return str ? ConsumerComponent.fromString(payload) : null;
-      });
+    return this.exec('_show', id.toString()).then((str: string) => {
+      const { payload, headers } = this._unpack(str);
+      checkVersionCompatibility(headers.version);
+      return str ? ConsumerComponent.fromString(payload) : null;
+    });
   }
 
-  fetch(ids: BitIds, noDeps: bool = false): Promise<ComponentObjects[]> {
+  fetch(ids: BitIds, noDeps: boolean = false): Promise<ComponentObjects[]> {
     let options = '';
     ids = ids.map(bitId => bitId.toString());
     if (noDeps) options = '-n';
-    return this.exec(`_fetch ${options}`, ids)
-      .then((str: string) => {
-        const { payload, headers } = this._unpack(str);
-        checkVersionCompatibility(headers.version);
-        return payload.map((raw) => {
-          return ComponentObjects.fromString(raw);
-        });
+    return this.exec(`_fetch ${options}`, ids).then((str: string) => {
+      const { payload, headers } = this._unpack(str);
+      checkVersionCompatibility(headers.version);
+      return payload.map((raw) => {
+        return ComponentObjects.fromString(raw);
       });
+    });
   }
 
   close() {
@@ -222,17 +210,24 @@ export default class SSH implements Network {
   }
 
   connect(sshUrl: SSHUrl, key: ?string): Promise<SSH> {
-    const sshConfig = this.composeConnectionObject(key)
+    const sshConfig = this.composeConnectionObject(key);
     return new Promise((resolve, reject) => {
-      if (!sshConfig.privateKey) reject('Could not authenticate\nPlease make sure you have configured ssh access and permissions to the remote scope');
+      if (!sshConfig.privateKey) {
+        reject(
+          'Could not authenticate\nPlease make sure you have configured ssh access and permissions to the remote scope'
+        );
+      }
       try {
         conn
           .on('error', err => reject(err))
           .on('ready', () => {
             this.connection = conn;
             resolve(this);
-          }).connect(sshConfig);
-      } catch (e) { return reject(e); }
+          })
+          .connect(sshConfig);
+      } catch (e) {
+        return reject(e);
+      }
     });
   }
 }

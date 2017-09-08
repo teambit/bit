@@ -13,19 +13,24 @@ export default class Export extends Command {
     ['m', 'message <message>', 'commit message'],
     ['a', 'all', 'commit all new and modified components'],
     ['f', 'force', 'forcely commit even if specs fails and even when component was not changed'],
-    ['v', 'verbose', 'show specs output on commit'],
+    ['v', 'verbose', 'show specs output on commit']
   ];
   loader = true;
 
-  action([id]: string[], { message, all, force, verbose }:
-  { message: string, all: ?bool, force: ?bool, verbose: ?bool }): Promise<any> {
+  action(
+    [id]: string[],
+    { message, all, force, verbose }: { message: string, all: ?boolean, force: ?boolean, verbose: ?boolean }
+  ): Promise<any> {
     if (!id && !all) {
       return Promise.reject('Missing [id]. To commit all components, please use --all flag');
     }
     if (id && all) {
-      return Promise.reject('You can use either [id] to commit a particular component or --all flag to commit them all');
+      return Promise.reject(
+        'You can use either [id] to commit a particular component or --all flag to commit them all'
+      );
     }
-    if (!message) {  // todo: get rid of this. Make it required by commander
+    if (!message) {
+      // todo: get rid of this. Make it required by commander
       return Promise.reject('Missing [message], use -m to write the log message');
     }
     if (all) {
@@ -34,7 +39,7 @@ export default class Export extends Command {
     return commitAction({ id, message, force, verbose });
   }
 
-  report(components: Component|Component[]): string {
+  report(components: Component | Component[]): string {
     if (!components) return chalk.yellow('nothing to commit');
     if (!Array.isArray(components)) components = [components];
 
@@ -56,8 +61,11 @@ export default class Export extends Command {
     const changedComponents = components.filter(component => component.version > 1);
     const addedComponents = components.filter(component => component.version === 1);
 
-    return chalk.green(`${components.length} components committed`) + chalk.gray(` | ${addedComponents.length} added, ${changedComponents.length} changed\n`)
-      + outputIfExists(addedComponents, 'added components: ')
-      + outputIfExists(changedComponents, 'changed components: ', true);
+    return (
+      chalk.green(`${components.length} components committed`) +
+      chalk.gray(` | ${addedComponents.length} added, ${changedComponents.length} changed\n`) +
+      outputIfExists(addedComponents, 'added components: ') +
+      outputIfExists(changedComponents, 'changed components: ', true)
+    );
   }
 }
