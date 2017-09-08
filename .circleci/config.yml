@@ -132,7 +132,7 @@ jobs:
       - run:
           name: npm link
           command: npm link
-      - tests:
+      - run:
           name: Run e2e tests
           type: shell
           command: |
