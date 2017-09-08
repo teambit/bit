@@ -1,3 +1,4 @@
+// @flow
 export default class MergeConflict extends Error {
   id: string;
   code: number;

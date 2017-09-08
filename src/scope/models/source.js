@@ -1,3 +1,4 @@
+// @flow
 import { BitObject } from '../objects';
 
 export default class Source extends BitObject {

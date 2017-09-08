@@ -1,3 +1,4 @@
+// @flow
 import path from 'path';
 import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';

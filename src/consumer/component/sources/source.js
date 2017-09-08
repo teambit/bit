@@ -1,4 +1,4 @@
-/** @flow */
+// @flow
 import Bit from '../../component';
 
 export default class Source {

@@ -1,3 +1,4 @@
+// @flow
 import Version from './version';
 import { LATEST, LATEST_TESTED_MARK } from '../constants';
 import { contains } from '../utils';

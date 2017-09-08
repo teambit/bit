@@ -1,3 +1,4 @@
+// @flow
 export default class VersionNotFound extends Error {
   constructor(version: string) {
     super();

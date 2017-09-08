@@ -1,4 +1,4 @@
-/** @Flow */
+// @flow
 import doctrine from 'doctrine';
 import exampleTagParser from './example-tag-parser';
 

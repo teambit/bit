@@ -1,4 +1,4 @@
-/** @Flow */
+// @flow
 import { Doclet } from './parser';
 
 export default function format(doc: Doclet): string {
