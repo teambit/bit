@@ -113,7 +113,7 @@ jobs:
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
-    parallelism: 6
+    parallelism: 8
     steps:
       - run: echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
       - run:
@@ -134,7 +134,7 @@ jobs:
           command: npm link
       - run:
           name: Run e2e tests
-          command: circleci tests glob "e2e/**/*.e2e.js" | circleci tests split | xargs -n 1 npm run mocha --reporter mocha-circleci-reporter
+          command: circleci tests glob "e2e/**/*.e2e.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
