@@ -135,7 +135,7 @@ export default class ComponentsList {
         newComponents.push(id);
       }
     });
-    if (!load || newComponents.length) return newComponents;
+    if (!load || !newComponents.length) return newComponents;
 
     const componentsIds = newComponents.map(id => BitId.parse(id));
     return this.consumer.loadComponents(componentsIds);
