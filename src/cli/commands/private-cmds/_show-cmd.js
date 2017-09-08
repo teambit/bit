@@ -11,7 +11,7 @@ export default class _Show extends Command {
   opts = [];
 
   action([path, args]: [string, string]): Promise<any> {
-    const { payload, headers } = unpackCommand(args);
+    const { payload } = unpackCommand(args);
     // validateVersion(headers)
     return scopeShow(fromBase64(path), payload);
   }

@@ -9,7 +9,7 @@ export type BitIdProps = {
   scope?: string,
   box?: string,
   name: string,
-  version: string
+  version?: ?string
 };
 
 export default class BitId {
@@ -25,7 +25,7 @@ export default class BitId {
     this.version = version || null;
   }
 
-  changeScope(newScope: string) {
+  changeScope(newScope: string): BitId {
     return new BitId({ scope: newScope, box: this.box, name: this.name, version: this.version });
   }
 

@@ -171,7 +171,7 @@ export default class SSH implements Network {
     });
   }
 
-  show(id: BitId) {
+  show(id: BitId): Promise<?ConsumerComponent> {
     return this.exec('_show', id.toString()).then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);

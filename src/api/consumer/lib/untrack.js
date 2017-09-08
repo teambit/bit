@@ -7,8 +7,8 @@ import ComponentsList from '../../../consumer/component/components-list';
 
 export default async function untrack(componentIds: string[]): Promise<Object> {
   const untrackedComponents = [];
-  let missing = [],
-    unRemovableComponents = [];
+  const missing = [];
+  const unRemovableComponents = [];
   const consumer: Consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
   const componentsList = new ComponentsList(consumer);

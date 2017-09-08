@@ -11,7 +11,7 @@ import { BEFORE_REMOTE_SEARCH } from '../../../cli/loader/loader-messages';
 
 export default class Search extends Command {
   name = 'search <query...>';
-  description = 'search for components by desired functionallity.';
+  description = 'search for components by desired functionality.';
   alias = '';
   opts = [['s', 'scope <scopename>', 'search in scope'], ['r', 'reindex', 're-index all components']];
   loader = true;
@@ -19,7 +19,7 @@ export default class Search extends Command {
   action([query]: [string[]], { scope, reindex }: { scope: string, reindex: boolean }) {
     const queryStr = query.join(' ');
     if (scope) {
-      loader.start(BEFORE_REMOTE_SEARCH({ scope, queryStr })); // eslint-disable-line
+      loader.start(BEFORE_REMOTE_SEARCH({ scope, queryStr }));
       return searchAdapter.searchRemotely(queryStr, scope, reindex).catch(() => {
         // web search
         const url = `https://${SEARCH_DOMAIN}/search/?q=${queryStr}`;

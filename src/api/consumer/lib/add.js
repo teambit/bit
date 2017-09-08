@@ -5,7 +5,6 @@ import R from 'ramda';
 import format from 'string-format';
 import {
   glob,
-  isValidIdChunk,
   isDir,
   calculateFileInfo,
   existsSync,
@@ -20,6 +19,7 @@ import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
 import logger from '../../../logger/logger';
 import PathNotExists from './exceptions/path-not-exists';
 import EmptyDirectory from './exceptions/empty-directory';
+import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 
 export default async function addAction(
   componentPaths: string[],
@@ -37,12 +37,7 @@ export default async function addAction(
   }
 
   // todo: remove the logic of fixing the absolute paths, it is already done in BitMap class
-  async function addOneComponent(
-    componentPathsStats: Object,
-    bitMap: BitMap,
-    consumer: Consumer,
-    keepDirectoryName: boolean = false
-  ) {
+  async function addOneComponent(componentPathsStats: Object, bitMap: BitMap, consumer: Consumer) {
     // remove excluded files from file list
     async function removeExcludedFiles(mapValues, excludedList) {
       const resolvedExcludedFiles = await getAllFiles(excludedList);
@@ -53,7 +48,7 @@ export default async function addAction(
     }
 
     // update test files according to dsl
-    async function updateTestFilesAccordingToDsl(files, testFiles) {
+    async function updateTestFilesAccordingToDsl(files: ComponentMapFile, testFiles: string[]) {
       const newFilesArr = files;
       const fileList = await testFiles.map(async (dsl) => {
         const fileList = await files.map(async (file) => {

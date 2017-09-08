@@ -5,6 +5,7 @@ import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';
 import { BitId, BitIds } from '../bit-id';
 import type { Network } from '../scope/network/network';
+import Component from '../consumer/component';
 
 /**
  * @ctx bit, primary, remote
@@ -49,7 +50,7 @@ export default class Remote {
     return this.connect().then(network => network.search(query, reindex));
   }
 
-  show(bitId: BitId): Promise<> {
+  show(bitId: BitId): Promise<?Component> {
     return this.connect().then(network => network.show(bitId));
   }
 

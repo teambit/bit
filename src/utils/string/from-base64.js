@@ -10,6 +10,6 @@
  *  fromBase64('aGVsbG8gd29ybGQ=') // => 'hello world'
  * ```
  */
-export default function fromBase64(base64: string) {
+export default function fromBase64(base64: string): string {
   return new Buffer(base64, 'base64').toString();
 }

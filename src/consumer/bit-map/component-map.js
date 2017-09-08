@@ -22,6 +22,12 @@ export type ComponentMapData = {
 };
 
 export default class ComponentMap {
+  files: ComponentMapFile[];
+  mainFile: string;
+  rootDir: ?string;
+  origin: ComponentOrigin;
+  dependencies: string[];
+  mainDistFile: ?string;
   constructor({ files, mainFile, rootDir, origin, dependencies, mainDistFile }: ComponentMapData) {
     this.files = files;
     this.mainFile = mainFile;
@@ -55,7 +61,7 @@ export default class ComponentMap {
     return changes;
   }
 
-  _findFile(fileName: string): ComponentMapFile {
+  _findFile(fileName: string): ?ComponentMapFile {
     fileName = pathNormalizeToLinux(fileName);
     return this.files.find((file) => {
       const filePath = this.rootDir ? path.join(this.rootDir, file.relativePath) : file.relativePath;
@@ -67,7 +73,7 @@ export default class ComponentMap {
     const currentFile = this._findFile(fileFrom);
     if (!currentFile) throw new Error(`the file ${fileFrom} is untracked`);
     const rootDir = this.rootDir;
-    const newLocation = rootDir ? this.getPathWithoutRootDir(rootDir, fileTo) : fileTo;
+    const newLocation = rootDir ? ComponentMap.getPathWithoutRootDir(rootDir, fileTo) : fileTo;
     logger.debug(`updating file location from ${currentFile.relativePath} to ${newLocation}`);
     if (this.mainFile === currentFile.relativePath) this.mainFile = newLocation;
     const changes = [{ from: currentFile.relativePath, to: newLocation }];
@@ -75,12 +81,12 @@ export default class ComponentMap {
     return changes;
   }
 
-  _updateDirLocation(dirFrom, dirTo) {
+  _updateDirLocation(dirFrom: string, dirTo: string) {
     const changes = [];
     const rootDir = this.rootDir;
     if (rootDir && rootDir === dirFrom) {
       this.rootDir = dirTo;
-      return this.changeFilesPathAccordingToItsRootDir(dirTo, this.files);
+      return ComponentMap.changeFilesPathAccordingToItsRootDir(dirTo, this.files);
     }
     let areFilesChanged = false;
     this.files.forEach((file) => {
@@ -88,7 +94,7 @@ export default class ComponentMap {
       if (filePath.startsWith(dirFrom)) {
         areFilesChanged = true;
         const fileTo = filePath.replace(dirFrom, dirTo);
-        const newLocation = rootDir ? this.getPathWithoutRootDir(rootDir, fileTo) : fileTo;
+        const newLocation = rootDir ? ComponentMap.getPathWithoutRootDir(rootDir, fileTo) : fileTo;
         logger.debug(`updating file location from ${file.relativePath} to ${newLocation}`);
         if (this.mainFile === file.relativePath) this.mainFile = newLocation;
         changes.push({ from: file.relativePath, to: newLocation });

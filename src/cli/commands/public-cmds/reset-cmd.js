@@ -10,7 +10,7 @@ export default class Reset extends Command {
   opts = [];
   loader = true;
 
-  action([id]: [string]): Promise<Bit> {
+  action([id]: [string]): Promise<Object> {
     return reset({ id }).then((component) => {
       return {
         name: component.name,

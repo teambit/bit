@@ -1,7 +1,6 @@
 /** @flow */
 import * as pathLib from 'path';
 import fs from 'fs-extra';
-import path from 'path';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
 import { GlobalRemotes } from '../global-config';
@@ -661,7 +660,7 @@ export default class Scope {
     const envComponent = (await this.get(bitId)).component;
     const mainFile =
       envComponent.dists && !R.isEmpty(envComponent.dists)
-        ? path.join(DEFAULT_DIST_DIRNAME, envComponent.mainFile)
+        ? pathLib.join(DEFAULT_DIST_DIRNAME, envComponent.mainFile)
         : envComponent.mainFile;
 
     if (opts && opts.pathOnly) {
@@ -852,8 +851,7 @@ export default class Scope {
 
     return readFile(getScopeJsonPath(scopePath)).then((rawScopeJson) => {
       const scopeJson = ScopeJson.loadFromJson(rawScopeJson.toString());
-      const scope = new Scope({ path, scopeJson });
-      return scope;
+      return new Scope({ path, scopeJson });
     });
   }
 }
