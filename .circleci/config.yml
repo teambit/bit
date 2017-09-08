@@ -133,12 +133,13 @@ jobs:
           command: npm link
       - run:
           name: Run e2e tests
+          parallelism: 4
           type: shell
           command: |
             # Print all files in one line
-            echo $(circleci tests glob "specs/**/*.js")
+            echo $(circleci tests glob "e2e/**/*.js")
             # Print one file per line
-            circleci tests glob "specs/**/*.js" | xargs -n 1 echo
+            circleci tests glob "e2e/**/*.js" | xargs -n 1 echo
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
