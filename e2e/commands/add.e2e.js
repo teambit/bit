@@ -25,7 +25,7 @@ describe('bit add command', function () {
       helper.createComponent('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'));
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('bar/foo2');
+      expect(bitMap).to.have.property('bar/foo2!!!');
     });
     it('Should trim testFiles spaces', () => {
       const osComponentName = path.normalize('bar/foo.js');
