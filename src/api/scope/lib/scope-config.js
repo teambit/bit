@@ -1,3 +1,4 @@
+// @flow
 import { loadScope } from '../../../scope';
 
 function set(key: string, value: string): Promise<any> {

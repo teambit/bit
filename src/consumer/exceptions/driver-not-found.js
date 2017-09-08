@@ -1,3 +1,4 @@
+// @flow
 export default class DriverNotFoundError extends Error {
   driver: string;
   lang: string;

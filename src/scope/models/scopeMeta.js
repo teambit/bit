@@ -1,3 +1,4 @@
+// @flow
 import { BitObject, Ref } from '../objects';
 import { bufferFrom, getStringifyArgs } from '../../utils';
 

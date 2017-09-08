@@ -1,3 +1,4 @@
+// @flow
 import R from 'ramda';
 import { DEFAULT_DIR_STRUCTURE } from '../../constants';
 

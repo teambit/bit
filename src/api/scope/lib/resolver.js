@@ -1,3 +1,4 @@
+// @flow
 import { loadScope } from '../../../scope';
 
 export const setResolver = (currentPath: string, resolverPath: string): Promise<any> => {

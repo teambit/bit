@@ -1,4 +1,4 @@
-/** @Flow */
+// @flow
 
 type Example = {
   raw: string,

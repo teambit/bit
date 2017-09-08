@@ -1,3 +1,4 @@
+// @flow
 import glob from 'glob';
 import os from 'os';
 import path from 'path';

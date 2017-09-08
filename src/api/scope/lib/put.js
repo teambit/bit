@@ -1,3 +1,4 @@
+// @flow
 import { loadScope } from '../../../scope';
 import ComponentObjects from '../../../scope/component-objects';
 
