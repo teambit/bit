@@ -2,17 +2,15 @@
 import c from 'chalk';
 import SpecsResults from '../consumer/specs-results/specs-results';
 
-export const formatNewBit = ({ box, name }: any): string =>
-c.white('     > ') + c.cyan(`${box}/${name}`);
+export const formatNewBit = ({ box, name }: any): string => c.white('     > ') + c.cyan(`${box}/${name}`);
 
 export const formatBit = ({ scope, box, name, version }: any): string =>
-c.white('     > ') + c.cyan(`${scope ? scope + '/' : ''}${box}/${name} - ${version ? version.toString() : 'latest'}`);
+  c.white('     > ') + c.cyan(`${scope ? `${scope}/` : ''}${box}/${name} - ${version ? version.toString() : 'latest'}`);
 
 export const formatPlainComponentItem = ({ scope, box, name, version }: any): string =>
-  c.cyan(`- ${scope ? scope + '/' : ''}${box}/${name}@${version ? version.toString() : 'latest'}`);
+  c.cyan(`- ${scope ? `${scope}/` : ''}${box}/${name}@${version ? version.toString() : 'latest'}`);
 
-export const formatBitString = (bit: string): string =>
-c.white('     > ') + c.cyan(`${bit}`);
+export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);
 
 export const paintBitProp = (key: string, value: string): string => {
   if (!value) return '';
@@ -36,12 +34,25 @@ const paintAuthor = (email: ?string, username: ?string): string => {
   return '';
 };
 
-export const paintLog = ({ message, date, hash, username, email }:
-  { message: string, hash: string, date: string, username: ?string, email: ?string }): string => {
-  return c.yellow(`commit ${hash}\n`) +
+export const paintLog = ({
+  message,
+  date,
+  hash,
+  username,
+  email
+}: {
+  message: string,
+  hash: string,
+  date: string,
+  username: ?string,
+  email: ?string
+}): string => {
+  return (
+    c.yellow(`commit ${hash}\n`) +
     paintAuthor(email, username) +
     c.white(`Date: ${date}\n`) +
-    c.white(`\n      ${message}\n`);
+    c.white(`\n      ${message}\n`)
+  );
 };
 
 const successTest = (test) => {
@@ -70,8 +81,10 @@ const paintGeneralFailure = (failure) => {
 
 const paintStats = (results) => {
   const statsHeader = results.pass ? c.underline.green('\ntests passed') : c.underline.red('\ntests failed');
-  const totalDuration = results.stats && results.stats.duration !== undefined ?
-    `file: ${results.specFile}\ntotal duration - ${c.cyan(`${results.stats.duration}ms\n`)}` : '';
+  const totalDuration =
+    results.stats && results.stats.duration !== undefined
+      ? `file: ${results.specFile}\ntotal duration - ${c.cyan(`${results.stats.duration}ms\n`)}`
+      : '';
   return `${statsHeader}\n${totalDuration}\n`;
 };
 
@@ -79,25 +92,27 @@ export const paintSpecsResults = (results: SpecsResults[]): string => {
   if (!results) return '';
   return results.map((specResult) => {
     const stats = paintStats(specResult);
-    const tests = (specResult.tests) ? `${specResult.tests.map(paintTest).join('\n')}\n` : '';
-    const failures = (specResult.failures) ? `${specResult.failures.map(paintGeneralFailure).join('\n')}\n` : '';
-    const final = tests || failures ? (stats + tests + failures) : '';
+    const tests = specResult.tests ? `${specResult.tests.map(paintTest).join('\n')}\n` : '';
+    const failures = specResult.failures ? `${specResult.failures.map(paintGeneralFailure).join('\n')}\n` : '';
+    const final = tests || failures ? stats + tests + failures : '';
     return final;
   });
 };
 
 export const paintAllSpecsResults = (results: Array<*>): string => {
   if (results.length === 0) return c.red('There are no components to test');
-  return results.map((result) => {
-    if (result.missingTester) return paintMissingTester(result.component);
-    const componentId = c.bold(`${result.component.box}/${result.component.name}`);
-    if (result.specs) return componentId + paintSpecsResults(result.specs);
-    return c.yellow(`tests are not defined for component: ${componentId}`);
-  }).join('\n');
+  return results
+    .map((result) => {
+      if (result.missingTester) return paintMissingTester(result.component);
+      const componentId = c.bold(`${result.component.box}/${result.component.name}`);
+      if (result.specs) return componentId + paintSpecsResults(result.specs);
+      return c.yellow(`tests are not defined for component: ${componentId}`);
+    })
+    .join('\n');
 };
 export const paintBuildResults = (buildResults: []): string => {
   if (buildResults) {
-    const statsHeader = c.underline.green('\nbuilded Files:\n')
+    const statsHeader = c.underline.green('\nbuilded Files:\n');
     return statsHeader + buildResults.map(file => `${c.cyan(`${file.path}`)}`).join('\n');
   }
   return '';

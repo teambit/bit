@@ -11,7 +11,7 @@ try {
   mockery.enable({
     warnOnReplace: false,
     warnOnUnregistered: false,
-    useCleanCache: true,
+    useCleanCache: true
   }); // enable mocks on process
 
   const tester = require(testerFilePath);
@@ -21,14 +21,16 @@ try {
 
   // register globals
   if (tester.globals) {
-    for (const g in tester.globals) { // eslint-disable-line
+    for (const g in tester.globals) {
+      // eslint-disable-line
       global[g] = tester.globals[g];
     }
   }
 
   // register modules
   if (tester.modules) {
-    for (const m in tester.modules) { // eslint-disable-line
+    for (const m in tester.modules) {
+      // eslint-disable-line
       mockery.registerMock(m, tester.modules[m]);
     }
   }
@@ -41,16 +43,17 @@ try {
     process.exit(1);
   }
 
-  tester.run(testFilePath)
-  .then((results) => {
-    mockery.disable();
-    results.specPath = testFilePath;
-    return process.send({ type: 'results', payload: results });
-  })
-  .catch((err) => {
-    mockery.disable();
-    return process.send({ type: 'error', payload: serializeError(err) });
-  });
+  tester
+    .run(testFilePath)
+    .then((results) => {
+      mockery.disable();
+      results.specPath = testFilePath;
+      return process.send({ type: 'results', payload: results });
+    })
+    .catch((err) => {
+      mockery.disable();
+      return process.send({ type: 'error', payload: serializeError(err) });
+    });
 } catch (e) {
   process.send({ type: 'error', payload: serializeError(e) });
 }

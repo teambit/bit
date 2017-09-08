@@ -5,23 +5,13 @@ import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
-import {
-  ConsumerAlreadyExists,
-  ConsumerNotFound,
-  NothingToImport,
-  MissingDependencies
-} from './exceptions';
+import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-import {
-  BITS_DIRNAME,
-  BIT_HIDDEN_DIR,
-  DEPENDENCIES_DIR,
-  COMPONENT_ORIGINS,
-} from '../constants';
+import { BITS_DIRNAME, BIT_HIDDEN_DIR, DEPENDENCIES_DIR, COMPONENT_ORIGINS } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
@@ -100,7 +90,9 @@ export default class Consumer {
       this.driver.getDriver(false);
       return true;
     } catch (err) {
-      msg = msg ? format(msg, err) : `Warning: Bit is not be able to run the bind command. Please install bit-${err.lang} driver and run the bind command.`;
+      msg = msg
+        ? format(msg, err)
+        : `Warning: Bit is not be able to run the bind command. Please install bit-${err.lang} driver and run the bind command.`;
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
@@ -149,7 +141,9 @@ export default class Consumer {
 
     const bitMap: BitMap = await this.getBitMap();
 
-    const driverExists = this.warnForMissingDriver('Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.');
+    const driverExists = this.warnForMissingDriver(
+      'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.'
+    );
 
     const components = idsToProcess.map(async (id: BitId) => {
       const idWithConcreteVersionString = getLatestVersionNumber(Object.keys(bitMap.getAllComponents()), id.toString());
@@ -160,7 +154,8 @@ export default class Consumer {
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
-      const component = Component.loadFromFileSystem({ bitDir,
+      const component = Component.loadFromFileSystem({
+        bitDir,
         consumerBitJson: this.bitJson,
         componentMap,
         id: idWithConcreteVersion,
@@ -168,15 +163,24 @@ export default class Consumer {
         bitMap
       });
       if (bitMap.hasChanged) await bitMap.write();
-      if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) { // no need to resolve dependencies
+      if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+        // no need to resolve dependencies
         return component;
       }
-      return loadDependenciesForComponent(component, componentMap, bitDir, this.driver, bitMap, this.getPath(),
-        idWithConcreteVersionString);
+      return loadDependenciesForComponent(
+        component,
+        componentMap,
+        bitDir,
+        this.driver,
+        bitMap,
+        this.getPath(),
+        idWithConcreteVersionString
+      );
     });
 
     const allComponents = [];
-    for (const componentP of components) { // load the components one after another (not in parallel).
+    for (const componentP of components) {
+      // load the components one after another (not in parallel).
       const component = await componentP;
       this._componentsCache[component.id.toString()] = component;
       logger.debug(`Finished loading the component, ${component.id.toString()}`);
@@ -186,8 +190,11 @@ export default class Consumer {
     return allComponents.concat(alreadyLoadedComponents);
   }
 
-  async importAccordingToBitJsonAndBitMap(verbose?: bool, withEnvironments: ?bool,
-                                          cache?: bool = true): Promise<> {
+  async importAccordingToBitJsonAndBitMap(
+    verbose?: boolean,
+    withEnvironments: ?boolean,
+    cache?: boolean = true
+  ): Promise<> {
     const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
     const bitMap = await this.getBitMap();
     const componentsFromBitMap = bitMap.getAllComponents(COMPONENT_ORIGINS.AUTHORED);
@@ -220,13 +227,13 @@ export default class Consumer {
       });
       return {
         dependencies: componentsAndDependencies,
-        envDependencies: envComponents,
+        envDependencies: envComponents
       };
     }
     return { dependencies: componentsAndDependencies };
   }
 
-  async importSpecificComponents(rawIds: ?string[], cache?: boolean, writeToPath?: string) {
+  async importSpecificComponents(rawIds: ?(string[]), cache?: boolean, writeToPath?: string) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw));
@@ -235,10 +242,13 @@ export default class Consumer {
     return { dependencies: componentDependenciesArr };
   }
 
-
-  import(rawIds: ?string[], verbose?: bool, withEnvironments: ?bool, cache?: bool = true,
-         writeToPath?: string):
-  Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
+  import(
+    rawIds: ?(string[]),
+    verbose?: boolean,
+    withEnvironments: ?boolean,
+    cache?: boolean = true,
+    writeToPath?: string
+  ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
       return this.importAccordingToBitJsonAndBitMap(verbose, withEnvironments, cache);
@@ -246,27 +256,22 @@ export default class Consumer {
     return this.importSpecificComponents(rawIds, cache, writeToPath);
   }
 
-  importEnvironment(rawId: ?string, verbose?: bool) {
-    if (!rawId) { throw new Error('you must specify bit id for importing'); } // @TODO - make a normal error message
+  importEnvironment(rawId: ?string, verbose?: boolean) {
+    if (!rawId) {
+      throw new Error('you must specify bit id for importing');
+    } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId);
-    return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose })
-      .then((envDependencies) => {
-        // todo: do we need the environment in bit.map?
-        // this.bitMap.addComponent(bitId.toString(), this.composeRelativeBitPath(bitId));
-        // this.bitMap.write();
-        return envDependencies;
-      });
+    return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose }).then((envDependencies) => {
+      // todo: do we need the environment in bit.map?
+      // this.bitMap.addComponent(bitId.toString(), this.composeRelativeBitPath(bitId));
+      // this.bitMap.write();
+      return envDependencies;
+    });
   }
 
   removeFromComponents(id: BitId, currentVersionOnly: boolean = false): Promise<any> {
     const componentsDir = this.getComponentsPath();
-    const componentDir = path.join(
-      componentsDir,
-      id.box,
-      id.name,
-      id.scope,
-      currentVersionOnly ? id.version : ''
-    );
+    const componentDir = path.join(componentsDir, id.box, id.name, id.scope, currentVersionOnly ? id.version : '');
 
     return new Promise((resolve, reject) => {
       return fs.remove(componentDir, (err) => {
@@ -286,16 +291,24 @@ export default class Consumer {
    * In case there are some same dependencies shared between the components, it makes sure to
    * write them only once.
    */
-  async writeToComponentsDir(componentDependencies: ComponentWithDependencies[], writeToPath?: string,
-                             force?: boolean = true): Promise<Component[]> {
+  async writeToComponentsDir(
+    componentDependencies: ComponentWithDependencies[],
+    writeToPath?: string,
+    force?: boolean = true
+  ): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
 
     const writeComponentsP = componentDependencies.map((componentWithDeps) => {
       const bitDir = writeToPath || this.composeBitPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitDir;
-      return componentWithDeps.component
-        .write({ bitDir, force, bitMap, origin: COMPONENT_ORIGINS.IMPORTED, consumerPath: this.getPath() });
+      return componentWithDeps.component.write({
+        bitDir,
+        force,
+        bitMap,
+        origin: COMPONENT_ORIGINS.IMPORTED,
+        consumerPath: this.getPath()
+      });
     });
     const writtenComponents = await Promise.all(writeComponentsP);
 
@@ -320,12 +333,15 @@ export default class Consumer {
         const depBitPath = path.join(componentWithDeps.component.writtenPath, DEPENDENCIES_DIR, dep.id.toFullPath());
         dep.writtenPath = depBitPath;
         dependenciesIdsCache[dependencyId] = depBitPath;
-        return dep.write({ bitDir: depBitPath,
-          force,
-          bitMap,
-          origin: COMPONENT_ORIGINS.NESTED,
-          parent: componentWithDeps.component.id,
-          consumerPath: this.getPath() })
+        return dep
+          .write({
+            bitDir: depBitPath,
+            force,
+            bitMap,
+            origin: COMPONENT_ORIGINS.NESTED,
+            parent: componentWithDeps.component.id,
+            consumerPath: this.getPath()
+          })
           .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap));
       });
 
@@ -334,9 +350,11 @@ export default class Consumer {
     const writtenDependencies = await Promise.all(allDependenciesP);
 
     await linkGenerator.writeDependencyLinks(componentDependencies, bitMap, this.getPath());
-    await Promise.all(componentDependencies.map(componentWithDependencies =>
-      linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
-    ));
+    await Promise.all(
+      componentDependencies.map(componentWithDependencies =>
+        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
+      )
+    );
     await bitMap.write();
     return [...writtenComponents, ...writtenDependencies];
   }
@@ -345,12 +363,14 @@ export default class Consumer {
     const bitMap = await this.getBitMap();
     const authoredComponents = bitMap.getAllComponents(COMPONENT_ORIGINS.AUTHORED);
     if (!authoredComponents) return null;
-    const committedComponentsWithoutVersions = committedComponents
-      .map(committedComponent => committedComponent.id.toStringWithoutVersion());
+    const committedComponentsWithoutVersions = committedComponents.map(committedComponent =>
+      committedComponent.id.toStringWithoutVersion()
+    );
     const authoredComponentsIds = Object.keys(authoredComponents).map(id => BitId.parse(id));
     // if a committed component is in authored array, remove it from the array as it has already been committed with the correct version
-    const componentsToUpdate = authoredComponentsIds.filter(component => !committedComponentsWithoutVersions
-      .includes(component.toStringWithoutVersion()));
+    const componentsToUpdate = authoredComponentsIds.filter(
+      component => !committedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
+    );
     return this.scope.bumpDependenciesVersions(componentsToUpdate, committedComponents);
   }
 
@@ -360,16 +380,20 @@ export default class Consumer {
    * a Version object. Once this is done, we have two Version objects, and we can compare their hashes
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
-    const { version } = await this.scope.sources.consumerComponentToVersion(
-      { consumerComponent: componentFromFileSystem, consumer: this, forHashOnly: true });
+    const { version } = await this.scope.sources.consumerComponentToVersion({
+      consumerComponent: componentFromFileSystem,
+      consumer: this,
+      forHashOnly: true
+    });
 
     version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
     version.flattenedDependencies = componentFromModel.flattenedDependencies;
     // dependencies from the FS don't have an exact version, copy the version from the model
     version.dependencies.forEach((dependency) => {
       const idWithoutVersion = dependency.id.toStringWithoutVersion();
-      const dependencyFromModel = componentFromModel.dependencies
-        .find(modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion);
+      const dependencyFromModel = componentFromModel.dependencies.find(
+        modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
+      );
       if (dependencyFromModel) {
         dependency.id = dependencyFromModel.id;
       }
@@ -399,20 +423,24 @@ export default class Consumer {
     return this.isComponentModified(versionFromModel, componentFromFileSystem);
   }
 
-  async commit(ids: BitId[], message: string, force: ?bool, verbose: ?bool): Promise<Component[]> {
+  async commit(ids: BitId[], message: string, force: ?boolean, verbose: ?boolean): Promise<Component[]> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const components = await this.loadComponents(componentsIds);
     // Run over the components to check if there is missing depenedencies
     // If there is at least one we won't commit anything
     const componentsWithMissingDeps = components.filter((component) => {
-      return (component.missingDependencies && !R.isEmpty(component.missingDependencies));
+      return component.missingDependencies && !R.isEmpty(component.missingDependencies);
     });
     if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
 
-
-    const committedComponents = await this.scope
-       .putMany({ consumerComponents: components, message, force, consumer: this, verbose });
+    const committedComponents = await this.scope.putMany({
+      consumerComponents: components,
+      message,
+      force,
+      consumer: this,
+      verbose
+    });
     await this.bumpDependenciesVersions(committedComponents);
 
     return components;
@@ -432,10 +460,9 @@ export default class Consumer {
   }
 
   runComponentSpecs(id: BitId, verbose: boolean = false): Promise<?any> {
-    return this.loadComponent(id)
-      .then((component) => {
-        return component.runSpecs({ scope: this.scope, consumer: this, verbose });
-      });
+    return this.loadComponent(id).then((component) => {
+      return component.runSpecs({ scope: this.scope, consumer: this, verbose });
+    });
   }
 
   async movePaths({ id, from, to }: { id: BitId, from: string, to: string }) {
@@ -443,7 +470,7 @@ export default class Consumer {
     const componentMap = bitMap.getComponent(id, true);
     const fromExists = fs.existsSync(from);
     const toExists = fs.existsSync(to);
-    if (fromExists && toExists) throw new Error(`unable to move because both paths from (${from}) and to (${to}) already exist`);
+    if (fromExists && toExists) { throw new Error(`unable to move because both paths from (${from}) and to (${to}) already exist`); }
     if (!fromExists && !toExists) throw new Error(`both paths from (${from}) and to (${to}) do not exist`);
 
     const fromRelative = this.getPathRelativeToConsumer(from);
@@ -466,15 +493,14 @@ export default class Consumer {
     const scopeP = Scope.ensure(path.join(projectPath, BIT_HIDDEN_DIR));
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
 
-    return Promise.all([scopeP, bitJsonP])
-      .then(([scope, bitJson]) => {
-        return new Consumer({
-          projectPath,
-          created: true,
-          scope,
-          bitJson
-        });
+    return Promise.all([scopeP, bitJsonP]).then(([scope, bitJson]) => {
+      return new Consumer({
+        projectPath,
+        created: true,
+        scope,
+        bitJson
       });
+    });
   }
 
   static async createWithExistingScope(consumerPath: string, scope: Scope): Promise<Consumer> {
@@ -495,16 +521,15 @@ export default class Consumer {
       if (!projectPath) return reject(new ConsumerNotFound());
       const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
       const bitJsonP = ConsumerBitJson.load(projectPath);
-      return Promise.all([scopeP, bitJsonP])
-        .then(([scope, bitJson]) =>
-          resolve(
-            new Consumer({
-              projectPath,
-              bitJson,
-              scope
-            })
-          )
-        );
+      return Promise.all([scopeP, bitJsonP]).then(([scope, bitJson]) =>
+        resolve(
+          new Consumer({
+            projectPath,
+            bitJson,
+            scope
+          })
+        )
+      );
     });
   }
 }

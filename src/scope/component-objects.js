@@ -35,10 +35,7 @@ export default class ComponentObjects {
   static fromObject(object: Object): ComponentObjects {
     const { component, objects } = object;
 
-    return new ComponentObjects(
-      new Buffer(component),
-      objects.map(obj => new Buffer(obj))
-    );
+    return new ComponentObjects(new Buffer(component), objects.map(obj => new Buffer(obj)));
   }
 
   toObjects(repo: Repository): { component: BitObject, objects: BitObject[] } {

@@ -11,7 +11,7 @@ const token = {
   CODE: 'CODE',
   DESC_DELIMITER: 'DESC_DELIMITER',
   RETURNS_DELIMITER: 'RETURNS_DELIMITER',
-  COMMENT: 'COMMENT',
+  COMMENT: 'COMMENT'
 };
 
 type Token = $Keys<typeof token>;
@@ -20,13 +20,13 @@ const status = {
   IN_CODE: 'IN_CODE',
   IN_DESCRIPTION: 'IN_DESCRIPTION',
   IN_RETURNS: 'IN_RETURNS',
-  NONE: 'NONE',
+  NONE: 'NONE'
 };
 
 type Status = $Keys<typeof status>;
 
 function isComment(str: string): Boolean {
-  return (str.startsWith('//'));
+  return str.startsWith('//');
 }
 
 function isCode(str: string): Boolean {
@@ -34,11 +34,11 @@ function isCode(str: string): Boolean {
 }
 
 function isDescriptionDelimiter(str: string): Boolean {
-  return (str === '//-');
+  return str === '//-';
 }
 
 function isReturnsDelimiter(str: string): Boolean {
-  return (str === '//=>');
+  return str === '//=>';
 }
 
 function tokenize(str: string): Token {
@@ -49,15 +49,14 @@ function tokenize(str: string): Token {
 }
 
 function stripComment(str: string): string {
-  return (isComment(str)) ? str.replace('//', '') : str;
+  return isComment(str) ? str.replace('//', '') : str;
 }
 
 function updateExample(line, field, example) {
   line = stripComment(line).trim();
   if (example[field]) {
     example[field] += `\n${line}`;
-  }
-  else {
+  } else {
     example[field] = line;
   }
 }
@@ -66,12 +65,12 @@ function parseToken(currentToken, line, currentStatus, example): Status {
   switch (currentToken) {
     case token.DESC_DELIMITER:
       if (currentStatus === status.NONE) currentStatus = status.IN_DESCRIPTION;
-      else if (currentStatus === status.IN_DESCRIPTION) currentStatus = status.NONE; // end desc block
+      else if (currentStatus === status.IN_DESCRIPTION) { currentStatus = status.NONE; } // end desc block
       else throw new Error(`${currentToken} can't appear after code or returns block`);
       break;
     case token.RETURNS_DELIMITER:
       if (currentStatus === status.NONE || currentStatus === status.IN_CODE) currentStatus = status.IN_RETURNS;
-      else if (currentStatus === status.IN_RETURNS) currentStatus = status.NONE; // end returns block
+      else if (currentStatus === status.IN_RETURNS) { currentStatus = status.NONE; } // end returns block
       else throw new Error(`${currentToken} must appear after code block`);
       break;
     case token.CODE:
@@ -121,8 +120,7 @@ export default function parse(exampleRaw: string): Example {
       const currentToken = tokenize(line);
       currentStatus = parseToken(currentToken, line, currentStatus, example);
     }
-  }
-  catch (e) {
+  } catch (e) {
     // That's fine. The example probably doesn't comply with our standard
   }
 

@@ -11,13 +11,15 @@ export default function format(doc: Doclet): string {
   }
 
   if (doc.args && doc.args.length) {
-    args = doc.args.map((arg) => {
-      let formattedParam = `${arg.name}`;
-      if (arg.type) {
-        formattedParam += ` (${arg.type})`;
-      }
-      return formattedParam;
-    }).join(', ');
+    args = doc.args
+      .map((arg) => {
+        let formattedParam = `${arg.name}`;
+        if (arg.type) {
+          formattedParam += ` (${arg.type})`;
+        }
+        return formattedParam;
+      })
+      .join(', ');
     formattedDoc += `args: ${args}\n`;
   }
   if (doc.returns) {

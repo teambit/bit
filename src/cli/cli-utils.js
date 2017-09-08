@@ -1,6 +1,6 @@
 import { toBase64, fromBase64, isString } from '../utils';
 
-export const pack = (x: Array<string>|string): string => {
+export const pack = (x: Array<string> | string): string => {
   return isString(x) ? toBase64(x) : toBase64(x.join('+++'));
 };
 
