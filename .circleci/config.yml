@@ -75,7 +75,7 @@ jobs:
             - npm-deps-{{ checksum "package.json" }}
             # Find the most recent cache used from any branch
             - npm-deps
-      - run: 
+      - run:
           name: Build bit source code
           command: npm run build
       - save_cache:
@@ -97,7 +97,7 @@ jobs:
       - run: mkdir junit
       - run:
           name: Run unit tests
-          command: npm run test-circle  
+          command: npm run test-circle
           environment:
             MOCHA_FILE: junit/unit-test-results.xml
           when: always
@@ -105,7 +105,7 @@ jobs:
           path: junit
       - store_artifacts:
           path: junit
-  
+
   e2e_test:
     docker:
       - image: circleci/node:6.10.3
@@ -128,12 +128,17 @@ jobs:
           keys:
             - builded-{{ checksum ".circle-sha" }}
       - run: mkdir junit
-      - run: 
+      - run:
           name: npm link
           command: npm link
-      - run: 
+      - run:
           name: Run e2e tests
-          command: npm run e2e-test-circle
+          type: shell
+          command: |
+            # Print all files in one line
+            echo $(circleci tests glob "specs/**/*.js")
+            # Print one file per line
+            circleci tests glob "specs/**/*.js" | xargs -n 1 echo
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
