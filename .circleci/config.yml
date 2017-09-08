@@ -139,7 +139,7 @@ jobs:
             # Print all files in one line
             echo $(circleci tests glob "e2e/**/*.js")
             # Print one file per line
-            circleci tests glob "e2e/**/*.js" | xargs -n 1 echo
+            circleci tests glob "e2e/**/*.js" | xargs -n 1 echo | mocha --compilers js:babel-core/register --reporter mocha-circleci-reporter
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
