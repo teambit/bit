@@ -134,7 +134,7 @@ jobs:
           command: npm link
       - run:
           name: Run e2e tests
-          command: circleci tests glob "e2e/**/*.e2e.js" | circleci tests split | xargs -n 1 npm run mocha
+          command: circleci tests glob "e2e/**/*.e2e.js" | circleci tests split | xargs -n 1 npm run mocha --reporter mocha-circleci-reporter
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always

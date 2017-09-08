@@ -17,7 +17,7 @@
     "e2e-test:appveyor":
       "mocha --compilers js:babel-core/register --reporter mocha-appveyor-reporter ./e2e/**/*.e2e.js",
     "e2e-test-circle": "mocha --compilers js:babel-core/register --reporter mocha-circleci-reporter ./e2e/**/*.e2e.js",
-    "mocha": "mocha --compilers js:babel-core/register --reporter mocha-circleci-reporter",
+    "mocha": "mocha --compilers js:babel-core/register",
     "clean": "rm -rf dist",
     "build": "babel src specs -d dist",
     "watch": "babel --watch bin src specs -d dist --source-maps",
