@@ -9,7 +9,6 @@ export default class Source {
   }
 
   create(bit: Bit): Source {
-    // eslint-disable-line
     throw Error('every source must implement a create method');
   }
 }
