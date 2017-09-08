@@ -2,7 +2,7 @@
 import R from 'ramda';
 import glob from 'glob';
 import path from 'path';
-import { BitId as ComponentId } from 'bit-scope-client/bit-id';
+import BitId from '../bit-id/bit-id';
 import BitJson from 'bit-scope-client/bit-json';
 import { COMPONENTS_DIRNAME, LATEST_VERSION, REMOTE_ALIAS_SIGN } from '../constants';
 import Component from './component';
@@ -51,7 +51,7 @@ export default class ComponentsMap {
     });
   }
 
-  getComponent(componentId: ComponentId): ?Component {
+  getComponent(componentId: BitId): ?Component {
     const scope = componentId.scope.startsWith(REMOTE_ALIAS_SIGN) ?
       componentId.scope.replace(REMOTE_ALIAS_SIGN, '') : componentId.scope;
     const base = `${componentId.box}/${componentId.name}/${scope}`;

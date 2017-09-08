@@ -1,6 +1,6 @@
 // @flow
 import chalk from 'chalk';
-import { type Command } from './types';
+import type { Command } from './types';
 import { bindAction } from '../../actions';
 
 const reportComponents = components => Object.keys(components)

@@ -1,9 +1,6 @@
 // @flow
 import R from 'ramda';
 import path from 'path';
-import BitJson from 'bit-scope-client/bit-json';
-import { InlineComponentsMap, ComponentsMap } from '../maps';
-import LocalScope from '../scope/local-scope';
 import { BitModuleDirectory, ComponentsDirectory } from '../directories';
 import MultiLink from '../directories/multi-link';
 import BitMap from '../bit-map';
@@ -22,10 +19,6 @@ export default async function bindAction({ projectRoot = process.cwd() }: { proj
 Promise<any> {
   const bitModuleDirectory = new BitModuleDirectory(projectRoot);
   const componentsDirectory = new ComponentsDirectory(projectRoot);
-
-  // const projectBitJson = BitJson.load(projectRoot);
-  // const localScope = await LocalScope.load(projectRoot);
-  // const localScopeName = localScope ? localScope.getScopeName() : null;
 
   const bitMap = await BitMap.load(projectRoot);
   await bitModuleDirectory.erase();
