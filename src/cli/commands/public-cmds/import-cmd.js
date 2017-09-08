@@ -35,7 +35,9 @@ export default class Import extends Command {
       tester?: boolean,
       compiler?: boolean,
       verbose?: boolean,
-      prefix?: string
+      prefix?: string,
+      display_dependencies?: boolean,
+      environment?: boolean
     }
   ): Promise<any> {
     // @TODO - import should support multiple components
@@ -60,7 +62,8 @@ export default class Import extends Command {
       notInPackageJson: [],
       notInNodeModules: [],
       notInBoth: []
-    }
+    },
+    display_dependencies?: boolean
   }): string {
     let dependenciesOutput;
     let envDependenciesOutput;

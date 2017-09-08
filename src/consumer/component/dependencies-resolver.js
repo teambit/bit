@@ -50,8 +50,8 @@ function findComponentsOfDepsFiles(
       const rootDir = entryComponentMap.rootDir;
 
       let fileDepRelative: string = fileDep;
-      let componentId: string;
-      let destination: string;
+      let componentId: ?string;
+      let destination: ?string;
       if (rootDir) {
         // Change the dependencies files to be relative to current consumer
         // We can't use path.resolve(rootDir, fileDep) because this might not work when running

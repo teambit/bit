@@ -6,6 +6,8 @@ import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_SHOW } from '../../../cli/loader/loader-messages';
 import { ScopeNotFound } from '../../../scope/exceptions';
 import Remotes from '../../../remotes/remotes';
+import Remote from '../../../remotes/remote';
+import Component from '../../../consumer/component';
 
 export default function getScopeComponent({
   id,
@@ -26,7 +28,7 @@ export default function getScopeComponent({
     });
   }
 
-  const remoteShow = (remote, bitId) => {
+  const remoteShow = (remote: Remote, bitId: BitId): Promise<?Component> => {
     loader.start(BEFORE_REMOTE_SHOW);
     return remote.show(bitId);
   };
@@ -54,7 +56,7 @@ export default function getScopeComponent({
       }
       return consumer.scope.loadComponent(bitId);
     })
-    .catch((err) => {
+    .catch(() => {
       // TODO - handle relevant error error
       return loadFromScope();
     })

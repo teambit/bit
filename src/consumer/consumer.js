@@ -21,6 +21,7 @@ import DirStructure from './dir-structure/dir-structure';
 import { getLatestVersionNumber } from '../utils';
 import * as linkGenerator from './component/link-generator';
 import loadDependenciesForComponent from './component/dependencies-resolver';
+import Version from '../scope/models/version';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -206,8 +207,8 @@ export default class Consumer {
         return Promise.reject(new NothingToImport());
       }
     }
-    let componentsAndDependenciesBitJson;
-    let componentsAndDependenciesBitMap;
+    let componentsAndDependenciesBitJson = [];
+    let componentsAndDependenciesBitMap = [];
     if (dependenciesFromBitJson) {
       componentsAndDependenciesBitJson = await this.scope.getManyWithAllVersions(dependenciesFromBitJson, cache);
       await this.writeToComponentsDir(componentsAndDependenciesBitJson);

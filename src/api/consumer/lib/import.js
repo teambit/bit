@@ -4,7 +4,6 @@ import glob from 'glob';
 import R from 'ramda';
 import path from 'path';
 import semver from 'semver';
-import Bit from '../../../consumer/component';
 import { Consumer, loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
@@ -26,8 +25,8 @@ export default async function importAction({
   verbose: ?boolean,
   prefix: ?string,
   environment: ?boolean
-}): Promise<Bit[]> {
-  async function importEnvironment(consumer: Consumer) {
+}): Promise<any> {
+  async function importEnvironment(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
 
     // TODO - import environment on multiple environments

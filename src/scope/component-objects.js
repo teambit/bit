@@ -28,7 +28,7 @@ export default class ComponentObjects {
     return JSON.stringify(componentsAndObjects);
   }
 
-  static manyFromString(str: string): ComponentObjects {
+  static manyFromString(str: string): ComponentObjects[] {
     return JSON.parse(str).map(componentObject => ComponentObjects.fromObject(componentObject));
   }
 

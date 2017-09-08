@@ -24,18 +24,21 @@ import type { ComponentMapFile, ComponentOrigin } from './component-map';
 
 const SHOULD_THROW = true;
 
+type BitMapComponents = { [string]: ComponentMap };
+
 export default class BitMap {
   projectRoot: string;
   mapPath: string;
-  components: Object<ComponentMap>;
-  constructor(projectRoot: string, mapPath: string, components: Object<string>) {
+  components: BitMapComponents;
+  hasChanged: boolean;
+  constructor(projectRoot: string, mapPath: string, components: BitMapComponents) {
     this.projectRoot = projectRoot;
     this.mapPath = mapPath;
     this.components = components;
     this.hasChanged = false;
   }
 
-  static async load(dirPath: string): BitMap {
+  static async load(dirPath: string): Promise<BitMap> {
     const mapPath = path.join(dirPath, BIT_MAP);
     const components = {};
     if (fs.existsSync(mapPath)) {
@@ -55,7 +58,7 @@ export default class BitMap {
     return new BitMap(dirPath, mapPath, components);
   }
 
-  getAllComponents(origin?: ComponentOrigin): Object<ComponentMap> {
+  getAllComponents(origin?: ComponentOrigin): BitMapComponents {
     if (!origin) return this.components;
     const isOriginMatch = component => component.origin === origin;
     return R.filter(isOriginMatch, this.components);
@@ -290,13 +293,13 @@ export default class BitMap {
       throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
       are authored or imported. This scenario is not supported`);
     }
-    const olderComponentId = R.head(olderComponentsIds);
+    const olderComponentId: string = R.head(olderComponentsIds);
     logger.debug(`BitMap: updating an older component ${olderComponentId} with a newer component ${newIdString}`);
     this.components[newIdString] = R.clone(this.components[olderComponentId]);
     delete this.components[olderComponentId];
   }
 
-  getComponent(id: string | BitId, shouldThrow: boolean): ComponentMap {
+  getComponent(id: string | BitId, shouldThrow: boolean = false): ComponentMap {
     if (R.is(String, id)) {
       id = BitId.parse(id);
     }
@@ -396,7 +399,7 @@ export default class BitMap {
     });
   }
 
-  write(): Promise<> {
+  write(): Promise<any> {
     logger.debug('writing to bit.map');
     this.modifyComponentsToLinuxPath(this.components);
     return outputFile(this.mapPath, AUTO_GENERATED_MSG + JSON.stringify(this.components, null, 4));

@@ -126,20 +126,19 @@ export default class ComponentsList {
    * @return {Promise.<string[] | Component[]>}
    * @memberof ComponentsList
    */
-  async listNewComponents(load: boolean = false): Promise<string[] | Component[]> {
+  async listNewComponents(load: boolean = false): Promise<Array<string | Component>> {
     const idsFromBitMap = await this.idsFromBitMap(false);
     const idsFromObjects = await this.idsFromObjects(false);
-    let newComponents = [];
+    const newComponents = [];
     idsFromBitMap.forEach((id) => {
       if (!idsFromObjects.includes(id)) {
         newComponents.push(id);
       }
     });
-    if (load && newComponents.length) {
-      const componentsIds = newComponents.map(id => BitId.parse(id));
-      newComponents = await this.consumer.loadComponents(componentsIds);
-    }
-    return newComponents;
+    if (!load || newComponents.length) return newComponents;
+
+    const componentsIds = newComponents.map(id => BitId.parse(id));
+    return this.consumer.loadComponents(componentsIds);
   }
   /**
    * New and modified components are commit pending

@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import path from 'path';
 import Command from '../../command';
 import { add } from '../../../api/consumer';
+import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 
 export default class Add extends Command {
   name = 'add <path...>';
@@ -54,7 +55,7 @@ export default class Add extends Command {
     );
   }
 
-  report(results: Array<{ id: string, files: string[] }>): string {
+  report(results: Array<{ id: string, files: ComponentMapFile[] }>): string {
     if (results.length > 1) {
       return chalk.green(`tracking ${results.length} new components`);
     }

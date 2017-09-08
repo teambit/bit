@@ -10,9 +10,7 @@ export default class List extends Command {
   alias = '';
   opts = [];
 
-  action([path, args]: [string, string]): Promise<any> {
-    const { headers } = unpackCommand(args);
-    // validateVersion(headers)
+  action([path]: [string, string]): Promise<any> {
     return scopeList(fromBase64(path)).then(components => components.map(c => c.toString()));
   }
 

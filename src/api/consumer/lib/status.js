@@ -2,6 +2,7 @@
 import R from 'ramda';
 import { loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
+import Component from '../../../consumer/component';
 
 export default async function status(): Promise<Object> {
   const consumer = await loadConsumer();
@@ -13,7 +14,7 @@ export default async function status(): Promise<Object> {
   // Run over the components to check if there is missing dependencies
   // If there is at least one we won't commit anything
   const newAndModified = newComponents.concat(modifiedComponent);
-  const componentsWithMissingDeps = newAndModified.filter((component) => {
+  const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
     return component.missingDependencies && !R.isEmpty(component.missingDependencies);
   });
 
