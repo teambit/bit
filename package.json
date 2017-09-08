@@ -13,6 +13,7 @@
     "test": "mocha --compilers js:babel-core/register ./specs/**/*.spec.js",
     "test:appveyor": "mocha --compilers js:babel-core/register --reporter mocha-appveyor-reporter ./specs/**/*.spec.js",
     "test-circle": "mocha --compilers js:babel-core/register --reporter mocha-circleci-reporter ./specs/**/*.spec.js",
+    "mocha-circleci": "mocha --compilers js:babel-core/register --reporter mocha-circleci-reporter",
     "e2e-test": "mocha --compilers js:babel-core/register ./e2e/**/*.e2e.js",
     "e2e-test:appveyor":
       "mocha --compilers js:babel-core/register --reporter mocha-appveyor-reporter ./e2e/**/*.e2e.js",
