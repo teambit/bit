@@ -1,7 +1,7 @@
 /** @flow */
 import path from 'path';
 import R from 'ramda';
-import { DEFAULT_INDEX_NAME, DEFAULT_INDEX_TS_NAME } from '../../constants';
+import { DEFAULT_INDEX_NAME } from '../../constants';
 import BitMap from '../bit-map/bit-map';
 import type { ComponentMapFile } from '../bit-map/component-map';
 import ComponentMap from '../bit-map/component-map';
@@ -31,7 +31,7 @@ function findComponentsOfDepsFiles(
   consumerPath: string
 ): Object {
   const packagesDeps = {};
-  const componentsDeps = [];
+  const componentsDeps = {};
   const untrackedDeps = [];
 
   const entryComponentMap = bitMap.getComponent(entryComponentId);
@@ -116,11 +116,12 @@ function findComponentsOfDepsFiles(
 
 /**
  * Merge the dependencies-trees we got from all files to one big dependency-tree
- * @param {Object} depTrees
+ * @param {Array<Object>} depTrees
  * @param {ComponentMapFile[]} files
  * @return {{missing: {packages: Array, files: Array}, tree: {}}}
  */
-function mergeDependencyTrees(depTrees: Object, files: ComponentMapFile[]): Object {
+function mergeDependencyTrees(depTrees: Array<Object>, files: ComponentMapFile[]): Object {
+  // $FlowFixMe
   if (depTrees.length === 1) return R.head(depTrees);
   if (depTrees.length !== files.length) {
     throw new Error(
@@ -131,16 +132,15 @@ function mergeDependencyTrees(depTrees: Object, files: ComponentMapFile[]): Obje
     missing: { packages: [], files: [] },
     tree: {}
   };
-  Object.keys(depTrees).forEach((dep, key) => {
-    // the keys of depTrees are parallel to the files
-    if (depTrees[dep].missing.packages.length && !files[key].test) {
+  depTrees.forEach((dep, key) => {
+    if (dep.missing.packages.length && !files[key].test) {
       // ignore package dependencies of tests for now
-      dependencyTree.missing.packages.push(...depTrees[dep].missing.packages);
+      dependencyTree.missing.packages.push(...dep.missing.packages);
     }
-    if (depTrees[dep].missing.files && depTrees[dep].missing.files.length) {
-      dependencyTree.missing.files.push(...depTrees[dep].missing.files);
+    if (dep.missing.files && dep.missing.files.length) {
+      dependencyTree.missing.files.push(...dep.missing.files);
     }
-    Object.assign(dependencyTree.tree, depTrees[dep].tree);
+    Object.assign(dependencyTree.tree, dep.tree);
   });
   dependencyTree.missing.packages = R.uniq(dependencyTree.missing.packages);
   dependencyTree.missing.files = R.uniq(dependencyTree.missing.files);

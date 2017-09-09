@@ -2,6 +2,7 @@
 import path from 'path';
 import R from 'ramda';
 import Version from '../../scope/models/version';
+import { Scope } from '../../scope';
 import Component from '../component';
 import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
@@ -10,12 +11,15 @@ import Consumer from '../consumer';
 import { glob } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
 
+export type ObjectsList = Promise<{ [componentId: string]: Version }>;
+
 export default class ComponentsList {
   consumer: Consumer;
+  scope: Scope;
   _bitMap: Object;
   _fromFileSystem: Promise<string[]>;
   _fromBitMap: Object = {};
-  _fromObjects: Promise<Object<Version>>;
+  _fromObjects: ObjectsList;
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.scope = consumer.scope;
@@ -25,7 +29,7 @@ export default class ComponentsList {
    * List all objects where the id is the object-id and the value is the Version object
    * It is useful when checking for modified components where the most important data is the Ref.
    */
-  async getFromObjects(): Promise<Object<Version>> {
+  async getFromObjects(): ObjectsList {
     if (!this._fromObjects) {
       const componentsObjects = await this.scope.objects.listComponents(false);
       const componentsVersionsP = {};
@@ -46,6 +50,7 @@ export default class ComponentsList {
       Object.keys(componentsVersionsP).forEach((key, i) => {
         componentsVersions[key] = allVersions[i];
       });
+      // $FlowFixMe
       this._fromObjects = componentsVersions;
     }
     return this._fromObjects;
@@ -58,7 +63,7 @@ export default class ComponentsList {
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
    * @return {Promise<string[]>}
    */
-  async listModifiedComponents(load: boolean = false): Promise<string[] | Component[]> {
+  async listModifiedComponents(load: boolean = false): Promise<Array<string | Component>> {
     const getAuthoredAndImportedFromFS = async () => {
       let [authored, imported] = await Promise.all([
         this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED),
@@ -179,7 +184,7 @@ export default class ComponentsList {
     return stagedComponents;
   }
 
-  async idsFromBitMap(withScopeName = true, origin) {
+  async idsFromBitMap(withScopeName: boolean = true, origin?: string): Promise<string[]> {
     const fromBitMap = await this.getFromBitMap(origin);
     const ids = Object.keys(fromBitMap);
     if (withScopeName) return ids;
@@ -223,16 +228,16 @@ export default class ComponentsList {
    * of that directory. The bit.map is used to find them all
    * @return {Promise<Component[]>}
    */
-  async getFromFileSystem(origin): Promise<Component[]> {
+  async getFromFileSystem(origin?: string): Promise<Component[]> {
     if (!this._fromFileSystem) {
-      const idsFromBitMap = await this.idsFromBitMap(undefined, origin);
+      const idsFromBitMap = await this.idsFromBitMap(true, origin);
       const parsedBitIds = idsFromBitMap.map(id => BitId.parse(id));
       this._fromFileSystem = await this.consumer.loadComponents(parsedBitIds);
     }
     return this._fromFileSystem;
   }
 
-  async getFromBitMap(origin): Object {
+  async getFromBitMap(origin?: string): Object {
     const cacheKeyName = origin || 'all';
     if (!this._fromBitMap[cacheKeyName]) {
       const bitMap = await this.getBitMap();

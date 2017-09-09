@@ -3,13 +3,7 @@ import path from 'path';
 import normalize from 'normalize-path';
 import R from 'ramda';
 import format from 'string-format';
-import {
-  DEFAULT_DIST_DIRNAME,
-  DEFAULT_INDEX_NAME,
-  DEFAULT_INDEX_TS_NAME,
-  COMPONENT_ORIGINS,
-  AUTO_GENERATED_MSG
-} from '../../constants';
+import { DEFAULT_DIST_DIRNAME, DEFAULT_INDEX_NAME, COMPONENT_ORIGINS, AUTO_GENERATED_MSG } from '../../constants';
 import { outputFile, getWithoutExt, pathJoinLinux } from '../../utils';
 import logger from '../../logger/logger';
 import { ComponentWithDependencies } from '../../scope';
@@ -82,10 +76,7 @@ async function writeDependencyLinks(
     let distLinkPath;
     if (hasDist) {
       distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, sourceRelativePath);
-    }
-
-    // Generate a link file inside dist folder of the dependent component
-    if (hasDist) {
+      // Generate a link file inside dist folder of the dependent component
       writeLinkFile(resolveDepVersion, distLinkPath, relativePathInDependency);
     }
 
@@ -137,8 +128,8 @@ async function writeDependencyLinks(
     const directLinksP = componentLinks(directDeps, flattenDeps, componentWithDeps.component.writtenPath, hasDist);
 
     const indirectLinksP = componentWithDeps.dependencies.map((dep: Component) => {
-      const hasDist = dep.dists && !R.isEmpty(dep.dists);
-      return componentLinks(dep.dependencies, dep.flattenedDependencies, dep.writtenPath, hasDist);
+      const depHasDist = dep.dists && !R.isEmpty(dep.dists);
+      return componentLinks(dep.dependencies, dep.flattenedDependencies, dep.writtenPath, depHasDist);
     });
 
     return Promise.all([directLinksP, ...indirectLinksP]);
