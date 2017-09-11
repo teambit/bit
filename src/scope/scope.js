@@ -239,7 +239,7 @@ export default class Scope {
   }
 
   /**
-   * Writes a component as an object into the 'objects' directory
+   * Writes components as objects into the 'objects' directory
    */
   async writeManyComponentsToModel(componentsObjects: ComponentObjects[]): Promise<any> {
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
@@ -340,7 +340,7 @@ export default class Scope {
       return remotes
         .fetch(left.map(def => def.id), this, true)
         .then((componentObjects) => {
-          return Promise.all(componentObjects.map(compObj => this.writeComponentToModel(compObj)));
+          return this.writeManyComponentsToModel(componentObjects);
         })
         .then(() => this.getExternalOnes(ids, remotes, true));
     });
