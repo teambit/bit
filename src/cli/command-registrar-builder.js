@@ -35,6 +35,7 @@ import Add from './commands/public-cmds/add-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
 import Move from './commands/public-cmds/move-cmd';
 import Remove from './commands/public-cmds/remove-cmd';
+import Delete from './commands/private-cmds/_delete-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -71,6 +72,7 @@ export default function registerCommands(): CommandRegistrar {
     new Add(),
     new Untrack(),
     new Move(),
-    new Remove()
+    new Remove(),
+    new Delete()
   ]);
 }

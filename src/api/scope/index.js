@@ -12,6 +12,7 @@ import ciUpdateAction from './lib/ci-update-action';
 import scopeConfig from './lib/scope-config';
 import catScope from './lib/cat-scope';
 import refreshScope from './lib/refresh-scope';
+import remove from './lib/delete';
 
 export {
   catObject,
@@ -27,5 +28,6 @@ export {
   ciUpdateAction,
   scopeConfig,
   catScope,
-  refreshScope
+  refreshScope,
+  remove
 };

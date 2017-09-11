@@ -74,6 +74,7 @@ export default class Component {
   writtenPath: ?string; // needed for generate links
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
+  deleted: boolean;
 
   set files(val: ?(SourceFile[])) {
     this._files = val;
@@ -131,7 +132,8 @@ export default class Component {
     dists,
     specsResults,
     license,
-    log
+    log,
+    deleted
   }: ComponentProps) {
     this.name = name;
     this.box = box || DEFAULT_BOX_NAME;
@@ -150,6 +152,7 @@ export default class Component {
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
+    this.deleted = deleted || false;
   }
 
   getFileExtension(): string {
@@ -604,7 +607,8 @@ export default class Component {
       dists: this.dists,
       specsResults: this.specsResults ? this.specsResults.map(res => res.serialize()) : null,
       license: this.license ? this.license.serialize() : null,
-      log: this.log
+      log: this.log,
+      deleted: this.deleted
     };
   }
 
@@ -636,7 +640,8 @@ export default class Component {
       dists,
       files,
       specsResults,
-      license
+      license,
+      deleted
     } = object;
     return new Component({
       name,
@@ -653,7 +658,8 @@ export default class Component {
       docs,
       dists,
       specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null,
-      license: license ? License.deserialize(license) : null
+      license: license ? License.deserialize(license) : null,
+      deleted: deleted || false
     });
   }
 
