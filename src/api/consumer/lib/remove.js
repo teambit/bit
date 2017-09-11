@@ -1,18 +1,29 @@
 /** @flow */
-import {loadConsumer} from "../../../consumer";
-import ComponentsList from '../../../consumer/component/components-list';
+import { loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 
-export default async function remove(componentsId: string): Promise<boolean> {
+export default async function remove({
+  ids,
+  hard,
+  remote,
+  force
+}: {
+  ids: string[],
+  hard: boolean,
+  remote: boolean,
+  force: boolean
+}): Promise<boolean> {
+  const bitIds = ids.map(bitId => BitId.parse(bitId));
   const consumer = await loadConsumer();
-
-  const y = await consumer.scope.remove({ bitId:BitId.parse(componentsId[0]) , consumer });
-  //const ref = component[0].VERSIONS[lastVersion];
-  //consumer.scope.objects.remove(ref)
-  //const x = await componentsList.getFromObjects();
-
-  console.log(x)
-  /* return loadConsumer().then(consumer =>
-    consumer.removeFromInline(id)
-  );*/
+  if (remote) {
+    const remotes = await consumer.scope.remotes();
+    const removeP = bitIds.map(async (bitId) => {
+      const resolvedRemote = await remotes.resolve(bitId.scope, consumer.scope);
+      return resolvedRemote.deleteMany(ids.join(' '));
+    });
+    const removedIds = await Promise.all(removeP);
+    return removedIds.reduce((a, b) => a.concat(b), []);
+  }
+  const removedIds = await consumer.scope.remove({ bitIds, hard, force });
+  return removedIds;
 }

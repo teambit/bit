@@ -139,7 +139,12 @@ export default class SSH implements Network {
       return Promise.resolve();
     });
   }
-
+  deleteMany(bitIds: Array<BitId>): Promise<ComponentObjects[]> {
+    return this.exec('_delete', bitIds).then((data: string) => {
+      const { payload } = this._unpack(data);
+      return Promise.resolve(payload);
+    });
+  }
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
     return this.pushMany([componentObjects]);
   }
@@ -156,15 +161,14 @@ export default class SSH implements Network {
       });
   }
 
-  list() {
+  list(all: boolean = false) {
     return this.exec('_list').then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
-      return rejectNils(
-        payload.map((c) => {
-          return c ? ConsumerComponent.fromString(c) : null;
-        })
-      );
+      const consumerComponents = payload.map((c) => {
+        return c ? ConsumerComponent.fromString(c) : null;
+      });
+      return rejectNils(all ? consumerComponents : consumerComponents.filter(component => !component.deleted));
     });
   }
 

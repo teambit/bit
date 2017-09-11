@@ -13,7 +13,13 @@ import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, DEFAULT_DIST_DIRNAME } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
+import {
+  ScopeNotFound,
+  ComponentNotFound,
+  ResolutionException,
+  DependencyNotFound,
+  ComponentDeleted
+} from './exceptions';
 import { RemoteScopeNotFound } from './network/exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
@@ -122,9 +128,10 @@ export default class Scope {
       .then(components => this.toConsumerComponents(components));
   }
 
-  async listStage() {
+  async listStage(all: boolean = false) {
     const components = await this.objects.listComponents(false);
-    return this.toConsumerComponents(components.filter(c => !c.scope || c.scope === this.name));
+    const filtered = all ? components : components.filter(component => !component.deleted);
+    return this.toConsumerComponents(filtered.filter(c => !c.scope || c.scope === this.name));
   }
 
   importDependencies(dependencies: BitId[]) {
@@ -437,6 +444,15 @@ export default class Scope {
     const [externals, locals] = splitWhen(id => id.isLocal(this.name), idsWithoutNils);
 
     const localDefs = await this.sources.getMany(locals);
+    const deltedComponets = localDefs.filter(def => def.component.deleted).map(component => component.id.toString());
+
+    // used for  import of soft deleted components directly -works with components that are dependent on soft deleted components
+    // TODO - ask gilad if i should throw error or print msg
+    if (!R.isEmpty(deltedComponets)) {
+      throw new ComponentDeleted(deltedComponets);
+      // const 'Cant import component deleted:'
+      // return Promise.reject(` ${deltedComponets}`);
+    }
     const versionDeps = await Promise.all(
       localDefs.map((def) => {
         if (!def.component) throw new ComponentNotFound(def.id.toString());
@@ -538,42 +554,41 @@ export default class Scope {
     return Promise.all(versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects)));
   }
 
-  remove({ bitId, consumer }: { bitId: BitId, consumer?: Consumer}): Promise<consumerComponent> {
-    if (!bitId.isLocal(this.name)) {
-      return Promise.reject('you can not reset a remote component');
-    }
-    return this.sources.get(bitId)
-      .then((component) => {
-        if (!component) throw new ComponentNotFound(bitId.toString());
-        const allVersions = component.listVersions();
-        if (allVersions.length > 1) {
-          const lastVersion = component.latest();
-          bitId.version = lastVersion.toString();
-          return consumer.removeFromComponents(bitId, true).then(() => {
-            bitId.version = (lastVersion - 1).toString();
-            return this.get(bitId).then((consumerComponent) => {
-              const ref = component.versions[lastVersion];
-              return this.objects.remove(ref).then(() => { // todo: remove also all deps of that ref
-                delete component.versions[lastVersion];
-                return this.objects.persist();
+  async remove({
+    bitIds,
+    hard,
+    force
+  }: {
+    bitIds: Array<BitId>,
+    hard: boolean,
+    force: boolean
+  }): Promise<Array<BitId>> {
+    const stagedComponents = await this.listStage();
+    // const consumerComponents =  await Promise.all(bitIds.map(async id => this.sources.get(id)));
 
-              }).then(() => consumerComponent);
-            });
-          });
-        }
-        return this.sources.get(bitId)
-          .then( component => {
-            const lastVersion = component.latest();
-            const ref = component.versions[lastVersion];
-            console.log(this.objects)
-            return this.objects.remove(ref).then((ref) => {
-              delete component.versions[lastVersion];
-              this.objects.add(component);
-              return this.objects.persist()
-            });
-          })
-        // .then(() => this.clean(bitId).then(() => consumerComponent)));
-      });
+    // check if one of the bitIds to remove is a dependecy of one of the staged components
+    // TODO - find better way to check this - Amit
+    /*    const dependentBits = stagedComponents.map((stagedComponent) => {
+     return stagedComponent.flattenedDependencies.map((dep)=> {
+     const y = consumerComponents.filter(consumerComponent => (consumerComponent.box === dep.box) && (consumerComponent.name === dep.name) && (consumerComponent.scope === dep.scope))
+     if (!R.isEmpty(y)) return stagedComponent;
+     });
+     }).reduce((a, b) => a.concat(b), []); */
+
+    const resultP = bitIds.map(async (bitId) => {
+      if (hard) {
+        const removedComponent = await this.sources.clean(bitId);
+        if (!removedComponent) throw new ComponentNotFound(bitId);
+        return bitId;
+      } 
+      const component = await this.sources.get(bitId);
+      component.deleted = true;
+      this.objects.add(component);
+      await this.objects.persist();
+      return component.id();
+    });
+    const result = await Promise.all(resultP);
+    return result;
   }
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
     if (!bitId.isLocal(this.name)) {
