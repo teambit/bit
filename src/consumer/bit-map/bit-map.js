@@ -16,7 +16,7 @@ import {
 } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId } from '../../bit-id';
-import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux } from '../../utils';
+import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux, isDir } from '../../utils';
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin } from './component-map';
 
@@ -373,6 +373,25 @@ export default class BitMap {
       });
       components[key].mainFile = pathNormalizeToLinux(components[key].mainFile);
     });
+  }
+
+  updatePathLocation(from: string, to: string, fromExists: boolean): Array<Object> {
+    const existingPath = fromExists ? from : to;
+    const isPathDir = isDir(existingPath);
+    const allChanges = [];
+    Object.keys(this.components).forEach((componentId) => {
+      const componentMap: ComponentMap = this.components[componentId];
+      const changes = isPathDir ? componentMap.updateDirLocation(from, to) : componentMap.updateFileLocation(from, to);
+      if (changes) allChanges.push(changes);
+    });
+    if (R.isEmpty(allChanges)) {
+      const errorMsg = isPathDir
+        ? `neither one of the files use the directory ${existingPath}`
+        : `the file ${existingPath} is untracked`;
+      throw new Error(errorMsg);
+    }
+
+    return Array.prototype.concat(...allChanges);
   }
 
   write(): Promise<any> {
