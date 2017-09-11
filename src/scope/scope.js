@@ -239,6 +239,20 @@ export default class Scope {
   }
 
   /**
+   * Writes a component as an object into the 'objects' directory
+   */
+  async writeManyComponentsToModel(componentsObjects: ComponentObjects[]): Promise<any> {
+    const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
+    logger.debug(
+      `writeComponentToModel, writing into the model, ids: ${manyObjects
+        .map(objects => objects.component.id())
+        .join(', ')}. They might have dependencies which are going to be written too`
+    );
+    await Promise.all(manyObjects.map(objects => this.sources.merge(objects)));
+    return this.objects.persist();
+  }
+
+  /**
    * When exporting components with dependencies to a bare-scope, some of the dependencies may be created locally and as
    * as result their scope-name is null. Once the bare-scope gets the components, it needs to convert these scope names
    * to the bare-scope name.
@@ -357,7 +371,7 @@ export default class Scope {
         .fetch(left.map(def => def.id), this)
         .then((componentObjects) => {
           logger.debug('getExternalMany: writing them to the model');
-          return Promise.all(componentObjects.map(compObj => this.writeComponentToModel(compObj)));
+          return this.writeManyComponentsToModel(componentObjects);
         })
         .then(() => this.getExternalMany(ids, remotes));
     });
