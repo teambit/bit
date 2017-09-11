@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import path from 'path';
 import Helper from '../e2e-helper';
 
 describe('delete files from a component', function () {

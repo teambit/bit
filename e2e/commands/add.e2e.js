@@ -1,10 +1,10 @@
 // covers also init, create, commit, import and export commands
 
+import fs from 'fs';
 import chai, { expect } from 'chai';
 import normalize from 'normalize-path';
 import path from 'path';
 import Helper from '../e2e-helper';
-import fs from 'fs';
 import { AUTO_GENERATED_MSG } from '../../src/constants';
 
 const assertArrays = require('chai-arrays');
@@ -132,7 +132,6 @@ describe('bit add command', function () {
     });
     it('Define dynamic main file ', () => {
       const mainFileOs = path.normalize('{PARENT_FOLDER}/{PARENT_FOLDER}.js');
-      const expectedRes = path.normalize('bar/bar.js');
       helper.createComponent('bar', 'bar.js');
       helper.createComponent('bar', 'foo1.js');
       helper.addComponentWithOptions('bar', { m: mainFileOs, n: 'test' });
