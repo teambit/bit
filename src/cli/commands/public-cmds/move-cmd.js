@@ -1,13 +1,12 @@
 /** @flow */
 import chalk from 'chalk';
-import path from 'path';
 import Command from '../../command';
 import { move } from '../../../api/consumer';
 
 export default class Move extends Command {
   name = 'move <id> <from> <to>';
   description = 'move files or directories of a component';
-  alias = 'm';
+  alias = 'mv';
   opts = [];
   loader = true;
 
