@@ -11,7 +11,7 @@ export default (components: ConsumerComponent[]) => {
   });
 
   function tablizeComponent(component) {
-    return [`${component.box}/${component.name}`, component.version]; // Add date, author
+    return [`${component.box}/${component.name}${c.red(component.deleted ? '[Deleted]' : '')}`, component.version]; // Add date, author
   }
 
   table.push(...components.map(tablizeComponent));

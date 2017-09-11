@@ -6,13 +6,21 @@ import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_LIST } from '../../../cli/loader/loader-messages';
 import Remotes from '../../../remotes/remotes';
 
-export default function list({ scopeName, cache }: { scopeName?: string, cache?: boolean }): Promise<string[]> {
+export default function list({
+  scopeName,
+  cache,
+  all
+}: {
+  scopeName?: string,
+  cache?: boolean,
+  all?: boolean
+}): Promise<string[]> {
   const remoteList = (remote) => {
     loader.start(BEFORE_REMOTE_LIST);
-    return remote.list();
+    return remote.list(all);
   };
   const scopeList = (scope) => {
-    return cache ? scope.list() : scope.listStage();
+    return cache ? scope.list() : scope.listStage(all);
   };
 
   return loadConsumer()
