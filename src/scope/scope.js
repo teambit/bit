@@ -210,7 +210,6 @@ export default class Scope {
         verbose
       });
       loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-      await this.objects.persist();
       const deps = await component.toVersionDependencies(LATEST, this, this.name);
       consumerComponent.version = deps.component.version;
       await deps.toConsumer(this.objects);
@@ -219,10 +218,13 @@ export default class Scope {
     });
 
     // Run the persistence one by one not in parallel!
-    return persistComponentsP.reduce(
+    const components = await persistComponentsP.reduce(
       (promise, func) => promise.then(result => func().then(Array.prototype.concat.bind(result))),
       Promise.resolve([])
     );
+    await this.objects.persist();
+
+    return components;
   }
 
   /**
