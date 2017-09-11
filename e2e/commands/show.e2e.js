@@ -131,7 +131,6 @@ describe('bit show command', function () {
 
       it('should include the dependencies correctly', () => {
         const dependencies = output.dependencies;
-        console.log('dependencies', JSON.stringify(dependencies));
         // TODO: Should be concrete version after we resolve the dep version
         const depPaths = [{ sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' }];
         const depObject = { id: 'utils/is-string', relativePaths: depPaths };
@@ -170,6 +169,8 @@ describe('bit show command', function () {
 
   // TODO: Implement after export is working
   describe.skip('remote components', () => {
+    let output;
+
     describe('single version as cli output (no -v or -j flags)', () => {
       it('should render the id correctly', () => {});
 

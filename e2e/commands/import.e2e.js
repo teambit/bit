@@ -251,11 +251,9 @@ describe('bit import', function () {
   });
 
   describe('import from bit json', () => {
-    let bitJsonPath;
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      bitJsonPath = path.join(helper.localScopePath, '/components/global/with-deps/bit.json');
     });
     describe('components with shared nested deps', () => {
       let myBitJsonPath;
@@ -853,7 +851,7 @@ describe('bit import', function () {
       const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
       expect(indexFileContent).to.have.string(
-        `@import \'../dependencies/style/style/${helper.remoteScope}/1/index.css\';`,
+        `@import '../dependencies/style/style/${helper.remoteScope}/1/index.css';`,
         'dependency link file point to the wrong place'
       );
     });
@@ -1195,7 +1193,7 @@ describe('bit import', function () {
       );
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(
-        `module.exports = require(\'../${expectedPathSuffix}\');`,
+        `module.exports = require('../${expectedPathSuffix}');`,
         'dependency link file point to the wrong place'
       );
     });
@@ -1208,7 +1206,7 @@ describe('bit import', function () {
       );
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(
-        `module.exports = require(\'../../${expectedPathSuffix}\');`,
+        `module.exports = require('../../${expectedPathSuffix}');`,
         'dependency link file point to the wrong place'
       );
     });
@@ -1230,7 +1228,7 @@ describe('bit import', function () {
       const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'index'));
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(
-        `module.exports = require(\'../../../../${expectedPathSuffix}\');`,
+        `module.exports = require('../../../../${expectedPathSuffix}');`,
         'in direct dependency link file point to the wrong place'
       );
     });
@@ -1253,7 +1251,7 @@ describe('bit import', function () {
       const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'index'));
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(
-        `module.exports = require(\'../../../../../${expectedPathSuffix}\');`,
+        `module.exports = require('../../../../../${expectedPathSuffix}');`,
         'in direct dependency link file point to the wrong place'
       );
     });

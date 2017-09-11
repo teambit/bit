@@ -217,6 +217,7 @@ export default class Helper {
     this.runCmd(`bit export ${this.envScope} compilers/babel`, tempScopePath);
     this.addRemoteScope(this.envScopePath);
     this.compilerCreated = true;
+    return true;
   }
 
   importCompiler(id?) {
