@@ -4,14 +4,14 @@ import Command from '../../command';
 import { move } from '../../../api/consumer';
 
 export default class Move extends Command {
-  name = 'move <id> <from> <to>';
-  description = 'move files or directories of a component';
+  name = 'move <from> <to>';
+  description = 'move files or directories of component(s)';
   alias = 'mv';
   opts = [];
   loader = true;
 
-  action([id, from, to]: [string, string, string]): Promise<*> {
-    return move({ id, from, to });
+  action([from, to]: [string, string]): Promise<*> {
+    return move({ from, to });
   }
 
   report(filesChanged: Array<{ from: string, to: string }>): string {
