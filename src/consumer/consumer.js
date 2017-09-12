@@ -356,8 +356,30 @@ export default class Consumer {
         linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
       )
     );
+
+    if (writeToPath) {
+      componentDependencies.forEach((componentWithDeps) => {
+        if (componentWithDeps.component.writtenPath !== writeToPath) {
+          const component = componentWithDeps.component;
+          this.moveExistingComponent(bitMap, component, component.writtenPath, writeToPath);
+        }
+      });
+    }
+
     await bitMap.write();
     return [...writtenComponents, ...writtenDependencies];
+  }
+
+  moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
+    if (fs.existsSync(newPath)) {
+      throw new Error(
+        `could not move the component ${component.id} from ${oldPath} to ${newPath} as the destination path already exists`
+      );
+    }
+    const componentMap = bitMap.getComponent(component.id);
+    componentMap.updateDirLocation(oldPath, newPath);
+    fs.moveSync(oldPath, newPath);
+    component.writtenPath = newPath;
   }
 
   async bumpDependenciesVersions(committedComponents: Component[]) {

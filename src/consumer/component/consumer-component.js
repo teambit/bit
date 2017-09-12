@@ -275,7 +275,7 @@ export default class Component {
     return this;
   }
 
-  _addComponentToBitMap(bitMap, rootDir, origin, parent) {
+  _addComponentToBitMap(bitMap: BitMap, rootDir: string, origin: string, parent?: string): void {
     const filesForBitMap = this.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
@@ -340,7 +340,7 @@ export default class Component {
     // when there is componentMap, this component (with this version or other version) is already part of the project.
     // There are several options as to what was the origin before and what is the origin now and according to this,
     // we update/remove/don't-touch the record in bit.map.
-    // The current origin can't be AUTHORED because when the author create a component for the first time,
+    // The current origin can't be AUTHORED because when the author creates a component for the first time,
     // componentMap doesn't exist. So we have left with two options:
     // 1) current origin is IMPORTED - If the version is the same as before, don't update bit.map. Otherwise, update.
     // one exception is where the origin was NESTED before, in this case, remove the current record and add a new one.
