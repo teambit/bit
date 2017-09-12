@@ -8,7 +8,6 @@ import MergeConflict from '../../exceptions/merge-conflict';
 import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
-import type { SSHUrl } from '../../../utils/parse-ssh-url';
 import type { ScopeDescriptor } from '../../scope';
 import ConsumerComponent from '../../../consumer/component';
 import checkVersionCompatibilityFunction from '../check-version-compatibility';
@@ -129,7 +128,7 @@ export default class SSH implements Network {
 
   pushMany(manyComponentObjects: ComponentObjects[]): Promise<ComponentObjects[]> {
     return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects)).then((data: string) => {
-      const { payload, headers } = this._unpack(data);
+      const { headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
       return Promise.resolve();
     });
@@ -204,12 +203,13 @@ export default class SSH implements Network {
       port: this.port,
       privateKey: keyGetter(key),
       debug: (str) => {
+        // eslint-disable-line
         // logger.debug(`SSH2: ${str}`); // uncomment to get the debug messages from ssh2 library
       }
     };
   }
 
-  connect(sshUrl: SSHUrl, key: ?string): Promise<SSH> {
+  connect(key: ?string): Promise<SSH> {
     const sshConfig = this.composeConnectionObject(key);
     return new Promise((resolve, reject) => {
       if (!sshConfig.privateKey) {

@@ -6,7 +6,7 @@ import BitObject from './object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound } from '../exceptions';
-import { resolveGroupId, mkdirp, writeFile, removeFile, allSettled, readFile, inflate } from '../../utils';
+import { resolveGroupId, mkdirp, writeFile, removeFile, readFile } from '../../utils';
 import { Scope } from '../../scope';
 import { Component, Symlink, ScopeMeta } from '../models';
 import logger from '../../logger/logger';
@@ -52,7 +52,7 @@ export default class Repository {
       .then((fileContents) => {
         return BitObject.parseObject(fileContents, this.types);
       })
-      .catch((e) => {
+      .catch(() => {
         logger.debug(`Failed reading a ref file ${this.objectPath(ref)}`);
         return null;
       });

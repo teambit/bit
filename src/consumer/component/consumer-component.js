@@ -401,7 +401,6 @@ export default class Component {
         loader.start(BEFORE_IMPORT_ENVIRONMENT);
         return scope.installEnvironment({
           ids: [this.compilerId, this.testerId],
-          consumer,
           verbose
         });
       }
@@ -545,7 +544,6 @@ export default class Component {
         loader.start(BEFORE_IMPORT_ENVIRONMENT);
         return scope.installEnvironment({
           ids: [this.compilerId],
-          consumer,
           verbose
         });
       }

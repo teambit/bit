@@ -1,3 +1,4 @@
+// @flow
 import * as semver from 'semver';
 import chalk from 'chalk';
 import { BIT_VERSION } from '../../constants';

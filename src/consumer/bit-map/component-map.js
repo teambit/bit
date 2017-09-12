@@ -2,7 +2,7 @@
 import path from 'path';
 import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS } from '../../constants';
-import { isDir, pathNormalizeToLinux } from '../../utils';
+import { pathNormalizeToLinux } from '../../utils';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
