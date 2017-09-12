@@ -223,7 +223,6 @@ export default class Consumer {
     if (withEnvironments) {
       const envComponents = await this.scope.installEnvironment({
         ids: [this.testerId, this.compilerId],
-        consumer: this,
         verbose
       });
       return {
@@ -262,7 +261,7 @@ export default class Consumer {
       throw new Error('you must specify bit id for importing');
     } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId);
-    return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose }).then((envDependencies) => {
+    return this.scope.installEnvironment({ ids: [bitId], verbose }).then((envDependencies) => {
       // todo: do we need the environment in bit.map?
       // this.bitMap.addComponent(bitId.toString(), this.composeRelativeBitPath(bitId));
       // this.bitMap.write();

@@ -1,8 +1,7 @@
 // @flow
-import fs from 'fs-extra';
 import path from 'path';
-import AbstractVinyl from './abstract-vinyl';
 import vinylFile from 'vinyl-file';
+import AbstractVinyl from './abstract-vinyl';
 import FileSourceNotFound from '../exceptions/file-source-not-found';
 import logger from '../../../logger/logger';
 

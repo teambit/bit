@@ -3,7 +3,6 @@ import path from 'path';
 import { BitId, BitIds } from '../../bit-id';
 import Repository from '../repository';
 import { forEach, writeFile } from '../../utils';
-import Scope from '../scope';
 import Bit from '../../consumer/component';
 import { DEPENDENCY_MAP_FILENAME } from '../../constants';
 

@@ -11,7 +11,7 @@ import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } from '../utils';
-import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, BIT_JSON, DEFAULT_DIST_DIRNAME } from '../constants';
+import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, DEFAULT_DIST_DIRNAME } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
 import { RemoteScopeNotFound } from './network/exceptions';
@@ -133,7 +133,7 @@ export default class Scope {
         .then(resolve)
         .catch((e) => {
           if (e instanceof RemoteScopeNotFound) return reject(e);
-          reject(new DependencyNotFound(e.id));
+          return reject(new DependencyNotFound(e.id));
         });
     });
   }
@@ -714,15 +714,7 @@ export default class Scope {
     );
   }
 
-  installEnvironment({
-    ids,
-    consumer,
-    verbose
-  }: {
-    ids: BitId[],
-    consumer?: Consumer,
-    verbose?: boolean
-  }): Promise<any> {
+  installEnvironment({ ids, verbose }: { ids: BitId[], verbose?: boolean }): Promise<any> {
     logger.debug(`scope.installEnvironment, ids: ${ids.join(', ')}`);
     const installPackageDependencies = (component: ConsumerComponent) => {
       return npmClient.install(

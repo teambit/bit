@@ -5,8 +5,6 @@ import Component from '../consumer/component';
 import serverlessIndex from './serverless-index';
 import logger from '../logger/logger';
 
-const isWin = require('os').platform() === 'win32';
-
 export type Doc = {
   id: string,
   name: string,
@@ -69,7 +67,7 @@ function prepareDoc(docs: Object, component: Component): Doc {
 }
 
 function addAllToLocalIndex(components: Array<Component>): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const docs = components.map(component => prepareDoc(component.docs, component));
     localIndex.then((indexInstance) => {
       const docStream = new Readable({ objectMode: true });
@@ -87,7 +85,7 @@ function addAllToLocalIndex(components: Array<Component>): Promise<string> {
 }
 
 function addToLocalIndex(component: Component): Promise<Component> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const doc = prepareDoc(component.docs, component);
     localIndex.then((indexInstance) => {
       const docStream = new Readable({ objectMode: true });
