@@ -308,7 +308,8 @@ export default class Consumer {
         force,
         bitMap,
         origin: COMPONENT_ORIGINS.IMPORTED,
-        consumerPath: this.getPath()
+        consumerPath: this.getPath(),
+        driver: this.driver
       });
     });
     const writtenComponents = await Promise.all(writeComponentsP);
@@ -341,7 +342,8 @@ export default class Consumer {
             bitMap,
             origin: COMPONENT_ORIGINS.NESTED,
             parent: componentWithDeps.component.id,
-            consumerPath: this.getPath()
+            consumerPath: this.getPath(),
+            driver: this.driver
           })
           .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap));
       });

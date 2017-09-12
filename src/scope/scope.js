@@ -26,6 +26,7 @@ import SourcesRepository from './repositories/sources';
 import { postExportHook, postImportHook } from '../hooks';
 import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
+import Driver from '../driver';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
 import {
@@ -698,7 +699,10 @@ export default class Scope {
     }
   }
 
-  writeToComponentsDir(componentWithDependencies: ComponentWithDependencies[]): Promise<ConsumerComponent[]> {
+  writeToComponentsDir(
+    componentWithDependencies: ComponentWithDependencies[],
+    driver: Driver
+  ): Promise<ConsumerComponent[]> {
     const componentsDir = this.getComponentsPath();
     const components: ConsumerComponent[] = flattenDependencies(componentWithDependencies);
 
@@ -709,7 +713,7 @@ export default class Scope {
     return Promise.all(
       components.map((component: ConsumerComponent) => {
         const bitPath = bitDirForConsumerImport(component);
-        return component.write({ bitDir: bitPath });
+        return component.write({ bitDir: bitPath, driver });
       })
     );
   }
@@ -736,7 +740,7 @@ export default class Scope {
 
     return this.getMany(ids).then((componentDependenciesArr) => {
       const writeToProperDir = () => {
-        return this.writeToComponentsDir(componentDependenciesArr);
+        return this.writeToComponentsDir(componentDependenciesArr, consumer.driver);
       };
 
       return writeToProperDir().then((components: ConsumerComponent[]) => {
