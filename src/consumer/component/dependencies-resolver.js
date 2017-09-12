@@ -171,17 +171,17 @@ export default async function loadDependenciesForComponent(
   consumerPath: string,
   idWithConcreteVersionString: string
 ): Promise<Component> {
-  component.missingDependencies = {};
+  const missingDependencies = {};
   const files = componentMap.files.map(file => file.relativePath);
   // find the dependencies (internal files and packages) through automatic dependency resolution
   const treesP = files.map(file => driver.getDependencyTree(bitDir, consumerPath, file));
   const trees = await Promise.all(treesP);
   const dependenciesTree = mergeDependencyTrees(trees, componentMap.files);
   if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) {
-    component.missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
+    missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
   }
   if (dependenciesTree.missing.packages && !R.isEmpty(dependenciesTree.missing.packages)) {
-    component.missingDependencies.missingPackagesDependenciesOnFs = dependenciesTree.missing.packages;
+    missingDependencies.missingPackagesDependenciesOnFs = dependenciesTree.missing.packages;
   }
   // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
   // they are referred as "untracked components" and the user should add them later on in order to commit
@@ -197,8 +197,12 @@ export default async function loadDependenciesForComponent(
     return { id: BitId.parse(depId), relativePaths: traversedCompDeps[depId] };
   });
   const untrackedDependencies = traversedDeps.untrackedDeps;
-  if (!R.isEmpty(untrackedDependencies)) component.missingDependencies.untrackedDependencies = untrackedDependencies;
+  if (!R.isEmpty(untrackedDependencies)) missingDependencies.untrackedDependencies = untrackedDependencies;
   component.packageDependencies = traversedDeps.packagesDeps;
+  // assign missingDependencies to component only when it has data.
+  // Otherwise, when it's empty, component.missingDependencies will be an empty object ({}), and for some weird reason,
+  // Ramda.isEmpty returns false when the component is received after async/await of Array.map.
+  if (!R.isEmpty(missingDependencies)) component.missingDependencies = missingDependencies;
 
   return component;
 }
