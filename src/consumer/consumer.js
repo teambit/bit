@@ -466,9 +466,7 @@ export default class Consumer {
     });
   }
 
-  async movePaths({ id, from, to }: { id: BitId, from: string, to: string }) {
-    const bitMap = await this.getBitMap();
-    const componentMap = bitMap.getComponent(id, true);
+  async movePaths({ from, to }: { from: string, to: string }) {
     const fromExists = fs.existsSync(from);
     const toExists = fs.existsSync(to);
     if (fromExists && toExists) {
@@ -478,7 +476,8 @@ export default class Consumer {
 
     const fromRelative = this.getPathRelativeToConsumer(from);
     const toRelative = this.getPathRelativeToConsumer(to);
-    const changes = componentMap.updatePathLocation(fromRelative, toRelative, fromExists);
+    const bitMap = await this.getBitMap();
+    const changes = bitMap.updatePathLocation(fromRelative, toRelative, fromExists);
     if (fromExists && !toExists) {
       // user would like to physically move the file. Otherwise (!fromExists and toExists), user would like to only update bit.map
       fs.moveSync(from, to);
