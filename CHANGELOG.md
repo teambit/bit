@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- Add support for writing package.json files
 
 ## [0.10.3] - 2017-08-23
 - Improve windows support
