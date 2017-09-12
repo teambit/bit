@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix commit and export issues when dealing with more than 500 components
 - support move command for moving files/directories of a component to a new location
 - fix export of large amount of data
+- create package.json for imported components
 
 ## [0.10.7] - 2017-09-07
 
