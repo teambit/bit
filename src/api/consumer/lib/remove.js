@@ -1,4 +1,6 @@
 /** @flow */
+import R from 'ramda';
+import groupArray from 'group-array';
 import { loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 
@@ -12,18 +14,22 @@ export default async function remove({
   hard: boolean,
   remote: boolean,
   force: boolean
-}): Promise<boolean> {
+}): Promise<any> {
   const bitIds = ids.map(bitId => BitId.parse(bitId));
   const consumer = await loadConsumer();
   if (remote) {
+    const groupedBitsByScope = groupArray(bitIds, 'scope');
     const remotes = await consumer.scope.remotes();
-    const removeP = bitIds.map(async (bitId) => {
-      const resolvedRemote = await remotes.resolve(bitId.scope, consumer.scope);
-      return resolvedRemote.deleteMany(ids.join(' '));
+    const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
+      const resolvedRemote = await remotes.resolve(key, consumer.scope);
+      const result = await resolvedRemote.deleteMany(groupedBitsByScope[key], hard, force);
+      return result;
     });
-    const removedIds = await Promise.all(removeP);
-    return removedIds.reduce((a, b) => a.concat(b), []);
+    const removedObj = await Promise.all(removeP);
+    return removedObj;
   }
-  const removedIds = await consumer.scope.remove({ bitIds, hard, force });
+
+  // local remove in case user wants to delete commited components
+  const removedIds = await consumer.scope.removeMany(bitIds, true, force);
   return removedIds;
 }

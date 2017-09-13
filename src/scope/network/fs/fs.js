@@ -38,9 +38,9 @@ export default class Fs implements Network {
     const scope = this.getScope();
     return scope.exportManyBareScope(components);
   }
-  deleteMany(bitIds: Array<BitId>): Promise<ComponentObjects[]> {
+  deleteMany(bitIds: Array<BitId>, hard: boolean, force: boolean): Promise<ComponentObjects[]> {
     const scope = this.getScope();
-    return scope.remove({ bitIds });
+    return scope.removeMany(bitIds, hard, force);
   }
   fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
     if (noDependencies) return this.getScope().manyOneObjects(bitIds);

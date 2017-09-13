@@ -121,11 +121,14 @@ export default class Scope {
     );
   }
 
-  list() {
+  list(all: boolean = false) {
     // @Deprecated
     return this.objects
       .listComponents() // @TODO - check version and cross check them with components
-      .then(components => this.toConsumerComponents(components));
+      .then((components) => {
+        const filtered = all ? components : components.filter(component => !component.deleted);
+        return this.toConsumerComponents(filtered);
+      });
   }
 
   async listStage(all: boolean = false) {
@@ -554,42 +557,62 @@ export default class Scope {
     return Promise.all(versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects)));
   }
 
-  async remove({
-    bitIds,
-    hard,
-    force
-  }: {
-    bitIds: Array<BitId>,
-    hard: boolean,
-    force: boolean
-  }): Promise<Array<BitId>> {
-    const stagedComponents = await this.listStage();
-    // const consumerComponents =  await Promise.all(bitIds.map(async id => this.sources.get(id)));
-
-    // check if one of the bitIds to remove is a dependecy of one of the staged components
-    // TODO - find better way to check this - Amit
-    /*    const dependentBits = stagedComponents.map((stagedComponent) => {
-     return stagedComponent.flattenedDependencies.map((dep)=> {
-     const y = consumerComponents.filter(consumerComponent => (consumerComponent.box === dep.box) && (consumerComponent.name === dep.name) && (consumerComponent.scope === dep.scope))
-     if (!R.isEmpty(y)) return stagedComponent;
-     });
-     }).reduce((a, b) => a.concat(b), []); */
-
-    const resultP = bitIds.map(async (bitId) => {
-      if (hard) {
-        const removedComponent = await this.sources.clean(bitId);
-        if (!removedComponent) throw new ComponentNotFound(bitId);
-        return bitId;
-      } 
-      const component = await this.sources.get(bitId);
-      component.deleted = true;
-      this.objects.add(component);
-      await this.objects.persist();
-      return component.id();
-    });
-    const result = await Promise.all(resultP);
-    return result;
+  async removeOne(bitId, hard): Promise<string> {
+    if (hard) {
+      await this.sources.clean(bitId);
+      return bitId.toStringWithoutVersion();
+    }
+    const component = await this.sources.get(bitId);
+    component.deleted = true;
+    this.objects.add(component);
+    await this.objects.persist();
+    return component.id();
   }
+  async findDependentBits(bitIds) {
+    const stagedComponents = await this.listStage();
+    return new Promise((resolve, reject) => {
+      const dependentBits = {};
+      bitIds.forEach((bitId) => {
+        stagedComponents.forEach((stagedComponent) => {
+          const dependencies = stagedComponent.flattenedDependencies.filter((flattendDependencie) => {
+            if (flattendDependencie.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
+              return stagedComponent.id.toStringWithoutVersion();
+            }
+          });
+          if (!R.isEmpty(dependencies)) dependentBits[bitId.toStringWithoutVersion()] = dependencies;
+        });
+      });
+      return resolve(dependentBits);
+    });
+  }
+
+  async filterComponents(bitIds) {
+    const missingComponents = [];
+    const foundComponents = [];
+    const resultP = bitIds.map(async (id) => {
+      const component = await this.sources.get(id);
+      if (!component) missingComponents.push(id.toStringWithoutVersion());
+      else foundComponents.push(id);
+    });
+    await Promise.all(resultP);
+    return Promise.resolve({ missingComponents, foundComponents });
+  }
+
+  async removeMany(bitIds: Array<BitId>, hard: boolean, force: boolean): Promise<any> {
+    const { missingComponents, foundComponents } = await this.filterComponents(bitIds);
+    const removeComponents = () => foundComponents.map(async bitId => this.removeOne(bitId, hard));
+    if (force) {
+      const result = await Promise.all(removeComponents());
+      return { bitIds: result, unRemovedComponents: {}, missingComponents };
+    }
+    const dependentBits = await this.findDependentBits(foundComponents);
+    if (R.isEmpty(dependentBits)) {
+      const result = await Promise.all(removeComponents());
+      return { bitIds: result, unRemovedComponents: {}, missingComponents };
+    }
+    return { unRemovedComponents: dependentBits, missingComponents };
+  }
+
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
     if (!bitId.isLocal(this.name)) {
       return Promise.reject('you can not reset a remote component');

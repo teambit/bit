@@ -1,20 +1,21 @@
 /** @flow */
 import Command from '../../command';
 import { remove } from '../../../api/scope';
-import { packCommand, buildCommandMessage } from '../../../utils';
+import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 
 export default class Delete extends Command {
-  name = '_delete <path> <args...>';
+  name = '_delete <path> <args>';
   private = true;
   description = 'remove a component from a scope';
   alias = '';
   opts = [];
 
-  action([path, ids, hard, force]: [string, string[], boolean, boolean]): Promise<any> {
-    return remove({ path, bitIds: ids, hard, force });
+  action([path, args]: [string, string]): Promise<any> {
+    const { payload } = unpackCommand(args);
+    return remove({ path: fromBase64(path), bitIds: payload.bitIds, hard: payload.hard, force: payload.force });
   }
 
-  report(bitIds: string[]): string {
-    return packCommand(buildCommandMessage(bitIds));
+  report(str): string {
+    return packCommand(buildCommandMessage(str));
   }
 }

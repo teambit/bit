@@ -20,7 +20,7 @@ export default function list({
     return remote.list(all);
   };
   const scopeList = (scope) => {
-    return cache ? scope.list() : scope.listStage(all);
+    return cache ? scope.list(all) : scope.listStage(all);
   };
 
   return loadConsumer()
