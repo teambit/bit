@@ -4,7 +4,14 @@ import { loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component';
 
-export default async function status(): Promise<Object> {
+export type StatusResult = {
+  newComponents: Component[],
+  modifiedComponent: Component[],
+  stagedComponents: string[],
+  componentsWithMissingDeps: Component[]
+};
+
+export default async function status(): Promise<StatusResult> {
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents(true);
@@ -15,7 +22,7 @@ export default async function status(): Promise<Object> {
   // If there is at least one we won't commit anything
   const newAndModified = newComponents.concat(modifiedComponent);
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
-    return component.missingDependencies && !R.isEmpty(component.missingDependencies);
+    return Boolean(component.missingDependencies);
   });
 
   return { newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps };

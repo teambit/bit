@@ -223,7 +223,6 @@ export default class Consumer {
     if (withEnvironments) {
       const envComponents = await this.scope.installEnvironment({
         ids: [this.testerId, this.compilerId],
-        consumer: this,
         verbose
       });
       return {
@@ -262,7 +261,7 @@ export default class Consumer {
       throw new Error('you must specify bit id for importing');
     } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId);
-    return this.scope.installEnvironment({ ids: [bitId], consumer: this, verbose }).then((envDependencies) => {
+    return this.scope.installEnvironment({ ids: [bitId], verbose }).then((envDependencies) => {
       // todo: do we need the environment in bit.map?
       // this.bitMap.addComponent(bitId.toString(), this.composeRelativeBitPath(bitId));
       // this.bitMap.write();
@@ -358,8 +357,30 @@ export default class Consumer {
         linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
       )
     );
+
+    if (writeToPath) {
+      componentDependencies.forEach((componentWithDeps) => {
+        if (componentWithDeps.component.writtenPath !== writeToPath) {
+          const component = componentWithDeps.component;
+          this.moveExistingComponent(bitMap, component, component.writtenPath, writeToPath);
+        }
+      });
+    }
+
     await bitMap.write();
     return [...writtenComponents, ...writtenDependencies];
+  }
+
+  moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
+    if (fs.existsSync(newPath)) {
+      throw new Error(
+        `could not move the component ${component.id} from ${oldPath} to ${newPath} as the destination path already exists`
+      );
+    }
+    const componentMap = bitMap.getComponent(component.id);
+    componentMap.updateDirLocation(oldPath, newPath);
+    fs.moveSync(oldPath, newPath);
+    component.writtenPath = newPath;
   }
 
   async bumpDependenciesVersions(committedComponents: Component[]) {
@@ -433,7 +454,7 @@ export default class Consumer {
     // Run over the components to check if there is missing depenedencies
     // If there is at least one we won't commit anything
     const componentsWithMissingDeps = components.filter((component) => {
-      return component.missingDependencies && !R.isEmpty(component.missingDependencies);
+      return Boolean(component.missingDependencies);
     });
     if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
 

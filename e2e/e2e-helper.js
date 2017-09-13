@@ -5,10 +5,20 @@ import path from 'path';
 import childProcess from 'child_process';
 import fs from 'fs-extra';
 import json from 'comment-json';
-import { v4 } from 'uuid';
+import v4 from 'uuid';
 import { VERSION_DELIMITER } from '../src/constants';
 
 export default class Helper {
+  debugMode: boolean;
+  localScope: string;
+  localScopePath: string;
+  remoteScope: string;
+  remoteScopePath: string;
+  envScope: string;
+  envScopePath: string;
+  e2eDir: string;
+  bitBin: string;
+  compilerCreated: boolean;
   cache: Object;
   constructor() {
     this.debugMode = !!process.env.npm_config_debug;
@@ -27,7 +37,7 @@ export default class Helper {
     this.localScopePath = path.join(this.e2eDir, this.localScope);
   }
 
-  runCmd(cmd, cwd = this.localScopePath) {
+  runCmd(cmd: string, cwd: string = this.localScopePath) {
     if (this.debugMode) console.log('cwd: ', cwd); // eslint-disable-line
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.debugMode) console.log('command: ', cmd); // eslint-disable-line
@@ -36,7 +46,7 @@ export default class Helper {
     return cmdOutput.toString();
   }
 
-  addBitJsonDependencies(bitJsonPath, dependencies, packageDependencies) {
+  addBitJsonDependencies(bitJsonPath: string, dependencies: Object, packageDependencies: Object) {
     const bitJson = fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
     bitJson.dependencies = bitJson.dependencies || {};
     bitJson.packageDependencies = bitJson.packageDependencies || {};
@@ -45,21 +55,21 @@ export default class Helper {
     fs.writeJSONSync(bitJsonPath, bitJson);
   }
 
-  readBitJson(bitJsonPath = path.join(this.localScopePath, 'bit.json')) {
+  readBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     return fs.readJSONSync(bitJsonPath) || {};
   }
 
-  writeBitJson(bitJson) {
+  writeBitJson(bitJson: Object) {
     const bitJsonPath = path.join(this.localScopePath, 'bit.json');
     return fs.writeJSONSync(bitJsonPath, bitJson);
   }
 
-  readBitMap(bitMapPath = path.join(this.localScopePath, '.bit.map.json'), withoutComment = true) {
+  readBitMap(bitMapPath: string = path.join(this.localScopePath, '.bit.map.json'), withoutComment: boolean = true) {
     const map = fs.readFileSync(bitMapPath) || {};
     return json.parse(map.toString('utf8'), null, withoutComment);
   }
 
-  writeBitMap(bitMap) {
+  writeBitMap(bitMap: Object) {
     const bitMapPath = path.join(this.localScopePath, '.bit.map.json');
     return fs.writeJSONSync(bitMapPath, bitMap);
   }
@@ -106,7 +116,7 @@ export default class Helper {
     }
   }
 
-  initNewLocalScope(deleteCurrentScope = true) {
+  initNewLocalScope(deleteCurrentScope: boolean = true) {
     if (deleteCurrentScope) {
       fs.removeSync(this.localScopePath);
     }
@@ -115,7 +125,7 @@ export default class Helper {
     return this.runCmd('bit init');
   }
 
-  addRemoteScope(remoteScopePath = this.remoteScopePath, localScopePath = this.localScopePath) {
+  addRemoteScope(remoteScopePath: string = this.remoteScopePath, localScopePath: string = this.localScopePath) {
     if (process.env.npm_config_with_ssh) {
       return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath}`, localScopePath);
     }

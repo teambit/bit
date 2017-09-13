@@ -1,12 +1,12 @@
 /** @flow */
-import { v4 } from 'uuid';
+import v4 from 'uuid';
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
 import npmClient from '../npm-client';
 import { Scope, ComponentWithDependencies } from '../scope';
 import { BitId } from '../bit-id';
-import { BITS_DIRNAME, ISOLATED_ENV_ROOT } from '../constants';
+import { ISOLATED_ENV_ROOT } from '../constants';
 import { mkdirp } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';

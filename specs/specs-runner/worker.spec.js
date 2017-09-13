@@ -18,7 +18,7 @@ describe('worker', () => {
       child.kill('SIGKILL');
     });
 
-    child.on('message', ({ type, payload }: { type: string, payload: Object }) => {
+    child.on('message', ({ type, payload }) => {
       expect(type).to.equal('error');
       expect(payload).to.equal('"myScope/box/my-component" doesn\'t have a valid tester interface');
       done();

@@ -42,7 +42,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: string)
   let name = '';
   let render = '';
 
-  for (const tag of commentsAst.tags) {
+  commentsAst.tags.forEach((tag) => {
     switch (tag.title) {
       case 'desc':
       case 'description':
@@ -82,7 +82,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: string)
       default:
         break;
     }
-  }
+  });
 
   const doclet = {
     name, // todo: find the function/method name by regex

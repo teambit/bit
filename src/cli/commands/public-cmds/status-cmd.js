@@ -2,9 +2,10 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { status } from '../../../api/consumer';
+import type { StatusResult } from '../../../api/consumer/lib/status';
+import Component from '../../../consumer/component';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
-import missingDepsTemplate from '../../templates/missing-dependencies-template';
 
 export default class Status extends Command {
   name = 'status';
@@ -17,8 +18,8 @@ export default class Status extends Command {
     return status();
   }
 
-  report({ newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps }: Object): string {
-    function formatMissing(missingComponent) {
+  report({ newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps }: StatusResult): string {
+    function formatMissing(missingComponent: Component) {
       function formatMissingStr(array, label) {
         if (!array || array.length === 0) return '';
         return chalk.yellow(`\n       ${label}: `) + chalk.white(array.join(', '));
@@ -36,8 +37,8 @@ export default class Status extends Command {
       )}\n`;
     }
 
-    function format(component) {
-      const missing = componentsWithMissingDeps.find((missingComp) => {
+    function format(component: string | Component): string {
+      const missing = componentsWithMissingDeps.find((missingComp: Component) => {
         const compId = component.id ? component.id.toString() : component;
         return missingComp.id.toString() === compId;
       });

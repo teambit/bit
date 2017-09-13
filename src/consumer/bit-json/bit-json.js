@@ -104,13 +104,13 @@ export default class BitJson extends AbstractBitJson {
     return this.mergeWithProto(json, protoBJ);
   }
 
-  static load(dirPath?: string, protoBJ?: ConsumerBitJson): Promise<BitJson> {
+  static load(dirPath: string, protoBJ?: ConsumerBitJson): Promise<BitJson> {
     return new Promise((resolve, reject) => {
       try {
         const result = this.loadSync(dirPath, protoBJ);
         return resolve(result);
       } catch (e) {
-        return reject(bitJsonPath);
+        return reject(dirPath);
       }
     });
   }

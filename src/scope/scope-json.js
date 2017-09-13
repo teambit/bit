@@ -68,18 +68,18 @@ export class ScopeJson {
   }
 
   set(key: string, val: string) {
-    if (!this.hasOwnProperty(key)) throw `unknown key ${key}`;
+    if (!this.hasOwnProperty(key)) throw new Error(`unknown key ${key}`);
     this[key] = val;
     return this;
   }
 
   get(key: string): string {
-    if (!this.hasOwnProperty(key)) throw `unknown key ${key}`;
+    if (!this.hasOwnProperty(key)) throw new Error(`unknown key ${key}`);
     return this[key];
   }
 
   del(key: string): string {
-    if (!this.hasOwnProperty(key)) throw `unknown key ${key}`;
+    if (!this.hasOwnProperty(key)) throw new Error(`unknown key ${key}`);
     return this[key];
   }
 
@@ -101,7 +101,7 @@ export class ScopeJson {
     return new ScopeJson(JSON.parse(json));
   }
 
-  getPopulatedLicense(): Promise<string> {
+  getPopulatedLicense(): Promise<?string> {
     if (!this.get('license') || !existsSync(this.get('license'))) return Promise.resolve();
     return readFile(this.get('license')).then(license => license.toString());
   }
