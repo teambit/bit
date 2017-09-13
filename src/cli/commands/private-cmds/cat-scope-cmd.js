@@ -1,4 +1,6 @@
 /** @flow */
+import Table from 'tty-table';
+import chalk from 'chalk';
 import Command from '../../command';
 import { catScope } from '../../../api/scope';
 import componentObject from '../../../scope/models/component';
@@ -16,7 +18,17 @@ export default class CatScope extends Command {
 
   report({ payload, full }: { payload: componentObject[], full: ?boolean }): string {
     if (!full) {
-      return payload.map(co => `${co.id()} -> ${co.hash().toString()}`).join('\n');
+      const header = [
+        { value: 'Id', width: 50, headerColor: 'cyan' },
+        { value: 'Object', width: 50, headerColor: 'cyan' }
+      ];
+      const opts = {
+        align: 'left'
+      };
+
+      const table = new Table(header, [], opts);
+      payload.forEach(co => table.push([co.id(), co.hash().toString()]));
+      return table.render();
     }
 
     return payload.map(co => `> ${co.hash().toString()}\n\n${co.id()}\n`).join('\n');

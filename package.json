@@ -71,6 +71,7 @@
     "ssh2": "^0.5.4",
     "string-format": "^0.5.0",
     "toposort-class": "^1.0.1",
+    "tty-table": "^2.5.5",
     "user-home": "^2.0.0",
     "uuid": "^3.0.1",
     "vinyl": "^2.1.0",
