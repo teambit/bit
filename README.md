@@ -13,9 +13,11 @@
 
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
-* **[Watch The Video](https://www.youtube.com/watch?v=vm_oOghNEYs)**
+[Website & community](https://bitsrc.io) • [Short video](https://www.youtube.com/watch?v=vm_oOghNEYs)  • [Demo project](https://github.com/itaymendel/movie-app)  • [Demo collection](https://bitsrc.io/bit/movie-app#styles)
 
-Organize reusable components from your existing source-code into shared-collections. Shared collections are like "playlists" that allow you to share your components with your team, and install or update individual components from any project while keeping maintainance curated and easy. You and your team can find and use these components, collaborate, get updates, and stay in sync.
+Bit enables you to share components from your existing source-code into shared playlist-like collections, share them with your team, and install or update them from any project with simple & curated maintenance. 
+
+You and your team can easily share and discover components, collaborate, get updates and stay in sync.
 
 Bit works great for React or Angular components, Node modules, utility functions and more.
 
@@ -28,6 +30,12 @@ Bit works great for React or Angular components, Node modules, utility functions
 * ***Coming soon:*** Install components with the tools you love - NPM, Yarn or Bit. Create and update components in seconds from any project using Bit, and use the tool of you choice to install them.
 
 Bit is an open-source collaborative project, actively maintained by a full-time venture-backed team and used by organizations and open source teams.
+
+## Demos
+
+1. An example of a React [movie-app component library](https://github.com/itaymendel/movie-app) shared with Bit [as a collection of individually accessible and discoverable components](https://bitsrc.io/bit/movie-app#styles) - without forcing source-code and filesystem changes to the repository itself.
+
+2. A [short demo video](https://www.youtube.com/watch?v=vm_oOghNEYs) of sharing these components across applications.
 
 ## Supported Languages
 Bit is language agnostic. Still, it requires binding and additional language sensitive features for different programming languages. To do this, Bit uses language-specific drivers:
