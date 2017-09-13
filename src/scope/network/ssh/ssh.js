@@ -98,15 +98,21 @@ export default class SSH implements Network {
             res += response.toString();
           })
           .on('exit', (code) => {
-            logger.error(`ssh: server had been exiting before closing. Exit code: ${code}`);
-            return code && code !== 0 ? reject(errorHandler(code, err)) : resolve(clean(res));
+            logger.info(`ssh: server had been exiting before closing. Exit code: ${code}`);
+            const promiseExit = () => {
+              return code && code !== 0 ? reject(errorHandler(code, err)) : resolve(clean(res));
+            };
+            // sometimes the connection 'exit' before 'close' and then it doesn't have the data (err) ready yet.
+            // in that case, we prefer to wait until the onClose will terminate the promise.
+            // sometimes though, the connection only 'exit' and never 'close' (happened when _put command sent back
+            // more than 1MB of data), in that case, the following setTimeout will terminate the promise.
+            setTimeout(promiseExit, 2000);
           })
           .on('close', (code, signal) => {
             if (commandName === '_put') res = res.replace(payload, '');
             logger.debug(`ssh: returned with code: ${code}, signal: ${signal}.`);
             // DO NOT CLOSE THE CONNECTION (using this.connection.end()), it causes bugs when there are several open
-            // connections. Same bugs occur when running "this.connection.end()" on "end" event. There is no point to
-            // run it on 'exit' event, it never reach there.
+            // connections. Same bugs occur when running "this.connection.end()" on "end" or "exit" events.
             return code && code !== 0 ? reject(errorHandler(code, err)) : resolve(clean(res));
           })
           .stderr.on('data', (response) => {
