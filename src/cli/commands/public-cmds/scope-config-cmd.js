@@ -86,6 +86,6 @@ class ScopeConfigDel extends Command {
   }
 
   report(conf: { [string]: string }): string {
-    return 'deleted successfully';
+    return 'deprecated successfully';
   }
 }

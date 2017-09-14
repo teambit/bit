@@ -6,19 +6,15 @@ import { remove } from '../../../api/consumer';
 
 export default class Remove extends Command {
   name = 'remove <ids...>';
-  description = 'remove a bit';
+  description = 'remove a component (local/remote)';
   alias = 'rm';
   opts = [
-    ['h', 'hard [boolean]', 'delete component with dependencies(default = false)'],
     ['f', 'force [boolean]', 'delete components with dependencies and remove files(default = false)'],
     ['r', 'remote [boolean]', 'remove from remote scope']
   ];
 
-  action(
-    [ids]: [string],
-    { hard = false, force = false, remote = false }: { hard: Boolean, force: Boolean, remote: Boolean }
-  ): Promise<any> {
-    return remove({ ids, hard, force, remote });
+  action([ids]: [string], { force = false, remote = false }: { force: Boolean, remote: Boolean }): Promise<any> {
+    return remove({ ids, force, remote });
   }
 
   report(bitObj: object | Array<any>): string {
@@ -27,7 +23,8 @@ export default class Remove extends Command {
 
   paintMissingComponents = missingComponents =>
     (!R.isEmpty(missingComponents) ? chalk.underline('missing components:') + chalk(` ${missingComponents}\n`) : '');
-  paintRemoved = bitIds => (!R.isEmpty(bitIds) ? chalk.underline('removed components:') + chalk(` ${bitIds}\n`) : '');
+  paintRemoved = bitIds =>
+    (!R.isEmpty(bitIds) && !R.isNil(bitIds) ? chalk.underline('removed components:') + chalk(` ${bitIds}\n`) : '');
   paintSingle = bitObj =>
     this.paintUnRemovedComponents(bitObj.unRemovedComponents) +
     this.paintRemoved(bitObj.bitIds) +
@@ -40,7 +37,7 @@ export default class Remove extends Command {
           `error: unable to delete ${key}, because the following components depend on it:\n`
         );
         const body = unRemovedComponents[key].join('\n');
-        return header + body;
+        return `${header + body}\n`;
       });
     }
     return '';

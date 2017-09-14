@@ -23,7 +23,7 @@ export default (component: ConsumerComponent) => {
     docs,
     files,
     mainFile,
-    deleted
+    deprecated
   } = component;
 
   const rows = [
@@ -37,7 +37,7 @@ export default (component: ConsumerComponent) => {
       : null,
     !R.isEmpty(packageDependencies) ? { [c.cyan('Packages')]: Object.keys(packageDependencies).join(',\n') } : null,
     !R.isEmpty(files) ? { [c.cyan('Files')]: files.map(file => normalize(file.relative)).join(',\n') } : null,
-    deleted ? { [c.cyan('Deleted')]: 'True' } : null
+    deprecated ? { [c.cyan('Deprecated')]: c.red('True') } : null
   ].filter(x => x);
 
   table.push(...rows);

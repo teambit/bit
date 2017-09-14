@@ -38,9 +38,13 @@ export default class Fs implements Network {
     const scope = this.getScope();
     return scope.exportManyBareScope(components);
   }
-  deleteMany(bitIds: Array<BitId>, hard: boolean, force: boolean): Promise<ComponentObjects[]> {
+  deleteMany(bitIds: Array<BitId>, force: boolean): Promise<ComponentObjects[]> {
     const scope = this.getScope();
-    return scope.removeMany(bitIds, hard, force);
+    return scope.removeMany(bitIds, force, true);
+  }
+  deprecateMany(bitIds: Array<BitId>): Promise<ComponentObjects[]> {
+    const scope = this.getScope();
+    return scope.softRemoveMany(bitIds);
   }
   fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
     if (noDependencies) return this.getScope().manyOneObjects(bitIds);
@@ -53,8 +57,8 @@ export default class Fs implements Network {
     return this.getScope().getObjects(ids);
   }
 
-  list(all: boolean = false): Promise<[]> {
-    return this.getScope().listStage(all);
+  list(): Promise<[]> {
+    return this.getScope().listStage();
   }
 
   search(query: string, reindex: boolean): Promise<[]> {

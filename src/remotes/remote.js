@@ -42,8 +42,8 @@ export default class Remote {
     });
   }
 
-  list(all: boolean = false): Promise<[]> {
-    return this.connect().then(network => network.list(all));
+  list(): Promise<[]> {
+    return this.connect().then(network => network.list());
   }
 
   search(query: string, reindex: boolean): Promise<any> {
@@ -69,8 +69,11 @@ export default class Remote {
   pushMany(components: ComponentObjects[]): Promise<ComponentObjects[]> {
     return connect(this.host).then(network => network.pushMany(components));
   }
-  deleteMany(bitIds: BitIds[], hard, force): Promise<ComponentObjects[]> {
-    return connect(this.host).then(network => network.deleteMany(bitIds, hard, force));
+  deleteMany(bitIds: BitIds[], force): Promise<Object[]> {
+    return connect(this.host).then(network => network.deleteMany(bitIds, force));
+  }
+  deprecateMany(bitIds: BitIds[]): Promise<Object[]> {
+    return connect(this.host).then(network => network.deprecateMany(bitIds));
   }
 
   static load(name: string, host: string): Remote {

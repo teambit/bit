@@ -35,6 +35,8 @@ import Add from './commands/public-cmds/add-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
 import Move from './commands/public-cmds/move-cmd';
 import Remove from './commands/public-cmds/remove-cmd';
+import Deprecate from './commands/public-cmds/deprecate-cmd';
+import DeprecatePrivate from './commands/private-cmds/_deprecate-cmd';
 import Delete from './commands/private-cmds/_delete-cmd';
 
 export default function registerCommands(): CommandRegistrar {
@@ -73,6 +75,8 @@ export default function registerCommands(): CommandRegistrar {
     new Untrack(),
     new Move(),
     new Remove(),
-    new Delete()
+    new Deprecate(),
+    new Delete(),
+    new DeprecatePrivate()
   ]);
 }

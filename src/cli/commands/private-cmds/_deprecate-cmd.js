@@ -1,18 +1,18 @@
 /** @flow */
 import Command from '../../command';
-import { remove } from '../../../api/scope';
+import { deprecate } from '../../../api/scope';
 import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 
-export default class DeprecatePrivate extends Command {
-  name = '_delete <path> <args>';
+export default class Deprecate extends Command {
+  name = '_deprecate <path> <args>';
   private = true;
-  description = 'remove a component from a scope';
+  description = 'deprecate a component from a scope';
   alias = '';
   opts = [];
 
   action([path, args]: [string, string]): Promise<any> {
     const { payload } = unpackCommand(args);
-    return remove({ path: fromBase64(path), bitIds: payload.bitIds, force: payload.force });
+    return deprecate({ path: fromBase64(path), bitIds: payload.bitIds });
   }
 
   report(str): string {

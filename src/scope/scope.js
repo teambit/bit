@@ -13,13 +13,7 @@ import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, DEFAULT_DIST_DIRNAME } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import {
-  ScopeNotFound,
-  ComponentNotFound,
-  ResolutionException,
-  DependencyNotFound,
-  ComponentDeleted
-} from './exceptions';
+import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
 import { RemoteScopeNotFound } from './network/exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
@@ -29,7 +23,7 @@ import { Repository, Ref, BitObject } from './objects';
 import ComponentWithDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
-import { postExportHook, postImportHook } from '../hooks';
+import { postExportHook, postImportHook, postHardDeleteHook, postSoftdDeleteHook } from '../hooks';
 import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
@@ -121,20 +115,16 @@ export default class Scope {
     );
   }
 
-  list(all: boolean = false) {
+  list() {
     // @Deprecated
     return this.objects
       .listComponents() // @TODO - check version and cross check them with components
-      .then((components) => {
-        const filtered = all ? components : components.filter(component => !component.deleted);
-        return this.toConsumerComponents(filtered);
-      });
+      .then(components => this.toConsumerComponents(components));
   }
 
-  async listStage(all: boolean = false) {
+  async listStage() {
     const components = await this.objects.listComponents(false);
-    const filtered = all ? components : components.filter(component => !component.deleted);
-    return this.toConsumerComponents(filtered.filter(c => !c.scope || c.scope === this.name));
+    return this.toConsumerComponents(components.filter(c => !c.scope || c.scope === this.name));
   }
 
   importDependencies(dependencies: BitId[]) {
@@ -447,15 +437,6 @@ export default class Scope {
     const [externals, locals] = splitWhen(id => id.isLocal(this.name), idsWithoutNils);
 
     const localDefs = await this.sources.getMany(locals);
-    const deltedComponets = localDefs.filter(def => def.component.deleted).map(component => component.id.toString());
-
-    // used for  import of soft deleted components directly -works with components that are dependent on soft deleted components
-    // TODO - ask gilad if i should throw error or print msg
-    if (!R.isEmpty(deltedComponets)) {
-      throw new ComponentDeleted(deltedComponets);
-      // const 'Cant import component deleted:'
-      // return Promise.reject(` ${deltedComponets}`);
-    }
     const versionDeps = await Promise.all(
       localDefs.map((def) => {
         if (!def.component) throw new ComponentNotFound(def.id.toString());
@@ -557,13 +538,13 @@ export default class Scope {
     return Promise.all(versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects)));
   }
 
-  async removeOne(bitId, hard): Promise<string> {
-    if (hard) {
+  async removeSingle(bitId, removeComponent): Promise<string> {
+    if (removeComponent) {
       await this.sources.clean(bitId);
       return bitId.toStringWithoutVersion();
     }
     const component = await this.sources.get(bitId);
-    component.deleted = true;
+    component.deprecated = true;
     this.objects.add(component);
     await this.objects.persist();
     return component.id();
@@ -573,20 +554,21 @@ export default class Scope {
     return new Promise((resolve, reject) => {
       const dependentBits = {};
       bitIds.forEach((bitId) => {
+        const dependencies = [];
         stagedComponents.forEach((stagedComponent) => {
-          const dependencies = stagedComponent.flattenedDependencies.filter((flattendDependencie) => {
+          stagedComponent.flattenedDependencies.forEach((flattendDependencie) => {
             if (flattendDependencie.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
-              return stagedComponent.id.toStringWithoutVersion();
+              dependencies.push(stagedComponent.id.toStringWithoutVersion());
             }
           });
-          if (!R.isEmpty(dependencies)) dependentBits[bitId.toStringWithoutVersion()] = dependencies;
         });
+        if (!R.isEmpty(dependencies)) dependentBits[bitId.toStringWithoutVersion()] = dependencies;
       });
       return resolve(dependentBits);
     });
   }
 
-  async filterComponents(bitIds) {
+  async filterComponents(bitIds: Array<BitId>) {
     const missingComponents = [];
     const foundComponents = [];
     const resultP = bitIds.map(async (id) => {
@@ -598,9 +580,9 @@ export default class Scope {
     return Promise.resolve({ missingComponents, foundComponents });
   }
 
-  async removeMany(bitIds: Array<BitId>, hard: boolean, force: boolean): Promise<any> {
+  async removeMany(bitIds: Array<BitId>, force: boolean): Promise<any> {
     const { missingComponents, foundComponents } = await this.filterComponents(bitIds);
-    const removeComponents = () => foundComponents.map(async bitId => this.removeOne(bitId, hard));
+    const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId, true));
     if (force) {
       const result = await Promise.all(removeComponents());
       return { bitIds: result, unRemovedComponents: {}, missingComponents };
@@ -612,7 +594,12 @@ export default class Scope {
     }
     return { unRemovedComponents: dependentBits, missingComponents };
   }
-
+  async softRemoveMany(bitIds: Array<BitId>): Promise<any> {
+    const { missingComponents, foundComponents } = await this.filterComponents(bitIds);
+    const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId, false));
+    const result = await Promise.all(removeComponents());
+    return { bitIds: result, unRemovedComponents: {}, missingComponents };
+  }
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
     if (!bitId.isLocal(this.name)) {
       return Promise.reject('you can not reset a remote component');

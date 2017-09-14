@@ -13,6 +13,7 @@ import scopeConfig from './lib/scope-config';
 import catScope from './lib/cat-scope';
 import refreshScope from './lib/refresh-scope';
 import remove from './lib/delete';
+import deprecate from './lib/deprecate';
 
 export {
   catObject,
@@ -29,5 +30,6 @@ export {
   scopeConfig,
   catScope,
   refreshScope,
-  remove
+  remove,
+  deprecate
 };
