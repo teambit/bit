@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - support move command for moving files/directories of a component to a new location
 - fix export of large amount of data
 - fix bug with commit --force when tests throws exception
+- fix bug - when you import authored component (and there is newer version) it duplicate it in the .bit.map.json
+- fix bug - when you import authored component it was added to bit.json dependencies
 
 ## [0.10.7] - 2017-09-07
 
