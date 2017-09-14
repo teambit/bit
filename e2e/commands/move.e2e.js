@@ -19,7 +19,7 @@ describe('bit move command', function () {
       helper.runCmd(`bit move ${oldPath} ${newPath}`);
     });
     it('should move physically the file', () => {
-      const localConsumerFiles = helper.getConsumerJSFiles();
+      const localConsumerFiles = helper.getConsumerFiles();
       expect(localConsumerFiles).to.include(newPath);
       expect(localConsumerFiles).not.to.include(oldPath);
     });
@@ -46,7 +46,7 @@ describe('bit move command', function () {
       helper.runCmd('bit move bar utils');
     });
     it('should move physically the directory', () => {
-      const localConsumerFiles = helper.getConsumerJSFiles();
+      const localConsumerFiles = helper.getConsumerFiles();
       localConsumerFiles.forEach((file) => {
         expect(file.startsWith('utils')).to.be.true;
       });
@@ -73,9 +73,9 @@ describe('bit move command', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       fs.moveSync(path.join(helper.localScopePath, oldPath), path.join(helper.localScopePath, newPath));
-      filesBeforeMove = helper.getConsumerJSFiles();
+      filesBeforeMove = helper.getConsumerFiles();
       helper.runCmd(`bit move ${oldPath} ${newPath}`);
-      filesAfterMove = helper.getConsumerJSFiles();
+      filesAfterMove = helper.getConsumerFiles();
     });
     it('should not physically move any file', () => {
       expect(filesBeforeMove).to.deep.equal(filesAfterMove);
@@ -116,13 +116,13 @@ describe('bit move command', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       fs.copySync(path.join(helper.localScopePath, fromPath), path.join(helper.localScopePath, toPath));
-      filesBeforeMove = helper.getConsumerJSFiles();
+      filesBeforeMove = helper.getConsumerFiles();
       try {
         helper.runCmd(`bit move ${fromPath} ${toPath}`);
       } catch (err) {
         output = err.message;
       }
-      filesAfterMove = helper.getConsumerJSFiles();
+      filesAfterMove = helper.getConsumerFiles();
     });
     it('should throw an error', () => {
       expect(output).to.have.string('Error');
@@ -142,7 +142,7 @@ describe('bit move command', function () {
       helper.runCmd(`bit move ${oldPath} ${newPath}`);
     });
     it('should move physically the file', () => {
-      const localConsumerFiles = helper.getConsumerJSFiles();
+      const localConsumerFiles = helper.getConsumerFiles();
       expect(localConsumerFiles).to.include(newPath);
       expect(localConsumerFiles).not.to.include(oldPath);
     });
@@ -177,7 +177,7 @@ describe('bit move command', function () {
       helper.runCmd(`bit move ${oldPath} ${newPath}`);
     });
     it('should move physically the directory', () => {
-      const localConsumerFiles = helper.getConsumerJSFiles();
+      const localConsumerFiles = helper.getConsumerFiles();
       localConsumerFiles.forEach((file) => {
         expect(file.startsWith(newPath)).to.be.true;
       });

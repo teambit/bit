@@ -86,7 +86,7 @@ export default class Consumer {
    * @returns {boolean} true if the driver exists, false otherwise
    * @memberof Consumer
    */
-  warnForMissingDriver(msg): boolean {
+  warnForMissingDriver(msg: string): boolean {
     try {
       this.driver.getDriver(false);
       return true;
@@ -282,11 +282,11 @@ export default class Consumer {
   }
 
   /**
-   * write the components into '/components' dir (or according to the bit.map) and its
-   * dependencies nested inside the component directory and under 'dependencies' dir.
+   * write the components into '/components' dir (or according to the bit.map) and its dependencies in the
+   * '/components/.dependencies' dir. Both directories are configurable in bit.json
    * For example: global/a has a dependency my-scope/global/b@1. The directories will be:
-   * project/root/component/global/a/impl.js
-   * project/root/component/global/a/dependency/global/b/my-scope/1/impl.js
+   * project/root/components/global/a/impl.js
+   * project/root/components/.dependencies/global/b/my-scope/1/impl.js
    *
    * In case there are some same dependencies shared between the components, it makes sure to
    * write them only once.
@@ -300,7 +300,7 @@ export default class Consumer {
     const dependenciesIdsCache = [];
 
     const writeComponentsP = componentDependencies.map((componentWithDeps) => {
-      const bitDir = writeToPath || this.composeBitPath(componentWithDeps.component.id);
+      const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitDir;
       return componentWithDeps.component.write({
         bitDir,
@@ -330,7 +330,7 @@ export default class Consumer {
           return Promise.resolve();
         }
 
-        const depBitPath = path.join(componentWithDeps.component.writtenPath, DEPENDENCIES_DIR, dep.id.toFullPath());
+        const depBitPath = this.composeDependencyPath(dep.id);
         dep.writtenPath = depBitPath;
         dependenciesIdsCache[dependencyId] = depBitPath;
         return dep
@@ -349,13 +349,6 @@ export default class Consumer {
     });
     const writtenDependencies = await Promise.all(allDependenciesP);
 
-    await linkGenerator.writeDependencyLinks(componentDependencies, bitMap, this.getPath());
-    await Promise.all(
-      componentDependencies.map(componentWithDependencies =>
-        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
-      )
-    );
-
     if (writeToPath) {
       componentDependencies.forEach((componentWithDeps) => {
         if (componentWithDeps.component.writtenPath !== writeToPath) {
@@ -364,6 +357,13 @@ export default class Consumer {
         }
       });
     }
+
+    await linkGenerator.writeDependencyLinks(componentDependencies, bitMap, this.getPath());
+    await Promise.all(
+      componentDependencies.map(componentWithDependencies =>
+        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
+      )
+    );
 
     await bitMap.write();
     return [...writtenComponents, ...writtenDependencies];
@@ -475,10 +475,15 @@ export default class Consumer {
     return path.join(...addToPath);
   }
 
-  composeBitPath(bitId: BitId): string {
+  composeComponentPath(bitId: BitId): string {
     const addToPath = [this.getPath(), this.composeRelativeBitPath(bitId)];
     logger.debug(`component dir path: ${addToPath.join('/')}`);
     return path.join(...addToPath);
+  }
+
+  composeDependencyPath(bitId: BitId): string {
+    const dependenciesDir = this.dirStructure.dependenciesDirStructure;
+    return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
   }
 
   runComponentSpecs(id: BitId, verbose: boolean = false): Promise<?any> {
