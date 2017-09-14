@@ -220,7 +220,7 @@ export default class BitMap {
       const root = this._makePathRelativeToProjectRoot(rootDir);
       this.components[componentIdStr].rootDir = root ? pathNormalizeToLinux(root) : root;
     }
-    if (origin === COMPONENT_ORIGINS.IMPORTED) {
+    if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
       // if there are older versions, the user is updating an existing component, delete old ones from bit.map
       this.deleteOlderVersionsOfComponent(componentId);
     }
