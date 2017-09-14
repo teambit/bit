@@ -10,7 +10,7 @@ export default function reset({ id }: { id: string }) {
     loader.start(BEFORE_RESET_ACTION);
     return consumer.scope.reset({ bitId, consumer }).then((c: ComponentDependencies) => {
       // const inlineId = new InlineId({ box: bitId.box, name: bitId.name });
-      // const inlineBitPath = inlineId.composeBitPath(consumer.getPath());
+      // const inlineBitPath = inlineId.composeComponentPath(consumer.getPath());
       // return c.component.write(inlineBitPath, true);
     });
   });

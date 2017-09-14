@@ -1,14 +1,16 @@
 // @flow
 import R from 'ramda';
-import { DEFAULT_DIR_STRUCTURE } from '../../constants';
+import { DEFAULT_DIR_STRUCTURE, DEFAULT_DIR_DEPENDENCIES_STRUCTURE } from '../../constants';
 
 export default class BitStructure {
   structureStr: string;
-  constructor(structure?: string) {
-    this.structureStr = structure || DEFAULT_DIR_STRUCTURE;
+  dependenciesDir: string;
+  constructor(structure: Object) {
+    this.structureStr = structure.components || DEFAULT_DIR_STRUCTURE;
+    this.dependenciesDir = structure.dependencies || DEFAULT_DIR_DEPENDENCIES_STRUCTURE;
   }
 
-  _getComponentStructurePart(componentStructure, componentPart) {
+  _getComponentStructurePart(componentStructure: string, componentPart: string): string {
     switch (componentPart) {
       case 'name':
         return 'name';
@@ -22,6 +24,10 @@ export default class BitStructure {
         throw new Error(`the ${componentPart} part of the component structure
            ${componentStructure} is invalid, it must be one of the following: "name", "namespace", "scope" or "version" `);
     }
+  }
+
+  get dependenciesDirStructure(): string {
+    return this.dependenciesDir;
   }
 
   get componentsDirStructure(): Object {

@@ -4,7 +4,12 @@ import R from 'ramda';
 import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
 import { BitJsonNotFound, BitJsonAlreadyExists } from './exceptions';
-import { BIT_JSON, DEFAULT_DIST_DIRNAME, DEFAULT_DIR_STRUCTURE } from '../../constants';
+import {
+  BIT_JSON,
+  DEFAULT_DIST_DIRNAME,
+  DEFAULT_DIR_STRUCTURE,
+  DEFAULT_DIR_DEPENDENCIES_STRUCTURE
+} from '../../constants';
 
 function composePath(bitPath: string) {
   return path.join(bitPath, BIT_JSON);
@@ -16,12 +21,15 @@ function hasExisting(bitPath: string): boolean {
 
 export default class ConsumerBitJson extends AbstractBitJson {
   distTarget: string; // path where to store build artifacts
-  structure: string; // directory structure template where to store imported components
+  structure: Object; // directory structure templates where to store imported components and dependencies
 
   constructor({ impl, spec, compiler, tester, dependencies, lang, distTarget, structure }) {
     super({ impl, spec, compiler, tester, dependencies, lang });
     this.distTarget = distTarget || DEFAULT_DIST_DIRNAME;
-    this.structure = structure || DEFAULT_DIR_STRUCTURE;
+    this.structure = structure || {
+      components: DEFAULT_DIR_STRUCTURE,
+      dependencies: DEFAULT_DIR_DEPENDENCIES_STRUCTURE
+    };
   }
 
   toPlainObject() {
@@ -63,6 +71,12 @@ export default class ConsumerBitJson extends AbstractBitJson {
 
   static fromPlainObject(object: Object) {
     const { sources, env, dependencies, lang, structure, dist } = object;
+
+    // todo: this is a backward compatibility, remove it on the next major version
+    const finalStructure = R.is(String, structure)
+      ? { components: structure, dependencies: DEFAULT_DIR_DEPENDENCIES_STRUCTURE }
+      : structure;
+
     return new ConsumerBitJson({
       impl: R.propOr(undefined, 'impl', sources),
       spec: R.propOr(undefined, 'spec', sources),
@@ -70,7 +84,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       tester: R.propOr(undefined, 'tester', env),
       lang,
       dependencies,
-      structure,
+      structure: finalStructure || {},
       distTarget: R.propOr(undefined, 'target', dist)
     });
   }

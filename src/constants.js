@@ -68,6 +68,8 @@ export const DEFAULT_LANGUAGE = 'javascript';
 
 export const DEFAULT_DIR_STRUCTURE = `${BITS_DIRNAME}/{namespace}/{name}`;
 
+export const DEFAULT_DIR_DEPENDENCIES_STRUCTURE = `${BITS_DIRNAME}/.dependencies`;
+
 export const DEFAULT_SEPARATOR = '/';
 
 export const LATEST_BIT_VERSION = 'latest';
