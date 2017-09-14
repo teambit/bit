@@ -456,8 +456,11 @@ export default class Component {
 
           return this.specsResults;
         } catch (err) {
-          if (verbose) throw err;
-          throw new ComponentSpecsFailed();
+          if (rejectOnFailure) {
+            if (verbose) throw err;
+            throw new ComponentSpecsFailed();
+          }
+          return this.specsResults;
         }
       };
 
