@@ -16,6 +16,8 @@ import { Scope, ComponentWithDependencies } from '../scope';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
+import ComponentMap from './bit-map/component-map';
+import type { BitMapComponents } from './bit-map/bit-map';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { getLatestVersionNumber } from '../utils';
@@ -365,6 +367,12 @@ export default class Consumer {
       )
     );
 
+    const componentsToBind = {};
+    writtenComponents.forEach((component) => {
+      componentsToBind[component.id.toString()] = bitMap.getComponent(component.id);
+    });
+    this.bindComponents(componentsToBind);
+
     await bitMap.write();
     return [...writtenComponents, ...writtenDependencies];
   }
@@ -449,7 +457,7 @@ export default class Consumer {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const components = await this.loadComponents(componentsIds);
-    // Run over the components to check if there is missing depenedencies
+    // Run over the components to check if there is missing dependencies
     // If there is at least one we won't commit anything
     const componentsWithMissingDeps = components.filter((component) => {
       return Boolean(component.missingDependencies);
@@ -466,6 +474,40 @@ export default class Consumer {
     await this.bumpDependenciesVersions(committedComponents);
 
     return components;
+  }
+
+  bindComponents(bitMapComponents: BitMapComponents): Object[] {
+    return Object.keys(bitMapComponents).map((componentId) => {
+      logger.debug(`binding component: ${componentId}`);
+      const componentMap: ComponentMap = bitMapComponents[componentId];
+      const parsedId = BitId.parse(componentId);
+      if (componentMap.rootDir) {
+        const target = path.join(this.getPath(), componentMap.rootDir);
+        const relativeLinkPath = path.join('node_modules', 'bit', parsedId.box, parsedId.name);
+        const linkPath = path.join(this.getPath(), relativeLinkPath);
+        const relativeTarget = path.relative(path.dirname(linkPath), target);
+        // fs.removeSync(linkPath);
+        fs.ensureSymlinkSync(relativeTarget, linkPath, 'dir');
+        return { id: componentId, bound: [{ from: componentMap.rootDir, to: relativeLinkPath }] };
+      }
+      const filesToBind = {
+        name: parsedId.name,
+        namespace: parsedId.box,
+        files: componentMap.getFilesRelativeToConsumer(),
+        mainFile: componentMap.getMainFileRelativeToConsumer()
+      };
+      // todo: implement
+      return { id: componentId, bound: [] };
+    });
+  }
+
+  async bindAll() {
+    const bitMap = await this.getBitMap();
+    const nonNestedFilter = component => component.origin !== COMPONENT_ORIGINS.NESTED;
+    const componentsToBind = R.filter(nonNestedFilter, bitMap.getAllComponents());
+    if (R.isEmpty(componentsToBind)) throw new Error('nothing to bind');
+    fs.removeSync(path.join(this.getPath(), 'node_modules', 'bit')); // todo: move to bit-javascript
+    return this.bindComponents(componentsToBind);
   }
 
   composeRelativeBitPath(bitId: BitId): string {
