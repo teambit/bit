@@ -13,7 +13,7 @@ import R from 'ramda';
  * @returns {Function} function which group the dependencies
  */
 const byType = R.groupBy((dependecies) => {
-  return dependecies.startsWith('bit/') ? 'bits' :
+  return dependecies.startsWith('node_modules/bit/') ? 'bits' :
          dependecies.includes('node_modules') ? 'packages' :
          'files';
 });
