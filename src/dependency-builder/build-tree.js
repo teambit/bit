@@ -8,13 +8,13 @@ import findPackage from 'find-package';
 import R from 'ramda';
 
 /**
- * Group dependecies by types (files, bits, packages)
- * @param {any} dependecies list of dependencies paths to group
+ * Group dependencies by types (files, bits, packages)
+ * @param {any} dependencies list of dependencies paths to group
  * @returns {Function} function which group the dependencies
  */
-const byType = R.groupBy((dependecies) => {
-  return dependecies.startsWith('node_modules/bit/') ? 'bits' :
-         dependecies.includes('node_modules') ? 'packages' :
+const byType = R.groupBy((dependencies) => {
+  return dependencies.startsWith('node_modules/bit/') ? 'bits' :
+         dependencies.includes('node_modules') ? 'packages' :
          'files';
 });
 
@@ -25,7 +25,7 @@ const byType = R.groupBy((dependecies) => {
  * @returns {Object} name and version of the package
  */
 function resolveNodePackage(packageFullPath) {
-  let result = {};
+  const result = {};
   const packageInfo = findPackage(packageFullPath);
   result[packageInfo.name] = packageInfo.version;
 
@@ -42,7 +42,7 @@ function resolveNodePackage(packageFullPath) {
  * @returns {Object} object with the dependencies groups
  */
 function groupDependencyList(list, cwd) {
-  let groups = byType(list);
+  const groups = byType(list);
   if (groups.packages) {
     const packages = groups.packages.reduce((res, packagePath) => {
       const packageWithVersion = resolveNodePackage(path.join(cwd, packagePath));
@@ -62,7 +62,7 @@ function groupDependencyList(list, cwd) {
  * @returns new tree with grouped dependencies
  */
 function groupDependencyTree(tree, cwd) {
-  let result = {};
+  const result = {};
   Object.keys(tree).forEach((key) => {
     result[key] = groupDependencyList(tree[key], cwd);
   });
