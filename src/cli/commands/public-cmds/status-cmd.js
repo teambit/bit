@@ -31,6 +31,9 @@ export default class Status extends Command {
       )}${formatMissingStr(
         missingComponent.missingDependencies.missingPackagesDependenciesOnFs,
         'missing packages dependencies'
+      )}${formatMissingStr(missingComponent.missingDependencies.missingLinks, 'missing bind links')}${formatMissingStr(
+        missingComponent.missingDependencies.missingComponents,
+        'missing components'
       )}${formatMissingStr(
         missingComponent.missingDependencies.missingDependenciesOnFs,
         'non-existing dependency files'

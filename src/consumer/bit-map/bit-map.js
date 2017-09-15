@@ -22,7 +22,7 @@ import type { ComponentMapFile, ComponentOrigin } from './component-map';
 
 const SHOULD_THROW = true;
 
-type BitMapComponents = { [componentId: string]: ComponentMap };
+export type BitMapComponents = { [componentId: string]: ComponentMap };
 
 export default class BitMap {
   projectRoot: string;

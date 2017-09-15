@@ -19,6 +19,7 @@ import { watchAll } from './lib/watch';
 import add from './lib/add';
 import untrack from './lib/untrack';
 import move from './lib/move';
+import bind from './lib/bind';
 
 export {
   init,
@@ -46,5 +47,6 @@ export {
   watchAll,
   add,
   untrack,
-  move
+  move,
+  bind
 };
