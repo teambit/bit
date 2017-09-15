@@ -300,7 +300,6 @@ export default class Consumer {
   ): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
-
     const writeComponentsP = componentDependencies.map((componentWithDeps) => {
       const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitDir;
@@ -353,9 +352,10 @@ export default class Consumer {
 
     if (writeToPath) {
       componentDependencies.forEach((componentWithDeps) => {
-        if (componentWithDeps.component.writtenPath !== writeToPath) {
+        const relativeWrittenPath = this.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
+        if (relativeWrittenPath !== writeToPath) {
           const component = componentWithDeps.component;
-          this.moveExistingComponent(bitMap, component, component.writtenPath, writeToPath);
+          this.moveExistingComponent(bitMap, component, relativeWrittenPath, writeToPath);
         }
       });
     }
@@ -486,16 +486,16 @@ export default class Consumer {
         const relativeLinkPath = path.join('node_modules', 'bit', parsedId.box, parsedId.name);
         const linkPath = path.join(this.getPath(), relativeLinkPath);
         const relativeTarget = path.relative(path.dirname(linkPath), target);
-        // fs.removeSync(linkPath);
+        fs.removeSync(linkPath); // in case a component has been moved
         fs.ensureSymlinkSync(relativeTarget, linkPath, 'dir');
         return { id: componentId, bound: [{ from: componentMap.rootDir, to: relativeLinkPath }] };
       }
-      const filesToBind = {
-        name: parsedId.name,
-        namespace: parsedId.box,
-        files: componentMap.getFilesRelativeToConsumer(),
-        mainFile: componentMap.getMainFileRelativeToConsumer()
-      };
+      // const filesToBind = {
+      //   name: parsedId.name,
+      //   namespace: parsedId.box,
+      //   files: componentMap.getFilesRelativeToConsumer(),
+      //   mainFile: componentMap.getMainFileRelativeToConsumer()
+      // };
       // todo: implement
       return { id: componentId, bound: [] };
     });
