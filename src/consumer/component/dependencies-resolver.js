@@ -207,8 +207,8 @@ export default async function loadDependenciesForComponent(
   if (dependenciesTree.missing.packages && !R.isEmpty(dependenciesTree.missing.packages)) {
     missingDependencies.missingPackagesDependenciesOnFs = dependenciesTree.missing.packages;
   }
-  missingDependencies.missingLinks = [];
-  missingDependencies.missingComponents = [];
+  const missingLinks = [];
+  const missingComponents = [];
   if (dependenciesTree.missing.bits && !R.isEmpty(dependenciesTree.missing.bits)) {
     dependenciesTree.missing.bits.forEach((missingBit) => {
       const componentId = getComponentNameFromRequirePath(missingBit);
@@ -216,6 +216,8 @@ export default async function loadDependenciesForComponent(
       else missingDependencies.missingComponents.push(componentId);
     });
   }
+  if (missingLinks.length) missingDependencies.missingLinks = missingLinks;
+  if (missingComponents.length) missingDependencies.missingComponents = missingComponents;
 
   // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
   // they are referred as "untracked components" and the user should add them later on in order to commit
