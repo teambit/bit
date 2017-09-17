@@ -71,7 +71,6 @@ export default async function importAction({
     return componentMap && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED;
   };
   const notAuthoredBitIds = R.filter(notAuthored, bitIds);
-  console.log(notAuthoredBitIds);
   if (!R.isEmpty(notAuthoredBitIds)) {
     // not needed when importing from bit.json/bit.map
     await consumer.bitJson.addDependencies(notAuthoredBitIds).write({ bitDir: consumer.getPath() });
