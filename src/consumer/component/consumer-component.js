@@ -676,14 +676,16 @@ export default class Component {
     componentMap,
     id,
     consumerPath,
-    bitMap
+    bitMap,
+    deprecated
   }: {
     bitDir: string,
     consumerBitJson: ConsumerBitJson,
     componentMap: ComponentMap,
     id: BitId,
     consumerPath: string,
-    bitMap: BitMap
+    bitMap: BitMap,
+    deprecated: boolean
   }): Component {
     let packageDependencies;
     let bitJson = consumerBitJson;
@@ -738,7 +740,8 @@ export default class Component {
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,
       files: getLoadedFiles(files),
-      packageDependencies
+      packageDependencies,
+      deprecated
     });
   }
 

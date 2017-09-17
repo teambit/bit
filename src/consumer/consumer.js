@@ -157,13 +157,15 @@ export default class Consumer {
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
+      const componentModule = await this.scope.sources.get(id);
       const component = Component.loadFromFileSystem({
         bitDir,
         consumerBitJson: this.bitJson,
         componentMap,
         id: idWithConcreteVersion,
         consumerPath: this.getPath(),
-        bitMap
+        bitMap,
+        deprecated: componentModule ? componentModule.deprecated : false
       });
       if (bitMap.hasChanged) await bitMap.write();
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
