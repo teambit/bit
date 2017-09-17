@@ -8,7 +8,7 @@ import { COMPONENT_ORIGINS } from '../../../constants';
 /**
  * Creates a new component, writes it to the file system and adds to bit.map
  */
-export default async function create(
+export default (async function create(
   idRaw: string,
   withSpecs: boolean = false,
   withBitJson: boolean = false,
@@ -36,4 +36,4 @@ export default async function create(
   await bitMap.write();
   // await consumer.driver.runHook('onCreate', component);
   return component;
-}
+});

@@ -3,7 +3,7 @@ import groupArray from 'group-array';
 import { loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 
-export default async function deprecate({ ids, remote }: { ids: string[], remote: boolean }): Promise<any> {
+export default (async function deprecate({ ids, remote }: { ids: string[], remote: boolean }): Promise<any> {
   const bitIds = ids.map(bitId => BitId.parse(bitId));
   const consumer = await loadConsumer();
   if (remote) {
@@ -21,4 +21,4 @@ export default async function deprecate({ ids, remote }: { ids: string[], remote
   // local remove in case user wants to delete commited components
   const removedIds = await consumer.scope.deprecateMany(bitIds);
   return removedIds;
-}
+});

@@ -21,7 +21,7 @@ import PathNotExists from './exceptions/path-not-exists';
 import EmptyDirectory from './exceptions/empty-directory';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 
-export default async function addAction(
+export default (async function addAction(
   componentPaths: string[],
   id?: string,
   main?: string,
@@ -269,4 +269,4 @@ export default async function addAction(
   }
   await bitMap.write();
   return added;
-}
+});

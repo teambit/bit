@@ -12,7 +12,7 @@ import { COMPONENT_ORIGINS } from '../../../constants';
 
 const key = R.compose(R.head, R.keys);
 
-export default async function importAction({
+export default (async function importAction({
   ids,
   tester,
   compiler,
@@ -73,7 +73,7 @@ export default async function importAction({
     consumer
   });
   return { dependencies, envDependencies, warnings };
-}
+});
 
 const getSemverType = (str): ?string => {
   if (semver.valid(str)) return 'V'; // VALID_VERSION

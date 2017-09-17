@@ -12,18 +12,11 @@ export default class List extends Command {
   name = 'list [scope]';
   description = 'list components on a local or a remote scope.';
   alias = 'ls';
-  opts = [
-    ['ids', 'ids', 'components ids to list'],
-    ['b', 'bare', 'show bare output (more details, less pretty)'],
-    ['a', 'all', 'show all components including soft-delete']
-  ];
+  opts = [['ids', 'ids', 'components ids to list'], ['b', 'bare', 'show bare output (more details, less pretty)']];
   loader = true;
 
-  action(
-    [scopeName]: string[],
-    { ids, bare, all }: { ids?: boolean, cache?: boolean, bare?: boolean, all?: boolean }
-  ): Promise<any> {
-    return listScope({ scopeName, cache: true, all }).then(components => ({
+  action([scopeName]: string[], { ids, bare }: { ids?: boolean, cache?: boolean, bare?: boolean }): Promise<any> {
+    return listScope({ scopeName, cache: true }).then(components => ({
       components,
       scope: scopeName,
       ids,

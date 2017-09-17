@@ -12,7 +12,7 @@ export default (components: ConsumerComponent[]) => {
 
   function tablizeComponent(component) {
     return [
-      `${component.box}/${component.name}${c.red(component.deprecated ? '[Deprecated]' : '')}`,
+      `${component.box}/${component.name}${c.red(component.deprecated ? ' [Deprecated]' : '')}`,
       component.version
     ]; // Add date, author
   }

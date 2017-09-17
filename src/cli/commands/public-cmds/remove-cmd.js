@@ -22,7 +22,9 @@ export default class Remove extends Command {
   }
 
   paintMissingComponents = missingComponents =>
-    (!R.isEmpty(missingComponents) ? chalk.underline('missing components:') + chalk(` ${missingComponents}\n`) : '');
+    (!R.isEmpty(missingComponents) && R.isNil(missingComponents)
+      ? chalk.underline('missing components:') + chalk(` ${missingComponents}\n`)
+      : '');
   paintRemoved = bitIds =>
     (!R.isEmpty(bitIds) && !R.isNil(bitIds) ? chalk.underline('removed components:') + chalk(` ${bitIds}\n`) : '');
   paintSingle = bitObj =>
@@ -31,7 +33,7 @@ export default class Remove extends Command {
     this.paintMissingComponents(bitObj.missingComponents);
 
   paintUnRemovedComponents(unRemovedComponents) {
-    if (!R.isEmpty(unRemovedComponents)) {
+    if (!R.isEmpty(unRemovedComponents) && !R.isNil(unRemovedComponents)) {
       return Object.keys(unRemovedComponents).map((key) => {
         const header = chalk.underline.red(
           `error: unable to delete ${key}, because the following components depend on it:\n`

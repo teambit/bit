@@ -3,7 +3,7 @@ import groupArray from 'group-array';
 import { loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 
-export default async function remove({
+export default (async function remove({
   ids,
   remote,
   force
@@ -29,4 +29,4 @@ export default async function remove({
   // local remove in case user wants to delete commited components
   const removedIds = await consumer.scope.removeMany(bitIds, force);
   return removedIds;
-}
+});

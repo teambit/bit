@@ -185,7 +185,7 @@ function mergeDependencyTrees(depTrees: Array<Object>, files: ComponentMapFile[]
  * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
  * component.missingDependencies.missingDependenciesOnFs
  */
-export default async function loadDependenciesForComponent(
+export default (async function loadDependenciesForComponent(
   component: Component,
   componentMap: ComponentMap,
   bitDir: string,
@@ -241,4 +241,4 @@ export default async function loadDependenciesForComponent(
   if (!R.isEmpty(missingDependencies)) component.missingDependencies = missingDependencies;
 
   return component;
-}
+});

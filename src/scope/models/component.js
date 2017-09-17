@@ -33,7 +33,7 @@ export default class Component extends BitObject {
   box: string;
   versions: { [number]: Ref };
   lang: string;
-  deprecated: Boolean;
+  deprecated: boolean;
 
   constructor(props: ComponentProps) {
     super();

@@ -21,7 +21,7 @@ export default class Deprecate extends Command {
   paintMissingComponents = missingComponents =>
     (!R.isEmpty(missingComponents) ? chalk.underline('missing components:') + chalk(` ${missingComponents}\n`) : '');
   paintRemoved = bitIds =>
-    (!R.isEmpty(bitIds) && !R.isNil(bitIds) ? chalk.underline('removed components:') + chalk(` ${bitIds}\n`) : '');
+    (!R.isEmpty(bitIds) && !R.isNil(bitIds) ? chalk.underline('deprecated components:') + chalk(` ${bitIds}\n`) : '');
   paintSingle = bitObj => this.paintRemoved(bitObj.bitIds) + this.paintMissingComponents(bitObj.missingComponents);
 
   paintMany = bitObjs => bitObjs.map(obj => this.paintSingle(obj));
