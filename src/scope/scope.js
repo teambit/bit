@@ -23,7 +23,7 @@ import { Repository, Ref, BitObject } from './objects';
 import ComponentWithDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
-import { postExportHook, postImportHook, postHardDeleteHook, postSoftdDeleteHook } from '../hooks';
+import { postExportHook, postImportHook, postDeprecateHook, postRemoveHook } from '../hooks';
 import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
@@ -599,13 +599,16 @@ export default class Scope {
   async removeMany(bitIds: Array<BitId>, force: boolean): Promise<any> {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId, true));
+
     if (force) {
       const removedComponents = await Promise.all(removeComponents());
+      await postRemoveHook({ ids: removedComponents });
       return { bitIds: removedComponents, missingComponents };
     }
     const dependentBits = await this.findDependentBits(foundComponents);
     if (R.isEmpty(dependentBits)) {
       const removedComponents = await Promise.all(removeComponents());
+      await postRemoveHook({ ids: removedComponents });
       return { bitIds: removedComponents, missingComponents };
     }
     return { dependentBits, missingComponents };
@@ -617,6 +620,7 @@ export default class Scope {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const deprecateComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId, false));
     const deprecatedComponents = await Promise.all(deprecateComponents());
+    await postDeprecateHook({ ids: deprecatedComponents });
     return { bitIds: deprecatedComponents, missingComponents };
   }
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
