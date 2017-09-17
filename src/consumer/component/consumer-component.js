@@ -192,7 +192,7 @@ export default class Component {
     const PackageJson = driver.getDriver().PackageJson;
     return new PackageJson(bitDir, {
       name: `${this.box}/${this.name}`,
-      version: this.version,
+      version: `${this.version.toString()}.0.0`,
       homepage: this._getHomepage(),
       main: this.mainFile,
       dependencies: this.packageDependencies,
