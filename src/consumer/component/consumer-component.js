@@ -167,6 +167,7 @@ export default class Component {
   }
 
   _getHomepage() {
+    // TODO: Validate somehow that this scope is really on bitsrc (maybe check if it contains . ?)
     const homepage = this.scope ? `https://bitsrc.io/${this.scope}/${this.box}/${this.name}` : undefined;
     return homepage;
   }
