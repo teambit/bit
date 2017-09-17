@@ -137,10 +137,12 @@ export default class Helper {
     return this.runCmd('bit init --bare', this.remoteScopePath);
   }
 
-  listRemoteScope() {
-    return this.runCmd(`bit list ${this.remoteScope} --bare`);
+  listRemoteScope(bare: boolean = true) {
+    return this.runCmd(`bit list ${this.remoteScope} ${bare ? '--bare' : ''}`);
   }
-
+  listLocalScope() {
+    return this.runCmd('bit list ');
+  }
   getNewBareScope() {
     const scopeName = v4();
     const scopePath = path.join(this.e2eDir, scopeName);
@@ -165,8 +167,11 @@ export default class Helper {
   commitComponent(id: string, commitMsg: string = 'commit-message') {
     return this.runCmd(`bit commit ${id} -m ${commitMsg}`);
   }
-  removeComponent(id: string, flags: string) {
+  removeComponent(id: string, flags: string = '') {
     return this.runCmd(`bit remove ${id} ${flags}`);
+  }
+  deprecateComponent(id: string, flags: string = '') {
+    return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
   commitAllComponents(commitMsg: string = 'commit-message') {
     return this.runCmd(`bit commit -am ${commitMsg}`);
