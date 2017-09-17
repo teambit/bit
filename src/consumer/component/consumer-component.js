@@ -393,8 +393,8 @@ export default class Component {
     this.files.forEach(file => file.updatePaths({ newBase }));
     // Don't write the package.json for an authored component, because it's dependencies probably managed
     // By the root packge.json
-    const actualWithBitJson = withBitJson && origin !== COMPONENT_ORIGINS.AUTHORED;
-    await this._writeToComponentDir(newBase, withBitJson, actualWithBitJson, driver, force);
+    const actualWithPackageJson = withPackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
+    await this._writeToComponentDir(newBase, withBitJson, actualWithPackageJson, driver, force);
 
     if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
 

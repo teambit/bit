@@ -196,7 +196,8 @@ export default class Consumer {
   async importAccordingToBitJsonAndBitMap(
     verbose?: boolean,
     withEnvironments: ?boolean,
-    cache?: boolean = true
+    cache?: boolean = true,
+    withPackageJson?: boolean = true
   ): Promise<> {
     const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
     const bitMap = await this.getBitMap();
@@ -213,13 +214,13 @@ export default class Consumer {
     let componentsAndDependenciesBitMap = [];
     if (dependenciesFromBitJson) {
       componentsAndDependenciesBitJson = await this.scope.getManyWithAllVersions(dependenciesFromBitJson, cache);
-      await this.writeToComponentsDir(componentsAndDependenciesBitJson);
+      await this.writeToComponentsDir(componentsAndDependenciesBitJson, undefined, undefined, withPackageJson);
     }
     if (componentsFromBitMap) {
       const componentsIds = Object.keys(componentsFromBitMap);
       const componentsIdsParsed = componentsIds.map(id => BitId.parse(id));
       componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsIdsParsed, cache);
-      await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false);
+      await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false, withPackageJson);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     if (withEnvironments) {
@@ -235,12 +236,17 @@ export default class Consumer {
     return { dependencies: componentsAndDependencies };
   }
 
-  async importSpecificComponents(rawIds: ?(string[]), cache?: boolean, writeToPath?: string) {
+  async importSpecificComponents(
+    rawIds: ?(string[]),
+    cache?: boolean,
+    writeToPath?: string,
+    withPackageJson?: boolean = true
+  ) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw));
     const componentDependenciesArr = await this.scope.getManyWithAllVersions(bitIds, cache);
-    await this.writeToComponentsDir(componentDependenciesArr, writeToPath);
+    await this.writeToComponentsDir(componentDependenciesArr, writeToPath, undefined, withPackageJson);
     return { dependencies: componentDependenciesArr };
   }
 
@@ -249,13 +255,14 @@ export default class Consumer {
     verbose?: boolean,
     withEnvironments: ?boolean,
     cache?: boolean = true,
-    writeToPath?: string
+    writeToPath?: string,
+    withPackageJson?: boolean = true
   ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
-      return this.importAccordingToBitJsonAndBitMap(verbose, withEnvironments, cache);
+      return this.importAccordingToBitJsonAndBitMap(verbose, withEnvironments, cache, withPackageJson);
     }
-    return this.importSpecificComponents(rawIds, cache, writeToPath);
+    return this.importSpecificComponents(rawIds, cache, writeToPath, withPackageJson);
   }
 
   importEnvironment(rawId: ?string, verbose?: boolean) {
@@ -296,7 +303,8 @@ export default class Consumer {
   async writeToComponentsDir(
     componentDependencies: ComponentWithDependencies[],
     writeToPath?: string,
-    force?: boolean = true
+    force?: boolean = true,
+    withPackageJson?: boolean = true
   ): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
@@ -307,6 +315,7 @@ export default class Consumer {
         bitDir,
         force,
         bitMap,
+        withPackageJson,
         origin: COMPONENT_ORIGINS.IMPORTED,
         consumerPath: this.getPath(),
         driver: this.driver
@@ -340,6 +349,7 @@ export default class Consumer {
             bitDir: depBitPath,
             force,
             bitMap,
+            withPackageJson,
             origin: COMPONENT_ORIGINS.NESTED,
             parent: componentWithDeps.component.id,
             consumerPath: this.getPath(),
