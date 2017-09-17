@@ -22,7 +22,7 @@ import type { ComponentMapFile, ComponentOrigin } from './component-map';
 
 const SHOULD_THROW = true;
 
-type BitMapComponents = { [componentId: string]: ComponentMap };
+export type BitMapComponents = { [componentId: string]: ComponentMap };
 
 export default class BitMap {
   projectRoot: string;
@@ -220,7 +220,7 @@ export default class BitMap {
       const root = this._makePathRelativeToProjectRoot(rootDir);
       this.components[componentIdStr].rootDir = root ? pathNormalizeToLinux(root) : root;
     }
-    if (origin === COMPONENT_ORIGINS.IMPORTED) {
+    if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
       // if there are older versions, the user is updating an existing component, delete old ones from bit.map
       this.deleteOlderVersionsOfComponent(componentId);
     }

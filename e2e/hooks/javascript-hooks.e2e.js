@@ -38,12 +38,43 @@ function createComponent(name, impl) {
 }
 
 // todo: once the bind is implemented, make it work
-describe.skip('javascript-hooks', function () {
+describe('javascript-hooks', function () {
   this.timeout(0);
   after(() => {
     helper.destroyEnv();
   });
-  describe('onCreate', () => {
+
+  describe('import component with internals files', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createFile(path.join('utils', 'internals'), 'is-type.js', isTypeFixture);
+      const isStringFixture =
+        "const isType = require('./internals/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createFile('utils', 'is-string.js', isStringFixture);
+      helper.addComponentWithOptions('utils', { m: 'utils/is-string.js', i: 'utils/is-string' });
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-string');
+    });
+    it('should be able to require the main file using require(bit/) syntax', () => {
+      const appJsFixture = "const isString = require('bit/utils/is-string'); console.log(isString());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type and got is-string');
+    });
+    it('should be able to require the internal file using require(bit/) syntax', () => {
+      const appJsFixture =
+        "const isType = require('bit/utils/is-string/utils/internals/is-type'); console.log(isType());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type');
+    });
+  });
+
+  describe.skip('onCreate', () => {
     describe.skip('without build', () => {
       before(() => {
         helper.reInitLocalScope();
@@ -78,7 +109,7 @@ describe.skip('javascript-hooks', function () {
     });
   });
 
-  describe('onCommit', () => {
+  describe.skip('onCommit', () => {
     describe.skip('without build', () => {
       before(() => {
         helper.reInitLocalScope();
@@ -116,7 +147,7 @@ describe.skip('javascript-hooks', function () {
     });
   });
 
-  describe('onExport', () => {
+  describe.skip('onExport', () => {
     describe.skip('without build', () => {
       before(() => {
         helper.reInitLocalScope();
@@ -161,7 +192,7 @@ describe.skip('javascript-hooks', function () {
     });
   });
 
-  describe('onImport', () => {
+  describe.skip('onImport', () => {
     describe.skip('without build', () => {
       before(() => {
         helper.reInitLocalScope();

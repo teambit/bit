@@ -1,7 +1,7 @@
 /** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
-import { getDriver } from '../../../api/consumer';
+import { getDriver, bind } from '../../../api/consumer';
 
 export default class Create extends Command {
   name = 'bind';
@@ -12,20 +12,22 @@ export default class Create extends Command {
   loader = true;
 
   action(args: string[], { verbose }: { verbose: ?boolean }): Promise<*> {
-    return getDriver().then((driverObj) => {
-      return driverObj.getDriver(false).bind({});
-    });
+    // return getDriver().then((driverObj) => {
+    //   return driverObj.getDriver(false).bind({});
+    // });
+    return bind();
   }
 
-  report(result: { [string]: string }): string {
-    const reportComponents = components =>
-      Object.keys(components)
-        .map(component => chalk.cyan(`\t${component} => ${components[component]}`))
-        .join('\n');
+  report(results: Array<{ id: string, bound: Object }>): string {
+    const reportComponents = results
+      .map((result) => {
+        const bounds = result.bound.map(bound => `\t\tFrom: ${bound.from}, To: ${bound.to}`).join('\n');
+        return chalk.cyan(`\t${result.id}:\n ${bounds}`);
+      })
+      .join('\n');
 
-    const reportTitle = components =>
-      chalk.underline(`Bound ${chalk.bold(Object.keys(components).length.toString())} components\n`);
+    const reportTitle = chalk.underline(`Bound ${chalk.bold(results.length)} components\n`);
 
-    return reportTitle(result) + reportComponents(result);
+    return reportTitle + reportComponents;
   }
 }

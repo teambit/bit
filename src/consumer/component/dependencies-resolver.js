@@ -42,6 +42,16 @@ function findComponentsOfDepsFiles(
     if (currentPackagesDeps && !R.isEmpty(currentPackagesDeps)) {
       Object.assign(packagesDeps, currentPackagesDeps);
     }
+    const currentBitsDeps = tree[file].bits;
+    if (currentBitsDeps && !R.isEmpty(currentBitsDeps)) {
+      currentBitsDeps.forEach((bitDep) => {
+        const componentId = getComponentNameFromRequirePath(bitDep);
+        const currentComponentsDeps = { [componentId]: [] };
+        if (!componentsDeps[componentId]) {
+          Object.assign(componentsDeps, currentComponentsDeps);
+        }
+      });
+    }
     const allFilesDeps = tree[file].files;
     if (!allFilesDeps || R.isEmpty(allFilesDeps)) return;
     allFilesDeps.forEach((fileDep) => {
@@ -114,6 +124,15 @@ function findComponentsOfDepsFiles(
   return { componentsDeps, packagesDeps, untrackedDeps };
 }
 
+// todo: move to bit-javascript
+function getComponentNameFromRequirePath(requirePath: string): string {
+  const prefix = requirePath.startsWith('node_modules') ? 'node_modules/bit/' : 'bit/';
+  const withoutPrefix = requirePath.replace(prefix, '');
+  const pathSplit = withoutPrefix.split('/');
+  if (pathSplit.length < 2) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
+  return new BitId({ box: pathSplit[0], name: pathSplit[1] }).toString();
+}
+
 /**
  * Merge the dependencies-trees we got from all files to one big dependency-tree
  * @param {Array<Object>} depTrees
@@ -129,7 +148,7 @@ function mergeDependencyTrees(depTrees: Array<Object>, files: ComponentMapFile[]
     );
   }
   const dependencyTree = {
-    missing: { packages: [], files: [] },
+    missing: { packages: [], files: [], bits: [] },
     tree: {}
   };
   depTrees.forEach((dep, key) => {
@@ -140,10 +159,14 @@ function mergeDependencyTrees(depTrees: Array<Object>, files: ComponentMapFile[]
     if (dep.missing.files && dep.missing.files.length) {
       dependencyTree.missing.files.push(...dep.missing.files);
     }
+    if (dep.missing.bits) {
+      dependencyTree.missing.bits.push(...dep.missing.bits);
+    }
     Object.assign(dependencyTree.tree, dep.tree);
   });
   dependencyTree.missing.packages = R.uniq(dependencyTree.missing.packages);
   dependencyTree.missing.files = R.uniq(dependencyTree.missing.files);
+  dependencyTree.missing.bits = R.uniq(dependencyTree.missing.bits);
   return dependencyTree;
 }
 
@@ -177,12 +200,25 @@ export default async function loadDependenciesForComponent(
   const treesP = files.map(file => driver.getDependencyTree(bitDir, consumerPath, file));
   const trees = await Promise.all(treesP);
   const dependenciesTree = mergeDependencyTrees(trees, componentMap.files);
+
   if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) {
     missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
   }
   if (dependenciesTree.missing.packages && !R.isEmpty(dependenciesTree.missing.packages)) {
     missingDependencies.missingPackagesDependenciesOnFs = dependenciesTree.missing.packages;
   }
+  const missingLinks = [];
+  const missingComponents = [];
+  if (dependenciesTree.missing.bits && !R.isEmpty(dependenciesTree.missing.bits)) {
+    dependenciesTree.missing.bits.forEach((missingBit) => {
+      const componentId = getComponentNameFromRequirePath(missingBit);
+      if (bitMap.getExistingComponentId(componentId)) missingDependencies.missingLinks.push(componentId);
+      else missingDependencies.missingComponents.push(componentId);
+    });
+  }
+  if (missingLinks.length) missingDependencies.missingLinks = missingLinks;
+  if (missingComponents.length) missingDependencies.missingComponents = missingComponents;
+
   // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
   // they are referred as "untracked components" and the user should add them later on in order to commit
   const traversedDeps = findComponentsOfDepsFiles(

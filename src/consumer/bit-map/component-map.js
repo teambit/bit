@@ -88,6 +88,7 @@ export default class ComponentMap {
     if (this.rootDir && this.rootDir.startsWith(dirFrom)) {
       const newRootDir = this.rootDir.replace(dirFrom, dirTo);
       changes.push({ from: this.rootDir, to: newRootDir });
+      logger.debug(`updating rootDir location from ${this.rootDir} to ${newRootDir}`);
       this.rootDir = newRootDir;
       return changes;
     }
@@ -103,5 +104,15 @@ export default class ComponentMap {
       }
     });
     return changes;
+  }
+
+  getFilesRelativeToConsumer() {
+    return this.files.map((file) => {
+      return this.rootDir ? path.join(this.rootDir, file.relativePath) : file.relativePath;
+    });
+  }
+
+  getMainFileRelativeToConsumer() {
+    return this.rootDir ? path.join(this.rootDir, this.mainFile) : this.mainFile;
   }
 }

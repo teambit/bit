@@ -60,7 +60,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     ProtocolNotSupported,
     () => 'fatal: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'
   ],
-  [RemoteScopeNotFound, err => `fatal: remote scope "${chalk.bold(err)}" not found.`],
+  [RemoteScopeNotFound, err => `fatal: remote scope "${chalk.bold(err.name)}" not found.`],
   [InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: [scope]/[box]/<name>'],
   [ComponentNotFound, err => `fatal: component with id "${chalk.bold(err.id)}" was not found`],
   [DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found.`],

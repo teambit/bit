@@ -158,8 +158,8 @@ export default class Helper {
     this.runCmd('bit install');
   }
 
-  getConsumerJSFiles() {
-    return glob.sync(path.normalize('**/*.js'), { cwd: this.localScopePath }).map(x => path.normalize(x));
+  getConsumerFiles(ext: string = '*.js') {
+    return glob.sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: true }).map(x => path.normalize(x));
   }
 
   commitComponent(id: string, commitMsg: string = 'commit-message') {
@@ -170,7 +170,7 @@ export default class Helper {
     return this.runCmd(`bit commit -am ${commitMsg}`);
   }
 
-  exportComponent(id, scope = this.remoteScope) {
+  exportComponent(id: string, scope: string = this.remoteScope) {
     return this.runCmd(`bit export ${scope} ${id}`);
   }
 
