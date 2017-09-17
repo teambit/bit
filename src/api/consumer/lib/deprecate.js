@@ -9,16 +9,16 @@ export default async function deprecate({ ids, remote }: { ids: string[], remote
   if (remote) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
     const remotes = await consumer.scope.remotes();
-    const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
+    const deprecateP = Object.keys(groupedBitsByScope).map(async (key) => {
       const resolvedRemote = await remotes.resolve(key, consumer.scope);
-      const result = await resolvedRemote.deprecateMany(groupedBitsByScope[key]);
-      return result;
+      const deprecateResult = await resolvedRemote.deprecateMany(groupedBitsByScope[key]);
+      return deprecateResult;
     });
-    const removedObj = await Promise.all(removeP);
-    return removedObj;
+    const deprecatedComponentsResult = await Promise.all(deprecateP);
+    return deprecatedComponentsResult;
   }
 
   // local remove in case user wants to delete commited components
-  const removedIds = await consumer.scope.softRemoveMany(bitIds);
+  const removedIds = await consumer.scope.deprecateMany(bitIds);
   return removedIds;
 }

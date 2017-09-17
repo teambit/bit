@@ -9,7 +9,7 @@ export default class Remove extends Command {
   description = 'remove a component (local/remote)';
   alias = 'rm';
   opts = [
-    ['f', 'force [boolean]', 'delete components with dependencies and remove files(default = false)'],
+    ['f', 'force [boolean]', 'force delete (default = false)'],
     ['r', 'remote [boolean]', 'remove from remote scope']
   ];
 
@@ -26,7 +26,7 @@ export default class Remove extends Command {
   paintRemoved = bitIds =>
     (!R.isEmpty(bitIds) && !R.isNil(bitIds) ? chalk.underline('removed components:') + chalk(` ${bitIds}\n`) : '');
   paintSingle = bitObj =>
-    this.paintUnRemovedComponents(bitObj.unRemovedComponents) +
+    this.paintUnRemovedComponents(bitObj.dependentBits) +
     this.paintRemoved(bitObj.bitIds) +
     this.paintMissingComponents(bitObj.missingComponents);
 

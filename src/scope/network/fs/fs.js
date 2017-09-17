@@ -40,11 +40,11 @@ export default class Fs implements Network {
   }
   deleteMany(bitIds: Array<BitId>, force: boolean): Promise<ComponentObjects[]> {
     const scope = this.getScope();
-    return scope.removeMany(bitIds, force, true);
+    return scope.removeMany(bitIds, force);
   }
   deprecateMany(bitIds: Array<BitId>): Promise<ComponentObjects[]> {
     const scope = this.getScope();
-    return scope.softRemoveMany(bitIds);
+    return scope.deprecateMany(bitIds);
   }
   fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
     if (noDependencies) return this.getScope().manyOneObjects(bitIds);

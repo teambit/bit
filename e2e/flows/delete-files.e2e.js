@@ -67,7 +67,7 @@ describe('delete files from a component', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap['bar/foo'].files.length).to.equal(1);
     });
-    it('should not show the deleted file in bit show command', () => {
+    it('should not show the deprecated file in bit show command', () => {
       const output = helper.showComponent('bar/foo');
       expect(output).to.have.string('bar/foo.js');
       expect(output).not.to.have.string('bar/baz.js');

@@ -27,6 +27,6 @@ export default async function remove({
   }
 
   // local remove in case user wants to delete commited components
-  const removedIds = await consumer.scope.removeMany(bitIds, force, true);
+  const removedIds = await consumer.scope.removeMany(bitIds, force);
   return removedIds;
 }

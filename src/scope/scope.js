@@ -538,7 +538,11 @@ export default class Scope {
     return Promise.all(versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects)));
   }
 
-  async removeSingle(bitId, removeComponent): Promise<string> {
+  /**
+   * Remove or deprecate single component
+   * @removeComponent - boolean - true if you want to remove component
+   */
+  async removeSingle(bitId: BitId, removeComponent: boolean): Promise<string> {
     if (removeComponent) {
       await this.sources.clean(bitId);
       return bitId.toStringWithoutVersion();
@@ -549,9 +553,14 @@ export default class Scope {
     await this.objects.persist();
     return component.id();
   }
-  async findDependentBits(bitIds) {
+
+  /**
+   * findDependentBits
+   * foreach component in array find the componnet that uses that component
+   */
+  async findDependentBits(bitIds: Array<BitId>): Promise<Array<object>> {
     const stagedComponents = await this.listStage();
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const dependentBits = {};
       bitIds.forEach((bitId) => {
         const dependencies = [];
@@ -568,7 +577,10 @@ export default class Scope {
     });
   }
 
-  async filterComponents(bitIds: Array<BitId>) {
+  /**
+   * split bit array to found and missing components (incase user misspelled id)
+   */
+  async filterFoundAndMissingComponents(bitIds: Array<BitId>) {
     const missingComponents = [];
     const foundComponents = [];
     const resultP = bitIds.map(async (id) => {
@@ -580,25 +592,32 @@ export default class Scope {
     return Promise.resolve({ missingComponents, foundComponents });
   }
 
+  /**
+   * Remove components from scope
+   * @force Boolean  - remove component from scope even if other components use it
+   */
   async removeMany(bitIds: Array<BitId>, force: boolean): Promise<any> {
-    const { missingComponents, foundComponents } = await this.filterComponents(bitIds);
+    const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId, true));
     if (force) {
-      const result = await Promise.all(removeComponents());
-      return { bitIds: result, unRemovedComponents: {}, missingComponents };
+      const removedComponents = await Promise.all(removeComponents());
+      return { bitIds: removedComponents, missingComponents };
     }
     const dependentBits = await this.findDependentBits(foundComponents);
     if (R.isEmpty(dependentBits)) {
-      const result = await Promise.all(removeComponents());
-      return { bitIds: result, unRemovedComponents: {}, missingComponents };
+      const removedComponents = await Promise.all(removeComponents());
+      return { bitIds: removedComponents, missingComponents };
     }
-    return { unRemovedComponents: dependentBits, missingComponents };
+    return { dependentBits, missingComponents };
   }
-  async softRemoveMany(bitIds: Array<BitId>): Promise<any> {
-    const { missingComponents, foundComponents } = await this.filterComponents(bitIds);
-    const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId, false));
-    const result = await Promise.all(removeComponents());
-    return { bitIds: result, unRemovedComponents: {}, missingComponents };
+  /**
+   * deprecate components from scope
+   */
+  async deprecateMany(bitIds: Array<BitId>): Promise<any> {
+    const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
+    const deprecateComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId, false));
+    const deprecatedComponents = await Promise.all(deprecateComponents());
+    return { bitIds: deprecatedComponents, missingComponents };
   }
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
     if (!bitId.isLocal(this.name)) {
