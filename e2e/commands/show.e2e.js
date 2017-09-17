@@ -36,6 +36,19 @@ describe('bit show command', function () {
       helper.commitComponent('comp/comp');
     });
 
+    describe('show deprecated local component', () => {
+      let output;
+      it('should show deprecated component', () => {
+        helper.deprecateComponent('comp/comp');
+        output = JSON.parse(helper.runCmd('bit show comp/comp -j'));
+        expect(output).to.include({ deprecated: true });
+      });
+      it('should show deprecated component', () => {
+        output = JSON.parse(helper.runCmd('bit show comp/comp -j'));
+        expect(output).to.include({ deprecated: false });
+      });
+    });
+
     describe('single version as cli output (no -v or -j flags)', () => {
       let output;
 
@@ -195,7 +208,6 @@ describe('bit show command', function () {
         expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
     });
-
     describe('all versions as cli output (without -j flag)', () => {
       it('should render the id correctly', () => {});
 
@@ -221,6 +233,35 @@ describe('bit show command', function () {
     });
   });
 
+  describe('show deprecated remote component', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportAllComponents();
+    });
+    it('should show deprecated component', () => {
+      helper.deprecateComponent(`${helper.remoteScope}/bar/foo`, '-r');
+      output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j`));
+      expect(output).to.include({ deprecated: true });
+    });
+  });
+  describe('show not deprecated remote component', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportAllComponents();
+    });
+    it('should show regular component', () => {
+      output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j`));
+      expect(output).to.include({ deprecated: false });
+    });
+  });
   describe.skip('with no docs', () => {
     before(() => {
       const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";

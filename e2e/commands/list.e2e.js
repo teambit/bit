@@ -28,7 +28,7 @@ describe('bit list command', function () {
       expect(output.includes('found 0 components')).to.be.true;
     });
   });
-  describe('when a component is created and committed', () => {
+  describe.only('when a component is created and committed', () => {
     before(() => {
       helper.cleanEnv();
       helper.runCmd('bit init');
@@ -39,6 +39,11 @@ describe('bit list command', function () {
     it('should display "found 1 components"', () => {
       const output = helper.runCmd('bit list');
       expect(output.includes('found 1 components')).to.be.true;
+    });
+    it('should list deprecated component', () => {
+      helper.deprecateComponent('bar/foo');
+      const output = helper.runCmd('bit list');
+      expect(output).to.contain.string('bar/foo [Deprecated]');
     });
   });
 });
