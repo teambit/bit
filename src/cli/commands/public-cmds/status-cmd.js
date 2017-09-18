@@ -6,6 +6,7 @@ import type { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
+import { missingDependenciesLabels } from '../../templates/missing-dependencies-template';
 
 export default class Status extends Command {
   name = 'status';
@@ -25,19 +26,11 @@ export default class Status extends Command {
         return chalk.yellow(`\n       ${label}: `) + chalk.white(array.join(', '));
       }
 
-      return `       ${formatMissingStr(
-        missingComponent.missingDependencies.untrackedDependencies,
-        'untracked file dependencies'
-      )}${formatMissingStr(
-        missingComponent.missingDependencies.missingPackagesDependenciesOnFs,
-        'missing packages dependencies'
-      )}${formatMissingStr(missingComponent.missingDependencies.missingLinks, 'missing bind links')}${formatMissingStr(
-        missingComponent.missingDependencies.missingComponents,
-        'missing components'
-      )}${formatMissingStr(
-        missingComponent.missingDependencies.missingDependenciesOnFs,
-        'non-existing dependency files'
-      )}\n`;
+      const missingStr = Object.keys(missingDependenciesLabels)
+        .map(key => formatMissingStr(missingComponent.missingDependencies[key], missingDependenciesLabels[key]))
+        .join('');
+
+      return `       ${missingStr}\n`;
     }
 
     function format(component: string | Component): string {
