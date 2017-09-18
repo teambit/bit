@@ -1,7 +1,7 @@
 /** @flow */
 import path from 'path';
 import R from 'ramda';
-import { DEFAULT_INDEX_NAME } from '../../constants';
+import { DEFAULT_INDEX_NAME, COMPONENT_ORIGINS } from '../../constants';
 import BitMap from '../bit-map/bit-map';
 import type { ComponentMapFile } from '../bit-map/component-map';
 import ComponentMap from '../bit-map/component-map';
@@ -33,6 +33,7 @@ function findComponentsOfDepsFiles(
   const packagesDeps = {};
   const componentsDeps = {};
   const untrackedDeps = [];
+  const relativeDeps = []; // dependencies that are required with relative path (and should be required using 'bit/').
 
   const entryComponentMap = bitMap.getComponent(entryComponentId);
 
@@ -113,6 +114,12 @@ function findComponentsOfDepsFiles(
       const depsPaths = { sourceRelativePath, destinationRelativePath: destination };
       const currentComponentsDeps = { [componentId]: [depsPaths] };
 
+      const componentMap = bitMap.getComponent(componentId);
+      if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+        relativeDeps.push(componentId);
+        return;
+      }
+
       if (componentsDeps[componentId]) {
         // it is another file of an already existing component. Just add the new path
         componentsDeps[componentId].push(depsPaths);
@@ -121,7 +128,7 @@ function findComponentsOfDepsFiles(
       }
     });
   });
-  return { componentsDeps, packagesDeps, untrackedDeps };
+  return { componentsDeps, packagesDeps, untrackedDeps, relativeDeps };
 }
 
 // todo: move to bit-javascript
@@ -185,7 +192,7 @@ function mergeDependencyTrees(depTrees: Array<Object>, files: ComponentMapFile[]
  * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
  * component.missingDependencies.missingDependenciesOnFs
  */
-export default async function loadDependenciesForComponent(
+export default (async function loadDependenciesForComponent(
   component: Component,
   componentMap: ComponentMap,
   bitDir: string,
@@ -235,10 +242,13 @@ export default async function loadDependenciesForComponent(
   const untrackedDependencies = traversedDeps.untrackedDeps;
   if (!R.isEmpty(untrackedDependencies)) missingDependencies.untrackedDependencies = untrackedDependencies;
   component.packageDependencies = traversedDeps.packagesDeps;
+  if (!R.isEmpty(traversedDeps.relativeDeps)) {
+    missingDependencies.relativeComponents = traversedDeps.relativeDeps;
+  }
   // assign missingDependencies to component only when it has data.
   // Otherwise, when it's empty, component.missingDependencies will be an empty object ({}), and for some weird reason,
   // Ramda.isEmpty returns false when the component is received after async/await of Array.map.
   if (!R.isEmpty(missingDependencies)) component.missingDependencies = missingDependencies;
 
   return component;
-}
+});

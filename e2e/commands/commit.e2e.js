@@ -176,6 +176,36 @@ describe('bit commit command', function () {
     });
   });
 
+  describe('after requiring an imported component with the relative syntax', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-type');
+
+      const isStringFixture =
+        "const isType = require('../components/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      try {
+        helper.commitAllComponents();
+      } catch (err) {
+        output = err.toString();
+      }
+    });
+    it('should not commit and throw an error regarding the relative syntax', () => {
+      expect(output).to.have.string('fatal: following component dependencies were not found');
+      expect(output).to.have.string(`relative components: ${helper.remoteScope}/utils/is-type@1`);
+    });
+  });
+
   describe('commit all components', () => {
     it('Should print there is nothing to commit right after success commit all', () => {
       // Create component and try to commit twice
