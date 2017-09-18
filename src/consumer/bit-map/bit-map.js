@@ -235,10 +235,13 @@ export default class BitMap {
       logger.warning(`unable to find the component ${id} in bit.map file`);
       return;
     }
+    const distFilesPathsNormalized = distFilesPaths.map(filePath => pathNormalizeToLinux(filePath));
 
-    const mainDistFile = distFilesPaths.find(distFile => distFile.endsWith(this.components[id].mainFile));
+    const mainDistFile = distFilesPathsNormalized.find(distFile => distFile.endsWith(this.components[id].mainFile));
     if (!mainDistFile) {
-      logger.warning(`unable to find the main dist file of component ${id}. Dist files: ${distFilesPaths.join(', ')}`);
+      logger.warning(
+        `unable to find the main dist file of component ${id}. Dist files: ${distFilesPathsNormalized.join(', ')}`
+      );
       return;
     }
     this.components[id].mainDistFile = this._makePathRelativeToProjectRoot(mainDistFile);
