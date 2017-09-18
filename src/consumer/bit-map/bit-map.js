@@ -382,8 +382,6 @@ export default class BitMap {
     const existingPath = fromExists ? from : to;
     const isPathDir = isDir(existingPath);
     const allChanges = [];
-    from = pathNormalizeToLinux(from);
-    to = pathNormalizeToLinux(to);
     Object.keys(this.components).forEach((componentId) => {
       const componentMap: ComponentMap = this.components[componentId];
       const changes = isPathDir ? componentMap.updateDirLocation(from, to) : componentMap.updateFileLocation(from, to);
