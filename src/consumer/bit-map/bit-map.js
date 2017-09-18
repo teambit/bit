@@ -63,8 +63,8 @@ export default class BitMap {
   }
 
   _makePathRelativeToProjectRoot(pathToChange: string): string {
-    if (!path.isAbsolute(pathToChange)) return pathToChange;
-    return pathToChange.replace(`${this.projectRoot}${path.sep}`, '');
+    const absolutePath = path.resolve(pathToChange);
+    return path.relative(this.projectRoot, absolutePath);
   }
 
   // todo - need to move to bit-javascript
