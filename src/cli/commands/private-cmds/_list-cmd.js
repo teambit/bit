@@ -10,8 +10,8 @@ export default class List extends Command {
   alias = '';
   opts = [];
 
-  action([path, all]: [string, string]): Promise<any> {
-    return scopeList(fromBase64(path), all).then(components => components.map(c => c.toString()));
+  action([path]: [string, string]): Promise<any> {
+    return scopeList(fromBase64(path)).then(components => components.map(c => c.toString()));
   }
 
   report(str: string): string {

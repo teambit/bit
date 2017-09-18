@@ -24,7 +24,7 @@ export type ComponentProps = {
   name: string,
   versions?: { [number]: Ref },
   lang?: string,
-  deprecated: Boolean
+  deprecated: boolean
 };
 
 export default class Component extends BitObject {

@@ -542,39 +542,37 @@ export default class Scope {
    * Remove or deprecate single component
    * @removeComponent - boolean - true if you want to remove component
    */
-  async removeSingle(bitId: BitId, removeComponent: boolean): Promise<string> {
-    if (removeComponent) {
-      await this.sources.clean(bitId);
-      return bitId.toStringWithoutVersion();
-    }
+  async removeSingle(bitId: BitId): Promise<string> {
+    await this.sources.clean(bitId);
+    return bitId.toStringWithoutVersion();
+  }
+
+  async deprecateSingle(bitId: BitId): Promise<string> {
     const component = await this.sources.get(bitId);
     component.deprecated = true;
     this.objects.add(component);
     await this.objects.persist();
     return component.id();
   }
-
   /**
    * findDependentBits
    * foreach component in array find the componnet that uses that component
    */
   async findDependentBits(bitIds: Array<BitId>): Promise<Array<object>> {
     const stagedComponents = await this.listStage();
-    return new Promise((resolve) => {
-      const dependentBits = {};
-      bitIds.forEach((bitId) => {
-        const dependencies = [];
-        stagedComponents.forEach((stagedComponent) => {
-          stagedComponent.flattenedDependencies.forEach((flattendDependencie) => {
-            if (flattendDependencie.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
-              dependencies.push(stagedComponent.id.toStringWithoutVersion());
-            }
-          });
+    const dependentBits = {};
+    bitIds.forEach((bitId) => {
+      const dependencies = [];
+      stagedComponents.forEach((stagedComponent) => {
+        stagedComponent.flattenedDependencies.forEach((flattendDependencie) => {
+          if (flattendDependencie.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
+            dependencies.push(stagedComponent.id.toStringWithoutVersion());
+          }
         });
-        if (!R.isEmpty(dependencies)) dependentBits[bitId.toStringWithoutVersion()] = dependencies;
       });
-      return resolve(dependentBits);
+      if (!R.isEmpty(dependencies)) dependentBits[bitId.toStringWithoutVersion()] = dependencies;
     });
+    return Promise.resolve(dependentBits);
   }
 
   /**
@@ -598,7 +596,7 @@ export default class Scope {
    */
   async removeMany(bitIds: Array<BitId>, force: boolean): Promise<any> {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
-    const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId, true));
+    const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId));
 
     if (force) {
       const removedComponents = await Promise.all(removeComponents());
@@ -618,7 +616,7 @@ export default class Scope {
    */
   async deprecateMany(bitIds: Array<BitId>): Promise<any> {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
-    const deprecateComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId, false));
+    const deprecateComponents = () => foundComponents.map(async bitId => this.deprecateSingle(bitId));
     const deprecatedComponents = await Promise.all(deprecateComponents());
     await postDeprecateHook({ ids: deprecatedComponents });
     return { bitIds: deprecatedComponents, missingComponents };

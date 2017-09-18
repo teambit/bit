@@ -177,10 +177,11 @@ export default class SSH implements Network {
     return this.exec('_list').then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
-      const consumerComponents = payload.map((c) => {
-        return c ? ConsumerComponent.fromString(c) : null;
-      });
-      return rejectNils(consumerComponents);
+      return rejectNils(
+        payload.map((c) => {
+          return c ? ConsumerComponent.fromString(c) : null;
+        })
+      );
     });
   }
 

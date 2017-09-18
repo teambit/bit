@@ -13,7 +13,7 @@ export default class Remove extends Command {
     ['r', 'remote [boolean]', 'remove from remote scope']
   ];
 
-  action([ids]: [string], { force = false, remote = false }: { force: Boolean, remote: Boolean }): Promise<any> {
+  action([ids]: [string], { force = false, remote = false }: { force: boolean, remote: boolean }): Promise<any> {
     return remove({ ids, force, remote });
   }
 

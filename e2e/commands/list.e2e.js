@@ -28,7 +28,7 @@ describe('bit list command', function () {
       expect(output.includes('found 0 components')).to.be.true;
     });
   });
-  describe.only('when a component is created and committed', () => {
+  describe('when a component is created and committed', () => {
     before(() => {
       helper.cleanEnv();
       helper.runCmd('bit init');
