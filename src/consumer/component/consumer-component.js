@@ -189,12 +189,11 @@ export default class Component {
   }
 
   writePackageJson(driver: Driver, bitDir: string, force?: boolean = true): Promise<boolean> {
-    // console.log('driver.PackageJson', driver.getDriver().PackageJson);
     const PackageJson = driver.getDriver().PackageJson;
     const name = `${this.box}/${this.name}`;
     // Replace all the / with - because / is not valid on package.json name key
     const validName = name.replace(/\//g, '-');
-    return new PackageJson(bitDir, {
+    const packageJson = new PackageJson(bitDir, {
       name: validName,
       version: `${this.version.toString()}.0.0`,
       homepage: this._getHomepage(),
@@ -203,7 +202,8 @@ export default class Component {
       devDependencies: this.devPackageDependencies,
       peerDependencies: this.peerPackageDependencies,
       componentRootFolder: bitDir
-    }).write({ override: force });
+    });
+    return packageJson.write({ override: force });
   }
 
   dependencies(): BitIds {
