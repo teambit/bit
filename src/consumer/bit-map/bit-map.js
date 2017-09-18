@@ -232,14 +232,14 @@ export default class BitMap {
 
   addMainDistFileToComponent(id: string, distFilesPaths: string[]): void {
     if (!this.components[id]) {
-      logger.warning(`unable to find the component ${id} in bit.map file`);
+      logger.warn(`unable to find the component ${id} in bit.map file`);
       return;
     }
     const distFilesPathsNormalized = distFilesPaths.map(filePath => pathNormalizeToLinux(filePath));
 
     const mainDistFile = distFilesPathsNormalized.find(distFile => distFile.endsWith(this.components[id].mainFile));
     if (!mainDistFile) {
-      logger.warning(
+      logger.warn(
         `unable to find the main dist file of component ${id}. Dist files: ${distFilesPathsNormalized.join(', ')}`
       );
       return;
