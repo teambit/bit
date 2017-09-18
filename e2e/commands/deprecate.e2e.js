@@ -8,20 +8,20 @@ describe('bit deprecate command', function () {
     helper.destroyEnv();
   });
   describe('with local scope and commited components', () => {
+    let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
+      output = helper.deprecateComponent('bar/foo');
     });
     it('should show deprecated component', () => {
-      const output = helper.deprecateComponent('bar/foo');
       expect(output).to.have.string('deprecated components: bar/foo');
     });
     it('should list components with deprecated components', () => {
-      helper.deprecateComponent('bar/foo');
-      const output = helper.listLocalScope('bar/foo');
-      expect(output).to.contain.string('bar/foo [Deprecated]');
+      const listOutput = helper.listLocalScope('bar/foo');
+      expect(listOutput).to.contain.string('bar/foo [Deprecated]');
     });
     it('should export component as deprecated ', () => {
       helper.deprecateComponent(`${helper.remoteScope}/bar/foo`);

@@ -60,7 +60,7 @@ describe('bit remove command', function () {
         `error: unable to delete ${helper.remoteScope}/utils/is-type, because the following components depend on it:`
       );
     });
-    it('should not remove component with dependencies when -f flag is true', () => {
+    it('should  remove component with dependencies when -f flag is true', () => {
       const output = helper.removeComponent(`${helper.remoteScope}/utils/is-type`, '-rf');
       expect(output).to.contain.string(`removed components: ${helper.remoteScope}/utils/is-type`);
     });
