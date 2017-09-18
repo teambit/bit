@@ -544,7 +544,7 @@ export default class Scope {
    */
   async removeSingle(bitId: BitId): Promise<string> {
     await this.sources.clean(bitId);
-    return bitId.toStringWithoutVersion();
+    return bitId;
   }
 
   async deprecateSingle(bitId: BitId): Promise<string> {
@@ -559,11 +559,12 @@ export default class Scope {
    * foreach component in array find the componnet that uses that component
    */
   async findDependentBits(bitIds: Array<BitId>): Promise<Array<object>> {
-    const stagedComponents = await this.listStage();
+    const allComponents = await this.objects.listComponents();
+    const allConsumerComponents = await this.toConsumerComponents(allComponents);
     const dependentBits = {};
     bitIds.forEach((bitId) => {
       const dependencies = [];
-      stagedComponents.forEach((stagedComponent) => {
+      allConsumerComponents.forEach((stagedComponent) => {
         stagedComponent.flattenedDependencies.forEach((flattendDependencie) => {
           if (flattendDependencie.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
             dependencies.push(stagedComponent.id.toStringWithoutVersion());

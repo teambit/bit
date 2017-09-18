@@ -636,13 +636,20 @@ export default class Consumer {
     const removedObj = await Promise.all(removeP);
     return removedObj;
   }
-  async removeLocal(bitIds: Array<BitId>, force: boolean) {
+  async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean) {
     // local remove in case user wants to delete commited components
     const removedIds = await this.scope.removeMany(bitIds, force);
+    if (!track && removedIds.bitIds) {
+      const bitMap = await this.getBitMap();
+      removedIds.bitIds.forEach((id) => {
+        bitMap.removeComponent(id);
+      });
+      await bitMap.write();
+    }
     return removedIds;
   }
-  async remove(ids: string[], remote: boolean, force: boolean) {
+  async remove(ids: string[], remote: boolean, force: boolean, track: boolean) {
     const bitIds = ids.map(bitId => BitId.parse(bitId));
-    return remote ? this.removeRemote(bitIds, force) : this.removeLocal(bitIds, force);
+    return remote ? this.removeRemote(bitIds, force) : this.removeLocal(bitIds, force, track);
   }
 }

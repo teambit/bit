@@ -10,11 +10,15 @@ export default class Remove extends Command {
   alias = 'rm';
   opts = [
     ['f', 'force [boolean]', 'force delete (default = false)'],
-    ['r', 'remote [boolean]', 'remove from remote scope']
+    ['r', 'remote [boolean]', 'remove from remote scope'],
+    ['t', 'track [boolean]', 'keep tracking component (default = false) ']
   ];
 
-  action([ids]: [string], { force = false, remote = false }: { force: boolean, remote: boolean }): Promise<any> {
-    return remove({ ids, force, remote });
+  action(
+    [ids]: [string],
+    { force = false, remote = false, track = false }: { force: boolean, remote: boolean, track: boolean }
+  ): Promise<any> {
+    return remove({ ids, force, remote, track });
   }
 
   report(bitObj: object | Array<any>): string {
