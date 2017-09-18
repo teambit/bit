@@ -8,7 +8,7 @@ export default class List extends Command {
   private = true;
   description = 'list scope components';
   alias = '';
-  opts = [['a', 'all', 'show all components including soft-delete']];
+  opts = [];
 
   action([path, all]: [string, string]): Promise<any> {
     return scopeList(fromBase64(path), all).then(components => components.map(c => c.toString()));
