@@ -1,31 +1,48 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe('bit remove command', function () {
+describe.only('bit remove command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
   });
   describe('with local scope and commited components', () => {
+    let output;
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
+      output = helper.removeComponent('bar/foo');
     });
     it('should remove component', () => {
-      const output = helper.removeComponent('bar/foo');
       expect(output).to.contain.string('removed components: bar/foo');
     });
+    it('should not show in bitmap', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.not.have.property('bar/foo');
+    });
     it('should removed component from commited components back to new', () => {
-      helper.removeComponent('bar/foo');
-      const output = helper.listLocalScope('bar/foo');
-      expect(output).to.not.contain.string('bar/foo');
-
+      const listOutput = helper.listLocalScope('bar/foo');
+      expect(listOutput).to.not.contain.string('bar/foo');
       const status = helper.runCmd('bit status');
       expect(status.includes('new components')).to.be.true;
       expect(status.includes('bar/foo')).to.be.true;
+    });
+  });
+  describe('with local scope and commited components', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      output = helper.removeComponent('bar/foo', '-t');
+    });
+    it('should  show in bitmap', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar/foo');
     });
   });
   describe('with remote scope without dependencies', () => {
@@ -42,6 +59,7 @@ describe('bit remove command', function () {
     });
   });
   describe('with remote scope with dependencies', () => {
+    const componentName = 'utils/is-type';
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
@@ -55,14 +73,62 @@ describe('bit remove command', function () {
       helper.exportAllComponents();
     });
     it('should not remove component with dependencies when -f flag is false', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-type`, '-r');
+      const output = helper.removeComponent(`${helper.remoteScope}/${componentName}`, '-r');
       expect(output).to.contain.string(
-        `error: unable to delete ${helper.remoteScope}/utils/is-type, because the following components depend on it:`
+        `error: unable to delete ${helper.remoteScope}/${componentName}, because the following components depend on it:`
       );
     });
     it('should  remove component with dependencies when -f flag is true', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-type`, '-rf');
-      expect(output).to.contain.string(`removed components: ${helper.remoteScope}/utils/is-type`);
+      const output = helper.removeComponent(`${helper.remoteScope}/${componentName}`, '-rf');
+      expect(output).to.contain.string(`removed components: ${helper.remoteScope}/${componentName}`);
+    });
+  });
+  describe('with imported components , no dependecies', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      // export a new simple component
+      helper.runCmd('bit create simple');
+      helper.commitComponent('simple');
+      helper.exportComponent('simple');
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('global/simple');
+    });
+    it('should not remove component with dependencies when -f flag is false', () => {
+      const output = helper.removeComponent(`${helper.remoteScope}/global/simple`);
+      expect(output).to.contain.string(`removed components: ${helper.remoteScope}/global/simple@latest`);
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple@latest`);
+    });
+  });
+  describe('with imported components with dependecies', () => {
+    let bitMap;
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+
+      // export a new simple component
+      helper.runCmd('bit create simple');
+      helper.commitComponent('simple');
+      helper.exportComponent('simple');
+
+      const withDepsFixture = 'import a from "./components/global/simple/impl.js"; ';
+      helper.createFile('', 'with-deps.js', withDepsFixture);
+      helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });
+      helper.commitAllComponents();
+      helper.exportComponent('comp/with-deps');
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      output = helper.importComponent('comp/with-deps');
+      bitMap = helper.readBitMap();
+    });
+    it('should not remove component with dependencies when -f flag is false', () => {
+      console.log(bitMap);
+      const output = helper.removeComponent(`${helper.remoteScope}/global/simple`);
+      expect(output).to.contain.string(`removed components: ${helper.remoteScope}/global/simple@latest`);
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple@latest`);
     });
   });
 });

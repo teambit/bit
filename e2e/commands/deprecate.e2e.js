@@ -31,25 +31,25 @@ describe('bit deprecate command', function () {
     });
   });
   describe('with remote scope', () => {
+    let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
       helper.exportAllComponents();
+      output = helper.deprecateComponent(`${helper.remoteScope}/bar/foo`, '-r');
     });
     it('should deprecate remote component ', () => {
-      const output = helper.deprecateComponent(`${helper.remoteScope}/bar/foo`, '-r');
       expect(output).to.contain.string(`deprecated components: ${helper.remoteScope}/bar/foo`);
     });
     it('should list components all components including deprecated from remote scope', () => {
-      helper.deprecateComponent(`${helper.remoteScope}/bar/foo`, '-r');
-      const output = helper.listRemoteScope(false);
-      expect(output).to.contain.string('bar/foo [Deprecated]');
+      const listOutput = helper.listRemoteScope(false);
+      expect(listOutput).to.contain.string('bar/foo [Deprecated]');
     });
     it('should not deprecate remote component if not found ', () => {
-      const output = helper.deprecateComponent(`${helper.remoteScope}/bar/foo111`, '-r');
-      expect(output).to.contain.string(`missing components: ${helper.remoteScope}/bar/foo`);
+      const depOutput = helper.deprecateComponent(`${helper.remoteScope}/bar/foo111`, '-r');
+      expect(depOutput).to.contain.string(`missing components: ${helper.remoteScope}/bar/foo`);
     });
   });
   describe('with remote scope with dependencies', () => {
