@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
+import symlinkOrCopy from 'symlink-or-copy';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
@@ -485,9 +486,9 @@ export default class Consumer {
         const target = path.join(this.getPath(), componentMap.rootDir);
         const relativeLinkPath = path.join('node_modules', 'bit', parsedId.box, parsedId.name);
         const linkPath = path.join(this.getPath(), relativeLinkPath);
-        const relativeTarget = path.relative(path.dirname(linkPath), target);
         fs.removeSync(linkPath); // in case a component has been moved
-        fs.ensureSymlinkSync(relativeTarget, linkPath, 'dir');
+        fs.ensureDirSync(path.dirname(linkPath));
+        symlinkOrCopy.sync(target, linkPath);
         return { id: componentId, bound: [{ from: componentMap.rootDir, to: relativeLinkPath }] };
       }
       // const filesToBind = {
