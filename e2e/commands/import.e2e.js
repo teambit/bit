@@ -485,16 +485,20 @@ describe('bit import', function () {
     describe.skip('typescript without compiler', () => {});
   });
 
-  describe('component/s with bit.json dependencies', () => {
+  describe("component's with bit.json and packages dependencies", () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
 
       // export a new simple component
-      helper.runCmd('bit create simple');
+      const simpleFixture = 'import a from "my-package"; ';
+      helper.createFile('global', 'simple.js', simpleFixture);
+      helper.addNpmPackage('my-package', '1.0.1');
+      helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
       helper.commitComponent('simple');
       helper.exportComponent('simple');
 
-      const withDepsFixture = 'import a from "./components/global/simple/impl.js"; ';
+      helper.addNpmPackage('some-package', '1.4.3');
+      const withDepsFixture = 'import a from "./global/simple.js"; import c from "some-package"';
       helper.createFile('', 'with-deps.js', withDepsFixture);
       helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });
       helper.commitAllComponents();
@@ -522,10 +526,12 @@ describe('bit import', function () {
       });
       it.skip('should not add existing components to bit.map file', () => {});
       it.skip('should create bit.json file with all the dependencies in the folder', () => {});
-      it.skip('should print warning for missing package dependencies', () => {
-        expect(output.includes('Missing the following package dependencies. Please install and add to package.json')).to
-          .be.true;
+      it('should print warning for missing package dependencies', () => {
+        expect(
+          output.includes('error - missing the following package dependencies. please install and add to package.json.')
+        ).to.be.true;
         expect(output.includes('lodash.get: 4.4.2')).to.be.true;
+        expect(output.includes('some-package: 1.0.0')).to.be.true;
       });
       it('should write the dependency in the dependencies directory', () => {
         const depDir = path.join(
@@ -536,12 +542,69 @@ describe('bit import', function () {
           'simple',
           helper.remoteScope,
           '1',
-          'impl.js'
+          'global',
+          'simple.js'
         );
         expect(fs.existsSync(depDir)).to.be.true;
       });
+      it('should write a package.json in the component dir', () => {
+        const packageJsonPath = path.join(helper.localScopePath, 'components', 'comp', 'with-deps', 'package.json');
+        expect(fs.existsSync(packageJsonPath)).to.be.true;
+        const packageJsonContent = fs.readJsonSync(packageJsonPath);
+        expect(packageJsonContent).to.deep.include({
+          name: 'comp-with-deps',
+          version: '1.0.0',
+          main: 'with-deps.js',
+          dependencies: { 'some-package': '1.4.3' }
+        });
+      });
+      it('should write a package.json in the nested dependency component dir', () => {
+        const packageJsonPath = path.join(
+          helper.localScopePath,
+          'components',
+          '.dependencies',
+          'global',
+          'simple',
+          helper.remoteScope,
+          '1',
+          'package.json'
+        );
+        expect(fs.existsSync(packageJsonPath)).to.be.true;
+        const packageJsonContent = fs.readJsonSync(packageJsonPath);
+        expect(packageJsonContent).to.deep.include({
+          name: 'global-simple',
+          version: '1.0.0',
+          main: 'global/simple.js',
+          dependencies: { 'my-package': '1.0.1' }
+        });
+      });
 
       it.skip('should write the dependencies according to their relative paths', () => {});
+    });
+
+    describe('with no_package_json flag', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponentWithOptions('comp/with-deps', { '-no_package_json': '' });
+      });
+      it('should not write a package.json in the component dir', () => {
+        const packageJsonPath = path.join(helper.localScopePath, 'components', 'comp', 'with-deps', 'package.json');
+        expect(fs.existsSync(packageJsonPath)).to.be.false;
+      });
+      it('should not write a package.json in the nested dependency component dir', () => {
+        const packageJsonPath = path.join(
+          helper.localScopePath,
+          'components',
+          '.dependencies',
+          'global',
+          'simple',
+          helper.remoteScope,
+          '1',
+          'package.json'
+        );
+        expect(fs.existsSync(packageJsonPath)).to.be.false;
+      });
     });
   });
 
