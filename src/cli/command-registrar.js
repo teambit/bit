@@ -56,7 +56,12 @@ function execAction(command, concrete, args) {
       return logAndExit(command.report(data), command.name);
     })
     .catch((err) => {
-      logger.error(err);
+      logger.error(
+        `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
+          err,
+          Object.getOwnPropertyNames(err)
+        )}`
+      );
       loader.off();
       const errorHandled = defaultHandleError(err) || command.handleError(err);
 

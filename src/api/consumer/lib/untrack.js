@@ -12,8 +12,8 @@ export default async function untrack(componentIds: string[]): Promise<Object> {
   const consumer: Consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
   const componentsList = new ComponentsList(consumer);
-  const newComponents = (await componentsList.listNewComponents(true)).map(componentId => componentId.id.toString());
-
+  const newComponents = (await componentsList.listNewComponents(false))
+  
   if (R.isEmpty(componentIds)) {
     newComponents.forEach(componentId => bitMap.removeComponent(componentId));
     await bitMap.write();

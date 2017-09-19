@@ -63,8 +63,8 @@ export default class BitMap {
   }
 
   _makePathRelativeToProjectRoot(pathToChange: string): string {
-    if (!path.isAbsolute(pathToChange)) return pathToChange;
-    return pathToChange.replace(`${this.projectRoot}${path.sep}`, '');
+    const absolutePath = path.resolve(pathToChange);
+    return path.relative(this.projectRoot, absolutePath);
   }
 
   // todo - need to move to bit-javascript
@@ -232,13 +232,16 @@ export default class BitMap {
 
   addMainDistFileToComponent(id: string, distFilesPaths: string[]): void {
     if (!this.components[id]) {
-      logger.warning(`unable to find the component ${id} in bit.map file`);
+      logger.warn(`unable to find the component ${id} in bit.map file`);
       return;
     }
+    const distFilesPathsNormalized = distFilesPaths.map(filePath => pathNormalizeToLinux(filePath));
 
-    const mainDistFile = distFilesPaths.find(distFile => distFile.endsWith(this.components[id].mainFile));
+    const mainDistFile = distFilesPathsNormalized.find(distFile => distFile.endsWith(this.components[id].mainFile));
     if (!mainDistFile) {
-      logger.warning(`unable to find the main dist file of component ${id}. Dist files: ${distFilesPaths.join(', ')}`);
+      logger.warn(
+        `unable to find the main dist file of component ${id}. Dist files: ${distFilesPathsNormalized.join(', ')}`
+      );
       return;
     }
     this.components[id].mainDistFile = this._makePathRelativeToProjectRoot(mainDistFile);
@@ -379,8 +382,6 @@ export default class BitMap {
     const existingPath = fromExists ? from : to;
     const isPathDir = isDir(existingPath);
     const allChanges = [];
-    from = pathNormalizeToLinux(from);
-    to = pathNormalizeToLinux(to);
     Object.keys(this.components).forEach((componentId) => {
       const componentMap: ComponentMap = this.components[componentId];
       const changes = isPathDir ? componentMap.updateDirLocation(from, to) : componentMap.updateFileLocation(from, to);
