@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
-import { mkdirp, isString, pathNormalizeToLinux } from '../../utils';
+import { mkdirp, isString, pathNormalizeToLinux, pathJoinLinux } from '../../utils';
 import BitJson from '../bit-json';
 import { Impl, Specs, Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -191,13 +191,20 @@ export default class Component {
   writePackageJson(driver: Driver, bitDir: string, force?: boolean = true): Promise<boolean> {
     const PackageJson = driver.getDriver().PackageJson;
     const name = `${this.box}/${this.name}`;
+    // In case there is dist files, we want to point the index to the dist file not to source.
+    // This important since when you require a module without specify file, it will give you the file specified under this key
+    // (or index.js if key not exists)
+    // We should improve this method of getting the main dist, because the main dist file name might be different than the source
+    // main file (for exmple with typescript compiler it will be main.js and main.ts)
+    const mainFile =
+      this.dists && !R.isEmpty(this.dists) ? pathJoinLinux(DEFAULT_DIST_DIRNAME, this.mainFile) : this.mainFile;
     // Replace all the / with - because / is not valid on package.json name key
     const validName = name.replace(/\//g, '-');
     const packageJson = new PackageJson(bitDir, {
       name: validName,
       version: `${this.version.toString()}.0.0`,
       homepage: this._getHomepage(),
-      main: this.mainFile,
+      main: mainFile,
       dependencies: this.packageDependencies,
       devDependencies: this.devPackageDependencies,
       peerDependencies: this.peerPackageDependencies,
