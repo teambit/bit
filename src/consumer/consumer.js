@@ -372,7 +372,7 @@ export default class Consumer {
     writtenComponents.forEach((component) => {
       componentsToBind[component.id.toString()] = bitMap.getComponent(component.id);
     });
-    this.bindComponents(componentsToBind);
+    this.bindComponents(componentsToBind, bitMap);
 
     await bitMap.write();
     return [...writtenComponents, ...writtenDependencies];
@@ -477,7 +477,17 @@ export default class Consumer {
     return components;
   }
 
-  bindComponents(bitMapComponents: BitMapComponents): Object[] {
+  bindComponents(bitMapComponents: BitMapComponents, bitMap: BitMap): Object[] {
+    const writeDependencyLink = (parentRootDir, bitId, rootDir) => {
+      const srcPath = path.join(this.getPath(), rootDir);
+      const relativeDestPath = path.join('node_modules', 'bit', bitId.box, bitId.name);
+      const destPath = path.join(this.getPath(), parentRootDir, relativeDestPath);
+      fs.removeSync(destPath); // in case a component has been moved
+      fs.ensureDirSync(path.dirname(destPath));
+      // Create a symlink at destPath pointing to srcPath.
+      symlinkOrCopy.sync(srcPath, destPath);
+    };
+
     return Object.keys(bitMapComponents).map((componentId) => {
       logger.debug(`binding component: ${componentId}`);
       const componentMap: ComponentMap = bitMapComponents[componentId];
@@ -489,6 +499,13 @@ export default class Consumer {
         fs.removeSync(linkPath); // in case a component has been moved
         fs.ensureDirSync(path.dirname(linkPath));
         symlinkOrCopy.sync(target, linkPath);
+        if (componentMap.dependencies) {
+          componentMap.dependencies.forEach((dependency) => {
+            const dependencyId = BitId.parse(dependency);
+            const dependencyComponentMap = bitMap.getComponent(dependencyId);
+            writeDependencyLink(componentMap.rootDir, dependencyId, dependencyComponentMap.rootDir);
+          });
+        }
         return { id: componentId, bound: [{ from: componentMap.rootDir, to: relativeLinkPath }] };
       }
       // const filesToBind = {
@@ -508,7 +525,7 @@ export default class Consumer {
     const componentsToBind = R.filter(nonNestedFilter, bitMap.getAllComponents());
     if (R.isEmpty(componentsToBind)) throw new Error('nothing to bind');
     fs.removeSync(path.join(this.getPath(), 'node_modules', 'bit')); // todo: move to bit-javascript
-    return this.bindComponents(componentsToBind);
+    return this.bindComponents(componentsToBind, bitMap);
   }
 
   composeRelativeBitPath(bitId: BitId): string {
