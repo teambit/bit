@@ -624,8 +624,7 @@ export default class Consumer {
     return remote ? this.deprecateRemote(bitIds) : this.deprecateLocal(bitIds);
   }
 
-  async removeRemote(ids: Array<BitId>, force: boolean) {
-    const bitIds = ids.map(bitId => BitId.parse(bitId));
+  async removeRemote(bitIds: Array<BitId>, force: boolean) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
     const remotes = await this.scope.remotes();
     const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
