@@ -699,10 +699,7 @@ export default class Scope {
     }
   }
 
-  writeToComponentsDir(
-    componentWithDependencies: ComponentWithDependencies[],
-    driver: Driver
-  ): Promise<ConsumerComponent[]> {
+  writeToComponentsDir(componentWithDependencies: ComponentWithDependencies[]): Promise<ConsumerComponent[]> {
     const componentsDir = this.getComponentsPath();
     const components: ConsumerComponent[] = flattenDependencies(componentWithDependencies);
 
@@ -713,7 +710,7 @@ export default class Scope {
     return Promise.all(
       components.map((component: ConsumerComponent) => {
         const bitPath = bitDirForConsumerImport(component);
-        return component.write({ bitDir: bitPath, driver });
+        return component.write({ bitDir: bitPath, withPackageJson: false });
       })
     );
   }
@@ -732,7 +729,7 @@ export default class Scope {
 
     return this.getMany(ids).then((componentDependenciesArr) => {
       const writeToProperDir = () => {
-        return this.writeToComponentsDir(componentDependenciesArr, consumer.driver);
+        return this.writeToComponentsDir(componentDependenciesArr);
       };
 
       return writeToProperDir().then((components: ConsumerComponent[]) => {
