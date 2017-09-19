@@ -21,7 +21,7 @@ import PathNotExists from './exceptions/path-not-exists';
 import EmptyDirectory from './exceptions/empty-directory';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 
-export default async function addAction(
+export default (async function addAction(
   componentPaths: string[],
   id?: string,
   main?: string,
@@ -135,6 +135,12 @@ export default async function addAction(
     if (id) {
       const existingComponentId = bitMap.getExistingComponentId(id);
       componentExists = !!existingComponentId;
+      if (componentExists && bitMap.getComponent(existingComponentId).origin === COMPONENT_ORIGINS.NESTED) {
+        throw new Error(`One of your dependencies (${existingComponentId}) has already the same namespace and name. 
+      If you're trying to add a new component, please choose a new namespace or name.
+      If you're trying to update a dependency component, please re-import it individually`);
+      }
+
       if (componentExists) id = existingComponentId;
       parsedId = BitId.parse(id);
     }
@@ -269,4 +275,4 @@ export default async function addAction(
   }
   await bitMap.write();
   return added;
-}
+});
