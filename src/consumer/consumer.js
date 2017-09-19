@@ -322,14 +322,14 @@ export default class Consumer {
           dep.writtenPath = depFromBitMap.rootDir;
           logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map`);
           bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
-          return Promise.resolve();
+          return Promise.resolve(dep);
         }
 
         if (dependenciesIdsCache[dependencyId]) {
           logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
           dep.writtenPath = dependenciesIdsCache[dependencyId];
           bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
-          return Promise.resolve();
+          return Promise.resolve(dep);
         }
 
         const depBitPath = this.composeDependencyPath(dep.id);
@@ -344,7 +344,8 @@ export default class Consumer {
             parent: componentWithDeps.component.id,
             consumerPath: this.getPath()
           })
-          .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap));
+          .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap))
+          .then(() => dep);
       });
 
       return Promise.all(writeDependenciesP);
@@ -367,15 +368,10 @@ export default class Consumer {
         linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
       )
     );
-
-    const componentsToBind = {};
-    writtenComponents.forEach((component) => {
-      componentsToBind[component.id.toString()] = bitMap.getComponent(component.id);
-    });
-    this.bindComponents(componentsToBind, bitMap);
-
     await bitMap.write();
-    return [...writtenComponents, ...writtenDependencies];
+    const allComponents = [...writtenComponents, ...R.flatten(writtenDependencies)];
+    this.bindComponents(allComponents, bitMap);
+    return allComponents;
   }
 
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
@@ -477,8 +473,8 @@ export default class Consumer {
     return components;
   }
 
-  bindComponents(bitMapComponents: BitMapComponents, bitMap: BitMap): Object[] {
-    const writeDependencyLink = (parentRootDir, bitId, rootDir) => {
+  bindComponents(components: Component[], bitMap: BitMap): Object[] {
+    const writeDependencyLink = (parentRootDir: string, bitId: BitId, rootDir: string) => {
       const srcPath = path.join(this.getPath(), rootDir);
       const relativeDestPath = path.join('node_modules', 'bit', bitId.box, bitId.name);
       const destPath = path.join(this.getPath(), parentRootDir, relativeDestPath);
@@ -486,27 +482,36 @@ export default class Consumer {
       fs.ensureDirSync(path.dirname(destPath));
       // Create a symlink at destPath pointing to srcPath.
       symlinkOrCopy.sync(srcPath, destPath);
+      return { from: parentRootDir, to: rootDir };
     };
 
-    return Object.keys(bitMapComponents).map((componentId) => {
+    const writeDependenciesLinks = (component, componentMap) => {
+      return component.dependencies.map((dependency) => {
+        const dependencyComponentMap = bitMap.getComponent(dependency.id);
+        return writeDependencyLink(componentMap.rootDir, dependency.id, dependencyComponentMap.rootDir);
+      });
+    };
+
+    return components.map((component) => {
+      const componentId = component.id;
       logger.debug(`binding component: ${componentId}`);
-      const componentMap: ComponentMap = bitMapComponents[componentId];
-      const parsedId = BitId.parse(componentId);
-      if (componentMap.rootDir) {
+      const componentMap: ComponentMap = bitMap.getComponent(componentId);
+      if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         const target = path.join(this.getPath(), componentMap.rootDir);
-        const relativeLinkPath = path.join('node_modules', 'bit', parsedId.box, parsedId.name);
+        const relativeLinkPath = path.join('node_modules', 'bit', componentId.box, componentId.name);
         const linkPath = path.join(this.getPath(), relativeLinkPath);
         fs.removeSync(linkPath); // in case a component has been moved
         fs.ensureDirSync(path.dirname(linkPath));
         symlinkOrCopy.sync(target, linkPath);
-        if (componentMap.dependencies) {
-          componentMap.dependencies.forEach((dependency) => {
-            const dependencyId = BitId.parse(dependency);
-            const dependencyComponentMap = bitMap.getComponent(dependencyId);
-            writeDependencyLink(componentMap.rootDir, dependencyId, dependencyComponentMap.rootDir);
-          });
+        const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
+        const boundDependencies = component.dependencies ? writeDependenciesLinks(component, componentMap) : [];
+        return { id: componentId, bound: bound.concat(boundDependencies) };
+      }
+      if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+        if (component.dependencies) {
+          const bound = writeDependenciesLinks(component, componentMap);
+          return { id: componentId, bound };
         }
-        return { id: componentId, bound: [{ from: componentMap.rootDir, to: relativeLinkPath }] };
       }
       // const filesToBind = {
       //   name: parsedId.name,
@@ -521,11 +526,12 @@ export default class Consumer {
 
   async bindAll() {
     const bitMap = await this.getBitMap();
-    const nonNestedFilter = component => component.origin !== COMPONENT_ORIGINS.NESTED;
-    const componentsToBind = R.filter(nonNestedFilter, bitMap.getAllComponents());
-    if (R.isEmpty(componentsToBind)) throw new Error('nothing to bind');
+    const componentsMaps = bitMap.getAllComponents();
+    if (R.isEmpty(componentsMaps)) throw new Error('nothing to bind');
+    const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));
+    const components = await this.loadComponents(componentsIds);
     fs.removeSync(path.join(this.getPath(), 'node_modules', 'bit')); // todo: move to bit-javascript
-    return this.bindComponents(componentsToBind, bitMap);
+    return this.bindComponents(components, bitMap);
   }
 
   composeRelativeBitPath(bitId: BitId): string {
