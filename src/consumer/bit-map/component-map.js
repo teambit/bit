@@ -70,6 +70,8 @@ export default class ComponentMap {
   }
 
   updateFileLocation(fileFrom: string, fileTo: string): Array<Object> {
+    fileFrom = pathNormalizeToLinux(fileFrom);
+    fileTo = pathNormalizeToLinux(fileTo);
     const currentFile = this._findFile(fileFrom);
     const changes = [];
     if (currentFile) {
@@ -84,12 +86,15 @@ export default class ComponentMap {
   }
 
   updateDirLocation(dirFrom: string, dirTo: string) {
+    dirFrom = pathNormalizeToLinux(dirFrom);
+    dirTo = pathNormalizeToLinux(dirTo);
     const changes = [];
     if (this.rootDir && this.rootDir.startsWith(dirFrom)) {
       const newRootDir = this.rootDir.replace(dirFrom, dirTo);
-      changes.push({ from: this.rootDir, to: newRootDir });
-      logger.debug(`updating rootDir location from ${this.rootDir} to ${newRootDir}`);
-      this.rootDir = newRootDir;
+      const newRootDirNormalized = pathNormalizeToLinux(newRootDir);
+      changes.push({ from: this.rootDir, to: newRootDirNormalized });
+      logger.debug(`updating rootDir location from ${this.rootDir} to ${newRootDirNormalized}`);
+      this.rootDir = newRootDirNormalized;
       return changes;
     }
     this.files.forEach((file) => {
