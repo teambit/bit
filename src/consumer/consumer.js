@@ -492,6 +492,15 @@ export default class Consumer {
       });
     };
 
+    const writeMissingLinks = (component, componentMap) => {
+      return component.missingDependencies.missingLinks.map((dependencyIdStr) => {
+        const dependencyId = bitMap.getExistingComponentId(dependencyIdStr);
+        if (!dependencyId) return null;
+        const dependencyComponentMap = bitMap.getComponent(dependencyId);
+        return writeDependencyLink(componentMap.rootDir, BitId.parse(dependencyId), dependencyComponentMap.rootDir);
+      });
+    };
+
     return components.map((component) => {
       const componentId = component.id;
       logger.debug(`binding component: ${componentId}`);
@@ -505,7 +514,11 @@ export default class Consumer {
         symlinkOrCopy.sync(target, linkPath);
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
         const boundDependencies = component.dependencies ? writeDependenciesLinks(component, componentMap) : [];
-        return { id: componentId, bound: bound.concat(boundDependencies) };
+        const boundMissingDependencies =
+          component.missingDependencies && component.missingDependencies.missingLinks
+            ? writeMissingLinks(component, componentMap)
+            : [];
+        return { id: componentId, bound: bound.concat([...boundDependencies, ...boundMissingDependencies]) };
       }
       if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         if (component.dependencies) {
