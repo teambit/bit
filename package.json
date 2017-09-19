@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "^0.10.4-dev.2",
+    "bit-javascript": "0.10.4-dev.3",
     "buffer-from": "^0.1.1",
     "camelcase": "^4.0.0",
     "chalk": "^2.1.0",

@@ -140,6 +140,7 @@ function findComponentsOfDepsFiles(
 
 // todo: move to bit-javascript
 function getComponentNameFromRequirePath(requirePath: string): string {
+  requirePath = pathNormalizeToLinux(requirePath);
   const prefix = requirePath.includes('node_modules') ? 'node_modules/bit/' : 'bit/';
   const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
   const pathSplit = withoutPrefix.split('/');
