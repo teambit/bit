@@ -242,7 +242,7 @@ describe('bit show command', function () {
     });
   });
 
-  describe('show regular/deprecated remote component', () => {
+  describe('show deprecated remote component', () => {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -255,6 +255,16 @@ describe('bit show command', function () {
       helper.deprecateComponent(`${helper.remoteScope}/bar/foo`, '-r');
       output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j`));
       expect(output).to.include({ deprecated: true });
+    });
+  });
+  describe('show deprecated remote component', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportAllComponents();
     });
     it('should show regular component', () => {
       output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j`));

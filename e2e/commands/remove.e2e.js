@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe.only('bit remove command', function () {
+describe('bit remove command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
   });
-  describe('with local scope and commited components', () => {
+  describe('with commited components and -t=false ', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
@@ -23,26 +23,31 @@ describe.only('bit remove command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.not.have.property('bar/foo');
     });
-    it('should removed component from commited components back to new', () => {
+    it('removed component should not be in new component when checking status', () => {
       const listOutput = helper.listLocalScope('bar/foo');
       expect(listOutput).to.not.contain.string('bar/foo');
       const status = helper.runCmd('bit status');
-      expect(status.includes('new components')).to.be.true;
-      expect(status.includes('bar/foo')).to.be.true;
+      expect(status.includes('bar/foo')).to.be.false;
     });
   });
-  describe('with local scope and commited components', () => {
-    let output;
+  describe('with commited components and -t=true', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      output = helper.removeComponent('bar/foo', '-t');
+      helper.removeComponent('bar/foo', '-t');
     });
     it('should  show in bitmap', () => {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('bar/foo');
+    });
+    it('removed component should  be in new component', () => {
+      const listOutput = helper.listLocalScope('bar/foo');
+      expect(listOutput).to.not.contain.string('bar/foo');
+      const status = helper.runCmd('bit status');
+      expect(status.includes('new components')).to.be.true;
+      expect(status.includes('bar/foo')).to.be.true;
     });
   });
   describe('with remote scope without dependencies', () => {
@@ -102,7 +107,7 @@ describe.only('bit remove command', function () {
       expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple@latest`);
     });
   });
-  describe('with imported components with dependecies', () => {
+  describe.skip('with imported components with dependecies', () => {
     let bitMap;
     let output;
     before(() => {
