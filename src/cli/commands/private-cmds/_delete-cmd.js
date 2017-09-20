@@ -3,7 +3,7 @@ import Command from '../../command';
 import { remove } from '../../../api/scope';
 import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 
-export default class DeprecatePrivate extends Command {
+export default class Delete extends Command {
   name = '_delete <path> <args>';
   private = true;
   description = 'remove a component from a scope';
