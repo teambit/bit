@@ -683,7 +683,7 @@ export default class Consumer {
     if (!track && removedIds.bitIds) {
       const bitMap = await this.getBitMap();
       removedIds.bitIds.forEach((id) => {
-        bitMap.removeComponent(id);
+        bitMap.removeComponent(BitId.parse(id));
       });
       await bitMap.write();
     }

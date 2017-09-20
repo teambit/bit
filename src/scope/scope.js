@@ -544,7 +544,7 @@ export default class Scope {
    */
   async removeSingle(bitId: BitId): Promise<string> {
     await this.sources.clean(bitId);
-    return bitId;
+    return bitId.toString();
   }
 
   async deprecateSingle(bitId: BitId): Promise<string> {
@@ -552,7 +552,7 @@ export default class Scope {
     component.deprecated = true;
     this.objects.add(component);
     await this.objects.persist();
-    return bitId;
+    return component.id();
   }
   /**
    * findDependentBits
@@ -595,19 +595,19 @@ export default class Scope {
    * Remove components from scope
    * @force Boolean  - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: Array<BitId>, force: boolean): Promise<any> {
+  async removeMany(bitIds: Array<BitId>, force: boolean, local: boolean = false): Promise<any> {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId));
 
     if (force) {
       const removedComponents = await Promise.all(removeComponents());
-      await postRemoveHook({ ids: removedComponents.map(id => id.toStringWithoutVersion()) });
-      return { bitIds: removedComponents, missingComponents };
+      await postRemoveHook({ ids: removedComponents });
+      return { bitIds: removedComponents };
     }
     const dependentBits = await this.findDependentBits(foundComponents);
     if (R.isEmpty(dependentBits)) {
       const removedComponents = await Promise.all(removeComponents());
-      await postRemoveHook({ ids: removedComponents.map(id => id.toStringWithoutVersion()) });
+      await postRemoveHook({ ids: removedComponents });
       return { bitIds: removedComponents, missingComponents };
     }
     return { dependentBits, missingComponents };
@@ -619,7 +619,7 @@ export default class Scope {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const deprecateComponents = () => foundComponents.map(async bitId => this.deprecateSingle(bitId));
     const deprecatedComponents = await Promise.all(deprecateComponents());
-    await postDeprecateHook({ ids: deprecatedComponents.map(id => id.toStringWithoutVersion()) });
+    await postDeprecateHook({ ids: deprecatedComponents });
     return { bitIds: deprecatedComponents, missingComponents };
   }
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
