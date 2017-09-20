@@ -146,22 +146,14 @@ export default class BitMap {
   }
 
   /**
-   * When the given id doesn't include scope-name, there might be a similar component in bit.map with scope-name, use it
-   * only when the origin is imported or author, as we don't allow to update nested component.
+   * When the given id doesn't include scope-name, there might be a similar component in bit.map with scope-name
    */
-  getExistingComponentId(componentIdStr: string): string | boolean {
+  getExistingComponentId(componentIdStr: string): ?string {
     if (this.components[componentIdStr]) return componentIdStr;
-    if (BitId.parse(componentIdStr).scope) return false; // given id has scope, it should have been an exact match
-    const foundId = Object.keys(this.components).find((component) => {
+    if (BitId.parse(componentIdStr).scope) return undefined; // given id has scope, it should have been an exact match
+    return Object.keys(this.components).find((component) => {
       return BitId.parse(component).toStringWithoutScopeAndVersion() === componentIdStr;
     });
-    if (!foundId) return false;
-    if (this.components[foundId].origin === COMPONENT_ORIGINS.NESTED) {
-      throw new Error(`One of your dependencies (${foundId}) has already the same namespace and name. 
-      If you're trying to add a new component, please choose a new namespace or name.
-      If you're trying to update a dependency component, please re-import it individually`);
-    }
-    return foundId;
   }
 
   addComponent({
