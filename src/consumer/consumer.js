@@ -521,19 +521,21 @@ export default class Consumer {
         return { id: componentId, bound: bound.concat([...boundDependencies, ...boundMissingDependencies]) };
       }
       if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-        if (component.dependencies) {
-          const bound = writeDependenciesLinks(component, componentMap);
-          return { id: componentId, bound };
-        }
+        if (!component.dependencies) return { id: componentId, bound: [] };
+        const bound = writeDependenciesLinks(component, componentMap);
+        return { id: componentId, bound };
       }
-      // const filesToBind = {
-      //   name: parsedId.name,
-      //   namespace: parsedId.box,
-      //   files: componentMap.getFilesRelativeToConsumer(),
-      //   mainFile: componentMap.getMainFileRelativeToConsumer()
-      // };
-      // todo: implement
-      return { id: componentId, bound: [] };
+
+      // origin is AUTHORED
+      const filesToBind = componentMap.getFilesRelativeToConsumer();
+      const bound = filesToBind.map((file) => {
+        const dest = path.join('node_modules', 'bit', componentId.box, componentId.name, file);
+        const destRelative = path.relative(path.dirname(dest), file);
+        const fileContent = `module.exports = require('${destRelative}');`;
+        fs.outputFileSync(dest, fileContent);
+        return { from: dest, to: file };
+      });
+      return { id: componentId, bound };
     });
   }
 
