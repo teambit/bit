@@ -14,7 +14,7 @@ export default class Export extends Command {
   loader = true;
 
   action([remote, ids]: [string, string[]], { forget }: any): Promise<*> {
-    return exportAction(ids, remote, !forget).then(id => ({ id, remote }));
+    return exportAction(ids, remote, !forget).then(componentId => ({ componentId, remote }));
   }
 
   report({ componentId, remote }: { componentId: BitId | BitId[], remote: string }): string {
