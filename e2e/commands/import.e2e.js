@@ -1363,6 +1363,49 @@ describe('bit import', function () {
     });
   });
 
+  describe('import the same component ("is-type") as an indirect dependency (of "is-string") and as a direct dependency with a newer version', () => {
+    // in other words, is-type@1 is a direct dependency of is-string, and the bit.json have these two components:
+    // is-string@1 and is-type@2. After the import we expect to have both is-type versions (1 and 2), and is-string to
+    // work with the v1 of is-type.
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const isTypeFixtureV1 = "module.exports = function isType() { return 'got is-type v1'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixtureV1);
+      helper.addComponent(path.normalize('utils/is-type.js'));
+      const isStringFixture =
+        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent(path.normalize('utils/is-string.js'));
+      helper.commitAllComponents();
+
+      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // update component
+      helper.commitAllComponents();
+
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+
+      const bitJson = helper.readBitJson();
+      bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '1';
+      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '2';
+      helper.writeBitJson(bitJson);
+      helper.runCmd('bit import');
+    });
+    it('should successfully print results of is-type@1 when requiring it indirectly by is-string', () => {
+      const appJsFixture = "const isString = require('bit/utils/is-string'); console.log(isString());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type v1 and got is-string');
+    });
+    it('should successfully print results of is-type@2 when requiring it directly', () => {
+      const appJsFixture = "const isType = require('bit/utils/is-type'); console.log(isType());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type v2');
+    });
+  });
+
   describe('import component is-type as a dependency of is-string and then import is-type directly', () => {
     let localConsumerFiles;
     before(() => {

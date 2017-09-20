@@ -177,7 +177,7 @@ export default class BitMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
     if (isDependency) {
-      if (!parent) throw new Error(`Unable to add indirect dependency ${componentId}, without "parent" parameter`);
+      if (!parent) throw new Error(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`);
       this.addDependencyToParent(parent, componentIdStr);
     }
     if (this.components[componentIdStr]) {
