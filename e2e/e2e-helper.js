@@ -189,6 +189,13 @@ export default class Helper {
     return this.runCmd(`bit import ${this.remoteScope}/${id}`);
   }
 
+  importComponentWithOptions(id: string = 'bar/foo.js', options: ?Object) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit import ${this.remoteScope}/${id} ${value}`);
+  }
+
   createCompiler() {
     if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
 
@@ -266,6 +273,12 @@ export default class Helper {
     const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
     const filePath = path.join(this.localScopePath, namespace, name);
     fs.outputFileSync(filePath, fixture);
+  }
+
+  addNpmPackage(name: string = 'lodash.get', version: string = '4.4.2') {
+    const packageJsonFixture = JSON.stringify({ name, version });
+    this.createFile(`node_modules/${name}`, 'index.js');
+    this.createFile(`node_modules/${name}`, 'package.json', packageJsonFixture);
   }
 
   createFile(folder: string = 'bar', name: string = 'foo.js', impl?: string) {

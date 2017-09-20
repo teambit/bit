@@ -18,14 +18,16 @@ export default (async function importAction({
   compiler,
   verbose,
   prefix,
-  environment
+  environment,
+  withPackageJson
 }: {
   ids: string,
   tester: ?boolean,
   compiler: ?boolean,
   verbose: ?boolean,
   prefix: ?string,
-  environment: ?boolean
+  environment: ?boolean,
+  withPackageJson: ?boolean
 }): Promise<any> {
   async function importEnvironment(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
@@ -54,7 +56,14 @@ export default (async function importAction({
     return importEnvironment(consumer);
   }
   const cache = false;
-  const { dependencies, envDependencies } = await consumer.import(ids, verbose, environment, cache, prefix);
+  const { dependencies, envDependencies } = await consumer.import(
+    ids,
+    verbose,
+    environment,
+    cache,
+    prefix,
+    withPackageJson
+  );
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const bitMap = await consumer.getBitMap();
   const notAuthored = (bitId) => {

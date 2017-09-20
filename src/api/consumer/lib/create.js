@@ -32,7 +32,7 @@ export default (async function create(
     consumer.scope
   );
   const bitMap = await BitMap.load(consumer.getPath());
-  await component.write({ withBitJson, force, bitMap, origin: COMPONENT_ORIGINS.AUTHORED });
+  await component.write({ withBitJson, force, bitMap, driver: consumer.driver, origin: COMPONENT_ORIGINS.AUTHORED });
   await bitMap.write();
   // await consumer.driver.runHook('onCreate', component);
   return component;

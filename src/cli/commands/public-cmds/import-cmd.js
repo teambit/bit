@@ -18,7 +18,8 @@ export default class Import extends Command {
     ['c', 'compiler', 'import a compiler environment component'],
     ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
     ['p', 'prefix <prefix>', 'import components into a specific directory'],
-    ['d', 'display_dependencies', 'display the imported dependencies']
+    ['d', 'display_dependencies', 'display the imported dependencies'],
+    ['', 'no_package_json', 'do not generate package.json for the imported component(s)']
   ];
   loader = true;
 
@@ -30,14 +31,16 @@ export default class Import extends Command {
       verbose,
       prefix,
       display_dependencies,
-      environment
+      environment,
+      no_package_json = false
     }: {
       tester?: boolean,
       compiler?: boolean,
       verbose?: boolean,
       prefix?: string,
       display_dependencies?: boolean,
-      environment?: boolean
+      environment?: boolean,
+      no_package_json?: boolean
     }
   ): Promise<any> {
     // @TODO - import should support multiple components
@@ -45,9 +48,15 @@ export default class Import extends Command {
       throw new Error('you cant use tester and compiler flags combined');
     }
 
-    return importAction({ ids, tester, compiler, verbose, prefix, environment }).then(importResults =>
-      R.assoc('display_dependencies', display_dependencies, importResults)
-    );
+    return importAction({
+      ids,
+      tester,
+      compiler,
+      verbose,
+      prefix,
+      environment,
+      withPackageJson: !no_package_json
+    }).then(importResults => R.assoc('display_dependencies', display_dependencies, importResults));
   }
 
   report({

@@ -26,6 +26,7 @@ import SourcesRepository from './repositories/sources';
 import { postExportHook, postImportHook, postDeprecateHook, postRemoveHook } from '../hooks';
 import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
+import Driver from '../driver';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
 import {
@@ -793,7 +794,7 @@ export default class Scope {
     return Promise.all(
       components.map((component: ConsumerComponent) => {
         const bitPath = bitDirForConsumerImport(component);
-        return component.write({ bitDir: bitPath });
+        return component.write({ bitDir: bitPath, withPackageJson: false });
       })
     );
   }

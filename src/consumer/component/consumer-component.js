@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
-import { mkdirp, isString, pathNormalizeToLinux } from '../../utils';
+import { mkdirp, isString, pathNormalizeToLinux, pathJoinLinux } from '../../utils';
 import BitJson from '../bit-json';
 import { Impl, Specs, Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -23,6 +23,7 @@ import type { ComponentMapFile } from '../bit-map/component-map';
 import ComponentMap from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
+import { Driver } from '../driver';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
 import {
@@ -40,6 +41,7 @@ export type ComponentProps = {
   version?: ?number,
   scope?: ?string,
   lang?: string,
+  mainFile?: string,
   compilerId?: ?BitId,
   testerId?: ?BitId,
   dependencies?: ?BitIds,
@@ -167,6 +169,12 @@ export default class Component {
     return R.mergeAll(this.dependencies.map(dependency => dependency.id.toObject()));
   }
 
+  _getHomepage() {
+    // TODO: Validate somehow that this scope is really on bitsrc (maybe check if it contains . ?)
+    const homepage = this.scope ? `https://bitsrc.io/${this.scope}/${this.box}/${this.name}` : undefined;
+    return homepage;
+  }
+
   static _dependenciesFromWritableObject(dependencies) {
     return BitIds.fromObject(dependencies).map(dependency => ({ id: dependency }));
   }
@@ -181,6 +189,31 @@ export default class Component {
       dependencies: this._dependenciesAsWritableObject(),
       packageDependencies: this.packageDependencies
     }).write({ bitDir, override: force });
+  }
+
+  writePackageJson(driver: Driver, bitDir: string, force?: boolean = true): Promise<boolean> {
+    const PackageJson = driver.getDriver().PackageJson;
+    const name = `${this.box}/${this.name}`;
+    // In case there is dist files, we want to point the index to the dist file not to source.
+    // This important since when you require a module without specify file, it will give you the file specified under this key
+    // (or index.js if key not exists)
+    // We should improve this method of getting the main dist, because the main dist file name might be different than the source
+    // main file (for exmple with typescript compiler it will be main.js and main.ts)
+    const mainFile =
+      this.dists && !R.isEmpty(this.dists) ? pathJoinLinux(DEFAULT_DIST_DIRNAME, this.mainFile) : this.mainFile;
+    // Replace all the / with - because / is not valid on package.json name key
+    const validName = name.replace(/\//g, '-');
+    const packageJson = new PackageJson(bitDir, {
+      name: validName,
+      version: `${this.version.toString()}.0.0`,
+      homepage: this._getHomepage(),
+      main: mainFile,
+      dependencies: this.packageDependencies,
+      devDependencies: this.devPackageDependencies,
+      peerDependencies: this.peerPackageDependencies,
+      componentRootFolder: bitDir
+    });
+    return packageJson.write({ override: force });
   }
 
   dependencies(): BitIds {
@@ -268,11 +301,18 @@ export default class Component {
     }
   }
 
-  async _writeToComponentDir(bitDir: string, withBitJson: boolean, force?: boolean = true) {
+  async _writeToComponentDir(
+    bitDir: string,
+    withBitJson: boolean,
+    withPackageJson: boolean,
+    driver: Driver,
+    force?: boolean = true
+  ) {
     await mkdirp(bitDir);
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
+    if (withPackageJson) await this.writePackageJson(driver, bitDir, force);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
     logger.debug('component has been written successfully');
     return this;
@@ -301,19 +341,23 @@ export default class Component {
   async write({
     bitDir,
     withBitJson = true,
+    withPackageJson = true,
     force = true,
     bitMap,
     origin,
     parent,
-    consumerPath
+    consumerPath,
+    driver
   }: {
     bitDir?: string,
     withBitJson?: boolean,
+    withPackageJson?: boolean,
     force?: boolean,
     bitMap?: BitMap,
     origin?: string,
     parent?: BitId,
-    consumerPath?: string
+    consumerPath?: string,
+    driver?: Driver
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     // Take the bitdir from the files (it will be the same for all the files of course)
@@ -327,15 +371,14 @@ export default class Component {
     // otherwise, check whether this component is in bitMap:
     // if it's there, write the files according to the paths in bit.map.
     // Otherwise, write to bitDir and update bitMap with the new paths.
-    if (!bitMap) return this._writeToComponentDir(calculatedBitDir, withBitJson, force);
+    if (!bitMap) return this._writeToComponentDir(calculatedBitDir, withBitJson, withPackageJson, driver, force);
 
     const idWithoutVersion = this.id.toStringWithoutVersion();
     const componentMap = bitMap.getComponent(idWithoutVersion, false);
     if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
-
     if (!componentMap) {
       // if there is no componentMap, the component is new to this project and should be written to bit.map
-      await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
+      await this._writeToComponentDir(calculatedBitDir, withBitJson, withPackageJson, driver, force);
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
       return this;
     }
@@ -352,7 +395,7 @@ export default class Component {
     if (origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       // when a user imports a component that was a dependency before, write the component directly into the components
       // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
-      await this._writeToComponentDir(calculatedBitDir, withBitJson, force);
+      await this._writeToComponentDir(calculatedBitDir, withBitJson, withPackageJson, driver, force);
       // todo: remove from the file system
       bitMap.removeComponent(this.id.toString());
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
@@ -362,7 +405,10 @@ export default class Component {
     const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
     this.writtenPath = newBase;
     this.files.forEach(file => file.updatePaths({ newBase }));
-    await this._writeToComponentDir(newBase, withBitJson, force);
+    // Don't write the package.json for an authored component, because it's dependencies probably managed
+    // By the root packge.json
+    const actualWithPackageJson = withPackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
+    await this._writeToComponentDir(newBase, withBitJson, actualWithPackageJson, driver, force);
 
     if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
 
