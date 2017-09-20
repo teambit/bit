@@ -12,7 +12,19 @@ export default (component: ConsumerComponent) => {
     wordWrap: true
   });
 
-  const { name, box, lang, compilerId, testerId, dependencies, packageDependencies, docs, files, mainFile } = component;
+  const {
+    name,
+    box,
+    lang,
+    compilerId,
+    testerId,
+    dependencies,
+    packageDependencies,
+    docs,
+    files,
+    mainFile,
+    deprecated
+  } = component;
 
   const rows = [
     { [c.cyan('ID')]: `${box}/${name}` },
@@ -24,7 +36,8 @@ export default (component: ConsumerComponent) => {
       ? { [c.cyan('Dependencies')]: dependencies.map(dependency => dependency.id.toString()).join(',\n') }
       : null,
     !R.isEmpty(packageDependencies) ? { [c.cyan('Packages')]: Object.keys(packageDependencies).join(',\n') } : null,
-    !R.isEmpty(files) ? { [c.cyan('Files')]: files.map(file => normalize(file.relative)).join(',\n') } : null
+    !R.isEmpty(files) ? { [c.cyan('Files')]: files.map(file => normalize(file.relative)).join(',\n') } : null,
+    deprecated ? { [c.cyan('Deprecated')]: c.red('True') } : null
   ].filter(x => x);
 
   table.push(...rows);

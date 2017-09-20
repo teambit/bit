@@ -5,15 +5,15 @@ import BitMap from '../../../consumer/bit-map';
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 
-export default async function untrack(componentIds: string[]): Promise<Object> {
+export default (async function untrack(componentIds: string[]): Promise<Object> {
   const untrackedComponents = [];
   const missing = [];
   const unRemovableComponents = [];
   const consumer: Consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
   const componentsList = new ComponentsList(consumer);
-  const newComponents = (await componentsList.listNewComponents(false))
-  
+  const newComponents = await componentsList.listNewComponents(false);
+
   if (R.isEmpty(componentIds)) {
     newComponents.forEach(componentId => bitMap.removeComponent(componentId));
     await bitMap.write();
@@ -29,4 +29,4 @@ export default async function untrack(componentIds: string[]): Promise<Object> {
   });
   await bitMap.write();
   return { untrackedComponents, unRemovableComponents, missingComponents: missing };
-}
+});

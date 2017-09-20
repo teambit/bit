@@ -47,6 +47,7 @@
     "fs-extra": "^4.0.1",
     "fstream": "^1.0.10",
     "glob": "^7.1.1",
+    "group-array": "^0.3.3",
     "is-array-buffer-x": "^1.0.13",
     "is-glob": "^4.0.0",
     "jfs": "^0.2.6",

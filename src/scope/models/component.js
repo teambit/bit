@@ -23,7 +23,8 @@ export type ComponentProps = {
   box?: string,
   name: string,
   versions?: { [number]: Ref },
-  lang?: string
+  lang?: string,
+  deprecated: boolean
 };
 
 export default class Component extends BitObject {
@@ -32,6 +33,7 @@ export default class Component extends BitObject {
   box: string;
   versions: { [number]: Ref };
   lang: string;
+  deprecated: boolean;
 
   constructor(props: ComponentProps) {
     super();
@@ -40,6 +42,7 @@ export default class Component extends BitObject {
     this.box = props.box || DEFAULT_BOX_NAME;
     this.versions = props.versions || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
+    this.deprecated = props.deprecated || false;
   }
 
   get versionArray(): Ref[] {
@@ -107,7 +110,8 @@ export default class Component extends BitObject {
       name: this.name,
       scope: this.scope,
       versions: versions(this.versions),
-      lang: this.lang
+      lang: this.lang,
+      deprecated: this.deprecated
     };
   }
 
@@ -191,7 +195,8 @@ export default class Component extends BitObject {
           docs: version.docs,
           license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
           specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
-          log
+          log,
+          deprecated: this.deprecated
         });
       });
     });
@@ -218,7 +223,8 @@ export default class Component extends BitObject {
       box: rawComponent.box,
       scope: rawComponent.scope,
       versions: mapObject(rawComponent.versions, val => Ref.from(val)),
-      lang: rawComponent.lang
+      lang: rawComponent.lang,
+      deprecated: rawComponent.deprecated
     });
   }
 

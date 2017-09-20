@@ -140,6 +140,23 @@ export default class SSH implements Network {
     });
   }
 
+  deleteMany(bitIds: string, force: boolean): Promise<ComponentObjects[]> {
+    return this.exec('_delete', {
+      bitIds: bitIds.map(id => id.toStringWithoutVersion()),
+      force
+    }).then((data: string) => {
+      const { payload } = this._unpack(data);
+      return Promise.resolve(payload);
+    });
+  }
+  deprecateMany(bitIds: string): Promise<ComponentObjects[]> {
+    return this.exec('_deprecate', {
+      bitIds: bitIds.map(x => x.toStringWithoutVersion())
+    }).then((data: string) => {
+      const { payload } = this._unpack(data);
+      return Promise.resolve(payload);
+    });
+  }
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
     return this.pushMany([componentObjects]);
   }

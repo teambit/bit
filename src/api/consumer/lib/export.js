@@ -44,7 +44,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
   return idsToExport;
 }
 
-export default async function exportAction(ids?: string[], remote: string, save: ?boolean) {
+export default (async function exportAction(ids?: string[], remote: string, save: ?boolean) {
   const consumer: Consumer = await loadConsumer();
   const idsToExport = await getComponentsToExport(ids, consumer, remote);
   // todo: what happens when some failed? we might consider avoid Promise.all
@@ -74,4 +74,4 @@ export default async function exportAction(ids?: string[], remote: string, save:
   components.map(component => bitMap.updateComponentId(component.id));
   await bitMap.write();
   return components;
-}
+});

@@ -43,6 +43,7 @@ export default class List extends Command {
     if (R.isEmpty(components)) {
       return chalk.white(`${decideHeaderSentence()}`);
     }
+
     if (ids) return JSON.stringify(components.map(c => c.id.toString()));
     // TODO - use a cheaper list for ids flag (do not fetch versions at all) @!IMPORTANT
     return decideHeaderSentence() + (bare ? bareListTemplate(components) : listTemplate(components));

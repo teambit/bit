@@ -1,6 +1,7 @@
 import init from './lib/init';
 import create from './lib/create';
 import remove from './lib/remove';
+import deprecate from './lib/deprecate';
 import listScope from './lib/list-scope';
 import { commitAction, commitAllAction } from './lib/commit';
 import status from './lib/status';
@@ -27,6 +28,7 @@ export {
   exportAction,
   create,
   remove,
+  deprecate,
   buildAll,
   listScope,
   commitAction,

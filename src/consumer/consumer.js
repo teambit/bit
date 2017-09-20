@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import groupArray from 'group-array';
 import fs from 'fs-extra';
 import R from 'ramda';
 import chalk from 'chalk';
@@ -158,13 +159,15 @@ export default class Consumer {
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
+      const componentModule = await this.scope.sources.get(id);
       const component = Component.loadFromFileSystem({
         bitDir,
         consumerBitJson: this.bitJson,
         componentMap,
         id: idWithConcreteVersion,
         consumerPath: this.getPath(),
-        bitMap
+        bitMap,
+        deprecated: componentModule ? componentModule.deprecated : false
       });
       if (bitMap.hasChanged) await bitMap.write();
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
@@ -655,5 +658,51 @@ export default class Consumer {
         )
       );
     });
+  }
+  async deprecateRemote(bitIds: Array<BitId>) {
+    const groupedBitsByScope = groupArray(bitIds, 'scope');
+    const remotes = await this.scope.remotes();
+    const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
+      const resolvedRemote = await remotes.resolve(scopeName, this.scope);
+      const deprecateResult = await resolvedRemote.deprecateMany(groupedBitsByScope[scopeName]);
+      return deprecateResult;
+    });
+    const deprecatedComponentsResult = await Promise.all(deprecateP);
+    return deprecatedComponentsResult;
+  }
+  async deprecateLocal(bitIds: Array<BitId>) {
+    return this.scope.deprecateMany(bitIds);
+  }
+  async deprecate(ids: string[], remote: boolean) {
+    const bitIds = ids.map(bitId => BitId.parse(bitId));
+    return remote ? this.deprecateRemote(bitIds) : this.deprecateLocal(bitIds);
+  }
+
+  async removeRemote(bitIds: Array<BitId>, force: boolean) {
+    const groupedBitsByScope = groupArray(bitIds, 'scope');
+    const remotes = await this.scope.remotes();
+    const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
+      const resolvedRemote = await remotes.resolve(key, this.scope);
+      const result = await resolvedRemote.deleteMany(groupedBitsByScope[key], force);
+      return result;
+    });
+    const removedObj = await Promise.all(removeP);
+    return removedObj;
+  }
+  async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean) {
+    // local remove in case user wants to delete commited components
+    const removedIds = await this.scope.removeMany(bitIds, force);
+    if (!track && removedIds.bitIds) {
+      const bitMap = await this.getBitMap();
+      removedIds.bitIds.forEach((id) => {
+        bitMap.removeComponent(BitId.parse(id));
+      });
+      await bitMap.write();
+    }
+    return removedIds;
+  }
+  async remove(ids: string[], remote: boolean, force: boolean, track: boolean) {
+    const bitIds = ids.map(bitId => BitId.parse(bitId));
+    return remote ? this.removeRemote(bitIds, force) : this.removeLocal(bitIds, force, track);
   }
 }

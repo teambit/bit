@@ -7,8 +7,12 @@ export const formatNewBit = ({ box, name }: any): string => c.white('     > ') +
 export const formatBit = ({ scope, box, name, version }: any): string =>
   c.white('     > ') + c.cyan(`${scope ? `${scope}/` : ''}${box}/${name} - ${version ? version.toString() : 'latest'}`);
 
-export const formatPlainComponentItem = ({ scope, box, name, version }: any): string =>
-  c.cyan(`- ${scope ? `${scope}/` : ''}${box}/${name}@${version ? version.toString() : 'latest'}`);
+export const formatPlainComponentItem = ({ scope, box, name, version, deprecated }: any): string =>
+  c.cyan(
+    `- ${scope ? `${scope}/` : ''}${box}/${name}@${version ? version.toString() : 'latest'}  ${deprecated
+      ? c.yellow('[Deprecated]')
+      : ''}`
+  );
 
 export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);
 

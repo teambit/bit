@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- remove feature for removing local and remote components
+- deprecate feature for deprecating local and remote components
 - support requiring imported components using `require('bit/namespace/name')` syntax
 - save all dependencies on one configurable directory (components/.dependencies by default) 
 - move a re-imported component to a new location when `bit import --prefix` is used

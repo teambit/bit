@@ -23,7 +23,7 @@ import { Repository, Ref, BitObject } from './objects';
 import ComponentWithDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
-import { postExportHook, postImportHook } from '../hooks';
+import { postExportHook, postImportHook, postDeprecateHook, postRemoveHook } from '../hooks';
 import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
 import Driver from '../driver';
@@ -539,6 +539,90 @@ export default class Scope {
     return Promise.all(versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects)));
   }
 
+  /**
+   * Remove or deprecate single component
+   * @removeComponent - boolean - true if you want to remove component
+   */
+  async removeSingle(bitId: BitId): Promise<string> {
+    await this.sources.clean(bitId);
+    return bitId.toString();
+  }
+
+  async deprecateSingle(bitId: BitId): Promise<string> {
+    const component = await this.sources.get(bitId);
+    component.deprecated = true;
+    this.objects.add(component);
+    await this.objects.persist();
+    return component.id();
+  }
+  /**
+   * findDependentBits
+   * foreach component in array find the componnet that uses that component
+   */
+  async findDependentBits(bitIds: Array<BitId>): Promise<Array<object>> {
+    const allComponents = await this.objects.listComponents();
+    const allConsumerComponents = await this.toConsumerComponents(allComponents);
+    const dependentBits = {};
+    bitIds.forEach((bitId) => {
+      const dependencies = [];
+      allConsumerComponents.forEach((stagedComponent) => {
+        stagedComponent.flattenedDependencies.forEach((flattendDependencie) => {
+          if (flattendDependencie.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
+            dependencies.push(stagedComponent.id.toStringWithoutVersion());
+          }
+        });
+      });
+      if (!R.isEmpty(dependencies)) dependentBits[bitId.toStringWithoutVersion()] = dependencies;
+    });
+    return Promise.resolve(dependentBits);
+  }
+
+  /**
+   * split bit array to found and missing components (incase user misspelled id)
+   */
+  async filterFoundAndMissingComponents(bitIds: Array<BitId>) {
+    const missingComponents = [];
+    const foundComponents = [];
+    const resultP = bitIds.map(async (id) => {
+      const component = await this.sources.get(id);
+      if (!component) missingComponents.push(id.toStringWithoutVersion());
+      else foundComponents.push(id);
+    });
+    await Promise.all(resultP);
+    return Promise.resolve({ missingComponents, foundComponents });
+  }
+
+  /**
+   * Remove components from scope
+   * @force Boolean  - remove component from scope even if other components use it
+   */
+  async removeMany(bitIds: Array<BitId>, force: boolean, local: boolean = false): Promise<any> {
+    const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
+    const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId));
+
+    if (force) {
+      const removedComponents = await Promise.all(removeComponents());
+      await postRemoveHook({ ids: removedComponents });
+      return { bitIds: removedComponents };
+    }
+    const dependentBits = await this.findDependentBits(foundComponents);
+    if (R.isEmpty(dependentBits)) {
+      const removedComponents = await Promise.all(removeComponents());
+      await postRemoveHook({ ids: removedComponents });
+      return { bitIds: removedComponents, missingComponents };
+    }
+    return { dependentBits, missingComponents };
+  }
+  /**
+   * deprecate components from scope
+   */
+  async deprecateMany(bitIds: Array<BitId>): Promise<any> {
+    const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
+    const deprecateComponents = () => foundComponents.map(async bitId => this.deprecateSingle(bitId));
+    const deprecatedComponents = await Promise.all(deprecateComponents());
+    await postDeprecateHook({ ids: deprecatedComponents });
+    return { bitIds: deprecatedComponents, missingComponents };
+  }
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
     if (!bitId.isLocal(this.name)) {
       return Promise.reject('you can not reset a remote component');

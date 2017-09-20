@@ -76,6 +76,7 @@ export default class Component {
   writtenPath: ?string; // needed for generate links
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
+  deprecated: boolean;
 
   set files(val: ?(SourceFile[])) {
     this._files = val;
@@ -133,7 +134,8 @@ export default class Component {
     dists,
     specsResults,
     license,
-    log
+    log,
+    deprecated
   }: ComponentProps) {
     this.name = name;
     this.box = box || DEFAULT_BOX_NAME;
@@ -152,6 +154,7 @@ export default class Component {
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
+    this.deprecated = deprecated || false;
   }
 
   getFileExtension(): string {
@@ -650,7 +653,8 @@ export default class Component {
       dists: this.dists,
       specsResults: this.specsResults ? this.specsResults.map(res => res.serialize()) : null,
       license: this.license ? this.license.serialize() : null,
-      log: this.log
+      log: this.log,
+      deprecated: this.deprecated
     };
   }
 
@@ -682,7 +686,8 @@ export default class Component {
       dists,
       files,
       specsResults,
-      license
+      license,
+      deprecated
     } = object;
     return new Component({
       name,
@@ -699,7 +704,8 @@ export default class Component {
       docs,
       dists,
       specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null,
-      license: license ? License.deserialize(license) : null
+      license: license ? License.deserialize(license) : null,
+      deprecated: deprecated || false
     });
   }
 
@@ -716,14 +722,16 @@ export default class Component {
     componentMap,
     id,
     consumerPath,
-    bitMap
+    bitMap,
+    deprecated
   }: {
     bitDir: string,
     consumerBitJson: ConsumerBitJson,
     componentMap: ComponentMap,
     id: BitId,
     consumerPath: string,
-    bitMap: BitMap
+    bitMap: BitMap,
+    deprecated: boolean
   }): Component {
     let packageDependencies;
     let bitJson = consumerBitJson;
@@ -778,7 +786,8 @@ export default class Component {
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,
       files: getLoadedFiles(files),
-      packageDependencies
+      packageDependencies,
+      deprecated
     });
   }
 

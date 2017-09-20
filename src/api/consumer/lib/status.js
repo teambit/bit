@@ -11,7 +11,7 @@ export type StatusResult = {
   componentsWithMissingDeps: Component[]
 };
 
-export default async function status(): Promise<StatusResult> {
+export default (async function status(): Promise<StatusResult> {
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents(true);
@@ -26,4 +26,4 @@ export default async function status(): Promise<StatusResult> {
   });
 
   return { newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps };
-}
+});

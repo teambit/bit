@@ -40,5 +40,10 @@ describe('bit list command', function () {
       const output = helper.runCmd('bit list');
       expect(output.includes('found 1 components')).to.be.true;
     });
+    it('should list deprecated component', () => {
+      helper.deprecateComponent('bar/foo');
+      const output = helper.runCmd('bit list');
+      expect(output).to.contain.string('bar/foo [Deprecated]');
+    });
   });
 });

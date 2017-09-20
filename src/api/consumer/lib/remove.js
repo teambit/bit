@@ -1,8 +1,17 @@
-// /** @flow */
-// import { loadConsumer } from '../../consumer';
+/** @flow */
+import { loadConsumer } from '../../../consumer';
 
-// export default function remove(id: string): Promise<boolean> {
-//   return loadConsumer().then(consumer =>
-//     consumer.removeFromInline(id)
-//   );
-// }
+export default (async function remove({
+  ids,
+  remote,
+  force,
+  track
+}: {
+  ids: string[],
+  remote: boolean,
+  force: boolean,
+  track: boolean
+}): Promise<any> {
+  const consumer = await loadConsumer();
+  return consumer.remove(ids, remote, force, track);
+});
