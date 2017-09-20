@@ -30,7 +30,7 @@ describe('flow of a long-dependencies-chain', function () {
             const previousFile = `foo${i - 1}`;
             const previousDir = `bar${i - 1}`;
             helper.importComponent(`${previousDir}/${previousFile}`);
-            impl = `const foo = require('../components/${previousDir}/${previousFile}/${previousDir}/${previousFile}'); 
+            impl = `const foo = require('bit/${previousDir}/${previousFile}/${previousDir}/${previousFile}'); 
           module.exports = function ${file}() { return foo() + ' and got ${file}'; };
           `;
           } else {
@@ -43,7 +43,7 @@ describe('flow of a long-dependencies-chain', function () {
           helper.exportComponent(`${dir}/${file}`);
         }
       });
-      it('should display results form its direct dependency and the long chain of indirect dependencies', () => {
+      it('should display results from its direct dependency and the long chain of indirect dependencies', () => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         const lastComponent = `bar${sizeOfChain - 1}/foo${sizeOfChain - 1}`;

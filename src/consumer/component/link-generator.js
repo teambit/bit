@@ -33,7 +33,6 @@ function _getLinkContent(mainFile: string, filePath: string): string {
   }
   filePath = getWithoutExt(filePath); // remove the extension
   const mainFileExt = path.extname(mainFile).replace('.', '');
-  console.log(path.extname(mainFileExt));
   const template = LINKS_CONTENT_TEMPLATES[mainFileExt];
   return format(template, { filePath: normalize(filePath) });
 }

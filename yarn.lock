@@ -810,9 +810,9 @@ bindings@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.2.1.tgz#14ad6113812d2d37d72e67b4cacb4bb726505f11"
 
-bit-javascript@^0.10.4-dev.1:
-  version "0.10.4-dev.1"
-  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.4-dev.1.tgz#d783ab6a9105afb2f24cf6c5bdf6305f89562841"
+bit-javascript@0.10.4-dev.3:
+  version "0.10.4-dev.3"
+  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.4-dev.3.tgz#83d673119b14e11f7d81781b658e128429a5e783"
   dependencies:
     bit-scope-client "^0.6.3"
     camelcase "^4.0.0"

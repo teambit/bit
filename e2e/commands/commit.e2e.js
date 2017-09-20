@@ -132,7 +132,7 @@ describe('bit commit command', function () {
         helper.addRemoteScope();
         helper.importComponent('comp/comp');
         helper.importComponent('comp/comp2');
-        const fileFixture = "var a = require('../../comp/comp2/file2')";
+        const fileFixture = "var a = require('bit/comp/comp2/file2')";
         helper.createFile('components/comp/comp', 'file.js', fileFixture);
         output = helper.commitComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
@@ -161,7 +161,7 @@ describe('bit commit command', function () {
         helper.addRemoteScope();
         helper.importComponent('comp/comp');
         helper.importComponent('comp/comp2');
-        const fileFixture = "var a = require('../../comp/comp2')";
+        const fileFixture = "var a = require('bit/comp/comp2')";
         helper.createFile('components/comp/comp', 'file.js', fileFixture);
         output = helper.commitComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
@@ -173,6 +173,36 @@ describe('bit commit command', function () {
         const deps = showOutput.dependencies;
         expect(deps.length).to.equal(1);
       });
+    });
+  });
+
+  describe('after requiring an imported component with the relative syntax', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-type');
+
+      const isStringFixture =
+        "const isType = require('../components/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      try {
+        helper.commitAllComponents();
+      } catch (err) {
+        output = err.toString();
+      }
+    });
+    it('should not commit and throw an error regarding the relative syntax', () => {
+      expect(output).to.have.string('fatal: following component dependencies were not found');
+      expect(output).to.have.string(`relative components: ${helper.remoteScope}/utils/is-type@1`);
     });
   });
 

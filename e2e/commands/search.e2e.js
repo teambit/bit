@@ -7,7 +7,6 @@ describe('bit search', function () {
   after(() => {
     helper.destroyEnv();
   });
-  // todo: for some reason, this doesn't work when installing bit using yarn, other search (scope/hub) do work
   describe('in a local scope', () => {
     before(() => {
       helper.reInitLocalScope();
