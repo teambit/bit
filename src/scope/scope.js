@@ -552,7 +552,7 @@ export default class Scope {
     component.deprecated = true;
     this.objects.add(component);
     await this.objects.persist();
-    return component.id();
+    return bitId;
   }
   /**
    * findDependentBits
@@ -601,13 +601,13 @@ export default class Scope {
 
     if (force) {
       const removedComponents = await Promise.all(removeComponents());
-      await postRemoveHook({ ids: removedComponents });
+      await postRemoveHook({ ids: removedComponents.map(id => id.toStringWithoutVersion()) });
       return { bitIds: removedComponents, missingComponents };
     }
     const dependentBits = await this.findDependentBits(foundComponents);
     if (R.isEmpty(dependentBits)) {
       const removedComponents = await Promise.all(removeComponents());
-      await postRemoveHook({ ids: removedComponents });
+      await postRemoveHook({ ids: removedComponents.map(id => id.toStringWithoutVersion()) });
       return { bitIds: removedComponents, missingComponents };
     }
     return { dependentBits, missingComponents };
@@ -619,7 +619,7 @@ export default class Scope {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const deprecateComponents = () => foundComponents.map(async bitId => this.deprecateSingle(bitId));
     const deprecatedComponents = await Promise.all(deprecateComponents());
-    await postDeprecateHook({ ids: deprecatedComponents });
+    await postDeprecateHook({ ids: deprecatedComponents.map(id => id.toStringWithoutVersion()) });
     return { bitIds: deprecatedComponents, missingComponents };
   }
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
