@@ -530,8 +530,8 @@ describe('bit import', function () {
         expect(
           output.includes('error - missing the following package dependencies. please install and add to package.json.')
         ).to.be.true;
-        expect(output.includes('lodash.get: 4.4.2')).to.be.true;
-        expect(output.includes('some-package: 1.0.0')).to.be.true;
+        expect(output.includes('my-package: 1.0.1')).to.be.true;
+        expect(output.includes('some-package: 1.4.3')).to.be.true;
       });
       it('should write the dependency in the dependencies directory', () => {
         const depDir = path.join(
