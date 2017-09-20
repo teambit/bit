@@ -103,21 +103,6 @@ export default class AbstractBitJson {
       return !(key === 'lang' && val === DEFAULT_LANGUAGE);
     };
 
-    const self = this;
-    function getSources() {
-      if (!self.getImplBasename() && !self.getSpecBasename()) {
-        return null;
-      }
-
-      return filterObject(
-        {
-          impl: self.getImplBasename(),
-          spec: self.getSpecBasename()
-        },
-        val => val
-      );
-    }
-
     return filterObject(
       {
         lang: this.lang,

@@ -21,12 +21,7 @@ describe('bit show command', function () {
       helper.addComponent('utils/is-string.js');
       helper.commitComponent('utils/is-string');
 
-      const lodashGetPackageJsonFixture = JSON.stringify({
-        name: 'lodash.get',
-        version: '4.4.2'
-      });
-      helper.createFile('node_modules/lodash.get', 'index.js');
-      helper.createFile('node_modules/lodash.get', 'package.json', lodashGetPackageJsonFixture);
+      helper.addNpmPackage();
 
       const fooBarFixture =
         "const isString = require('../utils/is-string.js'); const get = require('lodash.get'); module.exports = function foo() { return isString() + ' and got foo'; };";
