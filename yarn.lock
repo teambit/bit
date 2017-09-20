@@ -810,9 +810,9 @@ bindings@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.2.1.tgz#14ad6113812d2d37d72e67b4cacb4bb726505f11"
 
-bit-javascript@0.10.4-dev.3:
-  version "0.10.4-dev.3"
-  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.4-dev.3.tgz#83d673119b14e11f7d81781b658e128429a5e783"
+bit-javascript@0.10.4-dev.4:
+  version "0.10.4-dev.4"
+  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.4-dev.4.tgz#be84d4293d65363c728339a85fd8510029d58900"
   dependencies:
     bit-scope-client "^0.6.3"
     camelcase "^4.0.0"
@@ -820,7 +820,7 @@ bit-javascript@0.10.4-dev.3:
     chalk "^1.1.3"
     chokidar "^1.6.1"
     find-package "^1.0.0"
-    fs-extra "^2.1.2"
+    fs-extra "^4.0.2"
     glob "^7.1.1"
     madge "^2.0.0"
     mockery "^2.0.0"
@@ -2080,6 +2080,14 @@ fs-extra@^4.0.1:
     jsonfile "^3.0.0"
     universalify "^0.1.0"
 
+fs-extra@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-4.0.2.tgz#f91704c53d1b461f893452b0c307d9997647ab6b"
+  dependencies:
+    graceful-fs "^4.1.2"
+    jsonfile "^4.0.0"
+    universalify "^0.1.0"
+
 fs-extra@~0.6.4:
   version "0.6.4"
   resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-0.6.4.tgz#f46f0c75b7841f8d200b3348cd4d691d5a099d15"
@@ -2820,6 +2828,12 @@ jsonfile@^2.1.0:
 jsonfile@^3.0.0:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/jsonfile/-/jsonfile-3.0.1.tgz#a5ecc6f65f53f662c4415c7675a0331d0992ec66"
+  optionalDependencies:
+    graceful-fs "^4.1.6"
+
+jsonfile@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/jsonfile/-/jsonfile-4.0.0.tgz#8771aae0799b64076b76640fca058f9c10e33ecb"
   optionalDependencies:
     graceful-fs "^4.1.6"
 
