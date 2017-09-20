@@ -21,7 +21,7 @@ import ComponentMap from './bit-map/component-map';
 import type { BitMapComponents } from './bit-map/bit-map';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { getLatestVersionNumber } from '../utils';
+import { getLatestVersionNumber, pathRelative } from '../utils';
 import * as linkGenerator from './component/link-generator';
 import loadDependenciesForComponent from './component/dependencies-resolver';
 import Version from '../scope/models/version';
@@ -504,7 +504,7 @@ export default class Consumer {
     return components.map((component) => {
       const componentId = component.id;
       logger.debug(`binding component: ${componentId}`);
-      const componentMap: ComponentMap = bitMap.getComponent(componentId);
+      const componentMap: ComponentMap = bitMap.getComponent(componentId, true);
       if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         const target = path.join(this.getPath(), componentMap.rootDir);
         const relativeLinkPath = path.join('node_modules', 'bit', componentId.box, componentId.name);
@@ -527,10 +527,13 @@ export default class Consumer {
       }
 
       // origin is AUTHORED
-      const filesToBind = componentMap.getFilesRelativeToConsumer();
+      // const filesToBind = componentMap.getFilesRelativeToConsumer(); // todo: check why it throws an error randomly "TypeError: componentMap.getFilesRelativeToConsumer is not a function"
+      const filesToBind = componentMap.files.map((file) => {
+        return componentMap.rootDir ? path.join(componentMap.rootDir, file.relativePath) : file.relativePath;
+      });
       const bound = filesToBind.map((file) => {
         const dest = path.join('node_modules', 'bit', componentId.box, componentId.name, file);
-        const destRelative = path.relative(path.dirname(dest), file);
+        const destRelative = pathRelative(path.dirname(dest), file);
         const fileContent = `module.exports = require('${destRelative}');`;
         fs.outputFileSync(dest, fileContent);
         return { from: dest, to: file };
