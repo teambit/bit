@@ -66,7 +66,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found.`],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
   [ComponentNotFoundInPath, err => `fatal: component in path "${chalk.bold(err.path)}" was not found`],
-  [PermissionDenied, () => 'fatal: permission to scope was denied'],
+  [PermissionDenied, err => `fatal: permission to scope ${err.scope} was denied`],
   [RemoteNotFound, err => `fatal: remote "${chalk.bold(err.name)}" was not found`],
   [NetworkError, err => `fatal: remote failed with error: "${chalk.bold(err.remoteErr)}"`],
   [
