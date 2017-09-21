@@ -205,7 +205,7 @@ export default class Consumer {
   ): Promise<> {
     const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
     const bitMap = await this.getBitMap();
-    const componentsFromBitMap = bitMap.getAllComponents(COMPONENT_ORIGINS.AUTHORED);
+    const componentsFromBitMap = bitMap.getAuthoredExportedComponents();
 
     if ((R.isNil(dependenciesFromBitJson) || R.isEmpty(dependenciesFromBitJson)) && R.isEmpty(componentsFromBitMap)) {
       if (!withEnvironments) {
@@ -220,10 +220,8 @@ export default class Consumer {
       componentsAndDependenciesBitJson = await this.scope.getManyWithAllVersions(dependenciesFromBitJson, cache);
       await this.writeToComponentsDir(componentsAndDependenciesBitJson, undefined, undefined, withPackageJson);
     }
-    if (componentsFromBitMap) {
-      const componentsIds = Object.keys(componentsFromBitMap);
-      const componentsIdsParsed = componentsIds.map(id => BitId.parse(id));
-      componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsIdsParsed, cache);
+    if (componentsFromBitMap.length) {
+      componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsFromBitMap, cache);
       await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false, withPackageJson);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
