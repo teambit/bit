@@ -3,7 +3,7 @@ import { is, equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merg
 import path from 'path';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
-import { VersionNotFound } from '../exceptions';
+import { VersionNotFound, CorruptedComponent } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
 import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE, DEFAULT_DIST_DIRNAME } from '../../constants';
@@ -119,7 +119,10 @@ export default class Component extends BitObject {
     const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound();
     const versionLoaded = await versionRef.load(repository);
-    if (!versionLoaded) logger.warn(`loadVersion, failed loading version ${version} of ${this.id()}`);
+    if (!versionLoaded) {
+      logger.error(`loadVersion, failed loading version ${version} of ${this.id()}`);
+      throw new CorruptedComponent(this.id(), version);
+    }
     return versionLoaded;
   }
 
