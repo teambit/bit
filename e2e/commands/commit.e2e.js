@@ -6,7 +6,7 @@ import Helper from '../e2e-helper';
 
 let logSpy;
 
-describe('bit commit command', function () {
+describe.only('bit commit command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -97,7 +97,7 @@ describe('bit commit command', function () {
         output = helper.commitAllComponents();
       });
       it('should commit the component', () => {
-        expect(output).to.have.string('1 components committed');
+        expect(output).to.have.string('1 components tagged');
       });
     });
   });
@@ -111,8 +111,8 @@ describe('bit commit command', function () {
       helper.commitAllComponents();
       output = helper.commitComponent('bar/foo');
     });
-    it('should print nothing to commit', () => {
-      expect(output).to.have.string('nothing to commit');
+    it('should print nothing to tag', () => {
+      expect(output).to.have.string('nothing to tag');
     });
   });
 
@@ -214,7 +214,7 @@ describe('bit commit command', function () {
       helper.addComponentBarFoo();
       let output = helper.commitAllComponents();
       output = helper.commitAllComponents();
-      expect(output.includes('nothing to commit')).to.be.true;
+      expect(output.includes('nothing to tag')).to.be.true;
     });
 
     it.skip('Should print there is nothing to commit after import only', () => {

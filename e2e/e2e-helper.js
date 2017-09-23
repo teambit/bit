@@ -165,7 +165,7 @@ export default class Helper {
   }
 
   commitComponent(id: string, commitMsg: string = 'commit-message') {
-    return this.runCmd(`bit commit ${id} -m ${commitMsg}`);
+    return this.runCmd(`bit tag ${id} -m ${commitMsg}`);
   }
   removeComponent(id: string, flags: string = '') {
     return this.runCmd(`bit remove ${id} ${flags}`);
