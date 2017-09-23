@@ -1,4 +1,4 @@
-// covers also init, create, commit, import and export commands
+// covers also init, create, tag, import and export commands
 
 import sinon from 'sinon';
 import { expect } from 'chai';
@@ -6,7 +6,7 @@ import Helper from '../e2e-helper';
 
 let logSpy;
 
-describe.only('bit commit command', function () {
+describe('bit tag command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -16,7 +16,7 @@ describe.only('bit commit command', function () {
     helper.reInitLocalScope();
     logSpy = sinon.spy(console, 'log');
   });
-  describe.skip('commit one component', () => {
+  describe.skip('tag one component', () => {
     it('should throw error if the bit id does not exists', () => {});
 
     it('should print warning if the a driver is not installed', () => {
@@ -27,7 +27,7 @@ describe.only('bit commit command', function () {
       // console.log("args", myargs);
       expect(
         logSpy.calledWith(
-          'Warning: Bit is not be able calculate the dependencies tree. Please install bit-javascript driver and run commit again.\n'
+          'Warning: Bit is not be able calculate the dependencies tree. Please install bit-javascript driver and run tag again.\n'
         )
       ).to.be.true;
     });
@@ -40,7 +40,7 @@ describe.only('bit commit command', function () {
 
     it('should throw error if the tests failed', () => {});
 
-    describe.skip('commit imported component', () => {
+    describe.skip('tag imported component', () => {
       it('should index the component', () => {});
 
       it('should write the full id to bit map (include scope and version)', () => {});
@@ -54,36 +54,36 @@ describe.only('bit commit command', function () {
       });
     });
 
-    describe.skip('commit added component', () => {
+    describe.skip('tag added component', () => {
       it('should index the component', () => {});
 
-      it('should successfuly commit if there is no special error', () => {
+      it('should successfuly tag if there is no special error', () => {
         // Validate output
         // Validate model
       });
 
-      it('Should throw error if there is tracked files dependencies which not commited yet', () => {});
+      it('Should throw error if there is tracked files dependencies which not tagged yet', () => {});
 
       it('should add the correct dependencies to each component', () => {});
     });
   });
 
-  describe('commit non-exist component', () => {
+  describe('tag non-exist component', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
     });
-    it('should not commit another component', () => {
+    it('should not tag another component', () => {
       const commit = () => helper.commitComponent('non-exist-comp');
       expect(commit).to.throw('the component global/non-exist-comp was not found in the bit.map file');
     });
   });
 
-  describe('commit back', () => {
+  describe('tag back', () => {
     // This is specifically export more than one component since it's different case for the
     // resolveLatestVersion.js - getLatestVersionNumber function
-    describe('commit component after exporting 2 components', () => {
+    describe('tag component after exporting 2 components', () => {
       let output;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
@@ -96,13 +96,13 @@ describe.only('bit commit command', function () {
         helper.createFile('', 'file.js', 'console.log()');
         output = helper.commitAllComponents();
       });
-      it('should commit the component', () => {
+      it('should tag the component', () => {
         expect(output).to.have.string('1 components tagged');
       });
     });
   });
 
-  describe('commit already committed component without changing it', () => {
+  describe('tag already tagged component without changing it', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
@@ -116,7 +116,7 @@ describe.only('bit commit command', function () {
     });
   });
 
-  describe('commit imported component with new dependency to another imported component', () => {
+  describe('tag imported component with new dependency to another imported component', () => {
     describe('require the main file of the imported component', () => {
       let output;
       let showOutput;
@@ -137,8 +137,8 @@ describe.only('bit commit command', function () {
         output = helper.commitComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
       });
-      it('should commit the component', () => {
-        expect(output).to.have.string('1 components committed');
+      it('should tag the component', () => {
+        expect(output).to.have.string('1 components tagged');
       });
       it('should write the dependency to the component model ', () => {
         const deps = showOutput.dependencies;
@@ -166,8 +166,8 @@ describe.only('bit commit command', function () {
         output = helper.commitComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
       });
-      it('should commit the component', () => {
-        expect(output).to.have.string('1 components committed');
+      it('should tag the component', () => {
+        expect(output).to.have.string('1 components tagged');
       });
       it('should write the dependency to the component model ', () => {
         const deps = showOutput.dependencies;
@@ -200,15 +200,15 @@ describe.only('bit commit command', function () {
         output = err.toString();
       }
     });
-    it('should not commit and throw an error regarding the relative syntax', () => {
+    it('should not tag and throw an error regarding the relative syntax', () => {
       expect(output).to.have.string('fatal: following component dependencies were not found');
       expect(output).to.have.string(`relative components: ${helper.remoteScope}/utils/is-type@1`);
     });
   });
 
-  describe('commit all components', () => {
-    it('Should print there is nothing to commit right after success commit all', () => {
-      // Create component and try to commit twice
+  describe('tag all components', () => {
+    it('Should print there is nothing to tag right after success tag all', () => {
+      // Create component and try to tag twice
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
@@ -217,13 +217,13 @@ describe.only('bit commit command', function () {
       expect(output.includes('nothing to tag')).to.be.true;
     });
 
-    it.skip('Should print there is nothing to commit after import only', () => {
-      // Import component then try to commit
+    it.skip('Should print there is nothing to tag after import only', () => {
+      // Import component then try to tag
     });
 
-    it.skip('Should build and test all components before commit', () => {});
+    it.skip('Should build and test all components before tag', () => {});
 
-    it.skip('Should commit nothing if only some of the commits worked', () => {});
+    it.skip('Should tag nothing if only some of the tags worked', () => {});
 
     describe('missing dependencies errors', () => {
       let output;
@@ -286,7 +286,7 @@ describe.only('bit commit command', function () {
 
     it.skip('should index all components', () => {});
 
-    it.skip('should commit the components in the correct order', () => {});
+    it.skip('should tag the components in the correct order', () => {});
 
     it.skip('should add the correct dependencies to each component', () => {
       // Make sure the use case contain dependenceis from all types -

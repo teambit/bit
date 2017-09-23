@@ -15,7 +15,7 @@ ${chalk.underline('start a working area')}
 ${chalk.underline('add, modify and control components')}
   ${chalk.cyan('add')}     add any subset of files to be tracked as a component(s).
   ${chalk.cyan('status')}  show the working area component(s) status.
-  ${chalk.cyan('commit')}  record component changes and lock versions.
+  ${chalk.cyan('tag')}     record component changes and lock versions.
   ${chalk.cyan('mv')}      move a component to a different filesystem path.
   ${chalk.cyan('reset')}   revert a component version to previous one.
   ${chalk.cyan('untrack')} untrack a new component(s).

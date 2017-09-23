@@ -174,7 +174,7 @@ export default class Helper {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
   commitAllComponents(commitMsg: string = 'commit-message') {
-    return this.runCmd(`bit commit -am ${commitMsg}`);
+    return this.runCmd(`bit tag -am ${commitMsg}`);
   }
 
   exportComponent(id: string, scope: string = this.remoteScope) {
@@ -233,7 +233,7 @@ export default class Helper {
     ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'index.js'), '');
 
     this.runCmd('bit add compiler.js -i compilers/babel', tempScopePath);
-    this.runCmd('bit commit compilers/babel -m msg', tempScopePath);
+    this.runCmd('bit tag compilers/babel -m msg', tempScopePath);
 
     fs.emptyDirSync(this.envScopePath);
     this.runCmd('bit init --bare', this.envScopePath);
