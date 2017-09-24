@@ -28,31 +28,6 @@ function clean(str: string) {
   return str.replace('\n', '');
 }
 
-function errorHandler(code, err) {
-  let parsedError;
-  try {
-    parsedError = JSON.parse(err);
-  } catch (e) {
-    // be greacfull when can't parse error message
-    logger.error(`ssh: failed parsing error as JSON, error: ${err}`);
-  }
-
-  switch (code) {
-    default:
-      return new UnexpectedNetworkError(parsedError ? parsedError.message : err);
-    case 127:
-      return new ComponentNotFound((parsedError && parsedError.id) || err);
-    case 128:
-      return new PermissionDenied();
-    case 129:
-      return new RemoteScopeNotFound((parsedError && parsedError.id) || err);
-    case 130:
-      return new PermissionDenied();
-    case 131:
-      return new MergeConflict((parsedError && parsedError.id) || err);
-  }
-}
-
 export type SSHProps = {
   path: string,
   username: string,
@@ -100,7 +75,7 @@ export default class SSH implements Network {
           .on('exit', (code) => {
             logger.info(`ssh: server had been exiting before closing. Exit code: ${code}`);
             const promiseExit = () => {
-              return code && code !== 0 ? reject(errorHandler(code, err)) : resolve(clean(res));
+              return code && code !== 0 ? reject(this.errorHandler(code, err)) : resolve(clean(res));
             };
             // sometimes the connection 'exit' before 'close' and then it doesn't have the data (err) ready yet.
             // in that case, we prefer to wait until the onClose will terminate the promise.
@@ -113,7 +88,7 @@ export default class SSH implements Network {
             logger.debug(`ssh: returned with code: ${code}, signal: ${signal}.`);
             // DO NOT CLOSE THE CONNECTION (using this.connection.end()), it causes bugs when there are several open
             // connections. Same bugs occur when running "this.connection.end()" on "end" or "exit" events.
-            return code && code !== 0 ? reject(errorHandler(code, err)) : resolve(clean(res));
+            return code && code !== 0 ? reject(this.errorHandler(code, err)) : resolve(clean(res));
           })
           .stderr.on('data', (response) => {
             err = response.toString();
@@ -121,6 +96,31 @@ export default class SSH implements Network {
           });
       });
     });
+  }
+
+  errorHandler(code, err) {
+    let parsedError;
+    try {
+      parsedError = JSON.parse(err);
+    } catch (e) {
+      // be greacfull when can't parse error message
+      logger.error(`ssh: failed parsing error as JSON, error: ${err}`);
+    }
+
+    switch (code) {
+      default:
+        return new UnexpectedNetworkError(parsedError ? parsedError.message : err);
+      case 127:
+        return new ComponentNotFound((parsedError && parsedError.id) || err);
+      case 128:
+        return new PermissionDenied(`${this.host}:${this.path}`);
+      case 129:
+        return new RemoteScopeNotFound((parsedError && parsedError.id) || err);
+      case 130:
+        return new PermissionDenied(`${this.host}:${this.path}`);
+      case 131:
+        return new MergeConflict((parsedError && parsedError.id) || err);
+    }
   }
 
   _unpack(data) {

@@ -360,6 +360,7 @@ export default class Component {
     driver?: Driver
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
+    if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
     // Take the bitdir from the files (it will be the same for all the files of course)
     const calculatedBitDir = bitDir || this.files[0].base;
 
@@ -373,9 +374,12 @@ export default class Component {
     // Otherwise, write to bitDir and update bitMap with the new paths.
     if (!bitMap) return this._writeToComponentDir(calculatedBitDir, withBitJson, withPackageJson, driver, force);
 
-    const idWithoutVersion = this.id.toStringWithoutVersion();
-    const componentMap = bitMap.getComponent(idWithoutVersion, false);
-    if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
+    // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
+    // and namespace can co-exist with different versions.
+    // AUTHORED and IMPORTED components however, can't be saved with multiple versions, so we can ignore the version to
+    // find the component in bit.map
+    const idForBitMap = origin === COMPONENT_ORIGINS.NESTED ? this.id.toString() : this.id.toStringWithoutVersion();
+    const componentMap = bitMap.getComponent(idForBitMap, false);
     if (!componentMap) {
       // if there is no componentMap, the component is new to this project and should be written to bit.map
       await this._writeToComponentDir(calculatedBitDir, withBitJson, withPackageJson, driver, force);

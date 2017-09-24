@@ -3,6 +3,7 @@ import path from 'path';
 import R from 'ramda';
 import Version from '../../scope/models/version';
 import { Scope } from '../../scope';
+import { CorruptedComponent } from '../../scope/exceptions';
 import Component from '../component';
 import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
@@ -48,6 +49,11 @@ export default class ComponentsList {
       const allVersions = await Promise.all(R.values(componentsVersionsP));
 
       Object.keys(componentsVersionsP).forEach((key, i) => {
+        if (!allVersions[i]) {
+          // the component has a REF of its latest version, however, the object of the latest version is missing
+          const bitId = BitId.parse(key);
+          throw new CorruptedComponent(bitId.toStringWithoutVersion(), bitId.version);
+        }
         componentsVersions[key] = allVersions[i];
       });
       // $FlowFixMe

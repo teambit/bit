@@ -14,7 +14,7 @@ import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } fro
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, DEFAULT_DIST_DIRNAME } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
-import { RemoteScopeNotFound } from './network/exceptions';
+import { RemoteScopeNotFound, PermissionDenied } from './network/exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import ConsumerComponent from '../consumer/component';
@@ -133,7 +133,8 @@ export default class Scope {
       return this.importMany(dependencies)
         .then(resolve)
         .catch((e) => {
-          if (e instanceof RemoteScopeNotFound) return reject(e);
+          logger.error(`importDependencies got an error: ${JSON.stringify(e)}`);
+          if (e instanceof RemoteScopeNotFound || e instanceof PermissionDenied) return reject(e);
           return reject(new DependencyNotFound(e.id));
         });
     });

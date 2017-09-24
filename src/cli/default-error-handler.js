@@ -24,7 +24,13 @@ import {
 } from '../scope/network/exceptions';
 import MergeConflict from '../scope/exceptions/merge-conflict';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
-import { ScopeNotFound, ResolutionException, ComponentNotFound, DependencyNotFound } from '../scope/exceptions';
+import {
+  ScopeNotFound,
+  ResolutionException,
+  ComponentNotFound,
+  DependencyNotFound,
+  CorruptedComponent
+} from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
@@ -63,10 +69,17 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [RemoteScopeNotFound, err => `fatal: remote scope "${chalk.bold(err.name)}" not found.`],
   [InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: [scope]/[box]/<name>'],
   [ComponentNotFound, err => `fatal: component with id "${chalk.bold(err.id)}" was not found`],
+  [
+    CorruptedComponent,
+    err =>
+      `fatal: the model representation of "${chalk.bold(
+        err.id
+      )}" is corrupted, the object of version ${err.version} is missing`
+  ],
   [DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found.`],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
   [ComponentNotFoundInPath, err => `fatal: component in path "${chalk.bold(err.path)}" was not found`],
-  [PermissionDenied, () => 'fatal: permission to scope was denied'],
+  [PermissionDenied, err => `fatal: permission to scope ${err.scope} was denied`],
   [RemoteNotFound, err => `fatal: remote "${chalk.bold(err.name)}" was not found`],
   [NetworkError, err => `fatal: remote failed with error: "${chalk.bold(err.remoteErr)}"`],
   [

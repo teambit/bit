@@ -62,6 +62,17 @@ export default class BitMap {
     return R.filter(isOriginMatch, this.components);
   }
 
+  getAuthoredExportedComponents(): BitId[] {
+    const componentsIds = [];
+    Object.keys(this.components).forEach((componentId) => {
+      if (this.components[componentId].origin === COMPONENT_ORIGINS.AUTHORED) {
+        const idParsed = BitId.parse(componentId);
+        if (idParsed.scope) componentsIds.push(idParsed);
+      }
+    });
+    return componentsIds;
+  }
+
   _makePathRelativeToProjectRoot(pathToChange: string): string {
     const absolutePath = path.resolve(pathToChange);
     return path.relative(this.projectRoot, absolutePath);
@@ -177,7 +188,7 @@ export default class BitMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
     if (isDependency) {
-      if (!parent) throw new Error(`Unable to add indirect dependency ${componentId}, without "parent" parameter`);
+      if (!parent) throw new Error(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`);
       this.addDependencyToParent(parent, componentIdStr);
     }
     if (this.components[componentIdStr]) {

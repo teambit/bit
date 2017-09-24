@@ -1,7 +1,6 @@
-// covers also init, create, commit, import and export commands
+// `bit install` command is deprecated. Instead, we use `bit import` with no parameters
 
 import path from 'path';
-import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
@@ -26,7 +25,7 @@ describe('bit install command', function () {
       helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/bar/foo`]: '1' });
     });
     it('should display a successful message with the list of installed components', () => {
-      const output = helper.runCmd('bit install');
+      const output = helper.runCmd('bit import');
       expect(output.includes('successfully imported one component')).to.be.true;
     });
   });
@@ -43,8 +42,27 @@ describe('bit install command', function () {
       helper.writeBitMap(bitMap);
     });
     it('should display a successful message with the list of installed components', () => {
-      const output = helper.runCmd('bit install');
+      const output = helper.runCmd('bit import');
       expect(output.includes('successfully imported one component')).to.be.true;
+    });
+  });
+  describe('with an AUTHORED component which was only committed but not exported', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      const bitMap = helper.readBitMap();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.writeBitMap(bitMap);
+    });
+    it('should not try to import that component as it was not exported yet', () => {
+      try {
+        helper.runCmd('bit import');
+      } catch (err) {
+        expect(err.toString()).to.have.string('nothing to import');
+      }
     });
   });
 });
