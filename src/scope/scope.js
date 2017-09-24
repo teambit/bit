@@ -546,7 +546,7 @@ export default class Scope {
    */
   async removeSingle(bitId: BitId): Promise<string> {
     await this.sources.clean(bitId);
-    return bitId.toString();
+    return bitId.toStringWithoutVersion();
   }
 
   async deprecateSingle(bitId: BitId): Promise<string> {
@@ -554,7 +554,7 @@ export default class Scope {
     component.deprecated = true;
     this.objects.add(component);
     await this.objects.persist();
-    return component.id();
+    return bitId.toStringWithoutVersion();
   }
   /**
    * findDependentBits

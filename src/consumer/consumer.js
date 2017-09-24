@@ -685,11 +685,6 @@ export default class Consumer {
       return result;
     });
     const removeResults = await Promise.all(removeP);
-    removeResults.forEach((obj) => {
-      if (obj.bitIds) {
-        obj.bitIds = obj.bitIds.map(id => BitId.parse(id).toStringWithoutVersion());
-      }
-    });
     return removeResults;
   }
   async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean) {
