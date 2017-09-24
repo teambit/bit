@@ -596,7 +596,7 @@ export default class Scope {
    * Remove components from scope
    * @force Boolean  - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: Array<BitId>, force: boolean, local: boolean = false): Promise<any> {
+  async removeMany(bitIds: Array<BitId>, force: boolean): Promise<any> {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId));
 
