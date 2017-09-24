@@ -8,7 +8,8 @@ const logger = new winston.Logger({
     new winston.transports.File({
       filename: path.join(GLOBAL_LOGS, 'debug.log'),
       json: false,
-      level: process.env.NODE_ENV === 'production' ? 'error' : 'debug',
+      // Make it debug level also in production until the product will be more stable. in the future this should be changed to error
+      level: process.env.NODE_ENV === 'production' ? 'debug' : 'debug',
       maxsize: 10 * 1024 * 1024, // 10MB
       maxFiles: 10,
       colorize: true,

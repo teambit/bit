@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix bug - when you import authored component (and there is newer version) it duplicate it in the .bit.map.json
 - fix bug - when you import authored component it was added to bit.json dependencies
 - create package.json for imported components
+- fix bug with ssh2 times out on handshake
 
 ## [0.10.7] - 2017-09-07
 
