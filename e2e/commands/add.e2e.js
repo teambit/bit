@@ -91,7 +91,7 @@ describe('bit add command', function () {
 
       const addCmd = () => helper.addComponentWithOptions('bar', { n: 'test' });
       expect(addCmd).to.throw(
-        `Command failed: ${helper.bitBin} add bar -n test\nfatal: the main file index.[js, ts, css, scss, less, sass, jsx] was not found in the files list ${file1Path}, ${file2Path}\n`
+        `Command failed: ${helper.bitBin} add bar -n test\nfatal: the main file index.[js, ts, css, scss, less, sass, jsx, tsx] was not found in the files list ${file1Path}, ${file2Path}\n`
       );
     });
 
