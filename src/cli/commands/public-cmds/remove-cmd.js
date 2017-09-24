@@ -13,6 +13,7 @@ export default class Remove extends Command {
     ['r', 'remote [boolean]', 'remove from remote scope'],
     ['t', 'track [boolean]', 'keep tracking component (default = false) ']
   ];
+  loader = true;
 
   action(
     [ids]: [string],

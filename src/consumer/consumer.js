@@ -684,8 +684,8 @@ export default class Consumer {
       const result = await resolvedRemote.deleteMany(groupedBitsByScope[key], force);
       return result;
     });
-    const removedObj = await Promise.all(removeP);
-    return removedObj;
+    const removeResults = await Promise.all(removeP);
+    return removeResults;
   }
   async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean) {
     // local remove in case user wants to delete commited components

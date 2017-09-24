@@ -141,7 +141,7 @@ export default class SSH implements Network {
     });
   }
 
-  deleteMany(bitIds: string, force: boolean): Promise<ComponentObjects[]> {
+  deleteMany(bitIds: Array<BitId>, force: boolean): Promise<ComponentObjects[]> {
     return this.exec('_delete', {
       bitIds: bitIds.map(id => id.toStringWithoutVersion()),
       force
