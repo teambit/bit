@@ -102,9 +102,9 @@ describe('bit remove command', function () {
     });
     it('should not remove component with dependencies when -f flag is false', () => {
       const output = helper.removeComponent(`${helper.remoteScope}/global/simple`);
-      expect(output).to.contain.string(`removed components: ${helper.remoteScope}/global/simple@latest`);
+      expect(output).to.contain.string(`removed components: ${helper.remoteScope}/global/simple`);
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple@latest`);
+      expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple`);
     });
   });
   describe.skip('with imported components with dependecies', () => {
@@ -131,9 +131,9 @@ describe('bit remove command', function () {
     it('should not remove component with dependencies when -f flag is false', () => {
       console.log(bitMap);
       const output = helper.removeComponent(`${helper.remoteScope}/global/simple`);
-      expect(output).to.contain.string(`removed components: ${helper.remoteScope}/global/simple@latest`);
+      expect(output).to.contain.string(`removed components: ${helper.remoteScope}/global/simple`);
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple@latest`);
+      expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple`);
     });
   });
 });
