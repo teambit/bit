@@ -4,7 +4,7 @@ import normalize from 'normalize-path';
 import R from 'ramda';
 import format from 'string-format';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_INDEX_NAME, COMPONENT_ORIGINS, AUTO_GENERATED_MSG } from '../../constants';
-import { outputFile, getWithoutExt, searchFilesIgnoreExt } from '../../utils';
+import { outputFile, getWithoutExt, searchFilesIgnoreExt, getExt } from '../../utils';
 import logger from '../../logger/logger';
 import { ComponentWithDependencies } from '../../scope';
 import Component from '../component';
@@ -113,17 +113,22 @@ async function writeDependencyLinks(
 
       const currLinks = dep.relativePaths.map((relativePath) => {
         const destinationRelativePath = relativePath.destinationRelativePath;
-        const destinationDistRelativePath = searchFilesIgnoreExt(
+        let destinationDistRelativePath = searchFilesIgnoreExt(
           depComponent.dists,
           path.join(DEFAULT_DIST_DIRNAME, destinationRelativePath),
           'relative'
         );
+        destinationDistRelativePath = destinationDistRelativePath
+          ? destinationDistRelativePath.relative
+          : destinationRelativePath;
+        const destinationDistRelativePathExt = getExt(destinationDistRelativePath);
+
         return componentLink(
           resolveDepVersion,
           relativePath.sourceRelativePath,
           destinationRelativePath,
-          destinationDistRelativePath.relative,
-          destinationDistRelativePath.extname,
+          destinationDistRelativePath,
+          destinationDistRelativePathExt,
           parentDir,
           depComponent.calculateMainDistFile(),
           hasDist
