@@ -24,25 +24,8 @@ pipeline {
 					notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-tar/development/bit/${currentVersion}/bit-${currentVersion}-tar.gz","tar")
 					notifyReleaseServer(currentVersion,releaseServer,"http://bit-npm/stable/bit.npm","npm")
 				}
-
 			}
 		}
-	stage('build mac') {
-		steps {
-			sh('./scripts/build-tar.sh mac')
-			sh('./scripts/build-brew.sh')
-			sh("npm i -g --unsafe")
-			script {
-			def releaseServer = "${env.BIT_STAGE_SERVER}" + "/update"
-			def repo = "${env.EXTERNAL_REPO}"
-			def currentVersion = sh script: 'cat package.json | grep version | head -1 | awk -F: \'{ print $2 }\' | sed \'s/[",]//g\' ' , returnStdout: true
-			currentVersion = currentVersion.replaceAll("\\s","")
-			def tarName ="bit-${currentVersion}-brew.tar.gz"
-			deployToArtifactory("-brew.tar.gz","bit-brew/development/bit/${currentVersion}/","${currentVersion}","bit-brew/development/bit/${currentVersion}/")
-			notifyReleaseServer(currentVersion,releaseServer,"${repo}/bit-brew/development/bit/${currentVersion}/${tarName}","brew")
-			}
-		}
-	}
 }
 
 post {
