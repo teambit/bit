@@ -44,6 +44,10 @@ Bit is language agnostic. Still, it requires binding and additional language sen
 
 ## Quick start
 
+#### Usage example commands
+
+You can find a list of command examples [here](https://docs.bitsrc.io/en/article/usage).
+
 ### Install Bit
 
 See [different install methods](https://docs.bitsrc.io/en/article/02-install-bit-on-your-computer) for different operation systems.
