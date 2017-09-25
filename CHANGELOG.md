@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - support requiring imported components using `require('bit/namespace/name')` syntax
 - save all dependencies on one configurable directory (components/.dependencies by default) 
 - add support for tsx files
+- generate internal component links according to their compiled version
 - move a re-imported component to a new location when `bit import --prefix` is used
 - fix commit and export issues when dealing with more than 500 components
 - support move command for moving files/directories of a component to a new location
