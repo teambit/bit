@@ -61,6 +61,7 @@ import outputFile from './fs-output-file';
 import getLatestVersionNumber from './resolveLatestVersion';
 import calculateFileInfo from './fs/file-info';
 import getWithoutExt from './fs/fs-no-ext';
+import getExt from './fs/get-ext';
 import outputJsonFile from './fs-output-json-sync';
 import searchFilesIgnoreExt from './fs/search-files-ignore-ext';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelative, pathResolve, pathJoinOs } from './path';
@@ -129,6 +130,7 @@ export {
   getLatestVersionNumber,
   calculateFileInfo,
   getWithoutExt,
+  getExt,
   pathNormalizeToLinux,
   pathJoinLinux,
   pathRelative,
