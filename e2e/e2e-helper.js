@@ -59,6 +59,11 @@ export default class Helper {
     return fs.readJSONSync(bitJsonPath) || {};
   }
 
+  readPackageJson(packageJsonfolder: string = this.localScopePath) {
+    const packageJsonPath = path.join(packageJsonfolder, 'package.json');
+    return fs.readJSONSync(packageJsonPath) || {};
+  }
+
   writeBitJson(bitJson: Object) {
     const bitJsonPath = path.join(this.localScopePath, 'bit.json');
     return fs.writeJSONSync(bitJsonPath, bitJson);
@@ -160,7 +165,7 @@ export default class Helper {
     this.runCmd('bit install');
   }
 
-  getConsumerFiles(ext: string = '*.js') {
+  getConsumerFiles(ext: string = '*.{js,ts}') {
     return glob.sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: true }).map(x => path.normalize(x));
   }
 
