@@ -798,12 +798,14 @@ export default class Component {
       box,
       withSpecs,
       files,
+      mainFile,
       consumerBitJson,
       bitPath,
       consumerPath
     }: {
       consumerBitJson: ConsumerBitJson,
       name: string,
+      mainFile: string,
       box: string,
       scopeName?: ?string,
       withSpecs?: ?boolean
@@ -830,6 +832,7 @@ export default class Component {
       scope: scopeName,
       specsFile,
       files: [implVinylFile],
+      mainFile,
       compilerId,
       testerId,
       specs: withSpecs ? Specs.create(name, testerId, scope) : undefined
