@@ -274,5 +274,5 @@ export default (async function addAction(
     added.push(addedOne);
   }
   await bitMap.write();
-  return added;
+  return added.filter(id => !R.isEmpty(id.files));
 });
