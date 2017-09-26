@@ -31,23 +31,16 @@
   ],
   "main": "dist/index.js",
   "dependencies": {
-    "bit-scope-client": "^0.6.3",
     "camelcase": "^4.0.0",
     "caporal": "^0.5.0",
     "chalk": "^1.1.3",
-    "chokidar": "^1.6.1",
-    "dependency-tree": "https://github.com/teambit/node-dependency-tree",
+    "dependency-tree": "teambit/node-dependency-tree",
     "find-package": "^1.0.0",
     "fs-extra": "^4.0.2",
     "glob": "^7.1.1",
-    "mockery": "^2.0.0",
     "ora": "^1.2.0",
     "ramda": "^0.22.1",
-    "regenerator-runtime": "^0.10.5",
-    "require-from-string": "^1.2.1",
-    "stack-trace": "0.0.9",
-    "toposort-class": "^1.0.1",
-    "user-home": "^2.0.0"
+    "regenerator-runtime": "^0.10.5"
   },
   "devDependencies": {
     "babel-cli": "^6.24.0",
