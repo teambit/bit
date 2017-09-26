@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- ignore flag for commit command
 - remove feature for removing local and remote components
 - deprecate feature for deprecating local and remote components
 - support requiring imported components using `require('bit/namespace/name')` syntax
