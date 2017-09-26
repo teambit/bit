@@ -14,7 +14,7 @@ export default class Export extends Command {
     ['a', 'all', 'commit all new and modified components'],
     ['f', 'force', 'forcely commit even if specs fails and even when component was not changed'],
     ['v', 'verbose', 'show specs output on commit'],
-    ['i', 'ignore', 'ignore missing dependencies (default = false)']
+    ['', 'ignore_missing_dependencies', 'ignore missing dependencies (default = false)']
   ];
   loader = true;
 
@@ -25,8 +25,8 @@ export default class Export extends Command {
       all,
       force,
       verbose,
-      ignore = false
-    }: { message: string, all: ?boolean, force: ?boolean, verbose: ?boolean, ignore: ?boolean }
+      ignore_missing_dependencies = false
+    }: { message: string, all: ?boolean, force: ?boolean, verbose: ?boolean, ignore_missing_dependencies: ?boolean }
   ): Promise<any> {
     if (!id && !all) {
       return Promise.reject('Missing [id]. To commit all components, please use --all flag');
@@ -41,9 +41,9 @@ export default class Export extends Command {
       return Promise.reject('Missing [message], use -m to write the log message');
     }
     if (all) {
-      return commitAllAction({ message, force, verbose, ignore });
+      return commitAllAction({ message, force, verbose, ignore: ignore_missing_dependencies });
     }
-    return commitAction({ id, message, force, verbose, ignore });
+    return commitAction({ id, message, force, verbose, ignore: ignore_missing_dependencies });
   }
 
   report(components: Component | Component[]): string {
