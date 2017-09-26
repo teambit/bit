@@ -38,7 +38,7 @@ ${chalk.underline('examine component history and state')}
 ${chalk.underline('component envrionment operations')}
   ${chalk.cyan(
     'build'
-  )}       build any set of components with configured compiler (component compiler or as defined in bit.json)
+  )}      build any set of components with configured compiler (component compiler or as defined in bit.json)
   ${chalk.cyan(
     'test'
   )}       test any set of components with configured tester (component tester or as defined in bit.json)
