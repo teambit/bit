@@ -311,7 +311,7 @@ describe('bit commit command', function () {
         expect(output).to.have.string('1 components committed');
       });
     });
-    describe.only('commit all components with missing dependencies with --ignore_missing_dependencies', () => {
+    describe('commit all components with missing dependencies with --ignore_missing_dependencies', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
