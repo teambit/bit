@@ -8,20 +8,20 @@ export async function commitAction({
   message,
   force,
   verbose,
-  ignore
+  ignoreMissingDependencies
 }: {
   id: string,
   message: string,
   force: ?boolean,
   verbose?: boolean,
-  ignore?: boolean
+  ignoreMissingDependencies?: boolean
 }) {
   const consumer: Consumer = await loadConsumer();
   if (!force) {
     const isModified = await consumer.isComponentModifiedById(id);
     if (!isModified) return null;
   }
-  const components = await consumer.commit([id], message, force, verbose, ignore);
+  const components = await consumer.commit([id], message, force, verbose, ignoreMissingDependencies);
   return R.head(components);
 }
 
@@ -29,16 +29,16 @@ export async function commitAllAction({
   message,
   force,
   verbose,
-  ignore
+  ignoreMissingDependencies
 }: {
   message: string,
   force: ?boolean,
   verbose?: boolean,
-  ignore?: boolean
+  ignoreMissingDependencies?: boolean
 }) {
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const commitPendingComponents = await componentsList.listCommitPendingComponents();
   if (R.isEmpty(commitPendingComponents)) return null;
-  return consumer.commit(commitPendingComponents, message, force, verbose, ignore);
+  return consumer.commit(commitPendingComponents, message, force, verbose, ignoreMissingDependencies);
 }

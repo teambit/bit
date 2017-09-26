@@ -41,9 +41,9 @@ export default class Export extends Command {
       return Promise.reject('Missing [message], use -m to write the log message');
     }
     if (all) {
-      return commitAllAction({ message, force, verbose, ignore: ignore_missing_dependencies });
+      return commitAllAction({ message, force, verbose, ignoreMissingDependencies: ignore_missing_dependencies });
     }
-    return commitAction({ id, message, force, verbose, ignore: ignore_missing_dependencies });
+    return commitAction({ id, message, force, verbose, ignoreMissingDependencies: ignore_missing_dependencies });
   }
 
   report(components: Component | Component[]): string {

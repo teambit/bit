@@ -468,14 +468,14 @@ export default class Consumer {
     message: string,
     force: ?boolean,
     verbose: ?boolean,
-    ignore: ?boolean
+    ignoreMissingDependencies: ?boolean
   ): Promise<Component[]> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const components = await this.loadComponents(componentsIds);
     // Run over the components to check if there is missing dependencies
     // If there is at least one we won't commit anything
-    if (!ignore) {
+    if (!ignoreMissingDependencies) {
       const componentsWithMissingDeps = components.filter((component) => {
         return Boolean(component.missingDependencies);
       });
