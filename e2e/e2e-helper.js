@@ -169,8 +169,8 @@ export default class Helper {
     return glob.sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: true }).map(x => path.normalize(x));
   }
 
-  commitComponent(id: string, commitMsg: string = 'commit-message') {
-    return this.runCmd(`bit commit ${id} -m ${commitMsg}`);
+  commitComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
+    return this.runCmd(`bit commit ${id} -m ${commitMsg} ${options}`);
   }
   removeComponent(id: string, flags: string = '') {
     return this.runCmd(`bit remove ${id} ${flags}`);
@@ -178,8 +178,8 @@ export default class Helper {
   deprecateComponent(id: string, flags: string = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
-  commitAllComponents(commitMsg: string = 'commit-message') {
-    return this.runCmd(`bit commit -am ${commitMsg}`);
+  commitAllComponents(commitMsg: string = 'commit-message', options: string = '') {
+    return this.runCmd(`bit commit ${options} -am ${commitMsg} `);
   }
 
   exportComponent(id: string, scope: string = this.remoteScope) {
