@@ -1,11 +1,10 @@
-// TODO: This should be exported as a bit component
-
 // @flow
+// TODO: This should be exported as a bit component
 import path from 'path';
-import madge from 'madge';
 import fs from 'fs';
 import findPackage from 'find-package';
 import R from 'ramda';
+import generateTree from './generate-tree-madge';
 
 /**
  * Group dependencies by types (files, bits, packages)
@@ -164,26 +163,27 @@ function normalizePaths(tree) {
 /**
  * Function for fetching dependency tree of file or dir
  * @param cwd working directory
+ * @param consumerPath
  * @param filePath path of the file to calculate the dependecies
  * @return {Promise<{missing, tree}>}
  */
-export default function getDependecyTree(cwd: string, consumerPath: string, filePath: string): Promise<*> {
-  return madge(filePath, { baseDir: cwd, includeNpm: true })
-    .then((res) => {
-      const normalizedTree = normalizePaths(res.tree);
-      const { groups, foundedPackages } = groupMissings(res.skipped, cwd, consumerPath);
-      const relativeFilePath = path.relative(cwd, filePath);
-      const tree = groupDependencyTree(normalizedTree, cwd);
-      // Merge manually found packages with madge founded packages
-      if (foundedPackages && !R.isEmpty(foundedPackages)) {
-        // Madge found packages so we need to merge them with the manual
-        if (tree[relativeFilePath].packages) {
-          Object.assign(tree[relativeFilePath].packages, foundedPackages);
-          // There is only manually found packages
-        } else {
-          tree[relativeFilePath].packages = foundedPackages;
-        }
-      }
-      return { missing: groups, tree };
-    });
+export default async function getDependecyTree(cwd: string, consumerPath: string, filePath: string): Promise<*> {
+  const config = {
+    baseDir: cwd, includeNpm: true, requireConfig: null, webpackConfig: null, visited: {}, nonExistent: [] };
+  const result = generateTree([filePath], config);
+  const normalizedTree = normalizePaths(result.tree);
+  const { groups, foundedPackages } = groupMissings(result.skipped, cwd, consumerPath);
+  const relativeFilePath = path.relative(cwd, filePath);
+  const tree = groupDependencyTree(normalizedTree, cwd);
+  // Merge manually found packages with madge founded packages
+  if (foundedPackages && !R.isEmpty(foundedPackages)) {
+    // Madge found packages so we need to merge them with the manual
+    if (tree[relativeFilePath].packages) {
+      Object.assign(tree[relativeFilePath].packages, foundedPackages);
+      // There is only manually found packages
+    } else {
+      tree[relativeFilePath].packages = foundedPackages;
+    }
+  }
+  return { missing: groups, tree };
 }
