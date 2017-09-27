@@ -1,6 +1,8 @@
-import bindAction, { bindSpecificComponentsAction } from './bind';
+// import bindAction, { bindSpecificComponentsAction } from './bind';
+import getDependenciesAction from './get-dependencies';
 
 export {
-  bindAction,
-  bindSpecificComponentsAction
+  // bindAction,
+  // bindSpecificComponentsAction,
+  getDependenciesAction,
 };

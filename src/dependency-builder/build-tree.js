@@ -162,19 +162,18 @@ function normalizePaths(tree) {
 
 /**
  * Function for fetching dependency tree of file or dir
- * @param cwd working directory
+ * @param baseDir working directory
  * @param consumerPath
- * @param filePath path of the file to calculate the dependecies
+ * @param filePath path of the file to calculate the dependencies
  * @return {Promise<{missing, tree}>}
  */
-export default async function getDependecyTree(cwd: string, consumerPath: string, filePath: string): Promise<*> {
-  const config = {
-    baseDir: cwd, includeNpm: true, requireConfig: null, webpackConfig: null, visited: {}, nonExistent: [] };
+export default async function getDependecyTree(baseDir: string, consumerPath: string, filePath: string): Promise<*> {
+  const config = { baseDir, includeNpm: true, requireConfig: null, webpackConfig: null, visited: {}, nonExistent: [] };
   const result = generateTree([filePath], config);
   const normalizedTree = normalizePaths(result.tree);
-  const { groups, foundedPackages } = groupMissings(result.skipped, cwd, consumerPath);
-  const relativeFilePath = path.relative(cwd, filePath);
-  const tree = groupDependencyTree(normalizedTree, cwd);
+  const { groups, foundedPackages } = groupMissings(result.skipped, baseDir, consumerPath);
+  const relativeFilePath = path.relative(baseDir, filePath);
+  const tree = groupDependencyTree(normalizedTree, baseDir);
   // Merge manually found packages with madge founded packages
   if (foundedPackages && !R.isEmpty(foundedPackages)) {
     // Madge found packages so we need to merge them with the manual
