@@ -11,12 +11,12 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit add command', function () {
+describe.only('bit add command', function () {
   this.timeout(0);
   const helper = new Helper();
-  after(() => {
+  /*  after(() => {
     helper.destroyEnv();
-  });
+  }); */
   describe('add one component', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
@@ -204,6 +204,26 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
       expect(files).to.deep.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
       expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(bitMap).to.have.property('bar/foo');
+    });
+    it('Should add dir files with spec from multiple dsls when test files are placed in same structure but bit add is with glob', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo3.js');
+      helper.createComponent('bar', 'foo.spec.js');
+      helper.createComponent('test/bar', 'foo2.spec.js');
+      helper.createComponent('test', 'foo2.spec.js');
+      helper.addComponentWithOptions('bar/*.js', {
+        i: 'bar/foo',
+        m: path.normalize('bar/foo.js'),
+        t: 'test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,bar/foo.spec.js,test/{FILE_NAME}.spec.js'
+      });
+      const bitMap = helper.readBitMap();
+      const files = bitMap['bar/foo'].files;
+      expect(files).to.be.ofSize(6);
+      expect(files).to.deep.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
+      expect(files).to.deep.include({ relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Should add dir files with spec from dsl and glob pattern', () => {

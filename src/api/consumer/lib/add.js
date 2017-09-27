@@ -20,7 +20,6 @@ import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
 import logger from '../../../logger/logger';
 import PathNotExists from './exceptions/path-not-exists';
 import EmptyDirectory from './exceptions/empty-directory';
-import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 
 export default (async function addAction(
   componentPaths: string[],
@@ -37,42 +36,33 @@ export default (async function addAction(
     return absPath.replace(`${projectRoot}${path.sep}`, '');
   }
 
+  // update test files according to dsl
+  async function getFiles(files, testFiles: string[]) {
+    const fileList = await testFiles.map(async (dsl) => {
+      const fileList = await files.map(async (file) => {
+        const fileInfo = calculateFileInfo(file);
+        const generatedFile = format(dsl, fileInfo);
+        const matches = await glob(generatedFile);
+        return matches.filter(match => fs.existsSync(match));
+      });
+      return Promise.all(fileList);
+    });
+    const fileListRes = R.flatten(await Promise.all(fileList));
+    const uniq = R.uniq(fileListRes);
+    return uniq;
+  }
   // todo: remove the logic of fixing the absolute paths, it is already done in BitMap class
   async function addOneComponent(componentPathsStats: Object, bitMap: BitMap, consumer: Consumer) {
     // remove excluded files from file list
     async function removeExcludedFiles(mapValues, excludedList) {
-      const resolvedExcludedFiles = await getAllFiles(excludedList);
+      const files = R.flatten(mapValues.map(x => x.files.map(i => i.relativePath)));
+      const resolvedExcludedFiles = await getFiles(files, excludedList);
       mapValues.forEach((mapVal) => {
-        mapVal.files = mapVal.files.filter(key => !resolvedExcludedFiles[key.relativePath]);
-        mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles[testFile]);
+        mapVal.files = mapVal.files.filter(key => !resolvedExcludedFiles.includes(key.relativePath));
+        mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles.includes(testFile));
       });
     }
 
-    // update test files according to dsl
-    async function updateTestFilesAccordingToDsl(files: ComponentMapFile, testFiles: string[]) {
-      const newFilesArr = files;
-      const fileList = await testFiles.map(async (dsl) => {
-        const fileList = await files.map(async (file) => {
-          const fileInfo = calculateFileInfo(file.relativePath);
-          const generatedFile = format(dsl, fileInfo);
-          const matches = await glob(generatedFile);
-          return matches ? getAllFiles(matches) : getAllFiles([generatedFile]);
-        });
-        return Promise.all(fileList);
-      });
-      const fileListRes = R.flatten(await Promise.all(fileList));
-      const uniqFileList = R.uniq(fileListRes).filter(obj => !R.isEmpty(obj));
-      uniqFileList.forEach((file) => {
-        Object.keys(file).forEach((key) => {
-          const fileIndex = R.findIndex(R.propEq('relativePath', file[key]))(newFilesArr);
-          if (fileIndex > -1) newFilesArr[fileIndex].test = true;
-          else if (fs.existsSync(key)) {
-            newFilesArr.push({ relativePath: file[key], test: true, name: path.basename(file[key]) });
-          }
-        });
-      });
-      return newFilesArr;
-    }
     // used for updating main file if exists or doesn't exists
     function addMainFileToFiles(files, mainFile) {
       if (mainFile && mainFile.match(REGEX_PATTERN)) {
@@ -103,34 +93,6 @@ export default (async function addAction(
       return { id: componentId.toString(), files: bitMap.getComponent(componentId).files };
     };
 
-    async function getAllFiles(files: string[]) {
-      const filesArr = await Promise.all(
-        files.map(async (componentPath) => {
-          const files = {};
-          const matches = await glob(componentPath);
-          if (matches) {
-            matches.forEach(match => (files[pathNormalizeToLinux(match)] = pathNormalizeToLinux(match)));
-          } else if (fs.existsSync(componentPath) && isDir(componentPath)) {
-            const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
-            const matches = await glob(pathJoinLinux(relativeComponentPath, '**'), {
-              cwd: consumer.getPath(),
-              nodir: true
-            });
-            matches.forEach(match => (files[pathNormalizeToLinux(match)] = pathNormalizeToLinux(match)));
-          } else {
-            // is file
-            const relativeFilePath = pathNormalizeToLinux(
-              getPathRelativeToProjectRoot(componentPath, consumer.getPath())
-            );
-            files[relativeFilePath] = relativeFilePath;
-          }
-          return files;
-        })
-      );
-
-      return R.mergeAll(filesArr);
-    }
-
     let parsedId: BitId;
     let componentExists = false;
     if (id) {
@@ -145,9 +107,6 @@ export default (async function addAction(
       if (componentExists) id = existingComponentId;
       parsedId = BitId.parse(id);
     }
-
-    // const { domainSpecificTestFiles, testFiles } = splitTestAccordingToPattern(tests);
-    // tests = Object.keys(await getAllFiles(testFiles)).map( (item) => item);
 
     const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
       if (componentPathsStats[componentPath].isDir) {
@@ -164,7 +123,14 @@ export default (async function addAction(
           return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
         });
         // mark or add test files according to dsl
-        const newFileArrWithTests = await updateTestFilesAccordingToDsl(files, tests);
+        console.log('maybe');
+        const testFilesArr = !R.isEmpty(tests) ? await getFiles(files.map(file => file.relativePath), tests) : [];
+        const testFiles = testFilesArr.map(testFile => ({
+          relativePath: pathNormalizeToLinux(testFile),
+          test: true,
+          name: path.basename(testFile)
+        }));
+
         const resolvedMainFile = addMainFileToFiles(files, pathNormalizeToLinux(main));
         // matches.forEach((match) => {
         //   if (keepDirectoryName) {
@@ -179,7 +145,7 @@ export default (async function addAction(
           parsedId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
         }
 
-        return { componentId: parsedId, files: newFileArrWithTests, mainFile: resolvedMainFile, testsFiles: tests };
+        return { componentId: parsedId, files: files.concat(testFiles), mainFile: resolvedMainFile, testsFiles: tests };
       }
       // is file
       const resolvedPath = path.resolve(componentPath);
@@ -201,14 +167,21 @@ export default (async function addAction(
       ];
 
       // mark or add test files according to dsl
-      const newFileArrWithTests = await updateTestFilesAccordingToDsl(files, tests);
+      console.log('maybe');
+      const testFilesArr = !R.isEmpty(tests) ? await getFiles(files.map(file => file.relativePath), tests) : [];
+      const testFiles = testFilesArr.map(testFile => ({
+        relativePath: pathNormalizeToLinux(testFile),
+        test: true,
+        name: path.basename(testFile)
+      }));
+
       const resolvedMainFile = addMainFileToFiles(files, main);
 
       if (componentExists) {
-        return { componentId: parsedId, files: newFileArrWithTests, mainFile: resolvedMainFile, testsFiles: tests };
+        return { componentId: parsedId, files: files.concat(testFiles), mainFile: resolvedMainFile, testsFiles: tests };
       }
 
-      return { componentId: parsedId, files: newFileArrWithTests, mainFile: relativeFilePath, testsFiles: tests };
+      return { componentId: parsedId, files: files.concat(testFiles), mainFile: relativeFilePath, testsFiles: tests };
     });
 
     let mapValues = await Promise.all(mapValuesP);
@@ -254,6 +227,8 @@ export default (async function addAction(
   let added = [];
   if (isMultipleComponents) {
     logger.debug('bit add - multiple components');
+    const testToRemove = !R.isEmpty(tests) ? await getFiles(Object.keys(componentPathsStats), tests) : [];
+    testToRemove.forEach(test => delete componentPathsStats[test]);
     const addedP = Object.keys(componentPathsStats).map((onePath) => {
       return addOneComponent(
         {
