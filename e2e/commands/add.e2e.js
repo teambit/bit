@@ -11,12 +11,12 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe.only('bit add command', function () {
+describe('bit add command', function () {
   this.timeout(0);
   const helper = new Helper();
-  /*  after(() => {
+  after(() => {
     helper.destroyEnv();
-  }); */
+  });
   describe('add one component', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
@@ -50,6 +50,14 @@ describe.only('bit add command', function () {
       const bitMap = fs.readFileSync(path.join(helper.localScopePath, '.bit.map.json')).toString();
       expect(bitMap).to.have.string(AUTO_GENERATED_MSG);
     });
+    it('Should not add component to bitmap beacuse test file does not exists', () => {
+      const osComponentName = path.normalize('bar/foo.js');
+      const osFilePathName = path.normalize('bar/foo.spec.js');
+      helper.createComponent('bar', 'foo.js');
+      const addCmd = () => helper.addComponentWithOptions(osComponentName, { t: `${osFilePathName}       ` });
+      expect(addCmd).to.throw(`fatal: the file "${osFilePathName}" was not found`);
+    });
+
     it('Add component from subdir  ../someFile ', () => {
       const barPath = path.join(helper.localScopePath, 'bar/x');
       helper.createComponent('bar', 'foo2.js');

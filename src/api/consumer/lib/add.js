@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
 import format from 'string-format';
+import isGlob from 'is-glob';
 import uniqby from 'lodash.uniqby';
 import {
   glob,
@@ -204,6 +205,11 @@ export default (async function addAction(
 
   const consumer: Consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
+
+  // check unknown test files
+  tests.forEach((testFile) => {
+    if (!isGlob(testFile) && !fs.existsSync(testFile)) throw new PathNotExists(testFile);
+  });
 
   const componentPathsStats = {};
   const resolvedComponentPaths = await Promise.all(componentPaths.map(componentPath => glob(componentPath)));
