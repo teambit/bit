@@ -4,6 +4,7 @@ import R from 'ramda';
 import BitMap from '../../../consumer/bit-map';
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
+import { BitId } from '../../../bit-id';
 
 export default (async function untrack(componentIds: string[]): Promise<Object> {
   const untrackedComponents = [];
@@ -20,11 +21,14 @@ export default (async function untrack(componentIds: string[]): Promise<Object> 
     return { untrackedComponents: newComponents, unRemovableComponents, missingComponents: missing };
   }
   componentIds.forEach((componentId) => {
-    if (includes(newComponents, componentId)) {
-      untrackedComponents.push(componentId);
-      bitMap.removeComponent(componentId);
+    const bitId = BitId.parse(componentId);
+    if (includes(newComponents, bitId.toString())) {
+      untrackedComponents.push(bitId.toString());
+      bitMap.removeComponent(bitId.toString());
     } else {
-      bitMap.getComponent(componentId, false) ? unRemovableComponents.push(componentId) : missing.push(componentId);
+      bitMap.getComponent(bitId.toString(), false)
+        ? unRemovableComponents.push(bitId.toString())
+        : missing.push(bitId.toString());
     }
   });
   await bitMap.write();
