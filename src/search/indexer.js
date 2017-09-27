@@ -102,10 +102,10 @@ function addToLocalIndex(component: Component): Promise<Component> {
   });
 }
 
-function index(component: Component, scopePath: string): Promise<Component> {
+async function index(component: Component, scopePath: string): Promise<Component> {
   // if (isWin) return Promise.resolve(component);
   try {
-    localIndex = serverlessIndex.initializeIndex(scopePath);
+    localIndex = await serverlessIndex.initializeIndex(scopePath);
     return addToLocalIndex(component);
   } catch (err) {
     logger.error(`search.indexer found an issue while indexing. Error: ${err}`);
