@@ -29,7 +29,7 @@ export default class Export extends Command {
     }: { message: string, all: ?boolean, force: ?boolean, verbose: ?boolean, ignore_missing_dependencies: ?boolean }
   ): Promise<any> {
     if (!id && !all) {
-      return Promise.reject('Missing [id]. to commit all components, please use --all flag');
+      return Promise.reject('missing [id]. to commit all components, please use --all flag');
     }
     if (id && all) {
       return Promise.reject(
