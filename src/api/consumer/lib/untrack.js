@@ -21,14 +21,12 @@ export default (async function untrack(componentIds: string[]): Promise<Object> 
     return { untrackedComponents: newComponents, unRemovableComponents, missingComponents: missing };
   }
   componentIds.forEach((componentId) => {
-    const bitId = BitId.parse(componentId);
-    if (includes(newComponents, bitId.toString())) {
-      untrackedComponents.push(bitId.toString());
-      bitMap.removeComponent(bitId.toString());
+    const bitId = BitId.parse(componentId).toString();
+    if (includes(newComponents, bitId)) {
+      untrackedComponents.push(bitId);
+      bitMap.removeComponent(bitId);
     } else {
-      bitMap.getComponent(bitId.toString(), false)
-        ? unRemovableComponents.push(bitId.toString())
-        : missing.push(bitId.toString());
+      bitMap.getComponent(bitId, false) ? unRemovableComponents.push(bitId) : missing.push(bitId);
     }
   });
   await bitMap.write();
