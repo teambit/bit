@@ -48,5 +48,5 @@ export default class ComponentObjects {
 }
 
 function _from64Buffer(val): Buffer {
-  return Buffer.from(toBase64ArrayBuffer(val), 'base64');
+  return Buffer.from(val, 'base64');
 }
