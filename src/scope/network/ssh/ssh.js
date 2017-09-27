@@ -141,12 +141,13 @@ export default class SSH implements Network {
     }
   }
 
-  pushMany(manyComponentObjects: ComponentObjects[]): Promise<ComponentObjects[]> {
+  pushMany(manyComponentObjects: ComponentObjects[]): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
     return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects)).then((data: string) => {
-      const { headers } = this._unpack(data);
+      const { payload, headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
+      return payload.ids;
     });
   }
 

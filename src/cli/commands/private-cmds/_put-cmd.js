@@ -26,7 +26,7 @@ export default class Put extends Command {
     });
   }
 
-  report(componentsObjects: ComponentObjects[]): string {
-    return packCommand(buildCommandMessage({ message: `${componentsObjects.length} components have been exported` }));
+  report(ids: string[]): string {
+    return packCommand(buildCommandMessage({ ids }));
   }
 }
