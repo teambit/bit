@@ -21,6 +21,7 @@ import { propogateUntil, pathHas } from './fs/propogate-until';
 import isBitUrl from './is-bit-url';
 import bufferToReadStream from './buffer/to-read-stream';
 import toBase64 from './string/to-base64';
+import toBase64ArrayBuffer from './string/to-base64-array-buffer';
 import fromBase64 from './string/from-base64';
 import parseSSHUrl from './ssh/parse-url';
 import listDirectories from './fs/list-directories';
@@ -84,6 +85,7 @@ export {
   deflate,
   values,
   toBase64,
+  toBase64ArrayBuffer,
   fromBase64,
   glob,
   resolveBoolean,
