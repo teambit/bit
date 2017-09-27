@@ -15,6 +15,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 // GILAD:
 // This is the same as running arrayBuffer.toString('base64') but it runs faster:)
+// A reverse function can be found here: https://github.com/danguer/blog-examples/blob/master/js/base64-binary.js
+// (i tried it and couldn't make it work from some reason)
 
 export default function toBase64ArrayBuffer(arrayBuffer) {
   let base64 = '';
