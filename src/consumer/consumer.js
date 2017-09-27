@@ -463,17 +463,24 @@ export default class Consumer {
     return this.isComponentModified(versionFromModel, componentFromFileSystem);
   }
 
-  async commit(ids: BitId[], message: string, force: ?boolean, verbose: ?boolean): Promise<Component[]> {
+  async commit(
+    ids: BitId[],
+    message: string,
+    force: ?boolean,
+    verbose: ?boolean,
+    ignoreMissingDependencies: ?boolean
+  ): Promise<Component[]> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const components = await this.loadComponents(componentsIds);
     // Run over the components to check if there is missing dependencies
     // If there is at least one we won't commit anything
-    const componentsWithMissingDeps = components.filter((component) => {
-      return Boolean(component.missingDependencies);
-    });
-    if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
-
+    if (!ignoreMissingDependencies) {
+      const componentsWithMissingDeps = components.filter((component) => {
+        return Boolean(component.missingDependencies);
+      });
+      if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
+    }
     const committedComponents = await this.scope.putMany({
       consumerComponents: components,
       message,

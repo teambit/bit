@@ -280,7 +280,68 @@ describe('bit commit command', function () {
         expect(output).to.have.string('src/untracked2.js');
       });
     });
+    describe('commit component with missing dependencies with -ignore_missing_dependencies', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        const fileAfixture = "import a2 from './a2'; import a3 from './a3'";
+        helper.createFile('src', 'a.js', fileAfixture);
+        const fileA2fixture =
+          "import a3 from './a3';import pdackage from 'package';import missingfs from './missing-fs';import untracked from './untracked.js';";
+        helper.createFile('src', 'a2.js', fileA2fixture);
+        const fileBfixture =
+          "import b3 from './b3';import pdackage from 'package2';import missingfs from './missing-fs2';import untracked from './untracked2.js';";
+        helper.createFile('src', 'b.js', fileBfixture);
 
+        helper.createFile('src', 'untracked.js');
+        helper.createFile('src', 'untracked2.js');
+
+        helper.addComponentWithOptions('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
+        helper.addComponent('src/b.js');
+
+        const commitOne = () => helper.commitComponent('comp/a', 'commit-msg', '--ignore_missing_dependencies');
+        try {
+          output = commitOne();
+        } catch (err) {
+          output = err.toString();
+        }
+      });
+
+      it('Should print that the component is commited', () => {
+        expect(output).to.have.string('1 components committed');
+      });
+    });
+    describe('commit all components with missing dependencies with --ignore_missing_dependencies', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        const fileAfixture = "import a2 from './a2'; import a3 from './a3'";
+        helper.createFile('src', 'a.js', fileAfixture);
+        const fileA2fixture =
+          "import a3 from './a3';import pdackage from 'package';import missingfs from './missing-fs';import untracked from './untracked.js';";
+        helper.createFile('src', 'a2.js', fileA2fixture);
+        const fileBfixture =
+          "import b3 from './b3';import pdackage from 'package2';import missingfs from './missing-fs2';import untracked from './untracked2.js';";
+        helper.createFile('src', 'b.js', fileBfixture);
+
+        helper.createFile('src', 'untracked.js');
+        helper.createFile('src', 'untracked2.js');
+
+        helper.addComponentWithOptions('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
+        helper.addComponent('src/b.js');
+
+        const commitAll = () => helper.commitAllComponents('commit-msg', '--ignore_missing_dependencies');
+        try {
+          output = commitAll();
+        } catch (err) {
+          output = err.toString();
+        }
+      });
+
+      it('Should print that the components are commited', () => {
+        expect(output).to.have.string('2 components committed');
+      });
+    });
     // We throw this error because we don't know the packege version in this case
     it.skip('should throw error if there is missing package dependency', () => {});
 
