@@ -24,7 +24,7 @@ const stem = (sentence: string): string =>
     .split(' ')
     .map(stemmer)
     .join(' ');
-let localIndex;
+let indexInstance;
 
 function tokenizeStr(str: string): string {
   return str
@@ -69,43 +69,39 @@ function prepareDoc(docs: Object, component: Component): Doc {
 function addAllToLocalIndex(components: Array<Component>): Promise<string> {
   return new Promise((resolve) => {
     const docs = components.map(component => prepareDoc(component.docs, component));
-    localIndex.then((indexInstance) => {
-      const docStream = new Readable({ objectMode: true });
-      // $FlowFixMe: a flow bug. Stream can be an object as well when objectMode is true
-      docs.map(doc => docStream.push(doc));
-      docStream.push(null);
-      docStream
-        .pipe(indexInstance.defaultPipeline())
-        .pipe(indexInstance.add())
-        .on('finish', () => {
-          resolve('The indexing has been completed');
-        });
-    });
+    const docStream = new Readable({ objectMode: true });
+    // $FlowFixMe: a flow bug. Stream can be an object as well when objectMode is true
+    docs.map(doc => docStream.push(doc));
+    docStream.push(null);
+    docStream
+      .pipe(indexInstance.defaultPipeline())
+      .pipe(indexInstance.add())
+      .on('finish', () => {
+        resolve('The indexing has been completed');
+      });
   });
 }
 
 function addToLocalIndex(component: Component): Promise<Component> {
   return new Promise((resolve) => {
     const doc = prepareDoc(component.docs, component);
-    localIndex.then((indexInstance) => {
-      const docStream = new Readable({ objectMode: true });
-      // $FlowFixMe: a flow bug. Stream can be an object as well when objectMode is true
-      docStream.push(doc);
-      docStream.push(null);
-      docStream
-        .pipe(indexInstance.defaultPipeline())
-        .pipe(indexInstance.add())
-        .on('finish', () => {
-          resolve(component);
-        });
-    });
+    const docStream = new Readable({ objectMode: true });
+    // $FlowFixMe: a flow bug. Stream can be an object as well when objectMode is true
+    docStream.push(doc);
+    docStream.push(null);
+    docStream
+      .pipe(indexInstance.defaultPipeline())
+      .pipe(indexInstance.add())
+      .on('finish', () => {
+        resolve(component);
+      });
   });
 }
 
 async function index(component: Component, scopePath: string): Promise<Component> {
   // if (isWin) return Promise.resolve(component);
   try {
-    localIndex = await serverlessIndex.initializeIndex(scopePath);
+    indexInstance = await serverlessIndex.initializeIndex(scopePath);
     return addToLocalIndex(component);
   } catch (err) {
     logger.error(`search.indexer found an issue while indexing. Error: ${err}`);
@@ -114,15 +110,13 @@ async function index(component: Component, scopePath: string): Promise<Component
   }
 }
 
-function indexAll(path: string, components: Component[]): Promise<any> {
-  return new Promise((resolve, reject) => {
-    if (!components) return reject('The scope is empty');
-    logger.debug(`indexing all, scope path ${path}`);
-    serverlessIndex.deleteDb(path);
-    localIndex = serverlessIndex.initializeIndex(path);
-    const results = addAllToLocalIndex(components);
-    return resolve(results);
-  });
+async function indexAll(path: string, components: Component[]): Promise<any> {
+  if (!components) return Promise.reject('The scope is empty');
+  logger.debug(`indexing all, scope path ${path}`);
+  indexInstance = await serverlessIndex.initializeIndex(path);
+  serverlessIndex.deleteDb(path);
+  const results = addAllToLocalIndex(components);
+  return Promise.resolve(results);
 }
 
 module.exports = {
