@@ -29,16 +29,16 @@ export default class Export extends Command {
     }: { message: string, all: ?boolean, force: ?boolean, verbose: ?boolean, ignore_missing_dependencies: ?boolean }
   ): Promise<any> {
     if (!id && !all) {
-      return Promise.reject('Missing [id]. To commit all components, please use --all flag');
+      return Promise.reject('missing [id]. to commit all components, please use --all flag');
     }
     if (id && all) {
       return Promise.reject(
-        'You can use either [id] to commit a particular component or --all flag to commit them all'
+        'you can use either [id] to commit a particular component or --all flag to commit them all'
       );
     }
     if (!message) {
       // todo: get rid of this. Make it required by commander
-      return Promise.reject('Missing [message], use -m to write the log message');
+      return Promise.reject('missing [message], use -m to write the log message');
     }
     if (all) {
       return commitAllAction({ message, force, verbose, ignoreMissingDependencies: ignore_missing_dependencies });

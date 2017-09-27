@@ -21,12 +21,12 @@ export default class Create extends Command {
   report(results: Array<{ id: string, bound: Object }>): string {
     const reportComponents = results
       .map((result) => {
-        const bounds = result.bound.map(bound => `\t\tFrom: ${bound.from}, To: ${bound.to}`).join('\n');
+        const bounds = result.bound.map(bound => `\t\tfrom: ${bound.from}, to: ${bound.to}`).join('\n');
         return chalk.cyan(`\t${result.id}:\n ${bounds}`);
       })
       .join('\n');
 
-    const reportTitle = chalk.underline(`Bound ${chalk.bold(results.length)} components\n`);
+    const reportTitle = chalk.underline(`bound ${chalk.bold(results.length)} components\n`);
 
     return reportTitle + reportComponents;
   }
