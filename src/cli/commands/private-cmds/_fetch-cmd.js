@@ -18,6 +18,7 @@ export default class Fetch extends Command {
 
   report(componentObjects: ComponentObjects[]): string {
     const components = ComponentObjects.manyToString(componentObjects);
+    // No need to use packCommand because we handle all the base64 stuff in a better way inside the ComponentObjects.manyToString
     return JSON.stringify(buildCommandMessage(components));
   }
 }
