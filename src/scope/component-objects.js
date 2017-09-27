@@ -1,6 +1,7 @@
 /** @flow */
 import BitObject from './objects/object';
 import Repository from './objects/repository';
+import { toBase64ArrayBuffer } from '../utils';
 
 export default class ComponentObjects {
   component: Buffer;
@@ -12,10 +13,31 @@ export default class ComponentObjects {
   }
 
   // @TODO optimize ASAP.
-  toString(): string {
+  toString2(): string {
     return JSON.stringify({
       component: this.component,
       objects: this.objects
+    });
+  }
+
+  toString3(): string {
+    return JSON.stringify({
+      component: this.component.toString(),
+      objects: this.objects.map(obj => obj.toString('base64'))
+    });
+  }
+
+  toString4(): string {
+    return JSON.stringify({
+      component: this.component.toString(),
+      objects: this.objects.map(toBase64ArrayBuffer)
+    });
+  }
+
+  toString(): string {
+    return JSON.stringify({
+      component: this.component.toString(),
+      objects: this.objects.map(obj => obj.toString('binary'))
     });
   }
 
@@ -25,7 +47,17 @@ export default class ComponentObjects {
   }
 
   static manyToString(componentsAndObjects: Array<{ component: Buffer, objects: Buffer[] }>) {
-    return JSON.stringify(componentsAndObjects);
+    // console.log(componentsAndObjects.length);
+    const result1 = JSON.stringify(componentsAndObjects.map(componentAndObject => componentAndObject.toString()));
+    const result2 = JSON.stringify(componentsAndObjects.map(componentAndObject => componentAndObject.toString2()));
+    const result3 = JSON.stringify(componentsAndObjects.map(componentAndObject => componentAndObject.toString3()));
+    const result4 = JSON.stringify(componentsAndObjects.map(componentAndObject => componentAndObject.toString4()));
+    console.log('result1: ', result1.length);
+    console.log('result2: ', result2.length);
+    console.log('result3: ', result3.length);
+    console.log('result4: ', result4.length);
+    console.log('result8: ', JSON.stringify(componentsAndObjects).length);
+    return JSON.stringify(result3);
   }
 
   static manyFromString(str: string): ComponentObjects[] {
