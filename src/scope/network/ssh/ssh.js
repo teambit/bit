@@ -60,13 +60,18 @@ export default class SSH implements Network {
       let res = '';
       let err;
       const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), commandName === '_put' ? null : payload);
+      if (!this.connection) {
+        err = 'ssh connection is not defined';
+        logger.error(err);
+        return reject(err);
+      }
       this.connection.exec(cmd, (error, stream) => {
         if (error) {
           logger.error('ssh, exec returns an error: ', error);
           return reject(error);
         }
         if (commandName === '_put') {
-          stream.stdin.write(toBase64(payload));
+          stream.stdin.write(payload);
           stream.stdin.end();
         }
         stream
@@ -99,7 +104,7 @@ export default class SSH implements Network {
     });
   }
 
-  errorHandler(code, err) {
+  errorHandler(code: number, err: string) {
     let parsedError;
     try {
       parsedError = JSON.parse(err);
@@ -137,7 +142,6 @@ export default class SSH implements Network {
     return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects)).then((data: string) => {
       const { headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
-      return Promise.resolve();
     });
   }
 
@@ -158,7 +162,7 @@ export default class SSH implements Network {
       return Promise.resolve(payload);
     });
   }
-  push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
+  push(componentObjects: ComponentObjects): Promise<ComponentObjects[]> {
     return this.pushMany([componentObjects]);
   }
 
