@@ -211,11 +211,10 @@ export default class SSH implements Network {
     ids = ids.map(bitId => bitId.toString());
     if (noDeps) options = '-n';
     return this.exec(`_fetch ${options}`, ids).then((str: string) => {
-      const { payload, headers } = this._unpack(str);
+      const { payload, headers } = JSON.parse(str);
       checkVersionCompatibility(headers.version);
-      return payload.map((raw) => {
-        return ComponentObjects.fromString(raw);
-      });
+      const componentObjects = ComponentObjects.manyFromString(payload);
+      return componentObjects;
     });
   }
 

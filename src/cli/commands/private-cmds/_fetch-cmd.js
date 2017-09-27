@@ -17,7 +17,7 @@ export default class Fetch extends Command {
   }
 
   report(componentObjects: ComponentObjects[]): string {
-    const components = componentObjects.map(obj => obj.toString());
-    return packCommand(buildCommandMessage(components));
+    const components = ComponentObjects.manyToString(componentObjects);
+    return JSON.stringify(buildCommandMessage(components));
   }
 }
