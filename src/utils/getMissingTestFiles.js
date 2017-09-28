@@ -5,16 +5,8 @@ import { pathNormalizeToLinux } from './index';
 
 const DSL = ['{PARENT_FOLDER}', '{FILE_NAME}'];
 
-class TestFileNotExists extends Error {
-  path: string;
-
-  constructor(path: string) {
-    super();
-    this.path = path;
-  }
-}
-
-export default function verifyTestFIles(tests) {
+export default function getMissingTestFiles(tests) {
+  const missingTestFiles = [];
   const realTestFiles = tests.filter((testFile) => {
     const files = DSL.filter(pattern => testFile.indexOf(pattern) > -1);
     const glob = isGlob(pathNormalizeToLinux(testFile));
@@ -22,7 +14,8 @@ export default function verifyTestFIles(tests) {
   });
   if (!R.isEmpty(realTestFiles)) {
     realTestFiles.forEach((testFile) => {
-      if (!fs.existsSync(testFile)) throw new TestFileNotExists(testFile);
+      if (!fs.existsSync(testFile)) missingTestFiles.push(testFile);
     });
   }
+  return missingTestFiles;
 }

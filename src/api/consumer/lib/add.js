@@ -12,7 +12,7 @@ import {
   pathNormalizeToLinux,
   pathJoinLinux,
   pathResolve,
-  verifyTestFIles
+  getMissingTestFiles
 } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
@@ -205,7 +205,8 @@ export default (async function addAction(
   const bitMap = await BitMap.load(consumer.getPath());
 
   // check unknown test files
-  verifyTestFIles(tests);
+  const missingFiles = getMissingTestFiles(tests);
+  if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
 
   const componentPathsStats = {};
   const resolvedComponentPaths = await Promise.all(componentPaths.map(componentPath => glob(componentPath)));

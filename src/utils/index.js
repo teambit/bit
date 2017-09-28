@@ -65,7 +65,7 @@ import getExt from './fs/get-ext';
 import outputJsonFile from './fs-output-json-sync';
 import searchFilesIgnoreExt from './fs/search-files-ignore-ext';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelative, pathResolve, pathJoinOs } from './path';
-import verifyTestFIles from './verifyTetsFiles';
+import getMissingTestFiles from './getMissingTestFiles';
 
 export {
   parseSSHUrl,
@@ -139,5 +139,5 @@ export {
   pathJoinOs,
   outputJsonFile,
   searchFilesIgnoreExt,
-  verifyTestFIles
+  getMissingTestFiles
 };
