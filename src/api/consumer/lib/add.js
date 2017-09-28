@@ -39,8 +39,8 @@ export default (async function addAction(
 
   // update test files according to dsl
   async function getFiles(files, testFiles: string[]) {
-    const fileList = await testFiles.map(async (dsl) => {
-      const fileList = await files.map(async (file) => {
+    const fileList = testFiles.map(async (dsl) => {
+      const fileList = files.map(async (file) => {
         const fileInfo = calculateFileInfo(file);
         const generatedFile = format(dsl, fileInfo);
         const matches = await glob(generatedFile);
