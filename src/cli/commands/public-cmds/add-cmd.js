@@ -4,6 +4,7 @@ import path from 'path';
 import Command from '../../command';
 import { add } from '../../../api/consumer';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
+import { pathNormalizeToLinux } from '../../../utils';
 
 export default class Add extends Command {
   name = 'add <path...>';
@@ -43,7 +44,9 @@ export default class Add extends Command {
 
     const normalizedPathes = paths.map(p => path.normalize(p));
     const testsArray = tests ? this.splitList(tests).map(filePath => path.normalize(filePath.trim())) : [];
-    const exludedFiles = exclude ? this.splitList(exclude).map(filePath => path.normalize(filePath.trim())) : undefined;
+    const exludedFiles = exclude
+      ? this.splitList(exclude).map(filePath => pathNormalizeToLinux(filePath.trim()))
+      : undefined;
     return add(
       normalizedPathes,
       id,

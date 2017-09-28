@@ -3,7 +3,6 @@ import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
 import format from 'string-format';
-import isGlob from 'is-glob';
 import uniqby from 'lodash.uniqby';
 import {
   glob,
@@ -12,7 +11,8 @@ import {
   existsSync,
   pathNormalizeToLinux,
   pathJoinLinux,
-  pathResolve
+  pathResolve,
+  verifyTestFIles
 } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
@@ -50,7 +50,7 @@ export default (async function addAction(
     });
     const fileListRes = R.flatten(await Promise.all(fileList));
     const uniq = R.uniq(fileListRes);
-    return uniq;
+    return uniq.map(file => pathNormalizeToLinux(file));
   }
   // todo: remove the logic of fixing the absolute paths, it is already done in BitMap class
   async function addOneComponent(componentPathsStats: Object, bitMap: BitMap, consumer: Consumer) {
@@ -60,7 +60,7 @@ export default (async function addAction(
       const resolvedExcludedFiles = await getFiles(files, excludedList);
       mapValues.forEach((mapVal) => {
         mapVal.files = mapVal.files.filter(key => !resolvedExcludedFiles.includes(key.relativePath));
-        mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles.includes(testFile));
+        // mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles.includes(testFile));
       });
     }
 
@@ -124,7 +124,6 @@ export default (async function addAction(
           return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
         });
         // mark or add test files according to dsl
-        console.log('maybe');
         const testFilesArr = !R.isEmpty(tests) ? await getFiles(files.map(file => file.relativePath), tests) : [];
         const testFiles = testFilesArr.map(testFile => ({
           relativePath: pathNormalizeToLinux(testFile),
@@ -146,7 +145,7 @@ export default (async function addAction(
           parsedId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
         }
 
-        return { componentId: parsedId, files: files.concat(testFiles), mainFile: resolvedMainFile, testsFiles: tests };
+        return { componentId: parsedId, files: files.concat(testFiles), mainFile: resolvedMainFile };
       }
       // is file
       const resolvedPath = path.resolve(componentPath);
@@ -168,7 +167,6 @@ export default (async function addAction(
       ];
 
       // mark or add test files according to dsl
-      console.log('maybe');
       const testFilesArr = !R.isEmpty(tests) ? await getFiles(files.map(file => file.relativePath), tests) : [];
       const testFiles = testFilesArr.map(testFile => ({
         relativePath: pathNormalizeToLinux(testFile),
@@ -179,10 +177,10 @@ export default (async function addAction(
       const resolvedMainFile = addMainFileToFiles(files, main);
 
       if (componentExists) {
-        return { componentId: parsedId, files: files.concat(testFiles), mainFile: resolvedMainFile, testsFiles: tests };
+        return { componentId: parsedId, files: files.concat(testFiles), mainFile: resolvedMainFile };
       }
 
-      return { componentId: parsedId, files: files.concat(testFiles), mainFile: relativeFilePath, testsFiles: tests };
+      return { componentId: parsedId, files: files.concat(testFiles), mainFile: relativeFilePath };
     });
 
     let mapValues = await Promise.all(mapValuesP);
@@ -207,9 +205,7 @@ export default (async function addAction(
   const bitMap = await BitMap.load(consumer.getPath());
 
   // check unknown test files
-  tests.forEach((testFile) => {
-    if (!isGlob(testFile) && !fs.existsSync(testFile)) throw new PathNotExists(testFile);
-  });
+  verifyTestFIles(tests);
 
   const componentPathsStats = {};
   const resolvedComponentPaths = await Promise.all(componentPaths.map(componentPath => glob(componentPath)));
