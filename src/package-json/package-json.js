@@ -10,9 +10,10 @@ function composePath(componentRootFolder: string) {
 }
 
 function hasExisting(componentRootFolder: string, throws?: boolean = false): boolean {
-  const exists = fs.pathExistsSync(composePath(componentRootFolder));
+  const packageJsonPath = composePath(componentRootFolder);
+  const exists = fs.pathExistsSync(packageJsonPath);
   if (!exists && throws) {
-    throw (new PackageJsonNotFound());
+    throw (new PackageJsonNotFound(packageJsonPath));
   }
   return exists;
 }
@@ -68,7 +69,7 @@ export default class PackageJson {
 
   async write({ override = true }: { override?: boolean }): Promise<boolean> {
     if (!override && hasExisting(this.componentRootFolder)) {
-      return Promise.reject(new PackageJsonAlreadyExists());
+      return Promise.reject(new PackageJsonAlreadyExists(this.componentRootFolder));
     }
 
     const plain = this.toPlainObject();
