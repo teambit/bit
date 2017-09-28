@@ -19,7 +19,13 @@ export default class Status extends Command {
     return status();
   }
 
-  report({ newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps }: StatusResult): string {
+  report({
+    newComponents,
+    modifiedComponent,
+    stagedComponents,
+    componentsWithMissingDeps,
+    importPendingComponents
+  }: StatusResult): string {
     function formatMissing(missingComponent: Component) {
       function formatMissingStr(array, label) {
         if (!array || array.length === 0) return '';
@@ -45,6 +51,10 @@ export default class Status extends Command {
       return `${formatNewBit(component)}... ${chalk.red('missing dependencies')}${formatMissing(missing)}`;
     }
 
+    const importPendingWarning = importPendingComponents.length
+      ? chalk.yellow('Some of your components are not imported yet, please run "bit import" to import them\n\n')
+      : '';
+
     const newComponentsOutput = immutableUnshift(
       newComponents.map(format).sort((itemA) => {
         if (itemA.indexOf('ok') !== -1) return -1;
@@ -63,8 +73,11 @@ export default class Status extends Command {
       stagedComponents.length ? chalk.underline.white('staged components') : chalk.green('no staged components')
     ).join('\n');
 
-    return [newComponentsOutput, modifiedComponentOutput, stagedComponentsOutput].join(
-      chalk.underline('\n                         \n') + chalk.white('\n')
+    return (
+      importPendingWarning +
+      [newComponentsOutput, modifiedComponentOutput, stagedComponentsOutput].join(
+        chalk.underline('\n                         \n') + chalk.white('\n')
+      )
     );
   }
 }

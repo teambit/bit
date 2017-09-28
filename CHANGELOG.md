@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- exclude import-pending components from 'new components' section
 - add ignore missing dependencies to commit  
 - remove feature for removing local and remote components
 - deprecate feature for deprecating local and remote components
