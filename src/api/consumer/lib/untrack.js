@@ -21,6 +21,7 @@ export default (async function untrack(componentIds: string[]): Promise<Object> 
     return { untrackedComponents: newComponents, unRemovableComponents, missingComponents: missing };
   }
   componentIds.forEach((componentId) => {
+    // added this in order to get global auto complete in case the user on write the component name without default namespace
     const bitId = BitId.parse(componentId).toString();
     if (includes(newComponents, bitId)) {
       untrackedComponents.push(bitId);
