@@ -71,7 +71,6 @@ function checkUpdate(cb) {
 var clearCachePrefix = 'bit cc && ';
 
 function getUpdateCommand() {
-  if (constants.BIT_INSTALL_METHOD === 'brew') return 'brew update && brew upgrade bit';
   if (constants.BIT_INSTALL_METHOD === 'yum') return 'yum clean all && yum upgrade bit -y';
   if (constants.BIT_INSTALL_METHOD === 'deb') return 'sudo apt-get update && sudo apt-get install bit';
   if (constants.BIT_INSTALL_METHOD === 'npm') return 'npm install --global bit-bin';
