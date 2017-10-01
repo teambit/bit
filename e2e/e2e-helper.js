@@ -170,7 +170,7 @@ export default class Helper {
   }
 
   commitComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
-    return this.runCmd(`bit commit ${id} -m ${commitMsg} ${options}`);
+    return this.runCmd(`bit tag ${id} -m ${commitMsg} ${options}`);
   }
   removeComponent(id: string, flags: string = '') {
     return this.runCmd(`bit remove ${id} ${flags}`);
@@ -179,7 +179,7 @@ export default class Helper {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
   commitAllComponents(commitMsg: string = 'commit-message', options: string = '') {
-    return this.runCmd(`bit commit ${options} -am ${commitMsg} `);
+    return this.runCmd(`bit tag ${options} -am ${commitMsg} `);
   }
 
   exportComponent(id: string, scope: string = this.remoteScope) {
@@ -238,7 +238,7 @@ export default class Helper {
     ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'index.js'), '');
 
     this.runCmd('bit add compiler.js -i compilers/babel', tempScopePath);
-    this.runCmd('bit commit compilers/babel -m msg', tempScopePath);
+    this.runCmd('bit tag compilers/babel -m msg', tempScopePath);
 
     fs.emptyDirSync(this.envScopePath);
     this.runCmd('bit init --bare', this.envScopePath);
