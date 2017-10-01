@@ -2,7 +2,7 @@
 import type { Command } from './types';
 import { getDependenciesAction } from '../../actions';
 
-const report = (data) => { console.log('dependencies', data); };
+const report = (data) => { console.log('dependencies', JSON.stringify(data, null, '  ')); };
 
 const getDependenciesCommand: Command = {
   name: 'get-dependencies',
