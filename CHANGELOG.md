@@ -9,22 +9,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.10.8] - 2017-10-01
 
+- support requiring imported components using `require('bit/namespace/name')` syntax
+- new remove command for removing local and remote components
+- new deprecate command for deprecating local and remote components
+- new move command for moving files/directories of a component to a new location
+- create package.json for imported components
 - exclude import-pending components from 'new components' section
 - add ignore missing dependencies to commit  
-- remove feature for removing local and remote components
-- deprecate feature for deprecating local and remote components
-- support requiring imported components using `require('bit/namespace/name')` syntax
 - save all dependencies on one configurable directory (components/.dependencies by default) 
 - add support for tsx files
 - generate internal component links according to their compiled version
 - move a re-imported component to a new location when `bit import --prefix` is used
 - fix commit and export issues when dealing with more than 500 components
-- support move command for moving files/directories of a component to a new location
 - fix export of large amount of data
-- fix bug with commit --force when tests throws exception
-- fix bug - when you import authored component (and there is newer version) it duplicate it in the .bit.map.json
+- fix bug with commit --force when tests throws an exception
+- fix bug - when you import authored component (and there is a newer version) it duplicate it in the .bit.map.json
 - fix bug - when you import authored component it was added to bit.json dependencies
-- create package.json for imported components
 - fix bug with ssh2 times out on handshake
 
 ## [0.10.7] - 2017-09-07
