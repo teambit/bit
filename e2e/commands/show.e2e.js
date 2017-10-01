@@ -52,13 +52,6 @@ describe('bit show command', function () {
         output = helper.runCmd('bit show comp/comp');
         expect(output).to.include('Deprecated');
       });
-      it('Should not show component if bit.json is corrupted', () => {
-        helper.corruptBitJson();
-        const showCmd = () => helper.runCmd('bit show comp/comp -j');
-        expect(showCmd).to.throw(
-          'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-        );
-      });
     });
 
     describe('single version as cli output (no -v or -j flags)', () => {
@@ -311,6 +304,24 @@ function add(a, b) {
       expect(output.includes('Args')).to.be.true;
       expect(output.includes('Returns')).to.be.true;
       expect(output.includes('number -> Returns the total.')).to.be.true;
+    });
+  });
+  describe('local component', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler();
+
+      helper.createComponent('utils', 'is-string.js');
+      helper.addComponent('utils/is-string.js');
+      helper.commitComponent('utils/is-string');
+    });
+
+    it('Should not show component if bit.json is corrupted', () => {
+      helper.corruptBitJson();
+      const showCmd = () => helper.runCmd('bit show comp/comp -j');
+      expect(showCmd).to.throw(
+        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+      );
     });
   });
 });
