@@ -37,6 +37,7 @@ describe('bit show command', function () {
         output = helper.runCmd('bit show comp/comp');
         expect(output).to.not.include('Deprecated');
       });
+
       it('should show deprecated component', () => {
         output = JSON.parse(helper.runCmd('bit show comp/comp -j'));
         expect(output).to.include({ deprecated: false });
@@ -50,6 +51,13 @@ describe('bit show command', function () {
         helper.deprecateComponent('comp/comp');
         output = helper.runCmd('bit show comp/comp');
         expect(output).to.include('Deprecated');
+      });
+      it('Should not show component if bit.json is corrupted', () => {
+        helper.corruptBitJson();
+        const showCmd = () => helper.runCmd('bit show comp/comp -j');
+        expect(showCmd).to.throw(
+          'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+        );
       });
     });
 

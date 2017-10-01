@@ -7,7 +7,7 @@ describe('bit remove command', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe.only('with local scope and corrupted bit.json', () => {
+  describe('with local scope and corrupted bit.json', () => {
     before(() => {
       helper.initNewLocalScope();
     });

@@ -357,4 +357,17 @@ describe('bit status command', function () {
       expect(output.includes('no new components')).to.be.true;
     });
   });
+  describe('with corrupted bit.json', () => {
+    before(() => {
+      helper.initNewLocalScope();
+      helper.createComponentBarFoo();
+    });
+    it('Should not show status if bit.json is corrupted', () => {
+      helper.corruptBitJson();
+      const statusCmd = () => helper.runCmd('bit status');
+      expect(statusCmd).to.throw(
+        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+      );
+    });
+  });
 });
