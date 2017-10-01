@@ -8,13 +8,15 @@ export type StatusResult = {
   newComponents: Component[],
   modifiedComponent: Component[],
   stagedComponents: string[],
-  componentsWithMissingDeps: Component[]
+  componentsWithMissingDeps: Component[],
+  importPendingComponents: Component[]
 };
 
 export default (async function status(): Promise<StatusResult> {
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
-  const newComponents = await componentsList.listNewComponents(true);
+  const newAndImportPendingComponents = await componentsList.listNewComponentsAndImportPending();
+  const { newComponents, importPendingComponents } = newAndImportPendingComponents;
   const modifiedComponent = await componentsList.listModifiedComponents(true);
   const stagedComponents = await componentsList.listExportPendingComponents();
 
@@ -25,5 +27,5 @@ export default (async function status(): Promise<StatusResult> {
     return Boolean(component.missingDependencies);
   });
 
-  return { newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps };
+  return { newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps, importPendingComponents };
 });

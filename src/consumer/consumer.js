@@ -222,7 +222,9 @@ export default class Consumer {
     }
     if (componentsFromBitMap.length) {
       componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsFromBitMap, cache);
-      await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false, withPackageJson);
+      // Don't write the package.json for an authored component, because it's dependencies probably managed
+      // By the root packge.json
+      await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false, false);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     if (withEnvironments) {

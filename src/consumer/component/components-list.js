@@ -151,6 +151,27 @@ export default class ComponentsList {
     const componentsIds = newComponents.map(id => BitId.parse(id));
     return this.consumer.loadComponents(componentsIds);
   }
+
+  /**
+   * Authored exported components (easily identified by having a scope) which are not saved in the model are
+   * import-pending. Exclude them from the 'newComponents' and add them to 'pendingComponents'.
+   */
+  async listNewComponentsAndImportPending() {
+    const allNewComponents = await this.listNewComponents(true);
+    const newComponents = [];
+    const importPendingComponents = [];
+    const bitMap = await this.getBitMap();
+    allNewComponents.forEach((component) => {
+      const componentMap = bitMap.getComponent(component.id);
+      if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && component.id.scope) {
+        importPendingComponents.push(component);
+      } else {
+        newComponents.push(component);
+      }
+    });
+    return { newComponents, importPendingComponents };
+  }
+
   /**
    * New and modified components are commit pending
    *
@@ -252,7 +273,7 @@ export default class ComponentsList {
     return this._fromBitMap[cacheKeyName];
   }
 
-  async getBitMap(): Object {
+  async getBitMap(): Promise<BitMap> {
     if (!this._bitMap) {
       this._bitMap = await BitMap.load(this.consumer.getPath());
     }
