@@ -308,7 +308,7 @@ describe('bit tag command', function () {
       });
 
       it('Should print that the component is commited', () => {
-        expect(output).to.have.string('1 components committed');
+        expect(output).to.have.string('1 components tagged');
       });
     });
     describe('commit all components with missing dependencies with --ignore_missing_dependencies', () => {
@@ -339,7 +339,7 @@ describe('bit tag command', function () {
       });
 
       it('Should print that the components are commited', () => {
-        expect(output).to.have.string('2 components committed');
+        expect(output).to.have.string('2 components tagged');
       });
     });
     // We throw this error because we don't know the packege version in this case
