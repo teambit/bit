@@ -1,10 +1,55 @@
 // @flow
 // TODO: This should be exported as a bit component
-import path from 'path';
+
+import parents from 'parents';
 import fs from 'fs';
-import findPackage from 'find-package';
+import path from 'path';
+// import findPackage from 'find-package';
 import R from 'ramda';
 import generateTree from './generate-tree-madge';
+
+/**
+ * Taken from this package (with some minor changes):
+ * https://www.npmjs.com/package/find-package
+ * https://github.com/jalba/find-package
+ * 
+ */
+function findPath(dir) {
+  const parentsArr = parents(dir);
+  let i;
+  for (i = 0; i < parentsArr.length; i++) {
+    const config = `${parentsArr[i]}/package.json`;
+    try {
+        // console.log('config', config);
+      if (fs.lstatSync(config).isFile()) {
+        return config;
+      }
+    } catch (e) {}
+  }
+  return null;
+}
+
+/**
+ * Taken from this package (with some minor changes):
+ * https://www.npmjs.com/package/find-package
+ * https://github.com/jalba/find-package
+ * 
+ */
+function findPackage(dir, addPaths) {
+  const pathToConfig = findPath(dir);
+  let configJSON = null;
+  if (pathToConfig !== null) configJSON = require(pathToConfig);
+  if (configJSON && addPaths) {
+    configJSON.paths = {
+      relative: path.relative(dir, pathToConfig),
+      absolute: pathToConfig,
+    };
+  } else if (configJSON !== null) {
+    delete configJSON.paths;
+  }
+
+  return configJSON;
+}
 
 /**
  * Group dependencies by types (files, bits, packages)
@@ -24,11 +69,30 @@ const byType = R.groupBy((dependencies) => {
  * @param {any} packageFullPath full path to the package
  * @returns {Object} name and version of the package
  */
-function resolveNodePackage(packageFullPath) {
+function resolveNodePackage(cwd, packageFullPath) {
+  const NODE_MODULES = 'node_modules/';
   const result = {};
+  // Start by searching in the component dir and up from there
+  // If not found search in package dir itself.
+  // We are doing this, because the package.json insisde the package dir contain exact version
+  // And the component/consumer package.json might contain semver like ^ or ~
+  // We want to have this semver as dependency and not the exact version, otherwise it will be considered as modified all the time
+  const packageJsonInfo = findPackage(cwd);
+  if (packageJsonInfo) {
+    const packageRelativePath = packageFullPath.substring(packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length, packageFullPath.length);
+    const packageName = resolvePackageNameByPath(packageRelativePath);
+    const packageVersion = R.path(['dependencies', packageName], packageJsonInfo) ||
+                           R.path(['devDependencies', packageName], packageJsonInfo) ||
+                           R.path(['peerDependencies', packageName], packageJsonInfo);
+    if (packageVersion) {
+      result[packageName] = packageVersion;
+      return result;
+    }
+  }
+  // Get the package relative path to the node_modules dir
+
   const packageInfo = findPackage(packageFullPath);
   result[packageInfo.name] = packageInfo.version;
-
   return result;
 }
 
@@ -45,7 +109,7 @@ function groupDependencyList(list, cwd) {
   const groups = byType(list);
   if (groups.packages) {
     const packages = groups.packages.reduce((res, packagePath) => {
-      const packageWithVersion = resolveNodePackage(path.join(cwd, packagePath));
+      const packageWithVersion = resolveNodePackage(cwd, path.join(cwd, packagePath));
       return Object.assign(res, packageWithVersion);
     }, {});
     groups.packages = packages;
@@ -87,7 +151,7 @@ const byPathType = R.groupBy((missing) => {
  * @param {string} packagePath import statement path
  * @returns {string} name of the package
  */
-function resolveMissingPackageName(packagePath) {
+function resolvePackageNameByPath(packagePath) {
   const packagePathArr = packagePath.split(path.sep); // TODO: make sure this is working on windows
   // Regular package without path. example - import _ from 'lodash'
   if (packagePathArr.length === 1) return packagePath;
@@ -129,7 +193,7 @@ function resolveModulePath(nmPath, workingDir, root) {
  */
 function groupMissings(missings, cwd, consumerPath) {
   const groups = byPathType(missings);
-  const packages = groups.packages ? groups.packages.map(resolveMissingPackageName) : [];
+  const packages = groups.packages ? groups.packages.map(resolvePackageNameByPath) : [];
   // This is a hack to solve problems that madge has with packages for type script files
   // It see them as missing even if they are exists
   const foundedPackages = {};
@@ -141,7 +205,7 @@ function groupMissings(missings, cwd, consumerPath) {
     if (!resolvedPath) {
       return missingPackages.push(packageName);
     }
-    const packageWithVersion = resolveNodePackage(resolvedPath);
+    const packageWithVersion = resolveNodePackage(cwd, resolvedPath);
     return packageWithVersion ? Object.assign(foundedPackages, packageWithVersion) :
                                 missingPackages.push(packageWithVersion);
   });

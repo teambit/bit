@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 - Add a CLI command to easily get dependencies for a file
+- Support semver in packages dependencies
 
 ## [0.10.4] - 2017-10-01
 - Add support for writing package.json files
