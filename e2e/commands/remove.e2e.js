@@ -7,6 +7,18 @@ describe('bit remove command', function () {
   after(() => {
     helper.destroyEnv();
   });
+  describe.only('with local scope and corrupted bit.json', () => {
+    before(() => {
+      helper.initNewLocalScope();
+    });
+    it('Should not remove component if bit.json is corrupted', () => {
+      helper.corruptBitJson();
+      const removeCmd = () => helper.removeComponent('bar/foo2');
+      expect(removeCmd).to.throw(
+        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+      );
+    });
+  });
   describe('with commited components and -t=false ', () => {
     let output;
     before(() => {

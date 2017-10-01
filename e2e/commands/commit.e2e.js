@@ -16,6 +16,18 @@ describe('bit tag command', function () {
     helper.reInitLocalScope();
     logSpy = sinon.spy(console, 'log');
   });
+  describe('tag component with corrupted bitjson', () => {
+    it('Should not commit component if bit.json is corrupted', () => {
+      const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
+      helper.createComponent('bar', 'foo2.js', fixture);
+      helper.addComponent('bar/foo2.js');
+      const commit = () => helper.commitComponent('bar/foo2');
+      helper.corruptBitJson();
+      expect(commit).to.throw(
+        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+      );
+    });
+  });
   describe.skip('tag one component', () => {
     it('should throw error if the bit id does not exists', () => {});
 

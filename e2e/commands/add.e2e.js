@@ -27,6 +27,14 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('bar/foo2');
     });
+    it('Should not add component if bit.json is corrupted', () => {
+      helper.createComponent('bar', 'foo2.js');
+      helper.corruptBitJson();
+      const addCmd = () => helper.addComponent(path.normalize('bar/foo2.js'));
+      expect(addCmd).to.throw(
+        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+      );
+    });
     it('Should trim testFiles spaces', () => {
       const osComponentName = path.normalize('bar/foo.js');
       const osFilePathName = path.normalize('bar/foo.spec.js');
