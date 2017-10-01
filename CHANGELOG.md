@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- bit add' on missing test file should throw an error
+- prevent test files from becoming new components
 
 ## [0.10.8] - 2017-10-01
 
