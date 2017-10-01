@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.8] - 2017-10-01
+
 - exclude import-pending components from 'new components' section
 - add ignore missing dependencies to commit  
 - remove feature for removing local and remote components
