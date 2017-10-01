@@ -60,7 +60,6 @@ export default (async function addAction(
       const resolvedExcludedFiles = await getFiles(files, excludedList);
       mapValues.forEach((mapVal) => {
         mapVal.files = mapVal.files.filter(key => !resolvedExcludedFiles.includes(key.relativePath));
-        // mapVal.testsFiles = mapVal.testsFiles.filter(testFile => !resolvedExcludedFiles.includes(testFile));
       });
     }
 
@@ -109,6 +108,15 @@ export default (async function addAction(
       parsedId = BitId.parse(id);
     }
 
+    async function getTestFiles(files, tests) {
+      const testFilesArr = !R.isEmpty(tests) ? await getFiles(files.map(file => file.relativePath), tests) : [];
+      const testFiles = testFilesArr.map(testFile => ({
+        relativePath: pathNormalizeToLinux(testFile),
+        test: true,
+        name: path.basename(testFile)
+      }));
+      return testFiles;
+    }
     const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
@@ -123,13 +131,9 @@ export default (async function addAction(
         const files = matches.map((match) => {
           return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
         });
-        // mark or add test files according to dsl
-        const testFilesArr = !R.isEmpty(tests) ? await getFiles(files.map(file => file.relativePath), tests) : [];
-        const testFiles = testFilesArr.map(testFile => ({
-          relativePath: pathNormalizeToLinux(testFile),
-          test: true,
-          name: path.basename(testFile)
-        }));
+
+        // get test files
+        const testFiles = await getTestFiles(files, tests);
 
         const resolvedMainFile = addMainFileToFiles(files, pathNormalizeToLinux(main));
         // matches.forEach((match) => {
@@ -166,13 +170,8 @@ export default (async function addAction(
         { relativePath: pathNormalizeToLinux(relativeFilePath), test: false, name: path.basename(relativeFilePath) }
       ];
 
-      // mark or add test files according to dsl
-      const testFilesArr = !R.isEmpty(tests) ? await getFiles(files.map(file => file.relativePath), tests) : [];
-      const testFiles = testFilesArr.map(testFile => ({
-        relativePath: pathNormalizeToLinux(testFile),
-        test: true,
-        name: path.basename(testFile)
-      }));
+      // get test files
+      const testFiles = await getTestFiles(files, tests);
 
       const resolvedMainFile = addMainFileToFiles(files, main);
 
