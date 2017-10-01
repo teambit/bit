@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 - rename `bit commit` to `bit tag`
+- fix bug when component version is larger than 10 it won't show as staged
 
 ## [0.10.8] - 2017-10-01
 
