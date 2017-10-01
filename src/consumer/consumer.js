@@ -222,7 +222,9 @@ export default class Consumer {
     }
     if (componentsFromBitMap.length) {
       componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsFromBitMap, cache);
-      await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false, withPackageJson);
+      // Don't write the package.json for an authored component, because it's dependencies probably managed
+      // By the root packge.json
+      await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false, false);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     if (withEnvironments) {
@@ -463,17 +465,24 @@ export default class Consumer {
     return this.isComponentModified(versionFromModel, componentFromFileSystem);
   }
 
-  async commit(ids: BitId[], message: string, force: ?boolean, verbose: ?boolean): Promise<Component[]> {
+  async commit(
+    ids: BitId[],
+    message: string,
+    force: ?boolean,
+    verbose: ?boolean,
+    ignoreMissingDependencies: ?boolean
+  ): Promise<Component[]> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const components = await this.loadComponents(componentsIds);
     // Run over the components to check if there is missing dependencies
     // If there is at least one we won't commit anything
-    const componentsWithMissingDeps = components.filter((component) => {
-      return Boolean(component.missingDependencies);
-    });
-    if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
-
+    if (!ignoreMissingDependencies) {
+      const componentsWithMissingDeps = components.filter((component) => {
+        return Boolean(component.missingDependencies);
+      });
+      if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
+    }
     const committedComponents = await this.scope.putMany({
       consumerComponents: components,
       message,
@@ -684,8 +693,8 @@ export default class Consumer {
       const result = await resolvedRemote.deleteMany(groupedBitsByScope[key], force);
       return result;
     });
-    const removedObj = await Promise.all(removeP);
-    return removedObj;
+    const removeResults = await Promise.all(removeP);
+    return removeResults;
   }
   async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean) {
     // local remove in case user wants to delete commited components

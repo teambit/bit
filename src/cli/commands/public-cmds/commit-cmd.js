@@ -13,13 +13,20 @@ export default class Export extends Command {
     ['m', 'message <message>', 'message'],
     ['a', 'all', 'tag all new and modified components'],
     ['f', 'force', 'forcely tag even if tests are failing and even when component has not changed'],
-    ['v', 'verbose', 'show specs output on tag']
+    ['v', 'verbose', 'show specs output on tag'],
+    ['', 'ignore_missing_dependencies', 'ignore missing dependencies (default = false)']
   ];
   loader = true;
 
   action(
     [id]: string[],
-    { message, all, force, verbose }: { message: string, all: ?boolean, force: ?boolean, verbose: ?boolean }
+    {
+      message,
+      all,
+      force,
+      verbose,
+      ignore_missing_dependencies = false
+    }: { message: string, all: ?boolean, force: ?boolean, verbose: ?boolean, ignore_missing_dependencies: ?boolean }
   ): Promise<any> {
     if (!id && !all) {
       return Promise.reject('missing [id]. to tag all components, please use --all flag');
@@ -34,9 +41,9 @@ export default class Export extends Command {
       return Promise.reject('missing [message], please use -m to write the log message');
     }
     if (all) {
-      return commitAllAction({ message, force, verbose });
+      return commitAllAction({ message, force, verbose, ignoreMissingDependencies: ignore_missing_dependencies });
     }
-    return commitAction({ id, message, force, verbose });
+    return commitAction({ id, message, force, verbose, ignoreMissingDependencies: ignore_missing_dependencies });
   }
 
   report(components: Component | Component[]): string {

@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
 import format from 'string-format';
+import uniqby from 'lodash.uniqby';
 import {
   glob,
   isDir,
@@ -225,7 +226,7 @@ export default (async function addAction(
       return a.concat(b.files);
     }, []);
 
-    return addToBitMap({ componentId, files, mainFile: main });
+    return addToBitMap({ componentId, files: uniqby(files, 'relativePath'), mainFile: main });
   }
 
   const consumer: Consumer = await loadConsumer();
@@ -274,5 +275,5 @@ export default (async function addAction(
     added.push(addedOne);
   }
   await bitMap.write();
-  return added;
+  return added.filter(id => !R.isEmpty(id.files));
 });

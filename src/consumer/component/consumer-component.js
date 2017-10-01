@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
-import { mkdirp, isString, pathNormalizeToLinux, pathJoinLinux } from '../../utils';
+import { mkdirp, isString, pathNormalizeToLinux, searchFilesIgnoreExt, getWithoutExt } from '../../utils';
 import BitJson from '../bit-json';
 import { Impl, Specs, Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -194,13 +194,8 @@ export default class Component {
   writePackageJson(driver: Driver, bitDir: string, force?: boolean = true): Promise<boolean> {
     const PackageJson = driver.getDriver().PackageJson;
     const name = `${this.box}/${this.name}`;
-    // In case there is dist files, we want to point the index to the dist file not to source.
-    // This important since when you require a module without specify file, it will give you the file specified under this key
-    // (or index.js if key not exists)
-    // We should improve this method of getting the main dist, because the main dist file name might be different than the source
-    // main file (for exmple with typescript compiler it will be main.js and main.ts)
-    const mainFile =
-      this.dists && !R.isEmpty(this.dists) ? pathJoinLinux(DEFAULT_DIST_DIRNAME, this.mainFile) : this.mainFile;
+
+    const mainFile = this.calculateMainDistFile();
     // Replace all the / with - because / is not valid on package.json name key
     const validName = name.replace(/\//g, '-');
     const packageJson = new PackageJson(bitDir, {
@@ -666,14 +661,15 @@ export default class Component {
     return JSON.stringify(this.toObject());
   }
 
-  // TODO: This need to be calculated by the result of the compiling process (in bit map or in the model).
-  // because it might be that the compiler will change the mainFile name (for example replace main.ts by main.js)
+  // In case there is dist files, we want to point the index to the dist file not to source.
+  // This important since when you require a module without specify file, it will give you the file specified under this key
+  // (or index.js if key not exists)
   calculateMainDistFile(): string {
-    if (this.dists && !R.isEmpty(this.dists)) {
-      return path.join(DEFAULT_DIST_DIRNAME, this.mainFile);
-    }
-    return this.mainFile;
+    const distMainFile = path.join(DEFAULT_DIST_DIRNAME, this.mainFile);
+    const mainFile = searchFilesIgnoreExt(this.dists, distMainFile, 'relative', 'relative');
+    return mainFile || this.mainFile;
   }
+
   static fromObject(object: Object): Component {
     const {
       name,
@@ -802,12 +798,14 @@ export default class Component {
       box,
       withSpecs,
       files,
+      mainFile,
       consumerBitJson,
       bitPath,
       consumerPath
     }: {
       consumerBitJson: ConsumerBitJson,
       name: string,
+      mainFile: string,
       box: string,
       scopeName?: ?string,
       withSpecs?: ?boolean
@@ -834,6 +832,7 @@ export default class Component {
       scope: scopeName,
       specsFile,
       files: [implVinylFile],
+      mainFile,
       compilerId,
       testerId,
       specs: withSpecs ? Specs.create(name, testerId, scope) : undefined

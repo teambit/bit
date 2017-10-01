@@ -1109,7 +1109,7 @@ describe('bit import', function () {
       const linkPath = path.join(helper.localScopePath, expectedLocation);
       const linkPathContent = fs.readFileSync(linkPath).toString();
       const expectedPathSuffix = normalize(
-        path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index')
+        path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'utils', 'is-string')
       );
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(
@@ -1143,7 +1143,7 @@ describe('bit import', function () {
       );
       const linkPath = path.join(helper.localScopePath, expectedLocation);
       const linkPathContent = fs.readFileSync(linkPath).toString();
-      const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'index'));
+      const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'utils', 'is-type'));
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(
         `module.exports = require('../../../../${expectedPathSuffix}');`,

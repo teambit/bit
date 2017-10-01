@@ -69,7 +69,7 @@ export default class Remote {
   pushMany(components: ComponentObjects[]): Promise<ComponentObjects[]> {
     return connect(this.host).then(network => network.pushMany(components));
   }
-  deleteMany(bitIds: BitIds[], force): Promise<Object[]> {
+  deleteMany(bitIds: Array<BitIds>, force: boolean): Promise<Object[]> {
     return connect(this.host).then(network => network.deleteMany(bitIds, force));
   }
   deprecateMany(bitIds: BitIds[]): Promise<Object[]> {

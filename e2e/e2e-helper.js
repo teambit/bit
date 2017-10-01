@@ -59,6 +59,11 @@ export default class Helper {
     return fs.readJSONSync(bitJsonPath) || {};
   }
 
+  readPackageJson(packageJsonfolder: string = this.localScopePath) {
+    const packageJsonPath = path.join(packageJsonfolder, 'package.json');
+    return fs.readJSONSync(packageJsonPath) || {};
+  }
+
   writeBitJson(bitJson: Object) {
     const bitJsonPath = path.join(this.localScopePath, 'bit.json');
     return fs.writeJSONSync(bitJsonPath, bitJson);
@@ -160,12 +165,12 @@ export default class Helper {
     this.runCmd('bit install');
   }
 
-  getConsumerFiles(ext: string = '*.js') {
+  getConsumerFiles(ext: string = '*.{js,ts}') {
     return glob.sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: true }).map(x => path.normalize(x));
   }
 
-  commitComponent(id: string, commitMsg: string = 'commit-message') {
-    return this.runCmd(`bit tag ${id} -m ${commitMsg}`);
+  commitComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
+    return this.runCmd(`bit tag ${id} -m ${commitMsg} ${options}`);
   }
   removeComponent(id: string, flags: string = '') {
     return this.runCmd(`bit remove ${id} ${flags}`);
@@ -173,8 +178,8 @@ export default class Helper {
   deprecateComponent(id: string, flags: string = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
-  commitAllComponents(commitMsg: string = 'commit-message') {
-    return this.runCmd(`bit tag -am ${commitMsg}`);
+  commitAllComponents(commitMsg: string = 'commit-message', options: string = '') {
+    return this.runCmd(`bit tag ${options} -am ${commitMsg} `);
   }
 
   exportComponent(id: string, scope: string = this.remoteScope) {

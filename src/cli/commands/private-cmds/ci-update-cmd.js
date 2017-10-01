@@ -46,7 +46,8 @@ export default class CiUpdate extends Command {
     if (buildResults instanceof Error) {
       return buildResults.message;
     }
-    if (output) {
+    // check if there is build results
+    if (output && buildResults) {
       const ci = {};
       ci.specResults = specsResults;
       ci.mainDistFile = component.calculateMainDistFile();

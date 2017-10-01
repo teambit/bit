@@ -545,8 +545,9 @@ export default class Scope {
    * @removeComponent - boolean - true if you want to remove component
    */
   async removeSingle(bitId: BitId): Promise<string> {
+    logger.debug(`removing ${bitId.toString()}`);
     await this.sources.clean(bitId);
-    return bitId.toString();
+    return bitId.toStringWithoutVersion();
   }
 
   async deprecateSingle(bitId: BitId): Promise<string> {
@@ -554,7 +555,7 @@ export default class Scope {
     component.deprecated = true;
     this.objects.add(component);
     await this.objects.persist();
-    return component.id();
+    return bitId.toStringWithoutVersion();
   }
   /**
    * findDependentBits
@@ -597,7 +598,8 @@ export default class Scope {
    * Remove components from scope
    * @force Boolean  - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: Array<BitId>, force: boolean, local: boolean = false): Promise<any> {
+  async removeMany(bitIds: Array<BitId>, force: boolean): Promise<any> {
+    logger.debug(`removing ${bitIds} with force flag: ${force}`);
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId));
 

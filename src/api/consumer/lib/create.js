@@ -19,12 +19,14 @@ export default (async function create(
   const bitPath = consumer.composeRelativeBitPath(id);
   const defaultImpl = consumer.bitJson.getImplBasename();
   const files = { [defaultImpl]: defaultImpl };
+  const mainFile = defaultImpl;
   const component = Component.create(
     {
       name: id.name,
       box: id.box,
       withSpecs,
       files,
+      mainFile,
       consumerBitJson: consumer.bitJson,
       bitPath,
       consumerPath: consumer.getPath()

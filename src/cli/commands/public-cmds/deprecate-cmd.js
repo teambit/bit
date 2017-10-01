@@ -9,6 +9,7 @@ export default class Deprecate extends Command {
   description = 'deprecate a component (local/remote)';
   alias = 'd';
   opts = [['r', 'remote [boolean]', 'remove from remote scope']];
+  loader = true;
 
   action([ids]: [string], { remote = false }: { remote: Boolean }): Promise<any> {
     return deprecate({ ids, remote });

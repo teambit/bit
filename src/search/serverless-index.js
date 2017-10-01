@@ -19,7 +19,7 @@ function deleteDb(scopePath: string) {
   fs.removeSync(indexPath);
 }
 
-function initializeIndex(scopePath: string): Promise<any> {
+async function initializeIndex(scopePath: string): Promise<any> {
   if (!index) {
     // static var to make sure the index is not instantiated twice
     const indexOptions = {

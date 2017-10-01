@@ -48,7 +48,7 @@ export const DEFAULT_IMPL_NAME = 'impl.js';
 
 export const DEFAULT_INDEX_NAME = 'index'; // todo: move to bit-javascript
 
-export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'css', 'scss', 'less', 'sass', 'jsx']; // todo: move to bit-javascript
+export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'css', 'scss', 'less', 'sass', 'jsx', 'tsx']; // todo: move to bit-javascript
 
 export const DEFAULT_SPECS_NAME = 'spec.js';
 
@@ -101,6 +101,10 @@ export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
 export const SEARCH_DOMAIN = 'api.bitsrc.io';
 
 export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
+
+// Setting this to 99999 to prevent this issue:
+// https://github.com/mscdex/ssh2/issues/142
+export const DEFAULT_SSH_READY_TIMEOUT = 99999;
 
 /**
  * bit global config keys
