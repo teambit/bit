@@ -14,8 +14,11 @@ import { pathNormalizeToLinux, pathRelative, getWithoutExt } from '../../utils';
  * Given the tree of file dependencies from the driver, find the components of these files.
  * Each dependency file has a path, use bit.map to search for the component name by that path.
  * If the component is found, add it to "componentsDeps". Otherwise, add it to "untrackedDeps".
- * For the found components, add their sourceRelativePath and destinationRelativePath, it being used later on for
- * generating links upon import.
+ *
+ * For the found components, add their sourceRelativePath and destinationRelativePath, they are being used for
+ * generating links upon import:
+ * sourceRelativePath - location of the link file.
+ * destinationRelativePath - destination written inside the link file.
  *
  * @param {Object} tree - contains direct deps for each file
  * @param {string[]} files - component files to search
@@ -35,10 +38,80 @@ function findComponentsOfDepsFiles(
   const untrackedDeps = [];
   const relativeDeps = []; // dependencies that are required with relative path (and should be required using 'bit/').
   const missingDeps = [];
-
   const entryComponentMap = bitMap.getComponent(entryComponentId);
-
+  const rootDir = entryComponentMap.rootDir;
   const processedFiles = [];
+
+  const processDepFile = (depFile) => {
+    if (processedFiles.includes(depFile)) return;
+    processedFiles.push(depFile);
+
+    let depFileRelative: string = depFile; // dependency file path relative to consumer root
+    let componentId: ?string;
+    let destination: ?string;
+    if (rootDir) {
+      // The depFileRelative is relative to rootDir, change it to be relative to current consumer.
+      // We can't use path.resolve(rootDir, fileDep) because this might not work when running
+      // bit commands not from root, because resolve take by default the process.cwd
+      const rootDirFullPath = path.join(consumerPath, rootDir);
+      const fullDepFile = path.resolve(rootDirFullPath, depFile);
+      depFileRelative = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
+      componentId = bitMap.getComponentIdByPath(depFileRelative);
+    }
+
+    if (!componentId) {
+      // Check if it's a generated index file
+      const depFileWithoutExt = getWithoutExt(path.basename(depFileRelative));
+      if (depFileWithoutExt === DEFAULT_INDEX_NAME) {
+        const indexDir = path.dirname(depFileRelative);
+        componentId = bitMap.getComponentIdByRootPath(indexDir);
+        // Refer to the main file in case the source component required the index of the imported
+        if (componentId) destination = bitMap.getMainFileOfComponent(componentId);
+      }
+
+      if (!componentId) {
+        depFileRelative = depFile;
+        componentId = bitMap.getComponentIdByPath(depFileRelative);
+      }
+
+      // the file dependency doesn't have any counterpart component. Add it to untrackedDeps
+      if (!componentId) {
+        untrackedDeps.push(depFileRelative);
+        return;
+      }
+    }
+
+    // happens when in the same component one file requires another one. In this case, there is noting to do
+    if (componentId === entryComponentId) return;
+
+    // found a dependency component. Add it to componentsDeps
+    const depRootDir = bitMap.getRootDirOfComponent(componentId);
+    if (!destination) {
+      destination =
+        depRootDir && depFileRelative.startsWith(depRootDir)
+          ? pathRelative(depRootDir, depFileRelative)
+          : depFileRelative;
+    }
+    // when there is no rootDir for the current dependency (it happens when it's AUTHORED), keep the original path
+    const sourceRelativePath = depRootDir ? depFileRelative : depFile;
+
+    const depsPaths = { sourceRelativePath, destinationRelativePath: destination };
+    const currentComponentsDeps = { [componentId]: [depsPaths] };
+
+    const componentMap = bitMap.getComponent(componentId);
+    if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+      relativeDeps.push(componentId);
+      return;
+    }
+
+    if (componentsDeps[componentId]) {
+      // it is another file of an already existing component. Just add the new path
+      componentsDeps[componentId].push(depsPaths);
+    } else {
+      Object.assign(componentsDeps, currentComponentsDeps);
+    }
+  };
+
   files.forEach((file) => {
     const currentPackagesDeps = tree[file].packages;
     if (currentPackagesDeps && !R.isEmpty(currentPackagesDeps)) {
@@ -62,77 +135,8 @@ function findComponentsOfDepsFiles(
     }
     const allFilesDeps = tree[file].files;
     if (!allFilesDeps || R.isEmpty(allFilesDeps)) return;
-    allFilesDeps.forEach((fileDep) => {
-      if (processedFiles.includes(fileDep)) return;
-      processedFiles.push(fileDep);
-      const rootDir = entryComponentMap.rootDir;
-
-      let fileDepRelative: string = fileDep;
-      let componentId: ?string;
-      let destination: ?string;
-      if (rootDir) {
-        // Change the dependencies files to be relative to current consumer
-        // We can't use path.resolve(rootDir, fileDep) because this might not work when running
-        // bit commands not from root, because resolve take by default the process.cwd
-        const rootDirFullPath = path.join(consumerPath, rootDir);
-        const fullFileDep = path.resolve(rootDirFullPath, fileDep);
-        fileDepRelative = pathNormalizeToLinux(path.relative(consumerPath, fullFileDep));
-        componentId = bitMap.getComponentIdByPath(fileDepRelative);
-      } else {
-        fileDepRelative = fileDep;
-      }
-
-      if (!componentId) {
-        // Check if its a generated index file
-        const fileDepWithoutExt = getWithoutExt(path.basename(fileDepRelative));
-        if (fileDepWithoutExt === DEFAULT_INDEX_NAME) {
-          const indexDir = path.dirname(fileDepRelative);
-          componentId = bitMap.getComponentIdByRootPath(indexDir);
-          // Refer to the main file in case the source component required the index of the imported
-          if (componentId) destination = bitMap.getMainFileOfComponent(componentId);
-        }
-
-        if (!componentId) {
-          fileDepRelative = fileDep;
-          componentId = bitMap.getComponentIdByPath(fileDepRelative);
-        }
-
-        // the file dependency doesn't have any counterpart component. Add it to untrackedDeps
-        if (!componentId) {
-          untrackedDeps.push(fileDepRelative);
-          return;
-        }
-      }
-
-      // happens when in the same component one file requires another one. In this case, there is noting to do
-      if (componentId === entryComponentId) return;
-
-      // found a dependency component. Add it to componentsDeps
-      const depRootDir = bitMap.getRootDirOfComponent(componentId);
-      if (!destination) {
-        destination =
-          depRootDir && fileDepRelative.startsWith(depRootDir)
-            ? pathRelative(depRootDir, fileDepRelative)
-            : fileDepRelative;
-      }
-      // when there is no rootDir for the current dependency (it happens when it's AUTHORED), keep the original path
-      const sourceRelativePath = depRootDir ? fileDepRelative : fileDep;
-
-      const depsPaths = { sourceRelativePath, destinationRelativePath: destination };
-      const currentComponentsDeps = { [componentId]: [depsPaths] };
-
-      const componentMap = bitMap.getComponent(componentId);
-      if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-        relativeDeps.push(componentId);
-        return;
-      }
-
-      if (componentsDeps[componentId]) {
-        // it is another file of an already existing component. Just add the new path
-        componentsDeps[componentId].push(depsPaths);
-      } else {
-        Object.assign(componentsDeps, currentComponentsDeps);
-      }
+    allFilesDeps.forEach((depFile) => {
+      processDepFile(depFile);
     });
   });
   return { componentsDeps, packagesDeps, untrackedDeps, relativeDeps, missingDeps };
