@@ -86,7 +86,7 @@ describe('bit tag command', function () {
 
       it.skip('Should throw error if there is tracked files dependencies which not tagged yet', () => {});
 
-      describe.only('package dependencies calculation', () => {
+      describe('package dependencies calculation', () => {
         let packageDependencies;
         let depObject;
         let componentRootDir;
