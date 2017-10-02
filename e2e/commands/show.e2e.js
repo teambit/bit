@@ -1,8 +1,12 @@
 // covers also init, create, commit commands and the js-doc parser
 
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import path from 'path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+
+const assertArrays = require('chai-arrays');
+
+chai.use(assertArrays);
 
 describe('bit show command', function () {
   this.timeout(0);
