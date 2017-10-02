@@ -279,7 +279,11 @@ export default class Helper {
     const filePath = path.join(this.localScopePath, namespace, name);
     fs.outputFileSync(filePath, fixture);
   }
-
+  corruptBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+    const bitJson = this.readBitJson();
+    bitJson.corrupt = '"corrupted';
+    fs.writeFileSync(bitJsonPath, bitJson.toString());
+  }
   addNpmPackage(name: string = 'lodash.get', version: string = '4.4.2') {
     const packageJsonFixture = JSON.stringify({ name, version });
     this.createFile(`node_modules/${name}`, 'index.js');

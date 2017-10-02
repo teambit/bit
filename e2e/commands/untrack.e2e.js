@@ -69,5 +69,12 @@ describe('bit untrack command', function () {
       expect(Object.keys(bitMap)).to.be.ofSize(1);
       expect(bitMap).to.have.property('bar/foo2');
     });
+    it('Should not show component if bit.json is corrupted', () => {
+      helper.corruptBitJson();
+      const untrackCmd = () => helper.untrackComponent();
+      expect(untrackCmd).to.throw(
+        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+      );
+    });
   });
 });

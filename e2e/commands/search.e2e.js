@@ -40,4 +40,19 @@ describe('bit search', function () {
       expect(output).to.have.string('compilers/flow');
     });
   });
+  describe('with local scope and corrupted bit.json', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+    });
+    it('Should not search component if bit.json is corrupted', () => {
+      helper.corruptBitJson();
+      const searchCmd = () => helper.searchComponent('bar/foo');
+      expect(searchCmd).to.throw(
+        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+      );
+    });
+  });
 });

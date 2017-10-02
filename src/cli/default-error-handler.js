@@ -109,7 +109,8 @@ const errorsMap: [[Error, (err: Error) => string]] = [
         err.id
       )}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]`
   ],
-  [InvalidBitJson, err => `error: ${chalk.bold(err.path)} is not a valid JSON file.`],
+  [InvalidBitJson, err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.`],
+
   [ResolutionException, e => e.message],
   [
     DriverNotFound,
