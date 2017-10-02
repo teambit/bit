@@ -14,6 +14,7 @@ import docsParser, { Doclet } from '../../jsdoc/parser';
 import specsRunner from '../../specs-runner';
 import SpecsResults from '../specs-results';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
+import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment from '../../environment';
 import type { Log } from '../../scope/models/version';
@@ -752,9 +753,7 @@ export default class Component {
         }
       });
       if (filesKeysToDelete.length && !sourceFiles.length) {
-        throw new Error(
-          `invalid component ${id}, all files were deleted, please remove the component using bit remove command`
-        );
+        throw new MissingFilesFromComponent(id.toString());
       }
       if (filesKeysToDelete.length) {
         filesKeysToDelete.forEach(key => files.splice(key, 1));
