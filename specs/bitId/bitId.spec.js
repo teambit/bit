@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { BitId } from '../../src/bit-id';
 
-describe.only('Bit-id', () => {
+describe('Bit-id', () => {
   describe('getValidBitId', () => {
     it('should convert CSSComp to css-comp', () => {
       const bitName = 'CSSComp';
