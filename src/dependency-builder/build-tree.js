@@ -70,7 +70,7 @@ const byType = R.groupBy((dependencies) => {
  * @returns {Object} name and version of the package
  */
 function resolveNodePackage(cwd, packageFullPath) {
-  const NODE_MODULES = 'node_modules/';
+  const NODE_MODULES = 'node_modules';
   const result = {};
   // Start by searching in the component dir and up from there
   // If not found search in package dir itself.
@@ -79,7 +79,8 @@ function resolveNodePackage(cwd, packageFullPath) {
   // We want to have this semver as dependency and not the exact version, otherwise it will be considered as modified all the time
   const packageJsonInfo = findPackage(cwd);
   if (packageJsonInfo) {
-    const packageRelativePath = packageFullPath.substring(packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length, packageFullPath.length);
+    // The +1 is for the / after the node_modules, we didn't enter it into the NODE_MODULES const because it makes problems on windows
+    const packageRelativePath = packageFullPath.substring(packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1, packageFullPath.length);
     const packageName = resolvePackageNameByPath(packageRelativePath);
     const packageVersion = R.path(['dependencies', packageName], packageJsonInfo) ||
                            R.path(['devDependencies', packageName], packageJsonInfo) ||
