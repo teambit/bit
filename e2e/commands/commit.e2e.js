@@ -16,10 +16,10 @@ describe('bit tag command', function () {
     helper.reInitLocalScope();
     logSpy = sinon.spy(console, 'log');
   });
-  describe.skip('tag one component', () => {
-    it('should throw error if the bit id does not exists', () => {});
+  describe('tag one component', () => {
+    it.skip('should throw error if the bit id does not exists', () => {});
 
-    it('should print warning if the a driver is not installed', () => {
+    it.skip('should print warning if the a driver is not installed', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
       helper.createComponent('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
@@ -32,13 +32,13 @@ describe('bit tag command', function () {
       ).to.be.true;
     });
 
-    it('should persist the model in the scope', () => {});
+    it.skip('should persist the model in the scope', () => {});
 
-    it('should run the onCommit hook', () => {});
+    it.skip('should run the onCommit hook', () => {});
 
-    it('should throw error if the build failed', () => {});
+    it.skip('should throw error if the build failed', () => {});
 
-    it('should throw error if the tests failed', () => {});
+    it.skip('should throw error if the tests failed', () => {});
 
     describe.skip('tag imported component', () => {
       it('should index the component', () => {});
@@ -54,17 +54,97 @@ describe('bit tag command', function () {
       });
     });
 
-    describe.skip('tag added component', () => {
-      it('should index the component', () => {});
+    describe('tag added component', () => {
+      let output;
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createFile('', 'file.js');
+        helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
+        output = helper.commitComponent('comp/comp');
+      });
 
-      it('should successfuly tag if there is no special error', () => {
+      it.skip('should index the component', () => {});
+
+      it('should successfully tag if there is no special error', () => {
         // Validate output
+        expect(output).to.have.string('1 components tagged');
         // Validate model
       });
 
-      it('Should throw error if there is tracked files dependencies which not tagged yet', () => {});
+      it.skip('Should throw error if there is tracked files dependencies which not tagged yet', () => {});
 
-      it('should add the correct dependencies to each component', () => {});
+      describe('package dependencies calculation', () => {
+        let packageDependencies;
+        let depObject;
+        let componentRootDir;
+        before(() => {
+          helper.reInitLocalScope();
+
+          const fileFixture = 'import get from "lodash.get"';
+          helper.createFile('src', 'file.js', fileFixture);
+          helper.addComponentWithOptions('src/file.js', { i: 'comp/comp' });
+          helper.addNpmPackage('lodash.get', '1.0.0');
+
+          // Commit, export and import the component to make sure we have root folder defined in the bit.map
+          helper.reInitRemoteScope();
+          helper.addRemoteScope();
+          helper.commitComponent('comp/comp');
+          helper.exportComponent('comp/comp');
+          helper.reInitLocalScope('comp/comp');
+          helper.addRemoteScope();
+          helper.importComponent('comp/comp');
+          helper.addNpmPackage('lodash.get', '2.0.0');
+          const bitMap = helper.readBitMap();
+          componentRootDir = bitMap[`${helper.remoteScope}/comp/comp@1`].rootDir;
+        });
+        // beforeEach(() => {
+        // });
+        it('should take the package version from package.json in the component dir if exists', () => {
+          const componentPackageJsonFixture = JSON.stringify({ dependencies: { 'lodash.get': '^1.0.1' } });
+          helper.createFile(componentRootDir, 'package.json', componentPackageJsonFixture);
+          helper.commitComponent('comp/comp');
+          output = helper.showComponentWithOptions('comp/comp', { j: '' });
+          packageDependencies = JSON.parse(output).packageDependencies;
+          depObject = { 'lodash.get': '^1.0.1' };
+          expect(packageDependencies).to.include(depObject);
+        });
+        it('should take the package version from package.json in the consumer root dir if the package.json not exists in component dir', () => {
+          helper.deleteFile(`${componentRootDir}/package.json`);
+          helper.commitComponent('comp/comp');
+          output = helper.showComponentWithOptions('comp/comp', { j: '' });
+          packageDependencies = JSON.parse(output).packageDependencies;
+          depObject = { 'lodash.get': '2.0.0' };
+          expect(packageDependencies).to.include(depObject);
+        });
+        it('should take the package version from package.json in the consumer root dir if the package.json in component root dir does not contain the package definition', () => {
+          const componentPackageJsonFixture = JSON.stringify({ dependencies: { 'fake.package': '^1.0.1' } });
+          helper.createFile(componentRootDir, 'package.json', componentPackageJsonFixture);
+          helper.commitComponent('comp/comp');
+          output = helper.showComponentWithOptions('comp/comp', { j: '' });
+          packageDependencies = JSON.parse(output).packageDependencies;
+          depObject = { 'lodash.get': '2.0.0' };
+          expect(packageDependencies).to.include(depObject);
+        });
+        it('should take the package version from the package package.json if the package.json not exists in component / root dir', () => {
+          helper.deleteFile(`${componentRootDir}/package.json`);
+          helper.deleteFile('package.json');
+          helper.commitComponent('comp/comp');
+          output = helper.showComponentWithOptions('comp/comp', { j: '' });
+          packageDependencies = JSON.parse(output).packageDependencies;
+          depObject = { 'lodash.get': '2.0.0' };
+          expect(packageDependencies).to.include(depObject);
+        });
+        it('should take the package version from the package package.json if the package.json in component / root dir does not contain the package definition', () => {
+          helper.deleteFile(`${componentRootDir}/package.json`);
+          const rootPackageJsonFixture = JSON.stringify({ dependencies: { 'fake.package': '^1.0.1' } });
+          helper.createFile('', 'package.json', rootPackageJsonFixture);
+          helper.commitComponent('comp/comp');
+          output = helper.showComponentWithOptions('comp/comp', { j: '' });
+          packageDependencies = JSON.parse(output).packageDependencies;
+          depObject = { 'lodash.get': '2.0.0' };
+          expect(packageDependencies).to.include(depObject);
+        });
+      });
     });
   });
 
@@ -114,6 +194,7 @@ describe('bit tag command', function () {
     it('should print nothing to tag', () => {
       expect(output).to.have.string('nothing to tag');
     });
+    it.skip('should tag the component if -f used', () => {});
   });
 
   describe('tag imported component with new dependency to another imported component', () => {
@@ -280,7 +361,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('src/untracked2.js');
       });
     });
-    describe('commit component with missing dependencies with -ignore_missing_dependencies', () => {
+    describe('commit component with missing dependencies with --ignore_missing_dependencies', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
