@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.9-dev.1] - 2017-10-02
+
 - handle invalid bit.json
 - bit add' on missing test file should throw an error
 - prevent test files from becoming new components
