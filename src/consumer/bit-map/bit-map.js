@@ -396,7 +396,6 @@ export default class BitMap {
     const allChanges = [];
     Object.keys(this.components).forEach((componentId) => {
       const componentMap: ComponentMap = this.components[componentId];
-      componentMap.files = componentMap.files.filter(file => fs.pathExistsSync(file.relativePath));
       const changes = isPathDir ? componentMap.updateDirLocation(from, to) : componentMap.updateFileLocation(from, to);
       if (changes) allChanges.push(changes);
     });
@@ -406,8 +405,8 @@ export default class BitMap {
         : `the file ${existingPath} is untracked`;
       throw new Error(errorMsg);
     }
-
-    return Array.prototype.concat(...allChanges);
+    const flattenedArray = Array.prototype.concat(...allChanges);
+    return flattenedArray.filter(file => fs.pathExistsSync(file.to) || fs.pathExistsSync(file.from));
   }
 
   write(): Promise<any> {
