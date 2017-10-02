@@ -1,6 +1,7 @@
 // covers also init, create, tag, import and export commands
 
 import sinon from 'sinon';
+import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
@@ -85,7 +86,7 @@ describe('bit tag command', function () {
 
       it.skip('Should throw error if there is tracked files dependencies which not tagged yet', () => {});
 
-      describe('package dependencies calculation', () => {
+      describe.only('package dependencies calculation', () => {
         let packageDependencies;
         let depObject;
         let componentRootDir;
@@ -107,7 +108,7 @@ describe('bit tag command', function () {
           helper.importComponent('comp/comp');
           helper.addNpmPackage('lodash.get', '2.0.0');
           const bitMap = helper.readBitMap();
-          componentRootDir = bitMap[`${helper.remoteScope}/comp/comp@1`].rootDir;
+          componentRootDir = path.normalize(bitMap[`${helper.remoteScope}/comp/comp@1`].rootDir);
         });
         // beforeEach(() => {
         // });
@@ -121,7 +122,7 @@ describe('bit tag command', function () {
           expect(packageDependencies).to.include(depObject);
         });
         it('should take the package version from package.json in the consumer root dir if the package.json not exists in component dir', () => {
-          helper.deleteFile(`${componentRootDir}/package.json`);
+          helper.deleteFile(path.join(componentRootDir, 'package.json'));
           helper.commitComponent('comp/comp');
           output = helper.showComponentWithOptions('comp/comp', { j: '' });
           packageDependencies = JSON.parse(output).packageDependencies;
@@ -138,7 +139,7 @@ describe('bit tag command', function () {
           expect(packageDependencies).to.include(depObject);
         });
         it('should take the package version from the package package.json if the package.json not exists in component / root dir', () => {
-          helper.deleteFile(`${componentRootDir}/package.json`);
+          helper.deleteFile(path.join(componentRootDir, 'package.json'));
           helper.deleteFile('package.json');
           helper.commitComponent('comp/comp');
           output = helper.showComponentWithOptions('comp/comp', { j: '' });
@@ -147,7 +148,7 @@ describe('bit tag command', function () {
           expect(packageDependencies).to.include(depObject);
         });
         it('should take the package version from the package package.json if the package.json in component / root dir does not contain the package definition', () => {
-          helper.deleteFile(`${componentRootDir}/package.json`);
+          helper.deleteFile(path.join(componentRootDir, 'package.json'));
           const rootPackageJsonFixture = JSON.stringify({ dependencies: { 'fake.package': '^1.0.1' } });
           helper.createFile('', 'package.json', rootPackageJsonFixture);
           helper.commitComponent('comp/comp');
