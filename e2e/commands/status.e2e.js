@@ -1,6 +1,10 @@
 import path from 'path';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+
+const assertArrays = require('chai-arrays');
+
+chai.use(assertArrays);
 
 describe('bit status command', function () {
   this.timeout(0);
