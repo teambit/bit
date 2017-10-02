@@ -303,6 +303,10 @@ export default class Helper {
   addComponent(filePaths: string = path.normalize('bar/foo.js'), cwd = this.localScopePath) {
     return this.runCmd(`bit add ${filePaths}`, cwd);
   }
+
+  removeFile(filePath: string = path.normalize('bar/foo.js'), cwd = this.localScopePath) {
+    fs.removeSync(path.join(cwd, filePath));
+  }
   untrackComponent(id: string = '', cwd = this.localScopePath) {
     return this.runCmd(`bit untrack ${id}`, cwd);
   }

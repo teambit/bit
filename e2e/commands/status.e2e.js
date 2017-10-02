@@ -370,4 +370,35 @@ describe('bit status command', function () {
       );
     });
   });
+  describe('with removed file/files', () => {
+    beforeEach(() => {
+      helper.initNewLocalScope();
+      helper.createComponentBarFoo();
+      helper.createComponent('bar', 'index.js');
+      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+    });
+    it('Should remove files that were removed for component', () => {
+      const beforeRemoveBitMap = helper.readBitMap();
+      const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
+      expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+      helper.removeFile('bar/foo.js');
+      helper.runCmd('bit status');
+      const bitMap = helper.readBitMap();
+      const files = bitMap['bar/foo'].files;
+      expect(files).to.be.ofSize(1);
+      expect(files[0].name).to.equal('index.js');
+    });
+    it('Should throw error that all files were removed', () => {
+      const beforeRemoveBitMap = helper.readBitMap();
+      const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
+      expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+      helper.removeFile('bar/index.js');
+      helper.removeFile('bar/foo.js');
+
+      const statusCmd = () => helper.runCmd('bit status');
+      expect(statusCmd).to.throw(
+        'invalid component bar/foo, all files were deleted, please remove the component using bit remove command\n'
+      );
+    });
+  });
 });
