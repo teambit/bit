@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- handle invalid bit.json
 - bit add' on missing test file should throw an error
 - prevent test files from becoming new components
 - rename `bit commit` to `bit tag`
