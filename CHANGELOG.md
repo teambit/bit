@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - prevent test files from becoming new components
 - rename `bit commit` to `bit tag`
 - fix bug when component version is larger than 10 it won't show as staged
+- take package version from package.json in the component / root folder to support semver package dependencies
 
 
 ## [0.10.8] - 2017-10-01
