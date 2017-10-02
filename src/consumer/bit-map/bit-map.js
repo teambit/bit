@@ -396,6 +396,7 @@ export default class BitMap {
     const allChanges = [];
     Object.keys(this.components).forEach((componentId) => {
       const componentMap: ComponentMap = this.components[componentId];
+      componentMap.files = componentMap.files.filter(file => fs.pathExistsSync(file.relativePath));
       const changes = isPathDir ? componentMap.updateDirLocation(from, to) : componentMap.updateFileLocation(from, to);
       if (changes) allChanges.push(changes);
     });
