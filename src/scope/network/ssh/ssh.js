@@ -133,11 +133,11 @@ export default class SSH implements Network {
     }
   }
 
-  pushMany(manyComponentObjects: ComponentObjects[]): Promise<ComponentObjects[]> {
+  pushMany(manyComponentObjects: ComponentObjects[]): Promise<string[]> {
     return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects)).then((data: string) => {
-      const { headers } = this._unpack(data);
+      const { payload, headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
-      return Promise.resolve();
+      return payload.ids;
     });
   }
 
