@@ -2,10 +2,13 @@
 
 import sinon from 'sinon';
 import path from 'path';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 
 let logSpy;
+const assertArrays = require('chai-arrays');
+
+chai.use(assertArrays);
 
 describe('bit tag command', function () {
   this.timeout(0);
