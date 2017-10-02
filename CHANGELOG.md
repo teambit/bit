@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve bit add to convert files to valid bit names 
 - improve checkVersionCompatibility between server and client
+
 ## [0.10.9-dev.1] - 2017-10-02
 
 - handle invalid bit.json
