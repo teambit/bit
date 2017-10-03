@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.9-dev.2] - 2017-10-03
+
 - improve bit add to convert files to valid bit names 
 - improve checkVersionCompatibility between server and client
 - show correct message / error when the tester has an exception during bit test
