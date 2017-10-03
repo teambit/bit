@@ -51,13 +51,20 @@ export default class Export extends Command {
     if (!Array.isArray(components)) components = [components];
 
     function joinComponents(comps) {
-      return comps.map(comp => comp.id.toString().replace('@1', '')).join(', ');
+      return comps
+        .map((comp) => {
+          // Replace the @1 only if it ends with @1 to prevent id between 10-19 to shown wrong ->
+          // myId@10 will be myId0 which is wrong
+          return comp.id.toString().endsWith('@1') ? comp.id.toString().replace('@1', '') : comp.id.toString();
+        })
+        .join(', ');
     }
 
     function outputIfExists(comps, label, breakBefore) {
       if (comps.length !== 0) {
         let str = '';
         if (breakBefore) str = '\n';
+        console.log('');
         str += `${chalk.cyan(label)} ${joinComponents(comps)}`;
         return str;
       }

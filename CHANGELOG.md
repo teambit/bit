@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - improve bit add to convert files to valid bit names 
 - improve checkVersionCompatibility between server and client
+- show correct message / error when the tester has an exception during bit test
+- fix bug with printing wrong id on bit tag for component in versions between 10-19
 
 ## [0.10.9-dev.1] - 2017-10-02
 
