@@ -385,7 +385,7 @@ describe('bit status command', function () {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.removeFile('bar/foo.js');
+      helper.deleteFile('bar/foo.js');
       helper.runCmd('bit status');
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo'].files;
@@ -396,8 +396,8 @@ describe('bit status command', function () {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.removeFile('bar/index.js');
-      helper.removeFile('bar/foo.js');
+      helper.deleteFile('bar/index.js');
+      helper.deleteFile('bar/foo.js');
 
       const statusCmd = () => helper.runCmd('bit status');
       expect(statusCmd).to.throw(

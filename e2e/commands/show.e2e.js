@@ -339,7 +339,7 @@ function add(a, b) {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.removeFile('bar/foo.js');
+      helper.deleteFile('bar/foo.js');
       helper.runCmd('bit show bar/foo');
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo'].files;
@@ -350,8 +350,8 @@ function add(a, b) {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.removeFile('bar/index.js');
-      helper.removeFile('bar/foo.js');
+      helper.deleteFile('bar/index.js');
+      helper.deleteFile('bar/foo.js');
 
       const showCmd = () => helper.runCmd('bit show bar/foo');
       expect(showCmd).to.throw(

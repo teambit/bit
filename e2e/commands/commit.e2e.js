@@ -531,7 +531,7 @@ describe('bit tag command', function () {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.removeFile('bar/foo.js');
+      helper.deleteFile('bar/foo.js');
       helper.commitAllComponents();
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo'].files;
@@ -542,8 +542,8 @@ describe('bit tag command', function () {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.removeFile('bar/index.js');
-      helper.removeFile('bar/foo.js');
+      helper.deleteFile('bar/index.js');
+      helper.deleteFile('bar/foo.js');
 
       const commitCmd = () => helper.commitAllComponents();
       expect(commitCmd).to.throw(
