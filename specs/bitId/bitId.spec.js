@@ -7,7 +7,7 @@ describe('Bit-id', () => {
       const bitName = 'CSSComp';
       expect(BitId.getValidBitId('global', bitName).toString()).to.equal('global/css-comp');
     });
-    it('should convert CSSComp to en-us', () => {
+    it('should convert EN-US to en-us', () => {
       const bitName = 'EN-US';
       expect(BitId.getValidBitId('global', bitName).toString()).to.equal('global/en-us');
     });
@@ -41,5 +41,5 @@ describe('Bit-id', () => {
       const global = 'CSS!!####@comp';
       expect(BitId.getValidBitId(global, bitName).toString()).to.equal('css!!####@comp/app-bar');
     });
-  });
+  }).timeout(5000);
 });
