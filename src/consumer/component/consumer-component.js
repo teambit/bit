@@ -504,11 +504,19 @@ export default class Component {
 
           return this.specsResults;
         } catch (err) {
-          if (rejectOnFailure) {
-            if (verbose) throw err;
-            throw new ComponentSpecsFailed();
-          }
-          return this.specsResults;
+          // Put this condition in comment for now because we want to catch exceptions in the testers
+          // We can just pass the rejectOnFailure=true in the consumer.runComponentSpecs
+          // Because this will also affect the condition few lines above:
+          // if (rejectOnFailure && !this.specsResults.every(element => element.pass)) {
+          // in general there is some coupling with the test running between the params:
+          // rejectOnFailure / verbose and the initiator of the running (scope / consumer)
+          // We should make a better architecture for this
+
+          // if (rejectOnFailure) {
+          if (verbose) throw err;
+          throw new ComponentSpecsFailed();
+          // }
+          // return this.specsResults;
         }
       };
 
