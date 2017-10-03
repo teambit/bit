@@ -9,8 +9,8 @@ export default class Remove extends Command {
   description = 'remove a component (local/remote)';
   alias = 'rm';
   opts = [
-    ['f', 'force [boolean]', 'force delete (default = false)'],
-    ['r', 'remote [boolean]', 'remove from remote scope'],
+    ['f', 'force [boolean]', 'force remove (default = false)'],
+    ['r', 'remote [boolean]', 'remove from a remote scope'],
     ['t', 'track [boolean]', 'keep tracking component (default = false) ']
   ];
   loader = true;
