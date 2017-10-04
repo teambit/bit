@@ -203,7 +203,10 @@ export default class ComponentsList {
         const similarFileSystemComponent = listFromFileSystem.find(
           component => component.id.toStringWithoutVersion() === modelBitId.toStringWithoutVersion()
         );
-        if (similarFileSystemComponent && modelBitId.version > similarFileSystemComponent.version) {
+        if (
+          similarFileSystemComponent &&
+          modelBitId.getVersion().versionNum > similarFileSystemComponent.id.getVersion().versionNum
+        ) {
           stagedComponents.push(modelBitId.toString());
         }
       }

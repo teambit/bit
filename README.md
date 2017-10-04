@@ -1,5 +1,5 @@
 # Bit
-[![Bit communit hub](https://storage.googleapis.com/bit-assets/Github/readme-github-2.jpg)](http://bitsrc.io)
+[![Bit communit hub](https://storage.googleapis.com/bit-assets/Github/readme-github-3.jpg)](http://bitsrc.io)
 
 <div style="text-align:left">
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="apache" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>

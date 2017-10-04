@@ -1,8 +1,12 @@
 // covers also init, create, commit commands and the js-doc parser
 
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import path from 'path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+
+const assertArrays = require('chai-arrays');
+
+chai.use(assertArrays);
 
 describe('bit show command', function () {
   this.timeout(0);
@@ -37,6 +41,7 @@ describe('bit show command', function () {
         output = helper.runCmd('bit show comp/comp');
         expect(output).to.not.include('Deprecated');
       });
+
       it('should show deprecated component', () => {
         output = JSON.parse(helper.runCmd('bit show comp/comp -j'));
         expect(output).to.include({ deprecated: false });
@@ -303,6 +308,56 @@ function add(a, b) {
       expect(output.includes('Args')).to.be.true;
       expect(output.includes('Returns')).to.be.true;
       expect(output.includes('number -> Returns the total.')).to.be.true;
+    });
+  });
+  describe('local component', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler();
+
+      helper.createComponent('utils', 'is-string.js');
+      helper.addComponent('utils/is-string.js');
+      helper.commitComponent('utils/is-string');
+    });
+
+    it('Should not show component if bit.json is corrupted', () => {
+      helper.corruptBitJson();
+      const showCmd = () => helper.runCmd('bit show comp/comp -j');
+      expect(showCmd).to.throw(
+        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+      );
+    });
+  });
+  describe('with removed file/files', () => {
+    beforeEach(() => {
+      helper.initNewLocalScope();
+      helper.createComponentBarFoo();
+      helper.createComponent('bar', 'index.js');
+      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+    });
+    it('Should show component only with the left files', () => {
+      const beforeRemoveBitMap = helper.readBitMap();
+      const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
+      expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+      helper.deleteFile('bar/foo.js');
+      const output = helper.showComponent('bar/foo -j');
+      const bitMap = helper.readBitMap();
+      const files = bitMap['bar/foo'].files;
+      expect(files).to.be.ofSize(1);
+      expect(files[0].name).to.equal('index.js');
+      expect(JSON.parse(output).files).to.be.ofSize(1);
+    });
+    it('Should throw error that all files were removed', () => {
+      const beforeRemoveBitMap = helper.readBitMap();
+      const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
+      expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+      helper.deleteFile('bar/index.js');
+      helper.deleteFile('bar/foo.js');
+
+      const showCmd = () => helper.showComponent('bar/foo');
+      expect(showCmd).to.throw(
+        'invalid component bar/foo, all files were deleted, please remove the component using bit remove command\n'
+      );
     });
   });
 });

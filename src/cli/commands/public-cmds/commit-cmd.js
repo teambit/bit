@@ -6,14 +6,14 @@ import Component from '../../../consumer/component';
 const chalk = require('chalk');
 
 export default class Export extends Command {
-  name = 'commit [id]';
+  name = 'tag [id]';
   description = 'record component changes and lock versions.';
-  alias = 'c';
+  alias = 't';
   opts = [
-    ['m', 'message <message>', 'commit message'],
-    ['a', 'all', 'commit all new and modified components'],
-    ['f', 'force', 'forcely commit even if specs fails and even when component was not changed'],
-    ['v', 'verbose', 'show specs output on commit'],
+    ['m', 'message <message>', 'message'],
+    ['a', 'all', 'tag all new and modified components'],
+    ['f', 'force', 'forcely tag even if tests are failing and even when component has not changed'],
+    ['v', 'verbose', 'show specs output on tag'],
     ['', 'ignore_missing_dependencies', 'ignore missing dependencies (default = false)']
   ];
   loader = true;
@@ -29,16 +29,16 @@ export default class Export extends Command {
     }: { message: string, all: ?boolean, force: ?boolean, verbose: ?boolean, ignore_missing_dependencies: ?boolean }
   ): Promise<any> {
     if (!id && !all) {
-      return Promise.reject('missing [id]. to commit all components, please use --all flag');
+      return Promise.reject('missing [id]. to tag all components, please use --all flag');
     }
     if (id && all) {
       return Promise.reject(
-        'you can use either [id] to commit a particular component or --all flag to commit them all'
+        'you can use either a specific component [id] to tag a particular component or --all flag to tag them all'
       );
     }
     if (!message) {
       // todo: get rid of this. Make it required by commander
-      return Promise.reject('missing [message], use -m to write the log message');
+      return Promise.reject('missing [message], please use -m to write the log message');
     }
     if (all) {
       return commitAllAction({ message, force, verbose, ignoreMissingDependencies: ignore_missing_dependencies });
@@ -47,17 +47,24 @@ export default class Export extends Command {
   }
 
   report(components: Component | Component[]): string {
-    if (!components) return chalk.yellow('nothing to commit');
+    if (!components) return chalk.yellow('nothing to tag');
     if (!Array.isArray(components)) components = [components];
 
     function joinComponents(comps) {
-      return comps.map(comp => comp.id.toString().replace('@1', '')).join(', ');
+      return comps
+        .map((comp) => {
+          // Replace the @1 only if it ends with @1 to prevent id between 10-19 to shown wrong ->
+          // myId@10 will be myId0 which is wrong
+          return comp.id.toString().endsWith('@1') ? comp.id.toString().replace('@1', '') : comp.id.toString();
+        })
+        .join(', ');
     }
 
     function outputIfExists(comps, label, breakBefore) {
       if (comps.length !== 0) {
         let str = '';
         if (breakBefore) str = '\n';
+        console.log('');
         str += `${chalk.cyan(label)} ${joinComponents(comps)}`;
         return str;
       }
@@ -69,7 +76,7 @@ export default class Export extends Command {
     const addedComponents = components.filter(component => component.version === 1);
 
     return (
-      chalk.green(`${components.length} components committed`) +
+      chalk.green(`${components.length} components tagged`) +
       chalk.gray(` | ${addedComponents.length} added, ${changedComponents.length} changed\n`) +
       outputIfExists(addedComponents, 'added components: ') +
       outputIfExists(changedComponents, 'changed components: ', true)

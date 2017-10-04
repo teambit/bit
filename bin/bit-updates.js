@@ -43,7 +43,7 @@ function runUpdate(updateCommand) {
     if (shouldUpdate) {
       _exec(updateCommand, function () {
         _exec(previousCommand);
-      }); 
+      });
     } else _exec(previousCommand);
   });
 }

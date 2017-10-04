@@ -13,6 +13,7 @@ import {
 } from '../consumer/exceptions';
 import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
+import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
 import {
@@ -109,7 +110,8 @@ const errorsMap: [[Error, (err: Error) => string]] = [
         err.id
       )}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]`
   ],
-  [InvalidBitJson, err => `error: ${chalk.bold(err.path)} is not a valid JSON file.`],
+  [InvalidBitJson, err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.`],
+
   [ResolutionException, e => e.message],
   [
     DriverNotFound,
@@ -124,6 +126,12 @@ const errorsMap: [[Error, (err: Error) => string]] = [
       `fatal: the main file ${chalk.bold(err.mainFile)} was not found in the files list ${chalk.bold(
         err.files.join(', ')
       )}`
+  ],
+  [
+    MissingFilesFromComponent,
+    (err) => {
+      return `invalid component ${err.id}, all files were deleted, please remove the component using bit remove command`;
+    }
   ],
   [MissingBitMapComponent, err => `fatal: the component ${chalk.bold(err.id)} was not found in the bit.map file`],
   [PathNotExists, err => `fatal: the file "${chalk.bold(err.path)}" was not found`],

@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import decamelize from 'decamelize';
 import Version from '../version';
 import { InvalidBitId, InvalidIdChunk } from './exceptions';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER, NO_PLUGIN_TYPE } from '../constants';
@@ -130,19 +131,8 @@ export default class BitId {
   }
 
   static getValidBitId(box: string, name: string): BitId {
-    // replace any invalid character with a dash character
-    const makeValidIdChunk = (chunk) => {
-      const invalidChars = /[^$\-_!.a-z0-9]+/g;
-      const replaceUpperCaseWithDash = chunk
-        .trim()
-        .split(/(?=[A-Z])/)
-        .join('-')
-        .toLowerCase();
-      return replaceUpperCaseWithDash.replace(invalidChars, '-');
-    };
-
-    if (!isValidIdChunk(name)) name = makeValidIdChunk(name);
-    if (!isValidIdChunk(box)) box = makeValidIdChunk(box);
+    if (!isValidIdChunk(name)) name = decamelize(name, '-');
+    if (!isValidIdChunk(box)) box = decamelize(box, '-');
 
     return new BitId({ name, box });
   }

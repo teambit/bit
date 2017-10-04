@@ -405,8 +405,8 @@ export default class BitMap {
         : `the file ${existingPath} is untracked`;
       throw new Error(errorMsg);
     }
-
-    return Array.prototype.concat(...allChanges);
+    const flattenedArray = Array.prototype.concat(...allChanges);
+    return flattenedArray.filter(file => fs.pathExistsSync(file.to) || fs.pathExistsSync(file.from));
   }
 
   write(): Promise<any> {

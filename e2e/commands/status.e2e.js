@@ -1,6 +1,10 @@
 import path from 'path';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+
+const assertArrays = require('chai-arrays');
+
+chai.use(assertArrays);
 
 describe('bit status command', function () {
   this.timeout(0);
@@ -355,6 +359,50 @@ describe('bit status command', function () {
     });
     it('should not display that component as new', () => {
       expect(output.includes('no new components')).to.be.true;
+    });
+  });
+  describe('with corrupted bit.json', () => {
+    before(() => {
+      helper.initNewLocalScope();
+      helper.createComponentBarFoo();
+    });
+    it('Should not show status if bit.json is corrupted', () => {
+      helper.corruptBitJson();
+      const statusCmd = () => helper.runCmd('bit status');
+      expect(statusCmd).to.throw(
+        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+      );
+    });
+  });
+  describe('with removed file/files', () => {
+    beforeEach(() => {
+      helper.initNewLocalScope();
+      helper.createComponentBarFoo();
+      helper.createComponent('bar', 'index.js');
+      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+    });
+    it('Should remove files that were removed for component', () => {
+      const beforeRemoveBitMap = helper.readBitMap();
+      const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
+      expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+      helper.deleteFile('bar/foo.js');
+      helper.runCmd('bit status');
+      const bitMap = helper.readBitMap();
+      const files = bitMap['bar/foo'].files;
+      expect(files).to.be.ofSize(1);
+      expect(files[0].name).to.equal('index.js');
+    });
+    it('Should throw error that all files were removed', () => {
+      const beforeRemoveBitMap = helper.readBitMap();
+      const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
+      expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+      helper.deleteFile('bar/index.js');
+      helper.deleteFile('bar/foo.js');
+
+      const statusCmd = () => helper.runCmd('bit status');
+      expect(statusCmd).to.throw(
+        'invalid component bar/foo, all files were deleted, please remove the component using bit remove command\n'
+      );
     });
   });
 });
