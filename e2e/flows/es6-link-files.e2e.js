@@ -45,7 +45,7 @@ describe('es6 components with link files', function () {
     });
   });
 
-  describe('when a component uses index file to import single members from a module', () => {
+  describe('when importing a component that uses link file', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler();
@@ -69,7 +69,7 @@ describe('es6 components with link files', function () {
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
     });
-    it('should not consider that index file as a dependency', () => {
+    it('should rewrite the relevant part of the link file', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
@@ -77,7 +77,7 @@ describe('es6 components with link files', function () {
     });
   });
 
-  describe('when a component uses index file to import single members from a module!', () => {
+  describe('when the link file uses default-import and specific-import together', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler();
@@ -107,7 +107,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
     });
-    it('should not consider that index file as a dependency', () => {
+    it('should rewrite the relevant part of the link file', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
