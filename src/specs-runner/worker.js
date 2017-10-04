@@ -46,6 +46,7 @@ try {
   tester
     .run(testFilePath)
     .then((results) => {
+      if (!results) throw new Error(`tester did not return any result for the file ${testFilePath}`);
       mockery.disable();
       results.specPath = testFilePath;
       return process.send({ type: 'results', payload: results });

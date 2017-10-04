@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - extract only relevant dependencies from link files (files that only require other files)
+- throw error when tester doesn't return any result for test file
 
 ## [0.10.9-dev.2] - 2017-10-03
 
