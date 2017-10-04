@@ -810,72 +810,20 @@ bindings@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.2.1.tgz#14ad6113812d2d37d72e67b4cacb4bb726505f11"
 
-bit-javascript@0.10.4-dev.9:
-  version "0.10.4-dev.9"
-  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.4-dev.9.tgz#ae85babcc38028f6d23f23e6ef4d6f986993d972"
+bit-javascript@0.10.5-dev.3:
+  version "0.10.5-dev.3"
+  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.5-dev.3.tgz#727be2fa713f83820d3b6afdbceb19b7458182f7"
   dependencies:
-    bit-scope-client "^0.6.3"
     camelcase "^4.0.0"
     caporal "^0.5.0"
     chalk "^1.1.3"
-    chokidar "^1.6.1"
-    dependency-tree "https://github.com/teambit/node-dependency-tree"
-    find-package "^1.0.0"
+    dependency-tree teambit/node-dependency-tree
     fs-extra "^4.0.2"
     glob "^7.1.1"
-    mockery "^2.0.0"
     ora "^1.2.0"
+    parents "^1.0.1"
     ramda "^0.22.1"
     regenerator-runtime "^0.10.5"
-    require-from-string "^1.2.1"
-    stack-trace "0.0.9"
-    toposort-class "^1.0.1"
-    user-home "^2.0.0"
-
-bit-js@^0.2.2:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/bit-js/-/bit-js-0.2.2.tgz#6e704150bfaa43a6285c759de42619ed7e18e539"
-  dependencies:
-    bit-scope-client "^0.5.0"
-    camelcase "^4.0.0"
-    chalk "^1.1.3"
-    fs-extra "^2.1.2"
-    glob "^7.1.1"
-    mockery "^2.0.0"
-    ramda "^0.22.1"
-    require-from-string "^1.2.1"
-    stack-trace "0.0.9"
-    user-home "^2.0.0"
-
-bit-scope-client@^0.5.0:
-  version "0.5.13"
-  resolved "https://registry.yarnpkg.com/bit-scope-client/-/bit-scope-client-0.5.13.tgz#2500c5db17ac96448dc3db00255c89b3b12487fc"
-  dependencies:
-    bit-js "^0.2.2"
-    fs-extra "^2.1.2"
-    glob "^7.1.1"
-    is-array-buffer-x "^1.1.0"
-    ramda "^0.23.0"
-    sequest "^0.9.0"
-    user-home "^2.0.0"
-
-bit-scope-client@^0.6.3:
-  version "0.6.3"
-  resolved "https://registry.yarnpkg.com/bit-scope-client/-/bit-scope-client-0.6.3.tgz#175b82c4c058348b0e451da049e2337c8b1e542f"
-  dependencies:
-    bit-js "^0.2.2"
-    fs-extra "^2.1.2"
-    glob "^7.1.1"
-    is-array-buffer-x "^1.1.0"
-    ramda "^0.23.0"
-    sequest "^0.9.0"
-    user-home "^2.0.0"
-
-bl@^0.9.4:
-  version "0.9.5"
-  resolved "https://registry.yarnpkg.com/bl/-/bl-0.9.5.tgz#c06b797af085ea00bc527afc8efcf11de2232054"
-  dependencies:
-    readable-stream "~1.0.26"
 
 bl@^1.0.0:
   version "1.2.1"
@@ -1405,9 +1353,9 @@ depd@1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/depd/-/depd-1.1.0.tgz#e1bd82c6aab6ced965b97b88b17ed3e528ca18c3"
 
-"dependency-tree@git+https://github.com/teambit/node-dependency-tree.git":
+"dependency-tree@github:teambit/node-dependency-tree":
   version "5.11.0"
-  resolved "git+https://github.com/teambit/node-dependency-tree.git#c5d940cb33bc0c0ead77a4b9adbe66d47ba8c345"
+  resolved "https://codeload.github.com/teambit/node-dependency-tree/tar.gz/c5d940cb33bc0c0ead77a4b9adbe66d47ba8c345"
   dependencies:
     commander "^2.6.0"
     debug "^2.2.0"
@@ -1966,12 +1914,6 @@ fill-range@^2.1.0:
     repeat-element "^1.1.2"
     repeat-string "^1.5.2"
 
-find-package@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/find-package/-/find-package-1.0.0.tgz#d7738da67e3c5f055c24d3e19aa1aeed063c3e83"
-  dependencies:
-    parents "^1.0.1"
-
 find-up@^1.0.0:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/find-up/-/find-up-1.1.2.tgz#6b2e9822b1a2ce0a60ab64d610eccad53cb24d0f"
@@ -2066,13 +2008,6 @@ formatio@1.2.0, formatio@^1.2.0:
   resolved "https://registry.yarnpkg.com/formatio/-/formatio-1.2.0.tgz#f3b2167d9068c4698a8d51f4f760a39a54d818eb"
   dependencies:
     samsam "1.x"
-
-fs-extra@^2.1.2:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-2.1.2.tgz#046c70163cef9aad46b0e4a7fa467fb22d71de35"
-  dependencies:
-    graceful-fs "^4.1.2"
-    jsonfile "^2.1.0"
 
 fs-extra@^4.0.1:
   version "4.0.1"
@@ -2507,7 +2442,7 @@ invert-kv@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
 
-is-array-buffer-x@^1.0.13, is-array-buffer-x@^1.1.0:
+is-array-buffer-x@^1.0.13:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/is-array-buffer-x/-/is-array-buffer-x-1.4.0.tgz#c46586ab456fdf069fa9fdf27606a74c7a8719ef"
   dependencies:
@@ -2839,12 +2774,6 @@ json3@3.3.2:
 json5@^0.5.1:
   version "0.5.1"
   resolved "https://registry.yarnpkg.com/json5/-/json5-0.5.1.tgz#1eade7acc012034ad84e2396767ead9fa5495821"
-
-jsonfile@^2.1.0:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/jsonfile/-/jsonfile-2.4.0.tgz#3736a2b428b87bbda0cc83b53fa3d633a35c2ae8"
-  optionalDependencies:
-    graceful-fs "^4.1.6"
 
 jsonfile@^3.0.0:
   version "3.0.1"
@@ -3669,7 +3598,7 @@ object.omit@^2.0.0:
     for-own "^0.1.4"
     is-extendable "^0.1.1"
 
-once@^1.3.0, once@^1.3.1, once@^1.3.2, once@^1.3.3, once@^1.4.0:
+once@^1.3.0, once@^1.3.1, once@^1.3.3, once@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/once/-/once-1.4.0.tgz#583b1aa775961d4b113ac17d9c50baef9dd76bd1"
   dependencies:
@@ -4063,10 +3992,6 @@ ramda@^0.22.1:
   version "0.22.1"
   resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.22.1.tgz#031da0c3df417c5b33c96234757eb37033f36a0e"
 
-ramda@^0.23.0:
-  version "0.23.0"
-  resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.23.0.tgz#ccd13fff73497a93974e3e86327bfd87bd6e8e2b"
-
 ramda@^0.24.1:
   version "0.24.1"
   resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.24.1.tgz#c3b7755197f35b8dc3502228262c4c91ddb6b857"
@@ -4149,15 +4074,6 @@ readable-stream@^2.0.0, readable-stream@^2.0.1, readable-stream@^2.0.2, readable
     safe-buffer "~5.1.1"
     string_decoder "~1.0.3"
     util-deprecate "~1.0.1"
-
-readable-stream@~1.0.0, readable-stream@~1.0.26:
-  version "1.0.34"
-  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-1.0.34.tgz#125820e34bc842d2f2aaafafe4c2916ee32c157c"
-  dependencies:
-    core-util-is "~1.0.0"
-    inherits "~2.0.1"
-    isarray "0.0.1"
-    string_decoder "~0.10.x"
 
 readable-stream@~2.0.5:
   version "2.0.6"
@@ -4327,7 +4243,7 @@ require-directory@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/require-directory/-/require-directory-2.1.1.tgz#8c64ad5fd30dab1c976e2344ffe7f792a6a6df42"
 
-require-from-string@^1.1.0, require-from-string@^1.2.1:
+require-from-string@^1.1.0:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/require-from-string/-/require-from-string-1.2.1.tgz#529c9ccef27380adfec9a2f965b649bbee636418"
 
@@ -4504,14 +4420,6 @@ semver@5.3.0:
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.3.0.tgz#9b2ce5d3de02d17c6012ad326aa6b4d0cf54f94f"
 
-sequest@^0.9.0:
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/sequest/-/sequest-0.9.0.tgz#dde07a2af44ffa1bc124077c4b0429b56e0b2e56"
-  dependencies:
-    bl "^0.9.4"
-    once "^1.3.2"
-    ssh2 "^0.4.8"
-
 serialize-error@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/serialize-error/-/serialize-error-2.1.0.tgz#50b679d5635cdf84667bdc8e59af4e5b81d5f60a"
@@ -4643,14 +4551,6 @@ sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
 
-ssh2-streams@~0.0.22:
-  version "0.0.23"
-  resolved "https://registry.yarnpkg.com/ssh2-streams/-/ssh2-streams-0.0.23.tgz#aeef30831bb5fc4af6aa3f6d0a261a413531612b"
-  dependencies:
-    asn1 "~0.2.0"
-    readable-stream "~1.0.0"
-    streamsearch "~0.1.2"
-
 ssh2-streams@~0.1.18:
   version "0.1.19"
   resolved "https://registry.yarnpkg.com/ssh2-streams/-/ssh2-streams-0.1.19.tgz#f80ececc2de1a39e1aa64469851ec32bc96b83f9"
@@ -4658,13 +4558,6 @@ ssh2-streams@~0.1.18:
     asn1 "~0.2.0"
     semver "^5.1.0"
     streamsearch "~0.1.2"
-
-ssh2@^0.4.8:
-  version "0.4.15"
-  resolved "https://registry.yarnpkg.com/ssh2/-/ssh2-0.4.15.tgz#07c6f4106d9f7b6ea6e4df636c6c53f1f9817ff8"
-  dependencies:
-    readable-stream "~1.0.0"
-    ssh2-streams "~0.0.22"
 
 ssh2@^0.5.4:
   version "0.5.5"
@@ -4685,10 +4578,6 @@ sshpk@^1.7.0:
     ecc-jsbn "~0.1.1"
     jsbn "~0.1.0"
     tweetnacl "~0.14.0"
-
-stack-trace@0.0.9:
-  version "0.0.9"
-  resolved "https://registry.yarnpkg.com/stack-trace/-/stack-trace-0.0.9.tgz#a8f6eaeca90674c333e7c43953f275b451510695"
 
 stack-trace@0.0.x:
   version "0.0.10"
