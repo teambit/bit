@@ -193,7 +193,7 @@ export default class Component {
   }
 
   writePackageJson(driver: Driver, bitDir: string, force?: boolean = true): Promise<boolean> {
-    const PackageJson = driver.getDriver().PackageJson;
+    const PackageJson = driver.getDriver(false).PackageJson;
     const name = `${this.box}/${this.name}`;
 
     const mainFile = this.calculateMainDistFile();
