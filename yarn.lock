@@ -810,9 +810,9 @@ bindings@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.2.1.tgz#14ad6113812d2d37d72e67b4cacb4bb726505f11"
 
-bit-javascript@0.10.5-dev.3:
-  version "0.10.5-dev.3"
-  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.5-dev.3.tgz#727be2fa713f83820d3b6afdbceb19b7458182f7"
+bit-javascript@0.10.5-dev.6:
+  version "0.10.5-dev.6"
+  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.5-dev.6.tgz#ac05981a1a498c1f4884acfe3667d0cb7831c555"
   dependencies:
     camelcase "^4.0.0"
     caporal "^0.5.0"
