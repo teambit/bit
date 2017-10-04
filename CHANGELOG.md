@@ -7,21 +7,44 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- add ignore missing dependencies to commit  
-- remove feature for removing local and remote components
-- deprecate feature for deprecating local and remote components
+- extract only relevant dependencies from link files (files that only require other files)
+- throw error when tester doesn't return any result for test file
+
+## [0.10.9-dev.2] - 2017-10-03
+
+- improve bit add to convert files to valid bit names 
+- improve checkVersionCompatibility between server and client
+- show correct message / error when the tester has an exception during bit test
+- fix bug with printing wrong id on bit tag for component in versions between 10-19
+
+## [0.10.9-dev.1] - 2017-10-02
+
+- handle invalid bit.json
+- bit add' on missing test file should throw an error
+- prevent test files from becoming new components
+- rename `bit commit` to `bit tag`
+- fix bug when component version is larger than 10 it won't show as staged
+- take package version from package.json in the component / root folder to support semver package dependencies
+
+
+## [0.10.8] - 2017-10-01
+
 - support requiring imported components using `require('bit/namespace/name')` syntax
+- new remove command for removing local and remote components
+- new deprecate command for deprecating local and remote components
+- new move command for moving files/directories of a component to a new location
+- create package.json for imported components
+- exclude import-pending components from 'new components' section
+- add ignore missing dependencies to commit  
 - save all dependencies on one configurable directory (components/.dependencies by default) 
 - add support for tsx files
 - generate internal component links according to their compiled version
 - move a re-imported component to a new location when `bit import --prefix` is used
 - fix commit and export issues when dealing with more than 500 components
-- support move command for moving files/directories of a component to a new location
 - fix export of large amount of data
-- fix bug with commit --force when tests throws exception
-- fix bug - when you import authored component (and there is newer version) it duplicate it in the .bit.map.json
+- fix bug with commit --force when tests throws an exception
+- fix bug - when you import authored component (and there is a newer version) it duplicate it in the .bit.map.json
 - fix bug - when you import authored component it was added to bit.json dependencies
-- create package.json for imported components
 - fix bug with ssh2 times out on handshake
 
 ## [0.10.7] - 2017-09-07

@@ -1,12 +1,16 @@
-// covers also init, create, commit, import and export commands
+// covers also init, create, tag, import and export commands
 
 import sinon from 'sinon';
-import { expect } from 'chai';
+import path from 'path';
+import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 
 let logSpy;
+const assertArrays = require('chai-arrays');
 
-describe('bit commit command', function () {
+chai.use(assertArrays);
+
+describe('bit tag command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -16,10 +20,22 @@ describe('bit commit command', function () {
     helper.reInitLocalScope();
     logSpy = sinon.spy(console, 'log');
   });
-  describe.skip('commit one component', () => {
-    it('should throw error if the bit id does not exists', () => {});
+  describe('tag component with corrupted bitjson', () => {
+    it('Should not commit component if bit.json is corrupted', () => {
+      const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
+      helper.createComponent('bar', 'foo2.js', fixture);
+      helper.addComponent('bar/foo2.js');
+      const commit = () => helper.commitComponent('bar/foo2');
+      helper.corruptBitJson();
+      expect(commit).to.throw(
+        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+      );
+    });
+  });
+  describe('tag one component', () => {
+    it.skip('should throw error if the bit id does not exists', () => {});
 
-    it('should print warning if the a driver is not installed', () => {
+    it.skip('should print warning if the a driver is not installed', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
       helper.createComponent('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
@@ -27,20 +43,20 @@ describe('bit commit command', function () {
       // console.log("args", myargs);
       expect(
         logSpy.calledWith(
-          'Warning: Bit is not be able calculate the dependencies tree. Please install bit-javascript driver and run commit again.\n'
+          'Warning: Bit is not be able calculate the dependencies tree. Please install bit-javascript driver and run tag again.\n'
         )
       ).to.be.true;
     });
 
-    it('should persist the model in the scope', () => {});
+    it.skip('should persist the model in the scope', () => {});
 
-    it('should run the onCommit hook', () => {});
+    it.skip('should run the onCommit hook', () => {});
 
-    it('should throw error if the build failed', () => {});
+    it.skip('should throw error if the build failed', () => {});
 
-    it('should throw error if the tests failed', () => {});
+    it.skip('should throw error if the tests failed', () => {});
 
-    describe.skip('commit imported component', () => {
+    describe.skip('tag imported component', () => {
       it('should index the component', () => {});
 
       it('should write the full id to bit map (include scope and version)', () => {});
@@ -54,36 +70,116 @@ describe('bit commit command', function () {
       });
     });
 
-    describe.skip('commit added component', () => {
-      it('should index the component', () => {});
+    describe('tag added component', () => {
+      let output;
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createFile('', 'file.js');
+        helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
+        output = helper.commitComponent('comp/comp');
+      });
 
-      it('should successfuly commit if there is no special error', () => {
+      it.skip('should index the component', () => {});
+
+      it('should successfully tag if there is no special error', () => {
         // Validate output
+        expect(output).to.have.string('1 components tagged');
         // Validate model
       });
 
-      it('Should throw error if there is tracked files dependencies which not commited yet', () => {});
+      it.skip('Should throw error if there is tracked files dependencies which not tagged yet', () => {});
 
-      it('should add the correct dependencies to each component', () => {});
+      describe('package dependencies calculation', () => {
+        let packageDependencies;
+        let depObject;
+        let componentRootDir;
+        before(() => {
+          helper.reInitLocalScope();
+
+          const fileFixture = 'import get from "lodash.get"';
+          helper.createFile('src', 'file.js', fileFixture);
+          helper.addComponentWithOptions('src/file.js', { i: 'comp/comp' });
+          helper.addNpmPackage('lodash.get', '1.0.0');
+
+          // Commit, export and import the component to make sure we have root folder defined in the bit.map
+          helper.reInitRemoteScope();
+          helper.addRemoteScope();
+          helper.commitComponent('comp/comp');
+          helper.exportComponent('comp/comp');
+          helper.reInitLocalScope('comp/comp');
+          helper.addRemoteScope();
+          helper.importComponent('comp/comp');
+          helper.addNpmPackage('lodash.get', '2.0.0');
+          const bitMap = helper.readBitMap();
+          componentRootDir = path.normalize(bitMap[`${helper.remoteScope}/comp/comp@1`].rootDir);
+        });
+        // beforeEach(() => {
+        // });
+        it('should take the package version from package.json in the component dir if exists', () => {
+          const componentPackageJsonFixture = JSON.stringify({ dependencies: { 'lodash.get': '^1.0.1' } });
+          helper.createFile(componentRootDir, 'package.json', componentPackageJsonFixture);
+          helper.commitComponent('comp/comp');
+          output = helper.showComponentWithOptions('comp/comp', { j: '' });
+          packageDependencies = JSON.parse(output).packageDependencies;
+          depObject = { 'lodash.get': '^1.0.1' };
+          expect(packageDependencies).to.include(depObject);
+        });
+        it('should take the package version from package.json in the consumer root dir if the package.json not exists in component dir', () => {
+          helper.deleteFile(path.join(componentRootDir, 'package.json'));
+          helper.commitComponent('comp/comp');
+          output = helper.showComponentWithOptions('comp/comp', { j: '' });
+          packageDependencies = JSON.parse(output).packageDependencies;
+          depObject = { 'lodash.get': '2.0.0' };
+          expect(packageDependencies).to.include(depObject);
+        });
+        it('should take the package version from package.json in the consumer root dir if the package.json in component root dir does not contain the package definition', () => {
+          const componentPackageJsonFixture = JSON.stringify({ dependencies: { 'fake.package': '^1.0.1' } });
+          helper.createFile(componentRootDir, 'package.json', componentPackageJsonFixture);
+          helper.commitComponent('comp/comp');
+          output = helper.showComponentWithOptions('comp/comp', { j: '' });
+          packageDependencies = JSON.parse(output).packageDependencies;
+          depObject = { 'lodash.get': '2.0.0' };
+          expect(packageDependencies).to.include(depObject);
+        });
+        it('should take the package version from the package package.json if the package.json not exists in component / root dir', () => {
+          helper.deleteFile(path.join(componentRootDir, 'package.json'));
+          helper.deleteFile('package.json');
+          helper.commitComponent('comp/comp');
+          output = helper.showComponentWithOptions('comp/comp', { j: '' });
+          packageDependencies = JSON.parse(output).packageDependencies;
+          depObject = { 'lodash.get': '2.0.0' };
+          expect(packageDependencies).to.include(depObject);
+        });
+        it('should take the package version from the package package.json if the package.json in component / root dir does not contain the package definition', () => {
+          helper.deleteFile(path.join(componentRootDir, 'package.json'));
+          const rootPackageJsonFixture = JSON.stringify({ dependencies: { 'fake.package': '^1.0.1' } });
+          helper.createFile('', 'package.json', rootPackageJsonFixture);
+          helper.commitComponent('comp/comp');
+          output = helper.showComponentWithOptions('comp/comp', { j: '' });
+          packageDependencies = JSON.parse(output).packageDependencies;
+          depObject = { 'lodash.get': '2.0.0' };
+          expect(packageDependencies).to.include(depObject);
+        });
+      });
     });
   });
 
-  describe('commit non-exist component', () => {
+  describe('tag non-exist component', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
     });
-    it('should not commit another component', () => {
+    it('should not tag another component', () => {
       const commit = () => helper.commitComponent('non-exist-comp');
       expect(commit).to.throw('the component global/non-exist-comp was not found in the bit.map file');
     });
   });
 
-  describe('commit back', () => {
+  describe('tag back', () => {
     // This is specifically export more than one component since it's different case for the
     // resolveLatestVersion.js - getLatestVersionNumber function
-    describe('commit component after exporting 2 components', () => {
+    describe('tag component after exporting 2 components', () => {
       let output;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
@@ -96,13 +192,13 @@ describe('bit commit command', function () {
         helper.createFile('', 'file.js', 'console.log()');
         output = helper.commitAllComponents();
       });
-      it('should commit the component', () => {
-        expect(output).to.have.string('1 components committed');
+      it('should tag the component', () => {
+        expect(output).to.have.string('1 components tagged');
       });
     });
   });
 
-  describe('commit already committed component without changing it', () => {
+  describe('tag already tagged component without changing it', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
@@ -111,12 +207,13 @@ describe('bit commit command', function () {
       helper.commitAllComponents();
       output = helper.commitComponent('bar/foo');
     });
-    it('should print nothing to commit', () => {
-      expect(output).to.have.string('nothing to commit');
+    it('should print nothing to tag', () => {
+      expect(output).to.have.string('nothing to tag');
     });
+    it.skip('should tag the component if -f used', () => {});
   });
 
-  describe('commit imported component with new dependency to another imported component', () => {
+  describe('tag imported component with new dependency to another imported component', () => {
     describe('require the main file of the imported component', () => {
       let output;
       let showOutput;
@@ -137,8 +234,8 @@ describe('bit commit command', function () {
         output = helper.commitComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
       });
-      it('should commit the component', () => {
-        expect(output).to.have.string('1 components committed');
+      it('should tag the component', () => {
+        expect(output).to.have.string('1 components tagged');
       });
       it('should write the dependency to the component model ', () => {
         const deps = showOutput.dependencies;
@@ -166,8 +263,8 @@ describe('bit commit command', function () {
         output = helper.commitComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
       });
-      it('should commit the component', () => {
-        expect(output).to.have.string('1 components committed');
+      it('should tag the component', () => {
+        expect(output).to.have.string('1 components tagged');
       });
       it('should write the dependency to the component model ', () => {
         const deps = showOutput.dependencies;
@@ -200,30 +297,30 @@ describe('bit commit command', function () {
         output = err.toString();
       }
     });
-    it('should not commit and throw an error regarding the relative syntax', () => {
+    it('should not tag and throw an error regarding the relative syntax', () => {
       expect(output).to.have.string('fatal: following component dependencies were not found');
       expect(output).to.have.string(`relative components: ${helper.remoteScope}/utils/is-type@1`);
     });
   });
 
-  describe('commit all components', () => {
-    it('Should print there is nothing to commit right after success commit all', () => {
-      // Create component and try to commit twice
+  describe('tag all components', () => {
+    it('Should print there is nothing to tag right after success tag all', () => {
+      // Create component and try to tag twice
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       let output = helper.commitAllComponents();
       output = helper.commitAllComponents();
-      expect(output.includes('nothing to commit')).to.be.true;
+      expect(output.includes('nothing to tag')).to.be.true;
     });
 
-    it.skip('Should print there is nothing to commit after import only', () => {
-      // Import component then try to commit
+    it.skip('Should print there is nothing to tag after import only', () => {
+      // Import component then try to tag
     });
 
-    it.skip('Should build and test all components before commit', () => {});
+    it.skip('Should build and test all components before tag', () => {});
 
-    it.skip('Should commit nothing if only some of the commits worked', () => {});
+    it.skip('Should tag nothing if only some of the tags worked', () => {});
 
     describe('missing dependencies errors', () => {
       let output;
@@ -280,7 +377,7 @@ describe('bit commit command', function () {
         expect(output).to.have.string('src/untracked2.js');
       });
     });
-    describe('commit component with missing dependencies with -ignore_missing_dependencies', () => {
+    describe('commit component with missing dependencies with --ignore_missing_dependencies', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
@@ -308,7 +405,7 @@ describe('bit commit command', function () {
       });
 
       it('Should print that the component is commited', () => {
-        expect(output).to.have.string('1 components committed');
+        expect(output).to.have.string('1 components tagged');
       });
     });
     describe('commit all components with missing dependencies with --ignore_missing_dependencies', () => {
@@ -339,7 +436,7 @@ describe('bit commit command', function () {
       });
 
       it('Should print that the components are commited', () => {
-        expect(output).to.have.string('2 components committed');
+        expect(output).to.have.string('2 components tagged');
       });
     });
     // We throw this error because we don't know the packege version in this case
@@ -347,7 +444,7 @@ describe('bit commit command', function () {
 
     it.skip('should index all components', () => {});
 
-    it.skip('should commit the components in the correct order', () => {});
+    it.skip('should tag the components in the correct order', () => {});
 
     it.skip('should add the correct dependencies to each component', () => {
       // Make sure the use case contain dependenceis from all types -
@@ -422,5 +519,36 @@ describe('bit commit command', function () {
     it.skip('should persist all models in the scope', () => {});
 
     it.skip('should run the onCommit hook', () => {});
+  });
+  describe('with removed file/files', () => {
+    beforeEach(() => {
+      helper.initNewLocalScope();
+      helper.createComponentBarFoo();
+      helper.createComponent('bar', 'index.js');
+      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+    });
+    it('Should commit component only with the left files', () => {
+      const beforeRemoveBitMap = helper.readBitMap();
+      const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
+      expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+      helper.deleteFile('bar/foo.js');
+      helper.commitAllComponents();
+      const bitMap = helper.readBitMap();
+      const files = bitMap['bar/foo'].files;
+      expect(files).to.be.ofSize(1);
+      expect(files[0].name).to.equal('index.js');
+    });
+    it('Should throw error that all files were removed', () => {
+      const beforeRemoveBitMap = helper.readBitMap();
+      const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
+      expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+      helper.deleteFile('bar/index.js');
+      helper.deleteFile('bar/foo.js');
+
+      const commitCmd = () => helper.commitAllComponents();
+      expect(commitCmd).to.throw(
+        'invalid component bar/foo, all files were deleted, please remove the component using bit remove command\n'
+      );
+    });
   });
 });

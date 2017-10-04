@@ -3,7 +3,7 @@ import fs from 'fs';
 import R from 'ramda';
 import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
-import { BitJsonNotFound, BitJsonAlreadyExists } from './exceptions';
+import { BitJsonNotFound, BitJsonAlreadyExists, InvalidBitJson } from './exceptions';
 import {
   BIT_JSON,
   DEFAULT_DIST_DIRNAME,
@@ -94,8 +94,12 @@ export default class ConsumerBitJson extends AbstractBitJson {
       if (!hasExisting(dirPath)) return reject(new BitJsonNotFound());
       return fs.readFile(composePath(dirPath), (err, data) => {
         if (err) return reject(err);
-        const file = JSON.parse(data.toString('utf8'));
-        return resolve(this.fromPlainObject(file));
+        try {
+          const file = JSON.parse(data.toString('utf8'));
+          return resolve(this.fromPlainObject(file));
+        } catch (e) {
+          return reject(new InvalidBitJson(e));
+        }
       });
     });
   }

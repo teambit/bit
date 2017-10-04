@@ -222,7 +222,9 @@ export default class Consumer {
     }
     if (componentsFromBitMap.length) {
       componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsFromBitMap, cache);
-      await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false, withPackageJson);
+      // Don't write the package.json for an authored component, because it's dependencies probably managed
+      // By the root packge.json
+      await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false, false);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     if (withEnvironments) {
@@ -646,23 +648,20 @@ export default class Consumer {
     });
   }
 
-  static load(currentPath: string): Promise<Consumer> {
+  static async load(currentPath: string): Promise<Consumer> {
     // TODO: Refactor - remove the new Promise((resolve, reject) it's a bad practice use Promise.reject if needed
-    return new Promise((resolve, reject) => {
-      const projectPath = locateConsumer(currentPath);
-      if (!projectPath) return reject(new ConsumerNotFound());
-      const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
-      const bitJsonP = ConsumerBitJson.load(projectPath);
-      return Promise.all([scopeP, bitJsonP]).then(([scope, bitJson]) =>
-        resolve(
-          new Consumer({
-            projectPath,
-            bitJson,
-            scope
-          })
-        )
-      );
-    });
+    const projectPath = locateConsumer(currentPath);
+    if (!projectPath) return Promise.reject(new ConsumerNotFound());
+    const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
+    const bitJsonP = ConsumerBitJson.load(projectPath);
+    return Promise.all([scopeP, bitJsonP]).then(
+      ([scope, bitJson]) =>
+        new Consumer({
+          projectPath,
+          bitJson,
+          scope
+        })
+    );
   }
   async deprecateRemote(bitIds: Array<BitId>) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
