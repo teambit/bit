@@ -173,6 +173,7 @@ export default function generateTree(files, config) {
     });
     Object.assign(depTree, dependencyTreeResult);
   });
+
   let tree = convertTree(depTree, {}, pathCache, config.baseDir);
   for (const npmKey in npmPaths) {
     const id = processPath(npmKey, pathCache, config.baseDir);

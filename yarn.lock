@@ -1158,7 +1158,7 @@ delegates@^1.0.0:
 
 dependency-tree@teambit/node-dependency-tree:
   version "5.11.0"
-  resolved "https://codeload.github.com/teambit/node-dependency-tree/tar.gz/c5d940cb33bc0c0ead77a4b9adbe66d47ba8c345"
+  resolved "https://codeload.github.com/teambit/node-dependency-tree/tar.gz/89e6a7316f353b861f168745717a265aa311e918"
   dependencies:
     commander "^2.6.0"
     debug "^2.2.0"
@@ -1624,12 +1624,6 @@ fill-range@^2.1.0:
     randomatic "^1.1.3"
     repeat-element "^1.1.2"
     repeat-string "^1.5.2"
-
-find-package@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/find-package/-/find-package-1.0.0.tgz#d7738da67e3c5f055c24d3e19aa1aeed063c3e83"
-  dependencies:
-    parents "^1.0.1"
 
 find-up@^1.0.0:
   version "1.1.2"

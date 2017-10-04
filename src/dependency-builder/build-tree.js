@@ -12,7 +12,7 @@ import generateTree from './generate-tree-madge';
  * Taken from this package (with some minor changes):
  * https://www.npmjs.com/package/find-package
  * https://github.com/jalba/find-package
- * 
+ *
  */
 function findPath(dir) {
   const parentsArr = parents(dir);
@@ -33,7 +33,7 @@ function findPath(dir) {
  * Taken from this package (with some minor changes):
  * https://www.npmjs.com/package/find-package
  * https://github.com/jalba/find-package
- * 
+ *
  */
 function findPackage(dir, addPaths) {
   const pathToConfig = findPath(dir);
@@ -277,7 +277,7 @@ function updatePathMapWithLinkFilesData(pathMap) {
  * remove link-files from the files array and add a new attribute 'linkFiles' to the tree
  */
 function updateTreeAccordingToLinkFiles(tree, pathMap) {
-  if (!pathMap) return; // currently pathMap is relevant for ES6 only
+  if (!pathMap || !pathMap.length) return; // currently pathMap is relevant for ES6 only
   updatePathMapWithLinkFilesData(pathMap);
   Object.keys(tree).forEach((mainFile) => {
     if (!tree[mainFile].files || !tree[mainFile].files.length) return;
