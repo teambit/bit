@@ -282,6 +282,7 @@ function updateTreeAccordingToLinkFiles(tree, pathMap) {
   Object.keys(tree).forEach((mainFile) => {
     if (!tree[mainFile].files || !tree[mainFile].files.length) return;
     const mainFilePathMap = pathMap.find(file => file.relativePath === mainFile);
+    if (!mainFilePathMap) return; // @todo: throw an error
     const linkFiles = [];
     tree[mainFile].files.forEach((dependency, key) => {
       const dependencyPathMap = mainFilePathMap.dependencies.find(file => file.relativePath === dependency);
