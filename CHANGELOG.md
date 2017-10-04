@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- extract only relevant dependencies from link files (files that only require other files)
+
 ## [0.10.9-dev.2] - 2017-10-03
 
 - improve bit add to convert files to valid bit names 

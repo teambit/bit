@@ -10,6 +10,7 @@ import { ComponentWithDependencies } from '../../scope';
 import Component from '../component';
 import BitMap from '../bit-map/bit-map';
 import { BitIds } from '../../bit-id';
+import groupBy from 'lodash.groupby';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -28,13 +29,35 @@ function _getIndexFileName(mainFile: string): string {
 }
 
 // todo: move to bit-javascript
-function _getLinkContent(filePath: string): string {
+function _getLinkContent(filePath: string, importSpecifier?: Object): string {
+  const fileExt = path.extname(filePath).replace('.', '');
+  const getTemplate = () => {
+    if (importSpecifier) {
+      if (fileExt === 'js' || fileExt === 'jsx') {
+        let exportPart = 'exports';
+        if (importSpecifier.mainFile.isDefault) {
+          exportPart += '.default';
+        } else {
+          exportPart += `.${importSpecifier.mainFile.name}`;
+        }
+        let pathPart = "require('{filePath}')";
+        if (importSpecifier.linkFile.isDefault) {
+          pathPart += '.default';
+        }
+        return `${exportPart} = ${pathPart};`;
+      } else if (fileExt === 'ts' || fileExt === 'tsx') {
+        // @todo: implement
+      }
+    }
+    return LINKS_CONTENT_TEMPLATES[fileExt];
+  };
+
   if (!filePath.startsWith('.')) {
     filePath = `./${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
   }
-  const fileExt = path.extname(filePath).replace('.', '');
+
   filePath = getWithoutExt(filePath); // remove the extension
-  const template = LINKS_CONTENT_TEMPLATES[fileExt];
+  const template = getTemplate();
   return format(template, { filePath: normalize(filePath) });
 }
 
@@ -51,7 +74,13 @@ async function writeDependencyLinks(
   bitMap: BitMap,
   consumerPath: string
 ): Promise<any> {
-  const writeLinkFile = (componentId: string, mainFile: string, linkPath: string, relativePathInDependency: string) => {
+  const prepareLinkFile = (
+    componentId: string,
+    mainFile: string,
+    linkPath: string,
+    relativePathInDependency: string,
+    importSpecifier?: Object
+  ) => {
     const rootDir = path.join(consumerPath, bitMap.getRootDirOfComponent(componentId));
     let actualFilePath = path.join(rootDir, relativePathInDependency);
     if (relativePathInDependency === mainFile) {
@@ -59,12 +88,12 @@ async function writeDependencyLinks(
     }
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
 
-    const linkContent = _getLinkContent(relativeFilePath);
+    const linkContent = _getLinkContent(relativeFilePath, importSpecifier);
     logger.debug(`writeLinkFile, on ${linkPath}`);
-    return outputFile(linkPath, linkContent);
+    return { linkPath, linkContent, isEs6: !!importSpecifier };
   };
 
-  const componentLink = async (
+  const componentLink = (
     resolveDepVersion: string,
     sourceRelativePath: string,
     relativePathInDependency: string,
@@ -72,18 +101,29 @@ async function writeDependencyLinks(
     relativeDistExtInDependency: string,
     parentDir: string,
     mainFile: string,
-    hasDist: boolean
+    hasDist: boolean,
+    importSpecifier?: Object
   ) => {
     const linkPath = path.join(parentDir, sourceRelativePath);
     let distLinkPath;
+    const linkFiles = [];
     if (hasDist) {
       const sourceRelativePathWithCompiledExt = getWithoutExt(sourceRelativePath) + relativeDistExtInDependency;
       distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, sourceRelativePathWithCompiledExt);
       // Generate a link file inside dist folder of the dependent component
-      writeLinkFile(resolveDepVersion, mainFile, distLinkPath, relativeDistPathInDependency);
+      const linkFile = prepareLinkFile(
+        resolveDepVersion,
+        mainFile,
+        distLinkPath,
+        relativeDistPathInDependency,
+        importSpecifier
+      );
+      linkFiles.push(linkFile);
     }
 
-    return writeLinkFile(resolveDepVersion, mainFile, linkPath, relativePathInDependency);
+    const linkFile = prepareLinkFile(resolveDepVersion, mainFile, linkPath, relativePathInDependency, importSpecifier);
+    linkFiles.push(linkFile);
+    return linkFiles;
   };
 
   const componentLinks = (
@@ -95,9 +135,9 @@ async function writeDependencyLinks(
     mainFile: string,
     hasDist: boolean
   ) => {
-    if (!directDependencies || !directDependencies.length) return Promise.resolve();
+    if (!directDependencies || !directDependencies.length) return [];
     const links = directDependencies.map((dep) => {
-      if (!dep.relativePath && (!dep.relativePaths || R.isEmpty(dep.relativePaths))) return Promise.resolve();
+      if (!dep.relativePath && (!dep.relativePaths || R.isEmpty(dep.relativePaths))) return [];
       let resolveDepVersion = dep.id;
       // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
       // Actual version number, because on the bitmap we have only specific versions
@@ -131,12 +171,25 @@ async function writeDependencyLinks(
           destinationDistRelativePathExt,
           parentDir,
           depComponent.calculateMainDistFile(),
-          hasDist
+          hasDist,
+          relativePath.importSpecifier
         );
       });
-      return Promise.all(currLinks);
+      return R.flatten(currLinks);
     });
-    return Promise.all(links);
+    const flattenLinks = R.flatten(links);
+    const groupLinks = groupBy(flattenLinks, link => link.linkPath);
+    const allLinksP = Object.keys(groupLinks).map((group) => {
+      let content = '';
+      if (groupLinks[group][0].isEs6) {
+        // check by the first item of the array, it can be any other item as well
+        content = 'Object.defineProperty(exports, "__esModule", { value: true });\n';
+      }
+      content += groupLinks[group].map(linkItem => linkItem.linkContent).join('\n');
+      return outputFile(group, content);
+    });
+
+    return Promise.all(allLinksP);
   };
 
   const allLinksP = componentDependencies.map((componentWithDeps) => {

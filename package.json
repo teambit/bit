@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "0.10.5-dev.2",
+    "bit-javascript": "0.10.5-dev.4",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
     "chokidar": "^1.7.0",
@@ -51,6 +51,7 @@
     "is-glob": "^4.0.0",
     "jfs": "^0.2.6",
     "lodash.find": "^4.6.0",
+    "lodash.groupby": "^4.6.0",
     "lodash.includes": "^4.3.0",
     "lodash.maxby": "^4.6.0",
     "lodash.pickby": "^4.6.0",

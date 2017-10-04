@@ -98,6 +98,17 @@ export default class Version extends BitObject {
   id() {
     const obj = this.toObject();
 
+    // remove importSpecifier from the ID, it's not needed for the ID calculation.
+    // @todo: remove the entire dependencies.relativePaths from the ID (it's going to be a breaking change)
+    const dependencies = R.clone(obj.dependencies);
+    if (dependencies && dependencies.length) {
+      dependencies.forEach((dependency) => {
+        if (dependency.relativePaths && dependency.relativePaths.importSpecifier) {
+          delete dependencies.relativePaths.importSpecifier;
+        }
+      });
+    }
+
     return JSON.stringify(
       filterObject(
         {
@@ -106,7 +117,7 @@ export default class Version extends BitObject {
           compiler: obj.compiler,
           tester: obj.tester,
           log: obj.log,
-          dependencies: obj.dependencies,
+          dependencies,
           packageDependencies: obj.packageDependencies
         },
         val => !!val
