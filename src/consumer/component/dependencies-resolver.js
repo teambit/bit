@@ -42,10 +42,7 @@ function findComponentsOfDepsFiles(
   const rootDir = entryComponentMap.rootDir;
   const processedFiles = [];
 
-  const processDepFile = (depFile) => {
-    if (processedFiles.includes(depFile)) return;
-    processedFiles.push(depFile);
-
+  const getComponentIdByDepFile = (depFile) => {
     let depFileRelative: string = depFile; // dependency file path relative to consumer root
     let componentId: ?string;
     let destination: ?string;
@@ -73,12 +70,19 @@ function findComponentsOfDepsFiles(
         depFileRelative = depFile;
         componentId = bitMap.getComponentIdByPath(depFileRelative);
       }
+    }
+    return { componentId, depFileRelative, destination };
+  };
 
-      // the file dependency doesn't have any counterpart component. Add it to untrackedDeps
-      if (!componentId) {
-        untrackedDeps.push(depFileRelative);
-        return;
-      }
+  const processDepFile = (depFile: string, linkFile?: string, importSpecifier?: Object) => {
+    if (processedFiles.includes(depFile)) return;
+    processedFiles.push(depFile);
+
+    const { componentId, depFileRelative, destination } = getComponentIdByDepFile(depFile);
+    // the file dependency doesn't have any counterpart component. Add it to untrackedDeps
+    if (!componentId) {
+      untrackedDeps.push(depFileRelative);
+      return;
     }
 
     // happens when in the same component one file requires another one. In this case, there is noting to do
@@ -86,16 +90,22 @@ function findComponentsOfDepsFiles(
 
     // found a dependency component. Add it to componentsDeps
     const depRootDir = bitMap.getRootDirOfComponent(componentId);
-    if (!destination) {
-      destination =
-        depRootDir && depFileRelative.startsWith(depRootDir)
-          ? pathRelative(depRootDir, depFileRelative)
-          : depFileRelative;
-    }
-    // when there is no rootDir for the current dependency (it happens when it's AUTHORED), keep the original path
-    const sourceRelativePath = depRootDir ? depFileRelative : depFile;
+    const destinationRelativePath = destination || (depRootDir && depFileRelative.startsWith(depRootDir)
+      ? pathRelative(depRootDir, depFileRelative)
+      : depFileRelative);
 
-    const depsPaths = { sourceRelativePath, destinationRelativePath: destination };
+    let sourceRelativePath;
+    if (linkFile) {
+      sourceRelativePath = linkFile;
+    } else {
+      // when there is no rootDir for the current dependency (it happens when it's AUTHORED), keep the original path
+      sourceRelativePath = depRootDir ? depFileRelative : depFile;
+    }
+
+    const depsPaths = { sourceRelativePath, destinationRelativePath };
+    if (importSpecifier) {
+      depsPaths.importSpecifier = importSpecifier;
+    }
     const currentComponentsDeps = { [componentId]: [depsPaths] };
 
     const componentMap = bitMap.getComponent(componentId);
@@ -110,6 +120,19 @@ function findComponentsOfDepsFiles(
     } else {
       Object.assign(componentsDeps, currentComponentsDeps);
     }
+  };
+
+  const processLinkFile = (linkFile) => {
+    if (!linkFile.dependencies || R.isEmpty(linkFile.dependencies)) return;
+    linkFile.dependencies.forEach((dependency) => {
+      const component = getComponentIdByDepFile(linkFile.file);
+      if (component.componentId) {
+        // the linkFile is already a component, no need to treat it differently than other depFile
+        processDepFile(linkFile.file);
+      } else {
+        processDepFile(dependency.file, linkFile.file, dependency.importSpecifier);
+      }
+    });
   };
 
   files.forEach((file) => {
@@ -133,11 +156,18 @@ function findComponentsOfDepsFiles(
         }
       });
     }
-    const allFilesDeps = tree[file].files;
-    if (!allFilesDeps || R.isEmpty(allFilesDeps)) return;
-    allFilesDeps.forEach((depFile) => {
-      processDepFile(depFile);
-    });
+    const allDepsFiles = tree[file].files;
+    if (allDepsFiles && !R.isEmpty(allDepsFiles)) {
+      allDepsFiles.forEach((depFile) => {
+        processDepFile(depFile);
+      });
+    }
+    const allLinkFiles = tree[file].linkFiles;
+    if (allLinkFiles && !R.isEmpty(allLinkFiles)) {
+      allLinkFiles.forEach((linkFile) => {
+        processLinkFile(linkFile);
+      });
+    }
   });
   return { componentsDeps, packagesDeps, untrackedDeps, relativeDeps, missingDeps };
 }

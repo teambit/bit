@@ -357,38 +357,4 @@ describe('bit status command', function () {
       expect(output.includes('no new components')).to.be.true;
     });
   });
-  /**
-   * utils/is-array  => component utils/is-array
-   * utils/is-string => component utils/is-string
-   * utils/index.js  => UNTRACKED FILE
-   * bar/foo.js      => component bar/foo
-   *
-   * The file "utils/index.js" in untracked in any of the components, yet, becuase this file is
-   * a link-file, which only links to is-string file, we expect bar/foo to ignore this file and not
-   * raise a warning about missing-dependencies
-   */
-  describe('when a component uses index file to import single members from a module', () => {
-    let output;
-    before(() => {
-      helper.reInitLocalScope();
-      const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
-      helper.createComponent('utils', 'is-array.js', isArrayFixture);
-      helper.addComponent('utils/is-array.js');
-      const isStringFixture = "export default function isString() { return 'got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
-      const utilFixture =
-        "import isArray from './is-array'; import isString from './is-string'; export { isArray, isString }; ";
-      helper.createFile('utils', 'index.js', utilFixture);
-      const fooBarFixture =
-        "import { isString } from '../utils'; export default function foo() { return isString() + ' and got foo'; };";
-      helper.createComponentBarFoo(fooBarFixture);
-      helper.addComponentBarFoo();
-    });
-    it('should not consider that index file as a dependency', () => {
-      output = helper.runCmd('bit status');
-      expect(output.includes('bar/foo... ok')).to.be.true;
-      expect(output.includes('missing dependencies')).to.be.false;
-    });
-  });
 });

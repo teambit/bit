@@ -810,9 +810,9 @@ bindings@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.2.1.tgz#14ad6113812d2d37d72e67b4cacb4bb726505f11"
 
-bit-javascript@0.10.4-dev.8:
-  version "0.10.4-dev.8"
-  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.4-dev.8.tgz#fb899070725de612bb3fbb656c3af3d3b2bbd178"
+bit-javascript@0.10.4-dev.9:
+  version "0.10.4-dev.9"
+  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.4-dev.9.tgz#ae85babcc38028f6d23f23e6ef4d6f986993d972"
   dependencies:
     bit-scope-client "^0.6.3"
     camelcase "^4.0.0"
@@ -3113,6 +3113,10 @@ lodash.find@^4.6.0:
 lodash.get@^4.0.0:
   version "4.4.2"
   resolved "https://registry.yarnpkg.com/lodash.get/-/lodash.get-4.4.2.tgz#2d177f652fa31e939b4438d5341499dfa3825e99"
+
+lodash.groupby@^4.6.0:
+  version "4.6.0"
+  resolved "https://registry.yarnpkg.com/lodash.groupby/-/lodash.groupby-4.6.0.tgz#0b08a1dcf68397c397855c3239783832df7403d1"
 
 lodash.includes@^4.3.0:
   version "4.3.0"

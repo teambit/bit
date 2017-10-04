@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- extract only relevant dependencies from link files (files that only require other files)
 - exclude import-pending components from 'new components' section
 - add ignore missing dependencies to commit  
 - remove feature for removing local and remote components
