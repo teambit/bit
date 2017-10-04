@@ -226,6 +226,76 @@ function normalizePaths(tree) {
 }
 
 /**
+ * if a dependency file is in fact a link file, get its real dependencies.
+ */
+function getDependenciesFromLinkFileIfExists(dependency: Object, dependencyPathMap: Object): Object[] {
+  const dependencies = [];
+  if (!dependency.importSpecifiers) return dependencies;
+  for (let specifier of dependency.importSpecifiers) {
+    const realDep = dependencyPathMap.dependencies.find((dep) => {
+      if (!dep.importSpecifiers) return false;
+      return dep.importSpecifiers.find(depSpecifier => depSpecifier.name === specifier.name);
+    });
+    if (!realDep) {
+      // this is not a link file as it doesn't import at least one specifier.
+      break;
+    }
+    const depImportSpecifier = realDep.importSpecifiers.find(depSpecifier => depSpecifier.name === specifier.name);
+    const importSpecifier = {
+      mainFile: specifier,
+      linkFile: depImportSpecifier
+    };
+    dependencies.push({ file: realDep.relativePath, importSpecifier });
+  }
+  return dependencies;
+}
+
+/**
+ * mark dependencies that are link-files as such. Also, add the data of the real dependencies
+ */
+function updatePathMapWithLinkFilesData(pathMap) {
+  pathMap.forEach((file) => {
+    if (!file.dependencies || !file.dependencies.length) return;
+    file.dependencies.forEach((dependency) => {
+
+      if (!dependency.importSpecifiers || !dependency.importSpecifiers.length) {
+        // importSpecifiers was not implemented for that language
+        return;
+      }
+      const dependencyPathMap = pathMap.find(file => file.file === dependency.resolvedDep);
+      if (!dependencyPathMap || !dependencyPathMap.dependencies || !dependencyPathMap.dependencies.length) return;
+      const dependenciesFromLinkFiles = getDependenciesFromLinkFileIfExists(dependency, dependencyPathMap);
+      if (dependenciesFromLinkFiles.length) { // it is a link file
+        dependency.linkFile = true;
+        dependency.realDependencies = dependenciesFromLinkFiles;
+      }
+    });
+  });
+}
+
+/**
+ * remove link-files from the files array and add a new attribute 'linkFiles' to the tree
+ */
+function updateTreeAccordingToLinkFiles(tree, pathMap) {
+  if (!pathMap) return; // currently pathMap is relevant for ES6 only
+  updatePathMapWithLinkFilesData(pathMap);
+  Object.keys(tree).forEach((mainFile) => {
+    if (!tree[mainFile].files || !tree[mainFile].files.length) return;
+    const mainFilePathMap = pathMap.find(file => file.relativePath === mainFile);
+    const linkFiles = [];
+    tree[mainFile].files.forEach((dependency, key) => {
+      const dependencyPathMap = mainFilePathMap.dependencies.find(file => file.relativePath === dependency);
+      if (dependencyPathMap.linkFile) {
+        const linkFile = { file: dependency, dependencies: dependencyPathMap.realDependencies };
+        linkFiles.push(linkFile);
+        tree[mainFile].files.splice(key, 1); // delete the linkFile from the files array, as it's not a real dependency
+      }
+    });
+    if (linkFiles.length) tree[mainFile].linkFiles = linkFiles;
+  });
+}
+
+/**
  * Function for fetching dependency tree of file or dir
  * @param baseDir working directory
  * @param consumerPath
@@ -249,5 +319,6 @@ export default async function getDependecyTree(baseDir: string, consumerPath: st
       tree[relativeFilePath].packages = foundedPackages;
     }
   }
+  updateTreeAccordingToLinkFiles(tree, result.pathMap);
   return { missing: groups, tree };
 }

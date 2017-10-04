@@ -114,7 +114,17 @@ function getDetectiveOption(file, existingDetectiveOption) {
   if (extension === '.tsx') {
     detectiveOption.ts = { ecmaFeatures: { jsx: true } };
   }
+  detectiveOption.es6 = { importSpecifiers: {} };
   return detectiveOption;
+}
+
+function addRelativePathsToPathMap(pathMap, pathCache, baseDir) {
+  pathMap.forEach((file) => {
+    file.relativePath = processPath(file.file, pathCache, baseDir);
+    file.dependencies.forEach((dependnecy) => {
+      dependnecy.relativePath = processPath(dependnecy.resolvedDep, pathCache, baseDir);
+    });
+  });
 }
 
 /**
@@ -129,6 +139,7 @@ export default function generateTree(files, config) {
   const nonExistent = [];
   const npmPaths = {};
   const pathCache = {};
+  const pathMap = [];
 
   files.forEach((file) => {
     if (visited[file]) {
@@ -136,7 +147,7 @@ export default function generateTree(files, config) {
     }
 
     const detective = getDetectiveOption(file, config.detectiveOptions);
-    Object.assign(depTree, dependencyTree({
+    const dependencyTreeResult = dependencyTree({
       filename: file,
       directory: config.baseDir,
       requireConfig: config.requireConfig,
@@ -158,11 +169,11 @@ export default function generateTree(files, config) {
       },
       detective,
       nonExistent,
-    }));
+      pathMap,
+    });
+    Object.assign(depTree, dependencyTreeResult);
   });
-
   let tree = convertTree(depTree, {}, pathCache, config.baseDir);
-
   for (const npmKey in npmPaths) {
     const id = processPath(npmKey, pathCache, config.baseDir);
 
@@ -175,8 +186,11 @@ export default function generateTree(files, config) {
     tree = exclude(tree, config.excludeRegExp);
   }
 
+  addRelativePathsToPathMap(pathMap, pathCache, config.baseDir);
+
   return {
     tree: sort(tree),
     skipped: nonExistent,
+    pathMap,
   };
 }
