@@ -57,8 +57,7 @@ function findPackage(dir, addPaths) {
  * @returns {Function} function which group the dependencies
  */
 const byType = R.groupBy((dependencies) => {
-  const bitPackage = path.join('node_modules', 'bit');
-  return dependencies.includes(bitPackage) ? 'bits' :
+  return dependencies.includes('node_modules/bit') ? 'bits' :
          dependencies.includes('node_modules') ? 'packages' :
          'files';
 });
@@ -215,16 +214,6 @@ function groupMissings(missings, cwd, consumerPath) {
   return { groups, foundedPackages };
 }
 
-function normalizePaths(tree) {
-  const modifiedPathTree = {};
-  Object.keys(tree).forEach((key) => {
-    const normalizedPathArr = tree[key].map(keyPath => path.normalize(keyPath));
-    const name = path.normalize(key);
-    modifiedPathTree[name] = normalizedPathArr;
-  });
-  return modifiedPathTree;
-}
-
 /**
  * if a dependency file is in fact a link file, get its real dependencies.
  */
@@ -257,7 +246,6 @@ function updatePathMapWithLinkFilesData(pathMap) {
   pathMap.forEach((file) => {
     if (!file.dependencies || !file.dependencies.length) return;
     file.dependencies.forEach((dependency) => {
-
       if (!dependency.importSpecifiers || !dependency.importSpecifiers.length) {
         // importSpecifiers was not implemented for that language
         return;
@@ -286,6 +274,7 @@ function updateTreeAccordingToLinkFiles(tree, pathMap) {
     const linkFiles = [];
     tree[mainFile].files.forEach((dependency, key) => {
       const dependencyPathMap = mainFilePathMap.dependencies.find(file => file.relativePath === dependency);
+      if (!dependencyPathMap) return; // @todo: throw an error
       if (dependencyPathMap.linkFile) {
         const linkFile = { file: dependency, dependencies: dependencyPathMap.realDependencies };
         linkFiles.push(linkFile);
@@ -306,10 +295,9 @@ function updateTreeAccordingToLinkFiles(tree, pathMap) {
 export default async function getDependecyTree(baseDir: string, consumerPath: string, filePath: string): Promise<*> {
   const config = { baseDir, includeNpm: true, requireConfig: null, webpackConfig: null, visited: {}, nonExistent: [] };
   const result = generateTree([filePath], config);
-  const normalizedTree = normalizePaths(result.tree);
   const { groups, foundedPackages } = groupMissings(result.skipped, baseDir, consumerPath);
   const relativeFilePath = path.relative(baseDir, filePath);
-  const tree = groupDependencyTree(normalizedTree, baseDir);
+  const tree = groupDependencyTree(result.tree, baseDir);
   // Merge manually found packages with madge founded packages
   if (foundedPackages && !R.isEmpty(foundedPackages)) {
     // Madge found packages so we need to merge them with the manual
