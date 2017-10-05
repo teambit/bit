@@ -810,9 +810,9 @@ bindings@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.2.1.tgz#14ad6113812d2d37d72e67b4cacb4bb726505f11"
 
-bit-javascript@teambit/bit-javascript#bug-links-windows, bit-javascript@teambit/bit-javascript#bug/links-windows:
-  version "0.10.5-dev.6"
-  resolved "https://codeload.github.com/teambit/bit-javascript/tar.gz/9e6364761cb4d1173a0060fd901f7c05d3274964"
+bit-javascript@0.10.5-dev.7:
+  version "0.10.5-dev.7"
+  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.5-dev.7.tgz#ae4da0c0e54cade6a0f6c8ce80da4ceb1a3443e1"
   dependencies:
     camelcase "^4.0.0"
     caporal "^0.5.0"
@@ -1353,7 +1353,7 @@ depd@1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/depd/-/depd-1.1.0.tgz#e1bd82c6aab6ced965b97b88b17ed3e528ca18c3"
 
-dependency-tree@teambit/node-dependency-tree:
+"dependency-tree@github:teambit/node-dependency-tree":
   version "5.11.0"
   resolved "https://codeload.github.com/teambit/node-dependency-tree/tar.gz/89e6a7316f353b861f168745717a265aa311e918"
   dependencies:
