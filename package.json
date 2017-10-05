@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "teambit/bit-javascript#bug/links-windows",
+    "bit-javascript": "teambit/bit-javascript#bug-links-windows",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
     "chokidar": "^1.7.0",

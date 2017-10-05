@@ -810,7 +810,7 @@ bindings@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.2.1.tgz#14ad6113812d2d37d72e67b4cacb4bb726505f11"
 
-bit-javascript@teambit/bit-javascript#bug/links-windows:
+bit-javascript@teambit/bit-javascript#bug-links-windows, bit-javascript@teambit/bit-javascript#bug/links-windows:
   version "0.10.5-dev.6"
   resolved "https://codeload.github.com/teambit/bit-javascript/tar.gz/9e6364761cb4d1173a0060fd901f7c05d3274964"
   dependencies:
