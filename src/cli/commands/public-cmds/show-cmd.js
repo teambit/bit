@@ -12,14 +12,18 @@ export default class Show extends Command {
   alias = '';
   opts = [
     ['j', 'json', 'return a json version of the component'],
-    ['v', 'versions', 'return a json of all the versions of the component']
+    ['v', 'versions', 'return a json of all the versions of the component'],
+    ['c', 'compare [string]', 'compare current component to version [default=latest]']
   ];
   loader = true;
 
-  action([id]: [string], { json, versions }: { json: ?boolean, versions: ?boolean }): Promise<*> {
+  action(
+    [id]: [string],
+    { json, versions, compare = true }: { json: ?boolean, versions: ?boolean, compare?: string }
+  ): Promise<*> {
     function getBitComponent(allVersions: ?boolean) {
       const bitId = BitId.parse(id);
-      if (bitId.isLocal()) return getConsumerComponent({ id });
+      if (bitId.isLocal()) return getConsumerComponent({ id, compare });
       return getScopeComponent({ id, allVersions });
     }
 
@@ -30,19 +34,22 @@ export default class Show extends Command {
       }));
     }
 
-    return getBitComponent().then(component => ({
+    return getBitComponent().then(({ component, modelComponent }) => ({
       component,
+      modelComponent,
       json
     }));
   }
 
   report({
     component,
+    modelComponent,
     json,
     versions,
     components
   }: {
     component: ?ConsumerComponent,
+    modelComponent?: ConsumerComponent,
     json: ?boolean,
     versions: ?boolean,
     components: ?(ConsumerComponent[])
@@ -56,6 +63,6 @@ export default class Show extends Command {
     }
 
     if (!component) return 'could not find the requested component';
-    return json ? component.toString() : paintComponent(component);
+    return json ? component.toString() : paintComponent(component, modelComponent);
   }
 }
