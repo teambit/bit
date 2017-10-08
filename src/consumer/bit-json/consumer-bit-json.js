@@ -23,8 +23,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
   distTarget: string; // path where to store build artifacts
   structure: Object; // directory structure templates where to store imported components and dependencies
 
-  constructor({ impl, spec, compiler, tester, dependencies, lang, distTarget, structure }) {
-    super({ impl, spec, compiler, tester, dependencies, lang });
+  constructor({ impl, spec, compiler, tester, dependencies, lang, distTarget, structure, componentBindings }) {
+    super({ impl, spec, compiler, tester, dependencies, lang, componentBindings });
     this.distTarget = distTarget || DEFAULT_DIST_DIRNAME;
     this.structure = structure || {
       components: DEFAULT_DIR_STRUCTURE,
@@ -70,7 +70,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object) {
-    const { sources, env, dependencies, lang, structure, dist } = object;
+    const { sources, env, dependencies, lang, structure, dist, componentBindings } = object;
 
     // todo: this is a backward compatibility, remove it on the next major version
     const finalStructure = R.is(String, structure)
@@ -83,6 +83,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       compiler: R.propOr(undefined, 'compiler', env),
       tester: R.propOr(undefined, 'tester', env),
       lang,
+      componentBindings,
       dependencies,
       structure: finalStructure || {},
       distTarget: R.propOr(undefined, 'target', dist)
