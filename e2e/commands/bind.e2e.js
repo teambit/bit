@@ -11,9 +11,9 @@ describe('bit bind', function () {
   this.timeout(0);
   const helper = new Helper();
 
-  /*  after(() => {
+  after(() => {
     helper.destroyEnv();
-  }); */
+  });
 
   describe('author components', () => {
     before(() => {
