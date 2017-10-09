@@ -5,7 +5,7 @@ import chai, { expect } from 'chai';
 import normalize from 'normalize-path';
 import path from 'path';
 import Helper from '../e2e-helper';
-import { AUTO_GENERATED_MSG } from '../../src/constants';
+import { AUTO_GENERATED_MSG, DEFAULT_INDEX_EXTS } from '../../src/constants';
 
 const assertArrays = require('chai-arrays');
 
@@ -107,7 +107,9 @@ describe('bit add command', function () {
 
       const addCmd = () => helper.addComponentWithOptions('bar', { n: 'test' });
       expect(addCmd).to.throw(
-        `Command failed: ${helper.bitBin} add bar -n test\nfatal: the main file index.[js, ts, css, scss, less, sass, jsx, tsx] was not found in the files list ${file1Path}, ${file2Path}\n`
+        `Command failed: ${helper.bitBin} add bar -n test\nfatal: the main file index.[${DEFAULT_INDEX_EXTS.join(
+          ', '
+        )}] was not found in the files list ${file1Path}, ${file2Path}\n`
       );
     });
 
