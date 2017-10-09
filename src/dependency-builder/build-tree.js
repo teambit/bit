@@ -56,11 +56,10 @@ function findPackage(dir, addPaths) {
  * @param {any} dependencies list of dependencies paths to group
  * @returns {Function} function which group the dependencies
  */
-const byType = R.groupBy((dependencies) => {
-  return dependencies.includes('node_modules/bit') ? 'bits' :
-         dependencies.includes('node_modules') ? 'packages' :
-         'files';
-});
+const byType = (list, bindingPrefix) => {
+  const grouped = R.groupBy(list => list.includes(`node_modules/${bindingPrefix}`) ? 'bits' : list.includes('node_modules') ? 'packages' : 'files');
+  return grouped(list);
+}
 
 /**
  * Get a path to node package and return the name and version
@@ -105,8 +104,8 @@ function resolveNodePackage(cwd, packageFullPath) {
  * @param {any} cwd root of working directory (used for node packages version calculation)
  * @returns {Object} object with the dependencies groups
  */
-function groupDependencyList(list, cwd) {
-  const groups = byType(list);
+function groupDependencyList(list, cwd, bindingPrefix) {
+  const groups = byType(list, bindingPrefix);
   if (groups.packages) {
     const packages = groups.packages.reduce((res, packagePath) => {
       const packageWithVersion = resolveNodePackage(cwd, path.join(cwd, packagePath));
@@ -125,10 +124,10 @@ function groupDependencyList(list, cwd) {
  * @param {any} cwd the working directory path
  * @returns new tree with grouped dependencies
  */
-function groupDependencyTree(tree, cwd) {
+function groupDependencyTree(tree, cwd, bindingPrefix) {
   const result = {};
   Object.keys(tree).forEach((key) => {
-    result[key] = groupDependencyList(tree[key], cwd);
+    result[key] = groupDependencyList(tree[key], cwd, bindingPrefix);
   });
 
   return result;
@@ -292,12 +291,12 @@ function updateTreeAccordingToLinkFiles(tree, pathMap) {
  * @param filePath path of the file to calculate the dependencies
  * @return {Promise<{missing, tree}>}
  */
-export default async function getDependecyTree(baseDir: string, consumerPath: string, filePath: string): Promise<*> {
+export default async function getDependecyTree(baseDir: string, consumerPath: string, filePath: string, bindingPrefix: string ): Promise<*> {
   const config = { baseDir, includeNpm: true, requireConfig: null, webpackConfig: null, visited: {}, nonExistent: [] };
   const result = generateTree([filePath], config);
   const { groups, foundedPackages } = groupMissings(result.skipped, baseDir, consumerPath);
   const relativeFilePath = path.relative(baseDir, filePath);
-  const tree = groupDependencyTree(result.tree, baseDir);
+  const tree = groupDependencyTree(result.tree, baseDir, bindingPrefix);
   // Merge manually found packages with madge founded packages
   if (foundedPackages && !R.isEmpty(foundedPackages)) {
     // Madge found packages so we need to merge them with the manual
