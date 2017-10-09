@@ -110,7 +110,9 @@ export default class SSH implements Network {
   errorHandler(code: number, err: string) {
     let parsedError;
     try {
-      parsedError = JSON.parse(err);
+      const { headers, payload } = this._unpack(err, false);
+      checkVersionCompatibility(headers.version);
+      parsedError = payload;
     } catch (e) {
       // be greacfull when can't parse error message
       logger.error(`ssh: failed parsing error as JSON, error: ${err}`);
@@ -132,9 +134,9 @@ export default class SSH implements Network {
     }
   }
 
-  _unpack(data) {
+  _unpack(data, base64 = true) {
     try {
-      return unpackCommand(data);
+      return unpackCommand(data, base64);
     } catch (err) {
       logger.error(`unpackCommand found on error "${err}", while paring the following string: ${data}`);
       throw new SSHInvalidResponse(data);

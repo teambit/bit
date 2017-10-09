@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - extract only relevant dependencies from link files (files that only require other files)
 - throw error when tester doesn't return any result for test file
+- check version compatibility when an error occurred on the server 
 
 ## [0.10.9-dev.2] - 2017-10-03
 
