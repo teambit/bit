@@ -34,7 +34,8 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_LINK_NAME,
   COMPONENT_ORIGINS,
-  DEFAULT_DIST_DIRNAME
+  DEFAULT_DIST_DIRNAME,
+  BIT_JSON
 } from '../../constants';
 
 export type ComponentProps = {
@@ -792,8 +793,10 @@ export default class Component {
       }
     }
 
-    // we need to load bitJson of the specific component to know where to create links
-    const { componentBindings } = BitJson.loadSync(bitDir);
+    // we need to load bitJson of the specific component to get link prefix
+    const { componentBindings } = fs.existsSync(path.join(bitDir, BIT_JSON))
+      ? BitJson.loadSync(bitDir)
+      : { componentBindings: bitJson.componentBindings };
 
     return new Component({
       name: id.name,

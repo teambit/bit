@@ -106,8 +106,7 @@ export default class BitJson extends AbstractBitJson {
   static mergeWithProto(json, protoBJ: ?ConsumerBitJson): BitJson {
     const plainProtoBJ = protoBJ ? protoBJ.toPlainObject() : {};
     delete plainProtoBJ.dependencies;
-    const y = R.merge(plainProtoBJ, json);
-    return BitJson.fromPlainObject(y);
+    return BitJson.fromPlainObject(R.merge(plainProtoBJ, json));
   }
 
   static create(json = {}, protoBJ: ConsumerBitJson) {
