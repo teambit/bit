@@ -148,7 +148,10 @@ export default class Component extends BitObject {
 
   loadVersionSync(version: number, repository: Repository, throws: boolean = true): Version {
     const versionRef: Ref = this.versions[version];
-    if (!versionRef) throw new VersionNotFound();
+    if (!versionRef) {
+      if (throws) throw new VersionNotFound();
+      return null;
+    }
     const versionLoaded = versionRef.loadSync(repository, throws);
     if (!versionLoaded) {
       const logging = throws ? logger.error : logger.debug;
