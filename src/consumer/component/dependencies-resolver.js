@@ -32,7 +32,7 @@ function findComponentsOfDepsFiles(
   entryComponentId: string,
   bitMap: BitMap,
   consumerPath: string,
-  componentBindings: string
+  bindingPrefix: string
 ): Object {
   const packagesDeps = {};
   const componentsDeps = {};
@@ -146,7 +146,7 @@ function findComponentsOfDepsFiles(
     const currentBitsDeps = tree[file].bits;
     if (currentBitsDeps && !R.isEmpty(currentBitsDeps)) {
       currentBitsDeps.forEach((bitDep) => {
-        const componentId = getComponentNameFromRequirePath(bitDep, componentBindings);
+        const componentId = getComponentNameFromRequirePath(bitDep, bindingPrefix);
 
         const existingId = bitMap.getExistingComponentId(componentId);
         if (existingId) {
@@ -176,9 +176,9 @@ function findComponentsOfDepsFiles(
 }
 
 // todo: move to bit-javascript
-function getComponentNameFromRequirePath(requirePath: string, componentBindings: string): string {
+function getComponentNameFromRequirePath(requirePath: string, bindingPrefix: string): string {
   requirePath = pathNormalizeToLinux(requirePath);
-  const prefix = requirePath.includes('node_modules') ? `node_modules/${componentBindings}/` : 'componentBindings/';
+  const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : 'bindingPrefix/';
   const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
   const pathSplit = withoutPrefix.split('/');
   if (pathSplit.length < 2) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
@@ -249,7 +249,7 @@ export default (async function loadDependenciesForComponent(
   const missingDependencies = {};
   const files = componentMap.files.map(file => file.relativePath);
   // find the dependencies (internal files and packages) through automatic dependency resolution
-  const treesP = files.map(file => driver.getDependencyTree(bitDir, consumerPath, file, component.componentBindings));
+  const treesP = files.map(file => driver.getDependencyTree(bitDir, consumerPath, file, component.bindingPrefix));
   const trees = await Promise.all(treesP);
   const dependenciesTree = mergeDependencyTrees(trees, componentMap.files);
 
@@ -278,7 +278,7 @@ export default (async function loadDependenciesForComponent(
     idWithConcreteVersionString,
     bitMap,
     consumerPath,
-    component.componentBindings
+    component.bindingPrefix
   );
   const traversedCompDeps = traversedDeps.componentsDeps;
   component.dependencies = Object.keys(traversedCompDeps).map((depId) => {

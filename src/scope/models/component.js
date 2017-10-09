@@ -25,7 +25,7 @@ export type ComponentProps = {
   versions?: { [number]: Ref },
   lang?: string,
   deprecated: boolean,
-  componentBindings?: string
+  bindingPrefix?: string
 };
 
 export default class Component extends BitObject {
@@ -35,7 +35,7 @@ export default class Component extends BitObject {
   versions: { [number]: Ref };
   lang: string;
   deprecated: boolean;
-  componentBindings: string;
+  bindingPrefix: string;
 
   constructor(props: ComponentProps) {
     super();
@@ -45,7 +45,7 @@ export default class Component extends BitObject {
     this.versions = props.versions || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.deprecated = props.deprecated || false;
-    this.componentBindings = props.componentBindings || DEFAULT_LINK_NAME;
+    this.bindingPrefix = props.bindingPrefix || DEFAULT_LINK_NAME;
   }
 
   get versionArray(): Ref[] {
@@ -115,7 +115,7 @@ export default class Component extends BitObject {
       versions: versions(this.versions),
       lang: this.lang,
       deprecated: this.deprecated,
-      componentBindings: this.componentBindings
+      bindingPrefix: this.bindingPrefix
     };
   }
 
@@ -184,7 +184,7 @@ export default class Component extends BitObject {
           version: componentVersion.version,
           scope: this.scope,
           lang: this.lang,
-          componentBindings: this.componentBindings,
+          bindingPrefix: this.bindingPrefix,
           mainFile: version.mainFile || null,
           compilerId: version.compiler,
           testerId: version.tester,
@@ -233,7 +233,7 @@ export default class Component extends BitObject {
       versions: mapObject(rawComponent.versions, val => Ref.from(val)),
       lang: rawComponent.lang,
       deprecated: rawComponent.deprecated,
-      componentBindings: rawComponent.componentBindings
+      bindingPrefix: rawComponent.bindingPrefix
     });
   }
 

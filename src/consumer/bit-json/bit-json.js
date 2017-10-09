@@ -31,17 +31,8 @@ export type BitJsonProps = {
 export default class BitJson extends AbstractBitJson {
   packageDependencies: { [string]: string };
 
-  constructor({
-    impl,
-    spec,
-    compiler,
-    tester,
-    dependencies,
-    packageDependencies,
-    lang,
-    componentBindings
-  }: BitJsonProps) {
-    super({ impl, spec, compiler, tester, dependencies, lang, componentBindings });
+  constructor({ impl, spec, compiler, tester, dependencies, packageDependencies, lang, bindingPrefix }: BitJsonProps) {
+    super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix });
     this.packageDependencies = packageDependencies || {};
   }
 
@@ -89,7 +80,7 @@ export default class BitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object): BitJson {
-    const { sources = {}, env, dependencies, packageDependencies, lang, componentBindings } = object;
+    const { sources = {}, env, dependencies, packageDependencies, lang, bindingPrefix } = object;
 
     return new BitJson({
       impl: R.prop('impl', sources),
@@ -98,7 +89,7 @@ export default class BitJson extends AbstractBitJson {
       tester: R.prop('tester', env),
       dependencies,
       lang,
-      componentBindings,
+      bindingPrefix,
       packageDependencies
     });
   }

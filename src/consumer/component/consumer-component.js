@@ -44,7 +44,7 @@ export type ComponentProps = {
   version?: ?number,
   scope?: ?string,
   lang?: string,
-  componentBindings?: string,
+  bindingPrefix?: string,
   mainFile?: string,
   compilerId?: ?BitId,
   testerId?: ?BitId,
@@ -65,7 +65,7 @@ export default class Component {
   version: ?number;
   scope: ?string;
   lang: string;
-  componentBindings: string;
+  bindingPrefix: string;
   mainFile: string;
   compilerId: ?BitId;
   testerId: ?BitId;
@@ -128,7 +128,7 @@ export default class Component {
     version,
     scope,
     lang,
-    componentBindings,
+    bindingPrefix,
     mainFile,
     compilerId,
     testerId,
@@ -148,7 +148,7 @@ export default class Component {
     this.version = version;
     this.scope = scope;
     this.lang = lang || DEFAULT_LANGUAGE;
-    this.componentBindings = componentBindings || DEFAULT_LINK_NAME;
+    this.bindingPrefix = bindingPrefix || DEFAULT_LINK_NAME;
     this.mainFile = mainFile;
     this.compilerId = compilerId;
     this.testerId = testerId;
@@ -191,7 +191,7 @@ export default class Component {
       version: this.version,
       scope: this.scope,
       lang: this.lang,
-      componentBindings: this.componentBindings,
+      bindingPrefix: this.bindingPrefix,
       compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this._dependenciesAsWritableObject(),
@@ -659,7 +659,7 @@ export default class Component {
       mainFile: this.mainFile,
       scope: this.scope,
       lang: this.lang,
-      componentBindings: this.componentBindings,
+      bindingPrefix: this.bindingPrefix,
       compilerId: this.compilerId ? this.compilerId.toString() : null,
       testerId: this.testerId ? this.testerId.toString() : null,
       dependencies: this.dependencies.map(dep => Object.assign({}, dep, { id: dep.id.toString() })), // this._dependenciesAsWritableObject(),
@@ -694,7 +694,7 @@ export default class Component {
       version,
       scope,
       lang,
-      componentBindings,
+      bindingPrefix,
       compilerId,
       testerId,
       dependencies,
@@ -713,7 +713,7 @@ export default class Component {
       version: parseInt(version),
       scope,
       lang,
-      componentBindings,
+      bindingPrefix,
       compilerId: compilerId ? BitId.parse(compilerId) : null,
       testerId: testerId ? BitId.parse(testerId) : null,
       dependencies: dependencies.map(dep => Object.assign({}, dep, { id: BitId.parse(dep.id) })), // this._dependenciesFromWritableObject(dependencies),
@@ -794,9 +794,9 @@ export default class Component {
     }
 
     // we need to load bitJson of the specific component to get link prefix
-    const { componentBindings } = fs.existsSync(path.join(bitDir, BIT_JSON))
+    const { bindingPrefix } = fs.existsSync(path.join(bitDir, BIT_JSON))
       ? BitJson.loadSync(bitDir)
-      : { componentBindings: bitJson.componentBindings };
+      : { bindingPrefix: bitJson.bindingPrefix };
 
     return new Component({
       name: id.name,
@@ -804,7 +804,7 @@ export default class Component {
       scope: id.scope,
       version: id.version,
       lang: bitJson.lang,
-      componentBindings: componentBindings || DEFAULT_LINK_NAME,
+      bindingPrefix: bindingPrefix || DEFAULT_LINK_NAME,
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,
@@ -839,7 +839,7 @@ export default class Component {
     const compilerId = BitId.parse(consumerBitJson.compilerId);
     const testerId = BitId.parse(consumerBitJson.testerId);
     const lang = consumerBitJson.lang;
-    const componentBindings = consumerBitJson.componentBindings;
+    const bindingPrefix = consumerBitJson.bindingPrefix;
     const implVinylFile = new SourceFile({
       cwd: consumerPath,
       base: path.join(consumerPath, bitPath),
@@ -852,7 +852,7 @@ export default class Component {
       name,
       box,
       lang,
-      componentBindings,
+      bindingPrefix,
       version: LATEST_BIT_VERSION,
       scope: scopeName,
       specsFile,

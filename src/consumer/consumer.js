@@ -497,9 +497,9 @@ export default class Consumer {
   }
 
   bindComponents(components: Component[], bitMap: BitMap): Object[] {
-    const writeDependencyLink = (parentRootDir: string, bitId: BitId, rootDir: string, componentBindings: string) => {
+    const writeDependencyLink = (parentRootDir: string, bitId: BitId, rootDir: string, bindingPrefix: string) => {
       const srcPath = path.join(this.getPath(), rootDir);
-      const relativeDestPath = path.join('node_modules', componentBindings, bitId.box, bitId.name);
+      const relativeDestPath = path.join('node_modules', bindingPrefix, bitId.box, bitId.name);
       const destPath = path.join(this.getPath(), parentRootDir, relativeDestPath);
       fs.removeSync(destPath); // in case a component has been moved
       fs.ensureDirSync(path.dirname(destPath));
@@ -515,7 +515,7 @@ export default class Consumer {
           componentMap.rootDir,
           dependency.id,
           dependencyComponentMap.rootDir,
-          component.componentBindings
+          component.bindingPrefix
         );
       });
     };
@@ -529,7 +529,7 @@ export default class Consumer {
           componentMap.rootDir,
           BitId.parse(dependencyId),
           dependencyComponentMap.rootDir,
-          component.componentBindings
+          component.bindingPrefix
         );
       });
     };
@@ -542,7 +542,7 @@ export default class Consumer {
         const target = path.join(this.getPath(), componentMap.rootDir);
         const relativeLinkPath = path.join(
           'node_modules',
-          this.bitJson.componentBindings,
+          this.bitJson.bindingPrefix,
           componentId.box,
           componentId.name
         );
@@ -570,7 +570,7 @@ export default class Consumer {
         return componentMap.rootDir ? path.join(componentMap.rootDir, file.relativePath) : file.relativePath;
       });
       const bound = filesToBind.map((file) => {
-        const dest = path.join('node_modules', component.componentBindings, componentId.box, componentId.name, file);
+        const dest = path.join('node_modules', component.bindingPrefix, componentId.box, componentId.name, file);
         const destRelative = pathRelative(path.dirname(dest), file);
         const fileContent = `module.exports = require('${destRelative}');`;
         fs.outputFileSync(dest, fileContent);

@@ -20,7 +20,7 @@ export type AbstractBitJsonProps = {
   tester?: string,
   dependencies?: Object,
   lang?: string,
-  componentBindings?: string
+  bindingPrefix?: string
 };
 
 export default class AbstractBitJson {
@@ -32,16 +32,16 @@ export default class AbstractBitJson {
   tester: string;
   dependencies: { [string]: string };
   lang: string;
-  componentBindings: string;
+  bindingPrefix: string;
 
-  constructor({ impl, spec, compiler, tester, dependencies, lang, componentBindings }: AbstractBitJsonProps) {
+  constructor({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix }: AbstractBitJsonProps) {
     this.impl = impl || DEFAULT_IMPL_NAME;
     this.spec = spec || DEFAULT_SPECS_NAME;
     this.compiler = compiler || DEFAULT_COMPILER_ID;
     this.tester = tester || DEFAULT_TESTER_ID;
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
     this.lang = lang || DEFAULT_LANGUAGE;
-    this.componentBindings = componentBindings || DEFAULT_LINK_NAME;
+    this.bindingPrefix = bindingPrefix || DEFAULT_LINK_NAME;
   }
 
   get compilerId(): string {
@@ -105,14 +105,14 @@ export default class AbstractBitJson {
     const isPropDefaultOrNull = (val, key) => {
       if (!val) return false;
       if (key === 'lang') return !(key === 'lang' && val === DEFAULT_LANGUAGE);
-      if (key === 'componentBindings') return !(key === 'componentBindings' && val === DEFAULT_LINK_NAME);
+      if (key === 'bindingPrefix') return !(key === 'bindingPrefix' && val === DEFAULT_LINK_NAME);
       return true;
     };
 
     return filterObject(
       {
         lang: this.lang,
-        componentBindings: this.componentBindings,
+        bindingPrefix: this.bindingPrefix,
         env: {
           compiler: this.compilerId,
           tester: this.testerId
