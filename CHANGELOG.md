@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- new field in bit.json (bindingPrefix) for dynamic links
 - extract only relevant dependencies from link files (files that only require other files)
 - throw error when tester doesn't return any result for test file
 
