@@ -49,8 +49,27 @@ export default class Component extends BitObject {
     return values(this.versions);
   }
 
+  /**
+   * Get an existings version list for the component
+   * 
+   * @param {Repository} repository  - for searching for the objects
+   * @returns {number[]} - list of version numbers
+   * @memberof Component
+   */
+  listExistingVersions(repository: Repository): number[] {
+    const versions = this.listVersions();
+    if (!repository) return versions;
+    const existsVersions = versions.filter(version => this.isVersionObjectExists(version, repository));
+    return existsVersions;
+  }
+
+  isVersionObjectExists(version: number, repository: Repository): boolean {
+    return !!this.loadVersionSync(version, repository, false);
+  }
+
   listVersions(): number[] {
-    return Object.keys(this.versions).map(versionStr => parseInt(versionStr));
+    const versions = Object.keys(this.versions).map(versionStr => parseInt(versionStr));
+    return versions;
   }
 
   compatibleWith(component: Component) {
@@ -115,13 +134,29 @@ export default class Component extends BitObject {
     };
   }
 
-  async loadVersion(version: number, repository: Repository): Promise<Version> {
+  async loadVersion(version: number, repository: Repository, throws: boolean = true): Promise<Version> {
     const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound();
     const versionLoaded = await versionRef.load(repository);
     if (!versionLoaded) {
-      logger.error(`loadVersion, failed loading version ${version} of ${this.id()}`);
-      throw new CorruptedComponent(this.id(), version);
+      const logging = throws ? logger.error : logger.debug;
+      logging(`loadVersion, failed loading version ${version} of ${this.id()}`);
+      if (throws) throw new CorruptedComponent(this.id(), version);
+    }
+    return versionLoaded;
+  }
+
+  loadVersionSync(version: number, repository: Repository, throws: boolean = true): Version {
+    const versionRef: Ref = this.versions[version];
+    if (!versionRef) {
+      if (throws) throw new VersionNotFound();
+      return null;
+    }
+    const versionLoaded = versionRef.loadSync(repository, throws);
+    if (!versionLoaded) {
+      const logging = throws ? logger.error : logger.debug;
+      logging(`loadVersion, failed loading version ${version} of ${this.id()}`);
+      if (throws) throw new CorruptedComponent(this.id(), version);
     }
     return versionLoaded;
   }

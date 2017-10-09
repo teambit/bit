@@ -72,9 +72,9 @@ export default class SourceRepository {
 
     // This is to take care of case when the component is exists in the scope, but the requested version is missing
     if (
-      foundComponent &&
-      !bitId.getVersion().latest &&
-      !R.contains(bitId.getVersion().versionNum, foundComponent.listVersions())
+      !foundComponent ||
+      bitId.getVersion().latest ||
+      !foundComponent.isVersionObjectExists(bitId.getVersion().versionNum, this.objects())
     ) {
       return null;
     }
