@@ -29,10 +29,7 @@ describe('bit import', function () {
       expect(output.includes('successfully imported one component')).to.be.true;
       expect(output.includes('global/simple')).to.be.true;
     });
-    it.skip(
-      'should throw an error if there is already component with the same name and namespace and different scope',
-      () => {}
-    );
+    it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
     it('should add the component to bit.json file', () => {
       const bitJson = helper.readBitJson();
       const depName = [helper.remoteScope, 'global', 'simple'].join('/');
@@ -1388,13 +1385,13 @@ describe('bit import', function () {
       helper.runCmd('bit import');
     });
     it('should successfully print results of is-type@1 when requiring it indirectly by is-string', () => {
-      const appJsFixture = "const isString = require('bit/utils/is-string'); console.log(isString());";
+      const appJsFixture = "const isString = require('components/utils/is-string'); console.log(isString());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v1 and got is-string');
     });
     it('should successfully print results of is-type@2 when requiring it directly', () => {
-      const appJsFixture = "const isType = require('bit/utils/is-type'); console.log(isType());";
+      const appJsFixture = "const isType = require('components/utils/is-type'); console.log(isType());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v2');

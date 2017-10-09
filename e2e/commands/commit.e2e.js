@@ -229,7 +229,7 @@ describe('bit tag command', function () {
         helper.addRemoteScope();
         helper.importComponent('comp/comp');
         helper.importComponent('comp/comp2');
-        const fileFixture = "var a = require('bit/comp/comp2/file2')";
+        const fileFixture = "var a = require('components/comp/comp2/file2')";
         helper.createFile('components/comp/comp', 'file.js', fileFixture);
         output = helper.commitComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
@@ -258,7 +258,7 @@ describe('bit tag command', function () {
         helper.addRemoteScope();
         helper.importComponent('comp/comp');
         helper.importComponent('comp/comp2');
-        const fileFixture = "var a = require('bit/comp/comp2')";
+        const fileFixture = "var a = require('components/comp/comp2')";
         helper.createFile('components/comp/comp', 'file.js', fileFixture);
         output = helper.commitComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
