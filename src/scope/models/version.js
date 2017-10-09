@@ -49,7 +49,8 @@ export type VersionProps = {
   docs?: Doclet[],
   dependencies?: BitIds,
   flattenedDependencies?: BitIds,
-  packageDependencies?: { [string]: string }
+  packageDependencies?: { [string]: string },
+  componentBindings?: string
 };
 
 export default class Version extends BitObject {
@@ -65,6 +66,7 @@ export default class Version extends BitObject {
   dependencies: Array<Object>;
   flattenedDependencies: BitIds;
   packageDependencies: { [string]: string };
+  componentBindings: string;
 
   constructor({
     mainFile,
@@ -78,7 +80,8 @@ export default class Version extends BitObject {
     ci,
     specsResults,
     flattenedDependencies,
-    packageDependencies
+    packageDependencies,
+    componentBindings
   }: VersionProps) {
     super();
     this.mainFile = mainFile;
@@ -93,6 +96,7 @@ export default class Version extends BitObject {
     this.specsResults = specsResults;
     this.flattenedDependencies = flattenedDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
+    this.componentBindings = componentBindings;
   }
 
   id() {
@@ -118,7 +122,8 @@ export default class Version extends BitObject {
           tester: obj.tester,
           log: obj.log,
           dependencies,
-          packageDependencies: obj.packageDependencies
+          packageDependencies: obj.packageDependencies,
+          componentBindings: obj.componentBindings
         },
         val => !!val
       )
@@ -169,6 +174,7 @@ export default class Version extends BitObject {
           })
           : null,
         compiler: this.compiler ? this.compiler.toString() : null,
+        componentBindings: this.componentBindings || null,
         tester: this.tester ? this.tester.toString() : null,
         log: {
           message: this.log.message,
@@ -200,6 +206,7 @@ export default class Version extends BitObject {
       dists,
       files,
       compiler,
+      componentBindings,
       tester,
       log,
       docs,
@@ -234,6 +241,7 @@ export default class Version extends BitObject {
         })
         : null,
       compiler: compiler ? BitId.parse(compiler) : null,
+      componentBindings: componentBindings || null,
       tester: tester ? BitId.parse(tester) : null,
       log: {
         message: log.message,
@@ -282,6 +290,7 @@ export default class Version extends BitObject {
         })
         : null,
       compiler: component.compilerId,
+      componentBindings: component.componentBindings,
       tester: component.testerId,
       log: {
         message,

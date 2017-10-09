@@ -792,13 +792,16 @@ export default class Component {
       }
     }
 
+    // we need to load bitJson of the specific component to know where to create links
+    const { componentBindings } = BitJson.loadSync(bitDir);
+
     return new Component({
       name: id.name,
       box: id.box,
       scope: id.scope,
       version: id.version,
       lang: bitJson.lang,
-      componentBindings: bitJson.componentBindings,
+      componentBindings: componentBindings || DEFAULT_LINK_NAME,
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,
