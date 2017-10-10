@@ -118,12 +118,7 @@ export default class Component extends BitObject {
   async loadVersion(version: number, repository: Repository): Promise<Version> {
     const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound();
-    const versionLoaded = await versionRef.load(repository);
-    if (!versionLoaded) {
-      logger.error(`loadVersion, failed loading version ${version} of ${this.id()}`);
-      throw new CorruptedComponent(this.id(), version);
-    }
-    return versionLoaded;
+    return versionRef.load(repository);
   }
 
   collectObjects(repo: Repository): Promise<ComponentObjects> {
