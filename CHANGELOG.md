@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.9-dev.3] - 2017-10-10
+
 - extract only relevant dependencies from link files (files that only require other files)
 - throw error when tester doesn't return any result for test file
+- better handling deleted files
+- change the order of determine the main/index file - it's now ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass']
 
 ## [0.10.9-dev.2] - 2017-10-03
 
