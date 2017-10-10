@@ -55,7 +55,7 @@ export default (async function importAction({
   if (tester || compiler) {
     return importEnvironment(consumer);
   }
-  const cache = false;
+  const cache = true;
   const { dependencies, envDependencies } = await consumer.import(
     ids,
     verbose,
