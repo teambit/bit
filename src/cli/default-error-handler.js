@@ -34,6 +34,8 @@ import {
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
+import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
+
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import PathNotExists from '../api/consumer/lib/exceptions/path-not-exists';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
@@ -143,7 +145,8 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     invalidIdOnCommit,
     err => `error - Unable to commit. ${chalk.bold(err.id)} not found.
 Run \`bit status\` command to list all components available for commit.`
-  ]
+  ],
+  [NothingToCompareTo, err => `error - Unable to compare ${err.id}, component not in modules`]
 ];
 
 export default (err: Error): ?string => {

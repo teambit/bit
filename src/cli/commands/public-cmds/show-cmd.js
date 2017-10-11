@@ -13,13 +13,13 @@ export default class Show extends Command {
   opts = [
     ['j', 'json', 'return a json version of the component'],
     ['v', 'versions', 'return a json of all the versions of the component'],
-    ['c', 'compare [string]', 'compare current component to version [default=latest]']
+    ['c', 'compare [boolean]', 'compare current file system component to latest commited component [default=latest]']
   ];
   loader = true;
 
   action(
     [id]: [string],
-    { json, versions, compare = true }: { json: ?boolean, versions: ?boolean, compare?: string }
+    { json, versions, compare = false }: { json: ?boolean, versions: ?boolean, compare?: boolean }
   ): Promise<*> {
     function getBitComponent(allVersions: ?boolean) {
       const bitId = BitId.parse(id);
@@ -34,16 +34,16 @@ export default class Show extends Command {
       }));
     }
 
-    return getBitComponent().then(({ component, modelComponent }) => ({
+    return getBitComponent().then(({ component, moduleComponent }) => ({
       component,
-      modelComponent,
+      moduleComponent,
       json
     }));
   }
 
   report({
     component,
-    modelComponent,
+    moduleComponent,
     json,
     versions,
     components
@@ -63,6 +63,6 @@ export default class Show extends Command {
     }
 
     if (!component) return 'could not find the requested component';
-    return json ? component.toString() : paintComponent(component, modelComponent);
+    return json ? component.toString() : paintComponent(component, moduleComponent);
   }
 }
