@@ -1,13 +1,19 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
+import NothingToCompareTo from './exceptions/nothing-to-compare-to';
 
 export default (async function getConsumerBit({ id, compare }: { id: string, compare: boolean }) {
   const consumer = await loadConsumer();
-  const component = await consumer.loadComponent(BitId.parse(id)); // loads recent component
+  const bitId = BitId.parse(id);
+  const component = await consumer.loadComponent(bitId); // loads recent component
   if (compare) {
-    const modelComponent = await consumer.scope.loadComponent(BitId.parse(id));
-    return { component, modelComponent };
+    try {
+      const moduleComponent = await consumer.scope.loadComponent(bitId);
+      return { component, moduleComponent };
+    } catch (err) {
+      throw new NothingToCompareTo(id);
+    }
   }
   return { component };
 });
