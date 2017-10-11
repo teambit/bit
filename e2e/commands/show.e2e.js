@@ -360,4 +360,17 @@ function add(a, b) {
       );
     });
   });
+  describe('with compare flag', () => {
+    beforeEach(() => {
+      helper.initNewLocalScope();
+      helper.createComponentBarFoo();
+      helper.createComponent('bar', 'index.js');
+      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+    });
+
+    it('Should throw error that component is not in module', () => {
+      const showCmd = () => helper.showComponent('bar/foo --compare');
+      expect(showCmd).to.throw('error - Unable to compare bar/foo, component not in modules');
+    });
+  });
 });

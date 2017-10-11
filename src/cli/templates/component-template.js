@@ -20,7 +20,7 @@ const fields = [
   'deprecated'
 ];
 
-const header = [{ value: 'Id', width: 20, headerColor: 'cyan' }];
+const header = [{ value: 'ID', width: 20, headerColor: 'cyan' }];
 const opts = {
   borderStyle: 1,
   paddingBottom: 0,
