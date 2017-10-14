@@ -180,7 +180,10 @@ function resolveModulePath(nmPath, workingDir, root) {
     return null;
   }
 
-  return resolveModulePath(nmPath, path.dirname(workingDir), root);
+  const parentWorkingDir = path.dirname(workingDir);
+  if (parentWorkingDir === workingDir) return null;
+
+  return resolveModulePath(nmPath, parentWorkingDir, root);
 }
 
 /**
