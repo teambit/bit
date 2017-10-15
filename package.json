@@ -36,6 +36,7 @@
     "bit-javascript": "0.10.5-dev.7",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
+    "child-process-promise": "^2.2.1",
     "chokidar": "^1.7.0",
     "cli-spinners": "^1.0.0",
     "cli-table2": "^0.2.0",

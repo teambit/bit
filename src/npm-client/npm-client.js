@@ -1,11 +1,12 @@
 // @flow
-import { exec } from 'child_process';
+import childProcessP from 'child-process-promise';
 import R, { mapObjIndexed, isNil, pipe, values, merge, toPairs, map, join, is } from 'ramda';
 import decamelize from 'decamelize';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 
+const exec = childProcessP.exec;
 const objectToArray = obj => map(join('@'), toPairs(obj));
 const rejectNils = R.reject(isNil);
 
@@ -66,26 +67,23 @@ const installAction = (
   const serializedModules = modules && modules.length > 0 ? ` ${modules.join(' ')}` : '';
   const serializedFlags = flags && flags.length > 0 ? ` ${flags.join(' ')}` : '';
 
-  return new Promise((resolve, reject) => {
-    fs.ensureDirSync(path.join(options.cwd, 'node_modules'));
-    const commandToExecute = `npm install${serializedModules}${serializedFlags}`;
-    return exec(commandToExecute, { cwd: options.cwd }, (error, stdout, stderr) => {
-      if (error) return reject(error);
-      // This is an hack until we will upgrade to npm5 (don't know the exact version)
-      // In npm5 they improved the output to be something like:
-      // npm added 125, removed 32, updated 148 and moved 5 packages.
-      // see more info here:
-      // https://github.com/npm/npm/pull/15914
-      // https://github.com/npm/npm/issues/10732
-      // if (!verbose) {
-      stdout = `successfully ran ${commandToExecute}`;
-      // }
+  fs.ensureDirSync(path.join(options.cwd, 'node_modules'));
+  const commandToExecute = `npm install${serializedModules}${serializedFlags}`;
+  return exec(commandToExecute, { cwd: options.cwd }).then(({ stdout, stderr }) => {
+    // if (error) return reject(error);
+    // This is an hack until we will upgrade to npm5 (don't know the exact version)
+    // In npm5 they improved the output to be something like:
+    // npm added 125, removed 32, updated 148 and moved 5 packages.
+    // see more info here:
+    // https://github.com/npm/npm/pull/15914
+    // https://github.com/npm/npm/issues/10732
+    // if (!verbose) {
+    stdout = `successfully ran ${commandToExecute}`;
+    // }
 
-      return resolve({ stdout, stderr });
-    });
+    return { stdout, stderr };
   });
 };
-
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {
   console.log(chalk.yellow(stdout)); // eslint-disable-line
   console.log(chalk.yellow(stderr)); // eslint-disable-line
