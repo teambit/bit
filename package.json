@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.10.9-dev.2",
+  "version": "0.10.9-dev.4",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
@@ -67,7 +67,7 @@
     "regenerator-runtime": "^0.11.0",
     "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",
-    "search-index": "^0.13.0",
+    "search-index": "^0.14.0",
     "semver": "^5.3.0",
     "serialize-error": "^2.1.0",
     "ssh2": "^0.5.4",
