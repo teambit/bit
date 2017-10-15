@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fixed stderr maxBuffer exceeded bug in ci-update cmd
+
 ## [0.10.9-dev.3] - 2017-10-10
 
 - extract only relevant dependencies from link files (files that only require other files)
