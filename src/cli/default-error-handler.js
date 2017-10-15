@@ -91,7 +91,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
   [SSHInvalidResponse, () => 'fatal: received an invalid response from the remote SSH server'],
   [ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init --bare`'],
-  [ComponentSpecsFailed, () => "component's specs does not pass, fix them and commit"],
+  [ComponentSpecsFailed, () => "component's specs does not pass, fix them and tag"],
   [
     MissingDependencies,
     (err) => {
@@ -141,8 +141,8 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   ],
   [
     invalidIdOnCommit,
-    err => `error - Unable to commit. ${chalk.bold(err.id)} not found.
-Run \`bit status\` command to list all components available for commit.`
+    err => `error - Unable to tag. ${chalk.bold(err.id)} not found.
+Run \`bit status\` command to list all components available for tag.`
   ]
 ];
 
