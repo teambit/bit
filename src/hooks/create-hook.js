@@ -14,7 +14,11 @@ const createHook = (hookNameKey: string, methodName: string): (() => Promise<any
           logger.warn(`Failed running the ${hookNameKey} hook as destUrl is not set in the config file`);
           return resolve();
         }
-        logger.debug(`Running the ${hookNameKey} hook with destUrl: ${destUrl}, and data: ${data}`);
+        logger.debug(
+          `Running the ${hookNameKey} hook with destUrl: ${destUrl}, and data: ${typeof data === 'string'
+            ? data
+            : JSON.stringify(data)}`
+        );
         return client[methodName](destUrl, data)
           .then(() => {
             logger.debug(`Successfully ran hook ${hookNameKey}`);
