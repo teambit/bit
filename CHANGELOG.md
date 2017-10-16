@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.11.0-test.1] - 2017-10-16
+
 - prevent bare-scope corruption when the export process fails 
 - fixed stderr maxBuffer exceeded bug in ci-update cmd
 
