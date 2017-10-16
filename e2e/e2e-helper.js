@@ -259,13 +259,13 @@ export default class Helper {
       this.createCompiler();
     }
     // Temporary - for checking new serializaion against the stage env
-    this.setHubDomain('hub-stg.bitsrc.io');
+    this.setHubDomain('35.194.19.201');
     this.runCmd(`bit import ${id} --compiler`);
   }
 
   importTester(id) {
     // Temporary - for checking new serializaion against the stage env
-    this.setHubDomain('hub-stg.bitsrc.io');
+    this.setHubDomain('35.194.19.201');
     this.runCmd(`bit import ${id} --tester`);
   }
 
