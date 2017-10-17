@@ -115,14 +115,15 @@ function getDetectiveOption(file, existingDetectiveOption) {
     detectiveOption.ts = { ecmaFeatures: { jsx: true } };
   }
   detectiveOption.es6 = { importSpecifiers: {} };
+  detectiveOption.ts = { importSpecifiers: {} };
   return detectiveOption;
 }
 
 function addRelativePathsToPathMap(pathMap, pathCache, baseDir) {
   pathMap.forEach((file) => {
     file.relativePath = processPath(file.file, pathCache, baseDir);
-    file.dependencies.forEach((dependnecy) => {
-      dependnecy.relativePath = processPath(dependnecy.resolvedDep, pathCache, baseDir);
+    file.dependencies.forEach((dependency) => {
+      dependency.relativePath = processPath(dependency.resolvedDep, pathCache, baseDir);
     });
   });
 }
