@@ -11,14 +11,14 @@ const fooES6Fixture = "import fs from 'fs'; module.exports = function foo() { re
 const fooImplPath = path.join(helper.localScopePath, 'inline_components', 'global', 'foo', 'impl.js');
 
 function expectLinksInComponentLevel() {
-  const appJs = "const foo = require('componentes/global/foo'); console.log(foo());";
+  const appJs = "const foo = require('bit/global/foo'); console.log(foo());";
   fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
   const result = helper.runCmd('node app.js');
   expect(result.trim()).to.equal('got foo');
 }
 
 function expectLinksInNamespaceLevel() {
-  const appJs = "const bitGlobal = require('componentes/global'); console.log(bitGlobal.foo());";
+  const appJs = "const bitGlobal = require('bit/global'); console.log(bitGlobal.foo());";
   fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
   const result = helper.runCmd('node app.js');
   expect(result.trim()).to.equal('got foo');
