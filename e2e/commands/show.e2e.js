@@ -370,7 +370,7 @@ function add(a, b) {
 
     it('Should throw error nothing to compare no previous versions found', () => {
       const showCmd = () => helper.showComponent('bar/foo --compare');
-      expect(showCmd).to.throw('change error - nothing to compare no previous versions found');
+      expect(showCmd).to.throw('error - nothing to compare no previous versions found');
     });
   });
 });
