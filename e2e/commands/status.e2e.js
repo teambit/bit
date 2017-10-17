@@ -9,9 +9,9 @@ chai.use(assertArrays);
 describe('bit status command', function () {
   this.timeout(0);
   const helper = new Helper();
-  after(() => {
+  /*  after(() => {
     helper.destroyEnv();
-  });
+  }); */
   describe('when no components created', () => {
     before(() => {
       helper.cleanEnv();
@@ -238,10 +238,10 @@ describe('bit status command', function () {
       helper.addRemoteScope();
       helper.importComponent('comp/comp');
       const filefixture = '//some change to file';
-      helper.createFile('bit/comp/comp', 'file.js', filefixture);
+      helper.createFile('components/comp/comp', 'file.js', filefixture);
       helper.commitComponent('comp/comp');
       const filefixture2 = '//some other change to file';
-      helper.createFile('bit/comp/comp', 'file.js', filefixture2);
+      helper.createFile('components/comp/comp', 'file.js', filefixture2);
       output = helper.runCmd('bit status');
     });
     it('should not display that component as new', () => {
