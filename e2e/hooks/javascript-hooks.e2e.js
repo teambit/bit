@@ -278,7 +278,7 @@ describe('javascript-hooks', function () {
         helper.exportComponent('foo');
 
         const barComponentFixture =
-          "const foo = require('componentes/global/foo'); module.exports = function bar() { return 'got bar and ' + foo(); };";
+          "const foo = require('bit/global/foo'); module.exports = function bar() { return 'got bar and ' + foo(); };";
         createComponent('bar', barComponentFixture);
 
         const barJsonPath = path.join(helper.localScopePath, 'components', 'global', 'bar', 'bit.json');
@@ -293,13 +293,13 @@ describe('javascript-hooks', function () {
       });
       describe('of depth=1, "bar" depends on "foo"', () => {
         it('should create links in the component level', () => {
-          const appJs = "const bar = require('componentes/global/bar'); console.log(bar());";
+          const appJs = "const bar = require('bit/global/bar'); console.log(bar());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got bar and got foo');
         });
         it('should create links in the namespace level', () => {
-          const appJs = "const bitGlobal = require('componentes/global'); console.log(bitGlobal.bar());";
+          const appJs = "const bitGlobal = require('bit/global'); console.log(bitGlobal.bar());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got bar and got foo');
@@ -314,7 +314,7 @@ describe('javascript-hooks', function () {
       describe('of depth=2, "baz" depends on "bar" that depends on "foo"', () => {
         before(() => {
           const bazComponentFixture =
-            "const bar = require('componentes/global/bar'); module.exports = function baz() { return 'got baz and ' + bar(); };";
+            "const bar = require('bit/global/bar'); module.exports = function baz() { return 'got baz and ' + bar(); };";
           createComponent('baz', bazComponentFixture);
 
           const bazJsonPath = path.join(helper.localScopePath, 'components', 'global', 'baz', 'bit.json');
@@ -327,13 +327,13 @@ describe('javascript-hooks', function () {
           helper.importComponent('global/baz');
         });
         it('should create links in the component level', () => {
-          const appJs = "const baz = require('componentes/global/baz'); console.log(baz());";
+          const appJs = "const baz = require('bit/global/baz'); console.log(baz());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got baz and got bar and got foo');
         });
         it('should create links in the namespace level', () => {
-          const appJs = "const bitGlobal = require('componentes/global'); console.log(bitGlobal.baz());";
+          const appJs = "const bitGlobal = require('bit/global'); console.log(bitGlobal.baz());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got baz and got bar and got foo');
@@ -374,7 +374,7 @@ describe('javascript-hooks', function () {
           helper.runCmd(`bit import @${helper.remoteScope}/global/foo`);
         });
         it('should create links in the component level of the latest version', () => {
-          const appJs = "const foo = require('componentes/global/foo'); console.log(foo());";
+          const appJs = "const foo = require('bit/global/foo'); console.log(foo());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got foo v2');
@@ -386,7 +386,7 @@ describe('javascript-hooks', function () {
           helper.runCmd(`bit import @${helper.remoteScope}/global/foo${VERSION_DELIMITER}1`);
         });
         it('should create links in the component level of that specific version', () => {
-          const appJs = "const foo = require('componentes/global/foo'); console.log(foo());";
+          const appJs = "const foo = require('bit/global/foo'); console.log(foo());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got foo v1');
