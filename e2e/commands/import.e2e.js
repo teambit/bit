@@ -29,7 +29,10 @@ describe('bit import', function () {
       expect(output.includes('successfully imported one component')).to.be.true;
       expect(output.includes('global/simple')).to.be.true;
     });
-    it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
+    it.skip(
+      'should throw an error if there is already component with the same name and namespace and different scope',
+      () => {}
+    );
     it('should add the component to bit.json file', () => {
       const bitJson = helper.readBitJson();
       const depName = [helper.remoteScope, 'global', 'simple'].join('/');
@@ -1288,7 +1291,7 @@ describe('bit import', function () {
       helper.addComponent('utils/is-type.js');
       const isStringFixture =
         "const isType = require('../../../../utils/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('bit/utils/is-string/utils', 'is-string.js', isStringFixture); // modify utils/is-string
+      helper.createComponent('components/utils/is-string/utils', 'is-string.js', isStringFixture); // modify utils/is-string
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();

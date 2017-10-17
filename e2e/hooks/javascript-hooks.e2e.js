@@ -59,15 +59,15 @@ describe('javascript-hooks', function () {
       helper.addRemoteScope();
       helper.importComponent('utils/is-string');
     });
-    it('should be able to require the main file using require(components/) syntax', () => {
-      const appJsFixture = "const isString = require('components/utils/is-string'); console.log(isString());";
+    it('should be able to require the main file using require(bit/) syntax', () => {
+      const appJsFixture = "const isString = require('bit/utils/is-string'); console.log(isString());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string');
     });
-    it('should be able to require the internal file using require(components/) syntax', () => {
+    it('should be able to require the internal file using require(bit/) syntax', () => {
       const appJsFixture =
-        "const isType = require('components/utils/is-string/utils/internals/is-type'); console.log(isType());";
+        "const isType = require('bit/utils/is-string/utils/internals/is-type'); console.log(isType());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type');

@@ -256,7 +256,6 @@ export default class Consumer {
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw));
     const componentDependenciesArr = await this.scope.getManyWithAllVersions(bitIds, cache);
-    console.log('sadads');
     await this.writeToComponentsDir(componentDependenciesArr, writeToPath, undefined, withPackageJson);
     return { dependencies: componentDependenciesArr };
   }

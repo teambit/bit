@@ -30,7 +30,7 @@ describe('flow of a long-dependencies-chain', function () {
             const previousFile = `foo${i - 1}`;
             const previousDir = `bar${i - 1}`;
             helper.importComponent(`${previousDir}/${previousFile}`);
-            impl = `const foo = require('components/${previousDir}/${previousFile}/${previousDir}/${previousFile}'); 
+            impl = `const foo = require('bit/${previousDir}/${previousFile}/${previousDir}/${previousFile}'); 
           module.exports = function ${file}() { return foo() + ' and got ${file}'; };
           `;
           } else {

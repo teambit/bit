@@ -3,12 +3,12 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 
-describe('es6 components with link files', function () {
+describe.only('es6 components with link files', function () {
   this.timeout(0);
   const helper = new Helper();
-  /*  after(() => {
+  after(() => {
     helper.destroyEnv();
-  }); */
+  });
 
   /**
    * utils/is-array  => component utils/is-array
@@ -69,7 +69,7 @@ describe('es6 components with link files', function () {
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
     });
-    it('should rewrite the relevant part of the link file', () => {
+    it.only('should rewrite the relevant part of the link file', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
