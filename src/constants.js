@@ -7,8 +7,6 @@ export const PACKAGE_JSON = 'package.json';
 
 export const COMPONENTS_DIRNAME = 'components';
 
-export const INLINE_COMPONENTS_DIRNAME = 'inline_components';
-
 export const VERSION_DELIMITER = '@';
 
 export const NO_PLUGIN_TYPE = 'none';
