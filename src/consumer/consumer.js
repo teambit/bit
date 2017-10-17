@@ -608,9 +608,10 @@ export default class Consumer {
     return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
   }
 
-  runComponentSpecs(id: BitId, verbose: boolean = false): Promise<?any> {
+  async runComponentSpecs(id: BitId, verbose: boolean = false): Promise<?any> {
+    const bitMap = await this.getBitMap();
     return this.loadComponent(id).then((component) => {
-      return component.runSpecs({ scope: this.scope, consumer: this, verbose });
+      return component.runSpecs({ scope: this.scope, consumer: this, bitMap, verbose });
     });
   }
 

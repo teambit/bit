@@ -5,7 +5,7 @@ import client from './http-client/client';
 import logger from '../logger/logger';
 
 const createHook = (hookNameKey: string, methodName: string): (() => Promise<any>) => {
-  logger.debug(`Planning to run a hook ${hookNameKey} with a method ${methodName}`);
+  logger.debug(`Creating a hook ${hookNameKey} with a method ${methodName}`);
   methodName = R.toUpper(methodName);
   return (data: ?Object | string): Promise<?any> => {
     return new Promise((resolve) => {
@@ -14,7 +14,11 @@ const createHook = (hookNameKey: string, methodName: string): (() => Promise<any
           logger.warn(`Failed running the ${hookNameKey} hook as destUrl is not set in the config file`);
           return resolve();
         }
-        logger.debug(`Running the ${hookNameKey} hook with destUrl: ${destUrl}, and data: ${data}`);
+        logger.debug(
+          `Running the ${hookNameKey} hook with destUrl: ${destUrl}, and data: ${typeof data === 'string'
+            ? data
+            : JSON.stringify(data)}`
+        );
         return client[methodName](destUrl, data)
           .then(() => {
             logger.debug(`Successfully ran hook ${hookNameKey}`);

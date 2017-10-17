@@ -42,18 +42,22 @@ jobs:
           keys:
             # Find a cache corresponding to this specific package.json checksum
             # when this file is changed, this key will fail
-            - npm-deps-{{ checksum "package.json" }}
+            # Gilad: The 1 after the deps is a workaround to clean the cache of the node modules
+            # A real solution will be to clear all the cache once circle will support it (for v2)
+            # or move the packakge.json resotre to be from workspace instead of cache, then we can run 
+            # this step without cache
+            - npm-deps1-{{ checksum "package.json" }}
             # Find the most recent cache used from any branch
-            - npm-deps
+            - npm-deps1
       - run:
           name: Insatll npm dependencies
           command: 'npm install'
       - save_cache:
-          key: npm-deps-{{ checksum "package.json" }}
+          key: npm-deps1-{{ checksum "package.json" }}
           paths:
             - node_modules
       - save_cache:
-          key: npm-deps
+          key: npm-deps1
           paths:
             - node_modules
 
@@ -72,9 +76,9 @@ jobs:
           keys:
             # Find a cache corresponding to this specific package.json checksum
             # when this file is changed, this key will fail
-            - npm-deps-{{ checksum "package.json" }}
+            - npm-deps1-{{ checksum "package.json" }}
             # Find the most recent cache used from any branch
-            - npm-deps
+            - npm-deps1
       - run:
           name: Build bit source code
           command: npm run build

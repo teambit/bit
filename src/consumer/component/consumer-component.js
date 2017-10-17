@@ -435,6 +435,7 @@ export default class Component {
     consumer,
     environment,
     save,
+    bitMap,
     verbose,
     isolated,
     directory,
@@ -445,6 +446,7 @@ export default class Component {
     consumer?: Consumer,
     environment?: boolean,
     save?: boolean,
+    bitMap?: BitMap,
     verbose?: boolean,
     isolated?: boolean,
     directory?: string,
@@ -530,7 +532,7 @@ export default class Component {
 
       if (!isolated && consumer) {
         logger.debug('Building the component before running the tests');
-        await this.build({ scope, environment, verbose, consumer });
+        await this.build({ scope, environment, bitMap, verbose, consumer });
         const saveDists = this.dists ? this.dists.map(dist => dist.write()) : [Promise.resolve()];
 
         await Promise.all(saveDists);
@@ -593,6 +595,9 @@ export default class Component {
 
     // verify whether the environment is installed
     let compiler;
+    if (!bitMap && consumer) {
+      bitMap = await consumer.getBitMap();
+    }
     const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
     try {
