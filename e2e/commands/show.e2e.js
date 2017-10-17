@@ -8,13 +8,13 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit show command', function () {
+describe.only('bit show command', function () {
   this.timeout(0);
   const helper = new Helper();
 
-  after(() => {
+  /*  after(() => {
     helper.destroyEnv();
-  });
+  }); */
 
   describe('local component', () => {
     before(() => {
@@ -86,7 +86,7 @@ describe('bit show command', function () {
       });
 
       it('should render the main file correctly', () => {
-        expect(output).to.have.string('Main file', 'Main file row is missing');
+        expect(output).to.have.string('Main File', 'Main file row is missing');
         expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
 
@@ -108,7 +108,7 @@ describe('bit show command', function () {
       });
 
       it('should render the main file correctly', () => {
-        expect(output).to.have.string('Main file', 'Main file row is missing');
+        expect(output).to.have.string('Main File', 'Main file row is missing');
         expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
     });
@@ -213,7 +213,7 @@ describe('bit show command', function () {
       });
 
       it.skip('should render the main file correctly', () => {
-        expect(output).to.have.string('Main file', 'Main file row is missing');
+        expect(output).to.have.string('Main File', 'Main file row is missing');
         expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
     });

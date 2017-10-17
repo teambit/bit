@@ -6,6 +6,7 @@ import Table from 'tty-table';
 import normalize from 'normalize-path';
 import arrayDifference from 'array-difference';
 import ConsumerComponent from '../../consumer/component/consumer-component';
+import paintDocumentation from './docs-template';
 
 const fields = [
   'id',
@@ -48,7 +49,8 @@ function convertObjectToPrintable(component) {
     files,
     mainFile,
     deprecated,
-    version
+    version,
+    docs
   } = component;
   obj.id = version === 'latest' ? `${box}/${name}@${version} \n[file system]` : `${box}/${name}@${version}`;
   obj.compiler = compilerId ? compilerId.toString() : null;
@@ -72,6 +74,7 @@ function convertObjectToPrintable(component) {
       ? files.filter(file => file.test).map(file => normalize(file.relative))
       : null;
   obj.deprecated = deprecated ? 'True' : null;
+  obj.docs = docs;
   return obj;
 }
 
@@ -79,11 +82,11 @@ function paintWithoutCompare(component: ConsumerComponent) {
   const printableComponent = convertObjectToPrintable(component);
   const rows = fields
     .map((field) => {
-      const title = `${field[0].toUpperCase()}${field.substr(1)}`;
+      const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
       const arr = [];
       if (!printableComponent[field]) return null;
       if (field === 'id') {
-        header.push({ value: printableComponent[field], width: 40, headerColor: 'white' });
+        header.push({ value: printableComponent[field], width: 70, headerColor: 'white' });
         return null;
       }
       arr.push(c.cyan(title));
@@ -95,7 +98,7 @@ function paintWithoutCompare(component: ConsumerComponent) {
 
   const table = new Table(header, [], opts);
   table.push(...rows);
-  return table.render();
+  return table.render() + paintDocumentation(component.docs);
 }
 
 function paintWithCompare(originalComponent: ConsumerComponent, componentToCompareTo: ConsumerComponent) {
@@ -113,13 +116,13 @@ function paintWithCompare(originalComponent: ConsumerComponent, componentToCompa
   const rows = fields
     .map((field) => {
       if (!printableOriginalComponent[field] && !printableComponentToCompare[field]) return null;
-      const title = `${field[0].toUpperCase()}${field.substr(1)}`;
+      const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
       if (field === 'id') {
-        header.push({ value: printableComponentToCompare[field], width: 40, headerColor: 'white' });
-        header.push({ value: printableOriginalComponent[field], width: 40, headerColor: 'white' });
+        header.push({ value: printableComponentToCompare[field], width: 70, headerColor: 'white' });
+        header.push({ value: printableOriginalComponent[field], width: 70, headerColor: 'white' });
         return null;
       }
-      const arr = field in componentsDiffs && field != 'id' ? [c.red(title)] : [c.cyan(title)];
+      const arr = field in componentsDiffs && field !== 'id' ? [c.red(title)] : [c.cyan(title)];
       printableComponentToCompare[field] instanceof Array
         ? arr.push(printableComponentToCompare[field].join(','))
         : arr.push(printableComponentToCompare[field]);
