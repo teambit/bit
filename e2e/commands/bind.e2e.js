@@ -22,7 +22,7 @@ describe('bit bind', function () {
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       const isStringFixture =
-        "const isType = require('components/utils/is-type/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+        "const isType = require('bit/utils/is-type/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.runCmd('bit bind');
@@ -90,7 +90,7 @@ describe('bit bind', function () {
       helper.addRemoteScope();
       helper.importComponent('utils/is-type');
       const isStringFixture =
-        "const isType = require('components/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+        "const isType = require('bit/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();

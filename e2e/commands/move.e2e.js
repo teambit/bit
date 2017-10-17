@@ -184,7 +184,7 @@ describe('bit move command', function () {
     });
     it('should update the file path in bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap[`${helper.remoteScope}/bar/foo@1`].rootDir).to.equal('components/utils/foo');
+      expect(bitMap[`${helper.remoteScope}/bar/foo@1`].rootDir).to.equal('bit/utils/foo');
     });
     it('should not recognize the component as modified', () => {
       const output = helper.runCmd('bit status');

@@ -1288,7 +1288,7 @@ describe('bit import', function () {
       helper.addComponent('utils/is-type.js');
       const isStringFixture =
         "const isType = require('../../../../utils/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('components/utils/is-string/utils', 'is-string.js', isStringFixture); // modify utils/is-string
+      helper.createComponent('bit/utils/is-string/utils', 'is-string.js', isStringFixture); // modify utils/is-string
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -1385,13 +1385,13 @@ describe('bit import', function () {
       helper.runCmd('bit import');
     });
     it('should successfully print results of is-type@1 when requiring it indirectly by is-string', () => {
-      const appJsFixture = "const isString = require('components/utils/is-string'); console.log(isString());";
+      const appJsFixture = "const isString = require('bit/utils/is-string'); console.log(isString());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v1 and got is-string');
     });
     it('should successfully print results of is-type@2 when requiring it directly', () => {
-      const appJsFixture = "const isType = require('components/utils/is-type'); console.log(isType());";
+      const appJsFixture = "const isType = require('bit/utils/is-type'); console.log(isType());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v2');
