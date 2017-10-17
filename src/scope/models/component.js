@@ -6,7 +6,7 @@ import { ScopeMeta } from '../models';
 import { VersionNotFound, CorruptedComponent } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
-import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE, DEFAULT_DIST_DIRNAME, DEFAULT_LINK_NAME } from '../../constants';
+import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE, DEFAULT_DIST_DIRNAME, DEFAULT_BINDINGS_PREFIX } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/component';
@@ -45,7 +45,7 @@ export default class Component extends BitObject {
     this.versions = props.versions || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.deprecated = props.deprecated || false;
-    this.bindingPrefix = props.bindingPrefix || DEFAULT_LINK_NAME;
+    this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
   }
 
   get versionArray(): Ref[] {

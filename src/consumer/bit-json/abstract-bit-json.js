@@ -10,7 +10,7 @@ import {
   DEFAULT_DEPENDENCIES,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
-  DEFAULT_LINK_NAME
+  DEFAULT_BINDINGS_PREFIX
 } from '../../constants';
 
 export type AbstractBitJsonProps = {
@@ -41,7 +41,7 @@ export default class AbstractBitJson {
     this.tester = tester || DEFAULT_TESTER_ID;
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
     this.lang = lang || DEFAULT_LANGUAGE;
-    this.bindingPrefix = bindingPrefix || DEFAULT_LINK_NAME;
+    this.bindingPrefix = bindingPrefix || DEFAULT_BINDINGS_PREFIX;
   }
 
   get compilerId(): string {
@@ -105,7 +105,7 @@ export default class AbstractBitJson {
     const isPropDefaultOrNull = (val, key) => {
       if (!val) return false;
       if (key === 'lang') return !(key === 'lang' && val === DEFAULT_LANGUAGE);
-      if (key === 'bindingPrefix') return !(key === 'bindingPrefix' && val === DEFAULT_LINK_NAME);
+      if (key === 'bindingPrefix') return !(key === 'bindingPrefix' && val === DEFAULT_BINDINGS_PREFIX);
       return true;
     };
 

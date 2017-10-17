@@ -32,7 +32,7 @@ import {
   LATEST_BIT_VERSION,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
-  DEFAULT_LINK_NAME,
+  DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
   DEFAULT_DIST_DIRNAME,
   BIT_JSON
@@ -148,7 +148,7 @@ export default class Component {
     this.version = version;
     this.scope = scope;
     this.lang = lang || DEFAULT_LANGUAGE;
-    this.bindingPrefix = bindingPrefix || DEFAULT_LINK_NAME;
+    this.bindingPrefix = bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.mainFile = mainFile;
     this.compilerId = compilerId;
     this.testerId = testerId;
@@ -809,7 +809,7 @@ export default class Component {
       scope: id.scope,
       version: id.version,
       lang: bitJson.lang,
-      bindingPrefix: bindingPrefix || DEFAULT_LINK_NAME,
+      bindingPrefix: bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,

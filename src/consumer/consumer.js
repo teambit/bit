@@ -13,7 +13,13 @@ import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-import { BITS_DIRNAME, BIT_HIDDEN_DIR, DEPENDENCIES_DIR, COMPONENT_ORIGINS, DEFAULT_LINK_NAME } from '../constants';
+import {
+  BITS_DIRNAME,
+  BIT_HIDDEN_DIR,
+  DEPENDENCIES_DIR,
+  COMPONENT_ORIGINS,
+  DEFAULT_BINDINGS_PREFIX
+} from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
