@@ -243,7 +243,7 @@ export default class Scope {
   /**
    * Writes components as objects into the 'objects' directory
    */
-  async writeManyComponentsToModel(componentsObjects: ComponentObjects[]): Promise<any> {
+  async writeManyComponentsToModel(componentsObjects: ComponentObjects[], persist: boolean = true): Promise<any> {
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
     logger.debug(
       `writeComponentToModel, writing into the model, ids: ${manyObjects
@@ -251,7 +251,7 @@ export default class Scope {
         .join(', ')}. They might have dependencies which are going to be written too`
     );
     await Promise.all(manyObjects.map(objects => this.sources.merge(objects)));
-    return this.objects.persist();
+    return persist ? this.objects.persist() : Promise.resolve();
   }
 
   /**
@@ -311,7 +311,7 @@ export default class Scope {
       manyObjects.map(objects => objects.component.toComponentVersion(LATEST))
     );
     logger.debug('exportManyBareScope: will try to importMany in case there are missing dependencies');
-    const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id)); // resolve dependencies
+    const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id), undefined, true, false); // resolve dependencies
     logger.debug('exportManyBareScope: successfully ran importMany');
     await this.objects.persist();
     const objs = await Promise.all(versions.map(version => version.toObjects(this.objects)));
@@ -351,7 +351,12 @@ export default class Scope {
   /**
    * If found locally, use them. Otherwise, fetch from remote and then, save into the model.
    */
-  getExternalMany(ids: BitId[], remotes: Remotes, localFetch: boolean = true): Promise<VersionDependencies[]> {
+  getExternalMany(
+    ids: BitId[],
+    remotes: Remotes,
+    localFetch: boolean = true,
+    persist: boolean = true
+  ): Promise<VersionDependencies[]> {
     logger.debug(
       `getExternalMany, planning on fetching from ${localFetch ? 'local' : 'remote'} scope. Ids: ${ids.join(', ')}`
     );
@@ -373,7 +378,7 @@ export default class Scope {
         .fetch(left.map(def => def.id), this)
         .then((componentObjects) => {
           logger.debug('getExternalMany: writing them to the model');
-          return this.writeManyComponentsToModel(componentObjects);
+          return this.writeManyComponentsToModel(componentObjects, persist);
         })
         .then(() => this.getExternalMany(ids, remotes));
     });
@@ -431,7 +436,12 @@ export default class Scope {
    * and save them locally.
    * 3. External objects, fetch from a remote and save locally. (done by this.getExternalOnes method).
    */
-  async importMany(ids: BitIds, withEnvironments?: boolean, cache: boolean = true): Promise<VersionDependencies[]> {
+  async importMany(
+    ids: BitIds,
+    withEnvironments?: boolean,
+    cache: boolean = true,
+    persist: boolean = true
+  ): Promise<VersionDependencies[]> {
     logger.debug(`scope.importMany: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
@@ -450,7 +460,7 @@ export default class Scope {
     );
     await postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) });
     const remotes = await this.remotes();
-    const externalDeps = await this.getExternalMany(externals, remotes, cache);
+    const externalDeps = await this.getExternalMany(externals, remotes, cache, persist);
     return versionDeps.concat(externalDeps);
   }
 
