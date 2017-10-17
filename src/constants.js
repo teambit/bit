@@ -66,7 +66,7 @@ export const DEFAULT_BIT_VERSION = 1;
 
 export const DEFAULT_LANGUAGE = 'javascript';
 
-export const DEFAULT_LINK_NAME = 'components';
+export const DEFAULT_LINK_NAME = 'bit';
 
 export const DEFAULT_DIR_STRUCTURE = `${BITS_DIRNAME}/{namespace}/{name}`;
 
