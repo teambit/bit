@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - prevent bare-scope corruption when the export process fails 
 - fixed stderr maxBuffer exceeded bug in ci-update cmd
+- fixed - writing dist files to wrong directory during bit tag / test commands
 
 ## [0.10.9-dev.3] - 2017-10-10
 
