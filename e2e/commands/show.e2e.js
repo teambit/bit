@@ -8,13 +8,13 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe.only('bit show command', function () {
+describe('bit show command', function () {
   this.timeout(0);
   const helper = new Helper();
 
-  /*  after(() => {
+  after(() => {
     helper.destroyEnv();
-  }); */
+  });
 
   describe('local component', () => {
     before(() => {
