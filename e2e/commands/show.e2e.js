@@ -368,7 +368,7 @@ function add(a, b) {
       helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
     });
 
-    it('Should throw error that component is not in module', () => {
+    it('Should throw error nothing to compare no previous versions found', () => {
       const showCmd = () => helper.showComponent('bar/foo --compare');
       expect(showCmd).to.throw('change error - nothing to compare no previous versions found');
     });
