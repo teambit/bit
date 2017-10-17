@@ -1158,7 +1158,7 @@ delegates@^1.0.0:
 
 dependency-tree@teambit/node-dependency-tree:
   version "5.11.0"
-  resolved "https://codeload.github.com/teambit/node-dependency-tree/tar.gz/89e6a7316f353b861f168745717a265aa311e918"
+  resolved "https://codeload.github.com/teambit/node-dependency-tree/tar.gz/1218a6dcc78a81eff74397f9f41f435cc447319d"
   dependencies:
     commander "^2.6.0"
     debug "^2.2.0"
