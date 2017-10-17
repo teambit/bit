@@ -9,8 +9,8 @@ export default (async function getConsumerBit({ id, compare }: { id: string, com
   const component = await consumer.loadComponent(bitId); // loads recent component
   if (compare) {
     try {
-      const moduleComponent = await consumer.scope.loadComponent(bitId);
-      return { component, moduleComponent };
+      const componentModel = await consumer.scope.loadComponent(bitId);
+      return { component, componentModel };
     } catch (err) {
       throw new NothingToCompareTo(id);
     }

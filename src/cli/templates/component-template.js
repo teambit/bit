@@ -137,6 +137,6 @@ function paintWithCompare(originalComponent: ConsumerComponent, componentToCompa
   table.push(...rows);
   return table.render();
 }
-export default (component: ConsumerComponent, moduleComponent: ConsumerComponent) => {
-  return moduleComponent ? paintWithCompare(component, moduleComponent) : paintWithoutCompare(component);
+export default (component: ConsumerComponent, componentModel: ConsumerComponent) => {
+  return componentModel ? paintWithCompare(component, componentModel) : paintWithoutCompare(component);
 };

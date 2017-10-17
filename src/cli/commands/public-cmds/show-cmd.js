@@ -13,7 +13,7 @@ export default class Show extends Command {
   opts = [
     ['j', 'json', 'return a json version of the component'],
     ['v', 'versions', 'return a json of all the versions of the component'],
-    ['c', 'compare [boolean]', 'compare current file system component to latest commited component [default=latest]']
+    ['c', 'compare [boolean]', 'compare current file system component to latest tagged component [default=latest]']
   ];
   loader = true;
 
@@ -34,16 +34,16 @@ export default class Show extends Command {
       }));
     }
 
-    return getBitComponent().then(({ component, moduleComponent }) => ({
+    return getBitComponent().then(({ component, componentModel }) => ({
       component,
-      moduleComponent,
+      componentModel,
       json
     }));
   }
 
   report({
     component,
-    moduleComponent,
+    componentModel,
     json,
     versions,
     components
@@ -63,6 +63,6 @@ export default class Show extends Command {
     }
 
     if (!component) return 'could not find the requested component';
-    return json ? component.toString() : paintComponent(component, moduleComponent);
+    return json ? component.toString() : paintComponent(component, componentModel);
   }
 }
