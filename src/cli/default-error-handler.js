@@ -146,7 +146,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     err => `error - Unable to tag. ${chalk.bold(err.id)} not found.
 Run \`bit status\` command to list all components available for tag.`
   ],
-  [NothingToCompareTo, err => 'change error - nothing to compare no previous versions found']
+  [NothingToCompareTo, err => 'error - nothing to compare no previous versions found']
 ];
 
 export default (err: Error): ?string => {
