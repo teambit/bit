@@ -810,9 +810,9 @@ bindings@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.2.1.tgz#14ad6113812d2d37d72e67b4cacb4bb726505f11"
 
-bit-javascript@0.10.5-dev.7:
-  version "0.10.5-dev.7"
-  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.5-dev.7.tgz#ae4da0c0e54cade6a0f6c8ce80da4ceb1a3443e1"
+bit-javascript@0.10.5-dev.9:
+  version "0.10.5-dev.9"
+  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.5-dev.9.tgz#ccad699c3d174ec0e8c274944af5f4834a3c94de"
   dependencies:
     camelcase "^4.0.0"
     caporal "^0.5.0"
@@ -991,6 +991,14 @@ charenc@~0.0.1:
 check-error@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/check-error/-/check-error-1.0.2.tgz#574d312edd88bb5dd8912e9286dd6c0aed4aac82"
+
+child-process-promise@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/child-process-promise/-/child-process-promise-2.2.1.tgz#4730a11ef610fad450b8f223c79d31d7bdad8074"
+  dependencies:
+    cross-spawn "^4.0.2"
+    node-version "^1.0.0"
+    promise-polyfill "^6.0.1"
 
 chokidar@^1.6.1, chokidar@^1.7.0:
   version "1.7.0"
@@ -1200,6 +1208,13 @@ cosmiconfig@^1.1.0:
     pinkie-promise "^2.0.0"
     require-from-string "^1.1.0"
 
+cross-spawn@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/cross-spawn/-/cross-spawn-4.0.2.tgz#7b9247621c23adfdd3856004a823cbe397424d41"
+  dependencies:
+    lru-cache "^4.0.1"
+    which "^1.2.9"
+
 cross-spawn@^5.0.1, cross-spawn@^5.1.0:
   version "5.1.0"
   resolved "https://registry.yarnpkg.com/cross-spawn/-/cross-spawn-5.1.0.tgz#e8bd0efee58fcff6f8f94510a0a554bbfa235449"
@@ -1344,9 +1359,9 @@ depd@1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/depd/-/depd-1.1.0.tgz#e1bd82c6aab6ced965b97b88b17ed3e528ca18c3"
 
-dependency-tree@teambit/node-dependency-tree:
+"dependency-tree@github:teambit/node-dependency-tree":
   version "5.11.0"
-  resolved "https://codeload.github.com/teambit/node-dependency-tree/tar.gz/89e6a7316f353b861f168745717a265aa311e918"
+  resolved "https://codeload.github.com/teambit/node-dependency-tree/tar.gz/1218a6dcc78a81eff74397f9f41f435cc447319d"
   dependencies:
     commander "^2.6.0"
     debug "^2.2.0"
@@ -3458,6 +3473,10 @@ node-uuid@~1.4.3, node-uuid@~1.4.7:
   version "1.4.8"
   resolved "https://registry.yarnpkg.com/node-uuid/-/node-uuid-1.4.8.tgz#b040eb0923968afabf8d32fb1f17f1167fdab907"
 
+node-version@^1.0.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/node-version/-/node-version-1.1.0.tgz#f437d7ba407e65e2c4eaef8887b1718ba523d4f0"
+
 noop-logger@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/noop-logger/-/noop-logger-0.1.1.tgz#94a2b1633c4f1317553007d8966fd0e841b6a4c2"
@@ -3890,6 +3909,10 @@ process-nextick-args@^1.0.6, process-nextick-args@~1.0.6:
 progress@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/progress/-/progress-2.0.0.tgz#8a1be366bf8fc23db2bd23f10c6fe920b4389d1f"
+
+promise-polyfill@^6.0.1:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/promise-polyfill/-/promise-polyfill-6.0.2.tgz#d9c86d3dc4dc2df9016e88946defd69b49b41162"
 
 promise@^7.1.1:
   version "7.3.1"
