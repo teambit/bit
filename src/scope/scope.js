@@ -560,7 +560,7 @@ export default class Scope {
     const symlink = componentList.filter(
       link => link instanceof Symlink && link.id() === bitId.toStringWithoutScopeAndVersion()
     );
-    await this.sources.clean(bitId);
+    await this.sources.clean(bitId, true);
     if (!R.isEmpty(symlink)) await this.objects.remove(symlink[0].hash());
     return bitId.toStringWithoutVersion();
   }
