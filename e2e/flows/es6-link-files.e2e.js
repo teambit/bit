@@ -70,7 +70,7 @@ describe('es6 components with link files', function () {
       helper.importComponent('bar/foo');
     });
     it('should rewrite the relevant part of the link file', () => {
-      const appJsFixture = "const barFoo = require('bit/bar/foo'); console.log(barFoo.default());";
+      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-string and got foo');
@@ -108,7 +108,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.importComponent('bar/foo');
     });
     it('should rewrite the relevant part of the link file', () => {
-      const appJsFixture = "const barFoo = require('bit/bar/foo'); console.log(barFoo.default());";
+      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-array and got is-string and got foo');

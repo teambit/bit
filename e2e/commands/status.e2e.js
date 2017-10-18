@@ -9,9 +9,9 @@ chai.use(assertArrays);
 describe('bit status command', function () {
   this.timeout(0);
   const helper = new Helper();
-  /*  after(() => {
+  after(() => {
     helper.destroyEnv();
-  }); */
+  });
   describe('when no components created', () => {
     before(() => {
       helper.cleanEnv();
@@ -302,8 +302,8 @@ describe('bit status command', function () {
     });
     it('should not display missing files for the imported component', () => {
       expect(output).to.not.have.string('The following files dependencies are not tracked by bit');
-      expect(output).to.not.have.string('bit/utils/is-type/index.js');
-      expect(output).to.not.have.string('bit/utils/is-type/utils/is-type.js');
+      expect(output).to.not.have.string('components/utils/is-type/index.js');
+      expect(output).to.not.have.string('components/utils/is-type/utils/is-type.js');
     });
   });
   describe('when a component with multi files and dependency is imported', () => {
