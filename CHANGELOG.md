@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- prevent bare-scope corruption when the export process fails 
+## [0.10.9-dev.4] - 2017-10-18
+
+- new field in bit.json (bindingPrefix) for dynamic links
+- add flag to bit show to compare component in file system to last tagged component
+- prevent bare-scope corruption when the export process fails
 - fixed stderr maxBuffer exceeded bug in ci-update cmd
 - fixed - writing dist files to wrong directory during bit tag / test commands
-- add flag to show to compare component to componentModel
-- new field in bit.json (bindingPrefix) for dynamic links
 
 ## [0.10.9-dev.3] - 2017-10-10
 
