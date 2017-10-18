@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.10.9-dev.4] - 2017-10-18
 
+- typescript - extract only relevant dependencies from link files (files that only require other files)
 - new field in bit.json (bindingPrefix) for dynamic links
 - add flag to bit show to compare component in file system to last tagged component
 - prevent bare-scope corruption when the export process fails
