@@ -86,7 +86,7 @@ describe('bit show command', function () {
       });
 
       it('should render the main file correctly', () => {
-        expect(output).to.have.string('Main file', 'Main file row is missing');
+        expect(output).to.have.string('Main File', 'Main file row is missing');
         expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
 
@@ -108,7 +108,7 @@ describe('bit show command', function () {
       });
 
       it('should render the main file correctly', () => {
-        expect(output).to.have.string('Main file', 'Main file row is missing');
+        expect(output).to.have.string('Main File', 'Main file row is missing');
         expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
     });
@@ -213,7 +213,7 @@ describe('bit show command', function () {
       });
 
       it.skip('should render the main file correctly', () => {
-        expect(output).to.have.string('Main file', 'Main file row is missing');
+        expect(output).to.have.string('Main File', 'Main file row is missing');
         expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
       });
     });
@@ -358,6 +358,19 @@ function add(a, b) {
       expect(showCmd).to.throw(
         'invalid component bar/foo, all files were deleted, please remove the component using bit remove command\n'
       );
+    });
+  });
+  describe('with compare flag', () => {
+    beforeEach(() => {
+      helper.initNewLocalScope();
+      helper.createComponentBarFoo();
+      helper.createComponent('bar', 'index.js');
+      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+    });
+
+    it('Should throw error nothing to compare no previous versions found', () => {
+      const showCmd = () => helper.showComponent('bar/foo --compare');
+      expect(showCmd).to.throw('error - nothing to compare no previous versions found');
     });
   });
 });
