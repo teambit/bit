@@ -284,6 +284,11 @@ export default class Helper {
     bitJson.corrupt = '"corrupted';
     fs.writeFileSync(bitJsonPath, bitJson.toString());
   }
+  modifyFieldInBitJson(key: string, value: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+    const bitJson = this.readBitJson();
+    bitJson[key] = value;
+    fs.writeFileSync(bitJsonPath, JSON.stringify(bitJson));
+  }
   addNpmPackage(name: string = 'lodash.get', version: string = '4.4.2') {
     const packageJsonFixture = JSON.stringify({ name, version });
     this.createFile(`node_modules/${name}`, 'index.js');
