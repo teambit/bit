@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.9-dev.5] - 2017-10-18
+
 - fixed remove of exported component 
 
 ## [0.10.9-dev.4] - 2017-10-18
