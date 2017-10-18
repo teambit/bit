@@ -32,6 +32,7 @@
     "url": "https://github.com/teambit/bit"
   },
   "dependencies": {
+    "array-difference": "^0.0.1",
     "babel-runtime": "^6.23.0",
     "bit-javascript": "0.10.5-dev.8",
     "buffer-from": "^0.1.1",
@@ -62,6 +63,7 @@
     "mockery": "^2.0.0",
     "needle": "^2.0.0",
     "normalize-path": "^2.1.1",
+    "object-diff": "^0.0.4",
     "ora": "^1.1.0",
     "porter-stemmer": "^0.9.1",
     "ramda": "^0.24.1",
