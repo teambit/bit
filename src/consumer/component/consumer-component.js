@@ -32,8 +32,10 @@ import {
   LATEST_BIT_VERSION,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
+  DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
-  DEFAULT_DIST_DIRNAME
+  DEFAULT_DIST_DIRNAME,
+  BIT_JSON
 } from '../../constants';
 
 export type ComponentProps = {
@@ -42,6 +44,7 @@ export type ComponentProps = {
   version?: ?number,
   scope?: ?string,
   lang?: string,
+  bindingPrefix?: string,
   mainFile?: string,
   compilerId?: ?BitId,
   testerId?: ?BitId,
@@ -62,6 +65,7 @@ export default class Component {
   version: ?number;
   scope: ?string;
   lang: string;
+  bindingPrefix: string;
   mainFile: string;
   compilerId: ?BitId;
   testerId: ?BitId;
@@ -124,6 +128,7 @@ export default class Component {
     version,
     scope,
     lang,
+    bindingPrefix,
     mainFile,
     compilerId,
     testerId,
@@ -143,6 +148,7 @@ export default class Component {
     this.version = version;
     this.scope = scope;
     this.lang = lang || DEFAULT_LANGUAGE;
+    this.bindingPrefix = bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.mainFile = mainFile;
     this.compilerId = compilerId;
     this.testerId = testerId;
@@ -185,6 +191,7 @@ export default class Component {
       version: this.version,
       scope: this.scope,
       lang: this.lang,
+      bindingPrefix: this.bindingPrefix,
       compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this._dependenciesAsWritableObject(),
@@ -428,6 +435,7 @@ export default class Component {
     consumer,
     environment,
     save,
+    bitMap,
     verbose,
     isolated,
     directory,
@@ -438,6 +446,7 @@ export default class Component {
     consumer?: Consumer,
     environment?: boolean,
     save?: boolean,
+    bitMap?: BitMap,
     verbose?: boolean,
     isolated?: boolean,
     directory?: string,
@@ -523,7 +532,7 @@ export default class Component {
 
       if (!isolated && consumer) {
         logger.debug('Building the component before running the tests');
-        await this.build({ scope, environment, verbose, consumer });
+        await this.build({ scope, environment, bitMap, verbose, consumer });
         const saveDists = this.dists ? this.dists.map(dist => dist.write()) : [Promise.resolve()];
 
         await Promise.all(saveDists);
@@ -586,6 +595,9 @@ export default class Component {
 
     // verify whether the environment is installed
     let compiler;
+    if (!bitMap && consumer) {
+      bitMap = await consumer.getBitMap();
+    }
     const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
     try {
@@ -652,6 +664,7 @@ export default class Component {
       mainFile: this.mainFile,
       scope: this.scope,
       lang: this.lang,
+      bindingPrefix: this.bindingPrefix,
       compilerId: this.compilerId ? this.compilerId.toString() : null,
       testerId: this.testerId ? this.testerId.toString() : null,
       dependencies: this.dependencies.map(dep => Object.assign({}, dep, { id: dep.id.toString() })), // this._dependenciesAsWritableObject(),
@@ -686,6 +699,7 @@ export default class Component {
       version,
       scope,
       lang,
+      bindingPrefix,
       compilerId,
       testerId,
       dependencies,
@@ -704,6 +718,7 @@ export default class Component {
       version: parseInt(version),
       scope,
       lang,
+      bindingPrefix,
       compilerId: compilerId ? BitId.parse(compilerId) : null,
       testerId: testerId ? BitId.parse(testerId) : null,
       dependencies: dependencies.map(dep => Object.assign({}, dep, { id: BitId.parse(dep.id) })), // this._dependenciesFromWritableObject(dependencies),
@@ -783,12 +798,18 @@ export default class Component {
       }
     }
 
+    // we need to load bitJson of the specific component to get link prefix
+    const { bindingPrefix } = fs.existsSync(path.join(bitDir, BIT_JSON))
+      ? BitJson.loadSync(bitDir)
+      : { bindingPrefix: bitJson.bindingPrefix };
+
     return new Component({
       name: id.name,
       box: id.box,
       scope: id.scope,
       version: id.version,
       lang: bitJson.lang,
+      bindingPrefix: bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,
@@ -823,6 +844,7 @@ export default class Component {
     const compilerId = BitId.parse(consumerBitJson.compilerId);
     const testerId = BitId.parse(consumerBitJson.testerId);
     const lang = consumerBitJson.lang;
+    const bindingPrefix = consumerBitJson.bindingPrefix;
     const implVinylFile = new SourceFile({
       cwd: consumerPath,
       base: path.join(consumerPath, bitPath),
@@ -835,6 +857,7 @@ export default class Component {
       name,
       box,
       lang,
+      bindingPrefix,
       version: LATEST_BIT_VERSION,
       scope: scopeName,
       specsFile,
