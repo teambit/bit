@@ -131,8 +131,16 @@ export default class Component extends BitObject {
     );
   }
 
-  remove(repo: Repository): Promise {
-    const objectRefs = this.versionArray;
+  /**
+   * 
+   * 
+   * @param {Repository} repo 
+   * @param {boolean} [deepRemove=false] - wether to remove all the refs or only the version array
+   * @returns {Promise} 
+   * @memberof Component
+   */
+  remove(repo: Repository, deepRemove: boolean = false): Promise {
+    const objectRefs = deepRemove ? this.collectRefs(repo) : this.versionArray;
     return repo.removeMany(objectRefs.concat([this.hash()]));
   }
 

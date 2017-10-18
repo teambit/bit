@@ -556,7 +556,12 @@ export default class Scope {
    */
   async removeSingle(bitId: BitId): Promise<string> {
     logger.debug(`removing ${bitId.toString()}`);
-    await this.sources.clean(bitId);
+    const componentList = await this.objects.listComponents();
+    const symlink = componentList.filter(
+      link => link instanceof Symlink && link.id() === bitId.toStringWithoutScopeAndVersion()
+    );
+    await this.sources.clean(bitId, true);
+    if (!R.isEmpty(symlink)) await this.objects.remove(symlink[0].hash());
     return bitId.toStringWithoutVersion();
   }
 

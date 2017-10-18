@@ -274,10 +274,10 @@ export default class SourceRepository {
     return component;
   }
 
-  clean(bitId: BitId): Promise<void> {
+  clean(bitId: BitId, deepRemove: boolean = false): Promise<void> {
     return this.get(bitId).then((component) => {
       if (!component) return;
-      return component.remove(this.objects());
+      return component.remove(this.objects(), deepRemove);
     });
   }
 
