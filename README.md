@@ -15,27 +15,25 @@
 
 [Website & community](https://bitsrc.io) • [Short video](https://www.youtube.com/watch?v=vm_oOghNEYs)  • [Demo project](https://github.com/itaymendel/movie-app)  • [Demo collection](https://bitsrc.io/bit/movie-app#styles)
 
-Bit enables you to share components from your existing source-code into shared playlist-like collections, share them with your team, and install or update them from any project with simple & curated maintenance. 
-
-You and your team can easily share and discover components, collaborate, get updates and stay in sync.
+Bit enables you to share components directly from your project's source-code and install them in other projects. Components are shared into playlist-like collections, where they can be discovered by additional members of the team and installed across different projects with simple & curated maintenance. You and your team can easily share components, collaborate, get updates and stay in sync.
 
 Bit works great for React or Angular components, Node modules, utility functions and more.
 
-* **Turn any existing subset of files into a reusable component** without changing your source code or file structure. Turn any bulk of source code into a shared collection of components using simple commands.
+* **Turn any existing subset of files into a reusable component** without changing your source code or file structure. Turn any bulk of source code into a shared collection of components, ready to be installed in any repository using Bit or your favorite package manager (soon).
 
-* **Great discoverability for components** you and your team love and trust. Determine and monitor component quality through auto-generated docs and test results.
+* **Great discoverability for components** you and your team love and trust. Browse or search through an organized collection of your components, and monitor component quality through auto-generated docs, test results and integration plugins (e.g. react live rendering).
 
-* **Gain universal control over your dependency graph**. Commit and test vast dependency changes at once. Build and test any component in any application environment. 
+* **Gain universal control over your dependency graph**. Tag and test vast dependency version changes at once. Build and test any component, in any application environment.
 
-* ***Coming soon:*** Install components with the tools you love - NPM, Yarn or Bit. Create and update components in seconds from any project using Bit, and use the tool of you choice to install them.
+* ***Coming soon:*** Install components with the tools you love - NPM, Yarn or Bit. Share or update components in seconds from any project using Bit, and use the tool of your choice to install them.
 
 Bit is an open-source collaborative project, actively maintained by a full-time venture-backed team and used by organizations and open source teams.
 
 ## Demos
 
-1. An example of a React [movie-app component library](https://github.com/itaymendel/movie-app) shared with Bit [as a collection of individually accessible and discoverable components](https://bitsrc.io/bit/movie-app#styles) - without forcing source-code and filesystem changes to the repository itself.
-
-2. A [short demo video](https://www.youtube.com/watch?v=vm_oOghNEYs) of sharing these components across applications.
+1. A React [movie-app library](https://github.com/itaymendel/movie-app) shared with Bit, without forcing source-code and filesystem changes to the repository itself.
+2. The React movie-app's [collection of shared components](https://bitsrc.io/bit/movie-app#styles) 
+3. A [short demo video](https://www.youtube.com/watch?v=vm_oOghNEYs).
 
 ## Supported Languages
 Bit is language agnostic. Still, it requires binding and additional language sensitive features for different programming languages. To do this, Bit uses language-specific drivers:
