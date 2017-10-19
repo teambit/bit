@@ -1386,7 +1386,7 @@ depd@1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/depd/-/depd-1.1.0.tgz#e1bd82c6aab6ced965b97b88b17ed3e528ca18c3"
 
-"dependency-tree@github:teambit/node-dependency-tree":
+dependency-tree@teambit/node-dependency-tree:
   version "5.11.0"
   resolved "https://codeload.github.com/teambit/node-dependency-tree/tar.gz/1218a6dcc78a81eff74397f9f41f435cc447319d"
   dependencies:
