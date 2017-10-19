@@ -34,7 +34,7 @@
   "dependencies": {
     "array-difference": "^0.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "0.10.5-dev.9",
+    "bit-javascript": "0.10.5",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
     "child-process-promise": "^2.2.1",
