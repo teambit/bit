@@ -6,10 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
-- identify dependencies that are link files (files that only require other files)
+
+## [0.10.5] - 2017-10-19
+
+- Identify dependencies that are link files (files that only require other files)
 - Add a CLI command to easily get dependencies for a file
 - Support semver in packages dependencies
-- add support for bindingPrefix
+- Add support for bindingPrefix
 
 ## [0.10.4] - 2017-10-01
 - Add support for writing package.json files
