@@ -1,7 +1,7 @@
 // @flow
 import R from 'ramda';
 import c from 'chalk';
-import Table from 'cli-table2';
+import Table from 'tty-table';
 import { paintHeader } from '../chalk-box';
 import type { Doclet } from '../../jsdoc/parser';
 
@@ -18,12 +18,17 @@ const paintExamples = (examples) => {
 };
 
 export const paintDoc = (doc: Doclet) => {
-  const docsTable = new Table({
-    colWidths: [20, 50],
-    wordWrap: true
-  });
-
   const { name, description, args, returns } = doc;
+
+  const header = [
+    { value: 'Name', width: 20, headerColor: 'cyan', headerAlign: 'left' },
+    { value: `${name}`, width: 50, headerColor: 'white', color: 'white', headerAlign: 'left' }
+  ];
+  const opts = {
+    align: 'left'
+  };
+
+  const table = new Table(header, [], opts);
 
   const painArg = (arg) => {
     if (!arg.type && !arg.name) {
@@ -46,15 +51,15 @@ export const paintDoc = (doc: Doclet) => {
   };
 
   const rows = [
-    name ? { [c.cyan('Name')]: name } : null,
-    { [c.cyan('Description')]: description },
-    { [c.cyan('Args')]: `(${args.map(painArg).join(', ')})` },
-    { [c.cyan('Returns')]: painDescription(returns) }
+    [c.cyan('Description'), description],
+    [c.cyan('Args'), `(${args.map(painArg).join(', ')})`],
+    [c.cyan('Returns'), painDescription(returns)]
   ].filter(x => x);
 
-  docsTable.push(...rows);
+  // console.log('rows', rows);
 
-  return docsTable + paintExamples(doc.examples);
+  table.push(...rows);
+  return table.render() + paintExamples(doc.examples);
 };
 
 export default (docs: ?(Doclet[])) => {
