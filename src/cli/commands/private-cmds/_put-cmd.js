@@ -19,7 +19,7 @@ export default class Put extends Command {
           data += chunk.toString();
         })
         .on('end', () => {
-          return put({ componentObjects: fromBase64(data.toString()), path: fromBase64(path) })
+          return put({ componentObjects: data, path: fromBase64(path) })
             .then(resolve)
             .catch(reject);
         });

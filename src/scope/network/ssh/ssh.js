@@ -59,14 +59,22 @@ export default class SSH implements Network {
     return new Promise((resolve, reject) => {
       let res = '';
       let err;
+      // No need to use packCommand on the payload in case of put command
+      // because we handle all the base64 stuff in a better way inside the ComponentObjects.manyToString
+      // inside pushMany function here
       const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), commandName === '_put' ? null : payload);
+      if (!this.connection) {
+        err = 'ssh connection is not defined';
+        logger.error(err);
+        return reject(err);
+      }
       this.connection.exec(cmd, (error, stream) => {
         if (error) {
           logger.error('ssh, exec returns an error: ', error);
           return reject(error);
         }
         if (commandName === '_put') {
-          stream.stdin.write(toBase64(payload));
+          stream.stdin.write(payload);
           stream.stdin.end();
         }
         stream
@@ -99,7 +107,7 @@ export default class SSH implements Network {
     });
   }
 
-  errorHandler(code, err) {
+  errorHandler(code: number, err: string) {
     let parsedError;
     try {
       parsedError = JSON.parse(err);
@@ -134,10 +142,11 @@ export default class SSH implements Network {
   }
 
   pushMany(manyComponentObjects: ComponentObjects[]): Promise<ComponentObjects[]> {
+    // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
+    // to the pack command (to prevent duplicate base64)
     return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects)).then((data: string) => {
       const { headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
-      return Promise.resolve();
     });
   }
 
@@ -158,7 +167,7 @@ export default class SSH implements Network {
       return Promise.resolve(payload);
     });
   }
-  push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
+  push(componentObjects: ComponentObjects): Promise<ComponentObjects[]> {
     return this.pushMany([componentObjects]);
   }
 
@@ -207,11 +216,10 @@ export default class SSH implements Network {
     ids = ids.map(bitId => bitId.toString());
     if (noDeps) options = '-n';
     return this.exec(`_fetch ${options}`, ids).then((str: string) => {
-      const { payload, headers } = this._unpack(str);
+      const { payload, headers } = JSON.parse(str);
       checkVersionCompatibility(headers.version);
-      return payload.map((raw) => {
-        return ComponentObjects.fromString(raw);
-      });
+      const componentObjects = ComponentObjects.manyFromString(payload);
+      return componentObjects;
     });
   }
 
