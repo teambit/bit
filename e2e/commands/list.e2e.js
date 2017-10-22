@@ -46,7 +46,7 @@ describe('bit list command', function () {
       expect(output).to.contain.string('bar/foo [Deprecated]');
     });
   });
-  describe.only('with --outdated flag', () => {
+  describe('with --outdated flag', () => {
     describe('when a remote component has a higher version than the local component', () => {
       let output;
       before(() => {
