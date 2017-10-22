@@ -116,16 +116,40 @@ export default class Scope {
     );
   }
 
-  list() {
-    // @Deprecated
-    return this.objects
-      .listComponents() // @TODO - check version and cross check them with components
-      .then(components => this.toConsumerComponents(components));
+  async list(showRemoteVersion?: boolean = false) {
+    const components = await this.objects.listComponents();
+    const consumerComponents = await this.toConsumerComponents(components);
+    if (showRemoteVersion) {
+      const componentsIds = consumerComponents.map(component => component.id);
+      const latestVersionsInfo = await this.fetchRemoteVersions(componentsIds);
+      latestVersionsInfo.forEach((componentId) => {
+        const component = consumerComponents.find(
+          c => c.id.toStringWithoutVersion() === componentId.toStringWithoutVersion()
+        );
+        component.latest = componentId.version;
+      });
+    }
+    return consumerComponents;
   }
 
   async listStage() {
     const components = await this.objects.listComponents(false);
     return this.toConsumerComponents(components.filter(c => !c.scope || c.scope === this.name));
+  }
+
+  async fetchRemoteVersions(componentIds: BitId[]): Promise<BitId[]> {
+    const externals = componentIds.filter(id => !id.isLocal(this.name));
+    const remotes = await this.remotes();
+    return remotes.latestVersions(externals, this);
+  }
+
+  async latestVersions(componentIds: BitId[]): Promise<string[]> {
+    const components = await this.sources.getMany(componentIds);
+    return components.map((component) => {
+      const componentId = component.id;
+      componentId.version = component.component.latest();
+      return componentId.toString();
+    });
   }
 
   importDependencies(dependencies: BitId[]) {

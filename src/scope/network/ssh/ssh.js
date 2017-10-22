@@ -186,6 +186,14 @@ export default class SSH implements Network {
     });
   }
 
+  latestVersions(componentIds: BitId[]) {
+    return this.exec('_latest', componentIds).then((str: string) => {
+      const { payload, headers } = this._unpack(str);
+      checkVersionCompatibility(headers.version);
+      return payload;
+    });
+  }
+
   search(query: string, reindex: boolean) {
     return this.exec('_search', { query, reindex: reindex.toString() }).then((data) => {
       const { payload, headers } = this._unpack(data);
