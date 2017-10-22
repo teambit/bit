@@ -13,7 +13,13 @@ import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-import { BITS_DIRNAME, BIT_HIDDEN_DIR, DEPENDENCIES_DIR, COMPONENT_ORIGINS } from '../constants';
+import {
+  BITS_DIRNAME,
+  BIT_HIDDEN_DIR,
+  DEPENDENCIES_DIR,
+  COMPONENT_ORIGINS,
+  DEFAULT_BINDINGS_PREFIX
+} from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
@@ -496,9 +502,9 @@ export default class Consumer {
   }
 
   bindComponents(components: Component[], bitMap: BitMap): Object[] {
-    const writeDependencyLink = (parentRootDir: string, bitId: BitId, rootDir: string) => {
+    const writeDependencyLink = (parentRootDir: string, bitId: BitId, rootDir: string, bindingPrefix: string) => {
       const srcPath = path.join(this.getPath(), rootDir);
-      const relativeDestPath = path.join('node_modules', 'bit', bitId.box, bitId.name);
+      const relativeDestPath = path.join('node_modules', bindingPrefix, bitId.box, bitId.name);
       const destPath = path.join(this.getPath(), parentRootDir, relativeDestPath);
       fs.removeSync(destPath); // in case a component has been moved
       fs.ensureDirSync(path.dirname(destPath));
@@ -510,7 +516,12 @@ export default class Consumer {
     const writeDependenciesLinks = (component, componentMap) => {
       return component.dependencies.map((dependency) => {
         const dependencyComponentMap = bitMap.getComponent(dependency.id);
-        return writeDependencyLink(componentMap.rootDir, dependency.id, dependencyComponentMap.rootDir);
+        return writeDependencyLink(
+          componentMap.rootDir,
+          dependency.id,
+          dependencyComponentMap.rootDir,
+          component.bindingPrefix
+        );
       });
     };
 
@@ -519,7 +530,12 @@ export default class Consumer {
         const dependencyId = bitMap.getExistingComponentId(dependencyIdStr);
         if (!dependencyId) return null;
         const dependencyComponentMap = bitMap.getComponent(dependencyId);
-        return writeDependencyLink(componentMap.rootDir, BitId.parse(dependencyId), dependencyComponentMap.rootDir);
+        return writeDependencyLink(
+          componentMap.rootDir,
+          BitId.parse(dependencyId),
+          dependencyComponentMap.rootDir,
+          component.bindingPrefix
+        );
       });
     };
 
@@ -529,7 +545,12 @@ export default class Consumer {
       const componentMap: ComponentMap = bitMap.getComponent(componentId, true);
       if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         const target = path.join(this.getPath(), componentMap.rootDir);
-        const relativeLinkPath = path.join('node_modules', 'bit', componentId.box, componentId.name);
+        const relativeLinkPath = path.join(
+          'node_modules',
+          this.bitJson.bindingPrefix,
+          componentId.box,
+          componentId.name
+        );
         const linkPath = path.join(this.getPath(), relativeLinkPath);
         fs.removeSync(linkPath); // in case a component has been moved
         fs.ensureDirSync(path.dirname(linkPath));
@@ -554,7 +575,7 @@ export default class Consumer {
         return componentMap.rootDir ? path.join(componentMap.rootDir, file.relativePath) : file.relativePath;
       });
       const bound = filesToBind.map((file) => {
-        const dest = path.join('node_modules', 'bit', componentId.box, componentId.name, file);
+        const dest = path.join('node_modules', component.bindingPrefix, componentId.box, componentId.name, file);
         const destRelative = pathRelative(path.dirname(dest), file);
         const fileContent = `module.exports = require('${destRelative}');`;
         fs.outputFileSync(dest, fileContent);
@@ -592,9 +613,10 @@ export default class Consumer {
     return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
   }
 
-  runComponentSpecs(id: BitId, verbose: boolean = false): Promise<?any> {
+  async runComponentSpecs(id: BitId, verbose: boolean = false): Promise<?any> {
+    const bitMap = await this.getBitMap();
     return this.loadComponent(id).then((component) => {
-      return component.runSpecs({ scope: this.scope, consumer: this, verbose });
+      return component.runSpecs({ scope: this.scope, consumer: this, bitMap, verbose });
     });
   }
 
@@ -699,7 +721,7 @@ export default class Consumer {
     if (!track && removedIds.bitIds) {
       const bitMap = await this.getBitMap();
       removedIds.bitIds.forEach((id) => {
-        bitMap.removeComponent(BitId.parse(id));
+        bitMap.removeComponent(id);
       });
       await bitMap.write();
     }

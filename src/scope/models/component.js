@@ -6,7 +6,7 @@ import { ScopeMeta } from '../models';
 import { VersionNotFound, CorruptedComponent } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
-import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE, DEFAULT_DIST_DIRNAME } from '../../constants';
+import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE, DEFAULT_DIST_DIRNAME, DEFAULT_BINDINGS_PREFIX } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/component';
@@ -24,7 +24,8 @@ export type ComponentProps = {
   name: string,
   versions?: { [number]: Ref },
   lang?: string,
-  deprecated: boolean
+  deprecated: boolean,
+  bindingPrefix?: string
 };
 
 export default class Component extends BitObject {
@@ -34,6 +35,7 @@ export default class Component extends BitObject {
   versions: { [number]: Ref };
   lang: string;
   deprecated: boolean;
+  bindingPrefix: string;
 
   constructor(props: ComponentProps) {
     super();
@@ -43,6 +45,7 @@ export default class Component extends BitObject {
     this.versions = props.versions || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.deprecated = props.deprecated || false;
+    this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
   }
 
   get versionArray(): Ref[] {
@@ -111,7 +114,8 @@ export default class Component extends BitObject {
       scope: this.scope,
       versions: versions(this.versions),
       lang: this.lang,
-      deprecated: this.deprecated
+      deprecated: this.deprecated,
+      bindingPrefix: this.bindingPrefix
     };
   }
 
@@ -127,8 +131,16 @@ export default class Component extends BitObject {
     );
   }
 
-  remove(repo: Repository): Promise {
-    const objectRefs = this.versionArray;
+  /**
+   * 
+   * 
+   * @param {Repository} repo 
+   * @param {boolean} [deepRemove=false] - wether to remove all the refs or only the version array
+   * @returns {Promise} 
+   * @memberof Component
+   */
+  remove(repo: Repository, deepRemove: boolean = false): Promise {
+    const objectRefs = deepRemove ? this.collectRefs(repo) : this.versionArray;
     return repo.removeMany(objectRefs.concat([this.hash()]));
   }
 
@@ -175,6 +187,7 @@ export default class Component extends BitObject {
           version: componentVersion.version,
           scope: this.scope,
           lang: this.lang,
+          bindingPrefix: this.bindingPrefix,
           mainFile: version.mainFile || null,
           compilerId: version.compiler,
           testerId: version.tester,
@@ -222,7 +235,8 @@ export default class Component extends BitObject {
       scope: rawComponent.scope,
       versions: mapObject(rawComponent.versions, val => Ref.from(val)),
       lang: rawComponent.lang,
-      deprecated: rawComponent.deprecated
+      deprecated: rawComponent.deprecated,
+      bindingPrefix: rawComponent.bindingPrefix
     });
   }
 

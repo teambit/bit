@@ -31,8 +31,8 @@ export type BitJsonProps = {
 export default class BitJson extends AbstractBitJson {
   packageDependencies: { [string]: string };
 
-  constructor({ impl, spec, compiler, tester, dependencies, packageDependencies, lang }: BitJsonProps) {
-    super({ impl, spec, compiler, tester, dependencies, lang });
+  constructor({ impl, spec, compiler, tester, dependencies, packageDependencies, lang, bindingPrefix }: BitJsonProps) {
+    super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix });
     this.packageDependencies = packageDependencies || {};
   }
 
@@ -80,7 +80,7 @@ export default class BitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object): BitJson {
-    const { sources = {}, env, dependencies, packageDependencies, lang } = object;
+    const { sources = {}, env, dependencies, packageDependencies, lang, bindingPrefix } = object;
 
     return new BitJson({
       impl: R.prop('impl', sources),
@@ -89,6 +89,7 @@ export default class BitJson extends AbstractBitJson {
       tester: R.prop('tester', env),
       dependencies,
       lang,
+      bindingPrefix,
       packageDependencies
     });
   }
@@ -96,7 +97,6 @@ export default class BitJson extends AbstractBitJson {
   static mergeWithProto(json, protoBJ: ?ConsumerBitJson): BitJson {
     const plainProtoBJ = protoBJ ? protoBJ.toPlainObject() : {};
     delete plainProtoBJ.dependencies;
-
     return BitJson.fromPlainObject(R.merge(plainProtoBJ, json));
   }
 

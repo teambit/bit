@@ -229,17 +229,10 @@ export default class BitMap {
     }
   }
 
-  removeComponent(id: string | BitId) {
-    if (!R.is(String, id)) {
-      Object.keys(this.components).map((bitMapId) => {
-        const bitMapKey = BitId.parse(bitMapId);
-        if (R.eqProps('box', bitMapKey, id) && R.eqProps('scope', bitMapKey, id) && R.eqProps('name', bitMapKey, id)) {
-          delete this.components[bitMapKey.toString()];
-        }
-      });
-    } else {
-      delete this.components[id];
-    }
+  removeComponent(id: string | bitId) {
+    const bitId = id instanceof BitId ? id : BitId.parse(id);
+    const bitmapComponent = this.getExistingComponentId(bitId.toStringWithoutScopeAndVersion());
+    delete this.components[bitmapComponent];
   }
 
   addMainDistFileToComponent(id: string, distFilesPaths: string[]): void {

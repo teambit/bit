@@ -1,6 +1,5 @@
 /** @flow */
 import Table from 'tty-table';
-import chalk from 'chalk';
 import Command from '../../command';
 import { catScope } from '../../../api/scope';
 import componentObject from '../../../scope/models/component';

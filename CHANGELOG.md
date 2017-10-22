@@ -7,35 +7,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.11.0-test.1] - 2017-10-16
-
 - prevent bare-scope corruption when the export process fails 
 - fixed stderr maxBuffer exceeded bug in ci-update cmd
 
-## [0.10.9-dev.3] - 2017-10-10
+## [0.10.9] - 2017-10-18
 
+- rename `bit commit` to `bit tag`
 - extract only relevant dependencies from link files (files that only require other files)
-- throw error when tester doesn't return any result for test file
-- check version compatibility when an error occurred on the server
+- typescript - extract only relevant dependencies from link files (files that only require other files)
+- take package version from package.json in the component / root folder to support semver package dependencies
+- new field in bit.json (bindingPrefix) for dynamic links
+- add flag to bit show to compare component in file system to last tagged component
 - better handling deleted files
-- change the order of determine the main/index file - it's now ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass']
-
-## [0.10.9-dev.2] - 2017-10-03
-
 - improve bit add to convert files to valid bit names 
+- fixed - writing dist files to wrong directory during bit tag / test commands
+- fixed remove of exported component 
+- prevent bare-scope corruption when the export process fails
+- fixed stderr maxBuffer exceeded bug in ci-update cmd
+- throw error when tester doesn't return any result for test file
+- change the order of determine the main/index file - it's now ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass']
 - improve checkVersionCompatibility between server and client
 - show correct message / error when the tester has an exception during bit test
 - fix bug with printing wrong id on bit tag for component in versions between 10-19
-
-## [0.10.9-dev.1] - 2017-10-02
-
 - handle invalid bit.json
-- bit add' on missing test file should throw an error
+- bit add on missing test file should throw an error
 - prevent test files from becoming new components
-- rename `bit commit` to `bit tag`
 - fix bug when component version is larger than 10 it won't show as staged
-- take package version from package.json in the component / root folder to support semver package dependencies
-
 
 ## [0.10.8] - 2017-10-01
 
