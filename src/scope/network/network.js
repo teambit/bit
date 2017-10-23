@@ -12,5 +12,6 @@ export interface Network {
   fetch(bitIds: BitIds): Promise<ComponentObjects[]>,
   list(): Promise<ComponentObjects[]>,
   search(query: string, reindex: boolean): Promise<string>,
-  show(bitId: BitId): Promise<?Component>
+  show(bitId: BitId): Promise<?Component>,
+  latestVersions(bitIds: BitIds): Promise<ComponentObjects[]>
 }

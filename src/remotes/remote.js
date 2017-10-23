@@ -58,6 +58,10 @@ export default class Remote {
     return this.connect().then(network => network.fetch(bitIds, withoutDeps));
   }
 
+  latestVersions(bitIds: BitId[]): Promise<ComponentObjects[]> {
+    return this.connect().then(network => network.latestVersions(bitIds));
+  }
+
   validate() {
     if (!isBitUrl(this.host)) throw new InvalidRemote();
   }

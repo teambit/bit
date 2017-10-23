@@ -40,7 +40,8 @@ describe('bit deprecate command', function () {
       helper.deprecateComponent(`${helper.remoteScope}/bar/foo`);
       helper.exportAllComponents();
       const output = helper.listRemoteScope(false);
-      expect(output).to.contain.string('bar/foo [Deprecated]');
+      expect(output).to.contain.string('bar/foo');
+      expect(output).to.contain.string('[Deprecated]');
     });
   });
   describe('with remote scope', () => {
@@ -58,7 +59,8 @@ describe('bit deprecate command', function () {
     });
     it('should list components all components including deprecated from remote scope', () => {
       const listOutput = helper.listRemoteScope(false);
-      expect(listOutput).to.contain.string('bar/foo [Deprecated]');
+      expect(listOutput).to.contain.string('bar/foo');
+      expect(listOutput).to.contain.string('[Deprecated]');
     });
     it('should not deprecate remote component if not found ', () => {
       const depOutput = helper.deprecateComponent(`${helper.remoteScope}/bar/foo111`, '-r');

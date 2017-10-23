@@ -44,6 +44,17 @@ export default class Remotes extends Map<string, Remote> {
     return flatten(bits);
   }
 
+  async latestVersions(ids: BitId[], thisScope: Scope): Promise<BitId[]> {
+    const byScope = groupBy(prop('scope'));
+    const promises = [];
+    forEach(byScope(ids), (scopeIds, scopeName) => {
+      promises.push(this.resolve(scopeName, thisScope).then(remote => remote.latestVersions(scopeIds)));
+    });
+    const components = await Promise.all(promises);
+    const flattenComponents = flatten(components);
+    return flattenComponents.map(componentId => BitId.parse(componentId));
+  }
+
   toPlainObject() {
     const object = {};
 

@@ -1,18 +1,27 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
-import { loadScope } from '../../../scope';
+import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_LIST } from '../../../cli/loader/loader-messages';
 import Remotes from '../../../remotes/remotes';
+import Remote from '../../../remotes/remote';
 
-export default function list({ scopeName, cache }: { scopeName?: string, cache?: boolean }): Promise<string[]> {
-  const remoteList = (remote) => {
+export default function list({
+  scopeName,
+  cache,
+  showRemoteVersion
+}: {
+  scopeName?: string,
+  cache?: boolean,
+  showRemoteVersion?: boolean
+}): Promise<string[]> {
+  const remoteList = (remote: Remote) => {
     loader.start(BEFORE_REMOTE_LIST);
     return remote.list();
   };
-  const scopeList = (scope) => {
-    return cache ? scope.list() : scope.listStage();
+  const scopeList = (scope: Scope) => {
+    return cache ? scope.list(showRemoteVersion) : scope.listStage();
   };
 
   return loadConsumer()

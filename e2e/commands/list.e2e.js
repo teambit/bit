@@ -46,4 +46,68 @@ describe('bit list command', function () {
       expect(output).to.contain.string('bar/foo [Deprecated]');
     });
   });
+  describe('with --outdated flag', () => {
+    describe('when a remote component has a higher version than the local component', () => {
+      let output;
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        helper.commitComponentBarFoo();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo@1');
+        const clonedScopePath = helper.cloneLocalScope();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo@1');
+        helper.commitComponent('bar/foo', 'msg', '-f');
+        helper.exportAllComponents();
+
+        helper.getClonedLocalScope(clonedScopePath);
+        const stringOutput = helper.runCmd('bit list -o -j');
+        output = JSON.parse(stringOutput);
+      });
+      it('should show that it has a later version in the remote', () => {
+        const barFoo = output.find(item => item.id === `${helper.remoteScope}/bar/foo`);
+        expect(barFoo.remoteVersion).to.be.above(barFoo.localVersion);
+      });
+    });
+    describe('when a remote component has the same version as the local component', () => {
+      let output;
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponent('bar/baz');
+        helper.addComponent('bar/baz');
+        helper.commitComponent('bar/baz');
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/baz@1');
+        const stringOutput = helper.runCmd('bit list -o -j');
+        output = JSON.parse(stringOutput);
+      });
+      it('should display the same version for the local and remote', () => {
+        const barBaz = output.find(item => item.id === `${helper.remoteScope}/bar/baz`);
+        expect(barBaz.remoteVersion).to.equal(barBaz.localVersion);
+      });
+    });
+    describe('when a component is local only (never exported)', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createComponent('bar/local');
+        helper.addComponent('bar/local');
+        helper.commitComponent('bar/local');
+        const stringOutput = helper.runCmd('bit list -o -j');
+        output = JSON.parse(stringOutput);
+      });
+      it('should show that the component does not have a remote version', () => {
+        const barLocal = output.find(item => item.id === 'bar/local');
+        expect(barLocal.remoteVersion).to.equal('N/A');
+      });
+    });
+  });
 });
