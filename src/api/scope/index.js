@@ -14,6 +14,7 @@ import catScope from './lib/cat-scope';
 import refreshScope from './lib/refresh-scope';
 import remove from './lib/delete';
 import deprecate from './lib/deprecate';
+import latestVersions from './lib/latest-versions';
 
 export {
   catObject,
@@ -31,5 +32,6 @@ export {
   catScope,
   refreshScope,
   remove,
-  deprecate
+  deprecate,
+  latestVersions
 };

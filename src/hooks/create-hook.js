@@ -15,11 +15,12 @@ const createHook = (hookNameKey: string, methodName: string): (() => Promise<any
     return new Promise((resolve) => {
       return get(hookNameKey).then((destUrl) => {
         if (!destUrl) {
-          logger.warn(`Failed running the ${hookNameKey} hook as destUrl is not set in the config file`);
-
-          logger.debug(
-            `Running the ${hookNameKey} hook with destUrl: ${destUrl}, and data: ${stringifyIfNeeded(data)}`
+          logger.warn(
+            `Failed running the ${hookNameKey} hook as destUrl is not set in the config file. hook data: ${stringifyIfNeeded(
+              data
+            )}`
           );
+
           return resolve();
         }
         logger.debug(`Running the ${hookNameKey} hook with destUrl: ${destUrl}, and data: ${stringifyIfNeeded(data)}`);
