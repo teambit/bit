@@ -474,6 +474,7 @@ export default class Consumer {
   async commit(
     ids: BitId[],
     message: string,
+    releaseType: string,
     force: ?boolean,
     verbose: ?boolean,
     ignoreMissingDependencies: ?boolean
@@ -492,6 +493,7 @@ export default class Consumer {
     const committedComponents = await this.scope.putMany({
       consumerComponents: components,
       message,
+      releaseType,
       force,
       consumer: this,
       verbose

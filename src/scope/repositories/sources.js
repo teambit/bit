@@ -222,17 +222,17 @@ export default class SourceRepository {
     source,
     depIds,
     message,
+    releaseType,
     force,
     consumer,
-    releaseType,
     verbose
   }: {
     source: ConsumerComponent,
     depIds: BitId[],
     message: string,
+    releaseType: string,
     force: ?boolean,
     consumer: Consumer,
-    releaseType: string,
     verbose?: boolean
   }): Promise<Component> {
     const objectRepo = this.objects();

@@ -31,8 +31,8 @@ export default function getLatestVersionNumber(bitIds: BitId[] | string[], bitId
   const allVersionsForId = [];
   bitIds.map((id) => {
     if (getString(bitId, ignoreScopeAlways) === getString(id, ignoreScopeAlways)) {
-      const version = getParsed(id).getVersion();
-      allVersionsForId.push(version);
+      const version = getParsed(id).getVersion().versionNum;
+      if (version) allVersionsForId.push(version);
     }
     return allVersionsForId;
   });

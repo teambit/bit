@@ -7,7 +7,13 @@ import { ScopeMeta } from '../models';
 import { VersionNotFound } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
-import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE, DEFAULT_DIST_DIRNAME, DEFAULT_BINDINGS_PREFIX } from '../../constants';
+import {
+  DEFAULT_BOX_NAME,
+  DEFAULT_LANGUAGE,
+  DEFAULT_DIST_DIRNAME,
+  DEFAULT_BINDINGS_PREFIX,
+  DEFAULT_BIT_RELEASE_TYPE
+} from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/component';
@@ -85,12 +91,12 @@ export default class Component extends BitObject {
     );
   }
 
-  addVersion(version: Version, releaseType: string = 'patch') {
+  addVersion(version: Version, releaseType: string = DEFAULT_BIT_RELEASE_TYPE) {
     this.versions[this.version(releaseType)] = version.hash();
     return this;
   }
 
-  version(releaseType: string = 'patch') {
+  version(releaseType: string = DEFAULT_BIT_RELEASE_TYPE) {
     const latest = this.latest();
     if (latest) return semver.inc(latest, releaseType);
     return 1;

@@ -2,6 +2,7 @@
 import semver from 'semver';
 import { InvalidVersionChange, InvalidVersion } from './exceptions';
 import versionParser from './version-parser';
+import { DEFAULT_BIT_RELEASE_TYPE } from '../constants';
 
 export default class Version {
   versionNum: ?string;
@@ -12,7 +13,7 @@ export default class Version {
     this.latest = latest;
   }
 
-  increase(releaseType = 'patch'): Version {
+  increase(releaseType = DEFAULT_BIT_RELEASE_TYPE): Version {
     if (!this.versionNum) throw new InvalidVersionChange();
     this.versionNum = semver.inc(this.versionNum, releaseType);
     return this;
