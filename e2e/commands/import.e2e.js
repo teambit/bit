@@ -1383,7 +1383,7 @@ describe('bit import', function () {
 
       const bitJson = helper.readBitJson();
       bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '0.0.1';
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '2';
+      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '0.0.2';
       helper.writeBitJson(bitJson);
       helper.runCmd('bit import');
     });
