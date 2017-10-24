@@ -232,7 +232,7 @@ describe('bit import', function () {
     });
     it('should import component with deprecated msg', () => {
       expect(output.includes('successfully imported one component')).to.be.true;
-      expect(output.includes('imprel/imprel@1  [Deprecated]')).to.be.true;
+      expect(output.includes('imprel/imprel@0.0.1  [Deprecated]')).to.be.true;
     });
   });
 
@@ -1255,8 +1255,8 @@ describe('bit import', function () {
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('utils/is-type@1');
-      helper.importComponent('utils/is-type@2');
+      helper.importComponent('utils/is-type@0.0.1');
+      helper.importComponent('utils/is-type@0.0.2');
     });
     it('should imported v2 successfully and print the result from the latest version', () => {
       const appJsFixture = "const isType = require('./components/utils/is-type'); console.log(isType());";
@@ -1266,11 +1266,11 @@ describe('bit import', function () {
     });
     it('should update the existing record in bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@2`);
+      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
     });
     it('should not create a new record in bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@1`);
+      expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
     });
   });
 
@@ -1347,8 +1347,8 @@ describe('bit import', function () {
     });
     it('should show is-type as a dependency of is-string in bit.map', () => {
       const bitMap = helper.readBitMap();
-      const isTypeDependency = `${helper.remoteScope}/utils/is-type@1`;
-      expect(bitMap[`${helper.remoteScope}/utils/is-string@1`].dependencies).to.include(isTypeDependency);
+      const isTypeDependency = `${helper.remoteScope}/utils/is-type@0.0.1`;
+      expect(bitMap[`${helper.remoteScope}/utils/is-string@0.0.1`].dependencies).to.include(isTypeDependency);
     });
     it('should successfully require is-type dependency and print the results from both components', () => {
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
@@ -1359,8 +1359,8 @@ describe('bit import', function () {
   });
 
   describe('import the same component ("is-type") as an indirect dependency (of "is-string") and as a direct dependency with a newer version', () => {
-    // in other words, is-type@1 is a direct dependency of is-string, and the bit.json have these two components:
-    // is-string@1 and is-type@2. After the import we expect to have both is-type versions (1 and 2), and is-string to
+    // in other words, is-type@0.0.1 is a direct dependency of is-string, and the bit.json have these two components:
+    // is-string@0.0.1 and is-type@0.0.2. After the import we expect to have both is-type versions (1 and 2), and is-string to
     // work with the v1 of is-type.
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -1387,13 +1387,13 @@ describe('bit import', function () {
       helper.writeBitJson(bitJson);
       helper.runCmd('bit import');
     });
-    it('should successfully print results of is-type@1 when requiring it indirectly by is-string', () => {
+    it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
       const appJsFixture = "const isString = require('bit/utils/is-string'); console.log(isString());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v1 and got is-string');
     });
-    it('should successfully print results of is-type@2 when requiring it directly', () => {
+    it('should successfully print results of is-type@0.0.2 when requiring it directly', () => {
       const appJsFixture = "const isType = require('bit/utils/is-type'); console.log(isType());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
@@ -1426,8 +1426,8 @@ describe('bit import', function () {
     });
     it('should update the existing record of is-type in bit.map from NESTED to IMPORTED', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@1`);
-      expect(bitMap[`${helper.remoteScope}/utils/is-type@1`].origin).to.equal('IMPORTED');
+      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+      expect(bitMap[`${helper.remoteScope}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
     });
     it('should not break the is-string component', () => {
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
@@ -1465,7 +1465,7 @@ describe('bit import', function () {
       const { scopeName, scopePath } = helper.getNewBareScope();
       scopeB = scopeName;
       helper.addRemoteScope(scopePath);
-      helper.exportComponent(`${helper.remoteScope}/utils/is-string@2`, scopeB);
+      helper.exportComponent(`${helper.remoteScope}/utils/is-string@0.0.2`, scopeB);
       // import to a new local scope
       helper.initNewLocalScope();
       helper.addRemoteScope(scopePath);
@@ -1508,7 +1508,7 @@ describe('bit import', function () {
       const componentPath = path.join('components', 'utils', 'is-string', 'utils');
       helper.createComponent(componentPath, 'is-string.js', isStringModifiedFixture);
       helper.commitComponent('utils/is-string');
-      helper.exportComponent(`${helper.remoteScope}/utils/is-string@2`);
+      helper.exportComponent(`${helper.remoteScope}/utils/is-string@0.0.2`);
 
       fs.removeSync(helper.localScopePath);
       helper.setLocalScope(authorScope);

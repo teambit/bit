@@ -111,7 +111,7 @@ describe('bit tag command', function () {
           helper.importComponent('comp/comp');
           helper.addNpmPackage('lodash.get', '2.0.0');
           const bitMap = helper.readBitMap();
-          componentRootDir = path.normalize(bitMap[`${helper.remoteScope}/comp/comp@1`].rootDir);
+          componentRootDir = path.normalize(bitMap[`${helper.remoteScope}/comp/comp@0.0.1`].rootDir);
         });
         // beforeEach(() => {
         // });
@@ -299,7 +299,7 @@ describe('bit tag command', function () {
     });
     it('should not tag and throw an error regarding the relative syntax', () => {
       expect(output).to.have.string('fatal: following component dependencies were not found');
-      expect(output).to.have.string(`relative components: ${helper.remoteScope}/utils/is-type@1`);
+      expect(output).to.have.string(`relative components: ${helper.remoteScope}/utils/is-type@0.0.1`);
     });
   });
 

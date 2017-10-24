@@ -191,7 +191,7 @@ describe('bit export command', function () {
     });
     it('should export it with no errors', () => {
       const output = helper.listRemoteScope();
-      expect(output.includes(`${helper.remoteScope}/bar/foo@3`)).to.be.true;
+      expect(output.includes(`${helper.remoteScope}/bar/foo@0.0.3`)).to.be.true;
     });
   });
 
@@ -217,7 +217,7 @@ describe('bit export command', function () {
 
     it('should export it successfully', () => {
       const output = helper.listRemoteScope();
-      expect(output.includes('utils/is-string@2')).to.be.true;
+      expect(output.includes('utils/is-string@0.0.2')).to.be.true;
     });
   });
 
@@ -266,7 +266,7 @@ describe('bit export command', function () {
     });
     it('should export it with no errors', () => {
       const output = helper.listRemoteScope();
-      expect(output.includes(`${helper.remoteScope}/bar/foo@3`)).to.be.true;
+      expect(output.includes(`${helper.remoteScope}/bar/foo@0.0.3`)).to.be.true;
     });
   });
 
