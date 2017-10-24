@@ -1,7 +1,9 @@
 /** @flow */
+import semver from 'semver';
 import Command from '../../command';
 import { commitAction, commitAllAction } from '../../../api/consumer';
 import Component from '../../../consumer/component';
+import { DEFAULT_BIT_VERSION } from '../../../constants';
 
 const chalk = require('chalk');
 
@@ -55,7 +57,9 @@ export default class Export extends Command {
         .map((comp) => {
           // Replace the @1 only if it ends with @1 to prevent id between 10-19 to shown wrong ->
           // myId@10 will be myId0 which is wrong
-          return comp.id.toString().endsWith('@1') ? comp.id.toString().replace('@1', '') : comp.id.toString();
+          return comp.id.toString().endsWith(DEFAULT_BIT_VERSION)
+            ? comp.id.toString().replace(DEFAULT_BIT_VERSION, '')
+            : comp.id.toString();
         })
         .join(', ');
     }
@@ -72,8 +76,8 @@ export default class Export extends Command {
       return '';
     }
 
-    const changedComponents = components.filter(component => component.version > 1);
-    const addedComponents = components.filter(component => component.version === 1);
+    const changedComponents = components.filter(component => semver.gt(component.version, DEFAULT_BIT_VERSION));
+    const addedComponents = components.filter(component => semver.eq(component.version, DEFAULT_BIT_VERSION));
 
     return (
       chalk.green(`${components.length} components tagged`) +

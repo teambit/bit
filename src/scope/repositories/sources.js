@@ -4,7 +4,7 @@ import { bufferFrom, pathNormalizeToLinux } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../constants';
+import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
@@ -224,6 +224,7 @@ export default class SourceRepository {
     message,
     force,
     consumer,
+    releaseType,
     verbose
   }: {
     source: ConsumerComponent,
@@ -231,6 +232,7 @@ export default class SourceRepository {
     message: string,
     force: ?boolean,
     consumer: Consumer,
+    releaseType: string,
     verbose?: boolean
   }): Promise<Component> {
     const objectRepo = this.objects();
@@ -245,7 +247,7 @@ export default class SourceRepository {
       force,
       verbose
     });
-    component.addVersion(version);
+    component.addVersion(version, releaseType);
 
     objectRepo.add(version).add(component);
 
@@ -255,14 +257,14 @@ export default class SourceRepository {
     return component;
   }
 
-  putAdditionalVersion(component, version, message) {
+  putAdditionalVersion(component, version, message, releaseType: string = DEFAULT_BIT_RELEASE_TYPE) {
     version.log = {
       message,
       username: globalConfig.getSync(CFG_USER_NAME_KEY),
       email: globalConfig.getSync(CFG_USER_EMAIL_KEY),
       date: Date.now().toString()
     };
-    component.addVersion(version);
+    component.addVersion(version, releaseType);
     return this.put({ component, objects: [version] });
   }
 

@@ -1,9 +1,10 @@
 /** @flow */
+import semver from 'semver';
 import { is, equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
 import path from 'path';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
-import { VersionNotFound, CorruptedComponent } from '../exceptions';
+import { VersionNotFound } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
 import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE, DEFAULT_DIST_DIRNAME, DEFAULT_BINDINGS_PREFIX } from '../../constants';
@@ -22,7 +23,7 @@ export type ComponentProps = {
   scope?: string,
   box?: string,
   name: string,
-  versions?: { [number]: Ref },
+  versions?: { [string]: Ref },
   lang?: string,
   deprecated: boolean,
   bindingPrefix?: string
@@ -32,7 +33,7 @@ export default class Component extends BitObject {
   scope: string;
   name: string;
   box: string;
-  versions: { [number]: Ref };
+  versions: { [string]: Ref };
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
@@ -52,8 +53,8 @@ export default class Component extends BitObject {
     return values(this.versions);
   }
 
-  listVersions(): number[] {
-    return Object.keys(this.versions).map(versionStr => parseInt(versionStr));
+  listVersions(): string[] {
+    return Object.keys(this.versions);
   }
 
   compatibleWith(component: Component) {
@@ -63,9 +64,9 @@ export default class Component extends BitObject {
     return equals(component.versions, comparableObject);
   }
 
-  latest(): number {
-    if (empty(this.versions)) return 0;
-    return Math.max(...this.listVersions());
+  latest(): string {
+    if (empty(this.versions)) return '0.0.0';
+    return semver.maxSatisfying(this.listVersions(), '*');
   }
 
   collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } }> {
@@ -79,19 +80,19 @@ export default class Component extends BitObject {
   collectVersions(repo: Repository): Promise<ConsumerComponent> {
     return Promise.all(
       this.listVersions().map((versionNum) => {
-        return this.toConsumerComponent(String(versionNum), this.scope, repo);
+        return this.toConsumerComponent(versionNum, this.scope, repo);
       })
     );
   }
 
-  addVersion(version: Version) {
-    this.versions[this.version()] = version.hash();
+  addVersion(version: Version, releaseType: string = 'patch') {
+    this.versions[this.version(releaseType)] = version.hash();
     return this;
   }
 
-  version() {
+  version(releaseType: string = 'patch') {
     const latest = this.latest();
-    if (latest) return latest + 1;
+    if (latest) return semver.inc(latest, releaseType);
     return 1;
   }
 
@@ -100,7 +101,7 @@ export default class Component extends BitObject {
   }
 
   toObject() {
-    function versions(vers: { [number]: Ref }) {
+    function versions(vers: { [string]: Ref }) {
       const obj = {};
       forEach(vers, (ref, version) => {
         obj[version] = ref.toString();
@@ -119,7 +120,7 @@ export default class Component extends BitObject {
     };
   }
 
-  async loadVersion(version: number, repository: Repository): Promise<Version> {
+  async loadVersion(version: string, repository: Repository): Promise<Version> {
     const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound();
     return versionRef.load(repository);

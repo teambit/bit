@@ -1,4 +1,5 @@
 // @flow
+import semver from 'semver';
 import Version from './version';
 import { LATEST, LATEST_TESTED_MARK } from '../constants';
 import { contains } from '../utils';
@@ -13,22 +14,22 @@ function isLatestTested(versionStr: string) {
   const splited = versionStr.split(LATEST_TESTED_MARK);
   if (splited.length !== 2) return false;
   const [, numberStr] = splited;
-  const version = parseInt(numberStr);
+  const version = isRegular(numberStr);
   if (!version) return false;
   return true;
 }
 
 function isRegular(versionStr: string) {
-  return !!parseInt(versionStr);
+  return semver.valid(versionStr);
 }
 
 function returnRegular(versionStr: string) {
-  return new Version(parseInt(versionStr), false);
+  return new Version(versionStr, false);
 }
 
 function returnLatestTestedVersion(versionStr: string): Version {
   const [, numberStr] = versionStr.split(LATEST_TESTED_MARK);
-  return new Version(parseInt(numberStr), true);
+  return new Version(numberStr, true);
 }
 
 function returnLatest(): Version {
