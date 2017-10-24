@@ -294,8 +294,8 @@ describe('bit import', function () {
         helper.addRemoteScope();
         myBitJsonPath = path.join(helper.localScopePath, 'bit.json');
         helper.addBitJsonDependencies(myBitJsonPath, {
-          [`${helper.remoteScope}/comp/comp1`]: '1',
-          [`${helper.remoteScope}/comp/comp2`]: '1'
+          [`${helper.remoteScope}/comp/comp1`]: '0.0.1',
+          [`${helper.remoteScope}/comp/comp2`]: '0.0.1'
         });
         output = helper.runCmd('bit import');
         localConsumerFiles = helper.getConsumerFiles();
