@@ -72,7 +72,8 @@ describe('bit list command', function () {
       });
       it('should show that it has a later version in the remote', () => {
         const barFoo = output.find(item => item.id === `${helper.remoteScope}/bar/foo`);
-        expect(barFoo.remoteVersion).to.be.above(barFoo.localVersion);
+        expect(barFoo.remoteVersion).to.equal('0.0.2');
+        expect(barFoo.localVersion).to.equal('0.0.1');
       });
     });
     describe('when a remote component has the same version as the local component', () => {
