@@ -40,9 +40,12 @@ export default function getLatestVersionNumber(bitIds: BitId[] | string[], bitId
   // A case when the bitId provided doesn't exists in the array
   if (R.isEmpty(allVersionsForId)) return bitId;
 
-  const maxVersion = semver.allVersionsForId(allVersionsForId, '*');
-  const result = Object.clone(getParsed(bitId));
-  result.version = maxVersion;
+  const maxVersion = semver.maxSatisfying(allVersionsForId, '*');
+  const bitIdWithMaxVersion = getParsed(bitId).clone();
+  bitIdWithMaxVersion.version = maxVersion;
+  const result = bitIds.find((id) => {
+    return getString(id, ignoreScopeAlways, false) === getString(bitIdWithMaxVersion, ignoreScopeAlways, false);
+  });
 
   return result;
 }
