@@ -29,7 +29,7 @@ describe('bit export command', function () {
     });
     it('should write the exported component into bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo${VERSION_DELIMITER}1`);
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo${VERSION_DELIMITER}0.0.1`);
     });
   });
   describe('with multiple components, each has one file', () => {
