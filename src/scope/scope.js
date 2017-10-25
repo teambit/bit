@@ -167,6 +167,7 @@ export default class Scope {
   async putMany({
     consumerComponents,
     message,
+    exactVersion,
     releaseType,
     force,
     consumer,
@@ -174,6 +175,7 @@ export default class Scope {
   }: {
     consumerComponents: ConsumerComponent[],
     message: string,
+    exactVersion: ?string,
     releaseType: string,
     force: ?boolean,
     consumer: Consumer,
@@ -233,6 +235,7 @@ export default class Scope {
         source: consumerComponent,
         depIds: flattenedDependencies,
         message,
+        exactVersion,
         releaseType,
         force,
         consumer,

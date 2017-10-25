@@ -6,6 +6,7 @@ import ComponentsList from '../../../consumer/component/components-list';
 export async function commitAction({
   id,
   message,
+  exactVersion,
   releaseType,
   force,
   verbose,
@@ -13,6 +14,7 @@ export async function commitAction({
 }: {
   id: string,
   message: string,
+  exactVersion: ?string,
   releaseType: string,
   force: ?boolean,
   verbose?: boolean,
@@ -23,18 +25,28 @@ export async function commitAction({
     const isModified = await consumer.isComponentModifiedById(id);
     if (!isModified) return null;
   }
-  const components = await consumer.commit([id], message, releaseType, force, verbose, ignoreMissingDependencies);
+  const components = await consumer.commit(
+    [id],
+    message,
+    exactVersion,
+    releaseType,
+    force,
+    verbose,
+    ignoreMissingDependencies
+  );
   return R.head(components);
 }
 
 export async function commitAllAction({
   message,
+  exactVersion,
   releaseType,
   force,
   verbose,
   ignoreMissingDependencies
 }: {
   message: string,
+  exactVersion: ?string,
   releaseType: string,
   force: ?boolean,
   verbose?: boolean,
@@ -44,5 +56,13 @@ export async function commitAllAction({
   const componentsList = new ComponentsList(consumer);
   const commitPendingComponents = await componentsList.listCommitPendingComponents();
   if (R.isEmpty(commitPendingComponents)) return null;
-  return consumer.commit(commitPendingComponents, message, releaseType, force, verbose, ignoreMissingDependencies);
+  return consumer.commit(
+    commitPendingComponents,
+    message,
+    exactVersion,
+    releaseType,
+    force,
+    verbose,
+    ignoreMissingDependencies
+  );
 }

@@ -222,6 +222,7 @@ export default class SourceRepository {
     source,
     depIds,
     message,
+    exactVersion,
     releaseType,
     force,
     consumer,
@@ -230,6 +231,7 @@ export default class SourceRepository {
     source: ConsumerComponent,
     depIds: BitId[],
     message: string,
+    exactVersion: ?string,
     releaseType: string,
     force: ?boolean,
     consumer: Consumer,
@@ -247,7 +249,7 @@ export default class SourceRepository {
       force,
       verbose
     });
-    component.addVersion(version, releaseType);
+    component.addVersion(version, releaseType, exactVersion);
 
     objectRepo.add(version).add(component);
 

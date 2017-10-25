@@ -4,7 +4,7 @@ import { is, equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merg
 import path from 'path';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
-import { VersionNotFound } from '../exceptions';
+import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
 import {
@@ -12,7 +12,8 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_DIST_DIRNAME,
   DEFAULT_BINDINGS_PREFIX,
-  DEFAULT_BIT_RELEASE_TYPE
+  DEFAULT_BIT_RELEASE_TYPE,
+  DEFAULT_BIT_VERSION
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
@@ -91,7 +92,14 @@ export default class Component extends BitObject {
     );
   }
 
-  addVersion(version: Version, releaseType: string = DEFAULT_BIT_RELEASE_TYPE) {
+  addVersion(version: Version, releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: ?string) {
+    // Add exact version instead of using the semver mechanism
+    if (exactVersion) {
+      // Version already exists
+      if (this.versions[exactVersion]) throw new VersionAlreadyExists(exactVersion, this.id());
+      this.versions[exactVersion] = version.hash();
+      return this;
+    }
     this.versions[this.version(releaseType)] = version.hash();
     return this;
   }
@@ -99,7 +107,7 @@ export default class Component extends BitObject {
   version(releaseType: string = DEFAULT_BIT_RELEASE_TYPE) {
     const latest = this.latest();
     if (latest) return semver.inc(latest, releaseType);
-    return 1;
+    return DEFAULT_BIT_VERSION;
   }
 
   id(): string {

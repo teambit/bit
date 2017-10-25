@@ -14,6 +14,7 @@ export default class Export extends Command {
   opts = [
     ['m', 'message <message>', 'message'],
     ['a', 'all', 'tag all new and modified components'],
+    ['', 'exact_version <exact_version>', 'exact version to tag'],
     ['', 'patch', 'increment the patch version number'],
     ['', 'minor', 'increment the minor version number'],
     ['', 'major', 'increment the major version number'],
@@ -28,6 +29,7 @@ export default class Export extends Command {
     {
       message,
       all,
+      exact_version,
       patch,
       minor,
       major,
@@ -37,6 +39,7 @@ export default class Export extends Command {
     }: {
       message: string,
       all: ?boolean,
+      exact_version: ?string,
       patch: ?boolean,
       minor: ?boolean,
       major: ?boolean,
@@ -56,7 +59,7 @@ export default class Export extends Command {
 
     const releaseFlags = [patch, minor, major].filter(x => x);
     if (releaseFlags.length > 1) {
-      return Promise.reject('you can use only one of the version types - patch, minor, major');
+      return Promise.reject('you can use only one of the following - patch, minor, major');
     }
 
     // const releaseType = major ? 'major' : (minor ? 'minor' : (patch ? 'patch' : DEFAULT_BIT_RELEASE_TYPE));
@@ -72,6 +75,7 @@ export default class Export extends Command {
     if (all) {
       return commitAllAction({
         message,
+        exactVersion: exact_version,
         releaseType,
         force,
         verbose,
@@ -81,6 +85,7 @@ export default class Export extends Command {
     return commitAction({
       id,
       message,
+      exactVersion: exact_version,
       releaseType,
       force,
       verbose,
