@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - add `--outdated` flag to `bit list` command to show the remote versions of components
+- fix bug which make imported components considered as modified
 
 ## [0.10.9] - 2017-10-18
 
