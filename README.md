@@ -34,7 +34,7 @@ Bit is an open-source collaborative project, actively maintained by a full-time 
 ## Demos & Tutorials
 
 1. A collection of [React movie-app components](https://bitsrc.io/bit/movie-app) on the free Bit community hub.
-2. A matching [React component library](https://github.com/itaymendel/movie-app)) with Bit.
+2. A matching [React component library](https://github.com/itaymendel/movie-app) with Bit.
 3. A [short demo video](https://www.youtube.com/watch?v=vm_oOghNEYs).
 4. A [quick-start tutorial](https://teambit.github.io/docs/react-tutorial.html) for Bit with React components. 
 
