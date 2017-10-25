@@ -145,8 +145,8 @@ export default class Helper {
   listRemoteScope(bare: boolean = true) {
     return this.runCmd(`bit list ${this.remoteScope} ${bare ? '--bare' : ''}`);
   }
-  listLocalScope() {
-    return this.runCmd('bit list ');
+  listLocalScope(options: string = '') {
+    return this.runCmd(`bit list ${options}`);
   }
   getNewBareScope() {
     const scopeName = v4();
