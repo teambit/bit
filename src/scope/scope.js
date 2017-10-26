@@ -112,7 +112,7 @@ export default class Scope {
     return Promise.all(
       components
         .filter(comp => !(comp instanceof Symlink))
-        .map(c => c.toConsumerComponent(c.latest().toString(), this.name, this.objects))
+        .map(c => c.toConsumerComponent(c.latestExisting(this.objects).toString(), this.name, this.objects))
     );
   }
 
