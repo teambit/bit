@@ -58,7 +58,9 @@ export default class Fs implements Network {
   }
 
   latestVersions(componentIds: BitId[]) {
-    return this.getScope().latestVersions(componentIds);
+    return this.getScope()
+      .latestVersions(componentIds)
+      .then(componentsIds => componentsIds.map(componentId => componentId.toString()));
   }
 
   list(): Promise<[]> {

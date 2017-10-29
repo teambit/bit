@@ -90,11 +90,15 @@ export default class Repository {
     return readFile(this.objectPath(ref));
   }
 
-  loadSync(ref: Ref): BitObject {
+  loadSync(ref: Ref, throws: boolean = true): BitObject {
     try {
-      return BitObject.parseSync(fs.readFileSync(this.objectPath(ref)), this.types);
+      const objectFile = fs.readFileSync(this.objectPath(ref));
+      return BitObject.parseSync(objectFile, this.types);
     } catch (err) {
-      throw new HashNotFound(ref.toString());
+      if (throws) {
+        throw new HashNotFound(ref.toString());
+      }
+      return null;
     }
   }
 

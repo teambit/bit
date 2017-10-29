@@ -52,7 +52,10 @@ export default class ComponentsList {
         if (!allVersions[i]) {
           // the component has a REF of its latest version, however, the object of the latest version is missing
           const bitId = BitId.parse(key);
-          throw new CorruptedComponent(bitId.toStringWithoutVersion(), bitId.version);
+          logger.warn(
+            `the model representation of ${bitId.toStringWithoutVersion()} is missing ${bitId.version} version, if this component is nested, this is a normal behaviour, otherwise, the component is corrupted`
+          );
+          // throw new CorruptedComponent(bitId.toStringWithoutVersion(), bitId.version);
         }
         componentsVersions[key] = allVersions[i];
       });
