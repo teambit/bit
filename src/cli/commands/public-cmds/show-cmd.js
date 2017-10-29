@@ -13,18 +13,24 @@ export default class Show extends Command {
   opts = [
     ['j', 'json', 'return a json version of the component'],
     ['v', 'versions', 'return a json of all the versions of the component'],
+    ['o', 'outdated', 'show latest version from the remote scope (if exists)'],
     ['c', 'compare [boolean]', 'compare current file system component to latest tagged component [default=latest]']
   ];
   loader = true;
 
   action(
     [id]: [string],
-    { json, versions, compare = false }: { json: ?boolean, versions: ?boolean, compare?: boolean }
+    {
+      json,
+      versions,
+      outdated,
+      compare = false
+    }: { json: ?boolean, versions: ?boolean, outdated: ?boolean, compare?: boolean }
   ): Promise<*> {
     function getBitComponent(allVersions: ?boolean) {
       const bitId = BitId.parse(id);
-      if (bitId.isLocal()) return getConsumerComponent({ id, compare });
-      return getScopeComponent({ id, allVersions });
+      if (bitId.isLocal()) return getConsumerComponent({ id, compare, showRemoteVersions: outdated });
+      return getScopeComponent({ id, allVersions, showRemoteVersions: outdated });
     }
 
     if (versions) {
@@ -37,7 +43,8 @@ export default class Show extends Command {
     return getBitComponent().then(({ component, componentModel }) => ({
       component,
       componentModel,
-      json
+      json,
+      outdated
     }));
   }
 
@@ -46,13 +53,15 @@ export default class Show extends Command {
     componentModel,
     json,
     versions,
-    components
+    components,
+    outdated
   }: {
     component: ?ConsumerComponent,
     modelComponent?: ConsumerComponent,
     json: ?boolean,
     versions: ?boolean,
-    components: ?(ConsumerComponent[])
+    components: ?(ConsumerComponent[]),
+    outdated: ?boolean
   }): string {
     if (versions) {
       if (R.isNil(components) || R.isEmpty(components)) {
@@ -63,6 +72,6 @@ export default class Show extends Command {
     }
 
     if (!component) return 'could not find the requested component';
-    return json ? component.toString() : paintComponent(component, componentModel);
+    return json ? component.toString() : paintComponent(component, componentModel, outdated);
   }
 }

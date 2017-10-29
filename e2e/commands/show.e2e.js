@@ -373,4 +373,95 @@ function add(a, b) {
       expect(showCmd).to.throw('error - nothing to compare no previous versions found');
     });
   });
+  describe('with --outdated flag', () => {
+    describe('with a consumer component', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+        helper.createComponent('utils', 'is-type.js', isTypeFixture);
+        helper.addComponent('utils/is-type.js');
+        helper.commitComponent('utils/is-type');
+        helper.commitComponent('utils/is-type', 'msg', '-f');
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-type@1');
+
+        const isStringFixture =
+          "const isType = require('bit/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+        helper.createComponent('utils', 'is-string.js', isStringFixture);
+        helper.addComponent('utils/is-string.js');
+        helper.commitAllComponents();
+      });
+      describe('when a component uses an old version of a dependency', () => {
+        it('should indicate that the remote version is larger than the current version', () => {
+          const output = helper.showComponent('utils/is-string --outdated --json');
+          const outputParsed = JSON.parse(output);
+          expect(outputParsed.dependencies[0].currentVersion).to.equal('1');
+          expect(outputParsed.dependencies[0].localVersion).to.equal(2);
+          expect(outputParsed.dependencies[0].remoteVersion).to.equal('2');
+        });
+      });
+      describe('when the dependency was updated locally but not exported yet', () => {
+        before(() => {
+          helper.commitComponent('utils/is-type', 'msg', '-f');
+        });
+        it('should indicate that the current version is larger than the remote version', () => {
+          const output = helper.showComponent('utils/is-string --outdated --json');
+          const outputParsed = JSON.parse(output);
+          expect(outputParsed.dependencies[0].currentVersion).to.equal('3');
+          expect(outputParsed.dependencies[0].localVersion).to.equal(3);
+          expect(outputParsed.dependencies[0].remoteVersion).to.equal('2');
+        });
+      });
+      describe('when the dependency is up to date', () => {
+        before(() => {
+          helper.exportAllComponents();
+        });
+        it('should indicate that all versions are the same', () => {
+          const output = helper.showComponent('utils/is-string --outdated --json');
+          const outputParsed = JSON.parse(output);
+          expect(outputParsed.dependencies[0].currentVersion).to.equal('3');
+          expect(outputParsed.dependencies[0].localVersion).to.equal(3);
+          expect(outputParsed.dependencies[0].remoteVersion).to.equal('3');
+        });
+      });
+    });
+    describe('with a scope component', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+        helper.createComponent('utils', 'is-type.js', isTypeFixture);
+        helper.addComponent('utils/is-type.js');
+        helper.commitComponent('utils/is-type');
+        helper.commitComponent('utils/is-type', 'msg', '-f');
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-type@1');
+
+        const isStringFixture =
+          "const isType = require('bit/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+        helper.createComponent('utils', 'is-string.js', isStringFixture);
+        helper.addComponent('utils/is-string.js');
+        helper.commitAllComponents();
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        // @todo: add a test case before importing the component. Currently there is a bug that it downloads the
+        // component into the model in such a case
+        helper.importComponent('utils/is-string@1');
+      });
+      it('should show the remote and local versions', () => {
+        const output = helper.showComponent(`${helper.remoteScope}/utils/is-string --outdated --json`);
+        const outputParsed = JSON.parse(output);
+        expect(outputParsed.dependencies[0].currentVersion).to.equal('1');
+        expect(outputParsed.dependencies[0].localVersion).to.equal(2);
+        expect(outputParsed.dependencies[0].remoteVersion).to.equal('2');
+      });
+    });
+  });
 });

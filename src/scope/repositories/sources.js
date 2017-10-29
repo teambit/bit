@@ -76,6 +76,9 @@ export default class SourceRepository {
       !bitId.getVersion().latest &&
       !R.contains(bitId.getVersion().versionNum, foundComponent.listVersions())
     ) {
+      logger.debug(
+        `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum} was not found`
+      );
       return null;
     }
     return foundComponent;
