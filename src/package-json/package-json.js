@@ -4,11 +4,21 @@ import R from 'ramda';
 import path from 'path';
 import { PackageJsonAlreadyExists, PackageJsonNotFound } from '../exceptions';
 import { PACKAGE_JSON } from '../constants';
+import generatePostInstallScript from './postInstall';
 
 function composePath(componentRootFolder: string) {
   return path.join(componentRootFolder, PACKAGE_JSON);
 }
 
+function convertComponenstsToValidPackageNames(registryPrefix: string, bitDependencies: Object): Object {
+  const obj = {};
+  if (R.isEmpty(bitDependencies) || R.isNil(bitDependencies)) return obj;
+  Object.keys(bitDependencies).forEach(key => {
+    var name = key.replace(/\//g, '.');
+    obj[name] = `${registryPrefix}/${name}/-/${name}-${bitDependencies[key]}.tgz`;
+  });
+  return obj;
+}
 function hasExisting(componentRootFolder: string, throws?: boolean = false): boolean {
   const packageJsonPath = composePath(componentRootFolder);
   const exists = fs.pathExistsSync(packageJsonPath);
@@ -18,7 +28,7 @@ function hasExisting(componentRootFolder: string, throws?: boolean = false): boo
   return exists;
 }
 
-const PackageJsonPropsNames = ['name', 'version', 'homepage', 'main', 'dependencies', 'devDependencies', 'peerDependencies'];
+const PackageJsonPropsNames = ['name', 'version', 'homepage', 'main', 'dependencies', 'devDependencies', 'peerDependencies', 'license', 'scripts'];
 
 export type PackageJsonProps = {
   name?: string,
@@ -27,7 +37,10 @@ export type PackageJsonProps = {
   main?: string,
   dependencies?: Object,
   devDependencies?: Object,
-  peerDependencies?: Object
+  peerDependencies?: Object,
+  license?:string,
+  bitDependencies?: Object,
+  scripts?: Object,
 };
 
 export default class PackageJson {
@@ -39,16 +52,21 @@ export default class PackageJson {
   devDependencies: Object;
   peerDependencies: Object;
   componentRootFolder: string; // path where to write the package.json
+  license: string;
+  scripts: Object
 
-  constructor(componentRootFolder: string, { name, version, homepage, main, dependencies, devDependencies, peerDependencies }: PackageJsonProps) {
-    this.name = name;
+
+  constructor(componentRootFolder: string, { name, version, homepage, main, dependencies, devDependencies, peerDependencies, license, registryPrefix, bitDependencies, scripts }: PackageJsonProps) {
+    this.name = name.replace(/\//g, '.');
     this.version = version;
     this.homepage = homepage;
     this.main = main;
-    this.dependencies = dependencies;
+    this.dependencies = Object.assign({}, dependencies, convertComponenstsToValidPackageNames(registryPrefix, bitDependencies));
     this.devDependencies = devDependencies;
     this.peerDependencies = peerDependencies;
     this.componentRootFolder = componentRootFolder;
+    this.license = license;
+    this.scripts = scripts;
   }
 
   toPlainObject(): Object {
@@ -67,11 +85,12 @@ export default class PackageJson {
     return JSON.stringify(this.toPlainObject(), null, 4);
   }
 
-  async write({ override = true }: { override?: boolean }): Promise<boolean> {
+  async write({ override = true , postInstallLinkData = [] }: { override?: boolean, postInstallLinkData: Array<Object> }): Promise<boolean> {
     if (!override && hasExisting(this.componentRootFolder)) {
       return Promise.reject(new PackageJsonAlreadyExists(this.componentRootFolder));
     }
 
+    this.scripts = R.isEmpty(postInstallLinkData) ? [] : generatePostInstallScript(this.componentRootFolder, postInstallLinkData)
     const plain = this.toPlainObject();
 
     return fs.outputJSON(composePath(this.componentRootFolder), plain, { spaces: '\t' });
@@ -95,4 +114,5 @@ export default class PackageJson {
     hasExisting(composedPath, THROWS);
     return fs.readJson(composePath(composedPath));
   }
+
 }

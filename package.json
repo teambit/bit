@@ -1,6 +1,6 @@
 {
   "name": "bit-javascript",
-  "version": "0.10.5",
+  "version": "0.10.6-dev1",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint src && flow check || true",
@@ -34,6 +34,7 @@
     "camelcase": "^4.0.0",
     "caporal": "^0.5.0",
     "chalk": "^1.1.3",
+    "child-process-promise": "^2.2.1",
     "dependency-tree": "teambit/node-dependency-tree",
     "fs-extra": "^4.0.2",
     "glob": "^7.1.1",
