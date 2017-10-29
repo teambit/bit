@@ -143,12 +143,13 @@ export default class Scope {
     return remotes.latestVersions(externals, this);
   }
 
-  async latestVersions(componentIds: BitId[]): Promise<string[]> {
+  async latestVersions(componentIds: BitId[]): Promise<BitId[]> {
+    componentIds = componentIds.map(componentId => BitId.parse(componentId.toStringWithoutVersion()));
     const components = await this.sources.getMany(componentIds);
     return components.map((component) => {
-      const componentId = component.id;
+      const componentId = BitId.parse(component.id.toString());
       componentId.version = component.component.latest();
-      return componentId.toString();
+      return componentId;
     });
   }
 
