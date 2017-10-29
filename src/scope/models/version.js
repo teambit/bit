@@ -8,7 +8,7 @@ import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
 import type { Doclet } from '../../jsdoc/parser';
-import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX } from '../../constants';
+import { DEFAULT_BUNDLE_FILENAME } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
 
 type CiProps = {
@@ -174,7 +174,7 @@ export default class Version extends BitObject {
           })
           : null,
         compiler: this.compiler ? this.compiler.toString() : null,
-        bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+        bindingPrefix: this.bindingPrefix || null,
         tester: this.tester ? this.tester.toString() : null,
         log: {
           message: this.log.message,
