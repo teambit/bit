@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add `--outdated` flag to `bit show` command to show the local and remote versions of a component
+- add `--outdated` flag to `bit list` command to show the local and remote versions of components
 - prevent bare-scope corruption when the export process fails 
 - fixed stderr maxBuffer exceeded bug in ci-update cmd
-- add `--outdated` flag to `bit list` command to show the remote versions of components
 
 ## [0.10.9] - 2017-10-18
 

@@ -8,18 +8,7 @@ import arrayDifference from 'array-difference';
 import ConsumerComponent from '../../consumer/component/consumer-component';
 import paintDocumentation from './docs-template';
 
-const fields = [
-  'id',
-  'compiler',
-  'tester',
-  'language',
-  'mainFile',
-  'dependencies',
-  'packages',
-  'files',
-  'specs',
-  'deprecated'
-];
+const fields = ['id', 'compiler', 'tester', 'language', 'mainFile', 'packages', 'files', 'specs', 'deprecated'];
 
 const header = [{ value: 'ID', width: 20, headerColor: 'cyan' }];
 const opts = {
@@ -36,6 +25,7 @@ function comparator(a, b) {
   }
   return a === b;
 }
+
 function convertObjectToPrintable(component) {
   const obj = {};
   const {
@@ -44,7 +34,6 @@ function convertObjectToPrintable(component) {
     lang,
     compilerId,
     testerId,
-    dependencies,
     packageDependencies,
     files,
     mainFile,
@@ -57,10 +46,6 @@ function convertObjectToPrintable(component) {
   obj.language = lang || null;
   obj.tester = testerId ? testerId.toString() : null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
-  obj.dependencies =
-    !R.isEmpty(dependencies) && !R.isNil(dependencies)
-      ? dependencies.map(dependency => dependency.id.toString())
-      : null;
   obj.packages =
     !R.isEmpty(packageDependencies) && !R.isNil(packageDependencies)
       ? Object.keys(packageDependencies).map(key => `${key}@${packageDependencies[key]}`)
@@ -78,7 +63,43 @@ function convertObjectToPrintable(component) {
   return obj;
 }
 
-function paintWithoutCompare(component: ConsumerComponent) {
+function generateDependenciesTable(component, showRemoteVersion) {
+  if (!component.dependencies || !component.dependencies.length) return '';
+  const dependencyHeader = [];
+  if (showRemoteVersion) {
+    dependencyHeader.push({ value: 'Dependency ID', width: 80, headerColor: 'cyan' });
+    dependencyHeader.push({ value: 'Current Version', width: 20, headerColor: 'cyan' });
+    dependencyHeader.push({ value: 'Local Version', width: 20, headerColor: 'cyan' });
+    dependencyHeader.push({ value: 'Remote Version', width: 20, headerColor: 'cyan' });
+  } else {
+    dependencyHeader.push({ value: 'Dependencies', width: 80, headerColor: 'cyan' });
+  }
+  const dependencyRows = [];
+  component.dependencies.forEach((dependency) => {
+    const dependencyId = showRemoteVersion ? dependency.id.toStringWithoutVersion() : dependency.id.toString();
+    const row = [dependencyId];
+    if (showRemoteVersion) {
+      const dependencyVersion = parseInt(dependency.currentVersion);
+      const localVersion = parseInt(dependency.localVersion);
+      const remoteVersion = dependency.remoteVersion ? parseInt(dependency.remoteVersion) : null;
+      // if all versions are equal, paint them with green. Otherwise, paint with red
+      const color =
+        (remoteVersion && remoteVersion === localVersion && remoteVersion === dependencyVersion) ||
+        (!remoteVersion && localVersion === dependencyVersion)
+          ? 'green'
+          : 'red';
+      row.push(c[color](dependencyVersion));
+      row.push(c[color](localVersion));
+      row.push(remoteVersion ? c[color](remoteVersion) : 'N/A');
+    }
+    dependencyRows.push(row);
+  });
+
+  const dependenciesTable = new Table(dependencyHeader, dependencyRows);
+  return dependenciesTable.render();
+}
+
+function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: boolean) {
   const printableComponent = convertObjectToPrintable(component);
   const rows = fields
     .map((field) => {
@@ -96,12 +117,18 @@ function paintWithoutCompare(component: ConsumerComponent) {
     })
     .filter(x => x);
 
-  const table = new Table(header, [], opts);
-  table.push(...rows);
-  return table.render() + paintDocumentation(component.docs);
+  const componentTable = new Table(header, rows, opts);
+  const componentTableStr = componentTable.render();
+  const dependenciesTableStr = generateDependenciesTable(component, showRemoteVersion);
+
+  return componentTableStr + dependenciesTableStr + paintDocumentation(component.docs);
 }
 
-function paintWithCompare(originalComponent: ConsumerComponent, componentToCompareTo: ConsumerComponent) {
+function paintWithCompare(
+  originalComponent: ConsumerComponent,
+  componentToCompareTo: ConsumerComponent,
+  showRemoteVersion: boolean
+) {
   const printableOriginalComponent = convertObjectToPrintable(originalComponent);
   const printableComponentToCompare = convertObjectToPrintable(componentToCompareTo);
 
@@ -133,10 +160,14 @@ function paintWithCompare(originalComponent: ConsumerComponent, componentToCompa
     })
     .filter(x => x);
 
-  const table = new Table(header, []);
-  table.push(...rows);
-  return table.render();
+  const componentTable = new Table(header, rows);
+  const componentTableStr = componentTable.render();
+  const dependenciesTableStr = generateDependenciesTable(originalComponent, showRemoteVersion);
+  return componentTableStr + dependenciesTableStr;
 }
-export default (component: ConsumerComponent, componentModel: ConsumerComponent) => {
-  return componentModel ? paintWithCompare(component, componentModel) : paintWithoutCompare(component);
+
+export default (component: ConsumerComponent, componentModel: ConsumerComponent, showRemoteVersion: boolean) => {
+  return componentModel
+    ? paintWithCompare(component, componentModel, showRemoteVersion)
+    : paintWithoutCompare(component, showRemoteVersion);
 };
