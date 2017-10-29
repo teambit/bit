@@ -122,8 +122,7 @@ export default class Version extends BitObject {
           tester: obj.tester,
           log: obj.log,
           dependencies,
-          packageDependencies: obj.packageDependencies,
-          bindingPrefix: obj.bindingPrefix
+          packageDependencies: obj.packageDependencies
         },
         val => !!val
       )
