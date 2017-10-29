@@ -247,7 +247,7 @@ export default class SSH implements Network {
     return new Promise((resolve, reject) => {
       if (!sshConfig.privateKey) {
         reject(
-          'Could not authenticate\nPlease make sure you have configured ssh access and permissions to the remote scope'
+          'could not locate private SSH key file.\nuse the \"bit config set ssh_key_file\" command to configure its location.'
         );
       }
       try {

@@ -15,143 +15,176 @@
 
 [Website & community](https://bitsrc.io) • [Short video](https://www.youtube.com/watch?v=vm_oOghNEYs)  • [Demo project](https://github.com/itaymendel/movie-app)  • [Demo collection](https://bitsrc.io/bit/movie-app#styles)
 
-Bit enables you to share components from your existing source-code into shared playlist-like collections, share them with your team, and install or update them from any project with simple & curated maintenance. 
+Bit is a fast and powerful way to share and sync source code components between different SCM repositories and projects. As a nearly-seamless extension for your Git workflow, it enables you to tag and share components directly from your project's repository and install them in other projects while keeping them synced.
 
-You and your team can easily share and discover components, collaborate, get updates and stay in sync.
+![alt text](https://storage.googleapis.com/bit-docs/Bit-flow.png "Bit basic function 1")
 
-Bit works great for React or Angular components, Node modules, utility functions and more.
+You can download and add Bit to any project or library you want to share components from. Adding Bit to any project, existing or new, will not change its src code. Bit works great for React or Angular components, Node modules, utility functions and more.
 
-* **Turn any existing subset of files into a reusable component** without changing your source code or file structure. Turn any bulk of source code into a shared collection of components using simple commands.
+* **Tag and share any subset of files as a reusable component** directly from your project's repository, without changing your source code or file structure. Share multiple components in seconds and sync them across projects.
 
-* **Great discoverability for components** you and your team love and trust. Determine and monitor component quality through auto-generated docs and test results.
+* **Organize and discover components** shared and loved by your team. Determine and monitor component quality through auto-generated docs, test results and visual rendering.
 
 * **Gain universal control over your dependency graph**. Commit and test vast dependency changes at once. Build and test any component in any application environment. 
 
-* ***Coming soon:*** Install components with the tools you love - NPM, Yarn or Bit. Create and update components in seconds from any project using Bit, and use the tool of you choice to install them.
+* ***Coming soon:*** Install components with NPM and Yarn.
 
 Bit is an open-source collaborative project, actively maintained by a full-time venture-backed team and used by organizations and open source teams.
 
-## Demos
+## Demos & Tutorials
 
-1. An example of a React [movie-app component library](https://github.com/itaymendel/movie-app) shared with Bit [as a collection of individually accessible and discoverable components](https://bitsrc.io/bit/movie-app#styles) - without forcing source-code and filesystem changes to the repository itself.
-
-2. A [short demo video](https://www.youtube.com/watch?v=vm_oOghNEYs) of sharing these components across applications.
+1. A collection of [React movie-app components](https://bitsrc.io/bit/movie-app) on the free Bit community hub.
+2. A matching [React component library](https://github.com/itaymendel/movie-app) with Bit.
+3. A [short demo video](https://www.youtube.com/watch?v=vm_oOghNEYs).
+4. A [quick-start tutorial](https://teambit.github.io/docs/react-tutorial.html) for Bit with React components. 
 
 ## Supported Languages
 Bit is language agnostic. Still, it requires binding and additional language sensitive features for different programming languages. To do this, Bit uses language-specific drivers:
 
 * [bit-javascript](https://github.com/teambit/bit-javascript)
 
-## Quick start
+## Quick Start
 
-#### Usage example commands
-
-You can find a list of command examples [here](https://docs.bitsrc.io/en/article/usage).
+* You can find the full getting started guide [here](https://teambit.github.io/bit/getting-started.html).
+* You can find a list of command examples [here](https://docs.bitsrc.io/en/article/usage).
 
 ### Install Bit
 
-See [different install methods](https://docs.bitsrc.io/en/article/02-install-bit-on-your-computer) for different operation systems.
+See [different install methods](https://teambit.github.io/bit/installation.html) for different operation systems.
 
-### Initialize Bit for your project
+### Initialize Bit
 
-Initializing Bit on an existing project adds Bit’s virtualization.
+To start tracking even the most simple of components, we will need to create a workspace (local Scope) for your project. Use the local scope to organize and track the code components within your project.
+
+To create a local Bit Scope for your project, run this command:
 
 ```sh
 bit init
 ```
 
-### Add components
+### Create a Simple Component
 
-Bit `add` allows you to track a subset of files or directories as a reusable code component. Classic use cases would be web components (native, react, angular, etc.), utility functions or any other node.js module.
-
-```sh
-bit add src/utils/left-pad.js
-# tracking component utils/left-pad:
-#  added src/utils/left-pad.js
-```
-
-You can use glob patterns to track a vast amount of components at once:
-
-```sh
-bit add src/utils/*.js
-# tracking 24 new components
-```
-
-### Commit
-
-Bit `commit` commits changes to new and existing components in your application.
-
-To check which components were changed or added and are about to be committed, you can use `bit status`:
-
-```sh
-bit status
-# new components:
-#   utils/left-pad
-# modified components:
-#   utils/is-string
-```
-
-To commit all changes use:
-
-```sh
-bit commit -am ‘committed my first tracked code components'
-```
-
-Now all your components are staged, and ready to be pushed or used from any other project.
-
-### Export
-
-You can push staged/committed components to any remote Scope hosted on [bitsrc.io](https://bitsrc.io) or created on any machine (and connected via SSH).
-
-You can set up a free Bit Scope at Bit’s [community hub](https://bitsrc.io), and follow the [setup instructions](https://docs.bitsrc.io/en/article/07-create-a-free-bitsrc-scope).
-
-It’s also possible to easily set up a [remote scope on your own
-computer](https://docs.bitsrc.io/en/article/set-up-remote-bit-scope).
-
-Once you have a remote scope ready, run the export command:
-
-```sh
-bit export username.scope_name
-# exported 2 components to scope `username.scope_name`
-```
-
-### Import
-
-Bit `import` enables you to install a component as an application part in any destination on your project’s file system.
-
-Let's import the component we just created to a new project.
-
-1. Create a new project.
-2. Initialize a new scope using the bit init command.
-3. Import the component
-
-  ```sh
-  bit import username.scope_name/utils/left-pad
-  ```
-
-The component is now in the components directory, ready to be used in your code.
-
-**Use:**
+A Bit component can be a React or Angular component or any other Javascript component. 
+The simplest Bit component is a single file, with zero dependencies.
+Let's create a simple JavaScript module.  Create a file called `index.js` and paste the following code in the file:
 
 ```js
-const component = require('./components/utils/left-pad');
+/**
+ * Vaildates if input is string- throws exception if not
+ * @param {string} name
+ * @returns bool
+ * @example
+ * ```js
+ * isString(str)
+ * ```
+ */
+module.exports = function isString(input) {
+  if (typeof input !== 'string') {
+    throw new TypeError('Not a valid string');
+  }
+};
+```
+
+Let's track our component, and name it 'utils/is-string'.
+
+```sh
+bit add index.js -i utils/is-string
+```
+
+You can also use glob patterns to track a group of components together.
+
+Now run a quick `bit status` command to validate that `utils/is-string` is being tracked.
+
+### Tag a Component
+
+Now, let's Tag the newly tracked component. 
+Tagging a component will lock of all its dependencies (in this case we have none), and create a version for the component.
+
+```sh
+bit tag -am 'initial version'
+```
+
+Another quick `bit status` command will show that the component is now staged, and ready to be exported.
+
+### Create a Scope
+
+Components are shared into playlist-like collections called Scopes. A scope is a collection of shared components with a common theme or ownership. Scopes allow you to organize and maintain components in a single location, while individually installing and updating them. They also act as a registry for the components it hosts. 
+
+Scopes are super lightweight and can be [set up on any server](https://teambit.github.io/docs/advanced.html#host-your-own-scope), in any location. 
+
+You can also freely host your Scopes on the Bit community hub, [BitSrc](https://bitsrc.io).
+
+For this quick-start guide, let's [connect to to BitSrc](https://teambit.github.io/docs/bitsrc-setup.html##signup-to-bitsrc) and [create a Scope](https://teambit.github.io/docs/getting-started.html#create-a-scope).
+
+### Export Components
+
+After creating a Scope, run the `export` command. 
+This will publish your components and make them available to share in other projects:
+
+```
+bit export <username>.<scopename>
+```
+
+And you're done!  
+Browse your Scope and your different components which are now available for import.
+
+You can check out an example or React movie-app components exported to BitSrc [here](bitsrc.io/bit/movie-app).
+
+### Import Components
+
+Bit enables you to import individual components to use in your different projects.  
+You can install a component as an application part in any destination on your project’s file system.
+
+Let's import the components we just created to a new project.
+
+1. Create a new directory for the consuming project.
+2. Initialize a new scope using the `bit init` command.
+3. Import the component:
+
+```sh
+bit import <username>.<scopename>/utils/is-string
+```
+
+You can now use the component in your new project:
+
+```
+const component = require('./components/utils/is-string');
 # 'components' is the default location for imported components
 ```
 
+### Updating Components
+
+Components can be updated from any project which is using them.
+
+To update a component, simply change the code from inside your project's context. 
+Afterwards tag it again, and export it back to your Scope as a new version of your component.
+
+1. Open the file you just imported.
+2. Make any change in it.
+3. Run the `bit status` command to check that `utils/is-string` has been modified.
+4. Tag a new version for the component:
+
+```sh
+bit tag -am "updated component"
+```
+
+5. Export the new version of the component back to the Scope:
+
+```sh
+bit export <username>.<scopename>
+```
+
+Now you can go back to your browser, and see that there's a new version for `utils/is-string` with the changes we've made from the consumer project.
+
 ## Why Bit
 
-In today's software architecture, and with new frameworks such as React, Angular and more, it becomes increasingly important to share, discover and reuse different parts of our source code with our team and across repos.
+Achieving true modularity with reusable and encapsulated components is a considerable challenge.
 
-Using shared libraries resembles in many ways to using a static CD-Rom: it contains a lot of stuff we don't need in every use, they add weight and complexity, maintaining or updating them is hard - and they make discoverability very difficult.
+With every new feature and every new member joining our team, we found it increasingly hard to share our code and keep it synced between projects. Determined to avoid duplications, we considered many solutions including an arsenal of small repos and packages or creating vast shared static libraries.
 
-To solve this, we created Bit.
-It allows us to share any number of parts from our source-code into a playlist-like collection of reusable components, and share them with our team across projects. Individual components can be discovered, used or updated from any project.
+However, issues such as the publish overhead, discoverability, and maintainability prevented us from truly sharing and syncing our components as a team between our projects.
 
-With Bit, we can easily organize, share and discover our components, reduce our app's size and build times, use nothing but the code we need, and get useful information for choosing the rights components.
-
-We've been using it for over 8 months, and so do many organizations and different communities. 
-Feel free to try it out, contribute or add drivers for any language you wish.
-
+Finally, we decided to build our own open-source project that will allow us to share components directly from our SCM repo’s source code, organize them as a team with defined ownership and sync them between different projects. In a way, Bit is a “virtual monorepo” that syncs components on top of our entire codebase, with both multi-repo and mono-repo architectures in mind.
 
 ## Contributing
 
@@ -161,7 +194,7 @@ See [Contributing](CONTRIBUTING.md).
 
 ## Feedback
 
-Feedbacks are more than welcome: [team@bitsrc.io](mailto:team@bitsrc.io)
+Feedbacks are more than welcome: [team@bitsrc.io](mailto:team@bitsrc.io) or via Bit's [Gitter channel](https://gitter.im/bit-src/Bit).
 
 ## License
 

@@ -735,4 +735,37 @@ export default class Consumer {
     const bitIds = ids.map(bitId => BitId.parse(bitId));
     return remote ? this.removeRemote(bitIds, force) : this.removeLocal(bitIds, force, track);
   }
+
+  async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
+    logger.debug(`addRemoteAndLocalVersionsToDependencies for ${component.id.toString()}`);
+    let modelDependencies = [];
+    if (loadedFromFileSystem) {
+      // when loaded from file-system, the dependencies versions are fetched from bit.map.
+      // try to find the model version of the component to get the stored versions of the dependencies
+      try {
+        const mainComponentFromModel = await this.scope.loadRemoteComponent(component.id);
+        modelDependencies = mainComponentFromModel.dependencies;
+      } catch (e) {
+        // do nothing. the component is probably on the file-system only and not on the model.
+      }
+    }
+    const dependenciesIds = component.dependencies.map(dependency => dependency.id);
+    const localDependencies = await this.scope.latestVersions(dependenciesIds);
+    const remoteVersionsDependencies = await this.scope.fetchRemoteVersions(dependenciesIds);
+    component.dependencies.forEach((dependency) => {
+      const dependencyIdWithoutVersion = dependency.id.toStringWithoutVersion();
+      const removeVersionId = remoteVersionsDependencies.find(
+        remoteId => remoteId.toStringWithoutVersion() === dependencyIdWithoutVersion
+      );
+      const localVersionId = localDependencies.find(
+        localId => localId.toStringWithoutVersion() === dependencyIdWithoutVersion
+      );
+      const modelVersionId = modelDependencies.find(
+        modelDependency => modelDependency.id.toStringWithoutVersion() === dependencyIdWithoutVersion
+      );
+      dependency.remoteVersion = removeVersionId ? removeVersionId.version : null;
+      dependency.localVersion = localVersionId ? localVersionId.version : null;
+      dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
+    });
+  }
 }

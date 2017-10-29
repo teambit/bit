@@ -12,11 +12,13 @@ import Component from '../../../consumer/component';
 export default function getScopeComponent({
   id,
   allVersions,
-  scopePath
+  scopePath,
+  showRemoteVersions
 }: {
   id: string,
   allVersions: ?boolean,
-  scopePath: ?string
+  scopePath: ?string,
+  showRemoteVersions: ?boolean
 }) {
   function loadFromScope() {
     return loadScope(scopePath || process.cwd()).then((scope) => {
@@ -49,6 +51,11 @@ export default function getScopeComponent({
         const component = await consumer.scope
           .remotes()
           .then(remotes => remotes.resolve(bitId.scope, consumer.scope).then(remote => remoteShow(remote, bitId)));
+
+        if (showRemoteVersions) {
+          await consumer.addRemoteAndLocalVersionsToDependencies(component, false);
+        }
+
         return { component };
       }
 
