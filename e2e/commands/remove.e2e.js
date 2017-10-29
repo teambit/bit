@@ -36,7 +36,7 @@ describe('bit remove command', function () {
       expect(bitMap).to.not.have.property('bar/foo');
     });
     it('removed component should not be in new component when checking status', () => {
-      const listOutput = helper.listLocalScope('bar/foo');
+      const listOutput = helper.listLocalScope();
       expect(listOutput).to.not.contain.string('bar/foo');
       const status = helper.runCmd('bit status');
       expect(status.includes('bar/foo')).to.be.false;
@@ -55,7 +55,7 @@ describe('bit remove command', function () {
       expect(bitMap).to.have.property('bar/foo');
     });
     it('removed component should  be in new component', () => {
-      const listOutput = helper.listLocalScope('bar/foo');
+      const listOutput = helper.listLocalScope();
       expect(listOutput).to.not.contain.string('bar/foo');
       const status = helper.runCmd('bit status');
       expect(status.includes('new components')).to.be.true;
