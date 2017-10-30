@@ -2,7 +2,7 @@
 import path from 'path';
 import normalize from 'normalize-path';
 import R from 'ramda';
-import format from 'string-format';
+import groupBy from 'lodash.groupby';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_INDEX_NAME, COMPONENT_ORIGINS, AUTO_GENERATED_MSG } from '../../constants';
 import { outputFile, getWithoutExt, searchFilesIgnoreExt, getExt } from '../../utils';
 import logger from '../../logger/logger';
@@ -10,7 +10,6 @@ import { ComponentWithDependencies } from '../../scope';
 import Component from '../component';
 import BitMap from '../bit-map/bit-map';
 import { BitIds } from '../../bit-id';
-import groupBy from 'lodash.groupby';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -49,6 +48,10 @@ function _getLinkContent(filePath: string, importSpecifier?: Object): string {
         // @todo: implement
       }
     }
+    if (filePath.endsWith('.st.css')) {
+      // Wix Stylable format
+      return ":import { -st-from: '{filePath}'; }";
+    }
     return LINKS_CONTENT_TEMPLATES[fileExt];
   };
 
@@ -56,9 +59,9 @@ function _getLinkContent(filePath: string, importSpecifier?: Object): string {
     filePath = `./${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
   }
 
-  filePath = getWithoutExt(filePath); // remove the extension
+  const filePathWithoutExt = getWithoutExt(filePath);
   const template = getTemplate();
-  return format(template, { filePath: normalize(filePath) });
+  return template.replace('{filePath}', normalize(filePathWithoutExt));
 }
 
 /**

@@ -1,5 +1,5 @@
 /** @flow */
-import { loadConsumer } from '../../../consumer';
+import { loadConsumer, Consumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import NothingToCompareTo from './exceptions/nothing-to-compare-to';
 
@@ -12,7 +12,7 @@ export default (async function getConsumerBit({
   compare: boolean,
   showRemoteVersions: boolean
 }) {
-  const consumer = await loadConsumer();
+  const consumer: Consumer = await loadConsumer();
   const bitId = BitId.parse(id);
   const component = await consumer.loadComponent(bitId); // loads recent component
   if (showRemoteVersions) {
