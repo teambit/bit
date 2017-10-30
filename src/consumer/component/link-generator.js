@@ -50,7 +50,7 @@ function _getLinkContent(filePath: string, importSpecifier?: Object): string {
     }
     if (filePath.endsWith('.st.css')) {
       // Wix Stylable format
-      return ":import { -st-from: '{filePath}'; }";
+      return ':import { -st-from: "{filePath}.css"; }';
     }
     return LINKS_CONTENT_TEMPLATES[fileExt];
   };
