@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bug fix - re-adding a component after exporting it was considered as a new component 
+
 ## [0.10.10-dev.1] - 2017-10-30
 
 - add `--outdated` flag to `bit show` command to show the local and remote versions of a component
