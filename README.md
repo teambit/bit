@@ -17,20 +17,17 @@
 
 Bit is a fast and powerful way to share and sync source code components between different SCM repositories and projects. As a nearly-seamless extension for your Git workflow, it enables you to track and share components directly from your project's repository and install them in other projects while keeping them synced.
 
-Bit cuts the overhead of sharing components and syncing them between repositories. Instead of setting up additional repositories and packages, you can track and share any number of components directly from your repository's source code. Components are shared into organized playlist-like collections, which makes them individually available to discover, install and update from any repository or project.
+Classis use case for Bit are sharing [UI components](https://github.com/teambit/docs/blob/master/node-tutorial.md) (React, Angular etc), sharing [node.js components](https://github.com/teambit/docs/blob/master/node-tutorial.md), turning static shared libraries into "playlists" of individual components and more. 
 
-* **Share any subset of files as a reusable component** directly from your project's repository, without changing your source code or file structure. Share multiple components in seconds and sync them across projects.
+* **Track and share any subset of files as a reusable component** directly from your project's repository, without changing your source code or file structure. Share multiple components in seconds and sync them across projects.
 
-* **Organize and discover components** shared and loved by your team. Determine and monitor component quality through auto-generated docs, test results and visual rendering.
+* **Organize and discover components** shared into playlist-like collections, making them individually available. Determine and monitor component quality through auto-generated docs, test results and visual rendering.
 
-* **Universal control over your dependency graph**. Commit and test vast dependency changes at once. Build and test any component in any application environment. 
+* **Gain universal control over your dependency graph**: Commit and test vast dependency changes at once. Build and test any component in any application environment. 
 
-* ***Coming soon: NPM / Yarn component installation***.
+* *Coming soon: **NPM / Yarn install** for components shared with Bit*.
 
-* ***Coming soon: Event driven component updates***.
-
-
-Classis use case for Bit are [sharing UI components](https://github.com/teambit/docs/blob/master/node-tutorial.md) (React, Angular etc), [sharing node.js components](https://github.com/teambit/docs/blob/master/node-tutorial.md) between microservices, turning static shared libraries into "playlists" of individual components and more.
+* *Coming soon: **Event driven updates** for components*.
 
 Bit is an open-source collaborative project, actively maintained by a full-time venture-backed team and used by organizations and open source teams.
 
@@ -182,7 +179,7 @@ Now you can go back to your browser, and see that there's a new version for `uti
 
 ## Why Bit
 
-*You can learn more on Hackernoon: "[How we started sharing components as a team](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)".*
+*Learn more on Hackernoon: "[How we started sharing components as a team](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)".*
 
 With every new feature and every new member joining our team, we found it increasingly hard to share our code and keep it synced between projects. Determined to avoid duplications, we considered many solutions including an arsenal of small repos and packages or creating vast shared static libraries.
 
