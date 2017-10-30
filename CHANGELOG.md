@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - add `--outdated` flag to `bit show` command to show the local and remote versions of a component
 - add `--outdated` flag to `bit list` command to show the local and remote versions of components
 - fix bug which make imported components considered as modified
+- fix typo in help man page
 
 ## [0.10.9] - 2017-10-18
 
@@ -22,9 +23,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - new field in bit.json (bindingPrefix) for dynamic links
 - add flag to bit show to compare component in file system to last tagged component
 - better handling deleted files
-- improve bit add to convert files to valid bit names 
+- improve bit add to convert files to valid bit names
 - fixed - writing dist files to wrong directory during bit tag / test commands
-- fixed remove of exported component 
+- fixed remove of exported component
 - prevent bare-scope corruption when the export process fails
 - fixed stderr maxBuffer exceeded bug in ci-update cmd
 - throw error when tester doesn't return any result for test file
@@ -45,8 +46,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - new move command for moving files/directories of a component to a new location
 - create package.json for imported components
 - exclude import-pending components from 'new components' section
-- add ignore missing dependencies to commit  
-- save all dependencies on one configurable directory (components/.dependencies by default) 
+- add ignore missing dependencies to commit
+- save all dependencies on one configurable directory (components/.dependencies by default)
 - add support for tsx files
 - generate internal component links according to their compiled version
 - move a re-imported component to a new location when `bit import --prefix` is used

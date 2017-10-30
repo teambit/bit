@@ -29,13 +29,13 @@ ${chalk.underline('collaborate and share components')}
 
 ${chalk.underline('discover components')}
   ${chalk.cyan('list')}       list components on a local or a remote scope.
-  ${chalk.cyan('search')}     search for components by desired functionallity.
+  ${chalk.cyan('search')}     search for components by desired functionality.
 
 ${chalk.underline('examine component history and state')}
   ${chalk.cyan('log')}        show components(s) tag history.
-  ${chalk.cyan('show')}       show component overview.  
+  ${chalk.cyan('show')}       show component overview.
 
-${chalk.underline('component envrionment operations')}
+${chalk.underline('component environment operations')}
   ${chalk.cyan(
     'build'
   )}      build any set of components with configured compiler (component compiler or as defined in bit.json)
