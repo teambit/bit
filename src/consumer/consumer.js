@@ -250,13 +250,20 @@ export default class Consumer {
     rawIds: ?(string[]),
     cache?: boolean,
     writeToPath?: string,
-    withPackageJson?: boolean = true
+    withPackageJson?: boolean = true,
+    writeBitDependencies?: boolean = false
   ) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw));
     const componentDependenciesArr = await this.scope.getManyWithAllVersions(bitIds, cache);
-    await this.writeToComponentsDir(componentDependenciesArr, writeToPath, undefined, withPackageJson);
+    await this.writeToComponentsDir(
+      componentDependenciesArr,
+      writeToPath,
+      undefined,
+      withPackageJson,
+      writeBitDependencies
+    );
     return { dependencies: componentDependenciesArr };
   }
 
@@ -266,13 +273,20 @@ export default class Consumer {
     withEnvironments: ?boolean,
     cache?: boolean = true,
     writeToPath?: string,
-    withPackageJson?: boolean = true
+    withPackageJson?: boolean = true,
+    writeBitDependencies?: boolean = false
   ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
-      return this.importAccordingToBitJsonAndBitMap(verbose, withEnvironments, cache, withPackageJson);
+      return this.importAccordingToBitJsonAndBitMap(
+        verbose,
+        withEnvironments,
+        cache,
+        withPackageJson,
+        writeBitDependencies
+      );
     }
-    return this.importSpecificComponents(rawIds, cache, writeToPath, withPackageJson);
+    return this.importSpecificComponents(rawIds, cache, writeToPath, withPackageJson, writeBitDependencies);
   }
 
   importEnvironment(rawId: ?string, verbose?: boolean) {
@@ -314,7 +328,9 @@ export default class Consumer {
     componentDependencies: ComponentWithDependencies[],
     writeToPath?: string,
     force?: boolean = true,
-    withPackageJson?: boolean = true
+    withPackageJson?: boolean = true,
+    writeBitDependencies?: boolean = false,
+    createNpmLinkFiles?: boolean = false
   ): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
@@ -328,7 +344,9 @@ export default class Consumer {
         withPackageJson,
         origin: COMPONENT_ORIGINS.IMPORTED,
         consumerPath: this.getPath(),
-        driver: this.driver
+        driver: this.driver,
+        writeBitDependencies,
+        dependencies: componentWithDeps.dependencies
       });
     });
     const writtenComponents = await Promise.all(writeComponentsP);
@@ -363,7 +381,8 @@ export default class Consumer {
             origin: COMPONENT_ORIGINS.NESTED,
             parent: componentWithDeps.component.id,
             consumerPath: this.getPath(),
-            driver: this.driver
+            driver: this.driver,
+            dependencies: dep.dependencies
           })
           .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap))
           .then(() => dep);
@@ -375,15 +394,14 @@ export default class Consumer {
 
     if (writeToPath) {
       componentDependencies.forEach((componentWithDeps) => {
-        const relativeWrittenPath = this.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
-        if (relativeWrittenPath !== writeToPath) {
+        const relativeWrittenPath = componentWithDeps.component.writtenPath;
+        if (path.resolve(relativeWrittenPath) !== path.resolve(writeToPath)) {
           const component = componentWithDeps.component;
           this.moveExistingComponent(bitMap, component, relativeWrittenPath, writeToPath);
         }
       });
     }
-
-    await linkGenerator.writeDependencyLinks(componentDependencies, bitMap, this.getPath());
+    await linkGenerator.writeDependencyLinks(componentDependencies, bitMap, this.getPath(), createNpmLinkFiles);
     await Promise.all(
       componentDependencies.map(componentWithDependencies =>
         linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)

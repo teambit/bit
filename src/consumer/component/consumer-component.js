@@ -24,9 +24,12 @@ import type { ComponentMapFile } from '../bit-map/component-map';
 import ComponentMap from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
-import { Driver } from '../driver';
+import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
+import { getSync } from '../../api/consumer/lib/global-config';
+import * as linkGenerator from './link-generator';
+
 import {
   DEFAULT_BOX_NAME,
   LATEST_BIT_VERSION,
@@ -35,7 +38,10 @@ import {
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
   DEFAULT_DIST_DIRNAME,
-  BIT_JSON
+  BIT_JSON,
+  DEFAULT_REGISTRY_DOMAIN_PREFIX,
+  CFG_REGISTRY_DOMAIN_PREFIX,
+  DEFAULT_PACK_DIR_NAME
 } from '../../constants';
 
 export type ComponentProps = {
@@ -82,6 +88,7 @@ export default class Component {
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
   deprecated: boolean;
+  _driver: Driver;
 
   set files(val: ?(SourceFile[])) {
     this._files = val;
@@ -120,6 +127,13 @@ export default class Component {
         : [];
     }
     return this._docs;
+  }
+
+  get driver(): Driver {
+    if (!this._driver) {
+      this._driver = Driver.load(this.lang);
+    }
+    return this._driver;
   }
 
   constructor({
@@ -178,7 +192,9 @@ export default class Component {
 
   _getHomepage() {
     // TODO: Validate somehow that this scope is really on bitsrc (maybe check if it contains . ?)
-    const homepage = this.scope ? `https://bitsrc.io/${this.scope}/${this.box}/${this.name}` : undefined;
+    const homepage = this.scope
+      ? `https://bitsrc.io/${this.scope.replace('.', '/')}/${this.box}/${this.name}`
+      : undefined;
     return homepage;
   }
 
@@ -199,24 +215,52 @@ export default class Component {
     }).write({ bitDir, override: force });
   }
 
-  writePackageJson(driver: Driver, bitDir: string, force?: boolean = true): Promise<boolean> {
+  writePackageJson(
+    driver: Driver,
+    bitDir: string,
+    force?: boolean = true,
+    writeBitDependencies?: boolean = true,
+    dependencies: Array<Component>
+  ): Promise<boolean> {
+    const registryDomainPrefix = getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
     const PackageJson = driver.getDriver(false).PackageJson;
     const name = `${this.box}/${this.name}`;
-
+    let postInstallLinkData = [];
     const mainFile = this.calculateMainDistFile();
     // Replace all the / with - because / is not valid on package.json name key
-    const validName = name.replace(/\//g, '-');
+    // const validName = name.replace(/\//g, '-');
+    const bitDependencies = writeBitDependencies
+      ? R.fromPairs(this.dependencies.map(dep => [dep.id.toStringWithoutVersion(), `0.0.${dep.id.version}`]))
+      : {};
+
+    if (writeBitDependencies) {
+      const fullPathRequiresComponents = this.dependencies
+        .filter(component => R.isEmpty(component.relativePaths))
+        .map(component => component.id.toStringWithoutVersion());
+      const componentsRequiredByFullPath = !R.isEmpty(fullPathRequiresComponents)
+        ? dependencies.filter(depId =>
+          fullPathRequiresComponents.filter(dep => depId.id.toStringWithoutVersion() === depId)
+        )
+        : [];
+      postInstallLinkData = !R.isEmpty(componentsRequiredByFullPath)
+        ? componentsRequiredByFullPath.map(component => linkGenerator.generateEntryPointDataForPackages(component))
+        : [];
+    }
+
     const packageJson = new PackageJson(bitDir, {
-      name: validName,
-      version: `${this.version.toString()}.0.0`,
+      name: this.id.toStringWithoutVersion(),
+      version: `0.0.${this.version.toString()}`,
       homepage: this._getHomepage(),
       main: mainFile,
       dependencies: this.packageDependencies,
       devDependencies: this.devPackageDependencies,
       peerDependencies: this.peerPackageDependencies,
-      componentRootFolder: bitDir
+      componentRootFolder: bitDir,
+      license: `SEE LICENSE IN ${!R.isEmpty(this.license) ? 'LICENSE' : 'UNLICENSED'}`,
+      bitDependencies,
+      registryPrefix: registryDomainPrefix
     });
-    return packageJson.write({ override: force });
+    return packageJson.write({ override: force, postInstallLinkData });
   }
 
   dependencies(): BitIds {
@@ -309,13 +353,15 @@ export default class Component {
     withBitJson: boolean,
     withPackageJson: boolean,
     driver: Driver,
-    force?: boolean = true
+    force?: boolean = true,
+    writeBitDependencies?: boolean = false,
+    dependencies: Array<Components>
   ) {
     await mkdirp(bitDir);
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
-    if (withPackageJson) await this.writePackageJson(driver, bitDir, force);
+    if (withPackageJson) await this.writePackageJson(driver, bitDir, force, writeBitDependencies, dependencies);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
     logger.debug('component has been written successfully');
     return this;
@@ -350,7 +396,9 @@ export default class Component {
     origin,
     parent,
     consumerPath,
-    driver
+    driver,
+    writeBitDependencies = false,
+    dependencies
   }: {
     bitDir?: string,
     withBitJson?: boolean,
@@ -360,7 +408,9 @@ export default class Component {
     origin?: string,
     parent?: BitId,
     consumerPath?: string,
-    driver?: Driver
+    driver?: Driver,
+    writeBitDependencies?: boolean,
+    dependencies: Array<Components>
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
@@ -375,7 +425,17 @@ export default class Component {
     // otherwise, check whether this component is in bitMap:
     // if it's there, write the files according to the paths in bit.map.
     // Otherwise, write to bitDir and update bitMap with the new paths.
-    if (!bitMap) return this._writeToComponentDir(calculatedBitDir, withBitJson, withPackageJson, driver, force);
+    if (!bitMap) {
+      return this._writeToComponentDir(
+        calculatedBitDir,
+        withBitJson,
+        withPackageJson,
+        driver,
+        force,
+        writeBitDependencies,
+        dependencies
+      ); 
+    }
 
     // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
     // and namespace can co-exist with different versions.
@@ -383,9 +443,18 @@ export default class Component {
     // find the component in bit.map
     const idForBitMap = origin === COMPONENT_ORIGINS.NESTED ? this.id.toString() : this.id.toStringWithoutVersion();
     const componentMap = bitMap.getComponent(idForBitMap, false);
+
     if (!componentMap) {
       // if there is no componentMap, the component is new to this project and should be written to bit.map
-      await this._writeToComponentDir(calculatedBitDir, withBitJson, withPackageJson, driver, force);
+      await this._writeToComponentDir(
+        calculatedBitDir,
+        withBitJson,
+        withPackageJson,
+        driver,
+        force,
+        writeBitDependencies,
+        dependencies
+      );
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
       return this;
     }
@@ -402,7 +471,14 @@ export default class Component {
     if (origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       // when a user imports a component that was a dependency before, write the component directly into the components
       // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
-      await this._writeToComponentDir(calculatedBitDir, withBitJson, withPackageJson, driver, force);
+      await this._writeToComponentDir(
+        calculatedBitDir,
+        withBitJson,
+        withPackageJson,
+        driver,
+        force,
+        writeBitDependencies
+      );
       // todo: remove from the file system
       bitMap.removeComponent(this.id.toString());
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
@@ -655,7 +731,41 @@ export default class Component {
 
     return this.dists;
   }
-
+  async pack({
+    scope,
+    directory,
+    writeBitDependencies,
+    createNpmLinkFiles,
+    override
+  }: {
+    scope: Scope,
+    directory: ?string,
+    writeBitDependencies?: boolean,
+    createNpmLinkFiles?: boolean,
+    override: boolean
+  }): Promise<string> {
+    const isolatedEnvironment = new IsolatedEnvironment(scope);
+    try {
+      const importPath = path.join(isolatedEnvironment.path, DEFAULT_PACK_DIR_NAME);
+      const verbose = false;
+      const installDependencies = false;
+      await isolatedEnvironment.create();
+      await isolatedEnvironment.importE2E(
+        this.id.toString(),
+        verbose,
+        installDependencies,
+        importPath,
+        writeBitDependencies,
+        createNpmLinkFiles
+      );
+      const tgzPath = await this.driver.pack(importPath, directory || isolatedEnvironment.path, override);
+      await isolatedEnvironment.destroy();
+      return tgzPath;
+    } catch (err) {
+      await isolatedEnvironment.destroy();
+      return Promise.reject(err);
+    }
+  }
   toObject(): Object {
     return {
       name: this.name,

@@ -23,13 +23,27 @@ const LINKS_CONTENT_TEMPLATES = {
   less: "@import '{filePath}.less';"
 };
 
+const PACKAGES_LINKS_CONTENT_TEMPLATES = {
+  css: "@import '~{filePath}.css';",
+  scss: "@import '~{filePath}.scss';",
+  sass: "@import '~{filePath}.sass';",
+  less: "@import '~{filePath}.less';"
+};
+
+const fileExtentions = ['js', 'ts', 'jsx', 'tsx'];
+
 // todo: move to bit-javascript
 function _getIndexFileName(mainFile: string): string {
   return `${DEFAULT_INDEX_NAME}${path.extname(mainFile)}`;
 }
 
 // todo: move to bit-javascript
-function _getLinkContent(filePath: string, importSpecifier?: Object): string {
+function _getLinkContent(
+  filePath: string,
+  importSpecifier?: Object,
+  createNpmLinkFiles?: boolean,
+  bitPackageName: string
+): string {
   const fileExt = path.extname(filePath).replace('.', '');
   const getTemplate = () => {
     if (importSpecifier) {
@@ -49,6 +63,8 @@ function _getLinkContent(filePath: string, importSpecifier?: Object): string {
         // @todo: implement
       }
     }
+
+    if (createNpmLinkFiles && !fileExtentions.includes(fileExt)) return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
     return LINKS_CONTENT_TEMPLATES[fileExt];
   };
 
@@ -56,7 +72,15 @@ function _getLinkContent(filePath: string, importSpecifier?: Object): string {
     filePath = `./${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
   }
 
-  filePath = getWithoutExt(filePath); // remove the extension
+  const fileToLinkTo = path.basename(filePath);
+  const fileToLinkToWithoutSuffix = path.parse(fileToLinkTo);
+  if (createNpmLinkFiles) {
+    filePath = fileExtentions.includes(fileExt)
+      ? bitPackageName
+      : path.join(bitPackageName, fileToLinkToWithoutSuffix.name);
+  } else {
+    filePath = getWithoutExt(filePath); // remove the extension
+  }
   const template = getTemplate();
   return format(template, { filePath: normalize(filePath) });
 }
@@ -72,7 +96,8 @@ function _getLinkContent(filePath: string, importSpecifier?: Object): string {
 async function writeDependencyLinks(
   componentDependencies: ComponentWithDependencies[],
   bitMap: BitMap,
-  consumerPath: string
+  consumerPath: string,
+  createNpmLinkFiles: boolean
 ): Promise<any> {
   const prepareLinkFile = (
     componentId: string,
@@ -81,14 +106,14 @@ async function writeDependencyLinks(
     relativePathInDependency: string,
     importSpecifier?: Object
   ) => {
+    const packagePath = componentId.toStringWithoutVersion().replace(/\//g, '.');
     const rootDir = path.join(consumerPath, bitMap.getRootDirOfComponent(componentId));
     let actualFilePath = path.join(rootDir, relativePathInDependency);
     if (relativePathInDependency === mainFile) {
       actualFilePath = path.join(rootDir, _getIndexFileName(mainFile));
     }
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
-
-    const linkContent = _getLinkContent(relativeFilePath, importSpecifier);
+    const linkContent = _getLinkContent(relativeFilePath, importSpecifier, createNpmLinkFiles, packagePath);
     logger.debug(`writeLinkFile, on ${linkPath}`);
     return { linkPath, linkContent, isEs6: !!importSpecifier };
   };
@@ -246,5 +271,17 @@ async function writeEntryPointsForImportedComponent(component: Component, bitMap
   const entryPointPath = path.join(componentRoot, indexName);
   return outputFile(entryPointPath, AUTO_GENERATED_MSG + entryPointFileContent);
 }
+function generateEntryPointDataForPackages(component: Component): Promise<any> {
+  const packagePath = `${component.bindingPrefix}/${component.id.box}/${component.id.name}`.replace(/\//g, '.');
+  const mainFile = component.calculateMainDistFile();
+  const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
+  const fileContent = _getLinkContent(
+    `./${mainFile}`,
+    null,
+    true,
+    component.id.toStringWithoutVersion().replace(/\//g, '.')
+  );
+  return { indexName, packagePath, fileContent };
+}
 
-export { writeEntryPointsForImportedComponent, writeDependencyLinks };
+export { writeEntryPointsForImportedComponent, writeDependencyLinks, generateEntryPointDataForPackages };
