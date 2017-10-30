@@ -178,7 +178,7 @@ function findComponentsOfDepsFiles(
 // todo: move to bit-javascript
 function getComponentNameFromRequirePath(requirePath: string, bindingPrefix: string): string {
   requirePath = pathNormalizeToLinux(requirePath);
-  const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : 'bindingPrefix/';
+  const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : `${bindingPrefix}/`;
   const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
   const pathSplit = withoutPrefix.split('/');
   if (pathSplit.length < 2) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
@@ -263,7 +263,7 @@ export default (async function loadDependenciesForComponent(
   let missingComponents = [];
   if (dependenciesTree.missing.bits && !R.isEmpty(dependenciesTree.missing.bits)) {
     dependenciesTree.missing.bits.forEach((missingBit) => {
-      const componentId = getComponentNameFromRequirePath(missingBit);
+      const componentId = getComponentNameFromRequirePath(missingBit, component.bindingPrefix);
       // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
       if (bitMap.getExistingComponentId(componentId)) missingLinks.push(componentId);
       else missingComponents.push(componentId);
