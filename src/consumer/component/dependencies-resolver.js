@@ -112,7 +112,8 @@ function findComponentsOfDepsFiles(
     const currentComponentsDeps = { [componentId]: [depsPaths] };
 
     const componentMap = bitMap.getComponent(componentId);
-    if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+    if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED && entryComponentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+      // prevent author using relative paths for imported component
       relativeDeps.push(componentId);
       return;
     }
