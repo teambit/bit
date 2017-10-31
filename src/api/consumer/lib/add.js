@@ -93,10 +93,10 @@ export default (async function addAction(
       return { id: componentId.toString(), files: bitMap.getComponent(componentId).files };
     };
 
-    let parsedId: BitId;
     let componentExists = false;
-    if (id) {
-      const existingComponentId = bitMap.getExistingComponentId(id);
+    let parsedId: BitId;
+    const updateIdAccordingToExistingComponent = (currentId) => {
+      const existingComponentId = bitMap.getExistingComponentId(currentId);
       componentExists = !!existingComponentId;
       if (componentExists && bitMap.getComponent(existingComponentId).origin === COMPONENT_ORIGINS.NESTED) {
         throw new Error(`One of your dependencies (${existingComponentId}) has already the same namespace and name. 
@@ -105,7 +105,11 @@ export default (async function addAction(
       }
 
       if (componentExists) id = existingComponentId;
-      parsedId = BitId.parse(id);
+      parsedId = existingComponentId ? BitId.parse(existingComponentId) : BitId.parse(currentId);
+    };
+
+    if (id) {
+      updateIdAccordingToExistingComponent(id);
     }
 
     async function getTestFiles(files, tests) {
@@ -155,31 +159,26 @@ export default (async function addAction(
       const resolvedPath = path.resolve(componentPath);
       const pathParsed = path.parse(resolvedPath);
       const relativeFilePath = getPathRelativeToProjectRoot(componentPath, consumer.getPath());
-
       if (!parsedId) {
         let dirName = pathParsed.dir;
         if (!dirName) {
           const absPath = path.resolve(componentPath);
           dirName = path.dirname(absPath);
         }
-        const nameSpaceOrlastDir = namespace || R.last(dirName.split(path.sep));
-        parsedId = BitId.getValidBitId(nameSpaceOrlastDir, pathParsed.name);
+        const nameSpaceOrLastDir = namespace || R.last(dirName.split(path.sep));
+        parsedId = BitId.getValidBitId(nameSpaceOrLastDir, pathParsed.name);
+
+        updateIdAccordingToExistingComponent(parsedId.toString());
       }
 
       const files = [
         { relativePath: pathNormalizeToLinux(relativeFilePath), test: false, name: path.basename(relativeFilePath) }
       ];
 
-      // get test files
       const testFiles = await getTestFiles(files, tests);
-
       const resolvedMainFile = addMainFileToFiles(files, main);
-
-      if (componentExists) {
-        return { componentId: parsedId, files: files.concat(testFiles), mainFile: resolvedMainFile };
-      }
-
-      return { componentId: parsedId, files: files.concat(testFiles), mainFile: relativeFilePath };
+      const mainFile = componentExists ? resolvedMainFile : relativeFilePath;
+      return { componentId: parsedId, files: files.concat(testFiles), mainFile };
     });
 
     let mapValues = await Promise.all(mapValuesP);
@@ -209,9 +208,9 @@ export default (async function addAction(
 
   const componentPathsStats = {};
   const resolvedComponentPaths = await Promise.all(componentPaths.map(componentPath => glob(componentPath)));
-  const flattendFiles = R.flatten(resolvedComponentPaths);
-  if (!R.isEmpty(flattendFiles)) {
-    flattendFiles.forEach((componentPath) => {
+  const flattenedFiles = R.flatten(resolvedComponentPaths);
+  if (!R.isEmpty(flattenedFiles)) {
+    flattenedFiles.forEach((componentPath) => {
       if (!existsSync(componentPath)) {
         throw new PathNotExists(componentPath);
       }
@@ -252,5 +251,5 @@ export default (async function addAction(
     added.push(addedOne);
   }
   await bitMap.write();
-  return added.filter(id => !R.isEmpty(id.files));
+  return added.filter(addedId => !R.isEmpty(addedId.files));
 });
