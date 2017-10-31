@@ -6,7 +6,7 @@ export const missingDependenciesLabels = {
   untrackedDependencies: 'untracked file dependencies',
   missingPackagesDependenciesOnFs: 'missing packages dependencies',
   missingLinks: 'missing bind links',
-  relativeComponents: 'relative components',
+  relativeComponents: 'relative components (should be absolute)',
   missingDependenciesOnFs: 'non-existing dependency files'
 };
 
