@@ -10,6 +10,7 @@ export function getPath(scopePath: string): string {
 
 export type ScopeJsonProps = {
   name: string,
+  version: string,
   resolverPath?: string,
   license?: string,
   groupName: ?string,
@@ -18,13 +19,15 @@ export type ScopeJsonProps = {
 
 export class ScopeJson {
   _name: string;
+  version: ?string;
   resolverPath: ?string;
   license: ?string;
   remotes: { [string]: string };
   groupName: string;
 
-  constructor({ name, remotes, resolverPath, license, groupName }: ScopeJsonProps) {
+  constructor({ name, remotes, resolverPath, license, groupName, version }: ScopeJsonProps) {
     this.name = name;
+    this.version = version;
     this.resolverPath = resolverPath;
     this.license = license;
     this.remotes = remotes || {};

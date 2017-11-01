@@ -21,6 +21,7 @@ import add from './lib/add';
 import untrack from './lib/untrack';
 import move from './lib/move';
 import bind from './lib/bind';
+import migrate from './lib/migrate';
 
 export {
   init,
@@ -50,5 +51,6 @@ export {
   add,
   untrack,
   move,
-  bind
+  bind,
+  migrate
 };

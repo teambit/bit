@@ -11,7 +11,7 @@ import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } from '../utils';
-import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, DEFAULT_DIST_DIRNAME } from '../constants';
+import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, DEFAULT_DIST_DIRNAME, BIT_VERSION } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
 import { RemoteScopeNotFound, PermissionDenied } from './network/exceptions';
@@ -29,6 +29,8 @@ import Consumer from '../consumer/consumer';
 import Driver from '../driver';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
+import { MigrationResult } from '../migration/migration-helper';
+import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
 import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
   BEFORE_IMPORT_PUT_ON_SCOPE,
@@ -90,6 +92,29 @@ export default class Scope {
 
   getBitPathInComponentsDir(id: BitId): string {
     return pathLib.join(this.getComponentsPath(), id.toFullPath());
+  }
+
+  /**
+   * Running migration process for scope to update the stores (bit objects) to the current version
+   * 
+   * @param {any} verbose - print debug logs
+   * @returns {Object} - wether the process run and wether it successeded
+   * @memberof Consumer
+   */
+  async migrate(verbose): MigrationResult {
+    logger.debug('running migration process for scope');
+    if (verbose) console.log('running migration process for scope'); // eslint-disable-line
+    // We start to use this process after version 0.10.9, so we assume the scope is in the last production version
+    const scopeVersion = this.scopeJson.get('version') || '0.10.9';
+    const objects = await this.objects.list();
+    const resultObjects: ScopeMigrationResult = migrate(scopeVersion, objects, verbose);
+    // Persist the new objects
+    // Remove old objects
+    // Update the scope version
+    return {
+      run: true,
+      success: true
+    };
   }
 
   remotes(): Promise<Remotes> {
@@ -973,7 +998,7 @@ export default class Scope {
   static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName();
-    const scopeJson = new ScopeJson({ name, groupName });
+    const scopeJson = new ScopeJson({ name, groupName, version: BIT_VERSION });
     return Promise.resolve(new Scope({ path, created: true, scopeJson }));
   }
 
