@@ -91,13 +91,14 @@ function resolveNodePackage(cwd, packageFullPath) {
   // Get the package relative path to the node_modules dir
 
   const packageInfo = findPackage(packageFullPath);
+  if (!packageInfo) return null; // when running 'bitjs get-dependencies' command, packageInfo is sometimes empty
   result[packageInfo.name] = packageInfo.version;
   return result;
 }
 
 /**
  * Gets a list of dependencies and group them by types (files, bits, packages)
- * It's also transform the node packge dependencies from array of paths to object in this format:
+ * It's also transform the node package dependencies from array of paths to object in this format:
  * {dependencyName: version} (like in package.json)
  *
  * @param {any} list of dependencies paths
@@ -292,6 +293,7 @@ function updateTreeAccordingToLinkFiles(tree, pathMap) {
  * @param baseDir working directory
  * @param consumerPath
  * @param filePath path of the file to calculate the dependencies
+ * @param bindingPrefix
  * @return {Promise<{missing, tree}>}
  */
 export default async function getDependecyTree(baseDir: string, consumerPath: string, filePath: string, bindingPrefix: string ): Promise<*> {

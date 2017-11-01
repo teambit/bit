@@ -11,7 +11,7 @@ const getDependenciesCommand: Command = {
     { name: 'baseDir', description: 'base directory' },
     { name: 'file', description: 'filename' },
   ],
-  action: ({ baseDir, file }) => getDependenciesAction(baseDir, file),
+  action: ({ baseDir, file }) => getDependenciesAction(baseDir, file, 'bit'),
   report,
   loaderText: 'Finding dependencies',
   loader: true,
