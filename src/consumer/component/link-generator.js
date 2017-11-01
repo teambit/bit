@@ -2,7 +2,7 @@
 import path from 'path';
 import normalize from 'normalize-path';
 import R from 'ramda';
-import format from 'string-format';
+import groupBy from 'lodash.groupby';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_INDEX_NAME, COMPONENT_ORIGINS, AUTO_GENERATED_MSG } from '../../constants';
 import { outputFile, getWithoutExt, searchFilesIgnoreExt, getExt } from '../../utils';
 import logger from '../../logger/logger';
@@ -10,7 +10,7 @@ import { ComponentWithDependencies } from '../../scope';
 import Component from '../component';
 import BitMap from '../bit-map/bit-map';
 import { BitIds } from '../../bit-id';
-import groupBy from 'lodash.groupby';
+import fileTypesPlugins from '../../plugins/file-types-plugins';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -25,12 +25,12 @@ const LINKS_CONTENT_TEMPLATES = {
 
 // todo: move to bit-javascript
 function _getIndexFileName(mainFile: string): string {
-  return `${DEFAULT_INDEX_NAME}${path.extname(mainFile)}`;
+  return `${DEFAULT_INDEX_NAME}.${getExt(mainFile)}`;
 }
 
 // todo: move to bit-javascript
 function _getLinkContent(filePath: string, importSpecifier?: Object): string {
-  const fileExt = path.extname(filePath).replace('.', '');
+  const fileExt = getExt(filePath);
   const getTemplate = () => {
     if (importSpecifier) {
       if (fileExt === 'js' || fileExt === 'jsx') {
@@ -49,6 +49,10 @@ function _getLinkContent(filePath: string, importSpecifier?: Object): string {
         // @todo: implement
       }
     }
+    fileTypesPlugins.forEach((plugin) => {
+      LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate();
+    });
+
     return LINKS_CONTENT_TEMPLATES[fileExt];
   };
 
@@ -56,9 +60,13 @@ function _getLinkContent(filePath: string, importSpecifier?: Object): string {
     filePath = `./${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
   }
 
-  filePath = getWithoutExt(filePath); // remove the extension
+  const filePathWithoutExt = getWithoutExt(filePath);
   const template = getTemplate();
-  return format(template, { filePath: normalize(filePath) });
+  if (!template) {
+    // @todo: throw an exception?
+    logger.error(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
+  }
+  return template.replace('{filePath}', normalize(filePathWithoutExt));
 }
 
 /**
@@ -108,7 +116,7 @@ async function writeDependencyLinks(
     let distLinkPath;
     const linkFiles = [];
     if (hasDist) {
-      const sourceRelativePathWithCompiledExt = getWithoutExt(sourceRelativePath) + relativeDistExtInDependency;
+      const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
       distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, sourceRelativePathWithCompiledExt);
       // Generate a link file inside dist folder of the dependent component
       const linkFile = prepareLinkFile(
