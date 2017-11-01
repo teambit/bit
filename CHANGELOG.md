@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add plugin mechanism to support different file types
+- bug fix - re-adding a component after exporting it was considered as a new component 
 - fix a bug which makes bit test command not work when a component use bit/ to require another component
 
 ## [0.10.10-dev.1] - 2017-10-30

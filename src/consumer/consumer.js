@@ -191,7 +191,6 @@ export default class Consumer {
         bitMap,
         deprecated: componentModule ? componentModule.deprecated : false
       });
-      if (bitMap.hasChanged) await bitMap.write();
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // no need to resolve dependencies
         return component;
@@ -215,6 +214,7 @@ export default class Consumer {
       logger.debug(`Finished loading the component, ${component.id.toString()}`);
       allComponents.push(component);
     }
+    if (bitMap.hasChanged) await bitMap.write();
 
     return allComponents.concat(alreadyLoadedComponents);
   }
