@@ -385,7 +385,7 @@ function add(a, b) {
       });
       it('Should not throw an error "nothing to compare no previous versions found"', () => {
         const showCmd = () => helper.showComponent('bar/foo --compare');
-        expect(showCmd).not.to.throw('error - nothing to compare no previous versions found');
+        expect(showCmd).not.to.throw();
       });
     });
   });
