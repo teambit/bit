@@ -115,7 +115,7 @@ Scopes are super lightweight and can be [set up on any server](https://teambit.g
 
 You can also freely host your Scopes on the Bit community hub, [BitSrc](https://bitsrc.io).
 
-For this quick-start guide, let's [connect to to BitSrc](https://teambit.github.io/docs/bitsrc-setup.html##signup-to-bitsrc) and [create a Scope](https://teambit.github.io/docs/getting-started.html#create-a-scope).
+For this quick-start guide, let's [connect to to BitSrc](https://teambit.github.io/docs/bitsrc-setup.html#signup-to-bitsrc) and [create a Scope](https://teambit.github.io/docs/getting-started.html#create-a-scope).
 
 ### Export Components
 
