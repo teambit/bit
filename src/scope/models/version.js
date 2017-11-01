@@ -122,7 +122,8 @@ export default class Version extends BitObject {
           tester: obj.tester,
           log: obj.log,
           dependencies,
-          packageDependencies: obj.packageDependencies
+          packageDependencies: obj.packageDependencies,
+          bindingPrefix: obj.bindingPrefix // Should be removed once a proper migration will run
         },
         val => !!val
       )
@@ -173,7 +174,8 @@ export default class Version extends BitObject {
           })
           : null,
         compiler: this.compiler ? this.compiler.toString() : null,
-        bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+        bindingPrefix: this.bindingPrefix || null,
+        // bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX, // Should be used once a proper migration will run
         tester: this.tester ? this.tester.toString() : null,
         log: {
           message: this.log.message,
