@@ -69,7 +69,6 @@ const installAction = (
 
   fs.ensureDirSync(path.join(options.cwd, 'node_modules'));
 
-  const commandToExecute = `npm install${serializedModules}${serializedFlags}`;
   const args = ['install', ...serializedModules.trim().split(' '), serializedFlags];
   const promise = spawn('npm', args, { cwd: options.cwd });
   const childProcess = promise.childProcess;
@@ -80,7 +79,7 @@ const installAction = (
 
   return promise.then(() => {
     console.log(output.join(''));
-    return { stdout: `successfully ran ${commandToExecute}`, stderr: '' };
+    return { stdout: `successfully ran npm install${serializedModules}${serializedFlags}`, stderr: '' };
   });
 };
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {
