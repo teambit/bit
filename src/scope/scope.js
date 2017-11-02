@@ -106,8 +106,8 @@ export default class Scope {
     if (verbose) console.log('running migration process for scope'); // eslint-disable-line
     // We start to use this process after version 0.10.9, so we assume the scope is in the last production version
     const scopeVersion = this.scopeJson.get('version') || '0.10.9';
-    const objects = await this.objects.list();
-    const resultObjects: ScopeMigrationResult = migrate(scopeVersion, objects, verbose);
+    const rawObjects = await this.objects.listRawObjects();
+    const resultObjects: ScopeMigrationResult = migrate(scopeVersion, rawObjects, verbose);
     // Persist the new objects
     // Remove old objects
     // Update the scope version

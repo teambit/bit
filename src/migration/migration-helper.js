@@ -7,9 +7,14 @@ export type MigrationResult = {
   success: ?boolean
 };
 
+export type MigrationDeclaration = {
+  name: string,
+  migrate: Fucntion
+};
+
 type AbstractVersionMigrations = {
   version: string,
-  migrations: Fucntion[] | Object
+  migrations: MigrationDeclaration[]
 };
 
 /**
@@ -42,9 +47,9 @@ export default function getMigrationVersions(
   const sortedMigrationToRun = sortedMigrationVersionsToRun.map(migrationVersion => ({
     [migrationVersion]: migratonManifest[migrationVersion]
   }));
-  logger.debug(`Found the following versions which need migration ${sortedMigrationVersionsToRun}`);
+  logger.debug(`Found the following versions which need migration ${sortedMigrationVersionsToRun.join(', ')}`);
   if (verbose) {
-    console.log(`Found the following versions which need migration ${sortedMigrationVersionsToRun}`); // eslint-disable-line no-console
+    console.log(`Found the following versions which need migration ${sortedMigrationVersionsToRun.join(', ')}`); // eslint-disable-line no-console
   }
   return sortedMigrationToRun;
 }

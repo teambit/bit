@@ -38,6 +38,7 @@ import removeFile from './fs-remove-file';
 import allSettled from './promise-all-settled';
 import values from './object/values';
 import glob from './glob';
+import promisify from './promisify';
 import inflate from './zlib-inflate';
 import mapToObject from './map/to-object';
 import objectToTupleArray from './object/to-tuple-array';
@@ -87,6 +88,7 @@ export {
   toBase64,
   fromBase64,
   glob,
+  promisify,
   resolveBoolean,
   empty,
   filter,

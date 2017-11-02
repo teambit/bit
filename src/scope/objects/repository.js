@@ -1,12 +1,12 @@
 /** @flow */
 import fs from 'fs';
 import path from 'path';
-import glob from 'glob';
 import BitObject from './object';
+import BitRawObject from './raw-object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound } from '../exceptions';
-import { resolveGroupId, mkdirp, writeFile, removeFile, readFile } from '../../utils';
+import { resolveGroupId, mkdirp, writeFile, removeFile, readFile, glob } from '../../utils';
 import { Scope } from '../../scope';
 import { Component, Symlink, ScopeMeta } from '../models';
 import logger from '../../logger/logger';
@@ -58,14 +58,30 @@ export default class Repository {
       });
   }
 
-  list(): Promise<BitObject[]> {
-    return new Promise((resolve, reject) => {
-      return glob(path.join('*', '*'), { cwd: this.getPath() }, (err, matches) => {
-        if (err) reject(err);
-        const refs = matches.map(str => str.replace(path.sep, ''));
-        return Promise.all(refs.map(ref => this.load(ref))).then(resolve);
-      });
+  async list(): Promise<BitObject[]> {
+    const refs = await this.listRefs();
+    return Promise.all(refs.map(ref => this.load(ref)));
+  }
+
+  async listRefs(): Promise<Refs[]> {
+    const matches = await glob(path.join('*', '*'), { cwd: this.getPath() });
+    const refs = matches.map((str) => {
+      const hash = str.replace(path.sep, '');
+      return new Ref(hash);
     });
+    return refs;
+  }
+
+  async listRawObjects(): Promise<BitRawObject[]> {
+    const refs = await this.listRefs();
+    return Promise.all(
+      refs.map(async (ref) => {
+        const buffer = await this.loadRaw(ref);
+        const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer);
+        bitRawObject.ref = ref;
+        return bitRawObject;
+      })
+    );
   }
 
   listComponents(includeSymlinks: boolean = true): Promise<Component[]> {
