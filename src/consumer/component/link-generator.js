@@ -46,7 +46,22 @@ function _getLinkContent(filePath: string, importSpecifier?: Object): string {
         }
         return `${exportPart} = ${pathPart};`;
       } else if (fileExt === 'ts' || fileExt === 'tsx') {
-        // @todo: implement
+        let importPart = 'import ';
+        if (importSpecifier.linkFile.isDefault) {
+          importPart += `${importSpecifier.mainFile.name}`;
+        } else {
+          importPart += `{ ${importSpecifier.mainFile.name} }`;
+        }
+        importPart += " from '{filePath}';";
+
+        let exportPart = 'export ';
+        if (importSpecifier.mainFile.isDefault) {
+          exportPart += `default ${importSpecifier.mainFile.name};`;
+        } else {
+          exportPart += `{ ${importSpecifier.mainFile.name} };`;
+        }
+
+        return `${importPart}\n${exportPart}`;
       }
     }
     fileTypesPlugins.forEach((plugin) => {
@@ -98,7 +113,9 @@ async function writeDependencyLinks(
 
     const linkContent = _getLinkContent(relativeFilePath, importSpecifier);
     logger.debug(`writeLinkFile, on ${linkPath}`);
-    return { linkPath, linkContent, isEs6: !!importSpecifier };
+    const linkPathExt = getExt(linkPath);
+    const isEs6 = importSpecifier && linkPathExt === 'js';
+    return { linkPath, linkContent, isEs6 };
   };
 
   const componentLink = (
