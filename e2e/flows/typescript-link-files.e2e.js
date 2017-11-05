@@ -113,5 +113,25 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       const result = helper.runCmd('node app.ts');
       expect(result.trim()).to.equal('got is-array and got is-string and got foo');
     });
+    it('should be able to compile the main component with auto-generated .ts files without errors', () => {
+      helper.importCompiler('bit.envs/compilers/react-typescript');
+      const barFooFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
+      const compilerPrefix = path.join(
+        helper.localScopePath,
+        '.bit',
+        'components',
+        'compilers',
+        'react-typescript',
+        'bit.envs'
+      );
+      let version = '';
+      fs.readdirSync(compilerPrefix).forEach((file) => {
+        version = file;
+      });
+      const compilerPath = path.join(compilerPrefix, version, 'node_modules', 'typescript', 'bin');
+      const result = helper.runCmd(`tsc ${barFooFile}`, compilerPath);
+      // in case of compilation error it throws an exception
+      expect(result.trim()).to.equal('');
+    });
   });
 });

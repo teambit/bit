@@ -405,4 +405,36 @@ describe('bit status command', function () {
       );
     });
   });
+  describe('after importing a component that uses a dependency with relative-path', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      const isStringFixture =
+        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-string');
+      helper.importComponent('utils/is-type');
+      output = helper.runCmd('bit status');
+    });
+    it('should not show the main component as missing dependencies', () => {
+      expect(output.includes('missing dependencies')).to.be.false;
+    });
+    it('should not display any component as new', () => {
+      expect(output.includes('no new components')).to.be.true;
+    });
+    it('should not display any component as modified', () => {
+      expect(output.includes('no modified components')).to.be.true;
+    });
+    it('should not display any component as staged', () => {
+      expect(output.includes('no staged components')).to.be.true;
+    });
+  });
 });

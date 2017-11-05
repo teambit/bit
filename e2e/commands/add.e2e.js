@@ -464,4 +464,20 @@ describe('bit add command', function () {
       });
     });
   });
+  describe('adding a component again (without specifying id) after exporting it', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportComponent('bar/foo');
+      helper.addComponentBarFoo();
+    });
+    it('should not add it as a new component', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).not.to.have.property('bar/foo');
+    });
+  });
 });
