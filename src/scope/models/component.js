@@ -1,12 +1,20 @@
 /** @flow */
+import semver from 'semver';
 import { is, equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
 import path from 'path';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
-import { VersionNotFound, CorruptedComponent } from '../exceptions';
+import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
-import { DEFAULT_BOX_NAME, DEFAULT_LANGUAGE, DEFAULT_DIST_DIRNAME, DEFAULT_BINDINGS_PREFIX } from '../../constants';
+import {
+  DEFAULT_BOX_NAME,
+  DEFAULT_LANGUAGE,
+  DEFAULT_DIST_DIRNAME,
+  DEFAULT_BINDINGS_PREFIX,
+  DEFAULT_BIT_RELEASE_TYPE,
+  DEFAULT_BIT_VERSION
+} from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/component';
@@ -22,7 +30,7 @@ export type ComponentProps = {
   scope?: string,
   box?: string,
   name: string,
-  versions?: { [number]: Ref },
+  versions?: { [string]: Ref },
   lang?: string,
   deprecated: boolean,
   bindingPrefix?: string
@@ -32,7 +40,7 @@ export default class Component extends BitObject {
   scope: string;
   name: string;
   box: string;
-  versions: { [number]: Ref };
+  versions: { [string]: Ref };
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
@@ -52,14 +60,14 @@ export default class Component extends BitObject {
     return values(this.versions);
   }
 
-  listVersions(sort: 'ASC' | 'DESC'): number[] {
-    const versions = Object.keys(this.versions).map(versionStr => parseInt(versionStr));
+  listVersions(sort: 'ASC' | 'DESC'): string[] {
+    const versions = Object.keys(this.versions);
     if (!sort) return versions;
     if (sort === 'ASC') {
-      return versions.sort();
+      return versions.sort(semver.compare);
     }
 
-    return versions.sort().reverse();
+    return versions.sort(semver.compare).reverse();
   }
 
   compatibleWith(component: Component) {
@@ -69,9 +77,9 @@ export default class Component extends BitObject {
     return equals(component.versions, comparableObject);
   }
 
-  latest(): number {
-    if (empty(this.versions)) return 0;
-    return Math.max(...this.listVersions());
+  latest(): string {
+    if (empty(this.versions)) return '0.0.0';
+    return semver.maxSatisfying(this.listVersions(), '*');
   }
 
   /**
@@ -83,8 +91,8 @@ export default class Component extends BitObject {
    * @returns {number} 
    * @memberof Component
    */
-  latestExisting(repository: Repository): number {
-    if (empty(this.versions)) return 0;
+  latestExisting(repository: Repository): string {
+    if (empty(this.versions)) return '0.0.0';
     const versions = this.listVersions('ASC');
     let version = null;
     let versionStr = null;
@@ -92,7 +100,7 @@ export default class Component extends BitObject {
       versionStr = versions.pop();
       version = this.loadVersionSync(versionStr, repository, false);
     }
-    return versionStr || 0;
+    return versionStr || '0.0.0';
   }
 
   collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } }> {
@@ -106,20 +114,27 @@ export default class Component extends BitObject {
   collectVersions(repo: Repository): Promise<ConsumerComponent> {
     return Promise.all(
       this.listVersions().map((versionNum) => {
-        return this.toConsumerComponent(String(versionNum), this.scope, repo);
+        return this.toConsumerComponent(versionNum, this.scope, repo);
       })
     );
   }
 
-  addVersion(version: Version) {
-    this.versions[this.version()] = version.hash();
+  addVersion(version: Version, releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: ?string) {
+    // Add exact version instead of using the semver mechanism
+    if (exactVersion) {
+      // Version already exists
+      if (this.versions[exactVersion]) throw new VersionAlreadyExists(exactVersion, this.id());
+      this.versions[exactVersion] = version.hash();
+      return this;
+    }
+    this.versions[this.version(releaseType)] = version.hash();
     return this;
   }
 
-  version() {
+  version(releaseType: string = DEFAULT_BIT_RELEASE_TYPE) {
     const latest = this.latest();
-    if (latest) return latest + 1;
-    return 1;
+    if (latest) return semver.inc(latest, releaseType);
+    return DEFAULT_BIT_VERSION;
   }
 
   id(): string {
@@ -127,7 +142,7 @@ export default class Component extends BitObject {
   }
 
   toObject() {
-    function versions(vers: { [number]: Ref }) {
+    function versions(vers: { [string]: Ref }) {
       const obj = {};
       forEach(vers, (ref, version) => {
         obj[version] = ref.toString();
@@ -146,7 +161,7 @@ export default class Component extends BitObject {
     };
   }
 
-  async loadVersion(version: number, repository: Repository): Promise<Version> {
+  async loadVersion(version: string, repository: Repository): Promise<Version> {
     const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound();
     return versionRef.load(repository);

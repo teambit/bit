@@ -10,9 +10,9 @@ import logger from '../logger/logger';
 
 export default class ComponentVersion {
   component: Component;
-  version: number;
+  version: string;
 
-  constructor(component: Component, version: number) {
+  constructor(component: Component, version: string) {
     this.component = component;
     this.version = version;
   }
@@ -30,7 +30,7 @@ export default class ComponentVersion {
       scope: this.component.scope,
       box: this.component.box,
       name: this.component.name,
-      version: this.version.toString()
+      version: this.version
     });
   }
 
@@ -69,7 +69,7 @@ export default class ComponentVersion {
   }
 
   toConsumer(repo: Repository) {
-    return this.component.toConsumerComponent(this.version.toString(), this.component.scope, repo);
+    return this.component.toConsumerComponent(this.version, this.component.scope, repo);
   }
 
   toObjects(repo: Repository): Promise<ComponentObjects> {

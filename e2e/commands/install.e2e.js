@@ -22,7 +22,7 @@ describe('bit install command', function () {
       helper.addRemoteScope();
       // add "foo" as a bit.json dependency
       const bitJsonPath = path.join(helper.localScopePath, 'bit.json');
-      helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/bar/foo`]: '1' });
+      helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/bar/foo`]: '0.0.1' });
     });
     it('should display a successful message with the list of installed components', () => {
       const output = helper.runCmd('bit import');
