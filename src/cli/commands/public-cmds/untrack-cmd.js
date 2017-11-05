@@ -10,6 +10,7 @@ export default class Untrack extends Command {
   alias = 'u';
   opts = [];
   loader = true;
+  migration = true;
 
   action([components]: [string[]]): Promise<*> {
     return untrack(components || []);

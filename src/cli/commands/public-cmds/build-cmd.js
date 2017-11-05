@@ -15,6 +15,7 @@ export default class Build extends Command {
     ['v', 'verbose', 'showing npm verbose output for inspection']
   ];
   loader = true;
+  migration = true;
 
   action(
     [id]: string[],

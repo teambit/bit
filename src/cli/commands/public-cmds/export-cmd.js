@@ -12,6 +12,7 @@ export default class Export extends Command {
   alias = 'e';
   opts = [['f', 'forget', 'do not save to bit.json after export']];
   loader = true;
+  migration = true;
 
   action([remote, ids]: [string, string[]], { forget }: any): Promise<*> {
     return exportAction(ids, remote, !forget).then(component => ({ component, remote }));

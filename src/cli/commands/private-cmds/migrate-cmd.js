@@ -7,14 +7,16 @@ export default class Migrate extends Command {
   name = 'migrate [scopePath]';
   description = 'migrate scope to the current version';
   private = true;
+  loader = true;
+  migration = false;
   alias = '';
   opts = [['v', 'verbose', 'showing logs for the migration process']];
 
   action([scopePath]: [string], { verbose }: { verbose: ?boolean }): Promise<any> {
-    return migrate(scopePath || process.cwd(), verbose).then(result => ({ result, verbose }));
+    return migrate(scopePath, verbose).then(result => ({ result, verbose }));
   }
 
-  report({ result, verbose }: { result: boolean, verbose: ?boolean }): string {
+  report({ result }: { result: boolean }): string {
     return chalk.green('migrate finished');
   }
 }

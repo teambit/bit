@@ -2,8 +2,8 @@
 import serializeError from 'serialize-error';
 import commander from 'commander';
 import chalk from 'chalk';
-import { readFileSync } from 'fs';
 import type Command from './command';
+import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
 import { empty, first, isNumeric } from '../utils';
 import loader from './loader';
@@ -49,26 +49,36 @@ function execAction(command, concrete, args) {
     loader.on();
   }
 
-  command
-    .action(relevantArgs, opts)
-    .then((data) => {
-      loader.off();
-      return logAndExit(command.report(data), command.name);
-    })
-    .catch((err) => {
-      logger.error(
-        `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
-          err,
-          Object.getOwnPropertyNames(err)
-        )}`
-      );
-      loader.off();
-      const errorHandled = defaultHandleError(err) || command.handleError(err);
+  const migrateWrapper = (run: boolean) => {
+    if (run) {
+      logger.info('Checking if a migration is needed');
+      return migrate(null, false);
+    }
+    return Promise.resolve();
+  };
 
-      if (command.private) return serializeErrAndExit(err, command.name);
-      if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
-      return logErrAndExit(err, command.name);
-    });
+  migrateWrapper(command.migration).then(() => {
+    command
+      .action(relevantArgs, opts)
+      .then((data) => {
+        loader.off();
+        return logAndExit(command.report(data), command.name);
+      })
+      .catch((err) => {
+        logger.error(
+          `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
+            err,
+            Object.getOwnPropertyNames(err)
+          )}`
+        );
+        loader.off();
+        const errorHandled = defaultHandleError(err) || command.handleError(err);
+
+        if (command.private) return serializeErrAndExit(err, command.name);
+        if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
+        return logErrAndExit(err, command.name);
+      });
+  });
 }
 
 function serializeErrAndExit(err, commandName) {

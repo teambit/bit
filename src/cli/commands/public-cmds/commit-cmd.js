@@ -17,6 +17,7 @@ export default class Export extends Command {
     ['', 'ignore_missing_dependencies', 'ignore missing dependencies (default = false)']
   ];
   loader = true;
+  migration = true;
 
   action(
     [id]: string[],

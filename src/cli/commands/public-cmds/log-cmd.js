@@ -9,6 +9,7 @@ export default class Show extends Command {
   description = 'show components(s) commit history.';
   alias = '';
   opts = [];
+  migration = true;
 
   action([id]: [string]): Promise<*> {
     return getComponentLogs(id).then(logs =>
