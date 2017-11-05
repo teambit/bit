@@ -2,6 +2,10 @@
 import R from 'ramda';
 import semver from 'semver';
 
+/**
+ * Change all the component's version to be a valid semver
+ * @param {*} componentModel - The parsed component model
+ */
 function changeVersionToSemVer(componentModel: Object): Object {
   const semVerVersions = {};
   const addUpdatedVersion = (value, key) => {

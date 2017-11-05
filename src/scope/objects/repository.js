@@ -77,8 +77,7 @@ export default class Repository {
     return Promise.all(
       refs.map(async (ref) => {
         const buffer = await this.loadRaw(ref);
-        const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer);
-        bitRawObject.ref = ref;
+        const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref, this.types);
         return bitRawObject;
       })
     );
@@ -133,6 +132,12 @@ export default class Repository {
     // logger.debug(`repository: adding object ${object.hash().toString()} which consist of the following id: ${object.id()}`);
     this.objects.push(object);
     this.setCache(object);
+    return this;
+  }
+
+  addMany(objects: BitObject[]): Repository {
+    if (!objects || !objects.length) return this;
+    objects.forEach(obj => this.add(obj));
     return this;
   }
 

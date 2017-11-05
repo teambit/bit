@@ -257,6 +257,10 @@ export default class Version extends BitObject {
     });
   }
 
+  static from(versionProps: VersionProps): Version {
+    return new Version(versionProps);
+  }
+
   static fromComponent({
     component,
     files,

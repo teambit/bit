@@ -61,7 +61,8 @@ export class ScopeJson {
       remotes: this.remotes,
       resolverPath: this.resolverPath,
       license: this.license,
-      groupName: this.groupName
+      groupName: this.groupName,
+      version: this.version
     });
   }
 
@@ -96,7 +97,7 @@ export class ScopeJson {
     return this;
   }
 
-  write(path: string) {
+  async write(path: string) {
     return writeFile(pathlib.join(path, SCOPE_JSON), this.toJson());
   }
 

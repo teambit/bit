@@ -1,7 +1,3 @@
-/** @flow */
-import BitObject from './object';
-import BitRawObject from './raw-object';
-import Repository from './repository';
-import Ref from './ref';
+import addBindingPrefixDeclartaion from './add-binding-prefix';
 
-export { BitObject, BitRawObject, Ref, Repository };
+export { addBindingPrefixDeclartaion };

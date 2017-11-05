@@ -1,5 +1,18 @@
 /** @flow */
-import { is, equals, zip, fromPairs, keys, mapObjIndexed, objOf, mergeWith, merge, map, prop } from 'ramda';
+import {
+  is,
+  equals,
+  zip,
+  fromPairs,
+  keys,
+  mapObjIndexed,
+  objOf,
+  mergeWith,
+  merge,
+  map,
+  prop,
+  forEachObjIndexed
+} from 'ramda';
 import path from 'path';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
@@ -16,6 +29,7 @@ import ComponentVersion from '../component-version';
 import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
+import logger from '../../logger/logger';
 
 export type ComponentProps = {
   scope?: string,
@@ -247,6 +261,15 @@ export default class Component extends BitObject {
 
   refs(): Ref[] {
     return values(this.versions);
+  }
+
+  replaceRef(oldRef: Ref, newRef: Ref) {
+    const replace = (value, key) => {
+      if (value === oldRef.hash) {
+        this.versions[key] = newRef.hash;
+      }
+    };
+    forEachObjIndexed(replace, this.versions);
   }
 
   toBuffer(pretty: boolean) {
