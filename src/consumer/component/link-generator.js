@@ -2,7 +2,7 @@
 import path from 'path';
 import normalize from 'normalize-path';
 import R from 'ramda';
-import format from 'string-format';
+import groupBy from 'lodash.groupby';
 import { DEFAULT_DIST_DIRNAME, DEFAULT_INDEX_NAME, COMPONENT_ORIGINS, AUTO_GENERATED_MSG } from '../../constants';
 import { outputFile, getWithoutExt, searchFilesIgnoreExt, getExt } from '../../utils';
 import logger from '../../logger/logger';
@@ -10,7 +10,7 @@ import { ComponentWithDependencies } from '../../scope';
 import Component from '../component';
 import BitMap from '../bit-map/bit-map';
 import { BitIds } from '../../bit-id';
-import groupBy from 'lodash.groupby';
+import fileTypesPlugins from '../../plugins/file-types-plugins';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -34,7 +34,7 @@ const fileExtentions = ['js', 'ts', 'jsx', 'tsx'];
 
 // todo: move to bit-javascript
 function _getIndexFileName(mainFile: string): string {
-  return `${DEFAULT_INDEX_NAME}${path.extname(mainFile)}`;
+  return `${DEFAULT_INDEX_NAME}.${getExt(mainFile)}`;
 }
 
 // todo: move to bit-javascript
@@ -44,7 +44,7 @@ function _getLinkContent(
   createNpmLinkFiles?: boolean,
   bitPackageName: string
 ): string {
-  const fileExt = path.extname(filePath).replace('.', '');
+  const fileExt = getExt(filePath);
   const getTemplate = () => {
     if (importSpecifier) {
       if (fileExt === 'js' || fileExt === 'jsx') {
@@ -60,9 +60,27 @@ function _getLinkContent(
         }
         return `${exportPart} = ${pathPart};`;
       } else if (fileExt === 'ts' || fileExt === 'tsx') {
-        // @todo: implement
+        let importPart = 'import ';
+        if (importSpecifier.linkFile.isDefault) {
+          importPart += `${importSpecifier.mainFile.name}`;
+        } else {
+          importPart += `{ ${importSpecifier.mainFile.name} }`;
+        }
+        importPart += " from '{filePath}';";
+
+        let exportPart = 'export ';
+        if (importSpecifier.mainFile.isDefault) {
+          exportPart += `default ${importSpecifier.mainFile.name};`;
+        } else {
+          exportPart += `{ ${importSpecifier.mainFile.name} };`;
+        }
+
+        return `${importPart}\n${exportPart}`;
       }
     }
+    fileTypesPlugins.forEach((plugin) => {
+      LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate();
+    });
 
     if (createNpmLinkFiles && !fileExtentions.includes(fileExt)) return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
     return LINKS_CONTENT_TEMPLATES[fileExt];
@@ -72,17 +90,20 @@ function _getLinkContent(
     filePath = `./${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
   }
 
-  const fileToLinkTo = path.basename(filePath);
-  const fileToLinkToWithoutSuffix = path.parse(fileToLinkTo);
-  if (createNpmLinkFiles) {
-    filePath = fileExtentions.includes(fileExt)
-      ? bitPackageName
-      : path.join(bitPackageName, fileToLinkToWithoutSuffix.name);
-  } else {
-    filePath = getWithoutExt(filePath); // remove the extension
-  }
+  let filePathWithoutExt = getWithoutExt(filePath);
   const template = getTemplate();
-  return format(template, { filePath: normalize(filePath) });
+  if (createNpmLinkFiles) {
+    filePathWithoutExt = fileExtentions.includes(fileExt)
+      ? bitPackageName
+      : path.join(bitPackageName, filePathWithoutExt);
+  } else {
+    filePathWithoutExt = getWithoutExt(filePath); // remove the extension
+  }
+  if (!template) {
+    // @todo: throw an exception?
+    logger.error(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
+  }
+  return template.replace('{filePath}', normalize(filePathWithoutExt));
 }
 
 /**
@@ -115,7 +136,9 @@ async function writeDependencyLinks(
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
     const linkContent = _getLinkContent(relativeFilePath, importSpecifier, createNpmLinkFiles, packagePath);
     logger.debug(`writeLinkFile, on ${linkPath}`);
-    return { linkPath, linkContent, isEs6: !!importSpecifier };
+    const linkPathExt = getExt(linkPath);
+    const isEs6 = importSpecifier && linkPathExt === 'js';
+    return { linkPath, linkContent, isEs6 };
   };
 
   const componentLink = (
@@ -133,7 +156,7 @@ async function writeDependencyLinks(
     let distLinkPath;
     const linkFiles = [];
     if (hasDist) {
-      const sourceRelativePathWithCompiledExt = getWithoutExt(sourceRelativePath) + relativeDistExtInDependency;
+      const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
       distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, sourceRelativePathWithCompiledExt);
       // Generate a link file inside dist folder of the dependent component
       const linkFile = prepareLinkFile(

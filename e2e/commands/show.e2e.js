@@ -360,17 +360,33 @@ function add(a, b) {
       );
     });
   });
-  describe('with compare flag', () => {
-    beforeEach(() => {
+  describe('with --compare flag', () => {
+    before(() => {
       helper.initNewLocalScope();
       helper.createComponentBarFoo();
       helper.createComponent('bar', 'index.js');
       helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
     });
-
-    it('Should throw error nothing to compare no previous versions found', () => {
-      const showCmd = () => helper.showComponent('bar/foo --compare');
-      expect(showCmd).to.throw('error - nothing to compare no previous versions found');
+    describe('when adding a component without committing it', () => {
+      it('Should throw error nothing to compare no previous versions found', () => {
+        const showCmd = () => helper.showComponent('bar/foo --compare');
+        expect(showCmd).to.throw('error - nothing to compare no previous versions found');
+      });
+    });
+    describe('when importing a component', () => {
+      before(() => {
+        helper.commitAllComponents();
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo@1');
+      });
+      it('Should not throw an error "nothing to compare no previous versions found"', () => {
+        const showCmd = () => helper.showComponent('bar/foo --compare');
+        expect(showCmd).not.to.throw();
+      });
     });
   });
   describe('with --outdated flag', () => {
