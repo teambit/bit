@@ -294,4 +294,40 @@ describe('typescript', function () {
       });
     }
   });
+  describe('react style => .tsx extension', () => {
+    if (process.env.APPVEYOR === 'True') {
+      this.skip;
+    } else {
+      before(() => {
+        helper.reInitLocalScope();
+        const listFixture = `import {Item} from '../item/item';
+/**
+ * Awesome List React component.
+ */
+export class List extends React.Component {
+    public render() {
+        return (
+            <ul data-automation-id="LIST">
+                <Item />
+                <Item />
+                <Item />
+            </ul>
+        );
+    }
+}
+`;
+        const itemFixture = '';
+        helper.createComponent('list', 'list.tsx', listFixture);
+        helper.createComponent('item', 'item.tsx', itemFixture);
+        helper.addComponent('list/list.tsx');
+        helper.addComponent('item/item.tsx');
+      });
+      it('should be able to parse .tsx syntax successfully and recognize the dependencies', () => {
+        const output = helper.showComponent('list/list --json');
+        const outputParsed = JSON.parse(output);
+        expect(outputParsed.dependencies).to.have.lengthOf(1);
+        expect(outputParsed.dependencies[0].id).to.equal('item/item');
+      });
+    }
+  });
 });
