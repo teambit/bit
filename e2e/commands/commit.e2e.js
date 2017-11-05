@@ -428,7 +428,9 @@ describe('bit tag command', function () {
     });
     it('should not tag and throw an error regarding the relative syntax', () => {
       expect(output).to.have.string('fatal: following component dependencies were not found');
-      expect(output).to.have.string(`relative components: ${helper.remoteScope}/utils/is-type@0.0.1`);
+      expect(output).to.have.string(
+        `relative components (should be absolute): ${helper.remoteScope}/utils/is-type@0.0.1`
+      );
     });
   });
 

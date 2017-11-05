@@ -148,6 +148,7 @@ export default class Helper {
   listLocalScope(options: string = '') {
     return this.runCmd(`bit list ${options}`);
   }
+
   getNewBareScope() {
     const scopeName = v4();
     const scopePath = path.join(this.e2eDir, scopeName);

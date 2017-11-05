@@ -17,8 +17,8 @@ export default class Ref {
     return repository.findOne(this);
   }
 
-  loadSync(repo: Repository): BitObject {
-    return repo.loadSync(this);
+  loadSync(repo: Repository, throws: boolean = true): BitObject {
+    return repo.loadSync(this, throws);
   }
 
   loadRaw(repo: Repository): Promise<Buffer> {

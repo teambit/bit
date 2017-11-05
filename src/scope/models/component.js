@@ -60,8 +60,14 @@ export default class Component extends BitObject {
     return values(this.versions);
   }
 
-  listVersions(): string[] {
-    return Object.keys(this.versions);
+  listVersions(sort: 'ASC' | 'DESC'): string[] {
+    const versions = Object.keys(this.versions);
+    if (!sort) return versions;
+    if (sort === 'ASC') {
+      return versions.sort(semver.compare);
+    }
+
+    return versions.sort(semver.compare).reverse();
   }
 
   compatibleWith(component: Component) {
@@ -74,6 +80,27 @@ export default class Component extends BitObject {
   latest(): string {
     if (empty(this.versions)) return '0.0.0';
     return semver.maxSatisfying(this.listVersions(), '*');
+  }
+
+  /**
+   * Return the lateset version which actuall exists in the scope
+   * (exists means the object itself exists)
+   * This relevant for cases when the component version array has few versions
+   * but we don't have all the refs in the object
+   * 
+   * @returns {number} 
+   * @memberof Component
+   */
+  latestExisting(repository: Repository): string {
+    if (empty(this.versions)) return '0.0.0';
+    const versions = this.listVersions('ASC');
+    let version = null;
+    let versionStr = null;
+    while (!version && versions && versions.length) {
+      versionStr = versions.pop();
+      version = this.loadVersionSync(versionStr, repository, false);
+    }
+    return versionStr || '0.0.0';
   }
 
   collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } }> {
@@ -138,6 +165,12 @@ export default class Component extends BitObject {
     const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound();
     return versionRef.load(repository);
+  }
+
+  loadVersionSync(version: number, repository: Repository, throws: boolean = true): Version {
+    const versionRef: Ref = this.versions[version];
+    if (!versionRef) throw new VersionNotFound();
+    return versionRef.loadSync(repository, throws);
   }
 
   collectObjects(repo: Repository): Promise<ComponentObjects> {
