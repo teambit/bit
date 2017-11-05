@@ -29,7 +29,6 @@ import ComponentVersion from '../component-version';
 import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
-import logger from '../../logger/logger';
 
 export type ComponentProps = {
   scope?: string,
