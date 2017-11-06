@@ -77,7 +77,7 @@ export default class Repository {
     return Promise.all(
       refs.map(async (ref) => {
         const buffer = await this.loadRaw(ref);
-        const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref, this.types);
+        const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash, this.types);
         return bitRawObject;
       })
     );

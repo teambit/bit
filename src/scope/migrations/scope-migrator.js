@@ -2,7 +2,6 @@
 import R from 'ramda';
 import { BitObject, BitRawObject, Ref } from '../objects';
 import { BIT_VERSION } from '../../constants';
-import migratonManifest from './scope-migrator-manifest';
 import getMigrationVersions, { MigrationDeclaration } from '../../migration/migration-helper';
 import logger from '../../logger/logger';
 
@@ -34,11 +33,13 @@ const refsIndex = {};
 /**
  * Running migration process for scope 
  * @param {string} scopeVersion - The current scope version
+ * @param {Object} migratonManifest - A manifest which define what migrations to run
  * @param {BitRawObject} objects - Scope's raw objects
  * @param {boolean} verbose - print logs
  */
 export default (async function migrate(
   scopeVersion: string,
+  migratonManifest: Object,
   objects: BitRawObject[],
   verbose: boolean = false
 ): Promise<ScopeMigrationResult> {
@@ -118,7 +119,9 @@ const _updateRefsForObjects = (index: { [string]: BitRawObject }, oldRef: string
   if (oldRef !== newRef) {
     // Get the dependent object and replace the ref to the new one
     logger.debug(`replacing refrence for ${realObject.id()} old ref was: ${oldRef} new ref is:${newRef}`);
-    if (globalVerbose) { console.log(`replacing refrence for ${realObject.id()} old ref was: ${oldRef} new ref is:${newRef}`); }
+    if (globalVerbose) {
+      console.log(`replacing refrence for ${realObject.id()} old ref was: ${oldRef} new ref is:${newRef}`);
+    }
     realObject.replaceRef(new Ref(oldRef), new Ref(newRef));
   }
   return realObject;
@@ -139,9 +142,9 @@ const _getRealObjectWithUpdatedRefs = (
   if (result.newObjects[realObject.hash().hash]) return;
   result.newObjects[realObject.hash().hash] = realObject;
   // Check if we need to update ref
-  if (realObject.hash().hash !== object.ref.hash) {
-    result.refsToRemove.push(object.ref);
-    const dependentObject = _updateRefsForObjects(index, object.ref.hash, realObject.hash().hash);
+  if (realObject.hash().hash !== object.ref) {
+    result.refsToRemove.push(new Ref(object.ref));
+    const dependentObject = _updateRefsForObjects(index, object.ref, realObject.hash().hash);
     result.newObjects[dependentObject.hash().hash] = dependentObject;
   }
 };

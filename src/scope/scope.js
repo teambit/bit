@@ -30,6 +30,7 @@ import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
 import { MigrationResult } from '../migration/migration-helper';
+import migratonManifest from './migrations/scope-migrator-manifest';
 import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
 import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
@@ -113,7 +114,7 @@ export default class Scope {
       };
     }
     const rawObjects = await this.objects.listRawObjects();
-    const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, rawObjects, verbose);
+    const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, migratonManifest, rawObjects, verbose);
     // Add the new / updated objects
     this.objects.addMany(resultObjects.newObjects);
     // Remove old objects

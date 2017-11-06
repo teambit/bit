@@ -11,19 +11,32 @@ export default class BitRawObject {
   types: { [string]: Function };
   _ref: string;
 
-  constructor(buffer: Buffer, ref: ?string, types: ?{ [string]: Function }) {
-    const firstNullByteLocation = buffer.indexOf(NULL_BYTE);
-    const headers = buffer.slice(0, firstNullByteLocation).toString();
-    this.content = buffer.slice(firstNullByteLocation + 1, buffer.length);
-    this.headers = headers.split(SPACE_DELIMITER);
-    const [type] = this.headers;
-    this.type = type;
+  constructor(
+    buffer: Buffer,
+    ref: ?string,
+    types: ?{ [string]: Function },
+    type: ?string,
+    content: ?Buffer,
+    parsedContent: ?Any
+  ) {
+    let headers;
+    let contentFromBuffer;
+    if (buffer) {
+      const firstNullByteLocation = buffer.indexOf(NULL_BYTE);
+      headers = buffer.slice(0, firstNullByteLocation).toString();
+      contentFromBuffer = buffer.slice(firstNullByteLocation + 1, buffer.length);
+    }
+    this.content = content || contentFromBuffer;
+    this.headers = headers ? headers.split(SPACE_DELIMITER) : undefined;
+    const typeFromHeader = this.headers ? this.headers[0] : undefined;
+    this.type = type || typeFromHeader;
     this._ref = ref;
     this.types = types;
-    this.parsedContent = this.getParsedContent();
+    this.parsedContent = parsedContent || this.getParsedContent();
   }
 
   getParsedContent() {
+    if (this.parsedContent) return this.parsedContent;
     let parsedContent;
     switch (this.type) {
       case 'Version':
@@ -93,5 +106,12 @@ export default class BitRawObject {
    */
   toRealObject() {
     return this.types[this.type].from(this.parsedContent || this.getParsedContent());
+  }
+
+  clone() {
+    const types = this.types ? R.clone(this.types) : undefined;
+    const parsedContent = this.parsedContent ? R.clone(this.parsedContent) : undefined;
+    // TODO: Should also clone the buffers (content)
+    return new BitRawObject(undefined, this._ref, types, this.type, this.content, parsedContent);
   }
 }

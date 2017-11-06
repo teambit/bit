@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import getMigrationVersions from '../../src/migration/migration-helper';
 
-describe.only('migration helper', () => {
+describe('migration helper', () => {
   let migrationVersions;
   let versionsNumbers;
   before(() => {
