@@ -207,12 +207,16 @@ export default class Scope {
   async putMany({
     consumerComponents,
     message,
+    exactVersion,
+    releaseType,
     force,
     consumer,
     verbose
   }: {
     consumerComponents: ConsumerComponent[],
     message: string,
+    exactVersion: ?string,
+    releaseType: string,
     force: ?boolean,
     consumer: Consumer,
     verbose: ?boolean
@@ -271,6 +275,8 @@ export default class Scope {
         source: consumerComponent,
         depIds: flattenedDependencies,
         message,
+        exactVersion,
+        releaseType,
         force,
         consumer,
         verbose
@@ -604,7 +610,7 @@ export default class Scope {
       const idsWithAllVersions = versions.map((version) => {
         if (version === versionDependencies.component.version) return null; // imported already
         const versionId = versionDependencies.component.id;
-        versionId.version = version.toString();
+        versionId.version = version;
         return versionId;
       });
       return this.importManyOnes(idsWithAllVersions);
@@ -705,6 +711,7 @@ export default class Scope {
     await postDeprecateHook({ ids: deprecatedComponents });
     return { bitIds: deprecatedComponents, missingComponents };
   }
+
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
     if (!bitId.isLocal(this.name)) {
       return Promise.reject('you can not reset a remote component');
@@ -716,6 +723,7 @@ export default class Scope {
         const lastVersion = component.latest();
         bitId.version = lastVersion.toString();
         return consumer.removeFromComponents(bitId, true).then(() => {
+          // TODO: this won't work any more because the version is now string (semver)
           bitId.version = (lastVersion - 1).toString();
           return this.get(bitId).then((consumerComponent) => {
             const ref = component.versions[lastVersion];
@@ -870,7 +878,7 @@ export default class Scope {
     const components: ConsumerComponent[] = flattenDependencies(componentWithDependencies);
 
     const bitDirForConsumerImport = (component: ConsumerComponent) => {
-      return pathLib.join(componentsDir, component.box, component.name, component.scope, component.version.toString());
+      return pathLib.join(componentsDir, component.box, component.name, component.scope, component.version);
     };
 
     return Promise.all(
@@ -924,7 +932,7 @@ export default class Scope {
           committedComponent =>
             committedComponent.id.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
         );
-        if (committedComponentId && committedComponentId.version > dependency.id.version) {
+        if (committedComponentId && semver.gt(committedComponentId.version, dependency.id.version)) {
           dependency.id.version = committedComponentId.version;
           const flattenDependencyToUpdate = latestVersion.flattenedDependencies.find(
             flattenDependency => flattenDependency.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()

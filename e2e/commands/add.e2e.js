@@ -450,7 +450,7 @@ describe('bit add command', function () {
       });
       it('should add the new file to the existing imported component', () => {
         const bitMap = helper.readBitMap();
-        expect(bitMap[`${helper.remoteScope}/bar/foo@1`].files).to.be.ofSize(2);
+        expect(bitMap[`${helper.remoteScope}/bar/foo@0.0.1`].files).to.be.ofSize(2);
       });
       it('should not add it as a new component', () => {
         const bitMap = helper.readBitMap();

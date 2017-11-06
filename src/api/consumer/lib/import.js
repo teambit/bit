@@ -84,12 +84,16 @@ export default (async function importAction({
   return { dependencies, envDependencies, warnings };
 });
 
+// TODO: refactor to better use of semver
+// TODO: move to bit-javascript
 const getSemverType = (str): ?string => {
   if (semver.valid(str)) return 'V'; // VALID_VERSION
   if (semver.validRange(str)) return 'R'; // RANGE_VERSIONS
   return null;
 };
 
+// TODO: refactor to better use of semver
+// TODO: move to bit-javascript
 function compatibleWith(a: { [string]: string }, b: { [string]: string }): boolean {
   const depName = key(a);
   if (!b[depName]) return false; // dependency does not exist - return false
@@ -117,6 +121,8 @@ function compatibleWith(a: { [string]: string }, b: { [string]: string }): boole
   return false;
 }
 
+// TODO: refactor to better use of semver
+// TODO: move to bit-javascript
 const warnForPackageDependencies = ({ dependencies, consumer }): Promise<Object> => {
   const warnings = {
     notInPackageJson: [],

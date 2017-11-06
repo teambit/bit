@@ -41,7 +41,7 @@ import {
 export type ComponentProps = {
   name: string,
   box: string,
-  version?: ?number,
+  version?: ?string,
   scope?: ?string,
   lang?: string,
   bindingPrefix?: string,
@@ -62,7 +62,7 @@ export type ComponentProps = {
 export default class Component {
   name: string;
   box: string;
-  version: ?number;
+  version: ?string;
   scope: ?string;
   lang: string;
   bindingPrefix: string;
@@ -109,7 +109,7 @@ export default class Component {
       scope: this.scope,
       box: this.box,
       name: this.name,
-      version: this.version ? this.version.toString() : null
+      version: this.version
     });
   }
 
@@ -208,7 +208,7 @@ export default class Component {
     const validName = name.replace(/\//g, '-');
     const packageJson = new PackageJson(bitDir, {
       name: validName,
-      version: `${this.version.toString()}.0.0`,
+      version: this.version,
       homepage: this._getHomepage(),
       main: mainFile,
       dependencies: this.packageDependencies,
@@ -660,7 +660,7 @@ export default class Component {
     return {
       name: this.name,
       box: this.box,
-      version: this.version ? this.version.toString() : null,
+      version: this.version,
       mainFile: this.mainFile,
       scope: this.scope,
       lang: this.lang,
@@ -715,7 +715,7 @@ export default class Component {
     return new Component({
       name,
       box,
-      version: parseInt(version),
+      version,
       scope,
       lang,
       bindingPrefix,

@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import semver from 'semver';
 import R from 'ramda';
 import Version from '../../scope/models/version';
 import { Scope } from '../../scope';
@@ -208,7 +209,7 @@ export default class ComponentsList {
         );
         if (
           similarFileSystemComponent &&
-          modelBitId.getVersion().versionNum > similarFileSystemComponent.id.getVersion().versionNum
+          semver.gt(modelBitId.getVersion().versionNum, similarFileSystemComponent.id.getVersion().versionNum)
         ) {
           stagedComponents.push(modelBitId.toString());
         }

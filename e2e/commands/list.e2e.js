@@ -62,7 +62,7 @@ describe('bit list command', function () {
     });
     it('should display the last found version', () => {
       const output = JSON.parse(helper.listLocalScope('-j'));
-      expect(output).to.deep.includes({ id: 'bar/foo', localVersion: 1 });
+      expect(output).to.deep.includes({ id: 'bar/foo', localVersion: '0.0.1' });
     });
   });
   describe('with --outdated flag', () => {
@@ -76,12 +76,12 @@ describe('bit list command', function () {
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo@1');
+        helper.importComponent('bar/foo@0.0.1');
         const clonedScopePath = helper.cloneLocalScope();
 
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo@1');
+        helper.importComponent('bar/foo@0.0.1');
         helper.commitComponent('bar/foo', 'msg', '-f');
         helper.exportAllComponents();
 
@@ -91,7 +91,8 @@ describe('bit list command', function () {
       });
       it('should show that it has a later version in the remote', () => {
         const barFoo = output.find(item => item.id === `${helper.remoteScope}/bar/foo`);
-        expect(barFoo.remoteVersion).to.be.above(barFoo.localVersion);
+        expect(barFoo.remoteVersion).to.equal('0.0.2');
+        expect(barFoo.localVersion).to.equal('0.0.1');
       });
     });
     describe('when a remote component has the same version as the local component', () => {
@@ -104,7 +105,7 @@ describe('bit list command', function () {
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/baz@1');
+        helper.importComponent('bar/baz@0.0.1');
         const stringOutput = helper.runCmd('bit list -o -j');
         output = JSON.parse(stringOutput);
       });

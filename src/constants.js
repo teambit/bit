@@ -62,7 +62,9 @@ export const DEFAULT_DIST_DIRNAME = 'dist';
 
 export const DEFAULT_BUNDLE_FILENAME = 'dist.js';
 
-export const DEFAULT_BIT_VERSION = 1;
+export const DEFAULT_BIT_VERSION = '0.0.1';
+
+export const DEFAULT_BIT_RELEASE_TYPE = 'patch'; // release type of semver (patch, minor, major)
 
 export const DEFAULT_LANGUAGE = 'javascript';
 

@@ -32,6 +32,135 @@ describe('bit tag command', function () {
       );
     });
   });
+
+  describe('semver flags', () => {
+    let output;
+    describe('tag specific component', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createFile('components', 'patch.js');
+        helper.createFile('components', 'minor.js');
+        helper.createFile('components', 'major.js');
+        helper.createFile('components', 'exact.js');
+        helper.addComponent('components/*.js');
+        helper.commitAllComponents();
+      });
+      it('Should set the version to default version in tag new component', () => {
+        helper.createFile('components', 'default.js');
+        helper.addComponent('components/default.js');
+        output = helper.commitComponent('components/default');
+        const listOutput = JSON.parse(helper.listLocalScope('-j'));
+        expect(listOutput).to.deep.include({ id: 'components/default', localVersion: '0.0.1' });
+      });
+      it('Should increment the patch version when no version type specified', () => {
+        output = helper.commitComponent('components/default', 'message', '-f');
+        expect(output).to.have.string('components/default@0.0.2');
+      });
+      it('Should increment the patch version when --patch flag specified', () => {
+        output = helper.commitComponent('components/patch', 'message', '-f --patch');
+        expect(output).to.have.string('components/patch@0.0.2');
+      });
+      it('Should increment the minor version when --minor flag specified', () => {
+        output = helper.commitComponent('components/minor', 'message', '-f --minor');
+        expect(output).to.have.string('components/minor@0.1.0');
+      });
+      it('Should increment the major version when --major flag specified', () => {
+        output = helper.commitComponent('components/major', 'message', '-f --major');
+        expect(output).to.have.string('components/major@1.0.0');
+      });
+      it('Should set the exact version when specified on new component', () => {
+        helper.createFile('components', 'exact-new.js');
+        helper.addComponent('components/exact-new.js');
+        output = helper.commitComponent('components/exact-new', 'message', '-f --exact_version 5.12.10');
+        expect(output).to.have.string('components/exact-new@5.12.10');
+      });
+      it('Should set the exact version when specified on existing component', () => {
+        output = helper.commitComponent('components/exact', 'message', '-f --exact_version 3.3.3');
+        expect(output).to.have.string('components/exact@3.3.3');
+      });
+      it('Should increment patch version of dependent when using other flag on tag dependency', () => {
+        helper.createFile('components', 'dependency.js');
+        const fixture = "import foo from './dependency'";
+        helper.createFile('components', 'dependent.js', fixture);
+        helper.addComponent('components/dependency.js components/dependent.js');
+        helper.commitAllComponents();
+        helper.commitComponent('components/dependency', 'message', '-f --major');
+        const listOutput = JSON.parse(helper.listLocalScope('-j'));
+        expect(listOutput).to.deep.include({ id: 'components/dependency', localVersion: '1.0.0' });
+        expect(listOutput).to.deep.include({ id: 'components/dependent', localVersion: '0.0.2' });
+      });
+      it('Should throw error when the version already exists', () => {
+        helper.commitComponent('components/exact', 'message', '-f --exact_version 5.5.5');
+        const tagWithExisting = () => helper.commitComponent('components/exact', 'message', '-f --exact_version 5.5.5');
+        expect(tagWithExisting).to.throw('the version 5.5.5 already exists for components/exact');
+      });
+    });
+    describe('tag all components', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createFile('components', 'a.js');
+        helper.createFile('components', 'b.js');
+        helper.addComponent('components/*.js');
+      });
+      it('Should set the version to default version in tag new component', () => {
+        helper.commitAllComponents();
+        const listOutput = JSON.parse(helper.listLocalScope('-j'));
+        expect(listOutput).to.deep.include({ id: 'components/a', localVersion: '0.0.1' });
+        expect(listOutput).to.deep.include({ id: 'components/b', localVersion: '0.0.1' });
+      });
+      it('Should increment the patch version when no version type specified', () => {
+        helper.createFile('components', 'a.js', 'v0.0.2');
+        helper.createFile('components', 'b.js', 'v0.0.2');
+        output = helper.commitAllComponents('message');
+        expect(output).to.have.string('components/a@0.0.2');
+        expect(output).to.have.string('components/b@0.0.2');
+      });
+      it('Should increment the patch version when --patch flag specified', () => {
+        helper.createFile('components', 'a.js', 'v0.0.3');
+        helper.createFile('components', 'b.js', 'v0.0.3');
+        output = helper.commitAllComponents('message', '--patch');
+        expect(output).to.have.string('components/a@0.0.3');
+        expect(output).to.have.string('components/b@0.0.3');
+      });
+      it('Should increment the minor version when --minor flag specified', () => {
+        helper.createFile('components', 'a.js', 'v0.1.0');
+        helper.createFile('components', 'b.js', 'v0.1.0');
+        output = helper.commitAllComponents('message', '-f --minor');
+        expect(output).to.have.string('components/a@0.1.0');
+        expect(output).to.have.string('components/b@0.1.0');
+      });
+      it('Should increment the major version when --major flag specified', () => {
+        helper.createFile('components', 'a.js', 'v1.0.0');
+        helper.createFile('components', 'b.js', 'v1.0.0');
+        output = helper.commitAllComponents('message', '--major');
+        expect(output).to.have.string('components/a@1.0.0');
+        expect(output).to.have.string('components/b@1.0.0');
+      });
+      it('Should set the exact version when specified on new component', () => {
+        helper.createFile('components', 'c.js');
+        helper.createFile('components', 'd.js');
+        helper.addComponent('components/c.js components/d.js');
+        output = helper.commitAllComponents('message', '-f --exact_version 5.12.10');
+        expect(output).to.have.string('components/c@5.12.10');
+        expect(output).to.have.string('components/d@5.12.10');
+      });
+      it('Should set the exact version when specified on existing component', () => {
+        helper.createFile('components', 'a.js', 'v3.3.3');
+        helper.createFile('components', 'b.js', 'v3.3.3');
+        output = helper.commitAllComponents('message', '-f --exact_version 3.3.3');
+        expect(output).to.have.string('components/a@3.3.3');
+        expect(output).to.have.string('components/b@3.3.3');
+      });
+      it('Should throw error when the version already exists in one of the components', () => {
+        helper.createFile('components', 'a.js', 'v4.3.4');
+        helper.createFile('components', 'b.js', 'v4.3.4');
+        helper.commitComponent('components/a', 'message', '--exact_version 4.3.4');
+        helper.createFile('components', 'a.js', 'v4.3.4 sss');
+        const tagWithExisting = () => helper.commitAllComponents('message', '--exact_version 4.3.4');
+        expect(tagWithExisting).to.throw('the version 4.3.4 already exists for components/a');
+      });
+    });
+  });
   describe('tag one component', () => {
     it.skip('should throw error if the bit id does not exists', () => {});
 
@@ -111,7 +240,7 @@ describe('bit tag command', function () {
           helper.importComponent('comp/comp');
           helper.addNpmPackage('lodash.get', '2.0.0');
           const bitMap = helper.readBitMap();
-          componentRootDir = path.normalize(bitMap[`${helper.remoteScope}/comp/comp@1`].rootDir);
+          componentRootDir = path.normalize(bitMap[`${helper.remoteScope}/comp/comp@0.0.1`].rootDir);
         });
         // beforeEach(() => {
         // });
@@ -299,7 +428,9 @@ describe('bit tag command', function () {
     });
     it('should not tag and throw an error regarding the relative syntax', () => {
       expect(output).to.have.string('fatal: following component dependencies were not found');
-      expect(output).to.have.string(`relative components (should be absolute): ${helper.remoteScope}/utils/is-type@1`);
+      expect(output).to.have.string(
+        `relative components (should be absolute): ${helper.remoteScope}/utils/is-type@0.0.1`
+      );
     });
   });
 
