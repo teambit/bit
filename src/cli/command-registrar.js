@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import type Command from './command';
 import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
-import { empty, first, isNumeric } from '../utils';
+import { empty, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
 
@@ -82,7 +82,7 @@ function execAction(command, concrete, args) {
 }
 
 function serializeErrAndExit(err, commandName) {
-  process.stderr.write(JSON.stringify(serializeError(err)));
+  process.stderr.write(packCommand(buildCommandMessage(serializeError(err)), false));
   const code = err.code && isNumeric(err.code) ? err.code : 1;
   return logger.exitAfterFlush(code, commandName);
 }

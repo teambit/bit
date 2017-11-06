@@ -330,7 +330,10 @@ export default class Scope {
    * to the bare-scope name.
    * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
    */
-  _convertNonScopeToCorrectScope(componentsObjects: ComponentObjects, remoteScope: string): void {
+  _convertNonScopeToCorrectScope(
+    componentsObjects: { component: BitObject, objects: BitObject[] },
+    remoteScope: string
+  ): void {
     const changeScopeIfNeeded = (dependencyId) => {
       if (!dependencyId.scope) {
         const depId = ComponentModel.fromBitId(dependencyId);
@@ -344,7 +347,7 @@ export default class Scope {
       }
     };
 
-    componentsObjects.objects.forEach((object: Ref) => {
+    componentsObjects.objects.forEach((object: BitObject) => {
       if (object instanceof Version) {
         const hashBefore = object.hash().toString();
         object.dependencies.forEach((dependency) => {
@@ -365,6 +368,8 @@ export default class Scope {
         }
       }
     });
+
+    componentsObjects.component.scope = remoteScope;
   }
 
   /**
@@ -384,14 +389,15 @@ export default class Scope {
     const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id), undefined, true, false); // resolve dependencies
     logger.debug('exportManyBareScope: successfully ran importMany');
     await this.objects.persist();
-    const objs = await Promise.all(versions.map(version => version.toObjects(this.objects)));
+    await Promise.all(versions.map(version => version.toObjects(this.objects)));
     const manyConsumerComponent = await Promise.all(
       manyCompVersions.map(compVersion => compVersion.toConsumer(this.objects))
     );
     await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
-    await postExportHook({ ids: manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString()) });
+    const ids = manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString());
+    await postExportHook({ ids });
     await Promise.all(manyConsumerComponent.map(consumerComponent => performCIOps(consumerComponent, this.getPath())));
-    return objs;
+    return ids;
   }
 
   getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: boolean = false) {
@@ -807,26 +813,30 @@ export default class Scope {
     const componentIds = ids.map(id => BitId.parse(id));
     const componentObjectsP = componentIds.map(id => this.sources.getObjects(id));
     const componentObjects = await Promise.all(componentObjectsP);
+    const componentsAndObjects = [];
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(this.objects);
       this._convertNonScopeToCorrectScope(componentAndObject, remoteName);
+      componentsAndObjects.push(componentAndObject);
       const componentBuffer = await componentAndObject.component.compress();
       const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
       return new ComponentObjects(componentBuffer, objectsBuffer);
     });
     const manyObjects = await Promise.all(manyObjectsP);
+    let exportedIds;
     try {
-      await remote.pushMany(manyObjects);
+      exportedIds = await remote.pushMany(manyObjects);
       logger.debug('exportMany: successfully pushed all ids to the bare-scope, going to save them back to local scope');
     } catch (err) {
       logger.warn('exportMany: failed pushing ids to the bare-scope');
       return Promise.reject(err);
     }
-
     await Promise.all(componentIds.map(id => this.clean(id)));
     componentIds.map(id => this.createSymlink(id, remoteName));
-    const idsWithRemoteScope = componentIds.map(id => id.changeScope(remoteName));
-    return this.getManyWithAllVersions(idsWithRemoteScope);
+    const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id));
+    await Promise.all(componentsAndObjects.map(componentObject => this.sources.merge(componentObject)));
+    await this.objects.persist();
+    return idsWithRemoteScope;
   }
 
   ensureDir() {
