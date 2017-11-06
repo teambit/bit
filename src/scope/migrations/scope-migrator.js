@@ -66,6 +66,8 @@ const _runAllMigrationsForObject = (migrations: VersionMigrations[]): Function =
   logger.debug(`start updating object ${rawObject.ref} (${rawObject.id})`);
   // Skip Source files since we don't want the migration to run over them
   if (rawObject.type === 'Source') return null;
+  // Add refs to index
+  _addObjectRefsToIndex(refsIndex, rawObject);
   return R.forEach(_runAllVersionMigrationsForObject(rawObject), migrations);
 };
 
@@ -74,8 +76,6 @@ const _runAllMigrationsForObject = (migrations: VersionMigrations[]): Function =
  * @param {BitRawObject} rawObject - object to run migration on
  */
 const _runAllVersionMigrationsForObject = (rawObject: BitRawObject): Function => (migrations: VersionMigrations) => {
-  // Add refs to index
-  _addObjectRefsToIndex(refsIndex, rawObject);
   const versionNumber = Object.keys(migrations)[0];
   logger.debug(`updating object ${rawObject.ref} (${rawObject.id}) to version ${versionNumber}`);
   const migrationForObjectType = migrations[versionNumber][rawObject.type];
