@@ -27,7 +27,6 @@ import SourcesRepository from './repositories/sources';
 import { postExportHook, postImportHook, postDeprecateHook, postRemoveHook } from '../hooks';
 import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
-import Driver from '../driver';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
 import { MigrationResult } from '../migration/migration-helper';

@@ -39,7 +39,9 @@ export default function getMigrationVersions(
   // Get all the versions which contain at least one migration
   const migrationsVersions = Object.keys(migratonManifest);
   // Get migration versions which is between the current version and the store version
-  const migrationsVersionsToRun = migrationsVersions.filter(version => semver.satisfies(version, `>${storeVersion}`));
+  const migrationsVersionsToRun = migrationsVersions.filter(version =>
+    semver.satisfies(version, `>${storeVersion} <=${currentVersion}`)
+  );
   // Sort the migration to run them from the oldest version to the newest (in case i update my client and there is few versions in between with
   // migration process)
   const sortedMigrationVersionsToRun = migrationsVersionsToRun.sort(semver.compare);
