@@ -29,43 +29,59 @@ function _getIndexFileName(mainFile: string): string {
 }
 
 // todo: move to bit-javascript
-function _getLinkContent(filePath: string, importSpecifier?: Object): string {
+function _getLinkContent(filePath: string, importSpecifiers?: Object): string {
   const fileExt = getExt(filePath);
   const getTemplate = () => {
-    if (importSpecifier) {
+    if (importSpecifiers && importSpecifiers.length) {
       if (fileExt === 'js' || fileExt === 'jsx') {
-        let exportPart = 'exports';
-        if (importSpecifier.mainFile.isDefault) {
-          exportPart += '.default';
-        } else {
-          exportPart += `.${importSpecifier.mainFile.name}`;
-        }
-        let pathPart = "require('{filePath}')";
-        if (importSpecifier.linkFile.isDefault) {
-          pathPart += '.default';
-        }
-        return `${exportPart} = ${pathPart};`;
+        return importSpecifiers
+          .map((importSpecifier) => {
+            let exportPart = 'exports';
+            if (importSpecifier.mainFile.isDefault) {
+              exportPart += '.default';
+            } else {
+              exportPart += `.${importSpecifier.mainFile.name}`;
+            }
+            let pathPart = "require('{filePath}')";
+
+            if (
+              (importSpecifier.linkFile && importSpecifier.linkFile.isDefault) ||
+              (!importSpecifier.linkFile && importSpecifier.mainFile.isDefault)
+            ) {
+              pathPart += '.default';
+            } else {
+              pathPart += `.${importSpecifier.mainFile.name}`;
+            }
+            return `${exportPart} = ${pathPart};`;
+          })
+          .join('\n');
       } else if (fileExt === 'ts' || fileExt === 'tsx') {
-        let importPart = 'import ';
-        if (importSpecifier.linkFile.isDefault) {
-          importPart += `${importSpecifier.mainFile.name}`;
-        } else {
-          importPart += `{ ${importSpecifier.mainFile.name} }`;
-        }
-        importPart += " from '{filePath}';";
+        return importSpecifiers
+          .map((importSpecifier) => {
+            let importPart = 'import ';
+            if (
+              (importSpecifier.linkFile && importSpecifier.linkFile.isDefault) ||
+              (!importSpecifier.linkFile && importSpecifier.mainFile.isDefault)
+            ) {
+              importPart += `${importSpecifier.mainFile.name}`;
+            } else {
+              importPart += `{ ${importSpecifier.mainFile.name} }`;
+            }
+            importPart += " from '{filePath}';";
 
-        let exportPart = 'export ';
-        if (importSpecifier.mainFile.isDefault) {
-          exportPart += `default ${importSpecifier.mainFile.name};`;
-        } else {
-          exportPart += `{ ${importSpecifier.mainFile.name} };`;
-        }
-
-        return `${importPart}\n${exportPart}`;
+            let exportPart = 'export ';
+            if (importSpecifier.mainFile.isDefault) {
+              exportPart += `default ${importSpecifier.mainFile.name};`;
+            } else {
+              exportPart += `{ ${importSpecifier.mainFile.name} };`;
+            }
+            return `${importPart}\n${exportPart}`;
+          })
+          .join('\n');
       }
     }
     fileTypesPlugins.forEach((plugin) => {
-      LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate();
+      LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate(importSpecifiers);
     });
 
     return LINKS_CONTENT_TEMPLATES[fileExt];
@@ -81,7 +97,7 @@ function _getLinkContent(filePath: string, importSpecifier?: Object): string {
     // @todo: throw an exception?
     logger.error(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
   }
-  return template.replace('{filePath}', normalize(filePathWithoutExt));
+  return template.replace(/{filePath}/g, normalize(filePathWithoutExt));
 }
 
 /**
@@ -102,7 +118,7 @@ async function writeDependencyLinks(
     mainFile: string,
     linkPath: string,
     relativePathInDependency: string,
-    importSpecifier?: Object
+    relativePath: Object
   ) => {
     const rootDir = path.join(consumerPath, bitMap.getRootDirOfComponent(componentId));
     let actualFilePath = path.join(rootDir, relativePathInDependency);
@@ -110,25 +126,25 @@ async function writeDependencyLinks(
       actualFilePath = path.join(rootDir, _getIndexFileName(mainFile));
     }
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
-
-    const linkContent = _getLinkContent(relativeFilePath, importSpecifier);
+    const importSpecifiers = relativePath.importSpecifiers;
+    const linkContent = _getLinkContent(relativeFilePath, importSpecifiers);
     logger.debug(`writeLinkFile, on ${linkPath}`);
     const linkPathExt = getExt(linkPath);
-    const isEs6 = importSpecifier && linkPathExt === 'js';
+    const isEs6 = importSpecifiers && linkPathExt === 'js';
     return { linkPath, linkContent, isEs6 };
   };
 
   const componentLink = (
     resolveDepVersion: string,
-    sourceRelativePath: string,
+    relativePath: Object,
     relativePathInDependency: string,
     relativeDistPathInDependency: string,
     relativeDistExtInDependency: string,
     parentDir: string,
     mainFile: string,
-    hasDist: boolean,
-    importSpecifier?: Object
+    hasDist: boolean
   ) => {
+    const sourceRelativePath = relativePath.sourceRelativePath;
     const linkPath = path.join(parentDir, sourceRelativePath);
     let distLinkPath;
     const linkFiles = [];
@@ -141,12 +157,12 @@ async function writeDependencyLinks(
         mainFile,
         distLinkPath,
         relativeDistPathInDependency,
-        importSpecifier
+        relativePath
       );
       linkFiles.push(linkFile);
     }
 
-    const linkFile = prepareLinkFile(resolveDepVersion, mainFile, linkPath, relativePathInDependency, importSpecifier);
+    const linkFile = prepareLinkFile(resolveDepVersion, mainFile, linkPath, relativePathInDependency, relativePath);
     linkFiles.push(linkFile);
     return linkFiles;
   };
@@ -190,14 +206,13 @@ async function writeDependencyLinks(
 
         return componentLink(
           resolveDepVersion,
-          relativePath.sourceRelativePath,
+          relativePath,
           destinationRelativePath,
           destinationDistRelativePath,
           destinationDistRelativePathExt,
           parentDir,
           depComponent.calculateMainDistFile(),
-          hasDist,
-          relativePath.importSpecifier
+          hasDist
         );
       });
       return R.flatten(currLinks);

@@ -330,4 +330,54 @@ export class List extends React.Component {
       });
     }
   });
+  describe('with default and non default export', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler('bit.envs/compilers/react-typescript');
+      const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
+      helper.createComponent('utils', 'is-array.ts', isArrayFixture);
+      helper.addComponent('utils/is-array.ts');
+      const isStringFixture =
+        "export function isString() { return 'got is-string'; }; export function isString2() { return 'got is-string2'; };";
+      helper.createComponent('utils', 'is-string.ts', isStringFixture);
+      helper.addComponent('utils/is-string.ts');
+      const fooBarFixture = `import isArray from '../utils/is-array';
+import { isString, isString2 } from '../utils/is-string'; 
+export default function foo() { return isArray() +  ' and ' + isString() +  ' and ' + isString2() + ' and got foo'; };`;
+      helper.createComponent('bar', 'foo.ts', fooBarFixture);
+      helper.addComponent('bar/foo.ts');
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+    it('should be able to require its direct dependency and print results from all dependencies', () => {
+      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-array and got is-string and got is-string2 and got foo');
+    });
+    it('should be able to compile the main component with auto-generated .ts files without errors', () => {
+      helper.importCompiler('bit.envs/compilers/react-typescript');
+      const barFooFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
+      const compilerPrefix = path.join(
+        helper.localScopePath,
+        '.bit',
+        'components',
+        'compilers',
+        'react-typescript',
+        'bit.envs'
+      );
+      let version = '';
+      fs.readdirSync(compilerPrefix).forEach((file) => {
+        version = file;
+      });
+      const compilerPath = path.join(compilerPrefix, version, 'node_modules', 'typescript', 'bin');
+      const result = helper.runCmd(`tsc ${barFooFile}`, compilerPath);
+      // in case of compilation error it throws an exception
+      expect(result.trim()).to.equal('');
+    });
+  });
 });
