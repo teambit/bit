@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 
-const exec = childProcessP.exec;
+const spawn = childProcessP.spawn;
 const objectToArray = obj => map(join('@'), toPairs(obj));
 const rejectNils = R.reject(isNil);
 
@@ -68,20 +68,18 @@ const installAction = (
   const serializedFlags = flags && flags.length > 0 ? ` ${flags.join(' ')}` : '';
 
   fs.ensureDirSync(path.join(options.cwd, 'node_modules'));
-  const commandToExecute = `npm install${serializedModules}${serializedFlags}`;
-  return exec(commandToExecute, { cwd: options.cwd }).then(({ stdout, stderr }) => {
-    // if (error) return reject(error);
-    // This is an hack until we will upgrade to npm5 (don't know the exact version)
-    // In npm5 they improved the output to be something like:
-    // npm added 125, removed 32, updated 148 and moved 5 packages.
-    // see more info here:
-    // https://github.com/npm/npm/pull/15914
-    // https://github.com/npm/npm/issues/10732
-    // if (!verbose) {
-    stdout = `successfully ran ${commandToExecute}`;
-    // }
 
-    return { stdout, stderr };
+  const args = ['install', ...serializedModules.trim().split(' '), serializedFlags];
+  const promise = spawn('npm', args, { cwd: options.cwd });
+  const childProcess = promise.childProcess;
+  const output = [];
+
+  childProcess.stdout.on('data', data => output.push(data.toString()));
+  childProcess.stderr.on('data', data => output.push(data.toString()));
+
+  return promise.then(() => {
+    console.log(output.join(''));
+    return { stdout: `successfully ran npm install${serializedModules}${serializedFlags}`, stderr: '' };
   });
 };
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {
