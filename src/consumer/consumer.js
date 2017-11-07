@@ -120,7 +120,10 @@ export default class Consumer {
    */
   migrate(verbose): Object {
     logger.debug('running migration process for consumer');
+    // Check version of stores (bitmap / bitjson) to check if we need to run migrate
+    // If migration is needed add loader - loader.start(BEFORE_MIGRATION);
     // bitmap migrate
+
     return {
       run: true,
       success: true

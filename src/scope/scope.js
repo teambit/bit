@@ -35,7 +35,8 @@ import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
 import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
   BEFORE_IMPORT_PUT_ON_SCOPE,
-  BEFORE_INSTALL_NPM_DEPENDENCIES
+  BEFORE_INSTALL_NPM_DEPENDENCIES,
+  BEFORE_MIGRATION
 } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
 import logger from '../logger/logger';
@@ -113,6 +114,7 @@ export default class Scope {
         run: false
       };
     }
+    loader.start(BEFORE_MIGRATION);
     const rawObjects = await this.objects.listRawObjects();
     const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, migratonManifest, rawObjects, verbose);
     // Add the new / updated objects
