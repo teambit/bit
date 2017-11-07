@@ -78,15 +78,18 @@ export default class Export extends Command {
 
     const changedComponents = components.filter(component => component.version > 1);
     const addedComponents = components.filter(component => component.version === 1);
+    const autoUpdatedCount = autoUpdatedComponents ? autoUpdatedComponents.length : 0;
 
     return (
-      chalk.green(`${components.length} components tagged`) +
-      chalk.gray(` | ${addedComponents.length} added, ${changedComponents.length} changed\n`) +
+      chalk.green(`${components.length + autoUpdatedCount} components tagged`) +
+      chalk.gray(
+        ` | ${addedComponents.length} added, ${changedComponents.length} changed, ${autoUpdatedCount} auto-tagged\n`
+      ) +
       outputIfExists(addedComponents, 'added components: ') +
       outputIfExists(changedComponents, 'changed components: ', true) +
       outputIfExists(
         autoUpdatedComponents,
-        'auto-updated components (as a result of tagging their dependencies): ',
+        'auto-tagged components (as a result of tagging their dependencies): ',
         true
       )
     );
