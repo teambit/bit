@@ -2,7 +2,7 @@
 import SSH2 from 'ssh2';
 import R from 'ramda';
 import merge from 'lodash.merge';
-import { passphrase as promptPassphrase } from '../../../prompts';
+import { passphrase as promptPassphrase, userpass as promptUserpass } from '../../../prompts';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
 import { RemoteScopeNotFound, UnexpectedNetworkError, PermissionDenied, SSHInvalidResponse } from '../exceptions';
@@ -241,15 +241,19 @@ export default class SSH implements Network {
 
     // if ssh-agent socket exists, use it.
     if (process.env.SSH_AUTH_SOCK) {
-      return merge(base, { agent: process.env.SSH_AUTH_SOCK });
+      return Promise.resolve(merge(base, { agent: process.env.SSH_AUTH_SOCK }));
     }
 
     // otherwise just search for merge
-    return merge(base, { privateKey: keyGetter(key) });
+    const keyBuffer = keyGetter(key);
+    if (keyBuffer) {
+      return Promise.resolve(merge(base, { privateKey: keyBuffer }));
+    }
+
+    return promptUserpass().then(({ username, password }) => merge(base, { username, password }));
   }
 
   connect(key: ?string, passphrase: ?string): Promise<SSH> {
-    const sshConfig = this.composeConnectionObject(key, passphrase);
     const self = this;
 
     function prompt() {
@@ -261,28 +265,30 @@ export default class SSH implements Network {
       });
     }
 
-    return new Promise((resolve, reject) => {
-      const conn = new SSH2();
-      try {
-        conn
-          .on('error', err => reject(err))
-          .on('ready', () => {
-            this.connection = conn;
-            resolve(this);
-          })
-          .connect(sshConfig);
-      } catch (e) {
-        if (e.message === PASSPHRASE_MESSAGE) {
-          conn.end();
-          if (cachedPassphrase) {
-            return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
+    return this.composeConnectionObject(key, passphrase).then((sshConfig) => {
+      return new Promise((resolve, reject) => {
+        const conn = new SSH2();
+        try {
+          conn
+            .on('error', err => reject(err))
+            .on('ready', () => {
+              this.connection = conn;
+              resolve(this);
+            })
+            .connect(sshConfig);
+        } catch (e) {
+          if (e.message === PASSPHRASE_MESSAGE) {
+            conn.end();
+            if (cachedPassphrase) {
+              return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
+            }
+
+            return prompt().then(ssh => resolve(ssh));
           }
 
-          return prompt().then(ssh => resolve(ssh));
+          return reject(e);
         }
-
-        return reject(e);
-      }
+      });
     });
   }
 }

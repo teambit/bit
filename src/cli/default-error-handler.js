@@ -35,7 +35,7 @@ import {
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
-
+import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import PathNotExists from '../api/consumer/lib/exceptions/path-not-exists';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
@@ -146,7 +146,8 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     err => `error - Unable to tag. ${chalk.bold(err.id)} not found.
 Run \`bit status\` command to list all components available for tag.`
   ],
-  [NothingToCompareTo, err => 'error - nothing to compare no previous versions found']
+  [NothingToCompareTo, err => 'error - nothing to compare no previous versions found'],
+  [PromptCanceled, err => chalk.yellow('operation was aborted')]
 ];
 
 export default (err: Error): ?string => {
