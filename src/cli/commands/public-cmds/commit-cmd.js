@@ -47,15 +47,12 @@ export default class Export extends Command {
     return commitAction({ id, message, force, verbose, ignoreMissingDependencies: ignore_missing_dependencies });
   }
 
-  report({
-    components,
-    autoUpdatedComponents
-  }: {
-    components: Component[],
-    autoUpdatedComponents: ModelComponent[]
-  }): string {
-    if (!components) return chalk.yellow('nothing to tag');
-
+  report(results): string {
+    if (!results) return chalk.yellow('nothing to tag');
+    const {
+      components,
+      autoUpdatedComponents
+    }: { components: Component[], autoUpdatedComponents: ModelComponent[] } = results;
     function joinComponents(comps) {
       return comps
         .map((comp) => {
