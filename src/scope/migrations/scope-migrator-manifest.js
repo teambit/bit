@@ -9,5 +9,8 @@ export default {
   '0.11.0-test.3': {
     Component: [componentMigrations.changeVersionToSemVerDeclartaion],
     Version: [versionMigrations.addBindingPrefixDeclartaion, versionMigrations.changeVersionToSemVerDeclartaion]
+  },
+  '0.11.0-test.5': {
+    Version: [versionMigrations.changeImportSpecifiersToArray]
   }
 };
