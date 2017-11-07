@@ -57,28 +57,27 @@ function execAction(command, concrete, args) {
     return Promise.resolve();
   };
 
-  migrateWrapper(command.migration).then(() => {
-    command
-      .action(relevantArgs, opts)
-      .then((data) => {
+  migrateWrapper(command.migration)
+    .then(() => {
+      return command.action(relevantArgs, opts).then((data) => {
         loader.off();
         return logAndExit(command.report(data), command.name);
-      })
-      .catch((err) => {
-        logger.error(
-          `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
-            err,
-            Object.getOwnPropertyNames(err)
-          )}`
-        );
-        loader.off();
-        const errorHandled = defaultHandleError(err) || command.handleError(err);
-
-        if (command.private) return serializeErrAndExit(err, command.name);
-        if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
-        return logErrAndExit(err, command.name);
       });
-  });
+    })
+    .catch((err) => {
+      logger.error(
+        `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
+          err,
+          Object.getOwnPropertyNames(err)
+        )}`
+      );
+      loader.off();
+      const errorHandled = defaultHandleError(err) || command.handleError(err);
+
+      if (command.private) return serializeErrAndExit(err, command.name);
+      if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
+      return logErrAndExit(err, command.name);
+    });
 }
 
 function serializeErrAndExit(err, commandName) {
