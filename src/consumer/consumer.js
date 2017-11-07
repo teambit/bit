@@ -31,7 +31,7 @@ import DirStructure from './dir-structure/dir-structure';
 import { getLatestVersionNumber, pathRelative } from '../utils';
 import * as linkGenerator from './component/link-generator';
 import loadDependenciesForComponent from './component/dependencies-resolver';
-import Version from '../scope/models/version';
+import { Version, Component as ModelComponent } from '../scope/models';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -477,7 +477,7 @@ export default class Consumer {
     force: ?boolean,
     verbose: ?boolean,
     ignoreMissingDependencies: ?boolean
-  ): Promise<Component[]> {
+  ): Promise<{ components: Component[], autoUpdatedComponents: ModelComponent[] }> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const components = await this.loadComponents(componentsIds);
@@ -496,9 +496,9 @@ export default class Consumer {
       consumer: this,
       verbose
     });
-    await this.bumpDependenciesVersions(committedComponents);
+    const autoUpdatedComponents = await this.bumpDependenciesVersions(committedComponents);
 
-    return components;
+    return { components, autoUpdatedComponents };
   }
 
   bindComponents(components: Component[], bitMap: BitMap): Object[] {
