@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.11.0-test.3] - 2017-11-06
+
+- change versions numbers to be semantic versions
+- export / import performence and stability improvements
+- fix a bug which prevent the ci running tests in some cases
 - add plugin mechanism to support different file types
 - bug fix - re-adding a component after exporting it was considered as a new component 
 - fix a bug which makes bit test command not work when a component use bit/ to require another component
@@ -15,6 +20,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - add `--outdated` flag to `bit show` command to show the local and remote versions of a component
 - add `--outdated` flag to `bit list` command to show the local and remote versions of components
+- prevent bare-scope corruption when the export process fails
+- fixed stderr maxBuffer exceeded bug in ci-update cmd
 - fix bug which make imported components considered as modified
 - fix typo in help man page
 

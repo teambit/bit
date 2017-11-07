@@ -6,6 +6,7 @@ import BitNotInScope from './bit-not-in-scope';
 import MergeConflict from './merge-conflict';
 import ComponentNotFound from './component-not-found';
 import VersionNotFound from './version-not-found';
+import VersionAlreadyExists from './version-already-exists';
 import HashNotFound from './hash-not-found';
 import ResolutionException from './resolution-exception';
 import DependencyNotFound from './dependency-not-found';
@@ -18,6 +19,7 @@ export {
   HashNotFound,
   MergeConflict,
   VersionNotFound,
+  VersionAlreadyExists,
   ScopeAlreadyExists,
   BitNotInScope,
   ResolutionException,

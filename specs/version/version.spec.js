@@ -26,39 +26,41 @@ describe('Version', () => {
     });
   });
 
-  describe('increase() + decrease()', () => {
-    it('should increase concrete version by one', () => {
-      const version = new Version(24, false);
+  describe('increase()', () => {
+    it('should increase patch version by one by default', () => {
+      const version = new Version('0.0.1', false);
       version.increase();
-      expect(version.versionNum).to.equal(25);
+      expect(version.versionNum).to.equal('0.0.2');
+    });
+
+    it('should increase patch version by one', () => {
+      const version = new Version('0.0.1', false);
+      version.increase('patch');
+      expect(version.versionNum).to.equal('0.0.2');
+    });
+
+    it('should increase minor version by one', () => {
+      const version = new Version('0.0.1', false);
+      version.increase('minor');
+      expect(version.versionNum).to.equal('0.1.0');
+    });
+
+    it('should increase major version by one', () => {
+      const version = new Version('0.0.1', false);
+      version.increase('major');
+      expect(version.versionNum).to.equal('1.0.0');
     });
 
     it('should increase latest tested version by one', () => {
-      const version = new Version(24, true);
+      const version = new Version('0.0.1', true);
       version.increase();
-      expect(version.versionNum).to.equal(25);
-    });
-
-    it('should decrease concrete version by one', () => {
-      const version = new Version(24, false);
-      version.decrease();
-      expect(version.versionNum).to.equal(23);
-    });
-
-    it('should decrease latest tested version by one', () => {
-      const version = new Version(24, true);
-      version.decrease();
-      expect(version.versionNum).to.equal(23);
+      expect(version.versionNum).to.equal('0.0.2');
     });
 
     it('should throw an InvalidVersionChange error when trying to increase or decrease latest', () => {
       const version = new Version(null, true);
       expect(() => {
         version.increase();
-      }).to.throw();
-
-      expect(() => {
-        version.decrease();
       }).to.throw();
     });
   });

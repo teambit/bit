@@ -12,7 +12,7 @@ const helper = new Helper();
 describe('typescript', function () {
   this.timeout(0);
   after(() => {
-    // helper.destroyEnv();
+    helper.destroyEnv();
   });
 
   // This is one of the most important cases, because it involve a lot of working pieces from the base flow:
@@ -70,8 +70,8 @@ describe('typescript', function () {
         helper.importComponent('bar/foo');
         localConsumerFiles = helper.getConsumerFiles('*.{js,ts,json}');
       });
-      const isStringPath = path.join('components', '.dependencies', 'utils', 'is-string', helper.remoteScope, '1');
-      const isTypePath = path.join('components', '.dependencies', 'utils', 'is-type', helper.remoteScope, '1');
+      const isStringPath = path.join('components', '.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1');
+      const isTypePath = path.join('components', '.dependencies', 'utils', 'is-type', helper.remoteScope, '0.0.1');
       it('should keep the original directory structure of the main component', () => {
         const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.ts');
         expect(localConsumerFiles).to.include(expectedLocation);
@@ -95,7 +95,7 @@ describe('typescript', function () {
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
           name: 'bar-foo',
-          version: '1.0.0',
+          version: '0.0.1',
           main: 'dist/bar/foo.js'
         });
       });
@@ -114,7 +114,7 @@ describe('typescript', function () {
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
           name: 'utils-is-string',
-          version: '1.0.0',
+          version: '0.0.1',
           main: 'dist/utils/is-string.js'
         });
       });
@@ -133,7 +133,7 @@ describe('typescript', function () {
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
           name: 'utils-is-type',
-          version: '1.0.0',
+          version: '0.0.1',
           main: 'dist/utils/is-type.js'
         });
       });
@@ -156,7 +156,7 @@ describe('typescript', function () {
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
         const expectedPathSuffix = normalize(
-          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'utils', 'is-string')
+          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'utils', 'is-string')
         );
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
@@ -169,7 +169,7 @@ describe('typescript', function () {
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
         const expectedPathSuffix = normalize(
-          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index')
+          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'index')
         );
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
@@ -181,7 +181,7 @@ describe('typescript', function () {
         const expectedLocation = path.join(isStringPath, 'utils', 'is-type.ts');
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
-        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'utils', 'is-type'));
+        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'utils', 'is-type'));
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
           `../../../../${expectedPathSuffix}`,
@@ -192,7 +192,7 @@ describe('typescript', function () {
         const expectedLocation = path.join(isStringPath, 'dist', 'utils', 'is-type.js');
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
-        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'index'));
+        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'index'));
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
           `../../../../../${expectedPathSuffix}`,

@@ -39,6 +39,7 @@ import Deprecate from './commands/public-cmds/deprecate-cmd';
 import DeprecatePrivate from './commands/private-cmds/_deprecate-cmd';
 import Delete from './commands/private-cmds/_delete-cmd';
 import Latest from './commands/private-cmds/_latest-cmd';
+import Migrate from './commands/private-cmds/migrate-cmd';
 
 export default function registerCommands(): CommandRegistrar {
   return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -79,6 +80,7 @@ export default function registerCommands(): CommandRegistrar {
     new Deprecate(),
     new Delete(),
     new DeprecatePrivate(),
-    new Latest()
+    new Latest(),
+    new Migrate()
   ]);
 }

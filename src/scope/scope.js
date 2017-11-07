@@ -1,5 +1,6 @@
 /** @flow */
 import * as pathLib from 'path';
+import semver from 'semver';
 import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
@@ -11,7 +12,7 @@ import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } from '../utils';
-import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, DEFAULT_DIST_DIRNAME } from '../constants';
+import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, DEFAULT_DIST_DIRNAME, BIT_VERSION } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
 import { RemoteScopeNotFound, PermissionDenied } from './network/exceptions';
@@ -26,13 +27,16 @@ import SourcesRepository from './repositories/sources';
 import { postExportHook, postImportHook, postDeprecateHook, postRemoveHook } from '../hooks';
 import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
-import Driver from '../driver';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
+import { MigrationResult } from '../migration/migration-helper';
+import migratonManifest from './migrations/scope-migrator-manifest';
+import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
 import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
   BEFORE_IMPORT_PUT_ON_SCOPE,
-  BEFORE_INSTALL_NPM_DEPENDENCIES
+  BEFORE_INSTALL_NPM_DEPENDENCIES,
+  BEFORE_MIGRATION
 } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
 import logger from '../logger/logger';
@@ -90,6 +94,43 @@ export default class Scope {
 
   getBitPathInComponentsDir(id: BitId): string {
     return pathLib.join(this.getComponentsPath(), id.toFullPath());
+  }
+
+  /**
+   * Running migration process for scope to update the stores (bit objects) to the current version
+   * 
+   * @param {any} verbose - print debug logs
+   * @returns {Object} - wether the process run and wether it successeded
+   * @memberof Consumer
+   */
+  async migrate(verbose): MigrationResult {
+    logger.debug('running migration process for scope');
+    if (verbose) console.log('running migration process for scope'); // eslint-disable-line
+    // We start to use this process after version 0.10.9, so we assume the scope is in the last production version
+    const scopeVersion = this.scopeJson.get('version') || '0.10.9';
+    if (semver.gte(scopeVersion, BIT_VERSION)) {
+      logger.debug('scope version is up to date');
+      return {
+        run: false
+      };
+    }
+    loader.start(BEFORE_MIGRATION);
+    const rawObjects = await this.objects.listRawObjects();
+    const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, migratonManifest, rawObjects, verbose);
+    // Add the new / updated objects
+    this.objects.addMany(resultObjects.newObjects);
+    // Remove old objects
+    await this.objects.removeMany(resultObjects.refsToRemove);
+    // Persists new / remove objects
+    await this.objects.persist();
+    // Update the scope version
+    this.scopeJson.set('version', BIT_VERSION);
+    logger.debug(`updating scope version to version ${BIT_VERSION}`);
+    await this.scopeJson.write(this.getPath());
+    return {
+      run: true,
+      success: true
+    };
   }
 
   remotes(): Promise<Remotes> {
@@ -168,12 +209,16 @@ export default class Scope {
   async putMany({
     consumerComponents,
     message,
+    exactVersion,
+    releaseType,
     force,
     consumer,
     verbose
   }: {
     consumerComponents: ConsumerComponent[],
     message: string,
+    exactVersion: ?string,
+    releaseType: string,
     force: ?boolean,
     consumer: Consumer,
     verbose: ?boolean
@@ -232,6 +277,8 @@ export default class Scope {
         source: consumerComponent,
         depIds: flattenedDependencies,
         message,
+        exactVersion,
+        releaseType,
         force,
         consumer,
         verbose
@@ -285,7 +332,10 @@ export default class Scope {
    * to the bare-scope name.
    * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
    */
-  _convertNonScopeToCorrectScope(componentsObjects: ComponentObjects, remoteScope: string): void {
+  _convertNonScopeToCorrectScope(
+    componentsObjects: { component: BitObject, objects: BitObject[] },
+    remoteScope: string
+  ): void {
     const changeScopeIfNeeded = (dependencyId) => {
       if (!dependencyId.scope) {
         const depId = ComponentModel.fromBitId(dependencyId);
@@ -299,7 +349,7 @@ export default class Scope {
       }
     };
 
-    componentsObjects.objects.forEach((object: Ref) => {
+    componentsObjects.objects.forEach((object: BitObject) => {
       if (object instanceof Version) {
         const hashBefore = object.hash().toString();
         object.dependencies.forEach((dependency) => {
@@ -320,6 +370,8 @@ export default class Scope {
         }
       }
     });
+
+    componentsObjects.component.scope = remoteScope;
   }
 
   /**
@@ -339,14 +391,15 @@ export default class Scope {
     const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id), undefined, true, false); // resolve dependencies
     logger.debug('exportManyBareScope: successfully ran importMany');
     await this.objects.persist();
-    const objs = await Promise.all(versions.map(version => version.toObjects(this.objects)));
+    await Promise.all(versions.map(version => version.toObjects(this.objects)));
     const manyConsumerComponent = await Promise.all(
       manyCompVersions.map(compVersion => compVersion.toConsumer(this.objects))
     );
     await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
-    await postExportHook({ ids: manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString()) });
+    const ids = manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString());
+    await postExportHook({ ids });
     await Promise.all(manyConsumerComponent.map(consumerComponent => performCIOps(consumerComponent, this.getPath())));
-    return objs;
+    return ids;
   }
 
   getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: boolean = false) {
@@ -565,7 +618,7 @@ export default class Scope {
       const idsWithAllVersions = versions.map((version) => {
         if (version === versionDependencies.component.version) return null; // imported already
         const versionId = versionDependencies.component.id;
-        versionId.version = version.toString();
+        versionId.version = version;
         return versionId;
       });
       return this.importManyOnes(idsWithAllVersions);
@@ -666,6 +719,7 @@ export default class Scope {
     await postDeprecateHook({ ids: deprecatedComponents });
     return { bitIds: deprecatedComponents, missingComponents };
   }
+
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
     if (!bitId.isLocal(this.name)) {
       return Promise.reject('you can not reset a remote component');
@@ -677,6 +731,7 @@ export default class Scope {
         const lastVersion = component.latest();
         bitId.version = lastVersion.toString();
         return consumer.removeFromComponents(bitId, true).then(() => {
+          // TODO: this won't work any more because the version is now string (semver)
           bitId.version = (lastVersion - 1).toString();
           return this.get(bitId).then((consumerComponent) => {
             const ref = component.versions[lastVersion];
@@ -760,26 +815,30 @@ export default class Scope {
     const componentIds = ids.map(id => BitId.parse(id));
     const componentObjectsP = componentIds.map(id => this.sources.getObjects(id));
     const componentObjects = await Promise.all(componentObjectsP);
+    const componentsAndObjects = [];
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(this.objects);
       this._convertNonScopeToCorrectScope(componentAndObject, remoteName);
+      componentsAndObjects.push(componentAndObject);
       const componentBuffer = await componentAndObject.component.compress();
       const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
       return new ComponentObjects(componentBuffer, objectsBuffer);
     });
     const manyObjects = await Promise.all(manyObjectsP);
+    let exportedIds;
     try {
-      await remote.pushMany(manyObjects);
+      exportedIds = await remote.pushMany(manyObjects);
       logger.debug('exportMany: successfully pushed all ids to the bare-scope, going to save them back to local scope');
     } catch (err) {
       logger.warn('exportMany: failed pushing ids to the bare-scope');
       return Promise.reject(err);
     }
-
     await Promise.all(componentIds.map(id => this.clean(id)));
     componentIds.map(id => this.createSymlink(id, remoteName));
-    const idsWithRemoteScope = componentIds.map(id => id.changeScope(remoteName));
-    return this.getManyWithAllVersions(idsWithRemoteScope);
+    const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id));
+    await Promise.all(componentsAndObjects.map(componentObject => this.sources.merge(componentObject)));
+    await this.objects.persist();
+    return idsWithRemoteScope;
   }
 
   ensureDir() {
@@ -831,7 +890,7 @@ export default class Scope {
     const components: ConsumerComponent[] = flattenDependencies(componentWithDependencies);
 
     const bitDirForConsumerImport = (component: ConsumerComponent) => {
-      return pathLib.join(componentsDir, component.box, component.name, component.scope, component.version.toString());
+      return pathLib.join(componentsDir, component.box, component.name, component.scope, component.version);
     };
 
     return Promise.all(
@@ -885,7 +944,7 @@ export default class Scope {
           committedComponent =>
             committedComponent.id.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
         );
-        if (committedComponentId && committedComponentId.version > dependency.id.version) {
+        if (committedComponentId && semver.gt(committedComponentId.version, dependency.id.version)) {
           dependency.id.version = committedComponentId.version;
           const flattenDependencyToUpdate = latestVersion.flattenedDependencies.find(
             flattenDependency => flattenDependency.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
@@ -973,7 +1032,7 @@ export default class Scope {
   static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName();
-    const scopeJson = new ScopeJson({ name, groupName });
+    const scopeJson = new ScopeJson({ name, groupName, version: BIT_VERSION });
     return Promise.resolve(new Scope({ path, created: true, scopeJson }));
   }
 

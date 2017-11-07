@@ -2,6 +2,8 @@
 import Command from '../../command';
 import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 import { latestVersions } from '../../../api/scope';
+import { migrate } from '../../../api/consumer';
+import logger from '../../../logger/logger';
 
 export default class Latest extends Command {
   name = '_latest <path> <args>';
@@ -12,7 +14,11 @@ export default class Latest extends Command {
 
   action([path, args]: [string, string]): Promise<any> {
     const { payload } = unpackCommand(args);
-    return latestVersions(fromBase64(path), payload);
+    logger.info('Checking if a migration is needed');
+    const scopePath = fromBase64(path);
+    return migrate(scopePath, false).then(() => {
+      return latestVersions(scopePath, payload);
+    });
   }
 
   report(str: string): string {
