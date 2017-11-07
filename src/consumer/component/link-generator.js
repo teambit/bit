@@ -95,7 +95,7 @@ function _getLinkContent(
   if (createNpmLinkFiles) {
     filePathWithoutExt = fileExtentions.includes(fileExt)
       ? bitPackageName
-      : path.join(bitPackageName, filePathWithoutExt);
+      : path.join(bitPackageName, path.basename(filePathWithoutExt));
   } else {
     filePathWithoutExt = getWithoutExt(filePath); // remove the extension
   }
@@ -295,11 +295,11 @@ async function writeEntryPointsForImportedComponent(component: Component, bitMap
   return outputFile(entryPointPath, AUTO_GENERATED_MSG + entryPointFileContent);
 }
 function generateEntryPointDataForPackages(component: Component): Promise<any> {
-  const packagePath = `${component.bindingPrefix}/${component.id.box}/${component.id.name}`.replace(/\//g, '.');
+  const packagePath = `${component.bindingPrefix}/${component.id.box}/${component.id.name}`;
   const mainFile = component.calculateMainDistFile();
   const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
   const fileContent = _getLinkContent(
-    `./${mainFile}`,
+    `index.${getExt(mainFile)}`,
     null,
     true,
     component.id.toStringWithoutVersion().replace(/\//g, '.')

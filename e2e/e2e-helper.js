@@ -314,6 +314,7 @@ export default class Helper {
     return this.runCmd(`bit untrack ${id}`, cwd);
   }
 
+  addFixtureComponents() {}
   addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
@@ -357,6 +358,54 @@ export default class Helper {
     fs.removeSync(this.localScopePath);
     if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.localScopePath}`);
     fs.copySync(clonedScopePath, this.localScopePath);
+  }
+
+  createRemoteScopeWithComponentsFixture() {
+    if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
+
+    const tempScope = `${v4()}-temp`;
+    const tempScopePath = path.join(this.e2eDir, tempScope);
+    fs.emptyDirSync(tempScopePath);
+
+    this.runCmd('bit init', tempScopePath);
+
+    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
+    const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
+    fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
+
+    const babelCorePackageJson = { name: 'babel-core', version: '6.25.0' };
+    const babelPluginTransformObjectRestSpreadPackageJson = {
+      name: 'babel-plugin-transform-object-rest-spread',
+      version: '6.23.0'
+    };
+    const babelPresetLatestPackageJson = { name: 'babel-preset-latest', version: '6.24.1' };
+    const vinylPackageJson = { name: 'vinyl', version: '2.1.0' };
+
+    const nodeModulesDir = path.join(tempScopePath, 'node_modules');
+
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'package.json'), babelCorePackageJson);
+    ensureAndWriteJson(
+      path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'package.json'),
+      babelPluginTransformObjectRestSpreadPackageJson
+    );
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'package.json'), babelPresetLatestPackageJson);
+    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'package.json'), vinylPackageJson);
+
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'index.js'), '');
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'index.js'), '');
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'index.js'), '');
+    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'index.js'), '');
+
+    this.runCmd('bit add compiler.js -i compilers/babel', tempScopePath);
+    this.runCmd('bit tag compilers/babel -m msg', tempScopePath);
+
+    fs.emptyDirSync(this.envScopePath);
+    this.runCmd('bit init --bare', this.envScopePath);
+    this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
+    this.runCmd(`bit export ${this.envScope} compilers/babel`, tempScopePath);
+    this.addRemoteScope(this.envScopePath);
+    this.compilerCreated = true;
+    return true;
   }
 }
 

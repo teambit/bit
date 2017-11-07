@@ -35,7 +35,7 @@ export {
   refreshScope,
   remove,
   deprecate,
-  latestVersions
+  latestVersions,
   pack,
   packInScope
 };
