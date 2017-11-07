@@ -1,4 +1,5 @@
 /** @flow */
+// @TODO refactor this file to include only exports
 import first from './array/first';
 import bufferFrom from './buffer/from';
 import flatMap from './array/flat-map';
@@ -66,8 +67,10 @@ import outputJsonFile from './fs-output-json-sync';
 import searchFilesIgnoreExt from './fs/search-files-ignore-ext';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelative, pathResolve, pathJoinOs } from './path';
 import getMissingTestFiles from './getMissingTestFiles';
+import identityFile from './ssh/identity-file';
 
 export {
+  identityFile,
   parseSSHUrl,
   splitBy,
   sha1,
