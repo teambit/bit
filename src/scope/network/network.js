@@ -5,13 +5,13 @@ import type { ScopeDescriptor } from '../scope';
 import Component from '../../consumer/component';
 
 export interface Network {
-  connect(host: string): Network,
-  close(): void,
-  get(commandName: string): Promise<any>,
-  describeScope(): Promise<ScopeDescriptor>,
-  fetch(bitIds: BitIds): Promise<ComponentObjects[]>,
-  list(): Promise<ComponentObjects[]>,
-  search(query: string, reindex: boolean): Promise<string>,
-  show(bitId: BitId): Promise<?Component>,
-  latestVersions(bitIds: BitIds): Promise<ComponentObjects[]>
+  connect(host: string): Network;
+  close(): void;
+  get(commandName: string): Promise<any>;
+  describeScope(): Promise<ScopeDescriptor>;
+  fetch(bitIds: BitIds): Promise<ComponentObjects[]>;
+  list(): Promise<ComponentObjects[]>;
+  search(query: string, reindex: boolean): Promise<string>;
+  show(bitId: BitId): Promise<?Component>;
+  latestVersions(bitIds: BitIds): Promise<ComponentObjects[]>;
 }
