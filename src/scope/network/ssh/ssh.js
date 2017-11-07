@@ -5,7 +5,13 @@ import merge from 'lodash.merge';
 import { passphrase as promptPassphrase, userpass as promptUserpass } from '../../../prompts';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
-import { RemoteScopeNotFound, UnexpectedNetworkError, PermissionDenied, SSHInvalidResponse } from '../exceptions';
+import {
+  RemoteScopeNotFound,
+  UnexpectedNetworkError,
+  AuthenticationFailed,
+  PermissionDenied,
+  SSHInvalidResponse
+} from '../exceptions';
 import MergeConflict from '../../exceptions/merge-conflict';
 import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
@@ -20,6 +26,7 @@ import { DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
 const PASSPHRASE_MESSAGE = 'Encrypted private key detected, but no passphrase given';
+const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
 let cachedPassphrase = null;
 
 function absolutePath(path: string) {
@@ -247,7 +254,7 @@ export default class SSH implements Network {
     // otherwise just search for merge
     const keyBuffer = keyGetter(key);
     if (keyBuffer) {
-      return Promise.resolve(merge(base, { privateKey: keyBuffer }));
+      // return Promise.resolve(merge(base, { privateKey: keyBuffer }));
     }
 
     return promptUserpass().then(({ username, password }) => merge(base, { username, password }));
@@ -270,7 +277,13 @@ export default class SSH implements Network {
         const conn = new SSH2();
         try {
           conn
-            .on('error', err => reject(err))
+            .on('error', (err) => {
+              if (err.message === AUTH_FAILED_MESSAGE) {
+                return reject(new AuthenticationFailed());
+              }
+
+              return reject(err);
+            })
             .on('ready', () => {
               this.connection = conn;
               resolve(this);

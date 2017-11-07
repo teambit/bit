@@ -21,7 +21,8 @@ import {
   UnexpectedNetworkError,
   SSHInvalidResponse,
   ProtocolNotSupported,
-  RemoteScopeNotFound
+  RemoteScopeNotFound,
+  AuthenticationFailed
 } from '../scope/network/exceptions';
 import MergeConflict from '../scope/exceptions/merge-conflict';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
@@ -147,7 +148,8 @@ const errorsMap: [[Error, (err: Error) => string]] = [
 Run \`bit status\` command to list all components available for tag.`
   ],
   [NothingToCompareTo, err => 'error - nothing to compare no previous versions found'],
-  [PromptCanceled, err => chalk.yellow('operation was aborted')]
+  [PromptCanceled, err => chalk.yellow('operation was aborted')],
+  [AuthenticationFailed, err => 'authentication failed']
 ];
 
 export default (err: Error): ?string => {
