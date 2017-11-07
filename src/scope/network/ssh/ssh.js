@@ -1,6 +1,8 @@
 /** @flow */
 import SSH2 from 'ssh2';
 import R from 'ramda';
+import merge from 'lodash.merge';
+import { passphrase as promptPassphrase } from '../../../prompts';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
 import { RemoteScopeNotFound, UnexpectedNetworkError, PermissionDenied, SSHInvalidResponse } from '../exceptions';
@@ -17,8 +19,8 @@ import { DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
-
-const conn: SSH2 = new SSH2();
+const PASSPHRASE_MESSAGE = 'Encrypted private key detected, but no passphrase given';
+let cachedPassphrase = null;
 
 function absolutePath(path: string) {
   if (!path.startsWith('/')) return `~/${path}`;
@@ -228,28 +230,39 @@ export default class SSH implements Network {
     return this;
   }
 
-  composeConnectionObject(key: ?string) {
-    return {
+  composeConnectionObject(key: ?string, passphrase: ?string) {
+    const base = {
       username: this.username,
       host: this.host,
       port: this.port,
-      privateKey: keyGetter(key),
-      debug: (str) => {
-        // eslint-disable-line
-        // logger.debug(`SSH2: ${str}`); // uncomment to get the debug messages from ssh2 library
-      },
+      passphrase,
       readyTimeout: DEFAULT_SSH_READY_TIMEOUT
     };
+
+    // if ssh-agent socket exists, use it.
+    if (process.env.SSH_AUTH_SOCK) {
+      return merge(base, { agent: process.env.SSH_AUTH_SOCK });
+    }
+
+    // otherwise just search for merge
+    return merge(base, { privateKey: keyGetter(key) });
   }
 
-  connect(key: ?string): Promise<SSH> {
-    const sshConfig = this.composeConnectionObject(key);
+  connect(key: ?string, passphrase: ?string): Promise<SSH> {
+    const sshConfig = this.composeConnectionObject(key, passphrase);
+    const self = this;
+
+    function prompt() {
+      return promptPassphrase().then((res) => {
+        cachedPassphrase = res.passphrase;
+        return self.connect(key, cachedPassphrase).catch(() => {
+          return prompt();
+        });
+      });
+    }
+
     return new Promise((resolve, reject) => {
-      if (!sshConfig.privateKey) {
-        reject(
-          'could not locate private SSH key file.\nuse the "bit config set ssh_key_file" command to configure its location.'
-        );
-      }
+      const conn = new SSH2();
       try {
         conn
           .on('error', err => reject(err))
@@ -259,6 +272,15 @@ export default class SSH implements Network {
           })
           .connect(sshConfig);
       } catch (e) {
+        if (e.message === PASSPHRASE_MESSAGE) {
+          conn.end();
+          if (cachedPassphrase) {
+            return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
+          }
+
+          return prompt().then(ssh => resolve(ssh));
+        }
+
         return reject(e);
       }
     });
