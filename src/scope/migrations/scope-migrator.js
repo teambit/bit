@@ -96,7 +96,7 @@ const _runOneMigrationForObject = (rawObject: BitRawObject): Function => (migrat
     rawObject.parsedContent = migratedContent;
     return migratedContent;
   } catch (err) {
-    logger.info(`FAILED - running migration: ${migration.name} on object ${rawObject.ref} (${rawObject.id})`);
+    logger.error(`FAILED - running migration: ${migration.name} on object ${rawObject.ref} (${rawObject.id})`);
     throw err;
   }
 };
@@ -123,9 +123,9 @@ const _updateRefsForObjects = (index: { [string]: BitRawObject }, oldRef: string
   const realObject = index[oldRef].toRealObject();
   if (oldRef !== newRef) {
     // Get the dependent object and replace the ref to the new one
-    logger.debug(`replacing refrence for ${realObject.id()} old ref was: ${oldRef} new ref is:${newRef}`);
+    logger.debug(`replacing refrence for ${realObject.id()} old ref was: ${oldRef} new ref is: ${newRef}`);
     if (globalVerbose) {
-      console.log(`replacing refrence for ${realObject.id()} old ref was: ${oldRef} new ref is:${newRef}`);
+      console.log(`replacing refrence for ${realObject.id()} old ref was: ${oldRef} new ref is: ${newRef}`);
     }
     realObject.replaceRef(new Ref(oldRef), new Ref(newRef));
   }
