@@ -7,7 +7,7 @@ describe('bit search', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('in a local scope', () => {
+  describe.skip('in a local scope', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
@@ -19,7 +19,7 @@ describe('bit search', function () {
       expect(output).to.have.string('bar/foo');
     });
   });
-  describe('in a remote scope', () => {
+  describe.skip('in a remote scope', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
@@ -40,7 +40,7 @@ describe('bit search', function () {
       expect(output).to.have.string('compilers/flow');
     });
   });
-  describe('with local scope and corrupted bit.json', () => {
+  describe.skip('with local scope and corrupted bit.json', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
