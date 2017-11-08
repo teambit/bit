@@ -6,8 +6,10 @@ import PermissionDenied from './permission-denied';
 import NetworkError from './network-error';
 import UnexpectedNetworkError from './unexpected-network-error';
 import SSHInvalidResponse from './ssh-invalid-response';
+import AuthenticationFailed from './authentication-failed';
 
 export {
+  AuthenticationFailed,
   ProtocolNotSupported,
   NetworkError,
   UnexpectedNetworkError,
