@@ -267,51 +267,62 @@ export default class SSH implements Network {
   connect(key: ?string, passphrase: ?string, skipAgent: boolean = false): Promise<SSH> {
     const self = this;
 
-    return this.composeConnectionObject(key, passphrase, skipAgent).then((sshConfig) => {
-      return new Promise((resolve, reject) => {
-        function prompt() {
-          return promptPassphrase()
-            .then((res) => {
-              cachedPassphrase = res.passphrase;
-              return self.connect(key, cachedPassphrase).catch(() => {
-                return prompt();
-              });
-            })
-            .catch(err => reject(err));
-        }
-
-        const conn = new SSH2();
-        try {
-          conn
-            .on('error', (err) => {
-              if (this.hasAgentSocket() && err.message === AUTH_FAILED_MESSAGE) {
-                return this.connect(key, passphrase, true);
-              }
-
-              if (err.message === AUTH_FAILED_MESSAGE) {
-                return reject(new AuthenticationFailed());
-              }
-
-              return reject(err);
-            })
-            .on('ready', () => {
-              this.connection = conn;
-              resolve(this);
-            })
-            .connect(sshConfig);
-        } catch (e) {
-          if (e.message === PASSPHRASE_MESSAGE) {
-            conn.end();
-            if (cachedPassphrase) {
-              return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
-            }
-
-            return prompt().then(ssh => resolve(ssh));
+    return this.composeConnectionObject(key, passphrase, skipAgent)
+      .then((sshConfig) => {
+        return new Promise((resolve, reject) => {
+          function prompt() {
+            return promptPassphrase()
+              .then((res) => {
+                cachedPassphrase = res.passphrase;
+                return self.connect(key, cachedPassphrase).catch(() => {
+                  return prompt();
+                });
+              })
+              .catch(err => reject(err));
           }
 
-          return reject(e);
+          const conn = new SSH2();
+          try {
+            conn
+              .on('error', (err) => {
+                if (this.hasAgentSocket() && err.message === AUTH_FAILED_MESSAGE) {
+                  // retry in case ssh-agent failed
+                  reject({
+                    skip: true
+                  });
+                }
+
+                if (err.message === AUTH_FAILED_MESSAGE) {
+                  return reject(new AuthenticationFailed());
+                }
+
+                return reject(err);
+              })
+              .on('ready', () => {
+                this.connection = conn;
+                resolve(this);
+              })
+              .connect(sshConfig);
+          } catch (e) {
+            if (e.message === PASSPHRASE_MESSAGE) {
+              conn.end();
+              if (cachedPassphrase) {
+                return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
+              }
+
+              return prompt().then(ssh => resolve(ssh));
+            }
+
+            return reject(e);
+          }
+        });
+      })
+      .catch((err) => {
+        if (err.skip) {
+          return this.connect(key, passphrase, true);
         }
+
+        throw err;
       });
-    });
   }
 }
