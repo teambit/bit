@@ -573,7 +573,6 @@ export default class Consumer {
       logger.debug(`binding component: ${componentId}`);
       const componentMap: ComponentMap = bitMap.getComponent(componentId, true);
       if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-        const target = path.join(this.getPath(), componentMap.rootDir);
         const relativeLinkPath = path.join(
           'node_modules',
           this.bitJson.bindingPrefix,
@@ -583,7 +582,7 @@ export default class Consumer {
         const linkPath = path.join(this.getPath(), relativeLinkPath);
         fs.removeSync(linkPath); // in case a component has been moved
         fs.ensureDirSync(path.dirname(linkPath));
-        symlinkOrCopy.sync(target, linkPath);
+        symlinkOrCopy.sync(component.writtenPath, linkPath);
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
         const boundDependencies = component.dependencies ? writeDependenciesLinks(component, componentMap) : [];
         const boundMissingDependencies =
