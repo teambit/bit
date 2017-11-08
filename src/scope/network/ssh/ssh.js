@@ -1,9 +1,17 @@
 /** @flow */
 import SSH2 from 'ssh2';
 import R from 'ramda';
+import merge from 'lodash.merge';
+import { passphrase as promptPassphrase, userpass as promptUserpass } from '../../../prompts';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
-import { RemoteScopeNotFound, UnexpectedNetworkError, PermissionDenied, SSHInvalidResponse } from '../exceptions';
+import {
+  RemoteScopeNotFound,
+  UnexpectedNetworkError,
+  AuthenticationFailed,
+  PermissionDenied,
+  SSHInvalidResponse
+} from '../exceptions';
 import MergeConflict from '../../exceptions/merge-conflict';
 import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
@@ -17,8 +25,9 @@ import { DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
-
-const conn: SSH2 = new SSH2();
+const PASSPHRASE_MESSAGE = 'Encrypted private key detected, but no passphrase given';
+const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
+let cachedPassphrase = null;
 
 function absolutePath(path: string) {
   if (!path.startsWith('/')) return `~/${path}`;
@@ -239,39 +248,71 @@ export default class SSH implements Network {
     return this;
   }
 
-  composeConnectionObject(key: ?string) {
-    return {
+  composeConnectionObject(key: ?string, passphrase: ?string) {
+    const base = {
       username: this.username,
       host: this.host,
       port: this.port,
-      privateKey: keyGetter(key),
-      debug: (str) => {
-        // eslint-disable-line
-        // logger.debug(`SSH2: ${str}`); // uncomment to get the debug messages from ssh2 library
-      },
+      passphrase,
       readyTimeout: DEFAULT_SSH_READY_TIMEOUT
     };
+
+    // if ssh-agent socket exists, use it.
+    if (process.env.SSH_AUTH_SOCK) {
+      return Promise.resolve(merge(base, { agent: process.env.SSH_AUTH_SOCK }));
+    }
+
+    // otherwise just search for merge
+    const keyBuffer = keyGetter(key);
+    if (keyBuffer) {
+      return Promise.resolve(merge(base, { privateKey: keyBuffer }));
+    }
+
+    return promptUserpass().then(({ username, password }) => merge(base, { username, password }));
   }
 
-  connect(key: ?string): Promise<SSH> {
-    const sshConfig = this.composeConnectionObject(key);
-    return new Promise((resolve, reject) => {
-      if (!sshConfig.privateKey) {
-        reject(
-          'could not locate private SSH key file.\nuse the "bit config set ssh_key_file" command to configure its location.'
-        );
-      }
-      try {
-        conn
-          .on('error', err => reject(err))
-          .on('ready', () => {
-            this.connection = conn;
-            resolve(this);
-          })
-          .connect(sshConfig);
-      } catch (e) {
-        return reject(e);
-      }
+  connect(key: ?string, passphrase: ?string): Promise<SSH> {
+    const self = this;
+
+    function prompt() {
+      return promptPassphrase().then((res) => {
+        cachedPassphrase = res.passphrase;
+        return self.connect(key, cachedPassphrase).catch(() => {
+          return prompt();
+        });
+      });
+    }
+
+    return this.composeConnectionObject(key, passphrase).then((sshConfig) => {
+      return new Promise((resolve, reject) => {
+        const conn = new SSH2();
+        try {
+          conn
+            .on('error', (err) => {
+              if (err.message === AUTH_FAILED_MESSAGE) {
+                return reject(new AuthenticationFailed());
+              }
+
+              return reject(err);
+            })
+            .on('ready', () => {
+              this.connection = conn;
+              resolve(this);
+            })
+            .connect(sshConfig);
+        } catch (e) {
+          if (e.message === PASSPHRASE_MESSAGE) {
+            conn.end();
+            if (cachedPassphrase) {
+              return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
+            }
+
+            return prompt().then(ssh => resolve(ssh));
+          }
+
+          return reject(e);
+        }
+      });
     });
   }
 }

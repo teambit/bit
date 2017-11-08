@@ -692,6 +692,17 @@ describe('bit import', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
+    describe('when cloning the project to somewhere else', () => {
+      before(() => {
+        helper.mimicGitCloneLocalProject();
+      });
+      it('should be able to require its direct dependency and print results from all dependencies', () => {
+        const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
     describe('re-import with a specific path', () => {
       before(() => {
         helper.importComponent('bar/foo -p new-location');
@@ -1201,7 +1212,9 @@ describe('bit import', function () {
 
       const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
-      helper.commitComponent('utils/is-type');
+      const commitOutput = helper.commitComponent('utils/is-type');
+      expect(commitOutput).to.have.string('auto-tagged components');
+      expect(commitOutput).to.have.string('utils/is-string');
       // notice how is-string is not manually committed again!
       helper.exportAllComponents();
 

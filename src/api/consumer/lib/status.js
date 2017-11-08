@@ -19,6 +19,7 @@ export default (async function status(): Promise<StatusResult> {
   const { newComponents, importPendingComponents } = newAndImportPendingComponents;
   const modifiedComponent = await componentsList.listModifiedComponents(true);
   const stagedComponents = await componentsList.listExportPendingComponents();
+  const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
 
   // Run over the components to check if there is missing dependencies
   // If there is at least one we won't commit anything
@@ -27,5 +28,12 @@ export default (async function status(): Promise<StatusResult> {
     return Boolean(component.missingDependencies);
   });
 
-  return { newComponents, modifiedComponent, stagedComponents, componentsWithMissingDeps, importPendingComponents };
+  return {
+    newComponents,
+    modifiedComponent,
+    stagedComponents,
+    componentsWithMissingDeps,
+    importPendingComponents,
+    autoTagPendingComponents
+  };
 });

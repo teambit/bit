@@ -2,7 +2,7 @@
 import path from 'path';
 import semver from 'semver';
 import R from 'ramda';
-import Version from '../../scope/models/version';
+import { Version, Component as ModelComponent } from '../../scope/models';
 import { Scope } from '../../scope';
 import { CorruptedComponent } from '../../scope/exceptions';
 import Component from '../component';
@@ -216,6 +216,13 @@ export default class ComponentsList {
       }
     });
     return stagedComponents;
+  }
+
+  async listAutoTagPendingComponents(): Promise<ModelComponent[]> {
+    const modifiedComponents = await this.listModifiedComponents();
+    if (!modifiedComponents || !modifiedComponents.length) return [];
+    const modifiedComponentsIds = modifiedComponents.map(modifiedComponent => BitId.parse(modifiedComponent));
+    return this.consumer.listComponentsForAutoTagging(modifiedComponentsIds);
   }
 
   async idsFromBitMap(withScopeName: boolean = true, origin?: string): Promise<string[]> {
