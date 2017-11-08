@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - bug fix - generated .ts links were not valid
 
+## [0.11.0-test.8] - 2017-11-08
+- remove the ssh agent support (it's buggy)
+
+## [0.11.0-test.7] - 2017-11-08
+
+- SSH is not supporting passphrase in case a private key is encrypted
+- SSH authentication can be done with SSH username and password in case a private key or an SSH agent socket are not available
+- `bit show` - show components that will be tagged automatically when their dependencies are tagged
+- bug fix - dependencies were not written to the file-system when cloning a project with an existing bit.map file
+- disable the local search
+
 ## [0.11.0-test.3] - 2017-11-06
 
 - change versions numbers to be semantic versions

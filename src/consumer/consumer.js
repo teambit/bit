@@ -31,7 +31,7 @@ import DirStructure from './dir-structure/dir-structure';
 import { getLatestVersionNumber, pathRelative } from '../utils';
 import * as linkGenerator from './component/link-generator';
 import loadDependenciesForComponent from './component/dependencies-resolver';
-import Version from '../scope/models/version';
+import { Version, Component as ModelComponent } from '../scope/models';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -356,20 +356,20 @@ export default class Consumer {
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         const depFromBitMap = bitMap.getComponent(dependencyId, false);
-        if (depFromBitMap) {
+        if (depFromBitMap && fs.existsSync(depFromBitMap.rootDir)) {
           dep.writtenPath = depFromBitMap.rootDir;
-          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map`);
+          logger.debug(
+            `writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map and file system`
+          );
           bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
-
         if (dependenciesIdsCache[dependencyId]) {
           logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
           dep.writtenPath = dependenciesIdsCache[dependencyId];
           bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
-
         const depBitPath = this.composeDependencyPath(dep.id);
         dep.writtenPath = depBitPath;
         dependenciesIdsCache[dependencyId] = depBitPath;
@@ -426,19 +426,30 @@ export default class Consumer {
     component.writtenPath = newPath;
   }
 
-  async bumpDependenciesVersions(committedComponents: Component[]) {
+  async candidateComponentsForAutoTagging(modifiedComponents: BitId[]) {
     const bitMap = await this.getBitMap();
     const authoredComponents = bitMap.getAllComponents(COMPONENT_ORIGINS.AUTHORED);
     if (!authoredComponents) return null;
-    const committedComponentsWithoutVersions = committedComponents.map(committedComponent =>
-      committedComponent.id.toStringWithoutVersion()
+    const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
+      modifiedComponent.toStringWithoutVersion()
     );
     const authoredComponentsIds = Object.keys(authoredComponents).map(id => BitId.parse(id));
-    // if a committed component is in authored array, remove it from the array as it has already been committed with the correct version
-    const componentsToUpdate = authoredComponentsIds.filter(
-      component => !committedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
+    // if a modified component is in authored array, remove it from the array as it will be already tagged with the
+    // correct version
+    return authoredComponentsIds.filter(
+      component => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
     );
-    return this.scope.bumpDependenciesVersions(componentsToUpdate, committedComponents);
+  }
+
+  async listComponentsForAutoTagging(modifiedComponents: BitId[]) {
+    const candidateComponents = await this.candidateComponentsForAutoTagging(modifiedComponents);
+    return this.scope.bumpDependenciesVersions(candidateComponents, modifiedComponents, false);
+  }
+
+  async bumpDependenciesVersions(committedComponents: Component[]) {
+    const committedComponentsIds = committedComponents.map(committedComponent => committedComponent.id);
+    const candidateComponents = await this.candidateComponentsForAutoTagging(committedComponentsIds);
+    return this.scope.bumpDependenciesVersions(candidateComponents, committedComponentsIds, true);
   }
 
   /**
@@ -498,7 +509,7 @@ export default class Consumer {
     force: ?boolean,
     verbose: ?boolean,
     ignoreMissingDependencies: ?boolean
-  ): Promise<Component[]> {
+  ): Promise<{ components: Component[], autoUpdatedComponents: ModelComponent[] }> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const components = await this.loadComponents(componentsIds);
@@ -519,9 +530,9 @@ export default class Consumer {
       consumer: this,
       verbose
     });
-    await this.bumpDependenciesVersions(committedComponents);
+    const autoUpdatedComponents = await this.bumpDependenciesVersions(committedComponents);
 
-    return components;
+    return { components, autoUpdatedComponents };
   }
 
   bindComponents(components: Component[], bitMap: BitMap): Object[] {

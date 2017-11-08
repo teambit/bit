@@ -262,7 +262,12 @@ export default class SourceRepository {
     return component;
   }
 
-  putAdditionalVersion(component, version, message, releaseType: string = DEFAULT_BIT_RELEASE_TYPE) {
+  putAdditionalVersion(
+    component: Component,
+    version: Version,
+    message,
+    releaseType: string = DEFAULT_BIT_RELEASE_TYPE
+  ): Component {
     version.log = {
       message,
       username: globalConfig.getSync(CFG_USER_NAME_KEY),
@@ -273,7 +278,7 @@ export default class SourceRepository {
     return this.put({ component, objects: [version] });
   }
 
-  put({ component, objects }: ComponentTree) {
+  put({ component, objects }: ComponentTree): Component {
     logger.debug(`sources.put, id: ${component.id()}`);
     const repo = this.objects();
     repo.add(component);

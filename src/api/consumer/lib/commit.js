@@ -25,16 +25,7 @@ export async function commitAction({
     const isModified = await consumer.isComponentModifiedById(id);
     if (!isModified) return null;
   }
-  const components = await consumer.commit(
-    [id],
-    message,
-    exactVersion,
-    releaseType,
-    force,
-    verbose,
-    ignoreMissingDependencies
-  );
-  return R.head(components);
+  return consumer.commit([id], message, exactVersion, releaseType, force, verbose, ignoreMissingDependencies);
 }
 
 export async function commitAllAction({

@@ -31,7 +31,8 @@ export default class Search extends Command {
       });
     }
 
-    return searchAdapter.searchLocally(queryStr, reindex);
+    return Promise.reject(chalk.red('Local search is disabled for now'));
+    // return searchAdapter.searchLocally(queryStr, reindex);
   }
 
   report(searchResults: Array<Doc | *>): string {
