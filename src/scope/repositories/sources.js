@@ -258,7 +258,7 @@ export default class SourceRepository {
     return component;
   }
 
-  putAdditionalVersion(component, version, message) {
+  putAdditionalVersion(component: Component, version: Version, message): Component {
     version.log = {
       message,
       username: globalConfig.getSync(CFG_USER_NAME_KEY),
@@ -269,7 +269,7 @@ export default class SourceRepository {
     return this.put({ component, objects: [version] });
   }
 
-  put({ component, objects }: ComponentTree) {
+  put({ component, objects }: ComponentTree): Component {
     logger.debug(`sources.put, id: ${component.id()}`);
     const repo = this.objects();
     repo.add(component);

@@ -407,19 +407,30 @@ export default class Consumer {
     component.writtenPath = newPath;
   }
 
-  async bumpDependenciesVersions(committedComponents: Component[]) {
+  async candidateComponentsForAutoTagging(modifiedComponents: BitId[]) {
     const bitMap = await this.getBitMap();
     const authoredComponents = bitMap.getAllComponents(COMPONENT_ORIGINS.AUTHORED);
     if (!authoredComponents) return null;
-    const committedComponentsWithoutVersions = committedComponents.map(committedComponent =>
-      committedComponent.id.toStringWithoutVersion()
+    const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
+      modifiedComponent.toStringWithoutVersion()
     );
     const authoredComponentsIds = Object.keys(authoredComponents).map(id => BitId.parse(id));
-    // if a committed component is in authored array, remove it from the array as it has already been committed with the correct version
-    const componentsToUpdate = authoredComponentsIds.filter(
-      component => !committedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
+    // if a modified component is in authored array, remove it from the array as it will be already tagged with the
+    // correct version
+    return authoredComponentsIds.filter(
+      component => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
     );
-    return this.scope.bumpDependenciesVersions(componentsToUpdate, committedComponents);
+  }
+
+  async listComponentsForAutoTagging(modifiedComponents: BitId[]) {
+    const candidateComponents = await this.candidateComponentsForAutoTagging(modifiedComponents);
+    return this.scope.bumpDependenciesVersions(candidateComponents, modifiedComponents, false);
+  }
+
+  async bumpDependenciesVersions(committedComponents: Component[]) {
+    const committedComponentsIds = committedComponents.map(committedComponent => committedComponent.id);
+    const candidateComponents = await this.candidateComponentsForAutoTagging(committedComponentsIds);
+    return this.scope.bumpDependenciesVersions(candidateComponents, committedComponentsIds, true);
   }
 
   /**

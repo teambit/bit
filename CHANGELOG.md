@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - SSH is not supporting passphrase in case a private key is encrypted
 - SSH authentication can be done with SSH username and password in case a private key or an SSH agent socket are not available
 - by default, SSH auth would first look for an ssh-agent socket for authentication
+- `bit show` - show components that will be tagged automatically when their dependencies are tagged
 - bug fix - dependencies were not written to the file-system when cloning a project with an existing bit.map file
 - disable the local search
 - add plugin mechanism to support different file types
