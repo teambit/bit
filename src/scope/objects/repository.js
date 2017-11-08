@@ -76,9 +76,14 @@ export default class Repository {
     const refs = await this.listRefs();
     return Promise.all(
       refs.map(async (ref) => {
-        const buffer = await this.loadRaw(ref);
-        const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash, this.types);
-        return bitRawObject;
+        try {
+          const buffer = await this.loadRaw(ref);
+          const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash, this.types);
+          return bitRawObject;
+        } catch (err) {
+          logger.error(`Couldn't load the ref ${ref} this object is probably corrupted and should be delete`);
+          return null;
+        }
       })
     );
   }

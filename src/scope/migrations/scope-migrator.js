@@ -63,6 +63,10 @@ export default (async function migrate(
  * @param {VersionMigrations[]} migrations
  */
 const _runAllMigrationsForObject = (migrations: VersionMigrations[]): Function => (rawObject: BitRawObject) => {
+  // Make sure we got a rawObject (we might get a null object in case of corrupted object)
+  if (!rawObject) {
+    return null;
+  }
   logger.debug(`start updating object ${rawObject.ref} (${rawObject.id})`);
   // Skip Source files since we don't want the migration to run over them
   if (rawObject.type === 'Source') return null;
@@ -148,9 +152,13 @@ const _getRealObjectWithUpdatedRefs = (
   result: ScopeMigrationResultCache,
   index: { [string]: BitRawObject }
 ): Funcion => (object: BitRawObject) => {
+  // Make sure we got a rawObject (we might get a null object in case of corrupted object)
+  if (!object) {
+    return null;
+  }
   const realObject = object.toRealObject();
   // Make sure to not ovveride result we already put during the updte ref process
-  if (result.newObjects[realObject.hash().hash]) return;
+  if (result.newObjects[realObject.hash().hash]) return null;
   result.newObjects[realObject.hash().hash] = realObject;
   // Check if we need to update ref
   if (realObject.hash().hash !== object.ref) {
