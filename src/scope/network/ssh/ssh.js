@@ -263,17 +263,19 @@ export default class SSH implements Network {
   connect(key: ?string, passphrase: ?string): Promise<SSH> {
     const self = this;
 
-    function prompt() {
-      return promptPassphrase().then((res) => {
-        cachedPassphrase = res.passphrase;
-        return self.connect(key, cachedPassphrase).catch(() => {
-          return prompt();
-        });
-      });
-    }
-
     return this.composeConnectionObject(key, passphrase).then((sshConfig) => {
       return new Promise((resolve, reject) => {
+        function prompt() {
+          return promptPassphrase()
+            .then((res) => {
+              cachedPassphrase = res.passphrase;
+              return self.connect(key, cachedPassphrase).catch(() => {
+                return prompt();
+              });
+            })
+            .catch(err => reject(err));
+        }
+
         const conn = new SSH2();
         try {
           conn
