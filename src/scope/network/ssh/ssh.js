@@ -259,7 +259,7 @@ export default class SSH implements Network {
 
     // if ssh-agent socket exists, use it.
     if (process.env.SSH_AUTH_SOCK) {
-      return Promise.resolve(merge(base, { agent: process.env.SSH_AUTH_SOCK }));
+      // return Promise.resolve(merge(base, { agent: process.env.SSH_AUTH_SOCK }));
     }
 
     // otherwise just search for merge
