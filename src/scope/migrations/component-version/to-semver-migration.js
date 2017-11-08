@@ -11,6 +11,13 @@ import { VERSION_DELIMITER } from '../../../constants';
  */
 function changeVersionToSemVer(versionModel: Object): Object {
   const getUpdatedDependency = (dependency) => {
+    // Take care of very old models when the dependencies were strings
+    // in this case we will keep it string but change it to contain semver
+    // Those old model will still not work after this migration
+    if (typeof dependency === 'string') {
+      dependency = _getUpdatedId(dependency);
+      return dependency;
+    }
     dependency.id = _getUpdatedId(dependency.id);
     return dependency;
   };
@@ -36,6 +43,11 @@ function _getUpdatedId(id) {
       id = id.replace('::', VERSION_DELIMITER);
     }
     const parsedId = BitId.parse(id);
+    // Don't convert latest word
+    if (parsedId.getVersion().latest) {
+      return id;
+    }
+
     let version = parsedId.getVersion().versionNum;
     // In case there is already a semver, do nothing
     if (!semver.valid(version)) {
