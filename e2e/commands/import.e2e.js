@@ -29,7 +29,10 @@ describe('bit import', function () {
       expect(output.includes('successfully imported one component')).to.be.true;
       expect(output.includes('global/simple')).to.be.true;
     });
-    it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
+    it.skip(
+      'should throw an error if there is already component with the same name and namespace and different scope',
+      () => {}
+    );
     it('should add the component to bit.json file', () => {
       const bitJson = helper.readBitJson();
       const depName = [helper.remoteScope, 'global', 'simple'].join('/');
@@ -1209,6 +1212,8 @@ describe('bit import', function () {
 
       const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+      const statusOutput = helper.runCmd('bit status');
+      expect(statusOutput).to.have.string('components pending to be tagged automatically');
       const commitOutput = helper.commitComponent('utils/is-type');
       expect(commitOutput).to.have.string('auto-tagged components');
       expect(commitOutput).to.have.string('utils/is-string');
