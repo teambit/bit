@@ -1214,6 +1214,8 @@ describe('bit import', function () {
 
       const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+      const statusOutput = helper.runCmd('bit status');
+      expect(statusOutput).to.have.string('components pending to be tagged automatically');
       const commitOutput = helper.commitComponent('utils/is-type');
       expect(commitOutput).to.have.string('auto-tagged components');
       expect(commitOutput).to.have.string('utils/is-string');
