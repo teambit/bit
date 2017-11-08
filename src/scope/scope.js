@@ -240,7 +240,7 @@ export default class Scope {
       const deps = await component.toVersionDependencies(LATEST, this, this.name);
       consumerComponent.version = deps.component.version;
       await deps.toConsumer(this.objects);
-      await index(consumerComponent, this.getPath()); // todo: make sure it still works
+      // await index(consumerComponent, this.getPath());
       return consumerComponent;
     });
 
@@ -343,7 +343,7 @@ export default class Scope {
     const manyConsumerComponent = await Promise.all(
       manyCompVersions.map(compVersion => compVersion.toConsumer(this.objects))
     );
-    await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
+    // await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
     await postExportHook({ ids: manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString()) });
     await Promise.all(manyConsumerComponent.map(consumerComponent => performCIOps(consumerComponent, this.getPath())));
     return objs;
@@ -873,28 +873,29 @@ export default class Scope {
     });
   }
 
-  async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: ConsumerComponent[]) {
+  async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {
     const componentsObjects = await this.sources.getMany(componentsToUpdate);
     const componentsToUpdateP = componentsObjects.map(async (componentObjects) => {
       const component = componentObjects.component;
       if (!component) return null;
       const latestVersion = await component.loadVersion(component.latest(), this.objects);
-      let wasUpdated = false;
+      let pendingUpdate = false;
       latestVersion.dependencies.forEach((dependency) => {
         const committedComponentId = committedComponents.find(
-          committedComponent =>
-            committedComponent.id.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
+          committedComponent => committedComponent.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
         );
         if (committedComponentId && committedComponentId.version > dependency.id.version) {
+          pendingUpdate = true;
+          if (!persist) return;
           dependency.id.version = committedComponentId.version;
           const flattenDependencyToUpdate = latestVersion.flattenedDependencies.find(
             flattenDependency => flattenDependency.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
           );
           flattenDependencyToUpdate.version = committedComponentId.version;
-          wasUpdated = true;
         }
       });
-      if (wasUpdated) {
+      if (pendingUpdate) {
+        if (!persist) return componentObjects.component;
         const message = 'bump dependencies versions';
         return this.sources.putAdditionalVersion(componentObjects.component, latestVersion, message);
       }
@@ -902,7 +903,7 @@ export default class Scope {
     });
     const updatedComponentsAll = await Promise.all(componentsToUpdateP);
     const updatedComponents = removeNils(updatedComponentsAll);
-    if (!R.isEmpty(updatedComponents)) {
+    if (!R.isEmpty(updatedComponents) && persist) {
       await this.objects.persist();
     }
     return updatedComponents;
