@@ -32,6 +32,8 @@ import { getLatestVersionNumber, pathRelative } from '../utils';
 import * as linkGenerator from './component/link-generator';
 import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
+import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
+import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -113,7 +115,7 @@ export default class Consumer {
 
   /**
    * Running migration process for consumer to update the stores (.bit.map.json) to the current version
-   * 
+   *
    * @param {any} verbose - print debug logs
    * @returns {Object} - wether the process run and wether it successeded
    * @memberof Consumer
@@ -151,14 +153,18 @@ export default class Consumer {
   }
 
   async loadComponent(id: BitId): Promise<Component> {
-    const components = await this.loadComponents([id]);
+    const { components } = await this.loadComponents([id]);
     return components[0];
   }
 
-  async loadComponents(ids: BitId[]): Promise<Component[]> {
+  async loadComponents(
+    ids: BitId[],
+    throwOnFailure: boolean = true
+  ): Promise<{ components: Component[], deletedComponents: BitId[] }> {
     logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
     const alreadyLoadedComponents = [];
     const idsToProcess = [];
+    const deletedComponents = [];
     ids.forEach((id) => {
       if (this._componentsCache[id.toString()]) {
         logger.debug(`the component ${id.toString()} has been already loaded, use the cached component`);
@@ -167,7 +173,7 @@ export default class Consumer {
         idsToProcess.push(id);
       }
     });
-    if (!idsToProcess.length) return alreadyLoadedComponents;
+    if (!idsToProcess.length) return { components: alreadyLoadedComponents, deletedComponents };
 
     const bitMap: BitMap = await this.getBitMap();
 
@@ -185,15 +191,28 @@ export default class Consumer {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
       const componentModule = await this.scope.sources.get(id);
-      const component = Component.loadFromFileSystem({
-        bitDir,
-        consumerBitJson: this.bitJson,
-        componentMap,
-        id: idWithConcreteVersion,
-        consumerPath: this.getPath(),
-        bitMap,
-        deprecated: componentModule ? componentModule.deprecated : false
-      });
+      let component;
+      try {
+        component = await Component.loadFromFileSystem({
+          bitDir,
+          consumerBitJson: this.bitJson,
+          componentMap,
+          id: idWithConcreteVersion,
+          consumerPath: this.getPath(),
+          bitMap,
+          deprecated: componentModule ? componentModule.deprecated : false
+        });
+      } catch (err) {
+        if (throwOnFailure) throw err;
+
+        logger.error(`failed loading ${id} from the file-system`);
+        if (err instanceof MissingFilesFromComponent || err instanceof ComponentNotFoundInPath) {
+          deletedComponents.push(id);
+          return null;
+        }
+        throw err;
+      }
+
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // no need to resolve dependencies
         return component;
@@ -213,13 +232,15 @@ export default class Consumer {
     for (const componentP of components) {
       // load the components one after another (not in parallel).
       const component = await componentP;
-      this._componentsCache[component.id.toString()] = component;
-      logger.debug(`Finished loading the component, ${component.id.toString()}`);
-      allComponents.push(component);
+      if (component) {
+        this._componentsCache[component.id.toString()] = component;
+        logger.debug(`Finished loading the component, ${component.id.toString()}`);
+        allComponents.push(component);
+      }
     }
     if (bitMap.hasChanged) await bitMap.write();
 
-    return allComponents.concat(alreadyLoadedComponents);
+    return { components: allComponents.concat(alreadyLoadedComponents), deletedComponents };
   }
 
   async importAccordingToBitJsonAndBitMap(
@@ -512,7 +533,7 @@ export default class Consumer {
   ): Promise<{ components: Component[], autoUpdatedComponents: ModelComponent[] }> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
-    const components = await this.loadComponents(componentsIds);
+    const { components } = await this.loadComponents(componentsIds);
     // Run over the components to check if there is missing dependencies
     // If there is at least one we won't commit anything
     if (!ignoreMissingDependencies) {
@@ -624,7 +645,7 @@ export default class Consumer {
     const componentsMaps = bitMap.getAllComponents();
     if (R.isEmpty(componentsMaps)) throw new Error('nothing to bind');
     const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));
-    const components = await this.loadComponents(componentsIds);
+    const { components } = await this.loadComponents(componentsIds);
     fs.removeSync(path.join(this.getPath(), 'node_modules', 'bit')); // todo: move to bit-javascript
     return this.bindComponents(components, bitMap);
   }
