@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- `bit show` - show components that will be tagged automatically when their dependencies are tagged
 - bug fix - dependencies were not written to the file-system when cloning a project with an existing bit.map file
 - disable the local search
 - add plugin mechanism to support different file types
