@@ -91,7 +91,6 @@ const _runAllVersionMigrationsForObject = (rawObject: BitRawObject): Function =>
 const _runOneMigrationForObject = (rawObject: BitRawObject): Function => (migration: MigrationDeclaration) => {
   logger.debug(`running migration: ${migration.name} on object ${rawObject.ref} (${rawObject.id})`);
   if (globalVerbose) console.log(`running migration: ${migration.name} on object ${rawObject.ref} (${rawObject.id})`);
-  console.log(rawObject.ref, rawObject.getParsedContent());
   try {
     const migratedContent = migration.migrate(rawObject.getParsedContent());
     rawObject.parsedContent = migratedContent;
