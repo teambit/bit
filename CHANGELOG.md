@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bug fix - components that were not indicated as staged-components by `bit status` were exported by `bit export`
+
 ## [0.11.0-test.8] - 2017-11-08
 - remove the ssh agent support (it's buggy)
 

@@ -19,7 +19,7 @@ export default class ComponentsList {
   consumer: Consumer;
   scope: Scope;
   _bitMap: Object;
-  _fromFileSystem: Promise<string[]>;
+  _fromFileSystem: Promise<string[]> = [];
   _fromBitMap: Object = {};
   _fromObjects: ObjectsList;
   constructor(consumer: Consumer) {
@@ -270,12 +270,13 @@ export default class ComponentsList {
    * @return {Promise<Component[]>}
    */
   async getFromFileSystem(origin?: string): Promise<Component[]> {
-    if (!this._fromFileSystem) {
+    const cacheKeyName = origin || 'all';
+    if (!this._fromFileSystem[cacheKeyName]) {
       const idsFromBitMap = await this.idsFromBitMap(true, origin);
       const parsedBitIds = idsFromBitMap.map(id => BitId.parse(id));
-      this._fromFileSystem = await this.consumer.loadComponents(parsedBitIds);
+      this._fromFileSystem[cacheKeyName] = await this.consumer.loadComponents(parsedBitIds);
     }
-    return this._fromFileSystem;
+    return this._fromFileSystem[cacheKeyName];
   }
 
   async getFromBitMap(origin?: string): Object {
