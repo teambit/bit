@@ -264,6 +264,7 @@ export default class SSH implements Network {
     return !!process.env.SSH_AUTH_SOCK;
   }
 
+  // @TODO refactor this method
   connect(key: ?string, passphrase: ?string, skipAgent: boolean = false): Promise<SSH> {
     const self = this;
 
