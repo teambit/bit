@@ -692,6 +692,17 @@ describe('bit import', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
+    describe('when cloning the project to somewhere else', () => {
+      before(() => {
+        helper.mimicGitCloneLocalProject();
+      });
+      it('should be able to require its direct dependency and print results from all dependencies', () => {
+        const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
     describe('re-import with a specific path', () => {
       before(() => {
         helper.importComponent('bar/foo -p new-location');

@@ -337,20 +337,20 @@ export default class Consumer {
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         const depFromBitMap = bitMap.getComponent(dependencyId, false);
-        if (depFromBitMap) {
+        if (depFromBitMap && fs.existsSync(depFromBitMap.rootDir)) {
           dep.writtenPath = depFromBitMap.rootDir;
-          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map`);
+          logger.debug(
+            `writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map and file system`
+          );
           bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
-
         if (dependenciesIdsCache[dependencyId]) {
           logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
           dep.writtenPath = dependenciesIdsCache[dependencyId];
           bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
-
         const depBitPath = this.composeDependencyPath(dep.id);
         dep.writtenPath = depBitPath;
         dependenciesIdsCache[dependencyId] = depBitPath;
