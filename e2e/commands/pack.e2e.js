@@ -16,8 +16,7 @@ describe('bit pack', function () {
   before(() => {
     helper.setNewLocalAndRemoteScopes();
     helper.importCompiler('bit.envs/compilers/react-css');
-    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
-    fs.copySync(sourceDir, helper.localScopePath);
+    helper.copyFixtureComponents();
     helper.addComponentWithOptions('hero-button', { i: 'test/hero-button' });
     helper.addComponentWithOptions('styles', { i: 'test/styles' });
     helper.runCmd('npm i prop-types ');
@@ -26,7 +25,7 @@ describe('bit pack', function () {
     helper.reInitLocalScope();
     helper.addRemoteScope();
     helper.runCmd('npm i prop-types');
-    fs.copySync(sourceDir, helper.localScopePath);
+    helper.copyFixtureComponents();
     helper.importComponent('test/styles');
     helper.importComponent('test/hero-button');
     helper.addComponentWithOptions('hero', { i: 'test/hero' });
