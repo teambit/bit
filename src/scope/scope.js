@@ -240,7 +240,7 @@ export default class Scope {
       const deps = await component.toVersionDependencies(LATEST, this, this.name);
       consumerComponent.version = deps.component.version;
       await deps.toConsumer(this.objects);
-      await index(consumerComponent, this.getPath()); // todo: make sure it still works
+      // await index(consumerComponent, this.getPath());
       return consumerComponent;
     });
 
@@ -343,7 +343,7 @@ export default class Scope {
     const manyConsumerComponent = await Promise.all(
       manyCompVersions.map(compVersion => compVersion.toConsumer(this.objects))
     );
-    await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
+    // await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
     await postExportHook({ ids: manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString()) });
     await Promise.all(manyConsumerComponent.map(consumerComponent => performCIOps(consumerComponent, this.getPath())));
     return objs;
