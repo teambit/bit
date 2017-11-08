@@ -9,7 +9,7 @@ import Helper from '../e2e-helper';
 const helper = new Helper();
 
 // todo: once the bind is implemented, make it work
-describe('typescript', function () {
+describe.only('typescript', function () {
   this.timeout(0);
   after(() => {
     helper.destroyEnv();
@@ -92,7 +92,7 @@ describe('typescript', function () {
         const packageJsonFolder = path.join(helper.localScopePath, 'components', 'bar', 'foo');
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
-          name: 'bar-foo',
+          name: `${helper.remoteScope}.bar.foo`,
           version: '1.0.0',
           main: 'dist/bar/foo.js'
         });
@@ -127,7 +127,7 @@ describe('typescript', function () {
         );
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
-          name: 'utils-is-string',
+          name: `${helper.remoteScope}.utils.is-string`,
           version: '1.0.0',
           main: 'dist/utils/is-string.js'
         });
@@ -162,7 +162,7 @@ describe('typescript', function () {
         );
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
-          name: 'utils-is-type',
+          name: `${helper.remoteScope}.utils.is-type`,
           version: '1.0.0',
           main: 'dist/utils/is-type.js'
         });

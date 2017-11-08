@@ -337,7 +337,8 @@ export default class Component {
     const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
     try {
       await isolatedEnvironment.create();
-      const component = await isolatedEnvironment.importE2E(this.id.toString(), verbose);
+      const componetWithDependencies = await isolatedEnvironment.importE2E(this.id.toString(), verbose);
+      const component = componetWithDependencies.component;
       ciComponent.comp = component;
       const result = await runBuild(component.writtenPath);
       if (!keep) await isolatedEnvironment.destroy();
@@ -620,7 +621,8 @@ export default class Component {
       const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
       try {
         await isolatedEnvironment.create();
-        const component = await isolatedEnvironment.importE2E(this.id.toString(), verbose);
+        const componentWithDependencies = await isolatedEnvironment.importE2E(this.id.toString(), verbose);
+        const component = componentWithDependencies.component;
         component.isolatedEnvironment = isolatedEnvironment;
         logger.debug(`the component ${this.id.toString()} has been imported successfully into an isolated environment`);
 

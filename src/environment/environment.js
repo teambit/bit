@@ -51,7 +51,7 @@ export default class Environment {
     writePath: string,
     writeBitDependencies?: boolean = false,
     createNpmLinkFiles?: boolean = false
-  ): Promise<Component> {
+  ): Promise<ComponentWithDependencies> {
     const bitId = BitId.parse(rawId);
     const componentDependenciesArr = await this.scope.getMany([bitId]);
     await this.consumer.writeToComponentsDir(
