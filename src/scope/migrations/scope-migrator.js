@@ -120,6 +120,12 @@ function _addObjectRefsToIndex(index: { [string]: BitRawObject }, rawObject: Bit
  * @param {*} newRef 
  */
 const _updateRefsForObjects = (index: { [string]: BitRawObject }, oldRef: string, newRef: string): BitObject => {
+  // If the object doesn't has a dependent object return null
+  // This object reference won't be update anywhere
+  if (!index[oldRef]) {
+    logger.warn(`the object ref: ${oldRef} has been updated to: ${newRef} but there is no reference to this object`);
+    return null;
+  }
   const realObject = index[oldRef].toRealObject();
   if (oldRef !== newRef) {
     // Get the dependent object and replace the ref to the new one
@@ -150,6 +156,9 @@ const _getRealObjectWithUpdatedRefs = (
   if (realObject.hash().hash !== object.ref) {
     result.refsToRemove.push(new Ref(object.ref));
     const dependentObject = _updateRefsForObjects(index, object.ref, realObject.hash().hash);
-    result.newObjects[dependentObject.hash().hash] = dependentObject;
+    // Update the dependent object only if found one
+    if (dependentObject) {
+      result.newObjects[dependentObject.hash().hash] = dependentObject;
+    }
   }
 };
