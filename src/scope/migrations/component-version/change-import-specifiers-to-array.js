@@ -16,9 +16,7 @@ function updateImportSpecifiers(versionModel: Object): Object {
   return versionModel;
 }
 
-const changeImportSpecifiersToArray = {
+export default {
   name: 'change ImportSpecifier from Object to Array',
   migrate: updateImportSpecifiers
 };
-
-export default changeImportSpecifiersToArray;
