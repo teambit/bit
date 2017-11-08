@@ -16,7 +16,7 @@ function changeVersionToSemVer(versionModel: Object): Object {
     // Those old model will still not work after this migration
     if (typeof dependency === 'string') {
       logger.warn("The dependency dependency is stored with an old format, this version won't work properly");
-      dependency = { id: _getUpdatedId(dependency) };
+      dependency = { id: _getUpdatedId(dependency), relativePaths: [] };
       return dependency;
     }
     dependency.id = _getUpdatedId(dependency.id);
