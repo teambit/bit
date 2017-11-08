@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.11.0-test.7] - 2017-11-08
+
 - SSH is not supporting passphrase in case a private key is encrypted
 - SSH authentication can be done with SSH username and password in case a private key or an SSH agent socket are not available
 - by default, SSH auth would first look for an ssh-agent socket for authentication
