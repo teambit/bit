@@ -219,7 +219,7 @@ export default class Component {
     driver: Driver,
     bitDir: string,
     force?: boolean = true,
-    writeBitDependencies?: boolean = true,
+    writeBitDependencies?: boolean = false,
     dependencies: Array<Component>
   ): Promise<boolean> {
     const registryDomainPrefix = getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
@@ -434,7 +434,7 @@ export default class Component {
         force,
         writeBitDependencies,
         dependencies
-      ); 
+      );
     }
 
     // When a component is NESTED we do interested in the exact version, because multiple components with the same scope

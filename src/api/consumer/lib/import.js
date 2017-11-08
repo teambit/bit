@@ -20,7 +20,7 @@ export default (async function importAction({
   prefix,
   environment,
   withPackageJson,
-  writeBitDependencies = true
+  writeBitDependencies = false
 }: {
   ids: string,
   tester: ?boolean,
