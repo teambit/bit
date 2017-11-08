@@ -254,7 +254,7 @@ export default class SSH implements Network {
     // otherwise just search for merge
     const keyBuffer = keyGetter(key);
     if (keyBuffer) {
-      // return Promise.resolve(merge(base, { privateKey: keyBuffer }));
+      return Promise.resolve(merge(base, { privateKey: keyBuffer }));
     }
 
     return promptUserpass().then(({ username, password }) => merge(base, { username, password }));
