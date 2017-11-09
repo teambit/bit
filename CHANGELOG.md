@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bug fix - tests files saved with incorrect path when `bit add` was running from non-consumer root  
+
 ## [0.11.0-test.8] - 2017-11-08
 - remove the ssh agent support (it's buggy)
 
