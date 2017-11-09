@@ -8,6 +8,11 @@ import * as versionMigrations from './component-version';
 export default {
   '0.11.0-test.3': {
     Component: [componentMigrations.changeVersionToSemVerDeclartaion],
-    Version: [versionMigrations.addBindingPrefixDeclartaion, versionMigrations.changeVersionToSemVerDeclartaion]
+    Version: [
+      versionMigrations.implSpecsToFilesDeclartaion,
+      versionMigrations.specsResultstoArrayDeclartaion,
+      versionMigrations.addBindingPrefixDeclartaion,
+      versionMigrations.changeVersionToSemVerDeclartaion
+    ]
   }
 };
