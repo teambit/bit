@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+- `bit add` - exclude a component when its main file is excluded 
 - reimplement cat-object command
 
 ## [0.11.0-test.8] - 2017-11-08
