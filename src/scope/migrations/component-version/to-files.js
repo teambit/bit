@@ -12,6 +12,17 @@ function toFiles(versionModel: Object): Object {
     versionModel.files.push(file);
     delete versionModel.impl;
   }
+  if (versionModel.dist) {
+    versionModel.dists = versionModel.dists || [];
+    const file = {
+      file: versionModel.dist.file,
+      name: versionModel.dist.name,
+      relativePath: versionModel.dist.name,
+      test: false
+    };
+    versionModel.dists.push(file);
+    delete versionModel.dist;
+  }
   if (versionModel.specs) {
     versionModel.files = versionModel.files || [];
     const file = {
