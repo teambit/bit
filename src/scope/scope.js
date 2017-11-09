@@ -508,6 +508,10 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
+  getRawObject(hash: string): Promise<BitRawObject> {
+    return this.objects.loadRawObject(new Ref(hash));
+  }
+
   /**
    * 1. Local objects, fetch from local. (done by this.sources.getMany method)
    * 2. Fetch flattened dependencies (done by toVersionDependencies method). If they're not locally, fetch from remote

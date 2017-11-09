@@ -110,6 +110,12 @@ export default class Repository {
     return readFile(this.objectPath(ref));
   }
 
+  async loadRawObject(ref: Ref): Promise<BitRawObject> {
+    const buffer = await this.loadRaw(ref);
+    const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash, this.types);
+    return bitRawObject;
+  }
+
   loadSync(ref: Ref, throws: boolean = true): BitObject {
     try {
       const objectFile = fs.readFileSync(this.objectPath(ref));
