@@ -11,7 +11,7 @@ export async function test(id: string, verbose: boolean = true): Promise<Bit> {
   const component = await consumer.loadComponent(idParsed);
   if (!component.testerId) return { component, missingTester: true };
   const result = await consumer.runComponentSpecs(idParsed, verbose);
-  return { specs: result, component };
+  return [{ specs: result, component }];
 }
 
 export async function testAll(verbose: boolean = true): Promise<Bit> {
