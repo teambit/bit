@@ -1,6 +1,6 @@
 /** @flow */
 import Command from '../../command';
-import { test, testAll } from '../../../api/consumer';
+import { test } from '../../../api/consumer';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
 
 export default class Test extends Command {
@@ -27,7 +27,6 @@ export default class Test extends Command {
       verbose: ?boolean
     }
   ): Promise<any> {
-    if (!id) return testAll(verbose);
     return test(id, verbose);
   }
 

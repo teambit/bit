@@ -5,21 +5,20 @@ import BitMap from '../../../consumer/bit-map';
 import ComponentsList from '../../../consumer/component/components-list';
 import Bit from '../../../consumer/component';
 
-export async function test(id: string, verbose: boolean = true): Promise<Bit> {
+export default (async function test(id?: string, verbose: boolean = true): Promise<Bit> {
   const consumer: Consumer = await loadConsumer();
-  const idParsed = BitId.parse(id);
-  const component = await consumer.loadComponent(idParsed);
-  if (!component.testerId) return { component, missingTester: true };
-  const result = await consumer.runComponentSpecs(idParsed, verbose);
-  return [{ specs: result, component }];
-}
-
-export async function testAll(verbose: boolean = true): Promise<Bit> {
-  const consumer = await loadConsumer();
-  const componentsList = new ComponentsList(consumer);
   const bitMap = await BitMap.load(consumer.getPath());
-  const newAndModifiedComponents = await componentsList.newAndModifiedComponents();
-  const specsResults = newAndModifiedComponents.map(async (component) => {
+  let components;
+  if (id) {
+    const idParsed = BitId.parse(id);
+    const component = await consumer.loadComponent(idParsed);
+    components = [component];
+  } else {
+    const componentsList = new ComponentsList(consumer);
+    components = await componentsList.newAndModifiedComponents();
+  }
+
+  const specsResults = components.map(async (component) => {
     if (!component.testerId) {
       return { component, missingTester: true };
     }
@@ -28,4 +27,4 @@ export async function testAll(verbose: boolean = true): Promise<Bit> {
   });
 
   return Promise.all(specsResults);
-}
+});
