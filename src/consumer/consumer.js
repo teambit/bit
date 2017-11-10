@@ -459,9 +459,7 @@ export default class Consumer {
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
     const { version } = await this.scope.sources.consumerComponentToVersion({
-      consumerComponent: componentFromFileSystem,
-      consumer: this,
-      forHashOnly: true
+      consumerComponent: componentFromFileSystem
     });
 
     version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
