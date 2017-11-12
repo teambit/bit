@@ -24,7 +24,7 @@ import type { ComponentMapFile } from '../bit-map/component-map';
 import ComponentMap from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
-import { Driver } from '../driver';
+import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
 import { getSync } from '../../api/consumer/lib/global-config';

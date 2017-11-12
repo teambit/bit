@@ -11,11 +11,9 @@ describe('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
 
-  /*
   after(() => {
     helper.destroyEnv();
   });
-*/
 
   describe.skip('stand alone component (without dependencies)', () => {
     before(() => {
