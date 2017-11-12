@@ -1,9 +1,9 @@
 /** @flow */
 export default class CorruptedComponent extends Error {
   id: string;
-  version: number;
+  version: string;
 
-  constructor(id: string, version: number) {
+  constructor(id: string, version: string) {
     super();
     this.id = id;
     this.version = version;

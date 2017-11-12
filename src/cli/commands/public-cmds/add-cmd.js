@@ -19,6 +19,7 @@ export default class Add extends Command {
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ];
   loader = true;
+  migration = true;
 
   action(
     [paths]: [string[]],

@@ -104,7 +104,7 @@ describe('typescript', function () {
           'utils',
           'is-string',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'index.js'
         );
         expect(localConsumerFiles).to.include(expectedLocation);
@@ -123,7 +123,7 @@ describe('typescript', function () {
           'utils',
           'is-string',
           helper.remoteScope,
-          '1'
+          '0.0.1'
         );
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
@@ -139,7 +139,7 @@ describe('typescript', function () {
           'utils',
           'is-type',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'index.js'
         );
         expect(localConsumerFiles).to.include(expectedLocation);
@@ -158,7 +158,7 @@ describe('typescript', function () {
           'utils',
           'is-type',
           helper.remoteScope,
-          '1'
+          '0.0.1'
         );
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
@@ -174,7 +174,7 @@ describe('typescript', function () {
           'utils',
           'is-string',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'utils',
           'is-string.ts'
         );
@@ -187,7 +187,7 @@ describe('typescript', function () {
           'utils',
           'is-type',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'utils',
           'is-type.ts'
         );
@@ -200,7 +200,7 @@ describe('typescript', function () {
           'utils',
           'is-type',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'dist',
           'utils',
           'is-type.js'
@@ -211,7 +211,7 @@ describe('typescript', function () {
           'utils',
           'is-string',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'dist',
           'utils',
           'is-string.js'
@@ -224,7 +224,7 @@ describe('typescript', function () {
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
         const expectedPathSuffix = normalize(
-          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'utils', 'is-string')
+          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'utils', 'is-string')
         );
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
@@ -237,7 +237,7 @@ describe('typescript', function () {
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
         const expectedPathSuffix = normalize(
-          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index')
+          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'index')
         );
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
@@ -252,13 +252,13 @@ describe('typescript', function () {
           'utils',
           'is-string',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'utils',
           'is-type.ts'
         );
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
-        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'utils', 'is-type'));
+        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'utils', 'is-type'));
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
           `export * from '../../../../${expectedPathSuffix}';`,
@@ -272,14 +272,14 @@ describe('typescript', function () {
           'utils',
           'is-string',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'dist',
           'utils',
           'is-type.js'
         );
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
-        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'index'));
+        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'index'));
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
           `module.exports = require('../../../../../${expectedPathSuffix}');`,

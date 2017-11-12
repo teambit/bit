@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import semver from 'semver';
 import R from 'ramda';
 import { Version, Component as ModelComponent } from '../../scope/models';
 import { Scope } from '../../scope';
@@ -18,9 +19,10 @@ export default class ComponentsList {
   consumer: Consumer;
   scope: Scope;
   _bitMap: Object;
-  _fromFileSystem: Promise<string[]>;
+  _fromFileSystem: Promise<string[]> = [];
   _fromBitMap: Object = {};
   _fromObjects: ObjectsList;
+  _deletedComponents: string[];
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.scope = consumer.scope;
@@ -152,7 +154,8 @@ export default class ComponentsList {
     if (!load || !newComponents.length) return newComponents;
 
     const componentsIds = newComponents.map(id => BitId.parse(id));
-    return this.consumer.loadComponents(componentsIds);
+    const { components } = await this.consumer.loadComponents(componentsIds, false);
+    return components;
   }
 
   /**
@@ -208,7 +211,7 @@ export default class ComponentsList {
         );
         if (
           similarFileSystemComponent &&
-          modelBitId.getVersion().versionNum > similarFileSystemComponent.id.getVersion().versionNum
+          semver.gt(modelBitId.getVersion().versionNum, similarFileSystemComponent.id.getVersion().versionNum)
         ) {
           stagedComponents.push(modelBitId.toString());
         }
@@ -266,15 +269,31 @@ export default class ComponentsList {
    * Finds all components that are saved in the file system.
    * Components might be stored in the default component directory and also might be outside
    * of that directory. The bit.map is used to find them all
+   * If they are on bit.map but not on the file-system, populate them to _deletedComponents property
    * @return {Promise<Component[]>}
    */
   async getFromFileSystem(origin?: string): Promise<Component[]> {
-    if (!this._fromFileSystem) {
+    const cacheKeyName = origin || 'all';
+    if (!this._fromFileSystem[cacheKeyName]) {
       const idsFromBitMap = await this.idsFromBitMap(true, origin);
       const parsedBitIds = idsFromBitMap.map(id => BitId.parse(id));
-      this._fromFileSystem = await this.consumer.loadComponents(parsedBitIds);
+      const { components, deletedComponents } = await this.consumer.loadComponents(parsedBitIds, false);
+      this._fromFileSystem[cacheKeyName] = components;
+      if (!this._deletedComponents && !origin) {
+        this._deletedComponents = deletedComponents;
+      }
     }
-    return this._fromFileSystem;
+    return this._fromFileSystem[cacheKeyName];
+  }
+
+  /**
+   * components that are on bit.map but not on the file-system
+   */
+  async listDeletedComponents(): Promise<BitId[]> {
+    if (!this._deletedComponents) {
+      await this.getFromFileSystem();
+    }
+    return this._deletedComponents;
   }
 
   async getFromBitMap(origin?: string): Object {

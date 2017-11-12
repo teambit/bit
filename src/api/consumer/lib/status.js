@@ -20,6 +20,7 @@ export default (async function status(): Promise<StatusResult> {
   const modifiedComponent = await componentsList.listModifiedComponents(true);
   const stagedComponents = await componentsList.listExportPendingComponents();
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
+  const deletedComponents = await componentsList.listDeletedComponents();
 
   // Run over the components to check if there is missing dependencies
   // If there is at least one we won't commit anything
@@ -34,6 +35,7 @@ export default (async function status(): Promise<StatusResult> {
     stagedComponents,
     componentsWithMissingDeps,
     importPendingComponents,
-    autoTagPendingComponents
+    autoTagPendingComponents,
+    deletedComponents
   };
 });

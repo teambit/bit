@@ -24,8 +24,8 @@ import type { ComponentMapFile } from '../bit-map/component-map';
 import ComponentMap from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
-import { Driver } from '../../driver';
-import { BEFORE_IMPORT_ENVIRONMENT } from '../../cli/loader/loader-messages';
+import { Driver } from '../driver';
+import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
 import { getSync } from '../../api/consumer/lib/global-config';
 import * as linkGenerator from './link-generator';
@@ -47,7 +47,7 @@ import {
 export type ComponentProps = {
   name: string,
   box: string,
-  version?: ?number,
+  version?: ?string,
   scope?: ?string,
   lang?: string,
   bindingPrefix?: string,
@@ -68,7 +68,7 @@ export type ComponentProps = {
 export default class Component {
   name: string;
   box: string;
-  version: ?number;
+  version: ?string;
   scope: ?string;
   lang: string;
   bindingPrefix: string;
@@ -116,7 +116,7 @@ export default class Component {
       scope: this.scope,
       box: this.box,
       name: this.name,
-      version: this.version ? this.version.toString() : null
+      version: this.version
     });
   }
 
@@ -249,7 +249,7 @@ export default class Component {
 
     const packageJson = new PackageJson(bitDir, {
       name: this.id.toStringWithoutVersion(),
-      version: `0.0.${this.version.toString()}`,
+      version: this.version,
       homepage: this._getHomepage(),
       main: mainFile,
       dependencies: this.packageDependencies,
@@ -565,6 +565,7 @@ export default class Component {
       }
 
       const run = async (mainFile: string, distTestFiles: Dist[]) => {
+        loader.start(BEFORE_RUNNING_SPECS);
         try {
           const specsResultsP = distTestFiles.map(async (testFile) => {
             return specsRunner.run({
@@ -772,7 +773,7 @@ export default class Component {
     return {
       name: this.name,
       box: this.box,
-      version: this.version ? this.version.toString() : null,
+      version: this.version,
       mainFile: this.mainFile,
       scope: this.scope,
       lang: this.lang,
@@ -827,7 +828,7 @@ export default class Component {
     return new Component({
       name,
       box,
-      version: parseInt(version),
+      version,
       scope,
       lang,
       bindingPrefix,

@@ -11,7 +11,7 @@ export default class Source extends Repository {
   }
 
   listVersions(bitId: BitId): number[] {
-    return listDirectories(this.composeVersionsPath(bitId.name, bitId.box)).map(version => parseInt(version));
+    return listDirectories(this.composeVersionsPath(bitId.name, bitId.box)).map(version => version);
   }
 
   resolveVersion(id: BitId) {
@@ -43,7 +43,7 @@ export default class Source extends Repository {
     return path.join(this.getPath(), box, name);
   }
 
-  composeSourcePath({ name, box = 'global', version }: { name: string, box?: string, version: number }) {
-    return path.join(this.getPath(), box, name, version.toString());
+  composeSourcePath({ name, box = 'global', version }: { name: string, box?: string, version: string }) {
+    return path.join(this.getPath(), box, name, version);
   }
 }

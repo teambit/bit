@@ -282,7 +282,7 @@ describe('javascript-hooks', function () {
         createComponent('bar', barComponentFixture);
 
         const barJsonPath = path.join(helper.localScopePath, 'components', 'global', 'bar', 'bit.json');
-        helper.addBitJsonDependencies(barJsonPath, { [`${helper.remoteScope}/global/foo`]: '1' });
+        helper.addBitJsonDependencies(barJsonPath, { [`${helper.remoteScope}/global/foo`]: '0.0.1' });
         helper.commitComponent('bar');
         helper.exportComponent('bar');
       });
@@ -318,7 +318,7 @@ describe('javascript-hooks', function () {
           createComponent('baz', bazComponentFixture);
 
           const bazJsonPath = path.join(helper.localScopePath, 'components', 'global', 'baz', 'bit.json');
-          helper.addBitJsonDependencies(bazJsonPath, { [`${helper.remoteScope}/global/bar`]: '1' });
+          helper.addBitJsonDependencies(bazJsonPath, { [`${helper.remoteScope}/global/bar`]: '0.0.1' });
           helper.commitComponent('baz');
           helper.exportComponent('baz');
 

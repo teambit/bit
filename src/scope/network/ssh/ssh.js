@@ -68,14 +68,22 @@ export default class SSH implements Network {
     return new Promise((resolve, reject) => {
       let res = '';
       let err;
+      // No need to use packCommand on the payload in case of put command
+      // because we handle all the base64 stuff in a better way inside the ComponentObjects.manyToString
+      // inside pushMany function here
       const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), commandName === '_put' ? null : payload);
+      if (!this.connection) {
+        err = 'ssh connection is not defined';
+        logger.error(err);
+        return reject(err);
+      }
       this.connection.exec(cmd, (error, stream) => {
         if (error) {
           logger.error('ssh, exec returns an error: ', error);
           return reject(error);
         }
         if (commandName === '_put') {
-          stream.stdin.write(toBase64(payload));
+          stream.stdin.write(payload);
           stream.stdin.end();
         }
         stream
@@ -108,10 +116,12 @@ export default class SSH implements Network {
     });
   }
 
-  errorHandler(code, err) {
+  errorHandler(code: number, err: string) {
     let parsedError;
     try {
-      parsedError = JSON.parse(err);
+      const { headers, payload } = this._unpack(err, false);
+      checkVersionCompatibility(headers.version);
+      parsedError = payload;
     } catch (e) {
       // be greacfull when can't parse error message
       logger.error(`ssh: failed parsing error as JSON, error: ${err}`);
@@ -133,20 +143,22 @@ export default class SSH implements Network {
     }
   }
 
-  _unpack(data) {
+  _unpack(data, base64 = true) {
     try {
-      return unpackCommand(data);
+      return unpackCommand(data, base64);
     } catch (err) {
       logger.error(`unpackCommand found on error "${err}", while paring the following string: ${data}`);
       throw new SSHInvalidResponse(data);
     }
   }
 
-  pushMany(manyComponentObjects: ComponentObjects[]): Promise<ComponentObjects[]> {
+  pushMany(manyComponentObjects: ComponentObjects[]): Promise<string[]> {
+    // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
+    // to the pack command (to prevent duplicate base64)
     return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects)).then((data: string) => {
-      const { headers } = this._unpack(data);
+      const { payload, headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
-      return Promise.resolve();
+      return payload.ids;
     });
   }
 
@@ -167,7 +179,7 @@ export default class SSH implements Network {
       return Promise.resolve(payload);
     });
   }
-  push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
+  push(componentObjects: ComponentObjects): Promise<ComponentObjects[]> {
     return this.pushMany([componentObjects]);
   }
 
@@ -224,11 +236,10 @@ export default class SSH implements Network {
     ids = ids.map(bitId => bitId.toString());
     if (noDeps) options = '-n';
     return this.exec(`_fetch ${options}`, ids).then((str: string) => {
-      const { payload, headers } = this._unpack(str);
+      const { payload, headers } = JSON.parse(str);
       checkVersionCompatibility(headers.version);
-      return payload.map((raw) => {
-        return ComponentObjects.fromString(raw);
-      });
+      const componentObjects = ComponentObjects.manyFromString(payload);
+      return componentObjects;
     });
   }
 
@@ -237,7 +248,7 @@ export default class SSH implements Network {
     return this;
   }
 
-  composeConnectionObject(key: ?string, passphrase: ?string) {
+  composeConnectionObject(key: ?string, passphrase: ?string, skipAgent: boolean = false) {
     const base = {
       username: this.username,
       host: this.host,
@@ -247,8 +258,8 @@ export default class SSH implements Network {
     };
 
     // if ssh-agent socket exists, use it.
-    if (process.env.SSH_AUTH_SOCK) {
-      // return Promise.resolve(merge(base, { agent: process.env.SSH_AUTH_SOCK }));
+    if (this.hasAgentSocket() && !skipAgent) {
+      return Promise.resolve(merge(base, { agent: process.env.SSH_AUTH_SOCK }));
     }
 
     // otherwise just search for merge
@@ -260,50 +271,70 @@ export default class SSH implements Network {
     return promptUserpass().then(({ username, password }) => merge(base, { username, password }));
   }
 
-  connect(key: ?string, passphrase: ?string): Promise<SSH> {
+  hasAgentSocket() {
+    return !!process.env.SSH_AUTH_SOCK;
+  }
+
+  // @TODO refactor this method
+  connect(key: ?string, passphrase: ?string, skipAgent: boolean = false): Promise<SSH> {
     const self = this;
 
-    return this.composeConnectionObject(key, passphrase).then((sshConfig) => {
-      return new Promise((resolve, reject) => {
-        function prompt() {
-          return promptPassphrase()
-            .then((res) => {
-              cachedPassphrase = res.passphrase;
-              return self.connect(key, cachedPassphrase).catch(() => {
-                return prompt();
-              });
-            })
-            .catch(err => reject(err));
-        }
-
-        const conn = new SSH2();
-        try {
-          conn
-            .on('error', (err) => {
-              if (err.message === AUTH_FAILED_MESSAGE) {
-                return reject(new AuthenticationFailed());
-              }
-
-              return reject(err);
-            })
-            .on('ready', () => {
-              this.connection = conn;
-              resolve(this);
-            })
-            .connect(sshConfig);
-        } catch (e) {
-          if (e.message === PASSPHRASE_MESSAGE) {
-            conn.end();
-            if (cachedPassphrase) {
-              return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
-            }
-
-            return prompt().then(ssh => resolve(ssh));
+    return this.composeConnectionObject(key, passphrase, skipAgent)
+      .then((sshConfig) => {
+        return new Promise((resolve, reject) => {
+          function prompt() {
+            return promptPassphrase()
+              .then((res) => {
+                cachedPassphrase = res.passphrase;
+                return self.connect(key, cachedPassphrase).catch(() => {
+                  return prompt();
+                });
+              })
+              .catch(err => reject(err));
           }
 
-          return reject(e);
+          const conn = new SSH2();
+          try {
+            conn
+              .on('error', (err) => {
+                if (this.hasAgentSocket() && err.message === AUTH_FAILED_MESSAGE) {
+                  // retry in case ssh-agent failed
+                  reject({
+                    skip: true
+                  });
+                }
+
+                if (err.message === AUTH_FAILED_MESSAGE) {
+                  return reject(new AuthenticationFailed());
+                }
+
+                return reject(err);
+              })
+              .on('ready', () => {
+                this.connection = conn;
+                resolve(this);
+              })
+              .connect(sshConfig);
+          } catch (e) {
+            if (e.message === PASSPHRASE_MESSAGE) {
+              conn.end();
+              if (cachedPassphrase) {
+                return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
+              }
+
+              return prompt().then(ssh => resolve(ssh));
+            }
+
+            return reject(e);
+          }
+        });
+      })
+      .catch((err) => {
+        if (err.skip) {
+          return this.connect(key, passphrase, true);
         }
+
+        throw err;
       });
-    });
   }
 }

@@ -7,11 +7,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- `bit status` - add a new section "deleted components" for components that were deleted from the file-system manually
+- bug fix - components that were not indicated as staged-components by `bit status` were exported by `bit export`
+- bug fix - tests files saved with incorrect path when `bit add` was running from non-consumer root  
+- `bit add` - exclude a component when its main file is excluded 
+- `bit test` - paint a summary table when testing multiple components 
+- reimplement cat-object command
+
+## [0.11.0-test.8] - 2017-11-08
+- remove the ssh agent support (it's buggy)
+
+## [0.11.0-test.7] - 2017-11-08
+
 - SSH is not supporting passphrase in case a private key is encrypted
 - SSH authentication can be done with SSH username and password in case a private key or an SSH agent socket are not available
-- `bit show` - show components that will be tagged automatically when their dependencies are tagged
+- `bit status` - show components that will be tagged automatically when their dependencies are tagged
 - bug fix - dependencies were not written to the file-system when cloning a project with an existing bit.map file
 - disable the local search
+
+## [0.11.0-test.3] - 2017-11-06
+
+- change versions numbers to be semantic versions
+- export / import performence and stability improvements
+- fix a bug which prevent the ci running tests in some cases
 - add plugin mechanism to support different file types
 - bug fix - re-adding a component after exporting it was considered as a new component 
 - fix a bug which makes bit test command not work when a component use bit/ to require another component
@@ -20,6 +38,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - add `--outdated` flag to `bit show` command to show the local and remote versions of a component
 - add `--outdated` flag to `bit list` command to show the local and remote versions of components
+- prevent bare-scope corruption when the export process fails
+- fixed stderr maxBuffer exceeded bug in ci-update cmd
 - fix bug which make imported components considered as modified
 - fix typo in help man page
 

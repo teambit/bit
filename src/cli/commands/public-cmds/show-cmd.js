@@ -17,6 +17,7 @@ export default class Show extends Command {
     ['c', 'compare [boolean]', 'compare current file system component to latest tagged component [default=latest]']
   ];
   loader = true;
+  migration = true;
 
   action(
     [id]: [string],

@@ -11,6 +11,7 @@ export default class Remote extends Command {
   description = 'manage set of tracked bit scope(s)';
   alias = '';
   opts = [['g', 'global', 'see globally configured remotes']];
+  migration = true;
   commands = [new RemoteAdd(), new RemoteRm()];
 
   // $FlowFixMe

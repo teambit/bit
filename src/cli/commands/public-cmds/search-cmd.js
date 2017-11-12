@@ -15,6 +15,7 @@ export default class Search extends Command {
   alias = '';
   opts = [['s', 'scope <scopename>', 'search in scope'], ['r', 'reindex', 're-index all components']];
   loader = true;
+  migration = true;
 
   action([query]: [string[]], { scope, reindex }: { scope: string, reindex: boolean }) {
     const queryStr = query.join(' ');

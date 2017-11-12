@@ -6,7 +6,8 @@
  * @param { string | BitId } bitId
  * @returns {string}
  */
-import maxBy from 'lodash.maxby';
+import R from 'ramda';
+import semver from 'semver';
 import { BitId } from '../bit-id';
 
 export default function getLatestVersionNumber(bitIds: BitId[] | string[], bitId: string | BitId) {
@@ -26,17 +27,25 @@ export default function getLatestVersionNumber(bitIds: BitId[] | string[], bitId
 
   const componentId = getParsed(bitId);
   if (!componentId.getVersion().latest) return bitId;
-  const maxByFunc = searchId => (id) => {
-    if (getString(searchId, ignoreScopeAlways) === getString(id, ignoreScopeAlways)) {
-      const version = getParsed(id).getVersion();
-      if (version.latest) return 10000000;
-      return version.versionNum;
+
+  const allVersionsForId = [];
+  bitIds.map((id) => {
+    if (getString(bitId, ignoreScopeAlways) === getString(id, ignoreScopeAlways)) {
+      const version = getParsed(id).getVersion().versionNum;
+      if (version) allVersionsForId.push(version);
     }
-    return -1;
-  };
-  let result = maxBy(bitIds, maxByFunc(bitId));
-  // A case when the bitId provided doesn't exists in the array it will just return one of them
-  // So we want to make sure it won't return this wrong result
-  if (getString(result, true) !== getString(bitId, true)) result = bitId;
+    return allVersionsForId;
+  });
+
+  // A case when the bitId provided doesn't exists in the array
+  if (R.isEmpty(allVersionsForId)) return bitId;
+
+  const maxVersion = semver.maxSatisfying(allVersionsForId, '*');
+  const bitIdWithMaxVersion = getParsed(bitId).clone();
+  bitIdWithMaxVersion.version = maxVersion;
+  const result = bitIds.find((id) => {
+    return getString(id, ignoreScopeAlways, false) === getString(bitIdWithMaxVersion, ignoreScopeAlways, false);
+  });
+
   return result;
 }

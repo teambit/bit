@@ -1,6 +1,7 @@
 // @flow
 import c from 'chalk';
 import R from 'ramda';
+import semver from 'semver';
 import Table from 'tty-table';
 import ConsumerComponent from '../../consumer/component/consumer-component';
 
@@ -21,12 +22,15 @@ export default (components: ConsumerComponent[], json: boolean, showRemoteVersio
     const data = { id: `${id}${c.red(component.deprecated ? ' [Deprecated]' : '')}` }; // Add date, author
     let version = component.version;
     if (!json && showRemoteVersion) {
-      const color = component.latest && component.latest > component.version ? 'red' : 'green';
-      version = c[color](version);
+      const color = component.latest && semver.gt(component.latest, component.version) ? 'red' : null;
+      version = color ? c[color](version) : version;
     }
     data.localVersion = version;
     if (showRemoteVersion) {
-      data.remoteVersion = component.latest ? parseInt(component.latest) : 'N/A';
+      let remoteVersion = component.latest || 'N/A';
+      const color = component.latest && semver.gt(component.version, component.latest) ? 'red' : null;
+      remoteVersion = color ? c[color](remoteVersion) : remoteVersion;
+      data.remoteVersion = remoteVersion;
     }
     return data;
   }

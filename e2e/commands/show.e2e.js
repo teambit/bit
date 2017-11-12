@@ -135,7 +135,7 @@ describe('bit show command', function () {
 
       // TODO: get the version dynamically
       it('should include the compiler correctly', () => {
-        expect(output).to.include({ compilerId: `${helper.envScope}/compilers/babel${VERSION_DELIMITER}1` });
+        expect(output).to.include({ compilerId: `${helper.envScope}/compilers/babel${VERSION_DELIMITER}0.0.1` });
       });
 
       it('should include the language correctly', () => {
@@ -381,7 +381,7 @@ function add(a, b) {
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo@1');
+        helper.importComponent('bar/foo@0.0.1');
       });
       it('Should not throw an error "nothing to compare no previous versions found"', () => {
         const showCmd = () => helper.showComponent('bar/foo --compare');
@@ -402,7 +402,7 @@ function add(a, b) {
 
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('utils/is-type@1');
+        helper.importComponent('utils/is-type@0.0.1');
 
         const isStringFixture =
           "const isType = require('bit/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
@@ -414,9 +414,9 @@ function add(a, b) {
         it('should indicate that the remote version is larger than the current version', () => {
           const output = helper.showComponent('utils/is-string --outdated --json');
           const outputParsed = JSON.parse(output);
-          expect(outputParsed.dependencies[0].currentVersion).to.equal('1');
-          expect(outputParsed.dependencies[0].localVersion).to.equal(2);
-          expect(outputParsed.dependencies[0].remoteVersion).to.equal('2');
+          expect(outputParsed.dependencies[0].currentVersion).to.equal('0.0.1');
+          expect(outputParsed.dependencies[0].localVersion).to.equal('0.0.2');
+          expect(outputParsed.dependencies[0].remoteVersion).to.equal('0.0.2');
         });
       });
       describe('when the dependency was updated locally but not exported yet', () => {
@@ -426,9 +426,9 @@ function add(a, b) {
         it('should indicate that the current version is larger than the remote version', () => {
           const output = helper.showComponent('utils/is-string --outdated --json');
           const outputParsed = JSON.parse(output);
-          expect(outputParsed.dependencies[0].currentVersion).to.equal('3');
-          expect(outputParsed.dependencies[0].localVersion).to.equal(3);
-          expect(outputParsed.dependencies[0].remoteVersion).to.equal('2');
+          expect(outputParsed.dependencies[0].currentVersion).to.equal('0.0.3');
+          expect(outputParsed.dependencies[0].localVersion).to.equal('0.0.3');
+          expect(outputParsed.dependencies[0].remoteVersion).to.equal('0.0.2');
         });
       });
       describe('when the dependency is up to date', () => {
@@ -438,9 +438,9 @@ function add(a, b) {
         it('should indicate that all versions are the same', () => {
           const output = helper.showComponent('utils/is-string --outdated --json');
           const outputParsed = JSON.parse(output);
-          expect(outputParsed.dependencies[0].currentVersion).to.equal('3');
-          expect(outputParsed.dependencies[0].localVersion).to.equal(3);
-          expect(outputParsed.dependencies[0].remoteVersion).to.equal('3');
+          expect(outputParsed.dependencies[0].currentVersion).to.equal('0.0.3');
+          expect(outputParsed.dependencies[0].localVersion).to.equal('0.0.3');
+          expect(outputParsed.dependencies[0].remoteVersion).to.equal('0.0.3');
         });
       });
     });
@@ -456,7 +456,7 @@ function add(a, b) {
 
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('utils/is-type@1');
+        helper.importComponent('utils/is-type@0.0.1');
 
         const isStringFixture =
           "const isType = require('bit/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
@@ -469,14 +469,14 @@ function add(a, b) {
         helper.addRemoteScope();
         // @todo: add a test case before importing the component. Currently there is a bug that it downloads the
         // component into the model in such a case
-        helper.importComponent('utils/is-string@1');
+        helper.importComponent('utils/is-string@0.0.1');
       });
       it('should show the remote and local versions', () => {
         const output = helper.showComponent(`${helper.remoteScope}/utils/is-string --outdated --json`);
         const outputParsed = JSON.parse(output);
-        expect(outputParsed.dependencies[0].currentVersion).to.equal('1');
-        expect(outputParsed.dependencies[0].localVersion).to.equal(2);
-        expect(outputParsed.dependencies[0].remoteVersion).to.equal('2');
+        expect(outputParsed.dependencies[0].currentVersion).to.equal('0.0.1');
+        expect(outputParsed.dependencies[0].localVersion).to.equal('0.0.2');
+        expect(outputParsed.dependencies[0].remoteVersion).to.equal('0.0.2');
       });
     });
   });

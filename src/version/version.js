@@ -1,30 +1,26 @@
 /** @flow */
+import semver from 'semver';
 import { InvalidVersionChange, InvalidVersion } from './exceptions';
 import versionParser from './version-parser';
+import { DEFAULT_BIT_RELEASE_TYPE } from '../constants';
 
 export default class Version {
-  versionNum: ?number;
+  versionNum: ?string;
   latest: boolean;
 
-  constructor(versionNum: number, latest: boolean) {
+  constructor(versionNum: string, latest: boolean) {
     this.versionNum = versionNum;
     this.latest = latest;
   }
 
-  increase(): Version {
+  increase(releaseType = DEFAULT_BIT_RELEASE_TYPE): Version {
     if (!this.versionNum) throw new InvalidVersionChange();
-    this.versionNum = this.versionNum + 1;
+    this.versionNum = semver.inc(this.versionNum, releaseType);
     return this;
   }
 
-  decrease() {
-    if (!this.versionNum || this.versionNum <= 1) throw new InvalidVersionChange();
-    this.versionNum = this.versionNum - 1;
-    return this;
-  }
-
-  resolve(availableVersion: number[]) {
-    const getLatest = () => Math.max(...availableVersion);
+  resolve(availableVersion: string[]) {
+    const getLatest = () => semver.maxSatisfying(availableVersion, '*');
 
     if (this.latest) return getLatest();
     return this.versionNum;

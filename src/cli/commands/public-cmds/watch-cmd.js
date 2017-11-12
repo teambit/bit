@@ -8,6 +8,7 @@ export default class Create extends Command {
   alias = 'w';
   opts = [['v', 'verbose', 'showing npm verbose output for inspection']];
   loader = true;
+  migration = true;
 
   action(
     args: string[],

@@ -19,6 +19,7 @@ export default class List extends Command {
     ['j', 'json', 'show the output in JSON format']
   ];
   loader = true;
+  migration = true;
 
   action(
     [scopeName]: string[],

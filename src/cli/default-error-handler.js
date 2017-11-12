@@ -24,14 +24,15 @@ import {
   RemoteScopeNotFound,
   AuthenticationFailed
 } from '../scope/network/exceptions';
-import MergeConflict from '../scope/exceptions/merge-conflict';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import {
   ScopeNotFound,
   ResolutionException,
   ComponentNotFound,
   DependencyNotFound,
-  CorruptedComponent
+  CorruptedComponent,
+  VersionAlreadyExists,
+  MergeConflict
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
@@ -55,6 +56,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
       )
   ],
   [ConsumerAlreadyExists, () => "there's already a scope"],
+  [VersionAlreadyExists, err => `the version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`'],
   [
     BitAlreadyExistExternaly,

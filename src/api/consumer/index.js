@@ -11,7 +11,7 @@ import importAction from './lib/import';
 import exportAction from './lib/export';
 import getConsumerComponent from './lib/get-consumer-component';
 import getScopeComponent from './lib/get-scope-component';
-import { test, testAll } from './lib/test';
+import test from './lib/test';
 import getComponentLogs from './lib/get-component-logs';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import config from './lib/global-config';
@@ -21,6 +21,7 @@ import add from './lib/add';
 import untrack from './lib/untrack';
 import move from './lib/move';
 import bind from './lib/bind';
+import migrate from './lib/migrate';
 
 export {
   init,
@@ -41,7 +42,6 @@ export {
   getScopeComponent,
   getComponentLogs,
   test,
-  testAll,
   remoteAdd,
   remoteList,
   remoteRm,
@@ -50,5 +50,6 @@ export {
   add,
   untrack,
   move,
-  bind
+  bind,
+  migrate
 };

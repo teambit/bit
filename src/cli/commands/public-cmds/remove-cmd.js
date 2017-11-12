@@ -14,6 +14,7 @@ export default class Remove extends Command {
     ['t', 'track [boolean]', 'keep tracking component (default = false) ']
   ];
   loader = true;
+  migration = true;
 
   action(
     [ids]: [string],

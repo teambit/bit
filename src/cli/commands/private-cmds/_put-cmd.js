@@ -3,6 +3,8 @@ import Command from '../../command';
 import ComponentObjects from '../../../scope/component-objects';
 import { fromBase64, buildCommandMessage, packCommand } from '../../../utils';
 import { put } from '../../../api/scope';
+import { migrate } from '../../../api/consumer';
+import logger from '../../../logger/logger';
 
 export default class Put extends Command {
   name = '_put <path> <args>';
@@ -19,14 +21,19 @@ export default class Put extends Command {
           data += chunk.toString();
         })
         .on('end', () => {
-          return put({ componentObjects: fromBase64(data.toString()), path: fromBase64(path) })
+          logger.info('Checking if a migration is needed');
+          const scopePath = fromBase64(path);
+          return migrate(scopePath, false)
+            .then(() => {
+              return put({ componentObjects: data, path: fromBase64(path) });
+            })
             .then(resolve)
             .catch(reject);
         });
     });
   }
 
-  report(componentsObjects: ComponentObjects[]): string {
-    return packCommand(buildCommandMessage({ message: `${componentsObjects.length} components have been exported` }));
+  report(ids: string[]): string {
+    return packCommand(buildCommandMessage({ ids }));
   }
 }

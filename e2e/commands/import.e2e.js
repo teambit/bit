@@ -38,11 +38,11 @@ describe('bit import', function () {
     it('should add the component to bit.json file', () => {
       const bitJson = helper.readBitJson();
       const depName = [helper.remoteScope, 'global', 'simple'].join('/');
-      expect(bitJson.dependencies).to.include({ [depName]: '1' });
+      expect(bitJson.dependencies).to.include({ [depName]: '0.0.1' });
     });
     it('should add the component into bit.map file with the full id', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple${VERSION_DELIMITER}1`);
+      expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple${VERSION_DELIMITER}0.0.1`);
     });
     // TODO: Validate all files exists in a folder with the component name
     it('should write the component to default path from bit.json', () => {
@@ -234,7 +234,7 @@ describe('bit import', function () {
     });
     it('should import component with deprecated msg', () => {
       expect(output.includes('successfully imported one component')).to.be.true;
-      expect(output.includes('imprel/imprel@1  [Deprecated]')).to.be.true;
+      expect(output.includes('imprel/imprel@0.0.1  [Deprecated]')).to.be.true;
     });
   });
 
@@ -296,8 +296,8 @@ describe('bit import', function () {
         helper.addRemoteScope();
         myBitJsonPath = path.join(helper.localScopePath, 'bit.json');
         helper.addBitJsonDependencies(myBitJsonPath, {
-          [`${helper.remoteScope}/comp/comp1`]: '1',
-          [`${helper.remoteScope}/comp/comp2`]: '1'
+          [`${helper.remoteScope}/comp/comp1`]: '0.0.1',
+          [`${helper.remoteScope}/comp/comp2`]: '0.0.1'
         });
         output = helper.runCmd('bit import');
         localConsumerFiles = helper.getConsumerFiles();
@@ -334,7 +334,7 @@ describe('bit import', function () {
         expect(localConsumerFiles).to.include(expectedLocation);
         const linkFilePath = path.join(helper.localScopePath, expectedLocation);
         const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
-        const requireLink = `../../.dependencies/dep/level0/${helper.remoteScope}/1/index`;
+        const requireLink = `../../.dependencies/dep/level0/${helper.remoteScope}/0.0.1/index`;
         expect(linkFilePathContent).to.have.string(
           `module.exports = require('${requireLink}');`,
           'link file point to the wrong place'
@@ -352,7 +352,7 @@ describe('bit import', function () {
         expect(localConsumerFiles).to.include(expectedLocation);
         const linkFilePath = path.join(helper.localScopePath, expectedLocation);
         const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
-        const requireLink = `../../.dependencies/dep/level0/${helper.remoteScope}/1/index`;
+        const requireLink = `../../.dependencies/dep/level0/${helper.remoteScope}/0.0.1/index`;
         expect(linkFilePathContent).to.have.string(
           `module.exports = require('${requireLink}');`,
           'link file point to the wrong place'
@@ -366,7 +366,7 @@ describe('bit import', function () {
           'dep',
           'level0',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'index.js'
         );
         expect(localConsumerFiles).to.include(expectedLocation);
@@ -385,7 +385,7 @@ describe('bit import', function () {
           'dep',
           'level1',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'index.js'
         );
         expect(localConsumerFiles).to.include(expectedLocation);
@@ -404,7 +404,7 @@ describe('bit import', function () {
           'dep',
           'level0',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'level0.js'
         );
         expect(localConsumerFiles).to.include(expectedLocation);
@@ -417,7 +417,7 @@ describe('bit import', function () {
           'dep',
           'level1',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'level1.js'
         );
         expect(localConsumerFiles).to.include(expectedLocation);
@@ -430,13 +430,13 @@ describe('bit import', function () {
           'dep',
           'level0',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'level1.js'
         );
         expect(localConsumerFiles).to.include(expectedLocation);
         const linkFilePath = path.join(helper.localScopePath, expectedLocation);
         const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
-        const requireLink = `../../../level1/${helper.remoteScope}/1/index`;
+        const requireLink = `../../../level1/${helper.remoteScope}/0.0.1/index`;
         expect(linkFilePathContent).to.have.string(
           `module.exports = require('${requireLink}');`,
           'link file point to the wrong place'
@@ -484,7 +484,7 @@ describe('bit import', function () {
         expect(localConsumerFiles).to.include(expectedLocation);
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkFileContent = fs.readFileSync(linkPath).toString();
-        const requirePath = `../../../.dependencies/utils/is-type/${helper.remoteScope}/1/index`;
+        const requirePath = `../../../.dependencies/utils/is-type/${helper.remoteScope}/0.0.1/index`;
         expect(linkFileContent).to.have.string(
           `module.exports = require('${requirePath}');`,
           'link file point to the wrong place'
@@ -496,7 +496,7 @@ describe('bit import', function () {
         expect(localConsumerFiles).to.include(expectedLocation);
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkFileContent = fs.readFileSync(linkPath).toString();
-        const requirePath = `../../../.dependencies/utils/is-type/${helper.remoteScope}/1/utils/is-type-internal`;
+        const requirePath = `../../../.dependencies/utils/is-type/${helper.remoteScope}/0.0.1/utils/is-type-internal`;
         expect(linkFileContent).to.have.string(
           `module.exports = require('${requirePath}');`,
           'link file point to the wrong place'
@@ -540,13 +540,13 @@ describe('bit import', function () {
       });
 
       it('should add all missing components to bit.map file', () => {
-        expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple${VERSION_DELIMITER}1`);
+        expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple${VERSION_DELIMITER}0.0.1`);
       });
       it('should mark direct dependencies as "IMPORTED" in bit.map file', () => {
-        expect(bitMap[`${helper.remoteScope}/comp/with-deps${VERSION_DELIMITER}1`].origin).to.equal('IMPORTED');
+        expect(bitMap[`${helper.remoteScope}/comp/with-deps${VERSION_DELIMITER}0.0.1`].origin).to.equal('IMPORTED');
       });
       it('should mark indirect dependencies as "NESTED" in bit.map file', () => {
-        expect(bitMap[`${helper.remoteScope}/global/simple${VERSION_DELIMITER}1`].origin).to.equal('NESTED');
+        expect(bitMap[`${helper.remoteScope}/global/simple${VERSION_DELIMITER}0.0.1`].origin).to.equal('NESTED');
       });
       it.skip('should not add existing components to bit.map file', () => {});
       it.skip('should create bit.json file with all the dependencies in the folder', () => {});
@@ -565,7 +565,7 @@ describe('bit import', function () {
           'global',
           'simple',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'global',
           'simple.js'
         );
@@ -590,7 +590,7 @@ describe('bit import', function () {
           'global',
           'simple',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'package.json'
         );
         expect(fs.existsSync(packageJsonPath)).to.be.true;
@@ -624,7 +624,7 @@ describe('bit import', function () {
           'global',
           'simple',
           helper.remoteScope,
-          '1',
+          '0.0.1',
           'package.json'
         );
         expect(fs.existsSync(packageJsonPath)).to.be.false;
@@ -777,7 +777,7 @@ describe('bit import', function () {
         'style',
         'style',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'index.css'
       );
       expect(localConsumerFiles).to.include(expectedLocation);
@@ -795,7 +795,7 @@ describe('bit import', function () {
         'style',
         'style',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'style',
         'style.css'
       );
@@ -807,7 +807,7 @@ describe('bit import', function () {
       const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
       expect(indexFileContent).to.have.string(
-        `@import '../../../.dependencies/style/style/${helper.remoteScope}/1/index.css';`,
+        `@import '../../../.dependencies/style/style/${helper.remoteScope}/0.0.1/index.css';`,
         'dependency link file point to the wrong place'
       );
     });
@@ -874,7 +874,7 @@ describe('bit import', function () {
         'utils',
         'is-string',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'index.ts'
       );
       expect(localConsumerFiles).to.include(expectedLocation);
@@ -892,7 +892,7 @@ describe('bit import', function () {
         'utils',
         'is-type',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'index.ts'
       );
       expect(localConsumerFiles).to.include(expectedLocation);
@@ -910,7 +910,7 @@ describe('bit import', function () {
         'utils',
         'is-string',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'utils',
         'is-string.ts'
       );
@@ -923,7 +923,7 @@ describe('bit import', function () {
         'utils',
         'is-type',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'utils',
         'is-type.ts'
       );
@@ -940,7 +940,7 @@ describe('bit import', function () {
         'utils',
         'is-string',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'utils',
         'is-type.ts'
       );
@@ -1031,7 +1031,7 @@ describe('bit import', function () {
         'utils',
         'is-string',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'index.js'
       );
       expect(localConsumerFiles).to.include(expectedLocation);
@@ -1049,7 +1049,7 @@ describe('bit import', function () {
         'utils',
         'is-type',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'index.js'
       );
       expect(localConsumerFiles).to.include(expectedLocation);
@@ -1067,7 +1067,7 @@ describe('bit import', function () {
         'utils',
         'is-string',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'utils',
         'is-string.js'
       );
@@ -1080,7 +1080,7 @@ describe('bit import', function () {
         'utils',
         'is-type',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'utils',
         'is-type.js'
       );
@@ -1093,7 +1093,7 @@ describe('bit import', function () {
         'utils',
         'is-type',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'dist',
         'utils',
         'is-type.js'
@@ -1104,7 +1104,7 @@ describe('bit import', function () {
         'utils',
         'is-string',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'dist',
         'utils',
         'is-string.js'
@@ -1117,7 +1117,7 @@ describe('bit import', function () {
       const linkPath = path.join(helper.localScopePath, expectedLocation);
       const linkPathContent = fs.readFileSync(linkPath).toString();
       const expectedPathSuffix = normalize(
-        path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'utils', 'is-string')
+        path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'utils', 'is-string')
       );
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(
@@ -1130,7 +1130,7 @@ describe('bit import', function () {
       const linkPath = path.join(helper.localScopePath, expectedLocation);
       const linkPathContent = fs.readFileSync(linkPath).toString();
       const expectedPathSuffix = normalize(
-        path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '1', 'index')
+        path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'index')
       );
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(
@@ -1145,13 +1145,13 @@ describe('bit import', function () {
         'utils',
         'is-string',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'utils',
         'is-type.js'
       );
       const linkPath = path.join(helper.localScopePath, expectedLocation);
       const linkPathContent = fs.readFileSync(linkPath).toString();
-      const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'utils', 'is-type'));
+      const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'utils', 'is-type'));
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(
         `module.exports = require('../../../../${expectedPathSuffix}');`,
@@ -1165,14 +1165,14 @@ describe('bit import', function () {
         'utils',
         'is-string',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'dist',
         'utils',
         'is-type.js'
       );
       const linkPath = path.join(helper.localScopePath, expectedLocation);
       const linkPathContent = fs.readFileSync(linkPath).toString();
-      const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '1', 'index'));
+      const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'index'));
       expect(localConsumerFiles).to.include(expectedLocation);
       expect(linkPathContent).to.have.string(
         `module.exports = require('../../../../../${expectedPathSuffix}');`,
@@ -1272,8 +1272,8 @@ describe('bit import', function () {
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('utils/is-type@1');
-      helper.importComponent('utils/is-type@2');
+      helper.importComponent('utils/is-type@0.0.1');
+      helper.importComponent('utils/is-type@0.0.2');
     });
     it('should imported v2 successfully and print the result from the latest version', () => {
       const appJsFixture = "const isType = require('./components/utils/is-type'); console.log(isType());";
@@ -1283,11 +1283,11 @@ describe('bit import', function () {
     });
     it('should update the existing record in bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@2`);
+      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
     });
     it('should not create a new record in bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@1`);
+      expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
     });
   });
 
@@ -1339,8 +1339,8 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       const bitJson = helper.readBitJson();
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '1';
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '1';
+      bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '0.0.1';
+      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '0.0.1';
       helper.writeBitJson(bitJson);
       helper.runCmd('bit import');
       localConsumerFiles = helper.getConsumerFiles();
@@ -1356,7 +1356,7 @@ describe('bit import', function () {
         'utils',
         'is-type',
         helper.remoteScope,
-        '1',
+        '0.0.1',
         'utils',
         'is-type.js'
       );
@@ -1364,8 +1364,8 @@ describe('bit import', function () {
     });
     it('should show is-type as a dependency of is-string in bit.map', () => {
       const bitMap = helper.readBitMap();
-      const isTypeDependency = `${helper.remoteScope}/utils/is-type@1`;
-      expect(bitMap[`${helper.remoteScope}/utils/is-string@1`].dependencies).to.include(isTypeDependency);
+      const isTypeDependency = `${helper.remoteScope}/utils/is-type@0.0.1`;
+      expect(bitMap[`${helper.remoteScope}/utils/is-string@0.0.1`].dependencies).to.include(isTypeDependency);
     });
     it('should successfully require is-type dependency and print the results from both components', () => {
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
@@ -1376,8 +1376,8 @@ describe('bit import', function () {
   });
 
   describe('import the same component ("is-type") as an indirect dependency (of "is-string") and as a direct dependency with a newer version', () => {
-    // in other words, is-type@1 is a direct dependency of is-string, and the bit.json have these two components:
-    // is-string@1 and is-type@2. After the import we expect to have both is-type versions (1 and 2), and is-string to
+    // in other words, is-type@0.0.1 is a direct dependency of is-string, and the bit.json have these two components:
+    // is-string@0.0.1 and is-type@0.0.2. After the import we expect to have both is-type versions (1 and 2), and is-string to
     // work with the v1 of is-type.
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -1399,18 +1399,18 @@ describe('bit import', function () {
       helper.addRemoteScope();
 
       const bitJson = helper.readBitJson();
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '1';
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '2';
+      bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '0.0.1';
+      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '0.0.2';
       helper.writeBitJson(bitJson);
       helper.runCmd('bit import');
     });
-    it('should successfully print results of is-type@1 when requiring it indirectly by is-string', () => {
+    it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
       const appJsFixture = "const isString = require('bit/utils/is-string'); console.log(isString());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v1 and got is-string');
     });
-    it('should successfully print results of is-type@2 when requiring it directly', () => {
+    it('should successfully print results of is-type@0.0.2 when requiring it directly', () => {
       const appJsFixture = "const isType = require('bit/utils/is-type'); console.log(isType());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
@@ -1443,8 +1443,8 @@ describe('bit import', function () {
     });
     it('should update the existing record of is-type in bit.map from NESTED to IMPORTED', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@1`);
-      expect(bitMap[`${helper.remoteScope}/utils/is-type@1`].origin).to.equal('IMPORTED');
+      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+      expect(bitMap[`${helper.remoteScope}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
     });
     it('should not break the is-string component', () => {
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
@@ -1482,7 +1482,7 @@ describe('bit import', function () {
       const { scopeName, scopePath } = helper.getNewBareScope();
       scopeB = scopeName;
       helper.addRemoteScope(scopePath);
-      helper.exportComponent(`${helper.remoteScope}/utils/is-string@2`, scopeB);
+      helper.exportComponent(`${helper.remoteScope}/utils/is-string@0.0.2`, scopeB);
       // import to a new local scope
       helper.initNewLocalScope();
       helper.addRemoteScope(scopePath);
@@ -1525,7 +1525,7 @@ describe('bit import', function () {
       const componentPath = path.join('components', 'utils', 'is-string', 'utils');
       helper.createComponent(componentPath, 'is-string.js', isStringModifiedFixture);
       helper.commitComponent('utils/is-string');
-      helper.exportComponent(`${helper.remoteScope}/utils/is-string@2`);
+      helper.exportComponent(`${helper.remoteScope}/utils/is-string@0.0.2`);
 
       fs.removeSync(helper.localScopePath);
       helper.setLocalScope(authorScope);
