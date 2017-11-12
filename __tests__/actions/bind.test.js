@@ -26,9 +26,9 @@ jest.mock('bit-scope-client/bit-json');
 jest.mock('../../src/components-map');
 jest.mock('fs-extra');
 
-const VERSION_DELIMITER = '::';
+const VERSION_DELIMITER = '@';
 const fromObjectToDependenciesArray = dependencies => R.toPairs(dependencies)
-  .map(([component, version]) => component + VERSION_DELIMITER + version.toString());
+  .map(([component, version]) => component + VERSION_DELIMITER + version);
 
 beforeEach(() => {
   const dependenciesArray = fromObjectToDependenciesArray(bitJsonOneDep.dependencies);
