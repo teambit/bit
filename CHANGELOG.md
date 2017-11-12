@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- `bit status` - add a new section "deleted components" for components that were deleted from the file-system manually
+- bug fix - components that were not indicated as staged-components by `bit status` were exported by `bit export`
 - bug fix - tests files saved with incorrect path when `bit add` was running from non-consumer root  
 - `bit add` - exclude a component when its main file is excluded 
 - `bit test` - paint a summary table when testing multiple components 
@@ -19,7 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - SSH is not supporting passphrase in case a private key is encrypted
 - SSH authentication can be done with SSH username and password in case a private key or an SSH agent socket are not available
-- `bit show` - show components that will be tagged automatically when their dependencies are tagged
+- `bit status` - show components that will be tagged automatically when their dependencies are tagged
 - bug fix - dependencies were not written to the file-system when cloning a project with an existing bit.map file
 - disable the local search
 

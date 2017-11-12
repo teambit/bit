@@ -26,7 +26,8 @@ export default class Status extends Command {
     stagedComponents,
     componentsWithMissingDeps,
     importPendingComponents,
-    autoTagPendingComponents
+    autoTagPendingComponents,
+    deletedComponents
   }: StatusResult): string {
     function formatMissing(missingComponent: Component) {
       function formatMissingStr(array, label) {
@@ -77,6 +78,11 @@ export default class Status extends Command {
         : chalk.green('no auto-tag pending components')
     ).join('\n');
 
+    const deletedComponentOutput = immutableUnshift(
+      deletedComponents.map(format),
+      deletedComponents.length ? chalk.underline.white('deleted components') : chalk.green('no deleted components')
+    ).join('\n');
+
     const stagedComponentsOutput = immutableUnshift(
       stagedComponents.map(format),
       stagedComponents.length ? chalk.underline.white('staged components') : chalk.green('no staged components')
@@ -84,9 +90,13 @@ export default class Status extends Command {
 
     return (
       importPendingWarning +
-      [newComponentsOutput, modifiedComponentOutput, stagedComponentsOutput, autoTagPendingOutput].join(
-        chalk.underline('\n                         \n') + chalk.white('\n')
-      )
+      [
+        newComponentsOutput,
+        modifiedComponentOutput,
+        stagedComponentsOutput,
+        autoTagPendingOutput,
+        deletedComponentOutput
+      ].join(chalk.underline('\n                         \n') + chalk.white('\n'))
     );
   }
 }

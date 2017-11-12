@@ -374,35 +374,55 @@ describe('bit status command', function () {
       );
     });
   });
-  describe('with removed file/files', () => {
-    beforeEach(() => {
-      helper.initNewLocalScope();
-      helper.createComponentBarFoo();
-      helper.createComponent('bar', 'index.js');
-      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+  describe('when component files were deleted', () => {
+    describe('when some of the files were deleted', () => {
+      before(() => {
+        helper.initNewLocalScope();
+        helper.createComponentBarFoo();
+        helper.createComponent('bar', 'index.js');
+        helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+        helper.deleteFile('bar/foo.js');
+      });
+      it('should remove the files from bit.map', () => {
+        const beforeRemoveBitMap = helper.readBitMap();
+        const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
+        expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+        helper.runCmd('bit status');
+        const bitMap = helper.readBitMap();
+        const files = bitMap['bar/foo'].files;
+        expect(files).to.be.ofSize(1);
+        expect(files[0].name).to.equal('index.js');
+      });
     });
-    it('Should remove files that were removed for component', () => {
-      const beforeRemoveBitMap = helper.readBitMap();
-      const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
-      expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.deleteFile('bar/foo.js');
-      helper.runCmd('bit status');
-      const bitMap = helper.readBitMap();
-      const files = bitMap['bar/foo'].files;
-      expect(files).to.be.ofSize(1);
-      expect(files[0].name).to.equal('index.js');
-    });
-    it('Should throw error that all files were removed', () => {
-      const beforeRemoveBitMap = helper.readBitMap();
-      const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
-      expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.deleteFile('bar/index.js');
-      helper.deleteFile('bar/foo.js');
-
-      const statusCmd = () => helper.runCmd('bit status');
-      expect(statusCmd).to.throw(
-        'invalid component bar/foo, all files were deleted, please remove the component using bit remove command\n'
-      );
+    describe('when all of the files were deleted', () => {
+      let output;
+      before(() => {
+        helper.initNewLocalScope();
+        helper.createComponentBarFoo();
+        helper.createComponent('bar', 'index.js');
+        helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+        helper.deleteFile('bar/index.js');
+        helper.deleteFile('bar/foo.js');
+        output = helper.runCmd('bit status');
+      });
+      it('should not delete the files from bit.map', () => {
+        const beforeRemoveBitMap = helper.readBitMap();
+        const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
+        expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+      });
+      it('should not display that component as a modified component', () => {
+        expect(output.includes('no modified components')).to.be.true;
+      });
+      it('should not display that component as a staged component', () => {
+        expect(output.includes('no staged components')).to.be.true;
+      });
+      it('should not display that component as new', () => {
+        expect(output.includes('no new components')).to.be.true;
+      });
+      it('should display that component as deleted component', () => {
+        expect(output.includes('deleted components')).to.be.true;
+        expect(output.includes('no deleted components')).to.be.false;
+      });
     });
   });
   describe('after importing a component that uses a dependency with relative-path', () => {
