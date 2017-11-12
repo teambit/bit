@@ -113,7 +113,7 @@ export default class Consumer {
 
   /**
    * Running migration process for consumer to update the stores (.bit.map.json) to the current version
-   * 
+   *
    * @param {any} verbose - print debug logs
    * @returns {Object} - wether the process run and wether it successeded
    * @memberof Consumer
@@ -459,9 +459,7 @@ export default class Consumer {
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
     const { version } = await this.scope.sources.consumerComponentToVersion({
-      consumerComponent: componentFromFileSystem,
-      consumer: this,
-      forHashOnly: true
+      consumerComponent: componentFromFileSystem
     });
 
     version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
@@ -645,13 +643,6 @@ export default class Consumer {
   composeDependencyPath(bitId: BitId): string {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
     return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
-  }
-
-  async runComponentSpecs(id: BitId, verbose: boolean = false): Promise<?any> {
-    const bitMap = await this.getBitMap();
-    return this.loadComponent(id).then((component) => {
-      return component.runSpecs({ scope: this.scope, consumer: this, bitMap, verbose });
-    });
   }
 
   async movePaths({ from, to }: { from: string, to: string }) {
