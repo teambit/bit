@@ -248,7 +248,7 @@ export default class SSH implements Network {
     return this;
   }
 
-  composeConnectionObject(key: ?string, passphrase: ?string) {
+  composeConnectionObject(key: ?string, passphrase: ?string, skipAgent: boolean = false) {
     const base = {
       username: this.username,
       host: this.host,
@@ -258,8 +258,8 @@ export default class SSH implements Network {
     };
 
     // if ssh-agent socket exists, use it.
-    if (process.env.SSH_AUTH_SOCK) {
-      // return Promise.resolve(merge(base, { agent: process.env.SSH_AUTH_SOCK }));
+    if (this.hasAgentSocket() && !skipAgent) {
+      return Promise.resolve(merge(base, { agent: process.env.SSH_AUTH_SOCK }));
     }
 
     // otherwise just search for merge
@@ -271,48 +271,70 @@ export default class SSH implements Network {
     return promptUserpass().then(({ username, password }) => merge(base, { username, password }));
   }
 
-  connect(key: ?string, passphrase: ?string): Promise<SSH> {
+  hasAgentSocket() {
+    return !!process.env.SSH_AUTH_SOCK;
+  }
+
+  // @TODO refactor this method
+  connect(key: ?string, passphrase: ?string, skipAgent: boolean = false): Promise<SSH> {
     const self = this;
 
-    function prompt() {
-      return promptPassphrase().then((res) => {
-        cachedPassphrase = res.passphrase;
-        return self.connect(key, cachedPassphrase).catch(() => {
-          return prompt();
-        });
-      });
-    }
-
-    return this.composeConnectionObject(key, passphrase).then((sshConfig) => {
-      return new Promise((resolve, reject) => {
-        const conn = new SSH2();
-        try {
-          conn
-            .on('error', (err) => {
-              if (err.message === AUTH_FAILED_MESSAGE) {
-                return reject(new AuthenticationFailed());
-              }
-
-              return reject(err);
-            })
-            .on('ready', () => {
-              this.connection = conn;
-              resolve(this);
-            })
-            .connect(sshConfig);
-        } catch (e) {
-          if (e.message === PASSPHRASE_MESSAGE) {
-            conn.end();
-            if (cachedPassphrase) {
-              return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
-            }
-
-            return prompt().then(ssh => resolve(ssh));
+    return this.composeConnectionObject(key, passphrase, skipAgent)
+      .then((sshConfig) => {
+        return new Promise((resolve, reject) => {
+          function prompt() {
+            return promptPassphrase()
+              .then((res) => {
+                cachedPassphrase = res.passphrase;
+                return self.connect(key, cachedPassphrase).catch(() => {
+                  return prompt();
+                });
+              })
+              .catch(err => reject(err));
           }
 
-          return reject(e);
+          const conn = new SSH2();
+          try {
+            conn
+              .on('error', (err) => {
+                if (this.hasAgentSocket() && err.message === AUTH_FAILED_MESSAGE) {
+                  // retry in case ssh-agent failed
+                  reject({
+                    skip: true
+                  });
+                }
+
+                if (err.message === AUTH_FAILED_MESSAGE) {
+                  return reject(new AuthenticationFailed());
+                }
+
+                return reject(err);
+              })
+              .on('ready', () => {
+                this.connection = conn;
+                resolve(this);
+              })
+              .connect(sshConfig);
+          } catch (e) {
+            if (e.message === PASSPHRASE_MESSAGE) {
+              conn.end();
+              if (cachedPassphrase) {
+                return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
+              }
+
+              return prompt().then(ssh => resolve(ssh));
+            }
+
+            return reject(e);
+          }
+        });
+      })
+      .catch((err) => {
+        if (err.skip) {
+          return this.connect(key, passphrase, true);
         }
+
+        throw err;
       });
-    });
   }
 }
