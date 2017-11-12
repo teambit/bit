@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - `bit status` - add a new section "deleted components" for components that were deleted from the file-system manually
 - bug fix - components that were not indicated as staged-components by `bit status` were exported by `bit export`
+- bug fix - tests files saved with incorrect path when `bit add` was running from non-consumer root  
+- `bit add` - exclude a component when its main file is excluded 
+- `bit test` - paint a summary table when testing multiple components 
+- reimplement cat-object command
 
 ## [0.11.0-test.8] - 2017-11-08
 - remove the ssh agent support (it's buggy)

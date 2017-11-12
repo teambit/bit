@@ -1,5 +1,6 @@
 /** @flow */
 import c from 'chalk';
+import Table from 'tty-table';
 import SpecsResults from '../consumer/specs-results/specs-results';
 
 export const formatNewBit = ({ box, name }: any): string => c.white('     > ') + c.cyan(`${box}/${name}`);
@@ -114,6 +115,28 @@ export const paintAllSpecsResults = (results: Array<*>): string => {
     })
     .join('\n');
 };
+
+export const paintSummarySpecsResults = (results: Array<*>): string => {
+  if (results.length <= 1) return ''; // it there are no results or only one result, no need for summary
+  const summaryHeader = [];
+  summaryHeader.push({ value: 'Component ID', width: 80, headerColor: 'cyan' });
+  summaryHeader.push({ value: 'Specs Results', width: 50, headerColor: 'cyan' });
+  const specsSummary = (specResults) => {
+    const specsPassed = specResults.map(specResult => specResult.pass);
+    const areAllPassed = specsPassed.every(isPassed => isPassed);
+    return areAllPassed ? c.green('passed') : c.red('failed');
+  };
+  const summaryRows = results.map((result) => {
+    const componentId = c.bold(`${result.component.box}/${result.component.name}`);
+    if (result.missingTester) return [componentId, c.bold.red('tester is not defined')];
+    if (result.specs) return [componentId, specsSummary(result.specs)];
+    return [componentId, c.yellow('tests are not defined')];
+  });
+
+  const summaryTable = new Table(summaryHeader, summaryRows);
+  return summaryTable.render();
+};
+
 export const paintBuildResults = (buildResults: []): string => {
   if (buildResults) {
     const statsHeader = c.underline.green('\nbuilded Files:\n');

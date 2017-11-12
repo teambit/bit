@@ -480,9 +480,7 @@ export default class Consumer {
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
     const { version } = await this.scope.sources.consumerComponentToVersion({
-      consumerComponent: componentFromFileSystem,
-      consumer: this,
-      forHashOnly: true
+      consumerComponent: componentFromFileSystem
     });
 
     version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
@@ -666,13 +664,6 @@ export default class Consumer {
   composeDependencyPath(bitId: BitId): string {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
     return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
-  }
-
-  async runComponentSpecs(id: BitId, verbose: boolean = false): Promise<?any> {
-    const bitMap = await this.getBitMap();
-    return this.loadComponent(id).then((component) => {
-      return component.runSpecs({ scope: this.scope, consumer: this, bitMap, verbose });
-    });
   }
 
   async movePaths({ from, to }: { from: string, to: string }) {

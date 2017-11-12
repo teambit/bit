@@ -8,10 +8,11 @@ import { GlobalRemotes } from '../global-config';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
+import Source from './models/source';
 import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy } from '../utils';
+import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy, pathNormalizeToLinux } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, DEFAULT_DIST_DIRNAME, BIT_VERSION } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
@@ -36,7 +37,9 @@ import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
   BEFORE_IMPORT_PUT_ON_SCOPE,
   BEFORE_INSTALL_NPM_DEPENDENCIES,
-  BEFORE_MIGRATION
+  BEFORE_MIGRATION,
+  BEFORE_RUNNING_BUILD,
+  BEFORE_RUNNING_SPECS
 } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
 import logger from '../logger/logger';
@@ -98,7 +101,7 @@ export default class Scope {
 
   /**
    * Running migration process for scope to update the stores (bit objects) to the current version
-   * 
+   *
    * @param {any} verbose - print debug logs
    * @returns {Object} - wether the process run and wether it successeded
    * @memberof Consumer
@@ -265,6 +268,33 @@ export default class Scope {
       return Promise.all(flattenedDependenciesP);
     };
 
+    // @todo: to make them all run in parallel, we have to first get all compilers from all components, install all
+    // environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
+    logger.debug('scope.putMany: sequentially build all components');
+    loader.start(BEFORE_RUNNING_BUILD);
+    for (const consumerComponentId of sortedConsumerComponentsIds) {
+      const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
+      if (consumerComponent) {
+        await consumerComponent.build({ scope: this, consumer });
+      }
+    }
+
+    logger.debug('scope.putMany: sequentially test all components');
+    loader.start(BEFORE_RUNNING_SPECS);
+    const specsResults = {};
+    for (const consumerComponentId of sortedConsumerComponentsIds) {
+      const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
+      if (consumerComponent) {
+        specsResults[consumerComponentId] = await consumerComponent.runSpecs({
+          scope: this,
+          rejectOnFailure: !force,
+          consumer,
+          verbose
+        });
+      }
+    }
+
+    logger.debug('scope.putMany: sequentially persist all components');
     const persistComponentsP = sortedConsumerComponentsIds.map(consumerComponentId => async () => {
       const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
       // This happens when there is a dependency which have been already committed
@@ -273,17 +303,28 @@ export default class Scope {
       flattenedDependencies = R.flatten(flattenedDependencies);
       const predicate = id => id.toString(); // TODO: should be moved to BitId class
       flattenedDependencies = R.uniqBy(predicate)(flattenedDependencies);
+
+      const dists =
+        consumerComponent.dists && consumerComponent.dists.length
+          ? consumerComponent.dists.map((dist) => {
+            return {
+              name: dist.basename,
+              relativePath: pathNormalizeToLinux(dist.relative),
+              file: Source.from(dist.contents),
+              test: dist.test
+            };
+          })
+          : null;
+
       const component = await this.sources.addSource({
         source: consumerComponent,
         depIds: flattenedDependencies,
         message,
         exactVersion,
         releaseType,
-        force,
-        consumer,
-        verbose
+        dists,
+        specsResults: specsResults[consumerComponentId]
       });
-      loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
       const deps = await component.toVersionDependencies(LATEST, this, this.name);
       consumerComponent.version = deps.component.version;
       await deps.toConsumer(this.objects);
@@ -292,6 +333,7 @@ export default class Scope {
     });
 
     // Run the persistence one by one not in parallel!
+    loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
     const components = await persistComponentsP.reduce(
       (promise, func) => promise.then(result => func().then(Array.prototype.concat.bind(result))),
       Promise.resolve([])
@@ -506,6 +548,10 @@ export default class Scope {
 
   getObject(hash: string): Promise<BitObject> {
     return new Ref(hash).load(this.objects);
+  }
+
+  getRawObject(hash: string): Promise<BitRawObject> {
+    return this.objects.loadRawObject(new Ref(hash));
   }
 
   /**

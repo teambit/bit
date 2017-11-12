@@ -1,6 +1,6 @@
 /** @flow */
 import R from 'ramda';
-import { inflate } from '../../utils';
+import { inflate, getStringifyArgs } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 
 export default class BitRawObject {
@@ -50,6 +50,20 @@ export default class BitRawObject {
         parsedContent = this.content;
     }
     return parsedContent;
+  }
+
+  getString(pretty: boolean) {
+    const args = getStringifyArgs(pretty);
+    switch (this.type) {
+      case 'Version':
+      case 'Component':
+      case 'Symlink':
+      case 'ScopeMeta':
+        return JSON.stringify(this.parsedContent, ...args);
+
+      default:
+        return this.content;
+    }
   }
 
   set ref(ref: string) {
