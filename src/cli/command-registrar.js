@@ -2,10 +2,10 @@
 import serializeError from 'serialize-error';
 import commander from 'commander';
 import chalk from 'chalk';
-import { readFileSync } from 'fs';
 import type Command from './command';
+import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
-import { empty, first, isNumeric } from '../utils';
+import { empty, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
 
@@ -49,11 +49,20 @@ function execAction(command, concrete, args) {
     loader.on();
   }
 
-  command
-    .action(relevantArgs, opts)
-    .then((data) => {
-      loader.off();
-      return logAndExit(command.report(data), command.name);
+  const migrateWrapper = (run: boolean) => {
+    if (run) {
+      logger.info('Checking if a migration is needed');
+      return migrate(null, false);
+    }
+    return Promise.resolve();
+  };
+
+  migrateWrapper(command.migration)
+    .then(() => {
+      return command.action(relevantArgs, opts).then((data) => {
+        loader.off();
+        return logAndExit(command.report(data), command.name);
+      });
     })
     .catch((err) => {
       logger.error(
@@ -72,7 +81,7 @@ function execAction(command, concrete, args) {
 }
 
 function serializeErrAndExit(err, commandName) {
-  process.stderr.write(JSON.stringify(serializeError(err)));
+  process.stderr.write(packCommand(buildCommandMessage(serializeError(err)), false));
   const code = err.code && isNumeric(err.code) ? err.code : 1;
   return logger.exitAfterFlush(code, commandName);
 }

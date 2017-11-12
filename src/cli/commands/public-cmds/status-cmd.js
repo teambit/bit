@@ -14,6 +14,7 @@ export default class Status extends Command {
   alias = 's';
   opts = [];
   loader = true;
+  migration = true;
 
   action(): Promise<Object> {
     return status();

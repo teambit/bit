@@ -22,6 +22,7 @@ import { propogateUntil, pathHas } from './fs/propogate-until';
 import isBitUrl from './is-bit-url';
 import bufferToReadStream from './buffer/to-read-stream';
 import toBase64 from './string/to-base64';
+import toBase64ArrayBuffer from './string/to-base64-array-buffer';
 import fromBase64 from './string/from-base64';
 import parseSSHUrl from './ssh/parse-url';
 import listDirectories from './fs/list-directories';
@@ -39,6 +40,7 @@ import removeFile from './fs-remove-file';
 import allSettled from './promise-all-settled';
 import values from './object/values';
 import glob from './glob';
+import promisify from './promisify';
 import inflate from './zlib-inflate';
 import mapToObject from './map/to-object';
 import objectToTupleArray from './object/to-tuple-array';
@@ -88,8 +90,10 @@ export {
   deflate,
   values,
   toBase64,
+  toBase64ArrayBuffer,
   fromBase64,
   glob,
+  promisify,
   resolveBoolean,
   empty,
   filter,

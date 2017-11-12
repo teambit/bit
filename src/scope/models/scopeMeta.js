@@ -48,4 +48,8 @@ export default class ScopeMeta extends BitObject {
   static fromObject(props: ScopeMetaProps): ScopeMeta {
     return new ScopeMeta(props);
   }
+
+  static from(props: ScopeMetaProps): ScopeMeta {
+    return ScopeMeta.fromObject(props);
+  }
 }

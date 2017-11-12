@@ -22,6 +22,7 @@ export default class Import extends Command {
     ['', 'no_package_json', 'do not generate package.json for the imported component(s)']
   ];
   loader = true;
+  migration = true;
 
   action(
     [ids]: [string[]],

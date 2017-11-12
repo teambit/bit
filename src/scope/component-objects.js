@@ -1,6 +1,7 @@
 /** @flow */
 import BitObject from './objects/object';
 import Repository from './objects/repository';
+import { toBase64ArrayBuffer } from '../utils';
 
 export default class ComponentObjects {
   component: Buffer;
@@ -11,11 +12,10 @@ export default class ComponentObjects {
     this.objects = objects;
   }
 
-  // @TODO optimize ASAP.
   toString(): string {
     return JSON.stringify({
-      component: this.component,
-      objects: this.objects
+      component: toBase64ArrayBuffer(this.component),
+      objects: this.objects.map(toBase64ArrayBuffer)
     });
   }
 
@@ -25,17 +25,18 @@ export default class ComponentObjects {
   }
 
   static manyToString(componentsAndObjects: Array<{ component: Buffer, objects: Buffer[] }>) {
-    return JSON.stringify(componentsAndObjects);
+    const result = JSON.stringify(componentsAndObjects.map(componentAndObject => componentAndObject.toString()));
+    return result;
   }
 
   static manyFromString(str: string): ComponentObjects[] {
-    return JSON.parse(str).map(componentObject => ComponentObjects.fromObject(componentObject));
+    return JSON.parse(str).map(componentObject => ComponentObjects.fromString(componentObject));
   }
 
   static fromObject(object: Object): ComponentObjects {
     const { component, objects } = object;
 
-    return new ComponentObjects(new Buffer(component), objects.map(obj => new Buffer(obj)));
+    return new ComponentObjects(_from64Buffer(component), objects.map(_from64Buffer));
   }
 
   toObjects(repo: Repository): { component: BitObject, objects: BitObject[] } {
@@ -44,4 +45,8 @@ export default class ComponentObjects {
       objects: this.objects.map(obj => BitObject.parseSync(obj, repo.types))
     };
   }
+}
+
+function _from64Buffer(val): Buffer {
+  return Buffer.from(val, 'base64');
 }

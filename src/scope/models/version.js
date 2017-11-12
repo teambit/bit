@@ -123,7 +123,7 @@ export default class Version extends BitObject {
           log: obj.log,
           dependencies,
           packageDependencies: obj.packageDependencies,
-          bindingPrefix: obj.bindingPrefix // Should be removed once a proper migration will run
+          bindingPrefix: obj.bindingPrefix
         },
         val => !!val
       )
@@ -174,8 +174,7 @@ export default class Version extends BitObject {
           })
           : null,
         compiler: this.compiler ? this.compiler.toString() : null,
-        bindingPrefix: this.bindingPrefix || null,
-        // bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX, // Should be used once a proper migration will run
+        bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
         tester: this.tester ? this.tester.toString() : null,
         log: {
           message: this.log.message,
@@ -257,6 +256,10 @@ export default class Version extends BitObject {
       flattenedDependencies: BitIds.deserialize(flattenedDependencies),
       packageDependencies
     });
+  }
+
+  static from(versionProps: VersionProps): Version {
+    return new Version(versionProps);
   }
 
   static fromComponent({

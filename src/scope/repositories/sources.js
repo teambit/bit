@@ -4,7 +4,7 @@ import { bufferFrom, pathNormalizeToLinux } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../constants';
+import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
@@ -225,6 +225,8 @@ export default class SourceRepository {
     source,
     depIds,
     message,
+    exactVersion,
+    releaseType,
     force,
     consumer,
     verbose
@@ -232,6 +234,8 @@ export default class SourceRepository {
     source: ConsumerComponent,
     depIds: BitId[],
     message: string,
+    exactVersion: ?string,
+    releaseType: string,
     force: ?boolean,
     consumer: Consumer,
     verbose?: boolean
@@ -248,7 +252,7 @@ export default class SourceRepository {
       force,
       verbose
     });
-    component.addVersion(version);
+    component.addVersion(version, releaseType, exactVersion);
 
     objectRepo.add(version).add(component);
 
@@ -258,14 +262,19 @@ export default class SourceRepository {
     return component;
   }
 
-  putAdditionalVersion(component: Component, version: Version, message): Component {
+  putAdditionalVersion(
+    component: Component,
+    version: Version,
+    message,
+    releaseType: string = DEFAULT_BIT_RELEASE_TYPE
+  ): Component {
     version.log = {
       message,
       username: globalConfig.getSync(CFG_USER_NAME_KEY),
       email: globalConfig.getSync(CFG_USER_EMAIL_KEY),
       date: Date.now().toString()
     };
-    component.addVersion(version);
+    component.addVersion(version, releaseType);
     return this.put({ component, objects: [version] });
   }
 

@@ -4,23 +4,14 @@
 require('events').EventEmitter.defaultMaxListeners = 100;
 require('regenerator-runtime/runtime');
 /* eslint-disable no-var */
-var semver = require('semver');
-var mkdirp = require('mkdirp');
-var constants = require('../dist/constants');
-var roadRunner = require('roadrunner');
-var bitUpdates = require('./bit-updates');
+const semver = require('semver');
+const mkdirp = require('mkdirp');
+const constants = require('../dist/constants');
+const roadRunner = require('roadrunner');
+const bitUpdates = require('./bit-updates');
 
-var nodeVersion = process.versions.node.split('-')[0];
-var compatibilityStatus = getCompatibilityStatus();
-
-function getBuildDir() {
-  var map = {
-    current: 'dist',
-    legacy: 'dist'
-  };
-
-  return `../${map[compatibilityStatus]}`;
-}
+const nodeVersion = process.versions.node.split('-')[0];
+const compatibilityStatus = getCompatibilityStatus();
 
 function ensureDirectories() {
   mkdirp.sync(constants.MODULES_CACHE_DIR);
@@ -30,7 +21,9 @@ function ensureDirectories() {
 
 function verifyCompatibility() {
   if (compatibilityStatus === 'unsupported') {
-    console.log(require('chalk').red('Node version ' + nodeVersion + ' is not supported, please use Node.js 4.0 or higher.')); // eslint-disable-line
+    console.log(
+      require('chalk').red(`Node version ${nodeVersion} is not supported, please use Node.js 4.0 or higher.`)
+    ); // eslint-disable-line
     return process.exit();
   }
 
@@ -65,7 +58,7 @@ function checkForUpdates(cb) {
 }
 
 function updateOrLaunch(updateCommand) {
-  (updateCommand) ? bitUpdates.runUpdate(updateCommand) : loadCli();
+  return updateCommand ? bitUpdates.runUpdate(updateCommand) : loadCli();
 }
 
 function loadCli() {

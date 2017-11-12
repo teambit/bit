@@ -111,6 +111,25 @@ export default class Consumer {
     }
   }
 
+  /**
+   * Running migration process for consumer to update the stores (.bit.map.json) to the current version
+   * 
+   * @param {any} verbose - print debug logs
+   * @returns {Object} - wether the process run and wether it successeded
+   * @memberof Consumer
+   */
+  migrate(verbose): Object {
+    logger.debug('running migration process for consumer');
+    // Check version of stores (bitmap / bitjson) to check if we need to run migrate
+    // If migration is needed add loader - loader.start(BEFORE_MIGRATION);
+    // bitmap migrate
+
+    return {
+      run: true,
+      success: true
+    };
+  }
+
   write(): Promise<Consumer> {
     return this.bitJson
       .write({ bitDir: this.projectPath })
@@ -485,6 +504,8 @@ export default class Consumer {
   async commit(
     ids: BitId[],
     message: string,
+    exactVersion: ?string,
+    releaseType: string,
     force: ?boolean,
     verbose: ?boolean,
     ignoreMissingDependencies: ?boolean
@@ -503,6 +524,8 @@ export default class Consumer {
     const committedComponents = await this.scope.putMany({
       consumerComponents: components,
       message,
+      exactVersion,
+      releaseType,
       force,
       consumer: this,
       verbose
@@ -682,7 +705,6 @@ export default class Consumer {
   }
 
   static async load(currentPath: string): Promise<Consumer> {
-    // TODO: Refactor - remove the new Promise((resolve, reject) it's a bad practice use Promise.reject if needed
     const projectPath = locateConsumer(currentPath);
     if (!projectPath) return Promise.reject(new ConsumerNotFound());
     const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));

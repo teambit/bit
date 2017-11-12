@@ -50,28 +50,27 @@ export default (async function exportAction(ids?: string[], remote: string, save
   // todo: what happens when some failed? we might consider avoid Promise.all
   // in case we don't have anything to export
   if (R.isEmpty(idsToExport)) return [];
-  const componentsDependencies = await consumer.scope.exportMany(idsToExport, remote);
+  const componentsIds = await consumer.scope.exportMany(idsToExport, remote);
   const bitJsonDependencies = consumer.bitJson.getDependencies();
-  const componentsP = componentsDependencies.map(async (componentDependencies) => {
-    const component: ConsumerComponent = componentDependencies.component;
+  const componentsIdsP = componentsIds.map(async (componentId: BitId) => {
     if (save) {
       // add to bit.json only if the component is already there. So then the version will be updated. It's applicable
       // mainly when a component was imported first. For authored components, no need to save them in bit.json, they are
       // already in bit.map
       if (
         bitJsonDependencies.find(
-          bitJsonDependency => bitJsonDependency.toStringWithoutVersion() === component.id.toStringWithoutVersion()
+          bitJsonDependency => bitJsonDependency.toStringWithoutVersion() === componentId.toStringWithoutVersion()
         )
       ) {
-        await consumer.bitJson.addDependency(component.id).write({ bitDir: consumer.getPath() });
+        await consumer.bitJson.addDependency(componentId).write({ bitDir: consumer.getPath() });
       }
     }
-    return component;
+    return componentId;
   });
 
-  const components = await Promise.all(componentsP);
+  await Promise.all(componentsIdsP);
   const bitMap = await BitMap.load(consumer.getPath());
-  components.map(component => bitMap.updateComponentId(component.id));
+  componentsIds.map(componentsId => bitMap.updateComponentId(componentsId));
   await bitMap.write();
-  return components;
+  return componentsIds;
 });

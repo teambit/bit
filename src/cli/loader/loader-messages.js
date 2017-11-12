@@ -3,6 +3,7 @@
 export const BEFORE_REMOTE_SHOW = 'fetching remote component';
 export const BEFORE_IMPORT_ENVIRONMENT = 'importing environment dependencies...';
 export const BEFORE_REMOTE_LIST = 'listing remote components';
+export const BEFORE_MIGRATION = 'upgrading working directory...';
 export const BEFORE_REMOTE_REMOVE = 'removing remote components';
 export const BEFORE_REMOTE_DEPRECATE = 'deprecating remote components';
 export const BEFORE_RESET_ACTION = 'resetting component';

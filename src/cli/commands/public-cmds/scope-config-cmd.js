@@ -10,6 +10,7 @@ export default class ScopeConfig extends Command {
   alias = '';
   commands = [new ScopeConfigSet(), new ScopeConfigDel(), new ScopeConfigGet(), new ScopeConfigList()];
   opts = [];
+  migration = true;
 
   action(): Promise<any> {
     return scopeConfig.list();

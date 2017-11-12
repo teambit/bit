@@ -15,20 +15,20 @@ describe('versionParser()', () => {
   });
 
   it('should return a concrete version', () => {
-    const version = versionParser('1');
+    const version = versionParser('0.0.1');
     expect(version.latest).to.equal(false);
-    expect(version.versionNum).to.equal(1);
+    expect(version.versionNum).to.equal('0.0.1');
   });
 
   it('should return a latest tested version', () => {
-    const version = versionParser('*1');
+    const version = versionParser('*0.0.1');
     expect(version.latest).to.equal(true);
-    expect(version.versionNum).to.equal(1);
+    expect(version.versionNum).to.equal('0.0.1');
   });
 
   it('should return a latest tested version with double digits', () => {
-    const version = versionParser('*11');
+    const version = versionParser('*0.0.11');
     expect(version.latest).to.equal(true);
-    expect(version.versionNum).to.equal(11);
+    expect(version.versionNum).to.equal('0.0.11');
   });
 });

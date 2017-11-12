@@ -9,6 +9,7 @@ export default class Reset extends Command {
   alias = '';
   opts = [];
   loader = true;
+  migration = true;
 
   action([id]: [string]): Promise<Object> {
     return reset({ id }).then((component) => {
