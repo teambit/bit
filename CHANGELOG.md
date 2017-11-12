@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+
+## [0.10.6] - 2017-11-12
+
 - add pack command to create tgz for components
 
 ## [0.10.5] - 2017-10-19
