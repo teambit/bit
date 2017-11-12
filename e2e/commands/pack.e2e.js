@@ -89,27 +89,27 @@ describe('bit pack with relative paths', function () {
     helper.copyFixtureComponents();
     helper.addComponentWithOptions('hero-button', { i: 'test/hero-button' });
     helper.addComponentWithOptions('styles', { i: 'test/styles' });
-    helper.addComponentWithOptions('hero-withRelativeSyles', { i: 'test/herowithrelativesyles' });
+    helper.addComponentWithOptions('hero-withrelativepaths', { i: 'test/herowithrelativepaths' });
     helper.runCmd('npm i prop-types ');
     helper.commitAllComponents();
     helper.exportAllComponents();
     helper.reInitLocalScope();
     helper.addRemoteScope();
     helper.runCmd('npm i prop-types');
-    helper.importComponent('test/herowithrelativesyles');
+    helper.importComponent('test/herowithrelativepaths');
   });
-  describe('test pack ', () => {
+  describe.only('test pack ', () => {
     it('should print the tgz path', () => {
       const output = helper.runCmd(
-        `bit pack ${helper.remoteScope}/test/herowithrelativesyles  -d ${helper.localScopePath}   -l -w -o `,
+        `bit pack ${helper.remoteScope}/test/herowithrelativepaths  -d ${helper.localScopePath}   -l -w -o `,
         helper.remoteScopePath
       );
       tar.x({
-        file: `${helper.localScopePath}/${helper.remoteScope}.test.herowithrelativesyles-0.0.1.tgz`,
+        file: `${helper.localScopePath}/${helper.remoteScope}.test.herowithrelativepaths-0.0.1.tgz`,
         sync: true,
         cwd: helper.localScopePath
       });
-      expect(output).to.have.string(`${helper.remoteScope}.test.herowithrelativesyles-0.0.1.tgz`);
+      expect(output).to.have.string(`${helper.remoteScope}.test.herowithrelativepaths-0.0.1.tgz`);
     });
 
     it('check package.json bit dependencies', () => {
