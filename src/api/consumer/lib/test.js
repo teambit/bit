@@ -15,9 +15,11 @@ export default (async function test(id?: string, verbose: boolean = true): Promi
     components = [component];
   } else {
     const componentsList = new ComponentsList(consumer);
+    loader.start(BEFORE_LOADING_COMPONENTS);
     components = await componentsList.newAndModifiedComponents();
   }
 
+  loader.start(BEFORE_RUNNING_SPECS);
   const specsResults = components.map(async (component) => {
     if (!component.testerId) {
       return { component, missingTester: true };
