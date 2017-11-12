@@ -329,6 +329,13 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).not.to.have.property('bar/foo1');
     });
+    it('bitMap should not contain component if the main file is excluded', () => {
+      helper.createComponent('bar', 'foo1.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.addComponentWithOptions('bar', { i: 'bar/foo', e: 'bar/foo1.js', m: 'bar/foo1.js' });
+      const bitMap = helper.readBitMap();
+      expect(bitMap).not.to.have.property('bar/foo');
+    });
     it('bitMap should only contain bits that have files', () => {
       helper.createComponent('bar', 'foo1.js');
       helper.createComponent('bar', 'foo2.js');

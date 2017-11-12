@@ -59,7 +59,8 @@ export default (async function addAction(
       const files = R.flatten(mapValues.map(x => x.files.map(i => i.relativePath)));
       const resolvedExcludedFiles = await getFiles(files, excludedList);
       mapValues.forEach((mapVal) => {
-        mapVal.files = mapVal.files.filter(key => !resolvedExcludedFiles.includes(key.relativePath));
+        if (resolvedExcludedFiles.includes(mapVal.mainFile)) { mapVal.files = []; } // if mainFile is excluded, exclude all files
+        else mapVal.files = mapVal.files.filter(key => !resolvedExcludedFiles.includes(key.relativePath));
       });
     }
 
