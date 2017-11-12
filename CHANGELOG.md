@@ -6,35 +6,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
-- reimplement cat-object command
 
-## [0.11.0-test.8] - 2017-11-08
-- remove the ssh agent support (it's buggy)
-
-## [0.11.0-test.7] - 2017-11-08
-
-- SSH is not supporting passphrase in case a private key is encrypted
-- SSH authentication can be done with SSH username and password in case a private key or an SSH agent socket are not available
-- `bit show` - show components that will be tagged automatically when their dependencies are tagged
-- bug fix - dependencies were not written to the file-system when cloning a project with an existing bit.map file
-- disable the local search
-
-## [0.11.0-test.3] - 2017-11-06
-
+## [0.11.0] - 2017-11-12
 - change versions numbers to be semantic versions
-- export / import performence and stability improvements
-- fix a bug which prevent the ci running tests in some cases
-- add plugin mechanism to support different file types
-- bug fix - re-adding a component after exporting it was considered as a new component 
-- fix a bug which makes bit test command not work when a component use bit/ to require another component
-
-## [0.10.10-dev.1] - 2017-10-30
-
 - add `--outdated` flag to `bit show` command to show the local and remote versions of a component
 - add `--outdated` flag to `bit list` command to show the local and remote versions of components
+- `bit show` - show components that will be tagged automatically when their dependencies are tagged
+- export / import performance and stability improvements
+- add plugin mechanism to support different file types
+- SSH authentication can be done with SSH username and password in case a private key or an SSH agent socket is not available
+- SSH is not supporting passphrase in case a private key is encrypted
+- reimplement cat-object command
+- remove the ssh-agent support (it's buggy)
+- bug fix - dependencies were not written to the file-system when cloning a project with an existing bit.map file
+- disable the local search
+- fix a bug which prevents the ci running tests in some cases
+- bug fix - re-adding a component after exporting it was considered as a new component 
+- fix a bug which makes bit test command not work when a component use bit/ to require another component
 - prevent bare-scope corruption when the export process fails
 - fixed stderr maxBuffer exceeded bug in ci-update cmd
-- fix bug which make imported components considered as modified
+- fix a bug which makes imported components considered as modified
 - fix typo in help man page
 
 ## [0.10.9] - 2017-10-18
