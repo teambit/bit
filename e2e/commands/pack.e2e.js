@@ -7,7 +7,7 @@ import tar from 'tar';
 const assert = chai.assert;
 chai.use(require('chai-fs'));
 
-describe('bit pack', function () {
+describe('bit pack with absolute paths', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -50,6 +50,7 @@ describe('bit pack', function () {
       expect(pjson).to.have.property('scripts');
       const scripts = pjson.scripts;
       expect(scripts).to.have.property('postinstall');
+      assert.isObject(scripts, 'script is not object');
       const postInstallScript = scripts.postinstall;
       expect(postInstallScript).to.equal('node bitBindings.js');
     });
@@ -71,6 +72,63 @@ describe('bit pack', function () {
         .to.be.a.file()
         .with.content(`module.exports = require('${helper.remoteScope}.test.hero-button');`);
       expect(path.join(node_modules_dir, 'styles', 'index.css'))
+        .to.be.a.file()
+        .with.content(`@import '~${helper.remoteScope}.test.styles/index.css';`);
+    });
+  });
+});
+
+describe('bit pack with relative paths', function () {
+  this.timeout(0);
+  const helper = new Helper();
+  after(() => {
+    helper.destroyEnv();
+  });
+  before(() => {
+    helper.setNewLocalAndRemoteScopes();
+    helper.copyFixtureComponents();
+    helper.addComponentWithOptions('hero-button', { i: 'test/hero-button' });
+    helper.addComponentWithOptions('styles', { i: 'test/styles' });
+    helper.addComponentWithOptions('hero-withRelativeSyles', { i: 'test/herowithrelativesyles' });
+    helper.runCmd('npm i prop-types ');
+    helper.commitAllComponents();
+    helper.exportAllComponents();
+    helper.reInitLocalScope();
+    helper.addRemoteScope();
+    helper.runCmd('npm i prop-types');
+    helper.importComponent('test/herowithrelativesyles');
+  });
+  describe('test pack ', () => {
+    it('should print the tgz path', () => {
+      const output = helper.runCmd(
+        `bit pack ${helper.remoteScope}/test/herowithrelativesyles  -d ${helper.localScopePath}   -l -w -o `,
+        helper.remoteScopePath
+      );
+      tar.x({
+        file: `${helper.localScopePath}/${helper.remoteScope}.test.herowithrelativesyles-0.0.1.tgz`,
+        sync: true,
+        cwd: helper.localScopePath
+      });
+      expect(output).to.have.string(`${helper.remoteScope}.test.herowithrelativesyles-0.0.1.tgz`);
+    });
+
+    it('check package.json bit dependencies', () => {
+      const pjson = helper.readPackageJson(path.join(helper.localScopePath, 'package'));
+      assert.isObject(pjson.scripts, 'script is not object');
+      const dependencies = pjson.dependencies;
+      expect(Object.keys(dependencies)).to.have.lengthOf(2);
+      expect(dependencies).to.have.property(`${helper.remoteScope}.test.hero-button`);
+      expect(dependencies).to.have.property(`${helper.remoteScope}.test.styles`);
+    });
+    it('check links', () => {
+      const packDir = path.join(helper.localScopePath, 'package');
+      assert.pathExists(packDir);
+      assert.pathExists(path.join(packDir, 'hero-button'));
+      assert.pathExists(path.join(packDir, 'styles'));
+      expect(path.join(packDir, 'hero-button', 'index.js'))
+        .to.be.a.file()
+        .with.content(`module.exports = require('${helper.remoteScope}.test.hero-button');`);
+      expect(path.join(packDir, 'styles', 'global.css'))
         .to.be.a.file()
         .with.content(`@import '~${helper.remoteScope}.test.styles/index.css';`);
     });
