@@ -98,7 +98,7 @@ describe('bit pack with relative paths', function () {
     helper.runCmd('npm i prop-types');
     helper.importComponent('test/herowithrelativepaths');
   });
-  describe.only('test pack ', () => {
+  describe('test pack ', () => {
     it('should print the tgz path', () => {
       const output = helper.runCmd(
         `bit pack ${helper.remoteScope}/test/herowithrelativepaths  -d ${helper.localScopePath}   -l -w -o `,
