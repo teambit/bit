@@ -1,9 +1,11 @@
 /** @flow */
 import { loadConsumer, Consumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
+import loader from '../../../cli/loader';
 import BitMap from '../../../consumer/bit-map';
 import ComponentsList from '../../../consumer/component/components-list';
 import Bit from '../../../consumer/component';
+import { BEFORE_LOADING_COMPONENTS, BEFORE_RUNNING_SPECS } from '../../../cli/loader/loader-messages';
 
 export default (async function test(id?: string, verbose: boolean = true): Promise<Bit> {
   const consumer: Consumer = await loadConsumer();
