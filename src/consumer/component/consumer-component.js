@@ -25,7 +25,7 @@ import ComponentMap from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import { Driver } from '../driver';
-import { BEFORE_IMPORT_ENVIRONMENT } from '../../cli/loader/loader-messages';
+import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
 import {
   DEFAULT_BOX_NAME,
@@ -488,6 +488,7 @@ export default class Component {
       }
 
       const run = async (mainFile: string, distTestFiles: Dist[]) => {
+        loader.start(BEFORE_RUNNING_SPECS);
         try {
           const specsResultsP = distTestFiles.map(async (testFile) => {
             return specsRunner.run({
