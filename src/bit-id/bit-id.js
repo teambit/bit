@@ -50,7 +50,7 @@ export default class BitId {
     const scope = this.scope;
     const componentStr = ignoreScope || !scope ? [box, name].join('/') : [scope, box, name].join('/');
     if (version && scope) {
-      return componentStr.concat(`::${version}`);
+      return componentStr.concat(`${VERSION_DELIMITER}${version}`);
     }
 
     return componentStr;
