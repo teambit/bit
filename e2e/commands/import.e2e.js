@@ -15,7 +15,7 @@ describe('bit import', function () {
     helper.destroyEnv();
   });
 
-  describe.skip('stand alone component (without dependencies)', () => {
+  describe('stand alone component (without dependencies)', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       // export a new simple component
