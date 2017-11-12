@@ -90,7 +90,7 @@ export default class PackageJson {
       return Promise.reject(new PackageJsonAlreadyExists(this.componentRootFolder));
     }
 
-    this.scripts = R.isEmpty(postInstallLinkData) ? [] : generatePostInstallScript(this.componentRootFolder, postInstallLinkData)
+    this.scripts = R.isEmpty(postInstallLinkData) ? {} : generatePostInstallScript(this.componentRootFolder, postInstallLinkData)
     const plain = this.toPlainObject();
 
     return fs.outputJSON(composePath(this.componentRootFolder), plain, { spaces: '\t' });
