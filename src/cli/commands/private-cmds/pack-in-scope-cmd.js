@@ -8,7 +8,7 @@ export default class Pack extends Command {
   alias = '';
   opts = [
     ['d', 'directory <directory> ', 'path to store pack'],
-    ['w', 'write_bit_dependencies [boolean] ', 'write components in dependencie file'],
+    ['w', 'write_bit_dependencies [boolean] ', 'write bit components dependencies to package.json file'],
     ['l', 'links [boolean]', 'generate links according to repo'],
     ['o', 'override [boolean]', 'override existing pack file']
   ];
