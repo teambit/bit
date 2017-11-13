@@ -74,7 +74,7 @@ export default class ComponentsList {
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
    * @return {Promise<string[]>}
    */
-  async listModifiedComponents(load: boolean = false): Promise<Array<string | Component>> {
+  async listModifiedComponents(load: boolean = false): Promise<Array<BitId | Component>> {
     const getAuthoredAndImportedFromFS = async () => {
       let [authored, imported] = await Promise.all([
         this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED),
@@ -105,7 +105,7 @@ export default class ComponentsList {
           if (load) {
             modifiedComponents.push(componentFromFS);
           } else {
-            modifiedComponents.push(bitId.toStringWithoutScopeAndVersion());
+            modifiedComponents.push(bitId);
           }
         }
       } else {
@@ -188,7 +188,10 @@ export default class ComponentsList {
       this.listNewComponents(),
       this.listModifiedComponents()
     ]);
-    return [...newComponents, ...modifiedComponents];
+    const modifiedComponentsWithoutScopeAndVersion = modifiedComponents.map(componentId =>
+      componentId.toStringWithoutScopeAndVersion()
+    );
+    return [...newComponents, ...modifiedComponentsWithoutScopeAndVersion];
   }
 
   /**
@@ -223,8 +226,8 @@ export default class ComponentsList {
   async listAutoTagPendingComponents(): Promise<ModelComponent[]> {
     const modifiedComponents = await this.listModifiedComponents();
     if (!modifiedComponents || !modifiedComponents.length) return [];
-    const modifiedComponentsIds = modifiedComponents.map(modifiedComponent => BitId.parse(modifiedComponent));
-    return this.consumer.listComponentsForAutoTagging(modifiedComponentsIds);
+    const modifiedComponentsLatestVersions = await this.scope.latestVersions(modifiedComponents);
+    return this.consumer.listComponentsForAutoTagging(modifiedComponentsLatestVersions);
   }
 
   async idsFromBitMap(withScopeName: boolean = true, origin?: string): Promise<string[]> {
