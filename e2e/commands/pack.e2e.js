@@ -6,7 +6,7 @@ import tar from 'tar';
 
 chai.use(require('chai-fs'));
 
-describe.only('bit pack with absolute paths', function () {
+describe('bit pack with absolute paths', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -33,7 +33,7 @@ describe.only('bit pack with absolute paths', function () {
   });
   describe('test pack', () => {
     it('should print the tgz path', () => {
-      const output = helper.pack(`${helper.remoteScope}/test/hero`, helper.localScopePath);
+      const output = helper.pack('test/hero', helper.localScopePath);
 
       tar.x({
         file: `${helper.localScopePath}/${helper.remoteScope}.test.hero-0.0.1.tgz`,
@@ -97,7 +97,7 @@ describe('bit pack with relative paths', function () {
   });
   describe('test pack ', () => {
     it('should print the tgz path', () => {
-      const output = helper.pack(`${helper.remoteScope}/test/hero`, helper.localScopePath);
+      const output = helper.pack('test/hero', helper.localScopePath);
       tar.x({
         file: `${helper.localScopePath}/${helper.remoteScope}.test.herowithrelativepaths-0.0.1.tgz`,
         sync: true,

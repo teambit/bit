@@ -275,7 +275,7 @@ export default class Helper {
   }
 
   pack(component: string, output: string = this.localScopePath) {
-    return this.runCmd(`bit pack ${this.remoteScope}/${component}  -d ${output} -l -w -o`);
+    return this.runCmd(`bit pack ${this.remoteScope}/${component}  -d ${output} -l -w -o`, this.remoteScopePath);
   }
   addComponentBarFoo() {
     return this.addComponent();
