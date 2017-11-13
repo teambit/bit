@@ -82,7 +82,9 @@ function _getLinkContent(
       LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate();
     });
 
-    if (createNpmLinkFiles && !fileExtentionsForNpmLinkGenerator.includes(fileExt)) { return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt]; }
+    if (createNpmLinkFiles && !fileExtentionsForNpmLinkGenerator.includes(fileExt)) {
+      return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
+    }
     return LINKS_CONTENT_TEMPLATES[fileExt];
   };
 
