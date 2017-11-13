@@ -276,6 +276,9 @@ export default class Helper {
     this.createComponent(undefined, undefined, impl);
   }
 
+  pack(component: string, output: string = this.localScopePath) {
+    return this.runCmd(`bit pack ${this.remoteScope}/${component}  -d ${output} -l -w -o`);
+  }
   addComponentBarFoo() {
     return this.addComponent();
   }

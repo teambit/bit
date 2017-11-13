@@ -4,10 +4,9 @@ import path from 'path';
 import fs from 'fs-extra';
 import tar from 'tar';
 
-const assert = chai.assert;
 chai.use(require('chai-fs'));
 
-describe('bit pack with absolute paths', function () {
+describe.only('bit pack with absolute paths', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -34,10 +33,8 @@ describe('bit pack with absolute paths', function () {
   });
   describe('test pack', () => {
     it('should print the tgz path', () => {
-      const output = helper.runCmd(
-        `bit pack ${helper.remoteScope}/test/hero  -d ${helper.localScopePath}   -l -w -o `,
-        helper.remoteScopePath
-      );
+      const output = helper.pack(`${helper.remoteScope}/test/hero`, helper.localScopePath);
+
       tar.x({
         file: `${helper.localScopePath}/${helper.remoteScope}.test.hero-0.0.1.tgz`,
         sync: true,
@@ -50,7 +47,7 @@ describe('bit pack with absolute paths', function () {
       expect(pjson).to.have.property('scripts');
       const scripts = pjson.scripts;
       expect(scripts).to.have.property('postinstall');
-      assert.isObject(scripts, 'script is not object');
+      expect(scripts).to.be.an('object');
       const postInstallScript = scripts.postinstall;
       expect(postInstallScript).to.equal('node bitBindings.js');
     });
@@ -65,9 +62,9 @@ describe('bit pack with absolute paths', function () {
       const packDir = path.join(helper.localScopePath, 'package');
       const node_modules_dir = path.join(packDir, 'node_modules', 'bit', 'test');
       helper.runCmd('node bitBindings.js ', packDir);
-      assert.pathExists(node_modules_dir);
-      assert.pathExists(path.join(node_modules_dir, 'hero-button'));
-      assert.pathExists(path.join(node_modules_dir, 'styles'));
+      expect(node_modules_dir).to.be.a.directory();
+      expect(path.join(node_modules_dir, 'hero-button')).to.be.a.directory();
+      expect(path.join(node_modules_dir, 'styles')).to.be.a.directory();
       expect(path.join(node_modules_dir, 'hero-button', 'index.js'))
         .to.be.a.file()
         .with.content(`module.exports = require('${helper.remoteScope}.test.hero-button');`);
@@ -100,10 +97,7 @@ describe('bit pack with relative paths', function () {
   });
   describe('test pack ', () => {
     it('should print the tgz path', () => {
-      const output = helper.runCmd(
-        `bit pack ${helper.remoteScope}/test/herowithrelativepaths  -d ${helper.localScopePath}   -l -w -o `,
-        helper.remoteScopePath
-      );
+      const output = helper.pack(`${helper.remoteScope}/test/hero`, helper.localScopePath);
       tar.x({
         file: `${helper.localScopePath}/${helper.remoteScope}.test.herowithrelativepaths-0.0.1.tgz`,
         sync: true,
@@ -114,7 +108,7 @@ describe('bit pack with relative paths', function () {
 
     it('check package.json bit dependencies', () => {
       const pjson = helper.readPackageJson(path.join(helper.localScopePath, 'package'));
-      assert.isObject(pjson.scripts, 'script is not object');
+      expect(pjson.scripts).to.be.an('object');
       const dependencies = pjson.dependencies;
       expect(Object.keys(dependencies)).to.have.lengthOf(2);
       expect(dependencies).to.have.property(`${helper.remoteScope}.test.hero-button`);
@@ -122,9 +116,9 @@ describe('bit pack with relative paths', function () {
     });
     it('check links', () => {
       const packDir = path.join(helper.localScopePath, 'package');
-      assert.pathExists(packDir);
-      assert.pathExists(path.join(packDir, 'hero-button'));
-      assert.pathExists(path.join(packDir, 'styles'));
+      expect(packDir).to.be.a.directory();
+      expect(path.join(packDir, 'hero-button')).to.be.a.directory();
+      expect(path.join(packDir, 'styles')).to.be.a.directory();
       expect(path.join(packDir, 'hero-button', 'index.js'))
         .to.be.a.file()
         .with.content(`module.exports = require('${helper.remoteScope}.test.hero-button');`);

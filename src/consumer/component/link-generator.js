@@ -30,7 +30,7 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
   less: "@import '~{filePath}.less';"
 };
 
-const fileExtentions = ['js', 'ts', 'jsx', 'tsx'];
+const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
 
 // todo: move to bit-javascript
 function _getIndexFileName(mainFile: string): string {
@@ -82,7 +82,7 @@ function _getLinkContent(
       LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate();
     });
 
-    if (createNpmLinkFiles && !fileExtentions.includes(fileExt)) return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
+    if (createNpmLinkFiles && !fileExtentionsForNpmLinkGenerator.includes(fileExt)) { return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt]; }
     return LINKS_CONTENT_TEMPLATES[fileExt];
   };
 
@@ -93,7 +93,7 @@ function _getLinkContent(
   let filePathWithoutExt = getWithoutExt(filePath);
   const template = getTemplate();
   if (createNpmLinkFiles) {
-    filePathWithoutExt = fileExtentions.includes(fileExt)
+    filePathWithoutExt = fileExtentionsForNpmLinkGenerator.includes(fileExt)
       ? bitPackageName
       : path.join(bitPackageName, path.basename(filePathWithoutExt));
   } else {
@@ -127,6 +127,7 @@ async function writeDependencyLinks(
     relativePathInDependency: string,
     importSpecifier?: Object
   ) => {
+    // this is used to converd the component name to a valid npm package  name
     const packagePath = componentId.toStringWithoutVersion().replace(/\//g, '.');
     const rootDir = path.join(consumerPath, bitMap.getRootDirOfComponent(componentId));
     let actualFilePath = path.join(rootDir, relativePathInDependency);

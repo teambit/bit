@@ -20,7 +20,7 @@ export default function packInScope({
   links: boolean,
   override: boolean
 }) {
-  logger.debug(`buildInScope, id: ${id}, scopePath: ${scopePath}`);
+  logger.debug(`pack in scope, id: ${id}, scopePath: ${scopePath}`);
   function loadFromScope(initialError: ?Error) {
     return loadScope(scopePath || process.cwd())
       .catch(newErr => Promise.reject(initialError || newErr))

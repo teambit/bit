@@ -228,9 +228,8 @@ export default class Component {
     let postInstallLinkData = [];
     const mainFile = this.calculateMainDistFile();
     // Replace all the / with - because / is not valid on package.json name key
-    // const validName = name.replace(/\//g, '-');
     const bitDependencies = writeBitDependencies
-      ? R.fromPairs(this.dependencies.map(dep => [dep.id.toStringWithoutVersion(), `0.0.${dep.id.version}`]))
+      ? R.fromPairs(this.dependencies.map(dep => [dep.id.toStringWithoutVersion(), dep.id.version]))
       : {};
 
     if (writeBitDependencies) {
@@ -356,7 +355,7 @@ export default class Component {
     driver: Driver,
     force?: boolean = true,
     writeBitDependencies?: boolean = false,
-    dependencies: Array<Components>
+    dependencies: Components[]
   ) {
     await mkdirp(bitDir);
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
@@ -742,7 +741,7 @@ export default class Component {
     override
   }: {
     scope: Scope,
-    directory: ?string,
+    directory?: string,
     writeBitDependencies?: boolean,
     createNpmLinkFiles?: boolean,
     override: boolean
@@ -766,7 +765,7 @@ export default class Component {
       return tgzPath;
     } catch (err) {
       await isolatedEnvironment.destroy();
-      return Promise.reject(err);
+      throw new Error(err);
     }
   }
   toObject(): Object {
