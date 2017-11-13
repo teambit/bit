@@ -224,7 +224,8 @@ export default class ComponentsList {
     const modifiedComponents = await this.listModifiedComponents();
     if (!modifiedComponents || !modifiedComponents.length) return [];
     const modifiedComponentsIds = modifiedComponents.map(modifiedComponent => BitId.parse(modifiedComponent));
-    return this.consumer.listComponentsForAutoTagging(modifiedComponentsIds);
+    const modifiedComponentsLatestVersions = await this.scope.latestVersions(modifiedComponentsIds);
+    return this.consumer.listComponentsForAutoTagging(modifiedComponentsLatestVersions);
   }
 
   async idsFromBitMap(withScopeName: boolean = true, origin?: string): Promise<string[]> {

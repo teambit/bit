@@ -989,14 +989,20 @@ export default class Scope {
         const committedComponentId = committedComponents.find(
           committedComponent => committedComponent.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
         );
-        if (committedComponentId && semver.gt(committedComponentId.version, dependency.id.version)) {
+
+        if (!committedComponentId) return;
+        if (persist && semver.gt(committedComponentId.version, dependency.id.version)) {
           pendingUpdate = true;
-          if (!persist) return;
           dependency.id.version = committedComponentId.version;
           const flattenDependencyToUpdate = latestVersion.flattenedDependencies.find(
             flattenDependency => flattenDependency.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
           );
           flattenDependencyToUpdate.version = committedComponentId.version;
+        } else if (!persist && semver.gte(committedComponentId.version, dependency.id.version)) {
+          // if !persist, we only check whether a modified component may cause auto-tagging
+          // since it's only modified on the file-system, its version might be the same as the version stored in its
+          // dependents. That's why "semver.gte" is used instead of "server.gt".
+          pendingUpdate = true;
         }
       });
       if (pendingUpdate) {
