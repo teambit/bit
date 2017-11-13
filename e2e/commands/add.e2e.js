@@ -49,7 +49,7 @@ describe('bit add command', function () {
       expect(files).to.be.ofSize(2);
       expect(files).to.deep.include(expectTestFile);
     });
-    it('Should add to bitmap file that it was genarated comment', () => {
+    it('Should add to bitmap file that it was generated comment', () => {
       const osComponentName = path.normalize('bar/foo.js');
       const osFilePathName = path.normalize('bar/foo.spec.js');
       helper.createComponent('bar', 'foo.js');
@@ -58,7 +58,7 @@ describe('bit add command', function () {
       const bitMap = fs.readFileSync(path.join(helper.localScopePath, '.bit.map.json')).toString();
       expect(bitMap).to.have.string(AUTO_GENERATED_MSG);
     });
-    it('Should not add component to bitmap beacuse test file does not exists', () => {
+    it('Should not add component to bitmap because test file does not exists', () => {
       const osComponentName = path.normalize('bar/foo.js');
       const osFilePathName = path.normalize('bar/foo.spec.js');
       helper.createComponent('bar', 'foo.js');
@@ -69,10 +69,16 @@ describe('bit add command', function () {
     it('Add component from subdir  ../someFile ', () => {
       const barPath = path.join(helper.localScopePath, 'bar/x');
       helper.createComponent('bar', 'foo2.js');
+      helper.createFile('bar', 'foo2.spec.js');
       helper.createComponent('bar/x', 'foo1.js');
-      helper.addComponent('../foo2.js', barPath);
+      helper.addComponent('../foo2.js -t ../foo2.spec.js', barPath);
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('bar/foo2');
+
+      const testFile = bitMap['bar/foo2'].files.find(file => file.test === true);
+      const implFile = bitMap['bar/foo2'].files.find(file => file.test === false);
+      expect(testFile.relativePath).to.equal('bar/foo2.spec.js');
+      expect(implFile.relativePath).to.equal('bar/foo2.js');
     });
     it('Should add component with namespace flag to bitmap with correct name', () => {
       helper.createComponent('bar', 'foo2.js');
@@ -124,7 +130,7 @@ describe('bit add command', function () {
     });
 
     it.skip('Bitmap should contain multiple files for component with more than one file', () => {});
-    it.skip('Bitmap should contain impl files and test files  in diffrent fields', () => {});
+    it.skip('Bitmap should contain impl files and test files  in different fields', () => {});
     it('Bitmap origin should be AUTHORED', () => {
       helper.createComponent('bar', 'foo1.js');
       helper.addComponent('bar/foo1.js');
@@ -328,6 +334,13 @@ describe('bit add command', function () {
       helper.addComponentWithOptions(path.normalize('bar/foo1.js'), { e: 'bar/foo1.js' });
       const bitMap = helper.readBitMap();
       expect(bitMap).not.to.have.property('bar/foo1');
+    });
+    it('bitMap should not contain component if the main file is excluded', () => {
+      helper.createComponent('bar', 'foo1.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.addComponentWithOptions('bar', { i: 'bar/foo', e: 'bar/foo1.js', m: 'bar/foo1.js' });
+      const bitMap = helper.readBitMap();
+      expect(bitMap).not.to.have.property('bar/foo');
     });
     it('bitMap should only contain bits that have files', () => {
       helper.createComponent('bar', 'foo1.js');

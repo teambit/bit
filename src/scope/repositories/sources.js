@@ -11,8 +11,6 @@ import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
 import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
-import loader from '../../cli/loader';
-import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import { Consumer } from '../../consumer';
 import logger from '../../logger/logger';
 
@@ -143,20 +141,16 @@ export default class SourceRepository {
    * @param consumer
    * @param message
    * @param depIds
-   * @param force
-   * @param verbose
-   * @param forHashOnly - when the Version object is needed for hash calculation (e.g. when checking whether a component
-   * is modified), only the data for Version.id() is relevant because hash is based on id().
+   * @param dists
+   * @param specsResults
    * @return {Promise.<{version: Version, dists: *, files: *}>}
    */
   async consumerComponentToVersion({
     consumerComponent,
-    consumer,
     message,
     depIds,
-    force,
-    verbose,
-    forHashOnly = false
+    dists,
+    specsResults
   }: {
     consumerComponent: ConsumerComponent,
     consumer: Consumer,
@@ -164,7 +158,9 @@ export default class SourceRepository {
     depIds?: Object,
     force?: boolean,
     verbose?: boolean,
-    forHashOnly?: boolean
+    forHashOnly?: boolean,
+    dists?: Object,
+    specsResults?: any
   }): Promise<Object> {
     const files =
       consumerComponent.files && consumerComponent.files.length
@@ -181,31 +177,6 @@ export default class SourceRepository {
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
-    let dists;
-    let specsResults;
-    if (!forHashOnly) {
-      // for Hash calculation no need for dists and specsResults
-      await consumerComponent.build({ scope: this.scope, consumer });
-      dists =
-        consumerComponent.dists && consumerComponent.dists.length
-          ? consumerComponent.dists.map((dist) => {
-            return {
-              name: dist.basename,
-              relativePath: pathNormalizeToLinux(dist.relative),
-              file: Source.from(dist.contents),
-              test: dist.test
-            };
-          })
-          : null;
-      loader.start(BEFORE_RUNNING_SPECS);
-      specsResults = await consumerComponent.runSpecs({
-        scope: this.scope,
-        rejectOnFailure: !force,
-        consumer,
-        verbose
-      });
-    }
-
     consumerComponent.mainFile = pathNormalizeToLinux(consumerComponent.mainFile);
     const version = Version.fromComponent({
       component: consumerComponent,
@@ -218,7 +189,7 @@ export default class SourceRepository {
       email
     });
 
-    return { version, dists, files };
+    return { version, files };
   }
 
   async addSource({
@@ -227,30 +198,27 @@ export default class SourceRepository {
     message,
     exactVersion,
     releaseType,
-    force,
-    consumer,
-    verbose
+    dists,
+    specsResults
   }: {
     source: ConsumerComponent,
     depIds: BitId[],
     message: string,
     exactVersion: ?string,
     releaseType: string,
-    force: ?boolean,
-    consumer: Consumer,
-    verbose?: boolean
+    dists?: Object,
+    specsResults?: any
   }): Promise<Component> {
     const objectRepo = this.objects();
 
     // if a component exists in the model, add a new version. Otherwise, create a new component on them model
     const component = await this.findOrAddComponent(source);
-    const { version, dists, files } = await this.consumerComponentToVersion({
+    const { version, files } = await this.consumerComponentToVersion({
       consumerComponent: source,
-      consumer,
       message,
       depIds,
-      force,
-      verbose
+      dists,
+      specsResults
     });
     component.addVersion(version, releaseType, exactVersion);
 

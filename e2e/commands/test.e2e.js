@@ -157,21 +157,19 @@ describe('bit test command', function () {
 describe('bit component with no tester', function () {
   this.timeout(0);
   const helper = new Helper();
-  beforeEach(() => {
+  before(() => {
     helper.reInitLocalScope();
+    helper.createComponent('bar', 'foo.js');
+    helper.addComponent(path.join('bar', 'foo.js'));
   });
   after(() => {
     helper.destroyEnv();
   });
-  it('Should return not tester message when running test on all components', () => {
-    helper.createComponent('bar', 'foo.js');
-    helper.addComponent(path.join('bar', 'foo.js'));
+  it('should return not tester message when running test on all components', () => {
     const output = helper.testComponent();
     expect(output).to.have.string('tester for component: bar/foo is not defined');
   });
-  it('Should return not tester message when running test on single component', () => {
-    helper.createComponent('bar', 'foo.js');
-    helper.addComponent(path.join('bar', 'foo.js'));
+  it('should return not tester message when running test on single component', () => {
     const output = helper.testComponent('bar/foo');
     expect(output).to.have.string('tester for component: bar/foo is not defined');
   });
