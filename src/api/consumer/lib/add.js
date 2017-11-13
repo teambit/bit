@@ -35,7 +35,7 @@ export default (async function addAction(
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
     if (!componentPath) return componentPath;
     const absPath = path.resolve(componentPath);
-    return absPath.replace(`${projectRoot}${path.sep}`, '');
+    return path.relative(projectRoot, absPath);
   }
 
   // update test files according to dsl
