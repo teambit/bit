@@ -97,7 +97,7 @@ describe('bit pack with relative paths', function () {
   });
   describe('test pack ', () => {
     it('should print the tgz path', () => {
-      const output = helper.pack('test/hero', helper.localScopePath);
+      const output = helper.pack('test/herowithrelativepaths', helper.localScopePath);
       tar.x({
         file: `${helper.localScopePath}/${helper.remoteScope}.test.herowithrelativepaths-0.0.1.tgz`,
         sync: true,
