@@ -6,7 +6,7 @@ import * as componentMigrations from './component';
 import * as versionMigrations from './component-version';
 
 export default {
-  '0.11.0-test.3': {
+  '0.11.0': {
     Component: [componentMigrations.changeVersionToSemVerDeclartaion],
     Version: [
       versionMigrations.implSpecsToFilesDeclartaion,
