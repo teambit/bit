@@ -10,7 +10,7 @@ export default class Pack extends Command {
     ['d', 'directory <directory> ', 'path to store pack'],
     ['w', 'write_bit_dependencies [boolean] ', 'write components in dependencie file'],
     ['l', 'links [boolean]', 'generate links according to repo'],
-    ['o', 'override [boolean]', 'if pack file exists it is deleted']
+    ['o', 'override [boolean]', 'override existing pack file']
   ];
   private = true;
 
