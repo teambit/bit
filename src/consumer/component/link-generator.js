@@ -40,7 +40,7 @@ function _getIndexFileName(mainFile: string): string {
 // todo: move to bit-javascript
 function _getLinkContent(
   filePath: string,
-  importSpecifier?: Object,
+  importSpecifiers?: Object,
   createNpmLinkFiles?: boolean,
   bitPackageName: string
 ): string {
@@ -154,7 +154,7 @@ async function writeDependencyLinks(
     }
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
     const importSpecifiers = relativePath.importSpecifiers;
-    const linkContent = _getLinkContent(relativeFilePath, importSpecifier, createNpmLinkFiles, packagePath);
+    const linkContent = _getLinkContent(relativeFilePath, importSpecifiers, createNpmLinkFiles, packagePath);
     logger.debug(`writeLinkFile, on ${linkPath}`);
     const linkPathExt = getExt(linkPath);
     const isEs6 = importSpecifiers && linkPathExt === 'js';
