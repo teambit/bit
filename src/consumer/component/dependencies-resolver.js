@@ -75,7 +75,7 @@ function findComponentsOfDepsFiles(
     return { componentId, depFileRelative, destination };
   };
 
-  const processDepFile = (depFile: string, linkFile?: string, importSpecifier?: Object) => {
+  const processDepFile = (depFile: string, importSpecifiers?: Object, linkFile?: string) => {
     if (processedFiles.includes(depFile)) return;
     processedFiles.push(depFile);
 
@@ -106,8 +106,8 @@ function findComponentsOfDepsFiles(
     }
 
     const depsPaths = { sourceRelativePath, destinationRelativePath };
-    if (importSpecifier) {
-      depsPaths.importSpecifier = importSpecifier;
+    if (importSpecifiers) {
+      depsPaths.importSpecifiers = importSpecifiers;
     }
     const currentComponentsDeps = { [componentId]: [depsPaths] };
 
@@ -132,9 +132,9 @@ function findComponentsOfDepsFiles(
       const component = getComponentIdByDepFile(linkFile.file);
       if (component.componentId) {
         // the linkFile is already a component, no need to treat it differently than other depFile
-        processDepFile(linkFile.file);
+        processDepFile(linkFile.file, dependency.importSpecifiers);
       } else {
-        processDepFile(dependency.file, linkFile.file, dependency.importSpecifier);
+        processDepFile(dependency.file, dependency.importSpecifiers, linkFile.file);
       }
     });
   };
@@ -163,7 +163,14 @@ function findComponentsOfDepsFiles(
     const allDepsFiles = tree[file].files;
     if (allDepsFiles && !R.isEmpty(allDepsFiles)) {
       allDepsFiles.forEach((depFile) => {
-        processDepFile(depFile);
+        let importSpecifiers;
+        if (tree[file].importSpecifiers) {
+          const importSpecifiersFound = tree[file].importSpecifiers.find(
+            specifierFile => specifierFile.file === depFile
+          );
+          if (importSpecifiersFound) importSpecifiers = importSpecifiersFound.importSpecifiers;
+        }
+        processDepFile(depFile, importSpecifiers);
       });
     }
     const allLinkFiles = tree[file].linkFiles;

@@ -70,6 +70,8 @@ describe('typescript', function () {
         helper.importComponent('bar/foo');
         localConsumerFiles = helper.getConsumerFiles('*.{js,ts,json}');
       });
+      const isStringPath = path.join('components', '.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1');
+      const isTypePath = path.join('components', '.dependencies', 'utils', 'is-type', helper.remoteScope, '0.0.1');
       it('should keep the original directory structure of the main component', () => {
         const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.ts');
         expect(localConsumerFiles).to.include(expectedLocation);
@@ -98,15 +100,7 @@ describe('typescript', function () {
         });
       });
       it('should create an index.js file on the is-string dependency root dir pointing to the main file', () => {
-        const expectedLocation = path.join(
-          'components',
-          '.dependencies',
-          'utils',
-          'is-string',
-          helper.remoteScope,
-          '0.0.1',
-          'index.js'
-        );
+        const expectedLocation = path.join(isStringPath, 'index.js');
         expect(localConsumerFiles).to.include(expectedLocation);
         const indexPath = path.join(helper.localScopePath, expectedLocation);
         const indexFileContent = fs.readFileSync(indexPath).toString();
@@ -116,15 +110,7 @@ describe('typescript', function () {
         );
       });
       it('should point the main file key in the is-string dependency package.json to the dist main file', () => {
-        const packageJsonFolder = path.join(
-          helper.localScopePath,
-          'components',
-          '.dependencies',
-          'utils',
-          'is-string',
-          helper.remoteScope,
-          '0.0.1'
-        );
+        const packageJsonFolder = path.join(helper.localScopePath, isStringPath);
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
           name: `${helper.remoteScope}.utils.is-string`,
@@ -133,15 +119,7 @@ describe('typescript', function () {
         });
       });
       it('should create an index.js file on the is-type dependency root dir pointing to the main file', () => {
-        const expectedLocation = path.join(
-          'components',
-          '.dependencies',
-          'utils',
-          'is-type',
-          helper.remoteScope,
-          '0.0.1',
-          'index.js'
-        );
+        const expectedLocation = path.join(isTypePath, 'index.js');
         expect(localConsumerFiles).to.include(expectedLocation);
         const indexPath = path.join(helper.localScopePath, expectedLocation);
         const indexFileContent = fs.readFileSync(indexPath).toString();
@@ -151,15 +129,7 @@ describe('typescript', function () {
         );
       });
       it('should point the main file key in the is-type dependency package.json to the dist main file', () => {
-        const packageJsonFolder = path.join(
-          helper.localScopePath,
-          'components',
-          '.dependencies',
-          'utils',
-          'is-type',
-          helper.remoteScope,
-          '0.0.1'
-        );
+        const packageJsonFolder = path.join(helper.localScopePath, isTypePath);
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
           name: `${helper.remoteScope}.utils.is-type`,
@@ -168,54 +138,16 @@ describe('typescript', function () {
         });
       });
       it('should save the direct dependency nested to the main component', () => {
-        const expectedLocation = path.join(
-          'components',
-          '.dependencies',
-          'utils',
-          'is-string',
-          helper.remoteScope,
-          '0.0.1',
-          'utils',
-          'is-string.ts'
-        );
+        const expectedLocation = path.join(isStringPath, 'utils', 'is-string.ts');
         expect(localConsumerFiles).to.include(expectedLocation);
       });
       it('should save the indirect dependency nested to the main component (as opposed to nested of nested)', () => {
-        const expectedLocation = path.join(
-          'components',
-          '.dependencies',
-          'utils',
-          'is-type',
-          helper.remoteScope,
-          '0.0.1',
-          'utils',
-          'is-type.ts'
-        );
+        const expectedLocation = path.join(isTypePath, 'utils', 'is-type.ts');
         expect(localConsumerFiles).to.include(expectedLocation);
       });
       it('should add dependencies dists files to file system', () => {
-        const expectedIsTypeDistLocation = path.join(
-          'components',
-          '.dependencies',
-          'utils',
-          'is-type',
-          helper.remoteScope,
-          '0.0.1',
-          'dist',
-          'utils',
-          'is-type.js'
-        );
-        const expectedIsStringDistLocation = path.join(
-          'components',
-          '.dependencies',
-          'utils',
-          'is-string',
-          helper.remoteScope,
-          '0.0.1',
-          'dist',
-          'utils',
-          'is-string.js'
-        );
+        const expectedIsTypeDistLocation = path.join(isTypePath, 'dist', 'utils', 'is-type.js');
+        const expectedIsStringDistLocation = path.join(isStringPath, 'dist', 'utils', 'is-string.js');
         expect(localConsumerFiles).to.include(expectedIsTypeDistLocation);
         expect(localConsumerFiles).to.include(expectedIsStringDistLocation);
       });
@@ -228,7 +160,7 @@ describe('typescript', function () {
         );
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
-          `export * from '../../../${expectedPathSuffix}';`,
+          `../../../${expectedPathSuffix}`,
           'dependency link file point to the wrong place'
         );
       });
@@ -241,48 +173,29 @@ describe('typescript', function () {
         );
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
-          `module.exports = require('../../../../${expectedPathSuffix}');`,
+          `../../../../${expectedPathSuffix}`,
           'dependency link file point to the wrong place'
         );
       });
       it('should link the indirect dependency from dependent component source folder to its source file in the dependency directory', () => {
-        const expectedLocation = path.join(
-          'components',
-          '.dependencies',
-          'utils',
-          'is-string',
-          helper.remoteScope,
-          '0.0.1',
-          'utils',
-          'is-type.ts'
-        );
+        const expectedLocation = path.join(isStringPath, 'utils', 'is-type.ts');
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
         const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'utils', 'is-type'));
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
-          `export * from '../../../../${expectedPathSuffix}';`,
+          `../../../../${expectedPathSuffix}`,
           'in direct dependency link file point to the wrong place'
         );
       });
       it('should link the indirect dependency from dependent component dist folder to its index file in the dependency directory', () => {
-        const expectedLocation = path.join(
-          'components',
-          '.dependencies',
-          'utils',
-          'is-string',
-          helper.remoteScope,
-          '0.0.1',
-          'dist',
-          'utils',
-          'is-type.js'
-        );
+        const expectedLocation = path.join(isStringPath, 'dist', 'utils', 'is-type.js');
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
         const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'index'));
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
-          `module.exports = require('../../../../../${expectedPathSuffix}');`,
+          `../../../../../${expectedPathSuffix}`,
           'in direct dependency link file point to the wrong place'
         );
       });
@@ -329,5 +242,55 @@ export class List extends React.Component {
         expect(outputParsed.dependencies[0].id).to.equal('item/item');
       });
     }
+  });
+  describe('with default and non default export', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler('bit.envs/compilers/react-typescript');
+      const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
+      helper.createComponent('utils', 'is-array.ts', isArrayFixture);
+      helper.addComponent('utils/is-array.ts');
+      const isStringFixture =
+        "export function isString() { return 'got is-string'; }; export function isString2() { return 'got is-string2'; };";
+      helper.createComponent('utils', 'is-string.ts', isStringFixture);
+      helper.addComponent('utils/is-string.ts');
+      const fooBarFixture = `import isArray from '../utils/is-array';
+import { isString, isString2 } from '../utils/is-string'; 
+export default function foo() { return isArray() +  ' and ' + isString() +  ' and ' + isString2() + ' and got foo'; };`;
+      helper.createComponent('bar', 'foo.ts', fooBarFixture);
+      helper.addComponent('bar/foo.ts');
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+    it('should be able to require its direct dependency and print results from all dependencies', () => {
+      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-array and got is-string and got is-string2 and got foo');
+    });
+    it('should be able to compile the main component with auto-generated .ts files without errors', () => {
+      helper.importCompiler('bit.envs/compilers/react-typescript');
+      const barFooFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
+      const compilerPrefix = path.join(
+        helper.localScopePath,
+        '.bit',
+        'components',
+        'compilers',
+        'react-typescript',
+        'bit.envs'
+      );
+      let version = '';
+      fs.readdirSync(compilerPrefix).forEach((file) => {
+        version = file;
+      });
+      const compilerPath = path.join(compilerPrefix, version, 'node_modules', 'typescript', 'bin');
+      const result = helper.runCmd(`tsc ${barFooFile}`, compilerPath);
+      // in case of compilation error it throws an exception
+      expect(result.trim()).to.equal('');
+    });
   });
 });

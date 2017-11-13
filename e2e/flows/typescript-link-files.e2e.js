@@ -87,17 +87,18 @@ describe('typescript components with link files', function () {
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createComponent('utils', 'is-string.ts', isStringFixture);
       helper.addComponent('utils/is-string.ts');
-      const isBooleanFixture = "export default function isBoolean() { return 'got is-boolean'; };";
+      const isBooleanFixture = `export function isBoolean() { return 'got is-boolean'; };
+export function isBoolean2() { return 'got is-boolean2'; };`;
       helper.createComponent('utils', 'is-boolean.ts', isBooleanFixture);
       helper.addComponent('utils/is-boolean.ts');
       const utilFixture = `import isArray from './is-array';
 import isString from './is-string';
-import isBoolean from './is-boolean';
+import { isBoolean, isBoolean2 } from './is-boolean';
 export default isArray;
-export { isString, isBoolean }; `;
+export { isString, isBoolean, isBoolean2 }; `;
       helper.createFile('utils', 'index.ts', utilFixture);
-      const fooBarFixture = `import isArray, { isString } from '../utils';
-export default function foo() { return isArray() + ' and ' + isString() + ' and got foo'; };`;
+      const fooBarFixture = `import isArray, { isString, isBoolean, isBoolean2 } from '../utils';
+export default function foo() { return isArray() + ' and ' + isString() + ' and ' + isBoolean() + ' and ' + isBoolean2() + ' and got foo'; };`;
       helper.createComponent('bar', 'foo.ts', fooBarFixture);
       helper.addComponent('bar/foo.ts');
 
@@ -108,10 +109,13 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.importComponent('bar/foo');
     });
     it('should rewrite the relevant part of the link file', () => {
-      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.ts'), appJsFixture);
-      const result = helper.runCmd('node app.ts');
-      expect(result.trim()).to.equal('got is-array and got is-string and got foo');
+      const appJsFixture = `const barFoo = require('./components/bar/foo'); 
+console.log(barFoo.default());`;
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal(
+        'got is-array and got is-string and got is-boolean and got is-boolean2 and got foo'
+      );
     });
     it('should be able to compile the main component with auto-generated .ts files without errors', () => {
       helper.importCompiler('bit.envs/compilers/react-typescript');
