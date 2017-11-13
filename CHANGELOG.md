@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - bug fix - tests files saved with incorrect path when `bit add` was running from non-consumer root  
 - `bit add` - exclude a component when its main file is excluded 
 - `bit test` - paint a summary table when testing multiple components 
+- bug fix - generated .ts links were not valid
 
 ## [0.11.0] - 2017-11-12
 - change versions numbers to be semantic versions

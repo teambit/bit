@@ -14,5 +14,8 @@ export default {
       versionMigrations.addBindingPrefixDeclartaion,
       versionMigrations.changeVersionToSemVerDeclartaion
     ]
+  },
+  '0.11.1-dev.1': {
+    Version: [versionMigrations.changeImportSpecifiersToArray]
   }
 };
