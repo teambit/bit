@@ -186,7 +186,7 @@ export default class ComponentsList {
       commitPendingComponents = commitPendingComponents.concat(importedComponents);
     }
     const commitPendingComponentsIds = commitPendingComponents.map(componentId => BitId.parse(componentId));
-    const commitPendingComponentsLatest = await this.scope.latestVersions(commitPendingComponentsIds);
+    const commitPendingComponentsLatest = await this.scope.latestVersions(commitPendingComponentsIds, false);
     const warnings = [];
     commitPendingComponentsLatest.forEach((componentId) => {
       if (semver.gt(componentId.version, version)) {
