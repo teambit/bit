@@ -160,7 +160,7 @@ export default class ComponentsList {
 
   /**
    * Authored exported components (easily identified by having a scope) which are not saved in the model are
-   * import-pending. Exclude them from the 'newComponents' and add them to 'pendingComponents'.
+   * import-pending. Exclude them from the 'newComponents' and add them to 'importPendingComponents'.
    */
   async listNewComponentsAndImportPending() {
     const allNewComponents = await this.listNewComponents(true);
@@ -331,5 +331,23 @@ export default class ComponentsList {
       this._bitMap = await BitMap.load(this.consumer.getPath());
     }
     return this._bitMap;
+  }
+
+  static sortComponentsByName(components: Component[] | string[]): Component[] | string[] {
+    return components.sort((a, b) => {
+      let nameA = a.id || a;
+      let nameB = b.id || b;
+      nameA = nameA.toString().toUpperCase(); // ignore upper and lowercase
+      nameB = nameB.toString().toUpperCase(); // ignore upper and lowercase
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+
+      // names must be equal
+      return 0;
+    });
   }
 }
