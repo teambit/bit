@@ -208,7 +208,8 @@ export default class SSH implements Network {
   }
 
   latestVersions(componentIds: BitId[]) {
-    return this.exec('_latest', componentIds).then((str: string) => {
+    const componentIdsStr = componentIds.map(componentId => componentId.toString());
+    return this.exec('_latest', componentIdsStr).then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
       return payload;
