@@ -16,6 +16,6 @@ export default {
     ]
   },
   '0.11.1-dev.1': {
-    Version: [versionMigrations.changeImportSpecifiersToArray]
+    Version: [versionMigrations.changeImportSpecifiersToArray, versionMigrations.ensureMainFileDeclartaion]
   }
 };
