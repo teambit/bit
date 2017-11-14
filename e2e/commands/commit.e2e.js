@@ -757,9 +757,11 @@ describe('bit tag command', function () {
           output = helper.commitAllComponents('msg', '--scope --include_imported --exact_version 0.2.0');
         });
         it('should tag all components with the specified version including the imported components', () => {
+          // this also verifies that the auto-tag feature, doesn't automatically update is-string to its next version
+          // current version of is-string derived from the last test: 0.1.5, so auto-tag would tag it to 0.1.6
           expect(output).to.have.string('2 components tagged');
-          expect(output).to.have.string('bar/foo');
-          expect(output).to.have.string('utils/is-string');
+          expect(output).to.have.string('bar/foo@0.2.0');
+          expect(output).to.have.string('utils/is-string@0.2.0');
         });
         it('should not tag nested components', () => {
           expect(output).not.to.have.string('utils/is-type');
