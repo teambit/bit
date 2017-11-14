@@ -21,7 +21,9 @@ export default class Export extends Command {
     ['', 'major', 'increment the major version number'],
     ['f', 'force', 'forcely tag even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on tag'],
-    ['', 'ignore_missing_dependencies', 'ignore missing dependencies (default = false)']
+    ['', 'ignore_missing_dependencies', 'ignore missing dependencies (default = false)'],
+    ['s', 'scope', 'tag all components of the current scope'],
+    ['', 'include_imported', 'when "scope" flag is used, tag also imported components']
   ];
   loader = true;
   migration = true;
@@ -37,7 +39,9 @@ export default class Export extends Command {
       major,
       force,
       verbose,
-      ignore_missing_dependencies = false
+      ignore_missing_dependencies = false,
+      scope = false,
+      include_imported = false
     }: {
       message: string,
       all: ?boolean,
@@ -47,7 +51,9 @@ export default class Export extends Command {
       major: ?boolean,
       force: ?boolean,
       verbose: ?boolean,
-      ignore_missing_dependencies: ?boolean
+      ignore_missing_dependencies: ?boolean,
+      scope: ?boolean,
+      include_imported: ?boolean
     }
   ): Promise<any> {
     if (!id && !all) {
@@ -57,6 +63,14 @@ export default class Export extends Command {
       return Promise.reject(
         'you can use either a specific component [id] to tag a particular component or --all flag to tag them all'
       );
+    }
+    if (scope && !exact_version) {
+      return Promise.reject(
+        'tagging the entire scope (--scope), requires specifying an exact-version (--exact-version)'
+      );
+    }
+    if (include_imported && !scope) {
+      return Promise.reject("--include_imported flag can't be in use without --scope flag");
     }
 
     const releaseFlags = [patch, minor, major].filter(x => x);
@@ -81,7 +95,9 @@ export default class Export extends Command {
         releaseType,
         force,
         verbose,
-        ignoreMissingDependencies: ignore_missing_dependencies
+        ignoreMissingDependencies: ignore_missing_dependencies,
+        scope,
+        includeImported: include_imported
       });
     }
     return commitAction({
@@ -99,8 +115,9 @@ export default class Export extends Command {
     if (!results) return chalk.yellow('nothing to tag');
     const {
       components,
-      autoUpdatedComponents
-    }: { components: Component[], autoUpdatedComponents: ModelComponent[] } = results;
+      autoUpdatedComponents,
+      warnings
+    }: { components: Component[], autoUpdatedComponents: ModelComponent[], warnings: string[] } = results;
     function joinComponents(comps) {
       return comps
         .map((comp) => {
@@ -130,7 +147,10 @@ export default class Export extends Command {
     const addedComponents = components.filter(component => semver.eq(component.version, DEFAULT_BIT_VERSION));
     const autoUpdatedCount = autoUpdatedComponents ? autoUpdatedComponents.length : 0;
 
+    const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
+
     return (
+      warningsOutput +
       chalk.green(`${components.length + autoUpdatedCount} components tagged`) +
       chalk.gray(
         ` | ${addedComponents.length} added, ${changedComponents.length} changed, ${autoUpdatedCount} auto-tagged\n`

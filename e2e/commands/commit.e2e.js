@@ -682,4 +682,89 @@ describe('bit tag command', function () {
       );
     });
   });
+  describe('with --scope flag', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      const isStringFixture =
+        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-string');
+
+      const fooBarFixture =
+        "const isString = require('bit/utils/is-string'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      helper.createComponentBarFoo(fooBarFixture);
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+    });
+    describe('without --include_imported flag', () => {
+      describe('when current components have lower versions', () => {
+        let output;
+        before(() => {
+          output = helper.commitAllComponents('msg', '--scope --exact_version 0.0.5');
+        });
+        it('should tag authored components with the specified version', () => {
+          expect(output).to.have.string('1 components tagged');
+          expect(output).to.have.string('bar/foo');
+        });
+        it('should not tag imported components', () => {
+          expect(output).not.to.have.string('utils/is-string');
+        });
+        it('should not tag nested components', () => {
+          expect(output).not.to.have.string('utils/is-type');
+        });
+      });
+      describe('when one of the components has the same version', () => {
+        let output;
+        before(() => {
+          helper.commitComponent('bar/foo', 'msg', '--force --exact_version 0.0.8');
+          try {
+            helper.commitAllComponents('msg', '--scope --exact_version 0.0.8');
+          } catch (err) {
+            output = err.toString();
+          }
+        });
+        it('should throw an error', () => {
+          expect(output).to.have.string('the version 0.0.8 already exists for bar/foo');
+        });
+      });
+      describe('when one of the components has a greater version', () => {
+        let output;
+        before(() => {
+          helper.commitComponent('bar/foo', 'msg', '--force --exact_version 0.1.5');
+          output = helper.commitAllComponents('msg', '--scope --exact_version 0.1.4');
+        });
+        it('should display a warning', () => {
+          expect(output).to.have.string('warning: a component bar/foo@0.1.5 has a version greater than 0.1.4');
+        });
+        it('should continue tagging the authored components', () => {
+          expect(output).to.have.string('1 components tagged');
+        });
+      });
+    });
+    describe('with --include_imported flag', () => {
+      describe('when current components have lower versions', () => {
+        let output;
+        before(() => {
+          output = helper.commitAllComponents('msg', '--scope --include_imported --exact_version 0.2.0');
+        });
+        it('should tag all components with the specified version including the imported components', () => {
+          expect(output).to.have.string('2 components tagged');
+          expect(output).to.have.string('bar/foo');
+          expect(output).to.have.string('utils/is-string');
+        });
+        it('should not tag nested components', () => {
+          expect(output).not.to.have.string('utils/is-type');
+        });
+      });
+    });
+  });
 });

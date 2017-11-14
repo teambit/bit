@@ -178,6 +178,24 @@ export default class ComponentsList {
     return { newComponents, importPendingComponents };
   }
 
+  async listCommitPendingOfAllScope(version: string, includeImported: boolean = false) {
+    let commitPendingComponents;
+    commitPendingComponents = await this.idsFromBitMap(true, COMPONENT_ORIGINS.AUTHORED);
+    if (includeImported) {
+      const importedComponents = await this.idsFromBitMap(true, COMPONENT_ORIGINS.IMPORTED);
+      commitPendingComponents = commitPendingComponents.concat(importedComponents);
+    }
+    const commitPendingComponentsIds = commitPendingComponents.map(componentId => BitId.parse(componentId));
+    const commitPendingComponentsLatest = await this.scope.latestVersions(commitPendingComponentsIds);
+    const warnings = [];
+    commitPendingComponentsLatest.forEach((componentId) => {
+      if (semver.gt(componentId.version, version)) {
+        warnings.push(`warning: a component ${componentId.toString()} has a version greater than ${version}`);
+      }
+    });
+    return { commitPendingComponents, warnings };
+  }
+
   /**
    * New and modified components are commit pending
    *

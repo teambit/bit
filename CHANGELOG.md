@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support tagging the entire local scope and all imported components to a specific tag using `--scope` and `--include_imported` flags
 - `bit status` - add a new section "deleted components" for components that were deleted from the file-system manually
 - bug fix - components that were not indicated as staged-components by `bit status` were exported by `bit export`
 - bug fix - tests files saved with incorrect path when `bit add` was running from non-consumer root  
