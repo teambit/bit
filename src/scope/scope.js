@@ -13,7 +13,15 @@ import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy, pathNormalizeToLinux } from '../utils';
-import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, DEFAULT_DIST_DIRNAME, BIT_VERSION } from '../constants';
+import {
+  BIT_HIDDEN_DIR,
+  LATEST,
+  OBJECTS_DIR,
+  BITS_DIRNAME,
+  DEFAULT_DIST_DIRNAME,
+  BIT_VERSION,
+  DEFAULT_BIT_VERSION
+} from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
 import { RemoteScopeNotFound, PermissionDenied } from './network/exceptions';
@@ -187,12 +195,17 @@ export default class Scope {
     return remotes.latestVersions(externals, this);
   }
 
-  async latestVersions(componentIds: BitId[]): Promise<BitId[]> {
+  async latestVersions(componentIds: BitId[], throwOnFailure: boolean = false): Promise<BitId[]> {
     componentIds = componentIds.map(componentId => BitId.parse(componentId.toStringWithoutVersion()));
     const components = await this.sources.getMany(componentIds);
     return components.map((component) => {
       const componentId = BitId.parse(component.id.toString());
-      componentId.version = component.component.latest();
+      if (component.component) {
+        componentId.version = component.component.latest();
+      } else {
+        if (throwOnFailure) throw new ComponentNotFound(component.id.toString());
+        componentId.version = DEFAULT_BIT_VERSION;
+      }
       return componentId;
     });
   }
