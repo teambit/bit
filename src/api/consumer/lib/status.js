@@ -1,5 +1,4 @@
 /** @flow */
-import R from 'ramda';
 import { loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component';
@@ -9,7 +8,9 @@ export type StatusResult = {
   modifiedComponent: Component[],
   stagedComponents: string[],
   componentsWithMissingDeps: Component[],
-  importPendingComponents: Component[]
+  importPendingComponents: Component[],
+  autoTagPendingComponents: string[],
+  deletedComponents: string[]
 };
 
 export default (async function status(): Promise<StatusResult> {
@@ -20,7 +21,9 @@ export default (async function status(): Promise<StatusResult> {
   const modifiedComponent = await componentsList.listModifiedComponents(true);
   const stagedComponents = await componentsList.listExportPendingComponents();
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
+  const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
   const deletedComponents = await componentsList.listDeletedComponents();
+  const deletedComponentsStr = deletedComponents.map(component => component.toString());
 
   // Run over the components to check if there is missing dependencies
   // If there is at least one we won't commit anything
@@ -30,12 +33,12 @@ export default (async function status(): Promise<StatusResult> {
   });
 
   return {
-    newComponents,
-    modifiedComponent,
-    stagedComponents,
-    componentsWithMissingDeps,
-    importPendingComponents,
-    autoTagPendingComponents,
-    deletedComponents
+    newComponents: ComponentsList.sortComponentsByName(newComponents),
+    modifiedComponent: ComponentsList.sortComponentsByName(modifiedComponent),
+    stagedComponents: ComponentsList.sortComponentsByName(stagedComponents),
+    componentsWithMissingDeps, // no need to sort, we don't print it as is
+    importPendingComponents, // no need to sort, we use only its length
+    autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsStr),
+    deletedComponents: ComponentsList.sortComponentsByName(deletedComponentsStr)
   };
 });

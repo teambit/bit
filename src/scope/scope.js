@@ -52,6 +52,7 @@ import {
 import performCIOps from './ci-ops';
 import logger from '../logger/logger';
 import componentResolver from '../component-resolver';
+import ComponentsList from '../consumer/component/components-list';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -181,12 +182,13 @@ export default class Scope {
         component.latest = componentId.version;
       });
     }
-    return consumerComponents;
+    return ComponentsList.sortComponentsByName(consumerComponents);
   }
 
   async listStage() {
     const components = await this.objects.listComponents(false);
-    return this.toConsumerComponents(components.filter(c => !c.scope || c.scope === this.name));
+    const scopeComponents = await this.toConsumerComponents(components.filter(c => !c.scope || c.scope === this.name));
+    return ComponentsList.sortComponentsByName(scopeComponents);
   }
 
   async fetchRemoteVersions(componentIds: BitId[]): Promise<BitId[]> {

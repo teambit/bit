@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../../command';
 import { status } from '../../../api/consumer';
@@ -58,13 +59,14 @@ export default class Status extends Command {
       ? chalk.yellow('Some of your components are not imported yet, please run "bit import" to import them\n\n')
       : '';
 
-    const newComponentsOutput = immutableUnshift(
-      newComponents.map(format).sort((itemA) => {
-        if (itemA.indexOf('ok') !== -1) return -1;
-        return 1;
-      }),
-      newComponents.length ? chalk.underline.white('new components') : chalk.green('no new components')
-    ).join('\n');
+    const splitByMissing = R.groupBy((component) => {
+      return component.includes('missing dependencies') ? 'missing' : 'nonMissing';
+    });
+    const { missing, nonMissing } = splitByMissing(newComponents.map(format));
+    const newComponentsTitle = newComponents.length
+      ? chalk.underline.white('new components')
+      : chalk.green('no new components');
+    const newComponentsOutput = [newComponentsTitle, ...(nonMissing || []), ...(missing || [])].join('\n');
 
     const modifiedComponentOutput = immutableUnshift(
       modifiedComponent.map(format),
