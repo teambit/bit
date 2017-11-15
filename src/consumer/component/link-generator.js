@@ -23,15 +23,6 @@ const LINKS_CONTENT_TEMPLATES = {
   less: "@import '{filePath}.less';"
 };
 
-const PACKAGES_LINKS_CONTENT_TEMPLATES = {
-  css: "@import '~{filePath}';",
-  scss: "@import '~{filePath}';",
-  sass: "@import '~{filePath}';",
-  less: "@import '~{filePath}';"
-};
-
-const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
-
 // todo: move to bit-javascript
 function _getIndexFileName(mainFile: string): string {
   return `${DEFAULT_INDEX_NAME}.${getExt(mainFile)}`;
@@ -98,9 +89,6 @@ function _getLinkContent(
       LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate(importSpecifiers);
     });
 
-    if (createNpmLinkFiles && !fileExtentionsForNpmLinkGenerator.includes(fileExt)) {
-      return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
-    }
     return LINKS_CONTENT_TEMPLATES[fileExt];
   };
 
@@ -115,7 +103,7 @@ function _getLinkContent(
   } else {
     filePathWithoutExt = getWithoutExt(filePath); // remove the extension
   }
-  const f = getWithoutExt(filePath);
+
   if (!template) {
     // @todo: throw an exception?
     logger.error(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
