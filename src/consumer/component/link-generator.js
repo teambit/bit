@@ -24,10 +24,10 @@ const LINKS_CONTENT_TEMPLATES = {
 };
 
 const PACKAGES_LINKS_CONTENT_TEMPLATES = {
-  css: "@import '~{filePath}.css';",
-  scss: "@import '~{filePath}.scss';",
-  sass: "@import '~{filePath}.sass';",
-  less: "@import '~{filePath}.less';"
+  css: "@import '~{filePath}';",
+  scss: "@import '~{filePath}';",
+  sass: "@import '~{filePath}';",
+  less: "@import '~{filePath}';"
 };
 
 const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
@@ -111,12 +111,11 @@ function _getLinkContent(
   let filePathWithoutExt = getWithoutExt(filePath);
   const template = getTemplate();
   if (createNpmLinkFiles) {
-    filePathWithoutExt = fileExtentionsForNpmLinkGenerator.includes(fileExt)
-      ? bitPackageName
-      : path.join(bitPackageName, path.basename(filePathWithoutExt));
+    filePathWithoutExt = bitPackageName;
   } else {
     filePathWithoutExt = getWithoutExt(filePath); // remove the extension
   }
+  const f = getWithoutExt(filePath);
   if (!template) {
     // @todo: throw an exception?
     logger.error(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
@@ -315,15 +314,8 @@ async function writeEntryPointsForImportedComponent(component: Component, bitMap
 }
 function generateEntryPointDataForPackages(component: Component): Promise<any> {
   const packagePath = `${component.bindingPrefix}/${component.id.box}/${component.id.name}`;
-  const mainFile = component.calculateMainDistFile();
-  const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
-  const fileContent = _getLinkContent(
-    `index.${getExt(mainFile)}`,
-    null,
-    true,
-    component.id.toStringWithoutVersion().replace(/\//g, '.')
-  );
-  return { indexName, packagePath, fileContent };
+  const packageName = component.id.toStringWithoutVersion();
+  return { packageName, packagePath };
 }
 
 export { writeEntryPointsForImportedComponent, writeDependencyLinks, generateEntryPointDataForPackages };
