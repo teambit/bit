@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.7-dev.2] - 2017-11-15
+
+- change post install hook to work with symlink
+
 ## [0.10.7-dev.1] - 2017-11-13
 
 - stylable support
