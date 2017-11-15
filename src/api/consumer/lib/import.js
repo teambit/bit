@@ -19,7 +19,8 @@ export default (async function importAction({
   verbose,
   prefix,
   environment,
-  withPackageJson
+  withPackageJson,
+  writeBitDependencies = false
 }: {
   ids: string,
   tester: ?boolean,
@@ -27,7 +28,8 @@ export default (async function importAction({
   verbose: ?boolean,
   prefix: ?string,
   environment: ?boolean,
-  withPackageJson: ?boolean
+  withPackageJson: ?boolean,
+  writeBitDependencies: ?boolean
 }): Promise<any> {
   async function importEnvironment(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
@@ -62,7 +64,8 @@ export default (async function importAction({
     environment,
     cache,
     prefix,
-    withPackageJson
+    withPackageJson,
+    writeBitDependencies
   );
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const bitMap = await consumer.getBitMap();

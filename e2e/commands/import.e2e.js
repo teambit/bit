@@ -565,7 +565,7 @@ describe('bit import', function () {
         expect(fs.existsSync(packageJsonPath)).to.be.true;
         const packageJsonContent = fs.readJsonSync(packageJsonPath);
         expect(packageJsonContent).to.deep.include({
-          name: 'comp-with-deps',
+          name: `${helper.remoteScope}.comp.with-deps`,
           version: '0.0.1',
           main: 'with-deps.js',
           dependencies: { 'some-package': '1.4.3' }
@@ -585,7 +585,7 @@ describe('bit import', function () {
         expect(fs.existsSync(packageJsonPath)).to.be.true;
         const packageJsonContent = fs.readJsonSync(packageJsonPath);
         expect(packageJsonContent).to.deep.include({
-          name: 'global-simple',
+          name: `${helper.remoteScope}.global.simple`,
           version: '0.0.1',
           main: 'global/simple.js',
           dependencies: { 'my-package': '1.0.1' }

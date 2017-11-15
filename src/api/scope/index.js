@@ -15,6 +15,8 @@ import refreshScope from './lib/refresh-scope';
 import remove from './lib/delete';
 import deprecate from './lib/deprecate';
 import latestVersions from './lib/latest-versions';
+import pack from './lib/pack';
+import packInScope from './lib/pack-in-scope';
 
 export {
   catObject,
@@ -33,5 +35,7 @@ export {
   refreshScope,
   remove,
   deprecate,
-  latestVersions
+  latestVersions,
+  pack,
+  packInScope
 };

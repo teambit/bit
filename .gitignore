@@ -70,6 +70,8 @@ nodeBin
 .bit
 components
 
+!e2e/fixtures/components
+
 # DS_Store
 .DS_Store
 

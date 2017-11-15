@@ -44,17 +44,31 @@ export default class Environment {
    * @param rawId
    * @return {Promise.<Component>}
    */
-  async importE2E(rawId: string, verbose: boolean): Promise<Component> {
+  async importE2E(
+    rawId: string,
+    verbose: boolean,
+    installDependencies: boolean = true,
+    writePath: string,
+    writeBitDependencies?: boolean = false,
+    createNpmLinkFiles?: boolean = false
+  ): Promise<ComponentWithDependencies> {
     const bitId = BitId.parse(rawId);
     const componentDependenciesArr = await this.scope.getMany([bitId]);
-    await this.consumer.writeToComponentsDir(componentDependenciesArr);
+    await this.consumer.writeToComponentsDir(
+      componentDependenciesArr,
+      writePath,
+      true,
+      true,
+      writeBitDependencies,
+      createNpmLinkFiles
+    );
     const componentWithDependencies: ComponentWithDependencies = R.head(componentDependenciesArr);
     const componentWithDependenciesFlatten = [
       componentWithDependencies.component,
       ...componentWithDependencies.dependencies
     ];
-    await this.installNpmPackages(componentWithDependenciesFlatten, verbose);
-    return componentWithDependencies.component;
+    if (installDependencies) await this.installNpmPackages(componentWithDependenciesFlatten, verbose);
+    return componentWithDependencies;
   }
 
   getPath(): string {

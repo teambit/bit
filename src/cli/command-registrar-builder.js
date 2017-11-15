@@ -26,6 +26,7 @@ import Fetch from './commands/private-cmds/_fetch-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Build from './commands/public-cmds/build-cmd';
 import CiUpdate from './commands/private-cmds/ci-update-cmd';
+import Pack from './commands/private-cmds/pack-in-scope-cmd';
 import RefreshScope from './commands/private-cmds/refresh-scope-cmd';
 import CatScope from './commands/private-cmds/cat-scope-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
@@ -81,6 +82,7 @@ export default function registerCommands(): CommandRegistrar {
     new Delete(),
     new DeprecatePrivate(),
     new Latest(),
-    new Migrate()
+    new Migrate(),
+    new Pack()
   ]);
 }

@@ -23,13 +23,27 @@ const LINKS_CONTENT_TEMPLATES = {
   less: "@import '{filePath}.less';"
 };
 
+const PACKAGES_LINKS_CONTENT_TEMPLATES = {
+  css: "@import '~{filePath}';",
+  scss: "@import '~{filePath}';",
+  sass: "@import '~{filePath}';",
+  less: "@import '~{filePath}';"
+};
+
+const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
+
 // todo: move to bit-javascript
 function _getIndexFileName(mainFile: string): string {
   return `${DEFAULT_INDEX_NAME}.${getExt(mainFile)}`;
 }
 
 // todo: move to bit-javascript
-function _getLinkContent(filePath: string, importSpecifiers?: Object): string {
+function _getLinkContent(
+  filePath: string,
+  importSpecifiers?: Object,
+  createNpmLinkFiles?: boolean,
+  bitPackageName: string
+): string {
   const fileExt = getExt(filePath);
   const getTemplate = () => {
     if (importSpecifiers && importSpecifiers.length) {
@@ -84,6 +98,9 @@ function _getLinkContent(filePath: string, importSpecifiers?: Object): string {
       LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate(importSpecifiers);
     });
 
+    if (createNpmLinkFiles && !fileExtentionsForNpmLinkGenerator.includes(fileExt)) {
+      return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
+    }
     return LINKS_CONTENT_TEMPLATES[fileExt];
   };
 
@@ -91,8 +108,14 @@ function _getLinkContent(filePath: string, importSpecifiers?: Object): string {
     filePath = `./${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
   }
 
-  const filePathWithoutExt = getWithoutExt(filePath);
+  let filePathWithoutExt = getWithoutExt(filePath);
   const template = getTemplate();
+  if (createNpmLinkFiles) {
+    filePathWithoutExt = bitPackageName;
+  } else {
+    filePathWithoutExt = getWithoutExt(filePath); // remove the extension
+  }
+  const f = getWithoutExt(filePath);
   if (!template) {
     // @todo: throw an exception?
     logger.error(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
@@ -111,7 +134,8 @@ function _getLinkContent(filePath: string, importSpecifiers?: Object): string {
 async function writeDependencyLinks(
   componentDependencies: ComponentWithDependencies[],
   bitMap: BitMap,
-  consumerPath: string
+  consumerPath: string,
+  createNpmLinkFiles: boolean
 ): Promise<any> {
   const prepareLinkFile = (
     componentId: string,
@@ -120,6 +144,8 @@ async function writeDependencyLinks(
     relativePathInDependency: string,
     relativePath: Object
   ) => {
+    // this is used to converd the component name to a valid npm package  name
+    const packagePath = componentId.toStringWithoutVersion().replace(/\//g, '.');
     const rootDir = path.join(consumerPath, bitMap.getRootDirOfComponent(componentId));
     let actualFilePath = path.join(rootDir, relativePathInDependency);
     if (relativePathInDependency === mainFile) {
@@ -127,7 +153,7 @@ async function writeDependencyLinks(
     }
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
     const importSpecifiers = relativePath.importSpecifiers;
-    const linkContent = _getLinkContent(relativeFilePath, importSpecifiers);
+    const linkContent = _getLinkContent(relativeFilePath, importSpecifiers, createNpmLinkFiles, packagePath);
     logger.debug(`writeLinkFile, on ${linkPath}`);
     const linkPathExt = getExt(linkPath);
     const isEs6 = importSpecifiers && linkPathExt === 'js';
@@ -286,5 +312,10 @@ async function writeEntryPointsForImportedComponent(component: Component, bitMap
   const entryPointPath = path.join(componentRoot, indexName);
   return outputFile(entryPointPath, AUTO_GENERATED_MSG + entryPointFileContent);
 }
+function generateEntryPointDataForPackages(component: Component): Promise<any> {
+  const packagePath = `${component.bindingPrefix}/${component.id.box}/${component.id.name}`;
+  const packageName = component.id.toStringWithoutVersion();
+  return { packageName, packagePath };
+}
 
-export { writeEntryPointsForImportedComponent, writeDependencyLinks };
+export { writeEntryPointsForImportedComponent, writeDependencyLinks, generateEntryPointDataForPackages };

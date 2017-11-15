@@ -51,6 +51,11 @@ export default class Driver {
     return driver.getDependencyTree(cwd, consumerPath, fullPath, bindingPrefix);
   }
 
+  pack(cwd: string, directory: string, override: boolean): string {
+    const driver = this.getDriver(false);
+    return driver.pack(cwd, directory, override);
+  }
+
   static load(lang) {
     return new Driver(lang);
   }
