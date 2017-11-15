@@ -6,7 +6,7 @@ import tar from 'tar';
 
 chai.use(require('chai-fs'));
 
-describe.only('bit pack with absolute paths', function () {
+describe('bit pack with absolute paths', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -86,7 +86,7 @@ describe.only('bit pack with absolute paths', function () {
   });
 });
 
-describe.only('bit pack with relative paths', function () {
+describe('bit pack with relative paths', function () {
   this.timeout(0);
   const helper = new Helper();
   let output = '';
