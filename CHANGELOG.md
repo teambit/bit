@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+
+## [0.11.1-dev.2] - 2017-11-15
+- add bit pack command to build packages for registry
 - sort `bit show` and `bit list` components alphabetically
 - support tagging the entire local scope and all imported components to a specific tag using `--scope` and `--include_imported` flags
 - `bit status` - add a new section "deleted components" for components that were deleted from the file-system manually
