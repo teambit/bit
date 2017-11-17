@@ -110,109 +110,90 @@ describe('bit import', function () {
 
       it('should write the internal files according to their relative paths', () => {});
     });
+  });
 
-    describe('with compiler and tests', () => {
-      describe('with multiple files located in different directories', () => {
-        const expectedLocationImprel = path.join(
-          helper.localScopePath,
-          'components',
-          'imprel',
-          'impreldist',
-          'src',
-          'imprel.js'
+  describe('with compiler and tests', () => {
+    describe('with multiple files located in different directories', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.importCompiler();
+        helper.createComponent('src', 'imprel.js');
+        helper.createComponent('src', 'imprel.spec.js');
+        helper.createFile('src/utils', 'myUtil.js');
+        helper.runCmd(
+          'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/impreldist'
         );
-        const expectedLocationImprelSpec = path.join(
-          helper.localScopePath,
-          'components',
-          'imprel',
-          'impreldist',
-          'src',
-          'imprel.spec.js'
-        );
-        const expectedLocationMyUtil = path.join(
-          helper.localScopePath,
-          'components',
-          'imprel',
-          'impreldist',
-          'src',
-          'utils',
-          'myUtil.js'
-        );
-        const expectedLocationImprelDist = path.join(
-          helper.localScopePath,
-          'components',
-          'imprel',
-          'impreldist',
-          'dist',
-          'src',
-          'imprel.js'
-        );
-        const expectedLocationImprelSpecDist = path.join(
-          helper.localScopePath,
-          'components',
-          'imprel',
-          'impreldist',
-          'dist',
-          'src',
-          'imprel.spec.js'
-        );
-        const expectedLocationMyUtilDist = path.join(
-          helper.localScopePath,
-          'components',
-          'imprel',
-          'impreldist',
-          'dist',
-          'src',
-          'utils',
-          'myUtil.js'
-        );
+        helper.commitComponent('imprel/impreldist');
+        helper.exportComponent('imprel/impreldist');
+      });
+      describe('when a project is cloned somewhere else as AUTHORED', () => {
+        let localConsumerFiles;
         before(() => {
-          helper.importCompiler();
-          helper.createComponent('src', 'imprel.js');
-          helper.createComponent('src', 'imprel.spec.js');
-          helper.createFile('src/utils', 'myUtil.js');
-          helper.runCmd(
-            'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/impreldist'
-          );
-          helper.commitComponent('imprel/impreldist');
-          helper.exportComponent('imprel/impreldist');
+          helper.mimicGitCloneLocalProject();
+          localConsumerFiles = helper.getConsumerFiles();
+        });
+        it('should write the internal files according to their original paths', () => {
+          expect(localConsumerFiles).to.include(path.join('src', 'imprel.js'));
+          expect(localConsumerFiles).to.include(path.join('src', 'imprel.spec.js'));
+          expect(localConsumerFiles).to.include(path.join('src', 'utils', 'myUtil.js'));
+        });
+        it('should not write the dist files', () => {
+          localConsumerFiles.forEach((file) => {
+            expect(file.startsWith('components')).to.be.false;
+            expect(file.endsWith('.map.js')).to.be.false;
+          });
+        });
+      });
+      describe('when imported', () => {
+        let localConsumerFiles;
+        before(() => {
           helper.reInitLocalScope();
           helper.addRemoteScope();
           const output = helper.importComponent('imprel/impreldist');
           expect(output.includes('successfully imported one component')).to.be.true;
           expect(output.includes('imprel/imprel')).to.be.true;
+          localConsumerFiles = helper.getConsumerFiles();
         });
+        const imprelDir = path.join('components', 'imprel', 'impreldist');
+        const expectedLocationImprel = path.join(imprelDir, 'src', 'imprel.js');
+        const expectedLocationImprelSpec = path.join(imprelDir, 'src', 'imprel.spec.js');
+        const expectedLocationMyUtil = path.join(imprelDir, 'src', 'utils', 'myUtil.js');
+        const expectedLocationImprelDist = path.join(imprelDir, 'dist', 'src', 'imprel.js');
+        const expectedLocationImprelSpecDist = path.join(imprelDir, 'dist', 'src', 'imprel.spec.js');
+        const expectedLocationMyUtilDist = path.join(imprelDir, 'dist', 'src', 'utils', 'myUtil.js');
         it('should write the internal files according to their relative paths', () => {
-          expect(fs.existsSync(expectedLocationImprel)).to.be.true;
-          expect(fs.existsSync(expectedLocationImprelSpec)).to.be.true;
-          expect(fs.existsSync(expectedLocationMyUtil)).to.be.true;
+          expect(localConsumerFiles).to.include(expectedLocationImprel);
+          expect(localConsumerFiles).to.include(expectedLocationImprelSpec);
+          expect(localConsumerFiles).to.include(expectedLocationMyUtil);
         });
         it('should write the dist files in the component root dir', () => {
-          expect(fs.existsSync(expectedLocationImprelDist)).to.be.true;
-          expect(fs.existsSync(expectedLocationImprelSpecDist)).to.be.true;
-          expect(fs.existsSync(expectedLocationMyUtilDist)).to.be.true;
+          expect(localConsumerFiles).to.include(expectedLocationImprelDist);
+          expect(localConsumerFiles).to.include(expectedLocationImprelSpecDist);
+          expect(localConsumerFiles).to.include(expectedLocationMyUtilDist);
         });
-        describe('when a project is cloned somewhere else', () => {
+        describe('when a project is cloned somewhere else as IMPORTED', () => {
           before(() => {
             helper.mimicGitCloneLocalProject();
+            localConsumerFiles = helper.getConsumerFiles();
           });
           it('should write the internal files according to their relative paths', () => {
-            expect(fs.existsSync(expectedLocationImprel)).to.be.true;
-            expect(fs.existsSync(expectedLocationImprelSpec)).to.be.true;
-            expect(fs.existsSync(expectedLocationMyUtil)).to.be.true;
+            expect(localConsumerFiles).to.include(expectedLocationImprel);
+            expect(localConsumerFiles).to.include(expectedLocationImprelSpec);
+            expect(localConsumerFiles).to.include(expectedLocationMyUtil);
           });
           it('should write the dist files in the component root dir', () => {
-            expect(fs.existsSync(expectedLocationImprelDist)).to.be.true;
-            expect(fs.existsSync(expectedLocationImprelSpecDist)).to.be.true;
-            expect(fs.existsSync(expectedLocationMyUtilDist)).to.be.true;
+            expect(localConsumerFiles).to.include(expectedLocationImprelDist);
+            expect(localConsumerFiles).to.include(expectedLocationImprelSpecDist);
+            expect(localConsumerFiles).to.include(expectedLocationMyUtilDist);
           });
         });
       });
-      it.skip('should not install envs when not requested', () => {});
-      it.skip('should install envs when requested (-e)', () => {});
-      it.skip('should create bit.json file with envs in the folder', () => {});
     });
+    it.skip('should not install envs when not requested', () => {});
+    it.skip('should install envs when requested (-e)', () => {});
+    it.skip('should create bit.json file with envs in the folder', () => {});
   });
+
   describe('import deprecated component', () => {
     let output;
     before(() => {
