@@ -982,10 +982,8 @@ export default class Scope {
       return writeToProperDir().then((components: ConsumerComponent[]) => {
         loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
         return Promise.all(components.map(c => installPackageDependencies(c))).then((resultsArr) => {
-          if (verbose) {
-            loader.stop(); // in order to show npm install output on verbose flag
-            resultsArr.forEach(npmClient.printResults);
-          }
+          loader.stop(); // in order to show npm install output on verbose flag
+          resultsArr.forEach(npmClient.printResults);
 
           return components;
         });
