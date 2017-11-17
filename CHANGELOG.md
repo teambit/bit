@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - improve stability and performance of the dependency resolution mechanism
+- don't write dists files for authored components
 
 ## [0.11.1-dev.2] - 2017-11-15
 - add bit pack command to build packages for registry
