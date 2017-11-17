@@ -348,18 +348,28 @@ export default class Component {
     }
   }
 
-  async _writeToComponentDir(
+  async _writeToComponentDir({
+    bitDir,
+    withBitJson,
+    withPackageJson,
+    driver,
+    force = true,
+    writeBitDependencies = false,
+    writeDistsFiles = true,
+    dependencies
+  }: {
     bitDir: string,
     withBitJson: boolean,
     withPackageJson: boolean,
     driver: Driver,
-    force?: boolean = true,
-    writeBitDependencies?: boolean = false,
+    force?: boolean,
+    writeBitDependencies?: boolean,
+    writeDistsFiles?: boolean,
     dependencies: Components[]
-  ) {
+  }) {
     await mkdirp(bitDir);
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
-    if (this.dists) await this.dists.forEach(dist => dist.write(undefined, force));
+    if (this.dists && writeDistsFiles) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
     if (withPackageJson) await this.writePackageJson(driver, bitDir, force, writeBitDependencies, dependencies);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
@@ -416,7 +426,6 @@ export default class Component {
     if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
     // Take the bitdir from the files (it will be the same for all the files of course)
     const calculatedBitDir = bitDir || this.files[0].base;
-
     // Update files base dir according to bitDir
     if (this.files && bitDir) this.files.forEach(file => file.updatePaths({ newBase: bitDir }));
     if (this.dists && bitDir) this.dists.forEach(dist => dist.updatePaths({ newBase: bitDir }));
@@ -426,15 +435,15 @@ export default class Component {
     // if it's there, write the files according to the paths in bit.map.
     // Otherwise, write to bitDir and update bitMap with the new paths.
     if (!bitMap) {
-      return this._writeToComponentDir(
-        calculatedBitDir,
+      return this._writeToComponentDir({
+        bitDir: calculatedBitDir,
         withBitJson,
         withPackageJson,
         driver,
         force,
         writeBitDependencies,
         dependencies
-      );
+      });
     }
 
     // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
@@ -446,15 +455,15 @@ export default class Component {
 
     if (!componentMap) {
       // if there is no componentMap, the component is new to this project and should be written to bit.map
-      await this._writeToComponentDir(
-        calculatedBitDir,
+      await this._writeToComponentDir({
+        bitDir: calculatedBitDir,
         withBitJson,
         withPackageJson,
         driver,
         force,
         writeBitDependencies,
         dependencies
-      );
+      });
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
       return this;
     }
@@ -471,14 +480,14 @@ export default class Component {
     if (origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       // when a user imports a component that was a dependency before, write the component directly into the components
       // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
-      await this._writeToComponentDir(
-        calculatedBitDir,
+      await this._writeToComponentDir({
+        bitDir: calculatedBitDir,
         withBitJson,
         withPackageJson,
         driver,
         force,
         writeBitDependencies
-      );
+      });
       // todo: remove from the file system
       bitMap.removeComponent(this.id.toString());
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
@@ -489,9 +498,19 @@ export default class Component {
     this.writtenPath = newBase;
     this.files.forEach(file => file.updatePaths({ newBase }));
     // Don't write the package.json for an authored component, because it's dependencies probably managed
-    // By the root packge.json
+    // By the root package.json
     const actualWithPackageJson = withPackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
-    await this._writeToComponentDir(newBase, withBitJson, actualWithPackageJson, driver, force);
+    // don't write dists files for authored components as the author has its own mechanism to generate them
+    const writeDistsFiles = componentMap.origin !== COMPONENT_ORIGINS.AUTHORED;
+    await this._writeToComponentDir({
+      bitDir: newBase,
+      withBitJson,
+      withPackageJson: actualWithPackageJson,
+      driver,
+      force,
+      writeBitDependencies: false,
+      writeDistsFiles
+    });
 
     if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
 
