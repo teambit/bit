@@ -243,15 +243,15 @@ function resolveModulePath(nmPath, workingDir, root) {
  * Run over each entry in the missing array and transform the missing from list of paths
  * to object with missing types
  *
- * @param {Array} missings
- * @returns new object with grouped missings
+ * @param {Array} missing
+ * @returns new object with grouped missing
  */
-function groupMissings(missings, cwd, consumerPath) {
-  const groups = byPathType(missings);
+function groupMissing(missing, cwd, consumerPath) {
+  const groups = byPathType(missing);
   const packages = groups.packages ? groups.packages.map(resolvePackageNameByPath) : [];
   // This is a hack to solve problems that madge has with packages for type script files
   // It see them as missing even if they are exists
-  const foundedPackages = {};
+  const foundPackages = {};
   const missingPackages = [];
   packages.forEach((packageName) => {
     // Don't add the same package twice
@@ -261,12 +261,12 @@ function groupMissings(missings, cwd, consumerPath) {
       return missingPackages.push(packageName);
     }
     const packageWithVersion = resolveNodePackage(cwd, resolvedPath);
-    return packageWithVersion ? Object.assign(foundedPackages, packageWithVersion) :
+    return packageWithVersion ? Object.assign(foundPackages, packageWithVersion) :
                                 missingPackages.push(packageWithVersion);
   });
   groups.packages = missingPackages;
 
-  return { groups, foundedPackages };
+  return { groups, foundPackages };
 }
 
 /**
@@ -362,26 +362,28 @@ function updateTreeWithLinkFilesAndImportSpecifiers(tree: Tree, pathMap: PathMap
  * Function for fetching dependency tree of file or dir
  * @param baseDir working directory
  * @param consumerPath
- * @param filePath path of the file to calculate the dependencies
+ * @param filePaths path of the file to calculate the dependencies
  * @param bindingPrefix
  * @return {Promise<{missing, tree}>}
  */
-export default async function getDependecyTree(baseDir: string, consumerPath: string, filePath: string, bindingPrefix: string):
+export default async function getDependencyTree(baseDir: string, consumerPath: string, filePaths: string[], bindingPrefix: string):
   Promise<{ missing: Object, tree: Tree}> {
   const config = { baseDir, includeNpm: true, requireConfig: null, webpackConfig: null, visited: {}, nonExistent: [] };
-  const result = generateTree([filePath], config);
-  const { groups, foundedPackages } = groupMissings(result.skipped, baseDir, consumerPath);
-  const relativeFilePath = path.relative(baseDir, filePath);
+  const result = generateTree(filePaths, config);
+  const { groups, foundPackages } = groupMissing(result.skipped, baseDir, consumerPath);
   const tree: Tree = groupDependencyTree(result.tree, baseDir, bindingPrefix);
+  const relativeFilePaths = filePaths.map(filePath => path.relative(baseDir, filePath));
   // Merge manually found packages with madge founded packages
-  if (foundedPackages && !R.isEmpty(foundedPackages)) {
+  if (foundPackages && !R.isEmpty(foundPackages)) {
     // Madge found packages so we need to merge them with the manual
-    if (tree[relativeFilePath].packages) {
-      Object.assign(tree[relativeFilePath].packages, foundedPackages);
-      // There is only manually found packages
-    } else {
-      tree[relativeFilePath].packages = foundedPackages;
-    }
+    relativeFilePaths.forEach((relativeFilePath) => {
+      if (tree[relativeFilePath].packages) {
+        Object.assign(tree[relativeFilePath].packages, foundPackages);
+        // There is only manually found packages
+      } else {
+        tree[relativeFilePath].packages = foundPackages;
+      }
+    });
   }
   updateTreeWithLinkFilesAndImportSpecifiers(tree, result.pathMap);
   return { missing: groups, tree };
