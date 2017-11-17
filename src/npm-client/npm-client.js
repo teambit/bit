@@ -72,14 +72,18 @@ const installAction = (
   const args = ['install', ...serializedModules.trim().split(' '), serializedFlags];
   const promise = spawn('npm', args, { cwd: options.cwd });
   const childProcess = promise.childProcess;
-  const output = [];
+  const stdoutOutput = [];
+  const stderrOutput = [];
 
-  childProcess.stdout.on('data', data => output.push(data.toString()));
-  childProcess.stderr.on('data', data => output.push(data.toString()));
+  childProcess.stdout.on('data', data => stdoutOutput.push(data.toString()));
+  childProcess.stderr.on('data', data => stderrOutput.push(data.toString()));
 
   return promise.then(() => {
-    console.log(output.join(''));
-    return { stdout: `successfully ran npm install${serializedModules}${serializedFlags}`, stderr: '' };
+    const stdout = verbose
+      ? stdoutOutput.join('')
+      : `successfully ran npm install${serializedModules}${serializedFlags}`;
+    const stderr = verbose ? stderrOutput.join('') : '';
+    return { stdout, stderr };
   });
 };
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {
