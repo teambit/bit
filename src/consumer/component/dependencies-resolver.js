@@ -25,6 +25,7 @@ import { pathNormalizeToLinux, pathRelative, getWithoutExt } from '../../utils';
  * @param {string} entryComponentId - component id for the entry of traversing - used to know which of the files are part of that component
  * @param {BitMap} bitMap
  * @param {string} consumerPath
+ * @param {string} bindingPrefix
  */
 function findComponentsOfDepsFiles(
   tree: Object,
@@ -196,24 +197,15 @@ function getComponentNameFromRequirePath(requirePath: string, bindingPrefix: str
 /**
  * Merge the dependencies-trees we got from all files to one big dependency-tree
  * @param {Array<Object>} depTrees
- * @param {ComponentMapFile[]} files
  * @return {{missing: {packages: Array, files: Array}, tree: {}}}
  */
-function mergeDependencyTrees(depTrees: Array<Object>, files: ComponentMapFile[]): Object {
-  // $FlowFixMe
-  if (depTrees.length === 1) return R.head(depTrees);
-  if (depTrees.length !== files.length) {
-    throw new Error(
-      `Error occurred while resolving dependencies, num of files: ${files.length}, num of resolved dependencies: ${depTrees.length}`
-    );
-  }
+function mergeDependencyTrees(depTrees: Array<Object>): Object {
   const dependencyTree = {
     missing: { packages: [], files: [], bits: [] },
     tree: {}
   };
-  depTrees.forEach((dep, key) => {
-    if (dep.missing.packages.length && !files[key].test) {
-      // ignore package dependencies of tests for now
+  depTrees.forEach((dep) => {
+    if (dep.missing.packages.length) {
       dependencyTree.missing.packages.push(...dep.missing.packages);
     }
     if (dep.missing.files && dep.missing.files.length) {
@@ -255,11 +247,17 @@ export default (async function loadDependenciesForComponent(
   idWithConcreteVersionString: string
 ): Promise<Component> {
   const missingDependencies = {};
-  const files = componentMap.files.map(file => file.relativePath);
+  const { allFiles, nonTestsFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
+  const getDependenciesTree = async () => {
+    const nonTestsTree = await driver.getDependencyTree(bitDir, consumerPath, nonTestsFiles, component.bindingPrefix);
+    if (!testsFiles.length) return nonTestsTree;
+    const testsTree = await driver.getDependencyTree(bitDir, consumerPath, testsFiles, component.bindingPrefix);
+    // ignore package dependencies of tests for now
+    testsTree.missing.packages = [];
+    return mergeDependencyTrees([nonTestsTree, testsTree]);
+  };
   // find the dependencies (internal files and packages) through automatic dependency resolution
-  const treesP = files.map(file => driver.getDependencyTree(bitDir, consumerPath, file, component.bindingPrefix));
-  const trees = await Promise.all(treesP);
-  const dependenciesTree = mergeDependencyTrees(trees, componentMap.files);
+  const dependenciesTree = await getDependenciesTree();
 
   if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) {
     missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
@@ -282,7 +280,7 @@ export default (async function loadDependenciesForComponent(
   // they are referred as "untracked components" and the user should add them later on in order to commit
   const traversedDeps = findComponentsOfDepsFiles(
     dependenciesTree.tree,
-    files,
+    allFiles,
     idWithConcreteVersionString,
     bitMap,
     consumerPath,

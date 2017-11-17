@@ -43,12 +43,12 @@ export default class Driver {
   }
 
   // TODO: Improve flow object return type
-  getDependencyTree(cwd: string, consumerPath: string, filePath: string, bindingPrefix: string): Promise<Object> {
+  getDependencyTree(cwd: string, consumerPath: string, filePaths: string[], bindingPrefix: string): Promise<Object> {
     // This is important because without this, madge won't know to resolve files if we run the
     // CMD not from the root dir
-    const fullPath = path.join(cwd, filePath);
+    const fullPaths = filePaths.map(filePath => path.join(cwd, filePath));
     const driver = this.getDriver(false);
-    return driver.getDependencyTree(cwd, consumerPath, fullPath, bindingPrefix);
+    return driver.getDependencyTree(cwd, consumerPath, fullPaths, bindingPrefix);
   }
 
   pack(cwd: string, directory: string, override: boolean): string {

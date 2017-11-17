@@ -120,4 +120,16 @@ export default class ComponentMap {
   getMainFileRelativeToConsumer() {
     return this.rootDir ? path.join(this.rootDir, this.mainFile) : this.mainFile;
   }
+
+  getFilesGroupedByBeingTests(): Object {
+    const allFiles = [];
+    const nonTestsFiles = [];
+    const testsFiles = [];
+    this.files.forEach((file: ComponentMapFile) => {
+      allFiles.push(file.relativePath);
+      if (file.test) testsFiles.push(file.relativePath);
+      else nonTestsFiles.push(file.relativePath);
+    });
+    return { allFiles, nonTestsFiles, testsFiles };
+  }
 }
