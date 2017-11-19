@@ -104,7 +104,7 @@ export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
 
 export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
 
-export const DEFAULT_REGISTRY_DOMAIN_PREFIX = 'https://registry.bitsrc.io';
+export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
 export const SEARCH_DOMAIN = 'api.bitsrc.io';
 
