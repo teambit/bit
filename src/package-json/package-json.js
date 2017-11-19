@@ -14,8 +14,8 @@ function convertComponenstsToValidPackageNames(registryPrefix: string, bitDepend
   const obj = {};
   if (R.isEmpty(bitDependencies) || R.isNil(bitDependencies)) return obj;
   Object.keys(bitDependencies).forEach(key => {
-    var name = key.replace(/\//g, '.');
-    obj[name] = `${registryPrefix}/${name}/-/${name}-${bitDependencies[key]}.tgz`;
+    var name = `${registryPrefix}/${key.replace(/\//g, '.')}`;
+    obj[name] = bitDependencies[key];
   });
   return obj;
 }
