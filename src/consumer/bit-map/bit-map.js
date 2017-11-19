@@ -29,20 +29,27 @@ export default class BitMap {
   mapPath: string;
   components: BitMapComponents;
   hasChanged: boolean;
-  constructor(projectRoot: string, mapPath: string, components: BitMapComponents) {
+  version: string;
+
+  constructor(projectRoot: string, mapPath: string, components: BitMapComponents, version: string) {
     this.projectRoot = projectRoot;
     this.mapPath = mapPath;
     this.components = components;
     this.hasChanged = false;
+    this.version = version;
   }
 
   static async load(dirPath: string): Promise<BitMap> {
     const mapPath = path.join(dirPath, BIT_MAP);
     const components = {};
+    let version;
     if (fs.existsSync(mapPath)) {
       try {
         const mapFileContent = await readFile(mapPath);
         const componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
+        version = componentsJson.version;
+        // Don't treat version like component
+        delete componentsJson.version;
         Object.keys(componentsJson).forEach((componentId) => {
           components[componentId] = ComponentMap.fromJson(componentsJson[componentId]);
         });
@@ -53,7 +60,7 @@ export default class BitMap {
       logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will probably create a new one if needed`);
     }
 
-    return new BitMap(dirPath, mapPath, components);
+    return new BitMap(dirPath, mapPath, components, version);
   }
 
   getAllComponents(origin?: ComponentOrigin): BitMapComponents {
@@ -405,6 +412,7 @@ export default class BitMap {
   write(): Promise<any> {
     logger.debug('writing to bit.map');
     this.modifyComponentsToLinuxPath(this.components);
-    return outputFile(this.mapPath, AUTO_GENERATED_MSG + JSON.stringify(this.components, null, 4));
+    const bitMapContent = Object.assign({}, this.components, { version: this.version });
+    return outputFile(this.mapPath, AUTO_GENERATED_MSG + JSON.stringify(bitMapContent, null, 4));
   }
 }
