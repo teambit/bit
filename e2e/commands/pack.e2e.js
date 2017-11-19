@@ -57,8 +57,8 @@ describe('bit pack with absolute paths', function () {
       const pjson = helper.readPackageJson(path.join(helper.localScopePath, 'node_modules', 'package'));
       const dependencies = pjson.dependencies;
       expect(Object.keys(dependencies)).to.have.lengthOf(2);
-      expect(dependencies).to.have.property(`${helper.remoteScope}.test.hero-button`);
-      expect(dependencies).to.have.property(`${helper.remoteScope}.test.styles`);
+      expect(dependencies).to.have.property(`@bit/${helper.remoteScope}.test.hero-button`);
+      expect(dependencies).to.have.property(`@bit/${helper.remoteScope}.test.styles`);
     });
     it('check post install bindings', () => {
       helper.pack('test/hero', helper.localScopePath);
@@ -123,8 +123,8 @@ describe('bit pack with relative paths', function () {
       expect(pjson.scripts).to.be.an('object');
       const dependencies = pjson.dependencies;
       expect(Object.keys(dependencies)).to.have.lengthOf(2);
-      expect(dependencies).to.have.property(`${helper.remoteScope}.test.hero-button`);
-      expect(dependencies).to.have.property(`${helper.remoteScope}.test.styles`);
+      expect(dependencies).to.have.property(`@bit/${helper.remoteScope}.test.hero-button`);
+      expect(dependencies).to.have.property(`@bit/${helper.remoteScope}.test.styles`);
     });
     it('check links', () => {
       const packDir = path.join(helper.localScopePath, 'node_modules', 'package');
@@ -134,9 +134,7 @@ describe('bit pack with relative paths', function () {
       expect(path.join(packDir, 'hero-button', 'index.js'))
         .to.be.a.file()
         .with.content(
-          `Object.defineProperty(exports, "__esModule", { value: true });\nexports.default = require('${
-            helper.remoteScope
-          }.test.hero-button').default;`
+          `Object.defineProperty(exports, "__esModule", { value: true });\nexports.default = require('${helper.remoteScope}.test.hero-button').default;`
         );
       expect(path.join(packDir, 'styles', 'global.css'))
         .to.be.a.file()
