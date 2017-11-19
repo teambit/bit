@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import semver from 'semver';
 import groupArray from 'group-array';
 import fs from 'fs-extra';
 import R from 'ramda';
@@ -13,19 +14,14 @@ import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-import {
-  BITS_DIRNAME,
-  BIT_HIDDEN_DIR,
-  DEPENDENCIES_DIR,
-  COMPONENT_ORIGINS,
-  DEFAULT_BINDINGS_PREFIX
-} from '../constants';
+import { BITS_DIRNAME, BIT_HIDDEN_DIR, COMPONENT_ORIGINS, BIT_VERSION } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
+import migratonManifest from './migrations/consumer-migrator-manifest';
+import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import loader from '../cli/loader';
-import { BEFORE_IMPORT_ACTION } from '../cli/loader/loader-messages';
+import { BEFORE_IMPORT_ACTION, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
 import ComponentMap from './bit-map/component-map';
-import type { BitMapComponents } from './bit-map/bit-map';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { getLatestVersionNumber, pathRelative } from '../utils';
@@ -120,11 +116,28 @@ export default class Consumer {
    * @returns {Object} - wether the process run and wether it successeded
    * @memberof Consumer
    */
-  migrate(verbose): Object {
+  async migrate(verbose): Object {
     logger.debug('running migration process for consumer');
     // Check version of stores (bitmap / bitjson) to check if we need to run migrate
     // If migration is needed add loader - loader.start(BEFORE_MIGRATION);
     // bitmap migrate
+    if (verbose) console.log('running migration process for consumer'); // eslint-disable-line
+    // We start to use this process after version 0.10.9, so we assume the scope is in the last production version
+    const bitMap = await this.getBitMap();
+    const bitmapVersion = bitMap.version || '0.10.9';
+
+    if (semver.gte(bitmapVersion, BIT_VERSION)) {
+      logger.debug('bit.map version is up to date');
+      return {
+        run: false
+      };
+    }
+
+    loader.start(BEFORE_MIGRATION);
+
+    const result: ConsumerMigrationResult = await migrate(bitmapVersion, migratonManifest, bitMap, verbose);
+    result.bitMap.version = BIT_VERSION;
+    await result.bitMap.write();
 
     return {
       run: true,
