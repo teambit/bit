@@ -133,7 +133,9 @@ describe('bit pack with relative paths', function () {
       expect(path.join(packDir, 'styles')).to.be.a.directory();
       expect(path.join(packDir, 'hero-button', 'index.js'))
         .to.be.a.file()
-        .with.content(`module.exports = require('${helper.remoteScope}.test.hero-button');`);
+        .with.content(
+          `Object.defineProperty(exports, "__esModule", { value: true });\nexports.default = require('${helper.remoteScope}.test.hero-button').default;`
+        );
       expect(path.join(packDir, 'styles', 'global.css'))
         .to.be.a.file()
         .with.content(`@import '~${helper.remoteScope}.test.styles';`);
