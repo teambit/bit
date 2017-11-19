@@ -23,7 +23,8 @@ describe('bit untrack command', function () {
       helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo' });
       helper.untrackComponent('bar/foo');
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.be.empty;
+      expect(Object.keys(bitMap)).to.be.ofSize(1);
+      expect(bitMap).to.have.property('version');
     });
     it('Should remove specific component and keep commited ', () => {
       helper.createComponent('bar', 'foo.js');
@@ -32,15 +33,17 @@ describe('bit untrack command', function () {
       helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.untrackComponent('bar/foo');
       const bitMap = helper.readBitMap();
-      expect(Object.keys(bitMap)).to.be.ofSize(1);
+      expect(Object.keys(bitMap)).to.be.ofSize(2);
       expect(bitMap).to.have.property('bar/foo2');
+      expect(bitMap).to.have.property('version');
     });
     it('Should resolve and untrack  component and add global as prefix component ', () => {
       helper.createComponent('bar', 'foo.js');
       helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar' });
       helper.untrackComponent('bar');
       const bitMap = helper.readBitMap();
-      expect(Object.keys(bitMap)).to.be.ofSize(0);
+      expect(Object.keys(bitMap)).to.be.ofSize(1);
+      expect(bitMap).to.have.property('version');
     });
 
     it('Should remove 2 new components and keep commited component', () => {
@@ -53,8 +56,9 @@ describe('bit untrack command', function () {
       helper.addComponentWithOptions(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.untrackComponent('bar/foo bar/foo3');
       const bitMap = helper.readBitMap();
-      expect(Object.keys(bitMap)).to.be.ofSize(1);
+      expect(Object.keys(bitMap)).to.be.ofSize(2);
       expect(bitMap).to.have.property('bar/foo2');
+      expect(bitMap).to.have.property('version');
     });
     it('Should remove all new components and keep commited component', () => {
       helper.createComponent('bar', 'foo.js');
@@ -66,8 +70,9 @@ describe('bit untrack command', function () {
       helper.addComponentWithOptions(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.untrackComponent();
       const bitMap = helper.readBitMap();
-      expect(Object.keys(bitMap)).to.be.ofSize(1);
+      expect(Object.keys(bitMap)).to.be.ofSize(2);
       expect(bitMap).to.have.property('bar/foo2');
+      expect(bitMap).to.have.property('version');
     });
     it('Should not show component if bit.json is corrupted', () => {
       helper.corruptBitJson();
