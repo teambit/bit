@@ -593,7 +593,7 @@ export default class Consumer {
         symlinkOrCopy.sync(srcPath, destPath);
       } catch (err) {
         throw new Error(`failed to bind a component ${componentId.toString()}.
-         Symlink (or copy for windows) from: ${srcPath}, to: ${destPath} was failed.
+         Symlink (or copy for Windows) from: ${srcPath}, to: ${destPath} was failed.
          Original error: ${err}`);
       }
     };
@@ -644,7 +644,8 @@ export default class Consumer {
           componentId.name
         );
         const linkPath = path.join(this.getPath(), relativeLinkPath);
-        const target = path.join(this.getPath(), componentMap.rootDir);
+        // when a user moves the component directory, use component.writtenPath to find the correct target
+        const target = component.writtenPath || path.join(this.getPath(), componentMap.rootDir);
         createSymlinkOrCopy(componentId, target, linkPath);
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
         const boundDependencies = component.dependencies ? writeDependenciesLinks(component, componentMap) : [];
