@@ -13,31 +13,32 @@
 
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
-[Website & Community](https://bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Demo Components](https://bitsrc.io/bit/movie-app#styles) • [Docs](https://docs.bitsrc.io/en) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca) 
+[Community](https://bitsrc.io) •  [Docs](https://docs.bitsrc.io/en) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/) 
 
-Bit is a fast and powerful way to share and sync source code components between different SCM repositories and projects. As a nearly-seamless extension for your Git workflow, it enables you to track and share components directly from your project's repository and install them in other projects while keeping them synced.
+Bit is a command-line extension for isolation and synchronization of reusable source-code components among Git repositories.  
 
-Classis use case for Bit are sharing [UI components](https://github.com/teambit/docs/blob/master/node-tutorial.md) (React, Angular etc), sharing [node.js components](https://github.com/teambit/docs/blob/master/node-tutorial.md), turning static shared libraries into "playlists" of individual components and more. 
+**Isolate** and define any subset of files in your repository as a reusable component. Tag cross-component versions, track changes and gain absolute control over your component dependency graph.
 
-* **Track and share any subset of files as a reusable component** directly from your project's repository, without changing your source code or file structure. Share multiple components in seconds and sync them across projects.
+**Sync** components between repositories. Instantly get notified and merge component changes made in other repositories by leveraging integrations to Git's powerful comparison and merge utilities.
 
-* **Organize and discover components** shared into playlist-like collections, making them individually available. Determine and monitor component quality through auto-generated docs, test results and visual rendering.
+**Extend** Bit to execute, parse, compile, distribute and test reusable components individually on top of an isolated component environment. Bit extensions can be used for packing a component, publishing it to package registries, parsing useful information and testing to make sure each components executes individually.
 
-* **Gain universal control over your dependency graph**: Commit and test vast dependency changes at once. Build and test any component in any application environment. 
+## Use cases
 
-* *Coming soon: **NPM / Yarn install** for components shared with Bit*.
+Isolate and manage components in shared libraries for publishing individual components to [bitsrc](https://bitsrc.io) and to the NPM registry (soon).
 
-* *Coming soon: **Event driven updates** for components*.
+* A Shared [React component Library](https://github.com/itaymendel/movie-app) made individually available [on bitsrc](https://bitsrc.io/bit/movie-app) with NPM install (soon).
 
-Bit is an open-source collaborative project, actively maintained by a full-time venture-backed team and used by organizations and open source teams.
+* Tutorial: [Bit with Shared Libraries](https://docs.bitsrc.io/shared-lib-main.html).
 
-## Demos & Tutorials
+Sync shared web / UI components (React, Angular etc) between different frontend repositories.
 
-1. [Bit with React components](https://teambit.github.io/docs/react-tutorial.html).
-2. [Bit with node.js components](https://github.com/teambit/docs/blob/master/node-tutorial.md).
-3. A demo collection of [React movie-app components](https://bitsrc.io/bit/movie-app).
-4. A matching [React component library](https://github.com/itaymendel/movie-app) with Bit.
-5. A [short demo video](https://www.youtube.com/watch?v=vm_oOghNEYs).
+* Tutorial: [Bit with React](https://docs.bitsrc.io/react-tutorial.html).
+
+Sync shared-components between micro-services in a multi-repo architecture with Bit:
+
+* Tutorial: [Bit with Node.js](https://docs.bitsrc.io/node-tutorial.html).
+
 
 ## Supported Languages
 Bit is language agnostic. Still, it requires binding and additional language sensitive features for different programming languages. To do this, Bit uses language-specific drivers:
@@ -195,7 +196,7 @@ See [Contributing](CONTRIBUTING.md).
 
 ## Feedback
 
-Feedbacks are more than welcome @ [team@bitsrc.io](mailto:team@bitsrc.io) or via Bit's [Gitter channel](https://gitter.im/bit-src/Bit).
+Feedbacks and questions are more than welcome via Bit's [Gitter channel](https://gitter.im/bit-src/Bit).
 
 ## License
 
