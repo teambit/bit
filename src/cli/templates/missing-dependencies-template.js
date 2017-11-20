@@ -7,7 +7,8 @@ export const missingDependenciesLabels = {
   missingPackagesDependenciesOnFs: 'missing packages dependencies',
   missingLinks: 'missing bind links',
   relativeComponents: 'relative components (should be absolute)',
-  missingDependenciesOnFs: 'non-existing dependency files'
+  missingDependenciesOnFs: 'non-existing dependency files',
+  missingComponents: 'missing components'
 };
 
 export default function missingDepsTemplate(components: ConsumerComponent[]) {
