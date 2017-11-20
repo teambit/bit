@@ -35,10 +35,9 @@ describe('bit bind', function () {
     });
   });
   describe('with custom bind name in bit.json', () => {
-    const impl = "module.exports = function foo() { return 'got foo'; };";
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo(impl);
+      helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
       helper.exportComponent('bar/foo');
@@ -47,14 +46,31 @@ describe('bit bind', function () {
       helper.modifyFieldInBitJson('bindingPrefix', 'testLink');
       helper.importComponent('bar/foo');
     });
-    it('node_modules should contain custom dir name', () => {
-      assert.pathExists(path.join(helper.localScopePath, 'node_modules', 'testLink'));
+    describe('auto binding', () => {
+      it('node_modules should contain custom dir name', () => {
+        assert.pathExists(path.join(helper.localScopePath, 'node_modules', 'testLink'));
+      });
+      it('should create symlink inside custom folder', () => {
+        assert.pathExists(path.join(helper.localScopePath, 'node_modules', 'testLink', 'bar', 'foo'));
+      });
+      it('should point to generated symlink', () => {
+        expect(path.join(helper.localScopePath, 'node_modules', 'testLink', 'bar', 'foo', 'index.js')).to.be.a.file();
+      });
     });
-    it('should create symlink inside custom folder', () => {
-      assert.pathExists(path.join(helper.localScopePath, 'node_modules', 'testLink', 'bar', 'foo'));
-    });
-    it('should point to genetated symlink', () => {
-      expect(path.join(helper.localScopePath, 'node_modules', 'testLink', 'bar', 'foo', 'index.js')).to.be.a.file();
+    describe('manual binding', () => {
+      before(() => {
+        fs.removeSync(path.join(helper.localScopePath, 'node_modules', 'testLink'));
+        helper.runCmd('bit bind');
+      });
+      it('node_modules should contain custom dir name', () => {
+        assert.pathExists(path.join(helper.localScopePath, 'node_modules', 'testLink'));
+      });
+      it('should create symlink inside custom folder', () => {
+        assert.pathExists(path.join(helper.localScopePath, 'node_modules', 'testLink', 'bar', 'foo'));
+      });
+      it('should point to generated symlink', () => {
+        expect(path.join(helper.localScopePath, 'node_modules', 'testLink', 'bar', 'foo', 'index.js')).to.be.a.file();
+      });
     });
   });
   describe('import 2 components into same link dir', () => {

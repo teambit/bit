@@ -586,14 +586,23 @@ export default class Consumer {
   }
 
   bindComponents(components: Component[], bitMap: BitMap): Object[] {
+    const createSymlinkOrCopy = (componentId, srcPath, destPath) => {
+      fs.removeSync(destPath); // in case a component has been moved
+      fs.ensureDirSync(path.dirname(destPath));
+      try {
+        symlinkOrCopy.sync(srcPath, destPath);
+      } catch (err) {
+        throw new Error(`failed to bind a component ${componentId.toString()}.
+         Symlink (or copy for windows) from: ${srcPath}, to: ${destPath} was failed.
+         Original error: ${err}`);
+      }
+    };
     const writeDependencyLink = (parentRootDir: string, bitId: BitId, rootDir: string, bindingPrefix: string) => {
       const srcPath = path.join(this.getPath(), rootDir);
       const relativeDestPath = path.join('node_modules', bindingPrefix, bitId.box, bitId.name);
       const destPath = path.join(this.getPath(), parentRootDir, relativeDestPath);
-      fs.removeSync(destPath); // in case a component has been moved
-      fs.ensureDirSync(path.dirname(destPath));
-      // Create a symlink at destPath pointing to srcPath.
-      symlinkOrCopy.sync(srcPath, destPath);
+      createSymlinkOrCopy(bitId, srcPath, destPath);
+
       return { from: parentRootDir, to: rootDir };
     };
 
@@ -635,9 +644,8 @@ export default class Consumer {
           componentId.name
         );
         const linkPath = path.join(this.getPath(), relativeLinkPath);
-        fs.removeSync(linkPath); // in case a component has been moved
-        fs.ensureDirSync(path.dirname(linkPath));
-        symlinkOrCopy.sync(component.writtenPath, linkPath);
+        const target = path.join(this.getPath(), componentMap.rootDir);
+        createSymlinkOrCopy(componentId, target, linkPath);
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
         const boundDependencies = component.dependencies ? writeDependenciesLinks(component, componentMap) : [];
         const boundMissingDependencies =
@@ -674,7 +682,7 @@ export default class Consumer {
     if (R.isEmpty(componentsMaps)) throw new Error('nothing to bind');
     const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));
     const { components } = await this.loadComponents(componentsIds);
-    fs.removeSync(path.join(this.getPath(), 'node_modules', 'bit')); // todo: move to bit-javascript
+    fs.removeSync(path.join(this.getPath(), 'node_modules', this.bitJson.bindingPrefix)); // todo: move to bit-javascriptv
     return this.bindComponents(components, bitMap);
   }
 
