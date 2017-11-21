@@ -73,7 +73,6 @@
     "regenerator-runtime": "^0.11.0",
     "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",
-    "search-index": "^0.14.0",
     "semver": "^5.4.1",
     "serialize-error": "^2.1.0",
     "ssh2": "^0.5.4",
