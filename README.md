@@ -13,15 +13,15 @@
 
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
-[Community](https://bitsrc.io) •  [Docs](https://docs.bitsrc.io/en) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/) 
+[Community](https://bitsrc.io) •  [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/) 
 
 Bit is a command-line extension for isolation and synchronization of reusable source-code components among Git repositories.  
 
-**Isolate** and define any subset of files in your repository as a reusable component. Tag cross-component versions, track changes and gain absolute control over your component dependency graph.
+* **Isolate** and define any subset of files in your repository as a reusable component. Tag cross-component versions, track changes and gain absolute control over your component dependency graph.
 
-**Sync** components between repositories. Instantly get notified and merge component changes made in other repositories by leveraging integrations to Git's powerful comparison and merge utilities.
+* **Sync** components between repositories. Instantly get notified and merge component changes made in other repositories by leveraging integrations to Git's powerful comparison and merge utilities.
 
-**Extend** Bit to execute, parse, compile, distribute and test reusable components individually on top of an isolated component environment. Bit extensions can be used for packing a component, publishing it to package registries, parsing useful information and testing to make sure each components executes individually.
+* **Extend** Bit to execute, parse, compile, distribute and test reusable components individually on top of an isolated component environment. Bit extensions can be used for packing a component, publishing it to package registries, parsing useful information and testing to make sure each components executes individually.
 
 ## Use cases
 
