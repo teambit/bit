@@ -8,7 +8,18 @@ import arrayDifference from 'array-difference';
 import ConsumerComponent from '../../consumer/component/consumer-component';
 import paintDocumentation from './docs-template';
 
-const fields = ['id', 'compiler', 'tester', 'language', 'mainFile', 'packages', 'files', 'specs', 'deprecated'];
+const fields = [
+  'id',
+  'compiler',
+  'tester',
+  'language',
+  'mainFile',
+  'dependencies',
+  'packages',
+  'files',
+  'specs',
+  'deprecated'
+];
 
 const header = [{ value: 'ID', width: 20, headerColor: 'cyan' }];
 const opts = {
@@ -26,7 +37,7 @@ function comparator(a, b) {
   return a === b;
 }
 
-function convertObjectToPrintable(component) {
+function convertObjectToPrintable(component, isFromFs, includeDependecies = false) {
   const obj = {};
   const {
     name,
@@ -34,6 +45,7 @@ function convertObjectToPrintable(component) {
     lang,
     compilerId,
     testerId,
+    dependencies,
     packageDependencies,
     files,
     mainFile,
@@ -41,11 +53,12 @@ function convertObjectToPrintable(component) {
     version,
     docs
   } = component;
-  obj.id = version === 'latest' ? `${box}/${name}@${version} \n[file system]` : `${box}/${name}@${version}`;
+  obj.id = isFromFs ? `${box}/${name}@${version} \n[file system]` : `${box}/${name}@${version}`;
   obj.compiler = compilerId ? compilerId.toString() : null;
   obj.language = lang || null;
   obj.tester = testerId ? testerId.toString() : null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
+  if (includeDependecies) obj.dependencies = dependencies.map(dep => dep.id.toString());
   obj.packages =
     !R.isEmpty(packageDependencies) && !R.isNil(packageDependencies)
       ? Object.keys(packageDependencies).map(key => `${key}@${packageDependencies[key]}`)
@@ -63,7 +76,7 @@ function convertObjectToPrintable(component) {
   return obj;
 }
 
-function generateDependenciesTable(component, showRemoteVersion) {
+function generateDependenciesTable(component, showRemoteVersion, compareD) {
   if (!component.dependencies || !component.dependencies.length) return '';
   const dependencyHeader = [];
   if (showRemoteVersion) {
@@ -100,7 +113,7 @@ function generateDependenciesTable(component, showRemoteVersion) {
 }
 
 function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: boolean) {
-  const printableComponent = convertObjectToPrintable(component);
+  const printableComponent = convertObjectToPrintable(component, false, !showRemoteVersion);
   const rows = fields
     .map((field) => {
       const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
@@ -119,7 +132,7 @@ function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: bo
 
   const componentTable = new Table(header, rows, opts);
   const componentTableStr = componentTable.render();
-  const dependenciesTableStr = generateDependenciesTable(component, showRemoteVersion);
+  const dependenciesTableStr = showRemoteVersion ? generateDependenciesTable(component, showRemoteVersion) : '';
 
   return componentTableStr + dependenciesTableStr + paintDocumentation(component.docs);
 }
@@ -129,8 +142,8 @@ function paintWithCompare(
   componentToCompareTo: ConsumerComponent,
   showRemoteVersion: boolean
 ) {
-  const printableOriginalComponent = convertObjectToPrintable(originalComponent);
-  const printableComponentToCompare = convertObjectToPrintable(componentToCompareTo);
+  const printableOriginalComponent = convertObjectToPrintable(originalComponent, true, true);
+  const printableComponentToCompare = convertObjectToPrintable(componentToCompareTo, false, true);
 
   const componentsDiffs = diff.custom(
     {
@@ -162,7 +175,9 @@ function paintWithCompare(
 
   const componentTable = new Table(header, rows);
   const componentTableStr = componentTable.render();
-  const dependenciesTableStr = generateDependenciesTable(originalComponent, showRemoteVersion);
+  const dependenciesTableStr = !componentToCompareTo
+    ? generateDependenciesTable(originalComponent, showRemoteVersion)
+    : '';
   return componentTableStr + dependenciesTableStr;
 }
 
