@@ -94,6 +94,13 @@ describe('bit tag command', function () {
         const tagWithExisting = () => helper.commitComponent('components/exact', 'message', '-f --exact_version 5.5.5');
         expect(tagWithExisting).to.throw('the version 5.5.5 already exists for components/exact');
       });
+      it('Should print same output for flaged tag and non flaged tag', () => {
+        const majorOutput = helper.commitComponent('components/major', 'message', '--major');
+        helper.createFile('components', 'major1.js');
+        helper.addComponent('components/major1.js');
+        const nonFlagedCommit = helper.commitComponent('components/major');
+        expect(majorOutput).to.equal(nonFlagedCommit);
+      });
     });
     describe('tag all components', () => {
       before(() => {
