@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.11.1-dev.4] - 2017-11-20
+
 - Auto update .bit.map.json to semantic versions
 
 ## [0.11.1-dev.3] - 2017-11-19
