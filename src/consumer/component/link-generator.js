@@ -48,7 +48,7 @@ function _getLinkContent(
   const fileExt = getExt(filePath);
   /**
    * Get the template for the generated link file.
-   * 
+   *
    * For ES6 and TypeScript the template is more complicated and we often need to know how originally the variables were
    * imported, whether default (e.g. import foo from './bar') or non-default (e.g. import { foo } from './bar').
    *
