@@ -164,10 +164,10 @@ function paintWithCompare(
       }
       const arr = field in componentsDiffs && field !== 'id' ? [c.red(title)] : [c.cyan(title)];
       printableComponentToCompare[field] instanceof Array
-        ? arr.push(printableComponentToCompare[field].join(','))
+        ? arr.push(printableComponentToCompare[field].join('\n'))
         : arr.push(printableComponentToCompare[field]);
       printableOriginalComponent[field] instanceof Array
-        ? arr.push(printableOriginalComponent[field].join(','))
+        ? arr.push(printableOriginalComponent[field].join('\n'))
         : arr.push(printableOriginalComponent[field]);
       return arr;
     })
