@@ -21,11 +21,23 @@ export async function commitAction({
   ignoreMissingDependencies?: boolean
 }) {
   const consumer: Consumer = await loadConsumer();
+  const componentsList = new ComponentsList(consumer);
+  const newComponents = await componentsList.listNewComponents();
   if (!force) {
     const isModified = await consumer.isComponentModifiedById(id);
     if (!isModified) return null;
   }
-  return consumer.commit([id], message, exactVersion, releaseType, force, verbose, ignoreMissingDependencies);
+  const commitResults = await consumer.commit(
+    [id],
+    message,
+    exactVersion,
+    releaseType,
+    force,
+    verbose,
+    ignoreMissingDependencies
+  );
+  commitResults.newComponents = newComponents;
+  return commitResults;
 }
 
 async function getCommitPendingComponents(
@@ -63,6 +75,8 @@ export async function commitAllAction({
   includeImported?: boolean
 }) {
   const consumer = await loadConsumer();
+  const componentsList = new ComponentsList(consumer);
+  const newComponents = await componentsList.listNewComponents();
   const { commitPendingComponents, warnings } = await getCommitPendingComponents(
     consumer,
     scope,
@@ -80,5 +94,7 @@ export async function commitAllAction({
     ignoreMissingDependencies
   );
   commitResults.warnings = warnings;
+
+  commitResults.newComponents = newComponents;
   return commitResults;
 }
