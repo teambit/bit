@@ -13,9 +13,9 @@ chai.use(assertArrays);
 describe('bit tag command', function () {
   this.timeout(0);
   const helper = new Helper();
-  /*  after(() => {
+  after(() => {
     helper.destroyEnv();
-  }); */
+  });
   before(() => {
     helper.reInitLocalScope();
     logSpy = sinon.spy(console, 'log');
