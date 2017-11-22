@@ -46,11 +46,26 @@ function _getLinkContent(
   bitPackageName: string
 ): string {
   const fileExt = getExt(filePath);
+  /**
+   * Get the template for the generated link file.
+   *
+   * For ES6 and TypeScript the template is more complicated and we often need to know how originally the variables were
+   * imported, whether default (e.g. import foo from './bar') or non-default (e.g. import { foo } from './bar').
+   *
+   * The importSpecifier.linkFile attribute exists when the main-file doesn't require the variable directly, but uses a
+   * link-file to require it indirectly. E.g. src/bar.js: `import foo from './utils;` utils/index.js: `import foo from './foo';`
+   */
   const getTemplate = () => {
     if (importSpecifiers && importSpecifiers.length) {
       if (fileExt === 'js' || fileExt === 'jsx') {
+        // @see e2e/flows/es6-link-files.e2e.js file for cases covered by the following snippet
         return importSpecifiers
           .map((importSpecifier) => {
+            if (!importSpecifier.linkFile) {
+              // when no link-file is involved, use the standard non-es6 syntax (a privilege that doesn't exist for TS)
+              return LINKS_CONTENT_TEMPLATES.js;
+            }
+            // for link files we need to know whether the main-file imports the variable as default or non-default
             let exportPart = 'exports';
             if (importSpecifier.mainFile.isDefault) {
               exportPart += '.default';
@@ -59,14 +74,12 @@ function _getLinkContent(
             }
             let pathPart = "require('{filePath}')";
 
-            if (
-              (importSpecifier.linkFile && importSpecifier.linkFile.isDefault) ||
-              (!importSpecifier.linkFile && importSpecifier.mainFile.isDefault)
-            ) {
+            if (importSpecifier.linkFile.isDefault) {
               pathPart += '.default';
             } else {
               pathPart += `.${importSpecifier.mainFile.name}`;
             }
+
             return `${exportPart} = ${pathPart};`;
           })
           .join('\n');

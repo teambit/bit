@@ -135,4 +135,87 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       expect(result.trim()).to.equal('got is-array and got is-string and got foo');
     });
   });
+
+  describe('when a component uses non-link files with default-import and specific-import together', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler();
+      const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
+      helper.createComponent('utils', 'is-array.js', isArrayFixture);
+      helper.addComponent('utils/is-array.js');
+      const isStringFixture = "export default function isString() { return 'got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      const isBooleanFixture = `export function isBoolean() { return 'got is-boolean'; };
+export function isBoolean2() { return 'got is-boolean2'; };`;
+      helper.createComponent('utils', 'is-boolean.js', isBooleanFixture);
+      helper.addComponent('utils/is-boolean.js');
+      const fooBarFixture = `import isArray from '../utils/is-array';
+import isString from '../utils/is-string';
+import { isBoolean, isBoolean2 } from '../utils/is-boolean';
+export default function foo() { return isArray() + ' and ' + isString() + ' and ' + isBoolean() + ' and ' + isBoolean2() + ' and got foo'; };`;
+      helper.createComponentBarFoo(fooBarFixture);
+      helper.addComponentBarFoo();
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+    it('should generate the links correctly', () => {
+      const appJsFixture = `const barFoo = require('./components/bar/foo');
+console.log(barFoo.default());`;
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal(
+        'got is-array and got is-string and got is-boolean and got is-boolean2 and got foo'
+      );
+    });
+  });
+
+  describe('when a component uses a link and non-link files with default-import and specific-import together', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler();
+      const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
+      helper.createComponent('utils', 'is-array.js', isArrayFixture);
+      helper.addComponent('utils/is-array.js');
+      const isStringFixture = "export default function isString() { return 'got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      const isBooleanFixture = `export function isBoolean() { return 'got is-boolean'; };
+export function isBoolean2() { return 'got is-boolean2'; };
+export default function isBooleanDefault() { return 'got is-boolean-default'; }; `;
+      helper.createComponent('utils', 'is-boolean.js', isBooleanFixture);
+      helper.addComponent('utils/is-boolean.js');
+      const utilFixture = `import isArray from './is-array';
+import isString from './is-string';
+export default isArray;
+export { isString }; `;
+      helper.createFile('utils', 'index.js', utilFixture);
+
+      const fooBarFixture = `import isArray from '../utils';
+import { isString } from '../utils';
+import isBooleanDefault, { isBoolean, isBoolean2 } from '../utils/is-boolean';
+export default function foo() { return isArray() + ' and ' + isString() + ' and ' + isBoolean() + ' and ' + isBoolean2() + ' and ' + isBooleanDefault() + ' and got foo'; };`;
+      helper.createComponentBarFoo(fooBarFixture);
+      helper.addComponentBarFoo();
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+    it('should generate the links correctly', () => {
+      const appJsFixture = `const barFoo = require('./components/bar/foo');
+console.log(barFoo.default());`;
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal(
+        'got is-array and got is-string and got is-boolean and got is-boolean2 and got is-boolean-default and got foo'
+      );
+    });
+  });
 });

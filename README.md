@@ -15,29 +15,29 @@
 
 [Community](https://bitsrc.io) •  [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/) 
 
-Bit is a command-line extension for isolation and synchronization of reusable source-code components among Git repositories.  
+Bit is a command-line extension for isolation and synchronization of reusable source-code components among Git repositories.
 
 * **Isolate** and define any subset of files in your repository as a reusable component. Tag cross-component versions, track changes and gain absolute control over your component dependency graph.
 
 * **Sync** components between repositories. Instantly get notified and merge component changes made in other repositories by leveraging integrations to Git's powerful comparison and merge utilities.
 
-* **Extend** Bit to execute, parse, compile, distribute and test reusable components individually on top of an isolated component environment. Bit extensions can be used for packing a component, publishing it to package registries, parsing useful information and testing to make sure each components executes individually.
+* **Extend** Bit to execute, parse, compile, distribute and test reusable components individually on top of an isolated component environment. Bit extensions can be used for packing a component, publishing it to package registries, parsing useful information and testing to make sure each component executes individually.
 
 ## Use cases
+
+Sync shared web / UI components (React, Angular etc) between different frontend repositories.
+
+* Tutorial: [Bit with React](https://docs.bitsrc.io/react-tutorial.html).
+
+Sync shared-components between micro-services in a multi-repo architecture with Bit.
+
+* Tutorial: [Bit with Node.js](https://docs.bitsrc.io/node-tutorial.html).
 
 Isolate and manage components in shared libraries for publishing individual components to [bitsrc](https://bitsrc.io) and to the NPM registry (soon).
 
 * A Shared [React component Library](https://github.com/itaymendel/movie-app) made individually available [on bitsrc](https://bitsrc.io/bit/movie-app) with NPM install (soon).
 
 * Tutorial: [Bit with Shared Libraries](https://docs.bitsrc.io/shared-lib-main.html).
-
-Sync shared web / UI components (React, Angular etc) between different frontend repositories.
-
-* Tutorial: [Bit with React](https://docs.bitsrc.io/react-tutorial.html).
-
-Sync shared-components between micro-services in a multi-repo architecture with Bit:
-
-* Tutorial: [Bit with Node.js](https://docs.bitsrc.io/node-tutorial.html).
 
 
 ## Supported Languages
@@ -100,7 +100,7 @@ Now run a quick `bit status` command to validate that `utils/is-string` is being
 ### Tag a Component
 
 Now, let's Tag the newly tracked component. 
-Tagging a component will lock of all its dependencies (in this case we have none), and create a version for the component.
+Tagging a component will lock all of its dependencies (in this case we have none), and create a version for the component.
 
 ```sh
 bit tag -am 'initial version'
@@ -114,9 +114,9 @@ Components are shared into playlist-like collections called Scopes. A scope is a
 
 Scopes are super lightweight and can be [set up on any server](https://teambit.github.io/docs/advanced.html#host-your-own-scope), in any location. 
 
-You can also freely host your Scopes on the Bit community hub, [BitSrc](https://bitsrc.io).
+You can also freely host your Scopes on the Bit community hub, [bitsrc](https://bitsrc.io).
 
-For this quick-start guide, let's [connect to to BitSrc](https://teambit.github.io/docs/bitsrc-setup.html#signup-to-bitsrc) and [create a Scope](https://teambit.github.io/docs/getting-started.html#create-a-scope).
+For this quick-start guide, let's [connect to to bitsrc](https://teambit.github.io/docs/bitsrc-setup.html#signup-to-bitsrc) and [create a Scope](https://teambit.github.io/docs/getting-started.html#create-a-scope).
 
 ### Export Components
 
@@ -130,12 +130,12 @@ bit export <username>.<scopename>
 And you're done!  
 Browse your Scope and your different components which are now available for import.
 
-You can check out an example or React movie-app components exported to BitSrc [here](bitsrc.io/bit/movie-app).
+You can check out an example or React movie-app components exported to bitsrc [here](bitsrc.io/bit/movie-app).
 
 ### Import Components
 
 Bit enables you to import individual components to use in your different projects.  
-You can install a component as an application part in any destination on your project’s file system.
+You can install a component as an application-part in any destination on your project’s file system.
 
 Let's import the components we just created to a new project.
 
@@ -180,13 +180,19 @@ Now you can go back to your browser, and see that there's a new version for `uti
 
 ## Why Bit
 
-*Learn more on Hackernoon: "[How we started sharing components as a team](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)".*
+From UI frameworks such as React and Angular to Node.js microservices and serverless functions, modularity through encapsulated, reusable components in the foundation for today's and tomorrow's software architecture.
 
-With every new feature and every new member joining our team, we found it increasingly hard to share our code and keep it synced between projects. Determined to avoid duplications, we considered many solutions including an arsenal of small repos and packages or creating vast shared static libraries.
+Bit was created to introduce CSCM: components source code management.
 
-However, issues such as the publish overhead, discoverability, and maintainability prevented us from truly sharing and syncing our components as a team between our projects.
+It enables you to track and manage components in your SCM repository and install them in other repositories while keeping them synced and updated. Using Bit, you can share code between repositories or projects and collaborate as a team. It saves
+the overhead of setting up and maintaining additional repositories and packages for sharing components, and enables you to turn an existing shared library into a collection of individually available components.
 
-Finally, we decided to build our own open-source project that will allow us to share components directly from our SCM repo’s source code, organize them as a team with defined ownership and sync them between different projects. In a way, Bit is a “virtual monorepo” that syncs components on top of our entire codebase, with both multi-repo and mono-repo architectures in mind.
+In a way, Bit is a “virtual monorepo” that syncs components on top of your entire codebase, with both multi-repo and mono-repo architectures in mind.
+
+We've been using it for over 6 months, sharing components between our Node.js microservices and sharing our React components between front-end repositories, updating and syncing them from different projects.
+Today, Bit is being used by additional teams and communities from the open source and different organizations. 
+
+You can learn more on Hackernoon: "[How we started sharing components as a team](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)".*
 
 ## Contributing
 
