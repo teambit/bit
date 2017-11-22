@@ -19,7 +19,7 @@ export default (components: ConsumerComponent[], json: boolean, showRemoteVersio
 
   function tablizeComponent(component: ConsumerComponent) {
     const id = component.id.toStringWithoutVersion();
-    const data = { id: `${id}${c.red(component.deprecated ? ' [Deprecated]' : '')}` }; // Add date, author
+    const data = { id: c.red(`${id}${component.deprecated ? ' [Deprecated]' : ''}`) }; // Add date, author
     let version = component.version;
     if (!json && showRemoteVersion) {
       const color = component.latest && semver.gt(component.latest, component.version) ? 'red' : null;

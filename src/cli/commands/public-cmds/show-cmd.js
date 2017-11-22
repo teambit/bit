@@ -40,7 +40,7 @@ export default class Show extends Command {
         versions
       }));
     }
-
+    if (compare && outdated) return Promise.reject('You can use either [compare] or [outdated]');
     return getBitComponent().then(({ component, componentModel }) => ({
       component,
       componentModel,
