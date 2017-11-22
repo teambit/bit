@@ -11,7 +11,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe.only('bit add command', function () {
+describe('bit add command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
