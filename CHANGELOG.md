@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- fixed bit list commad display for deprecated components
-- fixed bit show with compare flag to display package dependencies
+- fixed bit list command display for deprecated components
+- fixed bit show with compare flag to display dependencies
 
 ## [0.11.1-dev.4] - 2017-11-20
 
