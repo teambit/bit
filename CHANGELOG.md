@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.11.1-dev.6] - 2017-11-22
+
 - fixed output to be the same for tag command
 - fixed bit list command display for deprecated components
 - fixed bit show with compare flag to display dependencies
