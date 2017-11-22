@@ -150,10 +150,9 @@ export default class Export extends Command {
     }
 
     // send only non new components to changed components compare
-    const nonNewComponents = components.filter(
+    const changedComponents = components.filter(
       component => !newComponents.includes(component.id.toStringWithoutVersion())
     );
-    const changedComponents = nonNewComponents.filter(component => semver.gt(component.version, DEFAULT_BIT_VERSION));
     const addedComponents = components.filter(component =>
       newComponents.includes(component.id.toStringWithoutVersion())
     );

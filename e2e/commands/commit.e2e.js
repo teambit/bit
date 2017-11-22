@@ -13,9 +13,9 @@ chai.use(assertArrays);
 describe('bit tag command', function () {
   this.timeout(0);
   const helper = new Helper();
-  after(() => {
+  /*  after(() => {
     helper.destroyEnv();
-  });
+  }); */
   before(() => {
     helper.reInitLocalScope();
     logSpy = sinon.spy(console, 'log');
@@ -95,11 +95,16 @@ describe('bit tag command', function () {
         expect(tagWithExisting).to.throw('the version 5.5.5 already exists for components/exact');
       });
       it('Should print same output for flaged tag and non flaged tag', () => {
+        helper.reInitLocalScope();
+        helper.createFile('components', 'major.js');
+        helper.addComponent('components/major.js');
         const majorOutput = helper.commitComponent('components/major', 'message', '--major');
-        helper.createFile('components', 'major1.js');
-        helper.addComponent('components/major1.js');
+        helper.reInitLocalScope();
+        helper.createFile('components', 'major.js');
+        helper.addComponent('components/major.js');
         const nonFlagedCommit = helper.commitComponent('components/major');
-        expect(majorOutput).to.equal(nonFlagedCommit);
+        expect(majorOutput).to.contain('1 components tagged | 1 added, 0 changed, 0 auto-tagged');
+        expect(nonFlagedCommit).to.contain('1 components tagged | 1 added, 0 changed, 0 auto-tagged');
       });
     });
     describe('tag all components', () => {
