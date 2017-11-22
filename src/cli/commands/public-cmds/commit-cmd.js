@@ -116,8 +116,14 @@ export default class Export extends Command {
     const {
       components,
       autoUpdatedComponents,
-      warnings
-    }: { components: Component[], autoUpdatedComponents: ModelComponent[], warnings: string[] } = results;
+      warnings,
+      newComponents
+    }: {
+      components: Component[],
+      autoUpdatedComponents: ModelComponent[],
+      warnings: string[],
+      newComponents: string[]
+    } = results;
     function joinComponents(comps) {
       return comps
         .map((comp) => {
@@ -143,8 +149,13 @@ export default class Export extends Command {
       return '';
     }
 
-    const changedComponents = components.filter(component => semver.gt(component.version, DEFAULT_BIT_VERSION));
-    const addedComponents = components.filter(component => semver.eq(component.version, DEFAULT_BIT_VERSION));
+    // send only non new components to changed components compare
+    const changedComponents = components.filter(
+      component => !newComponents.includes(component.id.toStringWithoutVersion())
+    );
+    const addedComponents = components.filter(component =>
+      newComponents.includes(component.id.toStringWithoutVersion())
+    );
     const autoUpdatedCount = autoUpdatedComponents ? autoUpdatedComponents.length : 0;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
