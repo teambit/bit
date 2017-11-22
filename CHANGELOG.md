@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fixed bit list command display for deprecated components
 - fixed bit show with compare flag to display dependencies
 - fixed bit add bug when adding test files with dsl 
+
 ## [0.11.1-dev.4] - 2017-11-20
 
 - Auto update .bit.map.json to semantic versions
