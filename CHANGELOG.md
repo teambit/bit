@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fixed bug on windows that created test files as components
+
 ## [0.11.1-dev.7] - 2017-11-23
 
 - fixed bit add bug when adding test files with dsl 
