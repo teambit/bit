@@ -94,7 +94,7 @@ describe('bit bind', function () {
       assert.pathExists(path.join(helper.localScopePath, 'node_modules', 'test', 'bar2'));
     });
   });
-  describe('component with depedendency tree of 2', () => {
+  describe('component with dependency tree of 2', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
@@ -120,7 +120,7 @@ describe('bit bind', function () {
       assert.pathExists(path.join(helper.localScopePath, 'node_modules', 'bitTest'));
     });
   });
-  describe('component with depedendency tree of 3', () => {
+  describe('component with dependency tree of 3', () => {
     before(() => {
       // is-type
       helper.setNewLocalAndRemoteScopes();
@@ -148,7 +148,7 @@ describe('bit bind', function () {
       helper.modifyFieldInBitJson('bindingPrefix', 'bitTest2');
       helper.importComponent('utils/is-string');
       const isStringFixture2 =
-        "const isType = require('bitTest2/utils/is-string'); module.exports = function isString2() { return isType() +  ' and got is-string'; };";
+        "const isString = require('bitTest2/utils/is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };";
       helper.createComponent('test', 'is-string2.js', isStringFixture2);
       helper.addComponent('test/is-string2.js');
       helper.commitAllComponents();
@@ -175,6 +175,23 @@ describe('bit bind', function () {
           'bitTest2/test/is-string2/node_modules/bitTest2/utils/is-string/node_modules/bitTest'
         )
       );
+    });
+    it('should print results from the dependency that uses require absolute syntax', () => {
+      const appJsFixture = "const isString2 = require('bitTest2/test/is-string2'); console.log(isString2());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type and got is-string and got is-string2');
+    });
+    describe('bit bind after deleting the current node_modules directories', () => {
+      before(() => {
+        fs.removeSync(path.join(helper.localScopePath, 'node_modules'));
+        fs.removeSync(path.join(helper.localScopePath, 'components', 'test', 'is-string2', 'node_modules'));
+        helper.runCmd('bit bind');
+      });
+      it('should still print results from the dependency that uses require absolute syntax', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got is-string2');
+      });
     });
   });
 });
