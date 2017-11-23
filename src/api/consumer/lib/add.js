@@ -239,7 +239,7 @@ export default (async function addAction(
   if (isMultipleComponents) {
     logger.debug('bit add - multiple components');
     const testToRemove = !R.isEmpty(tests) ? await getFiles(Object.keys(componentPathsStats), tests) : [];
-    testToRemove.forEach(test => delete componentPathsStats[test]);
+    testToRemove.forEach(test => delete componentPathsStats[path.normalize(test)]);
     const addedP = Object.keys(componentPathsStats).map((onePath) => {
       return addOneComponent(
         {
