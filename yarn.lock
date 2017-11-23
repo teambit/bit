@@ -812,9 +812,9 @@ binary-extensions@^1.0.0:
   version "1.10.0"
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-1.10.0.tgz#9aeb9a6c5e88638aad171e167f5900abe24835d0"
 
-bit-javascript@0.10.7-dev.5:
-  version "0.10.7-dev.5"
-  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.7-dev.5.tgz#fbb51aae15c270a01fe8e0a44862467e4f3aea98"
+bit-javascript@0.10.7-dev.6:
+  version "0.10.7-dev.6"
+  resolved "https://registry.yarnpkg.com/bit-javascript/-/bit-javascript-0.10.7-dev.6.tgz#faeb6d342c3aa3e0d71a53562ecd9163d7aca7ea"
   dependencies:
     camelcase "^4.0.0"
     caporal "^0.5.0"
@@ -1375,7 +1375,7 @@ depd@1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/depd/-/depd-1.1.0.tgz#e1bd82c6aab6ced965b97b88b17ed3e528ca18c3"
 
-dependency-tree@teambit/node-dependency-tree:
+"dependency-tree@github:teambit/node-dependency-tree":
   version "5.11.0"
   resolved "https://codeload.github.com/teambit/node-dependency-tree/tar.gz/7aef1bb39c7b06eb1f030ee8d7b3fb0978c2145d"
   dependencies:
