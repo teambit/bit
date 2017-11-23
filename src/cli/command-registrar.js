@@ -104,7 +104,10 @@ function registerAction(command: Command, concrete) {
 }
 
 function createOptStr(alias, name) {
-  return `-${alias}, --${name}`;
+  if (alias) {
+    return `-${alias}, --${name}`;
+  }
+  return `--${name}`;
 }
 
 function register(command: Command, commanderCmd) {
@@ -162,7 +165,6 @@ export default class CommandRegistrar {
 
   printHelp() {
     const helpTemplateGenerator = require('./templates/help');
-    // console.log(require('./templates/help'));
     console.log(helpTemplateGenerator(this.extensionsCommands));
     return this;
   }
@@ -178,10 +180,12 @@ export default class CommandRegistrar {
 
     const subcommand = args[0];
     const cmdList = this.commands.map(cmd => first(cmd.name.split(' ')));
+    const extensionsCmdList = this.extensionsCommands.map(cmd => first(cmd.name.split(' ')));
     const aliasList = this.commands.map(cmd => first(cmd.alias.split(' ')));
 
     if (
       cmdList.indexOf(subcommand) === -1 &&
+      extensionsCmdList.indexOf(subcommand) === -1 &&
       aliasList.indexOf(subcommand) === -1 &&
       subcommand !== '-V' &&
       subcommand !== '--version'

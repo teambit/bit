@@ -75,7 +75,6 @@ export default class Extension {
         if (extension.script.getDynamicConfig && typeof extension.script.getDynamicConfig === 'function') {
           extension.dynamicConfig = extension.script.getDynamicConfig(rawConfig);
         }
-        // console.log(extension);
         if (extension.script.init && typeof extension.script.init === 'function') {
           extension.script.init(rawConfig, extension.dynamicConfig, extension.api);
         }
