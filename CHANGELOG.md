@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fixed bit add bug when adding test files with dsl 
+
 ## [0.11.1-dev.6] - 2017-11-22
 
 - fixed output to be the same for tag command
 - fixed bit list command display for deprecated components
 - fixed bit show with compare flag to display dependencies
-- fixed bit add bug when adding test files with dsl 
 
 ## [0.11.1-dev.4] - 2017-11-20
 
