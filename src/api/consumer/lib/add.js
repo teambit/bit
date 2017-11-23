@@ -3,7 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import R from 'ramda';
 import format from 'string-format';
-import uniqby from 'lodash.uniqby';
+import assignwith from 'lodash.assignwith';
+import groupby from 'lodash.groupby';
 import {
   glob,
   isDir,
@@ -201,8 +202,11 @@ export default (async function addAction(
     const files = mapValues.reduce((a, b) => {
       return a.concat(b.files);
     }, []);
-
-    return addToBitMap({ componentId, files: uniqby(files, 'relativePath'), mainFile: main });
+    const groupedComponents = groupby(files, 'relativePath');
+    const uniqComponents = Object.keys(groupedComponents).map(key =>
+      assignwith({}, ...groupedComponents[key], (val1, val2) => val1 || val2)
+    );
+    return addToBitMap({ componentId, files: uniqComponents, mainFile: main });
   }
 
   const consumer: Consumer = await loadConsumer();
