@@ -3,6 +3,7 @@
 import R from 'ramda';
 import { HOOKS_NAMES } from '../constants';
 import logger from '../logger/logger';
+import ExtensionCommand from './extension-command';
 
 type NewCommand = {
   name: string,
@@ -29,6 +30,7 @@ export type ExtensionProps = {
 export default class Extension {
   // TODO: Validate the key against hooks list
   name: string;
+  disabled: boolean;
   filePath: string;
   registeredHooks: RegisteredHooks;
   commands: Commands;
@@ -37,8 +39,9 @@ export default class Extension {
   script: Function; // Store the required plugin
   api = {
     registerCommand: (newCommand: NewCommand) => {
+      // TODO: validate new command format
       logger.info(`registering new command ${newCommand.name}`);
-      this.commands.push(newCommand);
+      this.commands.push(new ExtensionCommand(newCommand));
     },
     registerToHook: (hookName: string, hookAction: Function) => {
       logger.info(`registering to hook ${hookName}`);
@@ -51,11 +54,18 @@ export default class Extension {
     this.rawConfig = extensionProps.rawConfig;
     this.dynamicConfig = extensionProps.rawConfig;
     this.commands = [];
+    this.registeredHooks = {};
   }
 
   static load(name: string, rawConfig: Object): Extension {
     logger.debug(`loading extension ${name}`);
     const extension = new Extension({ name, rawConfig });
+    // Skip disabled extensions
+    if (rawConfig.disabled) {
+      extension.disabled = true;
+      logger.debug(`skip extension ${name} because it is disabled`);
+      return extension;
+    }
     // Require extension from _debugFile
     if (process.env.DEBUG_EXTENSIONS && rawConfig._debugFile) {
       extension.filePath = rawConfig._debugFile;
@@ -69,6 +79,7 @@ export default class Extension {
         if (extension.script.init && typeof extension.script.init === 'function') {
           extension.script.init(rawConfig, extension.dynamicConfig, extension.api);
         }
+        // Make sure to not kill the process if an extension didn't load correctly
       } catch (err) {
         if (err.code === 'MODULE_NOT_FOUND') {
           const msg = `loading extension ${name} faild, the file ${rawConfig._debugFile} not found`;
@@ -76,6 +87,7 @@ export default class Extension {
           console.log(msg);
         }
         logger.error(err);
+        return extension;
       }
     }
     return extension;

@@ -5,11 +5,18 @@ import loadExtensions from './extensions/extensions-loader';
 
 loudRejection();
 
-const extensions = loadExtensions();
-const registrar = buildRegistrar();
+loadExtensions().then((extensions) => {
+  const extensionsCommands = extensions.reduce((acc, curr) => {
+    if (curr.commands && curr.commands.length) {
+      acc = acc.concat(curr.commands);
+    }
+    return acc;
+  }, []);
+  const registrar = buildRegistrar(extensionsCommands);
 
-try {
-  registrar.run();
-} catch (err) {
-  console.error('loud rejected:', err);
-}
+  try {
+    registrar.run();
+  } catch (err) {
+    console.error('loud rejected:', err);
+  }
+});
