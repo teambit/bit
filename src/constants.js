@@ -136,6 +136,11 @@ export const CFG_CI_FUNCTION_PATH_KEY = 'ci_function_path';
 export const CFG_CI_ENABLE_KEY = 'ci_enable';
 
 /**
+ * bit hooks
+ */
+export const HOOKS_NAMES = ['pre-tag', 'post-tag', 'pre-import', 'post-import', 'pre-export', 'post-export'];
+
+/**
  * cache root directory
  */
 export const CACHE_ROOT = getCacheDirectory();

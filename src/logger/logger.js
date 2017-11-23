@@ -3,35 +3,28 @@ import winston from 'winston';
 import path from 'path';
 import { GLOBAL_LOGS } from '../constants';
 
+export const baseFileTransportOpts = {
+  filename: path.join(GLOBAL_LOGS, 'debug.log'),
+  json: false,
+  // Make it debug level also in production until the product will be more stable. in the future this should be changed to error
+  level: process.env.NODE_ENV === 'production' ? 'debug' : 'debug',
+  maxsize: 10 * 1024 * 1024, // 10MB
+  maxFiles: 10,
+  colorize: true,
+  prettyPrint: true,
+  // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
+  // The filename will always have the most recent log lines. The larger the appended number, the older the log file
+  tailable: true
+};
+
+const exceptionsFileTransportOpts = Object.assign(
+  { filename: path.join(GLOBAL_LOGS, 'exceptions.log') },
+  baseFileTransportOpts
+);
+
 const logger = new winston.Logger({
-  transports: [
-    new winston.transports.File({
-      filename: path.join(GLOBAL_LOGS, 'debug.log'),
-      json: false,
-      // Make it debug level also in production until the product will be more stable. in the future this should be changed to error
-      level: process.env.NODE_ENV === 'production' ? 'debug' : 'debug',
-      maxsize: 10 * 1024 * 1024, // 10MB
-      maxFiles: 10,
-      colorize: true,
-      prettyPrint: true,
-      // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
-      // The filename will always have the most recent log lines. The larger the appended number, the older the log file
-      tailable: true
-    })
-  ],
-  exceptionHandlers: [
-    new winston.transports.File({
-      filename: path.join(GLOBAL_LOGS, 'exceptions.log'),
-      json: false,
-      maxsize: 10 * 1024 * 1024, // 10MB
-      maxFiles: 10,
-      colorize: true,
-      prettyPrint: true,
-      // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
-      // The filename will always have the most recent log lines. The larger the appended number, the older the log file
-      tailable: true
-    })
-  ],
+  transports: [new winston.transports.File(baseFileTransportOpts)],
+  exceptionHandlers: [new winston.transports.File(exceptionsFileTransportOpts)],
   exitOnError: false
 });
 

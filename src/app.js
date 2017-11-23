@@ -1,9 +1,11 @@
 /** @flow */
 import loudRejection from 'loud-rejection';
 import buildRegistrar from './cli/command-registrar-builder';
+import loadExtensions from './extensions/extensions-loader';
 
 loudRejection();
 
+const extensions = loadExtensions();
 const registrar = buildRegistrar();
 
 try {
