@@ -187,17 +187,6 @@ function groupDependencyTree(tree, cwd, bindingPrefix) {
 }
 
 /**
- * Group missing dependencies by types (files, bits, packages)
- * @param {Array} missing list of missing paths to group
- * @returns {Function} function which group the dependencies
- */
-const byPathType = R.groupBy((missing) => {
-  return missing.startsWith('bit/') ? 'bits' :
-         missing.startsWith('.') ? 'files' :
-         'packages';
-});
-
-/**
  * Get an import statement path to node package and return the package name
  *
  * @param {string} packagePath import statement path
@@ -244,10 +233,23 @@ function resolveModulePath(nmPath, workingDir, root) {
  * to object with missing types
  *
  * @param {Array} missing
+ * @param {string} cwd
+ * @param {string} consumerPath
+ * @param {string} bindingPrefix
  * @returns new object with grouped missing
  */
-function groupMissing(missing, cwd, consumerPath) {
-  const groups = byPathType(missing);
+function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
+  /**
+   * Group missing dependencies by types (files, bits, packages)
+   * @param {Array} missing list of missing paths to group
+   * @returns {Function} function which group the dependencies
+   */
+  const byPathType = R.groupBy((missing) => {
+    return missing.startsWith(`${bindingPrefix}/`) ? 'bits' :
+      missing.startsWith('.') ? 'files' :
+        'packages';
+  });
+  const groups = byPathType(missing, bindingPrefix);
   const packages = groups.packages ? groups.packages.map(resolvePackageNameByPath) : [];
   // This is a hack to solve problems that madge has with packages for type script files
   // It see them as missing even if they are exists
@@ -370,7 +372,7 @@ export default async function getDependencyTree(baseDir: string, consumerPath: s
   Promise<{ missing: Object, tree: Tree}> {
   const config = { baseDir, includeNpm: true, requireConfig: null, webpackConfig: null, visited: {}, nonExistent: [] };
   const result = generateTree(filePaths, config);
-  const { groups, foundPackages } = groupMissing(result.skipped, baseDir, consumerPath);
+  const { groups, foundPackages } = groupMissing(result.skipped, baseDir, consumerPath, bindingPrefix);
   const tree: Tree = groupDependencyTree(result.tree, baseDir, bindingPrefix);
   const relativeFilePaths = filePaths.map(filePath => path.relative(baseDir, filePath));
   // Merge manually found packages with madge founded packages

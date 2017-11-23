@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+
+## [0.10.7-dev.6] - 2017-11-22
+
+- bug fix - components that require dependencies with custom binding prefix were not recognized 
+
 ## [0.10.7-dev.3] - 2017-11-17
 
 - improve stability and performance of resolving dependencies
@@ -17,7 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.10.7-dev.1] - 2017-11-13
 
-- stylable support
+- Stylable support
 
 ## [0.10.6] - 2017-11-12
 
