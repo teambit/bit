@@ -28,14 +28,13 @@ export default class Export extends Command {
   migration = true;
 
   action(
-    [id]: string[],
+    [id, version]: string[],
     {
       message,
       all,
       patch,
       minor,
       major,
-      version,
       force,
       verbose,
       ignoreMissingDependencies = false,
@@ -47,7 +46,6 @@ export default class Export extends Command {
       minor: ?boolean,
       major: ?boolean,
       force: ?boolean,
-      version: ?string,
       verbose: ?boolean,
       ignoreMissingDependencies: ?boolean,
       scope: ?boolean

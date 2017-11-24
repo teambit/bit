@@ -10,7 +10,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit tag command', function () {
+describe.only('bit tag command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -71,11 +71,11 @@ describe('bit tag command', function () {
       it('Should set the exact version when specified on new component', () => {
         helper.createFile('components', 'exact-new.js');
         helper.addComponent('components/exact-new.js');
-        output = helper.commitComponent('components/exact-new', 'message', '-f --exact_version 5.12.10');
+        output = helper.commitComponent('components/exact-new 5.12.10', 'message', '-f');
         expect(output).to.have.string('components/exact-new@5.12.10');
       });
       it('Should set the exact version when specified on existing component', () => {
-        output = helper.commitComponent('components/exact', 'message', '-f --exact_version 3.3.3');
+        output = helper.commitComponent('components/exact 3.3.3', 'message', '-f');
         expect(output).to.have.string('components/exact@3.3.3');
       });
       it('Should increment patch version of dependent when using other flag on tag dependency', () => {
@@ -90,8 +90,8 @@ describe('bit tag command', function () {
         expect(listOutput).to.deep.include({ id: 'components/dependent', localVersion: '0.0.2' });
       });
       it('Should throw error when the version already exists', () => {
-        helper.commitComponent('components/exact', 'message', '-f --exact_version 5.5.5');
-        const tagWithExisting = () => helper.commitComponent('components/exact', 'message', '-f --exact_version 5.5.5');
+        helper.commitComponent('components/exact 5.5.5', 'message', '-f');
+        const tagWithExisting = () => helper.commitComponent('components/exact 5.5.5', 'message', '-f');
         expect(tagWithExisting).to.throw('the version 5.5.5 already exists for components/exact');
       });
       it('Should print same output for flaged tag and non flaged tag', () => {
@@ -152,23 +152,23 @@ describe('bit tag command', function () {
         helper.createFile('components', 'c.js');
         helper.createFile('components', 'd.js');
         helper.addComponent('components/c.js components/d.js');
-        output = helper.commitAllComponents('message', '-f --exact_version 5.12.10');
+        output = helper.commitAllComponents('message', '-f', '5.12.10');
         expect(output).to.have.string('components/c@5.12.10');
         expect(output).to.have.string('components/d@5.12.10');
       });
       it('Should set the exact version when specified on existing component', () => {
         helper.createFile('components', 'a.js', 'v3.3.3');
         helper.createFile('components', 'b.js', 'v3.3.3');
-        output = helper.commitAllComponents('message', '-f --exact_version 3.3.3');
+        output = helper.commitAllComponents('message', '-f', '3.3.3');
         expect(output).to.have.string('components/a@3.3.3');
         expect(output).to.have.string('components/b@3.3.3');
       });
       it('Should throw error when the version already exists in one of the components', () => {
         helper.createFile('components', 'a.js', 'v4.3.4');
         helper.createFile('components', 'b.js', 'v4.3.4');
-        helper.commitComponent('components/a', 'message', '--exact_version 4.3.4');
+        helper.commitComponent('components/a 4.3.4', 'message');
         helper.createFile('components', 'a.js', 'v4.3.4 sss');
-        const tagWithExisting = () => helper.commitAllComponents('message', '--exact_version 4.3.4');
+        const tagWithExisting = () => helper.commitAllComponents('message', '', '4.3.4');
         expect(tagWithExisting).to.throw('the version 4.3.4 already exists for components/a');
       });
     });
@@ -520,7 +520,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('src/untracked2.js');
       });
     });
-    describe('commit component with missing dependencies with --ignore_missing_dependencies', () => {
+    describe('commit component with missing dependencies with --ignore-missing-dependencies', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
@@ -539,7 +539,7 @@ describe('bit tag command', function () {
         helper.addComponentWithOptions('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js');
 
-        const commitOne = () => helper.commitComponent('comp/a', 'commit-msg', '--ignore_missing_dependencies');
+        const commitOne = () => helper.commitComponent('comp/a', 'commit-msg', '--ignore-missing-dependencies');
         try {
           output = commitOne();
         } catch (err) {
@@ -551,7 +551,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('1 components tagged');
       });
     });
-    describe('commit all components with missing dependencies with --ignore_missing_dependencies', () => {
+    describe('commit all components with missing dependencies with --ignore-missing-dependencies', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
@@ -570,7 +570,7 @@ describe('bit tag command', function () {
         helper.addComponentWithOptions('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js');
 
-        const commitAll = () => helper.commitAllComponents('commit-msg', '--ignore_missing_dependencies');
+        const commitAll = () => helper.commitAllComponents('commit-msg', '--ignore-missing-dependencies');
         try {
           output = commitAll();
         } catch (err) {
@@ -717,11 +717,11 @@ describe('bit tag command', function () {
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
     });
-    describe('without --include_imported flag', () => {
+    describe.only('without --all flag', () => {
       describe('when current components have lower versions', () => {
         let output;
         before(() => {
-          output = helper.commitAllComponents('msg', '--scope --exact_version 0.0.5');
+          output = helper.commitAllComponents('msg', '--scope 0.0.5');
         });
         it('should tag authored components with the specified version', () => {
           expect(output).to.have.string('1 components tagged');
@@ -737,9 +737,9 @@ describe('bit tag command', function () {
       describe('when one of the components has the same version', () => {
         let output;
         before(() => {
-          helper.commitComponent('bar/foo', 'msg', '--force --exact_version 0.0.8');
+          helper.commitComponent('bar/foo 0.0.8', 'msg', '--force');
           try {
-            helper.commitAllComponents('msg', '--scope --exact_version 0.0.8');
+            helper.commitAllComponents('msg', '--scope 0.0.8');
           } catch (err) {
             output = err.toString();
           }
@@ -751,8 +751,8 @@ describe('bit tag command', function () {
       describe('when one of the components has a greater version', () => {
         let output;
         before(() => {
-          helper.commitComponent('bar/foo', 'msg', '--force --exact_version 0.1.5');
-          output = helper.commitAllComponents('msg', '--scope --exact_version 0.1.4');
+          helper.commitComponent('bar/foo 0.1.5', 'msg', '--force');
+          output = helper.commitAllComponents('msg', '--scope 0.1.4');
         });
         it('should display a warning', () => {
           expect(output).to.have.string('warning: a component bar/foo@0.1.5 has a version greater than 0.1.4');
@@ -762,11 +762,11 @@ describe('bit tag command', function () {
         });
       });
     });
-    describe('with --include_imported flag', () => {
+    describe('with --all flag', () => {
       describe('when current components have lower versions', () => {
         let output;
         before(() => {
-          output = helper.commitAllComponents('msg', '--scope --include_imported --exact_version 0.2.0');
+          output = helper.commitAllComponents('msg', '--scope 0.2.0 --all');
         });
         it('should tag all components with the specified version including the imported components', () => {
           // this also verifies that the auto-tag feature, doesn't automatically update is-string to its next version

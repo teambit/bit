@@ -183,8 +183,8 @@ export default class Helper {
   deprecateComponent(id: string, flags: string = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
-  commitAllComponents(commitMsg: string = 'commit-message', options: string = '') {
-    return this.runCmd(`bit tag ${options} -am ${commitMsg} `);
+  commitAllComponents(commitMsg: string = 'commit-message', options: string = '', version: string = '') {
+    return this.runCmd(`bit tag ${options} -a ${version} -m ${commitMsg} `);
   }
 
   exportComponent(id: string, scope: string = this.remoteScope) {
