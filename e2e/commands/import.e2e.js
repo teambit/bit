@@ -1522,6 +1522,54 @@ describe('bit import', function () {
     });
   });
 
+  describe('import a component when the local version is modified', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+      const barFooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; };";
+      helper.createComponent(path.join('components', 'bar', 'foo', 'bar'), 'foo.js', barFooFixtureV2);
+
+      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+    });
+    describe('without --force flag', () => {
+      let output;
+      before(() => {
+        try {
+          helper.importComponent('bar/foo');
+        } catch (err) {
+          output = err.toString();
+        }
+      });
+      it('should display a warning saying it was unable to import', () => {
+        expect(output).to.have.string('unable to import');
+      });
+      it('should not override the local changes', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got foo v2');
+      });
+    });
+    describe('with --force flag', () => {
+      let output;
+      before(() => {
+        output = helper.importComponent('bar/foo --force');
+      });
+      it('should display a successful message', () => {
+        expect(output).to.have.string('successfully imported');
+      });
+      it('should override the local changes', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got foo');
+      });
+    });
+  });
+
   describe.skip('Import compiler', () => {
     before(() => {
       helper.reInitLocalScope();
