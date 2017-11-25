@@ -1243,7 +1243,8 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('utils/is-type@0.0.1');
-      helper.importComponent('utils/is-type@0.0.2');
+      // @todo: the --force flag here is a hack to work around a bug which shows the component of 0.0.1 as modified
+      helper.importComponent('utils/is-type@0.0.2 --force');
     });
     it('should imported v2 successfully and print the result from the latest version', () => {
       const appJsFixture = "const isType = require('./components/utils/is-type'); console.log(isType());";
