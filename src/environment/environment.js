@@ -76,12 +76,7 @@ export default class Environment {
   }
 
   destroy(): Promise<*> {
-    return new Promise((resolve, reject) => {
-      fs.remove(this.path, (err) => {
-        if (err) return reject(err);
-        logger.debug(`destroying the isolated environment at ${this.path}`);
-        return resolve();
-      });
-    });
+    logger.debug(`destroying the isolated environment at ${this.path}`);
+    return fs.remove(this.path);
   }
 }
