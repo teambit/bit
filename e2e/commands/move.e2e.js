@@ -102,7 +102,9 @@ describe('bit move command', function () {
       }
     });
     it('should throw an error', () => {
-      expect(output).to.have.string('Error');
+      expect(output).to.have.string(
+        'Command failed: bit-dev move bar/non-exist-source.js utils/non-exist-dest.js\nboth paths from (bar/non-exist-source.js) and to (utils/non-exist-dest.js) do not exist\n'
+      );
     });
   });
   describe('when both source and destination files exist', () => {
@@ -125,7 +127,9 @@ describe('bit move command', function () {
       filesAfterMove = helper.getConsumerFiles();
     });
     it('should throw an error', () => {
-      expect(output).to.have.string('Error');
+      expect(output).to.have.string(
+        'Command failed: bit-dev move bar/foo.js utils/foo.js\nunable to move because both paths from (bar/foo.js) and to (utils/foo.js) already exist\n'
+      );
     });
     it('should not physically move any file', () => {
       expect(filesBeforeMove).to.deep.equal(filesAfterMove);
