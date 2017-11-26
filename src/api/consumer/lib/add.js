@@ -39,10 +39,10 @@ export default (async function addAction(
   const validateNoDuplicateIds = (addComponents: Object[]) => {
     const duplicateIds = {};
     const newGroupedComponents = groupby(addComponents, 'componentId');
-    const componentsWithSameId = Object.keys(newGroupedComponents).forEach(
+    Object.keys(newGroupedComponents).forEach(
       key => (newGroupedComponents[key].length > 1 ? (duplicateIds[key] = newGroupedComponents[key]) : '')
     );
-    if (!R.isEmpty(componentsWithSameId) && !R.isNil(componentsWithSameId)) throw new DuplicateIds(duplicateIds);
+    if (!R.isEmpty(duplicateIds) && !R.isNil(duplicateIds)) throw new DuplicateIds(duplicateIds);
   };
   const addToBitMap = (bitmap: BitMap, { componentId, files, mainFile }): { id: string, files: string[] } => {
     bitMap.addComponent({
