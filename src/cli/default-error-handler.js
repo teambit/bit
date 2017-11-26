@@ -145,11 +145,10 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [
     DuplicateIds,
     err =>
-      Object.keys(err.component)
+      Object.keys(err.componentObject)
         .map((key) => {
-          return `unable to add ${Object.keys(err.component[key]).length} components with the same id ${chalk.bold(
-            key
-          )} : ${err.component[key]}\n`;
+          return `unable to add ${Object.keys(err.componentObject[key])
+            .length} components with the same id ${chalk.bold(key)} : ${err.componentObject[key]}\n`;
         })
         .join(' ')
   ],
