@@ -273,6 +273,7 @@ export default (async function addAction(
     const onlyDirs = R.filter(isPathDirectory, componentPathsStats);
     keepDirectoriesName = Object.keys(onlyDirs).length > 1;
     const addedOne = await addOneComponent(componentPathsStats, bitMap, consumer, keepDirectoriesName);
+    addToBitMap(bitMap, addedOne);
     added.push(addedOne);
   }
   await bitMap.write();
