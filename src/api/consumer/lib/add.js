@@ -64,7 +64,8 @@ export default (async function addAction(
       const files = R.flatten(mapValues.map(x => x.files.map(i => i.relativePath)));
       const resolvedExcludedFiles = await getFiles(files, excludedList);
       mapValues.forEach((mapVal) => {
-        if (resolvedExcludedFiles.includes(mapVal.mainFile)) {
+        const mainFile = pathNormalizeToLinux(mapVal.mainFile);
+        if (resolvedExcludedFiles.includes(mainFile)) {
           mapVal.files = [];
         } else mapVal.files = mapVal.files.filter(key => !resolvedExcludedFiles.includes(key.relativePath)); // if mainFile is excluded, exclude all files
       });
@@ -239,7 +240,7 @@ export default (async function addAction(
   if (isMultipleComponents) {
     logger.debug('bit add - multiple components');
     const testToRemove = !R.isEmpty(tests) ? await getFiles(Object.keys(componentPathsStats), tests) : [];
-    testToRemove.forEach(test => delete componentPathsStats[test]);
+    testToRemove.forEach(test => delete componentPathsStats[path.normalize(test)]);
     const addedP = Object.keys(componentPathsStats).map((onePath) => {
       return addOneComponent(
         {

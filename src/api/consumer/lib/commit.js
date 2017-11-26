@@ -24,7 +24,7 @@ export async function commitAction({
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
   if (!force) {
-    const isModified = await consumer.isComponentModifiedById(id);
+    const isModified = await consumer.isComponentModifiedById(id, true);
     if (!isModified) return null;
   }
   const commitResults = await consumer.commit(

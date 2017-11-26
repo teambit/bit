@@ -260,7 +260,8 @@ export default class Consumer {
     verbose?: boolean,
     withEnvironments: ?boolean,
     cache?: boolean = true,
-    withPackageJson?: boolean = true
+    withPackageJson?: boolean = true,
+    force?: boolean = false
   ): Promise<> {
     const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
     const bitMap = await this.getBitMap();
@@ -273,6 +274,11 @@ export default class Consumer {
         return Promise.reject(new NothingToImport());
       }
     }
+    if (!force) {
+      const allComponentsIds = dependenciesFromBitJson.concat(componentsFromBitMap).map(bitId => bitId.toString());
+      await this.warnForModifiedComponents(allComponentsIds);
+    }
+
     let componentsAndDependenciesBitJson = [];
     let componentsAndDependenciesBitMap = [];
     if (dependenciesFromBitJson) {
@@ -299,14 +305,33 @@ export default class Consumer {
     return { dependencies: componentsAndDependencies };
   }
 
+  async warnForModifiedComponents(ids: string[]) {
+    const modifiedComponents = await Promise.all(ids.map(rawId => this.isComponentModifiedById(rawId))).then(results =>
+      ids.filter(() => results.shift())
+    ); // a nice trick to Array.filter with promises
+    if (modifiedComponents.length) {
+      return Promise.reject(
+        chalk.yellow(
+          `unable to import the following components due to local changes, use --force flag to override your local changes\n${modifiedComponents.join(
+            '\n'
+          )} `
+        )
+      );
+    }
+  }
+
   async importSpecificComponents(
     rawIds: ?(string[]),
     cache?: boolean,
     writeToPath?: string,
     withPackageJson?: boolean = true,
-    writeBitDependencies?: boolean = false
+    writeBitDependencies?: boolean = false,
+    force?: boolean
   ) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
+    if (!force) {
+      await this.warnForModifiedComponents(rawIds);
+    }
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw));
     const componentDependenciesArr = await this.scope.getManyWithAllVersions(bitIds, cache);
@@ -327,19 +352,14 @@ export default class Consumer {
     cache?: boolean = true,
     writeToPath?: string,
     withPackageJson?: boolean = true,
-    writeBitDependencies?: boolean = false
+    writeBitDependencies?: boolean = false,
+    force?: boolean = false
   ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
-      return this.importAccordingToBitJsonAndBitMap(
-        verbose,
-        withEnvironments,
-        cache,
-        withPackageJson,
-        writeBitDependencies
-      );
+      return this.importAccordingToBitJsonAndBitMap(verbose, withEnvironments, cache, withPackageJson, force);
     }
-    return this.importSpecificComponents(rawIds, cache, writeToPath, withPackageJson, writeBitDependencies);
+    return this.importSpecificComponents(rawIds, cache, writeToPath, withPackageJson, writeBitDependencies, force);
   }
 
   importEnvironment(rawId: ?string, verbose?: boolean) {
@@ -541,10 +561,10 @@ export default class Consumer {
   /**
    * @see isComponentModified for the implementation of the comparison
    */
-  async isComponentModifiedById(id: string): Promise<boolean> {
+  async isComponentModifiedById(id: string, includeNewComponents: boolean = false): Promise<boolean> {
     const idParsed = BitId.parse(id);
     const componentFromModel = await this.scope.sources.get(idParsed);
-    if (!componentFromModel) return true; // the component was never committed
+    if (!componentFromModel) return includeNewComponents; // the component was never committed
     const latestVersionRef = componentFromModel.versions[componentFromModel.latest()];
     const versionFromModel = await this.scope.getObject(latestVersionRef.hash);
     const componentFromFileSystem = await this.loadComponent(idParsed);
