@@ -208,7 +208,7 @@ export default (async function addAction(
     const componentId = mapValues[0].componentId;
     mapValues = mapValues.filter(mapVal => !(Object.keys(mapVal.files).length === 0));
 
-    if (mapValues.length === 0) return { id: componentId, files: [] };
+    if (mapValues.length === 0) return { componentId, files: [] };
     if (mapValues.length === 1) return mapValues[0];
 
     const files = mapValues.reduce((a, b) => {
