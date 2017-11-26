@@ -21,6 +21,8 @@ import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
 import logger from '../../../logger/logger';
 import PathNotExists from './exceptions/path-not-exists';
+import DuplicateIds from './exceptions/duplicate-ids';
+
 import EmptyDirectory from './exceptions/empty-directory';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 
@@ -33,6 +35,26 @@ export default (async function addAction(
   exclude?: string[],
   override: boolean
 ): Promise<Object> {
+  // used to validate that no two files where added with the same id in the same bit add command
+  const validateNoDuplicateIds = (addComponents: Object[]) => {
+    const duplicateIds = {};
+    const newGroupedComponents = groupby(addComponents, 'componentId');
+    const componentsWithSameId = Object.keys(newGroupedComponents).forEach(
+      key => (newGroupedComponents[key].length > 1 ? (duplicateIds[key] = newGroupedComponents[key]) : '')
+    );
+    if (!R.isEmpty(componentsWithSameId)) throw new DuplicateIds(duplicateIds);
+  };
+  const addToBitMap = (bitmap: BitMap, { componentId, files, mainFile }): { id: string, files: string[] } => {
+    bitMap.addComponent({
+      componentId,
+      files,
+      mainFile,
+      origin: COMPONENT_ORIGINS.AUTHORED,
+      override
+    });
+    return { id: componentId.toString(), files: bitMap.getComponent(componentId).files };
+  };
+
   function getPathRelativeToProjectRoot(componentPath, projectRoot) {
     if (!componentPath) return componentPath;
     const absPath = path.resolve(componentPath);
@@ -89,17 +111,6 @@ export default (async function addAction(
       }
       return mainFile;
     }
-
-    const addToBitMap = ({ componentId, files, mainFile }): { id: string, files: string[] } => {
-      bitMap.addComponent({
-        componentId,
-        files,
-        mainFile,
-        origin: COMPONENT_ORIGINS.AUTHORED,
-        override
-      });
-      return { id: componentId.toString(), files: bitMap.getComponent(componentId).files };
-    };
 
     let componentExists = false;
     let parsedId: BitId;
@@ -198,7 +209,7 @@ export default (async function addAction(
     mapValues = mapValues.filter(mapVal => !(Object.keys(mapVal.files).length === 0));
 
     if (mapValues.length === 0) return { id: componentId, files: [] };
-    if (mapValues.length === 1) return addToBitMap(mapValues[0]);
+    if (mapValues.length === 1) return mapValues[0];
 
     const files = mapValues.reduce((a, b) => {
       return a.concat(b.files);
@@ -207,7 +218,7 @@ export default (async function addAction(
     const uniqComponents = Object.keys(groupedComponents).map(key =>
       assignwith({}, ...groupedComponents[key], (val1, val2) => val1 || val2)
     );
-    return addToBitMap({ componentId, files: uniqComponents, mainFile: main });
+    return { componentId, files: uniqComponents, mainFile: main };
   }
 
   const consumer: Consumer = await loadConsumer();
@@ -250,7 +261,10 @@ export default (async function addAction(
         consumer
       );
     });
+
     added = await Promise.all(addedP);
+    validateNoDuplicateIds(added);
+    added.forEach(component => addToBitMap(bitMap, component));
   } else {
     logger.debug('bit add - one component');
     // when a user enters more than one directory, he would like to keep the directories names

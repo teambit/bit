@@ -40,6 +40,8 @@ import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compar
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import PathNotExists from '../api/consumer/lib/exceptions/path-not-exists';
+import DuplicateIds from '../api/consumer/lib/exceptions/duplicate-ids';
+
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
 import { MissingMainFile, MissingBitMapComponent } from '../consumer/bit-map/exceptions';
 import EmptyDirectory from '../api/consumer/lib/exceptions/empty-directory';
@@ -140,6 +142,18 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   ],
   [MissingBitMapComponent, err => `fatal: the component ${chalk.bold(err.id)} was not found in the bit.map file`],
   [PathNotExists, err => `fatal: the file "${chalk.bold(err.path)}" was not found`],
+  [
+    DuplicateIds,
+    err =>
+      Object.keys(err.component)
+        .map((key) => {
+          return `unable to add ${Object.keys(err.component[key]).length} components with the same id ${chalk.bold(
+            key
+          )} : ${err.component[key]}\n`;
+        })
+        .join(' ')
+  ],
+
   [
     IdExportedAlready,
     err => `error - the component ${chalk.bold(err.id)} has been already exported to ${chalk.bold(err.remote)}`

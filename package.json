@@ -59,6 +59,7 @@
     "lodash.maxby": "^4.6.0",
     "lodash.merge": "^4.6.0",
     "lodash.pickby": "^4.6.0",
+    "lodash.toarray": "^4.4.0",
     "lodash.uniqby": "^4.7.0",
     "loud-rejection": "^1.6.0",
     "mkdirp": "^0.5.1",
