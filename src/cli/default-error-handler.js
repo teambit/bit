@@ -155,7 +155,7 @@ Run \`bit status\` command to list all components available for tag.`
 ];
 
 function formatUnhandled(err: Error): string {
-  return chalk.red(err.message);
+  return chalk.red(err.message || err);
 }
 
 export default (err: Error): ?string => {
