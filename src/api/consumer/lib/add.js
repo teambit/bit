@@ -264,7 +264,7 @@ export default (async function addAction(
 
     added = await Promise.all(addedP);
     validateNoDuplicateIds(added);
-    added.forEach(component => addToBitMap(bitMap, component));
+    added.forEach(component => (!R.isEmpty(component.files) ? addToBitMap(bitMap, component) : ''));
   } else {
     logger.debug('bit add - one component');
     // when a user enters more than one directory, he would like to keep the directories names
@@ -273,7 +273,7 @@ export default (async function addAction(
     const onlyDirs = R.filter(isPathDirectory, componentPathsStats);
     keepDirectoriesName = Object.keys(onlyDirs).length > 1;
     const addedOne = await addOneComponent(componentPathsStats, bitMap, consumer, keepDirectoriesName);
-    addToBitMap(bitMap, addedOne);
+    if (!R.isEmpty(addedOne.files)) addToBitMap(bitMap, addedOne);
     added.push(addedOne);
   }
   await bitMap.write();
