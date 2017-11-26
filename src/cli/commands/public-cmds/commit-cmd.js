@@ -38,7 +38,7 @@ export default class Export extends Command {
       force,
       verbose,
       ignoreMissingDependencies = false,
-      scope = false
+      scope = null
     }: {
       message: string,
       all: ?boolean,
@@ -48,16 +48,16 @@ export default class Export extends Command {
       force: ?boolean,
       verbose: ?boolean,
       ignoreMissingDependencies: ?boolean,
-      scope: ?boolean
+      scope: ?string
     }
   ): Promise<any> {
     function getVersion() {
-      if (all && isString(all)) return all;
       if (scope) return scope;
+      if (all && isString(all)) return all;
       return version;
     }
 
-    if (!id && !all) {
+    if (!id && !all && !scope) {
       return Promise.reject('missing [id]. to tag all components, please use --all flag');
     }
     if (id && all) {
@@ -79,7 +79,7 @@ export default class Export extends Command {
     else if (minor) releaseType = 'minor';
     else if (patch) releaseType = 'patch';
 
-    if (all) {
+    if (all || scope) {
       return commitAllAction({
         message: message || '',
         exactVersion: getVersion(),
@@ -132,7 +132,6 @@ export default class Export extends Command {
       if (comps.length !== 0) {
         let str = '';
         if (breakBefore) str = '\n';
-        console.log('');
         str += `${chalk.cyan(label)} ${joinComponents(comps)}`;
         return str;
       }
@@ -155,9 +154,9 @@ export default class Export extends Command {
       warningsOutput +
       chalk.green(`${components.length + autoUpdatedCount} components tagged`) +
       chalk.gray(
-        ` | ${addedComponents.length} added, ${changedComponents.length} changed, ${autoUpdatedCount} auto-tagged\n`
+        ` | ${addedComponents.length} added, ${changedComponents.length} changed, ${autoUpdatedCount} auto-tagged`
       ) +
-      outputIfExists(addedComponents, 'added components: ') +
+      outputIfExists(addedComponents, 'added components: ', true) +
       outputIfExists(changedComponents, 'changed components: ', true) +
       outputIfExists(
         autoUpdatedComponents,

@@ -717,11 +717,11 @@ describe.only('bit tag command', function () {
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
     });
-    describe.only('without --all flag', () => {
+    describe('without --all flag', () => {
       describe('when current components have lower versions', () => {
         let output;
         before(() => {
-          output = helper.commitAllComponents('msg', '--scope 0.0.5');
+          output = helper.tagScope('0.0.5', 'msg');
         });
         it('should tag authored components with the specified version', () => {
           expect(output).to.have.string('1 components tagged');
@@ -752,10 +752,10 @@ describe.only('bit tag command', function () {
         let output;
         before(() => {
           helper.commitComponent('bar/foo 0.1.5', 'msg', '--force');
-          output = helper.commitAllComponents('msg', '--scope 0.1.4');
+          output = helper.tagScope('0.1.4', 'msg');
         });
         it('should display a warning', () => {
-          expect(output).to.have.string('warning: a component bar/foo@0.1.5 has a version greater than 0.1.4');
+          expect(output).to.have.string('warning: bar/foo@0.1.5 has a version greater than 0.1.4');
         });
         it('should continue tagging the authored components', () => {
           expect(output).to.have.string('1 components tagged');
