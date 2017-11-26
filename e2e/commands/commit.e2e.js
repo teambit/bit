@@ -10,7 +10,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe.only('bit tag command', function () {
+describe('bit tag command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
