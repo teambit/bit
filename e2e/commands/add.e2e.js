@@ -191,6 +191,16 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'test2/foo1.spec.js', test: true, name: 'foo1.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
+    it('should not add test file as bit component', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('test', 'foo.spec.js');
+      helper.addComponentWithOptions(path.normalize('bar/foo.js'), {
+        t: path.normalize('test/{FILE_NAME}.spec.js'),
+        n: 'internal'
+      });
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.not.have.property('test/foo.spec');
+    });
 
     it('Should add dir files with spec from dsl when test files are flattened', () => {
       helper.createComponent('bar', 'foo.js');
