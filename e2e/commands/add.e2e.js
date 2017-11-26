@@ -35,11 +35,11 @@ describe('bit add command', function () {
         'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
       );
     });
-    it('Should not add component if bit.json is corrupted', () => {
+    it('Should throw error when adding more than one component with same id ', () => {
       helper.createComponent('bar', 'file.js');
       helper.createComponent('bar', 'file.md');
       const addCmd = () => helper.addComponent(path.normalize('bar/*'));
-      expect(addCmd).to.throw('cant add 2 components with same id: bar/file : bar/file.js,bar/file.md');
+      expect(addCmd).to.throw('unable to add 2 components with the same id bar/file : bar/file.js,bar/file.md');
     });
     it('Should trim testFiles spaces', () => {
       const osComponentName = path.normalize('bar/foo.js');
