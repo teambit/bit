@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import type Command from './command';
 import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
-import { empty, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
+import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
 
@@ -24,7 +24,7 @@ function parseSubcommandFromArgs(args: [any]) {
   return null;
 }
 
-function parseCommandName(commandName: string) {
+function parseCommandName(commandName: string): string {
   if (!commandName) return '';
   return first(commandName.split(' '));
 }
@@ -33,7 +33,7 @@ function getOpts(c, opts: [[string, string, string]]): { [string]: boolean | str
   const options = {};
 
   opts.forEach(([, name]) => {
-    name = parseCommandName(name);
+    name = camelCase(parseCommandName(name));
     options[name] = c[name];
   });
 
