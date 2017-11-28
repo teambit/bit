@@ -388,6 +388,37 @@ export default class Consumer {
   }
 
   /**
+   * Before writing the files into the file-system, remove the path-prefix that is shared among the main component files
+   * and its dependencies. It helps to avoid large file-system paths.
+   *
+   * This is relevant for IMPORTED components only when the author may have long paths that are not needed for whoever
+   * imports it. NESTED and AUTHORED components are written as is.
+   */
+  removeOriginallySharedDir(componentsAndDependenciesArray: ComponentWithDependencies[]): void {
+    const pathWithoutSharedDir = (pathStr, sharedDirToRemove) => {
+      return pathStr.replace(sharedDirToRemove + path.sep, '');
+    };
+    componentsAndDependenciesArray.forEach((componentAndDependencies) => {
+      componentAndDependencies.component.setOriginallySharedDir();
+      if (componentAndDependencies.component.originallySharedDir) {
+        const sharedDir = componentAndDependencies.component.originallySharedDir;
+        componentAndDependencies.component.files.forEach((file) => {
+          file.path = pathWithoutSharedDir(file.path, sharedDir);
+        });
+        componentAndDependencies.component.mainFile = pathWithoutSharedDir(
+          componentAndDependencies.component.mainFile,
+          sharedDir
+        );
+        componentAndDependencies.component.dependencies.forEach((dependency) => {
+          dependency.relativePaths.forEach((relativePath) => {
+            relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, sharedDir);
+          });
+        });
+      }
+    });
+  }
+
+  /**
    * write the components into '/components' dir (or according to the bit.map) and its dependencies in the
    * '/components/.dependencies' dir. Both directories are configurable in bit.json
    * For example: global/a has a dependency my-scope/global/b@1. The directories will be:
@@ -407,6 +438,7 @@ export default class Consumer {
   ): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
+    this.removeOriginallySharedDir(componentDependencies);
     const writeComponentsP = componentDependencies.map((componentWithDeps) => {
       const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitDir;
@@ -530,6 +562,11 @@ export default class Consumer {
    * a Version object. Once this is done, we have two Version objects, and we can compare their hashes
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
+    const bitMap = await this.getBitMap();
+    const componentMap = bitMap.getComponent(componentFromFileSystem.id, true);
+    if (componentMap.originallySharedDir) {
+      componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
+    }
     const { version } = await this.scope.sources.consumerComponentToVersion({
       consumerComponent: componentFromFileSystem
     });

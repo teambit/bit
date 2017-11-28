@@ -28,13 +28,15 @@ export default class ComponentMap {
   origin: ComponentOrigin;
   dependencies: string[];
   mainDistFile: ?string;
-  constructor({ files, mainFile, rootDir, origin, dependencies, mainDistFile }: ComponentMapData) {
+  originallySharedDir: ?string; // directory shared by a component and its dependencies by the original author
+  constructor({ files, mainFile, rootDir, origin, dependencies, mainDistFile, originallySharedDir }: ComponentMapData) {
     this.files = files;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
     this.origin = origin;
     this.dependencies = dependencies;
     this.mainDistFile = mainDistFile;
+    this.originallySharedDir = originallySharedDir;
   }
 
   static fromJson(componentMapObj: ComponentMapData): ComponentMap {

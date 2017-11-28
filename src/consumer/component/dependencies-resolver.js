@@ -77,6 +77,9 @@ function findComponentsOfDepsFiles(
   };
 
   const processDepFile = (depFile: string, importSpecifiers?: Object, linkFile?: string) => {
+    if (entryComponentMap.originallySharedDir) {
+      depFile = path.join(entryComponentMap.originallySharedDir, depFile);
+    }
     if (processedFiles.includes(depFile)) return;
     processedFiles.push(depFile);
 

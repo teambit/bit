@@ -1571,6 +1571,107 @@ describe('bit import', function () {
     });
   });
 
+  describe('component with shared directory across files and dependencies', () => {
+    /**
+     * Directory structure of the author
+     * src/bar/foo.js
+     * src/utils/is-string.js
+     * src/utils/is-type.js
+     *
+     * bar/foo depends on utils/is-string.
+     * utils/is-string depends on utils/is-type
+     *
+     * Expected structure after importing bar/foo in another project.
+     * components/bar/foo/bar/foo.js (Notice how the 'src' directory is gone)
+     * components/bar/foo/index.js (generated index file)
+     * components/bar/foo/utils/is-string.js (generated link file)
+     * components/.dependencies/utils/is-string/scope-name/version-number/src/utils/index.js (generated index file - point to is-string.js)
+     * components/.dependencies/utils/is-string/scope-name/version-number/src/utils/is-string.js
+     * components/.dependencies/utils/is-string/scope-name/version-number/src/utils/is-type.js (generated link file)
+     * components/.dependencies/utils/is-type/scope-name/version-number/src/utils/index.js (generated index file - point to is-type.js)
+     * components/.dependencies/utils/is-type/scope-name/version-number/src/utils/is-type.js
+     *
+     */
+    let localConsumerFiles;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent(path.join('src', 'utils'), 'is-type.js', isTypeFixture);
+      helper.addComponent('src/utils/is-type.js');
+      const isStringFixture =
+        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent(path.join('src', 'utils'), 'is-string.js', isStringFixture);
+      helper.addComponent('src/utils/is-string.js');
+      const fooBarFixture =
+        "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      helper.createComponentBarFoo(fooBarFixture);
+      helper.createComponent(path.join('src', 'bar'), 'foo.js', fooBarFixture);
+      helper.addComponent('src/bar/foo.js');
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+      localConsumerFiles = helper.getConsumerFiles();
+    });
+    it('should change the original directory structure of the main component and remove the shared directory', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should create an index.js file on the component root dir pointing to the main file', () => {
+      const expectedLocation = path.join('components', 'bar', 'foo', 'index.js');
+      expect(localConsumerFiles).to.include(expectedLocation);
+      const indexPath = path.join(helper.localScopePath, expectedLocation);
+      const indexFileContent = fs.readFileSync(indexPath).toString();
+      expect(indexFileContent).to.have.string(
+        "module.exports = require('./bar/foo');",
+        'index file point to the wrong place'
+      );
+    });
+    it('should be able to require its direct dependency and print results from all dependencies', () => {
+      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+    it('should not show any of the components as new or modified or deleted or staged', () => {
+      const output = helper.runCmd('bit status');
+      expect(output.includes('no new components')).to.be.true;
+      expect(output.includes('no modified components')).to.be.true;
+      expect(output.includes('no staged components')).to.be.true;
+      expect(output.includes('no deleted components')).to.be.true;
+    });
+    describe('when cloning the project to somewhere else', () => {
+      before(() => {
+        helper.mimicGitCloneLocalProject();
+      });
+      it('should be able to require its direct dependency and print results from all dependencies', () => {
+        const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
+    describe('re-import with a specific path', () => {
+      before(() => {
+        helper.importComponent('bar/foo -p new-location');
+        localConsumerFiles = helper.getConsumerFiles();
+      });
+      it('should move the component directory to the new location', () => {
+        const newLocation = path.join('new-location', 'bar', 'foo.js');
+        const oldLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
+        expect(localConsumerFiles).to.include(newLocation);
+        expect(localConsumerFiles).not.to.include(oldLocation);
+      });
+      it('should be able to require its direct dependency and print results from all dependencies', () => {
+        const appJsFixture = "const barFoo = require('./new-location'); console.log(barFoo());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
+  });
+
   describe.skip('Import compiler', () => {
     before(() => {
       helper.reInitLocalScope();

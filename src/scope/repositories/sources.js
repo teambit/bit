@@ -1,5 +1,6 @@
 /** @flow */
 import R from 'ramda';
+import path from 'path';
 import { bufferFrom, pathNormalizeToLinux } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
@@ -162,12 +163,18 @@ export default class SourceRepository {
     dists?: Object,
     specsResults?: any
   }): Promise<Object> {
+    const addSharedDirAndNormalize = (pathStr) => {
+      const withSharedDir = consumerComponent.originallySharedDir
+        ? path.join(consumerComponent.originallySharedDir, pathStr)
+        : pathStr;
+      return pathNormalizeToLinux(withSharedDir);
+    };
     const files =
       consumerComponent.files && consumerComponent.files.length
         ? consumerComponent.files.map((file) => {
           return {
             name: file.basename,
-            relativePath: pathNormalizeToLinux(file.relative),
+            relativePath: addSharedDirAndNormalize(file.relative),
             file: Source.from(file.contents),
             test: file.test
           };
@@ -177,7 +184,7 @@ export default class SourceRepository {
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
-    consumerComponent.mainFile = pathNormalizeToLinux(consumerComponent.mainFile);
+    consumerComponent.mainFile = addSharedDirAndNormalize(consumerComponent.mainFile);
     const version = Version.fromComponent({
       component: consumerComponent,
       files,

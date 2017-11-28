@@ -181,7 +181,8 @@ export default class BitMap {
     origin,
     parent,
     rootDir,
-    override
+    override,
+    originallySharedDir
   }: {
     componentId: BitId,
     files: ComponentMapFile[],
@@ -189,7 +190,8 @@ export default class BitMap {
     origin: ComponentOrigin,
     parent?: BitId,
     rootDir?: string,
-    override: boolean
+    override: boolean,
+    originallySharedDir?: string
   }): void {
     const isDependency = origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = componentId.toString();
@@ -229,6 +231,9 @@ export default class BitMap {
     if (rootDir) {
       const root = this._makePathRelativeToProjectRoot(rootDir);
       this.components[componentIdStr].rootDir = root ? pathNormalizeToLinux(root) : root;
+    }
+    if (originallySharedDir) {
+      this.components[componentIdStr].originallySharedDir = originallySharedDir;
     }
     if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
       // if there are older versions, the user is updating an existing component, delete old ones from bit.map

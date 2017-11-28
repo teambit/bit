@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- avoid writing long files paths for imported components when there is a shared directory among the component files and its dependencies
+
 ## [0.11.1-dev.9] - 2017-11-26
 
 - removed `--include-imported` flags as `--all` can be used for the same functionality

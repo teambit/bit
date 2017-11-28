@@ -85,6 +85,7 @@ export default class Component {
   license: ?License;
   log: ?Log;
   writtenPath: ?string; // needed for generate links
+  originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
   deprecated: boolean;
@@ -365,7 +366,7 @@ export default class Component {
     force?: boolean,
     writeBitDependencies?: boolean,
     writeDistsFiles?: boolean,
-    dependencies: Components[]
+    dependencies: Component[]
   }) {
     await mkdirp(bitDir);
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
@@ -388,7 +389,8 @@ export default class Component {
       mainFile: this.mainFile,
       rootDir,
       origin,
-      parent
+      parent,
+      originallySharedDir: this.originallySharedDir
     });
   }
 
@@ -821,6 +823,32 @@ export default class Component {
     const distMainFile = path.join(DEFAULT_DIST_DIRNAME, this.mainFile);
     const mainFile = searchFilesIgnoreExt(this.dists, distMainFile, 'relative', 'relative');
     return mainFile || this.mainFile;
+  }
+
+  /**
+   * find a shared directory among the files of the main component and its dependencies
+   */
+  setOriginallySharedDir() {
+    // taken from https://stackoverflow.com/questions/1916218/find-the-longest-common-starting-substring-in-a-set-of-strings
+    // It sorts the array, and then looks just at the first and last items
+    const sharedStartOfArray = (array) => {
+      const sortedArray = array.concat().sort();
+      const firstItem = sortedArray[0];
+      const lastItem = sortedArray[sortedArray.length - 1];
+      let i = 0;
+      while (i < firstItem.length && firstItem.charAt(i) === lastItem.charAt(i)) i++;
+      return firstItem.substring(0, i);
+    };
+
+    const filePaths = this.files.map(file => file.path);
+    const dependenciesPaths = this.dependencies.map(dependency =>
+      dependency.relativePaths.map(relativePath => relativePath.sourceRelativePath)
+    );
+    const allPaths = [...filePaths, ...R.flatten(dependenciesPaths)];
+    const sharedStart = sharedStartOfArray(allPaths);
+    if (!sharedStart || !sharedStart.includes(path.sep)) return;
+    const lastPathSeparator = sharedStart.lastIndexOf(path.sep);
+    this.originallySharedDir = sharedStart.substring(0, lastPathSeparator);
   }
 
   static fromObject(object: Object): Component {
