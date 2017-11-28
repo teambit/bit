@@ -59,7 +59,7 @@ export default class Environment {
     const componentDependenciesArr = await this.scope.getMany([bitId]);
     await this.consumer.writeToComponentsDir(
       componentDependenciesArr,
-      opts.directory,
+      opts.directory || this.path,
       true,
       !opts.noPackageJson,
       opts.writeBitDependencies,
