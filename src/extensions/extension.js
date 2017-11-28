@@ -4,6 +4,9 @@ import R from 'ramda';
 import { HOOKS_NAMES } from '../constants';
 import logger from '../logger/logger';
 import ExtensionCommand from './extension-command';
+import IsolatedEnvironment, { IsolateOptions } from '../environment';
+import { loadScope } from '../scope';
+import { loadConsumer } from '../consumer';
 
 type NewCommand = {
   name: string,
@@ -46,7 +49,8 @@ export default class Extension {
     registerToHook: (hookName: string, hookAction: Function) => {
       logger.info(`registering to hook ${hookName}`);
       this.registeredHooks[hookName] = hookAction;
-    }
+    },
+    createIsolatedEnv
   };
 
   constructor(extensionProps: ExtensionProps) {
@@ -106,3 +110,20 @@ export default class Extension {
     this.commands[commandName] = command;
   }
 }
+
+const createIsolatedEnv = async (scopePath: ?string, dirPath: ?string) => {
+  const scope = await _loadScope(scopePath);
+  const isolatedEnvironment = new IsolatedEnvironment(scope, dirPath);
+  await isolatedEnvironment.create();
+  return isolatedEnvironment;
+};
+
+const _loadScope = async (scopePath: ?string) => {
+  // If a scope path provided we will take the component from that scope
+  if (scopePath) {
+    return loadScope(scopePath);
+  }
+  // If a scope path was not provided we will get the consumer's scope
+  const consumer = await loadConsumer();
+  return consumer.scope;
+};
