@@ -12,14 +12,24 @@ import logger from '../logger/logger';
 import { Consumer } from '../consumer';
 import Component from '../consumer/component';
 
+export type IsolateOptions = {
+  directory: ?string,
+  writeBitDependencies: ?boolean,
+  links: ?boolean,
+  installPackages: ?boolean,
+  noPackageJson: ?boolean,
+  override: ?boolean,
+  verbose: boolean
+};
+
 export default class Environment {
   path: string;
   scope: Scope;
   consumer: Consumer;
 
-  constructor(scope: Scope, ciDir: string) {
+  constructor(scope: Scope, dir: ?string) {
     this.scope = scope;
-    this.path = ciDir || path.join(scope.getPath(), ISOLATED_ENV_ROOT, v4());
+    this.path = dir || path.join(scope.getPath(), ISOLATED_ENV_ROOT, v4());
     logger.debug(`creating a new isolated environment at ${this.path}`);
   }
 
@@ -44,30 +54,23 @@ export default class Environment {
    * @param rawId
    * @return {Promise.<Component>}
    */
-  async importE2E(
-    rawId: string,
-    verbose: boolean,
-    installDependencies: boolean = true,
-    writePath: string,
-    writeBitDependencies?: boolean = false,
-    createNpmLinkFiles?: boolean = false
-  ): Promise<ComponentWithDependencies> {
+  async isolateComponent(rawId: string, opts: IsolateOptions): Promise<ComponentWithDependencies> {
     const bitId = BitId.parse(rawId);
     const componentDependenciesArr = await this.scope.getMany([bitId]);
     await this.consumer.writeToComponentsDir(
       componentDependenciesArr,
-      writePath,
+      opts.directory,
       true,
-      true,
-      writeBitDependencies,
-      createNpmLinkFiles
+      !opts.noPackageJson,
+      opts.writeBitDependencies,
+      opts.createNpmLinkFiles
     );
     const componentWithDependencies: ComponentWithDependencies = R.head(componentDependenciesArr);
     const componentWithDependenciesFlatten = [
       componentWithDependencies.component,
       ...componentWithDependencies.dependencies
     ];
-    if (installDependencies) await this.installNpmPackages(componentWithDependenciesFlatten, verbose);
+    if (opts.installPackages) await this.installNpmPackages(componentWithDependenciesFlatten, opts.verbose);
     return componentWithDependencies;
   }
 

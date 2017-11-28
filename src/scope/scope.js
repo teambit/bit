@@ -70,6 +70,15 @@ export type ScopeProps = {
   objects?: Repository
 };
 
+export type IsolateOptions = {
+  directory: ?string,
+  write_bit_dependencies: ?boolean,
+  links: ?boolean,
+  install_packages: ?boolean,
+  no_package_json: ?boolean,
+  override: ?boolean
+};
+
 export default class Scope {
   created: boolean = false;
   scopeJson: ScopeJson;
@@ -1093,6 +1102,12 @@ export default class Scope {
     }
     const component = await this.loadComponent(bitId);
     return component.build({ scope: this, environment, save, consumer, verbose, directory, keep, ciComponent });
+  }
+
+  async isolateComponent(bitId: string, opts: IsolateOptions): Promise<string> {
+    const parsedId = BitId.parse(bitId);
+    const component = await this.loadComponent(parsedId);
+    return component.isolate(this, opts);
   }
 
   async pack({

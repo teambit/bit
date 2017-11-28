@@ -2,6 +2,7 @@
 import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
 import Init from './commands/public-cmds/init-cmd';
+import Isolate from './commands/public-cmds/isolate-cmd';
 import ScopeList from './commands/private-cmds/_list-cmd';
 import ScopeSearch from './commands/private-cmds/_search-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
@@ -49,6 +50,7 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
     BIT_VERSION,
     [
       new Init(),
+      new Isolate(),
       new Create(),
       new Commit(),
       new Import(),

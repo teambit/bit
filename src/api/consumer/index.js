@@ -1,4 +1,5 @@
 import init from './lib/init';
+import isolate from './lib/isolate';
 import create from './lib/create';
 import remove from './lib/remove';
 import deprecate from './lib/deprecate';
@@ -25,6 +26,7 @@ import migrate from './lib/migrate';
 
 export {
   init,
+  isolate,
   config,
   exportAction,
   create,
