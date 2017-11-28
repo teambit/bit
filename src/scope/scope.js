@@ -1110,26 +1110,6 @@ export default class Scope {
     return component.isolate(this, opts);
   }
 
-  async pack({
-    bitId,
-    directory,
-    writeBitDependencies,
-    links,
-    override
-  }: {
-    bitId: BitId,
-    outputPath: ?string,
-    writeBitDependencies: boolean,
-    links: boolean,
-    override: boolean
-  }): Promise<string> {
-    if (!bitId.isLocal(this.name)) {
-      throw new Error('cannot run build on remote component');
-    }
-    const component = await this.loadComponent(bitId);
-    return component.pack({ scope: this, directory, writeBitDependencies, createNpmLinkFiles: links, override });
-  }
-
   static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName();

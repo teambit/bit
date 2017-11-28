@@ -775,41 +775,6 @@ export default class Component {
     }
   }
 
-  async pack({
-    scope,
-    directory,
-    writeBitDependencies,
-    createNpmLinkFiles,
-    override
-  }: {
-    scope: Scope,
-    directory?: string,
-    writeBitDependencies?: boolean,
-    createNpmLinkFiles?: boolean,
-    override: boolean
-  }): Promise<string> {
-    const isolatedEnvironment = new IsolatedEnvironment(scope);
-    try {
-      const importPath = path.join(isolatedEnvironment.path, DEFAULT_PACK_DIR_NAME);
-      const verbose = false;
-      await isolatedEnvironment.create();
-      const isolateOpts = {
-        verbose,
-        directory: importPath,
-        writeBitDependencies: true,
-        createNpmLinkFiles: true,
-        installPackages: false,
-        noPackageJson: false
-      };
-      await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
-      const tgzPath = await this.driver.pack(importPath, directory || isolatedEnvironment.path, override);
-      await isolatedEnvironment.destroy();
-      return tgzPath;
-    } catch (err) {
-      await isolatedEnvironment.destroy();
-      throw new Error(err);
-    }
-  }
   toObject(): Object {
     return {
       name: this.name,
