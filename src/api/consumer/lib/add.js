@@ -137,7 +137,11 @@ export default (async function addAction(
         const lastDir = splitPath[splitPath.length - 1];
         const nameSpaceOrDir = namespace || splitPath[splitPath.length - 2];
 
-        const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
+        const matches = await glob(path.join(relativeComponentPath, '**'), {
+          cwd: consumer.getPath(),
+          nodir: true,
+          nocase: true
+        });
         if (!matches.length) throw new EmptyDirectory();
 
         const files = matches.map((match) => {
@@ -211,9 +215,6 @@ export default (async function addAction(
 
   const consumer: Consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
-
-  // resolve real main file name
-  main = main ? (await glob(main, { nocase: true }))[0] : main;
 
   // check unknown test files
   const missingFiles = getMissingTestFiles(tests);

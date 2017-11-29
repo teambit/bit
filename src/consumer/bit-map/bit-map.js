@@ -6,6 +6,7 @@ import find from 'lodash.find';
 import pickBy from 'lodash.pickby';
 import json from 'comment-json';
 import logger from '../../logger/logger';
+import glob from 'glob';
 import {
   BIT_MAP,
   DEFAULT_INDEX_NAME,
@@ -90,9 +91,15 @@ export default class BitMap {
     let newBaseMainFile;
     // Search the relativePath of the main file
     let mainFileFromFiles = R.find(R.propEq('relativePath', baseMainFile))(files);
+    mainFileFromFiles = R.isNil(mainFileFromFiles)
+      ? R.head(glob.sync(baseMainFile, { nocase: true }))
+      : mainFileFromFiles;
+
     // Search the base name of the main file and transfer to relativePath
     if (R.isNil(mainFileFromFiles)) {
-      const potentialMainFiles = files.filter(file => file.name === baseMainFile);
+      const potentialMainFiles = files.filter(
+        file => (file.name.toLocaleLowerCase() === baseMainFile ? baseMainFile.toLocaleLowerCase() : baseMainFile)
+      );
       if (potentialMainFiles.length) {
         // when there are several files that met the criteria, choose the closer to the root
         const sortByNumOfDirs = (a, b) =>
@@ -100,7 +107,9 @@ export default class BitMap {
         potentialMainFiles.sort(sortByNumOfDirs);
         mainFileFromFiles = R.head(potentialMainFiles);
       }
-      newBaseMainFile = mainFileFromFiles ? mainFileFromFiles.relativePath : baseMainFile;
+      newBaseMainFile = mainFileFromFiles
+        ? R.head(glob.sync(mainFileFromFiles.relativePath, { nocase: true }))
+        : baseMainFile;
       return { mainFileFromFiles, baseMainFile: newBaseMainFile || baseMainFile };
     }
     return { mainFileFromFiles, baseMainFile: originalMainFile };
