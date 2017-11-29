@@ -386,6 +386,17 @@ export default class BitMap {
     return R.keys(componentObject)[0];
   }
 
+  getComponentIdByPathWithOriginallySharedDir(pathWithoutSharedDir: string, pathWithSharedDir: string): string {
+    const found = pickBy(this.components, (componentObject) => {
+      const rootDir = componentObject.rootDir;
+      const filePath = componentObject.origin === COMPONENT_ORIGINS.NESTED ? pathWithSharedDir : pathWithoutSharedDir;
+      return find(componentObject.files, (file) => {
+        return file.relativePath === filePath || (rootDir && pathJoinLinux(rootDir, file.relativePath) === filePath);
+      });
+    });
+    return R.keys(found)[0];
+  }
+
   modifyComponentsToLinuxPath(components: Object) {
     Object.keys(components).forEach((key) => {
       components[key].files.forEach((file) => {

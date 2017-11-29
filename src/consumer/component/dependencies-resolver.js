@@ -44,6 +44,7 @@ function findComponentsOfDepsFiles(
   const rootDir = entryComponentMap.rootDir;
   const processedFiles = [];
 
+  // @todo: refactor ASAP it became way too complicated
   const getComponentIdByDepFile = (depFile) => {
     let depFileRelative: string = depFile; // dependency file path relative to consumer root
     let componentId: ?string;
@@ -55,7 +56,15 @@ function findComponentsOfDepsFiles(
       const rootDirFullPath = path.join(consumerPath, rootDir);
       const fullDepFile = path.resolve(rootDirFullPath, depFile);
       depFileRelative = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
-      componentId = bitMap.getComponentIdByPath(depFileRelative);
+      if (entryComponentMap.originallySharedDir) {
+        const fullDepFileWithSharedDir = path.resolve(rootDirFullPath, entryComponentMap.originallySharedDir, depFile);
+        const depFileRelativeWithSharedDir = pathNormalizeToLinux(
+          path.relative(consumerPath, fullDepFileWithSharedDir)
+        );
+        componentId = bitMap.getComponentIdByPathWithOriginallySharedDir(depFileRelative, depFileRelativeWithSharedDir);
+      } else {
+        componentId = bitMap.getComponentIdByPath(depFileRelative);
+      }
     }
 
     if (!componentId) {
@@ -70,16 +79,23 @@ function findComponentsOfDepsFiles(
 
       if (!componentId) {
         depFileRelative = depFile;
-        componentId = bitMap.getComponentIdByPath(depFileRelative);
+        if (entryComponentMap.originallySharedDir) {
+          const depFileRelativeWithSharedDir = pathNormalizeToLinux(
+            path.join(entryComponentMap.originallySharedDir, depFile)
+          );
+          componentId = bitMap.getComponentIdByPathWithOriginallySharedDir(
+            depFileRelative,
+            depFileRelativeWithSharedDir
+          );
+        } else {
+          componentId = bitMap.getComponentIdByPath(depFileRelative);
+        }
       }
     }
     return { componentId, depFileRelative, destination };
   };
 
   const processDepFile = (depFile: string, importSpecifiers?: Object, linkFile?: string) => {
-    if (entryComponentMap.originallySharedDir) {
-      depFile = path.join(entryComponentMap.originallySharedDir, depFile);
-    }
     if (processedFiles.includes(depFile)) return;
     processedFiles.push(depFile);
 
