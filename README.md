@@ -1,4 +1,4 @@
-# Bit
+
 [![Bit communit hub](https://storage.googleapis.com/bit-assets/Github/readme-github-3.jpg)](http://bitsrc.io)
 
 <div style="text-align:left">
@@ -15,33 +15,34 @@
 
 [Community](https://bitsrc.io) •  [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/) 
 
-Bit is a command-line extension for isolation and synchronization of reusable source-code components among Git repositories.
+Bit is a Git extension for isolation, sharing and synchronization of reusable source-code components among repositories.
 
-* **Isolate** and define any subset of files in your repository as a reusable component. Tag cross-component versions, track changes and gain absolute control over your component dependency graph.
+* **Isolate** and manage components by defining any subset of files in your repository as a reusable component. Tag cross-component versions, track changes and gain absolute control over your component dependency graph.
 
-* **Sync** components between repositories. Instantly get notified and merge component changes made in other repositories by leveraging integrations to Git's powerful comparison and merge utilities.
+* **Share and Sync** components between repositories. Get update notifications and merge component changes made in other repositories by leveraging integrations to Git's comparison and merge utilities.
 
 * **Extend** Bit to execute, parse, compile, distribute and test reusable components individually on top of an isolated component environment. Bit extensions can be used for packing a component, publishing it to package registries, parsing useful information and testing to make sure each component executes individually.
 
-## Use cases
+Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
-Sync shared web / UI components (React, Angular etc) between different frontend repositories.
+## Use Cases
+
+Share and sync UI components (React, Angular etc) between projects.
 
 * Tutorial: [Bit with React](https://docs.bitsrc.io/react-tutorial.html).
 
-Sync shared-components between micro-services in a multi-repo architecture with Bit.
+Share and sync Node.js components between micro-services in a multi-repo architecture.
 
 * Tutorial: [Bit with Node.js](https://docs.bitsrc.io/node-tutorial.html).
 
-Isolate and manage components in shared libraries for publishing individual components to [bitsrc](https://bitsrc.io) and to the NPM registry (soon).
+Share individual components from a shared library to Bit's [community hub](https://bitsrc.io) and to the NPM registry (soon).
 
-* A Shared [React component Library](https://github.com/itaymendel/movie-app) made individually available [on bitsrc](https://bitsrc.io/bit/movie-app) with NPM install (soon).
+* A [React component Library](https://github.com/itaymendel/movie-app) shared as individually available to the [community hub](https://bitsrc.io/bit/movie-app). Soon, they could also be installed with the native NPM/Yarn client.
 
 * Tutorial: [Bit with Shared Libraries](https://docs.bitsrc.io/shared-lib-main.html).
 
-
 ## Supported Languages
-Bit is language agnostic. Still, it requires binding and additional language sensitive features for different programming languages. To do this, Bit uses language-specific drivers:
+Bit's design is language agnostic. Still, it requires language-specific drivers for language-sensitive features (binding etc):
 
 * [bit-javascript](https://github.com/teambit/bit-javascript)
 
@@ -180,19 +181,21 @@ Now you can go back to your browser, and see that there's a new version for `uti
 
 ## Why Bit
 
-From UI frameworks such as React and Angular to Node.js microservices and serverless functions, modularity through encapsulated, reusable components in the foundation for today's and tomorrow's software architecture.
+Over the past 2 years, our team grew to include more developers working on more projects. 
 
-Bit was created to introduce CSCM: components source code management.
+Over time, we found it increasingly hard to share our code and keep it synced between projects. Determined to avoid duplications, we considered many solutions from an arsenal of small repos and packages to shared static libraries.
 
-It enables you to track and manage components in your SCM repository and install them in other repositories while keeping them synced and updated. Using Bit, you can share code between repositories or projects and collaborate as a team. It saves
-the overhead of setting up and maintaining additional repositories and packages for sharing components, and enables you to turn an existing shared library into a collection of individually available components.
+However, issues such as publish overhead, discoverability, and maintainability prevented us from truly sharing and syncing our components as a team between our projects.
 
-In a way, Bit is a “virtual monorepo” that syncs components on top of your entire codebase, with both multi-repo and mono-repo architectures in mind.
+The idea of Bit is that we can keep our components as an integral part of our repository and still natively integrate them into other repositories, without forcing any source code changes.
 
-We've been using it for over 6 months, sharing components between our Node.js microservices and sharing our React components between front-end repositories, updating and syncing them from different projects.
-Today, Bit is being used by additional teams and communities from the open source and different organizations. 
+You can think of Bit as a “virtual monorepo” for sharing and syncing components across repositories.
 
-You can learn more on Hackernoon: "[How we started sharing components as a team](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)".*
+Using Bit, we were able to create node.js micro-services composed entirely of shared components and share our arsenal of React components across apps. 
+
+Although a work in progress, and we are 100% committed to it so feel free to get started.
+
+Learn more at Hackernoon: "[How we started sharing components as a team](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)".*
 
 ## Contributing
 
