@@ -5,7 +5,7 @@
 import * as bitMapMigrations from './bit-map';
 
 export default {
-  '0.11.1-dev.2': {
+  '0.11.1': {
     bitmap: [bitMapMigrations.changeVersionToSemVerDeclartaion]
   }
 };
