@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bug fix for case sensitive input with bit add 
+
 ## [0.11.1-dev.9] - 2017-11-26
 
 - removed `--include-imported` flags as `--all` can be used for the same functionality
