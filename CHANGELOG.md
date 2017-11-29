@@ -7,22 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-
-## [0.10.7-dev.6] - 2017-11-22
-
-- bug fix - components that require dependencies with custom binding prefix were not recognized 
-
-## [0.10.7-dev.3] - 2017-11-17
-
-- improve stability and performance of resolving dependencies
-
-## [0.10.7-dev.2] - 2017-11-15
-
-- change post install hook to work with symlink
-
-## [0.10.7-dev.1] - 2017-11-13
+## [0.10.7] - 2017-11-29
 
 - Stylable support
+- improve stability and performance of resolving dependencies
+- change post install hook to work with symlink
+- bug fix - components that require dependencies with custom binding prefix were not recognized 
 
 ## [0.10.6] - 2017-11-12
 
