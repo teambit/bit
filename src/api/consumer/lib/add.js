@@ -146,7 +146,6 @@ export default (async function addAction(
 
         // get test files
         const testFiles = await getTestFiles(files);
-
         const resolvedMainFile = addMainFileToFiles(files, pathNormalizeToLinux(main));
         // matches.forEach((match) => {
         //   if (keepDirectoryName) {
@@ -213,12 +212,17 @@ export default (async function addAction(
   const consumer: Consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
 
+  // resolve real main file name
+  main = main ? (await glob(main, { nocase: true }))[0] : main;
+
   // check unknown test files
   const missingFiles = getMissingTestFiles(tests);
   if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
 
   const componentPathsStats = {};
-  const resolvedComponentPaths = await Promise.all(componentPaths.map(componentPath => glob(componentPath)));
+  const resolvedComponentPaths = await Promise.all(
+    componentPaths.map(componentPath => glob(componentPath, { nocase: true }))
+  );
   const flattenedFiles = R.flatten(resolvedComponentPaths);
   if (!R.isEmpty(flattenedFiles)) {
     flattenedFiles.forEach((componentPath) => {
