@@ -45,7 +45,7 @@ export default (async function addAction(
       const fileList = files.map(async (file) => {
         const fileInfo = calculateFileInfo(file);
         const generatedFile = format(dsl, fileInfo);
-        const matches = await glob(generatedFile);
+        const matches = await glob(generatedFile, { nocase: true });
         return matches.filter(match => fs.existsSync(match));
       });
       return Promise.all(fileList);
