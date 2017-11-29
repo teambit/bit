@@ -167,12 +167,16 @@ Run \`bit status\` command to list all components available for tag.`
   [AuthenticationFailed, err => 'authentication failed']
 ];
 
+function formatUnhandled(err: Error): string {
+  return chalk.red(err.message || err);
+}
+
 export default (err: Error): ?string => {
   const error = errorsMap.find(([ErrorType]) => {
     return err instanceof ErrorType;
   });
 
-  if (!error) return null;
+  if (!error) return formatUnhandled(err);
   const [, func] = error;
   logger.error(`User gets the following error: ${func(err)}`);
   return chalk.red(func(err));

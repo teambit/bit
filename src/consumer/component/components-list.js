@@ -190,7 +190,7 @@ export default class ComponentsList {
     const warnings = [];
     commitPendingComponentsLatest.forEach((componentId) => {
       if (semver.gt(componentId.version, version)) {
-        warnings.push(`warning: a component ${componentId.toString()} has a version greater than ${version}`);
+        warnings.push(`warning: ${componentId.toString()} has a version greater than ${version}`);
       }
     });
     return { commitPendingComponents, warnings };

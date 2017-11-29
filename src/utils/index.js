@@ -70,6 +70,7 @@ import searchFilesIgnoreExt from './fs/search-files-ignore-ext';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelative, pathResolve, pathJoinOs } from './path';
 import getMissingTestFiles from './getMissingTestFiles';
 import identityFile from './ssh/identity-file';
+import camelCase from './string/camel-case';
 
 export {
   identityFile,
@@ -134,6 +135,7 @@ export {
   buildCommandMessage,
   removeFromRequireCache,
   outputFile,
+  camelCase,
   bufferFrom,
   getLatestVersionNumber,
   calculateFileInfo,

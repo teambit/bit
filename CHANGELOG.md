@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.11.1-dev.9] - 2017-11-26
+
+- removed `--include-imported` flags as `--all` can be used for the same functionality
+- `--scope` flag can be used without `--all`
+- message in tag command is now optional
+- tag command now accepts version
+- `--all` and `--scope` accepts version (optional for `--all` and mandatory for `--scope`)
+
 ## [0.11.1-dev.8] - 2017-11-26
 
 - `bit import` - prevent overriding local changes unless --force flag was used 
