@@ -486,7 +486,9 @@ describe('bit add command', function () {
         }
       });
       it('should throw an error', () => {
-        expect(output).to.have.string('Error: unable to add file');
+        expect(output).to.have.string(
+          `Command failed: ${helper.bitBin} add bar/foo2.js -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
+        );
       });
     });
     describe('inside the component rootDir', () => {

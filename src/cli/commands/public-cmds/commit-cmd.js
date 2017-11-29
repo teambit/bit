@@ -3,74 +3,67 @@ import semver from 'semver';
 import Command from '../../command';
 import { commitAction, commitAllAction } from '../../../api/consumer';
 import Component from '../../../consumer/component';
+import { isString } from '../../../utils';
 import ModelComponent from '../../../scope/models/component';
 import { DEFAULT_BIT_VERSION, DEFAULT_BIT_RELEASE_TYPE } from '../../../constants';
 
 const chalk = require('chalk');
 
 export default class Export extends Command {
-  name = 'tag [id]';
+  name = 'tag [id] [version]';
   description = 'record component changes and lock versions.';
   alias = 't';
   opts = [
-    ['m', 'message <message>', 'message'],
-    ['a', 'all', 'tag all new and modified components'],
-    ['', 'exact_version <exact_version>', 'exact version to tag'],
-    ['', 'patch', 'increment the patch version number'],
-    ['', 'minor', 'increment the minor version number'],
-    ['', 'major', 'increment the major version number'],
+    ['m', 'message <message>', 'log message describing the user changes'],
+    ['a', 'all [version]', 'tag all new and modified components'],
+    ['s', 'scope <version>', 'tag all components of the current scope'],
+    ['p', 'patch', 'increment the patch version number'],
+    ['mi', 'minor', 'increment the minor version number'],
+    ['ma', 'major', 'increment the major version number'],
     ['f', 'force', 'forcely tag even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on tag'],
-    ['', 'ignore_missing_dependencies', 'ignore missing dependencies (default = false)'],
-    ['s', 'scope', 'tag all components of the current scope'],
-    ['', 'include_imported', 'when "scope" flag is used, tag also imported components']
+    ['i', 'ignore-missing-dependencies', 'ignore missing dependencies (default = false)']
   ];
   loader = true;
   migration = true;
 
   action(
-    [id]: string[],
+    [id, version]: string[],
     {
       message,
       all,
-      exact_version,
       patch,
       minor,
       major,
       force,
       verbose,
-      ignore_missing_dependencies = false,
-      scope = false,
-      include_imported = false
+      ignoreMissingDependencies = false,
+      scope = null
     }: {
       message: string,
       all: ?boolean,
-      exact_version: ?string,
       patch: ?boolean,
       minor: ?boolean,
       major: ?boolean,
       force: ?boolean,
       verbose: ?boolean,
-      ignore_missing_dependencies: ?boolean,
-      scope: ?boolean,
-      include_imported: ?boolean
+      ignoreMissingDependencies: ?boolean,
+      scope: ?string
     }
   ): Promise<any> {
-    if (!id && !all) {
+    function getVersion() {
+      if (scope) return scope;
+      if (all && isString(all)) return all;
+      return version;
+    }
+
+    if (!id && !all && !scope) {
       return Promise.reject('missing [id]. to tag all components, please use --all flag');
     }
     if (id && all) {
       return Promise.reject(
         'you can use either a specific component [id] to tag a particular component or --all flag to tag them all'
       );
-    }
-    if (scope && !exact_version) {
-      return Promise.reject(
-        'tagging the entire scope (--scope), requires specifying an exact-version (--exact-version)'
-      );
-    }
-    if (include_imported && !scope) {
-      return Promise.reject("--include_imported flag can't be in use without --scope flag");
     }
 
     const releaseFlags = [patch, minor, major].filter(x => x);
@@ -80,34 +73,32 @@ export default class Export extends Command {
 
     // const releaseType = major ? 'major' : (minor ? 'minor' : (patch ? 'patch' : DEFAULT_BIT_RELEASE_TYPE));
     let releaseType = DEFAULT_BIT_RELEASE_TYPE;
+    const includeImported = scope && all;
+
     if (major) releaseType = 'major';
     else if (minor) releaseType = 'minor';
     else if (patch) releaseType = 'patch';
 
-    if (!message) {
-      // todo: get rid of this. Make it required by commander
-      return Promise.reject('missing [message], please use -m to write the log message');
-    }
-    if (all) {
+    if (all || scope) {
       return commitAllAction({
-        message,
-        exactVersion: exact_version,
+        message: message || '',
+        exactVersion: getVersion(),
         releaseType,
         force,
         verbose,
-        ignoreMissingDependencies: ignore_missing_dependencies,
+        ignoreMissingDependencies,
         scope,
-        includeImported: include_imported
+        includeImported
       });
     }
     return commitAction({
       id,
       message,
-      exactVersion: exact_version,
+      exactVersion: getVersion(),
       releaseType,
       force,
       verbose,
-      ignoreMissingDependencies: ignore_missing_dependencies
+      ignoreMissingDependencies
     });
   }
 
@@ -141,7 +132,6 @@ export default class Export extends Command {
       if (comps.length !== 0) {
         let str = '';
         if (breakBefore) str = '\n';
-        console.log('');
         str += `${chalk.cyan(label)} ${joinComponents(comps)}`;
         return str;
       }
@@ -164,9 +154,9 @@ export default class Export extends Command {
       warningsOutput +
       chalk.green(`${components.length + autoUpdatedCount} components tagged`) +
       chalk.gray(
-        ` | ${addedComponents.length} added, ${changedComponents.length} changed, ${autoUpdatedCount} auto-tagged\n`
+        ` | ${addedComponents.length} added, ${changedComponents.length} changed, ${autoUpdatedCount} auto-tagged`
       ) +
-      outputIfExists(addedComponents, 'added components: ') +
+      outputIfExists(addedComponents, 'added components: ', true) +
       outputIfExists(changedComponents, 'changed components: ', true) +
       outputIfExists(
         autoUpdatedComponents,
