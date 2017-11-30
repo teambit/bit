@@ -30,6 +30,7 @@ export default class BitMap {
   components: BitMapComponents;
   hasChanged: boolean;
   version: string;
+  paths: { [path: string]: string }; // path => componentId
 
   constructor(projectRoot: string, mapPath: string, components: BitMapComponents, version: string) {
     this.projectRoot = projectRoot;
@@ -37,6 +38,7 @@ export default class BitMap {
     this.components = components;
     this.hasChanged = false;
     this.version = version;
+    this.paths = {};
   }
 
   static async load(dirPath: string): Promise<BitMap> {
@@ -384,21 +386,22 @@ export default class BitMap {
    * @memberof BitMap
    */
   getComponentIdByPath(componentPath: string): string {
-    const componentObject = this.getComponentObjectByPath(componentPath);
-    return R.keys(componentObject)[0];
+    this._populateAllPaths();
+    return this.paths[componentPath];
   }
 
-  getComponentIdByPathWithOriginallySharedDir(pathWithoutSharedDir: string, pathWithSharedDir: string): string {
-    const found = pickBy(this.components, (componentObject) => {
-      const rootDir = componentObject.rootDir;
-      const filePath = componentObject.origin === COMPONENT_ORIGINS.NESTED ? pathWithSharedDir : pathWithoutSharedDir;
-      const sharedDir = componentObject.originallySharedDir;
-      return find(componentObject.files, (file) => {
-        const relativePath = sharedDir ? pathJoinLinux(sharedDir, file.relativePath) : file.relativePath;
-        return relativePath === filePath || (rootDir && pathJoinLinux(rootDir, relativePath) === filePath);
+  _populateAllPaths() {
+    if (R.isEmpty(this.paths)) {
+      Object.keys(this.components).forEach((componentId) => {
+        const component = this.components[componentId];
+        component.files.forEach((file) => {
+          const relativeToConsumer = component.rootDir
+            ? pathJoinLinux(component.rootDir, file.relativePath)
+            : file.relativePath;
+          this.paths[relativeToConsumer] = componentId;
+        });
       });
-    });
-    return R.keys(found)[0];
+    }
   }
 
   modifyComponentsToLinuxPath(components: Object) {

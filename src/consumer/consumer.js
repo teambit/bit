@@ -544,37 +544,40 @@ export default class Consumer {
    * a Version object. Once this is done, we have two Version objects, and we can compare their hashes
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
-    const bitMap = await this.getBitMap();
-    const componentMap = bitMap.getComponent(componentFromFileSystem.id, true);
-    if (componentMap.originallySharedDir) {
-      componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
-    }
-    const { version } = await this.scope.sources.consumerComponentToVersion({
-      consumerComponent: componentFromFileSystem
-    });
-
-    version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
-    version.flattenedDependencies = componentFromModel.flattenedDependencies;
-    // dependencies from the FS don't have an exact version, copy the version from the model
-    version.dependencies.forEach((dependency) => {
-      const idWithoutVersion = dependency.id.toStringWithoutVersion();
-      const dependencyFromModel = componentFromModel.dependencies.find(
-        modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
-      );
-      if (dependencyFromModel) {
-        dependency.id = dependencyFromModel.id;
+    if (typeof componentFromFileSystem._isModified === 'undefined') {
+      const bitMap = await this.getBitMap();
+      const componentMap = bitMap.getComponent(componentFromFileSystem.id, true);
+      if (componentMap.originallySharedDir) {
+        componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
       }
-    });
+      const { version } = await this.scope.sources.consumerComponentToVersion({
+        consumerComponent: componentFromFileSystem
+      });
 
-    // uncomment to easily understand why two components are considered as modified
-    // if (componentFromModel.hash().hash !== version.hash().hash) {
-    //   console.log('-------------------componentFromModel------------------------');
-    //   console.log(componentFromModel.id());
-    //   console.log('------------------------version------------------------------');
-    //   console.log(version.id());
-    //   console.log('-------------------------END---------------------------------');
-    // }
-    return componentFromModel.hash().hash !== version.hash().hash;
+      version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
+      version.flattenedDependencies = componentFromModel.flattenedDependencies;
+      // dependencies from the FS don't have an exact version, copy the version from the model
+      version.dependencies.forEach((dependency) => {
+        const idWithoutVersion = dependency.id.toStringWithoutVersion();
+        const dependencyFromModel = componentFromModel.dependencies.find(
+          modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
+        );
+        if (dependencyFromModel) {
+          dependency.id = dependencyFromModel.id;
+        }
+      });
+
+      // uncomment to easily understand why two components are considered as modified
+      // if (componentFromModel.hash().hash !== version.hash().hash) {
+      //   console.log('-------------------componentFromModel------------------------');
+      //   console.log(componentFromModel.id());
+      //   console.log('------------------------version------------------------------');
+      //   console.log(version.id());
+      //   console.log('-------------------------END---------------------------------');
+      // }
+      componentFromFileSystem._isModified = componentFromModel.hash().hash !== version.hash().hash;
+    }
+    return componentFromFileSystem._isModified;
   }
 
   /**

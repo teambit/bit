@@ -90,6 +90,7 @@ export default class Component {
   missingDependencies: ?Object;
   deprecated: boolean;
   _driver: Driver;
+  _isModified: boolean;
 
   set files(val: ?(SourceFile[])) {
     this._files = val;

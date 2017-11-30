@@ -67,7 +67,7 @@ describe('bit install command', function () {
       helper.runCmd('bit import');
       const barFooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; };";
       helper.createComponent('bar', 'foo.js', barFooFixtureV2);
-      helper.createComponent(path.join('components', 'bar', 'foo2', 'bar'), 'foo2.js', barFooFixtureV2);
+      helper.createComponent(path.join('components', 'bar', 'foo2'), 'foo2.js', barFooFixtureV2);
     });
     describe('without --force flag', () => {
       let output;
