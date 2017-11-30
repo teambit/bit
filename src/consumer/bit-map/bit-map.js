@@ -339,8 +339,10 @@ export default class BitMap {
   getComponentObjectByPath(filePath: string): BitMapComponents {
     return pickBy(this.components, (componentObject) => {
       const rootDir = componentObject.rootDir;
+      const sharedDir = componentObject.originallySharedDir;
       return find(componentObject.files, (file) => {
-        return file.relativePath === filePath || (rootDir && pathJoinLinux(rootDir, file.relativePath) === filePath);
+        const relativePath = sharedDir ? pathJoinLinux(sharedDir, file.relativePath) : file.relativePath;
+        return relativePath === filePath || (rootDir && pathJoinLinux(rootDir, relativePath) === filePath);
       });
     });
   }
@@ -390,8 +392,10 @@ export default class BitMap {
     const found = pickBy(this.components, (componentObject) => {
       const rootDir = componentObject.rootDir;
       const filePath = componentObject.origin === COMPONENT_ORIGINS.NESTED ? pathWithSharedDir : pathWithoutSharedDir;
+      const sharedDir = componentObject.originallySharedDir;
       return find(componentObject.files, (file) => {
-        return file.relativePath === filePath || (rootDir && pathJoinLinux(rootDir, file.relativePath) === filePath);
+        const relativePath = sharedDir ? pathJoinLinux(sharedDir, file.relativePath) : file.relativePath;
+        return relativePath === filePath || (rootDir && pathJoinLinux(rootDir, relativePath) === filePath);
       });
     });
     return R.keys(found)[0];
