@@ -7,47 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.11.1-dev.9] - 2017-11-26
+## [0.11.1] - 2017-11-29
 
+- support tagging the entire local scope and all imported components to a specific tag using `--scope` and `--include_imported` flags
+- add bit pack command to build packages for registry
+- tag command now accepts a version
+- `bit test` - paint a summary table when testing multiple components 
+- `bit status` - add a new section "deleted components" for components that were deleted from the file-system manually
+- `bit import` - prevent overriding local changes unless --force flag was used 
+- sort `bit show` and `bit list` components alphabetically
+- Auto update .bit.map.json to semantic versions
+- improve stability and performance of the dependency resolution mechanism
 - removed `--include-imported` flags as `--all` can be used for the same functionality
 - `--scope` flag can be used without `--all`
 - message in tag command is now optional
-- tag command now accepts version
 - `--all` and `--scope` accepts version (optional for `--all` and mandatory for `--scope`)
-
-## [0.11.1-dev.8] - 2017-11-26
-
-- `bit import` - prevent overriding local changes unless --force flag was used 
 - fixed bug on windows that created test files as components
-
-## [0.11.1-dev.7] - 2017-11-23
-
-- fixed bit add bug when adding test files with dsl 
-
-## [0.11.1-dev.6] - 2017-11-22
-
+- fixed bit add bug when adding test files with DSL 
 - fixed output to be the same for tag command
 - fixed bit list command display for deprecated components
 - fixed bit show with compare flag to display dependencies
-
-## [0.11.1-dev.4] - 2017-11-20
-
-- Auto update .bit.map.json to semantic versions
-
-## [0.11.1-dev.3] - 2017-11-19
-
-- improve stability and performance of the dependency resolution mechanism
 - don't write dists files for authored components
-
-## [0.11.1-dev.2] - 2017-11-15
-- add bit pack command to build packages for registry
-- sort `bit show` and `bit list` components alphabetically
-- support tagging the entire local scope and all imported components to a specific tag using `--scope` and `--include_imported` flags
-- `bit status` - add a new section "deleted components" for components that were deleted from the file-system manually
 - bug fix - components that were not indicated as staged-components by `bit status` were exported by `bit export`
 - bug fix - tests files saved with incorrect path when `bit add` was running from non-consumer root  
 - `bit add` - exclude a component when its main file is excluded 
-- `bit test` - paint a summary table when testing multiple components 
 - bug fix - generated .ts links were not valid
 
 ## [0.11.0] - 2017-11-12
