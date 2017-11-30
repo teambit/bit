@@ -5,7 +5,7 @@ import { bufferFrom, pathNormalizeToLinux } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE } from '../../constants';
+import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE, COMPONENT_ORIGINS } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
@@ -186,10 +186,13 @@ export default class SourceRepository {
 
     consumerComponent.mainFile = pathNormalizeToLinux(addSharedDir(consumerComponent.mainFile));
     consumerComponent.dependencies.forEach((dependency) => {
-      dependency.relativePaths.forEach((relativePath) => {
-        relativePath.sourceRelativePath = addSharedDir(relativePath.sourceRelativePath);
-        relativePath.destinationRelativePath = addSharedDir(relativePath.destinationRelativePath);
-      });
+      if (dependency.origin && dependency.origin === COMPONENT_ORIGINS.NESTED) {
+        dependency.relativePaths.forEach((relativePath) => {
+          relativePath.sourceRelativePath = addSharedDir(relativePath.sourceRelativePath);
+          relativePath.destinationRelativePath = addSharedDir(relativePath.destinationRelativePath);
+        });
+      }
+      delete dependency.origin;
     });
     const version = Version.fromComponent({
       component: consumerComponent,

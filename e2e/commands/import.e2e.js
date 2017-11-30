@@ -1224,7 +1224,8 @@ describe('bit import', function () {
     });
   });
 
-  describe('after adding dependencies to an imported component', () => {
+  // @todo: block this option. We shouldn't allow adding AUTHORED component to an IMPORTED component with relative syntax
+  describe.skip('after adding dependencies to an imported component', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isStringWithNoDepsFixture = "module.exports = function isString() { return 'got is-string'; };";
