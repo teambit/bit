@@ -33,6 +33,7 @@ export type ExtensionProps = {
 export default class Extension {
   // TODO: Validate the key against hooks list
   name: string;
+  loaded: boolean;
   disabled: boolean;
   filePath: string;
   registeredHooks: RegisteredHooks;
@@ -61,40 +62,49 @@ export default class Extension {
     this.registeredHooks = {};
   }
 
-  static load(name: string, rawConfig: Object): Extension {
+  static async load(name: string, rawConfig: Object): Extension {
     logger.debug(`loading extension ${name}`);
+    if (process.env.DEBUG_EXTENSIONS && rawConfig._debugFile) {
+      return Extension.loadFromFile(name, rawConfig._debugFile, rawConfig);
+    }
+    return null;
+    // Require extension from scope
+  }
+
+  static async loadFromFile(name: string, filePath: string, rawConfig: Object = {}): Extension {
+    logger.debug(`loading extension ${name} from ${filePath}`);
     const extension = new Extension({ name, rawConfig });
     // Skip disabled extensions
     if (rawConfig.disabled) {
       extension.disabled = true;
       logger.debug(`skip extension ${name} because it is disabled`);
+      extension.loaded = false;
       return extension;
     }
-    // Require extension from _debugFile
-    if (process.env.DEBUG_EXTENSIONS && rawConfig._debugFile) {
-      extension.filePath = rawConfig._debugFile;
-      try {
-        const script = require(rawConfig._debugFile);
-        extension.script = script.default ? script.default : script;
-        if (extension.script.getDynamicConfig && typeof extension.script.getDynamicConfig === 'function') {
-          extension.dynamicConfig = extension.script.getDynamicConfig(rawConfig);
-        }
-        if (extension.script.init && typeof extension.script.init === 'function') {
-          extension.script.init(rawConfig, extension.dynamicConfig, extension.api);
-        }
-        // Make sure to not kill the process if an extension didn't load correctly
-      } catch (err) {
-        if (err.code === 'MODULE_NOT_FOUND') {
-          const msg = `loading extension ${name} faild, the file ${rawConfig._debugFile} not found`;
-          logger.error(msg);
-          console.log(msg);
-        }
-        logger.error(err);
-        return extension;
+    extension.filePath = filePath;
+    try {
+      const script = require(filePath);
+      extension.script = script.default ? script.default : script;
+      if (extension.script.getDynamicConfig && typeof extension.script.getDynamicConfig === 'function') {
+        extension.dynamicConfig = await extension.script.getDynamicConfig(rawConfig);
       }
+      if (extension.script.init && typeof extension.script.init === 'function') {
+        await extension.script.init(rawConfig, extension.dynamicConfig, extension.api);
+      }
+      // Make sure to not kill the process if an extension didn't load correctly
+    } catch (err) {
+      if (err.code === 'MODULE_NOT_FOUND') {
+        const msg = `loading extension ${name} faild, the file ${filePath} not found`;
+        logger.error(msg);
+        console.log(msg);
+      }
+      logger.error(`loading extension ${name} faild`);
+      logger.error(err);
+      extension.loaded = false;
+      return extension;
     }
+    extension.loaded = true;
     return extension;
-    // Require extension from scope
   }
 
   registerToHook(hookName: string, callback: Function) {
