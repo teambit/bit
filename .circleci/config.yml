@@ -37,7 +37,7 @@ jobs:
           command: echo $CIRCLE_SHA1 > .circle-sha
       - restore_cache:
           keys:
-            - repo1-{{ checksum ".circle-sha" }}
+            - repo-{{ checksum ".circle-sha" }}
       - restore_cache:
           keys:
             # Find a cache corresponding to this specific package.json checksum
@@ -76,9 +76,9 @@ jobs:
           keys:
             # Find a cache corresponding to this specific package.json checksum
             # when this file is changed, this key will fail
-            - npm-deps21-{{ checksum "package.json" }}
+            - npm-deps3-{{ checksum "package.json" }}
             # Find the most recent cache used from any branch
-            - npm-deps21
+            - npm-deps3
       - run:
           name: Build bit source code
           command: npm run build
