@@ -410,13 +410,14 @@ export default class Component {
    */
   stripOriginallySharedDir(bitMap: BitMap): void {
     const pathWithoutSharedDir = (pathStr, sharedDirToRemove) => {
-      return sharedDirToRemove ? pathStr.replace(sharedDirToRemove + path.sep, '') : pathStr;
+      // don't use path.sep. this.files and this.mainFile are always Linux format
+      return sharedDirToRemove ? pathStr.replace(`${sharedDirToRemove}/`, '') : pathStr;
     };
     const distWithoutSharedDir = (pathStr, sharedDirToRemove) => {
       if (!sharedDirToRemove) return pathStr;
       const distDirLength = DEFAULT_DIST_DIRNAME.length;
       const pathWithoutDistDir = pathStr.substring(distDirLength);
-      return pathStr.substring(0, distDirLength) + pathWithoutDistDir.replace(sharedDirToRemove + path.sep, '');
+      return pathStr.substring(0, distDirLength) + pathWithoutSharedDir(pathWithoutDistDir, sharedDirToRemove);
     };
     this.setOriginallySharedDir();
     const sharedDir = this.originallySharedDir;
