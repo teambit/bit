@@ -127,8 +127,10 @@ describe('bit move command', function () {
       filesAfterMove = helper.getConsumerFiles();
     });
     it('should throw an error', () => {
+      const barFooPath = path.join('bar', 'foo.js');
+      const utilsFooPath = path.join('utils', 'foo.js');
       expect(output).to.have.string(
-        `Command failed: ${helper.bitBin} move bar/foo.js utils/foo.js\nunable to move because both paths from (bar/foo.js) and to (utils/foo.js) already exist\n`
+        `Command failed: ${helper.bitBin} move ${barFooPath} ${utilsFooPath}\nunable to move because both paths from (${barFooPath}) and to (${utilsFooPath}) already exist\n`
       );
     });
     it('should not physically move any file', () => {

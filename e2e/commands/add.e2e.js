@@ -35,6 +35,12 @@ describe('bit add command', function () {
         'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
       );
     });
+    it('Should throw error when adding more than one component with same id ', () => {
+      helper.createComponent('bar', 'file.js');
+      helper.createComponent('bar', 'file.md');
+      const addCmd = () => helper.addComponent(path.normalize('bar/*'));
+      expect(addCmd).to.throw('unable to add 2 components with the same id bar/file : bar/file.js,bar/file.md');
+    });
     it('Should trim testFiles spaces', () => {
       const osComponentName = path.normalize('bar/foo.js');
       const osFilePathName = path.normalize('bar/foo.spec.js');
@@ -436,7 +442,6 @@ describe('bit add command', function () {
       expect(files[0]).to.deep.equal(expectedArray[0]);
       expect(files[1]).to.deep.equal(expectedArray[1]);
     });
-    it.skip('bitMap should contain tests that are not excluded', () => {});
     it('bitMap should contain component even if all test files are excluded ', () => {
       helper.createComponent('bar', 'foo1.js');
       helper.createComponent('bar', 'foo2.spec.js');
@@ -486,8 +491,9 @@ describe('bit add command', function () {
         }
       });
       it('should throw an error', () => {
+        const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${helper.bitBin} add bar/foo2.js -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
+          `Command failed: ${helper.bitBin} add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
         );
       });
     });
