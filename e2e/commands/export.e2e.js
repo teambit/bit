@@ -181,11 +181,11 @@ describe('bit export command', function () {
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
 
-      helper.createFile(path.join('components', 'bar', 'foo', 'bar'), 'foo.js', 'console.log("got foo v2")');
+      helper.createFile(path.join('components', 'bar', 'foo'), 'foo.js', 'console.log("got foo v2")');
       helper.commitComponentBarFoo();
       helper.exportComponent('bar/foo'); // v2
 
-      helper.createFile(path.join('components', 'bar', 'foo', 'bar'), 'foo.js', 'console.log("got foo v3")');
+      helper.createFile(path.join('components', 'bar', 'foo'), 'foo.js', 'console.log("got foo v3")');
       helper.commitComponentBarFoo();
       helper.exportComponent('bar/foo'); // v3
     });

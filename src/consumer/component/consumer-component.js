@@ -402,33 +402,40 @@ export default class Component {
    * This is relevant for IMPORTED components only when the author may have long paths that are not needed for whoever
    * imports it. NESTED and AUTHORED components are written as is.
    */
-  stripOriginallySharedDir(): void {
+  stripOriginallySharedDir(bitMap: BitMap): void {
     const pathWithoutSharedDir = (pathStr, sharedDirToRemove) => {
-      return pathStr.replace(sharedDirToRemove + path.sep, '');
+      return sharedDirToRemove ? pathStr.replace(sharedDirToRemove + path.sep, '') : pathStr;
     };
     const distWithoutSharedDir = (pathStr, sharedDirToRemove) => {
+      if (!sharedDirToRemove) return pathStr;
       const distDirLength = DEFAULT_DIST_DIRNAME.length;
       const pathWithoutDistDir = pathStr.substring(distDirLength);
       return pathStr.substring(0, distDirLength) + pathWithoutDistDir.replace(sharedDirToRemove + path.sep, '');
     };
     this.setOriginallySharedDir();
-    if (this.originallySharedDir) {
-      const sharedDir = this.originallySharedDir;
-      this.files.forEach((file) => {
-        file.path = pathWithoutSharedDir(file.path, sharedDir);
-      });
-      if (this.dists) {
-        this.dists.forEach((distFile) => {
-          distFile.path = distWithoutSharedDir(distFile.path, sharedDir);
-        });
-      }
-      this.mainFile = pathWithoutSharedDir(this.mainFile, sharedDir);
-      this.dependencies.forEach((dependency) => {
-        dependency.relativePaths.forEach((relativePath) => {
-          relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, sharedDir);
-        });
+    const sharedDir = this.originallySharedDir;
+    this.files.forEach((file) => {
+      file.path = pathWithoutSharedDir(file.path, sharedDir);
+    });
+    if (this.dists) {
+      this.dists.forEach((distFile) => {
+        distFile.path = distWithoutSharedDir(distFile.path, sharedDir);
       });
     }
+    this.mainFile = pathWithoutSharedDir(this.mainFile, sharedDir);
+    this.dependencies.forEach((dependency) => {
+      const dependencyId = dependency.id.toString();
+      const depFromBitMap = bitMap.getComponent(dependencyId, false);
+      dependency.relativePaths.forEach((relativePath) => {
+        relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, sharedDir);
+        if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+          relativePath.destinationRelativePath = pathWithoutSharedDir(
+            relativePath.destinationRelativePath,
+            depFromBitMap.originallySharedDir
+          );
+        }
+      });
+    });
   }
 
   /**

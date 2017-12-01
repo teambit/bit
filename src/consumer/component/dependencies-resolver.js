@@ -9,6 +9,7 @@ import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
 import { pathNormalizeToLinux, pathRelative, getWithoutExt } from '../../utils';
+import logger from '../../logger/logger';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -54,6 +55,10 @@ function findComponentsOfDepsFiles(
       if (componentId) return componentId;
     }
     for (const file of tree[depFile].files) {
+      if (file === depFile) {
+        logger.warn(`traverseTreeForComponentId found a cyclic dependency. ${file} depends on itself`);
+        continue;
+      }
       const componentId = traverseTreeForComponentId(file);
       if (componentId) return componentId;
     }

@@ -418,7 +418,7 @@ export default class Consumer {
         componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
           ? COMPONENT_ORIGINS.AUTHORED
           : COMPONENT_ORIGINS.IMPORTED;
-      if (origin === COMPONENT_ORIGINS.IMPORTED) componentWithDeps.component.stripOriginallySharedDir();
+      if (origin === COMPONENT_ORIGINS.IMPORTED) componentWithDeps.component.stripOriginallySharedDir(bitMap);
       return componentWithDeps.component.write({
         bitDir,
         force,
