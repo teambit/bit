@@ -1,6 +1,6 @@
 // @flow
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs-extra';
 import R from 'ramda';
 import { mkdirp, isString, pathNormalizeToLinux, searchFilesIgnoreExt, getWithoutExt } from '../../utils';
 import BitJson from '../bit-json';
@@ -358,7 +358,8 @@ export default class Component {
     force = true,
     writeBitDependencies = false,
     writeDistsFiles = true,
-    dependencies
+    dependencies,
+    deleteBitDirContent = false
   }: {
     bitDir: string,
     withBitJson: boolean,
@@ -367,9 +368,14 @@ export default class Component {
     force?: boolean,
     writeBitDependencies?: boolean,
     writeDistsFiles?: boolean,
-    dependencies: Component[]
+    dependencies: Component[],
+    deleteBitDirContent?: boolean
   }) {
-    await mkdirp(bitDir);
+    if (deleteBitDirContent) {
+      fs.emptydirSync(bitDir);
+    } else {
+      await mkdirp(bitDir);
+    }
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists && writeDistsFiles) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
@@ -507,7 +513,11 @@ export default class Component {
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
       return this;
     }
-
+    // For IMPORTED component we have to delete the content of the directory before importing.
+    // Otherwise, when the author adds new files outside of the previous originallySharedDir and this user imports them
+    // the environment will contain both copies, the old one with the old originallySharedDir and the new one.
+    // If a user made changes to the imported component, it will show a warning and stop the process.
+    const deleteBitDirContent = origin === COMPONENT_ORIGINS.IMPORTED;
     // when there is componentMap, this component (with this version or other version) is already part of the project.
     // There are several options as to what was the origin before and what is the origin now and according to this,
     // we update/remove/don't-touch the record in bit.map.
@@ -526,7 +536,8 @@ export default class Component {
         withPackageJson,
         driver,
         force,
-        writeBitDependencies
+        writeBitDependencies,
+        deleteBitDirContent
       });
       // todo: remove from the file system
       bitMap.removeComponent(this.id.toString());
@@ -549,7 +560,8 @@ export default class Component {
       driver,
       force,
       writeBitDependencies: false,
-      writeDistsFiles
+      writeDistsFiles,
+      deleteBitDirContent
     });
 
     if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
