@@ -409,36 +409,42 @@ export default class Component {
    * imports it. NESTED and AUTHORED components are written as is.
    */
   stripOriginallySharedDir(bitMap: BitMap): void {
-    const pathWithoutSharedDir = (pathStr, sharedDirToRemove) => {
-      // don't use path.sep. this.files and this.mainFile are always Linux format
-      return sharedDirToRemove ? pathStr.replace(`${sharedDirToRemove}/`, '') : pathStr;
+    this.setOriginallySharedDir();
+    const originallySharedDir = this.originallySharedDir;
+    const pathWithoutSharedDir = (pathStr, sharedDir, isLinuxFormat) => {
+      if (!sharedDir) return pathStr;
+      const partToRemove = isLinuxFormat ? `${sharedDir}/` : path.normalize(sharedDir) + path.sep;
+      return pathStr.replace(partToRemove, '');
     };
-    const distWithoutSharedDir = (pathStr, sharedDirToRemove) => {
-      if (!sharedDirToRemove) return pathStr;
+    const distWithoutSharedDir = (pathStr) => {
+      if (!originallySharedDir) return pathStr;
       const distDirLength = DEFAULT_DIST_DIRNAME.length;
       const pathWithoutDistDir = pathStr.substring(distDirLength);
-      return pathStr.substring(0, distDirLength) + pathWithoutSharedDir(pathWithoutDistDir, sharedDirToRemove);
+      return pathStr.substring(0, distDirLength) + pathWithoutSharedDir(pathWithoutDistDir, originallySharedDir, false);
     };
-    this.setOriginallySharedDir();
-    const sharedDir = this.originallySharedDir;
     this.files.forEach((file) => {
-      file.path = pathWithoutSharedDir(file.path, sharedDir);
+      file.path = pathWithoutSharedDir(file.path, originallySharedDir, false);
     });
     if (this.dists) {
       this.dists.forEach((distFile) => {
-        distFile.path = distWithoutSharedDir(distFile.path, sharedDir);
+        distFile.path = distWithoutSharedDir(distFile.path);
       });
     }
-    this.mainFile = pathWithoutSharedDir(this.mainFile, sharedDir);
+    this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir, true);
     this.dependencies.forEach((dependency) => {
       const dependencyId = dependency.id.toString();
       const depFromBitMap = bitMap.getComponent(dependencyId, false);
       dependency.relativePaths.forEach((relativePath) => {
-        relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, sharedDir);
+        relativePath.sourceRelativePath = pathWithoutSharedDir(
+          relativePath.sourceRelativePath,
+          originallySharedDir,
+          true
+        );
         if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
           relativePath.destinationRelativePath = pathWithoutSharedDir(
             relativePath.destinationRelativePath,
-            depFromBitMap.originallySharedDir
+            depFromBitMap.originallySharedDir,
+            true
           );
         }
       });
@@ -884,8 +890,8 @@ export default class Component {
       while (i < firstItem.length && firstItem.charAt(i) === lastItem.charAt(i)) i++;
       return firstItem.substring(0, i);
     };
-    const pathSep = '/'; // it works for Windows as well
-    const filePaths = this.files.map(file => file.relative);
+    const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
+    const filePaths = this.files.map(file => pathNormalizeToLinux(file.relative));
     const dependenciesPaths = this.dependencies.map(dependency =>
       dependency.relativePaths.map(relativePath => relativePath.sourceRelativePath)
     );
