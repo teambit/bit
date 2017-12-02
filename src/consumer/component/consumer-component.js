@@ -884,15 +884,15 @@ export default class Component {
       while (i < firstItem.length && firstItem.charAt(i) === lastItem.charAt(i)) i++;
       return firstItem.substring(0, i);
     };
-
+    const pathSep = '/'; // it works for Windows as well
     const filePaths = this.files.map(file => file.relative);
     const dependenciesPaths = this.dependencies.map(dependency =>
       dependency.relativePaths.map(relativePath => relativePath.sourceRelativePath)
     );
     const allPaths = [...filePaths, ...R.flatten(dependenciesPaths)];
     const sharedStart = sharedStartOfArray(allPaths);
-    if (!sharedStart || !sharedStart.includes(path.sep)) return;
-    const lastPathSeparator = sharedStart.lastIndexOf(path.sep);
+    if (!sharedStart || !sharedStart.includes(pathSep)) return;
+    const lastPathSeparator = sharedStart.lastIndexOf(pathSep);
     this.originallySharedDir = sharedStart.substring(0, lastPathSeparator);
   }
 
