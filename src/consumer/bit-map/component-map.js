@@ -18,7 +18,8 @@ export type ComponentMapData = {
   rootDir?: string, // needed to search for the component's bit.json. If it's undefined, the component probably don't have bit.json
   origin: ComponentOrigin,
   dependencies: string[], // needed for the bind process
-  mainDistFile?: string // needed when there is a build process involved
+  mainDistFile?: string, // needed when there is a build process involved
+  originallySharedDir: ?string // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
 };
 
 export default class ComponentMap {
@@ -28,13 +29,15 @@ export default class ComponentMap {
   origin: ComponentOrigin;
   dependencies: string[];
   mainDistFile: ?string;
-  constructor({ files, mainFile, rootDir, origin, dependencies, mainDistFile }: ComponentMapData) {
+  originallySharedDir: ?string;
+  constructor({ files, mainFile, rootDir, origin, dependencies, mainDistFile, originallySharedDir }: ComponentMapData) {
     this.files = files;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
     this.origin = origin;
     this.dependencies = dependencies;
     this.mainDistFile = mainDistFile;
+    this.originallySharedDir = originallySharedDir;
   }
 
   static fromJson(componentMapObj: ComponentMapData): ComponentMap {

@@ -30,6 +30,7 @@ export default class BitMap {
   components: BitMapComponents;
   hasChanged: boolean;
   version: string;
+  paths: { [path: string]: string }; // path => componentId
 
   constructor(projectRoot: string, mapPath: string, components: BitMapComponents, version: string) {
     this.projectRoot = projectRoot;
@@ -37,6 +38,7 @@ export default class BitMap {
     this.components = components;
     this.hasChanged = false;
     this.version = version;
+    this.paths = {};
   }
 
   static async load(dirPath: string): Promise<BitMap> {
@@ -181,7 +183,8 @@ export default class BitMap {
     origin,
     parent,
     rootDir,
-    override
+    override,
+    originallySharedDir
   }: {
     componentId: BitId,
     files: ComponentMapFile[],
@@ -189,7 +192,8 @@ export default class BitMap {
     origin: ComponentOrigin,
     parent?: BitId,
     rootDir?: string,
-    override: boolean
+    override: boolean,
+    originallySharedDir?: string
   }): void {
     const isDependency = origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = componentId.toString();
@@ -229,6 +233,9 @@ export default class BitMap {
     if (rootDir) {
       const root = this._makePathRelativeToProjectRoot(rootDir);
       this.components[componentIdStr].rootDir = root ? pathNormalizeToLinux(root) : root;
+    }
+    if (originallySharedDir) {
+      this.components[componentIdStr].originallySharedDir = originallySharedDir;
     }
     if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
       // if there are older versions, the user is updating an existing component, delete old ones from bit.map
@@ -334,8 +341,10 @@ export default class BitMap {
   getComponentObjectByPath(filePath: string): BitMapComponents {
     return pickBy(this.components, (componentObject) => {
       const rootDir = componentObject.rootDir;
+      const sharedDir = componentObject.originallySharedDir;
       return find(componentObject.files, (file) => {
-        return file.relativePath === filePath || (rootDir && pathJoinLinux(rootDir, file.relativePath) === filePath);
+        const relativePath = sharedDir ? pathJoinLinux(sharedDir, file.relativePath) : file.relativePath;
+        return relativePath === filePath || (rootDir && pathJoinLinux(rootDir, relativePath) === filePath);
       });
     });
   }
@@ -377,8 +386,22 @@ export default class BitMap {
    * @memberof BitMap
    */
   getComponentIdByPath(componentPath: string): string {
-    const componentObject = this.getComponentObjectByPath(componentPath);
-    return R.keys(componentObject)[0];
+    this._populateAllPaths();
+    return this.paths[componentPath];
+  }
+
+  _populateAllPaths() {
+    if (R.isEmpty(this.paths)) {
+      Object.keys(this.components).forEach((componentId) => {
+        const component = this.components[componentId];
+        component.files.forEach((file) => {
+          const relativeToConsumer = component.rootDir
+            ? pathJoinLinux(component.rootDir, file.relativePath)
+            : file.relativePath;
+          this.paths[relativeToConsumer] = componentId;
+        });
+      });
+    }
   }
 
   modifyComponentsToLinuxPath(components: Object) {
