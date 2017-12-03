@@ -9,6 +9,7 @@ import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
 import { pathNormalizeToLinux, pathRelative, getWithoutExt } from '../../utils';
+import logger from '../../logger/logger';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -44,10 +45,31 @@ function findComponentsOfDepsFiles(
   const rootDir = entryComponentMap.rootDir;
   const processedFiles = [];
 
+  const traverseTreeForComponentId = (depFile) => {
+    if (!tree[depFile] || !tree[depFile].files || !tree[depFile].files.length) return;
+    const rootDirFullPath = path.join(consumerPath, rootDir);
+    for (const file of tree[depFile].files) {
+      const fullDepFile = path.resolve(rootDirFullPath, file);
+      const depRelativeToConsumer = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
+      const componentId = bitMap.getComponentIdByPath(depRelativeToConsumer);
+      if (componentId) return componentId;
+    }
+    for (const file of tree[depFile].files) {
+      if (file === depFile) {
+        logger.warn(`traverseTreeForComponentId found a cyclic dependency. ${file} depends on itself`);
+        continue;
+      }
+      const componentId = traverseTreeForComponentId(file);
+      if (componentId) return componentId;
+    }
+  };
+
+  // @todo: refactor ASAP it became way too complicated
   const getComponentIdByDepFile = (depFile) => {
     let depFileRelative: string = depFile; // dependency file path relative to consumer root
     let componentId: ?string;
     let destination: ?string;
+
     if (rootDir) {
       // The depFileRelative is relative to rootDir, change it to be relative to current consumer.
       // We can't use path.resolve(rootDir, fileDep) because this might not work when running
@@ -55,24 +77,35 @@ function findComponentsOfDepsFiles(
       const rootDirFullPath = path.join(consumerPath, rootDir);
       const fullDepFile = path.resolve(rootDirFullPath, depFile);
       depFileRelative = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
-      componentId = bitMap.getComponentIdByPath(depFileRelative);
     }
 
-    if (!componentId) {
-      // Check if it's a generated index file
-      const depFileWithoutExt = getWithoutExt(path.basename(depFileRelative));
-      if (depFileWithoutExt === DEFAULT_INDEX_NAME) {
-        const indexDir = path.dirname(depFileRelative);
-        componentId = bitMap.getComponentIdByRootPath(indexDir);
-        // Refer to the main file in case the source component required the index of the imported
-        if (componentId) destination = bitMap.getMainFileOfComponent(componentId);
-      }
-
-      if (!componentId) {
-        depFileRelative = depFile;
-        componentId = bitMap.getComponentIdByPath(depFileRelative);
+    componentId = bitMap.getComponentIdByPath(depFileRelative);
+    // if not found here, the file is not a component file. It might be a bit-auto-generated file.
+    // find the component file by the auto-generated file.
+    // We make sure also that rootDir is there, otherwise, it's an AUTHORED component, which shouldn't have
+    // auto-generated files.
+    if (rootDir && !componentId) {
+      componentId = traverseTreeForComponentId(depFile);
+      if (componentId) {
+        // it is verified now that this depFile is an auto-generated file, therefore the sourceRelativePath and the
+        // destinationRelativePath should be a partial-path and not full-relative-to-consumer path.
+        destination = bitMap.getMainFileOfComponent(componentId);
+        depFileRelative = depFile; // change it back to partial-part, this will be later on the sourceRelativePath
       }
     }
+
+    // @todo: is it needed
+    // if (!componentId) {
+    //   // Check if it's a generated index file
+    //   const depFileWithoutExt = getWithoutExt(path.basename(depFileRelative));
+    //   if (depFileWithoutExt === DEFAULT_INDEX_NAME) {
+    //     const indexDir = path.dirname(depFileRelative);
+    //     componentId = bitMap.getComponentIdByRootPath(indexDir);
+    //     // Refer to the main file in case the source component required the index of the imported
+    //     if (componentId) destination = bitMap.getMainFileOfComponent(componentId);
+    //   }
+    // }
+
     return { componentId, depFileRelative, destination };
   };
 
@@ -258,7 +291,6 @@ export default (async function loadDependenciesForComponent(
   };
   // find the dependencies (internal files and packages) through automatic dependency resolution
   const dependenciesTree = await getDependenciesTree();
-
   if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) {
     missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
   }
@@ -288,7 +320,7 @@ export default (async function loadDependenciesForComponent(
   );
   const traversedCompDeps = traversedDeps.componentsDeps;
   component.dependencies = Object.keys(traversedCompDeps).map((depId) => {
-    return { id: BitId.parse(depId), relativePaths: traversedCompDeps[depId] };
+    return { id: BitId.parse(depId), relativePaths: traversedCompDeps[depId], origin: bitMap.components[depId].origin };
   });
   const untrackedDependencies = traversedDeps.untrackedDeps;
   if (!R.isEmpty(untrackedDependencies)) missingDependencies.untrackedDependencies = untrackedDependencies;

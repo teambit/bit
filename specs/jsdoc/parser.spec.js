@@ -214,7 +214,7 @@ describe('JSDoc Parser', () => {
       });
       it('should recognize Union type correctly', () => {
         const anyArg = args.find(arg => arg.name === 'unionType');
-        expect(anyArg.type).to.equal('(number|[])');
+        expect(anyArg.type).to.equal('(number | [])');
       });
       it('should recognize custom type correctly', () => {
         const anyArg = args.find(arg => arg.name === 'myCustomType');
@@ -234,7 +234,7 @@ describe('JSDoc Parser', () => {
       });
       it('should recognize Array of union', () => {
         const anyArg = args.find(arg => arg.name === 'arrayOfUnion');
-        expect(anyArg.type).to.equal('Array<(number|Object)>');
+        expect(anyArg.type).to.equal('Array<(number | Object)>');
       });
     });
 

@@ -1,6 +1,6 @@
 // @flow
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs-extra';
 import R from 'ramda';
 import { mkdirp, isString, pathNormalizeToLinux, searchFilesIgnoreExt, getWithoutExt } from '../../utils';
 import BitJson from '../bit-json';
@@ -85,10 +85,12 @@ export default class Component {
   license: ?License;
   log: ?Log;
   writtenPath: ?string; // needed for generate links
+  originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
   deprecated: boolean;
   _driver: Driver;
+  _isModified: boolean;
 
   set files(val: ?(SourceFile[])) {
     this._files = val;
@@ -361,7 +363,8 @@ export default class Component {
     force = true,
     writeBitDependencies = false,
     writeDistsFiles = true,
-    dependencies
+    dependencies,
+    deleteBitDirContent = false
   }: {
     bitDir: string,
     withBitJson: boolean,
@@ -370,9 +373,14 @@ export default class Component {
     force?: boolean,
     writeBitDependencies?: boolean,
     writeDistsFiles?: boolean,
-    dependencies: Components[]
+    dependencies: Component[],
+    deleteBitDirContent?: boolean
   }) {
-    await mkdirp(bitDir);
+    if (deleteBitDirContent) {
+      fs.emptydirSync(bitDir);
+    } else {
+      await mkdirp(bitDir);
+    }
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists && writeDistsFiles) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
@@ -393,7 +401,58 @@ export default class Component {
       mainFile: this.mainFile,
       rootDir,
       origin,
-      parent
+      parent,
+      originallySharedDir: this.originallySharedDir
+    });
+  }
+
+  /**
+   * Before writing the files into the file-system, remove the path-prefix that is shared among the main component files
+   * and its dependencies. It helps to avoid large file-system paths.
+   *
+   * This is relevant for IMPORTED components only when the author may have long paths that are not needed for whoever
+   * imports it. NESTED and AUTHORED components are written as is.
+   */
+  stripOriginallySharedDir(bitMap: BitMap): void {
+    this.setOriginallySharedDir();
+    const originallySharedDir = this.originallySharedDir;
+    const pathWithoutSharedDir = (pathStr, sharedDir, isLinuxFormat) => {
+      if (!sharedDir) return pathStr;
+      const partToRemove = isLinuxFormat ? `${sharedDir}/` : path.normalize(sharedDir) + path.sep;
+      return pathStr.replace(partToRemove, '');
+    };
+    const distWithoutSharedDir = (pathStr) => {
+      if (!originallySharedDir) return pathStr;
+      const distDirLength = DEFAULT_DIST_DIRNAME.length;
+      const pathWithoutDistDir = pathStr.substring(distDirLength);
+      return pathStr.substring(0, distDirLength) + pathWithoutSharedDir(pathWithoutDistDir, originallySharedDir, false);
+    };
+    this.files.forEach((file) => {
+      file.path = pathWithoutSharedDir(file.path, originallySharedDir, false);
+    });
+    if (this.dists) {
+      this.dists.forEach((distFile) => {
+        distFile.path = distWithoutSharedDir(distFile.path);
+      });
+    }
+    this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir, true);
+    this.dependencies.forEach((dependency) => {
+      const dependencyId = dependency.id.toString();
+      const depFromBitMap = bitMap.getComponent(dependencyId, false);
+      dependency.relativePaths.forEach((relativePath) => {
+        relativePath.sourceRelativePath = pathWithoutSharedDir(
+          relativePath.sourceRelativePath,
+          originallySharedDir,
+          true
+        );
+        if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+          relativePath.destinationRelativePath = pathWithoutSharedDir(
+            relativePath.destinationRelativePath,
+            depFromBitMap.originallySharedDir,
+            true
+          );
+        }
+      });
     });
   }
 
@@ -413,7 +472,8 @@ export default class Component {
     consumerPath,
     driver,
     writeBitDependencies = false,
-    dependencies
+    dependencies,
+    componentMap
   }: {
     bitDir?: string,
     withBitJson?: boolean,
@@ -425,7 +485,8 @@ export default class Component {
     consumerPath?: string,
     driver?: Driver,
     writeBitDependencies?: boolean,
-    dependencies: Array<Components>
+    dependencies: Array<Components>,
+    componentMap: ComponentMap
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
@@ -450,14 +511,6 @@ export default class Component {
         dependencies
       });
     }
-
-    // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
-    // and namespace can co-exist with different versions.
-    // AUTHORED and IMPORTED components however, can't be saved with multiple versions, so we can ignore the version to
-    // find the component in bit.map
-    const idForBitMap = origin === COMPONENT_ORIGINS.NESTED ? this.id.toString() : this.id.toStringWithoutVersion();
-    const componentMap = bitMap.getComponent(idForBitMap, false);
-
     if (!componentMap) {
       // if there is no componentMap, the component is new to this project and should be written to bit.map
       await this._writeToComponentDir({
@@ -472,15 +525,19 @@ export default class Component {
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
       return this;
     }
-
+    // For IMPORTED component we have to delete the content of the directory before importing.
+    // Otherwise, when the author adds new files outside of the previous originallySharedDir and this user imports them
+    // the environment will contain both copies, the old one with the old originallySharedDir and the new one.
+    // If a user made changes to the imported component, it will show a warning and stop the process.
+    const deleteBitDirContent = origin === COMPONENT_ORIGINS.IMPORTED;
     // when there is componentMap, this component (with this version or other version) is already part of the project.
     // There are several options as to what was the origin before and what is the origin now and according to this,
     // we update/remove/don't-touch the record in bit.map.
     // The current origin can't be AUTHORED because when the author creates a component for the first time,
-    // componentMap doesn't exist. So we have left with two options:
-    // 1) current origin is IMPORTED - If the version is the same as before, don't update bit.map. Otherwise, update.
+    // 1) current origin is AUTHORED - If the version is the same as before, don't update bit.map. Otherwise, update.
+    // 2) current origin is IMPORTED - If the version is the same as before, don't update bit.map. Otherwise, update.
     // one exception is where the origin was NESTED before, in this case, remove the current record and add a new one.
-    // 2) current origin is NESTED - the version can't be the same as before (otherwise it would be ignored before and
+    // 3) current origin is NESTED - the version can't be the same as before (otherwise it would be ignored before and
     // never reach this function, see @writeToComponentsDir). Therefore, always add to bit.map.
     if (origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       // when a user imports a component that was a dependency before, write the component directly into the components
@@ -491,7 +548,8 @@ export default class Component {
         withPackageJson,
         driver,
         force,
-        writeBitDependencies
+        writeBitDependencies,
+        deleteBitDirContent
       });
       // todo: remove from the file system
       bitMap.removeComponent(this.id.toString());
@@ -506,7 +564,7 @@ export default class Component {
     // By the root package.json
     const actualWithPackageJson = withPackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
     // don't write dists files for authored components as the author has its own mechanism to generate them
-    const writeDistsFiles = componentMap.origin !== COMPONENT_ORIGINS.AUTHORED;
+    const writeDistsFiles = origin !== COMPONENT_ORIGINS.AUTHORED;
     await this._writeToComponentDir({
       bitDir: newBase,
       withBitJson,
@@ -514,17 +572,11 @@ export default class Component {
       driver,
       force,
       writeBitDependencies: false,
-      writeDistsFiles
+      writeDistsFiles,
+      deleteBitDirContent
     });
 
     if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
-
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && origin === COMPONENT_ORIGINS.IMPORTED) {
-      // when a component was AUTHORED and it is imported now, keep the 'AUTHORED' as the origin. Otherwise, the bit.map
-      // file will be different for the author and other developers on the same project
-      logger.debug(`changing origin from ${origin} back to the original ${componentMap.origin}`);
-      origin = componentMap.origin;
-    }
     this._addComponentToBitMap(bitMap, componentMap.rootDir, origin, parent);
     return this;
   }
@@ -809,6 +861,33 @@ export default class Component {
     const distMainFile = path.join(DEFAULT_DIST_DIRNAME, this.mainFile);
     const mainFile = searchFilesIgnoreExt(this.dists, distMainFile, 'relative', 'relative');
     return mainFile || this.mainFile;
+  }
+
+  /**
+   * find a shared directory among the files of the main component and its dependencies
+   */
+  setOriginallySharedDir() {
+    if (this.originallySharedDir) return;
+    // taken from https://stackoverflow.com/questions/1916218/find-the-longest-common-starting-substring-in-a-set-of-strings
+    // It sorts the array, and then looks just at the first and last items
+    const sharedStartOfArray = (array) => {
+      const sortedArray = array.concat().sort();
+      const firstItem = sortedArray[0];
+      const lastItem = sortedArray[sortedArray.length - 1];
+      let i = 0;
+      while (i < firstItem.length && firstItem.charAt(i) === lastItem.charAt(i)) i++;
+      return firstItem.substring(0, i);
+    };
+    const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
+    const filePaths = this.files.map(file => pathNormalizeToLinux(file.relative));
+    const dependenciesPaths = this.dependencies.map(dependency =>
+      dependency.relativePaths.map(relativePath => relativePath.sourceRelativePath)
+    );
+    const allPaths = [...filePaths, ...R.flatten(dependenciesPaths)];
+    const sharedStart = sharedStartOfArray(allPaths);
+    if (!sharedStart || !sharedStart.includes(pathSep)) return;
+    const lastPathSeparator = sharedStart.lastIndexOf(pathSep);
+    this.originallySharedDir = sharedStart.substring(0, lastPathSeparator);
   }
 
   static fromObject(object: Object): Component {

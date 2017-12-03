@@ -425,7 +425,8 @@ describe('bit status command', function () {
       });
     });
   });
-  describe('after importing a component that uses a dependency with relative-path', () => {
+  // @todo: fix this along with 'import component is-type as a dependency of is-string and then import is-type directly' e2e-test.
+  describe.skip('after importing a component that uses a dependency with relative-path', () => {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();

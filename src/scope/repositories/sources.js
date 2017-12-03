@@ -1,10 +1,11 @@
 /** @flow */
 import R from 'ramda';
+import path from 'path';
 import { bufferFrom, pathNormalizeToLinux } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE } from '../../constants';
+import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE, COMPONENT_ORIGINS } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
@@ -162,12 +163,18 @@ export default class SourceRepository {
     dists?: Object,
     specsResults?: any
   }): Promise<Object> {
+    const addSharedDir = (pathStr) => {
+      const withSharedDir = consumerComponent.originallySharedDir
+        ? path.join(consumerComponent.originallySharedDir, pathStr)
+        : pathStr;
+      return pathNormalizeToLinux(withSharedDir);
+    };
     const files =
       consumerComponent.files && consumerComponent.files.length
         ? consumerComponent.files.map((file) => {
           return {
             name: file.basename,
-            relativePath: pathNormalizeToLinux(file.relative),
+            relativePath: pathNormalizeToLinux(addSharedDir(file.relative)),
             file: Source.from(file.contents),
             test: file.test
           };
@@ -177,7 +184,17 @@ export default class SourceRepository {
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
-    consumerComponent.mainFile = pathNormalizeToLinux(consumerComponent.mainFile);
+    consumerComponent.mainFile = pathNormalizeToLinux(addSharedDir(consumerComponent.mainFile));
+    consumerComponent.dependencies.forEach((dependency) => {
+      // @todo: Delete the following commented 'if' statement and remove the dependency.origin attribute altogether after all cases of the reduce-import are resolved.
+      // if (dependency.origin && dependency.origin === COMPONENT_ORIGINS.NESTED) {
+      dependency.relativePaths.forEach((relativePath) => {
+        relativePath.sourceRelativePath = addSharedDir(relativePath.sourceRelativePath);
+        // relativePath.destinationRelativePath = addSharedDir(relativePath.destinationRelativePath);
+      });
+      // }
+      delete dependency.origin;
+    });
     const version = Version.fromComponent({
       component: consumerComponent,
       files,
