@@ -36,7 +36,16 @@ export default class AbstractBitJson {
   bindingPrefix: string;
   extensions: Object;
 
-  constructor({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix, extensions }: AbstractBitJsonProps) {
+  constructor({
+    impl,
+    spec,
+    compiler,
+    tester,
+    dependencies,
+    lang,
+    bindingPrefix,
+    extensions = {}
+  }: AbstractBitJsonProps) {
     this.impl = impl || DEFAULT_IMPL_NAME;
     this.spec = spec || DEFAULT_SPECS_NAME;
     this.compiler = compiler || DEFAULT_COMPILER_ID;

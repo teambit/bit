@@ -16,6 +16,7 @@ export default (async function importAction({
   ids,
   tester,
   compiler,
+  extension,
   verbose,
   prefix,
   environment,
@@ -26,6 +27,7 @@ export default (async function importAction({
   ids: string,
   tester: ?boolean,
   compiler: ?boolean,
+  extension: ?boolean,
   verbose: ?boolean,
   prefix: ?string,
   environment: ?boolean,
@@ -49,6 +51,11 @@ export default (async function importAction({
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
+      if (extension) {
+        consumer.bitJson.extensions[envDependencies[0].id.toString()] = {};
+        return consumer.bitJson.write({ bitDir: consumer.getPath() });
+      }
+
       return Promise.resolve(true);
     }
     await writeToBitJsonIfNeeded();
@@ -56,7 +63,7 @@ export default (async function importAction({
   }
 
   const consumer: Consumer = await loadConsumer();
-  if (tester || compiler) {
+  if (tester || compiler || extension) {
     return importEnvironment(consumer);
   }
   const cache = false;

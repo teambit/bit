@@ -16,6 +16,7 @@ export default class Import extends Command {
     ['t', 'tester', 'import a tester environment component'],
     ['v', 'verbose', 'show a more verbose output when possible'],
     ['c', 'compiler', 'import a compiler environment component'],
+    ['', 'extension', 'import an extension component'],
     ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
     ['p', 'prefix <prefix>', 'import components into a specific directory'],
     ['d', 'display_dependencies', 'display the imported dependencies'],
@@ -30,6 +31,7 @@ export default class Import extends Command {
     {
       tester,
       compiler,
+      extension,
       verbose,
       prefix,
       display_dependencies,
@@ -39,6 +41,7 @@ export default class Import extends Command {
     }: {
       tester?: boolean,
       compiler?: boolean,
+      extension?: boolean,
       verbose?: boolean,
       prefix?: string,
       display_dependencies?: boolean,
@@ -56,6 +59,7 @@ export default class Import extends Command {
       ids,
       tester,
       compiler,
+      extension,
       verbose,
       prefix,
       environment,
