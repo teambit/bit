@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
-import tar from 'tar';
+// import tar from 'tar';
 import Helper from '../e2e-helper';
 
 chai.use(require('chai-fs'));
