@@ -1,12 +1,14 @@
 import chai, { expect } from 'chai';
-import Helper from '../e2e-helper';
 import path from 'path';
 import fs from 'fs-extra';
 import tar from 'tar';
+import Helper from '../e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe('bit pack with absolute paths', function () {
+// Skiping this since we moved pack to be a plugin.
+// We might still run it somehow from outside
+describe.skip('bit pack with absolute paths', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
