@@ -151,14 +151,25 @@ describe('bit add command', function () {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
-    it('Should add all components with correct namespace', () => {
+    it.only('Should add all components with correct namespace and return message to user', () => {
       const basePath = path.normalize('bar/*');
       helper.createComponent('bar', 'foo2.js');
       helper.createComponent('bar', 'foo1.js');
-      helper.addComponentWithOptions(basePath, { n: 'test' });
+      const output = helper.addComponentWithOptions(basePath, { n: 'test' });
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('test/foo1');
       expect(bitMap).to.have.property('test/foo2');
+      expect(output).to.equal('tracking 2 new components\n');
+    });
+    it.only('Should return error for missing namespace', () => {
+      const basePath = path.normalize('bar/*');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo1.js');
+      try {
+        helper.addComponentWithOptions(basePath, { n: '' });
+      } catch (err) {
+        expect(err.message).to.include("error: option `-n, --namespace <namespace>' argument missing");
+      }
     });
     it('Define dynamic main file ', () => {
       const mainFileOs = path.normalize('{PARENT_FOLDER}/{PARENT_FOLDER}.js');
@@ -225,6 +236,40 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
       expect(files).to.deep.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
+    });
+    it.only('Should return error if used the "-i" flag without specifying an ID', () => {
+      helper.createComponent('bar', 'foo.js');
+      try {
+        helper.addComponentWithOptions('bar', {
+          i: ''
+        });
+        const bitMap = helper.readBitMap();
+      } catch (err) {
+        const error = err.message;
+        expect(error).to.include("error: option `-i, --id <name>' argument missing");
+      }
+    });
+    it.only('Should return error if used an invalid ID', () => {
+      helper.createComponent('bar', 'foo.js');
+      try {
+        helper.addComponentWithOptions('bar', {
+          i: 'Bar/Foo'
+        });
+      } catch (err) {
+        console.log(err.message);
+        const error = err.message;
+        expect(error).to.include(
+          'invalid id part in "Bar/Foo", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]'
+        );
+      }
+    });
+    it.only('Should add component with global namespace if used parcial ID', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.addComponentWithOptions('bar', {
+        i: 'foo'
+      });
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('global/foo');
     });
     it('Should add dir files with spec from multiple dsls when test files are placed in same structure', () => {
       helper.createComponent('bar', 'foo.js');
