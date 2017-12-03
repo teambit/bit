@@ -15,7 +15,7 @@ export default {
       versionMigrations.changeVersionToSemVerDeclartaion
     ]
   },
-  '0.11.1-dev.1': {
+  '0.11.1': {
     Version: [versionMigrations.changeImportSpecifiersToArray, versionMigrations.ensureMainFileDeclartaion]
   }
 };

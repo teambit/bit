@@ -225,6 +225,7 @@ export default class Consumer {
         }
         throw err;
       }
+      component.originallySharedDir = componentMap.originallySharedDir;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // no need to resolve dependencies
@@ -398,7 +399,7 @@ export default class Consumer {
    * write them only once.
    */
   async writeToComponentsDir(
-    componentDependencies: ComponentWithDependencies[],
+    componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
     force?: boolean = true,
     withPackageJson?: boolean = true,
@@ -407,24 +408,33 @@ export default class Consumer {
   ): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
-    const writeComponentsP = componentDependencies.map((componentWithDeps) => {
+    const writeComponentsP = componentsWithDependencies.map((componentWithDeps) => {
       const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitDir;
+      // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
+      // find the component in bit.map
+      const componentMap = bitMap.getComponent(componentWithDeps.component.id.toStringWithoutVersion(), false);
+      const origin =
+        componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
+          ? COMPONENT_ORIGINS.AUTHORED
+          : COMPONENT_ORIGINS.IMPORTED;
+      if (origin === COMPONENT_ORIGINS.IMPORTED) componentWithDeps.component.stripOriginallySharedDir(bitMap);
       return componentWithDeps.component.write({
         bitDir,
         force,
         bitMap,
         withPackageJson,
-        origin: COMPONENT_ORIGINS.IMPORTED,
+        origin,
         consumerPath: this.getPath(),
         driver: this.driver,
         writeBitDependencies,
-        dependencies: componentWithDeps.dependencies
+        dependencies: componentWithDeps.dependencies,
+        componentMap
       });
     });
     const writtenComponents = await Promise.all(writeComponentsP);
 
-    const allDependenciesP = componentDependencies.map((componentWithDeps) => {
+    const allDependenciesP = componentsWithDependencies.map((componentWithDeps) => {
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         const depFromBitMap = bitMap.getComponent(dependencyId, false);
@@ -445,6 +455,9 @@ export default class Consumer {
         const depBitPath = this.composeDependencyPath(dep.id);
         dep.writtenPath = depBitPath;
         dependenciesIdsCache[dependencyId] = depBitPath;
+        // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
+        // and namespace can co-exist with different versions.
+        const componentMap = bitMap.getComponent(dep.id.toString(), false);
         return dep
           .write({
             bitDir: depBitPath,
@@ -455,7 +468,8 @@ export default class Consumer {
             parent: componentWithDeps.component.id,
             consumerPath: this.getPath(),
             driver: this.driver,
-            dependencies: dep.dependencies
+            dependencies: dep.dependencies,
+            componentMap
           })
           .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap))
           .then(() => dep);
@@ -466,7 +480,7 @@ export default class Consumer {
     const writtenDependencies = await Promise.all(allDependenciesP);
 
     if (writeToPath) {
-      componentDependencies.forEach((componentWithDeps) => {
+      componentsWithDependencies.forEach((componentWithDeps) => {
         const relativeWrittenPath = componentWithDeps.component.writtenPath;
         if (path.resolve(relativeWrittenPath) !== path.resolve(writeToPath)) {
           const component = componentWithDeps.component;
@@ -474,9 +488,9 @@ export default class Consumer {
         }
       });
     }
-    await linkGenerator.writeDependencyLinks(componentDependencies, bitMap, this.getPath(), createNpmLinkFiles);
+    await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, this.getPath(), createNpmLinkFiles);
     await Promise.all(
-      componentDependencies.map(componentWithDependencies =>
+      componentsWithDependencies.map(componentWithDependencies =>
         linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
       )
     );
@@ -530,32 +544,40 @@ export default class Consumer {
    * a Version object. Once this is done, we have two Version objects, and we can compare their hashes
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
-    const { version } = await this.scope.sources.consumerComponentToVersion({
-      consumerComponent: componentFromFileSystem
-    });
-
-    version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
-    version.flattenedDependencies = componentFromModel.flattenedDependencies;
-    // dependencies from the FS don't have an exact version, copy the version from the model
-    version.dependencies.forEach((dependency) => {
-      const idWithoutVersion = dependency.id.toStringWithoutVersion();
-      const dependencyFromModel = componentFromModel.dependencies.find(
-        modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
-      );
-      if (dependencyFromModel) {
-        dependency.id = dependencyFromModel.id;
+    if (typeof componentFromFileSystem._isModified === 'undefined') {
+      const bitMap = await this.getBitMap();
+      const componentMap = bitMap.getComponent(componentFromFileSystem.id, true);
+      if (componentMap.originallySharedDir) {
+        componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
       }
-    });
+      const { version } = await this.scope.sources.consumerComponentToVersion({
+        consumerComponent: componentFromFileSystem
+      });
 
-    // uncomment to easily understand why two components are considered as modified
-    // if (componentFromModel.hash().hash !== version.hash().hash) {
-    //   console.log('-------------------componentFromModel------------------------');
-    //   console.log(componentFromModel.id());
-    //   console.log('------------------------version------------------------------');
-    //   console.log(version.id());
-    //   console.log('-------------------------END---------------------------------');
-    // }
-    return componentFromModel.hash().hash !== version.hash().hash;
+      version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
+      version.flattenedDependencies = componentFromModel.flattenedDependencies;
+      // dependencies from the FS don't have an exact version, copy the version from the model
+      version.dependencies.forEach((dependency) => {
+        const idWithoutVersion = dependency.id.toStringWithoutVersion();
+        const dependencyFromModel = componentFromModel.dependencies.find(
+          modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
+        );
+        if (dependencyFromModel) {
+          dependency.id = dependencyFromModel.id;
+        }
+      });
+
+      // uncomment to easily understand why two components are considered as modified
+      // if (componentFromModel.hash().hash !== version.hash().hash) {
+      //   console.log('-------------------componentFromModel------------------------');
+      //   console.log(componentFromModel.id());
+      //   console.log('------------------------version------------------------------');
+      //   console.log(version.id());
+      //   console.log('-------------------------END---------------------------------');
+      // }
+      componentFromFileSystem._isModified = componentFromModel.hash().hash !== version.hash().hash;
+    }
+    return componentFromFileSystem._isModified;
   }
 
   /**
