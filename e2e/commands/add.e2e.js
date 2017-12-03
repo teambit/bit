@@ -151,7 +151,7 @@ describe('bit add command', function () {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
-    it.only('Should add all components with correct namespace and return message to user', () => {
+    it('Should add all components with correct namespace and return message to user', () => {
       const basePath = path.normalize('bar/*');
       helper.createComponent('bar', 'foo2.js');
       helper.createComponent('bar', 'foo1.js');
@@ -161,7 +161,7 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('test/foo2');
       expect(output).to.equal('tracking 2 new components\n');
     });
-    it.only('Should return error for missing namespace', () => {
+    it('Should return error for missing namespace', () => {
       const basePath = path.normalize('bar/*');
       helper.createComponent('bar', 'foo2.js');
       helper.createComponent('bar', 'foo1.js');
@@ -237,7 +237,7 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
-    it.only('Should return error if used the "-i" flag without specifying an ID', () => {
+    it('Should return error if used the "-i" flag without specifying an ID', () => {
       helper.createComponent('bar', 'foo.js');
       try {
         helper.addComponentWithOptions('bar', {
@@ -249,7 +249,7 @@ describe('bit add command', function () {
         expect(error).to.include("error: option `-i, --id <name>' argument missing");
       }
     });
-    it.only('Should return error if used an invalid ID', () => {
+    it('Should return error if used an invalid ID', () => {
       helper.createComponent('bar', 'foo.js');
       try {
         helper.addComponentWithOptions('bar', {
@@ -263,7 +263,7 @@ describe('bit add command', function () {
         );
       }
     });
-    it.only('Should add component with global namespace if used parcial ID', () => {
+    it('Should add component with global namespace if used parcial ID', () => {
       helper.createComponent('bar', 'foo.js');
       helper.addComponentWithOptions('bar', {
         i: 'foo'
