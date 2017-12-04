@@ -20,6 +20,8 @@ export default class Import extends Command {
     ['p', 'prefix <prefix>', 'import components into a specific directory'],
     ['d', 'display_dependencies', 'display the imported dependencies'],
     ['f', 'force', 'ignore local changes'],
+    ['', 'dist', 'write dist files (when exist) to the configured directory'],
+    ['', 'conf', 'write the configuration file (bit.json)'],
     ['', 'no_package_json', 'do not generate package.json for the imported component(s)']
   ];
   loader = true;
@@ -35,6 +37,8 @@ export default class Import extends Command {
       display_dependencies,
       environment,
       force = false,
+      dist = false,
+      conf = false,
       no_package_json = false
     }: {
       tester?: boolean,
@@ -44,6 +48,8 @@ export default class Import extends Command {
       display_dependencies?: boolean,
       environment?: boolean,
       force?: boolean,
+      dist?: boolean,
+      conf?: boolean,
       no_package_json?: boolean
     }
   ): Promise<any> {
@@ -60,6 +66,8 @@ export default class Import extends Command {
       prefix,
       environment,
       force,
+      dist,
+      conf,
       withPackageJson: !no_package_json
     }).then(importResults => R.assoc('display_dependencies', display_dependencies, importResults));
   }

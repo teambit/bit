@@ -67,7 +67,7 @@ describe('typescript components with link files', function () {
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.importComponent('bar/foo --dist');
     });
     it('should rewrite the relevant part of the link file', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
@@ -106,7 +106,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.importComponent('bar/foo --dist');
     });
     it('should rewrite the relevant part of the link file', () => {
       const appJsFixture = `const barFoo = require('./components/bar/foo'); 

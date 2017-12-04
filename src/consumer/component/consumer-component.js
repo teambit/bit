@@ -29,6 +29,7 @@ import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loade
 import FileSourceNotFound from './exceptions/file-source-not-found';
 import { getSync } from '../../api/consumer/lib/global-config';
 import * as linkGenerator from './link-generator';
+import { Component as ModelComponent } from '../../scope/models';
 
 import {
   DEFAULT_BOX_NAME,
@@ -86,6 +87,7 @@ export default class Component {
   log: ?Log;
   writtenPath: ?string; // needed for generate links
   originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
+  distDir: ?string; // might not be the default for imported component when dist.target is set in consumer bit.json
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
   deprecated: boolean;
@@ -418,7 +420,7 @@ export default class Component {
     };
     const distWithoutSharedDir = (pathStr) => {
       if (!originallySharedDir) return pathStr;
-      const distDirLength = DEFAULT_DIST_DIRNAME.length;
+      const distDirLength = this.getDistDir().length;
       const pathWithoutDistDir = pathStr.substring(distDirLength);
       return pathStr.substring(0, distDirLength) + pathWithoutSharedDir(pathWithoutDistDir, originallySharedDir, false);
     };
@@ -451,6 +453,23 @@ export default class Component {
     });
   }
 
+  updateDistsLocation(): void {
+    if (this.dists && this.distDir) {
+      this.dists.forEach((distFile) => {
+        distFile.path = distFile.path.replace(DEFAULT_DIST_DIRNAME, this.distDir);
+      });
+    }
+  }
+
+  setDistDir(distDir) {
+    this.distDir = distDir;
+  }
+
+  getDistDir() {
+    if (this.distDir) return this.distDir;
+    return DEFAULT_DIST_DIRNAME;
+  }
+
   /**
    * When using this function please check if you really need to pass the bitDir or not
    * It's better to init the files with the correct base, cwd and path than pass it here
@@ -467,6 +486,7 @@ export default class Component {
     consumerPath,
     driver,
     writeBitDependencies = false,
+    writeDistsFiles = true,
     dependencies,
     componentMap
   }: {
@@ -480,6 +500,7 @@ export default class Component {
     consumerPath?: string,
     driver?: Driver,
     writeBitDependencies?: boolean,
+    writeDistsFiles?: boolean,
     dependencies: Array<Components>,
     componentMap: ComponentMap
   }): Promise<Component> {
@@ -503,6 +524,7 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
+        writeDistsFiles,
         dependencies
       });
     }
@@ -515,6 +537,7 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
+        writeDistsFiles,
         dependencies
       });
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
@@ -544,6 +567,7 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
+        writeDistsFiles,
         deleteBitDirContent
       });
       // todo: remove from the file system
@@ -558,8 +582,6 @@ export default class Component {
     // Don't write the package.json for an authored component, because it's dependencies probably managed
     // By the root package.json
     const actualWithPackageJson = withPackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
-    // don't write dists files for authored components as the author has its own mechanism to generate them
-    const writeDistsFiles = origin !== COMPONENT_ORIGINS.AUTHORED;
     await this._writeToComponentDir({
       bitDir: newBase,
       withBitJson,
@@ -870,7 +892,7 @@ export default class Component {
   // This important since when you require a module without specify file, it will give you the file specified under this key
   // (or index.js if key not exists)
   calculateMainDistFile(): string {
-    const distMainFile = path.join(DEFAULT_DIST_DIRNAME, this.mainFile);
+    const distMainFile = path.join(this.getDistDir(), this.mainFile);
     const mainFile = searchFilesIgnoreExt(this.dists, distMainFile, 'relative', 'relative');
     return mainFile || this.mainFile;
   }
@@ -957,7 +979,7 @@ export default class Component {
     id,
     consumerPath,
     bitMap,
-    deprecated
+    componentFromModel
   }: {
     bitDir: string,
     consumerBitJson: ConsumerBitJson,
@@ -965,8 +987,9 @@ export default class Component {
     id: BitId,
     consumerPath: string,
     bitMap: BitMap,
-    deprecated: boolean
+    componentFromModel: ModelComponent
   }): Component {
+    const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     let packageDependencies;
     let bitJson = consumerBitJson;
     const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
@@ -1008,10 +1031,22 @@ export default class Component {
       }
     }
 
-    // we need to load bitJson of the specific component to get link prefix
-    const { bindingPrefix } = fs.existsSync(path.join(bitDir, BIT_JSON))
-      ? BitJson.loadSync(bitDir)
-      : { bindingPrefix: bitJson.bindingPrefix };
+    // by default, imported components are not written with bit.json file.
+    // use the component from the model to get their bit.json values
+    if (!fs.existsSync(path.join(bitDir, BIT_JSON)) && componentFromModel) {
+      if (componentFromModel.component.compilerId) {
+        bitJson.testerId = componentFromModel.component.compilerId.toString();
+      }
+      if (componentFromModel.component.testerId) {
+        bitJson.testerId = componentFromModel.component.testerId.toString();
+      }
+      if (componentFromModel.component.bindingPrefix) {
+        bitJson.bindingPrefix = componentFromModel.component.bindingPrefix;
+      }
+      if (componentFromModel.component.lang) {
+        bitJson.lang = componentFromModel.component.lang;
+      }
+    }
 
     return new Component({
       name: id.name,
@@ -1019,7 +1054,7 @@ export default class Component {
       scope: id.scope,
       version: id.version,
       lang: bitJson.lang,
-      bindingPrefix: bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+      bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,

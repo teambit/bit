@@ -54,14 +54,12 @@ export default class Environment {
   ): Promise<ComponentWithDependencies> {
     const bitId = BitId.parse(rawId);
     const componentDependenciesArr = await this.scope.getMany([bitId]);
-    await this.consumer.writeToComponentsDir(
-      componentDependenciesArr,
-      writePath,
-      true,
-      true,
+    await this.consumer.writeToComponentsDir({
+      componentsWithDependencies: componentDependenciesArr,
+      writeToPath: writePath,
       writeBitDependencies,
       createNpmLinkFiles
-    );
+    });
     const componentWithDependencies: ComponentWithDependencies = R.head(componentDependenciesArr);
     const componentWithDependenciesFlatten = [
       componentWithDependencies.component,
