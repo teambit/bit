@@ -146,8 +146,14 @@ function findComponentsOfDepsFiles(
     const currentComponentsDeps = { [componentId]: [depsPaths] };
 
     const componentMap = bitMap.getComponent(componentId);
-    if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED && entryComponentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      // prevent author using relative paths for imported component
+    if (
+      (componentMap.origin === COMPONENT_ORIGINS.IMPORTED && entryComponentMap.origin === COMPONENT_ORIGINS.AUTHORED) ||
+      (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && entryComponentMap.origin === COMPONENT_ORIGINS.IMPORTED)
+    ) {
+      // prevent author using relative paths for IMPORTED component
+      // also prevent adding AUTHORED component to an IMPORTED component using relative syntax. The reason is that when
+      // this component is imported somewhere else, a link-file between the IMPORTED and the AUTHORED must be written
+      // outside the component directory, which might override user files.
       relativeDeps.push(componentId);
       return;
     }

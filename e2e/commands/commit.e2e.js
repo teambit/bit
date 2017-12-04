@@ -439,7 +439,7 @@ describe('bit tag command', function () {
       }
     });
     it('should not tag and throw an error regarding the relative syntax', () => {
-      expect(output).to.have.string('fatal: following component dependencies were not found');
+      expect(output).to.have.string('fatal: issues found with the following component dependencies');
       expect(output).to.have.string(
         `relative components (should be absolute): ${helper.remoteScope}/utils/is-type@0.0.1`
       );
@@ -494,7 +494,7 @@ describe('bit tag command', function () {
 
       // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
       it('Should print that there is missing dependencies', () => {
-        expect(output).to.have.string('fatal: following component dependencies were not found');
+        expect(output).to.have.string('fatal: issues found with the following component dependencies');
       });
 
       it('Should print the components name with missing dependencies', () => {
