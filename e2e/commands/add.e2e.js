@@ -33,7 +33,7 @@ describe('bit add command', function () {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
-    it('Should tell the user there is already a scope', () => {
+    it('Should tell the user there is already a scope when running bit init twice', () => {
       let errorMsg;
       try {
         helper.initLocalScope();
@@ -355,6 +355,24 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo');
     });
 
+    // TODO: this feature should be implemented to prevent specs with dsl without quotes
+    it.skip(
+      'Should output message preventing user from adding files with spec from dsl and glob pattern without using quotes',
+      () => {
+        let errMsg = '';
+        helper.createComponent('bar', 'foo.js');
+        helper.createComponent('bar', 'foo2.js');
+        helper.createComponent('test/bar', 'foo.spec.js');
+        helper.createComponent('test/bar', 'foo2.spec.js');
+        try {
+          helper.runCmd('bit add bar/*.js -t test/bar/{FILE_NAME}.spec.js -n bar');
+        } catch (err) {
+          errMsg = err.message;
+        }
+        expect(errMsg).to.include('Please wrap tests with quotes');
+      }
+    );
+
     it('Should add dir files with spec from dsl and glob pattern and exclude', () => {
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('bar', 'foo2.js');
@@ -375,6 +393,20 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
+
+    // TODO: we need to implement the feature preventing -e without wrapping in quotes
+    it.skip('Should prevent using exclude without wrapping in quotes', () => {
+      let errMsg = '';
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      try {
+        helper.runCmd('bit add bar/*.js -e bar/foo2.js');
+      } catch (err) {
+        errMsg = err.message;
+      }
+      expect(errMsg).to.include('Please wrap excluded files with quotes');
+    });
+
     it('Should modify bitmap when adding component again when specifing id', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.createComponent('bar', 'index.js');
@@ -392,6 +424,7 @@ describe('bit add command', function () {
       expect(files2).to.be.array();
       expect(files2).to.be.ofSize(3);
     });
+
     it('Should modify bitmap when adding component again without id', () => {
       helper.createComponent('bar/foo', 'foo.js');
       helper.createComponent('bar/foo', 'index.js');
