@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.8-dev.1] - 2017-12-04
+
+- Add domain prefix to post install script
+
 ## [0.10.7] - 2017-11-29
 
 - Stylable support
