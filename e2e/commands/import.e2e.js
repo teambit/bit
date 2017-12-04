@@ -29,10 +29,7 @@ describe('bit import', function () {
       expect(output.includes('successfully imported one component')).to.be.true;
       expect(output.includes('global/simple')).to.be.true;
     });
-    it.skip(
-      'should throw an error if there is already component with the same name and namespace and different scope',
-      () => {}
-    );
+    it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
     it('should add the component to bit.json file', () => {
       const bitJson = helper.readBitJson();
       const depName = [helper.remoteScope, 'global', 'simple'].join('/');
@@ -125,14 +122,6 @@ describe('bit import', function () {
       });
       describe('when imported', () => {
         let localConsumerFiles;
-        before(() => {
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
-          const output = helper.importComponent('imprel/impreldist');
-          expect(output.includes('successfully imported one component')).to.be.true;
-          expect(output.includes('imprel/imprel')).to.be.true;
-          localConsumerFiles = helper.getConsumerFiles();
-        });
         const imprelDir = path.join('components', 'imprel', 'impreldist');
         const expectedLocationImprel = path.join(imprelDir, 'imprel.js');
         const expectedLocationImprelSpec = path.join(imprelDir, 'imprel.spec.js');
@@ -140,19 +129,11 @@ describe('bit import', function () {
         const expectedLocationImprelDist = path.join(imprelDir, 'dist', 'imprel.js');
         const expectedLocationImprelSpecDist = path.join(imprelDir, 'dist', 'imprel.spec.js');
         const expectedLocationMyUtilDist = path.join(imprelDir, 'dist', 'utils', 'myUtil.js');
-        it('should write the internal files according to their relative paths', () => {
-          expect(localConsumerFiles).to.include(expectedLocationImprel);
-          expect(localConsumerFiles).to.include(expectedLocationImprelSpec);
-          expect(localConsumerFiles).to.include(expectedLocationMyUtil);
-        });
-        it('should write the dist files in the component root dir', () => {
-          expect(localConsumerFiles).to.include(expectedLocationImprelDist);
-          expect(localConsumerFiles).to.include(expectedLocationImprelSpecDist);
-          expect(localConsumerFiles).to.include(expectedLocationMyUtilDist);
-        });
-        describe('when a project is cloned somewhere else as IMPORTED', () => {
+        describe('with --dist flag', () => {
           before(() => {
-            helper.mimicGitCloneLocalProject();
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.importComponent('imprel/impreldist --dist');
             localConsumerFiles = helper.getConsumerFiles();
           });
           it('should write the internal files according to their relative paths', () => {
@@ -164,6 +145,56 @@ describe('bit import', function () {
             expect(localConsumerFiles).to.include(expectedLocationImprelDist);
             expect(localConsumerFiles).to.include(expectedLocationImprelSpecDist);
             expect(localConsumerFiles).to.include(expectedLocationMyUtilDist);
+          });
+          describe('when a project is cloned somewhere else as IMPORTED', () => {
+            before(() => {
+              helper.mimicGitCloneLocalProject(true);
+              localConsumerFiles = helper.getConsumerFiles();
+            });
+            it('should write the internal files according to their relative paths', () => {
+              expect(localConsumerFiles).to.include(expectedLocationImprel);
+              expect(localConsumerFiles).to.include(expectedLocationImprelSpec);
+              expect(localConsumerFiles).to.include(expectedLocationMyUtil);
+            });
+            it('should write the dist files in the component root dir', () => {
+              expect(localConsumerFiles).to.include(expectedLocationImprelDist);
+              expect(localConsumerFiles).to.include(expectedLocationImprelSpecDist);
+              expect(localConsumerFiles).to.include(expectedLocationMyUtilDist);
+            });
+          });
+        });
+        describe('without --dist flag', () => {
+          before(() => {
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.importComponent('imprel/impreldist');
+            localConsumerFiles = helper.getConsumerFiles();
+          });
+          it('should write the internal files according to their relative paths', () => {
+            expect(localConsumerFiles).to.include(expectedLocationImprel);
+            expect(localConsumerFiles).to.include(expectedLocationImprelSpec);
+            expect(localConsumerFiles).to.include(expectedLocationMyUtil);
+          });
+          it('should not write the dist files in the component root dir', () => {
+            expect(localConsumerFiles).to.not.include(expectedLocationImprelDist);
+            expect(localConsumerFiles).to.not.include(expectedLocationImprelSpecDist);
+            expect(localConsumerFiles).to.not.include(expectedLocationMyUtilDist);
+          });
+          describe('when a project is cloned somewhere else as IMPORTED', () => {
+            before(() => {
+              helper.mimicGitCloneLocalProject();
+              localConsumerFiles = helper.getConsumerFiles();
+            });
+            it('should write the internal files according to their relative paths', () => {
+              expect(localConsumerFiles).to.include(expectedLocationImprel);
+              expect(localConsumerFiles).to.include(expectedLocationImprelSpec);
+              expect(localConsumerFiles).to.include(expectedLocationMyUtil);
+            });
+            it('should not write the dist files in the component root dir', () => {
+              expect(localConsumerFiles).to.not.include(expectedLocationImprelDist);
+              expect(localConsumerFiles).to.not.include(expectedLocationImprelSpecDist);
+              expect(localConsumerFiles).to.not.include(expectedLocationMyUtilDist);
+            });
           });
         });
       });
@@ -935,7 +966,7 @@ describe('bit import', function () {
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.importComponent('bar/foo --dist');
       localConsumerFiles = helper.getConsumerFiles();
     });
     it('should keep the original directory structure of the main component', () => {

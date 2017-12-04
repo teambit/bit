@@ -467,6 +467,7 @@ export default class Component {
     consumerPath,
     driver,
     writeBitDependencies = false,
+    writeDistsFiles = true,
     dependencies,
     componentMap
   }: {
@@ -480,6 +481,7 @@ export default class Component {
     consumerPath?: string,
     driver?: Driver,
     writeBitDependencies?: boolean,
+    writeDistsFiles?: boolean,
     dependencies: Array<Components>,
     componentMap: ComponentMap
   }): Promise<Component> {
@@ -503,6 +505,7 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
+        writeDistsFiles,
         dependencies
       });
     }
@@ -515,6 +518,7 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
+        writeDistsFiles,
         dependencies
       });
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
@@ -544,6 +548,7 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
+        writeDistsFiles,
         deleteBitDirContent
       });
       // todo: remove from the file system
@@ -558,8 +563,6 @@ export default class Component {
     // Don't write the package.json for an authored component, because it's dependencies probably managed
     // By the root package.json
     const actualWithPackageJson = withPackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
-    // don't write dists files for authored components as the author has its own mechanism to generate them
-    const writeDistsFiles = origin !== COMPONENT_ORIGINS.AUTHORED;
     await this._writeToComponentDir({
       bitDir: newBase,
       withBitJson,
