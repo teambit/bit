@@ -1,12 +1,14 @@
 /** @flow */
 
+import path from 'path';
 import R from 'ramda';
-import { HOOKS_NAMES } from '../constants';
+import { HOOKS_NAMES, BIT_HIDDEN_DIR } from '../constants';
 import logger from '../logger/logger';
 import ExtensionCommand from './extension-command';
 import IsolatedEnvironment, { IsolateOptions } from '../environment';
-import { loadScope } from '../scope';
+import { Scope, loadScope } from '../scope';
 import { loadConsumer } from '../consumer';
+import { BitId } from '../bit-id';
 
 type NewCommand = {
   name: string,
@@ -31,7 +33,6 @@ export type ExtensionProps = {
 };
 
 export default class Extension {
-  // TODO: Validate the key against hooks list
   name: string;
   loaded: boolean;
   disabled: boolean;
@@ -49,6 +50,7 @@ export default class Extension {
     },
     registerToHook: (hookName: string, hookAction: Function) => {
       logger.info(`registering to hook ${hookName}`);
+      // TODO: Validate the key against hooks list
       this.registeredHooks[hookName] = hookAction;
     },
     createIsolatedEnv
@@ -62,13 +64,24 @@ export default class Extension {
     this.registeredHooks = {};
   }
 
-  static async load(name: string, rawConfig: Object): Extension {
+  static async load(name: string, rawConfig: Object, scopePath: string): Promise<Extension> {
     logger.debug(`loading extension ${name}`);
+    // Require extension from _debugFile
     if (process.env.DEBUG_EXTENSIONS && rawConfig._debugFile) {
       return Extension.loadFromFile(name, rawConfig._debugFile, rawConfig);
     }
-    return null;
     // Require extension from scope
+    try {
+      const bitId = BitId.parse(name);
+      const internalComponentsPath = Scope.getComponentsRelativePath();
+      const internalComponentPath = Scope.getComponentRelativePath(bitId);
+      const componentPath = path.join(scopePath, internalComponentsPath, internalComponentPath);
+      return Extension.loadFromFile(name, componentPath, rawConfig);
+    } catch (err) {
+      logger.error(`loading extension ${name} faild`);
+      logger.error(err);
+      return null;
+    }
   }
 
   static async loadFromFile(name: string, filePath: string, rawConfig: Object = {}): Extension {
