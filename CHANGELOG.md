@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - write dist files for imported components according to dist.target configuration in bit.json
 - do not write dist files for imported components, unless `--dist` flag is used
+
+## [0.11.2-dev.1] - 2017-12-04
+
+- generate link for npm as scoped packages
+- prevent adding AUTHORED component to an IMPORTED component using require relative syntax
 - avoid writing long files paths for imported components when there is a shared directory among the component files and its dependencies
 
 ## [0.11.1] - 2017-11-29

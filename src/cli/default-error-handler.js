@@ -63,7 +63,9 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [
     BitAlreadyExistExternaly,
     err =>
-      `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${err.bitName}" to modify the current component or "bit create -f ${err.bitName}"!`
+      `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${
+        err.bitName
+      }" to modify the current component or "bit create -f ${err.bitName}"!`
   ],
   [
     PluginNotFound,
@@ -80,9 +82,9 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [
     CorruptedComponent,
     err =>
-      `fatal: the model representation of "${chalk.bold(
-        err.id
-      )}" is corrupted, the object of version ${err.version} is missing`
+      `fatal: the model representation of "${chalk.bold(err.id)}" is corrupted, the object of version ${
+        err.version
+      } is missing`
   ],
   [DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found.`],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
@@ -93,7 +95,9 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [
     MergeConflict,
     err =>
-      `error: Merge conflict occurred when exporting the component ${err.id}.\nTo resolve it, please import the latest version of the remote component, and only then export your changes.`
+      `error: Merge conflict occurred when exporting the component ${
+        err.id
+      }.\nTo resolve it, please import the latest version of the remote component, and only then export your changes.`
   ],
   [UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
   [SSHInvalidResponse, () => 'fatal: received an invalid response from the remote SSH server'],
@@ -103,7 +107,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     MissingDependencies,
     (err) => {
       const missingDepsColored = missingDepsTemplate(err.components);
-      return `fatal: following component dependencies were not found\n${missingDepsColored}`;
+      return `fatal: issues found with the following component dependencies\n${missingDepsColored}`;
     }
   ],
   [
@@ -137,7 +141,9 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [
     MissingFilesFromComponent,
     (err) => {
-      return `invalid component ${err.id}, all files were deleted, please remove the component using bit remove command`;
+      return `invalid component ${
+        err.id
+      }, all files were deleted, please remove the component using bit remove command`;
     }
   ],
   [MissingBitMapComponent, err => `fatal: the component ${chalk.bold(err.id)} was not found in the bit.map file`],
@@ -147,8 +153,9 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     err =>
       Object.keys(err.componentObject)
         .map((key) => {
-          return `unable to add ${Object.keys(err.componentObject[key])
-            .length} components with the same id ${chalk.bold(key)} : ${err.componentObject[key]}\n`;
+          return `unable to add ${
+            Object.keys(err.componentObject[key]).length
+          } components with the same id ${chalk.bold(key)} : ${err.componentObject[key]}\n`;
         })
         .join(' ')
   ],
