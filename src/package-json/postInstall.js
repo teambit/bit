@@ -11,14 +11,14 @@ class LinkData {
   packagePath: string;
   packageName: string;
 
-  constructor( { packagePath, packageName }: LinkProps) {
+  constructor( { packagePath, packageName }: LinkProps, domainPrefix: string) {
     this.packagePath = packagePath;
-    this.packageName = packageName.replace(/\//g, '.');
+    this.packageName = domainPrefix + '/' + packageName.replace(/\//g, '.');
   }
 }
 
-export default function generatePostInstallScript(writeDir: string, LinkProps: Array<Object>) {
-  const LinkArr = LinkProps.map(linkObj => new LinkData(linkObj));
+export default function generatePostInstallScript(writeDir: string, LinkProps: Array<Object>, domainPrefix: string) {
+  const LinkArr = LinkProps.map(linkObj => new LinkData(linkObj, domainPrefix));
   fs.writeFileSync(path.join(writeDir, postInstallScriptName), createTemplate(JSON.stringify(LinkArr)));
   return { postinstall : `node ${postInstallScriptName}` };
 }

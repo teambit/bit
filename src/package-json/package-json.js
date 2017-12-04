@@ -85,12 +85,12 @@ export default class PackageJson {
     return JSON.stringify(this.toPlainObject(), null, 4);
   }
 
-  async write({ override = true , postInstallLinkData = [] }: { override?: boolean, postInstallLinkData: Array<Object> }): Promise<boolean> {
+  async write({ override = true , postInstallLinkData = [], domainPrefix }: { override?: boolean, postInstallLinkData: Array<Object> , domainPrefix: string}): Promise<boolean> {
     if (!override && hasExisting(this.componentRootFolder)) {
       return Promise.reject(new PackageJsonAlreadyExists(this.componentRootFolder));
     }
 
-    this.scripts = R.isEmpty(postInstallLinkData) ? {} : generatePostInstallScript(this.componentRootFolder, postInstallLinkData)
+    this.scripts = R.isEmpty(postInstallLinkData) ? {} : generatePostInstallScript(this.componentRootFolder, postInstallLinkData, domainPrefix)
     const plain = this.toPlainObject();
 
     return fs.outputJSON(composePath(this.componentRootFolder), plain, { spaces: '\t' });
