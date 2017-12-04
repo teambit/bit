@@ -17,6 +17,18 @@ describe('bit add command', function () {
   after(() => {
     helper.destroyEnv();
   });
+  describe('add before running "bit init"', () => {
+    it.only('Should return message to run "bit init"', () => {
+      let error;
+      try {
+        helper.createComponent('bar', 'foo.js');
+        helper.addComponent(path.normalize('bar/foo.js'));
+      } catch (err) {
+        error = err.message;
+      }
+      expect(error).to.include('fatal: scope not found. to create a new scope, please use `bit init');
+    });
+  });
   describe('add one component', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
@@ -161,15 +173,17 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('test/foo2');
       expect(output).to.equal('tracking 2 new components\n');
     });
-    it('Should return error for missing namespace', () => {
+    it.only('Should return error for missing namespace', () => {
       const basePath = path.normalize('bar/*');
+      let errorMessage;
       helper.createComponent('bar', 'foo2.js');
       helper.createComponent('bar', 'foo1.js');
       try {
         helper.addComponentWithOptions(basePath, { n: '' });
       } catch (err) {
-        expect(err.message).to.include("error: option `-n, --namespace <namespace>' argument missing");
+        errorMessage = err.message;
       }
+      expect(errorMessage).to.include("error: option `-n, --namespace <namespace>' argument missing");
     });
     it('Define dynamic main file ', () => {
       const mainFileOs = path.normalize('{PARENT_FOLDER}/{PARENT_FOLDER}.js');
@@ -237,31 +251,31 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
-    it('Should return error if used the "-i" flag without specifying an ID', () => {
+    it.only('Should return error if used the "-i" flag without specifying an ID', () => {
       helper.createComponent('bar', 'foo.js');
+      let errorMessage;
       try {
         helper.addComponentWithOptions('bar', {
           i: ''
         });
-        const bitMap = helper.readBitMap();
       } catch (err) {
-        const error = err.message;
-        expect(error).to.include("error: option `-i, --id <name>' argument missing");
+        errorMessage = err.message;
       }
+      expect(errorMessage).to.include("error: option `-i, --id <name>' argument missing");
     });
-    it('Should return error if used an invalid ID', () => {
+    it.only('Should return error if used an invalid ID', () => {
       helper.createComponent('bar', 'foo.js');
+      let errorMessage;
       try {
         helper.addComponentWithOptions('bar', {
           i: 'Bar/Foo'
         });
       } catch (err) {
-        console.log(err.message);
-        const error = err.message;
-        expect(error).to.include(
-          'invalid id part in "Bar/Foo", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]'
-        );
+        errorMessage = err.message;
       }
+      expect(errorMessage).to.include(
+        'invalid id part in "Bar/Foo", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]'
+      );
     });
     it('Should add component with global namespace if used parcial ID', () => {
       helper.createComponent('bar', 'foo.js');
