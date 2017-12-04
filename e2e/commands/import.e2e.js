@@ -966,7 +966,7 @@ describe('bit import', function () {
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.importComponent('bar/foo --dist');
       localConsumerFiles = helper.getConsumerFiles();
     });
     it('should keep the original directory structure of the main component', () => {
