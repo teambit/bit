@@ -58,6 +58,19 @@ describe('bit status command', function () {
       expect(output.includes('no staged components')).to.be.true;
     });
   });
+  describe('when a component is created and added without its dependencies', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile();
+      helper.createFile('bar', 'foo2.js', 'var foo = require("./foo.js")');
+      helper.addComponent('bar/foo2.js');
+    });
+    it('Should show missing dependencies', () => {
+      output = helper.runCmd('bit status');
+      expect(output).to.have.string('untracked file dependencies: bar/foo.js');
+    });
+  });
   describe('when a component is created, added and committed', () => {
     let output;
     before(() => {
