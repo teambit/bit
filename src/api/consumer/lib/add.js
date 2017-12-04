@@ -223,9 +223,6 @@ export default (async function addAction(
   const consumer: Consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
 
-  // resolve real main file name
-  main = main ? (await glob(main, { nocase: true }))[0] : main;
-
   // check unknown test files
   const missingFiles = getMissingTestFiles(tests);
   if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
