@@ -228,9 +228,7 @@ export default (async function addAction(
   if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
 
   const componentPathsStats = {};
-  const resolvedComponentPaths = await Promise.all(
-    componentPaths.map(componentPath => glob(componentPath, { nocase: true }))
-  );
+  const resolvedComponentPaths = await Promise.all(componentPaths.map(componentPath => glob(componentPath)));
   const flattenedFiles = R.flatten(resolvedComponentPaths);
   if (!R.isEmpty(flattenedFiles)) {
     flattenedFiles.forEach((componentPath) => {
