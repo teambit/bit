@@ -32,11 +32,11 @@ const LINKS_CONTENT_TEMPLATES = {
 };
 
 const PACKAGES_LINKS_CONTENT_TEMPLATES = {
-  css: "@import '~@bit/{filePath}';",
-  scss: "@import '~@bit/{filePath}';",
-  sass: "@import '~@bit/{filePath}';",
-  less: "@import '~@bit/{filePath}';",
-  'st.css': ':import { -st-from: "@bit/{filePath}";}'
+  css: "@import '~{filePath}';",
+  scss: "@import '~{filePath}';",
+  sass: "@import '~{filePath}';",
+  less: "@import '~{filePath}';",
+  'st.css': ':import { -st-from: "{filePath}";}'
 };
 
 const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
@@ -168,8 +168,9 @@ async function writeDependencyLinks(
   ) => {
     // this is used to converd the component name to a valid npm package  name
     const packagePath =
-      (getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX) +
-      componentId.toStringWithoutVersion().replace(/\//g, '.');
+      `${getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX 
+      }/${ 
+        componentId.toStringWithoutVersion().replace(/\//g, '.')}`;
     const rootDir = path.join(consumerPath, bitMap.getRootDirOfComponent(componentId));
     let actualFilePath = path.join(rootDir, relativePathInDependency);
     if (relativePathInDependency === mainFile) {
