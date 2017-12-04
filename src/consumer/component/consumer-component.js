@@ -990,7 +990,7 @@ export default class Component {
     bitMap: BitMap,
     componentFromModel: ModelComponent
   }): Component {
-    const deprecated = componentFromModel ? componentFromModel.deprecated : false;
+    const deprecated = componentFromModel ? componentFromModel.component.deprecated : false;
     let packageDependencies;
     let bitJson = consumerBitJson;
     const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
