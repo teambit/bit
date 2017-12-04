@@ -30,7 +30,6 @@ const baseTemplate = (extensionsTemplate) => {
 
   ${chalk.underline('discover components')}
     ${chalk.cyan('list')}       list components on a local or a remote scope.
-    ${chalk.cyan('search')}     search for components by desired functionality.
 
   ${chalk.underline('examine component history and state')}
     ${chalk.cyan('log')}        show components(s) tag history.

@@ -103,7 +103,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     MissingDependencies,
     (err) => {
       const missingDepsColored = missingDepsTemplate(err.components);
-      return `fatal: following component dependencies were not found\n${missingDepsColored}`;
+      return `fatal: issues found with the following component dependencies\n${missingDepsColored}`;
     }
   ],
   [
