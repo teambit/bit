@@ -1034,7 +1034,7 @@ export default class Component {
 
     // by default, imported components are not written with bit.json file.
     // use the component from the model to get their bit.json values
-    if (!fs.existsSync(path.join(bitDir, BIT_JSON))) {
+    if (!fs.existsSync(path.join(bitDir, BIT_JSON)) && componentFromModel) {
       if (componentFromModel.component.compilerId) {
         bitJson.testerId = componentFromModel.component.compilerId.toString();
       }
