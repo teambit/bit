@@ -45,6 +45,10 @@ describe('bit import', function () {
       const expectedLocation = path.join(helper.localScopePath, 'components', 'global', 'simple', 'impl.js');
       expect(fs.existsSync(expectedLocation)).to.be.true;
     });
+    it('should not write the component bit.json file (only when --conf flag is set)', () => {
+      const bitJsonLocation = path.join(helper.localScopePath, 'components', 'global', 'simple', 'bit.json');
+      expect(fs.existsSync(bitJsonLocation)).to.be.false;
+    });
 
     describe('with multiple files located in different directories', () => {
       before(() => {
@@ -70,6 +74,18 @@ describe('bit import', function () {
         expect(fs.existsSync(expectedLocationImprel)).to.be.true;
         expect(fs.existsSync(expectedLocationImprelSpec)).to.be.true;
         expect(fs.existsSync(expectedLocationMyUtil)).to.be.true;
+      });
+    });
+
+    describe('with --conf flag', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('global/simple --conf');
+      });
+      it('should write the bit.json file of the component', () => {
+        const expectedLocation = path.join(helper.localScopePath, 'components', 'global', 'simple', 'bit.json');
+        expect(fs.existsSync(expectedLocation)).to.be.true;
       });
     });
 
