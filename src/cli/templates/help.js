@@ -59,7 +59,7 @@ const extensionsCommandTemplate = (extensionsCommand) => {
 };
 
 const extensionsCommandsTemplate = (extensionsCommands) => {
-  if (!extensionsCommands || !extensionsCommands.lengh) return '';
+  if (!extensionsCommands || !extensionsCommands.length) return '';
   return `${chalk.underline('extensions commands')}
   ${extensionsCommands.map(extensionsCommandTemplate)}
   `;
