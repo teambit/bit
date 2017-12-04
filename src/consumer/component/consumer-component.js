@@ -86,6 +86,7 @@ export default class Component {
   log: ?Log;
   writtenPath: ?string; // needed for generate links
   originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
+  distDir: ?string; // might not be the default for imported component when dist.target is set in consumer bit.json
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
   deprecated: boolean;
@@ -418,7 +419,7 @@ export default class Component {
     };
     const distWithoutSharedDir = (pathStr) => {
       if (!originallySharedDir) return pathStr;
-      const distDirLength = DEFAULT_DIST_DIRNAME.length;
+      const distDirLength = this.getDistDir().length;
       const pathWithoutDistDir = pathStr.substring(distDirLength);
       return pathStr.substring(0, distDirLength) + pathWithoutSharedDir(pathWithoutDistDir, originallySharedDir, false);
     };
@@ -449,6 +450,23 @@ export default class Component {
         }
       });
     });
+  }
+
+  updateDistsLocation(): void {
+    if (this.dists && this.distDir) {
+      this.dists.forEach((distFile) => {
+        distFile.path = distFile.path.replace(DEFAULT_DIST_DIRNAME, this.distDir);
+      });
+    }
+  }
+
+  setDistDir(distDir) {
+    this.distDir = distDir;
+  }
+
+  getDistDir() {
+    if (this.distDir) return this.distDir;
+    return DEFAULT_DIST_DIRNAME;
   }
 
   /**
@@ -873,7 +891,7 @@ export default class Component {
   // This important since when you require a module without specify file, it will give you the file specified under this key
   // (or index.js if key not exists)
   calculateMainDistFile(): string {
-    const distMainFile = path.join(DEFAULT_DIST_DIRNAME, this.mainFile);
+    const distMainFile = path.join(this.getDistDir(), this.mainFile);
     const mainFile = searchFilesIgnoreExt(this.dists, distMainFile, 'relative', 'relative');
     return mainFile || this.mainFile;
   }

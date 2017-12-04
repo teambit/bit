@@ -163,6 +163,23 @@ describe('bit import', function () {
             });
           });
         });
+        describe('with --dist flag when dist is set to a non-default directory', () => {
+          before(() => {
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.modifyFieldInBitJson('dist', { target: 'another-dist' });
+            helper.importComponent('imprel/impreldist --dist');
+            localConsumerFiles = helper.getConsumerFiles();
+          });
+          it('should write the dist files according to the new dist-target set in bit.json', () => {
+            const newLocationImprelDist = path.join(imprelDir, 'another-dist', 'imprel.js');
+            const newLocationImprelSpecDist = path.join(imprelDir, 'another-dist', 'imprel.spec.js');
+            const newLocationMyUtilDist = path.join(imprelDir, 'another-dist', 'utils', 'myUtil.js');
+            expect(localConsumerFiles).to.include(newLocationImprelDist);
+            expect(localConsumerFiles).to.include(newLocationImprelSpecDist);
+            expect(localConsumerFiles).to.include(newLocationMyUtilDist);
+          });
+        });
         describe('without --dist flag', () => {
           before(() => {
             helper.reInitLocalScope();
