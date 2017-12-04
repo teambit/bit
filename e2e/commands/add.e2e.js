@@ -355,7 +355,7 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo');
     });
 
-    // TODO: this feature should be implemented to prevent specs with dsl without quotes
+    // TODO: we need to implement the feature preventing the use of -t without wrapping in quotes.
     it.skip(
       'Should output message preventing user from adding files with spec from dsl and glob pattern without using quotes',
       () => {
@@ -394,7 +394,7 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo');
     });
 
-    // TODO: we need to implement the feature preventing -e without wrapping in quotes
+    // TODO: we need to implement the feature preventing -e without wrapping in quotes.
     it.skip('Should prevent using exclude without wrapping in quotes', () => {
       let errMsg = '';
       helper.createComponent('bar', 'foo.js');
