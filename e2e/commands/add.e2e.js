@@ -185,6 +185,7 @@ describe('bit add command', function () {
         errorMessage = err.message;
       }
       expect(errorMessage).to.have.string("error: option `-n, --namespace <namespace>' argument missing");
+
     });
     it('Define dynamic main file ', () => {
       const mainFileOs = path.normalize('{PARENT_FOLDER}/{PARENT_FOLDER}.js');
@@ -274,6 +275,7 @@ describe('bit add command', function () {
       } catch (err) {
         errorMessage = err.message;
       }
+
       expect(errorMessage).to.have.string(
         'invalid id part in "Bar/Foo", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]'
       );
