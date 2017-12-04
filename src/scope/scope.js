@@ -111,7 +111,19 @@ export default class Scope {
   }
 
   getComponentsPath(): string {
-    return pathLib.join(this.path, BITS_DIRNAME);
+    return pathLib.join(this.path, Scope.getComponentsRelativePath());
+  }
+
+  /**
+   * Get the releative components path inside the scope 
+   * (components such as compilers / testers / extensions)
+   */
+  static getComponentsRelativePath(): string {
+    return BITS_DIRNAME;
+  }
+
+  static getComponentRelativePath(id: BitId): string {
+    return pathLib.join(id.box, id.name, id.scope, id.version);
   }
 
   getBitPathInComponentsDir(id: BitId): string {
@@ -960,10 +972,6 @@ export default class Scope {
   async installEnvironment({ ids, verbose }: { ids: BitId[], verbose?: boolean }): Promise<any> {
     logger.debug(`scope.installEnvironment, ids: ${ids.join(', ')}`);
     const componentsDir = this.getComponentsPath();
-    const bitDir = (base: string, id: BitId, version: ?string) => {
-      const concreteVersion = version || id.version;
-      return pathLib.join(base, id.box, id.name, id.scope, concreteVersion);
-    };
     const isolateOpts = {
       writeBitDependencies: false,
       installPackages: true,
@@ -972,13 +980,12 @@ export default class Scope {
       verbose
     };
     const isolateComponentsP = ids.map(async (id) => {
-      let version = id.version;
+      let concreteId = id;
       if (id.getVersion().latest) {
         const concreteIds = await this.fetchRemoteVersions([id]);
-        const concreteId = concreteIds[0];
-        version = concreteId.getVersion().versionNum;
+        concreteId = concreteIds[0];
       }
-      const dir = bitDir(componentsDir, id, version);
+      const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
       const env = new IsolatedEnvironment(this, dir);
       await env.create();
       return env.isolateComponent(id, isolateOpts);
