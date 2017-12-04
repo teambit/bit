@@ -26,22 +26,14 @@ describe('bit add command', function () {
       } catch (err) {
         error = err.message;
       }
-      expect(error).to.include('fatal: scope not found. to create a new scope, please use `bit init');
+      expect(error).to.have.string('fatal: scope not found. to create a new scope, please use `bit init');
     });
   });
   describe('add one component', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
-    it('Should tell the user there is already a scope when running bit init twice', () => {
-      let errorMsg;
-      try {
-        helper.initLocalScope();
-      } catch (err) {
-        errorMsg = err.message;
-      }
-      expect(errorMsg).to.include("there's already a scope");
-    });
+
     it('Should add component to bitmap with folder as default namespace', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'));
@@ -180,7 +172,7 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('test/foo1');
       expect(bitMap).to.have.property('test/foo2');
-      expect(output).to.equal('tracking 2 new components\n');
+      expect(output).to.have.string('tracking 2 new components');
     });
     it('Should return error for missing namespace', () => {
       const basePath = path.normalize('bar/*');
@@ -192,7 +184,7 @@ describe('bit add command', function () {
       } catch (err) {
         errorMessage = err.message;
       }
-      expect(errorMessage).to.include("error: option `-n, --namespace <namespace>' argument missing");
+      expect(errorMessage).to.have.string("error: option `-n, --namespace <namespace>' argument missing");
     });
     it('Define dynamic main file ', () => {
       const mainFileOs = path.normalize('{PARENT_FOLDER}/{PARENT_FOLDER}.js');
@@ -270,7 +262,7 @@ describe('bit add command', function () {
       } catch (err) {
         errorMessage = err.message;
       }
-      expect(errorMessage).to.include("error: option `-i, --id <name>' argument missing");
+      expect(errorMessage).to.have.string("error: option `-i, --id <name>' argument missing");
     });
     it('Should return error if used an invalid ID', () => {
       helper.createComponent('bar', 'foo.js');
@@ -282,7 +274,7 @@ describe('bit add command', function () {
       } catch (err) {
         errorMessage = err.message;
       }
-      expect(errorMessage).to.include(
+      expect(errorMessage).to.have.string(
         'invalid id part in "Bar/Foo", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]'
       );
     });
@@ -369,7 +361,7 @@ describe('bit add command', function () {
         } catch (err) {
           errMsg = err.message;
         }
-        expect(errMsg).to.include('Please wrap tests with quotes');
+        expect(errMsg).to.have.string('Please wrap tests with quotes');
       }
     );
 
@@ -395,7 +387,7 @@ describe('bit add command', function () {
     });
 
     // TODO: we need to implement the feature preventing -e without wrapping in quotes.
-    it.skip('Should prevent using exclude without wrapping in quotes', () => {
+    it.skip('Should prevent using exclude flag without wrapping in quotes', () => {
       let errMsg = '';
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('bar', 'foo2.js');
@@ -404,7 +396,7 @@ describe('bit add command', function () {
       } catch (err) {
         errMsg = err.message;
       }
-      expect(errMsg).to.include('Please wrap excluded files with quotes');
+      expect(errMsg).to.have.string('Please wrap excluded files with quotes');
     });
 
     it('Should modify bitmap when adding component again when specifing id', () => {
