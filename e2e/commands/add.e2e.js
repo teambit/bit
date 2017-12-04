@@ -18,7 +18,7 @@ describe('bit add command', function () {
     helper.destroyEnv();
   });
   describe('add before running "bit init"', () => {
-    it.only('Should return message to run "bit init"', () => {
+    it('Should return message to run "bit init"', () => {
       let error;
       try {
         helper.createComponent('bar', 'foo.js');
@@ -173,7 +173,7 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('test/foo2');
       expect(output).to.equal('tracking 2 new components\n');
     });
-    it.only('Should return error for missing namespace', () => {
+    it('Should return error for missing namespace', () => {
       const basePath = path.normalize('bar/*');
       let errorMessage;
       helper.createComponent('bar', 'foo2.js');
@@ -251,7 +251,7 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
-    it.only('Should return error if used the "-i" flag without specifying an ID', () => {
+    it('Should return error if used the "-i" flag without specifying an ID', () => {
       helper.createComponent('bar', 'foo.js');
       let errorMessage;
       try {
@@ -263,7 +263,7 @@ describe('bit add command', function () {
       }
       expect(errorMessage).to.include("error: option `-i, --id <name>' argument missing");
     });
-    it.only('Should return error if used an invalid ID', () => {
+    it('Should return error if used an invalid ID', () => {
       helper.createComponent('bar', 'foo.js');
       let errorMessage;
       try {
