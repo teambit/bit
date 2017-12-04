@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- do not write the component's bit.json file, unless `--conf` flag is set
 - write dist files for imported components according to dist.target configuration in bit.json
 - do not write dist files for imported components, unless `--dist` flag is used
 - prevent overriding index file if exists
