@@ -33,6 +33,15 @@ describe('bit add command', function () {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
+    it.only('Should tell the user there is already a scope', () => {
+      let errorMsg;
+      try {
+        helper.initLocalScope();
+      } catch (err) {
+        errorMsg = err.message;
+      }
+      expect(errorMsg).to.include("there's already a scope");
+    });
     it('Should add component to bitmap with folder as default namespace', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'));
