@@ -29,6 +29,7 @@ import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loade
 import FileSourceNotFound from './exceptions/file-source-not-found';
 import { getSync } from '../../api/consumer/lib/global-config';
 import * as linkGenerator from './link-generator';
+import { Component as ModelComponent } from '../../scope/models';
 
 import {
   DEFAULT_BOX_NAME,
@@ -978,7 +979,7 @@ export default class Component {
     id,
     consumerPath,
     bitMap,
-    deprecated
+    componentFromModel
   }: {
     bitDir: string,
     consumerBitJson: ConsumerBitJson,
@@ -986,8 +987,9 @@ export default class Component {
     id: BitId,
     consumerPath: string,
     bitMap: BitMap,
-    deprecated: boolean
+    componentFromModel: ModelComponent
   }): Component {
+    const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     let packageDependencies;
     let bitJson = consumerBitJson;
     const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
@@ -1029,10 +1031,22 @@ export default class Component {
       }
     }
 
-    // we need to load bitJson of the specific component to get link prefix
-    const { bindingPrefix } = fs.existsSync(path.join(bitDir, BIT_JSON))
-      ? BitJson.loadSync(bitDir)
-      : { bindingPrefix: bitJson.bindingPrefix };
+    // by default, imported components are not written with bit.json file.
+    // use the component from the model to get their bit.json values
+    if (!fs.existsSync(path.join(bitDir, BIT_JSON))) {
+      if (componentFromModel.component.compilerId) {
+        bitJson.testerId = componentFromModel.component.compilerId.toString();
+      }
+      if (componentFromModel.component.testerId) {
+        bitJson.testerId = componentFromModel.component.testerId.toString();
+      }
+      if (componentFromModel.component.bindingPrefix) {
+        bitJson.bindingPrefix = componentFromModel.component.bindingPrefix;
+      }
+      if (componentFromModel.component.lang) {
+        bitJson.lang = componentFromModel.component.lang;
+      }
+    }
 
     return new Component({
       name: id.name,
@@ -1040,7 +1054,7 @@ export default class Component {
       scope: id.scope,
       version: id.version,
       lang: bitJson.lang,
-      bindingPrefix: bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+      bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,

@@ -205,7 +205,7 @@ export default class Consumer {
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
-      const componentModule = await this.scope.sources.get(id);
+      const componentFromModel = await this.scope.getFromLocalIfExist(idWithConcreteVersion);
       let component;
       try {
         component = await Component.loadFromFileSystem({
@@ -215,7 +215,7 @@ export default class Consumer {
           id: idWithConcreteVersion,
           consumerPath: this.getPath(),
           bitMap,
-          deprecated: componentModule ? componentModule.deprecated : false
+          componentFromModel
         });
       } catch (err) {
         if (throwOnFailure) throw err;
