@@ -33,7 +33,7 @@ describe('bit add command', function () {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
-    it.only('Should tell the user there is already a scope', () => {
+    it('Should tell the user there is already a scope', () => {
       let errorMsg;
       try {
         helper.initLocalScope();
