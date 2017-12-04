@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- write dist files for imported components according to dist.target configuration in bit.json
 - do not write dist files for imported components, unless `--dist` flag is used
 - avoid writing long files paths for imported components when there is a shared directory among the component files and its dependencies
 
