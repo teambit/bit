@@ -324,7 +324,7 @@ async function writeEntryPointsForImportedComponent(component: Component, bitMap
   const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = _getLinkContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
-  return outputFile(entryPointPath, AUTO_GENERATED_MSG + entryPointFileContent);
+  return outputFile(entryPointPath, AUTO_GENERATED_MSG + entryPointFileContent, false);
 }
 function generateEntryPointDataForPackages(component: Component): Promise<any> {
   const packagePath = `${component.bindingPrefix}/${component.id.box}/${component.id.name}`;
