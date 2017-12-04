@@ -74,7 +74,9 @@ export const DEFAULT_BINDINGS_PREFIX = 'bit';
 
 export const DEFAULT_DIR_STRUCTURE = `${BITS_DIRNAME}/{namespace}/{name}`;
 
-export const DEFAULT_DIR_DEPENDENCIES_STRUCTURE = `${BITS_DIRNAME}/.dependencies`;
+export const DEFAULT_DIR_DEPENDENCIES = '.dependencies';
+
+export const DEFAULT_DIR_DEPENDENCIES_STRUCTURE = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPENDENCIES}`;
 
 export const DEFAULT_SEPARATOR = '/';
 

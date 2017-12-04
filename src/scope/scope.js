@@ -24,6 +24,7 @@ import {
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
+import IsolatedEnvironment from '../environment';
 import { RemoteScopeNotFound, PermissionDenied } from './network/exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
@@ -955,49 +956,34 @@ export default class Scope {
     }
   }
 
-  writeToComponentsDir(componentWithDependencies: ComponentWithDependencies[]): Promise<ConsumerComponent[]> {
-    const componentsDir = this.getComponentsPath();
-    const components: ConsumerComponent[] = flattenDependencies(componentWithDependencies);
-
-    const bitDirForConsumerImport = (component: ConsumerComponent) => {
-      return pathLib.join(componentsDir, component.box, component.name, component.scope, component.version);
-    };
-
-    return Promise.all(
-      components.map((component: ConsumerComponent) => {
-        const bitPath = bitDirForConsumerImport(component);
-        return component.write({ bitDir: bitPath, withPackageJson: false });
-      })
-    );
-  }
-
-  installEnvironment({ ids, verbose }: { ids: BitId[], verbose?: boolean }): Promise<any> {
+  // TODO: Change name since it also used to install extension
+  async installEnvironment({ ids, verbose }: { ids: BitId[], verbose?: boolean }): Promise<any> {
     logger.debug(`scope.installEnvironment, ids: ${ids.join(', ')}`);
-    const installPackageDependencies = (component: ConsumerComponent) => {
-      return npmClient.install(
-        component.packageDependencies,
-        {
-          cwd: this.getBitPathInComponentsDir(component.id)
-        },
-        verbose
-      );
+    const componentsDir = this.getComponentsPath();
+    const bitDir = (base: string, id: BitId, version: ?string) => {
+      const concreteVersion = version || id.version;
+      return pathLib.join(base, id.box, id.name, id.scope, concreteVersion);
     };
-
-    return this.getMany(ids).then((componentDependenciesArr) => {
-      const writeToProperDir = () => {
-        return this.writeToComponentsDir(componentDependenciesArr);
-      };
-
-      return writeToProperDir().then((components: ConsumerComponent[]) => {
-        loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
-        return Promise.all(components.map(c => installPackageDependencies(c))).then((resultsArr) => {
-          loader.stop(); // in order to show npm install output on verbose flag
-          resultsArr.forEach(npmClient.printResults);
-
-          return components;
-        });
-      });
+    const isolateOpts = {
+      writeBitDependencies: false,
+      installPackages: true,
+      noPackageJson: false,
+      override: false,
+      verbose
+    };
+    const isolateComponentsP = ids.map(async (id) => {
+      let version = id.version;
+      if (id.getVersion().latest) {
+        const concreteIds = await this.fetchRemoteVersions([id]);
+        const concreteId = concreteIds[0];
+        version = concreteId.getVersion().versionNum;
+      }
+      const dir = bitDir(componentsDir, id, version);
+      const env = new IsolatedEnvironment(this, dir);
+      await env.create();
+      return env.isolateComponent(id, isolateOpts);
     });
+    return Promise.all(isolateComponentsP);
   }
 
   async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {

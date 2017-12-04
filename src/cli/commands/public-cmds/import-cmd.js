@@ -116,7 +116,7 @@ export default class Import extends Command {
 
     if (envDependencies && !R.isEmpty(envDependencies)) {
       envDependenciesOutput = immutableUnshift(
-        envDependencies.map(formatPlainComponentItem),
+        envDependencies.map(envDependency => formatPlainComponentItem(envDependency.component)),
         chalk.green('the following component environments were installed')
       ).join('\n');
     }

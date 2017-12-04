@@ -54,8 +54,8 @@ export default class Environment {
    * @param rawId
    * @return {Promise.<Component>}
    */
-  async isolateComponent(rawId: string, opts: IsolateOptions): Promise<ComponentWithDependencies> {
-    const bitId = BitId.parse(rawId);
+  async isolateComponent(rawId: string | BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
+    const bitId = typeof rawId === 'string' ? BitId.parse(rawId) : rawId;
     const componentDependenciesArr = await this.scope.getMany([bitId]);
     await this.consumer.writeToComponentsDir(
       componentDependenciesArr,

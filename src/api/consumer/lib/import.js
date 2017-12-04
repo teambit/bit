@@ -40,19 +40,20 @@ export default (async function importAction({
 
     // TODO - import environment on multiple environments
     const envDependencies = await consumer.importEnvironment(ids[0], verbose);
+    const id = envDependencies[0].component.id.toString();
     function writeToBitJsonIfNeeded() {
       if (compiler) {
-        consumer.bitJson.compilerId = envDependencies[0].id.toString();
+        consumer.bitJson.compilerId = id;
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
       if (tester) {
-        consumer.bitJson.testerId = envDependencies[0].id.toString();
+        consumer.bitJson.testerId = id;
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
       if (extension) {
-        consumer.bitJson.extensions[envDependencies[0].id.toString()] = {};
+        consumer.bitJson.extensions[id] = {};
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
