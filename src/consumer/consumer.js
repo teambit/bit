@@ -205,7 +205,7 @@ export default class Consumer {
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
-      const componentModule = await this.scope.sources.get(id);
+      const componentFromModel = await this.scope.getFromLocalIfExist(idWithConcreteVersion);
       let component;
       try {
         component = await Component.loadFromFileSystem({
@@ -215,7 +215,7 @@ export default class Consumer {
           id: idWithConcreteVersion,
           consumerPath: this.getPath(),
           bitMap,
-          deprecated: componentModule ? componentModule.deprecated : false
+          componentFromModel
         });
       } catch (err) {
         if (throwOnFailure) throw err;
@@ -265,7 +265,8 @@ export default class Consumer {
     cache?: boolean = true,
     withPackageJson?: boolean = true,
     force?: boolean = false,
-    dist?: boolean = false
+    dist?: boolean = false,
+    conf?: boolean = false
   ): Promise<> {
     const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
     const bitMap = await this.getBitMap();
@@ -290,6 +291,7 @@ export default class Consumer {
       await this.writeToComponentsDir({
         componentsWithDependencies: componentsAndDependenciesBitJson,
         withPackageJson,
+        withBitJson: conf,
         dist
       });
     }
@@ -301,6 +303,7 @@ export default class Consumer {
         componentsWithDependencies: componentsAndDependenciesBitMap,
         force: false,
         withPackageJson: false,
+        withBitJson: conf,
         dist
       });
     }
@@ -340,7 +343,8 @@ export default class Consumer {
     withPackageJson?: boolean = true,
     writeBitDependencies?: boolean = false,
     force?: boolean = false,
-    dist?: boolean = false
+    dist?: boolean = false,
+    conf?: boolean = false
   ) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     if (!force) {
@@ -353,6 +357,7 @@ export default class Consumer {
       componentsWithDependencies,
       writeToPath,
       withPackageJson,
+      withBitJson: conf,
       writeBitDependencies,
       dist
     });
@@ -368,11 +373,20 @@ export default class Consumer {
     withPackageJson?: boolean = true,
     writeBitDependencies?: boolean = false,
     force?: boolean = false,
-    dist?: boolean = false
+    dist?: boolean = false,
+    conf?: boolean = false
   ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
-      return this.importAccordingToBitJsonAndBitMap(verbose, withEnvironments, cache, withPackageJson, force, dist);
+      return this.importAccordingToBitJsonAndBitMap(
+        verbose,
+        withEnvironments,
+        cache,
+        withPackageJson,
+        force,
+        dist,
+        conf
+      );
     }
     return this.importSpecificComponents(
       rawIds,
@@ -381,7 +395,8 @@ export default class Consumer {
       withPackageJson,
       writeBitDependencies,
       force,
-      dist
+      dist,
+      conf
     );
   }
 
@@ -425,6 +440,7 @@ export default class Consumer {
     writeToPath,
     force = true,
     withPackageJson = true,
+    withBitJson = true,
     writeBitDependencies = false,
     createNpmLinkFiles = false,
     dist = true
@@ -433,6 +449,7 @@ export default class Consumer {
     writeToPath?: string,
     force?: boolean,
     withPackageJson?: boolean,
+    withBitJson?: boolean,
     writeBitDependencies?: boolean,
     createNpmLinkFiles?: boolean,
     dist?: boolean
@@ -461,6 +478,7 @@ export default class Consumer {
         bitDir,
         force,
         bitMap,
+        withBitJson,
         withPackageJson,
         origin,
         consumerPath: this.getPath(),
