@@ -86,6 +86,7 @@ export default class Component {
   log: ?Log;
   writtenPath: ?string; // needed for generate links
   originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
+  distDir: ?string; // might not be the default for imported component when dist.target is set in consumer bit.json
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
   deprecated: boolean;
@@ -419,7 +420,7 @@ export default class Component {
     };
     const distWithoutSharedDir = (pathStr) => {
       if (!originallySharedDir) return pathStr;
-      const distDirLength = DEFAULT_DIST_DIRNAME.length;
+      const distDirLength = this.getDistDir().length;
       const pathWithoutDistDir = pathStr.substring(distDirLength);
       return pathStr.substring(0, distDirLength) + pathWithoutSharedDir(pathWithoutDistDir, originallySharedDir, false);
     };
@@ -452,6 +453,23 @@ export default class Component {
     });
   }
 
+  updateDistsLocation(): void {
+    if (this.dists && this.distDir) {
+      this.dists.forEach((distFile) => {
+        distFile.path = distFile.path.replace(DEFAULT_DIST_DIRNAME, this.distDir);
+      });
+    }
+  }
+
+  setDistDir(distDir) {
+    this.distDir = distDir;
+  }
+
+  getDistDir() {
+    if (this.distDir) return this.distDir;
+    return DEFAULT_DIST_DIRNAME;
+  }
+
   /**
    * When using this function please check if you really need to pass the bitDir or not
    * It's better to init the files with the correct base, cwd and path than pass it here
@@ -468,6 +486,7 @@ export default class Component {
     consumerPath,
     driver,
     writeBitDependencies = false,
+    writeDistsFiles = true,
     dependencies,
     componentMap
   }: {
@@ -481,6 +500,7 @@ export default class Component {
     consumerPath?: string,
     driver?: Driver,
     writeBitDependencies?: boolean,
+    writeDistsFiles?: boolean,
     dependencies: Array<Components>,
     componentMap: ComponentMap
   }): Promise<Component> {
@@ -504,6 +524,7 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
+        writeDistsFiles,
         dependencies
       });
     }
@@ -516,6 +537,7 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
+        writeDistsFiles,
         dependencies
       });
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
@@ -545,6 +567,7 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
+        writeDistsFiles,
         deleteBitDirContent
       });
       // todo: remove from the file system
@@ -559,8 +582,6 @@ export default class Component {
     // Don't write the package.json for an authored component, because it's dependencies probably managed
     // By the root package.json
     const actualWithPackageJson = withPackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
-    // don't write dists files for authored components as the author has its own mechanism to generate them
-    const writeDistsFiles = origin !== COMPONENT_ORIGINS.AUTHORED;
     await this._writeToComponentDir({
       bitDir: newBase,
       withBitJson,
@@ -871,7 +892,7 @@ export default class Component {
   // This important since when you require a module without specify file, it will give you the file specified under this key
   // (or index.js if key not exists)
   calculateMainDistFile(): string {
-    const distMainFile = path.join(DEFAULT_DIST_DIRNAME, this.mainFile);
+    const distMainFile = path.join(this.getDistDir(), this.mainFile);
     const mainFile = searchFilesIgnoreExt(this.dists, distMainFile, 'relative', 'relative');
     return mainFile || this.mainFile;
   }

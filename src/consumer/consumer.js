@@ -101,7 +101,9 @@ export default class Consumer {
     } catch (err) {
       msg = msg
         ? format(msg, err)
-        : `Warning: Bit is not be able to run the bind command. Please install bit-${err.lang} driver and run the bind command.`;
+        : `Warning: Bit is not be able to run the bind command. Please install bit-${
+          err.lang
+        } driver and run the bind command.`;
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
@@ -262,7 +264,8 @@ export default class Consumer {
     withEnvironments: ?boolean,
     cache?: boolean = true,
     withPackageJson?: boolean = true,
-    force?: boolean = false
+    force?: boolean = false,
+    dist?: boolean = false
   ): Promise<> {
     const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
     const bitMap = await this.getBitMap();
@@ -284,13 +287,22 @@ export default class Consumer {
     let componentsAndDependenciesBitMap = [];
     if (dependenciesFromBitJson) {
       componentsAndDependenciesBitJson = await this.scope.getManyWithAllVersions(dependenciesFromBitJson, cache);
-      await this.writeToComponentsDir(componentsAndDependenciesBitJson, undefined, undefined, withPackageJson);
+      await this.writeToComponentsDir({
+        componentsWithDependencies: componentsAndDependenciesBitJson,
+        withPackageJson,
+        dist
+      });
     }
     if (componentsFromBitMap.length) {
       componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsFromBitMap, cache);
-      // Don't write the package.json for an authored component, because it's dependencies probably managed
-      // By the root packge.json
-      await this.writeToComponentsDir(componentsAndDependenciesBitMap, undefined, false, false);
+      // Don't write the package.json for an authored component, because its dependencies probably managed by the root
+      // package.json
+      await this.writeToComponentsDir({
+        componentsWithDependencies: componentsAndDependenciesBitMap,
+        force: false,
+        withPackageJson: false,
+        dist
+      });
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     if (withEnvironments) {
@@ -327,7 +339,8 @@ export default class Consumer {
     writeToPath?: string,
     withPackageJson?: boolean = true,
     writeBitDependencies?: boolean = false,
-    force?: boolean
+    force?: boolean = false,
+    dist?: boolean = false
   ) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     if (!force) {
@@ -335,15 +348,15 @@ export default class Consumer {
     }
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw));
-    const componentDependenciesArr = await this.scope.getManyWithAllVersions(bitIds, cache);
-    await this.writeToComponentsDir(
-      componentDependenciesArr,
+    const componentsWithDependencies = await this.scope.getManyWithAllVersions(bitIds, cache);
+    await this.writeToComponentsDir({
+      componentsWithDependencies,
       writeToPath,
-      undefined,
       withPackageJson,
-      writeBitDependencies
-    );
-    return { dependencies: componentDependenciesArr };
+      writeBitDependencies,
+      dist
+    });
+    return { dependencies: componentsWithDependencies };
   }
 
   import(
@@ -354,13 +367,22 @@ export default class Consumer {
     writeToPath?: string,
     withPackageJson?: boolean = true,
     writeBitDependencies?: boolean = false,
-    force?: boolean = false
+    force?: boolean = false,
+    dist?: boolean = false
   ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
-      return this.importAccordingToBitJsonAndBitMap(verbose, withEnvironments, cache, withPackageJson, force);
+      return this.importAccordingToBitJsonAndBitMap(verbose, withEnvironments, cache, withPackageJson, force, dist);
     }
-    return this.importSpecificComponents(rawIds, cache, writeToPath, withPackageJson, writeBitDependencies, force);
+    return this.importSpecificComponents(
+      rawIds,
+      cache,
+      writeToPath,
+      withPackageJson,
+      writeBitDependencies,
+      force,
+      dist
+    );
   }
 
   importEnvironment(rawId: ?string, verbose?: boolean) {
@@ -398,14 +420,23 @@ export default class Consumer {
    * In case there are some same dependencies shared between the components, it makes sure to
    * write them only once.
    */
-  async writeToComponentsDir(
+  async writeToComponentsDir({
+    componentsWithDependencies,
+    writeToPath,
+    force = true,
+    withPackageJson = true,
+    writeBitDependencies = false,
+    createNpmLinkFiles = false,
+    dist = true
+  }: {
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
-    force?: boolean = true,
-    withPackageJson?: boolean = true,
-    writeBitDependencies?: boolean = false,
-    createNpmLinkFiles?: boolean = false
-  ): Promise<Component[]> {
+    force?: boolean,
+    withPackageJson?: boolean,
+    writeBitDependencies?: boolean,
+    createNpmLinkFiles?: boolean,
+    dist?: boolean
+  }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
     const writeComponentsP = componentsWithDependencies.map((componentWithDeps) => {
@@ -418,7 +449,14 @@ export default class Consumer {
         componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
           ? COMPONENT_ORIGINS.AUTHORED
           : COMPONENT_ORIGINS.IMPORTED;
-      if (origin === COMPONENT_ORIGINS.IMPORTED) componentWithDeps.component.stripOriginallySharedDir(bitMap);
+      if (origin === COMPONENT_ORIGINS.IMPORTED) {
+        componentWithDeps.component.stripOriginallySharedDir(bitMap);
+        componentWithDeps.component.setDistDir(this.bitJson.distTarget);
+        componentWithDeps.component.updateDistsLocation();
+      }
+      // don't write dists files for authored components as the author has its own mechanism to generate them
+      // also, don't write dists file for imported component, unless the user used '--dist' flag
+      const writeDistsFiles = dist && origin === COMPONENT_ORIGINS.IMPORTED;
       return componentWithDeps.component.write({
         bitDir,
         force,
@@ -428,6 +466,7 @@ export default class Consumer {
         consumerPath: this.getPath(),
         driver: this.driver,
         writeBitDependencies,
+        writeDistsFiles,
         dependencies: componentWithDeps.dependencies,
         componentMap
       });
@@ -503,7 +542,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);

@@ -25,8 +25,8 @@ describe('bit pack with absolute paths', function () {
     helper.addRemoteScope();
     helper.runCmd('npm i prop-types');
     helper.copyFixtureComponents();
-    helper.importComponent('test/styles');
-    helper.importComponent('test/hero-button');
+    helper.importComponent('test/styles --dist');
+    helper.importComponent('test/hero-button --dist');
     helper.addComponentWithOptions('hero', { i: 'test/hero' });
     helper.commitAllComponents();
     helper.exportAllComponents();

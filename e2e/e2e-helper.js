@@ -166,12 +166,12 @@ export default class Helper {
     return { scopeName, scopePath };
   }
 
-  mimicGitCloneLocalProject() {
+  mimicGitCloneLocalProject(withDist = false) {
     fs.removeSync(path.join(this.localScopePath, '.bit'));
     fs.removeSync(path.join(this.localScopePath, 'components'));
     this.runCmd('bit init');
     this.addRemoteScope();
-    this.runCmd('bit install');
+    return withDist ? this.runCmd('bit import --dist') : this.runCmd('bit import');
   }
 
   getConsumerFiles(ext: string = '*.{js,ts}') {

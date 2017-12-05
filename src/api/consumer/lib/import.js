@@ -20,6 +20,7 @@ export default (async function importAction({
   prefix,
   environment,
   force,
+  dist,
   withPackageJson,
   writeBitDependencies = false
 }: {
@@ -30,6 +31,7 @@ export default (async function importAction({
   prefix: ?string,
   environment: ?boolean,
   force: boolean,
+  dist: boolean,
   withPackageJson: ?boolean,
   writeBitDependencies: ?boolean
 }): Promise<any> {
@@ -68,7 +70,8 @@ export default (async function importAction({
     prefix,
     withPackageJson,
     writeBitDependencies,
-    force
+    force,
+    dist
   );
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const bitMap = await consumer.getBitMap();
