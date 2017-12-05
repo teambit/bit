@@ -185,7 +185,6 @@ describe('bit add command', function () {
         errorMessage = err.message;
       }
       expect(errorMessage).to.have.string("error: option `-n, --namespace <namespace>' argument missing");
-
     });
     it('Define dynamic main file ', () => {
       const mainFileOs = path.normalize('{PARENT_FOLDER}/{PARENT_FOLDER}.js');

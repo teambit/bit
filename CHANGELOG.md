@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- prevent overriding index file if exists 
+
 ## [0.11.2-dev.1] - 2017-12-04
 
 - generate link for npm as scoped packages
