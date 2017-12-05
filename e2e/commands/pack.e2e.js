@@ -68,13 +68,13 @@ describe('bit pack with absolute paths', function () {
         sync: true,
         cwd: path.join(helper.localScopePath, 'node_modules')
       });
-      fs.mkdirsSync(path.join(helper.localScopePath, 'node_modules', `${helper.remoteScope}.test.hero-button`));
-      fs.mkdirsSync(path.join(helper.localScopePath, 'node_modules', `${helper.remoteScope}.test.styles`));
+      fs.mkdirsSync(path.join(helper.localScopePath, 'node_modules', `@bit/${helper.remoteScope}.test.hero-button`));
+      fs.mkdirsSync(path.join(helper.localScopePath, 'node_modules', `@bit/${helper.remoteScope}.test.styles`));
       fs.ensureFileSync(
-        path.join(helper.localScopePath, 'node_modules', `${helper.remoteScope}.test.styles`, 'index.js')
+        path.join(helper.localScopePath, 'node_modules', '@bit', `${helper.remoteScope}.test.styles`, 'index.js')
       );
       fs.ensureFileSync(
-        path.join(helper.localScopePath, 'node_modules', `${helper.remoteScope}.test.hero-button`, 'index.js')
+        path.join(helper.localScopePath, 'node_modules', '@bit', `${helper.remoteScope}.test.hero-button`, 'index.js')
       );
       const packDir = path.join(helper.localScopePath, 'node_modules', 'package');
       const node_modules_dir = path.join(packDir, 'node_modules', 'bit', 'test');
@@ -136,7 +136,7 @@ describe('bit pack with relative paths', function () {
         .with.content.that.match(new RegExp(`${helper.remoteScope}.test.hero-button`));
       expect(path.join(packDir, 'styles', 'global.css'))
         .to.be.a.file()
-        .with.content(`@import '~${helper.remoteScope}.test.styles';`);
+        .with.content(`@import '~@bit/${helper.remoteScope}.test.styles';`);
     });
   });
 });
