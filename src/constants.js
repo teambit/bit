@@ -140,7 +140,32 @@ export const CFG_CI_ENABLE_KEY = 'ci_enable';
 /**
  * bit hooks
  */
-export const HOOKS_NAMES = ['pre-tag', 'post-tag', 'pre-import', 'post-import', 'pre-export', 'post-export'];
+export const PRE_TAG_HOOK = 'pre-tag';
+
+export const POST_TAG_HOOK = 'post-tag';
+
+export const PRE_TAG_ALL_HOOK = 'pre-tag-all';
+
+export const POST_TAG_ALL_HOOK = 'post-tag-all';
+
+export const PRE_IMPORT_HOOK = 'pre-import';
+
+export const POST_IMPORT_HOOK = 'post-import';
+
+export const PRE_EXPORT_HOOK = 'pre-export';
+
+export const POST_EXPORT_HOOK = 'post-export';
+
+export const HOOKS_NAMES = [
+  PRE_TAG_HOOK,
+  POST_TAG_HOOK,
+  PRE_TAG_ALL_HOOK,
+  POST_TAG_ALL_HOOK,
+  PRE_IMPORT_HOOK,
+  POST_IMPORT_HOOK,
+  PRE_EXPORT_HOOK,
+  POST_EXPORT_HOOK
+];
 
 /**
  * cache root directory
