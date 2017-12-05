@@ -58,7 +58,7 @@ export default class HooksManager {
    */
   registerNewHook(hookName: string, throwIfExist: boolean = false): boolean {
     if (this.hooks.has(hookName)) {
-      logger.info(`trying to register an already existing hook ${hookName}`);
+      logger.warn(`trying to register an already existing hook ${hookName}`);
       if (throwIfExist) {
         throw new errors.HookAlreadyExists(hookName);
       }
@@ -77,7 +77,7 @@ export default class HooksManager {
    */
   registerActionToHook(hookName: string, hookAction: HookAction, throwIfNotExist: boolean = false) {
     if (!this.hooks.has(hookName)) {
-      logger.info(`trying to trigger a non existing hook ${hookName}`);
+      logger.warn(`trying to register to a non existing hook ${hookName}`);
       if (throwIfNotExist) {
         throw new errors.HookNotExists(hookName);
       }
@@ -96,7 +96,7 @@ export default class HooksManager {
   async triggerHook(hookName: string, args: Object): ?(HookFailures[]) {
     const resultErrors = [];
     if (!this.hooks.has(hookName)) {
-      logger.info(`trying to trigger a non existing hook ${hookName}`);
+      logger.warn(`trying to trigger a non existing hook ${hookName}`);
       throw new errors.HookNotExists(hookName);
     }
     logger.info(`triggering hook ${hookName}`);
