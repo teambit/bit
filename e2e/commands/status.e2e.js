@@ -71,7 +71,7 @@ describe('bit status command', function () {
       expect(output).to.have.string('untracked file dependencies: bar/foo.js');
     });
   });
-  describe.only('when a component is created and added without its package dependencies', () => {
+  describe('when a component is created and added without its package dependencies', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
