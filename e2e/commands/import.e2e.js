@@ -1272,8 +1272,8 @@ describe('bit import', function () {
     });
   });
 
-  // @todo: block this option. We shouldn't allow adding AUTHORED component to an IMPORTED component with relative syntax
-  describe.skip('after adding dependencies to an imported component', () => {
+  describe('after adding dependencies to an imported component with relative syntax', () => {
+    let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isStringWithNoDepsFixture = "module.exports = function isString() { return 'got is-string'; };";
@@ -1291,17 +1291,16 @@ describe('bit import', function () {
       const isStringFixture =
         "const isType = require('../../../utils/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('components/utils/is-string', 'is-string.js', isStringFixture); // modify utils/is-string
-      helper.commitAllComponents();
-      helper.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.importComponent('utils/is-string');
+      try {
+        output = helper.commitAllComponents();
+      } catch (err) {
+        output = err.toString();
+      }
     });
-    it('should recognize the modified imported component and print results from its new dependencies', () => {
-      const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-      const result = helper.runCmd('node app.js');
-      expect(result.trim()).to.equal('got is-type and got is-string');
+    it('should not allow tagging the component', () => {
+      expect(output).to.have.string('fatal: issues found with the following component dependencies');
+      expect(output).to.have.string('relative components (should be absolute)');
+      expect(output).to.have.string('utils/is-type');
     });
   });
 

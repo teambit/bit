@@ -262,7 +262,8 @@ export default class Component {
       bitDependencies,
       registryPrefix: registryDomainPrefix
     });
-    return packageJson.write({ override: force, postInstallLinkData });
+    const domainPrefix = getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
+    return packageJson.write({ override: force, postInstallLinkData, domainPrefix });
   }
 
   dependencies(): BitIds {

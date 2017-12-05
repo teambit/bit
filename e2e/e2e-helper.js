@@ -99,6 +99,10 @@ export default class Helper {
 
   reInitLocalScope() {
     fs.emptyDirSync(this.localScopePath);
+    this.initLocalScope();
+  }
+
+  initLocalScope() {
     return this.runCmd('bit init');
   }
 
