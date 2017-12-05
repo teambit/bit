@@ -71,6 +71,18 @@ describe('bit status command', function () {
       expect(output).to.have.string('untracked file dependencies: bar/foo.js');
     });
   });
+  describe.only('when a component is created and added without its package dependencies', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('bar', 'foo.js', 'var React = require("react")');
+      helper.addComponent('bar/foo.js');
+    });
+    it('Should show missing package dependencies', () => {
+      output = helper.runCmd('bit status');
+      expect(output).to.have.string('missing packages dependencies: react');
+    });
+  });
   describe('when a component is created, added and committed', () => {
     let output;
     before(() => {
