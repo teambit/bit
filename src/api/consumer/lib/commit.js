@@ -2,16 +2,12 @@
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
+import HooksManager from '../../../hooks';
+import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from '../../../constants';
 
-export async function commitAction({
-  id,
-  message,
-  exactVersion,
-  releaseType,
-  force,
-  verbose,
-  ignoreMissingDependencies
-}: {
+const HooksManagerInstance = HooksManager.getInstance();
+
+export async function commitAction(args: {
   id: string,
   message: string,
   exactVersion: ?string,
@@ -20,6 +16,8 @@ export async function commitAction({
   verbose?: boolean,
   ignoreMissingDependencies?: boolean
 }) {
+  const { id, message, exactVersion, releaseType, force, verbose, ignoreMissingDependencies } = args;
+  HooksManagerInstance.triggerHook(PRE_TAG_HOOK, args);
   const consumer: Consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
@@ -37,6 +35,7 @@ export async function commitAction({
     ignoreMissingDependencies
   );
   commitResults.newComponents = newComponents;
+  HooksManagerInstance.triggerHook(POST_TAG_HOOK, commitResults);
   return commitResults;
 }
 
@@ -55,16 +54,7 @@ async function getCommitPendingComponents(
   return { commitPendingComponents, warnings };
 }
 
-export async function commitAllAction({
-  message,
-  exactVersion,
-  releaseType,
-  force,
-  verbose,
-  ignoreMissingDependencies,
-  scope,
-  includeImported
-}: {
+export async function commitAllAction(args: {
   message: string,
   exactVersion: ?string,
   releaseType: string,
@@ -74,6 +64,17 @@ export async function commitAllAction({
   scope?: boolean,
   includeImported?: boolean
 }) {
+  const {
+    message,
+    exactVersion,
+    releaseType,
+    force,
+    verbose,
+    ignoreMissingDependencies,
+    scope,
+    includeImported
+  } = args;
+  HooksManagerInstance.triggerHook(PRE_TAG_ALL_HOOK, args);
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
@@ -96,5 +97,6 @@ export async function commitAllAction({
   commitResults.warnings = warnings;
 
   commitResults.newComponents = newComponents;
+  HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, commitResults);
   return commitResults;
 }
