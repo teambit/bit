@@ -2,8 +2,10 @@
 import loudRejection from 'loud-rejection';
 import buildRegistrar from './cli/command-registrar-builder';
 import loadExtensions from './extensions/extensions-loader';
+import HooksManager from './hooks';
 
 loudRejection();
+HooksManager.init();
 
 loadExtensions().then((extensions) => {
   const extensionsCommands = extensions.reduce((acc, curr) => {
