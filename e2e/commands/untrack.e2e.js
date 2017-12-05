@@ -26,16 +26,25 @@ describe('bit untrack command', function () {
       expect(Object.keys(bitMap)).to.be.ofSize(1);
       expect(bitMap).to.have.property('version');
     });
-    it('Should remove specific component and keep commited ', () => {
+    it('Should remove specific component and keep all other new components', () => {
       helper.createComponent('bar', 'foo.js');
       helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.createComponent('bar', 'foo2.js');
       helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.untrackComponent('bar/foo');
-      const bitMap = helper.readBitMap();
-      expect(Object.keys(bitMap)).to.be.ofSize(2);
+      const bitMap = helper.readBitMapWithoutVersion();
+      expect(Object.keys(bitMap)).to.be.ofSize(1);
       expect(bitMap).to.have.property('bar/foo2');
-      expect(bitMap).to.have.property('version');
+    });
+    it('Should be unsuccessful in untracking commited component and return a message to the user', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
+      helper.commitComponent('bar/foo');
+      const output = helper.untrackComponent('bar/foo');
+      const bitMap = helper.readBitMapWithoutVersion();
+      expect(output).to.have.string('error: unable to untrack bar/foo, please use the bit remove command.');
+      expect(Object.keys(bitMap)).to.be.ofSize(1);
+      expect(bitMap).to.have.property('bar/foo');
     });
     it('Should resolve and untrack  component and add global as prefix component ', () => {
       helper.createComponent('bar', 'foo.js');

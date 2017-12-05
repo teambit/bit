@@ -79,6 +79,19 @@ export default class Helper {
     return json.parse(map.toString('utf8'), null, withoutComment);
   }
 
+  readBitMapWithoutVersion(
+    bitMapPath: string = path.join(this.localScopePath, '.bit.map.json'),
+    withoutComment: boolean = true
+  ) {
+    const map = fs.readFileSync(bitMapPath) || {};
+    const parsedMap = json.parse(map.toString('utf8'), null, withoutComment);
+    const parsedMapArray = Object.keys(parsedMap);
+    if (parsedMapArray.length > 0 && Object.hasOwnProperty.call(parsedMap, 'version')) {
+      delete parsedMap.version;
+    }
+    return parsedMap;
+  }
+
   writeBitMap(bitMap: Object) {
     const bitMapPath = path.join(this.localScopePath, '.bit.map.json');
     return fs.writeJSONSync(bitMapPath, bitMap);
