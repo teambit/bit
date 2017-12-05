@@ -9,6 +9,9 @@ import IsolatedEnvironment, { IsolateOptions } from '../environment';
 import { Scope, loadScope } from '../scope';
 import { loadConsumer } from '../consumer';
 import { BitId } from '../bit-id';
+import HooksManager from '../hooks';
+
+const HooksManagerInstance = HooksManager.getInstance();
 
 type NewCommand = {
   name: string,
@@ -52,6 +55,7 @@ export default class Extension {
       logger.info(`registering to hook ${hookName}`);
       // TODO: Validate the key against hooks list
       this.registeredHooks[hookName] = hookAction;
+      HooksManagerInstance.registerActionToHook(hookName, hookAction);
     },
     createIsolatedEnv
   };
