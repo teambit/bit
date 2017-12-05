@@ -9,7 +9,7 @@ import IsolatedEnvironment, { IsolateOptions } from '../environment';
 import { Scope, loadScope } from '../scope';
 import { loadConsumer } from '../consumer';
 import { BitId } from '../bit-id';
-import HooksManager from '../hooks';
+import HooksManager, { HookAction } from '../hooks';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -19,8 +19,8 @@ type NewCommand = {
   action: Function
 };
 
-type RegisteredHooks = {
-  [string]: Function
+type RegisteredHooksActions = {
+  [string]: HookAction
 };
 
 type Commands = {
@@ -29,7 +29,7 @@ type Commands = {
 
 export type ExtensionProps = {
   name: string,
-  registeredHooks: RegisteredHooks,
+  registeredHooksActions: RegisteredHooksActions,
   commands?: Commands,
   rawConfig: Object,
   dynamicConfig: Object
@@ -40,7 +40,8 @@ export default class Extension {
   loaded: boolean;
   disabled: boolean;
   filePath: string;
-  registeredHooks: RegisteredHooks;
+  registeredHooksActions: RegisteredHooksActions;
+  newHooks: string[];
   commands: Commands;
   rawConfig: Object;
   dynamicConfig: Object;
@@ -51,11 +52,22 @@ export default class Extension {
       logger.info(`registering new command ${newCommand.name}`);
       this.commands.push(new ExtensionCommand(newCommand));
     },
-    registerToHook: (hookName: string, hookAction: Function) => {
-      logger.info(`registering to hook ${hookName}`);
-      // TODO: Validate the key against hooks list
-      this.registeredHooks[hookName] = hookAction;
-      HooksManagerInstance.registerActionToHook(hookName, hookAction);
+    registerActionToHook: (hookName: string, hookAction: HookAction) => {
+      logger.info(`registering ${hookAction.name} to hook ${hookName}`);
+      this.registeredHooksActions[hookName] = hookAction;
+    },
+    registerNewHook: (hookName: string) => {
+      logger.info(`registering new global hook ${hookName}`);
+      this.newHooks.push(hookName);
+      // Register the new hook in the global hooks manager
+      HooksManagerInstance.registerNewHook(hookName);
+    },
+    triggerHook: (hookName, args) => {
+      if (!R.contains(hookName, this.newHooks)) {
+        logger.debug(`trying to trigger the hook ${hookName} which not registerd by this extension`);
+        return;
+      }
+      HooksManagerInstance.triggerHook(hookName, args);
     },
     createIsolatedEnv
   };
@@ -65,7 +77,8 @@ export default class Extension {
     this.rawConfig = extensionProps.rawConfig;
     this.dynamicConfig = extensionProps.rawConfig;
     this.commands = [];
-    this.registeredHooks = {};
+    this.registeredHooksActions = {};
+    this.newHooks = [];
   }
 
   static async load(name: string, rawConfig: Object, scopePath: string): Promise<Extension> {
@@ -124,17 +137,16 @@ export default class Extension {
     return extension;
   }
 
-  registerToHook(hookName: string, callback: Function) {
-    // Validate hook name
-    if (!R.contains(hookName, HOOKS_NAMES)) {
-      logger.info(`Extension ${this.name} tried to register to unknown hook: ${hookName}`);
-      return;
-    }
-    this.registeredHooks[hookName] = callback;
-  }
-
-  registerNewCommand(commandName: string, command: NewCommand) {
-    this.commands[commandName] = command;
+  /**
+   * Register the hooks on the global hooks manager
+   * We don't do this directly on the api in order to be able to register to hooks defined by another extensions
+   * So we want to make sure to first load and register all new hooks from all extensions and only then register the actions
+   */
+  registerHookActionsOnHooksManager() {
+    const registerAction = (hookAction, hookName) => {
+      HooksManagerInstance.registerActionToHook(hookName, hookAction);
+    };
+    R.forEachObjIndexed(registerAction, this.registeredHooksActions);
   }
 }
 

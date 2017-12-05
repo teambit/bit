@@ -8,6 +8,10 @@ loudRejection();
 HooksManager.init();
 
 loadExtensions().then((extensions) => {
+  // Make sure to register all the hooks actions in the global hooks manager
+  extensions.forEach((extension) => {
+    extension.registerHookActionsOnHooksManager();
+  });
   const extensionsCommands = extensions.reduce((acc, curr) => {
     if (curr.commands && curr.commands.length) {
       acc = acc.concat(curr.commands);
