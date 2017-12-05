@@ -107,6 +107,9 @@ export default class BitJson extends AbstractBitJson {
     });
   }
 
+  /**
+   * Use the consumerBitJson as a base. Override values if exist in componentBitJson
+   */
   static mergeWithProto(json, protoBJ: ?ConsumerBitJson): BitJson {
     const plainProtoBJ = protoBJ ? protoBJ.toPlainObject() : {};
     delete plainProtoBJ.dependencies;

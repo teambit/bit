@@ -26,13 +26,14 @@ describe('bit add command', function () {
       } catch (err) {
         error = err.message;
       }
-      expect(error).to.include('fatal: scope not found. to create a new scope, please use `bit init');
+      expect(error).to.have.string('fatal: scope not found. to create a new scope, please use `bit init');
     });
   });
   describe('add one component', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
+
     it('Should add component to bitmap with folder as default namespace', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'));
@@ -171,7 +172,7 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('test/foo1');
       expect(bitMap).to.have.property('test/foo2');
-      expect(output).to.equal('tracking 2 new components\n');
+      expect(output).to.have.string('tracking 2 new components');
     });
     it('Should return error for missing namespace', () => {
       const basePath = path.normalize('bar/*');
@@ -183,7 +184,7 @@ describe('bit add command', function () {
       } catch (err) {
         errorMessage = err.message;
       }
-      expect(errorMessage).to.include("error: option `-n, --namespace <namespace>' argument missing");
+      expect(errorMessage).to.have.string("error: option `-n, --namespace <namespace>' argument missing");
     });
     it('Define dynamic main file ', () => {
       const mainFileOs = path.normalize('{PARENT_FOLDER}/{PARENT_FOLDER}.js');
@@ -261,7 +262,7 @@ describe('bit add command', function () {
       } catch (err) {
         errorMessage = err.message;
       }
-      expect(errorMessage).to.include("error: option `-i, --id <name>' argument missing");
+      expect(errorMessage).to.have.string("error: option `-i, --id <name>' argument missing");
     });
     it('Should return error if used an invalid ID', () => {
       helper.createComponent('bar', 'foo.js');
@@ -273,7 +274,8 @@ describe('bit add command', function () {
       } catch (err) {
         errorMessage = err.message;
       }
-      expect(errorMessage).to.include(
+
+      expect(errorMessage).to.have.string(
         'invalid id part in "Bar/Foo", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]'
       );
     });
@@ -346,6 +348,21 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo');
     });
 
+    // TODO: we need to implement the feature preventing the use of -t without wrapping in quotes.
+    it.skip('Should output message preventing user from adding files with spec from dsl and glob pattern without using quotes', () => {
+      let errMsg = '';
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('test/bar', 'foo.spec.js');
+      helper.createComponent('test/bar', 'foo2.spec.js');
+      try {
+        helper.runCmd('bit add bar/*.js -t test/bar/{FILE_NAME}.spec.js -n bar');
+      } catch (err) {
+        errMsg = err.message;
+      }
+      expect(errMsg).to.have.string('Please wrap tests with quotes');
+    });
+
     it('Should add dir files with spec from dsl and glob pattern and exclude', () => {
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('bar', 'foo2.js');
@@ -366,6 +383,20 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
+
+    // TODO: we need to implement the feature preventing -e without wrapping in quotes.
+    it.skip('Should prevent using exclude flag without wrapping in quotes', () => {
+      let errMsg = '';
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      try {
+        helper.runCmd('bit add bar/*.js -e bar/foo2.js');
+      } catch (err) {
+        errMsg = err.message;
+      }
+      expect(errMsg).to.have.string('Please wrap excluded files with quotes');
+    });
+
     it('Should modify bitmap when adding component again when specifing id', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.createComponent('bar', 'index.js');
@@ -383,6 +414,7 @@ describe('bit add command', function () {
       expect(files2).to.be.array();
       expect(files2).to.be.ofSize(3);
     });
+
     it('Should modify bitmap when adding component again without id', () => {
       helper.createComponent('bar/foo', 'foo.js');
       helper.createComponent('bar/foo', 'index.js');

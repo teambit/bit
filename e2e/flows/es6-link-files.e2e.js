@@ -81,7 +81,7 @@ describe('es6 components with link files', function () {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo');
+        helper.importComponent('bar/foo --dist');
       });
       it('should auto-generate a link file', () => {
         const currentUtilIndex = fs.readFileSync(
@@ -126,7 +126,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.importComponent('bar/foo --dist');
     });
     it('should rewrite the relevant part of the link file', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
@@ -161,7 +161,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.importComponent('bar/foo --dist');
     });
     it('should generate the links correctly', () => {
       const appJsFixture = `const barFoo = require('./components/bar/foo');
@@ -206,7 +206,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.importComponent('bar/foo --dist');
     });
     it('should generate the links correctly', () => {
       const appJsFixture = `const barFoo = require('./components/bar/foo');

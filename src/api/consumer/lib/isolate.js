@@ -5,12 +5,15 @@ import logger from '../../../logger/logger';
 
 // TODO: merge this with other instances of the same options
 export type IsolateOptions = {
-  directory: ?string,
-  write_bit_dependencies: ?boolean,
-  npm_links: ?boolean,
-  install_packages: ?boolean,
-  no_package_json: ?boolean,
-  override: ?boolean
+  writeToPath: ?string,
+  writeBitDependencies: ?boolean,
+  npmLinks: ?boolean,
+  installPackages: ?boolean,
+  dist: ?boolean,
+  conf: ?boolean,
+  noPackageJson: ?boolean,
+  override: ?boolean,
+  dist: ?boolean
 };
 
 export default (async function isolate(componentId: string, scopePath: string, opts: IsolateOptions): Promise<string> {

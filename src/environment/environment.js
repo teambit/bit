@@ -13,12 +13,14 @@ import { Consumer } from '../consumer';
 import Component from '../consumer/component';
 
 export type IsolateOptions = {
-  directory: ?string,
+  writeToPath: ?string,
   writeBitDependencies: ?boolean,
   links: ?boolean,
   installPackages: ?boolean,
   noPackageJson: ?boolean,
   override: ?boolean,
+  dist: ?boolean,
+  conf: ?boolean,
   verbose: boolean
 };
 
@@ -56,16 +58,19 @@ export default class Environment {
    */
   async isolateComponent(rawId: string | BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
     const bitId = typeof rawId === 'string' ? BitId.parse(rawId) : rawId;
-    const componentDependenciesArr = await this.scope.getMany([bitId]);
-    await this.consumer.writeToComponentsDir(
-      componentDependenciesArr,
-      opts.directory || this.path,
-      true,
-      !opts.noPackageJson,
-      opts.writeBitDependencies,
-      opts.createNpmLinkFiles
-    );
-    const componentWithDependencies: ComponentWithDependencies = R.head(componentDependenciesArr);
+    const componentsWithDependencies = await this.scope.getMany([bitId]);
+    const concreteOpts = {
+      componentsWithDependencies,
+      writeToPath: opts.writeToPath || this.path,
+      force: opts.override,
+      withPackageJson: !opts.noPackageJson,
+      withBitJson: opts.conf,
+      writeBitDependencies: opts.writeBitDependencies,
+      createNpmLinkFiles: opts.createNpmLinkFiles,
+      dist: opts.dist
+    };
+    await this.consumer.writeToComponentsDir(concreteOpts);
+    const componentWithDependencies: ComponentWithDependencies = R.head(componentsWithDependencies);
     const componentWithDependenciesFlatten = [
       componentWithDependencies.component,
       ...componentWithDependencies.dependencies

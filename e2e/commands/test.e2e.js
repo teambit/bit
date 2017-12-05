@@ -1,6 +1,5 @@
 // covers also ci-update command
 
-import fs from 'fs-extra';
 import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
@@ -43,7 +42,6 @@ describe('bit test command', function () {
   });
   after(() => {
     helper.destroyEnv();
-    fs.removeSync(clonedScopePath);
   });
   describe('when there are no tests', () => {
     before(() => {

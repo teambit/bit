@@ -20,6 +20,7 @@ export default class Helper {
   bitBin: string;
   compilerCreated: boolean;
   cache: Object;
+  clonedScopes: string[] = [];
   constructor() {
     this.debugMode = !!process.env.npm_config_debug;
     this.remoteScope = `${v4()}-remote`;
@@ -95,10 +96,17 @@ export default class Helper {
       fs.removeSync(this.cache.localScopePath);
       fs.removeSync(this.cache.remoteScopePath);
     }
+    if (this.clonedScopes && this.clonedScopes.length) {
+      this.clonedScopes.forEach(scopePath => fs.removeSync(scopePath));
+    }
   }
 
   reInitLocalScope() {
     fs.emptyDirSync(this.localScopePath);
+    this.initLocalScope();
+  }
+
+  initLocalScope() {
     return this.runCmd('bit init');
   }
 
@@ -162,12 +170,12 @@ export default class Helper {
     return { scopeName, scopePath };
   }
 
-  mimicGitCloneLocalProject() {
+  mimicGitCloneLocalProject(withDist = false) {
     fs.removeSync(path.join(this.localScopePath, '.bit'));
     fs.removeSync(path.join(this.localScopePath, 'components'));
     this.runCmd('bit init');
     this.addRemoteScope();
-    this.runCmd('bit install');
+    return withDist ? this.runCmd('bit import --dist') : this.runCmd('bit import');
   }
 
   getConsumerFiles(ext: string = '*.{js,ts}') {
@@ -371,6 +379,7 @@ export default class Helper {
     const clonedScopePath = path.join(this.e2eDir, clonedScope);
     if (this.debugMode) console.log(`cloning a scope from ${this.localScopePath} to ${clonedScopePath}`);
     fs.copySync(this.localScopePath, clonedScopePath);
+    this.clonedScopes.push(clonedScopePath);
     return clonedScopePath;
   }
 

@@ -673,6 +673,17 @@ export default class Scope {
   }
 
   /**
+   * return a component only when it's stored locally. Don't go to any remote server and don't throw an exception if the
+   * component is not there.
+   */
+  async getFromLocalIfExist(id: BitId): Promise<?ConsumerComponent> {
+    const componentFromSources = await this.sources.get(id);
+    if (!componentFromSources) return null;
+    const versionDependencies = await componentFromSources.toVersionDependencies(id.version, this, this.name);
+    return versionDependencies.toConsumer(this.objects);
+  }
+
+  /**
    * get multiple components from a scope, if not found in the local scope, fetch from a remote
    * scope. Then, write them to the local scope.
    */
@@ -976,6 +987,8 @@ export default class Scope {
       writeBitDependencies: false,
       installPackages: true,
       noPackageJson: false,
+      dist: true,
+      conf: true,
       override: false,
       verbose
     };

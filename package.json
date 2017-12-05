@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.11.1",
+  "version": "0.11.2-dev.4",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
@@ -35,7 +35,7 @@
   "dependencies": {
     "array-difference": "^0.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "0.10.7",
+    "bit-javascript": "^0.10.8-dev.1",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
     "child-process-promise": "^2.2.1",

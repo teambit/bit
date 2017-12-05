@@ -157,7 +157,6 @@ export default (async function addAction(
 
         // get test files
         const testFiles = await getTestFiles(files);
-
         const resolvedMainFile = addMainFileToFiles(files, pathNormalizeToLinux(main));
         // matches.forEach((match) => {
         //   if (keepDirectoryName) {

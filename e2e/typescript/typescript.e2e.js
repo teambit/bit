@@ -67,7 +67,7 @@ describe('typescript', function () {
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo');
+        helper.importComponent('bar/foo --dist');
         localConsumerFiles = helper.getConsumerFiles('*.{js,ts,json}');
       });
       const isStringPath = path.join('components', '.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1');
@@ -264,7 +264,7 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.importComponent('bar/foo --dist');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";

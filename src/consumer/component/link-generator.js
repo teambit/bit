@@ -3,7 +3,14 @@ import path from 'path';
 import normalize from 'normalize-path';
 import R from 'ramda';
 import groupBy from 'lodash.groupby';
-import { DEFAULT_DIST_DIRNAME, DEFAULT_INDEX_NAME, COMPONENT_ORIGINS, AUTO_GENERATED_MSG } from '../../constants';
+import {
+  DEFAULT_DIST_DIRNAME,
+  DEFAULT_INDEX_NAME,
+  COMPONENT_ORIGINS,
+  AUTO_GENERATED_MSG,
+  CFG_REGISTRY_DOMAIN_PREFIX,
+  DEFAULT_REGISTRY_DOMAIN_PREFIX
+} from '../../constants';
 import { outputFile, getWithoutExt, searchFilesIgnoreExt, getExt } from '../../utils';
 import logger from '../../logger/logger';
 import { ComponentWithDependencies } from '../../scope';
@@ -11,6 +18,7 @@ import Component from '../component';
 import BitMap from '../bit-map/bit-map';
 import { BitIds } from '../../bit-id';
 import fileTypesPlugins from '../../plugins/file-types-plugins';
+import { getSync } from '../../api/consumer/lib/global-config';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -159,7 +167,8 @@ async function writeDependencyLinks(
     relativePath: Object
   ) => {
     // this is used to converd the component name to a valid npm package  name
-    const packagePath = componentId.toStringWithoutVersion().replace(/\//g, '.');
+    const packagePath = `${getSync(CFG_REGISTRY_DOMAIN_PREFIX) ||
+      DEFAULT_REGISTRY_DOMAIN_PREFIX}/${componentId.toStringWithoutVersion().replace(/\//g, '.')}`;
     const rootDir = path.join(consumerPath, bitMap.getRootDirOfComponent(componentId));
     let actualFilePath = path.join(rootDir, relativePathInDependency);
     if (relativePathInDependency === mainFile) {
@@ -309,7 +318,6 @@ async function writeDependencyLinks(
         depHasDist
       );
     });
-
     return Promise.all([directLinksP, ...indirectLinksP]);
   });
   return Promise.all(allLinksP);
@@ -324,7 +332,7 @@ async function writeEntryPointsForImportedComponent(component: Component, bitMap
   const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = _getLinkContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
-  return outputFile(entryPointPath, AUTO_GENERATED_MSG + entryPointFileContent);
+  return outputFile(entryPointPath, AUTO_GENERATED_MSG + entryPointFileContent, false);
 }
 function generateEntryPointDataForPackages(component: Component): Promise<any> {
   const packagePath = `${component.bindingPrefix}/${component.id.box}/${component.id.name}`;
