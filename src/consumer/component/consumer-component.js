@@ -1030,7 +1030,7 @@ export default class Component {
     // use the component from the model to get their bit.json values
     if (!fs.existsSync(path.join(bitDir, BIT_JSON)) && componentFromModel) {
       if (componentFromModel.component.compilerId) {
-        bitJson.testerId = componentFromModel.component.compilerId.toString();
+        bitJson.compilerId = componentFromModel.component.compilerId.toString();
       }
       if (componentFromModel.component.testerId) {
         bitJson.testerId = componentFromModel.component.testerId.toString();
