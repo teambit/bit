@@ -34,7 +34,6 @@ import { Repository, Ref, BitObject } from './objects';
 import ComponentWithDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
-import { postExportHook, postImportHook, postDeprecateHook, postRemoveHook } from '../hooks';
 import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
@@ -476,7 +475,6 @@ export default class Scope {
     );
     // await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
     const ids = manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString());
-    await postExportHook({ ids });
     await Promise.all(manyConsumerComponent.map(consumerComponent => performCIOps(consumerComponent, this.getPath())));
     return ids;
   }
@@ -619,7 +617,6 @@ export default class Scope {
     logger.debug(
       'scope.importMany: successfully fetched local components and their dependencies. Going to fetch externals'
     );
-    await postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) });
     const remotes = await this.remotes();
     const externalDeps = await this.getExternalMany(externals, remotes, cache, persist);
     return versionDeps.concat(externalDeps);
@@ -639,7 +636,6 @@ export default class Scope {
         return def.component.toComponentVersion(def.id.version);
       })
     );
-    await postImportHook({ ids: componentVersionArr.map(cv => cv.id.toString()) });
     const remotes = await this.remotes();
     const externalDeps = await this.getExternalOnes(externals, remotes, cache);
     return componentVersionArr.concat(externalDeps);
@@ -792,13 +788,11 @@ export default class Scope {
 
     if (force) {
       const removedComponents = await Promise.all(removeComponents());
-      await postRemoveHook({ ids: removedComponents });
       return { bitIds: removedComponents };
     }
     const dependentBits = await this.findDependentBits(foundComponents);
     if (R.isEmpty(dependentBits)) {
       const removedComponents = await Promise.all(removeComponents());
-      await postRemoveHook({ ids: removedComponents });
       return { bitIds: removedComponents, missingComponents };
     }
     return { dependentBits, missingComponents };
@@ -810,7 +804,6 @@ export default class Scope {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const deprecateComponents = () => foundComponents.map(async bitId => this.deprecateSingle(bitId));
     const deprecatedComponents = await Promise.all(deprecateComponents());
-    await postDeprecateHook({ ids: deprecatedComponents });
     return { bitIds: deprecatedComponents, missingComponents };
   }
 
