@@ -21,6 +21,8 @@ export default (async function getConsumerBit({
   if (compare) {
     try {
       const componentModel = await consumer.scope.loadRemoteComponent(component.id);
+      const bitMap = await consumer.getBitMap();
+      componentModel.stripOriginallySharedDir(bitMap);
       return { component, componentModel };
     } catch (err) {
       throw new NothingToCompareTo(id);
