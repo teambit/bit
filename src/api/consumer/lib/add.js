@@ -114,11 +114,12 @@ export default (async function addAction(
       if (mainFile) {
         const mainPath = path.join(consumer.getPath(), consumer.getPathRelativeToConsumer(mainFile));
         if (fs.existsSync(mainPath)) {
-          resolvedMainFile = consumer.getPathRelativeToConsumer(mainFile);
+          resolvedMainFile = consumer.getPathRelativeToConsumer(mainPath);
         } else {
           resolvedMainFile = mainFile;
         }
       }
+      mainFile = resolvedMainFile;
       return resolvedMainFile;
     }
 
@@ -207,8 +208,8 @@ export default (async function addAction(
 
       files = await mergeTestFilesWithFiles(files);
       const resolvedMainFile = addMainFileToFiles(files, main);
-      const mainFile = componentExists ? resolvedMainFile : relativeFilePath;
-      return { componentId: parsedId, files, mainFile };
+      // const mainFile = componentExists ? resolvedMainFile : relativeFilePath;
+      return { componentId: parsedId, files, mainFile: resolvedMainFile };
     });
 
     let mapValues = await Promise.all(mapValuesP);
@@ -229,7 +230,7 @@ export default (async function addAction(
     const uniqComponents = Object.keys(groupedComponents).map(key =>
       assignwith({}, ...groupedComponents[key], (val1, val2) => val1 || val2)
     );
-    return { componentId, files: uniqComponents, mainFile: main };
+    return { componentId, files: uniqComponents, mainFile: R.head(mapValues).mainFile };
   }
 
   const consumer: Consumer = await loadConsumer();
