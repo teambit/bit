@@ -24,8 +24,16 @@ export default class BitIds extends Array<BitId> {
     return getLatestVersionNumber(this, idWithLatest);
   }
 
-  static deserialize(array: string[] = []) {
-    return new BitIds(...array.map(id => BitId.parse(id)));
+  /**
+   * Get array of bitIds strings and transfer them to BitIds object
+   * This function support also checking if the array contain strings or BitIds
+   * @param {string | BitId} array - array of bit ids
+   */
+  static deserialize(array: string[] | BitId[] = []) {
+    if (array && array.length && typeof array[0] === 'string') {
+      return new BitIds(...array.map(id => BitId.parse(id)));
+    }
+    return new BitIds(...array);
   }
 
   static fromObject(dependencies: { [string]: string }) {
