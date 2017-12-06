@@ -94,6 +94,13 @@ export default class BitJson extends AbstractBitJson {
     });
   }
 
+  mergeWithComponentData(component) {
+    this.compiler = component.compilerId ? component.compilerId.toString() : null;
+    this.tester = component.testerId ? component.testerId.toString() : null;
+    this.bindingPrefix = component.bindingPrefix;
+    this.lang = component.lang;
+  }
+
   /**
    * Use the consumerBitJson as a base. Override values if exist in componentBitJson
    */
