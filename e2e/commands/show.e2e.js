@@ -2,6 +2,7 @@
 
 import chai, { expect } from 'chai';
 import path from 'path';
+import R from 'ramda';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
 const assertArrays = require('chai-arrays');
@@ -180,6 +181,22 @@ describe('bit show command', function () {
       it('should include the main file correctly', () => {
         expect(output).to.include({ mainFile: 'src/mainFile.js' });
       });
+
+      describe('when the compiler is changed in the consumer bit.json', () => {
+        let bitJson;
+        before(() => {
+          bitJson = helper.readBitJson();
+          const clonedBitJson = R.clone(bitJson);
+          clonedBitJson.env.compiler = 'scope/namespace/name@0.0.1';
+          helper.writeBitJson(clonedBitJson);
+        });
+        after(() => {
+          helper.writeBitJson(bitJson);
+        });
+        it('should display the compiler of the component', () => {
+          expect(output).to.include({ compilerId: `${helper.envScope}/compilers/babel${VERSION_DELIMITER}0.0.1` });
+        });
+      });
     });
 
     it.skip('should throw an error if the -v flag provided', () => {});
@@ -322,6 +339,32 @@ function add(a, b) {
       expect(showCmd).to.throw(
         'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
       );
+    });
+  });
+  describe('local component without compiler', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+    describe('when the consumer bit.json has a compiler', () => {
+      let jsonOutput;
+      before(() => {
+        const bitJson = helper.readBitJson();
+        bitJson.env.compiler = 'scope/namespace/name@0.0.1';
+        helper.writeBitJson(bitJson);
+        const output = helper.showComponent('bar/foo --json');
+        jsonOutput = JSON.parse(output);
+      });
+      it('should not show the consumer compiler', () => {
+        expect(jsonOutput.compilerId).to.not.equal('scope/namespace/name@0.0.1');
+        expect(jsonOutput.compilerId).to.be.a('null');
+      });
     });
   });
   describe('with removed file/files', () => {
