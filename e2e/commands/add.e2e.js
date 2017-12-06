@@ -17,6 +17,7 @@ describe('bit add command', function () {
   after(() => {
     helper.destroyEnv();
   });
+
   describe('add before running "bit init"', () => {
     it('Should return message to run "bit init"', () => {
       let error;
@@ -33,7 +34,11 @@ describe('bit add command', function () {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
-
+    it('Should print tracking component: id', () => {
+      helper.createComponent('bar', 'foo2.js');
+      const output = helper.addComponent(path.normalize('bar/foo2.js'));
+      expect(output).to.contain('tracking component bar/foo2');
+    });
     it('Should add component to bitmap with folder as default namespace', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'));
