@@ -16,7 +16,6 @@ module.exports = {
   list: scopePath => scopeList(scopePath).then(components => components.map(c => c.id.toString())),
   loadExtension: async (extensionName: string, extensionFilePath: string, extensionConfig: Object): Extension => {
     const extension = await Extension.loadFromFile(extensionName, extensionFilePath, extensionConfig);
-    console.log('ds', extension.script);
     return Promise.resolve(extension);
   }
 };
