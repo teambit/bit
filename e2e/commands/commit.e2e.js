@@ -45,11 +45,13 @@ describe('bit tag command', function () {
         helper.addComponent('components/*.js');
         helper.commitAllComponents();
       });
-      it('Should set the version to default version in tag new component', () => {
+      it.only('Should set the version to default version in tag new component', () => {
         helper.createFile('components', 'default.js');
         helper.addComponent('components/default.js');
         output = helper.commitComponent('components/default');
+        console.log(output);
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
+        console.log(listOutput);
         expect(listOutput).to.deep.include({ id: 'components/default', localVersion: '0.0.1' });
       });
       it('Should increment the patch version when no version type specified', () => {
