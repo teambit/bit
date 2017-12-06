@@ -63,7 +63,6 @@ export default class Add extends Command {
     if (results.length > 1) {
       return chalk.green(`tracking ${results.length} new components`);
     }
-    console.log(results);
     return results
       .map((result) => {
         if (result.files.length === 0) {
