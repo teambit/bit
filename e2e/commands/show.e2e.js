@@ -383,6 +383,12 @@ function add(a, b) {
         const showCmd = () => helper.showComponent('bar/foo --compare');
         expect(showCmd).not.to.throw();
       });
+      it('model and file-system should have the same main file and files, regardless the originallySharedDir (bar)', () => {
+        const result = helper.showComponent('bar/foo --compare --json');
+        const { componentFromFileSystem, componentFromModel } = JSON.parse(result);
+        expect(componentFromFileSystem.mainFile).to.equal(componentFromModel.mainFile);
+        expect(componentFromFileSystem.files).to.deep.equal(componentFromModel.files);
+      });
     });
   });
   describe('with --outdated flag', () => {
