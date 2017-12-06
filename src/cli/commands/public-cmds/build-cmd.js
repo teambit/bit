@@ -1,6 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import { build, buildAll } from '../../../api/consumer';
+import { empty } from '../../../utils';
 
 const chalk = require('chalk');
 
@@ -34,7 +35,7 @@ export default class Build extends Command {
   }
 
   report(res: ?(string[]) | string | Object): string {
-    const noCompilerSpecifiedError = chalk.red('there is no compiler to that component');
+    const noCompilerSpecifiedError = chalk.red('compiler is not defined, please define a compiler in bit.json');
     if (!res) return noCompilerSpecifiedError;
     if (Array.isArray(res)) {
       return chalk.cyan(res.join('\n'));
@@ -42,6 +43,7 @@ export default class Build extends Command {
     if (typeof res === 'object') {
       // got from build-all
       // $FlowFixMe - res is an object
+      if (empty(res)) return chalk.yellow('nothing to build');
       return Object.keys(res)
         .map((component) => {
           const title = chalk.bold(component);
