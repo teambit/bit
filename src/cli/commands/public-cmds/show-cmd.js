@@ -73,6 +73,17 @@ export default class Show extends Command {
     }
 
     if (!component) return 'could not find the requested component';
-    return json ? component.toString() : paintComponent(component, componentModel, outdated);
+    if (json) {
+      const makeComponentReadable = (comp) => {
+        if (!comp) return;
+        delete comp._writeDistsFiles;
+        comp.files = comp.files.map(file => file.toReadableString());
+      };
+      makeComponentReadable(component);
+      makeComponentReadable(componentModel);
+      const jsonObject = componentModel ? { componentFileSystem: component, componentModel } : component;
+      return JSON.stringify(jsonObject, null, '  ');
+    }
+    return paintComponent(component, componentModel, outdated);
   }
 }
