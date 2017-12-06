@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - generate link for npm as scoped packages
 - prevent adding AUTHORED component to an IMPORTED component using require relative syntax
 - avoid writing long files paths for imported components when there is a shared directory among the component files and its dependencies
-
+- fixed bit add output tracking component undefined
 ## [0.11.1] - 2017-11-29
 
 - support tagging the entire local scope and all imported components to a specific tag using `--scope` and `--include_imported` flags
