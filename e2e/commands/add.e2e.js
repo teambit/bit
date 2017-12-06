@@ -40,6 +40,24 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('bar/foo2');
     });
+
+    it('Should add component main file when defined from relative path ', () => {
+      helper.createComponent('bar', 'bar.js');
+      helper.createComponent('bar/foo', 'foo.js');
+      helper.createComponent('bar/foo', 'foo2.js');
+
+      helper.createComponent('goo', 'goo.js');
+      helper.addComponentWithOptions(
+        path.normalize('foo/foo.js foo/foo2.js'),
+        { m: 'foo/foo2.js', i: 'test/test' },
+        path.join(helper.localScopePath, 'bar')
+      );
+      const bitMap = helper.readBitMap();
+      const files = bitMap['test/test'].files;
+      expect(bitMap['test/test'].mainFile).to.equal('bar/foo/foo2.js');
+      const expectTestFile = { relativePath: 'bar/foo/foo.js', test: false, name: 'foo.js' };
+      expect(files).to.deep.include(expectTestFile);
+    });
     it('Should not add component if bit.json is corrupted', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.corruptBitJson();
@@ -349,22 +367,19 @@ describe('bit add command', function () {
     });
 
     // TODO: we need to implement the feature preventing the use of -t without wrapping in quotes.
-    it.skip(
-      'Should output message preventing user from adding files with spec from dsl and glob pattern without using quotes',
-      () => {
-        let errMsg = '';
-        helper.createComponent('bar', 'foo.js');
-        helper.createComponent('bar', 'foo2.js');
-        helper.createComponent('test/bar', 'foo.spec.js');
-        helper.createComponent('test/bar', 'foo2.spec.js');
-        try {
-          helper.runCmd('bit add bar/*.js -t test/bar/{FILE_NAME}.spec.js -n bar');
-        } catch (err) {
-          errMsg = err.message;
-        }
-        expect(errMsg).to.have.string('Please wrap tests with quotes');
+    it.skip('Should output message preventing user from adding files with spec from dsl and glob pattern without using quotes', () => {
+      let errMsg = '';
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('test/bar', 'foo.spec.js');
+      helper.createComponent('test/bar', 'foo2.spec.js');
+      try {
+        helper.runCmd('bit add bar/*.js -t test/bar/{FILE_NAME}.spec.js -n bar');
+      } catch (err) {
+        errMsg = err.message;
       }
-    );
+      expect(errMsg).to.have.string('Please wrap tests with quotes');
+    });
 
     it('Should add dir files with spec from dsl and glob pattern and exclude', () => {
       helper.createComponent('bar', 'foo.js');
@@ -587,7 +602,9 @@ describe('bit add command', function () {
       it('should throw an error', () => {
         const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${helper.bitBin} add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
+          `Command failed: ${
+            helper.bitBin
+          } add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
         );
       });
     });
