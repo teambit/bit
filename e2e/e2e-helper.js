@@ -79,6 +79,12 @@ export default class Helper {
     return json.parse(map.toString('utf8'), null, withoutComment);
   }
 
+  readBitMapWithoutVersion() {
+    const bitMap = this.readBitMap();
+    delete bitMap.version;
+    return bitMap;
+  }
+
   writeBitMap(bitMap: Object) {
     const bitMapPath = path.join(this.localScopePath, '.bit.map.json');
     return fs.writeJSONSync(bitMapPath, bitMap);
