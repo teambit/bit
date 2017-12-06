@@ -141,7 +141,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('components/a@0.0.4');
         expect(output).to.have.string('components/b@0.0.4');
       });
-      it.only('Should show message "nothing to tag" if trying to tag with no changes', () => {
+      it('Should show message "nothing to tag" if trying to tag with no changes', () => {
         const tagWithoutChanges = helper.tagAllWithoutMessage();
         expect(tagWithoutChanges).to.have.string('nothing to tag');
       });
@@ -185,7 +185,7 @@ describe('bit tag command', function () {
     });
   });
   describe('tag one component', () => {
-    it.only('should throw error if the bit id does not exists', () => {
+    it('should throw error if the bit id does not exists', () => {
       let output;
       try {
         helper.tagWithoutMessage('non/existing');
