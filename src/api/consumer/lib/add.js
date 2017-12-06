@@ -5,6 +5,7 @@ import R from 'ramda';
 import format from 'string-format';
 import assignwith from 'lodash.assignwith';
 import groupby from 'lodash.groupby';
+import unionBy from 'lodash.unionby';
 import {
   glob,
   isDir,
@@ -109,7 +110,16 @@ export default (async function addAction(
           }
         });
       }
-      return mainFile;
+      let resolvedMainFile;
+      if (mainFile) {
+        const mainPath = path.join(consumer.getPath(), consumer.getPathRelativeToConsumer(mainFile));
+        if (fs.existsSync(mainPath)) {
+          resolvedMainFile = consumer.getPathRelativeToConsumer(mainFile);
+        } else {
+          resolvedMainFile = mainFile;
+        }
+      }
+      return resolvedMainFile;
     }
 
     let componentExists = false;
@@ -131,13 +141,15 @@ export default (async function addAction(
       updateIdAccordingToExistingComponent(id);
     }
 
-    async function getTestFiles(files: ComponentMapFile[]): ComponentMapFile[] {
+    async function mergeTestFilesWithFiles(files: ComponentMapFile[]): ComponentMapFile[] {
       const testFilesArr = !R.isEmpty(tests) ? await getFiles(files.map(file => file.relativePath), tests) : [];
-      return testFilesArr.map(testFile => ({
+      const resolvedTestFiles = testFilesArr.map(testFile => ({
         relativePath: testFile,
         test: true,
         name: path.basename(testFile)
       }));
+
+      return unionBy(resolvedTestFiles, files, 'relativePath');
     }
 
     const mapValuesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
@@ -151,12 +163,12 @@ export default (async function addAction(
         const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
         if (!matches.length) throw new EmptyDirectory();
 
-        const files = matches.map((match) => {
+        let files = matches.map((match) => {
           return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
         });
 
-        // get test files
-        const testFiles = await getTestFiles(files);
+        // merge test files with files
+        files = await mergeTestFilesWithFiles(files);
         const resolvedMainFile = addMainFileToFiles(files, pathNormalizeToLinux(main));
         // matches.forEach((match) => {
         //   if (keepDirectoryName) {
@@ -171,7 +183,7 @@ export default (async function addAction(
           parsedId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
         }
 
-        return { componentId: parsedId, files: files.concat(testFiles), mainFile: resolvedMainFile };
+        return { componentId: parsedId, files, mainFile: resolvedMainFile };
       }
       // is file
       const resolvedPath = path.resolve(componentPath);
@@ -189,14 +201,14 @@ export default (async function addAction(
         updateIdAccordingToExistingComponent(parsedId.toString());
       }
 
-      const files = [
+      let files = [
         { relativePath: pathNormalizeToLinux(relativeFilePath), test: false, name: path.basename(relativeFilePath) }
       ];
 
-      const testFiles = await getTestFiles(files);
+      files = await mergeTestFilesWithFiles(files);
       const resolvedMainFile = addMainFileToFiles(files, main);
       const mainFile = componentExists ? resolvedMainFile : relativeFilePath;
-      return { componentId: parsedId, files: files.concat(testFiles), mainFile };
+      return { componentId: parsedId, files, mainFile };
     });
 
     let mapValues = await Promise.all(mapValuesP);
