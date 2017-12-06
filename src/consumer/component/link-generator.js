@@ -292,7 +292,10 @@ async function writeDependencyLinks(
     logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
     const directDeps = componentWithDeps.component.dependencies;
     const flattenDeps = componentWithDeps.component.flattenedDependencies;
-    const hasDist = componentWithDeps.component.dists && !R.isEmpty(componentWithDeps.component.dists);
+    const hasDist =
+      componentWithDeps.component._writeDistsFiles &&
+      componentWithDeps.component.dists &&
+      !R.isEmpty(componentWithDeps.component.dists);
     const mainFile = componentWithDeps.component.calculateMainDistFile();
     const directLinksP = componentLinks(
       componentWithDeps.dependencies,
