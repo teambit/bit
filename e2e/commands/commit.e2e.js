@@ -45,13 +45,11 @@ describe('bit tag command', function () {
         helper.addComponent('components/*.js');
         helper.commitAllComponents();
       });
-      it.only('Should set the version to default version in tag new component', () => {
+      it('Should set the version to default version in tag new component', () => {
         helper.createFile('components', 'default.js');
         helper.addComponent('components/default.js');
         output = helper.commitComponent('components/default');
-        console.log(output);
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
-        console.log(listOutput);
         expect(listOutput).to.deep.include({ id: 'components/default', localVersion: '0.0.1' });
       });
       it('Should increment the patch version when no version type specified', () => {
@@ -136,6 +134,17 @@ describe('bit tag command', function () {
         expect(output).to.have.string('components/a@0.0.3');
         expect(output).to.have.string('components/b@0.0.3');
       });
+      it('Should increment the default version without the -m flag', () => {
+        helper.createFile('components', 'a.js', 'v0.0.4');
+        helper.createFile('components', 'b.js', 'v0.0.4');
+        output = helper.tagAllWithoutMessage();
+        expect(output).to.have.string('components/a@0.0.4');
+        expect(output).to.have.string('components/b@0.0.4');
+      });
+      it.only('Should show message "nothing to tag" if trying to tag with no changes', () => {
+        const tagWithoutChanges = helper.tagAllWithoutMessage();
+        expect(tagWithoutChanges).to.have.string('nothing to tag');
+      });
       it('Should increment the minor version when --minor flag specified', () => {
         helper.createFile('components', 'a.js', 'v0.1.0');
         helper.createFile('components', 'b.js', 'v0.1.0');
@@ -176,7 +185,15 @@ describe('bit tag command', function () {
     });
   });
   describe('tag one component', () => {
-    it.skip('should throw error if the bit id does not exists', () => {});
+    it.only('should throw error if the bit id does not exists', () => {
+      let output;
+      try {
+        helper.tagWithoutMessage('non/existing');
+      } catch (err) {
+        output = err.message;
+      }
+      expect(output).to.have.string('fatal: the component non/existing was not found in the bit.map file');
+    });
 
     it.skip('should print warning if the a driver is not installed', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
@@ -307,18 +324,6 @@ describe('bit tag command', function () {
     });
   });
 
-  describe('tag non-exist component', () => {
-    before(() => {
-      helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-    });
-    it('should not tag another component', () => {
-      const commit = () => helper.commitComponent('non-exist-comp');
-      expect(commit).to.throw('the component global/non-exist-comp was not found in the bit.map file');
-    });
-  });
-
   describe('tag back', () => {
     // This is specifically export more than one component since it's different case for the
     // resolveLatestVersion.js - getLatestVersionNumber function
@@ -339,21 +344,6 @@ describe('bit tag command', function () {
         expect(output).to.have.string('1 components tagged');
       });
     });
-  });
-
-  describe('tag already tagged component without changing it', () => {
-    let output;
-    before(() => {
-      helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.commitAllComponents();
-      output = helper.commitComponent('bar/foo');
-    });
-    it('should print nothing to tag', () => {
-      expect(output).to.have.string('nothing to tag');
-    });
-    it.skip('should tag the component if -f used', () => {});
   });
 
   describe('tag imported component with new dependency to another imported component', () => {
@@ -448,7 +438,9 @@ describe('bit tag command', function () {
     });
   });
 
+  // there is another describe('tag all components')
   describe('tag all components', () => {
+    // this "it" is a duplication. didn't remove it yet because it sets up the scope for the next tests. talk to gilad.
     it('Should print there is nothing to tag right after success tag all', () => {
       // Create component and try to tag twice
       helper.reInitLocalScope();
