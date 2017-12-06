@@ -93,13 +93,13 @@ export default class HooksManager {
    * @param {string} hookName - The hook name to trigger
    * @return {HookFailures} Aggregated errors of the actions failures
    */
-  async triggerHook(hookName: string, args: Object): ?(HookFailures[]) {
+  async triggerHook(hookName: string, args: Object = {}): ?(HookFailures[]) {
     const resultErrors = [];
     if (!this.hooks.has(hookName)) {
       logger.warn(`trying to trigger a non existing hook ${hookName}`);
       throw new errors.HookNotExists(hookName);
     }
-    logger.info(`triggering hook ${hookName}`);
+    logger.info(`triggering hook ${hookName} with args: ${_stringifyIfNeeded(args)}`);
     const actions = this.hooks.get(hookName);
     const actionsP = actions.map((action) => {
       // Catch errors in order to aggregate them
@@ -117,4 +117,8 @@ export default class HooksManager {
     await Promise.all(actionsP);
     return resultErrors;
   }
+}
+
+function _stringifyIfNeeded(val) {
+  return typeof val === 'string' ? val : JSON.stringify(val);
 }
