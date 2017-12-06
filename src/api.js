@@ -4,6 +4,9 @@ import { getScopeComponent } from './api/consumer/index';
 import { scopeList } from './api/scope/index';
 import Extension from './extensions/extension';
 import logger from './logger/logger';
+import HooksManager from './hooks';
+
+HooksManager.init();
 
 module.exports = {
   show: (scopePath, id, opts) =>
