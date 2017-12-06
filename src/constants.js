@@ -156,6 +156,22 @@ export const PRE_EXPORT_HOOK = 'pre-export';
 
 export const POST_EXPORT_HOOK = 'post-export';
 
+export const PRE_SEND_OBJECTS = 'pre-send-objects'; // pre-fetch
+
+export const POST_SEND_OBJECTS = 'post-send-objects'; // post-fetch
+
+export const PRE_RECEIVE_OBJECTS = 'pre-receive-objects'; // pre-put
+
+export const POST_RECEIVE_OBJECTS = 'post-receive-objects'; // post-put
+
+export const PRE_DEPRECATE_REMOTE = 'pre-deprecate-remote';
+
+export const POST_DEPRECATE_REMOTE = 'post-deprecate-remote';
+
+export const PRE_REMOVE_REMOTE = 'pre-remove-remote';
+
+export const POST_REMOVE_REMOTE = 'post-remove-remote';
+
 export const HOOKS_NAMES = [
   PRE_TAG_HOOK,
   POST_TAG_HOOK,
@@ -164,7 +180,15 @@ export const HOOKS_NAMES = [
   PRE_IMPORT_HOOK,
   POST_IMPORT_HOOK,
   PRE_EXPORT_HOOK,
-  POST_EXPORT_HOOK
+  POST_EXPORT_HOOK,
+  PRE_SEND_OBJECTS,
+  POST_SEND_OBJECTS,
+  PRE_RECEIVE_OBJECTS,
+  POST_RECEIVE_OBJECTS,
+  PRE_DEPRECATE_REMOTE,
+  POST_DEPRECATE_REMOTE,
+  PRE_REMOVE_REMOTE,
+  POST_REMOVE_REMOTE
 ];
 
 /**
