@@ -186,14 +186,9 @@ export default class SourceRepository {
 
     consumerComponent.mainFile = pathNormalizeToLinux(addSharedDir(consumerComponent.mainFile));
     consumerComponent.dependencies.forEach((dependency) => {
-      // @todo: Delete the following commented 'if' statement and remove the dependency.origin attribute altogether after all cases of the reduce-import are resolved.
-      // if (dependency.origin && dependency.origin === COMPONENT_ORIGINS.NESTED) {
       dependency.relativePaths.forEach((relativePath) => {
         relativePath.sourceRelativePath = addSharedDir(relativePath.sourceRelativePath);
-        // relativePath.destinationRelativePath = addSharedDir(relativePath.destinationRelativePath);
       });
-      // }
-      delete dependency.origin;
     });
     const version = Version.fromComponent({
       component: consumerComponent,
