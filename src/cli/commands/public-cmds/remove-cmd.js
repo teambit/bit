@@ -10,17 +10,13 @@ export default class Remove extends Command {
   alias = 'rm';
   opts = [
     ['f', 'force [boolean]', 'force remove (default = false)'],
-    ['r', 'remote [boolean]', 'remove from a remote scope'],
     ['t', 'track [boolean]', 'keep tracking component (default = false) ']
   ];
   loader = true;
   migration = true;
 
-  action(
-    [ids]: [string],
-    { force = false, remote = false, track = false }: { force: boolean, remote: boolean, track: boolean }
-  ): Promise<any> {
-    return remove({ ids, force, remote, track });
+  action([ids]: [string], { force = false, track = false }: { force: boolean, track: boolean }): Promise<any> {
+    return remove({ ids, force, track });
   }
 
   report(bitObj: object | Array<any>): string {
@@ -28,11 +24,13 @@ export default class Remove extends Command {
   }
 
   paintMissingComponents = missingComponents =>
-    (!R.isEmpty(missingComponents) && R.isNil(missingComponents)
-      ? chalk.underline('missing components:') + chalk(` ${missingComponents}\n`)
+    (!R.isEmpty(missingComponents) && !R.isNil(missingComponents)
+      ? chalk.red.underline('missing components:') + chalk(` ${missingComponents}\n`)
       : '');
   paintRemoved = bitIds =>
-    (!R.isEmpty(bitIds) && !R.isNil(bitIds) ? chalk.underline('removed components:') + chalk(` ${bitIds}\n`) : '');
+    (!R.isEmpty(bitIds) && !R.isNil(bitIds)
+      ? chalk.green.underline('successfully removed components:') + chalk(` ${bitIds}\n`)
+      : '');
   paintSingle = bitObj =>
     this.paintUnRemovedComponents(bitObj.dependentBits) +
     this.paintRemoved(bitObj.bitIds) +

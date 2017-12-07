@@ -3,18 +3,23 @@ import { loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_REMOVE } from '../../../cli/loader/loader-messages';
 
+import { BitId } from '../../../bit-id';
+
 export default (async function remove({
   ids,
-  remote,
   force,
   track
 }: {
   ids: string[],
-  remote: boolean,
   force: boolean,
   track: boolean
 }): Promise<any> {
-  if (remote) loader.start(BEFORE_REMOTE_REMOVE);
+  // loader.start(BEFORE_REMOTE_REMOVE);
   const consumer = await loadConsumer();
-  return consumer.remove(ids, remote, force, track);
+  const bitIds = ids.map(bitId => BitId.parse(bitId));
+  const localIds = [],
+    remoteIds = [];
+  bitIds.forEach(x => (x.isLocal() ? localIds.push(x) : remoteIds.push(x)));
+  // return  consumer.removeRemote(remoteIds, force)
+  return consumer.removeLocal(bitIds, force, track); // //:
 });

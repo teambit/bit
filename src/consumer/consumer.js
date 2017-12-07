@@ -559,9 +559,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
@@ -911,9 +911,12 @@ export default class Consumer {
     }
     return removedIds;
   }
-  async remove(ids: string[], remote: boolean, force: boolean, track: boolean) {
+  async remove(ids: string[], force: boolean, track: boolean) {
     const bitIds = ids.map(bitId => BitId.parse(bitId));
-    return remote ? this.removeRemote(bitIds, force) : this.removeLocal(bitIds, force, track);
+    const localIds = [],
+      remoteIds = [];
+    bitIds.forEach(x => (x.isLocal() ? localIds.push(x) : remoteIds.push(x)));
+    return this.removeRemote(remoteIds, force); // : this.removeLocal(bitIds, force, track);
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
