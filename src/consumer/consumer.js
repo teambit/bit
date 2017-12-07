@@ -102,9 +102,7 @@ export default class Consumer {
     } catch (err) {
       msg = msg
         ? format(msg, err)
-        : `Warning: Bit is not be able to run the bind command. Please install bit-${
-          err.lang
-        } driver and run the bind command.`;
+        : `Warning: Bit is not be able to run the bind command. Please install bit-${err.lang} driver and run the bind command.`;
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
@@ -560,9 +558,7 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
