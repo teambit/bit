@@ -57,6 +57,7 @@ export default (async function importAction({
       }
 
       if (extension) {
+        // TODO: don't create the same extension twice - check if older version exists and override it
         consumer.bitJson.extensions[id] = {
           options: {},
           config: {}

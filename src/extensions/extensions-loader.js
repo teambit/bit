@@ -6,6 +6,7 @@ import logger from '../logger/logger';
 
 export default (async function loadExtensions(): Extension[] {
   try {
+    logger.info('start loading extensions');
     const consumer: Consumer = await loadConsumer();
     const rawExtensions = consumer.bitJson.extensions || {};
     const extensions = R.values(
