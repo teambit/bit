@@ -22,6 +22,7 @@ import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
 import ComponentMap from './bit-map/component-map';
+import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { getLatestVersionNumber, pathRelative } from '../utils';
@@ -643,8 +644,20 @@ export default class Consumer {
     if (!componentFromModel) return includeNewComponents; // the component was never committed
     const latestVersionRef = componentFromModel.versions[componentFromModel.latest()];
     const versionFromModel = await this.scope.getObject(latestVersionRef.hash);
-    const componentFromFileSystem = await this.loadComponent(idParsed);
-    return this.isComponentModified(versionFromModel, componentFromFileSystem);
+    try {
+      const componentFromFileSystem = await this.loadComponent(idParsed);
+      return this.isComponentModified(versionFromModel, componentFromFileSystem);
+    } catch (err) {
+      if (
+        err instanceof MissingFilesFromComponent ||
+        err instanceof ComponentNotFoundInPath ||
+        err instanceof MissingBitMapComponent
+      ) {
+        // the file/s have been deleted or the component doesn't exist in bit.map file
+        return false;
+      }
+      throw err;
+    }
   }
 
   async commit(

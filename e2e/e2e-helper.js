@@ -349,11 +349,11 @@ export default class Helper {
     fs.copySync(sourceDir, cwd);
   }
   addFixtureComponents() {}
-  addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object) {
+  addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object, cwd = this.localScopePath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
-    return this.runCmd(`bit add ${filePaths} ${value}`);
+    return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
 
   testComponent(id) {

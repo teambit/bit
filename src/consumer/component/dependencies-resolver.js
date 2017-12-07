@@ -326,7 +326,7 @@ export default (async function loadDependenciesForComponent(
   );
   const traversedCompDeps = traversedDeps.componentsDeps;
   component.dependencies = Object.keys(traversedCompDeps).map((depId) => {
-    return { id: BitId.parse(depId), relativePaths: traversedCompDeps[depId], origin: bitMap.components[depId].origin };
+    return { id: BitId.parse(depId), relativePaths: traversedCompDeps[depId] };
   });
   const untrackedDependencies = traversedDeps.untrackedDeps;
   if (!R.isEmpty(untrackedDependencies)) missingDependencies.untrackedDependencies = untrackedDependencies;

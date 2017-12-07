@@ -18,6 +18,13 @@ export default class AbstractVinyl extends Vinyl {
     return fs.outputFile(filePath, this.contents).then(() => filePath);
   }
 
+  toReadableString() {
+    return {
+      relativePath: this.relative,
+      content: this.contents.toString()
+    };
+  }
+
   static loadFromParsedString(parsedString: Object) {
     if (!parsedString) return undefined;
     const contents = Buffer.isBuffer(parsedString._contents)

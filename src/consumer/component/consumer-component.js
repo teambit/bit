@@ -1018,18 +1018,7 @@ export default class Component {
     // by default, imported components are not written with bit.json file.
     // use the component from the model to get their bit.json values
     if (!fs.existsSync(path.join(bitDir, BIT_JSON)) && componentFromModel) {
-      if (componentFromModel.component.compilerId) {
-        bitJson.compilerId = componentFromModel.component.compilerId.toString();
-      }
-      if (componentFromModel.component.testerId) {
-        bitJson.testerId = componentFromModel.component.testerId.toString();
-      }
-      if (componentFromModel.component.bindingPrefix) {
-        bitJson.bindingPrefix = componentFromModel.component.bindingPrefix;
-      }
-      if (componentFromModel.component.lang) {
-        bitJson.lang = componentFromModel.component.lang;
-      }
+      bitJson.mergeWithComponentData(componentFromModel.component);
     }
 
     return new Component({

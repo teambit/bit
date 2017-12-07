@@ -2,6 +2,7 @@
 
 import chai, { expect } from 'chai';
 import path from 'path';
+import R from 'ramda';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 
 const assertArrays = require('chai-arrays');
@@ -172,17 +173,29 @@ describe('bit show command', function () {
         const secondFileObj = files[1];
 
         // path.pathNormalizeToLinux is used because the test check the vinyl objects
-        const mainFileHistory = [path.normalize(`${helper.localScopePath}/src/mainFile.js`)];
-        // const mainFileObj = {history: mainFileHistory};
-        const utilFileHistory = [path.normalize(`${helper.localScopePath}/src/utils/utilFile.js`)];
-        // const utilFileObj = {history: utilFileHistory};
-        expect(firstFileObj.history[0]).to.include(mainFileHistory);
-        expect(secondFileObj.history[0]).to.include(utilFileHistory);
+        expect(firstFileObj.relativePath).to.include(path.normalize('src/mainFile.js'));
+        expect(secondFileObj.relativePath).to.include(path.normalize('src/utils/utilFile.js'));
       });
 
       // TODO: change this to src/mainFile.js once we change the main file to store relative instead of path
       it('should include the main file correctly', () => {
         expect(output).to.include({ mainFile: 'src/mainFile.js' });
+      });
+
+      describe('when the compiler is changed in the consumer bit.json', () => {
+        let bitJson;
+        before(() => {
+          bitJson = helper.readBitJson();
+          const clonedBitJson = R.clone(bitJson);
+          clonedBitJson.env.compiler = 'scope/namespace/name@0.0.1';
+          helper.writeBitJson(clonedBitJson);
+        });
+        after(() => {
+          helper.writeBitJson(bitJson);
+        });
+        it('should display the compiler of the component', () => {
+          expect(output).to.include({ compilerId: `${helper.envScope}/compilers/babel${VERSION_DELIMITER}0.0.1` });
+        });
       });
     });
 
@@ -328,6 +341,32 @@ function add(a, b) {
       );
     });
   });
+  describe('local component without compiler', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+    describe('when the consumer bit.json has a compiler', () => {
+      let jsonOutput;
+      before(() => {
+        const bitJson = helper.readBitJson();
+        bitJson.env.compiler = 'scope/namespace/name@0.0.1';
+        helper.writeBitJson(bitJson);
+        const output = helper.showComponent('bar/foo --json');
+        jsonOutput = JSON.parse(output);
+      });
+      it('should not show the consumer compiler', () => {
+        expect(jsonOutput.compilerId).to.not.equal('scope/namespace/name@0.0.1');
+        expect(jsonOutput.compilerId).to.be.a('null');
+      });
+    });
+  });
   describe('with removed file/files', () => {
     beforeEach(() => {
       helper.initNewLocalScope();
@@ -386,6 +425,12 @@ function add(a, b) {
       it('Should not throw an error "nothing to compare no previous versions found"', () => {
         const showCmd = () => helper.showComponent('bar/foo --compare');
         expect(showCmd).not.to.throw();
+      });
+      it('model and file-system should have the same main file and files, regardless the originallySharedDir (bar)', () => {
+        const result = helper.showComponent('bar/foo --compare --json');
+        const { componentFromFileSystem, componentFromModel } = JSON.parse(result);
+        expect(componentFromFileSystem.mainFile).to.equal(componentFromModel.mainFile);
+        expect(componentFromFileSystem.files).to.deep.equal(componentFromModel.files);
       });
     });
   });
