@@ -15,6 +15,6 @@ export default (async function loadExtensions(): Extension[] {
   }
 });
 
-const _loadExtension = (scopePath: string) => (rawConfig: Object, name: string): Promise<Extension> => {
-  return Extension.load(name, rawConfig, scopePath);
+const _loadExtension = (scopePath: string) => (rawConfig: Object = {}, name: string): Promise<Extension> => {
+  return Extension.load(name, rawConfig.config, rawConfig.options, scopePath);
 };

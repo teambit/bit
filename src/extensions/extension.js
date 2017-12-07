@@ -44,6 +44,7 @@ export default class Extension {
   newHooks: string[];
   commands: Commands;
   rawConfig: Object;
+  options: Object;
   dynamicConfig: Object;
   script: Function; // Store the required plugin
   api = {
@@ -77,17 +78,18 @@ export default class Extension {
   constructor(extensionProps: ExtensionProps) {
     this.name = extensionProps.name;
     this.rawConfig = extensionProps.rawConfig;
+    this.options = extensionProps.options;
     this.dynamicConfig = extensionProps.rawConfig;
     this.commands = [];
     this.registeredHooksActions = {};
     this.newHooks = [];
   }
 
-  static async load(name: string, rawConfig: Object, scopePath: string): Promise<Extension> {
+  static async load(name: string, rawConfig: Object = {}, options: Object = {}, scopePath: string): Promise<Extension> {
     // logger.info(`loading extension ${name}`);
     // Require extension from _debugFile
-    if (process.env.DEBUG_EXTENSIONS && rawConfig._debugFile) {
-      return Extension.loadFromFile(name, rawConfig._debugFile, rawConfig);
+    if (options.file) {
+      return Extension.loadFromFile(name, options.file, rawConfig, options);
     }
     // Require extension from scope
     try {
@@ -95,7 +97,7 @@ export default class Extension {
       const internalComponentsPath = Scope.getComponentsRelativePath();
       const internalComponentPath = Scope.getComponentRelativePath(bitId);
       const componentPath = path.join(scopePath, internalComponentsPath, internalComponentPath);
-      return Extension.loadFromFile(name, componentPath, rawConfig);
+      return Extension.loadFromFile(name, componentPath, rawConfig, options);
     } catch (err) {
       logger.error(`loading extension ${name} faild`);
       logger.error(err);
@@ -103,11 +105,11 @@ export default class Extension {
     }
   }
 
-  static async loadFromFile(name: string, filePath: string, rawConfig: Object = {}): Extension {
+  static async loadFromFile(name: string, filePath: string, rawConfig: Object = {}, options: Object = {}): Extension {
     logger.info(`loading extension ${name} from ${filePath}`);
-    const extension = new Extension({ name, rawConfig });
+    const extension = new Extension({ name, rawConfig, options });
     // Skip disabled extensions
-    if (rawConfig.disabled) {
+    if (options.disabled) {
       extension.disabled = true;
       logger.info(`skip extension ${name} because it is disabled`);
       extension.loaded = false;

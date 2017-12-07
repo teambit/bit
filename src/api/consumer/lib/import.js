@@ -57,7 +57,10 @@ export default (async function importAction({
       }
 
       if (extension) {
-        consumer.bitJson.extensions[id] = {};
+        consumer.bitJson.extensions[id] = {
+          options: {},
+          config: {}
+        };
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
