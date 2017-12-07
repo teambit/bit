@@ -102,6 +102,34 @@ describe('bit import', function () {
 
       it('should write the internal files according to their relative paths', () => {});
     });
+
+    describe('re-import after deleting the component physically', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('global/simple');
+        fs.removeSync(path.join(helper.localScopePath, 'components'));
+        output = helper.importComponent('global/simple');
+      });
+      it('should import the component successfully', () => {
+        expect(output).to.have.string('successfully imported one component');
+      });
+    });
+
+    describe('re-import after deleting the bit.map file', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('global/simple');
+        fs.removeSync(path.join(helper.localScopePath, '.bit.map.json'));
+        output = helper.importComponent('global/simple');
+      });
+      it('should import the component successfully', () => {
+        expect(output).to.have.string('successfully imported one component');
+      });
+    });
   });
 
   describe('with compiler and tests', () => {
