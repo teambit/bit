@@ -172,12 +172,8 @@ describe('bit show command', function () {
         const secondFileObj = files[1];
 
         // path.pathNormalizeToLinux is used because the test check the vinyl objects
-        const mainFileHistory = [path.normalize(`${helper.localScopePath}/src/mainFile.js`)];
-        // const mainFileObj = {history: mainFileHistory};
-        const utilFileHistory = [path.normalize(`${helper.localScopePath}/src/utils/utilFile.js`)];
-        // const utilFileObj = {history: utilFileHistory};
-        expect(firstFileObj.history[0]).to.include(mainFileHistory);
-        expect(secondFileObj.history[0]).to.include(utilFileHistory);
+        expect(firstFileObj.relativePath).to.include(path.normalize('src/mainFile.js'));
+        expect(secondFileObj.relativePath).to.include(path.normalize('src/utils/utilFile.js'));
       });
 
       // TODO: change this to src/mainFile.js once we change the main file to store relative instead of path

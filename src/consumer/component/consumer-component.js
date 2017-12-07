@@ -87,7 +87,8 @@ export default class Component {
   log: ?Log;
   writtenPath: ?string; // needed for generate links
   originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
-  distDir: ?string; // might not be the default for imported component when dist.target is set in consumer bit.json
+  _distDir: ?string; // might not be the default for imported component when dist.target is set in consumer bit.json
+  _writeDistsFiles: ?boolean = true;
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
   deprecated: boolean;
@@ -360,7 +361,6 @@ export default class Component {
     driver,
     force = true,
     writeBitDependencies = false,
-    writeDistsFiles = true,
     dependencies,
     deleteBitDirContent = false
   }: {
@@ -370,7 +370,6 @@ export default class Component {
     driver: Driver,
     force?: boolean,
     writeBitDependencies?: boolean,
-    writeDistsFiles?: boolean,
     dependencies: Component[],
     deleteBitDirContent?: boolean
   }) {
@@ -380,7 +379,7 @@ export default class Component {
       await mkdirp(bitDir);
     }
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
-    if (this.dists && writeDistsFiles) await this.dists.forEach(dist => dist.write(undefined, force));
+    if (this.dists && this._writeDistsFiles) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
     if (withPackageJson) await this.writePackageJson(driver, bitDir, force, writeBitDependencies, dependencies);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
@@ -455,19 +454,19 @@ export default class Component {
   }
 
   updateDistsLocation(): void {
-    if (this.dists && this.distDir) {
+    if (this.dists && this._distDir) {
       this.dists.forEach((distFile) => {
-        distFile.path = distFile.path.replace(DEFAULT_DIST_DIRNAME, this.distDir);
+        distFile.path = distFile.path.replace(DEFAULT_DIST_DIRNAME, this._distDir);
       });
     }
   }
 
   setDistDir(distDir) {
-    this.distDir = distDir;
+    this._distDir = distDir;
   }
 
   getDistDir() {
-    if (this.distDir) return this.distDir;
+    if (this._distDir) return this._distDir;
     return DEFAULT_DIST_DIRNAME;
   }
 
@@ -487,7 +486,6 @@ export default class Component {
     consumerPath,
     driver,
     writeBitDependencies = false,
-    writeDistsFiles = true,
     dependencies,
     componentMap
   }: {
@@ -501,7 +499,6 @@ export default class Component {
     consumerPath?: string,
     driver?: Driver,
     writeBitDependencies?: boolean,
-    writeDistsFiles?: boolean,
     dependencies: Array<Components>,
     componentMap: ComponentMap
   }): Promise<Component> {
@@ -525,7 +522,6 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
-        writeDistsFiles,
         dependencies
       });
     }
@@ -538,7 +534,6 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
-        writeDistsFiles,
         dependencies
       });
       this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
@@ -568,7 +563,6 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
-        writeDistsFiles,
         deleteBitDirContent
       });
       // todo: remove from the file system
@@ -590,7 +584,6 @@ export default class Component {
       driver,
       force,
       writeBitDependencies: false,
-      writeDistsFiles,
       deleteBitDirContent
     });
 
@@ -889,10 +882,11 @@ export default class Component {
     return JSON.stringify(this.toObject());
   }
 
-  // In case there is dist files, we want to point the index to the dist file not to source.
+  // In case there are dist files, we want to point the index to the main dist file, not to source.
   // This important since when you require a module without specify file, it will give you the file specified under this key
   // (or index.js if key not exists)
   calculateMainDistFile(): string {
+    if (!this._writeDistsFiles) return this.mainFile;
     const distMainFile = path.join(this.getDistDir(), this.mainFile);
     const mainFile = searchFilesIgnoreExt(this.dists, distMainFile, 'relative', 'relative');
     return mainFile || this.mainFile;
@@ -1036,7 +1030,7 @@ export default class Component {
     // use the component from the model to get their bit.json values
     if (!fs.existsSync(path.join(bitDir, BIT_JSON)) && componentFromModel) {
       if (componentFromModel.component.compilerId) {
-        bitJson.testerId = componentFromModel.component.compilerId.toString();
+        bitJson.compilerId = componentFromModel.component.compilerId.toString();
       }
       if (componentFromModel.component.testerId) {
         bitJson.testerId = componentFromModel.component.testerId.toString();
