@@ -8,6 +8,7 @@ import IsolatedEnvironment from '../environment';
 import { Scope, loadScope } from '../scope';
 import { loadConsumer } from '../consumer';
 import { BitId } from '../bit-id';
+import loader from '../cli/loader';
 import HooksManager, { HookAction } from '../hooks';
 
 const HooksManagerInstance = HooksManager.getInstance();
@@ -69,6 +70,7 @@ export default class Extension {
       HooksManagerInstance.triggerHook(hookName, args);
     },
     getLogger: () => createExtensionLogger(this.name),
+    getLoader: () => loader,
     createIsolatedEnv
   };
 
