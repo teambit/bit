@@ -60,9 +60,9 @@ export default class Extension {
       logger.info(`registering new global hook ${hookName}`);
       this.newHooks.push(hookName);
       // Register the new hook in the global hooks manager
-      HooksManagerInstance.registerNewHook(hookName);
+      HooksManagerInstance.registerNewHook(hookName, { extension: this.name });
     },
-    triggerHook: (hookName, args) => {
+    triggerHook: (hookName: string, args: ?Object) => {
       if (!R.contains(hookName, this.newHooks)) {
         logger.debug(`trying to trigger the hook ${hookName} which not registerd by this extension`);
         return;
@@ -83,7 +83,7 @@ export default class Extension {
   }
 
   static async load(name: string, rawConfig: Object, scopePath: string): Promise<Extension> {
-    logger.debug(`loading extension ${name}`);
+    // logger.info(`loading extension ${name}`);
     // Require extension from _debugFile
     if (process.env.DEBUG_EXTENSIONS && rawConfig._debugFile) {
       return Extension.loadFromFile(name, rawConfig._debugFile, rawConfig);
@@ -103,12 +103,12 @@ export default class Extension {
   }
 
   static async loadFromFile(name: string, filePath: string, rawConfig: Object = {}): Extension {
-    logger.debug(`loading extension ${name} from ${filePath}`);
+    logger.info(`loading extension ${name} from ${filePath}`);
     const extension = new Extension({ name, rawConfig });
     // Skip disabled extensions
     if (rawConfig.disabled) {
       extension.disabled = true;
-      logger.debug(`skip extension ${name} because it is disabled`);
+      logger.info(`skip extension ${name} because it is disabled`);
       extension.loaded = false;
       return extension;
     }
@@ -127,7 +127,7 @@ export default class Extension {
       if (err.code === 'MODULE_NOT_FOUND') {
         const msg = `loading extension ${name} faild, the file ${filePath} not found`;
         logger.error(msg);
-        console.log(msg);
+        console.error(msg);
       }
       logger.error(`loading extension ${name} faild`);
       logger.error(err);
@@ -144,8 +144,8 @@ export default class Extension {
    * So we want to make sure to first load and register all new hooks from all extensions and only then register the actions
    */
   registerHookActionsOnHooksManager() {
-    const registerAction = (hookAction, hookName) => {
-      HooksManagerInstance.registerActionToHook(hookName, hookAction);
+    const registerAction = (hookAction: HookAction, hookName: string) => {
+      HooksManagerInstance.registerActionToHook(hookName, hookAction, { extension: this.name });
     };
     R.forEachObjIndexed(registerAction, this.registeredHooksActions);
   }

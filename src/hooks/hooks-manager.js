@@ -44,7 +44,7 @@ export default class HooksManager {
   /**
    * Get the instance of the HooksManager
    * @return {HooksManager} instance of the HooksManager
-   * 
+   *
    */
   static getInstance(): HooksManager {
     return instance;
@@ -52,13 +52,14 @@ export default class HooksManager {
 
   /**
    * register new hook name
-   * @param {string} hookName 
+   * @param {string} hookName
    * @param {boolean} throwIfExist - whether to throw an error if the hook name already exists
    * @return {boolean} whether the hook has been registerd
    */
-  registerNewHook(hookName: string, throwIfExist: boolean = false): boolean {
+  registerNewHook(hookName: string, context: Object = {}, throwIfExist: boolean = false): boolean {
     if (this.hooks.has(hookName)) {
-      logger.warn(`trying to register an already existing hook ${hookName}`);
+      const contextMsg = context.extension ? `from ${context.extension}` : '';
+      logger.warn(`trying to register an already existing hook ${hookName} ${contextMsg}`);
       if (throwIfExist) {
         throw new errors.HookAlreadyExists(hookName);
       }
@@ -75,9 +76,15 @@ export default class HooksManager {
    * @param {boolean} throwIfNotExist - whether to throw an exception in case the hook doesn't exists
    * @return {boolean} whether the action has been registerd successfully
    */
-  registerActionToHook(hookName: string, hookAction: HookAction, throwIfNotExist: boolean = false) {
+  registerActionToHook(
+    hookName: string,
+    hookAction: HookAction,
+    context: Object = {},
+    throwIfNotExist: boolean = false
+  ) {
     if (!this.hooks.has(hookName)) {
-      logger.warn(`trying to register to a non existing hook ${hookName}`);
+      const contextMsg = context.extension ? `from ${context.extension}` : '';
+      logger.warn(`trying to register to a non existing hook ${hookName} ${contextMsg}`);
       if (throwIfNotExist) {
         throw new errors.HookNotExists(hookName);
       }
