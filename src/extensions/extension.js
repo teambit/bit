@@ -85,11 +85,21 @@ export default class Extension {
     this.newHooks = [];
   }
 
-  static async load(name: string, rawConfig: Object = {}, options: Object = {}, scopePath: string): Promise<Extension> {
+  static async load(
+    name: string,
+    rawConfig: Object = {},
+    options: Object = {},
+    consumerPath: string,
+    scopePath: string
+  ): Promise<Extension> {
     // logger.info(`loading extension ${name}`);
     // Require extension from _debugFile
     if (options.file) {
-      return Extension.loadFromFile(name, options.file, rawConfig, options);
+      let absPath = options.file;
+      if (!path.isAbsolute(options.file)) {
+        absPath = path.resolve(consumerPath, options.file);
+      }
+      return Extension.loadFromFile(name, absPath, rawConfig, options);
     }
     // Require extension from scope
     try {
