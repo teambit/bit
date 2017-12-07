@@ -3,7 +3,7 @@
 import path from 'path';
 import R from 'ramda';
 import { HOOKS_NAMES, BIT_HIDDEN_DIR } from '../constants';
-import logger from '../logger/logger';
+import logger, { createExtensionLogger } from '../logger/logger';
 import ExtensionCommand from './extension-command';
 import IsolatedEnvironment, { IsolateOptions } from '../environment';
 import { Scope, loadScope } from '../scope';
@@ -69,6 +69,7 @@ export default class Extension {
       }
       HooksManagerInstance.triggerHook(hookName, args);
     },
+    getLogger: () => createExtensionLogger(this.name),
     createIsolatedEnv
   };
 
