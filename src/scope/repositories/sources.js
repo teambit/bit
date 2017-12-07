@@ -83,6 +83,12 @@ export default class SourceRepository {
     return foundComponent;
   }
 
+  async hasSymlink(bitId: BitId) {
+    const component = Component.fromBitId(bitId);
+    const foundComponent = await this.findComponent(component);
+    return foundComponent instanceof Symlink;
+  }
+
   getObjects(id: BitId): Promise<ComponentObjects> {
     return this.get(id).then((component) => {
       if (!component) throw new ComponentNotFound(id.toString());

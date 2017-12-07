@@ -4,6 +4,7 @@ import first from './array/first';
 import bufferFrom from './buffer/from';
 import flatMap from './array/flat-map';
 import flatten from './array/flatten';
+import filterAsync from './array/filter-async';
 import resolveBoolean from './resolve-boolean';
 import mapObject from './map-object';
 import mkdirp from './mkdirp';
@@ -88,6 +89,7 @@ export {
   isNumeric,
   inflate,
   diff,
+  filterAsync,
   deflate,
   values,
   toBase64,
