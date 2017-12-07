@@ -114,8 +114,11 @@ describe('bit tag command', function () {
         helper.createFile('components', 'b.js');
         helper.addComponent('components/*.js');
       });
-      it('Should set the version to default version in tag new component', () => {
+      it.only('Should set the version to default version in tag new component', () => {
         helper.commitAllComponents();
+        console.log(helper.runCmd('bit status'));
+        helper.runCmd('bit remove components/a');
+        console.log(helper.runCmd('bit status'));
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
         expect(listOutput).to.deep.include({ id: 'components/a', localVersion: '0.0.1' });
         expect(listOutput).to.deep.include({ id: 'components/b', localVersion: '0.0.1' });
