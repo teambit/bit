@@ -114,7 +114,7 @@ export default class Scope {
   }
 
   /**
-   * Get the releative components path inside the scope 
+   * Get the releative components path inside the scope
    * (components such as compilers / testers / extensions)
    */
   static getComponentsRelativePath(): string {
@@ -947,15 +947,10 @@ export default class Scope {
   async loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean }): Promise<> {
     logger.debug(`scope.loadEnvironment, id: ${bitId}`);
     if (!bitId) throw new ResolutionException();
-    const envComponent = (await this.get(bitId)).component;
-    const mainFile =
-      envComponent.dists && !R.isEmpty(envComponent.dists)
-        ? pathLib.join(DEFAULT_DIST_DIRNAME, envComponent.mainFile)
-        : envComponent.mainFile;
 
     if (opts && opts.pathOnly) {
       try {
-        const envPath = componentResolver(bitId.toString(), mainFile, this.getPath());
+        const envPath = componentResolver(bitId.toString(), null, this.getPath());
         if (fs.existsSync(envPath)) return envPath;
         throw new Error(`Unable to find an env component ${bitId.toString()}`);
       } catch (e) {
@@ -964,7 +959,7 @@ export default class Scope {
     }
 
     try {
-      const envFile = componentResolver(bitId.toString(), mainFile, this.getPath());
+      const envFile = componentResolver(bitId.toString(), null, this.getPath());
       logger.debug(`Requiring an environment file at ${envFile}`);
       return require(envFile);
     } catch (e) {
