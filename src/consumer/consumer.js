@@ -14,7 +14,7 @@ import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-import { BITS_DIRNAME, BIT_HIDDEN_DIR, COMPONENT_ORIGINS, BIT_VERSION } from '../constants';
+import { BITS_DIRNAME, BIT_HIDDEN_DIR, COMPONENT_ORIGINS, BIT_VERSION, LATEST_BIT_VERSION } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
@@ -39,6 +39,14 @@ export type ConsumerProps = {
   scope: Scope
 };
 
+type ComponentStatus = {
+  modified: boolean,
+  newlyCreated: boolean,
+  deleted: boolean,
+  staged: boolean,
+  notExist: boolean
+};
+
 export default class Consumer {
   projectPath: string;
   created: boolean;
@@ -47,7 +55,8 @@ export default class Consumer {
   _driver: Driver;
   _bitMap: BitMap;
   _dirStructure: DirStructure;
-  _componentsCache: Object; // cache loaded components
+  _componentsCache: Object = {}; // cache loaded components
+  _componentsStatusCache: Object = {}; // cache loaded components
 
   constructor({ projectPath, bitJson, scope, created = false }: ConsumerProps) {
     this.projectPath = projectPath;
@@ -55,7 +64,6 @@ export default class Consumer {
     this.created = created;
     this.scope = scope;
     this.warnForMissingDriver();
-    this._componentsCache = {};
   }
 
   get testerId(): ?BitId {
@@ -633,6 +641,64 @@ export default class Consumer {
       componentFromFileSystem._isModified = componentFromModel.hash().hash !== version.hash().hash;
     }
     return componentFromFileSystem._isModified;
+  }
+
+  async getComponentStatusById(id: BitId): ComponentStatus {
+    const getStatus = async () => {
+      const status: ComponentStatus = {};
+      const componentFromModel = await this.scope.sources.get(id);
+      let componentFromFileSystem;
+      try {
+        componentFromFileSystem = await this.loadComponent(BitId.parse(id.toStringWithoutVersion()));
+      } catch (err) {
+        if (
+          err instanceof MissingFilesFromComponent ||
+          err instanceof ComponentNotFoundInPath ||
+          err instanceof MissingBitMapComponent
+        ) {
+          // the file/s have been deleted or the component doesn't exist in bit.map file
+          if (componentFromModel) status.deleted = true;
+          else status.notExist = true;
+          return status;
+        }
+        throw err;
+      }
+      if (!componentFromModel) {
+        status.newlyCreated = true;
+        return status;
+      }
+      const versionFromFs = componentFromFileSystem.id.version;
+      const latestVersionFromModel = componentFromModel.latest();
+      let version;
+      if (
+        componentFromFileSystem.id.hasVersion() &&
+        semver.gt(latestVersionFromModel, componentFromFileSystem.id.getVersion().versionNum)
+      ) {
+        // Consider the following two scenarios:
+        // 1) a user tagged v1, exported, then tagged v2.
+        //    bitMap shows v1, model has v2 and the FS is v2.
+        //    Because the model version is bigger than bit-map and the model has symlink, we know it's staged.
+        //    to check whether the component is modified, we've to compare FS to the v2 of the model, not v1.
+        // 2) a user imported v1 of a component from a remote, when the latest version on the remote is v2.
+        //    bitMap shows v1, model has v2 and the FS is v1.
+        //    Even though the model version is bigger than bit-map, because the model doesn't have symlink, it's not staged.
+        //    to check whether the component is modified, we've to compare FS to the v1 of the model, not v2.
+        const hasSymLink = await this.scope.sources.hasSymlink(BitId.parse(id.toStringWithoutScopeAndVersion()));
+        status.staged = hasSymLink;
+        version = hasSymLink ? latestVersionFromModel : versionFromFs;
+      } else {
+        version = versionFromFs === LATEST_BIT_VERSION ? latestVersionFromModel : versionFromFs;
+      }
+      const versionRef = componentFromModel.versions[version];
+      const versionFromModel = await this.scope.getObject(versionRef.hash);
+      status.modified = await this.isComponentModified(versionFromModel, componentFromFileSystem);
+      status.staged = status.staged || !componentFromModel.scope; // when there is no scope, it's staged.
+      return status;
+    };
+    if (!this._componentsStatusCache[id.toString()]) {
+      this._componentsStatusCache[id.toString()] = await getStatus();
+    }
+    return this._componentsStatusCache[id.toString()];
   }
 
   /**

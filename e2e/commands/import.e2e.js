@@ -1301,7 +1301,7 @@ describe('bit import', function () {
     });
   });
 
-  describe('v2 of a component when v1 has been imported already', () => {
+  describe('importing v1 of a component when a component has v2', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
@@ -1318,22 +1318,31 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('utils/is-type@0.0.1');
-      // @todo: the --force flag here is a hack to work around a bug which shows the component of 0.0.1 as modified
-      helper.importComponent('utils/is-type@0.0.2 --force');
     });
-    it('should imported v2 successfully and print the result from the latest version', () => {
-      const appJsFixture = "const isType = require('./components/utils/is-type'); console.log(isType());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-      const result = helper.runCmd('node app.js');
-      expect(result.trim()).to.equal('got is-type v2'); // notice the "v2"
+    it('should not show the component as modified or staged', () => {
+      const statusOutput = helper.runCmd('bit status');
+      expect(statusOutput.includes('no new components')).to.be.true;
+      expect(statusOutput.includes('no modified components')).to.be.true;
+      expect(statusOutput.includes('no staged components')).to.be.true;
     });
-    it('should update the existing record in bit.map', () => {
-      const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
-    });
-    it('should not create a new record in bit.map', () => {
-      const bitMap = helper.readBitMap();
-      expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+    describe('then importing v2', () => {
+      before(() => {
+        helper.importComponent('utils/is-type@0.0.2');
+      });
+      it('should imported v2 successfully and print the result from the latest version', () => {
+        const appJsFixture = "const isType = require('./components/utils/is-type'); console.log(isType());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type v2'); // notice the "v2"
+      });
+      it('should update the existing record in bit.map', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
+      });
+      it('should not create a new record in bit.map', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+      });
     });
   });
 
