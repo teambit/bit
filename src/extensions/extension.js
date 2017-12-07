@@ -2,10 +2,9 @@
 
 import path from 'path';
 import R from 'ramda';
-import { HOOKS_NAMES, BIT_HIDDEN_DIR } from '../constants';
 import logger, { createExtensionLogger } from '../logger/logger';
 import ExtensionCommand from './extension-command';
-import IsolatedEnvironment, { IsolateOptions } from '../environment';
+import IsolatedEnvironment from '../environment';
 import { Scope, loadScope } from '../scope';
 import { loadConsumer } from '../consumer';
 import { BitId } from '../bit-id';
