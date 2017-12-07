@@ -29,7 +29,10 @@ describe('bit import', function () {
       expect(output.includes('successfully imported one component')).to.be.true;
       expect(output.includes('global/simple')).to.be.true;
     });
-    it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
+    it.skip(
+      'should throw an error if there is already component with the same name and namespace and different scope',
+      () => {}
+    );
     it('should add the component to bit.json file', () => {
       const bitJson = helper.readBitJson();
       const depName = [helper.remoteScope, 'global', 'simple'].join('/');
@@ -101,6 +104,34 @@ describe('bit import', function () {
       });
 
       it('should write the internal files according to their relative paths', () => {});
+    });
+
+    describe('re-import after deleting the component physically', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('global/simple');
+        fs.removeSync(path.join(helper.localScopePath, 'components'));
+        output = helper.importComponent('global/simple');
+      });
+      it('should import the component successfully', () => {
+        expect(output).to.have.string('successfully imported one component');
+      });
+    });
+
+    describe('re-import after deleting the bit.map file', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('global/simple');
+        fs.removeSync(path.join(helper.localScopePath, '.bit.map.json'));
+        output = helper.importComponent('global/simple');
+      });
+      it('should import the component successfully', () => {
+        expect(output).to.have.string('successfully imported one component');
+      });
     });
   });
 
@@ -1180,6 +1211,24 @@ describe('bit import', function () {
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+    describe('importing without --dist flag', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        localConsumerFiles = helper.getConsumerFiles();
+      });
+      it('should not write anything to the dist folder of the main component', () => {
+        const distFolder = path.join('components', 'bar', 'foo', 'dist');
+        localConsumerFiles.forEach(file => expect(file).to.not.have.string(distFolder));
+      });
+      it('main index file should point to the source and not to the dist', () => {
+        const indexFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'index.js');
+        const indexFileContent = fs.readFileSync(indexFile).toString();
+        expect(indexFileContent).to.have.string("require('./bar/foo')");
+        expect(indexFileContent).to.not.have.string('dist');
+      });
     });
   });
 

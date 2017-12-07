@@ -191,6 +191,9 @@ export default class Helper {
   commitComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
     return this.runCmd(`bit tag ${id} -m ${commitMsg} ${options}`);
   }
+  tagWithoutMessage(id: string, options: string = '') {
+    return this.runCmd(`bit tag ${id} ${options}`);
+  }
   removeComponent(id: string, flags: string = '') {
     return this.runCmd(`bit remove ${id} ${flags}`);
   }
@@ -200,6 +203,9 @@ export default class Helper {
 
   commitAllComponents(commitMsg: string = 'commit-message', options: string = '', version: string = '') {
     return this.runCmd(`bit tag ${options} -a ${version} -m ${commitMsg} `);
+  }
+  tagAllWithoutMessage(options: string = '', version: string = '') {
+    return this.runCmd(`bit tag -a ${version} ${options} `);
   }
 
   tagScope(version: string, message: string = 'commit-message', options: string = '') {
@@ -349,11 +355,11 @@ export default class Helper {
     fs.copySync(sourceDir, cwd);
   }
   addFixtureComponents() {}
-  addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object) {
+  addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object, cwd = this.localScopePath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
-    return this.runCmd(`bit add ${filePaths} ${value}`);
+    return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
 
   testComponent(id) {

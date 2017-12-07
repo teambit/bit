@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support `bit show --compare` with json format (`bit show component-name --json --compare`)
+
+## [0.11.2-dev.4] - 2017-12-05
+
 - do not write the component's bit.json file, unless `--conf` flag is set
 - write dist files for imported components according to dist.target configuration in bit.json
 - do not write dist files for imported components, unless `--dist` flag is used
+
+## [0.11.2-dev.3] - 2017-12-05
+
 - prevent overriding index file if exists
 
 ## [0.11.2-dev.1] - 2017-12-04
@@ -17,7 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - generate link for npm as scoped packages
 - prevent adding AUTHORED component to an IMPORTED component using require relative syntax
 - avoid writing long files paths for imported components when there is a shared directory among the component files and its dependencies
-
+- fixed bit add output tracking component undefined
 ## [0.11.1] - 2017-11-29
 
 - support tagging the entire local scope and all imported components to a specific tag using `--scope` and `--include_imported` flags
