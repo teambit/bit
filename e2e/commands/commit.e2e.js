@@ -442,7 +442,7 @@ describe('bit tag command', function () {
   });
 
   // there is another describe('tag all components')
-  describe.only('tag all components', () => {
+  describe('tag all components', () => {
     it.skip('Should print there is nothing to tag after import only', () => {
       // Import component then try to tag
     });
