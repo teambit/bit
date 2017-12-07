@@ -107,6 +107,8 @@ describe('bit tag command', function () {
         expect(nonFlagedCommit).to.contain('1 components tagged | 1 added, 0 changed, 0 auto-tagged');
       });
     });
+    // TODO: fix all the tests in the following "describe" so they will not rely on the output of the previous test
+    // waiting for 'bit remove' bug fix
     describe('tag all components', () => {
       before(() => {
         helper.reInitLocalScope();
@@ -142,6 +144,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('components/b@0.0.4');
       });
       it('Should show message "nothing to tag" if trying to tag with no changes', () => {
+        helper.tagAllWithoutMessage();
         const tagWithoutChanges = helper.tagAllWithoutMessage();
         expect(tagWithoutChanges).to.have.string('nothing to tag');
       });
@@ -439,18 +442,7 @@ describe('bit tag command', function () {
   });
 
   // there is another describe('tag all components')
-  describe('tag all components', () => {
-    // this "it" is a duplication. didn't remove it yet because it sets up the scope for the next tests. talk to gilad.
-    it('Should print there is nothing to tag right after success tag all', () => {
-      // Create component and try to tag twice
-      helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      let output = helper.commitAllComponents();
-      output = helper.commitAllComponents();
-      expect(output.includes('nothing to tag')).to.be.true;
-    });
-
+  describe.only('tag all components', () => {
     it.skip('Should print there is nothing to tag after import only', () => {
       // Import component then try to tag
     });
