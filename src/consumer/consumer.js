@@ -14,7 +14,7 @@ import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-import { BITS_DIRNAME, BIT_HIDDEN_DIR, COMPONENT_ORIGINS, BIT_VERSION, LATEST_BIT_VERSION } from '../constants';
+import { BITS_DIRNAME, BIT_HIDDEN_DIR, COMPONENT_ORIGINS, BIT_VERSION } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
@@ -25,7 +25,7 @@ import ComponentMap from './bit-map/component-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { getLatestVersionNumber, pathRelative } from '../utils';
+import { getLatestVersionNumber, pathRelative, filterAsync } from '../utils';
 import * as linkGenerator from './component/link-generator';
 import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
@@ -287,7 +287,7 @@ export default class Consumer {
       }
     }
     if (!force) {
-      const allComponentsIds = dependenciesFromBitJson.concat(componentsFromBitMap).map(bitId => bitId.toString());
+      const allComponentsIds = dependenciesFromBitJson.concat(componentsFromBitMap);
       await this.warnForModifiedComponents(allComponentsIds);
     }
 
@@ -328,10 +328,11 @@ export default class Consumer {
     return { dependencies: componentsAndDependencies };
   }
 
-  async warnForModifiedComponents(ids: string[]) {
-    const modifiedComponents = await Promise.all(ids.map(rawId => this.isComponentModifiedById(rawId))).then(results =>
-      ids.filter(() => results.shift())
-    ); // a nice trick to Array.filter with promises
+  async warnForModifiedComponents(ids: BitId[]) {
+    const modifiedComponents = await filterAsync(ids, (id) => {
+      return this.getComponentStatusById(id).then(status => status.modified);
+    });
+
     if (modifiedComponents.length) {
       return Promise.reject(
         chalk.yellow(
@@ -341,6 +342,7 @@ export default class Consumer {
         )
       );
     }
+    return Promise.resolve();
   }
 
   async importSpecificComponents(
@@ -354,11 +356,11 @@ export default class Consumer {
     conf?: boolean = false
   ) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
-    if (!force) {
-      await this.warnForModifiedComponents(rawIds);
-    }
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw));
+    if (!force) {
+      await this.warnForModifiedComponents(bitIds);
+    }
     const componentsWithDependencies = await this.scope.getManyWithAllVersions(bitIds, cache);
     await this.writeToComponentsDir({
       componentsWithDependencies,
@@ -687,31 +689,6 @@ export default class Consumer {
       this._componentsStatusCache[id.toString()] = await getStatus();
     }
     return this._componentsStatusCache[id.toString()];
-  }
-
-  /**
-   * @see isComponentModified for the implementation of the comparison
-   */
-  async isComponentModifiedById(id: string, includeNewComponents: boolean = false): Promise<boolean> {
-    const idParsed = BitId.parse(id);
-    const componentFromModel = await this.scope.sources.get(idParsed);
-    if (!componentFromModel) return includeNewComponents; // the component was never committed
-    const latestVersionRef = componentFromModel.versions[componentFromModel.latest()];
-    const versionFromModel = await this.scope.getObject(latestVersionRef.hash);
-    try {
-      const componentFromFileSystem = await this.loadComponent(idParsed);
-      return this.isComponentModified(versionFromModel, componentFromFileSystem);
-    } catch (err) {
-      if (
-        err instanceof MissingFilesFromComponent ||
-        err instanceof ComponentNotFoundInPath ||
-        err instanceof MissingBitMapComponent
-      ) {
-        // the file/s have been deleted or the component doesn't exist in bit.map file
-        return false;
-      }
-      throw err;
-    }
   }
 
   async commit(
