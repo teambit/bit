@@ -46,7 +46,7 @@ export type ComponentProps = {
   lang?: string,
   deprecated: boolean,
   bindingPrefix?: string,
-  local?: boolean
+  local?: boolean // whether a component was tagged locally. It's set to true once committed and to false once exported.
 };
 
 export default class Component extends BitObject {
