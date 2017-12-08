@@ -760,11 +760,21 @@ export default class Component {
       logger.debug('compilerId was not found, nothing to build');
       return Promise.resolve(null);
     }
-    const componentStatus = await consumer.getComponentStatusById(this.id);
-    if (componentStatus.modified === false && this.dists) {
-      logger.debug('skip the build process as the component was not modified');
+    // Ideally it's better to use the dists from the model.
+    // If there is no consumer, it comes from the scope or isolated environment, which the dists are already saved.
+    // If there is consumer, check whether the component was modified. If it wasn't, no need to re-build.
+    const isNeededToReBuild = async () => {
+      if (!consumer) return false;
+      const componentStatus = await consumer.getComponentStatusById(this.id);
+      return componentStatus.modified;
+    };
+
+    const needToRebuild = await isNeededToReBuild();
+    if (!needToRebuild && this.dists) {
+      logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
       return this.dists;
     }
+
     logger.debug('compilerId found, start building');
 
     // verify whether the environment is installed
