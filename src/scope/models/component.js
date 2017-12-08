@@ -45,7 +45,8 @@ export type ComponentProps = {
   versions?: { [string]: Ref },
   lang?: string,
   deprecated: boolean,
-  bindingPrefix?: string
+  bindingPrefix?: string,
+  local?: boolean
 };
 
 export default class Component extends BitObject {
@@ -56,6 +57,7 @@ export default class Component extends BitObject {
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
+  local: boolean;
 
   constructor(props: ComponentProps) {
     super();
@@ -66,6 +68,7 @@ export default class Component extends BitObject {
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.deprecated = props.deprecated || false;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+    this.local = props.local;
   }
 
   get versionArray(): Ref[] {
@@ -99,8 +102,8 @@ export default class Component extends BitObject {
    * (exists means the object itself exists)
    * This relevant for cases when the component version array has few versions
    * but we don't have all the refs in the object
-   * 
-   * @returns {number} 
+   *
+   * @returns {number}
    * @memberof Component
    */
   latestExisting(repository: Repository): string {
@@ -169,7 +172,8 @@ export default class Component extends BitObject {
       versions: versions(this.versions),
       lang: this.lang,
       deprecated: this.deprecated,
-      bindingPrefix: this.bindingPrefix
+      bindingPrefix: this.bindingPrefix,
+      local: this.local
     };
   }
 
@@ -192,11 +196,11 @@ export default class Component extends BitObject {
   }
 
   /**
-   * 
-   * 
-   * @param {Repository} repo 
+   *
+   *
+   * @param {Repository} repo
    * @param {boolean} [deepRemove=false] - wether to remove all the refs or only the version array
-   * @returns {Promise} 
+   * @returns {Promise}
    * @memberof Component
    */
   remove(repo: Repository, deepRemove: boolean = false): Promise {
@@ -305,7 +309,8 @@ export default class Component extends BitObject {
       versions: mapObject(rawComponent.versions, val => Ref.from(val)),
       lang: rawComponent.lang,
       deprecated: rawComponent.deprecated,
-      bindingPrefix: rawComponent.bindingPrefix
+      bindingPrefix: rawComponent.bindingPrefix,
+      local: rawComponent.local
     });
   }
 
