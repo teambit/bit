@@ -754,9 +754,18 @@ export default class Component {
     keep: ?boolean,
     ciComponent: any
   }): Promise<string> {
+    logger.debug(`consumer-component.build ${this.id}`);
     // @TODO - write SourceMap Type
-    if (!this.compilerId) return Promise.resolve(null);
-    logger.debug('consumer-component.build, compilerId found, start building');
+    if (!this.compilerId) {
+      logger.debug('compilerId was not found, nothing to build');
+      return Promise.resolve(null);
+    }
+    const componentStatus = await consumer.getComponentStatusById(this.id);
+    if (componentStatus.modified === false && this.dists) {
+      logger.debug('skip the build process as the component was not modified');
+      return this.dists;
+    }
+    logger.debug('compilerId found, start building');
 
     // verify whether the environment is installed
     let compiler;
@@ -985,6 +994,7 @@ export default class Component {
     componentFromModel: ModelComponent
   }): Component {
     const deprecated = componentFromModel ? componentFromModel.component.deprecated : false;
+    const dists = componentFromModel ? componentFromModel.component.dists : undefined;
     let packageDependencies;
     let bitJson = consumerBitJson;
     const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
@@ -1043,6 +1053,7 @@ export default class Component {
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,
       files: getLoadedFiles(files),
+      dists,
       packageDependencies,
       deprecated
     });
