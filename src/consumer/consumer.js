@@ -671,32 +671,20 @@ export default class Consumer {
         status.newlyCreated = true;
         return status;
       }
+      // "!componentFromModel.scope" is for backward compatibility, and won't be needed for components created since v0.11.3.
+      status.staged = componentFromModel.local || !componentFromModel.scope;
       const versionFromFs = componentFromFileSystem.id.version;
       const latestVersionFromModel = componentFromModel.latest();
-      let version;
-      if (
-        componentFromFileSystem.id.hasVersion() &&
-        semver.gt(latestVersionFromModel, componentFromFileSystem.id.getVersion().versionNum)
-      ) {
-        // Consider the following two scenarios:
-        // 1) a user tagged v1, exported, then tagged v2.
-        //    bitMap shows v1, model has v2 and the FS is v2.
-        //    Because the model version is bigger than bit-map and the model has symlink, we know it's staged.
-        //    to check whether the component is modified, we've to compare FS to the v2 of the model, not v1.
-        // 2) a user imported v1 of a component from a remote, when the latest version on the remote is v2.
-        //    bitMap shows v1, model has v2 and the FS is v1.
-        //    Even though the model version is bigger than bit-map, because the model doesn't have symlink, it's not staged.
-        //    to check whether the component is modified, we've to compare FS to the v1 of the model, not v2.
-        const hasSymLink = await this.scope.sources.hasSymlink(BitId.parse(id.toStringWithoutScopeAndVersion()));
-        status.staged = hasSymLink;
-        version = hasSymLink ? latestVersionFromModel : versionFromFs;
-      } else {
-        version = versionFromFs === LATEST_BIT_VERSION ? latestVersionFromModel : versionFromFs;
-      }
+      // Consider the following two scenarios:
+      // 1) a user tagged v1, exported, then tagged v2.
+      //    to check whether the component is modified, we've to compare FS to the v2 of the model, not v1.
+      // 2) a user imported v1 of a component from a remote, when the latest version on the remote is v2.
+      //    to check whether the component is modified, we've to compare FS to the v1 of the model, not v2.
+      //    @see reduce-path.e2e 'importing v1 of a component when a component has v2' to reproduce this case.
+      const version = status.staged ? latestVersionFromModel : versionFromFs;
       const versionRef = componentFromModel.versions[version];
       const versionFromModel = await this.scope.getObject(versionRef.hash);
       status.modified = await this.isComponentModified(versionFromModel, componentFromFileSystem);
-      status.staged = status.staged || !componentFromModel.scope; // when there is no scope, it's staged.
       return status;
     };
     if (!this._componentsStatusCache[id.toString()]) {

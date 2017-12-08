@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bug fix - importing an older version of a component ended up showing the component in "modified" and "staged" sections of bit status
 - support `bit show --compare` with json format (`bit show component-name --json --compare`)
 
 ## [0.11.2-dev.4] - 2017-12-05
