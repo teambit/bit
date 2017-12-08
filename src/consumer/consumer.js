@@ -645,7 +645,19 @@ export default class Consumer {
     return componentFromFileSystem._isModified;
   }
 
-  async getComponentStatusById(id: BitId): ComponentStatus {
+  /**
+   * Get a component status by ID. Return a ComponentStatus object.
+   * Keep in mind that a result can be a partial object of ComponentStatus, e.g. { notExist: true }.
+   * Each one of the ComponentStatus properties can be undefined, true or false.
+   * As a result, in order to check whether a component is not modified use (status.modified === false).
+   * Don't use (!status.modified) because a component may not exist and the status.modified will be undefined.
+   *
+   * The status may have 'true' for several properties. For example, a component can be staged and modified at the
+   * same time.
+   *
+   * The result is cached per ID and can be called several times with no penalties.
+   */
+  async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
     const getStatus = async () => {
       const status: ComponentStatus = {};
       const componentFromModel = await this.scope.sources.get(id);

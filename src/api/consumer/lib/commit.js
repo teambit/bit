@@ -26,7 +26,7 @@ export async function commitAction({
   const newComponents = await componentsList.listNewComponents();
   if (!force) {
     const componentStatus = await consumer.getComponentStatusById(BitId.parse(id));
-    if (!componentStatus.modified && !componentStatus.newlyCreated) return null;
+    if (componentStatus.modified === false) return null;
   }
   const commitResults = await consumer.commit(
     [id],
