@@ -981,7 +981,8 @@ export default class Scope {
       override: false,
       verbose
     };
-    const isolateComponentsP = ids.map(async (id) => {
+    const idsWithoutNils = removeNils(ids);
+    const isolateComponentsP = idsWithoutNils.map(async (id) => {
       let concreteId = id;
       if (id.getVersion().latest) {
         const concreteIds = await this.fetchRemoteVersions([id]);
