@@ -10,7 +10,7 @@ import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import BitMap from '../bit-map/bit-map';
 import Consumer from '../consumer';
-import { glob } from '../../utils';
+import { glob, filterAsync } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
@@ -55,7 +55,9 @@ export default class ComponentsList {
           // the component has a REF of its latest version, however, the object of the latest version is missing
           const bitId = BitId.parse(key);
           logger.warn(
-            `the model representation of ${bitId.toStringWithoutVersion()} is missing ${bitId.version} version, if this component is nested, this is a normal behaviour, otherwise, the component is corrupted`
+            `the model representation of ${bitId.toStringWithoutVersion()} is missing ${
+              bitId.version
+            } version, if this component is nested, this is a normal behaviour, otherwise, the component is corrupted`
           );
           // throw new CorruptedComponent(bitId.toStringWithoutVersion(), bitId.version);
         }
@@ -75,7 +77,7 @@ export default class ComponentsList {
    * @return {Promise<string[]>}
    */
   async listModifiedComponents(load: boolean = false): Promise<Array<BitId | Component>> {
-    const getAuthoredAndImportedFromFS = async () => {
+    const getAuthoredAndImportedFromFS = async (): Promise<Component[]> => {
       let [authored, imported] = await Promise.all([
         this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED),
         this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED)
@@ -84,37 +86,12 @@ export default class ComponentsList {
       imported = imported || [];
       return authored.concat(imported);
     };
-
-    const [objectComponents, fileSystemComponents] = await Promise.all([
-      this.getFromObjects(),
-      getAuthoredAndImportedFromFS()
-    ]);
-    const objFromFileSystem = fileSystemComponents.reduce((components, component) => {
-      components[component.id.toStringWithoutVersion()] = component;
-      return components;
-    }, {});
-
-    const modifiedComponents = [];
-    const calculateModified = Object.keys(objectComponents).map(async (id) => {
-      const bitId = BitId.parse(id);
-      const componentFromFS = objFromFileSystem[bitId.toStringWithoutVersion()];
-
-      if (componentFromFS) {
-        const isModified = await this.consumer.isComponentModified(objectComponents[id], componentFromFS);
-        if (isModified) {
-          if (load) {
-            modifiedComponents.push(componentFromFS);
-          } else {
-            modifiedComponents.push(bitId);
-          }
-        }
-      } else {
-        logger.warn(`a component ${id} exists in the model but not on the file system`);
-      }
-      return Promise.resolve();
+    const fileSystemComponents = await getAuthoredAndImportedFromFS();
+    const modifiedComponents = await filterAsync(fileSystemComponents, (component) => {
+      return this.consumer.getComponentStatusById(component.id).then(status => status.modified);
     });
-    await Promise.all(calculateModified);
-    return modifiedComponents;
+    if (load) return modifiedComponents;
+    return modifiedComponents.map(component => component.id);
   }
 
   async newAndModifiedComponents(): Promise<Component[]> {
@@ -218,27 +195,10 @@ export default class ComponentsList {
    * @return {Promise<string[]>}
    */
   async listExportPendingComponents(): Promise<string[]> {
-    const stagedComponents = [];
-    const listFromObjects = await this.getFromObjects();
-    const listFromFileSystem = await this.getFromFileSystem();
-    Object.keys(listFromObjects).forEach((id) => {
-      const modelBitId = BitId.parse(id);
-      if (!modelBitId.scope || modelBitId.scope === this.scope.name) {
-        modelBitId.scope = null;
-        stagedComponents.push(modelBitId.toString());
-      } else {
-        const similarFileSystemComponent = listFromFileSystem.find(
-          component => component.id.toStringWithoutVersion() === modelBitId.toStringWithoutVersion()
-        );
-        if (
-          similarFileSystemComponent &&
-          semver.gt(modelBitId.getVersion().versionNum, similarFileSystemComponent.id.getVersion().versionNum)
-        ) {
-          stagedComponents.push(modelBitId.toString());
-        }
-      }
+    const idsFromObjects = await this.idsFromObjects();
+    return filterAsync(idsFromObjects, (componentId) => {
+      return this.consumer.getComponentStatusById(BitId.parse(componentId)).then(status => status.staged);
     });
-    return stagedComponents;
   }
 
   async listAutoTagPendingComponents(): Promise<ModelComponent[]> {

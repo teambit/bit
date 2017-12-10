@@ -233,7 +233,7 @@ export default class SourceRepository {
       specsResults
     });
     component.addVersion(version, releaseType, exactVersion);
-
+    component.local = true;
     objectRepo.add(version).add(component);
 
     if (files) files.forEach(file => objectRepo.add(file.file));

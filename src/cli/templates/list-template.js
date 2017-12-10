@@ -7,7 +7,7 @@ import ConsumerComponent from '../../consumer/component/consumer-component';
 
 export default (components: ConsumerComponent[], json: boolean, showRemoteVersion?: boolean = false) => {
   const header = [
-    { value: 'Id', width: 60, headerColor: 'cyan', headerAlign: 'left' },
+    { value: 'Id', width: 70, headerColor: 'cyan', headerAlign: 'left' },
     { value: showRemoteVersion ? 'Local Version' : 'Version', width: 9, headerColor: 'cyan', headerAlign: 'left' }
   ];
   if (showRemoteVersion) {
