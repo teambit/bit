@@ -40,7 +40,7 @@ export default class Fs implements Network {
   }
 
   deleteMany(bitIds: Array<BitId>, force: boolean): Promise<ComponentObjects[]> {
-    return remove({ path: this.scopePath, ids: bitIds });
+    return remove({ path: this.scopePath, ids: bitIds, force });
   }
 
   deprecateMany(bitIds: Array<BitId>): Promise<ComponentObjects[]> {
