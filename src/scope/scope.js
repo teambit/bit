@@ -116,11 +116,16 @@ export default class Scope {
   /**
    * Get the releative components path inside the scope
    * (components such as compilers / testers / extensions)
+   * currently components
    */
   static getComponentsRelativePath(): string {
     return BITS_DIRNAME;
   }
 
+  /**
+   * Get a relative (to scope) path to a specific component such as compiler / tester / extension
+   * @param {BitId} id
+   */
   static getComponentRelativePath(id: BitId): string {
     return pathLib.join(id.box, id.name, id.scope, id.version);
   }
@@ -1100,6 +1105,14 @@ export default class Scope {
     return component.build({ scope: this, environment, save, consumer, verbose, directory, keep, ciComponent });
   }
 
+  /**
+   * import a component end to end. Including importing the dependencies and installing the npm
+   * packages.
+   *
+   * @param {string} bitId - the component id to isolate
+   * @param {IsolateOptions} opts
+   * @return {Promise.<string>} - the path to the isolated component
+   */
   async isolateComponent(bitId: string, opts: IsolateOptions): Promise<string> {
     const parsedId = BitId.parse(bitId);
     const component = await this.loadComponent(parsedId);

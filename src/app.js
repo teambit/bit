@@ -7,6 +7,7 @@ import HooksManager from './hooks';
 loudRejection();
 HooksManager.init();
 
+// Load extensions
 loadExtensions().then((extensions) => {
   // Make sure to register all the hooks actions in the global hooks manager
   extensions.forEach((extension) => {

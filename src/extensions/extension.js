@@ -37,6 +37,13 @@ export type ExtensionProps = {
   dynamicConfig: Object
 };
 
+/**
+ * A class which represent an extension
+ * The different attributes,
+ * Extension API,
+ * Load extension
+ * Config
+ */
 export default class Extension {
   name: string;
   loaded: boolean;
@@ -50,21 +57,34 @@ export default class Extension {
   dynamicConfig: Object;
   script: Function; // Store the required plugin
   api = {
+    /**
+     * API to resiter new command to bit
+     */
     registerCommand: (newCommand: NewCommand) => {
       // TODO: validate new command format
       logger.info(`registering new command ${newCommand.name}`);
       this.commands.push(new ExtensionCommand(newCommand));
     },
+    /**
+     * API to register action to an existing hook (hook name might be a hook defined by another extension)
+     */
     registerActionToHook: (hookName: string, hookAction: HookAction) => {
       logger.info(`registering ${hookAction.name} to hook ${hookName}`);
       this.registeredHooksActions[hookName] = hookAction;
     },
+    /**
+     * API to register a new hook name, usuful for communicate between different extensions
+     */
     registerNewHook: (hookName: string) => {
       logger.info(`registering new global hook ${hookName}`);
       this.newHooks.push(hookName);
       // Register the new hook in the global hooks manager
       HooksManagerInstance.registerNewHook(hookName, { extension: this.name });
     },
+    /**
+     * API to trigger a hook registered by this extension.
+     * trigger hook are available only for hooks registered by you.
+     */
     triggerHook: (hookName: string, args: ?Object) => {
       if (!R.contains(hookName, this.newHooks)) {
         logger.debug(`trying to trigger the hook ${hookName} which not registerd by this extension`);
@@ -72,6 +92,9 @@ export default class Extension {
       }
       HooksManagerInstance.triggerHook(hookName, args);
     },
+    /**
+     * API to get logger
+     */
     getLogger: () => createExtensionLogger(this.name),
     getLoader: () => loader,
     HOOKS_NAMES: _getHooksNames(),
@@ -88,6 +111,17 @@ export default class Extension {
     this.newHooks = [];
   }
 
+  /**
+   * Load extension by name
+   * The extension will be from scope by default or from file
+   * if there is file(path) in the options
+   * The file path is relative to the bit.json of the project or absolute
+   * @param {string} name - name of the extension
+   * @param {Object} rawConfig - raw config for the extension
+   * @param {Object} options - extension options such as - disabled, file, default
+   * @param {string} consumerPath - path to the consumer folder (to load the file relatively)
+   * @param {string} scopePath - scope which stores the extension code
+   */
   static async load(
     name: string,
     rawConfig: Object = {},

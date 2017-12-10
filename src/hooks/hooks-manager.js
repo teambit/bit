@@ -22,6 +22,11 @@ type HookFailures = {
 */
 let instance = null;
 
+/**
+ * A class which manage all the hooks
+ * This is a singelton class which expose getInstance method
+ * This class used for register new hooks, actions for existing hooks and trigger hooks
+ */
 export default class HooksManager {
   hooks = new Map();
 

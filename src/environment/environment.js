@@ -53,7 +53,8 @@ export default class Environment {
    * import a component end to end. Including importing the dependencies and installing the npm
    * packages.
    *
-   * @param rawId
+   * @param {string | BitId} rawId - the component id to isolate
+   * @param {IsolateOptions} opts
    * @return {Promise.<Component>}
    */
   async isolateComponent(rawId: string | BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {

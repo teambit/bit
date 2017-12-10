@@ -34,6 +34,7 @@ const logger = new winston.Logger({
 /**
  * Create a logger instance for extension
  * The extension name will be added as label so it will appear in the begining of each log line
+ * The logger is cached for each extension so there is no problem to use getLogger few times for the same extension
  * @param {string} extensionName
  */
 export const createExtensionLogger = (extensionName: string) => {

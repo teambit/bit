@@ -17,8 +17,16 @@ module.exports = {
       return c.toObject();
     }),
   list: scopePath => scopeList(scopePath).then(components => components.map(c => c.id.toString())),
-  loadExtension: async (extensionName: string, extensionFilePath: string, extensionConfig: Object): Extension => {
-    const extension = await Extension.loadFromFile(extensionName, extensionFilePath, extensionConfig);
+  /**
+   * Load extension progremmatically
+   */
+  loadExtension: async (
+    extensionName: string,
+    extensionFilePath: string,
+    extensionConfig: Object,
+    extensionOptions: Object
+  ): Extension => {
+    const extension = await Extension.loadFromFile(extensionName, extensionFilePath, extensionConfig, extensionOptions);
     return Promise.resolve(extension);
   }
 };

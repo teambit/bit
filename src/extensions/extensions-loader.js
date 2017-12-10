@@ -7,13 +7,17 @@ import { loadConsumer, Consumer } from '../consumer';
 import logger from '../logger/logger';
 import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
 
+/**
+ * Load all extensions
+ * Regular, defaults, globals
+ */
 export default (async function loadExtensions(): Extension[] {
   try {
     logger.info('start loading extensions');
     const consumer: Consumer = await loadConsumer();
     let rawExtensions = consumer.bitJson.extensions || {};
     // Load global extensions
-    const globalBitJson = await _getGlobalRawExtensions(false);
+    const globalBitJson = await _getGlobalBitJson(false);
     const globalRawExtensions = globalBitJson && globalBitJson.extensions;
     // Merge the global with the local extensions only if exists
     // The local extension is higher priority than the global ones since they are closer to the user
@@ -32,6 +36,11 @@ export default (async function loadExtensions(): Extension[] {
   }
 });
 
+/**
+ * Load specific exntesion
+ * @param {string} consumerPath
+ * @param {string} scopePath
+ */
 const _loadExtension = (consumerPath: string, scopePath: string) => (
   rawConfig: Object = {},
   name: string
@@ -39,7 +48,11 @@ const _loadExtension = (consumerPath: string, scopePath: string) => (
   return Extension.load(name, rawConfig.config, rawConfig.options, consumerPath, scopePath);
 };
 
-const _getGlobalRawExtensions = async (throws: boolean) => {
+/**
+ * Load the global bit.json file (in order to get the global extensions)
+ * @param {boolean} throws - whether to throw an error if the file corrupted
+ */
+const _getGlobalBitJson = async (throws: boolean) => {
   const globalBitJsonPath = path.join(GLOBAL_CONFIG, BIT_JSON);
   const exists = await fs.pathExists(globalBitJsonPath);
   if (!exists) return null;
