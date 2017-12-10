@@ -677,9 +677,9 @@ describe('bit tag command', function () {
       } catch (err) {
         errMsg = err.message;
       }
-      const status = helper.runCmd('bit list');
+      const output = helper.listLocalScope();
       expect(errMsg).to.have.string('fatal: issues found with the following component dependencies');
-      expect(status).to.not.have.string('bar/foo');
+      expect(output).to.not.have.string('bar/foo');
     });
     it('Should throw error that all files were removed', () => {
       const beforeRemoveBitMap = helper.readBitMap();
