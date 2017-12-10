@@ -107,6 +107,8 @@ describe('bit tag command', function () {
         expect(nonFlagedCommit).to.contain('1 components tagged | 1 added, 0 changed, 0 auto-tagged');
       });
     });
+    // TODO: fix all the tests in the following "describe" so they will not rely on the output of the previous test
+    // waiting for 'bit remove' bug fix
     describe('tag all components', () => {
       before(() => {
         helper.reInitLocalScope();
@@ -133,6 +135,18 @@ describe('bit tag command', function () {
         output = helper.commitAllComponents('message', '--patch');
         expect(output).to.have.string('components/a@0.0.3');
         expect(output).to.have.string('components/b@0.0.3');
+      });
+      it('Should increment the default version without the -m flag', () => {
+        helper.createFile('components', 'a.js', 'v0.0.4');
+        helper.createFile('components', 'b.js', 'v0.0.4');
+        output = helper.tagAllWithoutMessage();
+        expect(output).to.have.string('components/a@0.0.4');
+        expect(output).to.have.string('components/b@0.0.4');
+      });
+      it('Should show message "nothing to tag" if trying to tag with no changes', () => {
+        helper.tagAllWithoutMessage();
+        const tagWithoutChanges = helper.tagAllWithoutMessage();
+        expect(tagWithoutChanges).to.have.string('nothing to tag');
       });
       it('Should increment the minor version when --minor flag specified', () => {
         helper.createFile('components', 'a.js', 'v0.1.0');
@@ -174,7 +188,15 @@ describe('bit tag command', function () {
     });
   });
   describe('tag one component', () => {
-    it.skip('should throw error if the bit id does not exists', () => {});
+    it('should throw error if the bit id does not exists', () => {
+      let output;
+      try {
+        helper.tagWithoutMessage('non/existing');
+      } catch (err) {
+        output = err.message;
+      }
+      expect(output).to.have.string('fatal: the component non/existing was not found in the bit.map file');
+    });
 
     it.skip('should print warning if the a driver is not installed', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
@@ -305,18 +327,6 @@ describe('bit tag command', function () {
     });
   });
 
-  describe('tag non-exist component', () => {
-    before(() => {
-      helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-    });
-    it('should not tag another component', () => {
-      const commit = () => helper.commitComponent('non-exist-comp');
-      expect(commit).to.throw('the component global/non-exist-comp was not found in the bit.map file');
-    });
-  });
-
   describe('tag back', () => {
     // This is specifically export more than one component since it's different case for the
     // resolveLatestVersion.js - getLatestVersionNumber function
@@ -337,21 +347,6 @@ describe('bit tag command', function () {
         expect(output).to.have.string('1 components tagged');
       });
     });
-  });
-
-  describe('tag already tagged component without changing it', () => {
-    let output;
-    before(() => {
-      helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.commitAllComponents();
-      output = helper.commitComponent('bar/foo');
-    });
-    it('should print nothing to tag', () => {
-      expect(output).to.have.string('nothing to tag');
-    });
-    it.skip('should tag the component if -f used', () => {});
   });
 
   describe('tag imported component with new dependency to another imported component', () => {
@@ -446,17 +441,8 @@ describe('bit tag command', function () {
     });
   });
 
+  // there is another describe('tag all components')
   describe('tag all components', () => {
-    it('Should print there is nothing to tag right after success tag all', () => {
-      // Create component and try to tag twice
-      helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      let output = helper.commitAllComponents();
-      output = helper.commitAllComponents();
-      expect(output.includes('nothing to tag')).to.be.true;
-    });
-
     it.skip('Should print there is nothing to tag after import only', () => {
       // Import component then try to tag
     });

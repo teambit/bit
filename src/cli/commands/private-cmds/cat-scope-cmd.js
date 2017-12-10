@@ -18,7 +18,7 @@ export default class CatScope extends Command {
   report({ payload, full }: { payload: componentObject[], full: ?boolean }): string {
     if (!full) {
       const header = [
-        { value: 'Id', width: 50, headerColor: 'cyan' },
+        { value: 'Id', width: 70, headerColor: 'cyan' },
         { value: 'Object', width: 50, headerColor: 'cyan' }
       ];
       const opts = {

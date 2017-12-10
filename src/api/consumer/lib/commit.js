@@ -2,6 +2,7 @@
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
+import { BitId } from '../../../bit-id';
 
 export async function commitAction({
   id,
@@ -24,8 +25,8 @@ export async function commitAction({
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
   if (!force) {
-    const isModified = await consumer.isComponentModifiedById(id, true);
-    if (!isModified) return null;
+    const componentStatus = await consumer.getComponentStatusById(BitId.parse(id));
+    if (componentStatus.modified === false) return null;
   }
   const commitResults = await consumer.commit(
     [id],
