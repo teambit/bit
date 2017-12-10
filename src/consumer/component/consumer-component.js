@@ -765,9 +765,28 @@ export default class Component {
     keep: ?boolean,
     ciComponent: any
   }): Promise<string> {
+    logger.debug(`consumer-component.build ${this.id}`);
     // @TODO - write SourceMap Type
-    if (!this.compilerId) return Promise.resolve(null);
-    logger.debug('consumer-component.build, compilerId found, start building');
+    if (!this.compilerId) {
+      logger.debug('compilerId was not found, nothing to build');
+      return Promise.resolve(null);
+    }
+    // Ideally it's better to use the dists from the model.
+    // If there is no consumer, it comes from the scope or isolated environment, which the dists are already saved.
+    // If there is consumer, check whether the component was modified. If it wasn't, no need to re-build.
+    const isNeededToReBuild = async () => {
+      if (!consumer) return false;
+      const componentStatus = await consumer.getComponentStatusById(this.id);
+      return componentStatus.modified;
+    };
+
+    const needToRebuild = await isNeededToReBuild();
+    if (!needToRebuild && this.dists) {
+      logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
+      return this.dists;
+    }
+
+    logger.debug('compilerId found, start building');
 
     // verify whether the environment is installed
     let compiler;
@@ -974,6 +993,7 @@ export default class Component {
     componentFromModel: ModelComponent
   }): Component {
     const deprecated = componentFromModel ? componentFromModel.component.deprecated : false;
+    const dists = componentFromModel ? componentFromModel.component.dists : undefined;
     let packageDependencies;
     let bitJson = consumerBitJson;
     const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
@@ -1032,6 +1052,7 @@ export default class Component {
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,
       files: getLoadedFiles(files),
+      dists,
       packageDependencies,
       deprecated
     });

@@ -2,6 +2,7 @@
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
+import { BitId } from '../../../bit-id';
 import HooksManager from '../../../hooks';
 import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from '../../../constants';
 
@@ -22,8 +23,8 @@ export async function commitAction(args: {
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
   if (!force) {
-    const isModified = await consumer.isComponentModifiedById(id, true);
-    if (!isModified) return null;
+    const componentStatus = await consumer.getComponentStatusById(BitId.parse(id));
+    if (componentStatus.modified === false) return null;
   }
   const commitResults = await consumer.commit(
     [id],

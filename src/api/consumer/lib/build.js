@@ -41,6 +41,7 @@ export async function buildAll(): Promise<Object> {
   const bitMap = await BitMap.load(consumer.getPath());
   const componentsList = new ComponentsList(consumer);
   const newAndModifiedComponents = await componentsList.newAndModifiedComponents();
+  if (!newAndModifiedComponents || !newAndModifiedComponents.length) return Promise.reject('nothing to build');
   const buildAllP = await buildAllResults(newAndModifiedComponents, consumer, bitMap);
   const allComponents = await Promise.all(buildAllP);
   const componentsObj = {};

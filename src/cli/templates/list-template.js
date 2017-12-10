@@ -7,7 +7,7 @@ import ConsumerComponent from '../../consumer/component/consumer-component';
 
 export default (components: ConsumerComponent[], json: boolean, showRemoteVersion?: boolean = false) => {
   const header = [
-    { value: 'Id', width: 60, headerColor: 'cyan', headerAlign: 'left' },
+    { value: 'Id', width: 70, headerColor: 'cyan', headerAlign: 'left' },
     { value: showRemoteVersion ? 'Local Version' : 'Version', width: 9, headerColor: 'cyan', headerAlign: 'left' }
   ];
   if (showRemoteVersion) {
@@ -19,7 +19,7 @@ export default (components: ConsumerComponent[], json: boolean, showRemoteVersio
 
   function tablizeComponent(component: ConsumerComponent) {
     const id = component.id.toStringWithoutVersion();
-    const data = { id: c.red(`${id}${component.deprecated ? ' [Deprecated]' : ''}`) }; // Add date, author
+    const data = { id: c.white(`${id}${component.deprecated ? ' [Deprecated]' : ''}`) }; // Add date, author
     let version = component.version;
     if (!json && showRemoteVersion) {
       const color = component.latest && semver.gt(component.latest, component.version) ? 'red' : null;

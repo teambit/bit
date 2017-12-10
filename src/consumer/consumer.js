@@ -25,7 +25,7 @@ import ComponentMap from './bit-map/component-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { getLatestVersionNumber, pathRelative } from '../utils';
+import { getLatestVersionNumber, pathRelative, filterAsync } from '../utils';
 import * as linkGenerator from './component/link-generator';
 import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
@@ -39,6 +39,14 @@ export type ConsumerProps = {
   scope: Scope
 };
 
+type ComponentStatus = {
+  modified: boolean,
+  newlyCreated: boolean,
+  deleted: boolean,
+  staged: boolean,
+  notExist: boolean
+};
+
 export default class Consumer {
   projectPath: string;
   created: boolean;
@@ -47,7 +55,8 @@ export default class Consumer {
   _driver: Driver;
   _bitMap: BitMap;
   _dirStructure: DirStructure;
-  _componentsCache: Object; // cache loaded components
+  _componentsCache: Object = {}; // cache loaded components
+  _componentsStatusCache: Object = {}; // cache loaded components
 
   constructor({ projectPath, bitJson, scope, created = false }: ConsumerProps) {
     this.projectPath = projectPath;
@@ -55,7 +64,6 @@ export default class Consumer {
     this.created = created;
     this.scope = scope;
     this.warnForMissingDriver();
-    this._componentsCache = {};
   }
 
   get testerId(): ?BitId {
@@ -102,7 +110,9 @@ export default class Consumer {
     } catch (err) {
       msg = msg
         ? format(msg, err)
-        : `Warning: Bit is not be able to run the bind command. Please install bit-${err.lang} driver and run the bind command.`;
+        : `Warning: Bit is not be able to run the bind command. Please install bit-${
+          err.lang
+        } driver and run the bind command.`;
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
@@ -279,7 +289,7 @@ export default class Consumer {
       }
     }
     if (!force) {
-      const allComponentsIds = dependenciesFromBitJson.concat(componentsFromBitMap).map(bitId => bitId.toString());
+      const allComponentsIds = dependenciesFromBitJson.concat(componentsFromBitMap);
       await this.warnForModifiedComponents(allComponentsIds);
     }
 
@@ -320,10 +330,11 @@ export default class Consumer {
     return { dependencies: componentsAndDependencies };
   }
 
-  async warnForModifiedComponents(ids: string[]) {
-    const modifiedComponents = await Promise.all(ids.map(rawId => this.isComponentModifiedById(rawId))).then(results =>
-      ids.filter(() => results.shift())
-    ); // a nice trick to Array.filter with promises
+  async warnForModifiedComponents(ids: BitId[]) {
+    const modifiedComponents = await filterAsync(ids, (id) => {
+      return this.getComponentStatusById(id).then(status => status.modified);
+    });
+
     if (modifiedComponents.length) {
       return Promise.reject(
         chalk.yellow(
@@ -333,6 +344,7 @@ export default class Consumer {
         )
       );
     }
+    return Promise.resolve();
   }
 
   async importSpecificComponents(
@@ -346,11 +358,11 @@ export default class Consumer {
     conf?: boolean = false
   ) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
-    if (!force) {
-      await this.warnForModifiedComponents(rawIds);
-    }
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw));
+    if (!force) {
+      await this.warnForModifiedComponents(bitIds);
+    }
     const componentsWithDependencies = await this.scope.getManyWithAllVersions(bitIds, cache);
     await this.writeToComponentsDir({
       componentsWithDependencies,
@@ -558,7 +570,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
@@ -636,28 +650,61 @@ export default class Consumer {
   }
 
   /**
-   * @see isComponentModified for the implementation of the comparison
+   * Get a component status by ID. Return a ComponentStatus object.
+   * Keep in mind that a result can be a partial object of ComponentStatus, e.g. { notExist: true }.
+   * Each one of the ComponentStatus properties can be undefined, true or false.
+   * As a result, in order to check whether a component is not modified use (status.modified === false).
+   * Don't use (!status.modified) because a component may not exist and the status.modified will be undefined.
+   *
+   * The status may have 'true' for several properties. For example, a component can be staged and modified at the
+   * same time.
+   *
+   * The result is cached per ID and can be called several times with no penalties.
    */
-  async isComponentModifiedById(id: string, includeNewComponents: boolean = false): Promise<boolean> {
-    const idParsed = BitId.parse(id);
-    const componentFromModel = await this.scope.sources.get(idParsed);
-    if (!componentFromModel) return includeNewComponents; // the component was never committed
-    const latestVersionRef = componentFromModel.versions[componentFromModel.latest()];
-    const versionFromModel = await this.scope.getObject(latestVersionRef.hash);
-    try {
-      const componentFromFileSystem = await this.loadComponent(idParsed);
-      return this.isComponentModified(versionFromModel, componentFromFileSystem);
-    } catch (err) {
-      if (
-        err instanceof MissingFilesFromComponent ||
-        err instanceof ComponentNotFoundInPath ||
-        err instanceof MissingBitMapComponent
-      ) {
-        // the file/s have been deleted or the component doesn't exist in bit.map file
-        return false;
+  async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
+    const getStatus = async () => {
+      const status: ComponentStatus = {};
+      const componentFromModel = await this.scope.sources.get(id);
+      let componentFromFileSystem;
+      try {
+        componentFromFileSystem = await this.loadComponent(BitId.parse(id.toStringWithoutVersion()));
+      } catch (err) {
+        if (
+          err instanceof MissingFilesFromComponent ||
+          err instanceof ComponentNotFoundInPath ||
+          err instanceof MissingBitMapComponent
+        ) {
+          // the file/s have been deleted or the component doesn't exist in bit.map file
+          if (componentFromModel) status.deleted = true;
+          else status.notExist = true;
+          return status;
+        }
+        throw err;
       }
-      throw err;
+      if (!componentFromModel) {
+        status.newlyCreated = true;
+        return status;
+      }
+      // "!componentFromModel.scope" is for backward compatibility, and won't be needed for components created since v0.11.3.
+      status.staged = componentFromModel.local || !componentFromModel.scope;
+      const versionFromFs = componentFromFileSystem.id.version;
+      const latestVersionFromModel = componentFromModel.latest();
+      // Consider the following two scenarios:
+      // 1) a user tagged v1, exported, then tagged v2.
+      //    to check whether the component is modified, we've to compare FS to the v2 of the model, not v1.
+      // 2) a user imported v1 of a component from a remote, when the latest version on the remote is v2.
+      //    to check whether the component is modified, we've to compare FS to the v1 of the model, not v2.
+      //    @see reduce-path.e2e 'importing v1 of a component when a component has v2' to reproduce this case.
+      const version = status.staged ? latestVersionFromModel : versionFromFs;
+      const versionRef = componentFromModel.versions[version];
+      const versionFromModel = await this.scope.getObject(versionRef.hash);
+      status.modified = await this.isComponentModified(versionFromModel, componentFromFileSystem);
+      return status;
+    };
+    if (!this._componentsStatusCache[id.toString()]) {
+      this._componentsStatusCache[id.toString()] = await getStatus();
     }
+    return this._componentsStatusCache[id.toString()];
   }
 
   async commit(
