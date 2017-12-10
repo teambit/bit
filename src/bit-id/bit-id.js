@@ -78,6 +78,15 @@ export default class BitId {
     return path.join(this.box, this.name, this.scope, this.version);
   }
 
+  /**
+   * Get a string id and return a string without the version part
+   * @param {string} id
+   * @return {string} id - id without version
+   */
+  static getStringWithoutVersion(id: string): string {
+    return id.split(VERSION_DELIMITER)[0];
+  }
+
   static parse(id: ?string, version: string = LATEST_BIT_VERSION): ?BitId {
     if (!id || id === NO_PLUGIN_TYPE) {
       return null;

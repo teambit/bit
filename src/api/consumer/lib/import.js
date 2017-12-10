@@ -8,7 +8,9 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 import { flattenDependencies } from '../../../scope/flatten-dependencies';
-import { COMPONENT_ORIGINS } from '../../../constants';
+import { COMPONENT_ORIGINS, VERSION_DELIMITER } from '../../../constants';
+import { forEach } from '../../../utils/index';
+import { BitId } from '../../../bit-id';
 
 const key = R.compose(R.head, R.keys);
 
@@ -57,7 +59,16 @@ export default (async function importAction({
       }
 
       if (extension) {
-        // TODO: don't create the same extension twice - check if older version exists and override it
+        const idWithoutVersion = BitId.getStringWithoutVersion(id);
+        // don't create the same extension twice - check if older version exists and override it
+        const oldVersion = Object.keys(consumer.bitJson.extensions).find((ext) => {
+          return BitId.getStringWithoutVersion(ext) === idWithoutVersion;
+        });
+        if (oldVersion) {
+          consumer.bitJson.extensions[id] = consumer.bitJson.extensions[oldVersion];
+          delete consumer.bitJson.extensions[oldVersion];
+          return consumer.bitJson.write({ bitDir: consumer.getPath() });
+        }
         consumer.bitJson.extensions[id] = {
           options: {},
           config: {}
