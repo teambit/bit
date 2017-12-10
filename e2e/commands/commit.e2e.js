@@ -667,6 +667,20 @@ describe('bit tag command', function () {
       expect(files).to.be.ofSize(1);
       expect(files[0].name).to.equal('index.js');
     });
+    it('Should not let you tag with a non-existing dependency', () => {
+      let errMsg;
+      helper.createComponent('bar', 'foo.js', 'var index = require("./index.js")');
+      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+      helper.deleteFile('bar/index.js');
+      try {
+        helper.runCmd('bit tag -a');
+      } catch (err) {
+        errMsg = err.message;
+      }
+      const status = helper.runCmd('bit status');
+      expect(errMsg).to.have.string('fatal: issues found with the following component dependencies');
+      expect(status).to.have.string('new components\n     > bar/foo');
+    });
     it('Should throw error that all files were removed', () => {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
