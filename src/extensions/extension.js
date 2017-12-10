@@ -10,8 +10,10 @@ import { loadConsumer } from '../consumer';
 import { BitId } from '../bit-id';
 import loader from '../cli/loader';
 import HooksManager, { HookAction } from '../hooks';
+import { HOOKS_NAMES } from '../constants';
 
 const HooksManagerInstance = HooksManager.getInstance();
+const DEFAULT_EXTENSIONS_PATH = './default-extensions';
 
 type NewCommand = {
   name: string,
@@ -72,7 +74,8 @@ export default class Extension {
     },
     getLogger: () => createExtensionLogger(this.name),
     getLoader: () => loader,
-    createIsolatedEnv
+    HOOKS_NAMES: _getHooksNames(),
+    createIsolatedEnv: _createIsolatedEnv
   };
 
   constructor(extensionProps: ExtensionProps) {
@@ -103,10 +106,7 @@ export default class Extension {
     }
     // Require extension from scope
     try {
-      const bitId = BitId.parse(name);
-      const internalComponentsPath = Scope.getComponentsRelativePath();
-      const internalComponentPath = Scope.getComponentRelativePath(bitId);
-      const componentPath = path.join(scopePath, internalComponentsPath, internalComponentPath);
+      const componentPath = _getExtensionPath(name, scopePath, options.default);
       return Extension.loadFromFile(name, componentPath, rawConfig, options);
     } catch (err) {
       logger.error(`loading extension ${name} faild`);
@@ -164,7 +164,7 @@ export default class Extension {
   }
 }
 
-const createIsolatedEnv = async (scopePath: ?string, dirPath: ?string) => {
+const _createIsolatedEnv = async (scopePath: ?string, dirPath: ?string) => {
   const scope = await _loadScope(scopePath);
   const isolatedEnvironment = new IsolatedEnvironment(scope, dirPath);
   await isolatedEnvironment.create();
@@ -179,4 +179,32 @@ const _loadScope = async (scopePath: ?string) => {
   // If a scope path was not provided we will get the consumer's scope
   const consumer = await loadConsumer();
   return consumer.scope;
+};
+
+const _getDefaultExtensionPath = (name: string): string => {
+  const componentPath = path.join(__dirname, DEFAULT_EXTENSIONS_PATH, name);
+  return componentPath;
+};
+
+const _getRegularExtensionPath = (name: string, scopePath: string): string => {
+  const bitId = BitId.parse(name);
+  const internalComponentsPath = Scope.getComponentsRelativePath();
+  const internalComponentPath = Scope.getComponentRelativePath(bitId);
+  const componentPath = path.join(scopePath, internalComponentsPath, internalComponentPath);
+  return componentPath;
+};
+
+const _getExtensionPath = (name: string, scopePath: string, isDefault: boolean = false): string => {
+  if (isDefault) {
+    return _getDefaultExtensionPath(name);
+  }
+  return _getRegularExtensionPath(name, scopePath);
+};
+
+const _getHooksNames = () => {
+  const hooks = {};
+  HOOKS_NAMES.forEach((hook) => {
+    hooks[hook] = hook;
+  });
+  return hooks;
 };
