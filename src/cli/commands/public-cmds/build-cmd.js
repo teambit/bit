@@ -34,7 +34,7 @@ export default class Build extends Command {
   }
 
   report(res: ?(string[]) | string | Object): string {
-    const noCompilerSpecifiedError = chalk.red('there is no compiler to that component');
+    const noCompilerSpecifiedError = chalk.red('error: there is no compiler for that component');
     if (!res) return noCompilerSpecifiedError;
     if (Array.isArray(res)) {
       return chalk.cyan(res.join('\n'));
