@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- new extension system (beta)
+- add `bit isolate` command
 - avoid building process when a component was not modified and the dists are saved in the model
 - bug fix - importing an older version of a component ended up showing the component in "modified" and "staged" sections of bit status
 - support `bit show --compare` with json format (`bit show component-name --json --compare`)
