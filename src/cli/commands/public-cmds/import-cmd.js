@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { importAction } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
-import { formatBit, paintHeader, formatPlainComponentItem } from '../../chalk-box';
+import { formatPlainComponentItem } from '../../chalk-box';
 import Component from '../../../consumer/component';
 import { ComponentWithDependencies } from '../../../scope';
 
@@ -18,11 +18,11 @@ export default class Import extends Command {
     ['', 'extension', 'import an extension component'],
     ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
     ['p', 'prefix <prefix>', 'import components into a specific directory'],
-    ['d', 'display_dependencies', 'display the imported dependencies'],
+    ['d', 'display-dependencies', 'display the imported dependencies'],
     ['f', 'force', 'ignore local changes'],
     ['', 'dist', 'write dist files (when exist) to the configured directory'],
     ['', 'conf', 'write the configuration file (bit.json)'],
-    ['', 'no_package_json', 'do not generate package.json for the imported component(s)']
+    ['', 'ignore-package-json', 'do not generate package.json for the imported component(s)']
   ];
   loader = true;
   migration = true;
@@ -35,24 +35,24 @@ export default class Import extends Command {
       extension,
       verbose = false,
       prefix,
-      display_dependencies,
+      displayDependencies,
       environment,
       force = false,
       dist = false,
       conf = false,
-      no_package_json = false
+      ignorePackageJson = false
     }: {
       tester?: boolean,
       compiler?: boolean,
       extension?: boolean,
       verbose?: boolean,
       prefix?: string,
-      display_dependencies?: boolean,
+      displayDependencies?: boolean,
       environment?: boolean,
       force?: boolean,
       dist?: boolean,
       conf?: boolean,
-      no_package_json?: boolean
+      ignorePackageJson?: boolean
     }
   ): Promise<any> {
     // @TODO - import should support multiple components
@@ -71,15 +71,15 @@ export default class Import extends Command {
       force,
       dist,
       conf,
-      withPackageJson: !no_package_json
-    }).then(importResults => R.assoc('display_dependencies', display_dependencies, importResults));
+      withPackageJson: !ignorePackageJson
+    }).then(importResults => R.assoc('displayDependencies', displayDependencies, importResults));
   }
 
   report({
     dependencies,
     envDependencies,
     warnings,
-    display_dependencies
+    displayDependencies
   }: {
     dependencies?: ComponentWithDependencies[],
     envDependencies?: Component[],
@@ -88,7 +88,7 @@ export default class Import extends Command {
       notInNodeModules: [],
       notInBoth: []
     },
-    display_dependencies?: boolean
+    displayDependencies?: boolean
   }): string {
     let dependenciesOutput;
     let envDependenciesOutput;
@@ -111,7 +111,7 @@ export default class Import extends Command {
       }
 
       const peerDependenciesOutput =
-        peerDependencies && !R.isEmpty(peerDependencies) && display_dependencies
+        peerDependencies && !R.isEmpty(peerDependencies) && displayDependencies
           ? immutableUnshift(
             R.uniq(peerDependencies.map(formatPlainComponentItem)),
             chalk.green(`\n\nsuccessfully imported ${components.length} component dependencies`)

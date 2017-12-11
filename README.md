@@ -15,13 +15,18 @@
 
 [Community](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/) 
 
-Bit is a Git extension for isolation and synchronization of reusable source-code components among Git repositories.
+Up until now, sharing code between repositories meant maintaining additional repositories and packages. As a result, overhead, discoverability and maintainability quickly became an issue. 
 
-* **Isolate** and define any subset of files in your repository as a reusable component. Tag cross-component versions, track changes and gain absolute control over your component dependency graph.
+Bit is a Git extension for isolation and synchronization of reusable source-code components directly between repositories. 
+It enables you to share reusable components directly from your repository and make them individually available to discover, import and update from other repositories.
 
-* **Sync** components between repositories. Instantly get notified and merge component changes made in other repositories by leveraging integrations to Git's comparison and merge utilities.
+Key features:
 
-* **Extend** Bit to execute, parse, compile, distribute and test reusable components individually on top of an isolated component environment. Bit extensions can be used for packing a component, publishing it to package registries, parsing useful information and testing to make sure each component executes individually.
+* **Isolate components** in your repository by pointing out subsets of files as reusable components. Bit will provide full control over their dependency graph, enables you to track changes, tag cross-component versions and more. 
+
+* **Sync components** between repositories. Once components from one repo are imported into another repo, you can get notified and merge component changes made in the different repositories by leveraging integrations to Git's comparison and merge utilities.
+
+* **Extend Bit** to play with components. You can use extensions to visually render your components, test and compile them, parse and present useful information from the inline docs and even publish your components to NPM (released in the next weeks).
 
 Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
@@ -33,8 +38,8 @@ Share and sync UI components (React, Angular etc) between projects.
 Share and sync Node.js components between micro-services in a multi-repo architecture.
 * Tutorial: [Bit with Node.js](https://docs.bitsrc.io/node-tutorial.html).
 
-Share individual components from a shared library to Bit's [community hub](https://bitsrc.io) and to the NPM registry (soon).
-* A [React component Library](https://github.com/itaymendel/movie-app) shared as [individually available components](https://bitsrc.io/bit/movie-app) to the community hub. Soon, they could also be installed with the native NPM/Yarn client.
+Shared library: use Bit as "component iTunes" for your static shared library.
+* Add Bit to a project ([example React app](https://github.com/itaymendel/movie-app)) to make its components [individually available](https://bitsrc.io/bit/movie-app) to discover and install from an organized collection.
 * Tutorial: [Bit with Shared Libraries](https://docs.bitsrc.io/shared-lib-main.html).
 
 ## Supported Languages
