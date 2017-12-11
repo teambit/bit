@@ -198,7 +198,7 @@ export default class Extension {
   }
 }
 
-const _createIsolatedEnv = async (scopePath: ?string, dirPath: ?string) => {
+const _createIsolatedEnv = async (scopePath: string, dirPath: ?string) => {
   const scope = await _loadScope(scopePath);
   const isolatedEnvironment = new IsolatedEnvironment(scope, dirPath);
   await isolatedEnvironment.create();

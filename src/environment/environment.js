@@ -13,15 +13,15 @@ import { Consumer } from '../consumer';
 import Component from '../consumer/component';
 
 export type IsolateOptions = {
-  writeToPath: ?string,
-  writeBitDependencies: ?boolean,
-  links: ?boolean,
-  installPackages: ?boolean,
-  noPackageJson: ?boolean,
-  override: ?boolean,
-  dist: ?boolean,
-  conf: ?boolean,
-  verbose: boolean
+  writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
+  writeBitDependencies: ?boolean, // Write bit dependencies as package dependencies in package.json
+  links: ?boolean, // Fix the links to dependencies to be links to the package
+  installPackages: ?boolean, // Install the package dependencies
+  noPackageJson: ?boolean, // Don't write the package.json
+  override: ?boolean, // Override existing files in the folder
+  dist: ?boolean, // Write dist files
+  conf: ?boolean, // Write bit.json file
+  verbose: boolean // Print more logs
 };
 
 export default class Environment {
