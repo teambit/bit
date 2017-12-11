@@ -17,7 +17,6 @@ ${chalk.underline('add, modify and control components')}
   ${chalk.cyan('status')}     show the working area component(s) status.
   ${chalk.cyan('tag')}        record component changes and lock versions.
   ${chalk.cyan('move')}       move a component to a different filesystem path.
-  ${chalk.cyan('reset')}      revert a component version to previous one.
   ${chalk.cyan('untrack')}    untrack a new component(s).
 
 ${chalk.underline('collaborate and share components')}
@@ -25,7 +24,6 @@ ${chalk.underline('collaborate and share components')}
   ${chalk.cyan('export')}     export components to a remote scope.
   ${chalk.cyan('remote')}     manage set of tracked bit scope(s).
   ${chalk.cyan('remove')}     remove component(s) from your working area, or a remote scope.
-  ${chalk.cyan('deprecate')}  mark component(s) as deprecated.
 
 ${chalk.underline('discover components')}
   ${chalk.cyan('list')}       list components on a local or a remote scope.
