@@ -61,7 +61,7 @@ class RemoteAdd extends Command {
 }
 
 class RemoteRm extends Command {
-  name = 'rm <name>';
+  name = 'del <name>';
   description = 'remove a tracked bit remote';
   alias = '';
   opts = [['g', 'global', 'remove a global configured remote scope']];
