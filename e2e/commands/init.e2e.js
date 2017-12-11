@@ -11,7 +11,7 @@ describe('run bit init', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('', () => {
+  describe('prevent running bit init more than once', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
     });

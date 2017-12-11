@@ -418,6 +418,13 @@ describe('bit status command', function () {
         expect(files).to.be.ofSize(1);
         expect(files[0].name).to.equal('index.js');
       });
+      it('Should show "non-existing dependency" when deleting a file that is required by other files', () => {
+        helper.createComponent('bar', 'foo.js', 'var index = require("./index.js")');
+        helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+        helper.deleteFile('bar/index.js');
+        const output = helper.runCmd('bit status');
+        expect(output).to.have.string('non-existing dependency files: ./index.js');
+      });
     });
     describe('when all of the files were deleted', () => {
       let output;
