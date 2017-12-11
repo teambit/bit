@@ -66,6 +66,11 @@ describe('bit test command', function () {
       const output = helper.testComponent('utils/is-type');
       expect(output).to.have.string('tests passed');
     });
+    it('Should not be able to run tests with wrong tester env', () => {
+      helper.importTester('bit.envs/testers/jest');
+      const output = helper.testComponent('utils/is-type');
+      expect(output).to.have.string('❌   Jest failure');
+    });
   });
   describe('when tests are failed', () => {
     before(() => {
@@ -77,6 +82,15 @@ describe('bit test command', function () {
     it('should indicate that testes are failed', () => {
       const output = helper.testComponent('utils/is-type');
       expect(output).to.have.string('tests failed');
+    });
+    it('Should indicate that this componrnt does not exist when testing a non existant component', () => {
+      let output;
+      try {
+        helper.testComponent('bar/foo');
+      } catch (err) {
+        output = err.message;
+      }
+      expect(output).to.have.string('fatal: the component bar/foo was not found in the bit.map file');
     });
   });
   describe('when there is before hook which fail', () => {
