@@ -29,10 +29,7 @@ describe('bit import', function () {
       expect(output.includes('successfully imported one component')).to.be.true;
       expect(output.includes('global/simple')).to.be.true;
     });
-    it.skip(
-      'should throw an error if there is already component with the same name and namespace and different scope',
-      () => {}
-    );
+    it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
     it('should add the component to bit.json file', () => {
       const bitJson = helper.readBitJson();
       const depName = [helper.remoteScope, 'global', 'simple'].join('/');
@@ -633,11 +630,11 @@ describe('bit import', function () {
       it.skip('should write the dependencies according to their relative paths', () => {});
     });
 
-    describe('with no_package_json flag', () => {
+    describe('with ignore-package-json flag', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponentWithOptions('comp/with-deps', { '-no_package_json': '' });
+        helper.importComponentWithOptions('comp/with-deps', { '-ignore-package-json': '' });
       });
       it('should not write a package.json in the component dir', () => {
         const packageJsonPath = path.join(helper.localScopePath, 'components', 'comp', 'with-deps', 'package.json');
