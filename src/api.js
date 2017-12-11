@@ -18,7 +18,7 @@ module.exports = {
     }),
   list: scopePath => scopeList(scopePath).then(components => components.map(c => c.id.toString())),
   /**
-   * Load extension progremmatically
+   * Load extension programmatically
    */
   loadExtension: async (
     extensionName: string,
