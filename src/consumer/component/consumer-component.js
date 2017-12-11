@@ -41,8 +41,7 @@ import {
   DEFAULT_DIST_DIRNAME,
   BIT_JSON,
   DEFAULT_REGISTRY_DOMAIN_PREFIX,
-  CFG_REGISTRY_DOMAIN_PREFIX,
-  DEFAULT_PACK_DIR_NAME
+  CFG_REGISTRY_DOMAIN_PREFIX
 } from '../../constants';
 
 export type ComponentProps = {
@@ -854,18 +853,17 @@ export default class Component {
   }): Promise<string> {
     const isolatedEnvironment = new IsolatedEnvironment(scope);
     try {
-      const importPath = path.join(isolatedEnvironment.path, DEFAULT_PACK_DIR_NAME);
       const verbose = false;
       const installDependencies = false;
       await isolatedEnvironment.create();
-      await isolatedEnvironment.importE2E(
+      const componentWithDeps = await isolatedEnvironment.importE2E(
         this.id.toString(),
         verbose,
         installDependencies,
-        importPath,
         writeBitDependencies,
         createNpmLinkFiles
       );
+      const importPath = componentWithDeps.component.writtenPath;
       const tgzPath = await this.driver.pack(importPath, directory || isolatedEnvironment.path, override);
       await isolatedEnvironment.destroy();
       return tgzPath;

@@ -38,8 +38,6 @@ export const BIT_JSON = 'bit.json';
 
 export const BIT_MAP = '.bit.map.json';
 
-export const DEFAULT_PACK_DIR_NAME = 'pack';
-
 export const COMPONENT_ORIGINS = {
   IMPORTED: 'IMPORTED',
   AUTHORED: 'AUTHORED',
