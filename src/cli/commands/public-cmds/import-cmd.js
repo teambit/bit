@@ -14,7 +14,6 @@ export default class Import extends Command {
   alias = 'i';
   opts = [
     ['t', 'tester', 'import a tester environment component'],
-    ['v', 'verbose', 'show a more verbose output when possible'],
     ['c', 'compiler', 'import a compiler environment component'],
     ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
     ['p', 'prefix <prefix>', 'import components into a specific directory'],
@@ -32,7 +31,7 @@ export default class Import extends Command {
     {
       tester,
       compiler,
-      verbose,
+      verbose = false,
       prefix,
       display_dependencies,
       environment,
