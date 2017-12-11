@@ -740,6 +740,11 @@ describe('bit import', function () {
         expect(localConsumerFiles).to.include(newLocation);
         expect(localConsumerFiles).not.to.include(oldLocation);
       });
+      it('should update the rootDir in bit.map to the new location', () => {
+        const bitMap = helper.readBitMap();
+        const componentMap = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
+        expect(componentMap.rootDir).to.equal('new-location');
+      });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./new-location'); console.log(barFoo());";
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
