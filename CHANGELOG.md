@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.1] - 2017-12-11
+
 - new extension system (beta)
 - add `bit isolate` command
 - avoid building process when a component was not modified and the dists are saved in the model
