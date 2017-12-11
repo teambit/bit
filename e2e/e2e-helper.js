@@ -299,10 +299,6 @@ export default class Helper {
     return this.runCmd(`bit build ${id}`);
   }
 
-  test(id?: string = '') {
-    this.runCmd(`bit test ${id}`);
-  }
-
   createComponentBarFoo(impl?: string) {
     this.createComponent(undefined, undefined, impl);
   }
