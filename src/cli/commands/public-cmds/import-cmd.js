@@ -17,11 +17,11 @@ export default class Import extends Command {
     ['c', 'compiler', 'import a compiler environment component'],
     ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
     ['p', 'prefix <prefix>', 'import components into a specific directory'],
-    ['d', 'display_dependencies', 'display the imported dependencies'],
+    ['d', 'display-dependencies', 'display the imported dependencies'],
     ['f', 'force', 'ignore local changes'],
     ['', 'dist', 'write dist files (when exist) to the configured directory'],
     ['', 'conf', 'write the configuration file (bit.json)'],
-    ['', 'no_package_json', 'do not generate package.json for the imported component(s)']
+    ['', 'no-package-json', 'do not generate package.json for the imported component(s)']
   ];
   loader = true;
   migration = true;
