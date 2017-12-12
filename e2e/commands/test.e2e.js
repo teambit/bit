@@ -165,7 +165,7 @@ describe('bit test command', function () {
       expect(output).to.have.string('tests passed');
     });
   });
-  describe.only('bit component with es6 syntax without building before testing', () => {
+  describe('bit component with es6 syntax without building before testing', () => {
     const testWithEs6 = `import {expect} from 'chai';
     import isType from './is-type.js';
     

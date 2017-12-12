@@ -11,7 +11,7 @@ describe('bit build', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe.only('importing and using compiler', () => {
+  describe('importing and using compiler', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
