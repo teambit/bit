@@ -525,4 +525,24 @@ function add(a, b) {
       });
     });
   });
+  // TODO: complete tests after feature is finished
+  describe.skip('show versions of exported component with the -v flag', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.exportAllComponents();
+    });
+    it('should show versions of authored component when not specifying scope name', () => {
+      output = helper.runCmd('bit show bar/foo -v');
+      console.log(output);
+      // expect(output).to.include({ deprecated: true });
+    });
+    it('Should show versions of a remote component using scope name when you are not the author', () => {
+      output = helper.runCmd('bit show bit.envs/compilers/babel -v');
+      console.log(output);
+    });
+  });
 });
