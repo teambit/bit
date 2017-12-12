@@ -29,10 +29,7 @@ describe('bit import', function () {
       expect(output.includes('successfully imported one component')).to.be.true;
       expect(output.includes('global/simple')).to.be.true;
     });
-    it.skip(
-      'should throw an error if there is already component with the same name and namespace and different scope',
-      () => {}
-    );
+    it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
     it('should add the component to bit.json file', () => {
       const bitJson = helper.readBitJson();
       const depName = [helper.remoteScope, 'global', 'simple'].join('/');
@@ -633,11 +630,11 @@ describe('bit import', function () {
       it.skip('should write the dependencies according to their relative paths', () => {});
     });
 
-    describe('with no_package_json flag', () => {
+    describe('with ignore-package-json flag', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponentWithOptions('comp/with-deps', { '-no_package_json': '' });
+        helper.importComponentWithOptions('comp/with-deps', { '-ignore-package-json': '' });
       });
       it('should not write a package.json in the component dir', () => {
         const packageJsonPath = path.join(helper.localScopePath, 'components', 'comp', 'with-deps', 'package.json');
@@ -742,6 +739,11 @@ describe('bit import', function () {
         const oldLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
         expect(localConsumerFiles).to.include(newLocation);
         expect(localConsumerFiles).not.to.include(oldLocation);
+      });
+      it('should update the rootDir in bit.map to the new location', () => {
+        const bitMap = helper.readBitMap();
+        const componentMap = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
+        expect(componentMap.rootDir).to.equal('new-location');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./new-location'); console.log(barFoo());";
