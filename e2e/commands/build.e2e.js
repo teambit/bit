@@ -11,10 +11,10 @@ describe('bit build', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('importing and using compiler', () => {
+  describe.only('importing and using compiler', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
-      helper.createFile();
+      helper.createComponentBarFoo();
       helper.addComponentBarFoo();
     });
     it('Should not be able to build without importing a build env', () => {
@@ -22,8 +22,10 @@ describe('bit build', function () {
       expect(output).to.have.string('nothing to build');
     });
     it('Should successfully import and build using the babel compiler', () => {
-      const output = helper.importCompiler('bit.envs/compilers/babel');
-      expect(output).to.have.string('the following component environments were installed\n- bit.envs/compilers/babel@');
+      const output = helper.importCompiler();
+      expect(output).to.have.string(
+        `the following component environments were installed\n- ${helper.envScope}/compilers/babel@`
+      );
       const buildOutput = helper.build();
       expect(buildOutput).to.have.string('-local/dist/bar/foo.js.map');
       expect(buildOutput).to.have.string('-local/dist/bar/foo.js');

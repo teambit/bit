@@ -165,7 +165,7 @@ describe('bit test command', function () {
       expect(output).to.have.string('tests passed');
     });
   });
-  describe('bit component with es6 syntax without building before testing', () => {
+  describe.only('bit component with es6 syntax without building before testing', () => {
     const testWithEs6 = `import {expect} from 'chai';
     import isType from './is-type.js';
     
@@ -191,7 +191,7 @@ describe('bit test command', function () {
       expect(output).to.have.string('Unexpected token import');
     });
     it('Should be able to test after building', () => {
-      helper.importCompiler('bit.envs/compilers/babel');
+      helper.importCompiler();
       helper.build();
       const output = helper.testComponent('utils/is-type');
       expect(output).to.have.string('tests passed');
