@@ -83,7 +83,7 @@ describe('bit test command', function () {
       const output = helper.testComponent('utils/is-type');
       expect(output).to.have.string('tests failed');
     });
-    it('Should indicate that this componrnt does not exist when testing a non existant component', () => {
+    it('Should indicate that this component does not exist when testing a non existant component', () => {
       let output;
       try {
         helper.testComponent('bar/foo');
@@ -162,6 +162,38 @@ describe('bit test command', function () {
     });
     it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
       const output = helper.runCmd(`bit ci-update ${helper.remoteScope}/utils/is-type`, helper.remoteScopePath);
+      expect(output).to.have.string('tests passed');
+    });
+  });
+  describe('bit component with es6 syntax without building before testing', () => {
+    const testWithEs6 = `import {expect} from 'chai';
+    import isType from './is-type.js';
+    
+    describe('isType', () => {
+      it('should display "got is-type"', () => {
+        expect(isType()).to.equal('got is-type');
+      });
+    });`;
+
+    before(() => {
+      helper.getClonedLocalScope(clonedScopePath);
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createComponent('utils', 'is-type.spec.js', testWithEs6);
+      helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
+    });
+    it('Should not be able to test without building first', () => {
+      let output;
+      try {
+        helper.testComponent('utils/is-type');
+      } catch (err) {
+        output = err.message;
+      }
+      expect(output).to.have.string('Unexpected token import');
+    });
+    it('Should be able to test after building', () => {
+      helper.importCompiler('bit.envs/compilers/babel');
+      helper.build();
+      const output = helper.testComponent('utils/is-type');
       expect(output).to.have.string('tests passed');
     });
   });

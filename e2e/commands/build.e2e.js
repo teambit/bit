@@ -21,12 +21,12 @@ describe('bit build', function () {
       const output = helper.build();
       expect(output).to.have.string('nothing to build');
     });
-    it('Should successfully import and build using the babel compiler', () => {
-      let output = helper.runCmd('bit import bit.envs/compilers/babel -c');
+    it.only('Should successfully import and build using the babel compiler', () => {
+      const output = helper.importCompiler('bit.envs/compilers/babel');
       expect(output).to.have.string('the following component environments were installed\n- bit.envs/compilers/babel@');
-      output = helper.build();
-      expect(output).to.have.string('-local/dist/bar/foo.js.map');
-      expect(output).to.have.string('-local/dist/bar/foo.js');
+      const buildOutput = helper.build();
+      expect(buildOutput).to.have.string('-local/dist/bar/foo.js.map');
+      expect(buildOutput).to.have.string('-local/dist/bar/foo.js');
     });
   });
 });
