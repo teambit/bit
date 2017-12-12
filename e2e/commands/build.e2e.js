@@ -21,7 +21,7 @@ describe('bit build', function () {
       const output = helper.build();
       expect(output).to.have.string('nothing to build');
     });
-    it.only('Should successfully import and build using the babel compiler', () => {
+    it('Should successfully import and build using the babel compiler', () => {
       const output = helper.importCompiler('bit.envs/compilers/babel');
       expect(output).to.have.string('the following component environments were installed\n- bit.envs/compilers/babel@');
       const buildOutput = helper.build();
