@@ -525,8 +525,7 @@ function add(a, b) {
       });
     });
   });
-  // TODO: complete tests after feature is finished
-  describe.skip('show versions of exported component with the -v flag', () => {
+  describe('show versions of exported component with the -v flag', () => {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -537,10 +536,16 @@ function add(a, b) {
     });
     it('should show versions of authored component when not specifying scope name', () => {
       output = helper.runCmd('bit show bar/foo -v');
-      console.log(output);
-      // expect(output).to.include({ deprecated: true });
+      const parsedOutput = JSON.parse(output);
+      expect(parsedOutput).to.be.ofSize(1);
+      expect(parsedOutput[0]).to.to.include({
+        name: 'foo',
+        box: 'bar',
+        version: '0.0.1'
+      });
     });
-    it('Should show versions of a remote component using scope name when you are not the author', () => {
+    // TODO: complete tests after feature is finished
+    it.skip('Should show versions of a remote component using scope name when you are not the author', () => {
       output = helper.runCmd('bit show bit.envs/compilers/babel -v');
       console.log(output);
     });
