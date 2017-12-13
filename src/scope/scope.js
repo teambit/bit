@@ -712,7 +712,7 @@ export default class Scope {
     );
     await this.sources.clean(bitId, true);
     if (!R.isEmpty(symlink)) await this.objects.remove(symlink[0].hash());
-    return bitId.toStringWithoutVersion();
+    return bitId;
   }
 
   async deprecateSingle(bitId: BitId): Promise<string> {
@@ -771,7 +771,7 @@ export default class Scope {
     if (force) {
       const removedComponents = await Promise.all(removeComponents());
       await postRemoveHook({ ids: removedComponents });
-      return { bitIds: removedComponents };
+      return { bitIds: removedComponents, missingComponents };
     }
     const dependentBits = await this.findDependentBits(foundComponents);
     if (R.isEmpty(dependentBits)) {
@@ -837,7 +837,6 @@ export default class Scope {
     if (!id.isLocal(this.name)) {
       throw new Error('cannot load bit from remote scope, please import first');
     }
-
     return this.loadRemoteComponent(id);
   }
 

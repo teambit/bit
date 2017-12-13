@@ -19,10 +19,13 @@ export default class Remove extends Command {
     return remove({ ids, force, track });
   }
 
-  report(bitObj: object | Array<any>): string {
-    return Array.isArray(bitObj) ? this.paintMany(bitObj) : this.paintSingle(bitObj);
+  report({ localResult, remoteResult }): string {
+    return this.paintSingle(localResult) + this.paintMany(remoteResult);
   }
-
+  paintModifiedComponents = modifiedComponents =>
+    (!R.isEmpty(modifiedComponents) && !R.isNil(modifiedComponents)
+      ? chalk.red.underline('modified components:') + chalk(` ${modifiedComponents}\n`)
+      : '');
   paintMissingComponents = missingComponents =>
     (!R.isEmpty(missingComponents) && !R.isNil(missingComponents)
       ? chalk.red.underline('missing components:') + chalk(` ${missingComponents}\n`)
@@ -34,17 +37,20 @@ export default class Remove extends Command {
   paintSingle = bitObj =>
     this.paintUnRemovedComponents(bitObj.dependentBits) +
     this.paintRemoved(bitObj.bitIds) +
-    this.paintMissingComponents(bitObj.missingComponents);
+    this.paintMissingComponents(bitObj.missingComponents) +
+    this.paintModifiedComponents(bitObj.modifiedComponents);
 
   paintUnRemovedComponents(unRemovedComponents) {
     if (!R.isEmpty(unRemovedComponents) && !R.isNil(unRemovedComponents)) {
-      return Object.keys(unRemovedComponents).map((key) => {
-        const header = chalk.underline.red(
-          `error: unable to delete ${key}, because the following components depend on it:\n`
-        );
-        const body = unRemovedComponents[key].join('\n');
-        return `${header + body}\n`;
-      });
+      return Object.keys(unRemovedComponents)
+        .map((key) => {
+          const header = chalk.underline.red(
+            `error: unable to delete ${key}, because the following components depend on it:`
+          );
+          const body = unRemovedComponents[key].join('\n');
+          return `${header}\n${body}`;
+        })
+        .join('\n\n');
     }
     return '';
   }

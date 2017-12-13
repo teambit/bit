@@ -58,6 +58,7 @@
     "lodash.includes": "^4.3.0",
     "lodash.maxby": "^4.6.0",
     "lodash.merge": "^4.6.0",
+    "lodash.partition": "^4.6.0",
     "lodash.pickby": "^4.6.0",
     "lodash.toarray": "^4.4.0",
     "lodash.unionby": "^4.8.0",

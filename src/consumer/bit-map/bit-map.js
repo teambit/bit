@@ -246,7 +246,9 @@ export default class BitMap {
   removeComponent(id: string | bitId) {
     const bitId = id instanceof BitId ? id : BitId.parse(id);
     const bitmapComponent = this.getExistingComponentId(bitId.toStringWithoutScopeAndVersion());
+    const deletedComponent = this.components[bitmapComponent];
     delete this.components[bitmapComponent];
+    return deletedComponent;
   }
 
   addMainDistFileToComponent(id: string, distFilesPaths: string[]): void {

@@ -71,7 +71,7 @@ describe('bit remove command', function () {
       helper.exportAllComponents();
     });
     it('should remove remote component', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/bar/foo`, '-r');
+      const output = helper.removeComponent(`${helper.remoteScope}/bar/foo`);
       expect(output).to.contain.string(`removed components: ${helper.remoteScope}/bar/foo`);
     });
   });
@@ -90,13 +90,13 @@ describe('bit remove command', function () {
       helper.exportAllComponents();
     });
     it('should not remove component with dependencies when -f flag is false', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/${componentName}`, '-r');
+      const output = helper.removeComponent(`${helper.remoteScope}/${componentName}`);
       expect(output).to.contain.string(
         `error: unable to delete ${helper.remoteScope}/${componentName}, because the following components depend on it:`
       );
     });
     it('should  remove component with dependencies when -f flag is true', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/${componentName}`, '-rf');
+      const output = helper.removeComponent(`${helper.remoteScope}/${componentName}`, '-f');
       expect(output).to.contain.string(`removed components: ${helper.remoteScope}/${componentName}`);
     });
   });

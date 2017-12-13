@@ -1,5 +1,6 @@
 /** @flow */
 import semver from 'semver';
+import uniqBy from 'lodash.uniqby';
 import {
   is,
   equals,
@@ -205,7 +206,14 @@ export default class Component extends BitObject {
    */
   remove(repo: Repository, deepRemove: boolean = false): Promise {
     const objectRefs = deepRemove ? this.collectRefs(repo) : this.versionArray;
-    return repo.removeMany(objectRefs.concat([this.hash()]));
+    const uniq = uniqBy(objectRefs, 'hash');
+    return repo.removeMany(uniq.concat([this.hash()]));
+  }
+  async removeVersion(repo: Repository, version: string, fileHashesToRemove: String[]): Promise {
+    const objectRefs = this.versions[version];
+    delete this.versions[version];
+    await repo.removeMany([objectRefs.hash].concat(fileHashesToRemove));
+    return this;
   }
 
   toComponentVersion(versionStr: string): ComponentVersion {

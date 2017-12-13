@@ -266,9 +266,34 @@ export default class SourceRepository {
     return component;
   }
 
+  async removeVersion(component, bitId): Promise<void> {
+    const objectRepo = this.objects();
+    const componentVersionToRemove = component.versions[bitId.version].loadSync(objectRepo);
+    const allVersionsfiles = Object.keys(component.versions)
+      .map((key) => {
+        if (key !== bitId.version) {
+          const componentVersion = component.versions[key].loadSync(objectRepo);
+          return componentVersion.files.map(file => file.file.hash);
+        }
+      })
+      .filter(x => x);
+    const flattenedVersionsFilesHashes = R.flatten(allVersionsfiles);
+    const componetFileHashes = componentVersionToRemove.files.map(file => file.file.hash);
+    const modifiedCompoent = await component.removeVersion(
+      objectRepo,
+      bitId.version,
+      R.difference(componetFileHashes, flattenedVersionsFilesHashes)
+    );
+    objectRepo.add(modifiedCompoent);
+    await objectRepo.persist();
+    return modifiedCompoent;
+  }
   clean(bitId: BitId, deepRemove: boolean = false): Promise<void> {
     return this.get(bitId).then((component) => {
       if (!component) return;
+      if (bitId.version !== 'latest' && Object.keys(component.versions).length > 1) {
+        return this.removeVersion(component, bitId);
+      }
       return component.remove(this.objects(), deepRemove);
     });
   }
