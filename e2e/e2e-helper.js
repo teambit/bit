@@ -286,13 +286,17 @@ export default class Helper {
     }
     // Temporary - for checking new serializaion against the stage env
     // this.setHubDomain('hub-stg.bitsrc.io');
-    this.runCmd(`bit import ${id} --compiler`);
+    return this.runCmd(`bit import ${id} --compiler`);
   }
 
   importTester(id) {
     // Temporary - for checking new serializaion against the stage env
     // this.setHubDomain('hub-stg.bitsrc.io');
     this.runCmd(`bit import ${id} --tester`);
+  }
+
+  build(id?: string = '') {
+    return this.runCmd(`bit build ${id}`);
   }
 
   createComponentBarFoo(impl?: string) {
