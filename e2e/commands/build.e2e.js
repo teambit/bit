@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import path from 'path';
 import Helper from '../e2e-helper';
 
 const assertArrays = require('chai-arrays');
@@ -27,8 +28,8 @@ describe('bit build', function () {
         `the following component environments were installed\n- ${helper.envScope}/compilers/babel@`
       );
       const buildOutput = helper.build();
-      expect(buildOutput).to.have.string('-local/dist/bar/foo.js.map');
-      expect(buildOutput).to.have.string('-local/dist/bar/foo.js');
+      expect(buildOutput).to.have.string(path.normalize('local/dist/bar/foo.js.map'));
+      expect(buildOutput).to.have.string(path.normalize('local/dist/bar/foo.js'));
     });
   });
 });
