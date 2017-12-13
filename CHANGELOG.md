@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- rename `bit bind` command to `bit link`
+
 ## [0.12.0-ext.1] - 2017-12-11
 
 - new extension system (beta)
