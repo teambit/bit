@@ -110,7 +110,9 @@ export default class Consumer {
     } catch (err) {
       msg = msg
         ? format(msg, err)
-        : `Warning: Bit is not be able to run the bind command. Please install bit-${err.lang} driver and run the bind command.`;
+        : `Warning: Bit is not be able to run the link command. Please install bit-${
+          err.lang
+        } driver and run the link command.`;
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
@@ -561,14 +563,16 @@ export default class Consumer {
     );
     await bitMap.write();
     const allComponents = [...writtenComponents, ...R.flatten(writtenDependencies)];
-    this.bindComponents(allComponents, bitMap);
+    this.linkComponents(allComponents, bitMap);
     return allComponents;
   }
 
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
@@ -737,14 +741,14 @@ export default class Consumer {
     return { components, autoUpdatedComponents };
   }
 
-  bindComponents(components: Component[], bitMap: BitMap): Object[] {
+  linkComponents(components: Component[], bitMap: BitMap): Object[] {
     const createSymlinkOrCopy = (componentId, srcPath, destPath) => {
       fs.removeSync(destPath); // in case a component has been moved
       fs.ensureDirSync(path.dirname(destPath));
       try {
         symlinkOrCopy.sync(srcPath, destPath);
       } catch (err) {
-        throw new Error(`failed to bind a component ${componentId.toString()}.
+        throw new Error(`failed to link a component ${componentId.toString()}.
          Symlink (or copy for Windows) from: ${srcPath}, to: ${destPath} was failed.
          Original error: ${err}`);
       }
@@ -786,7 +790,7 @@ export default class Consumer {
 
     return components.map((component) => {
       const componentId = component.id;
-      logger.debug(`binding component: ${componentId}`);
+      logger.debug(`linking component: ${componentId}`);
       const componentMap: ComponentMap = bitMap.getComponent(componentId, true);
       if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         const relativeLinkPath = path.join(
@@ -829,14 +833,14 @@ export default class Consumer {
     });
   }
 
-  async bindAll() {
+  async linkAll() {
     const bitMap = await this.getBitMap();
     const componentsMaps = bitMap.getAllComponents();
-    if (R.isEmpty(componentsMaps)) throw new Error('nothing to bind');
+    if (R.isEmpty(componentsMaps)) throw new Error('nothing to link');
     const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));
     const { components } = await this.loadComponents(componentsIds);
     fs.removeSync(path.join(this.getPath(), 'node_modules', this.bitJson.bindingPrefix)); // todo: move to bit-javascriptv
-    return this.bindComponents(components, bitMap);
+    return this.linkComponents(components, bitMap);
   }
 
   composeRelativeBitPath(bitId: BitId): string {
