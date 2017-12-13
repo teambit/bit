@@ -30,10 +30,13 @@ export default class Show extends Command {
   ): Promise<*> {
     function getBitComponent(allVersions: ?boolean) {
       const bitId = BitId.parse(id);
-      if (bitId.isLocal()) return getConsumerComponent({ id, compare, showRemoteVersions: outdated });
+      if (bitId.isLocal()) return getConsumerComponent({ id, compare, allVersions, showRemoteVersions: outdated });
       return getScopeComponent({ id, allVersions, showRemoteVersions: outdated });
     }
 
+    if (versions && (compare || outdated)) {
+      return Promise.reject("You can't use [compare] or [outdated] along with versions");
+    }
     if (versions) {
       return getBitComponent(versions).then(components => ({
         components,
@@ -69,7 +72,7 @@ export default class Show extends Command {
         return 'could not find the requested component';
       }
       // $FlowFixMe
-      return JSON.stringify(components.map(c => c.toObject()));
+      return JSON.stringify(components.map(c => c.toObject()), null, '  ');
     }
 
     if (!component) return 'could not find the requested component';
