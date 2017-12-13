@@ -230,17 +230,7 @@ describe('bit tag command', function () {
 
     it.skip('should throw error if the build failed', () => {});
 
-    it.only('should throw error if didnt build before test', () => {
-      let output;
-      try {
-        helper.tagWithoutMessage('bar/foo');
-      } catch (err) {
-        output = err.message;
-      }
-      expect(output).to.have.string("component's specs does not pass, fix them and tag");
-    });
-
-    it.only('should throw error if the tests failed', () => {
+    it('should throw error if the tests failed', () => {
       let output;
       try {
         helper.tagWithoutMessage('bar/foo');
