@@ -549,7 +549,7 @@ export default class Consumer {
     if (writeToPath) {
       componentsWithDependencies.forEach((componentWithDeps) => {
         const relativeWrittenPath = this.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
-        if (path.resolve(relativeWrittenPath) !== path.resolve(writeToPath)) {
+        if (relativeWrittenPath && path.resolve(relativeWrittenPath) !== path.resolve(writeToPath)) {
           const component = componentWithDeps.component;
           this.moveExistingComponent(bitMap, component, relativeWrittenPath, writeToPath);
         }
