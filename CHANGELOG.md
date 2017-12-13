@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.1] - 2017-12-13
+
 - rename `bit bind` command to `bit link`
 
 ## [0.12.0-ext.1] - 2017-12-11
