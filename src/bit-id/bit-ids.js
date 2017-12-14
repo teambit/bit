@@ -4,6 +4,7 @@ import { BitId } from '../bit-id';
 import { forEach, getLatestVersionNumber } from '../utils';
 
 export default class BitIds extends Array<BitId> {
+  // TODO: use the static toStrings below
   serialize(): string[] {
     return this.map(bitId => bitId.toString());
   }
@@ -34,6 +35,18 @@ export default class BitIds extends Array<BitId> {
       return new BitIds(...array.map(id => BitId.parse(id)));
     }
     return new BitIds(...array);
+  }
+
+  /**
+   * Get array of bitIds strings and transfer them to BitIds object
+   * This function support also checking if the array contain strings or BitIds
+   * @param {string | BitId} array - array of bit ids
+   */
+  static toStrings(array: string[] | BitId[] = []) {
+    if (array && array.length && typeof array[0] === 'string') {
+      return array;
+    }
+    return array.map(bitId => bitId.toString());
   }
 
   static fromObject(dependencies: { [string]: string }) {
