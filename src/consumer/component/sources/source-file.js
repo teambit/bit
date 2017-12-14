@@ -19,7 +19,7 @@ export default class SourceFile extends AbstractVinyl {
     try {
       const file = new SourceFile(vinylFile.readSync(filePath, { base, cwd: consumerPath }));
       // TODO: remove this distFilePath?
-      file.distFilePath = path.join(consumerPath, distTarget, file.relative);
+      // file.distFilePath = path.join(consumerPath, distTarget, file.relative);
       for (const k in extendedProps) file[k] = extendedProps[k];
       return file;
     } catch (err) {

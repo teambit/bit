@@ -467,7 +467,7 @@ export default class Consumer {
   }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
-    const writeComponentsP = componentsWithDependencies.map((componentWithDeps) => {
+    const writeComponentsP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
       const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitDir;
       // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
@@ -492,8 +492,7 @@ export default class Consumer {
         withBitJson,
         withPackageJson,
         origin,
-        consumerPath: this.getPath(),
-        driver: this.driver,
+        consumer: this,
         writeBitDependencies,
         dependencies: componentWithDeps.dependencies,
         componentMap
@@ -533,12 +532,11 @@ export default class Consumer {
             withPackageJson,
             origin: COMPONENT_ORIGINS.NESTED,
             parent: componentWithDeps.component.id,
-            consumerPath: this.getPath(),
-            driver: this.driver,
+            consumer: this,
             dependencies: dep.dependencies,
             componentMap
           })
-          .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap))
+          .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap, this))
           .then(() => dep);
       });
 
@@ -555,10 +553,10 @@ export default class Consumer {
         }
       });
     }
-    await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, this.getPath(), createNpmLinkFiles);
+    await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, this, createNpmLinkFiles);
     await Promise.all(
       componentsWithDependencies.map(componentWithDependencies =>
-        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
+        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap, this)
       )
     );
     await bitMap.write();
@@ -579,6 +577,14 @@ export default class Consumer {
     componentMap.updateDirLocation(oldPath, newPath);
     fs.moveSync(oldPath, newPath);
     component.writtenPath = newPath;
+  }
+
+  /**
+   * By default, the dists paths are inside the component.
+   * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
+   */
+  shouldDistsBeInsideTheComponent(): boolean {
+    return !this.bitJson.distEntry && !this.bitJson.distTarget;
   }
 
   async candidateComponentsForAutoTagging(modifiedComponents: BitId[]) {
