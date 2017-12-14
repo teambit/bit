@@ -13,20 +13,19 @@
 
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
-[Community](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/) 
+[Community](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/)
 
-Up until now, sharing code between repositories meant maintaining additional repositories and packages. As a result, overhead, discoverability and maintainability quickly became an issue. 
+Bit connects great tools like Git, Yarn and NPM to form a frictionless code sharing experience between repositoires and people. If shared libraries are a music CD-Rom, Bit is your component playlist. It creates a dynamic workflow providing three main advantages: **Low overhead**, **Discoverability** and **Maintainability**.
 
-Bit is a Git extension for isolation and synchronization of reusable source-code components directly between repositories. 
-It enables you to share reusable components directly from your repository and make them individually available to discover, import and update from other repositories.
+While Git is great for collaborating on a single repo, Bit provides a distributed component development workflow across multiple repositories. You can isolate components in any Git repository, and quickly share them to dynamic and curatable collections of components called Scopes. From there, components can be individually found and consumed with package managers like Yarn/NPM or sourced in any repository for further modifications.
 
 Key features:
 
-* **Isolate components** in your repository by pointing out subsets of files as reusable components. Bit will provide full control over their dependency graph, enables you to track changes, tag cross-component versions and more. 
-
-* **Sync components** between repositories. Once components from one repo are imported into another repo, you can get notified and merge component changes made in the different repositories by leveraging integrations to Git's comparison and merge utilities.
-
-* **Extend Bit** to play with components. You can use extensions to visually render your components, test and compile them, parse and present useful information from the inline docs and even publish your components to NPM (released in the next weeks).
+* Share individual components quickly, without changing your source-code and from any path in your repository.
+* Keep a single source of truth for components, while developing or sourcing components in any repository.
+* Organize components in curated and dynamic collections. Explore and discover components in your component collections.
+* Consume components with NPM, Yarn or any other package manager.
+* Get control and learn which components are used by who and where. Easily make vast changes across projects and components, and gain full control over your dependency graph.
 
 Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
@@ -69,7 +68,7 @@ MacbookPro:src bit$ bit init
 successfully initialized Bit on the repository.
 ```
 
-### Create a component collection (Scope)
+### Create a component collection
 
 A scope is a collection of shared components with a common theme or ownership. 
 Scopes group and organize components together, so that they can be discovered and synced in additional projects.
