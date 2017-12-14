@@ -22,7 +22,7 @@ Bit provides a distributed component development workflow. You can isolate compo
 * Share individual components quickly to curated and dynamic collections, without changing your source-code and from any path in your repository.
 * Keep a single source of truth for components, while developing or sourcing components in any repository.
 * Consume components with NPM, Yarn or any other package manager.
-* Get control and learn which components are used by who and where. Easily make vast changes across projects and components, and gain full control over your dependency graph.
+* Easily make vast changes across projects and components, and gain full control over your dependency graph.
 * Use extensions to visually render your components, test and compile them, parse and present useful information from the inline docs and even publish your components to package registries.
 
 Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
