@@ -15,11 +15,9 @@
 
 [Community](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/)
 
-Bit connects great tools like Git, Yarn and NPM to form a frictionless code sharing experience between repositoires and people. If shared libraries are a music CD-Rom, Bit is your component playlist. It creates a dynamic workflow providing three main advantages: **Low overhead**, **Discoverability** and **Maintainability**.
+Bit connects great tools like Git, Yarn and NPM to form a frictionless code sharing experience between repositoires and people. If shared libraries are a music CD-Rom, Bit is your component playlist. 
 
-While Git is great for collaborating on a single repo, Bit provides a distributed component development workflow across multiple repositories. You can isolate components in any Git repository, and quickly share them to dynamic and curatable collections of components called Scopes. From there, components can be individually found and consumed with package managers like Yarn/NPM or sourced in any repository for further modifications.
-
-Key features:
+Bit provides a distributed component development workflow. You can isolate components in any Git repository, and quickly share them to dynamic and curatable collections of components. From there, components can be individually found and consumed with package managers like Yarn/NPM or sourced in any repository for further modifications.
 
 * Share individual components quickly, without changing your source-code and from any path in your repository.
 * Keep a single source of truth for components, while developing or sourcing components in any repository.
