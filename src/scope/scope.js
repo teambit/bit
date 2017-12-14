@@ -463,7 +463,7 @@ export default class Scope {
    * dependencies, saves them as well. Finally runs the build process if needed on an isolated
    * environment.
    */
-  async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<ComponentObjects[]> {
+  async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<string[]> {
     logger.debug(`exportManyBareScope: Going to save ${componentsObjects.length} components`);
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
     await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true)));
