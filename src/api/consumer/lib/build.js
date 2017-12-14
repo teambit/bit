@@ -5,7 +5,10 @@ import { BitId } from '../../../bit-id';
 import BitMap from '../../../consumer/bit-map';
 import ComponentsList from '../../../consumer/component/components-list';
 
-function writeDistFiles(component: Component): Promise<?Array<?string>> {
+function writeDistFiles(component: Component, consumer, bitMap): Promise<?Array<?string>> {
+  component.stripOriginallySharedDir(bitMap);
+  const componentMap = bitMap.getComponent(component.id);
+  component.updateDistsPerConsumerBitJson(consumer, componentMap);
   const saveDist = component.dists.map(distFile => distFile.write());
   return Promise.all(saveDist);
 }
@@ -17,7 +20,7 @@ export async function build(id: string): Promise<?Array<string>> {
   const component: Component = await consumer.loadComponent(bitId);
   const result = await component.build({ scope: consumer.scope, consumer, bitMap });
   if (result === null) return null;
-  const distFilePaths = await writeDistFiles(component);
+  const distFilePaths = await writeDistFiles(component, consumer, bitMap);
   bitMap.addMainDistFileToComponent(component.id, distFilePaths);
   await bitMap.write();
   // await consumer.driver.runHook('onBuild', [component]);

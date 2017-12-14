@@ -315,7 +315,7 @@ async function writeDependencyLinks(
       const depDistRoot = dep.getDistDirForConsumer(consumer, depComponentMap.rootDir);
       // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
       // also the indirect ones
-      // The dep.dependencies contain only an id and relativePathes and not the full object
+      // The dep.dependencies contain only an id and relativePaths and not the full object
       return componentLinks(
         componentWithDeps.dependencies,
         dep.dependencies,
@@ -333,7 +333,8 @@ async function writeDependencyLinks(
 async function writeEntryPointsForImportedComponent(
   component: Component,
   bitMap: BitMap,
-  consumer: Consumer
+  consumer: Consumer,
+  writeDist: boolean
 ): Promise<any> {
   const componentRoot = component.writtenPath;
   const componentId = component.id.toString();
@@ -343,7 +344,7 @@ async function writeEntryPointsForImportedComponent(
   const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = _getLinkContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
-  if (component.dists && !consumer.shouldDistsBeInsideTheComponent()) {
+  if (component.dists && writeDist && !consumer.shouldDistsBeInsideTheComponent()) {
     const distDir = component.getDistDirForConsumer(consumer, componentMap.rootDir);
     const entryPointDist = path.join(distDir, indexName);
     await outputFile(entryPointDist, AUTO_GENERATED_MSG + entryPointFileContent, false);

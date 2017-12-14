@@ -97,7 +97,6 @@ export default class Component {
   log: ?Log;
   writtenPath: ?string; // needed for generate links
   originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
-  _distDir: ?string; // might not be the default for imported component when dist.target is set in consumer bit.json
   _writeDistsFiles: ?boolean = true;
   _areDistsInsideComponentDir: ?boolean = true;
   isolatedEnvironment: IsolatedEnvironment;
@@ -445,7 +444,7 @@ export default class Component {
    * Before writing the files into the file-system, remove the path-prefix that is shared among the main component files
    * and its dependencies. It helps to avoid large file-system paths.
    *
-   * This is relevant for IMPORTED components only when the author may have long paths that are not needed for whoever
+   * This is relevant for IMPORTED components only as the author may have long paths that are not needed for whoever
    * imports it. NESTED and AUTHORED components are written as is.
    */
   stripOriginallySharedDir(bitMap: BitMap): void {
@@ -467,7 +466,7 @@ export default class Component {
     this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir, true);
     this.dependencies.forEach((dependency) => {
       const dependencyId = dependency.id.toString();
-      const depFromBitMap = bitMap.getComponent(dependencyId, false);
+      const depFromBitMap = bitMap.getComponent(dependencyId);
       dependency.relativePaths.forEach((relativePath: RelativePath) => {
         relativePath.sourceRelativePath = pathWithoutSharedDir(
           relativePath.sourceRelativePath,
@@ -485,21 +484,16 @@ export default class Component {
     });
   }
 
-  updateDistsLocation(): void {
-    if (this.dists && this._distDir) {
-      this.dists.forEach((distFile) => {
-        distFile.path = distFile.path.replace(DEFAULT_DIST_DIRNAME, this._distDir);
-      });
+  updateDistsPerConsumerBitJson(consumer: Consumer, componentMap: ComponentMap): void {
+    if (this.dists) {
+      const newDistBase = this.getDistDirForConsumer(consumer, componentMap.rootDir);
+      const getNewRelative = (dist) => {
+        if (consumer.bitJson.distEntry && componentMap.rootDir) {
+          return dist.relative.replace(consumer.bitJson.distEntry, '');
+        }
+      };
+      this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase, newRelative: getNewRelative(dist) }));
     }
-  }
-
-  setDistDir(distDir) {
-    this._distDir = distDir;
-  }
-
-  getDistDir() {
-    if (this._distDir) return this._distDir;
-    return DEFAULT_DIST_DIRNAME;
   }
 
   /**
@@ -593,15 +587,7 @@ export default class Component {
       return this;
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
-    if (this.dists) {
-      const newDistBase = this.getDistDirForConsumer(consumer, componentMap.rootDir);
-      const getNewRelative = (dist) => {
-        if (consumer.bitJson.distEntry && componentMap.rootDir) {
-          return dist.relative.replace(consumer.bitJson.distEntry, '');
-        }
-      };
-      this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase, newRelative: getNewRelative(dist) }));
-    }
+    this.updateDistsPerConsumerBitJson(consumer, componentMap);
     const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
     this.writtenPath = newBase;
     this.files.forEach(file => file.updatePaths({ newBase }));

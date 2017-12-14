@@ -479,8 +479,6 @@ export default class Consumer {
           : COMPONENT_ORIGINS.IMPORTED;
       if (origin === COMPONENT_ORIGINS.IMPORTED) {
         componentWithDeps.component.stripOriginallySharedDir(bitMap);
-        componentWithDeps.component.setDistDir(this.bitJson.distTarget);
-        componentWithDeps.component.updateDistsLocation();
       }
       // don't write dists files for authored components as the author has its own mechanism to generate them
       // also, don't write dists file for imported component, unless the user used '--dist' flag
@@ -536,7 +534,7 @@ export default class Consumer {
             dependencies: dep.dependencies,
             componentMap
           })
-          .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap, this))
+          .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap, this, dist))
           .then(() => dep);
       });
 
@@ -556,7 +554,7 @@ export default class Consumer {
     await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, this, createNpmLinkFiles);
     await Promise.all(
       componentsWithDependencies.map(componentWithDependencies =>
-        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap, this)
+        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap, this, dist)
       )
     );
     await bitMap.write();
