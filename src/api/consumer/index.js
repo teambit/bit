@@ -20,7 +20,7 @@ import { watchAll } from './lib/watch';
 import add from './lib/add';
 import untrack from './lib/untrack';
 import move from './lib/move';
-import bind from './lib/bind';
+import link from './lib/link';
 import migrate from './lib/migrate';
 
 export {
@@ -50,6 +50,6 @@ export {
   add,
   untrack,
   move,
-  bind,
+  link,
   migrate
 };

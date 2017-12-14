@@ -34,7 +34,9 @@ export default class Show extends Command {
       return getScopeComponent({ id, allVersions, showRemoteVersions: outdated });
     }
 
-    if (versions && (compare || outdated)) { return Promise.reject("You can't use [compare] or [outdated] along with versions"); }
+    if (versions && (compare || outdated)) {
+      return Promise.reject("You can't use [compare] or [outdated] along with versions");
+    }
     if (versions) {
       return getBitComponent(versions).then(components => ({
         components,

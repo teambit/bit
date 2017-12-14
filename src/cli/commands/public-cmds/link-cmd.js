@@ -1,21 +1,18 @@
 /** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
-import { getDriver, bind } from '../../../api/consumer';
+import { link } from '../../../api/consumer';
 
 export default class Create extends Command {
-  name = 'bind';
-  description = 'Call the driver bind action';
+  name = 'link';
+  description = 'Call the driver link action';
   alias = 'b';
   opts = [['v', 'verbose', 'showing the driver path']];
   private = true;
   loader = true;
 
   action(args: string[], { verbose }: { verbose: ?boolean }): Promise<*> {
-    // return getDriver().then((driverObj) => {
-    //   return driverObj.getDriver(false).bind({});
-    // });
-    return bind();
+    return link();
   }
 
   report(results: Array<{ id: string, bound: Object }>): string {

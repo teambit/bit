@@ -7,7 +7,7 @@ chai.use(require('chai-fs'));
 
 const assert = chai.assert;
 
-describe('bit bind', function () {
+describe('bit link', function () {
   this.timeout(0);
   const helper = new Helper();
 
@@ -25,7 +25,7 @@ describe('bit bind', function () {
         "const isType = require('bit/utils/is-type/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
-      helper.runCmd('bit bind');
+      helper.runCmd('bit link');
     });
     it('should print results from the dependency that uses require(bit) syntax', () => {
       const appJsFixture = "const isString = require('./utils/is-string'); console.log(isString());";
@@ -46,7 +46,7 @@ describe('bit bind', function () {
       helper.modifyFieldInBitJson('bindingPrefix', 'testLink');
       helper.importComponent('bar/foo');
     });
-    describe('auto binding', () => {
+    describe('auto linking', () => {
       it('node_modules should contain custom dir name', () => {
         assert.pathExists(path.join(helper.localScopePath, 'node_modules', 'testLink'));
       });
@@ -57,10 +57,10 @@ describe('bit bind', function () {
         expect(path.join(helper.localScopePath, 'node_modules', 'testLink', 'bar', 'foo', 'index.js')).to.be.a.file();
       });
     });
-    describe('manual binding', () => {
+    describe('manual linking', () => {
       before(() => {
         fs.removeSync(path.join(helper.localScopePath, 'node_modules', 'testLink'));
-        helper.runCmd('bit bind');
+        helper.runCmd('bit link');
       });
       it('node_modules should contain custom dir name', () => {
         assert.pathExists(path.join(helper.localScopePath, 'node_modules', 'testLink'));
@@ -182,11 +182,11 @@ describe('bit bind', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got is-string2');
     });
-    describe('bit bind after deleting the current node_modules directories', () => {
+    describe('bit link after deleting the current node_modules directories', () => {
       before(() => {
         fs.removeSync(path.join(helper.localScopePath, 'node_modules'));
         fs.removeSync(path.join(helper.localScopePath, 'components', 'test', 'is-string2', 'node_modules'));
-        helper.runCmd('bit bind');
+        helper.runCmd('bit link');
       });
       it('should still print results from the dependency that uses require absolute syntax', () => {
         const result = helper.runCmd('node app.js');
