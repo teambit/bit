@@ -19,11 +19,11 @@ Bit connects great tools like Git, Yarn and NPM to form a frictionless code shar
 
 Bit provides a distributed component development workflow. You can isolate components in any Git repository, and quickly share them to dynamic and curatable collections of components. From there, components can be individually found and consumed with package managers like Yarn/NPM or sourced in any repository for further modifications.
 
-* Share individual components quickly, without changing your source-code and from any path in your repository.
+* Share individual components quickly to curated and dynamic collections, without changing your source-code and from any path in your repository.
 * Keep a single source of truth for components, while developing or sourcing components in any repository.
-* Organize components in curated and dynamic collections. Explore and discover components in your component collections.
 * Consume components with NPM, Yarn or any other package manager.
 * Get control and learn which components are used by who and where. Easily make vast changes across projects and components, and gain full control over your dependency graph.
+* Use extensions to visually render your components, test and compile them, parse and present useful information from the inline docs and even publish your components to package registries.
 
 Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
