@@ -924,7 +924,7 @@ export default class Component {
   // (or index.js if key not exists)
   calculateMainDistFile(): string {
     if (this._writeDistsFiles && this._areDistsInsideComponentDir) {
-      const mainFile = searchFilesIgnoreExt(this.dists, this.mainFile, 'relative', 'relative');
+      const mainFile = searchFilesIgnoreExt(this.dists, path.normalize(this.mainFile), 'relative', 'relative');
       if (mainFile) return path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
     return this.mainFile;

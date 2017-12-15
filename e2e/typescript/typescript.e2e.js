@@ -169,13 +169,13 @@ describe('typescript', function () {
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
         const expectedPathSuffix = normalize(
-          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'index')
+          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1')
         );
         expect(localConsumerFiles).to.include(expectedLocation);
-        // expect(linkPathContent).to.have.string(
-        //   `../../../../${expectedPathSuffix}`,
-        //   'dependency link file point to the wrong place'
-        // );
+        expect(linkPathContent).to.have.string(
+          `../../../../${expectedPathSuffix}`,
+          'dependency link file point to the wrong place'
+        );
       });
       it('should link the indirect dependency from dependent component source folder to its source file in the dependency directory', () => {
         const expectedLocation = path.join(isStringPath, 'utils', 'is-type.ts');
@@ -192,12 +192,12 @@ describe('typescript', function () {
         const expectedLocation = path.join(isStringPath, 'dist', 'utils', 'is-type.js');
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
-        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'index'));
+        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1'));
         expect(localConsumerFiles).to.include(expectedLocation);
-        // expect(linkPathContent).to.have.string(
-        //   `../../../../../${expectedPathSuffix}`,
-        //   'in direct dependency link file point to the wrong place'
-        // );
+        expect(linkPathContent).to.have.string(
+          `../../../../../${expectedPathSuffix}`,
+          'in direct dependency link file point to the wrong place'
+        );
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";

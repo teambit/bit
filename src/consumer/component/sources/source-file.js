@@ -1,5 +1,4 @@
 // @flow
-import path from 'path';
 import vinylFile from 'vinyl-file';
 import AbstractVinyl from './abstract-vinyl';
 import FileSourceNotFound from '../exceptions/file-source-not-found';
@@ -18,8 +17,6 @@ export default class SourceFile extends AbstractVinyl {
   ): SourceFile | null {
     try {
       const file = new SourceFile(vinylFile.readSync(filePath, { base, cwd: consumerPath }));
-      // TODO: remove this distFilePath?
-      // file.distFilePath = path.join(consumerPath, distTarget, file.relative);
       for (const k in extendedProps) file[k] = extendedProps[k];
       return file;
     } catch (err) {
