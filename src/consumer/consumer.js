@@ -534,7 +534,7 @@ export default class Consumer {
             dependencies: dep.dependencies,
             componentMap
           })
-          .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap, this, dist))
+          .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap, this))
           .then(() => dep);
       });
 
@@ -554,7 +554,7 @@ export default class Consumer {
     await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, this, createNpmLinkFiles);
     await Promise.all(
       componentsWithDependencies.map(componentWithDependencies =>
-        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap, this, dist)
+        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap, this)
       )
     );
     await bitMap.write();
@@ -746,6 +746,11 @@ export default class Consumer {
   }
 
   linkComponents(components: Component[], bitMap: BitMap): Object[] {
+    /**
+     * @param componentId
+     * @param srcPath the path where the symlink is pointing to
+     * @param destPath the path where to write the symlink
+     */
     const createSymlinkOrCopy = (componentId, srcPath, destPath) => {
       fs.removeSync(destPath); // in case a component has been moved
       fs.ensureDirSync(path.dirname(destPath));
@@ -758,10 +763,9 @@ export default class Consumer {
       }
     };
     const writeDependencyLink = (parentRootDir: string, bitId: BitId, rootDir: string, bindingPrefix: string) => {
-      const srcPath = path.join(this.getPath(), rootDir);
       const relativeDestPath = path.join('node_modules', bindingPrefix, bitId.box, bitId.name);
-      const destPath = path.join(this.getPath(), parentRootDir, relativeDestPath);
-      createSymlinkOrCopy(bitId, srcPath, destPath);
+      const destPath = path.join(parentRootDir, relativeDestPath);
+      createSymlinkOrCopy(bitId, rootDir, destPath);
 
       return { from: parentRootDir, to: rootDir };
     };
@@ -769,12 +773,26 @@ export default class Consumer {
     const writeDependenciesLinks = (component, componentMap) => {
       return component.dependencies.map((dependency) => {
         const dependencyComponentMap = bitMap.getComponent(dependency.id);
-        return writeDependencyLink(
-          componentMap.rootDir,
-          dependency.id,
-          dependencyComponentMap.rootDir,
-          component.bindingPrefix
+        const writtenLinks = [];
+        writtenLinks.push(
+          writeDependencyLink(
+            path.join(this.getPath(), componentMap.rootDir),
+            dependency.id,
+            path.join(this.getPath(), dependencyComponentMap.rootDir),
+            component.bindingPrefix
+          )
         );
+        if (!this.shouldDistsBeInsideTheComponent()) {
+          writtenLinks.push(
+            writeDependencyLink(
+              component.getDistDirForConsumer(this, componentMap.rootDir),
+              dependency.id,
+              component.getDistDirForConsumer(this, dependencyComponentMap.rootDir),
+              component.bindingPrefix
+            )
+          );
+        }
+        return writtenLinks;
       });
     };
 
@@ -782,6 +800,7 @@ export default class Consumer {
       return component.missingDependencies.missingLinks.map((dependencyIdStr) => {
         const dependencyId = bitMap.getExistingComponentId(dependencyIdStr);
         if (!dependencyId) return null;
+
         const dependencyComponentMap = bitMap.getComponent(dependencyId);
         return writeDependencyLink(
           componentMap.rootDir,
@@ -805,7 +824,10 @@ export default class Consumer {
         );
         const linkPath = path.join(this.getPath(), relativeLinkPath);
         // when a user moves the component directory, use component.writtenPath to find the correct target
-        const target = component.writtenPath || path.join(this.getPath(), componentMap.rootDir);
+        let target = component.writtenPath || path.join(this.getPath(), componentMap.rootDir);
+        if (component.dists && component._writeDistsFiles && !this.shouldDistsBeInsideTheComponent()) {
+          target = component.getDistDirForConsumer(this, componentMap.rootDir);
+        }
         createSymlinkOrCopy(componentId, target, linkPath);
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
         const boundDependencies = component.dependencies ? writeDependenciesLinks(component, componentMap) : [];
@@ -813,7 +835,7 @@ export default class Consumer {
           component.missingDependencies && component.missingDependencies.missingLinks
             ? writeMissingLinks(component, componentMap)
             : [];
-        return { id: componentId, bound: bound.concat([...boundDependencies, ...boundMissingDependencies]) };
+        return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
       }
       if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         if (!component.dependencies) return { id: componentId, bound: [] };
