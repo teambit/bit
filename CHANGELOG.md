@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support saving dists files on a pre-configured directory relative to consumer root (rather than saving them inside the component dir) 
+- remove 'dist' attribute from consumer bit.json by default
 - rename `bit bind` command to `bit link`
 - avoid building process when a component was not modified and the dists are saved in the model
 - bug fix - importing an older version of a component ended up showing the component in "modified" and "staged" sections of bit status

@@ -236,8 +236,7 @@ export default class Component extends BitObject {
         ? Promise.all(
           version.dists.map(dist =>
             dist.file.load(repository).then((content) => {
-              const relativePathWithDist = path.join(DEFAULT_DIST_DIRNAME, dist.relativePath);
-              return new Dist({ base: '.', path: relativePathWithDist, contents: content.contents, test: dist.test });
+              return new Dist({ base: '.', path: dist.relativePath, contents: content.contents, test: dist.test });
             })
           )
         )

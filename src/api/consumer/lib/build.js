@@ -1,11 +1,17 @@
 /** @flow */
-import { loadConsumer } from '../../../consumer';
+import { loadConsumer, Consumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
 import BitMap from '../../../consumer/bit-map';
 import ComponentsList from '../../../consumer/component/components-list';
+import { COMPONENT_ORIGINS } from '../../../constants';
 
-function writeDistFiles(component: Component): Promise<?Array<?string>> {
+function writeDistFiles(component: Component, consumer: Consumer, bitMap: BitMap): Promise<?Array<?string>> {
+  const componentMap = bitMap.getComponent(component.id);
+  if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+    component.stripOriginallySharedDir(bitMap);
+  }
+  component.updateDistsPerConsumerBitJson(consumer, componentMap);
   const saveDist = component.dists.map(distFile => distFile.write());
   return Promise.all(saveDist);
 }
@@ -17,7 +23,7 @@ export async function build(id: string): Promise<?Array<string>> {
   const component: Component = await consumer.loadComponent(bitId);
   const result = await component.build({ scope: consumer.scope, consumer, bitMap });
   if (result === null) return null;
-  const distFilePaths = await writeDistFiles(component);
+  const distFilePaths = await writeDistFiles(component, consumer, bitMap);
   bitMap.addMainDistFileToComponent(component.id, distFilePaths);
   await bitMap.write();
   // await consumer.driver.runHook('onBuild', [component]);
@@ -31,7 +37,7 @@ async function buildAllResults(components, consumer, bitMap) {
     if (result === null) {
       return { component: bitId.toString(), buildResults: null };
     }
-    const buildResults = await writeDistFiles(component);
+    const buildResults = await writeDistFiles(component, consumer, bitMap);
     return { component: bitId.toString(), buildResults };
   });
 }
