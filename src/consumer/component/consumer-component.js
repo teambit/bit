@@ -579,6 +579,7 @@ export default class Component {
         driver,
         force,
         writeBitDependencies,
+        dependencies,
         deleteBitDirContent
       });
       // todo: remove from the file system
@@ -600,7 +601,8 @@ export default class Component {
       withPackageJson: actualWithPackageJson,
       driver,
       force,
-      writeBitDependencies: false,
+      writeBitDependencies,
+      dependencies,
       deleteBitDirContent
     });
 

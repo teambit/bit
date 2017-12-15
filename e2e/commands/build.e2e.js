@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import fs from 'fs-extra';
 import Helper from '../e2e-helper';
 
 const assertArrays = require('chai-arrays');
@@ -35,11 +34,13 @@ describe('bit build', function () {
   });
   describe('with dist attribute populated', () => {
     let localConsumerFiles;
+    let clonedScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler();
       helper.createComponent(path.normalize('src/bar'), 'foo.js');
       helper.addComponent(path.normalize('src/bar/foo.js'));
+      clonedScope = helper.cloneLocalScope();
     });
     describe('as author', () => {
       describe('with dist.entry populated', () => {
@@ -48,9 +49,6 @@ describe('bit build', function () {
           helper.build();
           localConsumerFiles = helper.getConsumerFiles('*.{js,ts}', false);
         });
-        after(() => {
-          fs.removeSync(path.join(helper.localScopePath, 'dist'));
-        });
         it('should write the dists files without the dist.entry part', () => {
           expect(localConsumerFiles).to.include(path.join('dist', 'bar', 'foo.js'));
           expect(localConsumerFiles).to.not.include(path.join('dist', 'src', 'bar', 'foo.js'));
@@ -58,12 +56,10 @@ describe('bit build', function () {
       });
       describe('with dist.entry and dist.target populated', () => {
         before(() => {
+          helper.getClonedLocalScope(clonedScope);
           helper.modifyFieldInBitJson('dist', { entry: 'src', target: 'my-dist' });
           helper.build();
           localConsumerFiles = helper.getConsumerFiles('*.{js,ts}', false);
-        });
-        after(() => {
-          fs.removeSync(path.join(helper.localScopePath, 'my-dist'));
         });
         it('should write the dists files inside dist.target dir and without the dist.entry part', () => {
           expect(localConsumerFiles).to.include(path.join('my-dist', 'bar', 'foo.js'));
@@ -75,20 +71,19 @@ describe('bit build', function () {
     });
     describe('as imported', () => {
       before(() => {
+        helper.getClonedLocalScope(clonedScope);
         helper.commitAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
         helper.importComponent('bar/foo');
+        clonedScope = helper.cloneLocalScope();
       });
       describe('with dist.entry populated', () => {
         before(() => {
           helper.modifyFieldInBitJson('dist', { entry: 'src' });
           helper.build('bar/foo');
           localConsumerFiles = helper.getConsumerFiles('*.{js,ts}', false);
-        });
-        after(() => {
-          fs.removeSync(path.join(helper.localScopePath, 'dist'));
         });
         it('should write the dists files without the dist.entry part and without the originallySharedDirectory part', () => {
           expect(localConsumerFiles).to.include(path.join('dist', 'components', 'bar', 'foo', 'foo.js'));
@@ -101,12 +96,10 @@ describe('bit build', function () {
       });
       describe('with dist.entry and dist.target populated', () => {
         before(() => {
+          helper.getClonedLocalScope(clonedScope);
           helper.modifyFieldInBitJson('dist', { entry: 'src', target: 'my-dist' });
           helper.build('bar/foo');
           localConsumerFiles = helper.getConsumerFiles('*.{js,ts}', false);
-        });
-        after(() => {
-          fs.removeSync(path.join(helper.localScopePath, 'my-dist'));
         });
         it('should write the dists files inside dist.target dir and without the dist.entry part', () => {
           expect(localConsumerFiles).to.include(path.join('my-dist', 'components', 'bar', 'foo', 'foo.js'));
