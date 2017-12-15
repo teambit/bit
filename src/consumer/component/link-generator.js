@@ -333,8 +333,7 @@ async function writeDependencyLinks(
 async function writeEntryPointsForImportedComponent(
   component: Component,
   bitMap: BitMap,
-  consumer: Consumer,
-  writeDist: boolean
+  consumer: Consumer
 ): Promise<any> {
   const componentRoot = component.writtenPath;
   const componentId = component.id.toString();
@@ -344,7 +343,7 @@ async function writeEntryPointsForImportedComponent(
   const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = _getLinkContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
-  if (component.dists && writeDist && !consumer.shouldDistsBeInsideTheComponent()) {
+  if (component.dists && component._writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
     const distDir = component.getDistDirForConsumer(consumer, componentMap.rootDir);
     const entryPointDist = path.join(distDir, indexName);
     await outputFile(entryPointDist, AUTO_GENERATED_MSG + entryPointFileContent, false);
