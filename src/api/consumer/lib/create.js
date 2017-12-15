@@ -29,7 +29,7 @@ export default (async function create(
       mainFile,
       consumerBitJson: consumer.bitJson,
       bitPath,
-      consumerPath: consumer.getPath()
+      consumer
     },
     consumer.scope
   );

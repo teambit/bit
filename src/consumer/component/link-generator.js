@@ -15,10 +15,12 @@ import { outputFile, getWithoutExt, searchFilesIgnoreExt, getExt } from '../../u
 import logger from '../../logger/logger';
 import { ComponentWithDependencies } from '../../scope';
 import Component from '../component';
+import { Dependency, RelativePath } from '../component/consumer-component';
 import BitMap from '../bit-map/bit-map';
 import { BitIds } from '../../bit-id';
 import fileTypesPlugins from '../../plugins/file-types-plugins';
 import { getSync } from '../../api/consumer/lib/global-config';
+import { Consumer } from '../../consumer';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -156,23 +158,24 @@ function _getLinkContent(
 async function writeDependencyLinks(
   componentDependencies: ComponentWithDependencies[],
   bitMap: BitMap,
-  consumerPath: string,
+  consumer: Consumer,
   createNpmLinkFiles: boolean
 ): Promise<any> {
+  const consumerPath: string = consumer.getPath();
   const prepareLinkFile = (
     componentId: string,
     mainFile: string,
     linkPath: string,
     relativePathInDependency: string,
-    relativePath: Object
+    relativePath: Object,
+    depRootDir: ?string
   ) => {
-    // this is used to converd the component name to a valid npm package  name
+    // this is used to convert the component name to a valid npm package  name
     const packagePath = `${getSync(CFG_REGISTRY_DOMAIN_PREFIX) ||
       DEFAULT_REGISTRY_DOMAIN_PREFIX}/${componentId.toStringWithoutVersion().replace(/\//g, '.')}`;
-    const rootDir = path.join(consumerPath, bitMap.getRootDirOfComponent(componentId));
-    let actualFilePath = path.join(rootDir, relativePathInDependency);
+    let actualFilePath = path.join(depRootDir, relativePathInDependency);
     if (relativePathInDependency === mainFile) {
-      actualFilePath = path.join(rootDir, _getIndexFileName(mainFile));
+      actualFilePath = path.join(depRootDir, _getIndexFileName(mainFile));
     }
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
     const importSpecifiers = relativePath.importSpecifiers;
@@ -184,34 +187,46 @@ async function writeDependencyLinks(
   };
 
   const componentLink = (
-    resolveDepVersion: string,
+    depId: string,
+    depComponent: Component,
     relativePath: Object,
-    relativePathInDependency: string,
-    relativeDistPathInDependency: string,
-    relativeDistExtInDependency: string,
     parentDir: string,
     mainFile: string,
-    hasDist: boolean
+    hasDist: boolean,
+    distRoot: string
   ) => {
+    const relativePathInDependency = relativePath.destinationRelativePath;
+    let relativeDistPathInDependency = searchFilesIgnoreExt(depComponent.dists, relativePathInDependency, 'relative');
+    relativeDistPathInDependency = relativeDistPathInDependency
+      ? relativeDistPathInDependency.relative
+      : relativePathInDependency;
+
+    const relativeDistExtInDependency = getExt(relativeDistPathInDependency);
     const sourceRelativePath = relativePath.sourceRelativePath;
     const linkPath = path.join(parentDir, sourceRelativePath);
     let distLinkPath;
     const linkFiles = [];
+    const depComponentMap = bitMap.getComponent(depId, true);
+
+    const depRootDir = path.join(consumerPath, depComponentMap.rootDir);
+
     if (hasDist) {
       const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
-      distLinkPath = path.join(parentDir, DEFAULT_DIST_DIRNAME, sourceRelativePathWithCompiledExt);
+      const depRootDirDist = depComponent.getDistDirForConsumer(consumer, depComponentMap.rootDir);
+      distLinkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
       // Generate a link file inside dist folder of the dependent component
       const linkFile = prepareLinkFile(
-        resolveDepVersion,
+        depId,
         mainFile,
         distLinkPath,
         relativeDistPathInDependency,
-        relativePath
+        relativePath,
+        depRootDirDist
       );
       linkFiles.push(linkFile);
     }
 
-    const linkFile = prepareLinkFile(resolveDepVersion, mainFile, linkPath, relativePathInDependency, relativePath);
+    const linkFile = prepareLinkFile(depId, mainFile, linkPath, relativePathInDependency, relativePath, depRootDir);
     linkFiles.push(linkFile);
     return linkFiles;
   };
@@ -219,15 +234,15 @@ async function writeDependencyLinks(
   const componentLinks = (
     // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
     dependencies: Component[],
-    directDependencies: Object[],
+    directDependencies: Dependency[],
     flattenedDependencies: BitIds,
     parentDir: string,
-    mainFile: string,
-    hasDist: boolean
+    hasDist: boolean,
+    distRoot: string
   ) => {
     if (!directDependencies || !directDependencies.length) return [];
-    const links = directDependencies.map((dep) => {
-      if (!dep.relativePath && (!dep.relativePaths || R.isEmpty(dep.relativePaths))) return [];
+    const links = directDependencies.map((dep: Dependency) => {
+      if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
       let resolveDepVersion = dep.id;
       // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
       // Actual version number, because on the bitmap we have only specific versions
@@ -237,31 +252,18 @@ async function writeDependencyLinks(
 
       // Helper function to look for the component object
       const _byComponentId = dependency => dependency.id.toString() === resolveDepVersion.toString();
-
       // Get the real dependency component
       const depComponent = R.find(_byComponentId, dependencies);
 
-      const currLinks = dep.relativePaths.map((relativePath) => {
-        const destinationRelativePath = relativePath.destinationRelativePath;
-        let destinationDistRelativePath = searchFilesIgnoreExt(
-          depComponent.dists,
-          path.join(DEFAULT_DIST_DIRNAME, destinationRelativePath),
-          'relative'
-        );
-        destinationDistRelativePath = destinationDistRelativePath
-          ? destinationDistRelativePath.relative
-          : destinationRelativePath;
-        const destinationDistRelativePathExt = getExt(destinationDistRelativePath);
-
+      const currLinks = dep.relativePaths.map((relativePath: RelativePath) => {
         return componentLink(
           resolveDepVersion,
+          depComponent,
           relativePath,
-          destinationRelativePath,
-          destinationDistRelativePath,
-          destinationDistRelativePathExt,
           parentDir,
           depComponent.calculateMainDistFile(),
-          hasDist
+          hasDist,
+          distRoot
         );
       });
       return R.flatten(currLinks);
@@ -281,7 +283,7 @@ async function writeDependencyLinks(
     return Promise.all(allLinksP);
   };
 
-  const allLinksP = componentDependencies.map((componentWithDeps) => {
+  const allLinksP = componentDependencies.map((componentWithDeps: ComponentWithDependencies) => {
     const componentMap = bitMap.getComponent(componentWithDeps.component.id, true);
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       logger.debug(
@@ -290,35 +292,37 @@ async function writeDependencyLinks(
       return Promise.resolve();
     }
     logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
-    const directDeps = componentWithDeps.component.dependencies;
+    const directDeps: Dependency[] = componentWithDeps.component.dependencies;
     const flattenDeps = componentWithDeps.component.flattenedDependencies;
     const hasDist =
       componentWithDeps.component._writeDistsFiles &&
       componentWithDeps.component.dists &&
       !R.isEmpty(componentWithDeps.component.dists);
-    const mainFile = componentWithDeps.component.calculateMainDistFile();
+    const distRoot = componentWithDeps.component.getDistDirForConsumer(consumer, componentMap.rootDir);
+
     const directLinksP = componentLinks(
       componentWithDeps.dependencies,
       directDeps,
       flattenDeps,
       componentWithDeps.component.writtenPath,
-      mainFile,
-      hasDist
+      hasDist,
+      distRoot
     );
 
     const indirectLinksP = componentWithDeps.dependencies.map((dep: Component) => {
-      const depMainFile = dep.calculateMainDistFile();
       const depHasDist = dep.dists && !R.isEmpty(dep.dists);
+      const depComponentMap = bitMap.getComponent(dep.id, true);
+      const depDistRoot = dep.getDistDirForConsumer(consumer, depComponentMap.rootDir);
       // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
       // also the indirect ones
-      // The dep.dependencies contain only an id and relativePathes and not the full object
+      // The dep.dependencies contain only an id and relativePaths and not the full object
       return componentLinks(
         componentWithDeps.dependencies,
         dep.dependencies,
         dep.flattenedDependencies,
         dep.writtenPath,
-        depMainFile,
-        depHasDist
+        depHasDist,
+        depDistRoot
       );
     });
     return Promise.all([directLinksP, ...indirectLinksP]);
@@ -326,7 +330,12 @@ async function writeDependencyLinks(
   return Promise.all(allLinksP);
 }
 
-async function writeEntryPointsForImportedComponent(component: Component, bitMap: BitMap): Promise<any> {
+async function writeEntryPointsForImportedComponent(
+  component: Component,
+  bitMap: BitMap,
+  consumer: Consumer,
+  writeDist: boolean
+): Promise<any> {
   const componentRoot = component.writtenPath;
   const componentId = component.id.toString();
   const componentMap = bitMap.getComponent(componentId);
@@ -335,6 +344,11 @@ async function writeEntryPointsForImportedComponent(component: Component, bitMap
   const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = _getLinkContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
+  if (component.dists && writeDist && !consumer.shouldDistsBeInsideTheComponent()) {
+    const distDir = component.getDistDirForConsumer(consumer, componentMap.rootDir);
+    const entryPointDist = path.join(distDir, indexName);
+    await outputFile(entryPointDist, AUTO_GENERATED_MSG + entryPointFileContent, false);
+  }
   return outputFile(entryPointPath, AUTO_GENERATED_MSG + entryPointFileContent, false);
 }
 function generateEntryPointDataForPackages(component: Component): Promise<any> {

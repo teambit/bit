@@ -169,7 +169,7 @@ describe('typescript', function () {
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
         const expectedPathSuffix = normalize(
-          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'index')
+          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1')
         );
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
@@ -192,7 +192,7 @@ describe('typescript', function () {
         const expectedLocation = path.join(isStringPath, 'dist', 'utils', 'is-type.js');
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
-        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'index'));
+        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1'));
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
           `../../../../../${expectedPathSuffix}`,
