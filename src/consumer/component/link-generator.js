@@ -196,7 +196,11 @@ async function writeDependencyLinks(
     distRoot: string
   ) => {
     const relativePathInDependency = relativePath.destinationRelativePath;
-    let relativeDistPathInDependency = searchFilesIgnoreExt(depComponent.dists, relativePathInDependency, 'relative');
+    let relativeDistPathInDependency = searchFilesIgnoreExt(
+      depComponent.dists,
+      path.normalize(relativePathInDependency),
+      'relative'
+    );
     relativeDistPathInDependency = relativeDistPathInDependency
       ? relativeDistPathInDependency.relative
       : relativePathInDependency;
