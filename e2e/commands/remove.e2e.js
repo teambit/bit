@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe('bit remove command', function () {
+describe.only('bit remove command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -42,6 +42,7 @@ describe('bit remove command', function () {
       expect(status.includes('bar/foo')).to.be.false;
     });
   });
+
   describe('with commited components and -t=true', () => {
     before(() => {
       helper.reInitLocalScope();
@@ -146,6 +147,79 @@ describe('bit remove command', function () {
       expect(output).to.contain.string(`removed components: ${helper.remoteScope}/global/simple`);
       const bitMap = helper.readBitMap();
       expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple`);
+    });
+  });
+
+  describe('remove versions from local scope', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      const isStringFixture =
+        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      helper.commitAllComponents();
+      helper.createComponent(
+        'utils',
+        'is-string.js',
+        "module.exports = function isType() { return 'got is-type'; };console.log('sdfsdfsdf')"
+      );
+      helper.commitAllComponents();
+    });
+    it('should remove component version only', () => {
+      const output = helper.removeComponent('utils/is-string@0.0.2');
+      expect(output).to.contain.string('successfully removed components: utils/is-string@0.0.2');
+    });
+    it('should display version 0.0.1 for component', () => {
+      const output = JSON.parse(helper.listLocalScope('-j'));
+      expect(output).to.deep.includes({ id: 'utils/is-string', localVersion: '0.0.1' });
+    });
+    it('should still be in bitmap', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('utils/is-string');
+    });
+    it('should remove entire component if specified version is the only one', () => {
+      const output = helper.removeComponent('utils/is-string@0.0.1', '-f');
+      expect(output).to.contain.string('successfully removed components: utils/is-string');
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.not.have.property('utils/is-string');
+    });
+  });
+  describe('remove versions from remote scope', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      const isStringFixture =
+        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      helper.commitAllComponents();
+      helper.createComponent(
+        'utils',
+        'is-string.js',
+        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };console.log('sdfsdfsdf')'"
+      );
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+    });
+    it('should remove component version only', () => {
+      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.2`);
+      expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/is-string@0.0.2`);
+    });
+    it('should display version 0.0.1 for component', () => {
+      const output = helper.listRemoteScope(true);
+      expect(output).to.contain.string(`${helper.remoteScope}/utils/is-string@0.0.1`);
+    });
+    it('should remove entire component if specified version is the only one', () => {
+      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.1`);
+      expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/is-string@latest`);
+      const listOutput = helper.listRemoteScope(true);
+      expect(listOutput).to.not.contain.string(`${helper.remoteScope}/utils/is-string`);
+      expect(listOutput).to.contain.string(`${helper.remoteScope}/utils/is-type`);
     });
   });
 });
