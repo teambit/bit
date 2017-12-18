@@ -11,20 +11,27 @@ export type ComponentObjectsInput = {
   componentObjects: string
 };
 
-export default function put({ path, componentObjects }: ComponentObjectsInput): Promise<ComponentObjects[]> {
+export default function put(
+  { path, componentObjects }: ComponentObjectsInput,
+  headers: ?Object
+): Promise<ComponentObjects[]> {
   if (typeof componentObjects === 'string') {
     componentObjects = ComponentObjects.manyFromString(componentObjects);
   }
-  HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, componentObjects });
+  HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, componentObjects }, headers);
 
   return loadScope(path).then((scope) => {
     return scope.exportManyBareScope(componentObjects).then((componentsIds) => {
-      HooksManagerInstance.triggerHook(POST_RECEIVE_OBJECTS, {
-        componentObjects,
-        componentsIds,
-        scopePath: path,
-        scopeName: scope.scopeJson.name
-      });
+      HooksManagerInstance.triggerHook(
+        POST_RECEIVE_OBJECTS,
+        {
+          componentObjects,
+          componentsIds,
+          scopePath: path,
+          scopeName: scope.scopeJson.name
+        },
+        headers
+      );
       return componentsIds;
     });
   });

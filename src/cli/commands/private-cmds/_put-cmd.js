@@ -1,7 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import ComponentObjects from '../../../scope/component-objects';
-import { fromBase64, buildCommandMessage, packCommand } from '../../../utils';
+import { fromBase64, buildCommandMessage, packCommand, unpackCommand } from '../../../utils';
 import { put } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
@@ -13,8 +13,9 @@ export default class Put extends Command {
   alias = '';
   opts = [];
 
-  action([path]: [string, string]): Promise<any> {
+  action([path, args]: [string, string]): Promise<any> {
     let data = '';
+    const { headers } = unpackCommand(args);
     return new Promise((resolve, reject) => {
       process.stdin
         .on('data', (chunk) => {
@@ -25,7 +26,7 @@ export default class Put extends Command {
           const scopePath = fromBase64(path);
           return migrate(scopePath, false)
             .then(() => {
-              return put({ componentObjects: data, path: fromBase64(path) });
+              return put({ componentObjects: data, path: fromBase64(path) }, headers);
             })
             .then(resolve)
             .catch(reject);

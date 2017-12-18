@@ -17,7 +17,7 @@ export default class Delete extends Command {
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
     return migrate(scopePath, false).then(() => {
-      return remove({ path: scopePath, bitIds: payload.bitIds, force: payload.force });
+      return remove({ path: scopePath, bitIds: payload.bitIds, force: payload.force }, headers);
     });
   }
 

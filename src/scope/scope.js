@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
 import { GlobalRemotes } from '../global-config';
+import * as globalConfig from '../api/consumer/lib/global-config';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
@@ -20,7 +21,9 @@ import {
   BITS_DIRNAME,
   DEFAULT_DIST_DIRNAME,
   BIT_VERSION,
-  DEFAULT_BIT_VERSION
+  DEFAULT_BIT_VERSION,
+  CFG_USER_NAME_KEY,
+  CFG_USER_EMAIL_KEY
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
@@ -900,7 +903,7 @@ export default class Scope {
     return this.objects.add(symlink);
   }
 
-  async exportMany(ids: string[], remoteName: string): Promise<ComponentWithDependencies[]> {
+  async exportMany(ids: string[], remoteName: string, context: Object = {}): Promise<ComponentWithDependencies[]> {
     logger.debug(`exportMany, ids: ${ids.join(', ')}`);
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
@@ -908,6 +911,9 @@ export default class Scope {
     const componentObjectsP = componentIds.map(id => this.sources.getObjects(id));
     const componentObjects = await Promise.all(componentObjectsP);
     const componentsAndObjects = [];
+    const username = globalConfig.getSync(CFG_USER_NAME_KEY);
+    const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
+    _enrichContext(context);
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(this.objects);
       componentAndObject.component.local = false;
@@ -920,7 +926,7 @@ export default class Scope {
     const manyObjects = await Promise.all(manyObjectsP);
     let exportedIds;
     try {
-      exportedIds = await remote.pushMany(manyObjects);
+      exportedIds = await remote.pushMany(manyObjects, context);
       logger.debug('exportMany: successfully pushed all ids to the bare-scope, going to save them back to local scope');
     } catch (err) {
       logger.warn('exportMany: failed pushing ids to the bare-scope');
@@ -1140,3 +1146,13 @@ export default class Scope {
     });
   }
 }
+
+/**
+ * Add more keys to the context which will be passed to hooks
+ * @param {Object} context
+ */
+const _enrichContext = (context: Object = {}) => {
+  const username = globalConfig.getSync(CFG_USER_NAME_KEY);
+  const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
+  Object.assign(context, { username, email });
+};

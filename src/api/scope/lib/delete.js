@@ -6,21 +6,25 @@ import HooksManager from '../../../hooks';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
-export default function remove({ path, ids, force }): Promise<string[]> {
+export default function remove({ path, ids, force }, headers: ?Object): Promise<string[]> {
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds, force };
-  HooksManagerInstance.triggerHook(PRE_REMOVE_REMOTE, args);
+  HooksManagerInstance.triggerHook(PRE_REMOVE_REMOTE, args, headers);
   return loadScope(path).then((scope) => {
     return scope.removeMany(bitIds, force).then((res) => {
-      HooksManagerInstance.triggerHook(POST_REMOVE_REMOTE, {
-        removedComponentsIds: res.bitIds,
-        missingComponentsIds: res.missingComponents,
-        dependentBitsIds: BitIds.toStrings(res.dependentBits),
-        force,
-        scopePath: path,
-        componentsIds: bitIds.serialize(),
-        scopeName: scope.scopeJson.name
-      });
+      HooksManagerInstance.triggerHook(
+        POST_REMOVE_REMOTE,
+        {
+          removedComponentsIds: res.bitIds,
+          missingComponentsIds: res.missingComponents,
+          dependentBitsIds: BitIds.toStrings(res.dependentBits),
+          force,
+          scopePath: path,
+          componentsIds: bitIds.serialize(),
+          scopeName: scope.scopeJson.name
+        },
+        headers
+      );
       return res;
     });
   });
