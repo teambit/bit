@@ -15,7 +15,7 @@ import {
   DEFAULT_INDEX_EXTS
 } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux, isDir } from '../../utils';
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin } from './component-map';
@@ -249,6 +249,9 @@ export default class BitMap {
     const deletedComponent = this.components[bitmapComponent];
     delete this.components[bitmapComponent];
     return deletedComponent;
+  }
+  removeComponents(ids: BitIds) {
+    return ids.map(id => this.removeComponent(id));
   }
 
   addMainDistFileToComponent(id: string, distFilesPaths: string[]): void {
