@@ -12,9 +12,14 @@ export default function fetch(path: string, ids: string[], noDependencies: boole
   HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args);
   return loadScope(path).then((scope) => {
     if (noDependencies) return scope.manyOneObjects(bitIds);
-    return scope.getObjects(bitIds).then((objects) => {
-      HooksManagerInstance.triggerHook(POST_SEND_OBJECTS, objects);
-      return objects;
+    return scope.getObjects(bitIds).then((componentObjects) => {
+      HooksManagerInstance.triggerHook(POST_SEND_OBJECTS, {
+        componentObjects,
+        scopePath: path,
+        componentsIds: bitIds.serialize(),
+        scopeName: scope.scopeJson.name
+      });
+      return componentObjects;
     });
   });
 }

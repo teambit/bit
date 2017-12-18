@@ -18,9 +18,14 @@ export default function put({ path, componentObjects }: ComponentObjectsInput): 
   HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, componentObjects });
 
   return loadScope(path).then((scope) => {
-    return scope.exportManyBareScope(componentObjects).then((resultComponentObjects) => {
-      HooksManagerInstance.triggerHook(POST_RECEIVE_OBJECTS, resultComponentObjects);
-      return resultComponentObjects;
+    return scope.exportManyBareScope(componentObjects).then((componentsIds) => {
+      HooksManagerInstance.triggerHook(POST_RECEIVE_OBJECTS, {
+        componentObjects,
+        componentsIds,
+        scopePath: path,
+        scopeName: scope.scopeJson.name
+      });
+      return componentsIds;
     });
   });
 }
