@@ -166,7 +166,6 @@ describe('dists file are written outside the components dir', function () {
           expect(localConsumerFiles).to.include(path.join('my-dist', 'bar', 'foo.js'));
           expect(localConsumerFiles).to.not.include(path.join('my-dist', 'src', 'bar', 'foo.js'));
           expect(localConsumerFiles).to.not.include(path.join('dist', 'src', 'bar', 'foo.js'));
-          expect(localConsumerFiles).to.not.include(path.join('my-dist', 'bar', 'foo.js'));
           expect(localConsumerFiles).to.not.include(path.join('dist', 'bar', 'foo.js'));
         });
       });
