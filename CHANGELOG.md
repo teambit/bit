@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.4] - 2017-12-19
+
 - support saving dists files on a pre-configured directory relative to consumer root (rather than saving them inside the component dir) 
 - remove 'dist' attribute from consumer bit.json by default
+- add headers to server side hooks
+- add context to PRE_RECEIVE_OBJECTS hook
 
 ## [0.12.0-ext.3] - 2017-12-14
 
