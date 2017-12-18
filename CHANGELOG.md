@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support saving dists files on a pre-configured directory relative to consumer root (rather than saving them inside the component dir) 
+- remove 'dist' attribute from consumer bit.json by default
+
 ## [0.12.0-ext.3] - 2017-12-14
 
 - improve args for post-x-remote hooks

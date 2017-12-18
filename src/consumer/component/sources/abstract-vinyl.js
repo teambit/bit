@@ -2,6 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import Vinyl from 'vinyl';
+import logger from '../../../logger/logger';
 
 export default class AbstractVinyl extends Vinyl {
   // Update the base path and keep the relative value to be the same
@@ -14,6 +15,7 @@ export default class AbstractVinyl extends Vinyl {
 
   write(writePath?: string, force?: boolean = true): Promise<any> {
     const filePath = writePath || this.path;
+    logger.debug(`writing a file to the file-system at ${filePath}`);
     if (!force && fs.existsSync(filePath)) return Promise.resolve();
     return fs.outputFile(filePath, this.contents).then(() => filePath);
   }

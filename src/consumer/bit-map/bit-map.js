@@ -194,7 +194,7 @@ export default class BitMap {
     rootDir?: string,
     override: boolean,
     originallySharedDir?: string
-  }): void {
+  }): ComponentMap {
     const isDependency = origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
@@ -241,6 +241,8 @@ export default class BitMap {
       // if there are older versions, the user is updating an existing component, delete old ones from bit.map
       this.deleteOlderVersionsOfComponent(componentId);
     }
+
+    return this.components[componentIdStr];
   }
 
   removeComponent(id: string | bitId) {
@@ -290,7 +292,9 @@ export default class BitMap {
       return;
     }
     if (olderComponentsIds.length > 1) {
-      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
+      throw new Error(`Your ${
+        BIT_MAP
+      } file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
       are authored or imported. This scenario is not supported`);
     }
     const olderComponentId = olderComponentsIds[0];
