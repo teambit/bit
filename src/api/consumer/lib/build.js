@@ -8,9 +8,7 @@ import { COMPONENT_ORIGINS } from '../../../constants';
 
 function writeDistFiles(component: Component, consumer: Consumer, bitMap: BitMap): Promise<?Array<?string>> {
   const componentMap = bitMap.getComponent(component.id);
-  if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-    component.stripOriginallySharedDir(bitMap);
-  }
+  // no need to call component.stripOriginallySharedDir(bitMap), it has the correct paths already
   component.updateDistsPerConsumerBitJson(consumer, componentMap);
   const saveDist = component.dists.map(distFile => distFile.write());
   return Promise.all(saveDist);

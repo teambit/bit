@@ -155,6 +155,10 @@ export default class Helper {
     return this.runCmd(`bit remote add file://${remoteScopePath}`, localScopePath);
   }
 
+  addRemoteEnvironment() {
+    return this.runCmd(`bit remote add file://${this.envScopePath}`, this.localScopePath);
+  }
+
   reInitRemoteScope() {
     fs.emptyDirSync(this.remoteScopePath);
     return this.runCmd('bit init --bare', this.remoteScopePath);
