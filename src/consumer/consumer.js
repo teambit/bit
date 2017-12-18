@@ -31,6 +31,7 @@ import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
+import { RemovedLocalObjects } from '../scope/component-remove.js';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -956,14 +957,36 @@ export default class Consumer {
     return Promise.all(removeP);
   }
 
+  removeComponentFromFs(bitIds: BitIds, bitMap: BitMap) {
+    bitIds.forEach((id) => {
+      const component = bitMap.getComponent(id);
+      if (component && component.rootDir) fs.removeSync(path.join(this.getPath(), component.rootDir));
+    });
+  }
   async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean) {
     // local remove in case user wants to delete commited components
     let removedIds;
+    const bitMap = await this.getBitMap();
     const modifiedComponents = [];
     const regularComponents = [];
+    const ResolvedIDs = bitIds.map((id) => {
+      const realName = bitMap.getExistingComponentId(id.toStringWithoutVersion());
+      if (!realName) return id;
+      const component = bitMap.getComponent(realName);
+      if (
+        component &&
+        (component.origin === COMPONENT_ORIGINS.IMPORTED || component.origin === COMPONENT_ORIGINS.NESTED)
+      ) {
+        const realId = BitId.parse(realName);
+        realId.version = 'latest';
+        return realId;
+      }
+      return id;
+    });
+    if (R.isEmpty(ResolvedIDs)) return new RemovedLocalObjects();
     if (!force) {
       await Promise.all(
-        bitIds.map(async (id) => {
+        ResolvedIDs.map(async (id) => {
           const componentStatus = await this.getComponentStatusById(id);
           if (componentStatus.modified) modifiedComponents.push(id);
           else regularComponents.push(id);
@@ -972,26 +995,15 @@ export default class Consumer {
       removedIds = await this.scope.removeMany(regularComponents, force);
       removedIds.modifiedComponents = modifiedComponents;
     } else {
-      removedIds = await this.scope.removeMany(bitIds, force);
+      removedIds = await this.scope.removeMany(ResolvedIDs, force);
     }
     if (!track && removedIds.bitIds) {
-      const bitMap = await this.getBitMap();
-      removedIds.bitIds.forEach((id) => {
-        if (id.version === 'latest') {
-          const component = bitMap.removeComponent(id);
-          if (component.rootDir) fs.removeSync(path.join(this.getPath(), component.rootDir));
-        }
-      });
+      this.removeComponentFromFs(removedIds.bitIds.concat(removedIds.removedDependencies), bitMap);
+      bitMap.removeComponents(removedIds.bitIds.filter(id => id.version === 'latest'));
+      bitMap.removeComponents(removedIds.removedDependencies);
       await bitMap.write();
     }
     return removedIds;
-  }
-  async remove(ids: string[], force: boolean, track: boolean) {
-    const bitIds = ids.map(bitId => BitId.parse(bitId));
-    const localIds = [],
-      remoteIds = [];
-    bitIds.forEach(x => (x.isLocal() ? localIds.push(x) : remoteIds.push(x)));
-    return this.removeRemote(remoteIds, force); // : this.removeLocal(bitIds, force, track);
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {

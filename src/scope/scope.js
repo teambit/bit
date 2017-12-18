@@ -4,6 +4,7 @@ import semver from 'semver';
 import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
+import find from 'lodash.find';
 import { GlobalRemotes } from '../global-config';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
@@ -53,6 +54,7 @@ import performCIOps from './ci-ops';
 import logger from '../logger/logger';
 import componentResolver from '../component-resolver';
 import ComponentsList from '../consumer/component/components-list';
+import { RemovedObjects } from './component-remove';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -700,19 +702,52 @@ export default class Scope {
     return Promise.all(versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects)));
   }
 
+  async removeComponent(id, componentList) {
+    const symlink = componentList.filter(
+      link => link instanceof Symlink && link.id() === id.toStringWithoutScopeAndVersion()
+    );
+    await this.sources.clean(id, true);
+    if (!R.isEmpty(symlink)) await this.objects.remove(symlink[0].hash());
+  }
+
   /**
-   * Remove or deprecate single component
+   * Remove component dependecies
+   */
+  async removeDependentComponents(dependentBits, componentList, consumerComponentToRemove, bitId): Promise<string> {
+    const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (id) => {
+      const arr = dependentBits[id.toStringWithoutVersion()];
+      const name = bitId.version === 'latest' ? bitId.toStringWithoutVersion() : bitId.toString();
+      const depArr = R.reject(num => num === name || BitId.parse(num).scope !== bitId.scope, arr);
+      if (R.isEmpty(depArr)) {
+        if (id.scope !== bitId.scope) await this.removeComponent(id, componentList);
+        return id;
+      }
+    });
+    return (await Promise.all(removedComponents)).filter(x => !R.isNil(x));
+  }
+
+  /**
+   * Remove  single component
    * @removeComponent - boolean - true if you want to remove component
    */
   async removeSingle(bitId: BitId): Promise<string> {
     logger.debug(`removing ${bitId.toString()}`);
+    const component = (await this.sources.get(bitId)).toComponentVersion();
+    const consumerComponentToRemove = await component.toConsumer(this.objects);
     const componentList = await this.objects.listComponents();
-    const symlink = componentList.filter(
-      link => link instanceof Symlink && link.id() === bitId.toStringWithoutScopeAndVersion()
+    const dependentBits = await this.findDependentBits(
+      consumerComponentToRemove.flattenedDependencies,
+      bitId.version !== 'latest'
     );
-    await this.sources.clean(bitId, true);
-    if (!R.isEmpty(symlink)) await this.objects.remove(symlink[0].hash());
-    return bitId;
+    const removedDependencies = await this.removeDependentComponents(
+      dependentBits,
+      componentList,
+      consumerComponentToRemove,
+      bitId
+    );
+    await this.removeComponent(bitId, componentList);
+    if (Object.keys(component.component.versions).length <= 1) bitId.version = 'latest';
+    return { bitId, removedDependencies };
   }
 
   async deprecateSingle(bitId: BitId): Promise<string> {
@@ -726,16 +761,19 @@ export default class Scope {
    * findDependentBits
    * foreach component in array find the componnet that uses that component
    */
-  async findDependentBits(bitIds: Array<BitId>): Promise<Array<object>> {
-    const allComponents = await this.objects.listComponents();
-    const allConsumerComponents = await this.toConsumerComponents(allComponents);
+  async findDependentBits(bitIds: Array<BitId>, returnResultsWithVersion: boolean = false): Promise<Array<object>> {
+    const allComponents = await this.objects.listComponents(false);
+    const allComponentVersions = await Promise.all(allComponents.map(x => x.collectVersions(this.objects)));
+    const allConsumerComponents = R.flatten(allComponentVersions);
     const dependentBits = {};
     bitIds.forEach((bitId) => {
       const dependencies = [];
       allConsumerComponents.forEach((stagedComponent) => {
-        stagedComponent.flattenedDependencies.forEach((flattendDependencie) => {
-          if (flattendDependencie.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
-            dependencies.push(stagedComponent.id.toStringWithoutVersion());
+        stagedComponent.flattenedDependencies.forEach((flattenedDependence) => {
+          if (flattenedDependence.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
+            returnResultsWithVersion
+              ? dependencies.push(stagedComponent.id.toString())
+              : dependencies.push(stagedComponent.id.toStringWithoutVersion());
           }
         });
       });
@@ -766,20 +804,16 @@ export default class Scope {
   async removeMany(bitIds: Array<BitId>, force: boolean): Promise<any> {
     logger.debug(`removing ${bitIds} with force flag: ${force}`);
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
-    const removeComponents = () => foundComponents.map(async bitId => this.removeSingle(bitId));
-
-    if (force) {
-      const removedComponents = await Promise.all(removeComponents());
-      await postRemoveHook({ ids: removedComponents });
-      return { bitIds: removedComponents, missingComponents };
-    }
     const dependentBits = await this.findDependentBits(foundComponents);
-    if (R.isEmpty(dependentBits)) {
-      const removedComponents = await Promise.all(removeComponents());
+
+    if (R.isEmpty(dependentBits) || force) {
+      const removedComponents = await Promise.all(foundComponents.map(async bitId => this.removeSingle(bitId)));
+      const ids = removedComponents.map(x => x.bitId);
+      const removedDependencies = R.flatten(removedComponents.map(x => x.removedDependencies));
       await postRemoveHook({ ids: removedComponents });
-      return { bitIds: removedComponents, missingComponents };
+      return new RemovedObjects(ids, missingComponents, removedDependencies, dependentBits);
     }
-    return { dependentBits, missingComponents };
+    return new RemovedObjects([], missingComponents, [], dependentBits);
   }
   /**
    * deprecate components from scope

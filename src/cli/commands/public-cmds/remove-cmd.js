@@ -3,6 +3,7 @@ import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../../command';
 import { remove } from '../../../api/consumer';
+import { RemovedObjects, RemovedLocalObjects } from '../../../scope/component-remove.js';
 
 export default class Remove extends Command {
   name = 'remove <ids...>';
@@ -19,7 +20,7 @@ export default class Remove extends Command {
     return remove({ ids, force, track });
   }
 
-  report({ localResult, remoteResult }): string {
+  report({ localResult, remoteResult }: { localResult: RemovedLocalObjects, remoteResult: RemovedObjects }): string {
     return this.paintSingle(localResult) + this.paintMany(remoteResult);
   }
   paintModifiedComponents = modifiedComponents =>
