@@ -30,7 +30,7 @@ import Pack from './commands/private-cmds/pack-in-scope-cmd';
 import RefreshScope from './commands/private-cmds/refresh-scope-cmd';
 import CatScope from './commands/private-cmds/cat-scope-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
-import Bind from './commands/public-cmds/bind-cmd';
+import Link from './commands/public-cmds/link-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
 import Add from './commands/public-cmds/add-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
@@ -72,7 +72,7 @@ export default function registerCommands(): CommandRegistrar {
     new RefreshScope(),
     new CatScope(),
     new ScopeConfig(),
-    new Bind(),
+    new Link(),
     new Watch(),
     new Add(),
     new Untrack(),

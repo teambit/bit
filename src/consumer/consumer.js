@@ -111,9 +111,9 @@ export default class Consumer {
     } catch (err) {
       msg = msg
         ? format(msg, err)
-        : `Warning: Bit is not be able to run the bind command. Please install bit-${
+        : `Warning: Bit is not be able to run the link command. Please install bit-${
           err.lang
-        } driver and run the bind command.`;
+        } driver and run the link command.`;
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
@@ -468,7 +468,7 @@ export default class Consumer {
   }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
-    const writeComponentsP = componentsWithDependencies.map((componentWithDeps) => {
+    const writeComponentsP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
       const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitDir;
       // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
@@ -480,8 +480,6 @@ export default class Consumer {
           : COMPONENT_ORIGINS.IMPORTED;
       if (origin === COMPONENT_ORIGINS.IMPORTED) {
         componentWithDeps.component.stripOriginallySharedDir(bitMap);
-        componentWithDeps.component.setDistDir(this.bitJson.distTarget);
-        componentWithDeps.component.updateDistsLocation();
       }
       // don't write dists files for authored components as the author has its own mechanism to generate them
       // also, don't write dists file for imported component, unless the user used '--dist' flag
@@ -493,8 +491,7 @@ export default class Consumer {
         withBitJson,
         withPackageJson,
         origin,
-        consumerPath: this.getPath(),
-        driver: this.driver,
+        consumer: this,
         writeBitDependencies,
         dependencies: componentWithDeps.dependencies,
         componentMap
@@ -534,12 +531,11 @@ export default class Consumer {
             withPackageJson,
             origin: COMPONENT_ORIGINS.NESTED,
             parent: componentWithDeps.component.id,
-            consumerPath: this.getPath(),
-            driver: this.driver,
+            consumer: this,
             dependencies: dep.dependencies,
             componentMap
           })
-          .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap))
+          .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap, this))
           .then(() => dep);
       });
 
@@ -556,15 +552,15 @@ export default class Consumer {
         }
       });
     }
-    await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, this.getPath(), createNpmLinkFiles);
+    await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, this, createNpmLinkFiles);
     await Promise.all(
       componentsWithDependencies.map(componentWithDependencies =>
-        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap)
+        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap, this)
       )
     );
     await bitMap.write();
     const allComponents = [...writtenComponents, ...R.flatten(writtenDependencies)];
-    this.bindComponents(allComponents, bitMap);
+    this.linkComponents(allComponents, bitMap);
     return allComponents;
   }
 
@@ -580,6 +576,14 @@ export default class Consumer {
     componentMap.updateDirLocation(oldPath, newPath);
     fs.moveSync(oldPath, newPath);
     component.writtenPath = newPath;
+  }
+
+  /**
+   * By default, the dists paths are inside the component.
+   * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
+   */
+  shouldDistsBeInsideTheComponent(): boolean {
+    return !this.bitJson.distEntry && !this.bitJson.distTarget;
   }
 
   async candidateComponentsForAutoTagging(modifiedComponents: BitId[]) {
@@ -742,23 +746,27 @@ export default class Consumer {
     return { components, autoUpdatedComponents };
   }
 
-  bindComponents(components: Component[], bitMap: BitMap): Object[] {
+  linkComponents(components: Component[], bitMap: BitMap): Object[] {
+    /**
+     * @param componentId
+     * @param srcPath the path where the symlink is pointing to
+     * @param destPath the path where to write the symlink
+     */
     const createSymlinkOrCopy = (componentId, srcPath, destPath) => {
       fs.removeSync(destPath); // in case a component has been moved
       fs.ensureDirSync(path.dirname(destPath));
       try {
         symlinkOrCopy.sync(srcPath, destPath);
       } catch (err) {
-        throw new Error(`failed to bind a component ${componentId.toString()}.
+        throw new Error(`failed to link a component ${componentId.toString()}.
          Symlink (or copy for Windows) from: ${srcPath}, to: ${destPath} was failed.
          Original error: ${err}`);
       }
     };
     const writeDependencyLink = (parentRootDir: string, bitId: BitId, rootDir: string, bindingPrefix: string) => {
-      const srcPath = path.join(this.getPath(), rootDir);
       const relativeDestPath = path.join('node_modules', bindingPrefix, bitId.box, bitId.name);
-      const destPath = path.join(this.getPath(), parentRootDir, relativeDestPath);
-      createSymlinkOrCopy(bitId, srcPath, destPath);
+      const destPath = path.join(parentRootDir, relativeDestPath);
+      createSymlinkOrCopy(bitId, rootDir, destPath);
 
       return { from: parentRootDir, to: rootDir };
     };
@@ -766,12 +774,26 @@ export default class Consumer {
     const writeDependenciesLinks = (component, componentMap) => {
       return component.dependencies.map((dependency) => {
         const dependencyComponentMap = bitMap.getComponent(dependency.id);
-        return writeDependencyLink(
-          componentMap.rootDir,
-          dependency.id,
-          dependencyComponentMap.rootDir,
-          component.bindingPrefix
+        const writtenLinks = [];
+        writtenLinks.push(
+          writeDependencyLink(
+            path.join(this.getPath(), componentMap.rootDir),
+            dependency.id,
+            path.join(this.getPath(), dependencyComponentMap.rootDir),
+            component.bindingPrefix
+          )
         );
+        if (!this.shouldDistsBeInsideTheComponent()) {
+          writtenLinks.push(
+            writeDependencyLink(
+              component.getDistDirForConsumer(this, componentMap.rootDir),
+              dependency.id,
+              component.getDistDirForConsumer(this, dependencyComponentMap.rootDir),
+              component.bindingPrefix
+            )
+          );
+        }
+        return writtenLinks;
       });
     };
 
@@ -779,6 +801,7 @@ export default class Consumer {
       return component.missingDependencies.missingLinks.map((dependencyIdStr) => {
         const dependencyId = bitMap.getExistingComponentId(dependencyIdStr);
         if (!dependencyId) return null;
+
         const dependencyComponentMap = bitMap.getComponent(dependencyId);
         return writeDependencyLink(
           componentMap.rootDir,
@@ -791,7 +814,7 @@ export default class Consumer {
 
     return components.map((component) => {
       const componentId = component.id;
-      logger.debug(`binding component: ${componentId}`);
+      logger.debug(`linking component: ${componentId}`);
       const componentMap: ComponentMap = bitMap.getComponent(componentId, true);
       if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         const relativeLinkPath = path.join(
@@ -802,7 +825,10 @@ export default class Consumer {
         );
         const linkPath = path.join(this.getPath(), relativeLinkPath);
         // when a user moves the component directory, use component.writtenPath to find the correct target
-        const target = component.writtenPath || path.join(this.getPath(), componentMap.rootDir);
+        let target = component.writtenPath || path.join(this.getPath(), componentMap.rootDir);
+        if (component.dists && component._writeDistsFiles && !this.shouldDistsBeInsideTheComponent()) {
+          target = component.getDistDirForConsumer(this, componentMap.rootDir);
+        }
         createSymlinkOrCopy(componentId, target, linkPath);
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
         const boundDependencies = component.dependencies ? writeDependenciesLinks(component, componentMap) : [];
@@ -810,7 +836,7 @@ export default class Consumer {
           component.missingDependencies && component.missingDependencies.missingLinks
             ? writeMissingLinks(component, componentMap)
             : [];
-        return { id: componentId, bound: bound.concat([...boundDependencies, ...boundMissingDependencies]) };
+        return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
       }
       if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         if (!component.dependencies) return { id: componentId, bound: [] };
@@ -834,14 +860,14 @@ export default class Consumer {
     });
   }
 
-  async bindAll() {
+  async linkAll() {
     const bitMap = await this.getBitMap();
     const componentsMaps = bitMap.getAllComponents();
-    if (R.isEmpty(componentsMaps)) throw new Error('nothing to bind');
+    if (R.isEmpty(componentsMaps)) throw new Error('nothing to link');
     const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));
     const { components } = await this.loadComponents(componentsIds);
     fs.removeSync(path.join(this.getPath(), 'node_modules', this.bitJson.bindingPrefix)); // todo: move to bit-javascriptv
-    return this.bindComponents(components, bitMap);
+    return this.linkComponents(components, bitMap);
   }
 
   composeRelativeBitPath(bitId: BitId): string {

@@ -188,6 +188,19 @@ describe('bit tag command', function () {
     });
   });
   describe('tag one component', () => {
+    before(() => {
+      helper.importTester('bit.envs/testers/mocha');
+      const failingTest = `const expect = require('chai').expect; 
+      const foo = require('./foo.js');
+      describe('failing test', () => {
+        it('should fail', () => {
+          expect(true).to.equal(false);
+        })
+      });`;
+      helper.createComponentBarFoo();
+      helper.createFile('bar', 'foo.spec.js', failingTest);
+      helper.addComponentWithOptions('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
+    });
     it('should throw error if the bit id does not exists', () => {
       let output;
       try {
@@ -217,7 +230,15 @@ describe('bit tag command', function () {
 
     it.skip('should throw error if the build failed', () => {});
 
-    it.skip('should throw error if the tests failed', () => {});
+    it('should throw error if the tests failed', () => {
+      let output;
+      try {
+        helper.tagWithoutMessage('bar/foo');
+      } catch (err) {
+        output = err.message;
+      }
+      expect(output).to.have.string("component's specs does not pass, fix them and tag");
+    });
 
     describe.skip('tag imported component', () => {
       it('should index the component', () => {});

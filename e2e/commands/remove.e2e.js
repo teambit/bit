@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import path from 'path';
 import Helper from '../e2e-helper';
 
 describe.only('bit remove command', function () {
@@ -105,9 +106,10 @@ describe.only('bit remove command', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       // export a new simple component
-      helper.runCmd('bit create simple');
-      helper.commitComponent('simple');
-      helper.exportComponent('simple');
+      helper.createComponent('global', 'simple.js');
+      helper.addComponent(path.normalize('global/simple.js'));
+      helper.commitComponent('global/simple');
+      helper.exportComponent('global/simple');
 
       helper.reInitLocalScope();
       helper.addRemoteScope();

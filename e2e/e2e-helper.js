@@ -184,8 +184,10 @@ export default class Helper {
     return withDist ? this.runCmd('bit import --dist') : this.runCmd('bit import');
   }
 
-  getConsumerFiles(ext: string = '*.{js,ts}') {
-    return glob.sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: true }).map(x => path.normalize(x));
+  getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true) {
+    return glob
+      .sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: includeDot })
+      .map(x => path.normalize(x));
   }
 
   commitComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
@@ -286,13 +288,17 @@ export default class Helper {
     }
     // Temporary - for checking new serializaion against the stage env
     // this.setHubDomain('hub-stg.bitsrc.io');
-    this.runCmd(`bit import ${id} --compiler`);
+    return this.runCmd(`bit import ${id} --compiler`);
   }
 
   importTester(id) {
     // Temporary - for checking new serializaion against the stage env
     // this.setHubDomain('hub-stg.bitsrc.io');
     this.runCmd(`bit import ${id} --tester`);
+  }
+
+  build(id?: string = '') {
+    return this.runCmd(`bit build ${id}`);
   }
 
   createComponentBarFoo(impl?: string) {
@@ -324,7 +330,7 @@ export default class Helper {
   modifyFieldInBitJson(key: string, value: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     const bitJson = this.readBitJson();
     bitJson[key] = value;
-    fs.writeFileSync(bitJsonPath, JSON.stringify(bitJson));
+    fs.writeJsonSync(bitJsonPath, bitJson);
   }
   addNpmPackage(name: string = 'lodash.get', version: string = '4.4.2') {
     const packageJsonFixture = JSON.stringify({ name, version });

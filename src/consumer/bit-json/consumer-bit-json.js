@@ -4,12 +4,7 @@ import R from 'ramda';
 import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
 import { BitJsonNotFound, BitJsonAlreadyExists, InvalidBitJson } from './exceptions';
-import {
-  BIT_JSON,
-  DEFAULT_DIST_DIRNAME,
-  DEFAULT_DIR_STRUCTURE,
-  DEFAULT_DIR_DEPENDENCIES_STRUCTURE
-} from '../../constants';
+import { BIT_JSON, DEFAULT_DIR_STRUCTURE, DEFAULT_DIR_DEPENDENCIES_STRUCTURE } from '../../constants';
 
 function composePath(bitPath: string) {
   return path.join(bitPath, BIT_JSON);
@@ -20,12 +15,16 @@ function hasExisting(bitPath: string): boolean {
 }
 
 export default class ConsumerBitJson extends AbstractBitJson {
-  distTarget: string; // path where to store build artifacts
+  distTarget: ?string; // path where to store build artifacts
+  // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
+  // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
+  distEntry: ?string;
   structure: Object; // directory structure templates where to store imported components and dependencies
 
-  constructor({ impl, spec, compiler, tester, dependencies, lang, distTarget, structure, bindingPrefix }) {
+  constructor({ impl, spec, compiler, tester, dependencies, lang, distTarget, distEntry, structure, bindingPrefix }) {
     super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix });
-    this.distTarget = distTarget || DEFAULT_DIST_DIRNAME;
+    this.distTarget = distTarget;
+    this.distEntry = distEntry;
     this.structure = structure || {
       components: DEFAULT_DIR_STRUCTURE,
       dependencies: DEFAULT_DIR_DEPENDENCIES_STRUCTURE
@@ -34,11 +33,14 @@ export default class ConsumerBitJson extends AbstractBitJson {
 
   toPlainObject() {
     const superObject = super.toPlainObject();
+    if (this.distEntry || this.distTarget) {
+      const dist = {};
+      if (this.distEntry) dist.entry = this.distEntry;
+      if (this.distTarget) dist.target = this.distTarget;
+      return R.merge(superObject, { structure: this.structure, dist });
+    }
     return R.merge(superObject, {
-      structure: this.structure,
-      dist: {
-        target: this.distTarget
-      }
+      structure: this.structure
     });
   }
 
@@ -86,7 +88,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
       bindingPrefix,
       dependencies,
       structure: finalStructure || {},
-      distTarget: R.propOr(undefined, 'target', dist)
+      distTarget: R.propOr(undefined, 'target', dist),
+      distEntry: R.propOr(undefined, 'entry', dist)
     });
   }
 
