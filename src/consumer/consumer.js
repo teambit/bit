@@ -741,7 +741,7 @@ export default class Consumer {
     return path.join('node_modules', bindingPrefix, id.box, id.name);
   }
 
-  static getComponentIdFromNodeModulesPath(bindingPrefix, requirePath) {
+  static getComponentIdFromNodeModulesPath(requirePath, bindingPrefix) {
     requirePath = pathNormalizeToLinux(requirePath);
     const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : `${bindingPrefix}/`;
     const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
