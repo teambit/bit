@@ -326,9 +326,7 @@ describe('bit add command', function () {
         errorMessage = err.message;
       }
 
-      expect(errorMessage).to.have.string(
-        'invalid id part in "Bar/Foo", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]'
-      );
+      expect(errorMessage).to.have.string('invalid id part in "Bar/Foo"');
     });
     it('Should add component with global namespace if used parcial ID', () => {
       helper.createComponent('bar', 'foo.js');

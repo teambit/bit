@@ -1,6 +1,6 @@
 import isString from './string/is-string';
 
-const validationRegExp = /^[$\-_!.a-z0-9]+$/;
+const validationRegExp = /^[$\-_!a-z0-9]+$/;
 
 /** @flow */
 export default function isValidIdChunk(val: any): boolean {

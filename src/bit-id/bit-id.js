@@ -106,7 +106,7 @@ export default class BitId {
 
     if (idSplit.length === 2) {
       const [box, name] = idSplit;
-      if (!isValidIdChunk(name) || !isValidScopeName(box)) {
+      if (!isValidIdChunk(name) || !isValidIdChunk(box)) {
         // $FlowFixMe
         throw new InvalidIdChunk(`${box}/${name}`);
       }
@@ -135,9 +135,14 @@ export default class BitId {
   }
 
   static getValidBitId(box: string, name: string): BitId {
-    if (!isValidIdChunk(name)) name = decamelize(name, '-');
-    if (!isValidIdChunk(box)) box = decamelize(box, '-');
+    const getValidIdChunk = (chunk) => {
+      if (!isValidIdChunk(chunk)) {
+        chunk = chunk.replace(/\./g, '');
+        chunk = decamelize(chunk, '-');
+      }
+      return chunk;
+    };
 
-    return new BitId({ name, box });
+    return new BitId({ name: getValidIdChunk(name), box: getValidIdChunk(box) });
   }
 }
