@@ -17,7 +17,7 @@ export default function remove({ path, ids, force }, headers: ?Object): Promise<
         {
           removedComponentsIds: res.bitIds,
           missingComponentsIds: res.missingComponents,
-          dependentBitsIds: BitIds.toStrings(res.dependentBits),
+          dependentBitsIds: res.dependentBits,
           force,
           scopePath: path,
           componentsIds: bitIds.serialize(),
