@@ -1,19 +1,25 @@
 /** @flow */
-import * as fs from 'fs-extra';
-import * as path from 'path';
 import AbstractVinyl from './abstract-vinyl';
-import { DEFAULT_DIST_DIRNAME } from '../../../constants';
 
-const DEFAULT_SOURCEMAP_VERSION = 3; // TODO - move to constant !
-
+/**
+ * Dist paths are by default saved into the component root-dir/dist. However, when dist is set in bit.json, the paths
+ * are in the consumer-root/dist.target dir. If dist.entry is set the paths should be stripped from dist.entry.
+ * If there is originallySharedDir, it should be stripped as well.
+ *
+ * There modifications of the paths are taken care in different stages depends on the scenario.
+ * 1) using 'bit build'.
+ * If the component wasn't change since the last build, it'll load the dists from the model, strip the
+ * sharedOriginallyDir and then write them. (See consumer-component.build()).
+ * If the component was changed, it will re-build it. The dists path are cloned from the files, since the files are
+ * sharedOriginallyDir stripped, so will be the dists files. The only thing needed is to strip the dist.entry, which is
+ * done after getting the files from the compiler. (See consumer-component.buildIfNeeded()).
+ * 2) using 'bit import'.
+ * When converting the component from model to consumer-component, the sharedOriginallyDir is stripped. (see
+ * consumer-component.stripOriginallySharedDir() )/
+ * Then, Before writing the dists to the file-system, the dist-entry is taken care of. (see
+ * consumer-component.updateDistsPerConsumerBitJson() ).
+ */
 export default class Dist extends AbstractVinyl {
-  // TODO: remove this distFilePath?
-  distFilePath: string;
-
-  static getFilePath(bitPath: string, fileName: string) {
-    return path.join(bitPath, DEFAULT_DIST_DIRNAME, fileName);
-  }
-
   static loadFromParsedString(parsedString: Object) {
     if (!parsedString) return;
     const opts = super.loadFromParsedString(parsedString);
