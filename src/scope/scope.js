@@ -702,11 +702,11 @@ export default class Scope {
     return Promise.all(versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects)));
   }
 
-  async removeComponent(id, componentList) {
+  async removeComponent(id, componentList, removeRefs: boolean = false) {
     const symlink = componentList.filter(
       link => link instanceof Symlink && link.id() === id.toStringWithoutScopeAndVersion()
     );
-    await this.sources.clean(id, true);
+    await this.sources.clean(id, removeRefs);
     if (!R.isEmpty(symlink)) await this.objects.remove(symlink[0].hash());
   }
 
@@ -719,7 +719,7 @@ export default class Scope {
       const name = bitId.version === 'latest' ? bitId.toStringWithoutVersion() : bitId.toString();
       const depArr = R.reject(num => num === name || BitId.parse(num).scope !== bitId.scope, arr);
       if (R.isEmpty(depArr)) {
-        if (id.scope !== bitId.scope) await this.removeComponent(id, componentList);
+        if (id.scope !== bitId.scope) await this.removeComponent(id, componentList, true);
         return id;
       }
     });

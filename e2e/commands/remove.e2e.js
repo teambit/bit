@@ -168,6 +168,15 @@ describe('bit remove command', function () {
         'is-string.js',
         "module.exports = function isType() { return 'got is-type'; };console.log('sdfsdfsdf')"
       );
+    });
+    it('should not remove component when component is modified', () => {
+      const output = helper.removeComponent('utils/is-string@0.0.1');
+      expect(output).to.contain.string('modified components: utils/is-string@0.0.1');
+      helper.commitAllComponents();
+    });
+    it('should print error msg when trying to remove missing component', () => {
+      const output = helper.removeComponent('utils/is-string@0.0.10');
+      expect(output).to.contain.string('missing components: utils/is-string@0.0.10');
       helper.commitAllComponents();
     });
     it('should remove component version only', () => {
@@ -182,7 +191,7 @@ describe('bit remove command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('utils/is-string');
     });
-    it('should remove entire component if specified version is the only one', () => {
+    it.skip('should remove entire component if specified version is the only one', () => {
       const output = helper.removeComponent('utils/is-string@0.0.1', '-f');
       expect(output).to.contain.string('successfully removed components: utils/is-string');
       const bitMap = helper.readBitMap();
@@ -218,7 +227,7 @@ describe('bit remove command', function () {
     });
     it('should remove entire component if specified version is the only one', () => {
       const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.1`);
-      expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/is-string@latest`);
+      expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/is-string`);
       const listOutput = helper.listRemoteScope(true);
       expect(listOutput).to.not.contain.string(`${helper.remoteScope}/utils/is-string`);
       expect(listOutput).to.contain.string(`${helper.remoteScope}/utils/is-type`);
