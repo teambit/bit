@@ -25,7 +25,7 @@ import ComponentMap from './bit-map/component-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { getLatestVersionNumber, pathRelative, filterAsync } from '../utils';
+import { getLatestVersionNumber, pathRelative, filterAsync, pathNormalizeToLinux } from '../utils';
 import * as linkGenerator from './component/link-generator';
 import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
@@ -242,15 +242,7 @@ export default class Consumer {
         // no need to resolve dependencies
         return component;
       }
-      return loadDependenciesForComponent(
-        component,
-        componentMap,
-        bitDir,
-        this.driver,
-        bitMap,
-        this.getPath(),
-        idWithConcreteVersionString
-      );
+      return loadDependenciesForComponent(component, componentMap, bitDir, this, bitMap, idWithConcreteVersionString);
     });
 
     const allComponents = [];
@@ -745,6 +737,19 @@ export default class Consumer {
     return { components, autoUpdatedComponents };
   }
 
+  static getNodeModulesPathOfComponent(bindingPrefix, id) {
+    return path.join('node_modules', bindingPrefix, id.box, id.name);
+  }
+
+  static getComponentIdFromNodeModulesPath(bindingPrefix, requirePath) {
+    requirePath = pathNormalizeToLinux(requirePath);
+    const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : `${bindingPrefix}/`;
+    const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
+    const pathSplit = withoutPrefix.split('/');
+    if (pathSplit.length < 2) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
+    return new BitId({ box: pathSplit[0], name: pathSplit[1] }).toString();
+  }
+
   linkComponents(components: Component[], bitMap: BitMap): Object[] {
     /**
      * @param componentId
@@ -763,7 +768,7 @@ export default class Consumer {
       }
     };
     const writeDependencyLink = (parentRootDir: string, bitId: BitId, rootDir: string, bindingPrefix: string) => {
-      const relativeDestPath = path.join('node_modules', bindingPrefix, bitId.box, bitId.name);
+      const relativeDestPath = Consumer.getNodeModulesPathOfComponent(bindingPrefix, bitId);
       const destPath = path.join(parentRootDir, relativeDestPath);
       createSymlinkOrCopy(bitId, rootDir, destPath);
 
@@ -816,12 +821,7 @@ export default class Consumer {
       logger.debug(`linking component: ${componentId}`);
       const componentMap: ComponentMap = bitMap.getComponent(componentId, true);
       if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-        const relativeLinkPath = path.join(
-          'node_modules',
-          this.bitJson.bindingPrefix,
-          componentId.box,
-          componentId.name
-        );
+        const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(this.bitJson.bindingPrefix, componentId);
         const linkPath = path.join(this.getPath(), relativeLinkPath);
         // when a user moves the component directory, use component.writtenPath to find the correct target
         let target = component.writtenPath || path.join(this.getPath(), componentMap.rootDir);
@@ -849,7 +849,7 @@ export default class Consumer {
         return componentMap.rootDir ? path.join(componentMap.rootDir, file.relativePath) : file.relativePath;
       });
       const bound = filesToBind.map((file) => {
-        const dest = path.join('node_modules', component.bindingPrefix, componentId.box, componentId.name, file);
+        const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
         const destRelative = pathRelative(path.dirname(dest), file);
         const fileContent = `module.exports = require('${destRelative}');`;
         fs.outputFileSync(dest, fileContent);
@@ -865,7 +865,7 @@ export default class Consumer {
     if (R.isEmpty(componentsMaps)) throw new Error('nothing to link');
     const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));
     const { components } = await this.loadComponents(componentsIds);
-    fs.removeSync(path.join(this.getPath(), 'node_modules', this.bitJson.bindingPrefix)); // todo: move to bit-javascriptv
+    fs.removeSync(path.join(this.getPath(), 'node_modules', this.bitJson.bindingPrefix)); // todo: move to bit-javascript
     return this.linkComponents(components, bitMap);
   }
 
