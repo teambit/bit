@@ -790,7 +790,7 @@ export default class Scope {
     const foundComponents = [];
     const resultP = bitIds.map(async (id) => {
       const component = await this.sources.get(id);
-      if (!component) missingComponents.push(id.toStringWithoutVersion());
+      if (!component) missingComponents.push(id);
       else foundComponents.push(id);
     });
     await Promise.all(resultP);
@@ -811,7 +811,7 @@ export default class Scope {
       const ids = removedComponents.map(x => x.bitId);
       const removedDependencies = R.flatten(removedComponents.map(x => x.removedDependencies));
       await postRemoveHook({ ids: removedComponents });
-      return new RemovedObjects(ids, missingComponents, removedDependencies, dependentBits);
+      return new RemovedObjects(ids, missingComponents, removedDependencies, []);
     }
     return new RemovedObjects([], missingComponents, [], dependentBits);
   }

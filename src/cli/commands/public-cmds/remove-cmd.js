@@ -1,6 +1,5 @@
 /** @flow */
-import R from 'ramda';
-import chalk from 'chalk';
+
 import Command from '../../command';
 import { remove } from '../../../api/consumer';
 import { RemovedObjects, RemovedLocalObjects } from '../../../scope/component-remove.js';
@@ -21,40 +20,9 @@ export default class Remove extends Command {
   }
 
   report({ localResult, remoteResult }: { localResult: RemovedLocalObjects, remoteResult: RemovedObjects }): string {
-    return this.paintSingle(localResult) + this.paintMany(remoteResult);
+    return localResult.paintSingle() + this.paintArray(remoteResult);
   }
-  paintModifiedComponents = modifiedComponents =>
-    (!R.isEmpty(modifiedComponents) && !R.isNil(modifiedComponents)
-      ? chalk.red.underline('modified components:') + chalk(` ${modifiedComponents}\n`)
-      : '');
-  paintMissingComponents = missingComponents =>
-    (!R.isEmpty(missingComponents) && !R.isNil(missingComponents)
-      ? chalk.red.underline('missing components:') + chalk(` ${missingComponents}\n`)
-      : '');
-  paintRemoved = bitIds =>
-    (!R.isEmpty(bitIds) && !R.isNil(bitIds)
-      ? chalk.green.underline('successfully removed components:') + chalk(` ${bitIds}\n`)
-      : '');
-  paintSingle = bitObj =>
-    this.paintUnRemovedComponents(bitObj.dependentBits) +
-    this.paintRemoved(bitObj.bitIds) +
-    this.paintMissingComponents(bitObj.missingComponents) +
-    this.paintModifiedComponents(bitObj.modifiedComponents);
-
-  paintUnRemovedComponents(unRemovedComponents) {
-    if (!R.isEmpty(unRemovedComponents) && !R.isNil(unRemovedComponents)) {
-      return Object.keys(unRemovedComponents)
-        .map((key) => {
-          const header = chalk.underline.red(
-            `error: unable to delete ${key}, because the following components depend on it:`
-          );
-          const body = unRemovedComponents[key].join('\n');
-          return `${header}\n${body}`;
-        })
-        .join('\n\n');
-    }
-    return '';
+  paintArray(removedObjectsArray) {
+    return removedObjectsArray.map(item => item.paintSingle());
   }
-
-  paintMany = bitObjs => bitObjs.map(obj => this.paintSingle(obj));
 }

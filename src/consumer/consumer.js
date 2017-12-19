@@ -991,7 +991,7 @@ export default class Consumer {
   }
   async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean) {
     // local remove in case user wants to delete commited components
-    let removedIds;
+    let removeResult;
     const bitMap = await this.getBitMap();
     const modifiedComponents = [];
     const regularComponents = [];
@@ -1018,18 +1018,24 @@ export default class Consumer {
           else regularComponents.push(id);
         })
       );
-      removedIds = await this.scope.removeMany(regularComponents, force);
-      removedIds.modifiedComponents = modifiedComponents;
+      removeResult = await this.scope.removeMany(regularComponents, force);
+      removeResult.modifiedComponents = modifiedComponents;
     } else {
-      removedIds = await this.scope.removeMany(ResolvedIDs, force);
+      removeResult = await this.scope.removeMany(ResolvedIDs, force);
     }
-    if (!track && removedIds.bitIds) {
-      this.removeComponentFromFs(removedIds.bitIds.concat(removedIds.removedDependencies), bitMap);
-      bitMap.removeComponents(removedIds.bitIds.filter(id => id.version === 'latest'));
-      bitMap.removeComponents(removedIds.removedDependencies);
+    if (!track && removeResult.bitIds) {
+      this.removeComponentFromFs(removeResult.bitIds.concat(removeResult.removedDependencies), bitMap);
+      bitMap.removeComponents(removeResult.bitIds.filter(id => id.version === 'latest'));
+      bitMap.removeComponents(removeResult.removedDependencies);
       await bitMap.write();
     }
-    return removedIds;
+    return new RemovedLocalObjects(
+      removeResult.bitIds,
+      removeResult.missingComponents,
+      removeResult.modifiedComponents,
+      removeResult.dependentBits,
+      removeResult.removedDependencies
+    );
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
