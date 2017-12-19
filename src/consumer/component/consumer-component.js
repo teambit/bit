@@ -796,7 +796,7 @@ export default class Component {
     const needToRebuild = await isNeededToReBuild();
     if (!needToRebuild && this.dists) {
       logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
-      if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         this.stripOriginallySharedDir(bitMap);
       }
       return this.dists;
