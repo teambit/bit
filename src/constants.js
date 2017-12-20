@@ -68,7 +68,9 @@ export const DEFAULT_BIT_RELEASE_TYPE = 'patch'; // release type of semver (patc
 
 export const DEFAULT_LANGUAGE = 'javascript';
 
-export const DEFAULT_BINDINGS_PREFIX = 'bit';
+export const DEFAULT_BINDINGS_PREFIX = '@bit';
+
+export const NODE_PATH_SEPARATOR = '.';
 
 export const DEFAULT_DIR_STRUCTURE = `${BITS_DIRNAME}/{namespace}/{name}`;
 

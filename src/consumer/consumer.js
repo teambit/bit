@@ -14,7 +14,7 @@ import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-import { BITS_DIRNAME, BIT_HIDDEN_DIR, COMPONENT_ORIGINS, BIT_VERSION } from '../constants';
+import { BITS_DIRNAME, BIT_HIDDEN_DIR, COMPONENT_ORIGINS, BIT_VERSION, NODE_PATH_SEPARATOR } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
@@ -738,16 +738,24 @@ export default class Consumer {
   }
 
   static getNodeModulesPathOfComponent(bindingPrefix, id) {
-    return path.join('node_modules', bindingPrefix, id.box, id.name);
+    if (!id.scope) throw new Error(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`);
+    return path.join('node_modules', bindingPrefix, [id.scope, id.box, id.name].join(NODE_PATH_SEPARATOR));
   }
 
   static getComponentIdFromNodeModulesPath(requirePath, bindingPrefix) {
     requirePath = pathNormalizeToLinux(requirePath);
     const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : `${bindingPrefix}/`;
     const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
-    const pathSplit = withoutPrefix.split('/');
-    if (pathSplit.length < 2) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
-    return new BitId({ box: pathSplit[0], name: pathSplit[1] }).toString();
+    const componentName = withoutPrefix.includes('/')
+      ? withoutPrefix.substr(0, withoutPrefix.indexOf('/'))
+      : withoutPrefix;
+    const pathSplit = componentName.split(NODE_PATH_SEPARATOR);
+    if (pathSplit.length < 3) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
+
+    const name = pathSplit[pathSplit.length - 1];
+    const box = pathSplit[pathSplit.length - 2];
+    const scope = pathSplit.length === 3 ? pathSplit[0] : `${pathSplit[0]}.${pathSplit[1]}`;
+    return new BitId({ scope, box, name }).toString();
   }
 
   linkComponents(components: Component[], bitMap: BitMap): Object[] {
@@ -838,17 +846,15 @@ export default class Consumer {
         return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
       }
       if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-        if (!component.dependencies) return { id: componentId, bound: [] };
+        if (!component.dependencies) return { id: componentId, bound: null };
         const bound = writeDependenciesLinks(component, componentMap);
         return { id: componentId, bound };
       }
 
       // origin is AUTHORED
-      // const filesToBind = componentMap.getFilesRelativeToConsumer(); // todo: check why it throws an error randomly "TypeError: componentMap.getFilesRelativeToConsumer is not a function"
-      const filesToBind = componentMap.files.map((file) => {
-        return componentMap.rootDir ? path.join(componentMap.rootDir, file.relativePath) : file.relativePath;
-      });
+      const filesToBind = componentMap.getFilesRelativeToConsumer();
       const bound = filesToBind.map((file) => {
+        if (!componentId.scope) return { id: componentId, bound: null }; // scope is a must to generate the link
         const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
         const destRelative = pathRelative(path.dirname(dest), file);
         const fileContent = `module.exports = require('${destRelative}');`;

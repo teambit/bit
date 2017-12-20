@@ -363,7 +363,13 @@ export default class Helper {
   copyFixtureComponents(dir: string = '', cwd = this.localScopePath) {
     const sourceDir = path.join(__dirname, 'fixtures', 'components');
     fs.copySync(sourceDir, cwd);
+    // update with the correct remote-scope
+    const heroPath = path.join(cwd, 'hero', 'hero.js');
+    const heroContent = fs.readFileSync(heroPath).toString();
+    const newContent = heroContent.replace(/{remoteScope}/g, this.remoteScope);
+    fs.writeFileSync(heroPath, newContent);
   }
+
   addFixtureComponents() {}
   addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object, cwd = this.localScopePath) {
     const value = Object.keys(options)
@@ -403,6 +409,10 @@ export default class Helper {
     fs.copySync(this.localScopePath, clonedScopePath);
     this.clonedScopes.push(clonedScopePath);
     return clonedScopePath;
+  }
+
+  getRequireBitPath(box, name) {
+    return `@bit/${this.remoteScope}.${box}.${name}`;
   }
 
   getClonedLocalScope(clonedScopePath) {

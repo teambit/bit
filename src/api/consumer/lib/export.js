@@ -44,6 +44,33 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
   return idsToExport;
 }
 
+async function addToBitJson(ids: BitId[], consumer: Consumer) {
+  const bitJsonDependencies = consumer.bitJson.getDependencies();
+  const componentsIdsP = ids.map(async (componentId: BitId) => {
+    // add to bit.json only if the component is already there. So then the version will be updated. It's applicable
+    // mainly when a component was imported first. For authored components, no need to save them in bit.json, they are
+    // already in bit.map
+    if (
+      bitJsonDependencies.find(
+        bitJsonDependency => bitJsonDependency.toStringWithoutVersion() === componentId.toStringWithoutVersion()
+      )
+    ) {
+      await consumer.bitJson.addDependency(componentId).write({ bitDir: consumer.getPath() });
+    }
+    return componentId;
+  });
+
+  return Promise.all(componentsIdsP);
+}
+
+async function linkComponents(ids: BitId[], consumer: Consumer, bitMap: BitMap): void {
+  // we don't have much of a choice here, we have to load all the exported components in order to link them
+  // some of the components might but authored, some might be imported.
+  // when a component has dists, we need the consumer-component object to retrieve the dists info.
+  const { components } = await consumer.loadComponents(ids);
+  consumer.linkComponents(components, bitMap);
+}
+
 export default (async function exportAction(ids?: string[], remote: string, save: ?boolean) {
   const consumer: Consumer = await loadConsumer();
   const idsToExport = await getComponentsToExport(ids, consumer, remote);
@@ -51,26 +78,10 @@ export default (async function exportAction(ids?: string[], remote: string, save
   // in case we don't have anything to export
   if (R.isEmpty(idsToExport)) return [];
   const componentsIds = await consumer.scope.exportMany(idsToExport, remote);
-  const bitJsonDependencies = consumer.bitJson.getDependencies();
-  const componentsIdsP = componentsIds.map(async (componentId: BitId) => {
-    if (save) {
-      // add to bit.json only if the component is already there. So then the version will be updated. It's applicable
-      // mainly when a component was imported first. For authored components, no need to save them in bit.json, they are
-      // already in bit.map
-      if (
-        bitJsonDependencies.find(
-          bitJsonDependency => bitJsonDependency.toStringWithoutVersion() === componentId.toStringWithoutVersion()
-        )
-      ) {
-        await consumer.bitJson.addDependency(componentId).write({ bitDir: consumer.getPath() });
-      }
-    }
-    return componentId;
-  });
-
-  await Promise.all(componentsIdsP);
-  const bitMap = await BitMap.load(consumer.getPath());
+  if (save) await addToBitJson(componentsIds, consumer);
+  const bitMap = await consumer.getBitMap();
   componentsIds.map(componentsId => bitMap.updateComponentId(componentsId));
   await bitMap.write();
+  await linkComponents(componentsIds, consumer, bitMap);
   return componentsIds;
 });
