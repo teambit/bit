@@ -47,7 +47,28 @@ describe('bit remove command', function () {
       expect(status.includes('bar/foo')).to.be.false;
     });
   });
+  describe('with local components with dependecies between them  ', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const aFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'a.js', aFixture);
+      helper.addComponent('utils/a.js');
 
+      const bFixture = "const a = require('./a');";
+      helper.createComponent('utils', 'b.js', bFixture);
+      helper.addComponent('utils/b.js');
+      helper.commitAllComponents();
+      output = helper.removeComponent('utils/b', '-d');
+    });
+    it('should remove component', () => {
+      expect(output).to.contain.string('removed components: utils/b');
+    });
+    it('should not show in bitmap', () => {
+      assert.notPathExists(path.join(helper.localScopePath, 'utils', 'b.js'), 'file should not exist');
+      assert.pathExists(path.join(helper.localScopePath, 'utils', 'a.js'), 'file should  exist');
+    });
+  });
   describe('with commited components and -t=true', () => {
     before(() => {
       helper.reInitLocalScope();

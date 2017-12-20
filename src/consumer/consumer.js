@@ -983,10 +983,17 @@ export default class Consumer {
     return Promise.all(removeP);
   }
 
-  removeComponentFromFs(bitIds: BitIds, bitMap: BitMap) {
+  removeComponentFromFs(bitIds: BitIds, bitMap: BitMap, deletFiles: boolean) {
     bitIds.forEach((id) => {
-      const component = bitMap.getComponent(id);
-      if (component && component.rootDir) fs.removeSync(path.join(this.getPath(), component.rootDir));
+      const component = id.isLocal() ? bitMap.getComponent(id.toStringWithoutVersion()) : bitMap.getComponent(id);
+      if (
+        (component.origin && component.origin == COMPONENT_ORIGINS.IMPORTED) ||
+        component.origin == COMPONENT_ORIGINS.NESTED
+      ) {
+        fs.removeSync(path.join(this.getPath(), component.rootDir));
+      } else if (component.origin == COMPONENT_ORIGINS.AUTHORED && deletFiles) {
+        component.files.map(file => fs.removeSync(file.relativePath));
+      }
     });
   }
   resolveLocalComponentIds(bitIds: BitIds, bitMap: BitMap) {
@@ -1005,7 +1012,7 @@ export default class Consumer {
       return id;
     });
   }
-  async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean) {
+  async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean, deletFiles: boolean) {
     // local remove in case user wants to delete commited components
     const bitMap = await this.getBitMap();
     const modifiedComponents = [];
@@ -1026,8 +1033,11 @@ export default class Consumer {
       force,
       true
     );
-    if (!track && !R.isEmpty(removedComponentIds)) {
-      this.removeComponentFromFs(removedComponentIds.concat(removedDependencies), bitMap);
+    if (!R.isEmpty(removedComponentIds)) {
+      this.removeComponentFromFs(removedComponentIds, bitMap, deletFiles);
+      this.removeComponentFromFs(removedDependencies, bitMap, false);
+    }
+    if ((!track || deletFiles) && !R.isEmpty(removedComponentIds)) {
       bitMap.removeComponents(removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION));
       bitMap.removeComponents(removedDependencies);
       await bitMap.write();
