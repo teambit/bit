@@ -227,9 +227,7 @@ export default class BitMap {
         );
       }
     } else {
-      // $FlowFixMe
-      this.components[componentIdStr] = { files, origin };
-
+      this.components[componentIdStr] = new ComponentMap({ files, origin });
       this.components[componentIdStr].mainFile = this._getMainFile(
         pathNormalizeToLinux(mainFile),
         this.components[componentIdStr]
