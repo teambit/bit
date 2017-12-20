@@ -119,7 +119,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     err =>
       `invalid id part in "${chalk.bold(
         err.id
-      )}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "."]`
+      )}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
   ],
   [InvalidBitJson, err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.`],
 
