@@ -717,9 +717,9 @@ export default class Scope {
     const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (id) => {
       const arr = dependentBits[id.toStringWithoutVersion()];
       const name = bitId.version === 'latest' ? bitId.toStringWithoutVersion() : bitId.toString();
-      const depArr = R.reject(num => num === name || BitId.parse(num).scope !== bitId.scope, arr);
-      if (R.isEmpty(depArr)) {
-        if (id.scope !== bitId.scope) await this.removeComponent(id, componentList, true);
+      const depArr = R.reject(num => num === name || BitId.parse(num).scope !== id.scope, arr);
+      if (R.isEmpty(depArr) && id.scope !== bitId.scope) {
+        await this.removeComponent(id, componentList, true);
         return id;
       }
     });
@@ -745,7 +745,7 @@ export default class Scope {
       consumerComponentToRemove,
       bitId
     );
-    await this.removeComponent(bitId, componentList);
+    await this.removeComponent(bitId, componentList, false);
     if (Object.keys(component.component.versions).length <= 1) bitId.version = 'latest';
     return { bitId, removedDependencies };
   }

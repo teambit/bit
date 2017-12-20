@@ -1019,7 +1019,6 @@ export default class Consumer {
         })
       );
       removeResult = await this.scope.removeMany(regularComponents, force);
-      removeResult.modifiedComponents = modifiedComponents;
     } else {
       removeResult = await this.scope.removeMany(ResolvedIDs, force);
     }
@@ -1032,7 +1031,7 @@ export default class Consumer {
     return new RemovedLocalObjects(
       removeResult.bitIds,
       removeResult.missingComponents,
-      removeResult.modifiedComponents,
+      modifiedComponents,
       removeResult.dependentBits,
       removeResult.removedDependencies
     );

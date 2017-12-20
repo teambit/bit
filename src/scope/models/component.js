@@ -209,10 +209,10 @@ export default class Component extends BitObject {
     const uniq = uniqBy(objectRefs, 'hash');
     return repo.removeMany(uniq.concat([this.hash()]));
   }
-  async removeVersion(repo: Repository, version: string, fileHashesToRemove: String[]): Promise {
+  async removeVersion(repo: Repository, version: string): Promise<Component> {
     const objectRefs = this.versions[version];
     delete this.versions[version];
-    await repo.removeMany([objectRefs.hash].concat(fileHashesToRemove));
+    await repo.removeMany([objectRefs.hash]);
     return this;
   }
 

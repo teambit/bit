@@ -2,12 +2,12 @@ import { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
 
-describe('bit remove command', function () {
+describe.only('bit remove command', function () {
   this.timeout(0);
   const helper = new Helper();
-  after(() => {
+  /*  after(() => {
     helper.destroyEnv();
-  });
+  }); */
   describe('with local scope and corrupted bit.json', () => {
     before(() => {
       helper.initNewLocalScope();
@@ -122,35 +122,6 @@ describe('bit remove command', function () {
       expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple`);
     });
   });
-  describe.skip('with imported components with dependecies', () => {
-    let bitMap;
-    let output;
-    before(() => {
-      helper.setNewLocalAndRemoteScopes();
-
-      // export a new simple component
-      helper.runCmd('bit create simple');
-      helper.commitComponent('simple');
-      helper.exportComponent('simple');
-
-      const withDepsFixture = 'import a from "./components/global/simple/impl.js"; ';
-      helper.createFile('', 'with-deps.js', withDepsFixture);
-      helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });
-      helper.commitAllComponents();
-      helper.exportComponent('comp/with-deps');
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      output = helper.importComponent('comp/with-deps');
-      bitMap = helper.readBitMap();
-    });
-    it('should not remove component with dependencies when -f flag is false', () => {
-      console.log(bitMap);
-      const output = helper.removeComponent(`${helper.remoteScope}/global/simple`);
-      expect(output).to.contain.string(`removed components: ${helper.remoteScope}/global/simple`);
-      const bitMap = helper.readBitMap();
-      expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple`);
-    });
-  });
 
   describe('remove versions from local scope', () => {
     before(() => {
@@ -191,7 +162,7 @@ describe('bit remove command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('utils/is-string');
     });
-    it.skip('should remove entire component if specified version is the only one', () => {
+    it('should remove entire component if specified version is the only one', () => {
       const output = helper.removeComponent('utils/is-string@0.0.1', '-f');
       expect(output).to.contain.string('successfully removed components: utils/is-string');
       const bitMap = helper.readBitMap();
@@ -204,6 +175,11 @@ describe('bit remove command', function () {
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
+
+      const copyIsTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('copy', 'is-type.js', copyIsTypeFixture);
+      helper.addComponent('copy/is-type.js');
+
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
@@ -231,6 +207,58 @@ describe('bit remove command', function () {
       const listOutput = helper.listRemoteScope(true);
       expect(listOutput).to.not.contain.string(`${helper.remoteScope}/utils/is-string`);
       expect(listOutput).to.contain.string(`${helper.remoteScope}/utils/is-type`);
+    });
+    it('2 components with same file hash should still work if one component is deleted', () => {
+      const output = helper.removeComponent(`${helper.remoteScope}/copy/is-type`);
+      expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/copy/is-type`);
+      const listOutput = helper.listRemoteScope(true);
+      expect(listOutput).to.contain.string(`${helper.remoteScope}/utils/is-type`);
+    });
+  });
+  describe('delete components with same file hash', () => {
+    before(() => {
+      const helper2 = new Helper();
+      helper2.setNewLocalAndRemoteScopes();
+      helper.setNewLocalAndRemoteScopes();
+      helper.addRemoteScope(helper2.remoteScopePath, helper.remoteScopePath);
+      const aFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'a.js', aFixture);
+      helper.addComponent('utils/a.js');
+
+      let bFixture = "const a = require('./a');";
+      helper.createComponent('utils', 'b.js', bFixture);
+      helper.addComponent('utils/b.js');
+
+      const cFixture = "const a = require('./a');";
+      helper.createComponent('utils', 'c.js', cFixture);
+      helper.addComponent('utils/c.js');
+
+      helper.commitAllComponents();
+
+      bFixture = "console.log('sdfdsf');";
+      helper.createComponent('utils', 'b.js', bFixture);
+
+      helper.commitAllComponents();
+      helper.addRemoteScope(helper2.remoteScopePath, helper.localScopePath);
+      helper.exportComponent('utils/a', helper2.remoteScope);
+      helper.exportComponent('utils/b');
+      helper.exportComponent('utils/c');
+    });
+    it('should remove component version only', () => {
+      const output = helper.removeComponent(`${helper.remoteScope}/utils/b@0.0.1`);
+      expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/b@0.0.1`);
+    });
+    it('should import component c with no issues', () => {
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      const output = helper.importComponent('utils/b');
+      expect(output.includes('successfully imported one component')).to.be.true;
+    });
+    it('should import component c with no issues', () => {
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      const output = helper.importComponent('utils/c');
+      expect(output.includes('successfully imported one component')).to.be.true;
     });
   });
 });

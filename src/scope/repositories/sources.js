@@ -268,22 +268,7 @@ export default class SourceRepository {
 
   async removeVersion(component, bitId): Promise<void> {
     const objectRepo = this.objects();
-    const componentVersionToRemove = component.versions[bitId.version].loadSync(objectRepo);
-    const allVersionsfiles = Object.keys(component.versions)
-      .map((key) => {
-        if (key !== bitId.version) {
-          const componentVersion = component.versions[key].loadSync(objectRepo);
-          return componentVersion.files.map(file => file.file.hash);
-        }
-      })
-      .filter(x => x);
-    const flattenedVersionsFilesHashes = R.flatten(allVersionsfiles);
-    const componetFileHashes = componentVersionToRemove.files.map(file => file.file.hash);
-    const modifiedCompoent = await component.removeVersion(
-      objectRepo,
-      bitId.version,
-      R.difference(componetFileHashes, flattenedVersionsFilesHashes)
-    );
+    const modifiedCompoent = await component.removeVersion(objectRepo, bitId.version);
     objectRepo.add(modifiedCompoent);
     await objectRepo.persist();
     return modifiedCompoent;

@@ -22,7 +22,7 @@ export default class Remove extends Command {
   report({ localResult, remoteResult }: { localResult: RemovedLocalObjects, remoteResult: RemovedObjects }): string {
     return localResult.paintSingle() + this.paintArray(remoteResult);
   }
-  paintArray(removedObjectsArray) {
+  paintArray(removedObjectsArray: RemovedObjects) {
     return removedObjectsArray.map(item => item.paintSingle());
   }
 }
