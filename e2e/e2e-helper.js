@@ -364,7 +364,7 @@ export default class Helper {
     const sourceDir = path.join(__dirname, 'fixtures', 'components');
     fs.copySync(sourceDir, cwd);
     // update with the correct remote-scope
-    const heroPath = path.join(cwd, 'hero', 'hero.js');
+    const heroPath = path.join(cwd, 'hero', 'Hero.js');
     const heroContent = fs.readFileSync(heroPath).toString();
     const newContent = heroContent.replace(/{remoteScope}/g, this.remoteScope);
     fs.writeFileSync(heroPath, newContent);
