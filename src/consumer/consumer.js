@@ -1033,12 +1033,13 @@ export default class Consumer {
       force,
       true
     );
+    const componentToRemove = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
     if (!R.isEmpty(removedComponentIds)) {
-      this.removeComponentFromFs(removedComponentIds, bitMap, deletFiles);
+      this.removeComponentFromFs(componentToRemove, bitMap, deletFiles);
       this.removeComponentFromFs(removedDependencies, bitMap, false);
     }
     if ((!track || deletFiles) && !R.isEmpty(removedComponentIds)) {
-      bitMap.removeComponents(removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION));
+      bitMap.removeComponents(componentToRemove);
       bitMap.removeComponents(removedDependencies);
       await bitMap.write();
     }
