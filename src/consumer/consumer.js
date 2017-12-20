@@ -1021,17 +1021,24 @@ export default class Consumer {
         })
       );
     }
-    const { bitIds, missingComponents, dependentBits, removedDependencies } = await this.scope.removeMany(
+    const { removedComponentIds, missingComponents, dependentBits, removedDependencies } = await this.scope.removeMany(
       force ? resolvedIDs : regularComponents,
-      force
+      force,
+      true
     );
-    if (!track && removeResult.bitIds) {
-      this.removeComponentFromFs(bitIds.concat(removedDependencies), bitMap);
-      bitMap.removeComponents(bitIds.filter(id => id.version === LATEST_BIT_VERSION));
+    if (!track && !R.isEmpty(removedComponentIds)) {
+      this.removeComponentFromFs(removedComponentIds.concat(removedDependencies), bitMap);
+      bitMap.removeComponents(removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION));
       bitMap.removeComponents(removedDependencies);
       await bitMap.write();
     }
-    return new RemovedLocalObjects(bitIds, missingComponents, modifiedComponents, dependentBits, removedDependencies);
+    return new RemovedLocalObjects(
+      removedComponentIds,
+      missingComponents,
+      modifiedComponents,
+      dependentBits,
+      removedDependencies
+    );
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {

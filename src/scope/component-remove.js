@@ -3,17 +3,17 @@ import chalk from 'chalk';
 import { BitIds } from '../bit-id';
 
 export class RemovedObjects {
-  bitIds: BitIds;
+  removedComponentIds: BitIds;
   missingComponents: BitIds;
-  dependentBits: BitIds;
+  dependentBits: Object;
   removedDependencies: BitIds;
   constructor(
     bitIds: BitIds = [],
     missingComponents: BitIds = [],
     removedDependencies: BitIds = [],
-    dependentBits: BitIds = []
+    dependentBits: Object = {}
   ) {
-    this.bitIds = bitIds;
+    this.removedComponentIds = bitIds;
     this.missingComponents = missingComponents;
     this.dependentBits = dependentBits;
     this.removedDependencies = removedDependencies;
@@ -29,9 +29,13 @@ export class RemovedObjects {
         )
       : '');
   paintRemoved = () =>
-    (!R.isEmpty(this.bitIds)
+    (!R.isEmpty(this.removedComponentIds)
       ? chalk.green.underline('successfully removed components:') +
-        chalk(` ${this.bitIds.map(id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}\n`)
+        chalk(
+          ` ${this.removedComponentIds.map(
+            id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString())
+          )}\n`
+        )
       : '');
   paintSingle() {
     return this.paintUnRemovedComponents() + this.paintRemoved() + this.paintMissingComponents();
@@ -58,10 +62,10 @@ export class RemovedLocalObjects extends RemovedObjects {
     bitIds: BitIds,
     missingComponents: BitIds,
     modifiedComponents: BitIds = [],
-    dependentBits: BitIds,
+    dependentBits: Object,
     removedDependencies: BitIds
   ) {
-    super(bitIds, missingComponents, dependentBits, removedDependencies);
+    super(bitIds, missingComponents, removedDependencies, dependentBits);
     this.modifiedComponents = modifiedComponents;
   }
 

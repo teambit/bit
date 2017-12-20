@@ -1,6 +1,10 @@
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
+
+chai.use(require('chai-fs'));
+
+const assert = chai.assert;
 
 describe('bit remove command', function () {
   this.timeout(0);
@@ -216,8 +220,9 @@ describe('bit remove command', function () {
     });
   });
   describe('delete components with same file hash', () => {
+    const helper2 = new Helper();
+
     before(() => {
-      const helper2 = new Helper();
       helper2.setNewLocalAndRemoteScopes();
       helper.setNewLocalAndRemoteScopes();
       helper.addRemoteScope(helper2.remoteScopePath, helper.remoteScopePath);
@@ -259,6 +264,27 @@ describe('bit remove command', function () {
       helper.addRemoteScope();
       const output = helper.importComponent('utils/c');
       expect(output.includes('successfully imported one component')).to.be.true;
+    });
+    it('should remove imported component and its files', () => {
+      const importedComponentDir = path.join(helper.localScopePath, 'components', 'utils');
+      const importedDependeceDir = path.join(
+        helper.localScopePath,
+        'components',
+        '.dependencies',
+        'utils',
+        'a',
+        helper2.remoteScope
+      );
+
+      const output = helper.removeComponent('utils/c');
+      expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/c`);
+      assert.isEmptyDirectory(importedComponentDir, 'directory not empty');
+      assert.isEmptyDirectory(importedDependeceDir, 'directory not empty');
+    });
+    it('bitmap should not contain component and dependences', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/c`);
+      expect(bitMap).to.not.have.property(`${helper2.remoteScope}/utils/a`);
     });
   });
 });

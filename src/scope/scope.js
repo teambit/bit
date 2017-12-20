@@ -714,16 +714,23 @@ export default class Scope {
   /**
    * Remove component dependecies
    */
-  async removeDependentComponents(dependentBits, componentList, consumerComponentToRemove, bitId): Promise<string> {
+  async removeComponentsDependences(
+    dependentBits,
+    componentList,
+    consumerComponentToRemove,
+    bitId,
+    removeSameOrigin: boolean = false
+  ): Promise<string> {
     const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (id) => {
       const arr = dependentBits[id.toStringWithoutVersion()];
       const name = bitId.version === LATEST_BIT_VERSION ? bitId.toStringWithoutVersion() : bitId.toString();
       const depArr = R.reject(num => num === name || BitId.parse(num).scope !== id.scope, arr);
-      if (R.isEmpty(depArr) && id.scope !== bitId.scope) {
+      if (R.isEmpty(depArr) && (id.scope !== bitId.scope || removeSameOrigin)) {
         await this.removeComponent(id, componentList, true);
         return id;
       }
     });
+
     return (await Promise.all(removedComponents)).filter(x => !R.isNil(x));
   }
 
@@ -731,7 +738,7 @@ export default class Scope {
    * Remove  single component
    * @removeComponent - boolean - true if you want to remove component
    */
-  async removeSingle(bitId: BitId): Promise<string> {
+  async removeSingle(bitId: BitId, removeSameOrigin: boolean = false): Promise<string> {
     logger.debug(`removing ${bitId.toString()}`);
     const component = (await this.sources.get(bitId)).toComponentVersion();
     const consumerComponentToRemove = await component.toConsumer(this.objects);
@@ -740,11 +747,12 @@ export default class Scope {
       consumerComponentToRemove.flattenedDependencies,
       bitId.version !== LATEST_BIT_VERSION
     );
-    const removedDependencies = await this.removeDependentComponents(
+    const removedDependencies = await this.removeComponentsDependences(
       dependentBits,
       componentList,
       consumerComponentToRemove,
-      bitId
+      bitId,
+      removeSameOrigin
     );
     await this.removeComponent(bitId, componentList, false);
     if (Object.keys(component.component.versions).length <= 1) bitId.version = LATEST_BIT_VERSION;
@@ -802,17 +810,19 @@ export default class Scope {
    * Remove components from scope
    * @force Boolean  - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: Array<BitId>, force: boolean): Promise<any> {
+  async removeMany(bitIds: Array<BitId>, force: boolean, removeSameOrigin: boolean = false): Promise<any> {
     logger.debug(`removing ${bitIds} with force flag: ${force}`);
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const dependentBits = await this.findDependentBits(foundComponents);
 
     if (R.isEmpty(dependentBits) || force) {
-      const removedComponents = await Promise.all(foundComponents.map(async bitId => this.removeSingle(bitId)));
+      const removedComponents = await Promise.all(
+        foundComponents.map(async bitId => this.removeSingle(bitId, removeSameOrigin))
+      );
       const ids = removedComponents.map(x => x.bitId);
       const removedDependencies = R.flatten(removedComponents.map(x => x.removedDependencies));
       await postRemoveHook({ ids: removedComponents });
-      return new RemovedObjects(ids, missingComponents, removedDependencies, []);
+      return new RemovedObjects(ids, missingComponents, removedDependencies, {});
     }
     return new RemovedObjects([], missingComponents, [], dependentBits);
   }
