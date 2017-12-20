@@ -2,12 +2,12 @@ import { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
 
-describe.only('bit remove command', function () {
+describe('bit remove command', function () {
   this.timeout(0);
   const helper = new Helper();
-  /*  after(() => {
+  after(() => {
     helper.destroyEnv();
-  }); */
+  });
   describe('with local scope and corrupted bit.json', () => {
     before(() => {
       helper.initNewLocalScope();
