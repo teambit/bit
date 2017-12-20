@@ -21,7 +21,8 @@ import {
   BITS_DIRNAME,
   DEFAULT_DIST_DIRNAME,
   BIT_VERSION,
-  DEFAULT_BIT_VERSION
+  DEFAULT_BIT_VERSION,
+  LATEST_BIT_VERSION
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
@@ -716,7 +717,7 @@ export default class Scope {
   async removeDependentComponents(dependentBits, componentList, consumerComponentToRemove, bitId): Promise<string> {
     const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (id) => {
       const arr = dependentBits[id.toStringWithoutVersion()];
-      const name = bitId.version === 'latest' ? bitId.toStringWithoutVersion() : bitId.toString();
+      const name = bitId.version === LATEST_BIT_VERSION ? bitId.toStringWithoutVersion() : bitId.toString();
       const depArr = R.reject(num => num === name || BitId.parse(num).scope !== id.scope, arr);
       if (R.isEmpty(depArr) && id.scope !== bitId.scope) {
         await this.removeComponent(id, componentList, true);
@@ -737,7 +738,7 @@ export default class Scope {
     const componentList = await this.objects.listComponents();
     const dependentBits = await this.findDependentBits(
       consumerComponentToRemove.flattenedDependencies,
-      bitId.version !== 'latest'
+      bitId.version !== LATEST_BIT_VERSION
     );
     const removedDependencies = await this.removeDependentComponents(
       dependentBits,
@@ -746,7 +747,7 @@ export default class Scope {
       bitId
     );
     await this.removeComponent(bitId, componentList, false);
-    if (Object.keys(component.component.versions).length <= 1) bitId.version = 'latest';
+    if (Object.keys(component.component.versions).length <= 1) bitId.version = LATEST_BIT_VERSION;
     return { bitId, removedDependencies };
   }
 

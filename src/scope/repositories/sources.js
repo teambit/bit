@@ -5,7 +5,13 @@ import { bufferFrom, pathNormalizeToLinux } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE, COMPONENT_ORIGINS } from '../../constants';
+import {
+  CFG_USER_NAME_KEY,
+  CFG_USER_EMAIL_KEY,
+  DEFAULT_BIT_RELEASE_TYPE,
+  COMPONENT_ORIGINS,
+  LATEST_BIT_VERSION
+} from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
@@ -276,7 +282,7 @@ export default class SourceRepository {
   clean(bitId: BitId, deepRemove: boolean = false): Promise<void> {
     return this.get(bitId).then((component) => {
       if (!component) return;
-      if (bitId.version !== 'latest' && Object.keys(component.versions).length > 1) {
+      if (bitId.version !== LATEST_BIT_VERSION && Object.keys(component.versions).length > 1) {
         return this.removeVersion(component, bitId);
       }
       return component.remove(this.objects(), deepRemove);

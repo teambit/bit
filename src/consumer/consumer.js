@@ -14,7 +14,7 @@ import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-import { BITS_DIRNAME, BIT_HIDDEN_DIR, COMPONENT_ORIGINS, BIT_VERSION } from '../constants';
+import { BITS_DIRNAME, BIT_HIDDEN_DIR, COMPONENT_ORIGINS, BIT_VERSION, LATEST_BIT_VERSION } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
@@ -989,13 +989,8 @@ export default class Consumer {
       if (component && component.rootDir) fs.removeSync(path.join(this.getPath(), component.rootDir));
     });
   }
-  async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean) {
-    // local remove in case user wants to delete commited components
-    let removeResult;
-    const bitMap = await this.getBitMap();
-    const modifiedComponents = [];
-    const regularComponents = [];
-    const ResolvedIDs = bitIds.map((id) => {
+  resolveLocalComponentIds(bitIds: BitIds, bitMap: BitMap) {
+    return bitIds.map((id) => {
       const realName = bitMap.getExistingComponentId(id.toStringWithoutVersion());
       if (!realName) return id;
       const component = bitMap.getComponent(realName);
@@ -1004,37 +999,39 @@ export default class Consumer {
         (component.origin === COMPONENT_ORIGINS.IMPORTED || component.origin === COMPONENT_ORIGINS.NESTED)
       ) {
         const realId = BitId.parse(realName);
-        realId.version = 'latest';
+        realId.version = LATEST_BIT_VERSION;
         return realId;
       }
       return id;
     });
-    if (R.isEmpty(ResolvedIDs)) return new RemovedLocalObjects();
+  }
+  async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean) {
+    // local remove in case user wants to delete commited components
+    const bitMap = await this.getBitMap();
+    const modifiedComponents = [];
+    const regularComponents = [];
+    const resolvedIDs = this.resolveLocalComponentIds(bitIds, bitMap);
+    if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects();
     if (!force) {
       await Promise.all(
-        ResolvedIDs.map(async (id) => {
+        resolvedIDs.map(async (id) => {
           const componentStatus = await this.getComponentStatusById(id);
           if (componentStatus.modified) modifiedComponents.push(id);
           else regularComponents.push(id);
         })
       );
-      removeResult = await this.scope.removeMany(regularComponents, force);
-    } else {
-      removeResult = await this.scope.removeMany(ResolvedIDs, force);
     }
+    const { bitIds, missingComponents, dependentBits, removedDependencies } = await this.scope.removeMany(
+      force ? resolvedIDs : regularComponents,
+      force
+    );
     if (!track && removeResult.bitIds) {
-      this.removeComponentFromFs(removeResult.bitIds.concat(removeResult.removedDependencies), bitMap);
-      bitMap.removeComponents(removeResult.bitIds.filter(id => id.version === 'latest'));
-      bitMap.removeComponents(removeResult.removedDependencies);
+      this.removeComponentFromFs(bitIds.concat(removedDependencies), bitMap);
+      bitMap.removeComponents(bitIds.filter(id => id.version === LATEST_BIT_VERSION));
+      bitMap.removeComponents(removedDependencies);
       await bitMap.write();
     }
-    return new RemovedLocalObjects(
-      removeResult.bitIds,
-      removeResult.missingComponents,
-      modifiedComponents,
-      removeResult.dependentBits,
-      removeResult.removedDependencies
-    );
+    return new RemovedLocalObjects(bitIds, missingComponents, modifiedComponents, dependentBits, removedDependencies);
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
