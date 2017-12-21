@@ -799,21 +799,23 @@ export default class Component {
       return componentStatus.modified;
     };
 
-    const needToRebuild = await isNeededToReBuild();
-    if (!needToRebuild && this.dists) {
-      logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
-      return this.dists;
-    }
-
-    logger.debug('compilerId found, start building');
-
-    // verify whether the environment is installed
-    let compiler;
     if (!bitMap && consumer) {
       bitMap = await consumer.getBitMap();
     }
     const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
+    const needToRebuild = await isNeededToReBuild();
+    if (!needToRebuild && this.dists) {
+      logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
+      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+        this.stripOriginallySharedDir(bitMap);
+      }
+      return this.dists;
+    }
+
+    logger.debug('compilerId found, start building');
+    // verify whether the environment is installed
+    let compiler;
     try {
       compiler = await scope.loadEnvironment(this.compilerId);
     } catch (err) {

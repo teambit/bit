@@ -39,7 +39,7 @@ export class ScopeJson {
     const cleanName = suggestedName
       .split('')
       .map((char) => {
-        if (/^[$\-_!.a-z0-9]+$/.test(char)) return char;
+        if (/^[$\-_!a-z0-9]+$/.test(char)) return char;
         return '';
       })
       .join('');

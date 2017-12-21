@@ -903,7 +903,7 @@ export default class Scope {
     return this.objects.add(symlink);
   }
 
-  async exportMany(ids: string[], remoteName: string, context: Object = {}): Promise<ComponentWithDependencies[]> {
+  async exportMany(ids: string[], remoteName: string, context: Object = {}): Promise<BitId[]> {
     logger.debug(`exportMany, ids: ${ids.join(', ')}`);
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);

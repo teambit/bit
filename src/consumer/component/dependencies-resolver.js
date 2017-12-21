@@ -10,6 +10,7 @@ import Component from '../component';
 import { Driver } from '../../driver';
 import { pathNormalizeToLinux, pathRelative, getWithoutExt } from '../../utils';
 import logger from '../../logger/logger';
+import { Consumer } from '../../consumer';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -187,7 +188,7 @@ function findComponentsOfDepsFiles(
     const currentBitsDeps = tree[file].bits;
     if (currentBitsDeps && !R.isEmpty(currentBitsDeps)) {
       currentBitsDeps.forEach((bitDep) => {
-        const componentId = getComponentNameFromRequirePath(bitDep, bindingPrefix);
+        const componentId = Consumer.getComponentIdFromNodeModulesPath(bitDep, bindingPrefix);
 
         const existingId = bitMap.getExistingComponentId(componentId);
         if (existingId) {
@@ -221,16 +222,6 @@ function findComponentsOfDepsFiles(
     }
   });
   return { componentsDeps, packagesDeps, untrackedDeps, relativeDeps, missingDeps };
-}
-
-// todo: move to bit-javascript
-function getComponentNameFromRequirePath(requirePath: string, bindingPrefix: string): string {
-  requirePath = pathNormalizeToLinux(requirePath);
-  const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : `${bindingPrefix}/`;
-  const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
-  const pathSplit = withoutPrefix.split('/');
-  if (pathSplit.length < 2) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
-  return new BitId({ box: pathSplit[0], name: pathSplit[1] }).toString();
 }
 
 /**
@@ -280,11 +271,12 @@ export default (async function loadDependenciesForComponent(
   component: Component,
   componentMap: ComponentMap,
   bitDir: string,
-  driver: Driver,
+  consumer: Consumer,
   bitMap: BitMap,
-  consumerPath: string,
   idWithConcreteVersionString: string
 ): Promise<Component> {
+  const driver: Driver = consumer.driver;
+  const consumerPath = consumer.getPath();
   const missingDependencies = {};
   const { allFiles, nonTestsFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
   const getDependenciesTree = async () => {
@@ -307,7 +299,7 @@ export default (async function loadDependenciesForComponent(
   let missingComponents = [];
   if (dependenciesTree.missing.bits && !R.isEmpty(dependenciesTree.missing.bits)) {
     dependenciesTree.missing.bits.forEach((missingBit) => {
-      const componentId = getComponentNameFromRequirePath(missingBit, component.bindingPrefix);
+      const componentId = Consumer.getComponentIdFromNodeModulesPath(missingBit, component.bindingPrefix);
       // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
       if (bitMap.getExistingComponentId(componentId)) missingLinks.push(componentId);
       else missingComponents.push(componentId);

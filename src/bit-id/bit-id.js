@@ -51,7 +51,7 @@ export default class BitId {
     const scope = this.scope;
     const componentStr = ignoreScope || !scope ? [box, name].join('/') : [scope, box, name].join('/');
     // when there is no scope and the version is latest, omit the version.
-    if (ignoreVersion || (!scope && !this.hasVersion())) return componentStr;
+    if (ignoreVersion || !this.hasVersion()) return componentStr;
     return componentStr.concat(`${VERSION_DELIMITER}${version}`);
   }
 
@@ -115,7 +115,7 @@ export default class BitId {
 
     if (idSplit.length === 2) {
       const [box, name] = idSplit;
-      if (!isValidIdChunk(name) || !isValidScopeName(box)) {
+      if (!isValidIdChunk(name) || !isValidIdChunk(box)) {
         // $FlowFixMe
         throw new InvalidIdChunk(`${box}/${name}`);
       }
@@ -144,9 +144,14 @@ export default class BitId {
   }
 
   static getValidBitId(box: string, name: string): BitId {
-    if (!isValidIdChunk(name)) name = decamelize(name, '-');
-    if (!isValidIdChunk(box)) box = decamelize(box, '-');
+    const getValidIdChunk = (chunk) => {
+      if (!isValidIdChunk(chunk)) {
+        chunk = chunk.replace(/\./g, '');
+        chunk = decamelize(chunk, '-');
+      }
+      return chunk;
+    };
 
-    return new BitId({ name, box });
+    return new BitId({ name: getValidIdChunk(name), box: getValidIdChunk(box) });
   }
 }

@@ -386,7 +386,7 @@ describe('bit tag command', function () {
         helper.addRemoteScope();
         helper.importComponent('comp/comp');
         helper.importComponent('comp/comp2');
-        const fileFixture = "var a = require('bit/comp/comp2/file2')";
+        const fileFixture = `var a = require('@bit/${helper.remoteScope}.comp.comp2/file2')`;
         helper.createFile('components/comp/comp', 'file.js', fileFixture);
         output = helper.commitComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
@@ -415,7 +415,7 @@ describe('bit tag command', function () {
         helper.addRemoteScope();
         helper.importComponent('comp/comp');
         helper.importComponent('comp/comp2');
-        const fileFixture = "var a = require('bit/comp/comp2')";
+        const fileFixture = `var a = require('${helper.getRequireBitPath('comp', 'comp2')}')`;
         helper.createFile('components/comp/comp', 'file.js', fileFixture);
         output = helper.commitComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
@@ -732,8 +732,10 @@ describe('bit tag command', function () {
       helper.addRemoteScope();
       helper.importComponent('utils/is-string');
 
-      const fooBarFixture =
-        "const isString = require('bit/utils/is-string'); module.exports = function foo() { return isString() + ' and got foo'; };";
+      const fooBarFixture = `const isString = require('${helper.getRequireBitPath(
+        'utils',
+        'is-string'
+      )}'); module.exports = function foo() { return isString() + ' and got foo'; };`;
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();

@@ -7,23 +7,30 @@ export default class Create extends Command {
   name = 'link';
   description = 'Call the driver link action';
   alias = 'b';
-  opts = [['v', 'verbose', 'showing the driver path']];
+  opts = [];
   private = true;
   loader = true;
 
-  action(args: string[], { verbose }: { verbose: ?boolean }): Promise<*> {
+  action(): Promise<*> {
     return link();
   }
 
-  report(results: Array<{ id: string, bound: Object }>): string {
+  report(results: Array<{ id: string, bound: ?Object }>): string {
     const reportComponents = results
       .map((result) => {
-        const bounds = result.bound.map(bound => `\t\tfrom: ${bound.from}, to: ${bound.to}`).join('\n');
+        const bounds = result.bound
+          .filter(bound => bound.from && bound.to)
+          .map(bound => `\t\tfrom: ${bound.from}, to: ${bound.to}`)
+          .join('\n');
+        if (!bounds.length) {
+          const reason = result.id.scope ? 'is a nested dependency' : 'was not exported yet';
+          return chalk.cyan(`\t${result.id}:\n\t\tnothing to link because the component ${reason}`);
+        }
         return chalk.cyan(`\t${result.id}:\n ${bounds}`);
       })
       .join('\n');
 
-    const reportTitle = chalk.underline(`bound ${chalk.bold(results.length)} components\n`);
+    const reportTitle = chalk.underline(`found ${chalk.bold(results.length)} components\n`);
 
     return reportTitle + reportComponents;
   }
