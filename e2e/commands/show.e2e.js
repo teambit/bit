@@ -449,8 +449,10 @@ function add(a, b) {
         helper.addRemoteScope();
         helper.importComponent('utils/is-type@0.0.1');
 
-        const isStringFixture =
-          "const isType = require('bit/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+        const isStringFixture = `const isType = require('${helper.getRequireBitPath(
+          'utils',
+          'is-type'
+        )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.createComponent('utils', 'is-string.js', isStringFixture);
         helper.addComponent('utils/is-string.js');
         helper.commitAllComponents();
@@ -503,8 +505,10 @@ function add(a, b) {
         helper.addRemoteScope();
         helper.importComponent('utils/is-type@0.0.1');
 
-        const isStringFixture =
-          "const isType = require('bit/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+        const isStringFixture = `const isType = require('${helper.getRequireBitPath(
+          'utils',
+          'is-type'
+        )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.createComponent('utils', 'is-string.js', isStringFixture);
         helper.addComponent('utils/is-string.js');
         helper.commitAllComponents();
