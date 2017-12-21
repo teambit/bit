@@ -603,7 +603,7 @@ describe('bit import', function () {
           name: `${helper.remoteScope}.comp.with-deps`,
           version: '0.0.1',
           main: 'with-deps.js',
-          dependencies: { 'lodash.isstring': '^4.0.0' }
+          dependencies: { 'lodash.isstring': '4.0.0' }
         });
       });
       it('should write a package.json in the nested dependency component dir', () => {
@@ -623,7 +623,7 @@ describe('bit import', function () {
           name: `${helper.remoteScope}.global.simple`,
           version: '0.0.1',
           main: 'global/simple.js',
-          dependencies: { 'lodash.isboolean': '^3.0.0' }
+          dependencies: { 'lodash.isboolean': '3.0.0' }
         });
       });
 
