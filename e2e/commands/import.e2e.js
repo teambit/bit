@@ -1400,13 +1400,15 @@ describe('bit import', function () {
       helper.runCmd('bit import');
     });
     it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
-      const appJsFixture = "const isString = require('bit/utils/is-string'); console.log(isString());";
+      const requirePath = helper.getRequireBitPath('utils', 'is-string');
+      const appJsFixture = `const isString = require('${requirePath}'); console.log(isString());`;
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v1 and got is-string');
     });
     it('should successfully print results of is-type@0.0.2 when requiring it directly', () => {
-      const appJsFixture = "const isType = require('bit/utils/is-type'); console.log(isType());";
+      const requirePath = helper.getRequireBitPath('utils', 'is-type');
+      const appJsFixture = `const isType = require('${requirePath}'); console.log(isType());`;
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v2');

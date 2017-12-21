@@ -77,7 +77,7 @@ describe('bit pack with absolute paths', function () {
         path.join(helper.localScopePath, 'node_modules', '@bit', `${helper.remoteScope}.test.hero-button`, 'index.js')
       );
       const packDir = path.join(helper.localScopePath, 'node_modules', 'package');
-      const node_modules_dir = path.join(packDir, 'node_modules', 'bit', 'test');
+      const node_modules_dir = path.join(packDir, 'node_modules', '@bit', 'test');
       helper.runCmd('node bitBindings.js ', packDir);
       expect(node_modules_dir).to.be.a.directory();
       expect(path.join(node_modules_dir, 'hero-button')).to.be.a.directory();

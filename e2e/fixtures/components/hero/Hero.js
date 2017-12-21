@@ -1,6 +1,6 @@
-import HeroButton from 'bit/test/hero-button';
+import HeroButton from '@bit/{remoteScope}.test.hero-button';
 import style from './style.scss';
-import global from 'bit/test/styles';
+import global from '@bit/{remoteScope}.test.styles';
 
 /**
  * @render react

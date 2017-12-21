@@ -6,6 +6,10 @@ import Helper from '../e2e-helper';
 describe('dists file are written outside the components dir', function () {
   this.timeout(0);
   const helper = new Helper();
+  const appJsFixture = `const barFoo = require('${helper.getRequireBitPath(
+    'bar',
+    'foo'
+  )}'); console.log(barFoo.default());`;
   let scopeWithCompiler;
   before(() => {
     helper.setNewLocalAndRemoteScopes();
@@ -53,8 +57,10 @@ describe('dists file are written outside the components dir', function () {
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.importComponent('utils/is-type --dist');
 
-      const isStringFixture =
-        "import isType from 'bit/utils/is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
+      const isStringFixture = `import isType from '${helper.getRequireBitPath(
+        'utils',
+        'is-type'
+      )}'; export default function isString() { return isType() +  ' and got is-string'; };`;
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
@@ -62,8 +68,10 @@ describe('dists file are written outside the components dir', function () {
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.importComponent('utils/is-string --dist');
 
-      const fooBarFixture =
-        "import isString from 'bit/utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
+      const fooBarFixture = `import isString from '${helper.getRequireBitPath(
+        'utils',
+        'is-string'
+      )}'; export default function foo() { return isString() + ' and got foo'; };`;
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
       helper.commitAllComponents();
@@ -74,21 +82,21 @@ describe('dists file are written outside the components dir', function () {
       helper.importComponent('bar/foo --dist');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
-      const appJsFixture = "const barFoo = require('bit/bar/foo'); console.log(barFoo.default());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
     describe('"bit build" after updating the imported component', () => {
       before(() => {
-        const fooBarFixtureV2 =
-          "import isString from 'bit/utils/is-string'; export default function foo() { return isString() + ' and got foo v2'; };";
+        const fooBarFixtureV2 = `import isString from '${helper.getRequireBitPath(
+          'utils',
+          'is-string'
+        )}'; export default function foo() { return isString() + ' and got foo v2'; };`;
         helper.createComponent('components/bar/foo', 'foo.js', fooBarFixtureV2); // update component
         helper.addRemoteEnvironment();
         helper.build();
       });
       it('should save the dists file in the same place "bit import" saved them', () => {
-        const appJsFixture = "const barFoo = require('bit/bar/foo'); console.log(barFoo.default());";
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
@@ -127,7 +135,6 @@ describe('dists file are written outside the components dir', function () {
       helper.importComponent('bar/foo --dist');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
-      const appJsFixture = "const barFoo = require('bit/bar/foo'); console.log(barFoo.default());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
