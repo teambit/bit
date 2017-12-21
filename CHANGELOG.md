@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.5] - 2017-12-21
+
 - change auto-generated node_modules links to be the same as NPM installation of components (@bit/scope.box.name)
+- add context to all server side hooks
 
 ## [0.12.0-ext.4] - 2017-12-19
 
