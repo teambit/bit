@@ -539,16 +539,15 @@ describe('bit import', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
 
-      helper.runCmd('npm init -y');
-      helper.runCmd('npm install lodash.isboolean@3.0.0 lodash.isstring@4.0.0 --save-exact');
-
       // export a new simple component
+      helper.addNpmPackage('lodash.isboolean', '3.0.0');
       const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
       helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
       helper.commitComponent('simple');
       helper.exportComponent('simple');
 
+      helper.addNpmPackage('lodash.isstring', '4.0.0');
       const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';
       helper.createFile('', 'with-deps.js', withDepsFixture);
       helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });
