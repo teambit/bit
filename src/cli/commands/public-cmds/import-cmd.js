@@ -21,6 +21,7 @@ export default class Import extends Command {
     ['f', 'force', 'ignore local changes'],
     ['', 'dist', 'write dist files (when exist) to the configured directory'],
     ['', 'conf', 'write the configuration file (bit.json)'],
+    ['', 'skip-npm-install', 'do not install packages of the imported components'],
     ['', 'ignore-package-json', 'do not generate package.json for the imported component(s)']
   ];
   loader = true;
@@ -38,6 +39,7 @@ export default class Import extends Command {
       force = false,
       dist = false,
       conf = false,
+      skipNpmInstall = false,
       ignorePackageJson = false
     }: {
       tester?: boolean,
@@ -49,6 +51,7 @@ export default class Import extends Command {
       force?: boolean,
       dist?: boolean,
       conf?: boolean,
+      skipNpmInstall?: boolean,
       ignorePackageJson?: boolean
     }
   ): Promise<any> {
@@ -67,6 +70,7 @@ export default class Import extends Command {
       force,
       dist,
       conf,
+      installNpmPackages: !skipNpmInstall,
       withPackageJson: !ignorePackageJson
     }).then(importResults => R.assoc('displayDependencies', displayDependencies, importResults));
   }

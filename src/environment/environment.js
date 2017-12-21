@@ -3,14 +3,12 @@ import v4 from 'uuid';
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-import npmClient from '../npm-client';
 import { Scope, ComponentWithDependencies } from '../scope';
 import { BitId } from '../bit-id';
 import { ISOLATED_ENV_ROOT } from '../constants';
 import { mkdirp } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
-import Component from '../consumer/component';
 
 export default class Environment {
   path: string;
@@ -26,15 +24,6 @@ export default class Environment {
   async create(): Promise<> {
     await mkdirp(this.path);
     this.consumer = await Consumer.createWithExistingScope(this.path, this.scope);
-  }
-
-  installNpmPackages(components: Component[], verbose: boolean): Promise<*> {
-    return Promise.all(
-      components.map((component) => {
-        if (R.isEmpty(component.packageDependencies)) return Promise.resolve();
-        return npmClient.install(component.packageDependencies, { cwd: component.writtenPath }, verbose);
-      })
-    );
   }
 
   /**
@@ -59,11 +48,7 @@ export default class Environment {
       createNpmLinkFiles
     });
     const componentWithDependencies: ComponentWithDependencies = R.head(componentDependenciesArr);
-    const componentWithDependenciesFlatten = [
-      componentWithDependencies.component,
-      ...componentWithDependencies.dependencies
-    ];
-    if (installDependencies) await this.installNpmPackages(componentWithDependenciesFlatten, verbose);
+    if (installDependencies) await this.consumer.installNpmPackages([componentWithDependencies], verbose);
     return componentWithDependencies;
   }
 

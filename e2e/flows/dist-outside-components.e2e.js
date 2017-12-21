@@ -57,10 +57,8 @@ describe('dists file are written outside the components dir', function () {
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.importComponent('utils/is-type --dist');
 
-      const isStringFixture = `import isType from '${helper.getRequireBitPath(
-        'utils',
-        'is-type'
-      )}'; export default function isString() { return isType() +  ' and got is-string'; };`;
+      const isStringFixture = `import isType from '${helper.getRequireBitPath('utils', 'is-type')}';
+ export default function isString() { return isType() +  ' and got is-string'; };`;
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
@@ -68,10 +66,8 @@ describe('dists file are written outside the components dir', function () {
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.importComponent('utils/is-string --dist');
 
-      const fooBarFixture = `import isString from '${helper.getRequireBitPath(
-        'utils',
-        'is-string'
-      )}'; export default function foo() { return isString() + ' and got foo'; };`;
+      const fooBarFixture = `import isString from '${helper.getRequireBitPath('utils', 'is-string')}';
+export default function foo() { return isString() + ' and got foo'; };`;
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
       helper.commitAllComponents();
@@ -88,10 +84,8 @@ describe('dists file are written outside the components dir', function () {
     });
     describe('"bit build" after updating the imported component', () => {
       before(() => {
-        const fooBarFixtureV2 = `import isString from '${helper.getRequireBitPath(
-          'utils',
-          'is-string'
-        )}'; export default function foo() { return isString() + ' and got foo v2'; };`;
+        const fooBarFixtureV2 = `import isString from '${helper.getRequireBitPath('utils', 'is-string')}';
+export default function foo() { return isString() + ' and got foo v2'; };`;
         helper.createComponent('components/bar/foo', 'foo.js', fooBarFixtureV2); // update component
         helper.addRemoteEnvironment();
         helper.build();

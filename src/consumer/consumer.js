@@ -19,7 +19,7 @@ import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import loader from '../cli/loader';
-import { BEFORE_IMPORT_ACTION, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
+import { BEFORE_IMPORT_ACTION, BEFORE_INSTALL_NPM_DEPENDENCIES, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
 import ComponentMap from './bit-map/component-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
@@ -31,6 +31,7 @@ import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
+import npmClient from '../npm-client';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -267,7 +268,8 @@ export default class Consumer {
     withPackageJson?: boolean = true,
     force?: boolean = false,
     dist?: boolean = false,
-    conf?: boolean = false
+    conf?: boolean = false,
+    installNpmPackages?: boolean = true
   ): Promise<> {
     const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
     const bitMap = await this.getBitMap();
@@ -295,11 +297,12 @@ export default class Consumer {
         withBitJson: conf,
         dist
       });
+      if (installNpmPackages) await this.installNpmPackages(componentsAndDependenciesBitJson);
     }
     if (componentsFromBitMap.length) {
       componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsFromBitMap, cache);
       // Don't write the package.json for an authored component, because its dependencies probably managed by the root
-      // package.json
+      // package.json. Also, don't install npm packages for the same reason.
       await this.writeToComponentsDir({
         componentsWithDependencies: componentsAndDependenciesBitMap,
         force: false,
@@ -347,7 +350,8 @@ export default class Consumer {
     writeBitDependencies?: boolean = false,
     force?: boolean = false,
     dist?: boolean = false,
-    conf?: boolean = false
+    conf?: boolean = false,
+    installNpmPackages?: boolean = true
   ) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
@@ -364,6 +368,7 @@ export default class Consumer {
       writeBitDependencies,
       dist
     });
+    if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies);
     return { dependencies: componentsWithDependencies };
   }
 
@@ -377,7 +382,8 @@ export default class Consumer {
     writeBitDependencies?: boolean = false,
     force?: boolean = false,
     dist?: boolean = false,
-    conf?: boolean = false
+    conf?: boolean = false,
+    installNpmPackages?: boolean = true
   ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
@@ -388,7 +394,8 @@ export default class Consumer {
         withPackageJson,
         force,
         dist,
-        conf
+        conf,
+        installNpmPackages
       );
     }
     return this.importSpecificComponents(
@@ -399,7 +406,8 @@ export default class Consumer {
       writeBitDependencies,
       force,
       dist,
-      conf
+      conf,
+      installNpmPackages
     );
   }
 
@@ -1034,6 +1042,26 @@ export default class Consumer {
       dependency.remoteVersion = removeVersionId ? removeVersionId.version : null;
       dependency.localVersion = localVersionId ? localVersionId.version : null;
       dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
+    });
+  }
+
+  async installNpmPackages(componentsWithDependencies: ComponentWithDependencies[], verbose: boolean): Promise<*> {
+    const componentsWithDependenciesFlatten = R.flatten(
+      componentsWithDependencies.map(oneComponentWithDependencies => [
+        oneComponentWithDependencies.component,
+        ...oneComponentWithDependencies.dependencies
+      ])
+    );
+    loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
+    const results = await Promise.all(
+      componentsWithDependenciesFlatten.map((component) => {
+        if (R.isEmpty(component.packageDependencies)) return Promise.resolve();
+        return npmClient.install(component.packageDependencies, { cwd: component.writtenPath });
+      })
+    );
+    loader.stop();
+    results.forEach((result) => {
+      if (result) npmClient.printResults(result);
     });
   }
 }
