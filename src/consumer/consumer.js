@@ -18,6 +18,7 @@ import { BITS_DIRNAME, BIT_HIDDEN_DIR, COMPONENT_ORIGINS, BIT_VERSION } from '..
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
+import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
@@ -31,6 +32,7 @@ import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
+import * as globalConfig from '../api/consumer/lib/global-config';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -954,9 +956,11 @@ export default class Consumer {
   async deprecateRemote(bitIds: Array<BitId>) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
     const remotes = await this.scope.remotes();
+    const context = {};
+    enrichContextFromGlobal(context);
     const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
       const resolvedRemote = await remotes.resolve(scopeName, this.scope);
-      const deprecateResult = await resolvedRemote.deprecateMany(groupedBitsByScope[scopeName]);
+      const deprecateResult = await resolvedRemote.deprecateMany(groupedBitsByScope[scopeName], context);
       return deprecateResult;
     });
     const deprecatedComponentsResult = await Promise.all(deprecateP);
@@ -973,9 +977,11 @@ export default class Consumer {
   async removeRemote(bitIds: Array<BitId>, force: boolean) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
     const remotes = await this.scope.remotes();
+    const context = {};
+    enrichContextFromGlobal(context);
     const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
       const resolvedRemote = await remotes.resolve(key, this.scope);
-      const result = await resolvedRemote.deleteMany(groupedBitsByScope[key], force);
+      const result = await resolvedRemote.deleteMany(groupedBitsByScope[key], force, context);
       return result;
     });
     const removeResults = await Promise.all(removeP);

@@ -181,9 +181,13 @@ export default class SSH implements Network {
     });
   }
   deprecateMany(bitIds: string, context: ?Object): Promise<ComponentObjects[]> {
-    return this.exec('_deprecate', {
-      bitIds: bitIds.map(x => x.toStringWithoutVersion(), context)
-    }).then((data: string) => {
+    return this.exec(
+      '_deprecate',
+      {
+        bitIds: bitIds.map(x => x.toStringWithoutVersion())
+      },
+      context
+    ).then((data: string) => {
       const { payload } = this._unpack(data);
       return Promise.resolve(payload);
     });

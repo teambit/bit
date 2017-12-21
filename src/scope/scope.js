@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
 import { GlobalRemotes } from '../global-config';
-import * as globalConfig from '../api/consumer/lib/global-config';
+import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
@@ -21,9 +21,7 @@ import {
   BITS_DIRNAME,
   DEFAULT_DIST_DIRNAME,
   BIT_VERSION,
-  DEFAULT_BIT_VERSION,
-  CFG_USER_NAME_KEY,
-  CFG_USER_EMAIL_KEY
+  DEFAULT_BIT_VERSION
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
@@ -487,8 +485,9 @@ export default class Scope {
     return ids;
   }
 
-  getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: boolean = false) {
+  getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: boolean = false, context: Object = {}) {
     logger.debug(`getExternalOnes, ids: ${ids.join(', ')}`);
+    enrichContextFromGlobal(context);
     return this.sources.getMany(ids).then((defs) => {
       const left = defs.filter((def) => {
         if (!localFetch) return true;
@@ -503,7 +502,7 @@ export default class Scope {
 
       logger.debug(`getExternalOnes: ${left.length} left. Fetching them from a remote`);
       return remotes
-        .fetch(left.map(def => def.id), this, true)
+        .fetch(left.map(def => def.id), this, true, context)
         .then((componentObjects) => {
           return this.writeManyComponentsToModel(componentObjects);
         })
@@ -518,11 +517,13 @@ export default class Scope {
     ids: BitId[],
     remotes: Remotes,
     localFetch: boolean = true,
-    persist: boolean = true
+    persist: boolean = true,
+    context: Object = {}
   ): Promise<VersionDependencies[]> {
     logger.debug(
       `getExternalMany, planning on fetching from ${localFetch ? 'local' : 'remote'} scope. Ids: ${ids.join(', ')}`
     );
+    enrichContextFromGlobal(context);
     return this.sources.getMany(ids).then((defs) => {
       const left = defs.filter((def) => {
         if (!localFetch) return true;
@@ -538,7 +539,7 @@ export default class Scope {
 
       logger.debug(`getExternalMany: ${left.length} left. Fetching them from a remote`);
       return remotes
-        .fetch(left.map(def => def.id), this)
+        .fetch(left.map(def => def.id), this, undefined, context)
         .then((componentObjects) => {
           logger.debug('getExternalMany: writing them to the model');
           return this.writeManyComponentsToModel(componentObjects, persist);
@@ -554,19 +555,22 @@ export default class Scope {
   getExternal({
     id,
     remotes,
-    localFetch = true
+    localFetch = true,
+    context = {}
   }: {
     id: BitId,
     remotes: Remotes,
-    localFetch: boolean
+    localFetch: boolean,
+    context: Object
   }): Promise<VersionDependencies> {
+    enrichContextFromGlobal(context);
     return this.sources.get(id).then((component) => {
       if (component && localFetch) {
         return component.toVersionDependencies(id.version, this, id.scope);
       }
 
       return remotes
-        .fetch([id], this)
+        .fetch([id], this, undefined, context)
         .then(([componentObjects]) => {
           return this.writeComponentToModel(componentObjects);
         })
@@ -574,11 +578,21 @@ export default class Scope {
     });
   }
 
-  getExternalOne({ id, remotes, localFetch = true }: { id: BitId, remotes: Remotes, localFetch: boolean }) {
+  getExternalOne({
+    id,
+    remotes,
+    localFetch = true,
+    context = {}
+  }: {
+    id: BitId,
+    remotes: Remotes,
+    localFetch: boolean,
+    context: Object
+  }) {
     return this.sources.get(id).then((component) => {
       if (component && localFetch) return component.toComponentVersion(id.version);
       return remotes
-        .fetch([id], this, true)
+        .fetch([id], this, true, context)
         .then(([componentObjects]) => this.writeComponentToModel(componentObjects))
         .then(() => this.getExternal({ id, remotes, localFetch: true }));
     });
@@ -911,9 +925,7 @@ export default class Scope {
     const componentObjectsP = componentIds.map(id => this.sources.getObjects(id));
     const componentObjects = await Promise.all(componentObjectsP);
     const componentsAndObjects = [];
-    const username = globalConfig.getSync(CFG_USER_NAME_KEY);
-    const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
-    _enrichContext(context);
+    enrichContextFromGlobal(context);
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(this.objects);
       componentAndObject.component.local = false;
@@ -1146,13 +1158,3 @@ export default class Scope {
     });
   }
 }
-
-/**
- * Add more keys to the context which will be passed to hooks
- * @param {Object} context
- */
-const _enrichContext = (context: Object = {}) => {
-  const username = globalConfig.getSync(CFG_USER_NAME_KEY);
-  const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
-  Object.assign(context, { username, email });
-};
