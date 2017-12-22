@@ -8,7 +8,8 @@ chai.use(require('chai-fs'));
 // see the content of this component here: https://bitsrc.io/david/tests/bar/foo
 const componentTestId = 'david.tests/bar/foo';
 
-describe('importing bit components from bitsrc.io', function () {
+// todo: figure out how to config CI servers to work with bit registry
+describe.skip('importing bit components from bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
   const barFooDir = path.join(helper.localScopePath, 'components', 'bar', 'foo');
