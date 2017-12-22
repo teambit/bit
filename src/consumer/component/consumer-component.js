@@ -555,6 +555,11 @@ export default class Component {
       // if there is no componentMap, the component is new to this project and should be written to bit.map
       componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
     }
+    if (!consumer.shouldDistsBeInsideTheComponent() && !this.dists) {
+      // since the dists are set to be outside the components dir, the source files must be saved there
+      // otherwise, other components in dists won't be able to link to this component
+      this.copyFilesIntoDists();
+    }
     // For IMPORTED component we have to delete the content of the directory before importing.
     // Otherwise, when the author adds new files outside of the previous originallySharedDir and this user imports them
     // the environment will contain both copies, the old one with the old originallySharedDir and the new one.
@@ -752,6 +757,10 @@ export default class Component {
     }
   }
 
+  copyFilesIntoDists() {
+    this.dists = this.files.map(file => new Dist({ base: file.base, path: file.path, contents: file.contents }));
+  }
+
   async build({
     scope,
     environment,
@@ -776,8 +785,15 @@ export default class Component {
     logger.debug(`consumer-component.build ${this.id}`);
     // @TODO - write SourceMap Type
     if (!this.compilerId) {
-      logger.debug('compilerId was not found, nothing to build');
-      return Promise.resolve(null);
+      if (!consumer || consumer.shouldDistsBeInsideTheComponent()) {
+        logger.debug('compilerId was not found, nothing to build');
+        return Promise.resolve(null);
+      }
+      logger.debug(
+        'compilerId was not found, however, because the dists are set to be outside the components directory, save the source file as dists'
+      );
+      this.copyFilesIntoDists();
+      return this.dists;
     }
     // Ideally it's better to use the dists from the model.
     // If there is no consumer, it comes from the scope or isolated environment, which the dists are already saved.
