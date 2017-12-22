@@ -3,14 +3,12 @@ import v4 from 'uuid';
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-import npmClient from '../npm-client';
 import { Scope, ComponentWithDependencies } from '../scope';
 import { BitId } from '../bit-id';
 import { ISOLATED_ENV_ROOT } from '../constants';
 import { mkdirp } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
-import Component from '../consumer/component';
 
 export type IsolateOptions = {
   writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
@@ -40,15 +38,6 @@ export default class Environment {
     this.consumer = await Consumer.createWithExistingScope(this.path, this.scope);
   }
 
-  installNpmPackages(components: Component[], verbose: boolean): Promise<*> {
-    return Promise.all(
-      components.map((component) => {
-        if (R.isEmpty(component.packageDependencies)) return Promise.resolve();
-        return npmClient.install(component.packageDependencies, { cwd: component.writtenPath }, verbose);
-      })
-    );
-  }
-
   /**
    * import a component end to end. Including importing the dependencies and installing the npm
    * packages.
@@ -72,11 +61,7 @@ export default class Environment {
     };
     await this.consumer.writeToComponentsDir(concreteOpts);
     const componentWithDependencies: ComponentWithDependencies = R.head(componentsWithDependencies);
-    const componentWithDependenciesFlatten = [
-      componentWithDependencies.component,
-      ...componentWithDependencies.dependencies
-    ];
-    if (opts.installPackages) await this.installNpmPackages(componentWithDependenciesFlatten, opts.verbose);
+    if (opts.installPackages) await this.consumer.installNpmPackages([componentWithDependencies], opts.verbose);
     return componentWithDependencies;
   }
 

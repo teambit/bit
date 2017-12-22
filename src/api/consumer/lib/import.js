@@ -25,6 +25,7 @@ export default (async function importAction({
   force,
   dist,
   conf,
+  installNpmPackages,
   withPackageJson,
   writeBitDependencies = false
 }: {
@@ -38,6 +39,7 @@ export default (async function importAction({
   force: boolean,
   dist: boolean,
   conf: boolean,
+  installNpmPackages: boolean,
   withPackageJson: ?boolean,
   writeBitDependencies: ?boolean
 }): Promise<any> {
@@ -97,7 +99,8 @@ export default (async function importAction({
     writeBitDependencies,
     force,
     dist,
-    conf
+    conf,
+    installNpmPackages
   );
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const bitMap = await consumer.getBitMap();
@@ -114,7 +117,8 @@ export default (async function importAction({
   const warnings = await warnForPackageDependencies({
     dependencies: flattenDependencies(dependencies),
     envDependencies,
-    consumer
+    consumer,
+    installNpmPackages
   });
   return { dependencies, envDependencies, warnings };
 });
@@ -158,13 +162,13 @@ function compatibleWith(a: { [string]: string }, b: { [string]: string }): boole
 
 // TODO: refactor to better use of semver
 // TODO: move to bit-javascript
-const warnForPackageDependencies = ({ dependencies, consumer }): Promise<Object> => {
+const warnForPackageDependencies = ({ dependencies, consumer, installNpmPackages }): Promise<Object> => {
   const warnings = {
     notInPackageJson: [],
     notInNodeModules: [],
     notInBoth: []
   };
-
+  if (installNpmPackages) return warnings;
   const projectDir = consumer.getPath();
   const getPackageJson = (dir) => {
     try {
