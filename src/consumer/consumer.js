@@ -269,7 +269,8 @@ export default class Consumer {
     force?: boolean = false,
     dist?: boolean = false,
     conf?: boolean = false,
-    installNpmPackages?: boolean = true
+    installNpmPackages?: boolean = true,
+    installDependenciesAsBitComponents?: boolean = false
   ): Promise<> {
     const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
     const bitMap = await this.getBitMap();
@@ -295,7 +296,8 @@ export default class Consumer {
         componentsWithDependencies: componentsAndDependenciesBitJson,
         withPackageJson,
         withBitJson: conf,
-        dist
+        dist,
+        installDependenciesAsBitComponents
       });
       if (installNpmPackages) await this.installNpmPackages(componentsAndDependenciesBitJson);
     }
@@ -351,7 +353,8 @@ export default class Consumer {
     force?: boolean = false,
     dist?: boolean = false,
     conf?: boolean = false,
-    installNpmPackages?: boolean = true
+    installNpmPackages?: boolean = true,
+    installDependenciesAsBitComponents?: boolean = false
   ) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
@@ -366,7 +369,8 @@ export default class Consumer {
       withPackageJson,
       withBitJson: conf,
       writeBitDependencies,
-      dist
+      dist,
+      installDependenciesAsBitComponents
     });
     if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies);
     return { dependencies: componentsWithDependencies };
@@ -383,7 +387,8 @@ export default class Consumer {
     force?: boolean = false,
     dist?: boolean = false,
     conf?: boolean = false,
-    installNpmPackages?: boolean = true
+    installNpmPackages?: boolean = true,
+    installDependenciesAsBitComponents?: boolean = false
   ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
@@ -395,7 +400,8 @@ export default class Consumer {
         force,
         dist,
         conf,
-        installNpmPackages
+        installNpmPackages,
+        installDependenciesAsBitComponents
       );
     }
     return this.importSpecificComponents(
@@ -407,7 +413,8 @@ export default class Consumer {
       force,
       dist,
       conf,
-      installNpmPackages
+      installNpmPackages,
+      installDependenciesAsBitComponents
     );
   }
 
@@ -454,7 +461,8 @@ export default class Consumer {
     withBitJson = true,
     writeBitDependencies = false,
     createNpmLinkFiles = false,
-    dist = true
+    dist = true,
+    installDependenciesAsBitComponents = false
   }: {
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
@@ -463,13 +471,18 @@ export default class Consumer {
     withBitJson?: boolean,
     writeBitDependencies?: boolean,
     createNpmLinkFiles?: boolean,
-    dist?: boolean
+    dist?: boolean,
+    installDependenciesAsBitComponents?: boolean
   }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
+    const remotes = await this.scope.remotes();
     const writeComponentsP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
       const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitDir;
+      // if a component.scope is listed as a remote, it doesn't go to the hub and therefore it can't import dependencies as packages
+      componentWithDeps.component.dependenciesAreBitComponents =
+        installDependenciesAsBitComponents || remotes.get(componentWithDeps.component.scope);
       // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
       // find the component in bit.map
       const componentMap = bitMap.getComponent(componentWithDeps.component.id.toStringWithoutVersion(), false);
@@ -499,6 +512,7 @@ export default class Consumer {
     const writtenComponents = await Promise.all(writeComponentsP);
 
     const allDependenciesP = componentsWithDependencies.map((componentWithDeps) => {
+      if (!componentWithDeps.component.dependenciesAreBitComponents) return Promise.resolve(null);
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         const depFromBitMap = bitMap.getComponent(dependencyId, false);
@@ -540,7 +554,8 @@ export default class Consumer {
 
       return Promise.all(writeDependenciesP);
     });
-    const writtenDependencies = await Promise.all(allDependenciesP);
+    const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
+    const writtenDependencies = writtenDependenciesIncludesNull.filter(dep => dep);
 
     if (writeToPath) {
       componentsWithDependencies.forEach((componentWithDeps) => {
@@ -558,7 +573,9 @@ export default class Consumer {
       )
     );
     await bitMap.write();
-    const allComponents = [...writtenComponents, ...R.flatten(writtenDependencies)];
+    const allComponents = writtenDependencies
+      ? [...writtenComponents, ...R.flatten(writtenDependencies)]
+      : writtenComponents;
     this.linkComponents(allComponents, bitMap);
     return allComponents;
   }
@@ -846,7 +863,10 @@ export default class Consumer {
         }
         createSymlinkOrCopy(componentId, target, linkPath);
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
-        const boundDependencies = component.dependencies ? writeDependenciesLinks(component, componentMap) : [];
+        const boundDependencies =
+          component.dependencies && component.dependenciesAreBitComponents
+            ? writeDependenciesLinks(component, componentMap)
+            : [];
         const boundMissingDependencies =
           component.missingDependencies && component.missingDependencies.missingLinks
             ? writeMissingLinks(component, componentMap)
@@ -1047,16 +1067,21 @@ export default class Consumer {
 
   async installNpmPackages(componentsWithDependencies: ComponentWithDependencies[], verbose: boolean): Promise<*> {
     const componentsWithDependenciesFlatten = R.flatten(
-      componentsWithDependencies.map(oneComponentWithDependencies => [
-        oneComponentWithDependencies.component,
-        ...oneComponentWithDependencies.dependencies
-      ])
+      componentsWithDependencies.map((oneComponentWithDependencies) => {
+        return oneComponentWithDependencies.component.dependenciesAreBitComponents
+          ? [oneComponentWithDependencies.component, ...oneComponentWithDependencies.dependencies]
+          : [oneComponentWithDependencies.component];
+      })
     );
     loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
     const results = await Promise.all(
       componentsWithDependenciesFlatten.map((component) => {
-        if (R.isEmpty(component.packageDependencies)) return Promise.resolve();
-        return npmClient.install(component.packageDependencies, { cwd: component.writtenPath });
+        const packagesToInstall =
+          component._bitDependenciesPackages && !component.dependenciesAreBitComponents
+            ? Object.assign(component._bitDependenciesPackages, component.packageDependencies)
+            : component.packageDependencies;
+        if (R.isEmpty(packagesToInstall)) return Promise.resolve();
+        return npmClient.install(packagesToInstall, { cwd: component.writtenPath });
       })
     );
     loader.stop();

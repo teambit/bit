@@ -24,6 +24,7 @@ export default (async function importAction({
   conf,
   installNpmPackages,
   withPackageJson,
+  installDependenciesAsBitComponents,
   writeBitDependencies = false
 }: {
   ids: string,
@@ -37,8 +38,23 @@ export default (async function importAction({
   conf: boolean,
   installNpmPackages: boolean,
   withPackageJson: ?boolean,
+  installDependenciesAsBitComponents: ?boolean,
   writeBitDependencies: ?boolean
 }): Promise<any> {
+  if (!withPackageJson) {
+    // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
+    installNpmPackages = false;
+    installDependenciesAsBitComponents = true;
+  }
+  if (!installNpmPackages) {
+    // if npm packages are not installed, don't install dependencies as npm packages
+    installDependenciesAsBitComponents = true;
+  }
+  if (!installDependenciesAsBitComponents) {
+    // according to the two 'if' statements above, installNpmPackages and withPackageJson must be true
+    writeBitDependencies = true;
+  }
+
   async function importEnvironment(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
 
@@ -77,7 +93,8 @@ export default (async function importAction({
     force,
     dist,
     conf,
-    installNpmPackages
+    installNpmPackages,
+    installDependenciesAsBitComponents
   );
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const bitMap = await consumer.getBitMap();

@@ -96,6 +96,8 @@ export default class Component {
   license: ?License;
   log: ?Log;
   writtenPath: ?string; // needed for generate links
+  dependenciesAreBitComponents: ?boolean = true; // otherwise they're npm packages
+  _bitDependenciesPackages: ?Object;
   originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
   _writeDistsFiles: ?boolean = true;
   _areDistsInsideComponentDir: ?boolean = true;
@@ -274,6 +276,7 @@ export default class Component {
       bitDependencies,
       registryPrefix: registryDomainPrefix
     });
+    if (!R.isEmpty(bitDependencies)) this._bitDependenciesPackages = packageJson.dependencies;
     const domainPrefix = getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
     return packageJson.write({ override: force, postInstallLinkData, domainPrefix });
   }

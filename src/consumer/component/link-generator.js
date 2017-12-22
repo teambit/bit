@@ -4,7 +4,6 @@ import normalize from 'normalize-path';
 import R from 'ramda';
 import groupBy from 'lodash.groupby';
 import {
-  DEFAULT_DIST_DIRNAME,
   DEFAULT_INDEX_NAME,
   COMPONENT_ORIGINS,
   AUTO_GENERATED_MSG,
@@ -21,6 +20,7 @@ import { BitIds } from '../../bit-id';
 import fileTypesPlugins from '../../plugins/file-types-plugins';
 import { getSync } from '../../api/consumer/lib/global-config';
 import { Consumer } from '../../consumer';
+import ComponentMap from '../bit-map/component-map';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -168,18 +168,19 @@ async function writeDependencyLinks(
     linkPath: string,
     relativePathInDependency: string,
     relativePath: Object,
-    depRootDir: ?string
+    depRootDir: ?string,
+    isNpmLink: boolean
   ) => {
     // this is used to convert the component name to a valid npm package  name
     const packagePath = `${getSync(CFG_REGISTRY_DOMAIN_PREFIX) ||
       DEFAULT_REGISTRY_DOMAIN_PREFIX}/${componentId.toStringWithoutVersion().replace(/\//g, '.')}`;
-    let actualFilePath = path.join(depRootDir, relativePathInDependency);
+    let actualFilePath = depRootDir ? path.join(depRootDir, relativePathInDependency) : relativePathInDependency;
     if (relativePathInDependency === mainFile) {
-      actualFilePath = path.join(depRootDir, _getIndexFileName(mainFile));
+      actualFilePath = depRootDir ? path.join(depRootDir, _getIndexFileName(mainFile)) : _getIndexFileName(mainFile);
     }
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
     const importSpecifiers = relativePath.importSpecifiers;
-    const linkContent = _getLinkContent(relativeFilePath, importSpecifiers, createNpmLinkFiles, packagePath);
+    const linkContent = _getLinkContent(relativeFilePath, importSpecifiers, isNpmLink, packagePath);
     logger.debug(`writeLinkFile, on ${linkPath}`);
     const linkPathExt = getExt(linkPath);
     const isEs6 = importSpecifiers && linkPathExt === 'js';
@@ -189,13 +190,16 @@ async function writeDependencyLinks(
   const componentLink = (
     depId: string,
     depComponent: Component,
-    relativePath: Object,
-    parentDir: string,
-    mainFile: string,
-    hasDist: boolean,
-    distRoot: string
+    relativePath: RelativePath,
+    parentComponent: Component,
+    parentComponentMap: ComponentMap
   ) => {
+    const parentDir = parentComponent.writtenPath;
     const relativePathInDependency = relativePath.destinationRelativePath;
+    const mainFile = depComponent.calculateMainDistFile();
+    const hasDist = parentComponent._writeDistsFiles && parentComponent.dists && !R.isEmpty(parentComponent.dists);
+    const distRoot = parentComponent.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
+
     let relativeDistPathInDependency = searchFilesIgnoreExt(
       depComponent.dists,
       path.normalize(relativePathInDependency),
@@ -210,11 +214,11 @@ async function writeDependencyLinks(
     const linkPath = path.join(parentDir, sourceRelativePath);
     let distLinkPath;
     const linkFiles = [];
-    const depComponentMap = bitMap.getComponent(depId, true);
+    const depComponentMap = parentComponent.dependenciesAreBitComponents ? bitMap.getComponent(depId, true) : undefined;
 
-    const depRootDir = path.join(consumerPath, depComponentMap.rootDir);
-
-    if (hasDist) {
+    const depRootDir = depComponentMap ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
+    const isNpmLink = createNpmLinkFiles || !parentComponent.dependenciesAreBitComponents;
+    if (hasDist && parentComponent.dependenciesAreBitComponents) {
       const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
       const depRootDirDist = depComponent.getDistDirForConsumer(consumer, depComponentMap.rootDir);
       distLinkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
@@ -225,12 +229,21 @@ async function writeDependencyLinks(
         distLinkPath,
         relativeDistPathInDependency,
         relativePath,
-        depRootDirDist
+        depRootDirDist,
+        isNpmLink
       );
       linkFiles.push(linkFile);
     }
 
-    const linkFile = prepareLinkFile(depId, mainFile, linkPath, relativePathInDependency, relativePath, depRootDir);
+    const linkFile = prepareLinkFile(
+      depId,
+      mainFile,
+      linkPath,
+      relativePathInDependency,
+      relativePath,
+      depRootDir,
+      isNpmLink
+    );
     linkFiles.push(linkFile);
     return linkFiles;
   };
@@ -238,12 +251,12 @@ async function writeDependencyLinks(
   const componentLinks = (
     // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
     dependencies: Component[],
-    directDependencies: Dependency[],
-    flattenedDependencies: BitIds,
-    parentDir: string,
-    hasDist: boolean,
-    distRoot: string
+    parentComponent: Component,
+    parentComponentMap: ComponentMap
   ) => {
+    const directDependencies: Dependency[] = parentComponent.dependencies;
+    const flattenedDependencies: BitIds = parentComponent.flattenedDependencies;
+
     if (!directDependencies || !directDependencies.length) return [];
     const links = directDependencies.map((dep: Dependency) => {
       if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
@@ -260,15 +273,7 @@ async function writeDependencyLinks(
       const depComponent = R.find(_byComponentId, dependencies);
 
       const currLinks = dep.relativePaths.map((relativePath: RelativePath) => {
-        return componentLink(
-          resolveDepVersion,
-          depComponent,
-          relativePath,
-          parentDir,
-          depComponent.calculateMainDistFile(),
-          hasDist,
-          distRoot
-        );
+        return componentLink(resolveDepVersion, depComponent, relativePath, parentComponent, parentComponentMap);
       });
       return R.flatten(currLinks);
     });
@@ -296,40 +301,20 @@ async function writeDependencyLinks(
       return Promise.resolve();
     }
     logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
-    const directDeps: Dependency[] = componentWithDeps.component.dependencies;
-    const flattenDeps = componentWithDeps.component.flattenedDependencies;
-    const hasDist =
-      componentWithDeps.component._writeDistsFiles &&
-      componentWithDeps.component.dists &&
-      !R.isEmpty(componentWithDeps.component.dists);
-    const distRoot = componentWithDeps.component.getDistDirForConsumer(consumer, componentMap.rootDir);
 
-    const directLinksP = componentLinks(
-      componentWithDeps.dependencies,
-      directDeps,
-      flattenDeps,
-      componentWithDeps.component.writtenPath,
-      hasDist,
-      distRoot
-    );
+    const directLinksP = componentLinks(componentWithDeps.dependencies, componentWithDeps.component, componentMap);
 
-    const indirectLinksP = componentWithDeps.dependencies.map((dep: Component) => {
-      const depHasDist = dep.dists && !R.isEmpty(dep.dists);
-      const depComponentMap = bitMap.getComponent(dep.id, true);
-      const depDistRoot = dep.getDistDirForConsumer(consumer, depComponentMap.rootDir);
-      // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
-      // also the indirect ones
-      // The dep.dependencies contain only an id and relativePaths and not the full object
-      return componentLinks(
-        componentWithDeps.dependencies,
-        dep.dependencies,
-        dep.flattenedDependencies,
-        dep.writtenPath,
-        depHasDist,
-        depDistRoot
-      );
-    });
-    return Promise.all([directLinksP, ...indirectLinksP]);
+    if (componentWithDeps.component.dependenciesAreBitComponents) {
+      const indirectLinksP = componentWithDeps.dependencies.map((dep: Component) => {
+        const depComponentMap = bitMap.getComponent(dep.id, true);
+        // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
+        // also the indirect ones
+        // The dep.dependencies contain only an id and relativePaths and not the full object
+        return componentLinks(componentWithDeps.dependencies, dep, depComponentMap);
+      });
+      return Promise.all([directLinksP, ...indirectLinksP]);
+    }
+    return directLinksP;
   });
   return Promise.all(allLinksP);
 }
