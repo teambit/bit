@@ -46,7 +46,7 @@ export default class Environment {
       componentsWithDependencies: componentDependenciesArr,
       writeBitDependencies,
       createNpmLinkFiles,
-      installDependenciesAsBitComponents: true
+      saveDependenciesAsComponents: true
     });
     const componentWithDependencies: ComponentWithDependencies = R.head(componentDependenciesArr);
     if (installDependencies) await this.consumer.installNpmPackages([componentWithDependencies], verbose);

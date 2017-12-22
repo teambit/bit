@@ -270,7 +270,7 @@ export default class Consumer {
     dist?: boolean = false,
     conf?: boolean = false,
     installNpmPackages?: boolean = true,
-    installDependenciesAsBitComponents?: boolean = false
+    saveDependenciesAsComponents?: boolean = false
   ): Promise<> {
     const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
     const bitMap = await this.getBitMap();
@@ -297,7 +297,7 @@ export default class Consumer {
         withPackageJson,
         withBitJson: conf,
         dist,
-        installDependenciesAsBitComponents
+        saveDependenciesAsComponents
       });
       if (installNpmPackages) await this.installNpmPackages(componentsAndDependenciesBitJson);
     }
@@ -354,7 +354,7 @@ export default class Consumer {
     dist?: boolean = false,
     conf?: boolean = false,
     installNpmPackages?: boolean = true,
-    installDependenciesAsBitComponents?: boolean = false
+    saveDependenciesAsComponents?: boolean = false
   ) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
@@ -370,7 +370,7 @@ export default class Consumer {
       withBitJson: conf,
       writeBitDependencies,
       dist,
-      installDependenciesAsBitComponents
+      saveDependenciesAsComponents
     });
     if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies);
     return { dependencies: componentsWithDependencies };
@@ -388,7 +388,7 @@ export default class Consumer {
     dist?: boolean = false,
     conf?: boolean = false,
     installNpmPackages?: boolean = true,
-    installDependenciesAsBitComponents?: boolean = false
+    saveDependenciesAsComponents?: boolean = false
   ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
@@ -401,7 +401,7 @@ export default class Consumer {
         dist,
         conf,
         installNpmPackages,
-        installDependenciesAsBitComponents
+        saveDependenciesAsComponents
       );
     }
     return this.importSpecificComponents(
@@ -414,7 +414,7 @@ export default class Consumer {
       dist,
       conf,
       installNpmPackages,
-      installDependenciesAsBitComponents
+      saveDependenciesAsComponents
     );
   }
 
@@ -462,7 +462,7 @@ export default class Consumer {
     writeBitDependencies = false,
     createNpmLinkFiles = false,
     dist = true,
-    installDependenciesAsBitComponents = false
+    saveDependenciesAsComponents = false
   }: {
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
@@ -472,7 +472,7 @@ export default class Consumer {
     writeBitDependencies?: boolean,
     createNpmLinkFiles?: boolean,
     dist?: boolean,
-    installDependenciesAsBitComponents?: boolean
+    saveDependenciesAsComponents?: boolean // as opposed to npm packages
   }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
@@ -481,8 +481,8 @@ export default class Consumer {
       const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitDir;
       // if a component.scope is listed as a remote, it doesn't go to the hub and therefore it can't import dependencies as packages
-      componentWithDeps.component.dependenciesAreBitComponents =
-        installDependenciesAsBitComponents || remotes.get(componentWithDeps.component.scope);
+      componentWithDeps.component.dependenciesSavedAsComponents =
+        saveDependenciesAsComponents || remotes.get(componentWithDeps.component.scope);
       // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
       // find the component in bit.map
       const componentMap = bitMap.getComponent(componentWithDeps.component.id.toStringWithoutVersion(), false);
@@ -511,8 +511,8 @@ export default class Consumer {
     });
     const writtenComponents = await Promise.all(writeComponentsP);
 
-    const allDependenciesP = componentsWithDependencies.map((componentWithDeps) => {
-      if (!componentWithDeps.component.dependenciesAreBitComponents) return Promise.resolve(null);
+    const allDependenciesP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
+      if (!componentWithDeps.component.dependenciesSavedAsComponents) return Promise.resolve(null);
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         const depFromBitMap = bitMap.getComponent(dependencyId, false);
@@ -864,7 +864,7 @@ export default class Consumer {
         createSymlinkOrCopy(componentId, target, linkPath);
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
         const boundDependencies =
-          component.dependencies && component.dependenciesAreBitComponents
+          component.dependencies && component.dependenciesSavedAsComponents
             ? writeDependenciesLinks(component, componentMap)
             : [];
         const boundMissingDependencies =
@@ -1068,7 +1068,7 @@ export default class Consumer {
   async installNpmPackages(componentsWithDependencies: ComponentWithDependencies[], verbose: boolean): Promise<*> {
     const componentsWithDependenciesFlatten = R.flatten(
       componentsWithDependencies.map((oneComponentWithDependencies) => {
-        return oneComponentWithDependencies.component.dependenciesAreBitComponents
+        return oneComponentWithDependencies.component.dependenciesSavedAsComponents
           ? [oneComponentWithDependencies.component, ...oneComponentWithDependencies.dependencies]
           : [oneComponentWithDependencies.component];
       })
@@ -1077,7 +1077,7 @@ export default class Consumer {
     const results = await Promise.all(
       componentsWithDependenciesFlatten.map((component) => {
         const packagesToInstall =
-          component._bitDependenciesPackages && !component.dependenciesAreBitComponents
+          component._bitDependenciesPackages && !component.dependenciesSavedAsComponents
             ? Object.assign(component._bitDependenciesPackages, component.packageDependencies)
             : component.packageDependencies;
         if (R.isEmpty(packagesToInstall)) return Promise.resolve();

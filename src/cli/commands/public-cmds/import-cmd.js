@@ -21,16 +21,16 @@ export default class Import extends Command {
     ['f', 'force', 'ignore local changes'],
     ['', 'dist', 'write dist files (when exist) to the configured directory'],
     ['', 'conf', 'write the configuration file (bit.json)'],
-    ['', 'dependencies-as-bit-components', 'install hub dependencies as bit components rather than npm packages'],
+    ['', 'save-dependencies-as-components', 'save hub dependencies as bit components rather than npm packages'],
     [
       '',
       'skip-npm-install',
-      'do not install packages of the imported components. (it automatically enables install-dependencies-by-bit flag)'
+      'do not install packages of the imported components. (it automatically enables save-dependencies-as-components flag)'
     ],
     [
       '',
       'ignore-package-json',
-      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and install-dependencies-by-bit flags)'
+      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)'
     ]
   ];
   loader = true;
@@ -49,7 +49,7 @@ export default class Import extends Command {
       dist = false,
       conf = false,
       skipNpmInstall = false,
-      dependenciesAsBitComponents = false,
+      saveDependenciesAsComponents = false,
       ignorePackageJson = false
     }: {
       tester?: boolean,
@@ -62,7 +62,7 @@ export default class Import extends Command {
       dist?: boolean,
       conf?: boolean,
       skipNpmInstall?: boolean,
-      dependenciesAsBitComponents?: boolean,
+      saveDependenciesAsComponents?: boolean,
       ignorePackageJson?: boolean
     }
   ): Promise<any> {
@@ -82,7 +82,7 @@ export default class Import extends Command {
       conf,
       installNpmPackages: !skipNpmInstall,
       withPackageJson: !ignorePackageJson,
-      installDependenciesAsBitComponents: dependenciesAsBitComponents
+      saveDependenciesAsComponents
     }).then(importResults => R.assoc('displayDependencies', displayDependencies, importResults));
   }
 

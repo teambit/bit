@@ -96,7 +96,7 @@ export default class Component {
   license: ?License;
   log: ?Log;
   writtenPath: ?string; // needed for generate links
-  dependenciesAreBitComponents: ?boolean = true; // otherwise they're npm packages
+  dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
   _bitDependenciesPackages: ?Object;
   originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
   _writeDistsFiles: ?boolean = true;

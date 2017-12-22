@@ -214,11 +214,13 @@ async function writeDependencyLinks(
     const linkPath = path.join(parentDir, sourceRelativePath);
     let distLinkPath;
     const linkFiles = [];
-    const depComponentMap = parentComponent.dependenciesAreBitComponents ? bitMap.getComponent(depId, true) : undefined;
+    const depComponentMap = parentComponent.dependenciesSavedAsComponents
+      ? bitMap.getComponent(depId, true)
+      : undefined;
 
     const depRootDir = depComponentMap ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
-    const isNpmLink = createNpmLinkFiles || !parentComponent.dependenciesAreBitComponents;
-    if (hasDist && parentComponent.dependenciesAreBitComponents) {
+    const isNpmLink = createNpmLinkFiles || !parentComponent.dependenciesSavedAsComponents;
+    if (hasDist && parentComponent.dependenciesSavedAsComponents) {
       const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
       const depRootDirDist = depComponent.getDistDirForConsumer(consumer, depComponentMap.rootDir);
       distLinkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
@@ -304,7 +306,7 @@ async function writeDependencyLinks(
 
     const directLinksP = componentLinks(componentWithDeps.dependencies, componentWithDeps.component, componentMap);
 
-    if (componentWithDeps.component.dependenciesAreBitComponents) {
+    if (componentWithDeps.component.dependenciesSavedAsComponents) {
       const indirectLinksP = componentWithDeps.dependencies.map((dep: Component) => {
         const depComponentMap = bitMap.getComponent(dep.id, true);
         // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
