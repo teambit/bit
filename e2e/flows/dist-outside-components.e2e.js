@@ -225,6 +225,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
      */
     before(() => {
       helper.getClonedLocalScope(scopeWithCompiler);
+      helper.reInitRemoteScope();
       const isTypeFixture = "export default function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
