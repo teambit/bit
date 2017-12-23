@@ -45,7 +45,8 @@ export default class Environment {
     await this.consumer.writeToComponentsDir({
       componentsWithDependencies: componentDependenciesArr,
       writeBitDependencies,
-      createNpmLinkFiles
+      createNpmLinkFiles,
+      saveDependenciesAsComponents: true
     });
     const componentWithDependencies: ComponentWithDependencies = R.head(componentDependenciesArr);
     if (installDependencies) await this.consumer.installNpmPackages([componentWithDependencies], verbose);
