@@ -57,6 +57,7 @@ export default class Environment {
       withBitJson: opts.conf,
       writeBitDependencies: opts.writeBitDependencies,
       createNpmLinkFiles: opts.createNpmLinkFiles,
+      saveDependenciesAsComponents: true,
       dist: opts.dist
     };
     await this.consumer.writeToComponentsDir(concreteOpts);

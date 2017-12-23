@@ -22,8 +22,17 @@ export default class Import extends Command {
     ['f', 'force', 'ignore local changes'],
     ['', 'dist', 'write dist files (when exist) to the configured directory'],
     ['', 'conf', 'write the configuration file (bit.json)'],
-    ['', 'skip-npm-install', 'do not install packages of the imported components'],
-    ['', 'ignore-package-json', 'do not generate package.json for the imported component(s)']
+    ['', 'save-dependencies-as-components', 'save hub dependencies as bit components rather than npm packages'],
+    [
+      '',
+      'skip-npm-install',
+      'do not install packages of the imported components. (it automatically enables save-dependencies-as-components flag)'
+    ],
+    [
+      '',
+      'ignore-package-json',
+      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)'
+    ]
   ];
   loader = true;
   migration = true;
@@ -42,6 +51,7 @@ export default class Import extends Command {
       dist = false,
       conf = false,
       skipNpmInstall = false,
+      saveDependenciesAsComponents = false,
       ignorePackageJson = false
     }: {
       tester?: boolean,
@@ -55,6 +65,7 @@ export default class Import extends Command {
       dist?: boolean,
       conf?: boolean,
       skipNpmInstall?: boolean,
+      saveDependenciesAsComponents?: boolean,
       ignorePackageJson?: boolean
     }
   ): Promise<any> {
@@ -62,7 +73,6 @@ export default class Import extends Command {
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
     }
-
     return importAction({
       ids,
       tester,
@@ -75,7 +85,8 @@ export default class Import extends Command {
       dist,
       conf,
       installNpmPackages: !skipNpmInstall,
-      withPackageJson: !ignorePackageJson
+      withPackageJson: !ignorePackageJson,
+      saveDependenciesAsComponents
     }).then(importResults => R.assoc('displayDependencies', displayDependencies, importResults));
   }
 
