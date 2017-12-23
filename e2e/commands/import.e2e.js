@@ -602,9 +602,9 @@ describe('bit import', function () {
         expect(packageJsonContent).to.deep.include({
           name: `${helper.remoteScope}.comp.with-deps`,
           version: '0.0.1',
-          main: 'with-deps.js',
-          dependencies: { 'lodash.isstring': '4.0.0' }
+          main: 'with-deps.js'
         });
+        expect(packageJsonContent.dependencies['lodash.isstring']).to.have.string('4.0.0'); // it can be ^4.0.0 or 4.0.0 depends on npm version installed
       });
       it('should write a package.json in the nested dependency component dir', () => {
         const packageJsonPath = path.join(
@@ -622,9 +622,9 @@ describe('bit import', function () {
         expect(packageJsonContent).to.deep.include({
           name: `${helper.remoteScope}.global.simple`,
           version: '0.0.1',
-          main: 'global/simple.js',
-          dependencies: { 'lodash.isboolean': '3.0.0' }
+          main: 'global/simple.js'
         });
+        expect(packageJsonContent.dependencies['lodash.isboolean']).to.have.string('3.0.0');
       });
 
       it.skip('should write the dependencies according to their relative paths', () => {});
@@ -663,11 +663,11 @@ describe('bit import', function () {
         output = helper.importComponentWithOptions('comp/with-deps', { '-skip-npm-install': '' });
       });
       it('should print warning for missing package dependencies', () => {
-        expect(
-          output.includes('error - missing the following package dependencies. please install and add to package.json.')
-        ).to.be.true;
-        expect(output.includes('lodash.isboolean: 3.0.0')).to.be.true;
-        expect(output.includes('lodash.isstring: 4.0.0')).to.be.true;
+        expect(output).to.have.string(
+          'error - missing the following package dependencies. please install and add to package.json.'
+        );
+        expect(output).to.have.string('lodash.isboolean: 3.0.0');
+        expect(output).to.have.string('lodash.isstring: 4.0.0');
       });
     });
   });

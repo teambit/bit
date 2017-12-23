@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- `bit import`: install hub dependencies as npm packages, unless `--save-dependencies-as-components` flag is set
 - `bit import`: install npm packages by default, unless `--skip-npm-install` flag is set
 - change auto-generated node_modules links to be the same as NPM installation of components (@bit/scope.box.name)
 - support saving dists files on a pre-configured directory relative to consumer root (rather than saving them inside the component dir) 
