@@ -6,7 +6,7 @@ chai.use(require('chai-fs'));
 
 const assert = chai.assert;
 
-describe('bit remove command', function () {
+describe.only('bit remove command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -47,26 +47,28 @@ describe('bit remove command', function () {
       expect(status.includes('bar/foo')).to.be.false;
     });
   });
-  describe('with local components with dependecies between them  ', () => {
+  describe('local component with dependent', () => {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const aFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'a.js', aFixture);
-      helper.addComponent('utils/a.js');
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
 
-      const bFixture = "const a = require('./a');";
-      helper.createComponent('utils', 'b.js', bFixture);
-      helper.addComponent('utils/b.js');
+      const isStringFixture = "const a = require('./is-type');";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
-      output = helper.removeComponent('utils/b', '-d');
+      output = helper.removeComponent('utils/is-string', '-d');
     });
-    it('should remove component', () => {
-      expect(output).to.contain.string('removed components: utils/b');
+    it('should remove local component', () => {
+      expect(output).to.contain.string('removed components: utils/is-string');
     });
-    it('should not show in bitmap', () => {
-      assert.notPathExists(path.join(helper.localScopePath, 'utils', 'b.js'), 'file should not exist');
-      assert.pathExists(path.join(helper.localScopePath, 'utils', 'a.js'), 'file should  exist');
+    it('should remove local component files from fs', () => {
+      assert.notPathExists(path.join(helper.localScopePath, 'utils', 'is-string.js'), 'file should not exist');
+    });
+    it('should not remove local component dependent files from fs', () => {
+      assert.pathExists(path.join(helper.localScopePath, 'utils', 'is-type.js'), 'file should  exist');
     });
   });
   describe('with commited components and -t=true', () => {
@@ -154,6 +156,8 @@ describe('bit remove command', function () {
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
+    });
+    it('should not remove component version when component is modified', () => {
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
@@ -164,13 +168,15 @@ describe('bit remove command', function () {
         'is-string.js',
         "module.exports = function isType() { return 'got is-type'; };console.log('sdfsdfsdf')"
       );
+      const output = helper.removeComponent('utils/is-string@0.0.1');
+      expect(output).to.contain.string('error: unable to remove modified components: utils/is-string@0.0.1');
     });
     it('should not remove component when component is modified', () => {
-      const output = helper.removeComponent('utils/is-string@0.0.1');
-      expect(output).to.contain.string('modified components: utils/is-string@0.0.1');
-      helper.commitAllComponents();
+      const output = helper.removeComponent('utils/is-string');
+      expect(output).to.contain.string('error: unable to remove modified components: utils/is-string');
     });
     it('should print error msg when trying to remove missing component', () => {
+      helper.commitAllComponents();
       const output = helper.removeComponent('utils/is-string@0.0.10');
       expect(output).to.contain.string('missing components: utils/is-string@0.0.10');
       helper.commitAllComponents();
@@ -201,8 +207,7 @@ describe('bit remove command', function () {
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
 
-      const copyIsTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('copy', 'is-type.js', copyIsTypeFixture);
+      helper.createComponent('copy', 'is-type.js', isTypeFixture);
       helper.addComponent('copy/is-type.js');
 
       const isStringFixture =
@@ -233,6 +238,11 @@ describe('bit remove command', function () {
       expect(listOutput).to.not.contain.string(`${helper.remoteScope}/utils/is-string`);
       expect(listOutput).to.contain.string(`${helper.remoteScope}/utils/is-type`);
     });
+    it('should import component with same hash of component that was deleted', () => {
+      const output = helper.importComponent('copy/is-type');
+      expect(output.includes('successfully imported one component')).to.be.true;
+      expect(output.includes('copy/is-type')).to.be.true;
+    });
     it('2 components with same file hash should still work if one component is deleted', () => {
       const output = helper.removeComponent(`${helper.remoteScope}/copy/is-type`);
       expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/copy/is-type`);
@@ -240,50 +250,50 @@ describe('bit remove command', function () {
       expect(listOutput).to.contain.string(`${helper.remoteScope}/utils/is-type`);
     });
   });
-  describe('delete components with same file hash', () => {
+  describe.only('delete components with same file hash', () => {
     const helper2 = new Helper();
 
     before(() => {
       helper2.setNewLocalAndRemoteScopes();
       helper.setNewLocalAndRemoteScopes();
       helper.addRemoteScope(helper2.remoteScopePath, helper.remoteScopePath);
-      const aFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'a.js', aFixture);
-      helper.addComponent('utils/a.js');
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
 
-      let bFixture = "const a = require('./a');";
-      helper.createComponent('utils', 'b.js', bFixture);
-      helper.addComponent('utils/b.js');
+      let isStringFixture = "const a = require('./is-type');";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
 
-      const cFixture = "const a = require('./a');";
-      helper.createComponent('utils', 'c.js', cFixture);
-      helper.addComponent('utils/c.js');
+      const isString2Fixture = "const a = require('./is-type');";
+      helper.createComponent('utils', 'is-string2.js', isString2Fixture);
+      helper.addComponent('utils/is-string2.js');
 
       helper.commitAllComponents();
 
-      bFixture = "console.log('sdfdsf');";
-      helper.createComponent('utils', 'b.js', bFixture);
+      isStringFixture = "console.log('sdfdsf');";
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
 
       helper.commitAllComponents();
       helper.addRemoteScope(helper2.remoteScopePath, helper.localScopePath);
-      helper.exportComponent('utils/a', helper2.remoteScope);
-      helper.exportComponent('utils/b');
-      helper.exportComponent('utils/c');
+      helper.exportComponent('utils/is-type', helper2.remoteScope);
+      helper.exportComponent('utils/is-string');
+      helper.exportComponent('utils/is-string2');
     });
     it('should remove component version only', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/utils/b@0.0.1`);
-      expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/b@0.0.1`);
+      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.1`);
+      expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/is-string@0.0.1`);
     });
-    it('should import component c with no issues', () => {
+    it('should import component is-string with no issues', () => {
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      const output = helper.importComponent('utils/b');
+      const output = helper.importComponent('utils/is-string');
       expect(output.includes('successfully imported one component')).to.be.true;
     });
-    it('should import component c with no issues', () => {
+    it('should import component is-string2 with no issues', () => {
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      const output = helper.importComponent('utils/c');
+      const output = helper.importComponent('utils/is-string2');
       expect(output.includes('successfully imported one component')).to.be.true;
     });
     it('should remove imported component and its files', () => {
@@ -293,19 +303,19 @@ describe('bit remove command', function () {
         'components',
         '.dependencies',
         'utils',
-        'a',
+        'is-type',
         helper2.remoteScope
       );
 
-      const output = helper.removeComponent('utils/c');
-      expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/c`);
+      const output = helper.removeComponent('utils/is-string2');
+      expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/is-string2`);
       assert.isEmptyDirectory(importedComponentDir, 'directory not empty');
       assert.isEmptyDirectory(importedDependeceDir, 'directory not empty');
     });
     it('bitmap should not contain component and dependences', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/c`);
-      expect(bitMap).to.not.have.property(`${helper2.remoteScope}/utils/a`);
+      expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-string2`);
+      expect(bitMap).to.not.have.property(`${helper2.remoteScope}/utils/is-type`);
     });
   });
 });

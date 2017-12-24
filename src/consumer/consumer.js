@@ -6,6 +6,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
+import partition from 'lodash.partition';
 import symlinkOrCopy from 'symlink-or-copy';
 import { locateConsumer, pathHasConsumer } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport, MissingDependencies } from './exceptions';
@@ -1012,7 +1013,29 @@ export default class Consumer {
     return remote ? this.deprecateRemote(bitIds) : this.deprecateLocal(bitIds);
   }
 
-  async removeRemote(bitIds: Array<BitId>, force: boolean) {
+  /**
+   * Remove components local and remote
+   * splits array of ids into local and remote and removes according to flags
+   * @param {string[]} ids - list of remote component ids to delete
+   * @param {boolean} force - delete component that are used by other components.
+   * @param {boolean} track - keep tracking local staged components in bitmap.
+   * @param {boolean} deleteFiles - delete local added files from fs.
+   */
+  async remove(ids: string[], force: boolean, track: boolean, deleteFiles: boolean) {
+    const bitIds = ids.map(bitId => BitId.parse(bitId));
+    const [localIds, remoteIds] = partition(bitIds, id => id.isLocal());
+    const localResult = await this.removeLocal(localIds, force, track, deleteFiles);
+    const remoteResult = await this.removeRemote(remoteIds, force);
+    return { localResult, remoteResult };
+  }
+
+  /**
+   * Remove remote component from ssh server
+   * this method groups remote components by remote name and deletes remote components together
+   * @param {BitIds} bitIds - list of remote component ids to delete
+   * @param {boolean} force - delete component that are used by other components.
+   */
+  async removeRemote(bitIds: BitIds, force: boolean) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
     const remotes = await this.scope.remotes();
     const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
@@ -1023,20 +1046,34 @@ export default class Consumer {
 
     return Promise.all(removeP);
   }
-
-  removeComponentFromFs(bitIds: BitIds, bitMap: BitMap, deletFiles: boolean) {
-    bitIds.forEach((id) => {
+  /**
+   * delete files from fs according to imported/created
+   * @param {BitIds} bitIds - list of remote component ids to delete
+   * @param {BitMap} bitMap - delete component that are used by other components.
+   * @param {boolean} deleteFiles - delete component that are used by other components.
+   */
+  async removeComponentFromFs(bitIds: BitIds, bitMap: BitMap, deleteFiles: boolean) {
+    return bitIds.map(async (id) => {
       const component = id.isLocal() ? bitMap.getComponent(id.toStringWithoutVersion()) : bitMap.getComponent(id);
       if (
         (component.origin && component.origin == COMPONENT_ORIGINS.IMPORTED) ||
         component.origin == COMPONENT_ORIGINS.NESTED
       ) {
-        fs.removeSync(path.join(this.getPath(), component.rootDir));
-      } else if (component.origin == COMPONENT_ORIGINS.AUTHORED && deletFiles) {
-        component.files.map(file => fs.removeSync(file.relativePath));
+        await fs.remove(path.join(this.getPath(), component.rootDir));
+      } else if (component.origin == COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
+        return Promise.all(component.files.map(async file => await fs.remove(file.relativePath)));
       }
     });
   }
+  /**
+   * resolveLocalComponentIds - method is used for resolving local component ids
+   * imported = bit.remote/utils/is-string
+   * local = utils/is-string
+   * if component is imported then cant remove version only component
+   * @param {BitIds} bitIds - list of remote component ids to delete
+   * @param {BitMap} bitMap - delete component that are used by other components.
+   * @param {boolean} deleteFiles - delete component that are used by other components.
+   */
   resolveLocalComponentIds(bitIds: BitIds, bitMap: BitMap) {
     return bitIds.map((id) => {
       const realName = bitMap.getExistingComponentId(id.toStringWithoutVersion());
@@ -1053,7 +1090,14 @@ export default class Consumer {
       return id;
     });
   }
-  async removeLocal(bitIds: Array<BitId>, force: boolean, track: boolean, deletFiles: boolean) {
+
+  /**
+   * removeLocal - remove local (imported, new staged components) from modules and bitmap  accoriding to flags
+   * @param {BitIds} bitIds - list of remote component ids to delete
+   * @param {boolean} force - delete component that are used by other components.
+   * @param {boolean} deleteFiles - delete component that are used by other components.
+   */
+  async removeLocal(bitIds: BitIds, force: boolean, track: boolean, deleteFiles: boolean) {
     // local remove in case user wants to delete commited components
     const bitMap = await this.getBitMap();
     const modifiedComponents = [];
@@ -1074,13 +1118,13 @@ export default class Consumer {
       force,
       true
     );
-    const componentToRemove = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
+    const componensToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
     if (!R.isEmpty(removedComponentIds)) {
-      this.removeComponentFromFs(componentToRemove, bitMap, deletFiles);
-      this.removeComponentFromFs(removedDependencies, bitMap, false);
+      await this.removeComponentFromFs(componensToRemoveFromFs, bitMap, deleteFiles);
+      await this.removeComponentFromFs(removedDependencies, bitMap, false);
     }
-    if ((!track || deletFiles) && !R.isEmpty(removedComponentIds)) {
-      bitMap.removeComponents(componentToRemove);
+    if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) {
+      bitMap.removeComponents(componensToRemoveFromFs);
       bitMap.removeComponents(removedDependencies);
       await bitMap.write();
     }

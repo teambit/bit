@@ -271,14 +271,24 @@ export default class SourceRepository {
     objects.forEach(obj => repo.add(obj));
     return component;
   }
-
-  async removeVersion(component, bitId): Promise<void> {
+  /**
+   * removeVersion - remove specific component version from component
+   * @param {Component} component - component to remove version from
+   * @param {BitId} bitId - bitid with version to remove.
+   */
+  async removeVersion(component: Component, bitId: BitId): Promise<void> {
     const objectRepo = this.objects();
     const modifiedCompoent = await component.removeVersion(objectRepo, bitId.version);
     objectRepo.add(modifiedCompoent);
     await objectRepo.persist();
     return modifiedCompoent;
   }
+
+  /**
+   * clean - remove component or component version
+   * @param {BitId} bitId - bitid to remove
+   * @param {boolean} deepRemove - remove all component refs or only version refs
+   */
   clean(bitId: BitId, deepRemove: boolean = false): Promise<void> {
     return this.get(bitId).then((component) => {
       if (!component) return;

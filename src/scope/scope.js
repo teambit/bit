@@ -705,7 +705,7 @@ export default class Scope {
 
   async removeComponent(id, componentList, removeRefs: boolean = false) {
     const symlink = componentList.filter(
-      link => link instanceof Symlink && link.id() === id.toStringWithoutScopeAndVersion()
+      component => component instanceof Symlink && component.id() === id.toStringWithoutScopeAndVersion()
     );
     await this.sources.clean(id, removeRefs);
     if (!R.isEmpty(symlink)) await this.objects.remove(symlink[0].hash());
@@ -735,8 +735,9 @@ export default class Scope {
   }
 
   /**
-   * Remove  single component
-   * @removeComponent - boolean - true if you want to remove component
+   * removeSingle - remove single component
+   * @param {BitId} bitId - list of remote component ids to delete
+   * @param {boolean} removeSameOrigin - remove component dependencies from same origin
    */
   async removeSingle(bitId: BitId, removeSameOrigin: boolean = false): Promise<string> {
     logger.debug(`removing ${bitId.toString()}`);

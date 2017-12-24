@@ -3,6 +3,7 @@
 import Command from '../../command';
 import { remove } from '../../../api/consumer';
 import { RemovedObjects, RemovedLocalObjects } from '../../../scope/component-remove.js';
+import paintRemoved from '../../templates/remove-template';
 
 export default class Remove extends Command {
   name = 'remove <ids...>';
@@ -24,9 +25,9 @@ export default class Remove extends Command {
   }
 
   report({ localResult, remoteResult }: { localResult: RemovedLocalObjects, remoteResult: RemovedObjects }): string {
-    return localResult.paintSingle() + this.paintArray(remoteResult);
+    return paintRemoved(localResult) + this.paintArray(remoteResult);
   }
   paintArray(removedObjectsArray: RemovedObjects) {
-    return removedObjectsArray.map(item => item.paintSingle());
+    return removedObjectsArray.map(item => paintRemoved(item));
   }
 }
