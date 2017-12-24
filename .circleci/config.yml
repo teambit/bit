@@ -140,6 +140,7 @@ jobs:
           key: bitsrc-ssh-key
       - restore_cache:
           key: bitsrc-registry
+      - run: cat ~/.npmrc     
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
