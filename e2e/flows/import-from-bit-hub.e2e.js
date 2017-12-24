@@ -9,7 +9,7 @@ chai.use(require('chai-fs'));
 const componentTestId = 'david.tests/bar/foo';
 
 // todo: figure out how to config CI servers to work with bit registry
-describe.only('importing bit components from bitsrc.io', function () {
+describe('importing bit components from bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
   const barFooDir = path.join(helper.localScopePath, 'components', 'bar', 'foo');
@@ -19,7 +19,7 @@ describe.only('importing bit components from bitsrc.io', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe.only('without --save-dependencies-as-components flag', () => {
+  describe('without --save-dependencies-as-components flag', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.runCmd(`bit import ${componentTestId}`);
