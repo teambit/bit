@@ -15,15 +15,21 @@
 
 [Community](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/)
 
-Bit plays with great tools like Git, Yarn and NPM to form a simple and frictionless component sharing experience. If shared-libraries are music CD-ROMs, Bit is your song playlist. It makes the experience of sharing code simple and accessible for everyone.  
+**Bit** - Build applications with reusable code components.
 
-Bit provides a distributed component development workflow. You can isolate components in any Git repository, and quickly share them to dynamic and curatable collections of components. Then, components can be individually found and consumed with package managers like Yarn/NPM or sourced in any repository for further modifications.
+Bit integrates into your existing code sharing ecosystem (Git, Yarn, NPM) and creates a super-fast and frictionless code sharing experience. It helps you easily isolate, organize and share components between projects and team members to cut the time for building new applications, reduce the maintenance efforts of packages and shared-libraries, help keep your code DRY and save your time & resources for building new things.
 
-- Quickly share individual components to curated and dynamic collections, from any path in your repository and without changing your source-code.
-- Keep a single source of truth for components, while developing or sourcing components from any repository.
-- Experience and discover components in your collections. Apply extensions to visually render your components, test and compile them, parse and present useful information from the inline docs and even publish your components to package registries.
+**Distributed component development workflow**
+
+- Quickly isolate and share individual components from any path in your repository, without changing your source-code.
+
+- Organize components in curated collections as a single source of truth, while developing or sourcing components from any repository.
+
 - Install components with NPM, Yarn or any other package manager - even if shared with Bit.
-- Get control and learn which components are used by who and where. Easily make vast changes to multiple components in different projects and gain full control over your 
+
+- Easily learn exactly which components are being used by who and where, to make vast component changes in multiple projects without breaking a single one of them.
+
+- Extend Bit to visually render, test, compile and parse useful information for your components without having to spend hours writing documantaion.
 
 Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
