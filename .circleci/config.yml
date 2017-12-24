@@ -107,8 +107,7 @@ jobs:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
       - restore_cache:
-            keys:
-              - builded-{{ checksum ".circle-sha" }}
+            key: builded-{{ checksum ".circle-sha" }}
       - run: mkdir junit
       - run:
           name: Run unit tests
@@ -138,9 +137,9 @@ jobs:
           name: create global npm directory (to avoid using sudo for npm link)
           command: mkdir ~/.npm-global
       - restore_cache:
-          keys:
-            - bitsrc-ssh-key
-            - bitsrc-registry
+          key: bitsrc-ssh-key
+      - restore_cache:
+          key: bitsrc-registry
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
