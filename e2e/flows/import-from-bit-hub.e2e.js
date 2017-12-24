@@ -19,7 +19,7 @@ describe.only('importing bit components from bitsrc.io', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('without --save-dependencies-as-components flag', () => {
+  describe.only('without --save-dependencies-as-components flag', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.runCmd(`bit import ${componentTestId}`);
