@@ -27,6 +27,17 @@ jobs:
           paths:
             - ~/.ssh/id_rsa
 
+  set_bitsrc_registry:    
+    docker:
+        - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - run: npm config set @bit:registry https://node.bitsrc.io
+      - save_cache:
+          key: bitsrc-registry
+          paths:
+            - ~/.npmrc
+
   install_npm_deps:
     docker:
       - image: circleci/node:6.10.3
@@ -129,6 +140,7 @@ jobs:
       - restore_cache:
           keys:
             - bitsrc-ssh-key
+            - bitsrc-registry
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
@@ -166,3 +178,4 @@ workflows:
           requires:
             - build
             - set_ssh_key
+            - set_bitsrc_registry
