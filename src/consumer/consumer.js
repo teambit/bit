@@ -473,7 +473,7 @@ export default class Consumer {
     createNpmLinkFiles?: boolean,
     dist?: boolean,
     saveDependenciesAsComponents?: boolean // as opposed to npm packages
-  }): Promise<Component[]> {
+    }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
     const remotes = await this.scope.remotes();
@@ -583,9 +583,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
@@ -973,6 +973,7 @@ export default class Consumer {
 
   static async load(currentPath: string): Promise<Consumer> {
     const projectPath = locateConsumer(currentPath);
+    if (!pathHasConsumer(projectPath)) await Consumer.create(projectPath).then(consumer => consumer.write());
     if (!projectPath) return Promise.reject(new ConsumerNotFound());
     const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
     const bitJsonP = ConsumerBitJson.load(projectPath);
