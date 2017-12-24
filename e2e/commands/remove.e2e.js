@@ -6,7 +6,7 @@ chai.use(require('chai-fs'));
 
 const assert = chai.assert;
 
-describe.only('bit remove command', function () {
+describe('bit remove command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -250,7 +250,7 @@ describe.only('bit remove command', function () {
       expect(listOutput).to.contain.string(`${helper.remoteScope}/utils/is-type`);
     });
   });
-  describe.only('delete components with same file hash', () => {
+  describe('delete components with same file hash', () => {
     const helper2 = new Helper();
 
     before(() => {
