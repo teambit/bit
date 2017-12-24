@@ -540,15 +540,15 @@ describe('bit import', function () {
       helper.setNewLocalAndRemoteScopes();
 
       // export a new simple component
-      const simpleFixture = 'import a from "my-package"; ';
+      helper.addNpmPackage('lodash.isboolean', '3.0.0');
+      const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
-      helper.addNpmPackage('my-package', '1.0.1');
       helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
       helper.commitComponent('simple');
       helper.exportComponent('simple');
 
-      helper.addNpmPackage('some-package', '1.4.3');
-      const withDepsFixture = 'import a from "./global/simple.js"; import c from "some-package"';
+      helper.addNpmPackage('lodash.isstring', '4.0.0');
+      const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';
       helper.createFile('', 'with-deps.js', withDepsFixture);
       helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });
       helper.commitAllComponents();
@@ -576,12 +576,10 @@ describe('bit import', function () {
       });
       it.skip('should not add existing components to bit.map file', () => {});
       it.skip('should create bit.json file with all the dependencies in the folder', () => {});
-      it('should print warning for missing package dependencies', () => {
-        expect(
-          output.includes('error - missing the following package dependencies. please install and add to package.json.')
-        ).to.be.true;
-        expect(output.includes('my-package: 1.0.1')).to.be.true;
-        expect(output.includes('some-package: 1.4.3')).to.be.true;
+      it('should print a successful message about installed npm packages', () => {
+        expect(output).to.have.string('successfully ran npm install');
+        expect(output).to.have.string('lodash.isboolean');
+        expect(output).to.have.string('lodash.isstring');
       });
       it('should write the dependency in the dependencies directory', () => {
         const depDir = path.join(
@@ -604,9 +602,9 @@ describe('bit import', function () {
         expect(packageJsonContent).to.deep.include({
           name: `${helper.remoteScope}.comp.with-deps`,
           version: '0.0.1',
-          main: 'with-deps.js',
-          dependencies: { 'some-package': '1.4.3' }
+          main: 'with-deps.js'
         });
+        expect(packageJsonContent.dependencies['lodash.isstring']).to.have.string('4.0.0'); // it can be ^4.0.0 or 4.0.0 depends on npm version installed
       });
       it('should write a package.json in the nested dependency component dir', () => {
         const packageJsonPath = path.join(
@@ -624,15 +622,15 @@ describe('bit import', function () {
         expect(packageJsonContent).to.deep.include({
           name: `${helper.remoteScope}.global.simple`,
           version: '0.0.1',
-          main: 'global/simple.js',
-          dependencies: { 'my-package': '1.0.1' }
+          main: 'global/simple.js'
         });
+        expect(packageJsonContent.dependencies['lodash.isboolean']).to.have.string('3.0.0');
       });
 
       it.skip('should write the dependencies according to their relative paths', () => {});
     });
 
-    describe('with ignore-package-json flag', () => {
+    describe('with --ignore-package-json flag', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -654,6 +652,22 @@ describe('bit import', function () {
           'package.json'
         );
         expect(fs.existsSync(packageJsonPath)).to.be.false;
+      });
+    });
+
+    describe('with --skip-npm-install flag', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        output = helper.importComponentWithOptions('comp/with-deps', { '-skip-npm-install': '' });
+      });
+      it('should print warning for missing package dependencies', () => {
+        expect(output).to.have.string(
+          'error - missing the following package dependencies. please install and add to package.json.'
+        );
+        expect(output).to.have.string('lodash.isboolean: 3.0.0');
+        expect(output).to.have.string('lodash.isstring: 4.0.0');
       });
     });
   });
@@ -1400,13 +1414,15 @@ describe('bit import', function () {
       helper.runCmd('bit import');
     });
     it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
-      const appJsFixture = "const isString = require('bit/utils/is-string'); console.log(isString());";
+      const requirePath = helper.getRequireBitPath('utils', 'is-string');
+      const appJsFixture = `const isString = require('${requirePath}'); console.log(isString());`;
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v1 and got is-string');
     });
     it('should successfully print results of is-type@0.0.2 when requiring it directly', () => {
-      const appJsFixture = "const isType = require('bit/utils/is-type'); console.log(isType());";
+      const requirePath = helper.getRequireBitPath('utils', 'is-type');
+      const appJsFixture = `const isType = require('${requirePath}'); console.log(isType());`;
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v2');

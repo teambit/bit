@@ -17,5 +17,9 @@ export default {
   },
   '0.11.1': {
     Version: [versionMigrations.changeImportSpecifiersToArray, versionMigrations.ensureMainFileDeclartaion]
+  },
+  '0.11.2': {
+    Component: [componentMigrations.updateBindingPrefixToNewDefault],
+    Version: [versionMigrations.updateBindingPrefixToNewDefault]
   }
 };

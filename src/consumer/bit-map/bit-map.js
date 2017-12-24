@@ -160,7 +160,7 @@ export default class BitMap {
     allVersions.forEach((version) => {
       if (version !== componentId.toString() && this.components[version].origin !== COMPONENT_ORIGINS.NESTED) {
         logger.debug(`BitMap: deleting an older version ${version} of an existing component ${componentId.toString()}`);
-        delete this.components[version];
+        this._removeFromComponentsArray(version);
       }
     });
   }
@@ -170,7 +170,12 @@ export default class BitMap {
    */
   getExistingComponentId(componentIdStr: string): ?string {
     if (this.components[componentIdStr]) return componentIdStr;
-    if (BitId.parse(componentIdStr).scope) return undefined; // given id has scope, it should have been an exact match
+    const parsedId = BitId.parse(componentIdStr);
+    if (parsedId.scope && !parsedId.hasVersion()) {
+      return Object.keys(this.components).find((component) => {
+        return BitId.parse(component).toStringWithoutVersion() === componentIdStr;
+      });
+    }
     return Object.keys(this.components).find((component) => {
       return BitId.parse(component).toStringWithoutScopeAndVersion() === componentIdStr;
     });
@@ -222,9 +227,7 @@ export default class BitMap {
         );
       }
     } else {
-      // $FlowFixMe
-      this.components[componentIdStr] = { files, origin };
-
+      this.components[componentIdStr] = new ComponentMap({ files, origin });
       this.components[componentIdStr].mainFile = this._getMainFile(
         pathNormalizeToLinux(mainFile),
         this.components[componentIdStr]
@@ -245,17 +248,23 @@ export default class BitMap {
     return this.components[componentIdStr];
   }
 
-  removeComponent(id: string | bitId) {
+  _removeFromComponentsArray(componentId) {
+    const invalidateCache = () => {
+      this.paths = {};
+    };
+    delete this.components[componentId];
+    invalidateCache();
+  }
+
+  removeComponent(id: string | BitId) {
     const bitId = id instanceof BitId ? id : BitId.parse(id);
     const bitmapComponent = this.getExistingComponentId(bitId.toStringWithoutScopeAndVersion());
-    const deletedComponent = this.components[bitmapComponent];
-    delete this.components[bitmapComponent];
-    return deletedComponent;
+    this._removeFromComponentsArray(bitmapComponent);
+    return bitmapComponent;
   }
   removeComponents(ids: BitIds) {
     return ids.map(id => this.removeComponent(id));
   }
-
   addMainDistFileToComponent(id: string, distFilesPaths: string[]): void {
     if (!this.components[id]) {
       logger.warn(`unable to find the component ${id} in bit.map file`);
@@ -297,15 +306,13 @@ export default class BitMap {
       return;
     }
     if (olderComponentsIds.length > 1) {
-      throw new Error(`Your ${
-        BIT_MAP
-      } file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
+      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
       are authored or imported. This scenario is not supported`);
     }
     const olderComponentId = olderComponentsIds[0];
     logger.debug(`BitMap: updating an older component ${olderComponentId} with a newer component ${newIdString}`);
-    this.components[newIdString] = R.clone(this.components[olderComponentId]);
-    delete this.components[olderComponentId];
+    this.components[newIdString] = this.components[olderComponentId];
+    this._removeFromComponentsArray(olderComponentId);
   }
 
   getComponent(id: string | BitId, shouldThrow: boolean = false): ComponentMap {

@@ -14,12 +14,19 @@ import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-import { BITS_DIRNAME, BIT_HIDDEN_DIR, COMPONENT_ORIGINS, BIT_VERSION, LATEST_BIT_VERSION } from '../constants';
+import {
+  BITS_DIRNAME,
+  BIT_HIDDEN_DIR,
+  COMPONENT_ORIGINS,
+  BIT_VERSION,
+  NODE_PATH_SEPARATOR,
+  LATEST_BIT_VERSION
+} from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import loader from '../cli/loader';
-import { BEFORE_IMPORT_ACTION, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
+import { BEFORE_IMPORT_ACTION, BEFORE_INSTALL_NPM_DEPENDENCIES, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
 import ComponentMap from './bit-map/component-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
@@ -31,6 +38,7 @@ import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
+import npmClient from '../npm-client';
 import { RemovedLocalObjects } from '../scope/component-remove.js';
 
 export type ConsumerProps = {
@@ -268,7 +276,9 @@ export default class Consumer {
     withPackageJson?: boolean = true,
     force?: boolean = false,
     dist?: boolean = false,
-    conf?: boolean = false
+    conf?: boolean = false,
+    installNpmPackages?: boolean = true,
+    saveDependenciesAsComponents?: boolean = false
   ): Promise<> {
     const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
     const bitMap = await this.getBitMap();
@@ -294,13 +304,15 @@ export default class Consumer {
         componentsWithDependencies: componentsAndDependenciesBitJson,
         withPackageJson,
         withBitJson: conf,
-        dist
+        dist,
+        saveDependenciesAsComponents
       });
+      if (installNpmPackages) await this.installNpmPackages(componentsAndDependenciesBitJson);
     }
     if (componentsFromBitMap.length) {
       componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsFromBitMap, cache);
       // Don't write the package.json for an authored component, because its dependencies probably managed by the root
-      // package.json
+      // package.json. Also, don't install npm packages for the same reason.
       await this.writeToComponentsDir({
         componentsWithDependencies: componentsAndDependenciesBitMap,
         force: false,
@@ -348,7 +360,9 @@ export default class Consumer {
     writeBitDependencies?: boolean = false,
     force?: boolean = false,
     dist?: boolean = false,
-    conf?: boolean = false
+    conf?: boolean = false,
+    installNpmPackages?: boolean = true,
+    saveDependenciesAsComponents?: boolean = false
   ) {
     logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
@@ -363,8 +377,10 @@ export default class Consumer {
       withPackageJson,
       withBitJson: conf,
       writeBitDependencies,
-      dist
+      dist,
+      saveDependenciesAsComponents
     });
+    if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies);
     return { dependencies: componentsWithDependencies };
   }
 
@@ -378,7 +394,9 @@ export default class Consumer {
     writeBitDependencies?: boolean = false,
     force?: boolean = false,
     dist?: boolean = false,
-    conf?: boolean = false
+    conf?: boolean = false,
+    installNpmPackages?: boolean = true,
+    saveDependenciesAsComponents?: boolean = false
   ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
     if (!rawIds || R.isEmpty(rawIds)) {
@@ -389,7 +407,9 @@ export default class Consumer {
         withPackageJson,
         force,
         dist,
-        conf
+        conf,
+        installNpmPackages,
+        saveDependenciesAsComponents
       );
     }
     return this.importSpecificComponents(
@@ -400,7 +420,9 @@ export default class Consumer {
       writeBitDependencies,
       force,
       dist,
-      conf
+      conf,
+      installNpmPackages,
+      saveDependenciesAsComponents
     );
   }
 
@@ -447,7 +469,8 @@ export default class Consumer {
     withBitJson = true,
     writeBitDependencies = false,
     createNpmLinkFiles = false,
-    dist = true
+    dist = true,
+    saveDependenciesAsComponents = false
   }: {
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
@@ -456,13 +479,18 @@ export default class Consumer {
     withBitJson?: boolean,
     writeBitDependencies?: boolean,
     createNpmLinkFiles?: boolean,
-    dist?: boolean
+    dist?: boolean,
+    saveDependenciesAsComponents?: boolean // as opposed to npm packages
   }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
+    const remotes = await this.scope.remotes();
     const writeComponentsP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
       const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitDir;
+      // if a component.scope is listed as a remote, it doesn't go to the hub and therefore it can't import dependencies as packages
+      componentWithDeps.component.dependenciesSavedAsComponents =
+        saveDependenciesAsComponents || remotes.get(componentWithDeps.component.scope);
       // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
       // find the component in bit.map
       const componentMap = bitMap.getComponent(componentWithDeps.component.id.toStringWithoutVersion(), false);
@@ -491,7 +519,8 @@ export default class Consumer {
     });
     const writtenComponents = await Promise.all(writeComponentsP);
 
-    const allDependenciesP = componentsWithDependencies.map((componentWithDeps) => {
+    const allDependenciesP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
+      if (!componentWithDeps.component.dependenciesSavedAsComponents) return Promise.resolve(null);
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         const depFromBitMap = bitMap.getComponent(dependencyId, false);
@@ -533,7 +562,8 @@ export default class Consumer {
 
       return Promise.all(writeDependenciesP);
     });
-    const writtenDependencies = await Promise.all(allDependenciesP);
+    const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
+    const writtenDependencies = writtenDependenciesIncludesNull.filter(dep => dep);
 
     if (writeToPath) {
       componentsWithDependencies.forEach((componentWithDeps) => {
@@ -551,7 +581,9 @@ export default class Consumer {
       )
     );
     await bitMap.write();
-    const allComponents = [...writtenComponents, ...R.flatten(writtenDependencies)];
+    const allComponents = writtenDependencies
+      ? [...writtenComponents, ...R.flatten(writtenDependencies)]
+      : writtenComponents;
     this.linkComponents(allComponents, bitMap);
     return allComponents;
   }
@@ -739,16 +771,24 @@ export default class Consumer {
   }
 
   static getNodeModulesPathOfComponent(bindingPrefix, id) {
-    return path.join('node_modules', bindingPrefix, id.box, id.name);
+    if (!id.scope) throw new Error(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`);
+    return path.join('node_modules', bindingPrefix, [id.scope, id.box, id.name].join(NODE_PATH_SEPARATOR));
   }
 
   static getComponentIdFromNodeModulesPath(requirePath, bindingPrefix) {
     requirePath = pathNormalizeToLinux(requirePath);
     const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : `${bindingPrefix}/`;
     const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
-    const pathSplit = withoutPrefix.split('/');
-    if (pathSplit.length < 2) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
-    return new BitId({ box: pathSplit[0], name: pathSplit[1] }).toString();
+    const componentName = withoutPrefix.includes('/')
+      ? withoutPrefix.substr(0, withoutPrefix.indexOf('/'))
+      : withoutPrefix;
+    const pathSplit = componentName.split(NODE_PATH_SEPARATOR);
+    if (pathSplit.length < 3) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
+
+    const name = pathSplit[pathSplit.length - 1];
+    const box = pathSplit[pathSplit.length - 2];
+    const scope = pathSplit.length === 3 ? pathSplit[0] : `${pathSplit[0]}.${pathSplit[1]}`;
+    return new BitId({ scope, box, name }).toString();
   }
 
   linkComponents(components: Component[], bitMap: BitMap): Object[] {
@@ -831,7 +871,10 @@ export default class Consumer {
         }
         createSymlinkOrCopy(componentId, target, linkPath);
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
-        const boundDependencies = component.dependencies ? writeDependenciesLinks(component, componentMap) : [];
+        const boundDependencies =
+          component.dependencies && component.dependenciesSavedAsComponents
+            ? writeDependenciesLinks(component, componentMap)
+            : [];
         const boundMissingDependencies =
           component.missingDependencies && component.missingDependencies.missingLinks
             ? writeMissingLinks(component, componentMap)
@@ -839,17 +882,15 @@ export default class Consumer {
         return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
       }
       if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-        if (!component.dependencies) return { id: componentId, bound: [] };
+        if (!component.dependencies) return { id: componentId, bound: null };
         const bound = writeDependenciesLinks(component, componentMap);
         return { id: componentId, bound };
       }
 
       // origin is AUTHORED
-      // const filesToBind = componentMap.getFilesRelativeToConsumer(); // todo: check why it throws an error randomly "TypeError: componentMap.getFilesRelativeToConsumer is not a function"
-      const filesToBind = componentMap.files.map((file) => {
-        return componentMap.rootDir ? path.join(componentMap.rootDir, file.relativePath) : file.relativePath;
-      });
+      const filesToBind = componentMap.getFilesRelativeToConsumer();
       const bound = filesToBind.map((file) => {
+        if (!componentId.scope) return { id: componentId, bound: null }; // scope is a must to generate the link
         const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
         const destRelative = pathRelative(path.dirname(dest), file);
         const fileContent = `module.exports = require('${destRelative}');`;
@@ -1082,6 +1123,31 @@ export default class Consumer {
       dependency.remoteVersion = removeVersionId ? removeVersionId.version : null;
       dependency.localVersion = localVersionId ? localVersionId.version : null;
       dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
+    });
+  }
+
+  async installNpmPackages(componentsWithDependencies: ComponentWithDependencies[], verbose: boolean): Promise<*> {
+    const componentsWithDependenciesFlatten = R.flatten(
+      componentsWithDependencies.map((oneComponentWithDependencies) => {
+        return oneComponentWithDependencies.component.dependenciesSavedAsComponents
+          ? [oneComponentWithDependencies.component, ...oneComponentWithDependencies.dependencies]
+          : [oneComponentWithDependencies.component];
+      })
+    );
+    loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
+    const results = await Promise.all(
+      componentsWithDependenciesFlatten.map((component) => {
+        const packagesToInstall =
+          component._bitDependenciesPackages && !component.dependenciesSavedAsComponents
+            ? Object.assign(component._bitDependenciesPackages, component.packageDependencies)
+            : component.packageDependencies;
+        if (R.isEmpty(packagesToInstall)) return Promise.resolve();
+        return npmClient.install(packagesToInstall, { cwd: component.writtenPath });
+      })
+    );
+    loader.stop();
+    results.forEach((result) => {
+      if (result) npmClient.printResults(result);
     });
   }
 }

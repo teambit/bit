@@ -4,6 +4,7 @@ import changeImportSpecifiersToArray from './change-import-specifiers-to-array';
 import implSpecsToFilesDeclartaion from './to-files';
 import ensureMainFileDeclartaion from './ensure-main-file';
 import specsResultstoArrayDeclartaion from './specs-results-to-array';
+import updateBindingPrefixToNewDefault from './update-binding-prefix-to-new-default';
 
 export {
   addBindingPrefixDeclartaion,
@@ -11,5 +12,6 @@ export {
   implSpecsToFilesDeclartaion,
   specsResultstoArrayDeclartaion,
   ensureMainFileDeclartaion,
-  changeImportSpecifiersToArray
+  changeImportSpecifiersToArray,
+  updateBindingPrefixToNewDefault
 };

@@ -494,13 +494,13 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.reInitLocalScope();
-      const fooFixture = "require ('bit/bar/baz');";
+      const fooFixture = "require ('@bit/scope.bar.baz');";
       helper.createComponentBarFoo(fooFixture);
       helper.addComponentBarFoo();
       output = helper.runCmd('bit status');
     });
     it('should show the missing component as missing', () => {
-      expect(output).to.have.string('missing components: bar/baz');
+      expect(output).to.have.string('missing components: scope/bar/baz');
     });
   });
 });
