@@ -165,6 +165,7 @@ workflows:
     jobs:
       - checkout_code
       - set_ssh_key
+      - set_bitsrc_registry
       - install_npm_deps:
           requires:
               - checkout_code
