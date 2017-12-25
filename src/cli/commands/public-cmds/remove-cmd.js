@@ -11,8 +11,8 @@ export default class Remove extends Command {
   alias = 'rm';
   opts = [
     ['f', 'force [boolean]', 'force remove (default = false)'],
-    ['t', 'track [boolean]', 'keep tracking component (default = false) '],
-    ['d', 'deleteFiles [boolean]', 'delete local component files']
+    ['t', 'track [boolean]', 'keep tracking component (default = false)'],
+    ['d', 'delete-files [boolean]', 'delete local component files']
   ];
   loader = true;
   migration = true;
