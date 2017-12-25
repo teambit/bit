@@ -27,6 +27,17 @@ jobs:
           paths:
             - ~/.ssh/id_rsa
 
+  set_bitsrc_registry:    
+    docker:
+        - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - run: npm config set @bit:registry https://node.bitsrc.io
+      - save_cache:
+          key: bitsrc-registry
+          paths:
+            - ~/.npmrc
+
   install_npm_deps:
     docker:
       - image: circleci/node:6.10.3
@@ -96,8 +107,7 @@ jobs:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
       - restore_cache:
-            keys:
-              - builded-{{ checksum ".circle-sha" }}
+            key: builded-{{ checksum ".circle-sha" }}
       - run: mkdir junit
       - run:
           name: Run unit tests
@@ -127,8 +137,9 @@ jobs:
           name: create global npm directory (to avoid using sudo for npm link)
           command: mkdir ~/.npm-global
       - restore_cache:
-          keys:
-            - bitsrc-ssh-key
+          key: bitsrc-ssh-key
+      - restore_cache:
+          key: bitsrc-registry
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
@@ -153,6 +164,7 @@ workflows:
     jobs:
       - checkout_code
       - set_ssh_key
+      - set_bitsrc_registry
       - install_npm_deps:
           requires:
               - checkout_code
@@ -166,3 +178,4 @@ workflows:
           requires:
             - build
             - set_ssh_key
+            - set_bitsrc_registry

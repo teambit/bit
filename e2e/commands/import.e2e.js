@@ -578,8 +578,6 @@ describe('bit import', function () {
       it.skip('should create bit.json file with all the dependencies in the folder', () => {});
       it('should print a successful message about installed npm packages', () => {
         expect(output).to.have.string('successfully ran npm install');
-        expect(output).to.have.string('lodash.isboolean');
-        expect(output).to.have.string('lodash.isstring');
       });
       it('should write the dependency in the dependencies directory', () => {
         const depDir = path.join(

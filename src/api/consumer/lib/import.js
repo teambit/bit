@@ -54,10 +54,6 @@ export default (async function importAction({
     // if npm packages are not installed, don't install dependencies as npm packages
     saveDependenciesAsComponents = true;
   }
-  if (!saveDependenciesAsComponents) {
-    // according to the two 'if' statements above, installNpmPackages and withPackageJson must be true
-    writeBitDependencies = true;
-  }
 
   async function importEnvironment(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);

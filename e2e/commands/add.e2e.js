@@ -30,6 +30,14 @@ describe('bit add command', function () {
       expect(error).to.have.string('fatal: scope not found. to create a new scope, please use `bit init');
     });
   });
+  describe('add before running "bit init" with .bit.map.json', () => {
+    it('Should init consumer add then add component', () => {
+      helper.createBitMap();
+      helper.createComponent('bar', 'foo.js');
+      const output = helper.addComponent(path.normalize('bar/foo.js'));
+      expect(output).to.contain('tracking component bar/foo');
+    });
+  });
   describe('add one component', () => {
     beforeEach(() => {
       helper.reInitLocalScope();

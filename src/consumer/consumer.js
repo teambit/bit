@@ -7,7 +7,7 @@ import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
 import symlinkOrCopy from 'symlink-or-copy';
-import { locateConsumer, pathHasConsumer } from './consumer-locator';
+import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
@@ -301,7 +301,7 @@ export default class Consumer {
         dist,
         saveDependenciesAsComponents
       });
-      if (installNpmPackages) await this.installNpmPackages(componentsAndDependenciesBitJson);
+      if (installNpmPackages) await this.installNpmPackages(componentsAndDependenciesBitJson, verbose);
     }
     if (componentsFromBitMap.length) {
       componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsFromBitMap, cache);
@@ -353,6 +353,7 @@ export default class Consumer {
     withPackageJson?: boolean = true,
     writeBitDependencies?: boolean = false,
     force?: boolean = false,
+    verbose?: boolean = false,
     dist?: boolean = false,
     conf?: boolean = false,
     installNpmPackages?: boolean = true,
@@ -374,7 +375,7 @@ export default class Consumer {
       dist,
       saveDependenciesAsComponents
     });
-    if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies);
+    if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
     return { dependencies: componentsWithDependencies };
   }
 
@@ -413,6 +414,7 @@ export default class Consumer {
       withPackageJson,
       writeBitDependencies,
       force,
+      verbose,
       dist,
       conf,
       installNpmPackages,
@@ -506,7 +508,7 @@ export default class Consumer {
         withPackageJson,
         origin,
         consumer: this,
-        writeBitDependencies,
+        writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
         dependencies: componentWithDeps.dependencies,
         componentMap
       });
@@ -976,6 +978,9 @@ export default class Consumer {
   static async load(currentPath: string): Promise<Consumer> {
     const projectPath = locateConsumer(currentPath);
     if (!projectPath) return Promise.reject(new ConsumerNotFound());
+    if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
+      await Consumer.create(currentPath).then(consumer => consumer.write());
+    }
     const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
     const bitJsonP = ConsumerBitJson.load(projectPath);
     return Promise.all([scopeP, bitJsonP]).then(
@@ -1071,7 +1076,12 @@ export default class Consumer {
     });
   }
 
-  async installNpmPackages(componentsWithDependencies: ComponentWithDependencies[], verbose: boolean): Promise<*> {
+  async installNpmPackages(
+    componentsWithDependencies: ComponentWithDependencies[],
+    verbose: boolean = false
+  ): Promise<*> {
+    // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
+    // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
     const componentsWithDependenciesFlatten = R.flatten(
       componentsWithDependencies.map((oneComponentWithDependencies) => {
         return oneComponentWithDependencies.component.dependenciesSavedAsComponents
@@ -1087,7 +1097,11 @@ export default class Consumer {
             ? Object.assign(component._bitDependenciesPackages, component.packageDependencies)
             : component.packageDependencies;
         if (R.isEmpty(packagesToInstall)) return Promise.resolve();
-        return npmClient.install(packagesToInstall, { cwd: component.writtenPath });
+        // don't pass the packagesToInstall to npmClient.install function.
+        // otherwise, it'll try to npm install the packages in one line 'npm install packageA packageB' and when
+        // there are mix of public and private packages it fails with 404 error.
+        // passing an empty array, results in installing packages from the package.json file
+        return npmClient.install([], { cwd: component.writtenPath }, verbose);
       })
     );
     loader.stop();
