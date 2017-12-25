@@ -299,7 +299,7 @@ export default class Consumer {
         dist,
         saveDependenciesAsComponents
       });
-      if (installNpmPackages) await this.installNpmPackages(componentsAndDependenciesBitJson);
+      if (installNpmPackages) await this.installNpmPackages(componentsAndDependenciesBitJson, verbose);
     }
     if (componentsFromBitMap.length) {
       componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsFromBitMap, cache);
@@ -351,6 +351,7 @@ export default class Consumer {
     withPackageJson?: boolean = true,
     writeBitDependencies?: boolean = false,
     force?: boolean = false,
+    verbose?: boolean = false,
     dist?: boolean = false,
     conf?: boolean = false,
     installNpmPackages?: boolean = true,
@@ -372,7 +373,7 @@ export default class Consumer {
       dist,
       saveDependenciesAsComponents
     });
-    if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies);
+    if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
     return { dependencies: componentsWithDependencies };
   }
 
@@ -411,6 +412,7 @@ export default class Consumer {
       withPackageJson,
       writeBitDependencies,
       force,
+      verbose,
       dist,
       conf,
       installNpmPackages,
@@ -1065,7 +1067,10 @@ export default class Consumer {
     });
   }
 
-  async installNpmPackages(componentsWithDependencies: ComponentWithDependencies[], verbose: boolean): Promise<*> {
+  async installNpmPackages(
+    componentsWithDependencies: ComponentWithDependencies[],
+    verbose: boolean = false
+  ): Promise<*> {
     const componentsWithDependenciesFlatten = R.flatten(
       componentsWithDependencies.map((oneComponentWithDependencies) => {
         return oneComponentWithDependencies.component.dependenciesSavedAsComponents
@@ -1081,7 +1086,7 @@ export default class Consumer {
             ? Object.assign(component._bitDependenciesPackages, component.packageDependencies)
             : component.packageDependencies;
         if (R.isEmpty(packagesToInstall)) return Promise.resolve();
-        return npmClient.install(packagesToInstall, { cwd: component.writtenPath });
+        return npmClient.install(packagesToInstall, { cwd: component.writtenPath }, verbose);
       })
     );
     loader.stop();
