@@ -194,7 +194,7 @@ async function writeDependencyLinks(
     parentComponent: Component,
     parentComponentMap: ComponentMap
   ) => {
-    const parentDir = parentComponent.writtenPath;
+    const parentDir = parentComponent.writtenPath || parentComponentMap.rootDir; // when running from bit build, the writtenPath is not available
     const relativePathInDependency = relativePath.destinationRelativePath;
     const mainFile = depComponent.calculateMainDistFile();
     const hasDist = parentComponent._writeDistsFiles && parentComponent.dists && !R.isEmpty(parentComponent.dists);

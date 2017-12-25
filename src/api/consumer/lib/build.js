@@ -4,13 +4,20 @@ import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
 import BitMap from '../../../consumer/bit-map';
 import ComponentsList from '../../../consumer/component/components-list';
-import { COMPONENT_ORIGINS } from '../../../constants';
+import ComponentWithDependencies from '../../../scope/component-dependencies';
+import { writeDependencyLinks } from '../../../consumer/component/link-generator';
 
 function writeDistFiles(component: Component, consumer: Consumer, bitMap: BitMap): Promise<?Array<?string>> {
   const componentMap = bitMap.getComponent(component.id);
   component.updateDistsPerConsumerBitJson(consumer, componentMap);
   const saveDist = component.dists.map(distFile => distFile.write());
   return Promise.all(saveDist);
+}
+
+async function writeLinksInDist(consumer: Consumer, component: Component, bitMap: BitMap) {
+  const dependencies = await consumer.loadComponents(component.dependencies.map(dep => dep.id));
+  const componentWithDeps = new ComponentWithDependencies({ component, dependencies: dependencies.components });
+  return writeDependencyLinks([componentWithDeps], bitMap, consumer, false);
 }
 
 export async function build(id: string): Promise<?Array<string>> {
@@ -21,6 +28,7 @@ export async function build(id: string): Promise<?Array<string>> {
   const result = await component.build({ scope: consumer.scope, consumer, bitMap });
   if (result === null) return null;
   const distFilePaths = await writeDistFiles(component, consumer, bitMap);
+  await writeLinksInDist(consumer, component, bitMap);
   bitMap.addMainDistFileToComponent(component.id, distFilePaths);
   await bitMap.write();
   // await consumer.driver.runHook('onBuild', [component]);
@@ -35,6 +43,7 @@ async function buildAllResults(components, consumer, bitMap) {
       return { component: bitId.toString(), buildResults: null };
     }
     const buildResults = await writeDistFiles(component, consumer, bitMap);
+    await writeLinksInDist(consumer, component, bitMap);
     return { component: bitId.toString(), buildResults };
   });
 }
