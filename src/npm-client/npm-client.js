@@ -5,6 +5,7 @@ import decamelize from 'decamelize';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
+import logger from '../logger/logger';
 
 const spawn = childProcessP.spawn;
 const objectToArray = obj => map(join('@'), toPairs(obj));
@@ -30,6 +31,7 @@ const defaults = {
   cwd: process.cwd(),
   global: false,
   save: false,
+  verbose: false,
   saveDev: false,
   saveOptional: false,
   saveExact: false,
@@ -56,6 +58,10 @@ const installAction = (
   verbose: boolean
 ) => {
   const options = merge(defaults, userOpts);
+  // Add npm verbose flag
+  if (verbose) {
+    options.verbose = true;
+  }
   const flags = pipe(mapObjIndexed(serializeOption), rejectNils, values)(options);
 
   // taking care of object case
@@ -65,11 +71,12 @@ const installAction = (
   modules = Array.isArray(modules) ? modules : (modules && [modules]) || []; // eslint-disable-line
 
   const serializedModules = modules && modules.length > 0 ? ` ${modules.join(' ')}` : '';
-  const serializedFlags = flags && flags.length > 0 ? ` ${flags.join(' ')}` : '';
+  const serializedFlags = flags && flags.length > 0 ? `${flags.join(' ')}` : '';
 
   fs.ensureDirSync(path.join(options.cwd, 'node_modules'));
 
   const args = ['install', ...serializedModules.trim().split(' '), serializedFlags];
+
   const promise = spawn('npm', args, { cwd: options.cwd });
   const childProcess = promise.childProcess;
   const stdoutOutput = [];
@@ -78,13 +85,18 @@ const installAction = (
   childProcess.stdout.on('data', data => stdoutOutput.push(data.toString()));
   childProcess.stderr.on('data', data => stderrOutput.push(data.toString()));
 
-  return promise.then(() => {
-    const stdout = verbose
-      ? stdoutOutput.join('')
-      : `successfully ran npm install${serializedModules}${serializedFlags}`;
-    const stderr = verbose ? stderrOutput.join('') : '';
-    return { stdout, stderr };
-  });
+  let stdout;
+  return promise
+    .then(() => {
+      stdout = verbose ? stdoutOutput.join('') : `successfully ran npm install${serializedModules}${serializedFlags}`;
+      const stderr = verbose ? stderrOutput.join('') : '';
+      return { stdout, stderr };
+    })
+    .catch((err) => {
+      const stderr = verbose ? stderrOutput.join('') : '';
+      logger.error('failed ran npm install\n', err.message, stderr);
+      throw err;
+    });
 };
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {
   console.log(chalk.yellow(stdout)); // eslint-disable-line
