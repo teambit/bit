@@ -506,7 +506,7 @@ export default class Consumer {
         withPackageJson,
         origin,
         consumer: this,
-        writeBitDependencies,
+        writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
         dependencies: componentWithDeps.dependencies,
         componentMap
       });
