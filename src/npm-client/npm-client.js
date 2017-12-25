@@ -52,6 +52,16 @@ const serializeOption = (bool, optName) => {
   return camelCaseToOptionCase(optName);
 };
 
+const stripNonNpmErrors = (errors: string[]) => {
+  // a workaround to remove all 'npm warn' and 'npm notice'.
+  // NPM itself returns them even when --loglevel = error or when --silent/--quiet flags are set
+  return errors
+    .join('')
+    .split('\n')
+    .filter(error => error.startsWith('npm ERR!'))
+    .join('\n');
+};
+
 const installAction = (
   modules: string[] | string | { [string]: number | string },
   userOpts?: Options,
@@ -93,9 +103,8 @@ const installAction = (
       return { stdout, stderr };
     })
     .catch((err) => {
-      const stderr = verbose ? stderrOutput.join('') : '';
-      logger.error('failed ran npm install\n', err.message, stderr);
-      throw err;
+      const stderr = verbose ? stderrOutput.join('') : stripNonNpmErrors(stderrOutput);
+      return Promise.reject(`${stderr}\n\n${err.message}`);
     });
 };
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {
