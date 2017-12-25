@@ -482,7 +482,7 @@ export default class Consumer {
     createNpmLinkFiles?: boolean,
     dist?: boolean,
     saveDependenciesAsComponents?: boolean // as opposed to npm packages
-  }): Promise<Component[]> {
+    }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
     const remotes = await this.scope.remotes();
@@ -1053,17 +1053,21 @@ export default class Consumer {
    * @param {boolean} deleteFiles - delete component that are used by other components.
    */
   async removeComponentFromFs(bitIds: BitIds, bitMap: BitMap, deleteFiles: boolean) {
-    return bitIds.map(async (id) => {
-      const component = id.isLocal() ? bitMap.getComponent(id.toStringWithoutVersion()) : bitMap.getComponent(id);
-      if (
-        (component.origin && component.origin == COMPONENT_ORIGINS.IMPORTED) ||
-        component.origin == COMPONENT_ORIGINS.NESTED
-      ) {
-        await fs.remove(path.join(this.getPath(), component.rootDir));
-      } else if (component.origin == COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
-        return Promise.all(component.files.map(async file => await fs.remove(file.relativePath)));
-      }
-    });
+    return Promise.all(
+      bitIds.map(async (id) => {
+        const component = id.isLocal()
+          ? bitMap.getComponent(bitMap.getExistingComponentId(id.toStringWithoutVersion()))
+          : bitMap.getComponent(id);
+        if (
+          (component.origin && component.origin == COMPONENT_ORIGINS.IMPORTED) ||
+          component.origin == COMPONENT_ORIGINS.NESTED
+        ) {
+          return await fs.remove(path.join(this.getPath(), component.rootDir));
+        } else if (component.origin == COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
+          return Promise.all(component.files.map(async file => await fs.remove(file.relativePath)));
+        }
+      })
+    );
   }
   /**
    * resolveLocalComponentIds - method is used for resolving local component ids
