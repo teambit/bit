@@ -12,6 +12,14 @@ describe('bit status command', function () {
   after(() => {
     helper.destroyEnv();
   });
+  describe('before running "bit init" with .bit.map.json', () => {
+    it('Should init consumer add then run  status ', () => {
+      helper.createBitMap();
+      helper.createComponent('bar', 'foo.js');
+      const output = helper.runCmd('bit status');
+      expect(output).to.include('bar/foo');
+    });
+  });
   describe('when no components created', () => {
     before(() => {
       helper.cleanEnv();
@@ -24,6 +32,7 @@ describe('bit status command', function () {
       expect(output.includes('no staged components')).to.be.true;
     });
   });
+
   describe('when a component is created in components directory but not added', () => {
     before(() => {
       helper.cleanEnv();

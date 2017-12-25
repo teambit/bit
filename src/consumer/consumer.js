@@ -974,7 +974,9 @@ export default class Consumer {
   static async load(currentPath: string): Promise<Consumer> {
     const projectPath = locateConsumer(currentPath);
     if (!projectPath) return Promise.reject(new ConsumerNotFound());
-    if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) { await Consumer.create(currentPath).then(consumer => consumer.write()); }
+    if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
+      await Consumer.create(currentPath).then(consumer => consumer.write());
+    }
     const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
     const bitJsonP = ConsumerBitJson.load(projectPath);
     return Promise.all([scopeP, bitJsonP]).then(
