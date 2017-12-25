@@ -16,7 +16,14 @@ describe('bit show command', function () {
   after(() => {
     helper.destroyEnv();
   });
-
+  describe('run before running "bit init" with .bit.map.json', () => {
+    it('Should init consumer add then show component', () => {
+      helper.createBitMap();
+      helper.createComponent('bar', 'foo.js');
+      const output = helper.showComponent('bar/foo');
+      expect(output).to.include('bar/foo');
+    });
+  });
   describe('local component', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();

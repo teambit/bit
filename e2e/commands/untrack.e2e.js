@@ -14,6 +14,14 @@ describe('bit untrack command', function () {
   after(() => {
     helper.destroyEnv();
   });
+  describe('before running "bit init" with .bit.map.json', () => {
+    it('Should init consumer add then run untrack ', () => {
+      helper.createBitMap();
+      helper.createComponent('bar', 'foo.js');
+      const output = helper.untrackComponent('bar/foo');
+      expect(output).to.include('bar/foo');
+    });
+  });
   describe('untrack components by id', () => {
     beforeEach(() => {
       helper.reInitLocalScope();

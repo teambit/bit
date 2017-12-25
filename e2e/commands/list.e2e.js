@@ -8,6 +8,14 @@ describe('bit list command', function () {
   after(() => {
     helper.destroyEnv();
   });
+  describe('list before running "bit init" with .bit.map.json', () => {
+    it('Should init consumer add then list component', () => {
+      helper.createBitMap();
+      helper.createComponent('bar', 'foo.js');
+      const output = helper.listLocalScope();
+      expect(output.includes('found 0 components')).to.be.true;
+    });
+  });
   describe('when no components created', () => {
     before(() => {
       helper.cleanEnv();
