@@ -25,7 +25,7 @@ describe('run bit init', function () {
   });
 });
 
-describe.only('automatic bit init when .bit.map.json already exists', function () {
+describe('automatic bit init when .bit.map.json already exists', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
