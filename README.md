@@ -17,9 +17,9 @@
 
 **Bit** - Build applications with reusable components, in a component-driven distributed workflow.
 
-It integrates into your existing ecosystem (Git, Yarn, NPM) and creates a lightning-fast experience for sharing code between projects and teams. You can easily isolate and share components directly from any project’s source code without changing it, and organize them as building blocks for your team to use in different projects and build new things. 
+Bit integrates into your existing ecosystem (Git, Yarn, NPM) and creates a lightning-fast experience for sharing code between projects and teams. You can easily isolate and share components directly from any project’s source code without changing it, and organize them as building blocks for your team to use in different projects and build new things. 
 
-Bit helps you cut the time for building new applications and features, eliminates the maintenance overhead of additional repositories and packages, helps to keep your code DRY and saves your time & resources for building new features and applications.
+It cuts the time for building new applications and features, eliminates the maintenance overhead of additional repositories and packages for sharing code, helps to keep your code DRY and saves your time & resources for building new features and applications.
 
 **Distributed component development workflow**
 
