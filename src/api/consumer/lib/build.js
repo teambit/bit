@@ -7,6 +7,7 @@ import ComponentsList from '../../../consumer/component/components-list';
 import ComponentWithDependencies from '../../../scope/component-dependencies';
 import { writeDependencyLinks, writeEntryPointsForImportedComponent } from '../../../consumer/component/link-generator';
 import { COMPONENT_ORIGINS } from '../../../constants';
+import { pathNormalizeToLinux } from '../../../utils/path';
 
 async function writeDistFiles(component: Component, consumer: Consumer, bitMap: BitMap): Promise<?Array<?string>> {
   const componentMap = bitMap.getComponent(component.id);
@@ -23,7 +24,7 @@ async function writeLinksInDist(consumer: Consumer, component: Component, compon
   const dependencies = await consumer.loadComponents(component.dependencies.map(dep => dep.id));
   const componentWithDeps = new ComponentWithDependencies({ component, dependencies: dependencies.components });
   await writeDependencyLinks([componentWithDeps], bitMap, consumer, false);
-  const newMainFile = component.calculateMainDistFile();
+  const newMainFile = pathNormalizeToLinux(component.calculateMainDistFile());
   await component.updatePackageJsonAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
   return writeEntryPointsForImportedComponent(component, bitMap, consumer);
 }
