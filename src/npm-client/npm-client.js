@@ -62,9 +62,12 @@ const stripNonNpmErrors = (errors: string[]) => {
     .join('\n');
 };
 
+/**
+ * when modules is empty, it runs 'npm install' without any package, which installs according to package.json file
+ */
 const installAction = (
   modules: string[] | string | { [string]: number | string },
-  userOpts?: Options,
+  userOpts: Options,
   verbose: boolean
 ) => {
   const options = merge(defaults, userOpts);
@@ -98,7 +101,9 @@ const installAction = (
   let stdout;
   return promise
     .then(() => {
-      stdout = verbose ? stdoutOutput.join('') : `successfully ran npm install${serializedModules}${serializedFlags}`;
+      stdout = verbose
+        ? stdoutOutput.join('')
+        : `successfully ran npm install${serializedModules}${serializedFlags} at ${options.cwd}`;
       const stderr = verbose ? stderrOutput.join('') : '';
       return { stdout, stderr };
     })

@@ -506,7 +506,7 @@ export default class Consumer {
         withPackageJson,
         origin,
         consumer: this,
-        writeBitDependencies,
+        writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
         dependencies: componentWithDeps.dependencies,
         componentMap
       });
@@ -1074,6 +1074,8 @@ export default class Consumer {
     componentsWithDependencies: ComponentWithDependencies[],
     verbose: boolean = false
   ): Promise<*> {
+    // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
+    // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
     const componentsWithDependenciesFlatten = R.flatten(
       componentsWithDependencies.map((oneComponentWithDependencies) => {
         return oneComponentWithDependencies.component.dependenciesSavedAsComponents
@@ -1089,7 +1091,11 @@ export default class Consumer {
             ? Object.assign(component._bitDependenciesPackages, component.packageDependencies)
             : component.packageDependencies;
         if (R.isEmpty(packagesToInstall)) return Promise.resolve();
-        return npmClient.install(packagesToInstall, { cwd: component.writtenPath }, verbose);
+        // don't pass the packagesToInstall to npmClient.install function.
+        // otherwise, it'll try to npm install the packages in one line 'npm install packageA packageB' and when
+        // there are mix of public and private packages it fails with 404 error.
+        // passing an empty array, results in installing packages from the package.json file
+        return npmClient.install([], { cwd: component.writtenPath }, verbose);
       })
     );
     loader.stop();
