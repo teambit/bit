@@ -15,7 +15,7 @@
 
 [Community](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/)
 
-**Bit** is a powerful tool for building applications with reusable components, in a component-driven distributed workflow.
+**Bit** - Build applications with reusable components, in a component-driven distributed workflow.
 
 It integrates into your existing ecosystem (Git, Yarn, NPM) and creates a lightning-fast experience for sharing code between projects and teams. You can easily isolate and share components directly from any project’s source code without changing it, and organize them as building blocks for your team to use in different projects and build new things. 
 
