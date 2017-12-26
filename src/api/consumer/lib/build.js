@@ -5,19 +5,27 @@ import { BitId } from '../../../bit-id';
 import BitMap from '../../../consumer/bit-map';
 import ComponentsList from '../../../consumer/component/components-list';
 import ComponentWithDependencies from '../../../scope/component-dependencies';
-import { writeDependencyLinks } from '../../../consumer/component/link-generator';
+import { writeDependencyLinks, writeEntryPointsForImportedComponent } from '../../../consumer/component/link-generator';
+import { COMPONENT_ORIGINS } from '../../../constants';
 
-function writeDistFiles(component: Component, consumer: Consumer, bitMap: BitMap): Promise<?Array<?string>> {
+async function writeDistFiles(component: Component, consumer: Consumer, bitMap: BitMap): Promise<?Array<?string>> {
   const componentMap = bitMap.getComponent(component.id);
   component.updateDistsPerConsumerBitJson(consumer, componentMap);
   const saveDist = component.dists.map(distFile => distFile.write());
-  return Promise.all(saveDist);
+  const distsFiles = await Promise.all(saveDist);
+  if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+    await writeLinksInDist(consumer, component, componentMap, bitMap);
+  }
+  return distsFiles;
 }
 
-async function writeLinksInDist(consumer: Consumer, component: Component, bitMap: BitMap) {
+async function writeLinksInDist(consumer: Consumer, component: Component, componentMap, bitMap: BitMap) {
   const dependencies = await consumer.loadComponents(component.dependencies.map(dep => dep.id));
   const componentWithDeps = new ComponentWithDependencies({ component, dependencies: dependencies.components });
-  return writeDependencyLinks([componentWithDeps], bitMap, consumer, false);
+  await writeDependencyLinks([componentWithDeps], bitMap, consumer, false);
+  const newMainFile = component.calculateMainDistFile();
+  await component.updatePackageJsonAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
+  return writeEntryPointsForImportedComponent(component, bitMap, consumer);
 }
 
 export async function build(id: string): Promise<?Array<string>> {
@@ -28,7 +36,6 @@ export async function build(id: string): Promise<?Array<string>> {
   const result = await component.build({ scope: consumer.scope, consumer, bitMap });
   if (result === null) return null;
   const distFilePaths = await writeDistFiles(component, consumer, bitMap);
-  await writeLinksInDist(consumer, component, bitMap);
   bitMap.addMainDistFileToComponent(component.id, distFilePaths);
   await bitMap.write();
   // await consumer.driver.runHook('onBuild', [component]);
@@ -43,7 +50,6 @@ async function buildAllResults(components, consumer, bitMap) {
       return { component: bitId.toString(), buildResults: null };
     }
     const buildResults = await writeDistFiles(component, consumer, bitMap);
-    await writeLinksInDist(consumer, component, bitMap);
     return { component: bitId.toString(), buildResults };
   });
 }

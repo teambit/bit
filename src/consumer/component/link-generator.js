@@ -326,9 +326,9 @@ async function writeEntryPointsForImportedComponent(
   bitMap: BitMap,
   consumer: Consumer
 ): Promise<any> {
-  const componentRoot = component.writtenPath;
   const componentId = component.id.toString();
   const componentMap = bitMap.getComponent(componentId);
+  const componentRoot = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
   const mainFile = component.calculateMainDistFile();
   const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
