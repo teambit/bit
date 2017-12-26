@@ -194,7 +194,7 @@ async function writeDependencyLinks(
     parentComponent: Component,
     parentComponentMap: ComponentMap
   ) => {
-    const parentDir = parentComponent.writtenPath;
+    const parentDir = parentComponent.writtenPath || parentComponentMap.rootDir; // when running from bit build, the writtenPath is not available
     const relativePathInDependency = relativePath.destinationRelativePath;
     const mainFile = depComponent.calculateMainDistFile();
     const hasDist = parentComponent._writeDistsFiles && parentComponent.dists && !R.isEmpty(parentComponent.dists);
@@ -326,9 +326,9 @@ async function writeEntryPointsForImportedComponent(
   bitMap: BitMap,
   consumer: Consumer
 ): Promise<any> {
-  const componentRoot = component.writtenPath;
   const componentId = component.id.toString();
   const componentMap = bitMap.getComponent(componentId);
+  const componentRoot = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
   const mainFile = component.calculateMainDistFile();
   const indexName = _getIndexFileName(mainFile); // Move to bit-javascript

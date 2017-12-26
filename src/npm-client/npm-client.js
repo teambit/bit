@@ -87,6 +87,7 @@ const installAction = (
   const serializedFlags = flags && flags.length > 0 ? `${flags.join(' ')}` : '';
 
   fs.ensureDirSync(path.join(options.cwd, 'node_modules'));
+  logger.debug(`installing npm packages ${serializedModules} at ${options.cwd}`);
 
   const args = ['install', ...serializedModules.trim().split(' '), serializedFlags];
 

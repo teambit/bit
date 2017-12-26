@@ -13,9 +13,6 @@ describe('importing bit components from bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
   const barFooDir = path.join(helper.localScopePath, 'components', 'bar', 'foo');
-  // before(() => {
-  //   helper.runCmd('npm config set @bit:registry https://node.bitsrc.io');
-  // });
   after(() => {
     helper.destroyEnv();
   });

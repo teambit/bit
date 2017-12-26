@@ -97,7 +97,6 @@ export default class Component {
   log: ?Log;
   writtenPath: ?string; // needed for generate links
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
-  _bitDependenciesPackages: ?Object;
   originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
   _writeDistsFiles: ?boolean = true;
   _areDistsInsideComponentDir: ?boolean = true;
@@ -268,17 +267,28 @@ export default class Component {
       version: this.version,
       homepage: this._getHomepage(),
       main: mainFile,
-      dependencies: this.packageDependencies,
       devDependencies: this.devPackageDependencies,
       peerDependencies: this.peerPackageDependencies,
       componentRootFolder: bitDir,
-      license: `SEE LICENSE IN ${!R.isEmpty(this.license) ? 'LICENSE' : 'UNLICENSED'}`,
-      bitDependencies,
-      registryPrefix: registryDomainPrefix
+      license: `SEE LICENSE IN ${!R.isEmpty(this.license) ? 'LICENSE' : 'UNLICENSED'}`
     });
-    if (!R.isEmpty(bitDependencies)) this._bitDependenciesPackages = packageJson.dependencies;
     const domainPrefix = getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
-    return packageJson.write({ override: force, postInstallLinkData, domainPrefix });
+    packageJson.setDependencies(this.packageDependencies, bitDependencies, registryDomainPrefix);
+    packageJson.setScripts(postInstallLinkData, domainPrefix);
+
+    return packageJson.write({ override: force });
+  }
+
+  async updatePackageJsonAttribute(consumer: Consumer, componentDir, attributeName, attributeValue): Promise<*> {
+    const PackageJson = consumer.driver.getDriver(false).PackageJson;
+    try {
+      const packageJson = await PackageJson.load(componentDir);
+      packageJson[attributeName] = attributeValue;
+      return packageJson.write({ override: true });
+    } catch (e) {
+      // package.json doesn't exist, that's fine, no need to update anything
+      return Promise.resolve();
+    }
   }
 
   dependencies(): BitIds {

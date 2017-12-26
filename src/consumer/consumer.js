@@ -475,7 +475,7 @@ export default class Consumer {
     createNpmLinkFiles?: boolean,
     dist?: boolean,
     saveDependenciesAsComponents?: boolean // as opposed to npm packages
-    }): Promise<Component[]> {
+  }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
     const remotes = await this.scope.remotes();
@@ -585,9 +585,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
@@ -1086,12 +1086,7 @@ export default class Consumer {
     loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
     const results = await Promise.all(
       componentsWithDependenciesFlatten.map((component) => {
-        const packagesToInstall =
-          component._bitDependenciesPackages && !component.dependenciesSavedAsComponents
-            ? Object.assign(component._bitDependenciesPackages, component.packageDependencies)
-            : component.packageDependencies;
-        if (R.isEmpty(packagesToInstall)) return Promise.resolve();
-        // don't pass the packagesToInstall to npmClient.install function.
+        // don't pass the packages to npmClient.install function.
         // otherwise, it'll try to npm install the packages in one line 'npm install packageA packageB' and when
         // there are mix of public and private packages it fails with 404 error.
         // passing an empty array, results in installing packages from the package.json file
