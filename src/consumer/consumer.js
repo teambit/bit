@@ -946,7 +946,6 @@ export default class Consumer {
   }
 
   static create(projectPath: string = process.cwd()): Promise<Consumer> {
-    if (pathHasConsumer(projectPath)) return Promise.reject(new ConsumerAlreadyExists());
     return this.ensure(projectPath);
   }
 
