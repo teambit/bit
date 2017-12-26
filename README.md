@@ -15,9 +15,9 @@
 
 [Community](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/)
 
-**Bit** is a powerful tool for building applications in component-driven development, with a distributed workflow.
+**Bit** is a powerful tool for building applications with reusable components, in a component-driven distributed workflow.
 
-It integrates into your existing ecosystem and creates a super-fast experience for sharing code between projects and teams. You can easily isolate and share components directly from any project’s source code without changing it, and organize them as building blocks for your team to use in different projects and build new things. 
+It integrates into your existing ecosystem (Git, Yarn, NPM) and creates a lightning-fast experience for sharing code between projects and teams. You can easily isolate and share components directly from any project’s source code without changing it, and organize them as building blocks for your team to use in different projects and build new things. 
 
 Bit helps you cut the time for building new applications and features, eliminates the maintenance overhead of additional repositories and packages, helps to keep your code DRY and saves your time & resources for building new features and applications.
 
@@ -206,7 +206,7 @@ Every day, more software is being built with smaller, encapsulated and reusable 
 
 The way we share code between projects and people was designed for larger projects. As a result, when working with smaller components we still have to choose between cumbersome shared libraries or an arsenal of micro-packages. Both suffer from the same problems we had while using music CD-Roms before our iTunes playlists: they require great overhead, they are hard to change and maintain at scale and they make it hard to discover and use single components. As a result, we often write more of the same things or duplicate code between projects. 
 
-Our vision is to enable any developer to easily share, discover and compose components together in order to build any software application. We believe that through powerful and effective expirience for modularity, sharing and collaboration we can speed and improve the way we build technology.
+Our vision is to enable any developer to easily share, discover and compose components together in order to build any software application. We believe that through powerful and effective experience for modularity, sharing and collaboration we can speed and improve the way we build technology.
 
 Although it is a work in progress, feel free to get started.
 Learn more on Hackernoon: "[How we started sharing components as a team](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)".*
@@ -226,4 +226,3 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
-
