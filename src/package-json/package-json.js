@@ -38,8 +38,7 @@ export type PackageJsonProps = {
   dependencies?: Object,
   devDependencies?: Object,
   peerDependencies?: Object,
-  license?:string,
-  bitDependencies?: Object,
+  license?: string,
   scripts?: Object,
 };
 
@@ -53,15 +52,14 @@ export default class PackageJson {
   peerDependencies: Object;
   componentRootFolder: string; // path where to write the package.json
   license: string;
-  scripts: Object
+  scripts: Object;
 
-
-  constructor(componentRootFolder: string, { name, version, homepage, main, dependencies, devDependencies, peerDependencies, license, registryPrefix, bitDependencies, scripts }: PackageJsonProps) {
+  constructor(componentRootFolder: string, { name, version, homepage, main, dependencies, devDependencies, peerDependencies, license, scripts }: PackageJsonProps) {
     this.name = name.replace(/\//g, '.');
     this.version = version;
     this.homepage = homepage;
     this.main = main;
-    this.dependencies = Object.assign({}, dependencies, convertComponenstsToValidPackageNames(registryPrefix, bitDependencies));
+    this.dependencies = dependencies;
     this.devDependencies = devDependencies;
     this.peerDependencies = peerDependencies;
     this.componentRootFolder = componentRootFolder;
@@ -85,14 +83,19 @@ export default class PackageJson {
     return JSON.stringify(this.toPlainObject(), null, 4);
   }
 
-  async write({ override = true , postInstallLinkData = [], domainPrefix }: { override?: boolean, postInstallLinkData: Array<Object> , domainPrefix: string}): Promise<boolean> {
+  setScripts(postInstallLinkData: Array<Object> = [], domainPrefix: string) {
+    this.scripts = R.isEmpty(postInstallLinkData) ? {} : generatePostInstallScript(this.componentRootFolder, postInstallLinkData, domainPrefix);
+  }
+
+  setDependencies(dependencies, bitDependencies: Object, registryPrefix: string) {
+    this.dependencies = Object.assign({}, dependencies, convertComponenstsToValidPackageNames(registryPrefix, bitDependencies));
+  }
+
+  async write({ override = true }: { override?: boolean }): Promise<boolean> {
     if (!override && hasExisting(this.componentRootFolder)) {
       return Promise.reject(new PackageJsonAlreadyExists(this.componentRootFolder));
     }
-
-    this.scripts = R.isEmpty(postInstallLinkData) ? {} : generatePostInstallScript(this.componentRootFolder, postInstallLinkData, domainPrefix)
     const plain = this.toPlainObject();
-
     return fs.outputJSON(composePath(this.componentRootFolder), plain, { spaces: '\t' });
   }
 
@@ -108,11 +111,11 @@ export default class PackageJson {
     return new PackageJson(componentRootFolder, object);
   }
 
-  static load(componentRootFolder: string): Promise<PackageJson> {
+  static async load(componentRootFolder: string): Promise<PackageJson> {
     const THROWS = true;
     const composedPath = composePath(componentRootFolder);
-    hasExisting(composedPath, THROWS);
-    return fs.readJson(composePath(composedPath));
+    hasExisting(componentRootFolder, THROWS);
+    const componentJsonObject = await fs.readJson(composedPath);
+    return new PackageJson(componentRootFolder, componentJsonObject);
   }
-
 }
