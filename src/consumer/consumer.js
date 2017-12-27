@@ -1091,12 +1091,7 @@ export default class Consumer {
     loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
     const results = await Promise.all(
       componentsWithDependenciesFlatten.map((component) => {
-        const packagesToInstall =
-          component._bitDependenciesPackages && !component.dependenciesSavedAsComponents
-            ? Object.assign(component._bitDependenciesPackages, component.packageDependencies)
-            : component.packageDependencies;
-        if (R.isEmpty(packagesToInstall)) return Promise.resolve();
-        // don't pass the packagesToInstall to npmClient.install function.
+        // don't pass the packages to npmClient.install function.
         // otherwise, it'll try to npm install the packages in one line 'npm install packageA packageB' and when
         // there are mix of public and private packages it fails with 404 error.
         // passing an empty array, results in installing packages from the package.json file

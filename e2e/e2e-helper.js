@@ -64,8 +64,8 @@ export default class Helper {
     return fs.readJSONSync(bitJsonPath) || {};
   }
 
-  readPackageJson(packageJsonfolder: string = this.localScopePath) {
-    const packageJsonPath = path.join(packageJsonfolder, 'package.json');
+  readPackageJson(packageJsonFolder: string = this.localScopePath) {
+    const packageJsonPath = path.join(packageJsonFolder, 'package.json');
     return fs.readJSONSync(packageJsonPath) || {};
   }
 
