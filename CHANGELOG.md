@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.7] - 2017-12-27
+
 ## [0.12.0-ext.6] - 2017-12-26
 
 - `bit import`: install hub dependencies as npm packages, unless `--save-dependencies-as-components` flag is set
