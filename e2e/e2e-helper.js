@@ -89,6 +89,10 @@ export default class Helper {
     const bitMapPath = path.join(this.localScopePath, '.bit.map.json');
     return fs.writeJSONSync(bitMapPath, bitMap);
   }
+  writeGitIgnore(list: string[]) {
+    const bitMapPath = path.join(this.localScopePath, '.gitignore');
+    return fs.writeFileSync(bitMapPath, list.join('\n'));
+  }
 
   cleanEnv() {
     fs.emptyDirSync(this.localScopePath);

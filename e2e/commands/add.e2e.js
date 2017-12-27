@@ -39,9 +39,11 @@ describe('bit add command', function () {
     });
   });
   describe('add one component', () => {
+    let errorMessage;
     beforeEach(() => {
       helper.reInitLocalScope();
     });
+
     it('Should print tracking component: id', () => {
       helper.createComponent('bar', 'foo2.js');
       const output = helper.addComponent(path.normalize('bar/foo2.js'));
@@ -683,6 +685,68 @@ describe('bit add command', function () {
     it('should not add it as a new component', () => {
       const bitMap = helper.readBitMap();
       expect(bitMap).not.to.have.property('bar/foo');
+    });
+  });
+
+  describe('add component/s with gitignore', () => {
+    let errorMessage;
+    before(() => {
+      helper.reInitLocalScope();
+    });
+    it('Should show warning msg in case there are no files to add beacuse of gitignore', () => {
+      helper.createComponent('bar', 'foo2.js');
+      helper.writeGitIgnore(['bar/foo2.js']);
+
+      try {
+        helper.addComponent(path.normalize('bar/foo2.js'));
+      } catch (err) {
+        errorMessage = err.message;
+      }
+      expect(errorMessage).to.contain('warning: no files to add,the following files were ignored: bar/foo2.js');
+    });
+    it('Should show warning msg in case there are no files to add beacuse of gitignore', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo3.js');
+      helper.createComponent('bar', 'boo.js');
+      helper.writeGitIgnore(['bar/f*']);
+      const output = helper.addComponent(path.normalize('bar/*.js'));
+      expect(output).to.contain('tracking component bar/boo');
+    });
+    it('Should contain only unfiltered components inside bitmap', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar/boo');
+    });
+  });
+
+  describe('ignore specific files inside component', () => {
+    before(() => {
+      helper.reInitLocalScope();
+    });
+    it('Should tarck component ', () => {
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo3.js');
+      helper.createComponent('bar', 'boo.js');
+      helper.createComponent('bar', 'index.js');
+      helper.writeGitIgnore(['bar/foo.js', 'bar/foo3.js']);
+      const output = helper.addComponentWithOptions(path.normalize('bar/'), { i: 'bar/foo' });
+      expect(output).to.contain('tracking component bar/foo');
+    });
+    it('Should contain component inside bitmap', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar/foo');
+    });
+    it('Should contain inside bitmap only files that are not inside gitignore', () => {
+      const bitMap = helper.readBitMap();
+      const expectedArray = [
+        { relativePath: 'bar/boo.js', test: false, name: 'boo.js' },
+        { relativePath: 'bar/index.js', test: false, name: 'index.js' }
+      ];
+      expect(bitMap).to.have.property('bar/foo');
+      const files = bitMap['bar/foo'].files;
+      expect(files).to.be.array();
+      expect(files).to.be.ofSize(2);
+      expect(files[0]).to.deep.equal(expectedArray[0]);
+      expect(files[1]).to.deep.equal(expectedArray[1]);
     });
   });
 });
