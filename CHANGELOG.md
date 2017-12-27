@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - support `bit show --compare` with json format (`bit show component-name --json --compare`)
 - change `bit remote rm` to `bit remote del`
 - run bit init (on every command) if dir is not initialized but contains bit.map.json
+- add unsafe-perm for installing packages inside components
 
 ## [0.11.2-dev.4] - 2017-12-05
 

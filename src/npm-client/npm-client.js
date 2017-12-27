@@ -32,6 +32,7 @@ const defaults = {
   global: false,
   save: false,
   verbose: false,
+  unsafePerm: true,
   saveDev: false,
   saveOptional: false,
   saveExact: false,
