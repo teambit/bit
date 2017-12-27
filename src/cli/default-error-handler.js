@@ -40,6 +40,7 @@ import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compar
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import PathNotExists from '../api/consumer/lib/exceptions/path-not-exists';
+import NoFiles from '../api/consumer/lib/exceptions/no-files';
 import DuplicateIds from '../api/consumer/lib/exceptions/duplicate-ids';
 
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
@@ -148,6 +149,12 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   ],
   [MissingBitMapComponent, err => `fatal: the component ${chalk.bold(err.id)} was not found in the bit.map file`],
   [PathNotExists, err => `fatal: the file "${chalk.bold(err.path)}" was not found`],
+  [
+    NoFiles,
+    err =>
+      chalk.yellow('warning: no files to add') +
+      chalk.yellow(err.ignoredFiles ? `,the following files were ignored: ${chalk.bold(err.ignoredFiles)}` : '')
+  ],
   [
     DuplicateIds,
     err =>
