@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add unsafe-perm for installing packages inside components
+
 ## [0.12.0-ext.9] - 2017-12-27
 
 - validte public ssh key exists before reading it

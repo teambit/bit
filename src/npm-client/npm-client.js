@@ -92,7 +92,8 @@ const installAction = (
 
   const args = ['install', ...serializedModules.trim().split(' '), serializedFlags];
 
-  const promise = spawn('npm', args, { cwd: options.cwd });
+  // Set the shell to true to prevent problems with post install scripts when running as root
+  const promise = spawn('npm', args, { cwd: options.cwd, shell: true });
   const childProcess = promise.childProcess;
   const stdoutOutput = [];
   const stderrOutput = [];
