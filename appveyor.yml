@@ -36,6 +36,8 @@ install:
   - ps: $fileContent += $env:priv_key.Replace(' ', "`n")
   - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
+  - cmd: npm config set @bit:registry https://node.bitsrc.io
+  - cmd: npm config ls
   - ps: Install-Product node 6
   - "npm i"
   - "npm run build"

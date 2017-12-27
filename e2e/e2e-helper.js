@@ -64,8 +64,8 @@ export default class Helper {
     return fs.readJSONSync(bitJsonPath) || {};
   }
 
-  readPackageJson(packageJsonfolder: string = this.localScopePath) {
-    const packageJsonPath = path.join(packageJsonfolder, 'package.json');
+  readPackageJson(packageJsonFolder: string = this.localScopePath) {
+    const packageJsonPath = path.join(packageJsonFolder, 'package.json');
     return fs.readJSONSync(packageJsonPath) || {};
   }
 
@@ -115,7 +115,31 @@ export default class Helper {
   initLocalScope() {
     return this.runCmd('bit init');
   }
+  createBitMap(
+    cwd: string = this.localScopePath,
+    componentObject = {
+      'bar/foo': {
+        files: [
+          {
+            relativePath: 'bar/foo.js',
+            test: false,
+            name: 'foo.js'
+          }
+        ],
+        mainFile: 'bar/foo.js',
+        origin: 'AUTHORED'
+      }
+    }
+  ) {
+    const bitmapFile = path.join(cwd, '.bit.map.json');
 
+    const bitmap = {
+      version: '0.11.1-testing'
+    };
+    Object.keys(componentObject).forEach(key => (bitmap[key] = componentObject[key]));
+    fs.ensureFileSync(bitmapFile);
+    return fs.writeJsonSync(bitmapFile, bitmap);
+  }
   setNewLocalAndRemoteScopes() {
     if (!this.cache) {
       this.reInitLocalScope();

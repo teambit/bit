@@ -578,8 +578,6 @@ describe('bit import', function () {
       it.skip('should create bit.json file with all the dependencies in the folder', () => {});
       it('should print a successful message about installed npm packages', () => {
         expect(output).to.have.string('successfully ran npm install');
-        expect(output).to.have.string('lodash.isboolean');
-        expect(output).to.have.string('lodash.isstring');
       });
       it('should write the dependency in the dependencies directory', () => {
         const depDir = path.join(
@@ -1182,6 +1180,27 @@ describe('bit import', function () {
         const indexFileContent = fs.readFileSync(indexFile).toString();
         expect(indexFileContent).to.have.string("require('./bar/foo')");
         expect(indexFileContent).to.not.have.string('dist');
+      });
+      describe('bit build after importing without --dist flag', () => {
+        before(() => {
+          helper.build('bar/foo');
+        });
+        it('main index file should point to the dist and not to the source', () => {
+          const indexFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'index.js');
+          const indexFileContent = fs.readFileSync(indexFile).toString();
+          expect(indexFileContent).to.have.string("require('./dist/bar/foo')");
+        });
+        it('package.json main attribute should point to the main dist file', () => {
+          const packageJsonFile = path.join(helper.localScopePath, 'components', 'bar', 'foo');
+          const packageJson = helper.readPackageJson(packageJsonFile);
+          expect(packageJson.main).to.equal('dist/bar/foo.js');
+        });
+        it('should generate all the links in the dists directory and be able to require its direct dependency', () => {
+          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
       });
     });
   });

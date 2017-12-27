@@ -2,10 +2,10 @@
  * @flow
  * @deprecated
  * @TODO deprecated and should be removed from here and use fs-propogate-until instead...
-*/
+ */
 import * as pathlib from 'path';
 import * as fs from 'fs';
-import { BIT_JSON, BIT_HIDDEN_DIR } from '../constants';
+import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP } from '../constants';
 
 function composeBitHiddenDirPath(path: string) {
   return pathlib.join(path, BIT_HIDDEN_DIR);
@@ -22,6 +22,12 @@ export function pathHasConsumer(path: string) {
   return fs.existsSync(composeBitHiddenDirPath(path)) && fs.existsSync(composeBitJsonPath(path));
 }
 
+/**
+ * determine whether given path has a bitmap
+ */
+export function pathHasBitMap(path: string) {
+  return fs.existsSync(pathlib.join(path, BIT_MAP));
+}
 /**
  * determine whether given path has a bit.Json
  */
@@ -53,7 +59,7 @@ export function locateConsumer(absPath: string): ?string {
     return paths.reverse();
   }
 
-  if (pathHasConsumer(absPath)) return absPath;
+  if (pathHasConsumer(absPath) || pathHasBitMap(absPath)) return absPath;
   const searchPaths = buildPropogationPaths();
-  return searchPaths.find(searchPath => pathHasConsumer(searchPath));
+  return searchPaths.find(searchPath => pathHasConsumer(searchPath) || pathHasBitMap(searchPath));
 }

@@ -5,6 +5,7 @@ import decamelize from 'decamelize';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
+import logger from '../logger/logger';
 
 const spawn = childProcessP.spawn;
 const objectToArray = obj => map(join('@'), toPairs(obj));
@@ -30,6 +31,8 @@ const defaults = {
   cwd: process.cwd(),
   global: false,
   save: false,
+  verbose: false,
+  unsafePerm: true,
   saveDev: false,
   saveOptional: false,
   saveExact: false,
@@ -50,12 +53,29 @@ const serializeOption = (bool, optName) => {
   return camelCaseToOptionCase(optName);
 };
 
+const stripNonNpmErrors = (errors: string[]) => {
+  // a workaround to remove all 'npm warn' and 'npm notice'.
+  // NPM itself returns them even when --loglevel = error or when --silent/--quiet flags are set
+  return errors
+    .join('')
+    .split('\n')
+    .filter(error => error.startsWith('npm ERR!'))
+    .join('\n');
+};
+
+/**
+ * when modules is empty, it runs 'npm install' without any package, which installs according to package.json file
+ */
 const installAction = (
   modules: string[] | string | { [string]: number | string },
-  userOpts?: Options,
+  userOpts: Options,
   verbose: boolean
 ) => {
   const options = merge(defaults, userOpts);
+  // Add npm verbose flag
+  if (verbose) {
+    options.verbose = true;
+  }
   const flags = pipe(mapObjIndexed(serializeOption), rejectNils, values)(options);
 
   // taking care of object case
@@ -65,12 +85,15 @@ const installAction = (
   modules = Array.isArray(modules) ? modules : (modules && [modules]) || []; // eslint-disable-line
 
   const serializedModules = modules && modules.length > 0 ? ` ${modules.join(' ')}` : '';
-  const serializedFlags = flags && flags.length > 0 ? ` ${flags.join(' ')}` : '';
+  const serializedFlags = flags && flags.length > 0 ? `${flags.join(' ')}` : '';
 
   fs.ensureDirSync(path.join(options.cwd, 'node_modules'));
+  logger.debug(`installing npm packages ${serializedModules} at ${options.cwd}`);
 
   const args = ['install', ...serializedModules.trim().split(' '), serializedFlags];
-  const promise = spawn('npm', args, { cwd: options.cwd });
+
+  // Set the shell to true to prevent problems with post install scripts when running as root
+  const promise = spawn('npm', args, { cwd: options.cwd, shell: true });
   const childProcess = promise.childProcess;
   const stdoutOutput = [];
   const stderrOutput = [];
@@ -78,13 +101,19 @@ const installAction = (
   childProcess.stdout.on('data', data => stdoutOutput.push(data.toString()));
   childProcess.stderr.on('data', data => stderrOutput.push(data.toString()));
 
-  return promise.then(() => {
-    const stdout = verbose
-      ? stdoutOutput.join('')
-      : `successfully ran npm install${serializedModules}${serializedFlags}`;
-    const stderr = verbose ? stderrOutput.join('') : '';
-    return { stdout, stderr };
-  });
+  let stdout;
+  return promise
+    .then(() => {
+      stdout = verbose
+        ? stdoutOutput.join('')
+        : `successfully ran npm install${serializedModules}${serializedFlags} at ${options.cwd}`;
+      const stderr = verbose ? stderrOutput.join('') : '';
+      return { stdout, stderr };
+    })
+    .catch((err) => {
+      const stderr = verbose ? stderrOutput.join('') : stripNonNpmErrors(stderrOutput);
+      return Promise.reject(`${stderr}\n\n${err.message}`);
+    });
 };
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {
   console.log(chalk.yellow(stdout)); // eslint-disable-line

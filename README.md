@@ -15,29 +15,41 @@
 
 [Community](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/)
 
-Bit plays with great tools like Git, Yarn and NPM to form a simple and frictionless component sharing experience. If shared-libraries are music CD-ROMs, Bit is your song playlist. It makes the experience of sharing code simple and accessible for everyone.  
+**Bit** - Build applications with reusable components, in a component-driven distributed workflow.
 
-Bit provides a distributed component development workflow. You can isolate components in any Git repository, and quickly share them to dynamic and curatable collections of components. Then, components can be individually found and consumed with package managers like Yarn/NPM or sourced in any repository for further modifications.
+Bit integrates into your existing ecosystem (Git, Yarn, NPM) and creates a lightning-fast experience for sharing code between projects and teams. You can easily isolate and share components directly from any project’s source code without changing it, and organize them as building blocks for your team to use in different projects and build new things. 
 
-- Quickly share individual components to curated and dynamic collections, from any path in your repository and without changing your source-code.
-- Keep a single source of truth for components, while developing or sourcing components from any repository.
-- Experience and discover components in your collections. Apply extensions to visually render your components, test and compile them, parse and present useful information from the inline docs and even publish your components to package registries.
-- Install components with NPM, Yarn or any other package manager - even if shared with Bit.
-- Get control and learn which components are used by who and where. Easily make vast changes to multiple components in different projects and gain full control over your 
+It cuts the time for building new applications and features, eliminates the maintenance overhead of additional repositories and packages for sharing code, helps to keep your code DRY and saves your time & resources for building new features and applications.
+
+**Distributed component development workflow**
+
+- Quickly isolate and share components directly from any path in your repository, without changing your source-code or having to maintain additional repos/packages.
+
+- Organize components in curated collections to make them discoverable for you and your team. Extend Bit to visually render, test, compile and parse useful information for your components without having to spend hours writing documentation.
+
+- Source and develop components from different repositories, while collaborating with a single source of truth.
+
+- Install components using Yarn or NPM, even if shared with Bit.
+
+- Easily learn exactly which components are being used by who and where, and make multiple component changes in multiple projects without breaking a single one of them.
 
 Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
 ## Use Cases
 
-Share and sync UI components (React, Angular etc) between projects.
+**UI / Web components**: Organize, share and reuse React, Vue and Angular components between projects.
 * Tutorial: [Bit with React](https://docs.bitsrc.io/react-tutorial.html).
+* An [example React app](https://github.com/itaymendel/movie-app) with 9 React components shared and made [individually available](https://bitsrc.io/bit/movie-app) with Bit.
 
-Share and sync Node.js components between micro-services in a multi-repo architecture.
+**Node.js modules**: Share and sync Node.js components between micro-services in a multi-repo architecture.
 * Tutorial: [Bit with Node.js](https://docs.bitsrc.io/node-tutorial.html).
 
-Shared library: use Bit as "component iTunes" for your static shared library.
-* Add Bit to a project ([example React app](https://github.com/itaymendel/movie-app)) to make its components [individually available](https://bitsrc.io/bit/movie-app) to discover and install from an organized collection.
+**Shared Libraries**: use Bit to easily turn any shared-lib into a dynamic collection of individual components.
+
+
 * Tutorial: [Bit with Shared Libraries](https://docs.bitsrc.io/shared-lib-main.html).
+
+Additional use cases: **GraphQL APIs**, **Serverless functions**, **Utility functions** and any encapsulated, reusable functionality.
 
 ## Supported Languages
 Bit's design is language agnostic. Still, it requires language-specific drivers for language-sensitive features (binding etc):
@@ -188,19 +200,15 @@ Now you can go back to your browser, and see that there's a new version for `com
 * You can find the full getting started guide [here](https://teambit.github.io/bit/getting-started.html).
 * You can find a list of command examples [here](https://docs.bitsrc.io/en/article/usage).
 
-## Why Bit
+## Motivation
 
-Over the past 2 years, our team grew to include more developers working on more projects.
+Every day, more software is being built with smaller, encapsulated and reusable components. From UI and Web components to reusable functionalities, GraphQL APIs an even serverless functions, smaller components are the building blocks of our future software.
 
-Over time, we found it increasingly hard to share our code and keep it synced between projects. Determined to avoid duplications, we considered many solutions from an arsenal of small repos and packages to shared static libraries.
-However, issues such as publish overhead, discoverability, and maintainability prevented us from truly sharing and syncing our components as a team between our projects.
+The way we share code between projects and people was designed for larger projects. As a result, when working with smaller components we still have to choose between cumbersome shared libraries or an arsenal of micro-packages. Both suffer from the same problems we had while using music CD-Roms before our iTunes playlists: they require great overhead, they are hard to change and maintain at scale and they make it hard to discover and use single components. As a result, we often write more of the same things or duplicate code between projects. 
 
-The idea of Bit is that we can keep our components as an integral part of our repository and still natively integrate them into other repositories, without forcing any source code changes.
-You can think of Bit as a “virtual monorepo” for sharing and syncing components across repositories.
+Our vision is to enable any developer to easily share, discover and compose components together in order to build any software application. We believe that through powerful and effective experience for modularity, sharing and collaboration we can speed and improve the way we build technology.
 
-Using Bit, we were able to create node.js micro-services composed entirely of shared components and share our arsenal of React components across apps.
 Although it is a work in progress, feel free to get started.
-
 Learn more on Hackernoon: "[How we started sharing components as a team](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)".*
 
 ## Contributing
