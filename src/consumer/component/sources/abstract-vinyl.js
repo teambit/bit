@@ -13,16 +13,11 @@ export default class AbstractVinyl extends Vinyl {
     this.path = path.join(this.base, relative);
   }
 
-  write(path?: string, force?: boolean = true): Promise<any> {
-    const filePath = path || this.path;
+  write(writePath?: string, force?: boolean = true): Promise<any> {
+    const filePath = writePath || this.path;
     logger.debug(`writing a file to the file-system at ${filePath}`);
     if (!force && fs.existsSync(filePath)) return Promise.resolve();
-    return new Promise((resolve, reject) => {
-      fs.outputFile(filePath, this.contents, (err, res) => {
-        if (err) return reject(err);
-        return resolve(filePath);
-      });
-    });
+    return fs.outputFile(filePath, this.contents).then(() => filePath);
   }
 
   toReadableString() {
@@ -33,7 +28,7 @@ export default class AbstractVinyl extends Vinyl {
   }
 
   static loadFromParsedString(parsedString: Object) {
-    if (!parsedString) return;
+    if (!parsedString) return undefined;
     const contents = Buffer.isBuffer(parsedString._contents)
       ? parsedString._contents
       : new Buffer(parsedString._contents);
@@ -46,7 +41,7 @@ export default class AbstractVinyl extends Vinyl {
   }
 
   static loadFromParsedStringArray(arr: Object[]) {
-    if (!arr) return;
+    if (!arr) return undefined;
     return arr.map(this.loadFromParsedString);
   }
 }

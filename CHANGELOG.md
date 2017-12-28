@@ -7,12 +7,50 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.10] - 2017-12-27
+
+- add unsafe-perm for installing packages inside components
+
+## [0.12.0-ext.9] - 2017-12-27
+
+- validte public ssh key exists before reading it
+
+## [0.12.0-ext.8] - 2017-12-27
+
+- add unsafe-perm for installing packages inside components
+- add public ssh key to context for server side hooks
+
+## [0.12.0-ext.7] - 2017-12-27
+
+## [0.12.0-ext.6] - 2017-12-26
+
 - `bit import`: install hub dependencies as npm packages, unless `--save-dependencies-as-components` flag is set
 - `bit import`: install npm packages by default, unless `--skip-npm-install` flag is set
+
+## [0.12.0-ext.5] - 2017-12-21
+
 - change auto-generated node_modules links to be the same as NPM installation of components (@bit/scope.box.name)
+- add context to all server side hooks
+
+## [0.12.0-ext.4] - 2017-12-19
+
 - support saving dists files on a pre-configured directory relative to consumer root (rather than saving them inside the component dir) 
 - remove 'dist' attribute from consumer bit.json by default
+- add headers to server side hooks
+- add context to PRE_RECEIVE_OBJECTS hook
+
+## [0.12.0-ext.3] - 2017-12-14
+
+- improve args for post-x-remote hooks
+
+## [0.12.0-ext.2] - 2017-12-13
+
 - rename `bit bind` command to `bit link`
+
+## [0.12.0-ext.1] - 2017-12-11
+
+- new extension system (beta)
+- add `bit isolate` command
 - avoid building process when a component was not modified and the dists are saved in the model
 - bug fix - importing an older version of a component ended up showing the component in "modified" and "staged" sections of bit status
 - rename `no_dependencies` flag to `no-dependencies` on `bit import` 
@@ -20,8 +58,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - support `bit show --compare` with json format (`bit show component-name --json --compare`)
 - change `bit remote rm` to `bit remote del`
 - run bit init (on every command) if dir is not initialized but contains bit.map.json
-- add unsafe-perm for installing packages inside components
-- set shell to true for installing packages inside components
 
 ## [0.11.2-dev.4] - 2017-12-05
 

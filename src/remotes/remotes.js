@@ -29,13 +29,18 @@ export default class Remotes extends Map<string, Remote> {
     });
   }
 
-  async fetch(ids: BitId[], thisScope: Scope, withoutDeps: boolean = false): Promise<ComponentObjects[]> {
+  async fetch(
+    ids: BitId[],
+    thisScope: Scope,
+    withoutDeps: boolean = false,
+    context: ?Object
+  ): Promise<ComponentObjects[]> {
     // TODO - Transfer the fetch logic into the ssh module,
     // in order to close the ssh connection in the end of the multifetch instead of one fetch
     const byScope = groupBy(prop('scope'));
     const promises = [];
     forEach(byScope(ids), (scopeIds, scopeName) => {
-      promises.push(this.resolve(scopeName, thisScope).then(remote => remote.fetch(scopeIds, withoutDeps)));
+      promises.push(this.resolve(scopeName, thisScope).then(remote => remote.fetch(scopeIds, withoutDeps, context)));
     });
 
     logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps}) on a remote`);

@@ -2,6 +2,7 @@
 import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
 import Init from './commands/public-cmds/init-cmd';
+import Isolate from './commands/public-cmds/isolate-cmd';
 import ScopeList from './commands/private-cmds/_list-cmd';
 import ScopeSearch from './commands/private-cmds/_search-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
@@ -26,7 +27,6 @@ import Fetch from './commands/private-cmds/_fetch-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Build from './commands/public-cmds/build-cmd';
 import CiUpdate from './commands/private-cmds/ci-update-cmd';
-import Pack from './commands/private-cmds/pack-in-scope-cmd';
 import RefreshScope from './commands/private-cmds/refresh-scope-cmd';
 import CatScope from './commands/private-cmds/cat-scope-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
@@ -42,47 +42,53 @@ import Delete from './commands/private-cmds/_delete-cmd';
 import Latest from './commands/private-cmds/_latest-cmd';
 import Migrate from './commands/private-cmds/migrate-cmd';
 
-export default function registerCommands(): CommandRegistrar {
-  return new CommandRegistrar(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
-    new Init(),
-    new Create(),
-    new Commit(),
-    new Import(),
-    new Install(),
-    new Export(),
-    new Status(),
-    new Reset(),
-    new List(),
-    new Config(),
-    new ClearCache(),
-    new Remote(),
-    new CatObject(),
-    new Show(),
-    new Log(),
-    new Search(),
-    new Test(),
-    new Put(),
-    new ScopeList(),
-    new ScopeSearch(),
-    new ScopeShow(),
-    new Fetch(),
-    new Build(),
-    new DescribeScope(),
-    new CiUpdate(),
-    new RefreshScope(),
-    new CatScope(),
-    new ScopeConfig(),
-    new Link(),
-    new Watch(),
-    new Add(),
-    new Untrack(),
-    new Move(),
-    new Remove(),
-    new Deprecate(),
-    new Delete(),
-    new DeprecatePrivate(),
-    new Latest(),
-    new Migrate(),
-    new Pack()
-  ]);
+export default function registerCommands(extensionsCommands): CommandRegistrar {
+  return new CommandRegistrar(
+    BIT_USAGE,
+    BIT_DESCRIPTION,
+    BIT_VERSION,
+    [
+      new Init(),
+      new Isolate(),
+      new Create(),
+      new Commit(),
+      new Import(),
+      new Install(),
+      new Export(),
+      new Status(),
+      new Reset(),
+      new List(),
+      new Config(),
+      new ClearCache(),
+      new Remote(),
+      new CatObject(),
+      new Show(),
+      new Log(),
+      new Search(),
+      new Test(),
+      new Put(),
+      new ScopeList(),
+      new ScopeSearch(),
+      new ScopeShow(),
+      new Fetch(),
+      new Build(),
+      new DescribeScope(),
+      new CiUpdate(),
+      new RefreshScope(),
+      new CatScope(),
+      new ScopeConfig(),
+      new Link(),
+      new Watch(),
+      new Add(),
+      new Untrack(),
+      new Move(),
+      new Remove(),
+      new Deprecate(),
+      new Delete(),
+      new DeprecatePrivate(),
+      new Latest(),
+      new Migrate()
+    ],
+    extensionsCommands
+  );
 }

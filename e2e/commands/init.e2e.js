@@ -14,7 +14,8 @@ describe('run bit init', function () {
   beforeEach(() => {
     helper.reInitLocalScope();
   });
-  it('Should tell the user there is already a scope when running bit init twice', () => {
+  // skip since we change the behaviour to work when running bit init twice
+  it.skip('Should tell the user there is already a scope when running bit init twice', () => {
     let errorMsg;
     try {
       helper.initLocalScope();

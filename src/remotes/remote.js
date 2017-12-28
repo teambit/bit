@@ -54,8 +54,8 @@ export default class Remote {
     return this.connect().then(network => network.show(bitId));
   }
 
-  fetch(bitIds: BitId[], withoutDeps: boolean): Promise<ComponentObjects[]> {
-    return this.connect().then(network => network.fetch(bitIds, withoutDeps));
+  fetch(bitIds: BitId[], withoutDeps: boolean, context: ?Object): Promise<ComponentObjects[]> {
+    return this.connect().then(network => network.fetch(bitIds, withoutDeps, context));
   }
 
   latestVersions(bitIds: BitId[]): Promise<ComponentObjects[]> {
@@ -70,14 +70,14 @@ export default class Remote {
     return connect(this.host).then(network => network.push(componentObjects));
   }
 
-  pushMany(components: ComponentObjects[]): Promise<ComponentObjects[]> {
-    return connect(this.host).then(network => network.pushMany(components));
+  pushMany(components: ComponentObjects[], context: ?Object): Promise<ComponentObjects[]> {
+    return connect(this.host).then(network => network.pushMany(components, context));
   }
-  deleteMany(bitIds: Array<BitIds>, force: boolean): Promise<Object[]> {
-    return connect(this.host).then(network => network.deleteMany(bitIds, force));
+  deleteMany(bitIds: Array<BitIds>, force: boolean, context: ?Object): Promise<Object[]> {
+    return connect(this.host).then(network => network.deleteMany(bitIds, force, context));
   }
-  deprecateMany(bitIds: BitIds[]): Promise<Object[]> {
-    return connect(this.host).then(network => network.deprecateMany(bitIds));
+  deprecateMany(bitIds: BitIds[], context: ?Object): Promise<Object[]> {
+    return connect(this.host).then(network => network.deprecateMany(bitIds, context));
   }
 
   static load(name: string, host: string): Remote {
