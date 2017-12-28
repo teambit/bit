@@ -414,6 +414,11 @@ export default class Helper {
     return this.runCmd(`bit show ${id}`);
   }
 
+  showComponentParsed(id: string = 'bar/foo') {
+    const output = this.runCmd(`bit show ${id} --json`);
+    return JSON.parse(output);
+  }
+
   showComponentWithOptions(id: string = 'bar/foo', options: ?Object) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)

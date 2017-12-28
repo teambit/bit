@@ -254,7 +254,15 @@ export default class Consumer {
         // no need to resolve dependencies
         return component;
       }
-      return loadDependenciesForComponent(component, componentMap, bitDir, this, bitMap, idWithConcreteVersionString);
+      return loadDependenciesForComponent(
+        component,
+        componentMap,
+        bitDir,
+        this,
+        bitMap,
+        idWithConcreteVersionString,
+        componentFromModel
+      );
     });
 
     const allComponents = [];
@@ -308,9 +316,10 @@ export default class Consumer {
         withPackageJson,
         withBitJson: conf,
         dist,
-        saveDependenciesAsComponents
+        saveDependenciesAsComponents,
+        installNpmPackages,
+        verbose
       });
-      if (installNpmPackages) await this.installNpmPackages(componentsAndDependenciesBitJson, verbose);
     }
     if (componentsFromBitMap.length) {
       componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsFromBitMap, cache);
@@ -320,6 +329,7 @@ export default class Consumer {
         componentsWithDependencies: componentsAndDependenciesBitMap,
         force: false,
         withPackageJson: false,
+        installNpmPackages: false,
         withBitJson: conf,
         dist
       });
@@ -382,9 +392,10 @@ export default class Consumer {
       withBitJson: conf,
       writeBitDependencies,
       dist,
-      saveDependenciesAsComponents
+      saveDependenciesAsComponents,
+      installNpmPackages,
+      verbose
     });
-    if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
     return { dependencies: componentsWithDependencies };
   }
 
@@ -475,7 +486,9 @@ export default class Consumer {
     writeBitDependencies = false,
     createNpmLinkFiles = false,
     dist = true,
-    saveDependenciesAsComponents = false
+    saveDependenciesAsComponents = false,
+    installNpmPackages = true,
+    verbose = false
   }: {
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
@@ -485,8 +498,10 @@ export default class Consumer {
     writeBitDependencies?: boolean,
     createNpmLinkFiles?: boolean,
     dist?: boolean,
-    saveDependenciesAsComponents?: boolean // as opposed to npm packages
-    }): Promise<Component[]> {
+    saveDependenciesAsComponents?: boolean, // as opposed to npm packages
+    installNpmPackages?: boolean,
+    verbose?: boolean
+  }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
     const remotes = await this.scope.remotes();
@@ -586,6 +601,7 @@ export default class Consumer {
       )
     );
     await bitMap.write();
+    if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
     const allComponents = writtenDependencies
       ? [...writtenComponents, ...R.flatten(writtenDependencies)]
       : writtenComponents;
@@ -596,9 +612,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
@@ -806,6 +822,7 @@ export default class Consumer {
       fs.removeSync(destPath); // in case a component has been moved
       fs.ensureDirSync(path.dirname(destPath));
       try {
+        logger.debug(`generating a symlink on ${destPath} pointing to ${srcPath}`);
         symlinkOrCopy.sync(srcPath, destPath);
       } catch (err) {
         throw new Error(`failed to link a component ${componentId.toString()}.

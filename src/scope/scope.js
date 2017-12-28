@@ -270,7 +270,7 @@ export default class Scope {
     force: ?boolean,
     consumer: Consumer,
     verbose: ?boolean
-    }): Promise<ComponentWithDependencies> {
+  }): Promise<ComponentWithDependencies> {
     // TODO: Change the return type
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
     const topSort = new Toposort();
@@ -930,9 +930,9 @@ export default class Scope {
     });
   }
 
-  loadComponent(id: BitId): Promise<ConsumerComponent> {
+  loadComponent(id: BitId, localOnly: boolean = true): Promise<ConsumerComponent> {
     logger.debug(`scope.loadComponent, id: ${id}`);
-    if (!id.isLocal(this.name)) {
+    if (localOnly && !id.isLocal(this.name)) {
       throw new Error('cannot load bit from remote scope, please import first');
     }
     return this.loadRemoteComponent(id);
@@ -1139,7 +1139,7 @@ export default class Scope {
     isolated?: boolean,
     directory?: string,
     keep?: boolean
-    }): Promise<?any> {
+  }): Promise<?any> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run specs on remote component');
     }
@@ -1175,14 +1175,13 @@ export default class Scope {
     directory: ?string,
     keep: ?boolean,
     ciComponent: any
-    }): Promise<string> {
+  }): Promise<string> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run build on remote component');
     }
     const component = await this.loadComponent(bitId);
     return component.build({ scope: this, environment, save, consumer, verbose, directory, keep, ciComponent });
   }
-
 
   /**
    * import a component end to end. Including importing the dependencies and installing the npm

@@ -220,9 +220,11 @@ async function writeDependencyLinks(
 
     const depRootDir = depComponentMap ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
     const isNpmLink = createNpmLinkFiles || !parentComponent.dependenciesSavedAsComponents;
-    if (hasDist && parentComponent.dependenciesSavedAsComponents) {
+    if (hasDist) {
       const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
-      const depRootDirDist = depComponent.getDistDirForConsumer(consumer, depComponentMap.rootDir);
+      const depRootDirDist = depComponentMap
+        ? depComponent.getDistDirForConsumer(consumer, depComponentMap.rootDir)
+        : undefined;
       distLinkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
       // Generate a link file inside dist folder of the dependent component
       const linkFile = prepareLinkFile(
@@ -258,7 +260,6 @@ async function writeDependencyLinks(
   ) => {
     const directDependencies: Dependency[] = parentComponent.dependencies;
     const flattenedDependencies: BitIds = parentComponent.flattenedDependencies;
-
     if (!directDependencies || !directDependencies.length) return [];
     const links = directDependencies.map((dep: Dependency) => {
       if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
