@@ -875,7 +875,6 @@ export default class Scope {
       );
       const ids = removedComponents.map(x => x.bitId);
       const removedDependencies = R.flatten(removedComponents.map(x => x.removedDependencies));
-      await postRemoveHook({ ids: removedComponents });
       return new RemovedObjects(ids, missingComponents, removedDependencies, {});
     }
     return new RemovedObjects([], missingComponents, [], dependentBits);
