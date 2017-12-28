@@ -8,7 +8,6 @@ chai.use(require('chai-fs'));
 // see the content of this component here: https://bitsrc.io/david/tests/bar/foo
 const componentTestId = 'david.tests/bar/foo';
 
-// todo: figure out how to config CI servers to work with bit registry
 describe('importing bit components from bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
@@ -41,6 +40,14 @@ describe('importing bit components from bitsrc.io', function () {
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+    it('should recognize the npm packages as dependencies when loading from the file system', () => {
+      const showOutput = helper.showComponentParsed();
+      expect(showOutput.dependencies[0].id).to.equal('david.tests/utils/is-string@0.0.1');
+    });
+    it("bit status should not show the component (because it's not new/modified/staged etc)", () => {
+      const output = helper.runCmd('bit status');
+      expect(output.includes('bar/foo')).to.be.false;
     });
   });
   describe('with --save-dependencies-as-components flag', () => {

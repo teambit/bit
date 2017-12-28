@@ -28,6 +28,7 @@ import { Consumer } from '../../consumer';
  * @param {BitMap} bitMap
  * @param {string} consumerPath
  * @param {string} bindingPrefix
+ * @param componentFromModel
  */
 function findComponentsOfDepsFiles(
   tree: Object,
@@ -35,7 +36,8 @@ function findComponentsOfDepsFiles(
   entryComponentId: string,
   bitMap: BitMap,
   consumerPath: string,
-  bindingPrefix: string
+  bindingPrefix: string,
+  componentFromModel
 ): Object {
   const packagesDeps = {};
   const componentsDeps = {};
@@ -47,14 +49,23 @@ function findComponentsOfDepsFiles(
   const processedFiles = [];
 
   const traverseTreeForComponentId = (depFile) => {
-    if (!tree[depFile] || !tree[depFile].files || !tree[depFile].files.length) return;
+    if (!tree[depFile] || (!tree[depFile].files && !tree[depFile].bits)) return;
     const rootDirFullPath = path.join(consumerPath, rootDir);
-    for (const file of tree[depFile].files) {
-      const fullDepFile = path.resolve(rootDirFullPath, file);
-      const depRelativeToConsumer = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
-      const componentId = bitMap.getComponentIdByPath(depRelativeToConsumer);
-      if (componentId) return componentId;
+    if (tree[depFile].files && tree[depFile].files.length) {
+      for (const file of tree[depFile].files) {
+        const fullDepFile = path.resolve(rootDirFullPath, file);
+        const depRelativeToConsumer = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
+        const componentId = bitMap.getComponentIdByPath(depRelativeToConsumer);
+        if (componentId) return componentId;
+      }
     }
+    if (tree[depFile].bits && tree[depFile].bits.length) {
+      for (const bit of tree[depFile].bits) {
+        const componentId = Consumer.getComponentIdFromNodeModulesPath(bit, bindingPrefix);
+        if (componentId) return componentId;
+      }
+    }
+
     for (const file of tree[depFile].files) {
       if (file === depFile) {
         logger.warn(`traverseTreeForComponentId found a cyclic dependency. ${file} depends on itself`);
@@ -65,7 +76,6 @@ function findComponentsOfDepsFiles(
     }
   };
 
-  // @todo: refactor ASAP it became way too complicated
   const getComponentIdByDepFile = (depFile) => {
     let depFileRelative: string = depFile; // dependency file path relative to consumer root
     let componentId: ?string;
@@ -90,22 +100,21 @@ function findComponentsOfDepsFiles(
       if (componentId) {
         // it is verified now that this depFile is an auto-generated file, therefore the sourceRelativePath and the
         // destinationRelativePath should be a partial-path and not full-relative-to-consumer path.
-        destination = bitMap.getMainFileOfComponent(componentId);
+        const componentMap = bitMap.getComponent(componentId);
+        if (componentMap) destination = componentMap.mainFile;
+        else {
+          // when there is no componentMap, the bit dependency was imported as a npm package.
+          // we're missing two things, which can be obtained from the model: 1) version. 2) mainFile.
+          const dependency = componentFromModel.dependencies.find(
+            dep => dep.id.toStringWithoutVersion() === componentId
+          );
+          destination = dependency.mainFile;
+          componentId = dependency.id.toString();
+        }
+
         depFileRelative = depFile; // change it back to partial-part, this will be later on the sourceRelativePath
       }
     }
-
-    // @todo: is it needed
-    // if (!componentId) {
-    //   // Check if it's a generated index file
-    //   const depFileWithoutExt = getWithoutExt(path.basename(depFileRelative));
-    //   if (depFileWithoutExt === DEFAULT_INDEX_NAME) {
-    //     const indexDir = path.dirname(depFileRelative);
-    //     componentId = bitMap.getComponentIdByRootPath(indexDir);
-    //     // Refer to the main file in case the source component required the index of the imported
-    //     if (componentId) destination = bitMap.getMainFileOfComponent(componentId);
-    //   }
-    // }
 
     return { componentId, depFileRelative, destination };
   };
@@ -124,8 +133,9 @@ function findComponentsOfDepsFiles(
     // happens when in the same component one file requires another one. In this case, there is noting to do
     if (componentId === entryComponentId) return;
 
+    const componentMap = bitMap.getComponent(componentId);
     // found a dependency component. Add it to componentsDeps
-    const depRootDir = bitMap.getRootDirOfComponent(componentId);
+    const depRootDir = componentMap ? componentMap.rootDir : undefined;
     const destinationRelativePath =
       destination ||
       (depRootDir && depFileRelative.startsWith(depRootDir)
@@ -146,10 +156,11 @@ function findComponentsOfDepsFiles(
     }
     const currentComponentsDeps = { [componentId]: [depsPaths] };
 
-    const componentMap = bitMap.getComponent(componentId);
     if (
-      (componentMap.origin === COMPONENT_ORIGINS.IMPORTED && entryComponentMap.origin === COMPONENT_ORIGINS.AUTHORED) ||
-      (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && entryComponentMap.origin === COMPONENT_ORIGINS.IMPORTED)
+      componentMap &&
+      ((componentMap.origin === COMPONENT_ORIGINS.IMPORTED &&
+        entryComponentMap.origin === COMPONENT_ORIGINS.AUTHORED) ||
+        (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && entryComponentMap.origin === COMPONENT_ORIGINS.IMPORTED))
     ) {
       // prevent author using relative paths for IMPORTED component
       // also prevent adding AUTHORED component to an IMPORTED component using relative syntax. The reason is that when
@@ -273,7 +284,8 @@ export default (async function loadDependenciesForComponent(
   bitDir: string,
   consumer: Consumer,
   bitMap: BitMap,
-  idWithConcreteVersionString: string
+  idWithConcreteVersionString: string,
+  componentFromModel: Component
 ): Promise<Component> {
   const driver: Driver = consumer.driver;
   const consumerPath = consumer.getPath();
@@ -314,7 +326,8 @@ export default (async function loadDependenciesForComponent(
     idWithConcreteVersionString,
     bitMap,
     consumerPath,
-    component.bindingPrefix
+    component.bindingPrefix,
+    componentFromModel
   );
   const traversedCompDeps = traversedDeps.componentsDeps;
   component.dependencies = Object.keys(traversedCompDeps).map((depId) => {

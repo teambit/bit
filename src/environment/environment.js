@@ -46,11 +46,11 @@ export default class Environment {
       componentsWithDependencies: componentDependenciesArr,
       writeBitDependencies,
       createNpmLinkFiles,
-      saveDependenciesAsComponents: true
+      saveDependenciesAsComponents: true,
+      installNpmPackages: installDependencies,
+      verbose
     });
-    const componentWithDependencies: ComponentWithDependencies = R.head(componentDependenciesArr);
-    if (installDependencies) await this.consumer.installNpmPackages([componentWithDependencies], verbose);
-    return componentWithDependencies;
+    return R.head(componentDependenciesArr);
   }
 
   getPath(): string {
