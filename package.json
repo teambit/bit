@@ -38,6 +38,7 @@
     "dependency-tree": "teambit/node-dependency-tree",
     "fs-extra": "^4.0.2",
     "glob": "^7.1.1",
+    "lodash.partition": "^4.6.0",
     "ora": "^1.2.0",
     "parents": "^1.0.1",
     "ramda": "^0.22.1",

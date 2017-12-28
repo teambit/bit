@@ -1,11 +1,12 @@
 // @flow
 // TODO: This should be exported as a bit component
 
-import parents from 'parents';
 import fs from 'fs';
 import path from 'path';
 import R from 'ramda';
 import generateTree from './generate-tree-madge';
+import PackageJson from '../package-json/package-json';
+import partition from 'lodash.partition';
 
 /**
  * Import Specifier data.
@@ -61,47 +62,6 @@ export type Tree = {
   [main_file: string]: Dependencies
 }
 
-/**
- * Taken from this package (with some minor changes):
- * https://www.npmjs.com/package/find-package
- * https://github.com/jalba/find-package
- *
- */
-function findPath(dir) {
-  const parentsArr = parents(dir);
-  let i;
-  for (i = 0; i < parentsArr.length; i++) {
-    const config = `${parentsArr[i]}/package.json`;
-    try {
-      if (fs.lstatSync(config).isFile()) {
-        return config;
-      }
-    } catch (e) {}
-  }
-  return null;
-}
-
-/**
- * Taken from this package (with some minor changes):
- * https://www.npmjs.com/package/find-package
- * https://github.com/jalba/find-package
- *
- */
-function findPackage(dir, addPaths) {
-  const pathToConfig = findPath(dir);
-  let configJSON = null;
-  if (pathToConfig !== null) configJSON = require(pathToConfig);
-  if (configJSON && addPaths) {
-    configJSON.paths = {
-      relative: path.relative(dir, pathToConfig),
-      absolute: pathToConfig,
-    };
-  } else if (configJSON !== null) {
-    delete configJSON.paths;
-  }
-
-  return configJSON;
-}
 
 /**
  * Group dependencies by types (files, bits, packages)
@@ -127,7 +87,7 @@ function resolveNodePackage(cwd, packageFullPath) {
   // We are doing this, because the package.json insisde the package dir contain exact version
   // And the component/consumer package.json might contain semver like ^ or ~
   // We want to have this semver as dependency and not the exact version, otherwise it will be considered as modified all the time
-  const packageJsonInfo = findPackage(cwd);
+  const packageJsonInfo = PackageJson.findPackage(cwd);
   if (packageJsonInfo) {
     // The +1 is for the / after the node_modules, we didn't enter it into the NODE_MODULES const because it makes problems on windows
     const packageRelativePath = packageFullPath.substring(packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1, packageFullPath.length);
@@ -142,7 +102,7 @@ function resolveNodePackage(cwd, packageFullPath) {
   }
   // Get the package relative path to the node_modules dir
 
-  const packageInfo = findPackage(packageFullPath);
+  const packageInfo = PackageJson.findPackage(packageFullPath);
   if (!packageInfo) return null; // when running 'bitjs get-dependencies' command, packageInfo is sometimes empty
   result[packageInfo.name] = packageInfo.version;
   return result;
@@ -229,6 +189,23 @@ function resolveModulePath(nmPath, workingDir, root) {
 }
 
 /**
+ * Resolve package dependencies from package.json according to package names
+ *
+ * @param {Object} packageJson
+ * @param {string []} packagesNames
+ * @returns new object with found and missing
+ */
+function findPackagesInPackageJson (packageJson: Object, packagesNames: string[] ) {
+  const { dependencies, devDependencies, peerDependencies } = packageJson;
+  const mergedDependencies = Object.assign(dependencies, devDependencies, peerDependencies)
+  if (packagesNames && packagesNames.length && !R.isNil(mergedDependencies)) {
+    const [foundPackages, missingPackages] = partition(packagesNames, item => item in mergedDependencies);
+    foundPackages.forEach(pack => foundPackages[pack] = mergedDependencies[pack] )
+    return { foundPackages, missingPackages };
+  }
+  return { foundPackages: {}, missingPackages: packagesNames}
+}
+/**
  * Run over each entry in the missing array and transform the missing from list of paths
  * to object with missing types
  *
@@ -239,6 +216,8 @@ function resolveModulePath(nmPath, workingDir, root) {
  * @returns new object with grouped missing
  */
 function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
+  const packageJson = PackageJson.findPackage(cwd);
+
   /**
    * Group missing dependencies by types (files, bits, packages)
    * @param {Array} missing list of missing paths to group
@@ -263,12 +242,13 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
       return missingPackages.push(packageName);
     }
     const packageWithVersion = resolveNodePackage(cwd, resolvedPath);
+
     return packageWithVersion ? Object.assign(foundPackages, packageWithVersion) :
                                 missingPackages.push(packageWithVersion);
   });
-  groups.packages = missingPackages;
-
-  return { groups, foundPackages };
+  const result = findPackagesInPackageJson(packageJson, missingPackages);
+  groups.packages = result.missingPackages;
+  return { groups, foundPackages: Object.assign(foundPackages, result.foundPackages) };
 }
 
 /**
@@ -387,6 +367,7 @@ export default async function getDependencyTree(baseDir: string, consumerPath: s
       }
     });
   }
+
   updateTreeWithLinkFilesAndImportSpecifiers(tree, result.pathMap);
   return { missing: groups, tree };
 }
