@@ -1,6 +1,7 @@
 /** @flow */
 import loadScope from '../../scope-loader';
 import Scope from '../../scope';
+import { fetch, deprecate, remove, put } from '../../../api/scope';
 import ComponentObjects from '../../component-objects';
 import { BitIds, BitId } from '../../../bit-id';
 import { FsScopeNotLoaded } from '../exceptions';
@@ -35,26 +36,22 @@ export default class Fs implements Network {
   }
 
   pushMany(components: ComponentObjects[]): Promise<ComponentObjects[]> {
-    const scope = this.getScope();
-    return scope.exportManyBareScope(components);
-  }
-  deleteMany(bitIds: Array<BitId>, force: boolean): Promise<ComponentObjects[]> {
-    const scope = this.getScope();
-    return scope.removeMany(bitIds, force);
-  }
-  deprecateMany(bitIds: Array<BitId>): Promise<ComponentObjects[]> {
-    const scope = this.getScope();
-    return scope.deprecateMany(bitIds);
-  }
-  fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
-    if (noDependencies) return this.getScope().manyOneObjects(bitIds);
-    return this.getScope()
-      .getObjects(bitIds)
-      .then(bitsMatrix => flatten(bitsMatrix));
+    return put({ path: this.scopePath, componentObjects: components });
   }
 
-  fetchAll(ids: BitIds): Promise<ComponentObjects[]> {
-    return this.getScope().getObjects(ids);
+  deleteMany(bitIds: Array<BitId>, force: boolean): Promise<ComponentObjects[]> {
+    return remove({ path: this.scopePath, ids: bitIds, force });
+  }
+
+  deprecateMany(bitIds: Array<BitId>): Promise<ComponentObjects[]> {
+    return deprecate({ path: this.scopePath, ids: bitIds });
+  }
+
+  fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
+    return fetch(this.scopePath, bitIds, noDependencies).then((bitsMatrix) => {
+      if (noDependencies) return bitsMatrix;
+      return flatten(bitsMatrix);
+    });
   }
 
   latestVersions(componentIds: BitId[]) {

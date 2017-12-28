@@ -15,6 +15,7 @@ export default class Import extends Command {
   opts = [
     ['t', 'tester', 'import a tester environment component'],
     ['c', 'compiler', 'import a compiler environment component'],
+    ['', 'extension', 'import an extension component'],
     ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
     ['p', 'prefix <prefix>', 'import components into a specific directory'],
     ['d', 'display-dependencies', 'display the imported dependencies'],
@@ -42,6 +43,7 @@ export default class Import extends Command {
     {
       tester,
       compiler,
+      extension,
       prefix,
       displayDependencies,
       environment,
@@ -55,6 +57,7 @@ export default class Import extends Command {
     }: {
       tester?: boolean,
       compiler?: boolean,
+      extension?: boolean,
       verbose?: boolean,
       prefix?: string,
       displayDependencies?: boolean,
@@ -75,6 +78,7 @@ export default class Import extends Command {
       ids,
       tester,
       compiler,
+      extension,
       verbose,
       prefix,
       environment,
@@ -135,7 +139,7 @@ export default class Import extends Command {
 
     if (envDependencies && !R.isEmpty(envDependencies)) {
       envDependenciesOutput = immutableUnshift(
-        envDependencies.map(formatPlainComponentItem),
+        envDependencies.map(envDependency => formatPlainComponentItem(envDependency.component)),
         chalk.green('the following component environments were installed')
       ).join('\n');
     }

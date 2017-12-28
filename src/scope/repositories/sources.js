@@ -38,7 +38,7 @@ export default class SourceRepository {
 
   async findComponent(component: Component): Promise<?Component> {
     try {
-      const foundComponent = this.objects().findOne(component.hash());
+      const foundComponent = await this.objects().findOne(component.hash());
       if (foundComponent) return foundComponent;
     } catch (err) {
       logger.error(`findComponent got an error ${err}`);

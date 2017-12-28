@@ -10,14 +10,26 @@ import { mkdirp } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
 
+export type IsolateOptions = {
+  writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
+  writeBitDependencies: ?boolean, // Write bit dependencies as package dependencies in package.json
+  links: ?boolean, // Fix the links to dependencies to be links to the package
+  installPackages: ?boolean, // Install the package dependencies
+  noPackageJson: ?boolean, // Don't write the package.json
+  override: ?boolean, // Override existing files in the folder
+  dist: ?boolean, // Write dist files
+  conf: ?boolean, // Write bit.json file
+  verbose: boolean // Print more logs
+};
+
 export default class Environment {
   path: string;
   scope: Scope;
   consumer: Consumer;
 
-  constructor(scope: Scope, ciDir: string) {
+  constructor(scope: Scope, dir: ?string) {
     this.scope = scope;
-    this.path = ciDir || path.join(scope.getPath(), ISOLATED_ENV_ROOT, v4());
+    this.path = dir || path.join(scope.getPath(), ISOLATED_ENV_ROOT, v4());
     logger.debug(`creating a new isolated environment at ${this.path}`);
   }
 
@@ -30,27 +42,28 @@ export default class Environment {
    * import a component end to end. Including importing the dependencies and installing the npm
    * packages.
    *
-   * @param rawId
+   * @param {string | BitId} rawId - the component id to isolate
+   * @param {IsolateOptions} opts
    * @return {Promise.<Component>}
    */
-  async importE2E(
-    rawId: string,
-    verbose: boolean,
-    installDependencies: boolean = true,
-    writeBitDependencies?: boolean = false,
-    createNpmLinkFiles?: boolean = false
-  ): Promise<ComponentWithDependencies> {
-    const bitId = BitId.parse(rawId);
-    const componentDependenciesArr = await this.scope.getMany([bitId]);
-    await this.consumer.writeToComponentsDir({
-      componentsWithDependencies: componentDependenciesArr,
-      writeBitDependencies,
-      createNpmLinkFiles,
+  async isolateComponent(rawId: string | BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
+    const bitId = typeof rawId === 'string' ? BitId.parse(rawId) : rawId;
+    const componentsWithDependencies = await this.scope.getMany([bitId]);
+    const concreteOpts = {
+      componentsWithDependencies,
+      writeToPath: opts.writeToPath || this.path,
+      force: opts.override,
+      withPackageJson: !opts.noPackageJson,
+      withBitJson: opts.conf,
+      writeBitDependencies: opts.writeBitDependencies,
+      createNpmLinkFiles: opts.createNpmLinkFiles,
       saveDependenciesAsComponents: true,
-      installNpmPackages: installDependencies,
-      verbose
-    });
-    return R.head(componentDependenciesArr);
+      dist: opts.dist,
+      installNpmPackages: opts.installPackages,
+      verbose: opts.verbose
+    };
+    await this.consumer.writeToComponentsDir(concreteOpts);
+    return R.head(componentsWithDependencies);
   }
 
   getPath(): string {
@@ -58,12 +71,7 @@ export default class Environment {
   }
 
   destroy(): Promise<*> {
-    return new Promise((resolve, reject) => {
-      fs.remove(this.path, (err) => {
-        if (err) return reject(err);
-        logger.debug(`destroying the isolated environment at ${this.path}`);
-        return resolve();
-      });
-    });
+    logger.debug(`destroying the isolated environment at ${this.path}`);
+    return fs.remove(this.path);
   }
 }

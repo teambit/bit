@@ -13,11 +13,11 @@ export default class Deprecate extends Command {
   opts = [];
 
   action([path, args]: [string, string]): Promise<any> {
-    const { payload } = unpackCommand(args);
+    const { payload, headers } = unpackCommand(args);
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
     return migrate(scopePath, false).then(() => {
-      return deprecate({ path: scopePath, bitIds: payload.bitIds });
+      return deprecate({ path: scopePath, bitIds: payload.bitIds }, headers);
     });
   }
 

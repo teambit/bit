@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
 import { GlobalRemotes } from '../global-config';
+import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
@@ -24,6 +25,7 @@ import {
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
+import IsolatedEnvironment from '../environment';
 import { RemoteScopeNotFound, PermissionDenied } from './network/exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
@@ -33,7 +35,6 @@ import { Repository, Ref, BitObject } from './objects';
 import ComponentWithDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
-import { postExportHook, postImportHook, postDeprecateHook, postRemoveHook } from '../hooks';
 import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
@@ -70,6 +71,15 @@ export type ScopeProps = {
   objects?: Repository
 };
 
+export type IsolateOptions = {
+  directory: ?string,
+  write_bit_dependencies: ?boolean,
+  links: ?boolean,
+  install_packages: ?boolean,
+  no_package_json: ?boolean,
+  override: ?boolean
+};
+
 export default class Scope {
   created: boolean = false;
   scopeJson: ScopeJson;
@@ -101,7 +111,24 @@ export default class Scope {
   }
 
   getComponentsPath(): string {
-    return pathLib.join(this.path, BITS_DIRNAME);
+    return pathLib.join(this.path, Scope.getComponentsRelativePath());
+  }
+
+  /**
+   * Get the releative components path inside the scope
+   * (components such as compilers / testers / extensions)
+   * currently components
+   */
+  static getComponentsRelativePath(): string {
+    return BITS_DIRNAME;
+  }
+
+  /**
+   * Get a relative (to scope) path to a specific component such as compiler / tester / extension
+   * @param {BitId} id
+   */
+  static getComponentRelativePath(id: BitId): string {
+    return pathLib.join(id.box, id.name, id.scope, id.version);
   }
 
   getBitPathInComponentsDir(id: BitId): string {
@@ -437,7 +464,7 @@ export default class Scope {
    * dependencies, saves them as well. Finally runs the build process if needed on an isolated
    * environment.
    */
-  async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<ComponentObjects[]> {
+  async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<string[]> {
     logger.debug(`exportManyBareScope: Going to save ${componentsObjects.length} components`);
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
     await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true)));
@@ -454,13 +481,13 @@ export default class Scope {
     );
     // await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
     const ids = manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString());
-    await postExportHook({ ids });
     await Promise.all(manyConsumerComponent.map(consumerComponent => performCIOps(consumerComponent, this.getPath())));
     return ids;
   }
 
-  getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: boolean = false) {
+  getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: boolean = false, context: Object = {}) {
     logger.debug(`getExternalOnes, ids: ${ids.join(', ')}`);
+    enrichContextFromGlobal(context);
     return this.sources.getMany(ids).then((defs) => {
       const left = defs.filter((def) => {
         if (!localFetch) return true;
@@ -475,7 +502,7 @@ export default class Scope {
 
       logger.debug(`getExternalOnes: ${left.length} left. Fetching them from a remote`);
       return remotes
-        .fetch(left.map(def => def.id), this, true)
+        .fetch(left.map(def => def.id), this, true, context)
         .then((componentObjects) => {
           return this.writeManyComponentsToModel(componentObjects);
         })
@@ -490,11 +517,13 @@ export default class Scope {
     ids: BitId[],
     remotes: Remotes,
     localFetch: boolean = true,
-    persist: boolean = true
+    persist: boolean = true,
+    context: Object = {}
   ): Promise<VersionDependencies[]> {
     logger.debug(
       `getExternalMany, planning on fetching from ${localFetch ? 'local' : 'remote'} scope. Ids: ${ids.join(', ')}`
     );
+    enrichContextFromGlobal(context);
     return this.sources.getMany(ids).then((defs) => {
       const left = defs.filter((def) => {
         if (!localFetch) return true;
@@ -510,7 +539,7 @@ export default class Scope {
 
       logger.debug(`getExternalMany: ${left.length} left. Fetching them from a remote`);
       return remotes
-        .fetch(left.map(def => def.id), this)
+        .fetch(left.map(def => def.id), this, undefined, context)
         .then((componentObjects) => {
           logger.debug('getExternalMany: writing them to the model');
           return this.writeManyComponentsToModel(componentObjects, persist);
@@ -526,19 +555,22 @@ export default class Scope {
   getExternal({
     id,
     remotes,
-    localFetch = true
+    localFetch = true,
+    context = {}
   }: {
     id: BitId,
     remotes: Remotes,
-    localFetch: boolean
+    localFetch: boolean,
+    context: Object
   }): Promise<VersionDependencies> {
+    enrichContextFromGlobal(context);
     return this.sources.get(id).then((component) => {
       if (component && localFetch) {
         return component.toVersionDependencies(id.version, this, id.scope);
       }
 
       return remotes
-        .fetch([id], this)
+        .fetch([id], this, undefined, context)
         .then(([componentObjects]) => {
           return this.writeComponentToModel(componentObjects);
         })
@@ -546,11 +578,21 @@ export default class Scope {
     });
   }
 
-  getExternalOne({ id, remotes, localFetch = true }: { id: BitId, remotes: Remotes, localFetch: boolean }) {
+  getExternalOne({
+    id,
+    remotes,
+    localFetch = true,
+    context = {}
+  }: {
+    id: BitId,
+    remotes: Remotes,
+    localFetch: boolean,
+    context: Object
+  }) {
     return this.sources.get(id).then((component) => {
       if (component && localFetch) return component.toComponentVersion(id.version);
       return remotes
-        .fetch([id], this, true)
+        .fetch([id], this, true, context)
         .then(([componentObjects]) => this.writeComponentToModel(componentObjects))
         .then(() => this.getExternal({ id, remotes, localFetch: true }));
     });
@@ -597,7 +639,6 @@ export default class Scope {
     logger.debug(
       'scope.importMany: successfully fetched local components and their dependencies. Going to fetch externals'
     );
-    await postImportHook({ ids: R.flatten(versionDeps.map(vd => vd.getAllIds())) });
     const remotes = await this.remotes();
     const externalDeps = await this.getExternalMany(externals, remotes, cache, persist);
     return versionDeps.concat(externalDeps);
@@ -617,7 +658,6 @@ export default class Scope {
         return def.component.toComponentVersion(def.id.version);
       })
     );
-    await postImportHook({ ids: componentVersionArr.map(cv => cv.id.toString()) });
     const remotes = await this.remotes();
     const externalDeps = await this.getExternalOnes(externals, remotes, cache);
     return componentVersionArr.concat(externalDeps);
@@ -770,13 +810,11 @@ export default class Scope {
 
     if (force) {
       const removedComponents = await Promise.all(removeComponents());
-      await postRemoveHook({ ids: removedComponents });
       return { bitIds: removedComponents };
     }
     const dependentBits = await this.findDependentBits(foundComponents);
     if (R.isEmpty(dependentBits)) {
       const removedComponents = await Promise.all(removeComponents());
-      await postRemoveHook({ ids: removedComponents });
       return { bitIds: removedComponents, missingComponents };
     }
     return { dependentBits, missingComponents };
@@ -788,7 +826,6 @@ export default class Scope {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const deprecateComponents = () => foundComponents.map(async bitId => this.deprecateSingle(bitId));
     const deprecatedComponents = await Promise.all(deprecateComponents());
-    await postDeprecateHook({ ids: deprecatedComponents });
     return { bitIds: deprecatedComponents, missingComponents };
   }
 
@@ -880,7 +917,7 @@ export default class Scope {
     return this.objects.add(symlink);
   }
 
-  async exportMany(ids: string[], remoteName: string): Promise<BitId[]> {
+  async exportMany(ids: string[], remoteName: string, context: Object = {}): Promise<BitId[]> {
     logger.debug(`exportMany, ids: ${ids.join(', ')}`);
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
@@ -888,6 +925,7 @@ export default class Scope {
     const componentObjectsP = componentIds.map(id => this.sources.getObjects(id));
     const componentObjects = await Promise.all(componentObjectsP);
     const componentsAndObjects = [];
+    enrichContextFromGlobal(context);
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(this.objects);
       componentAndObject.component.local = false;
@@ -900,7 +938,7 @@ export default class Scope {
     const manyObjects = await Promise.all(manyObjectsP);
     let exportedIds;
     try {
-      exportedIds = await remote.pushMany(manyObjects);
+      exportedIds = await remote.pushMany(manyObjects, context);
       logger.debug('exportMany: successfully pushed all ids to the bare-scope, going to save them back to local scope');
     } catch (err) {
       logger.warn('exportMany: failed pushing ids to the bare-scope');
@@ -933,15 +971,10 @@ export default class Scope {
   async loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean }): Promise<> {
     logger.debug(`scope.loadEnvironment, id: ${bitId}`);
     if (!bitId) throw new ResolutionException();
-    const envComponent = (await this.get(bitId)).component;
-    const mainFile =
-      envComponent.dists && !R.isEmpty(envComponent.dists)
-        ? pathLib.join(DEFAULT_DIST_DIRNAME, envComponent.mainFile)
-        : envComponent.mainFile;
 
     if (opts && opts.pathOnly) {
       try {
-        const envPath = componentResolver(bitId.toString(), mainFile, this.getPath());
+        const envPath = componentResolver(bitId.toString(), null, this.getPath());
         if (fs.existsSync(envPath)) return envPath;
         throw new Error(`Unable to find an env component ${bitId.toString()}`);
       } catch (e) {
@@ -950,7 +983,7 @@ export default class Scope {
     }
 
     try {
-      const envFile = componentResolver(bitId.toString(), mainFile, this.getPath());
+      const envFile = componentResolver(bitId.toString(), null, this.getPath());
       logger.debug(`Requiring an environment file at ${envFile}`);
       return require(envFile);
     } catch (e) {
@@ -958,49 +991,32 @@ export default class Scope {
     }
   }
 
-  writeToComponentsDir(componentWithDependencies: ComponentWithDependencies[]): Promise<ConsumerComponent[]> {
-    const componentsDir = this.getComponentsPath();
-    const components: ConsumerComponent[] = flattenDependencies(componentWithDependencies);
-
-    const bitDirForConsumerImport = (component: ConsumerComponent) => {
-      return pathLib.join(componentsDir, component.box, component.name, component.scope, component.version);
-    };
-
-    return Promise.all(
-      components.map((component: ConsumerComponent) => {
-        const bitPath = bitDirForConsumerImport(component);
-        return component.write({ bitDir: bitPath, withPackageJson: false });
-      })
-    );
-  }
-
-  installEnvironment({ ids, verbose }: { ids: BitId[], verbose?: boolean }): Promise<any> {
+  // TODO: Change name since it also used to install extension
+  async installEnvironment({ ids, verbose }: { ids: BitId[], verbose?: boolean }): Promise<any> {
     logger.debug(`scope.installEnvironment, ids: ${ids.join(', ')}`);
-    const installPackageDependencies = (component: ConsumerComponent) => {
-      return npmClient.install(
-        component.packageDependencies,
-        {
-          cwd: this.getBitPathInComponentsDir(component.id)
-        },
-        verbose
-      );
+    const componentsDir = this.getComponentsPath();
+    const isolateOpts = {
+      writeBitDependencies: false,
+      installPackages: true,
+      noPackageJson: false,
+      dist: true,
+      conf: true,
+      override: false,
+      verbose
     };
-
-    return this.getMany(ids).then((componentDependenciesArr) => {
-      const writeToProperDir = () => {
-        return this.writeToComponentsDir(componentDependenciesArr);
-      };
-
-      return writeToProperDir().then((components: ConsumerComponent[]) => {
-        loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
-        return Promise.all(components.map(c => installPackageDependencies(c))).then((resultsArr) => {
-          loader.stop(); // in order to show npm install output on verbose flag
-          resultsArr.forEach(npmClient.printResults);
-
-          return components;
-        });
-      });
+    const idsWithoutNils = removeNils(ids);
+    const isolateComponentsP = idsWithoutNils.map(async (id) => {
+      let concreteId = id;
+      if (id.getVersion().latest) {
+        const concreteIds = await this.fetchRemoteVersions([id]);
+        concreteId = concreteIds[0];
+      }
+      const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
+      const env = new IsolatedEnvironment(this, dir);
+      await env.create();
+      return env.isolateComponent(id, isolateOpts);
     });
+    return Promise.all(isolateComponentsP);
   }
 
   async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {
@@ -1107,24 +1123,18 @@ export default class Scope {
     return component.build({ scope: this, environment, save, consumer, verbose, directory, keep, ciComponent });
   }
 
-  async pack({
-    bitId,
-    directory,
-    writeBitDependencies,
-    links,
-    override
-  }: {
-    bitId: BitId,
-    outputPath: ?string,
-    writeBitDependencies: boolean,
-    links: boolean,
-    override: boolean
-  }): Promise<string> {
-    if (!bitId.isLocal(this.name)) {
-      throw new Error('cannot run build on remote component');
-    }
-    const component = await this.loadComponent(bitId);
-    return component.pack({ scope: this, directory, writeBitDependencies, createNpmLinkFiles: links, override });
+  /**
+   * import a component end to end. Including importing the dependencies and installing the npm
+   * packages.
+   *
+   * @param {string} bitId - the component id to isolate
+   * @param {IsolateOptions} opts
+   * @return {Promise.<string>} - the path to the isolated component
+   */
+  async isolateComponent(bitId: string, opts: IsolateOptions): Promise<string> {
+    const parsedId = BitId.parse(bitId);
+    const component = await this.loadComponent(parsedId);
+    return component.isolate(this, opts);
   }
 
   static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {
