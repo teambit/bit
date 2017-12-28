@@ -243,7 +243,7 @@ export default class Scope {
     force: ?boolean,
     consumer: Consumer,
     verbose: ?boolean
-  }): Promise<ComponentWithDependencies> {
+    }): Promise<ComponentWithDependencies> {
     // TODO: Change the return type
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
     const topSort = new Toposort();
@@ -534,7 +534,7 @@ export default class Scope {
     id: BitId,
     remotes: Remotes,
     localFetch: boolean
-  }): Promise<VersionDependencies> {
+    }): Promise<VersionDependencies> {
     return this.sources.get(id).then((component) => {
       if (component && localFetch) {
         return component.toVersionDependencies(id.version, this, id.scope);
@@ -730,7 +730,6 @@ export default class Scope {
         return id;
       }
     });
-
     return (await Promise.all(removedComponents)).filter(x => !R.isNil(x));
   }
 
@@ -744,10 +743,12 @@ export default class Scope {
     const component = (await this.sources.get(bitId)).toComponentVersion();
     const consumerComponentToRemove = await component.toConsumer(this.objects);
     const componentList = await this.objects.listComponents();
+
     const dependentBits = await this.findDependentBits(
       consumerComponentToRemove.flattenedDependencies,
       bitId.version !== LATEST_BIT_VERSION
     );
+
     const removedDependencies = await this.removeComponentsDependences(
       dependentBits,
       componentList,
@@ -755,6 +756,7 @@ export default class Scope {
       bitId,
       removeSameOrigin
     );
+
     await this.removeComponent(bitId, componentList, false);
     if (Object.keys(component.component.versions).length <= 1) bitId.version = LATEST_BIT_VERSION;
     return { bitId, removedDependencies };
@@ -773,8 +775,19 @@ export default class Scope {
    */
   async findDependentBits(bitIds: Array<BitId>, returnResultsWithVersion: boolean = false): Promise<Array<object>> {
     const allComponents = await this.objects.listComponents(false);
-    const allComponentVersions = await Promise.all(allComponents.map(x => x.collectVersions(this.objects)));
-    const allConsumerComponents = R.flatten(allComponentVersions);
+    const allComponentVersions = await Promise.all(
+      allComponents.map(async (component) => {
+        const loadedVersions = await Promise.all(
+          Object.keys(component.versions).map(async (version) => {
+            const componentVersion = await component.loadVersion(version, this.objects);
+            componentVersion.id = BitId.parse(component.id());
+            return componentVersion;
+          })
+        );
+        return loadedVersions.filter(x => x);
+      })
+    );
+    const allConsumerComponents = R.flatten(allComponentVersions.filter(x => x != null));
     const dependentBits = {};
     bitIds.forEach((bitId) => {
       const dependencies = [];
@@ -787,9 +800,10 @@ export default class Scope {
           }
         });
       });
-      if (!R.isEmpty(dependencies)) dependentBits[bitId.toStringWithoutVersion()] = dependencies;
+
+      if (!R.isEmpty(dependencies)) dependentBits[bitId.toStringWithoutVersion()] = R.uniq(dependencies);
     });
-    return Promise.resolve(dependentBits);
+    return await Promise.resolve(dependentBits);
   }
 
   /**
@@ -815,7 +829,6 @@ export default class Scope {
     logger.debug(`removing ${bitIds} with force flag: ${force}`);
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const dependentBits = await this.findDependentBits(foundComponents);
-
     if (R.isEmpty(dependentBits) || force) {
       const removedComponents = await Promise.all(
         foundComponents.map(async bitId => this.removeSingle(bitId, removeSameOrigin))
@@ -1108,7 +1121,7 @@ export default class Scope {
     isolated?: boolean,
     directory?: string,
     keep?: boolean
-  }): Promise<?any> {
+    }): Promise<?any> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run specs on remote component');
     }
@@ -1144,7 +1157,7 @@ export default class Scope {
     directory: ?string,
     keep: ?boolean,
     ciComponent: any
-  }): Promise<string> {
+    }): Promise<string> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run build on remote component');
     }
@@ -1164,7 +1177,7 @@ export default class Scope {
     writeBitDependencies: boolean,
     links: boolean,
     override: boolean
-  }): Promise<string> {
+    }): Promise<string> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run build on remote component');
     }

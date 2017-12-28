@@ -150,7 +150,7 @@ describe('bit remove command', function () {
     });
   });
 
-  describe('remove versions from local scope', () => {
+  describe.skip('remove versions from local scope', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
@@ -200,7 +200,7 @@ describe('bit remove command', function () {
       expect(bitMap).to.not.have.property('utils/is-string');
     });
   });
-  describe('remove versions from remote scope', () => {
+  describe.skip('remove versions from remote scope', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
@@ -280,7 +280,7 @@ describe('bit remove command', function () {
       helper.exportComponent('utils/is-string');
       helper.exportComponent('utils/is-string2');
     });
-    it('should remove component version only', () => {
+    it.skip('should remove component version only', () => {
       const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.1`);
       expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/is-string@0.0.1`);
     });
@@ -316,6 +316,11 @@ describe('bit remove command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-string2`);
       expect(bitMap).to.not.have.property(`${helper2.remoteScope}/utils/is-type`);
+    });
+
+    it('should remove imported component from bit.json', () => {
+      const bitJson = helper.readBitJson();
+      expect(bitJson).to.not.have.property(`${helper.remoteScope}/utils/is-string2`);
     });
   });
 });

@@ -1027,7 +1027,11 @@ export default class Consumer {
    * @param {boolean} deleteFiles - delete local added files from fs.
    */
   async remove(ids: string[], force: boolean, track: boolean, deleteFiles: boolean) {
-    const bitIds = ids.map(bitId => BitId.parse(bitId));
+    // added this to remove support for remove version
+    const bitIds = ids.map(bitId => BitId.parse(bitId)).map((id) => {
+      id.version = LATEST_BIT_VERSION;
+      return id;
+    });
     const [localIds, remoteIds] = partition(bitIds, id => id.isLocal());
     const localResult = await this.removeLocal(localIds, force, track, deleteFiles);
     const remoteResult = await this.removeRemote(remoteIds, force);
@@ -1101,6 +1105,20 @@ export default class Consumer {
   }
 
   /**
+   * cleanBitMapAndBitJson - clean up removed components from bitmap and bit.json file
+   * @param {BitMap} bitMap - list of remote component ids to delete
+   * @param {BitIds} componensToRemoveFromFs - delete component that are used by other components.
+   * @param {BitIds} removedDependencies - delete component that are used by other components.
+   */
+  async cleanBitMapAndBitJson(bitMap: BitMap, componensToRemoveFromFs: BitIds, removedDependencies: BitIds) {
+    const bitJson = this.bitJson;
+    bitMap.removeComponents(componensToRemoveFromFs);
+    bitMap.removeComponents(removedDependencies);
+    componensToRemoveFromFs.map(x => delete bitJson.dependencies[x.toStringWithoutVersion()]);
+    bitJson.write({ bitDir: this.projectPath });
+    return await bitMap.write();
+  }
+  /**
    * removeLocal - remove local (imported, new staged components) from modules and bitmap  accoriding to flags
    * @param {BitIds} bitIds - list of remote component ids to delete
    * @param {boolean} force - delete component that are used by other components.
@@ -1127,16 +1145,13 @@ export default class Consumer {
       force,
       true
     );
+
     const componensToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
     if (!R.isEmpty(removedComponentIds)) {
       await this.removeComponentFromFs(componensToRemoveFromFs, bitMap, deleteFiles);
       await this.removeComponentFromFs(removedDependencies, bitMap, false);
     }
-    if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) {
-      bitMap.removeComponents(componensToRemoveFromFs);
-      bitMap.removeComponents(removedDependencies);
-      await bitMap.write();
-    }
+    if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) { this.cleanBitMapAndBitJson(bitMap, componensToRemoveFromFs, removedDependencies); }
     return new RemovedLocalObjects(
       removedComponentIds,
       missingComponents,
