@@ -58,12 +58,12 @@ export default class Environment {
       writeBitDependencies: opts.writeBitDependencies,
       createNpmLinkFiles: opts.createNpmLinkFiles,
       saveDependenciesAsComponents: true,
-      dist: opts.dist
+      dist: opts.dist,
+      installNpmPackages: opts.installPackages,
+      verbose: opts.verbose
     };
     await this.consumer.writeToComponentsDir(concreteOpts);
-    const componentWithDependencies: ComponentWithDependencies = R.head(componentsWithDependencies);
-    if (opts.installPackages) await this.consumer.installNpmPackages([componentWithDependencies], opts.verbose);
-    return componentWithDependencies;
+    return R.head(componentsWithDependencies);
   }
 
   getPath(): string {

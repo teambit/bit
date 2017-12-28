@@ -869,9 +869,9 @@ export default class Scope {
     });
   }
 
-  loadComponent(id: BitId): Promise<ConsumerComponent> {
+  loadComponent(id: BitId, localOnly: boolean = true): Promise<ConsumerComponent> {
     logger.debug(`scope.loadComponent, id: ${id}`);
-    if (!id.isLocal(this.name)) {
+    if (localOnly && !id.isLocal(this.name)) {
       throw new Error('cannot load bit from remote scope, please import first');
     }
 

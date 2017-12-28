@@ -6,7 +6,7 @@ import { MigrationResult } from '../../../migration/migration-helper';
 
 /**
  * Running migration process for consumer and / or scope - to update the stores (bitObjects, bit.map.json) to the current version
- * 
+ *
  * @export
  * @param {string} scopePath - A path to scope directory, it a path was provided the migration won't run on consumer
  * @param {boolean} verbose - print debug logs

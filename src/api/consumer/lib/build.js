@@ -21,8 +21,18 @@ async function writeDistFiles(component: Component, consumer: Consumer, bitMap: 
 }
 
 async function writeLinksInDist(consumer: Consumer, component: Component, componentMap, bitMap: BitMap) {
-  const dependencies = await consumer.loadComponents(component.dependencies.map(dep => dep.id));
-  const componentWithDeps = new ComponentWithDependencies({ component, dependencies: dependencies.components });
+  const getDependencies = () => {
+    return component.dependencies.map((dependency) => {
+      if (bitMap.isExistWithSameVersion(dependency.id)) {
+        return consumer.loadComponent(dependency.id);
+      }
+      // when dependencies are imported as npm packages, they are not in bit.map
+      component.dependenciesSavedAsComponents = false;
+      return consumer.scope.loadComponent(dependency.id, false);
+    });
+  };
+  const dependencies = await Promise.all(getDependencies());
+  const componentWithDeps = new ComponentWithDependencies({ component, dependencies });
   await writeDependencyLinks([componentWithDeps], bitMap, consumer, false);
   const newMainFile = pathNormalizeToLinux(component.calculateMainDistFile());
   await component.updatePackageJsonAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
