@@ -1071,7 +1071,7 @@ export default class Consumer {
           (component.origin && component.origin == COMPONENT_ORIGINS.IMPORTED) ||
           component.origin == COMPONENT_ORIGINS.NESTED
         ) {
-          return await fs.remove(path.join(this.getPath(), component.rootDir));
+          return fs.remove(path.join(this.getPath(), component.rootDir));
         } else if (component.origin == COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
           return Promise.all(component.files.map(async file => await fs.remove(file.relativePath)));
         }
