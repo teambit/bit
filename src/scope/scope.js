@@ -346,12 +346,21 @@ export default class Scope {
       const predicate = id => id.toString(); // TODO: should be moved to BitId class
       flattenedDependencies = R.uniqBy(predicate)(flattenedDependencies);
 
+      const addSharedDirAndDistEntry = (pathStr) => {
+        const withSharedDir = consumerComponent.originallySharedDir
+          ? pathLib.join(consumerComponent.originallySharedDir, pathStr)
+          : pathStr;
+        const withDistEntry = consumer.bitJson.distEntry
+          ? pathLib.join(consumer.bitJson.distEntry, withSharedDir)
+          : withSharedDir;
+        return pathNormalizeToLinux(withDistEntry);
+      };
       const dists =
         consumerComponent.dists && consumerComponent.dists.length
           ? consumerComponent.dists.map((dist) => {
             return {
               name: dist.basename,
-              relativePath: pathNormalizeToLinux(dist.relative),
+              relativePath: addSharedDirAndDistEntry(dist.relative),
               file: Source.from(dist.contents),
               test: dist.test
             };
