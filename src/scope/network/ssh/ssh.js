@@ -59,11 +59,11 @@ export default class SSH implements Network {
     this.host = host || '';
   }
 
-  buildCmd(commandName: string, path: string, payload: any): string {
-    return `bit ${commandName} ${toBase64(path)} ${packCommand(buildCommandMessage(payload))}`;
+  buildCmd(commandName: string, path: string, payload: any, context: any): string {
+    return `bit ${commandName} ${toBase64(path)} ${packCommand(buildCommandMessage(payload, context))}`;
   }
 
-  exec(commandName: string, payload: any): Promise<any> {
+  exec(commandName: string, payload: any, context: ?Object): Promise<any> {
     logger.debug(`ssh: going to run a remote command ${commandName}, path: ${this.path}`);
     return new Promise((resolve, reject) => {
       let res = '';
@@ -71,7 +71,12 @@ export default class SSH implements Network {
       // No need to use packCommand on the payload in case of put command
       // because we handle all the base64 stuff in a better way inside the ComponentObjects.manyToString
       // inside pushMany function here
-      const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), commandName === '_put' ? null : payload);
+      const cmd = this.buildCmd(
+        commandName,
+        absolutePath(this.path || ''),
+        commandName === '_put' ? null : payload,
+        context
+      );
       if (!this.connection) {
         err = 'ssh connection is not defined';
         logger.error(err);
@@ -152,29 +157,37 @@ export default class SSH implements Network {
     }
   }
 
-  pushMany(manyComponentObjects: ComponentObjects[]): Promise<string[]> {
+  pushMany(manyComponentObjects: ComponentObjects[], context: ?Object): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
-    return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects)).then((data: string) => {
+    return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects), context).then((data: string) => {
       const { payload, headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
       return payload.ids;
     });
   }
 
-  deleteMany(bitIds: Array<BitId>, force: boolean): Promise<ComponentObjects[]> {
-    return this.exec('_delete', {
-      bitIds: bitIds.map(id => id.toStringWithoutVersion()),
-      force
-    }).then((data: string) => {
+  deleteMany(bitIds: Array<BitId>, force: boolean, context: ?Object): Promise<ComponentObjects[]> {
+    return this.exec(
+      '_delete',
+      {
+        bitIds: bitIds.map(id => id.toStringWithoutVersion()),
+        force
+      },
+      context
+    ).then((data: string) => {
       const { payload } = this._unpack(data);
       return Promise.resolve(payload);
     });
   }
-  deprecateMany(bitIds: string): Promise<ComponentObjects[]> {
-    return this.exec('_deprecate', {
-      bitIds: bitIds.map(x => x.toStringWithoutVersion())
-    }).then((data: string) => {
+  deprecateMany(bitIds: string, context: ?Object): Promise<ComponentObjects[]> {
+    return this.exec(
+      '_deprecate',
+      {
+        bitIds: bitIds.map(x => x.toStringWithoutVersion())
+      },
+      context
+    ).then((data: string) => {
       const { payload } = this._unpack(data);
       return Promise.resolve(payload);
     });
@@ -232,11 +245,11 @@ export default class SSH implements Network {
     });
   }
 
-  fetch(ids: BitIds, noDeps: boolean = false): Promise<ComponentObjects[]> {
+  fetch(ids: BitIds, noDeps: boolean = false, context: ?Object): Promise<ComponentObjects[]> {
     let options = '';
     ids = ids.map(bitId => bitId.toString());
     if (noDeps) options = '-n';
-    return this.exec(`_fetch ${options}`, ids).then((str: string) => {
+    return this.exec(`_fetch ${options}`, ids, context).then((str: string) => {
       const { payload, headers } = JSON.parse(str);
       checkVersionCompatibility(headers.version);
       const componentObjects = ComponentObjects.manyFromString(payload);

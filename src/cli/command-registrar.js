@@ -103,11 +103,42 @@ function registerAction(command: Command, concrete) {
   });
 }
 
+function createOptStr(alias, name) {
+  if (alias) {
+    return `-${alias}, --${name}`;
+  }
+  return `--${name}`;
+}
+
+function register(command: Command, commanderCmd) {
+  // $FlowFixMe
+  const concrete = commanderCmd
+    .command(command.name, null, { noHelp: command.private })
+    .description(command.description)
+    .alias(command.alias);
+
+  command.opts.forEach(([alias, name, description]) => {
+    concrete.option(createOptStr(alias, name), description);
+  });
+
+  // attach skip-update to all commands
+  concrete.option('--skip-update', 'Skips auto updates');
+
+  if (command.commands) {
+    command.commands.forEach((nestedCmd) => {
+      register(nestedCmd, concrete);
+    });
+  }
+
+  return registerAction(command, concrete);
+}
+
 export default class CommandRegistrar {
   version: string;
   usage: string;
   description: string;
   commands: Command[];
+  extensionsCommands: ?(Command[]);
 
   registerBaseCommand() {
     commander
@@ -117,44 +148,25 @@ export default class CommandRegistrar {
       .description(this.description);
   }
 
-  constructor(usage: string, description: string, version: string, commands: Command[]) {
+  constructor(usage: string, description: string, version: string, commands: Command[], extensionsCommands: Command[]) {
     this.usage = usage;
     this.description = description;
     this.version = version;
     this.commands = commands;
+    this.extensionsCommands = extensionsCommands;
+  }
+
+  registerExtenstionsCommands() {
+    this.extensionsCommands.forEach(cmd => register(cmd, commander));
   }
 
   registerCommands() {
-    function createOptStr(alias, name) {
-      return `-${alias}, --${name}`;
-    }
-
-    function register(command: Command, commanderCmd) {
-      // $FlowFixMe
-      const concrete = commanderCmd
-        .command(command.name, null, { noHelp: command.private })
-        .description(command.description)
-        .alias(command.alias);
-
-      command.opts.forEach(([alias, name, description]) => {
-        concrete.option(createOptStr(alias, name), description);
-      });
-
-      // attach skip-update to all commands
-      concrete.option('--skip-update', 'Skips auto updates');
-
-      command.commands.forEach((nestedCmd) => {
-        register(nestedCmd, concrete);
-      });
-
-      return registerAction(command, concrete);
-    }
-
     this.commands.forEach(cmd => register(cmd, commander));
   }
 
   printHelp() {
-    console.log(require('./templates/help'));
+    const helpTemplateGenerator = require('./templates/help');
+    console.log(helpTemplateGenerator(this.extensionsCommands));
     return this;
   }
 
@@ -169,10 +181,12 @@ export default class CommandRegistrar {
 
     const subcommand = args[0];
     const cmdList = this.commands.map(cmd => first(cmd.name.split(' ')));
+    const extensionsCmdList = this.extensionsCommands.map(cmd => first(cmd.name.split(' ')));
     const aliasList = this.commands.map(cmd => first(cmd.alias.split(' ')));
 
     if (
       cmdList.indexOf(subcommand) === -1 &&
+      extensionsCmdList.indexOf(subcommand) === -1 &&
       aliasList.indexOf(subcommand) === -1 &&
       subcommand !== '-V' &&
       subcommand !== '--version'
@@ -192,13 +206,14 @@ export default class CommandRegistrar {
 
   run() {
     const args = process.argv.slice(2);
-    if (args[0] && args[0] === '--help') {
+    if (args[0] && (args[0] === '--help' || args[0] === '-h')) {
       this.printHelp();
       return this;
     }
 
     this.registerBaseCommand();
     this.registerCommands();
+    this.registerExtenstionsCommands();
     this.outputHelp();
     commander.parse(process.argv);
 

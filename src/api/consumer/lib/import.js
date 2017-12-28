@@ -8,7 +8,9 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 import { flattenDependencies } from '../../../scope/flatten-dependencies';
-import { COMPONENT_ORIGINS } from '../../../constants';
+import { COMPONENT_ORIGINS, VERSION_DELIMITER } from '../../../constants';
+import { forEach } from '../../../utils/index';
+import { BitId } from '../../../bit-id';
 
 const key = R.compose(R.head, R.keys);
 
@@ -16,6 +18,7 @@ export default (async function importAction({
   ids,
   tester,
   compiler,
+  extension,
   verbose,
   prefix,
   environment,
@@ -30,6 +33,7 @@ export default (async function importAction({
   ids: string,
   tester: ?boolean,
   compiler: ?boolean,
+  extension: ?boolean,
   verbose: ?boolean,
   prefix: ?string,
   environment: ?boolean,
@@ -56,14 +60,33 @@ export default (async function importAction({
 
     // TODO - import environment on multiple environments
     const envDependencies = await consumer.importEnvironment(ids[0], verbose);
+    const id = envDependencies[0].component.id.toString();
     function writeToBitJsonIfNeeded() {
       if (compiler) {
-        consumer.bitJson.compilerId = envDependencies[0].id.toString();
+        consumer.bitJson.compilerId = id;
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
       if (tester) {
-        consumer.bitJson.testerId = envDependencies[0].id.toString();
+        consumer.bitJson.testerId = id;
+        return consumer.bitJson.write({ bitDir: consumer.getPath() });
+      }
+
+      if (extension) {
+        const idWithoutVersion = BitId.getStringWithoutVersion(id);
+        // don't create the same extension twice - check if older version exists and override it
+        const oldVersion = Object.keys(consumer.bitJson.extensions).find((ext) => {
+          return BitId.getStringWithoutVersion(ext) === idWithoutVersion;
+        });
+        if (oldVersion) {
+          consumer.bitJson.extensions[id] = consumer.bitJson.extensions[oldVersion];
+          delete consumer.bitJson.extensions[oldVersion];
+          return consumer.bitJson.write({ bitDir: consumer.getPath() });
+        }
+        consumer.bitJson.extensions[id] = {
+          options: {},
+          config: {}
+        };
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
@@ -74,7 +97,7 @@ export default (async function importAction({
   }
 
   const consumer: Consumer = await loadConsumer();
-  if (tester || compiler) {
+  if (tester || compiler || extension) {
     return importEnvironment(consumer);
   }
   const cache = false;

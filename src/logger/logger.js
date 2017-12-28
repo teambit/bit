@@ -3,37 +3,59 @@ import winston from 'winston';
 import path from 'path';
 import { GLOBAL_LOGS } from '../constants';
 
+// Store the extensionsLoggers to prevent create more than one logger for the same extension
+// in case the extension developer use api.logger more than once
+const extensionsLoggers = new Map();
+
+export const baseFileTransportOpts = {
+  filename: path.join(GLOBAL_LOGS, 'debug.log'),
+  json: false,
+  // Make it debug level also in production until the product will be more stable. in the future this should be changed to error
+  level: process.env.NODE_ENV === 'production' ? 'debug' : 'debug',
+  maxsize: 10 * 1024 * 1024, // 10MB
+  maxFiles: 10,
+  colorize: true,
+  prettyPrint: true,
+  // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
+  // The filename will always have the most recent log lines. The larger the appended number, the older the log file
+  tailable: true
+};
+
+const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
+  filename: path.join(GLOBAL_LOGS, 'exceptions.log')
+});
+
 const logger = new winston.Logger({
-  transports: [
-    new winston.transports.File({
-      filename: path.join(GLOBAL_LOGS, 'debug.log'),
-      json: false,
-      // Make it debug level also in production until the product will be more stable. in the future this should be changed to error
-      level: process.env.NODE_ENV === 'production' ? 'debug' : 'debug',
-      maxsize: 10 * 1024 * 1024, // 10MB
-      maxFiles: 10,
-      colorize: true,
-      prettyPrint: true,
-      // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
-      // The filename will always have the most recent log lines. The larger the appended number, the older the log file
-      tailable: true
-    })
-  ],
-  exceptionHandlers: [
-    new winston.transports.File({
-      filename: path.join(GLOBAL_LOGS, 'exceptions.log'),
-      json: false,
-      maxsize: 10 * 1024 * 1024, // 10MB
-      maxFiles: 10,
-      colorize: true,
-      prettyPrint: true,
-      // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
-      // The filename will always have the most recent log lines. The larger the appended number, the older the log file
-      tailable: true
-    })
-  ],
+  transports: [new winston.transports.File(baseFileTransportOpts)],
+  exceptionHandlers: [new winston.transports.File(exceptionsFileTransportOpts)],
   exitOnError: false
 });
+
+/**
+ * Create a logger instance for extension
+ * The extension name will be added as label so it will appear in the begining of each log line
+ * The logger is cached for each extension so there is no problem to use getLogger few times for the same extension
+ * @param {string} extensionName
+ */
+export const createExtensionLogger = (extensionName: string) => {
+  // Getting logger from cache
+  const existingLogger = extensionsLoggers.get(extensionName);
+
+  if (existingLogger) {
+    return existingLogger;
+  }
+  const extensionFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
+    filename: path.join(GLOBAL_LOGS, 'extensions.log'),
+    label: extensionName
+  });
+  const extLogger = new winston.Logger({
+    transports: [new winston.transports.File(extensionFileTransportOpts)],
+    exceptionHandlers: [new winston.transports.File(extensionFileTransportOpts)],
+    exitOnError: false
+  });
+  extensionsLoggers.set(extensionName, extLogger);
+  return extLogger;
+};
 
 // @credit Kegsay from https://github.com/winstonjs/winston/issues/228
 // it solves an issue when exiting the code explicitly and the log file is not written

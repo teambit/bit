@@ -18,14 +18,17 @@ function getLatestVersion(bitId: BitId, componentsDir: string): number {
   return Math.max(versionsDirs);
 }
 
-function componentResolver(componentId: string, mainFilePath: string, projectRoot: string = process.cwd()): string {
+function componentResolver(componentId: string, mainFilePath: ?string, projectRoot: string = process.cwd()): string {
   const bitId = BitId.parse(componentId);
   const componentsDir = path.join(projectRoot, BITS_DIRNAME);
   const version = getLatestVersion(bitId, componentsDir);
   bitId.version = version.toString();
   const componentPath = path.join(componentsDir, bitId.toFullPath());
   logger.debug(`resolving component, path: ${componentPath}`);
-  return path.join(componentPath, mainFilePath);
+  if (mainFilePath) {
+    return path.join(componentPath, mainFilePath);
+  }
+  return componentPath;
 }
 
 export default componentResolver;
