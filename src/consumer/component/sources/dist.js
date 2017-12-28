@@ -2,11 +2,11 @@
 import AbstractVinyl from './abstract-vinyl';
 
 /**
- * Dist paths are by default saved into the component root-dir/dist. However, when dist is set in bit.json, the paths
+ * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
  * are in the consumer-root/dist.target dir. If dist.entry is set the paths should be stripped from dist.entry.
  * If there is originallySharedDir, it should be stripped as well.
  *
- * There modifications of the paths are taken care in different stages depends on the scenario.
+ * These modifications of the paths are taken care in different stages depends on the scenario.
  * 1) using 'bit build'.
  * If the component wasn't change since the last build, it'll load the dists from the model, strip the
  * sharedOriginallyDir and then write them. (See consumer-component.build()).
@@ -18,6 +18,10 @@ import AbstractVinyl from './abstract-vinyl';
  * consumer-component.stripOriginallySharedDir() )/
  * Then, Before writing the dists to the file-system, the dist-entry is taken care of. (see
  * consumer-component.updateDistsPerConsumerBitJson() ).
+ *
+ * The opposite action is taken when a component is tagged. We load the component from the file-system while the dist
+ * paths are stripped from consumer dist.entry and originallySharedDir. Then, before writing them to the model, we add
+ * back the dist.entry and originallySharedDir. (See addSharedDirAndDistEntry function in scope.js)
  */
 export default class Dist extends AbstractVinyl {
   static loadFromParsedString(parsedString: Object) {
