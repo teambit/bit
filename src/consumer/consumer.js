@@ -1151,7 +1151,9 @@ export default class Consumer {
       await this.removeComponentFromFs(componensToRemoveFromFs, bitMap, deleteFiles);
       await this.removeComponentFromFs(removedDependencies, bitMap, false);
     }
-    if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) { this.cleanBitMapAndBitJson(bitMap, componensToRemoveFromFs, removedDependencies); }
+    if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) {
+      await this.cleanBitMapAndBitJson(bitMap, componensToRemoveFromFs, removedDependencies);
+    }
     return new RemovedLocalObjects(
       removedComponentIds,
       missingComponents,
