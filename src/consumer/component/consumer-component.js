@@ -16,7 +16,7 @@ import SpecsResults from '../specs-results';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
-import IsolatedEnvironment from '../../environment';
+import IsolatedEnvironment, { IsolateOptions } from '../../environment';
 import type { Log } from '../../scope/models/version';
 import { ResolutionException } from '../../scope/exceptions';
 import BitMap from '../bit-map';
@@ -392,7 +392,12 @@ export default class Component {
     const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
     try {
       await isolatedEnvironment.create();
-      const componetWithDependencies = await isolatedEnvironment.importE2E(this.id.toString(), verbose);
+      const isolateOpts = {
+        verbose,
+        installPackages: true,
+        noPackageJson: false
+      };
+      const componetWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
       const component = componetWithDependencies.component;
       ciComponent.comp = component;
       const result = await runBuild(component.writtenPath);
@@ -745,7 +750,13 @@ export default class Component {
       const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
       try {
         await isolatedEnvironment.create();
-        const componentWithDependencies = await isolatedEnvironment.importE2E(this.id.toString(), verbose);
+        const isolateOpts = {
+          verbose,
+          dist: true,
+          installPackages: true,
+          noPackageJson: false
+        };
+        const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
         const component = componentWithDependencies.component;
         component.isolatedEnvironment = isolatedEnvironment;
         logger.debug(`the component ${this.id.toString()} has been imported successfully into an isolated environment`);
@@ -889,40 +900,19 @@ export default class Component {
 
     return this.dists;
   }
-  async pack({
-    scope,
-    directory,
-    writeBitDependencies,
-    createNpmLinkFiles,
-    override
-  }: {
-    scope: Scope,
-    directory?: string,
-    writeBitDependencies?: boolean,
-    createNpmLinkFiles?: boolean,
-    override: boolean
-  }): Promise<string> {
-    const isolatedEnvironment = new IsolatedEnvironment(scope);
+
+  async isolate(scope: Scope, opts: IsolateOptions): Promise<string> {
+    const isolatedEnvironment = new IsolatedEnvironment(scope, opts.writeToPath);
     try {
-      const verbose = false;
-      const installDependencies = false;
       await isolatedEnvironment.create();
-      const componentWithDeps = await isolatedEnvironment.importE2E(
-        this.id.toString(),
-        verbose,
-        installDependencies,
-        writeBitDependencies,
-        createNpmLinkFiles
-      );
-      const importPath = componentWithDeps.component.writtenPath;
-      const tgzPath = await this.driver.pack(importPath, directory || isolatedEnvironment.path, override);
-      await isolatedEnvironment.destroy();
-      return tgzPath;
+      await isolatedEnvironment.isolateComponent(this.id.toString(), opts);
+      return isolatedEnvironment.path;
     } catch (err) {
       await isolatedEnvironment.destroy();
       throw new Error(err);
     }
   }
+
   toObject(): Object {
     return {
       name: this.name,
