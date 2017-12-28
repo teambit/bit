@@ -7,6 +7,7 @@ chai.use(require('chai-fs'));
 
 // see the content of this component here: https://bitsrc.io/david/tests/bar/foo
 const componentTestId = 'david.tests/bar/foo';
+const componentES6TestId = 'david.tests-es6/bar/foo-es6';
 
 describe('importing bit components from bitsrc.io', function () {
   this.timeout(0);
@@ -77,6 +78,33 @@ describe('importing bit components from bitsrc.io', function () {
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+  });
+  describe('ES6 component', () => {
+    describe('with --dist flag', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.runCmd(`bit import ${componentES6TestId} --dist`);
+      });
+      it('should generate all the links in the dists dir correctly and print results from all dependencies', () => {
+        const appJsFixture = "const barFoo = require('./components/bar/foo-es6'); console.log(barFoo());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
+    describe('without --dist flag and running bit build afterwards', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.runCmd(`bit import ${componentES6TestId}`);
+        helper.build('bar/foo-es6');
+      });
+      it('should generate all the links in the dists dir correctly and print results from all dependencies', () => {
+        const appJsFixture = "const barFoo = require('./components/bar/foo-es6'); console.log(barFoo());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
     });
   });
 });
