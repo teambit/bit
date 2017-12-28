@@ -13,6 +13,8 @@ export const NO_PLUGIN_TYPE = 'none';
 
 export const MODULE_NAME = 'bit';
 
+export const DEFAULT_BINDINGS_PREFIX = '@bit';
+
 export const MODULES_DIR = 'node_modules';
 
 export const INDEX_JS = 'index.js';

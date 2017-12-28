@@ -109,9 +109,12 @@ function findPackage(dir, addPaths) {
  * @returns {Function} function which group the dependencies
  */
 const byType = (list, bindingPrefix) => {
-  const grouped = R.groupBy(list => list.includes(`node_modules/${bindingPrefix}`) ? 'bits' : list.includes('node_modules') ? 'packages' : 'files');
+  const grouped = R.groupBy((item) => {
+    if (item.includes(`node_modules/${bindingPrefix}`)) return 'bits';
+    return item.includes('node_modules') ? 'packages' : 'files';
+  });
   return grouped(list);
-}
+};
 
 /**
  * Get a path to node package and return the name and version
@@ -244,10 +247,9 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
    * @param {Array} missing list of missing paths to group
    * @returns {Function} function which group the dependencies
    */
-  const byPathType = R.groupBy((missing) => {
-    return missing.startsWith(`${bindingPrefix}/`) ? 'bits' :
-      missing.startsWith('.') ? 'files' :
-        'packages';
+  const byPathType = R.groupBy((item) => {
+    if (item.startsWith(`${bindingPrefix}/`)) return 'bits';
+    return item.startsWith('.') ? 'files' : 'packages';
   });
   const groups = byPathType(missing, bindingPrefix);
   const packages = groups.packages ? groups.packages.map(resolvePackageNameByPath) : [];
