@@ -8,7 +8,7 @@ import json from 'comment-json';
 import logger from '../../logger/logger';
 import { BIT_MAP, DEFAULT_INDEX_NAME, COMPONENT_ORIGINS, DEFAULT_SEPARATOR, DEFAULT_INDEX_EXTS } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux, isDir } from '../../utils';
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin } from './component-map';
@@ -253,8 +253,11 @@ export default class BitMap {
     const bitId = id instanceof BitId ? id : BitId.parse(id);
     const bitmapComponent = this.getExistingComponentId(bitId.toStringWithoutScopeAndVersion());
     this._removeFromComponentsArray(bitmapComponent);
+    return bitmapComponent;
   }
-
+  removeComponents(ids: BitIds) {
+    return ids.map(id => this.removeComponent(id));
+  }
   addMainDistFileToComponent(id: string, distFilesPaths: string[]): void {
     if (!this.components[id]) {
       logger.warn(`unable to find the component ${id} in bit.map file`);
@@ -296,9 +299,7 @@ export default class BitMap {
       return;
     }
     if (olderComponentsIds.length > 1) {
-      throw new Error(`Your ${
-        BIT_MAP
-      } file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
+      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
       are authored or imported. This scenario is not supported`);
     }
     const olderComponentId = olderComponentsIds[0];

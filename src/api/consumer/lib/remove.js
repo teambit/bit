@@ -1,20 +1,20 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
-import { BEFORE_REMOTE_REMOVE } from '../../../cli/loader/loader-messages';
+import { BEFORE_REMOVE } from '../../../cli/loader/loader-messages';
 
 export default (async function remove({
   ids,
-  remote,
   force,
-  track
+  track,
+  deleteFiles
 }: {
   ids: string[],
-  remote: boolean,
   force: boolean,
-  track: boolean
+  track: boolean,
+  deleteFiles: boolean
 }): Promise<any> {
-  if (remote) loader.start(BEFORE_REMOTE_REMOVE);
+  loader.start(BEFORE_REMOVE);
   const consumer = await loadConsumer();
-  return consumer.remove(ids, remote, force, track);
+  return consumer.remove(ids, force, track, deleteFiles);
 });

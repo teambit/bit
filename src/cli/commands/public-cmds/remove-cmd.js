@@ -1,8 +1,9 @@
 /** @flow */
-import R from 'ramda';
-import chalk from 'chalk';
+
 import Command from '../../command';
 import { remove } from '../../../api/consumer';
+import { RemovedObjects, RemovedLocalObjects } from '../../../scope/component-remove.js';
+import paintRemoved from '../../templates/remove-template';
 
 export default class Remove extends Command {
   name = 'remove <ids...>';
@@ -10,46 +11,23 @@ export default class Remove extends Command {
   alias = 'rm';
   opts = [
     ['f', 'force [boolean]', 'force remove (default = false)'],
-    ['r', 'remote [boolean]', 'remove from a remote scope'],
-    ['t', 'track [boolean]', 'keep tracking component (default = false) ']
+    ['t', 'track [boolean]', 'keep tracking component (default = false)'],
+    ['d', 'delete-files [boolean]', 'delete local component files']
   ];
   loader = true;
   migration = true;
 
   action(
     [ids]: [string],
-    { force = false, remote = false, track = false }: { force: boolean, remote: boolean, track: boolean }
+    { force = false, track = false, deleteFiles = false }: { force: boolean, track: boolean, deleteFiles: boolean }
   ): Promise<any> {
-    return remove({ ids, force, remote, track });
+    return remove({ ids, force, track, deleteFiles });
   }
 
-  report(bitObj: object | Array<any>): string {
-    return Array.isArray(bitObj) ? this.paintMany(bitObj) : this.paintSingle(bitObj);
+  report({ localResult, remoteResult }: { localResult: RemovedLocalObjects, remoteResult: RemovedObjects }): string {
+    return paintRemoved(localResult) + this.paintArray(remoteResult);
   }
-
-  paintMissingComponents = missingComponents =>
-    (!R.isEmpty(missingComponents) && R.isNil(missingComponents)
-      ? chalk.underline('missing components:') + chalk(` ${missingComponents}\n`)
-      : '');
-  paintRemoved = bitIds =>
-    (!R.isEmpty(bitIds) && !R.isNil(bitIds) ? chalk.underline('removed components:') + chalk(` ${bitIds}\n`) : '');
-  paintSingle = bitObj =>
-    this.paintUnRemovedComponents(bitObj.dependentBits) +
-    this.paintRemoved(bitObj.bitIds) +
-    this.paintMissingComponents(bitObj.missingComponents);
-
-  paintUnRemovedComponents(unRemovedComponents) {
-    if (!R.isEmpty(unRemovedComponents) && !R.isNil(unRemovedComponents)) {
-      return Object.keys(unRemovedComponents).map((key) => {
-        const header = chalk.underline.red(
-          `error: unable to delete ${key}, because the following components depend on it:\n`
-        );
-        const body = unRemovedComponents[key].join('\n');
-        return `${header + body}\n`;
-      });
-    }
-    return '';
+  paintArray(removedObjectsArray: RemovedObjects) {
+    return removedObjectsArray.map(item => paintRemoved(item));
   }
-
-  paintMany = bitObjs => bitObjs.map(obj => this.paintSingle(obj));
 }
