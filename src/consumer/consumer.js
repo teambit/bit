@@ -8,6 +8,7 @@ import chalk from 'chalk';
 import format from 'string-format';
 import partition from 'lodash.partition';
 import symlinkOrCopy from 'symlink-or-copy';
+import glob from 'glob';
 import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
@@ -879,6 +880,17 @@ export default class Consumer {
       });
     };
 
+    const symlinkPackages = (from, to, bindingPrefix) => {
+      const dirsIncludesBindingPrefix = glob.sync('*', { cwd: from });
+      const dirs = dirsIncludesBindingPrefix.filter(dir => dir !== bindingPrefix);
+      if (!dirs.length) return;
+      logger.debug(`deleting the content of ${to}`);
+      fs.emptyDirSync(to);
+      dirs.forEach((dir) => {
+        symlinkOrCopy.sync(path.join(from, dir), path.join(to, dir));
+      });
+    };
+
     return components.map((component) => {
       const componentId = component.id;
       logger.debug(`linking component: ${componentId}`);
@@ -890,6 +902,14 @@ export default class Consumer {
         let target = component.writtenPath || path.join(this.getPath(), componentMap.rootDir);
         if (component.dists && component._writeDistsFiles && !this.shouldDistsBeInsideTheComponent()) {
           target = component.getDistDirForConsumer(this, componentMap.rootDir);
+
+          // symlink all node-modules.
+          const fromNodeModules = path.join(
+            component.writtenPath || path.join(this.getPath(), componentMap.rootDir),
+            'node_modules'
+          );
+          const toNodeModules = path.join(target, 'node_modules');
+          symlinkPackages(fromNodeModules, toNodeModules, this.bitJson.bindingPrefix);
         }
         createSymlinkOrCopy(componentId, target, linkPath);
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
@@ -901,6 +921,7 @@ export default class Consumer {
           component.missingDependencies && component.missingDependencies.missingLinks
             ? writeMissingLinks(component, componentMap)
             : [];
+
         return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
       }
       if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
@@ -929,7 +950,7 @@ export default class Consumer {
     if (R.isEmpty(componentsMaps)) throw new Error('nothing to link');
     const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));
     const { components } = await this.loadComponents(componentsIds);
-    fs.removeSync(path.join(this.getPath(), 'node_modules', this.bitJson.bindingPrefix)); // todo: move to bit-javascript
+    // fs.removeSync(path.join(this.getPath(), 'node_modules', this.bitJson.bindingPrefix)); // todo: move to bit-javascript
     return this.linkComponents(components, bitMap);
   }
 
