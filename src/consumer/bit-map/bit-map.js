@@ -6,14 +6,7 @@ import find from 'lodash.find';
 import pickBy from 'lodash.pickby';
 import json from 'comment-json';
 import logger from '../../logger/logger';
-import {
-  BIT_MAP,
-  DEFAULT_INDEX_NAME,
-  COMPONENT_ORIGINS,
-  AUTO_GENERATED_MSG,
-  DEFAULT_SEPARATOR,
-  DEFAULT_INDEX_EXTS
-} from '../../constants';
+import { BIT_MAP, DEFAULT_INDEX_NAME, COMPONENT_ORIGINS, DEFAULT_SEPARATOR, DEFAULT_INDEX_EXTS } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId } from '../../bit-id';
 import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux, isDir } from '../../utils';
@@ -451,6 +444,6 @@ export default class BitMap {
     logger.debug('writing to bit.map');
     this.modifyComponentsToLinuxPath(this.components);
     const bitMapContent = Object.assign({}, this.components, { version: this.version });
-    return outputFile(this.mapPath, AUTO_GENERATED_MSG + JSON.stringify(bitMapContent, null, 4));
+    return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
   }
 }

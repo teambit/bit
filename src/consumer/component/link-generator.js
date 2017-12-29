@@ -289,7 +289,7 @@ async function writeDependencyLinks(
         content = 'Object.defineProperty(exports, "__esModule", { value: true });\n';
       }
       content += groupLinks[group].map(linkItem => linkItem.linkContent).join('\n');
-      return outputFile(group, content);
+      return outputFile({ filePath: group, content });
     });
 
     return Promise.all(allLinksP);
@@ -338,9 +338,9 @@ async function writeEntryPointsForImportedComponent(
   if (component.dists && component._writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
     const distDir = component.getDistDirForConsumer(consumer, componentMap.rootDir);
     const entryPointDist = path.join(distDir, indexName);
-    await outputFile(entryPointDist, AUTO_GENERATED_MSG + entryPointFileContent, false);
+    await outputFile({ filePath: entryPointDist, content: entryPointFileContent, override: false });
   }
-  return outputFile(entryPointPath, AUTO_GENERATED_MSG + entryPointFileContent, false);
+  return outputFile({ filePath: entryPointPath, content: entryPointFileContent, override: false });
 }
 function generateEntryPointDataForPackages(component: Component): Promise<any> {
   const packagePath = `${component.bindingPrefix}/${component.id.box}/${component.id.name}`;
