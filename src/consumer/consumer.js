@@ -963,6 +963,26 @@ export default class Consumer {
     return this.linkComponents(components, bitMap);
   }
 
+  async writeLinksInDist(component: Component, componentMap, bitMap: BitMap) {
+    const getDependencies = () => {
+      return component.dependencies.map((dependency) => {
+        if (bitMap.isExistWithSameVersion(dependency.id)) {
+          return this.loadComponent(dependency.id);
+        }
+        // when dependencies are imported as npm packages, they are not in bit.map
+        component.dependenciesSavedAsComponents = false;
+        return this.scope.loadComponent(dependency.id, false);
+      });
+    };
+    const dependencies = await Promise.all(getDependencies());
+    const componentWithDeps = new ComponentWithDependencies({ component, dependencies });
+    await linkGenerator.writeDependencyLinks([componentWithDeps], bitMap, this, false);
+    const newMainFile = pathNormalizeToLinux(component.calculateMainDistFile());
+    await component.updatePackageJsonAttribute(this, componentMap.rootDir, 'main', newMainFile);
+    this.linkComponents([component], bitMap);
+    return linkGenerator.writeEntryPointsForImportedComponent(component, bitMap, this);
+  }
+
   composeRelativeBitPath(bitId: BitId): string {
     const { staticParts, dynamicParts } = this.dirStructure.componentsDirStructure;
     const dynamicDirs = dynamicParts.map(part => bitId[part]);
