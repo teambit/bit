@@ -880,9 +880,13 @@ export default class Consumer {
       });
     };
 
-    const symlinkPackages = (from, to, bindingPrefix) => {
+    const symlinkPackages = (from, to, bindingPrefix, dependenciesSavedAsComponents) => {
       const dirsIncludesBindingPrefix = glob.sync('*', { cwd: from });
-      const dirs = dirsIncludesBindingPrefix.filter(dir => dir !== bindingPrefix);
+      // when dependenciesSavedAsComponents the node_modules/@bit has real link files, we don't want to touch them
+      // otherwise, node_modules/@bit has packages as any other directory in node_modules
+      const dirs = dependenciesSavedAsComponents
+        ? dirsIncludesBindingPrefix.filter(dir => dir !== bindingPrefix)
+        : dirsIncludesBindingPrefix;
       if (!dirs.length) return;
       logger.debug(`deleting the content of ${to}`);
       fs.emptyDirSync(to);
@@ -909,7 +913,12 @@ export default class Consumer {
             'node_modules'
           );
           const toNodeModules = path.join(target, 'node_modules');
-          symlinkPackages(fromNodeModules, toNodeModules, this.bitJson.bindingPrefix);
+          symlinkPackages(
+            fromNodeModules,
+            toNodeModules,
+            this.bitJson.bindingPrefix,
+            component.dependenciesSavedAsComponents
+          );
         }
         createSymlinkOrCopy(componentId, target, linkPath);
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
