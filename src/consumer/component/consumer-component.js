@@ -634,7 +634,8 @@ export default class Component {
     return this;
   }
 
-  async writeDists(consumer?: Consumer, bitMap?: BitMap, writeLinks?: boolean = true): Promise<string[]> {
+  async writeDists(consumer?: Consumer, bitMap?: BitMap, writeLinks?: boolean = true): Promise<?(string[])> {
+    if (!this.dists) return null;
     let componentMap;
     if (consumer && bitMap) {
       componentMap = bitMap.getComponent(this.id);
