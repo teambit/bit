@@ -36,6 +36,7 @@ async function writeLinksInDist(consumer: Consumer, component: Component, compon
   await writeDependencyLinks([componentWithDeps], bitMap, consumer, false);
   const newMainFile = pathNormalizeToLinux(component.calculateMainDistFile());
   await component.updatePackageJsonAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
+  consumer.linkComponents([component], bitMap);
   return writeEntryPointsForImportedComponent(component, bitMap, consumer);
 }
 
