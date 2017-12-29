@@ -634,6 +634,19 @@ export default class Component {
     return this;
   }
 
+  async writeDists(consumer?: Consumer, bitMap?: BitMap, writeLinks?: boolean = true): Promise<string[]> {
+    let componentMap;
+    if (consumer && bitMap) {
+      componentMap = bitMap.getComponent(this.id);
+      this.updateDistsPerConsumerBitJson(consumer, componentMap);
+    }
+    const saveDist = this.dists.map(distFile => distFile.write());
+    if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+      await consumer.writeLinksInDist(this, componentMap, bitMap);
+    }
+    return Promise.all(saveDist);
+  }
+
   async runSpecs({
     scope,
     rejectOnFailure,
@@ -739,10 +752,7 @@ export default class Component {
       if (!isolated && consumer) {
         logger.debug('Building the component before running the tests');
         await this.build({ scope, environment, bitMap, verbose, consumer });
-        const saveDists = this.dists ? this.dists.map(dist => dist.write()) : [Promise.resolve()];
-
-        await Promise.all(saveDists);
-
+        await this.writeDists(consumer, bitMap);
         const testDists = this.dists ? this.dists.filter(dist => dist.test) : this.files.filter(file => file.test);
         return run(this.mainFile, testDists);
       }
