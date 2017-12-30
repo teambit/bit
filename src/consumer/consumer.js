@@ -852,14 +852,10 @@ export default class Consumer {
           )
         );
         if (!this.shouldDistsBeInsideTheComponent()) {
-          writtenLinks.push(
-            writeDependencyLink(
-              component.getDistDirForConsumer(this, componentMap.rootDir),
-              dependency.id,
-              component.getDistDirForConsumer(this, dependencyComponentMap.rootDir),
-              component.bindingPrefix
-            )
-          );
+          const from = component.getDistDirForConsumer(this, componentMap.rootDir);
+          const to = component.getDistDirForConsumer(this, dependencyComponentMap.rootDir);
+          writtenLinks.push(writeDependencyLink(from, dependency.id, to, component.bindingPrefix));
+          symlinkPackages(from, to);
         }
         return writtenLinks;
       });
@@ -880,18 +876,24 @@ export default class Consumer {
       });
     };
 
-    const symlinkPackages = (from, to, bindingPrefix, dependenciesSavedAsComponents) => {
-      const dirsIncludesBindingPrefix = glob.sync('*', { cwd: from });
+    /**
+     * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
+     * root-dir. The solution is to go through the node_modules packages one by one and symlink them.
+     */
+    const symlinkPackages = (from: string, to: string, dependenciesSavedAsComponents: boolean = true) => {
+      const fromNodeModules = path.join(from, 'node_modules');
+      const toNodeModules = path.join(to, 'node_modules');
+      const dirsIncludesBindingPrefix = glob.sync('*', { cwd: fromNodeModules });
       // when dependenciesSavedAsComponents the node_modules/@bit has real link files, we don't want to touch them
       // otherwise, node_modules/@bit has packages as any other directory in node_modules
       const dirs = dependenciesSavedAsComponents
-        ? dirsIncludesBindingPrefix.filter(dir => dir !== bindingPrefix)
+        ? dirsIncludesBindingPrefix.filter(dir => dir !== this.bitJson.bindingPrefix)
         : dirsIncludesBindingPrefix;
       if (!dirs.length) return;
-      logger.debug(`deleting the content of ${to}`);
-      fs.emptyDirSync(to);
+      logger.debug(`deleting the content of ${toNodeModules}`);
+      fs.emptyDirSync(toNodeModules);
       dirs.forEach((dir) => {
-        symlinkOrCopy.sync(path.join(from, dir), path.join(to, dir));
+        symlinkOrCopy.sync(path.join(fromNodeModules, dir), path.join(toNodeModules, dir));
       });
     };
 
@@ -903,24 +905,15 @@ export default class Consumer {
         const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(this.bitJson.bindingPrefix, componentId);
         const linkPath = path.join(this.getPath(), relativeLinkPath);
         // when a user moves the component directory, use component.writtenPath to find the correct target
-        let target = component.writtenPath || path.join(this.getPath(), componentMap.rootDir);
+        const srcTarget = component.writtenPath || path.join(this.getPath(), componentMap.rootDir);
         if (component.dists && component._writeDistsFiles && !this.shouldDistsBeInsideTheComponent()) {
-          target = component.getDistDirForConsumer(this, componentMap.rootDir);
-
-          // symlink all node-modules.
-          const fromNodeModules = path.join(
-            component.writtenPath || path.join(this.getPath(), componentMap.rootDir),
-            'node_modules'
-          );
-          const toNodeModules = path.join(target, 'node_modules');
-          symlinkPackages(
-            fromNodeModules,
-            toNodeModules,
-            this.bitJson.bindingPrefix,
-            component.dependenciesSavedAsComponents
-          );
+          const distTarget = component.getDistDirForConsumer(this, componentMap.rootDir);
+          symlinkPackages(srcTarget, distTarget, component.dependenciesSavedAsComponents);
+          createSymlinkOrCopy(componentId, distTarget, linkPath);
+        } else {
+          createSymlinkOrCopy(componentId, srcTarget, linkPath);
         }
-        createSymlinkOrCopy(componentId, target, linkPath);
+
         const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
         const boundDependencies =
           component.dependencies && component.dependenciesSavedAsComponents
