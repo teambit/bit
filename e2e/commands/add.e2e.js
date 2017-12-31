@@ -408,22 +408,19 @@ describe('bit add command', function () {
     });
 
     // TODO: we need to implement the feature preventing the use of -t without wrapping in quotes.
-    it.skip(
-      'Should output message preventing user from adding files with spec from dsl and glob pattern without using quotes',
-      () => {
-        let errMsg = '';
-        helper.createComponent('bar', 'foo.js');
-        helper.createComponent('bar', 'foo2.js');
-        helper.createComponent('test/bar', 'foo.spec.js');
-        helper.createComponent('test/bar', 'foo2.spec.js');
-        try {
-          helper.runCmd('bit add bar/*.js -t test/bar/{FILE_NAME}.spec.js -n bar');
-        } catch (err) {
-          errMsg = err.message;
-        }
-        expect(errMsg).to.have.string('Please wrap tests with quotes');
+    it.skip('Should output message preventing user from adding files with spec from dsl and glob pattern without using quotes', () => {
+      let errMsg = '';
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('test/bar', 'foo.spec.js');
+      helper.createComponent('test/bar', 'foo2.spec.js');
+      try {
+        helper.runCmd('bit add bar/*.js -t test/bar/{FILE_NAME}.spec.js -n bar');
+      } catch (err) {
+        errMsg = err.message;
       }
-    );
+      expect(errMsg).to.have.string('Please wrap tests with quotes');
+    });
 
     it('Should add dir files with spec from dsl and glob pattern and exclude', () => {
       helper.createComponent('bar', 'foo.js');
@@ -645,7 +642,9 @@ describe('bit add command', function () {
       it('should throw an error', () => {
         const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${helper.bitBin} add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
+          `Command failed: ${
+            helper.bitBin
+          } add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
         );
       });
     });
@@ -695,14 +694,16 @@ describe('bit add command', function () {
     });
     it('Should show warning msg in case there are no files to add beacuse of gitignore', () => {
       helper.createComponent('bar', 'foo2.js');
-      helper.writeGitIgnore(['bar/foo2.js']);
+      helper.writeGitIgnore([path.normalize('bar/foo2.js')]);
 
       try {
         helper.addComponent(path.normalize('bar/foo2.js'));
       } catch (err) {
         errorMessage = err.message;
       }
-      expect(errorMessage).to.contain('warning: no files to add,the following files were ignored: bar/foo2.js');
+      expect(errorMessage).to.contain(
+        `warning: no files to add,the following files were ignored: ${path.normalize('bar/foo2.js')}`
+      );
     });
     it('Should only add files that are not in  gitignore', () => {
       helper.createComponent('bar', 'foo.js');
