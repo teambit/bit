@@ -7,7 +7,7 @@ import path from 'path';
  * https://github.com/jalba/find-package
  *
  */
-function findPath(dir, fileToFind) {
+function searchFileRecursively(dir, fileToFind) {
   const parentsArr = parents(dir);
   let i;
   for (i = 0; i < parentsArr.length; i++) {
@@ -27,18 +27,7 @@ function findPath(dir, fileToFind) {
  * https://github.com/jalba/find-package
  *
  */
-export default function findPackage(dir, fileToFind) {
-  const pathToConfig = findPath(dir, fileToFind);
-  const configJSON = null;
-  if (pathToConfig !== null) return pathToConfig;
-  if (configJSON) {
-    configJSON.paths = {
-      relative: path.relative(dir, pathToConfig),
-      absolute: pathToConfig
-    };
-  } else if (configJSON !== null) {
-    delete configJSON.paths;
-  }
-
-  return configJSON;
+export default function findFile(dir, fileToFind) {
+  const pathToFile = searchFileRecursively(dir, fileToFind);
+  return pathToFile;
 }

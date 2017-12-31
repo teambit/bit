@@ -258,7 +258,9 @@ export default (async function addAction(
     await Promise.all(componentPaths.map(componentPath => glob(componentPath)))
   );
 
+  // Run diff on both arrays to see what was filtered out because of the gitignore file
   const diff = arrayDiff(resolvedComponentPathsWithGitIgnore, resolvedComponentPathsWithoutGitIgnore);
+
   if (R.isEmpty(resolvedComponentPathsWithoutGitIgnore)) throw new PathNotExists(componentPaths);
   if (!R.isEmpty(resolvedComponentPathsWithGitIgnore)) {
     resolvedComponentPathsWithGitIgnore.forEach((componentPath) => {
@@ -299,9 +301,7 @@ export default (async function addAction(
     logger.debug('bit add - one component');
     // when a user enters more than one directory, he would like to keep the directories names
     // so then when a component is imported, it will write the files into the original directories
-    const isPathDirectory = c => c.isDir;
-    const onlyDirs = R.filter(isPathDirectory, componentPathsStats);
-    // keepDirectoriesName = Object.keys(onlyDirs).length > 1;
+
     const addedOne = await addOneComponent(componentPathsStats, bitMap, consumer, ignoreList);
     if (!R.isEmpty(addedOne.files)) addToBitMap(bitMap, addedOne);
     added.push(addedOne);
