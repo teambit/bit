@@ -745,8 +745,7 @@ describe('bit add command', function () {
       const files = bitMap['bar/foo'].files;
       expect(files).to.be.array();
       expect(files).to.be.ofSize(2);
-      expect(files[0]).to.deep.equal(expectedArray[0]);
-      expect(files[1]).to.deep.equal(expectedArray[1]);
+      expect(files).to.deep.equal(expectedArray);
     });
   });
 });
