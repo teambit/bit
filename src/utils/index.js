@@ -72,6 +72,8 @@ import { pathNormalizeToLinux, pathJoinLinux, pathRelative, pathResolve, pathJoi
 import getMissingTestFiles from './getMissingTestFiles';
 import identityFile from './ssh/identity-file';
 import camelCase from './string/camel-case';
+import retrieveIgnoreList from './ignore/ignore';
+import findFile from './find-file';
 
 export {
   identityFile,
@@ -150,5 +152,7 @@ export {
   pathJoinOs,
   outputJsonFile,
   searchFilesIgnoreExt,
-  getMissingTestFiles
+  getMissingTestFiles,
+  retrieveIgnoreList,
+  findFile
 };

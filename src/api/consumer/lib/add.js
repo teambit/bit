@@ -1,6 +1,6 @@
 /** @flow */
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs-extra';
 import R from 'ramda';
 import format from 'string-format';
 import assignwith from 'lodash.assignwith';
@@ -12,9 +12,9 @@ import {
   calculateFileInfo,
   existsSync,
   pathNormalizeToLinux,
-  pathJoinLinux,
   pathResolve,
-  getMissingTestFiles
+  getMissingTestFiles,
+  retrieveIgnoreList
 } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
@@ -22,8 +22,9 @@ import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
 import logger from '../../../logger/logger';
 import PathNotExists from './exceptions/path-not-exists';
+import NoFiles from './exceptions/no-files';
 import DuplicateIds from './exceptions/duplicate-ids';
-
+import arrayDiff from 'array-difference';
 import EmptyDirectory from './exceptions/empty-directory';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 
@@ -68,7 +69,7 @@ export default (async function addAction(
       const fileList = files.map(async (file) => {
         const fileInfo = calculateFileInfo(file);
         const generatedFile = format(dsl, fileInfo);
-        const matches = await glob(generatedFile);
+        const matches = await glob(generatedFile, { ignore: ignoreList });
         return matches.filter(match => fs.existsSync(match));
       });
       return Promise.all(fileList);
@@ -81,7 +82,12 @@ export default (async function addAction(
     });
   }
 
-  async function addOneComponent(componentPathsStats: Object, bitMap: BitMap, consumer: Consumer) {
+  async function addOneComponent(
+    componentPathsStats: Object,
+    bitMap: BitMap,
+    consumer: Consumer,
+    gitIgnoreFiles: string[]
+  ) {
     // remove excluded files from file list
     async function removeExcludedFiles(mapValues, excludedList) {
       const files = R.flatten(mapValues.map(x => x.files.map(i => i.relativePath)));
@@ -161,7 +167,11 @@ export default (async function addAction(
         const lastDir = splitPath[splitPath.length - 1];
         const nameSpaceOrDir = namespace || splitPath[splitPath.length - 2];
 
-        const matches = await glob(path.join(relativeComponentPath, '**'), { cwd: consumer.getPath(), nodir: true });
+        const matches = await glob(path.join(relativeComponentPath, '**'), {
+          cwd: consumer.getPath(),
+          nodir: true,
+          ignore: gitIgnoreFiles
+        });
         if (!matches.length) throw new EmptyDirectory();
 
         let files = matches.map((match) => {
@@ -235,16 +245,25 @@ export default (async function addAction(
 
   const consumer: Consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
-
+  const ignoreList = retrieveIgnoreList(consumer.getPath());
   // check unknown test files
   const missingFiles = getMissingTestFiles(tests);
   if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
 
   const componentPathsStats = {};
-  const resolvedComponentPaths = await Promise.all(componentPaths.map(componentPath => glob(componentPath)));
-  const flattenedFiles = R.flatten(resolvedComponentPaths);
-  if (!R.isEmpty(flattenedFiles)) {
-    flattenedFiles.forEach((componentPath) => {
+  const resolvedComponentPathsWithGitIgnore = R.flatten(
+    await Promise.all(componentPaths.map(componentPath => glob(componentPath, { ignore: ignoreList })))
+  );
+  const resolvedComponentPathsWithoutGitIgnore = R.flatten(
+    await Promise.all(componentPaths.map(componentPath => glob(componentPath)))
+  );
+
+  // Run diff on both arrays to see what was filtered out because of the gitignore file
+  const diff = arrayDiff(resolvedComponentPathsWithGitIgnore, resolvedComponentPathsWithoutGitIgnore);
+
+  if (R.isEmpty(resolvedComponentPathsWithoutGitIgnore)) throw new PathNotExists(componentPaths);
+  if (!R.isEmpty(resolvedComponentPathsWithGitIgnore)) {
+    resolvedComponentPathsWithGitIgnore.forEach((componentPath) => {
       if (!existsSync(componentPath)) {
         throw new PathNotExists(componentPath);
       }
@@ -253,10 +272,10 @@ export default (async function addAction(
       };
     });
   } else {
-    throw new PathNotExists(componentPaths);
+    throw new NoFiles(diff);
   }
 
-  let keepDirectoriesName = false;
+  const keepDirectoriesName = false;
   // if a user entered multiple paths and entered an id, he wants all these paths to be one component
   const isMultipleComponents = Object.keys(componentPathsStats).length > 1 && !id;
   let added = [];
@@ -270,7 +289,8 @@ export default (async function addAction(
           [onePath]: componentPathsStats[onePath]
         },
         bitMap,
-        consumer
+        consumer,
+        ignoreList
       );
     });
 
@@ -281,10 +301,8 @@ export default (async function addAction(
     logger.debug('bit add - one component');
     // when a user enters more than one directory, he would like to keep the directories names
     // so then when a component is imported, it will write the files into the original directories
-    const isPathDirectory = c => c.isDir;
-    const onlyDirs = R.filter(isPathDirectory, componentPathsStats);
-    keepDirectoriesName = Object.keys(onlyDirs).length > 1;
-    const addedOne = await addOneComponent(componentPathsStats, bitMap, consumer, keepDirectoriesName);
+
+    const addedOne = await addOneComponent(componentPathsStats, bitMap, consumer, ignoreList);
     if (!R.isEmpty(addedOne.files)) addToBitMap(bitMap, addedOne);
     added.push(addedOne);
   }

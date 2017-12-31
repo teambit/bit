@@ -37,6 +37,8 @@ export const BITS_DIRNAME = 'components';
 
 export const BIT_JSON = 'bit.json';
 
+export const GIT_IGNORE = '.gitignore';
+
 export const BIT_MAP = '.bit.map.json';
 
 export const COMPONENT_ORIGINS = {

@@ -69,6 +69,7 @@
     "needle": "^2.0.0",
     "normalize-path": "^2.1.1",
     "object-diff": "^0.0.4",
+    "parse-gitignore": "^0.4.0",
     "ora": "^1.1.0",
     "pkg": "^4.2.6",
     "porter-stemmer": "^0.9.1",
