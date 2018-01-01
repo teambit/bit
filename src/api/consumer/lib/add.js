@@ -67,16 +67,12 @@ export default (async function addAction(
       }
       const temp = Object.assign({}, component);
       temp.files = [file];
-      temp.origin = COMPONENT_ORIGINS.AUTHORED;
       if (!componentsObject[temp.componentId]) {
         return (componentsObject[temp.componentId] = temp);
       }
       return componentsObject[temp.componentId].files.push(file);
     });
-    return Object.keys(componentsObject).map((key) => {
-      componentsObject[key].override = override;
-      return bitmap.addComponent(componentsObject[key]);
-    });
+    return Object.keys(componentsObject).map(key => addToBitMap(componentsObject[key]));
   };
   // used to validate that no two files where added with the same id in the same bit add command
   const validateNoDuplicateIds = (addComponents: Object[]) => {
