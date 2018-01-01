@@ -72,7 +72,7 @@ export default (async function addAction(
       }
       return componentsObject[temp.componentId].files.push(file);
     });
-    return Object.keys(componentsObject).map(key => addToBitMap(componentsObject[key]));
+    return Object.keys(componentsObject).map(key => addToBitMap(bitMap, componentsObject[key]));
   };
   // used to validate that no two files where added with the same id in the same bit add command
   const validateNoDuplicateIds = (addComponents: Object[]) => {
