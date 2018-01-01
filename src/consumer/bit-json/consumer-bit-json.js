@@ -20,7 +20,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
   // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
   distEntry: ?string;
   structure: Object; // directory structure templates where to store imported components and dependencies
-  extensions: Object;
+  saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
 
   constructor({
     impl,
@@ -28,6 +28,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     compiler,
     tester,
     dependencies,
+    saveDependenciesAsComponents,
     lang,
     distTarget,
     distEntry,
@@ -42,19 +43,22 @@ export default class ConsumerBitJson extends AbstractBitJson {
       components: DEFAULT_DIR_STRUCTURE,
       dependencies: DEFAULT_DIR_DEPENDENCIES_STRUCTURE
     };
+    this.saveDependenciesAsComponents = saveDependenciesAsComponents || false;
   }
 
   toPlainObject() {
     const superObject = super.toPlainObject();
+    const consumerObject = R.merge(superObject, {
+      structure: this.structure,
+      saveDependenciesAsComponents: this.saveDependenciesAsComponents
+    });
     if (this.distEntry || this.distTarget) {
       const dist = {};
       if (this.distEntry) dist.entry = this.distEntry;
       if (this.distTarget) dist.target = this.distTarget;
-      return R.merge(superObject, { structure: this.structure, dist });
+      return R.merge(consumerObject, { dist });
     }
-    return R.merge(superObject, {
-      structure: this.structure
-    });
+    return consumerObject;
   }
 
   write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
@@ -85,7 +89,17 @@ export default class ConsumerBitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object) {
-    const { sources, env, dependencies, lang, structure, dist, bindingPrefix, extensions } = object;
+    const {
+      sources,
+      env,
+      dependencies,
+      lang,
+      structure,
+      dist,
+      bindingPrefix,
+      extensions,
+      saveDependenciesAsComponents
+    } = object;
 
     // todo: this is a backward compatibility, remove it on the next major version
     const finalStructure = R.is(String, structure)
@@ -101,6 +115,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       bindingPrefix,
       extensions,
       dependencies,
+      saveDependenciesAsComponents,
       structure: finalStructure || {},
       distTarget: R.propOr(undefined, 'target', dist),
       distEntry: R.propOr(undefined, 'entry', dist)
