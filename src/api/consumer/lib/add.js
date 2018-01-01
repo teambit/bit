@@ -6,6 +6,7 @@ import format from 'string-format';
 import assignwith from 'lodash.assignwith';
 import groupby from 'lodash.groupby';
 import unionBy from 'lodash.unionby';
+import find from 'lodash.find';
 import {
   glob,
   isDir,
@@ -14,12 +15,13 @@ import {
   pathNormalizeToLinux,
   pathResolve,
   getMissingTestFiles,
-  retrieveIgnoreList
+  retrieveIgnoreList,
+  pathIsInside
 } from '../../../utils';
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
-import { COMPONENT_ORIGINS, REGEX_PATTERN } from '../../../constants';
+import { COMPONENT_ORIGINS, REGEX_PATTERN, AUTO_GENERATED_STAMP } from '../../../constants';
 import logger from '../../../logger/logger';
 import PathNotExists from './exceptions/path-not-exists';
 import NoFiles from './exceptions/no-files';
@@ -37,6 +39,46 @@ export default (async function addAction(
   exclude?: string[],
   override: boolean
 ): Promise<Object> {
+  const addOrUpdateExistingComponentsInBitMap = (consumerPath: String, bitmap: BitMap, component): componentMaps[] => {
+    const componentsObject = {};
+    const componentMaps = component.files.map((file) => {
+      const fileContent = fs.readFileSync(path.join(consumerPath, file.relativePath)).toString();
+      if (fileContent.includes(AUTO_GENERATED_STAMP)) return;
+      const key = bitmap.getComponentIdByPath(file.relativePath);
+      if (key && override) {
+        const y = bitmap.getComponent(key);
+        const u = bitmap.getRootDirOfComponent(key) || consumerPath;
+        const foundComponentFromBitMap = find(y.files, (componentFile) => {
+          const bitMapComponentFilePath = path.join(consumerPath, u, path.join(componentFile.relativePath)).toString();
+          return pathIsInside(bitMapComponentFilePath, path.join(consumerPath, file.relativePath));
+        });
+        if (R.isEmpty(foundComponentFromBitMap)) {
+          y.files.push(file);
+          if (!componentsObject[BitId.parse(key)]) {
+            return (componentsObject[BitId.parse(key)] = {
+              componentId: BitId.parse(key),
+              files: [file]
+            });
+          } 
+          return componentsObject[BitId.parse(key)].files.push(file);
+        }
+      }
+      const temp = Object.assign({}, component);
+      // const temp = component;
+      temp.files = [file];
+      temp.origin = COMPONENT_ORIGINS.AUTHORED;
+      if (!componentsObject[temp.componentId]) {
+        return (componentsObject[temp.componentId] = temp);
+      } 
+      return componentsObject[temp.componentId].files.push(file);
+    });
+    return Object.keys(componentsObject).map((key) => {
+      componentsObject[key].override = override;
+      const y = bitmap.addComponent(componentsObject[key]);
+      return y;
+    });
+    // componentMaps;
+  };
   // used to validate that no two files where added with the same id in the same bit add command
   const validateNoDuplicateIds = (addComponents: Object[]) => {
     const duplicateIds = {};
@@ -172,6 +214,7 @@ export default (async function addAction(
           nodir: true,
           ignore: gitIgnoreFiles
         });
+
         if (!matches.length) throw new EmptyDirectory();
 
         let files = matches.map((match) => {
@@ -296,14 +339,22 @@ export default (async function addAction(
 
     added = await Promise.all(addedP);
     validateNoDuplicateIds(added);
-    added.forEach(component => (!R.isEmpty(component.files) ? addToBitMap(bitMap, component) : ''));
+    added.forEach(
+      component =>
+        (!R.isEmpty(component.files)
+          ? addOrUpdateExistingComponentsInBitMap(consumer.projectPath, bitMap, component)
+          : /* addToBitMap(bitMap, component) */ '')
+    );
   } else {
     logger.debug('bit add - one component');
     // when a user enters more than one directory, he would like to keep the directories names
     // so then when a component is imported, it will write the files into the original directories
 
     const addedOne = await addOneComponent(componentPathsStats, bitMap, consumer, ignoreList);
-    if (!R.isEmpty(addedOne.files)) addToBitMap(bitMap, addedOne);
+    if (!R.isEmpty(addedOne.files)) {
+      addOrUpdateExistingComponentsInBitMap(consumer.projectPath, bitMap, addedOne);
+      // addToBitMap(bitMap, addedOne);
+    }
     added.push(addedOne);
   }
   await bitMap.write();

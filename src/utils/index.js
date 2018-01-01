@@ -74,6 +74,7 @@ import identityFile from './ssh/identity-file';
 import camelCase from './string/camel-case';
 import retrieveIgnoreList from './ignore/ignore';
 import findFile from './find-file';
+import pathIsInside from './path-is-inside';
 
 export {
   identityFile,
@@ -154,5 +155,6 @@ export {
   searchFilesIgnoreExt,
   getMissingTestFiles,
   retrieveIgnoreList,
-  findFile
+  findFile,
+  pathIsInside
 };
