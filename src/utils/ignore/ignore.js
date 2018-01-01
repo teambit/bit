@@ -1,5 +1,5 @@
 import gitignore from 'parse-gitignore';
-import { BIT_JSON, BIT_MAP, GIT_IGNORE } from '../../constants';
+import { IGNORE_LIST, GIT_IGNORE } from '../../constants';
 import { findFile } from '../index';
 
 function getGitIgnoreFile(dir: string) {
@@ -8,6 +8,6 @@ function getGitIgnoreFile(dir: string) {
 }
 
 export default function retrieveIgnoreList(cwd: string) {
-  const ignoreList = getGitIgnoreFile(cwd).concat([BIT_JSON, BIT_MAP, GIT_IGNORE]);
+  const ignoreList = getGitIgnoreFile(cwd).concat(IGNORE_LIST);
   return ignoreList;
 }

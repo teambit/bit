@@ -41,43 +41,41 @@ export default (async function addAction(
 ): Promise<Object> {
   const addOrUpdateExistingComponentsInBitMap = (consumerPath: String, bitmap: BitMap, component): componentMaps[] => {
     const componentsObject = {};
-    const componentMaps = component.files.map((file) => {
+    component.files.forEach((file) => {
       const fileContent = fs.readFileSync(path.join(consumerPath, file.relativePath)).toString();
       if (fileContent.includes(AUTO_GENERATED_STAMP)) return;
       const key = bitmap.getComponentIdByPath(file.relativePath);
       if (key && override) {
-        const y = bitmap.getComponent(key);
-        const u = bitmap.getRootDirOfComponent(key) || consumerPath;
-        const foundComponentFromBitMap = find(y.files, (componentFile) => {
-          const bitMapComponentFilePath = path.join(consumerPath, u, path.join(componentFile.relativePath)).toString();
+        const bitMapComponent = bitmap.getComponent(key);
+        const componentRootDir = bitmap.getRootDirOfComponent(key) || consumerPath;
+        const foundComponentFromBitMap = find(bitMapComponent.files, (componentFile) => {
+          const bitMapComponentFilePath = path
+            .join(consumerPath, componentRootDir, path.join(componentFile.relativePath))
+            .toString();
           return pathIsInside(bitMapComponentFilePath, path.join(consumerPath, file.relativePath));
         });
         if (R.isEmpty(foundComponentFromBitMap)) {
-          y.files.push(file);
+          bitMapComponent.files.push(file);
           if (!componentsObject[BitId.parse(key)]) {
             return (componentsObject[BitId.parse(key)] = {
               componentId: BitId.parse(key),
               files: [file]
             });
-          } 
+          }
           return componentsObject[BitId.parse(key)].files.push(file);
         }
       }
       const temp = Object.assign({}, component);
-      // const temp = component;
       temp.files = [file];
-      temp.origin = COMPONENT_ORIGINS.AUTHORED;
       if (!componentsObject[temp.componentId]) {
         return (componentsObject[temp.componentId] = temp);
-      } 
+      }
       return componentsObject[temp.componentId].files.push(file);
     });
     return Object.keys(componentsObject).map((key) => {
       componentsObject[key].override = override;
-      const y = bitmap.addComponent(componentsObject[key]);
-      return y;
+      return bitmap.addComponent(componentsObject[key]);
     });
-    // componentMaps;
   };
   // used to validate that no two files where added with the same id in the same bit add command
   const validateNoDuplicateIds = (addComponents: Object[]) => {

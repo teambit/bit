@@ -41,6 +41,15 @@ export const GIT_IGNORE = '.gitignore';
 
 export const BIT_MAP = '.bit.map.json';
 
+export const IGNORE_LIST = [
+  '**/.bit.map.json',
+  '**/.gitignore',
+  '**/bit.json',
+  '**/bitBindings.js',
+  '**/node_modules/**',
+  '**/package.json'
+];
+
 export const COMPONENT_ORIGINS = {
   IMPORTED: 'IMPORTED',
   AUTHORED: 'AUTHORED',
