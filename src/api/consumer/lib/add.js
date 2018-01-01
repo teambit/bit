@@ -67,6 +67,7 @@ export default (async function addAction(
       }
       const temp = Object.assign({}, component);
       temp.files = [file];
+      temp.origin = COMPONENT_ORIGINS.AUTHORED;
       if (!componentsObject[temp.componentId]) {
         return (componentsObject[temp.componentId] = temp);
       }
