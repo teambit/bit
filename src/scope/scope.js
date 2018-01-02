@@ -57,6 +57,7 @@ import logger from '../logger/logger';
 import componentResolver from '../component-resolver';
 import ComponentsList from '../consumer/component/components-list';
 import { RemovedObjects } from './component-remove';
+import Component from '../consumer/component/consumer-component';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -852,7 +853,7 @@ export default class Scope {
 
       if (!R.isEmpty(dependencies)) dependentBits[bitId.toStringWithoutVersion()] = R.uniq(dependencies);
     });
-    return await Promise.resolve(dependentBits);
+    return Promise.resolve(dependentBits);
   }
 
   /**
@@ -944,6 +945,21 @@ export default class Scope {
       throw new Error('cannot load bit from remote scope, please import first');
     }
     return this.loadRemoteComponent(id);
+  }
+
+  /**
+   * load components from the model and return them as ComponentVersion array.
+   * if a component is not available locally, it'll just ignore it without throwing any error.
+   */
+  async loadLocalComponents(ids: BitId[]): Promise<ComponentVersion[]> {
+    const componentsObjects = await this.sources.getMany(ids);
+    const components = componentsObjects.map((componentObject) => {
+      const component = componentObject.component;
+      if (!component) return null;
+      const version = componentObject.id.hasVersion() ? componentObject.id.version : component.latest();
+      return component.toComponentVersion(version);
+    });
+    return removeNils(components);
   }
 
   loadComponentLogs(id: BitId): Promise<{ [number]: { message: string, date: string, hash: string } }> {
@@ -1127,6 +1143,23 @@ export default class Scope {
       await this.objects.persist();
     }
     return updatedComponents;
+  }
+
+  /**
+   * find the components in componentsPool which one of their dependencies include in potentialDependencies
+   */
+  async findDirectDependentComponents(componentsPool: BitId[], potentialDependencies: BitId[]): Promise<Component[]> {
+    const componentsVersions = await this.loadLocalComponents(componentsPool);
+    const potentialDependenciesWithoutVersions = potentialDependencies.map(id => id.toStringWithoutVersion());
+    const dependentsP = componentsVersions.map(async (componentVersion: ComponentVersion) => {
+      const component = await componentVersion.getVersion(this.objects);
+      const found = component.dependencies.find(dependency =>
+        potentialDependenciesWithoutVersions.includes(dependency.id.toStringWithoutVersion())
+      );
+      return found ? componentVersion.toConsumer(this.objects) : null;
+    });
+    const dependents = await Promise.all(dependentsP);
+    return removeNils(dependents);
   }
 
   async runComponentSpecs({

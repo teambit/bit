@@ -1448,8 +1448,7 @@ describe('bit import', function () {
     });
   });
 
-  // @todo: fix this case. currently it does change it in the bit.map, but the link on the filesystem still direct to the .dependency dir
-  describe.skip('import component is-type as a dependency of is-string and then import is-type directly', () => {
+  describe('import component is-type as a dependency of is-string and then import is-type directly', () => {
     let localConsumerFiles;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -1478,10 +1477,13 @@ describe('bit import', function () {
       expect(bitMap[`${helper.remoteScope}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
     });
     it('should not break the is-string component', () => {
+      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+      helper.createComponent(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
-      expect(result.trim()).to.equal('got is-type and got is-string');
+      expect(result.trim()).to.equal('got is-type v2 and got is-string');
     });
   });
 

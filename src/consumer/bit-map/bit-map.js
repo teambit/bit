@@ -58,10 +58,12 @@ export default class BitMap {
     return new BitMap(dirPath, mapPath, components, version);
   }
 
-  getAllComponents(origin?: ComponentOrigin): BitMapComponents {
+  getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): BitMapComponents {
     if (!origin) return this.components;
     const isOriginMatch = component => component.origin === origin;
-    return R.filter(isOriginMatch, this.components);
+    const isOriginMatchArray = component => origin.includes(component.origin);
+    const filter = Array.isArray(origin) ? isOriginMatchArray : isOriginMatch;
+    return R.filter(filter, this.components);
   }
 
   getAuthoredExportedComponents(): BitId[] {
@@ -299,7 +301,9 @@ export default class BitMap {
       return;
     }
     if (olderComponentsIds.length > 1) {
-      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
+      throw new Error(`Your ${
+        BIT_MAP
+      } file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
       are authored or imported. This scenario is not supported`);
     }
     const olderComponentId = olderComponentsIds[0];

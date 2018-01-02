@@ -303,7 +303,9 @@ async function writeDependencyLinks(
       );
       return Promise.resolve();
     }
+    // it must be IMPORTED. We don't pass NESTED to this function
     logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
+    componentWithDeps.component.stripOriginallySharedDir(bitMap);
 
     const directLinksP = componentLinks(componentWithDeps.dependencies, componentWithDeps.component, componentMap);
 
