@@ -190,6 +190,30 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo1');
       expect(bitMap['bar/foo1'].origin).to.equal('AUTHORED');
     });
+    it('Should prevent adding a file with invalid keys in namespace', () => {
+      let errMsg;
+      helper.createComponentBarFoo();
+      try {
+        helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar.f/foo' });
+      } catch (err) {
+        errMsg = err.message;
+      }
+      expect(errMsg).to.have.string(
+        'id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]'
+      );
+    });
+    it('Should prevent adding a file with invalid keys in ID', () => {
+      let errMsg;
+      helper.createComponentBarFoo();
+      try {
+        helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/fo.o' });
+      } catch (err) {
+        errMsg = err.message;
+      }
+      expect(errMsg).to.have.string(
+        'id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]'
+      );
+    });
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
     it.skip('should not allow adding a component with an existing box-name and component-name', () => {});
   });
@@ -408,19 +432,22 @@ describe('bit add command', function () {
     });
 
     // TODO: we need to implement the feature preventing the use of -t without wrapping in quotes.
-    it.skip('Should output message preventing user from adding files with spec from dsl and glob pattern without using quotes', () => {
-      let errMsg = '';
-      helper.createComponent('bar', 'foo.js');
-      helper.createComponent('bar', 'foo2.js');
-      helper.createComponent('test/bar', 'foo.spec.js');
-      helper.createComponent('test/bar', 'foo2.spec.js');
-      try {
-        helper.runCmd('bit add bar/*.js -t test/bar/{FILE_NAME}.spec.js -n bar');
-      } catch (err) {
-        errMsg = err.message;
+    it.skip(
+      'Should output message preventing user from adding files with spec from dsl and glob pattern without using quotes',
+      () => {
+        let errMsg = '';
+        helper.createComponent('bar', 'foo.js');
+        helper.createComponent('bar', 'foo2.js');
+        helper.createComponent('test/bar', 'foo.spec.js');
+        helper.createComponent('test/bar', 'foo2.spec.js');
+        try {
+          helper.runCmd('bit add bar/*.js -t test/bar/{FILE_NAME}.spec.js -n bar');
+        } catch (err) {
+          errMsg = err.message;
+        }
+        expect(errMsg).to.have.string('Please wrap tests with quotes');
       }
-      expect(errMsg).to.have.string('Please wrap tests with quotes');
-    });
+    );
 
     it('Should add dir files with spec from dsl and glob pattern and exclude', () => {
       helper.createComponent('bar', 'foo.js');
@@ -642,9 +669,7 @@ describe('bit add command', function () {
       it('should throw an error', () => {
         const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${
-            helper.bitBin
-          } add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
+          `Command failed: ${helper.bitBin} add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
         );
       });
     });
