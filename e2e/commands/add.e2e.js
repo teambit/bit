@@ -39,7 +39,6 @@ describe('bit add command', function () {
     });
   });
   describe('add one component', () => {
-    let errorMessage;
     beforeEach(() => {
       helper.reInitLocalScope();
     });
@@ -180,7 +179,6 @@ describe('bit add command', function () {
       const addCmd = () => helper.addComponent('non-existing-file.js');
       expect(addCmd).to.throw('fatal: the file "non-existing-file.js" was not found');
     });
-
     it.skip('Bitmap should contain multiple files for component with more than one file', () => {});
     it.skip('Bitmap should contain impl files and test files  in different fields', () => {});
     it('Bitmap origin should be AUTHORED', () => {
@@ -192,6 +190,19 @@ describe('bit add command', function () {
     });
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
     it.skip('should not allow adding a component with an existing box-name and component-name', () => {});
+    it.skip('Should add files to imported component', () => {
+      helper.setNewLocalAndRemoteScopes();
+      const remote = helper.remoteScopePath;
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo ' });
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope(remote);
+      helper.importComponent('bar/foo');
+      helper.addComponent('.', path.join(helper.localScopePath, 'components', 'bar', 'foo'));
+    });
   });
 
   describe('adding file to existing tagged component', () => {

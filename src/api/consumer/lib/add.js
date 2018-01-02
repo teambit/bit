@@ -7,6 +7,8 @@ import assignwith from 'lodash.assignwith';
 import groupby from 'lodash.groupby';
 import unionBy from 'lodash.unionby';
 import find from 'lodash.find';
+import clone from 'clone';
+
 import {
   glob,
   isDir,
@@ -29,6 +31,7 @@ import DuplicateIds from './exceptions/duplicate-ids';
 import arrayDiff from 'array-difference';
 import EmptyDirectory from './exceptions/empty-directory';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
+import { ComponentMap, ComponentMapData } from '../../../consumer/bit-map/component-map';
 
 export default (async function addAction(
   componentPaths: string[],
@@ -43,36 +46,37 @@ export default (async function addAction(
     const componentsObject = {};
     component.files.forEach((file) => {
       const fileContent = fs.readFileSync(path.join(consumerPath, file.relativePath)).toString();
-      if (fileContent.includes(AUTO_GENERATED_STAMP)) return;
-      const key = bitmap.getComponentIdByPath(file.relativePath);
-      if (key && override) {
-        const bitMapComponent = bitmap.getComponent(key);
-        const componentRootDir = bitmap.getRootDirOfComponent(key) || consumerPath;
-        const foundComponentFromBitMap = find(bitMapComponent.files, (componentFile) => {
-          const bitMapComponentFilePath = path
-            .join(consumerPath, componentRootDir, path.join(componentFile.relativePath))
-            .toString();
-          return pathIsInside(bitMapComponentFilePath, path.join(consumerPath, file.relativePath));
-        });
-        if (R.isEmpty(foundComponentFromBitMap)) {
-          bitMapComponent.files.push(file);
-          if (!componentsObject[BitId.parse(key)]) {
-            return (componentsObject[BitId.parse(key)] = {
-              componentId: BitId.parse(key),
-              files: [file]
-            });
+      if (!fileContent.includes(AUTO_GENERATED_STAMP)) {
+        const foundComponentFromBitMap = bitmap.findPotentialComponentOwnerForFile(file.relativePath, consumerPath);
+        if (foundComponentFromBitMap && foundComponentFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+          const potentialComponent = clone(foundComponentFromBitMap);
+          potentialComponent.files = [];
+          // file should be part of the component
+          const tempFile = path.relative(potentialComponent.rootDir, file.relativePath);
+          const f = find(potentialComponent.files, x => x.relativePath === tempFile);
+          const bitMapComponentId = bitmap.getComponentIdByRootPath(potentialComponent.rootDir);
+          if (!componentsObject[bitMapComponentId]) {
+            if (!f) potentialComponent.files = [file];
+            else f.relativePath = path.join(potentialComponent.rootDir, f.relativePath);
+            componentsObject[bitMapComponentId] = potentialComponent;
+          } else if (!f) componentsObject[bitMapComponentId].files.push(file);
+          else f.relativePath = path.join(potentialComponent.rootDir, f.relativePath);
+        } else {
+          // component not imported then add it as a seperated component
+          const temp = clone(component);
+          temp.files = [file];
+          if (!componentsObject[temp.componentId]) {
+            componentsObject[temp.componentId] = temp;
+          } else {
+            componentsObject[temp.componentId].files.push(file);
           }
-          return componentsObject[BitId.parse(key)].files.push(file);
         }
       }
-      const temp = Object.assign({}, component);
-      temp.files = [file];
-      if (!componentsObject[temp.componentId]) {
-        return (componentsObject[temp.componentId] = temp);
-      }
-      return componentsObject[temp.componentId].files.push(file);
     });
-    return Object.keys(componentsObject).map(key => addToBitMap(bitMap, componentsObject[key]));
+    return Object.keys(componentsObject).map((key) => {
+      componentsObject[key].componentId = BitId.parse(key);
+      return addToBitMap(bitMap, componentsObject[key]);
+    });
   };
   // used to validate that no two files where added with the same id in the same bit add command
   const validateNoDuplicateIds = (addComponents: Object[]) => {
@@ -347,11 +351,11 @@ export default (async function addAction(
 
     const addedOne = await addOneComponent(componentPathsStats, bitMap, consumer, ignoreList);
     if (!R.isEmpty(addedOne.files)) {
-      addOrUpdateExistingComponentsInBitMap(consumer.projectPath, bitMap, addedOne);
+      const addedComponents = addOrUpdateExistingComponentsInBitMap(consumer.projectPath, bitMap, addedOne);
       // addToBitMap(bitMap, addedOne);
+      added.push(addedComponents);
     }
-    added.push(addedOne);
   }
   await bitMap.write();
-  return added.filter(addedId => !R.isEmpty(addedId.files));
+  return R.flatten(added.filter(addedId => !R.isEmpty(addedId.files)));
 });
