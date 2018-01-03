@@ -9,18 +9,18 @@ import {
   AUTO_GENERATED_MSG,
   CFG_REGISTRY_DOMAIN_PREFIX,
   DEFAULT_REGISTRY_DOMAIN_PREFIX
-} from '../../constants';
-import { outputFile, getWithoutExt, searchFilesIgnoreExt, getExt } from '../../utils';
-import logger from '../../logger/logger';
-import { ComponentWithDependencies } from '../../scope';
-import Component from '../component';
-import { Dependency, RelativePath } from '../component/consumer-component';
-import BitMap from '../bit-map/bit-map';
-import { BitIds } from '../../bit-id';
-import fileTypesPlugins from '../../plugins/file-types-plugins';
-import { getSync } from '../../api/consumer/lib/global-config';
-import { Consumer } from '../../consumer';
-import ComponentMap from '../bit-map/component-map';
+} from '../constants';
+import { outputFile, getWithoutExt, searchFilesIgnoreExt, getExt } from '../utils';
+import logger from '../logger/logger';
+import { ComponentWithDependencies } from '../scope';
+import Component from '../consumer/component';
+import { Dependency, RelativePath } from '../consumer/component/consumer-component';
+import BitMap from '../consumer/bit-map/bit-map';
+import { BitIds } from '../bit-id';
+import fileTypesPlugins from '../plugins/file-types-plugins';
+import { getSync } from '../api/consumer/lib/global-config';
+import { Consumer } from '../consumer';
+import ComponentMap from '../consumer/bit-map/component-map';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -324,11 +324,10 @@ async function writeDependencyLinks(
   return Promise.all(allLinksP);
 }
 
-async function writeEntryPointsForImportedComponent(
-  component: Component,
-  bitMap: BitMap,
-  consumer: Consumer
-): Promise<any> {
+/**
+ * Relevant for IMPORTED and NESTED only
+ */
+async function writeEntryPointsForComponent(component: Component, bitMap: BitMap, consumer: Consumer): Promise<any> {
   const componentId = component.id.toString();
   const componentMap = bitMap.getComponent(componentId);
   const componentRoot = component.writtenPath || componentMap.rootDir;
@@ -346,10 +345,5 @@ async function writeEntryPointsForImportedComponent(
   logger.debug(`writeEntryPointFile, on ${entryPointPath}`);
   return outputFile({ filePath: entryPointPath, content: entryPointFileContent, override: false });
 }
-function generateEntryPointDataForPackages(component: Component): Promise<any> {
-  const packagePath = `${component.bindingPrefix}/${component.id.box}/${component.id.name}`;
-  const packageName = component.id.toStringWithoutVersion();
-  return { packageName, packagePath };
-}
 
-export { writeEntryPointsForImportedComponent, writeDependencyLinks, generateEntryPointDataForPackages };
+export { writeEntryPointsForComponent, writeDependencyLinks };
