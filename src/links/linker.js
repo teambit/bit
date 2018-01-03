@@ -7,8 +7,9 @@ import BitMap from '../consumer/bit-map/bit-map';
 import logger from '../logger/logger';
 import { pathNormalizeToLinux } from '../utils';
 import * as linkGenerator from '../links/link-generator';
-import nodeModulesLinkComponents from './node-modules-linker';
+import linkComponentsToNodeModules from './node-modules-linker';
 import Consumer from '../consumer/consumer';
+import ComponentWithDependencies from '../scope/component-dependencies';
 
 export async function linkAllToNodeModules(consumer: Consumer) {
   const bitMap = await consumer.getBitMap();
@@ -16,7 +17,7 @@ export async function linkAllToNodeModules(consumer: Consumer) {
   if (R.isEmpty(componentsMaps)) throw new Error('nothing to link');
   const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));
   const { components } = await consumer.loadComponents(componentsIds);
-  return nodeModulesLinkComponents(components, bitMap, consumer);
+  return linkComponentsToNodeModules(components, bitMap, consumer);
 }
 
 export async function writeLinksInDist(component: Component, componentMap, bitMap: BitMap, consumer: Consumer) {
@@ -24,7 +25,7 @@ export async function writeLinksInDist(component: Component, componentMap, bitMa
   await linkGenerator.writeDependencyLinks([componentWithDeps], bitMap, consumer, false);
   const newMainFile = pathNormalizeToLinux(component.calculateMainDistFile());
   await component.updatePackageJsonAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
-  nodeModulesLinkComponents([component], bitMap, consumer);
+  linkComponentsToNodeModules([component], bitMap, consumer);
   return linkGenerator.writeEntryPointsForComponent(component, bitMap, consumer);
 }
 
@@ -32,7 +33,7 @@ export async function writeLinksInDist(component: Component, componentMap, bitMa
  * an IMPORTED component might be NESTED before.
  * find those components and re-link all their dependents
  */
-export async function reLinkDirectlyImportedDependencies(
+async function reLinkDirectlyImportedDependencies(
   potentialDependencies: Component[],
   bitMap: BitMap,
   consumer: Consumer
@@ -47,5 +48,40 @@ export async function reLinkDirectlyImportedDependencies(
     components.map(component => component.toComponentWithDependencies(bitMap, consumer))
   );
   await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, consumer, false);
-  nodeModulesLinkComponents(components, bitMap, consumer);
+  linkComponentsToNodeModules(components, bitMap, consumer);
+}
+
+/**
+ * link the components after import.
+ * this process contains the following steps:
+ * 1) writing link files to connect imported components to their dependencies
+ * 2) writing index.js files (entry-point files) in the root directories of each one of the imported and dependencies components.
+ * 3) creating symlinks from components directories to node_modules
+ * 4) in case a component was nested and now imported directly, re-link its dependents
+ */
+export async function linkComponents(
+  componentsWithDependencies: ComponentWithDependencies[],
+  writtenComponents: Component[],
+  writtenDependencies: ?(Component[]),
+  bitMap: BitMap,
+  consumer: Consumer,
+  createNpmLinkFiles: boolean
+) {
+  const allComponents = writtenDependencies
+    ? [...writtenComponents, ...R.flatten(writtenDependencies)]
+    : writtenComponents;
+  await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, consumer, createNpmLinkFiles);
+  if (writtenDependencies) {
+    await Promise.all(
+      R.flatten(writtenDependencies).map(component =>
+        linkGenerator.writeEntryPointsForComponent(component, bitMap, consumer)
+      )
+    );
+  }
+  await Promise.all(
+    writtenComponents.map(component => linkGenerator.writeEntryPointsForComponent(component, bitMap, consumer))
+  );
+  linkComponentsToNodeModules(allComponents, bitMap, consumer);
+  await reLinkDirectlyImportedDependencies(writtenComponents, bitMap, consumer);
+  return allComponents;
 }

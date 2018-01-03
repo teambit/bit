@@ -28,7 +28,7 @@ import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
 import { getSync } from '../../api/consumer/lib/global-config';
-import { generateEntryPointDataForPackages, writeLinksInDist } from '../../links';
+import { writeLinksInDist } from '../../links';
 import { Component as ModelComponent } from '../../scope/models';
 import {
   DEFAULT_BOX_NAME,
@@ -232,6 +232,12 @@ export default class Component {
     }).write({ bitDir, override: force });
   }
 
+  getPackageNameAndPath(): Promise<any> {
+    const packagePath = `${this.bindingPrefix}/${this.id.box}/${this.id.name}`;
+    const packageName = this.id.toStringWithoutVersion();
+    return { packageName, packagePath };
+  }
+
   writePackageJson(
     driver: Driver,
     bitDir: string,
@@ -259,7 +265,7 @@ export default class Component {
         )
         : [];
       postInstallLinkData = !R.isEmpty(componentsRequiredByFullPath)
-        ? componentsRequiredByFullPath.map(component => generateEntryPointDataForPackages(component))
+        ? componentsRequiredByFullPath.map(component => component.getPackageNameAndPath())
         : [];
     }
 

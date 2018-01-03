@@ -1,17 +1,4 @@
 import linkComponentsToNodeModules from './node-modules-linker';
-import { linkAllToNodeModules, writeLinksInDist, reLinkDirectlyImportedDependencies } from './linker';
-import {
-  writeEntryPointsForComponent,
-  writeDependencyLinks,
-  generateEntryPointDataForPackages
-} from './link-generator';
+import { linkComponents, linkAllToNodeModules, writeLinksInDist } from './linker';
 
-export {
-  linkComponentsToNodeModules,
-  linkAllToNodeModules,
-  writeLinksInDist,
-  reLinkDirectlyImportedDependencies,
-  writeEntryPointsForComponent,
-  writeDependencyLinks,
-  generateEntryPointDataForPackages
-};
+export { linkComponents, linkComponentsToNodeModules, linkAllToNodeModules, writeLinksInDist };

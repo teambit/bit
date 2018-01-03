@@ -346,10 +346,4 @@ async function writeEntryPointsForComponent(component: Component, bitMap: BitMap
   return outputFile({ filePath: entryPointPath, content: entryPointFileContent, override: false });
 }
 
-function generateEntryPointDataForPackages(component: Component): Promise<any> {
-  const packagePath = `${component.bindingPrefix}/${component.id.box}/${component.id.name}`;
-  const packageName = component.id.toStringWithoutVersion();
-  return { packageName, packagePath };
-}
-
-export { writeEntryPointsForComponent, writeDependencyLinks, generateEntryPointDataForPackages };
+export { writeEntryPointsForComponent, writeDependencyLinks };

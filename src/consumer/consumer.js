@@ -40,12 +40,7 @@ import MissingFilesFromComponent from './component/exceptions/missing-files-from
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import npmClient from '../npm-client';
 import { RemovedLocalObjects } from '../scope/component-remove';
-import {
-  reLinkDirectlyImportedDependencies,
-  writeEntryPointsForComponent,
-  writeDependencyLinks,
-  linkComponentsToNodeModules
-} from '../links';
+import { linkComponents } from '../links';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -576,27 +571,23 @@ export default class Consumer {
         // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
         // and namespace can co-exist with different versions.
         const componentMap = bitMap.getComponent(dep.id.toString(), false);
-        return dep
-          .write({
-            bitDir: depBitPath,
-            force,
-            bitMap,
-            withPackageJson,
-            origin: COMPONENT_ORIGINS.NESTED,
-            parent: componentWithDeps.component.id,
-            consumer: this,
-            dependencies: dep.dependencies,
-            componentMap
-          })
-          .then(() => writeEntryPointsForComponent(dep, bitMap, this))
-          .then(() => dep);
+        return dep.write({
+          bitDir: depBitPath,
+          force,
+          bitMap,
+          withPackageJson,
+          origin: COMPONENT_ORIGINS.NESTED,
+          parent: componentWithDeps.component.id,
+          consumer: this,
+          dependencies: dep.dependencies,
+          componentMap
+        });
       });
 
       return Promise.all(writeDependenciesP);
     });
     const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
     const writtenDependencies = writtenDependenciesIncludesNull.filter(dep => dep);
-
     if (writeToPath) {
       componentsWithDependencies.forEach((componentWithDeps) => {
         const relativeWrittenPath = this.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
@@ -606,20 +597,17 @@ export default class Consumer {
         }
       });
     }
-    await writeDependencyLinks(componentsWithDependencies, bitMap, this, createNpmLinkFiles);
-    await Promise.all(
-      componentsWithDependencies.map(componentWithDependencies =>
-        writeEntryPointsForComponent(componentWithDependencies.component, bitMap, this)
-      )
-    );
     await bitMap.write();
     if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
-    const allComponents = writtenDependencies
-      ? [...writtenComponents, ...R.flatten(writtenDependencies)]
-      : writtenComponents;
-    linkComponentsToNodeModules(allComponents, bitMap, this);
-    await reLinkDirectlyImportedDependencies(writtenComponents, bitMap, this);
-    return allComponents;
+
+    return linkComponents(
+      componentsWithDependencies,
+      writtenComponents,
+      writtenDependencies,
+      bitMap,
+      this,
+      createNpmLinkFiles
+    );
   }
 
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
