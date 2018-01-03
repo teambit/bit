@@ -303,7 +303,9 @@ async function writeDependencyLinks(
       );
       return Promise.resolve();
     }
+    // it must be IMPORTED. We don't pass NESTED to this function
     logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
+    componentWithDeps.component.stripOriginallySharedDir(bitMap);
 
     const directLinksP = componentLinks(componentWithDeps.dependencies, componentWithDeps.component, componentMap);
 
@@ -338,8 +340,10 @@ async function writeEntryPointsForImportedComponent(
   if (component.dists && component._writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
     const distDir = component.getDistDirForConsumer(consumer, componentMap.rootDir);
     const entryPointDist = path.join(distDir, indexName);
+    logger.debug(`writeEntryPointFile, on ${entryPointDist}`);
     await outputFile({ filePath: entryPointDist, content: entryPointFileContent, override: false });
   }
+  logger.debug(`writeEntryPointFile, on ${entryPointPath}`);
   return outputFile({ filePath: entryPointPath, content: entryPointFileContent, override: false });
 }
 function generateEntryPointDataForPackages(component: Component): Promise<any> {

@@ -249,7 +249,7 @@ export default class Consumer {
         }
         throw err;
       }
-      component.originallySharedDir = componentMap.originallySharedDir;
+      component.originallySharedDir = componentMap.originallySharedDir || null;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // no need to resolve dependencies
@@ -616,7 +616,26 @@ export default class Consumer {
       ? [...writtenComponents, ...R.flatten(writtenDependencies)]
       : writtenComponents;
     this.linkComponents(allComponents, bitMap);
+    await this.reLinkDirectlyImportedDependencies(writtenComponents, bitMap);
     return allComponents;
+  }
+
+  /**
+   * an IMPORTED component might be NESTED before.
+   * find those components and re-link all their dependents
+   */
+  async reLinkDirectlyImportedDependencies(potentialDependencies: Component[], bitMap: BitMap): void {
+    const fsComponents = bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+    const fsComponentsIds = Object.keys(fsComponents).map(component => BitId.parse(component));
+    const potentialDependenciesIds = potentialDependencies.map(c => c.id);
+    const components = await this.scope.findDirectDependentComponents(fsComponentsIds, potentialDependenciesIds);
+    if (!components.length) return;
+    logger.debug('reLinkDirectlyImportedDependencies: found components to re-link');
+    const componentsWithDependencies = await Promise.all(
+      components.map(component => component.toComponentWithDependencies(bitMap, this))
+    );
+    await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, this, false);
+    this.linkComponents(components, bitMap);
   }
 
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
@@ -966,18 +985,7 @@ export default class Consumer {
   }
 
   async writeLinksInDist(component: Component, componentMap, bitMap: BitMap) {
-    const getDependencies = () => {
-      return component.dependencies.map((dependency) => {
-        if (bitMap.isExistWithSameVersion(dependency.id)) {
-          return this.loadComponent(dependency.id);
-        }
-        // when dependencies are imported as npm packages, they are not in bit.map
-        component.dependenciesSavedAsComponents = false;
-        return this.scope.loadComponent(dependency.id, false);
-      });
-    };
-    const dependencies = await Promise.all(getDependencies());
-    const componentWithDeps = new ComponentWithDependencies({ component, dependencies });
+    const componentWithDeps = await component.toComponentWithDependencies(bitMap, this);
     await linkGenerator.writeDependencyLinks([componentWithDeps], bitMap, this, false);
     const newMainFile = pathNormalizeToLinux(component.calculateMainDistFile());
     await component.updatePackageJsonAttribute(this, componentMap.rootDir, 'main', newMainFile);
