@@ -68,7 +68,9 @@ export default (async function addAction(
           const parsedBitId = BitId.parse(bitMapComponentId);
           // throw error in case user didnt add id to imported component or the id is incorrect
           if (!id) throw new MissingComponentIdForImportedComponent(parsedBitId.toStringWithoutVersion());
-          if (bitMapComponentId !== id) { throw new IncorrectIdForImportedComponent(parsedBitId.toStringWithoutVersion(), id); }
+          if (bitMapComponentId !== id) {
+            throw new IncorrectIdForImportedComponent(parsedBitId.toStringWithoutVersion(), id);
+          }
 
           const potentialComponent = clone(foundComponentFromBitMap[bitMapComponentId]);
           const tempFile = path.relative(potentialComponent.rootDir, file.relativePath);

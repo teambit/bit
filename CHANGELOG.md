@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#495](https://github.com/teambit/bit/issues/495) support adding files to imported components and ignoring existing files
+
 ## [0.12.0-ext.10] - 2017-12-27
 
 - add unsafe-perm for installing packages inside components

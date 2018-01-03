@@ -38,7 +38,7 @@ describe('bit add command', function () {
       expect(output).to.contain('tracking component bar/foo');
     });
   });
-  describe('add imported component', () => {
+  describe('add to imported component', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const remote = helper.remoteScopePath;
@@ -50,10 +50,34 @@ describe('bit add command', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope(remote);
       helper.importComponent('bar/foo');
-      helper.addComponent('.', path.join(helper.localScopePath, 'components', 'bar', 'foo'));
     });
-
+    it('Should throw error when trying to add files to imported component without specifying id', () => {
+      const addCmd = () => helper.addComponent('.', path.join(helper.localScopePath, 'components', 'bar', 'foo'));
+      expect(addCmd).to.throw(
+        `error - unable to add new files to the imported component "${
+          helper.remoteScope
+        }/bar/foo" without specifying '--id`
+      );
+    });
+    it('Should throw error when trying to add files to imported component without specifying correct id', () => {
+      const addCmd = () =>
+        helper.addComponentWithOptions(
+          '.',
+          { i: 'test/test' },
+          path.join(helper.localScopePath, 'components', 'bar', 'foo')
+        );
+      expect(addCmd).to.throw(
+        `error - unable to add new files from the root directory of the imported component  "${
+          helper.remoteScope
+        }/bar/foo" to "test/test`
+      );
+    });
     it('Should not add files to imported component', () => {
+      helper.addComponentWithOptions(
+        '.',
+        { i: 'bar/foo' },
+        path.join(helper.localScopePath, 'components', 'bar', 'foo')
+      );
       const expectTestFile = { relativePath: 'foo.js', test: false, name: 'foo.js' };
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
@@ -65,7 +89,11 @@ describe('bit add command', function () {
     });
     it('Should only add new files to imported component', () => {
       helper.createFile(path.join('components', 'bar', 'foo', 'testDir'), 'newFile.js', 'console.log("test");');
-      helper.addComponent('.', path.join(helper.localScopePath, 'components', 'bar', 'foo'));
+      helper.addComponentWithOptions(
+        '.',
+        { i: 'bar/foo' },
+        path.join(helper.localScopePath, 'components', 'bar', 'foo')
+      );
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
       const component = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
@@ -79,7 +107,10 @@ describe('bit add command', function () {
       helper.createFile(path.join('components', 'bar', 'foo', 'testDir'), 'test.spec.js', 'console.log("test");');
       helper.addComponentWithOptions(
         'testDir/test.spec.js',
-        { t: 'testDir/test.spec.js' },
+        {
+          t: 'testDir/test.spec.js',
+          i: 'bar/foo'
+        },
         path.join(helper.localScopePath, 'components', 'bar', 'foo')
       );
       const bitMap = helper.readBitMap();
