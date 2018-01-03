@@ -40,6 +40,8 @@ import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compar
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import PathNotExists from '../api/consumer/lib/exceptions/path-not-exists';
+import MissingComponentIdForImportedComponent from '../api/consumer/lib/exceptions/change-imported-name';
+import IncorrectIdForImportedComponent from '../api/consumer/lib/exceptions/incorrect-id-imported-component';
 import NoFiles from '../api/consumer/lib/exceptions/no-files';
 import DuplicateIds from '../api/consumer/lib/exceptions/duplicate-ids';
 
@@ -149,6 +151,17 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   ],
   [MissingBitMapComponent, err => `fatal: the component ${chalk.bold(err.id)} was not found in the bit.map file`],
   [PathNotExists, err => `fatal: the file "${chalk.bold(err.path)}" was not found`],
+  [
+    MissingComponentIdForImportedComponent,
+    err => `error - unable to add new files to the imported component "${chalk.bold(err.id)}" without specifying '--id`
+  ],
+  [
+    IncorrectIdForImportedComponent,
+    err =>
+      `error - unable to add new files from the root directory of the imported component  "${chalk.bold(
+        err.importedId
+      )}" to "${chalk.bold(err.newId)}"`
+  ],
   [
     NoFiles,
     err =>

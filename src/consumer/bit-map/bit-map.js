@@ -359,6 +359,17 @@ export default class BitMap {
   }
 
   /**
+   * Return a potential componentMap if file is supposed to be part of it
+   * by a path exist in the files object
+   *
+   * @param {string} componentPath relative to consumer - as stored in bit.map files object
+   * @returns {ComponentMap} componentMap
+   */
+  getComponentObjectOfFileByPath(componentPath: string): BitMapComponents {
+    const components = this.getAllComponents();
+    return R.pickBy(component => pathIsInside(componentPath, component.rootDir || this.projectRoot), components);
+  }
+  /**
    *
    * Return the full component object by a root path for the component, means:
    * {
@@ -399,17 +410,6 @@ export default class BitMap {
     return this.paths[componentPath];
   }
 
-  /**
-   * Return a potential componentMap if file is supposed to be part of it
-   * by a path exist in the files object
-   *
-   * @param {string} componentPath relative to consumer - as stored in bit.map files object
-   * @returns {ComponentMap} componentMap
-   */
-  findPotentialComponentOwnerForFile(componentPath: string, consumerPath: string): ComponentMap {
-    const components = this.getAllComponents();
-    return find(components, component => pathIsInside(componentPath, component.rootDir || consumerPath));
-  }
   _populateAllPaths() {
     if (R.isEmpty(this.paths)) {
       Object.keys(this.components).forEach((componentId) => {
