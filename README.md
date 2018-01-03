@@ -15,37 +15,35 @@
 
 [Community](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/)
 
-**Bit** - Build applications with reusable components, in a component-driven distributed workflow.
+**Bit** - Share components directly from your project's source code without changing it, organize them in curated collections and sync them in all your projects.
 
-Bit integrates into your existing ecosystem (Git, Yarn, NPM) and creates a lightning-fast experience for sharing code between projects and teams. You can easily isolate and share components directly from any project’s source code without changing it, and organize them as building blocks for your team to use in different projects and build new things. 
+Bit cuts the time and overhead for sharing and managing components as a team, eliminates the maintenance overhead of additional repositories and packages for sharing code, helps to keep your code DRY and saves your time & effort for building new things.
 
-It cuts the time for building new applications and features, eliminates the maintenance overhead of additional repositories and packages for sharing code, helps to keep your code DRY and saves your time & resources for building new features and applications.
+- **Isolate and share** components directly from any path in your repository, without changing your source-code.
 
-**Distributed component development workflow**
+- **Organize components** in curated collections on the cloud (or on your own server) to make them discoverable for your team. 
 
-- Quickly isolate and share components directly from any path in your repository, without changing your source-code or having to maintain additional repos/packages.
+- **Collaborate and develop** on components from different repositories in a distributed workflow, while keeping a single source of truth.
 
-- Organize components in curated collections to make them discoverable for you and your team. Extend Bit to visually render, test, compile and parse useful information for your components without having to spend hours writing documentation.
+- **Install components** using **Yarn or NPM**, even if shared with Bit.
 
-- Source and develop components from different repositories, while collaborating with a single source of truth.
+- **Learn and control** exactly which components are being used by who and where, and make multiple component changes in multiple projects without breaking a single one of them.
 
-- Install components using Yarn or NPM, even if shared with Bit.
+- **Extend** Bit to visually render, test, compile and parse useful information for your components without having to spend hours writing documentation.
 
-- Easily learn exactly which components are being used by who and where, and make multiple component changes in multiple projects without breaking a single one of them.
 
 Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
 ## Use Cases
 
-**UI / Web components**: Organize, share and reuse React, Vue and Angular components between projects.
+**UI / Web components**: Organize, share and manage React, Vue and Angular components.
 * Tutorial: [Bit with React](https://docs.bitsrc.io/react-tutorial.html).
 * An [example React app](https://github.com/itaymendel/movie-app) with 9 React components shared and made [individually available](https://bitsrc.io/bit/movie-app) with Bit.
 
-**Node.js modules**: Share and sync Node.js components between micro-services in a multi-repo architecture.
+**Node.js modules**: Share and sync Node.js modules between micro-services in a multi-repo architecture.
 * Tutorial: [Bit with Node.js](https://docs.bitsrc.io/node-tutorial.html).
 
-**Shared Libraries**: use Bit to easily turn any shared-lib into a dynamic collection of individual components.
-
+**Shared Libraries**: use Bit to easily turn any shared-lib into a dynamic collection of individual components in minutes.
 
 * Tutorial: [Bit with Shared Libraries](https://docs.bitsrc.io/shared-lib-main.html).
 

@@ -411,10 +411,19 @@ export default class Consumer {
     force?: boolean = false,
     dist?: boolean = false,
     conf?: boolean = false,
-    installNpmPackages?: boolean = true,
-    saveDependenciesAsComponents?: boolean = false
+    installNpmPackages?: boolean = true
   ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
     loader.start(BEFORE_IMPORT_ACTION);
+    let saveDependenciesAsComponents = this.bitJson.saveDependenciesAsComponents;
+    if (!withPackageJson) {
+      // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
+      installNpmPackages = false;
+      saveDependenciesAsComponents = true;
+    }
+    if (!installNpmPackages) {
+      // if npm packages are not installed, don't install dependencies as npm packages
+      saveDependenciesAsComponents = true;
+    }
     if (!rawIds || R.isEmpty(rawIds)) {
       return this.importAccordingToBitJsonAndBitMap(
         verbose,
@@ -613,9 +622,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);

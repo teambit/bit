@@ -16,7 +16,7 @@ describe('importing bit components from bitsrc.io', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('without --save-dependencies-as-components flag', () => {
+  describe('when saveDependenciesAsComponents is the default (FALSE) in consumer bit.json', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.runCmd(`bit import ${componentTestId}`);
@@ -51,10 +51,11 @@ describe('importing bit components from bitsrc.io', function () {
       expect(output.includes('bar/foo')).to.be.false;
     });
   });
-  describe('with --save-dependencies-as-components flag', () => {
+  describe('when saveDependenciesAsComponents is set to TRUE in consumer bit.json', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.runCmd(`bit import ${componentTestId} --save-dependencies-as-components`);
+      helper.modifyFieldInBitJson('saveDependenciesAsComponents', true);
+      helper.runCmd(`bit import ${componentTestId}`);
     });
     it('should save the dependencies as bit components inside the component directory', () => {
       expect(path.join(helper.localScopePath, 'components', '.dependencies')).to.be.a.path();

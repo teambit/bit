@@ -23,7 +23,6 @@ export default class Import extends Command {
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'dist', 'write dist files (when exist) to the configured directory'],
     ['', 'conf', 'write the configuration file (bit.json)'],
-    ['', 'save-dependencies-as-components', 'save hub dependencies as bit components rather than npm packages'],
     [
       '',
       'skip-npm-install',
@@ -52,7 +51,6 @@ export default class Import extends Command {
       dist = false,
       conf = false,
       skipNpmInstall = false,
-      saveDependenciesAsComponents = false,
       ignorePackageJson = false
     }: {
       tester?: boolean,
@@ -66,7 +64,6 @@ export default class Import extends Command {
       dist?: boolean,
       conf?: boolean,
       skipNpmInstall?: boolean,
-      saveDependenciesAsComponents?: boolean,
       ignorePackageJson?: boolean
     }
   ): Promise<any> {
@@ -86,8 +83,7 @@ export default class Import extends Command {
       dist,
       conf,
       installNpmPackages: !skipNpmInstall,
-      withPackageJson: !ignorePackageJson,
-      saveDependenciesAsComponents
+      withPackageJson: !ignorePackageJson
     }).then(importResults => R.assoc('displayDependencies', displayDependencies, importResults));
   }
 

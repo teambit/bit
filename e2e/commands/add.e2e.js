@@ -272,6 +272,30 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo1');
       expect(bitMap['bar/foo1'].origin).to.equal('AUTHORED');
     });
+    it('Should prevent adding a file with invalid keys in namespace', () => {
+      let errMsg;
+      helper.createComponentBarFoo();
+      try {
+        helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar.f/foo' });
+      } catch (err) {
+        errMsg = err.message;
+      }
+      expect(errMsg).to.have.string(
+        'id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]'
+      );
+    });
+    it('Should prevent adding a file with invalid keys in ID', () => {
+      let errMsg;
+      helper.createComponentBarFoo();
+      try {
+        helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/fo.o' });
+      } catch (err) {
+        errMsg = err.message;
+      }
+      expect(errMsg).to.have.string(
+        'id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]'
+      );
+    });
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
     it.skip('should not allow adding a component with an existing box-name and component-name', () => {});
   });
