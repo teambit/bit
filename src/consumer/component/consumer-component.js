@@ -99,7 +99,7 @@ export default class Component {
   writtenPath: ?string; // needed for generate links
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
   originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
-  _wasOriginallySharedDirStripped: ?boolean;
+  _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
   _writeDistsFiles: ?boolean = true;
   _areDistsInsideComponentDir: ?boolean = true;
   isolatedEnvironment: IsolatedEnvironment;
@@ -963,7 +963,7 @@ export default class Component {
    * find a shared directory among the files of the main component and its dependencies
    */
   setOriginallySharedDir() {
-    if (this.originallySharedDir) return;
+    if (this.originallySharedDir !== undefined) return;
     // taken from https://stackoverflow.com/questions/1916218/find-the-longest-common-starting-substring-in-a-set-of-strings
     // It sorts the array, and then looks just at the first and last items
     const sharedStartOfArray = (array) => {

@@ -340,8 +340,10 @@ async function writeEntryPointsForImportedComponent(
   if (component.dists && component._writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
     const distDir = component.getDistDirForConsumer(consumer, componentMap.rootDir);
     const entryPointDist = path.join(distDir, indexName);
+    logger.debug(`writeEntryPointFile, on ${entryPointDist}`);
     await outputFile({ filePath: entryPointDist, content: entryPointFileContent, override: false });
   }
+  logger.debug(`writeEntryPointFile, on ${entryPointPath}`);
   return outputFile({ filePath: entryPointPath, content: entryPointFileContent, override: false });
 }
 function generateEntryPointDataForPackages(component: Component): Promise<any> {

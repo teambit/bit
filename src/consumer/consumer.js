@@ -249,7 +249,7 @@ export default class Consumer {
         }
         throw err;
       }
-      component.originallySharedDir = componentMap.originallySharedDir;
+      component.originallySharedDir = componentMap.originallySharedDir || null;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // no need to resolve dependencies
@@ -630,6 +630,7 @@ export default class Consumer {
     const potentialDependenciesIds = potentialDependencies.map(c => c.id);
     const components = await this.scope.findDirectDependentComponents(fsComponentsIds, potentialDependenciesIds);
     if (!components.length) return;
+    logger.debug('reLinkDirectlyImportedDependencies: found components to re-link');
     const componentsWithDependencies = await Promise.all(
       components.map(component => component.toComponentWithDependencies(bitMap, this))
     );
