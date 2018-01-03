@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
-import { mkdirp, isString, pathNormalizeToLinux, searchFilesIgnoreExt, getWithoutExt } from '../../utils';
+import { mkdirp, isString, pathNormalizeToLinux, searchFilesIgnoreExt } from '../../utils';
 import BitJson from '../bit-json';
 import { Impl, Specs, Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -28,9 +28,8 @@ import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
 import { getSync } from '../../api/consumer/lib/global-config';
-import * as linkGenerator from './link-generator';
+import { generateEntryPointDataForPackages, writeLinksInDist } from '../../links';
 import { Component as ModelComponent } from '../../scope/models';
-
 import {
   DEFAULT_BOX_NAME,
   LATEST_BIT_VERSION,
@@ -260,7 +259,7 @@ export default class Component {
         )
         : [];
       postInstallLinkData = !R.isEmpty(componentsRequiredByFullPath)
-        ? componentsRequiredByFullPath.map(component => linkGenerator.generateEntryPointDataForPackages(component))
+        ? componentsRequiredByFullPath.map(component => generateEntryPointDataForPackages(component))
         : [];
     }
 
@@ -640,7 +639,7 @@ export default class Component {
     }
     const saveDist = this.dists.map(distFile => distFile.write());
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-      await consumer.writeLinksInDist(this, componentMap, bitMap);
+      await writeLinksInDist(this, componentMap, bitMap, consumer);
     }
     return Promise.all(saveDist);
   }
