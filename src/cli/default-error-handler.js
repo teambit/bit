@@ -40,7 +40,7 @@ import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compar
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import PathNotExists from '../api/consumer/lib/exceptions/path-not-exists';
-import MissingComponentIdForImportedComponent from '../api/consumer/lib/exceptions/change-imported-name';
+import MissingComponentIdForImportedComponent from '../api/consumer/lib/exceptions/missing-id-imported-component';
 import IncorrectIdForImportedComponent from '../api/consumer/lib/exceptions/incorrect-id-imported-component';
 import NoFiles from '../api/consumer/lib/exceptions/no-files';
 import DuplicateIds from '../api/consumer/lib/exceptions/duplicate-ids';

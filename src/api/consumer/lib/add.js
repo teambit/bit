@@ -26,7 +26,7 @@ import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS, REGEX_PATTERN, AUTO_GENERATED_STAMP } from '../../../constants';
 import logger from '../../../logger/logger';
 import PathNotExists from './exceptions/path-not-exists';
-import MissingComponentIdForImportedComponent from './exceptions/change-imported-name';
+import MissingComponentIdForImportedComponent from './exceptions/missing-id-imported-component';
 import IncorrectIdForImportedComponent from './exceptions/incorrect-id-imported-component';
 import NoFiles from './exceptions/no-files';
 import DuplicateIds from './exceptions/duplicate-ids';
