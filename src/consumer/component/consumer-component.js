@@ -247,7 +247,6 @@ export default class Component {
   ): Promise<boolean> {
     const registryDomainPrefix = getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
     const PackageJson = driver.getDriver(false).PackageJson;
-    const name = `${this.box}/${this.name}`;
     let postInstallLinkData = [];
     const mainFile = this.calculateMainDistFile();
     // Replace all the / with - because / is not valid on package.json name key
@@ -269,8 +268,10 @@ export default class Component {
         : [];
     }
 
+    const domainPrefix = getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
+    const name = `${domainPrefix}/${this.id.toStringWithoutVersion().replace(/\//g, '.')}`;
     const packageJson = new PackageJson(bitDir, {
-      name: this.id.toStringWithoutVersion(),
+      name,
       version: this.version,
       homepage: this._getHomepage(),
       main: mainFile,
@@ -279,7 +280,6 @@ export default class Component {
       componentRootFolder: bitDir,
       license: `SEE LICENSE IN ${!R.isEmpty(this.license) ? 'LICENSE' : 'UNLICENSED'}`
     });
-    const domainPrefix = getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
     packageJson.setDependencies(this.packageDependencies, bitDependencies, registryDomainPrefix);
     packageJson.setScripts(postInstallLinkData, domainPrefix);
 

@@ -8,7 +8,6 @@ export default class BitStructure {
   constructor(componentsDefaultDirectory, dependenciesDirectory) {
     this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTES_DIR_PATH;
     this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
-    console.log('dsffds');
   }
 
   _getComponentStructurePart(componentStructure: string, componentPart: string): string {
@@ -23,7 +22,9 @@ export default class BitStructure {
         return 'version';
       default:
         throw new Error(`the ${componentPart} part of the component structure
-           ${componentStructure} is invalid, it must be one of the following: "name", "namespace", "scope" or "version" `);
+           ${
+  componentStructure
+} is invalid, it must be one of the following: "name", "namespace", "scope" or "version" `);
     }
   }
 
