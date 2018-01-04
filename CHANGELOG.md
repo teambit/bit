@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- when a nested dependency is imported directly, re-link all its dependents
+- [#527](https://github.com/teambit/bit/issues/527) rename structure property in bit.json
 - [#500](https://github.com/teambit/bit/issues/500) files added under one component although it was not specified 
 
 

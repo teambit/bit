@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
-import { mkdirp, isString, pathNormalizeToLinux, searchFilesIgnoreExt, getWithoutExt } from '../../utils';
+import { mkdirp, isString, pathNormalizeToLinux, searchFilesIgnoreExt } from '../../utils';
 import BitJson from '../bit-json';
 import { Impl, Specs, Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -28,9 +28,8 @@ import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
 import { getSync } from '../../api/consumer/lib/global-config';
-import * as linkGenerator from './link-generator';
+import { writeLinksInDist } from '../../links';
 import { Component as ModelComponent } from '../../scope/models';
-
 import {
   DEFAULT_BOX_NAME,
   LATEST_BIT_VERSION,
@@ -43,6 +42,7 @@ import {
   DEFAULT_REGISTRY_DOMAIN_PREFIX,
   CFG_REGISTRY_DOMAIN_PREFIX
 } from '../../constants';
+import ComponentWithDependencies from '../../scope/component-dependencies';
 
 export type RelativePath = {
   sourceRelativePath: string,
@@ -98,6 +98,7 @@ export default class Component {
   writtenPath: ?string; // needed for generate links
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
   originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
+  _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
   _writeDistsFiles: ?boolean = true;
   _areDistsInsideComponentDir: ?boolean = true;
   isolatedEnvironment: IsolatedEnvironment;
@@ -231,6 +232,12 @@ export default class Component {
     }).write({ bitDir, override: force });
   }
 
+  getPackageNameAndPath(): Promise<any> {
+    const packagePath = `${this.bindingPrefix}/${this.id.box}/${this.id.name}`;
+    const packageName = this.id.toStringWithoutVersion();
+    return { packageName, packagePath };
+  }
+
   writePackageJson(
     driver: Driver,
     bitDir: string,
@@ -258,7 +265,7 @@ export default class Component {
         )
         : [];
       postInstallLinkData = !R.isEmpty(componentsRequiredByFullPath)
-        ? componentsRequiredByFullPath.map(component => linkGenerator.generateEntryPointDataForPackages(component))
+        ? componentsRequiredByFullPath.map(component => component.getPackageNameAndPath())
         : [];
     }
 
@@ -466,6 +473,7 @@ export default class Component {
    * imports it. NESTED and AUTHORED components are written as is.
    */
   stripOriginallySharedDir(bitMap: BitMap): void {
+    if (this._wasOriginallySharedDirStripped) return;
     this.setOriginallySharedDir();
     const originallySharedDir = this.originallySharedDir;
     const pathWithoutSharedDir = (pathStr, sharedDir, isLinuxFormat) => {
@@ -500,6 +508,7 @@ export default class Component {
         }
       });
     });
+    this._wasOriginallySharedDirStripped = true;
   }
 
   updateDistsPerConsumerBitJson(consumer: Consumer, componentMap: ComponentMap): void {
@@ -595,20 +604,13 @@ export default class Component {
     if (origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       // when a user imports a component that was a dependency before, write the component directly into the components
       // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
-      await this._writeToComponentDir({
-        bitDir: calculatedBitDir,
-        withBitJson,
-        withPackageJson,
-        driver,
-        force,
-        writeBitDependencies,
-        dependencies,
-        deleteBitDirContent
-      });
-      // todo: remove from the file system
+      const oldLocation = path.join(consumerPath, componentMap.rootDir);
+      logger.debug(
+        `deleting the old directory of a component at ${oldLocation}, the new directory is ${calculatedBitDir}`
+      );
+      fs.removeSync(oldLocation);
       bitMap.removeComponent(this.id.toString());
-      this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
-      return this;
+      componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
     this.updateDistsPerConsumerBitJson(consumer, componentMap);
@@ -643,7 +645,7 @@ export default class Component {
     }
     const saveDist = this.dists.map(distFile => distFile.write());
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-      await consumer.writeLinksInDist(this, componentMap, bitMap);
+      await writeLinksInDist(this, componentMap, bitMap, consumer);
     }
     return Promise.all(saveDist);
   }
@@ -966,7 +968,7 @@ export default class Component {
    * find a shared directory among the files of the main component and its dependencies
    */
   setOriginallySharedDir() {
-    if (this.originallySharedDir) return;
+    if (this.originallySharedDir !== undefined) return;
     // taken from https://stackoverflow.com/questions/1916218/find-the-longest-common-starting-substring-in-a-set-of-strings
     // It sorts the array, and then looks just at the first and last items
     const sharedStartOfArray = (array) => {
@@ -987,6 +989,21 @@ export default class Component {
     if (!sharedStart || !sharedStart.includes(pathSep)) return;
     const lastPathSeparator = sharedStart.lastIndexOf(pathSep);
     this.originallySharedDir = sharedStart.substring(0, lastPathSeparator);
+  }
+
+  async toComponentWithDependencies(bitMap: BitMap, consumer: Consumer): Promise<ComponentWithDependencies> {
+    const getDependencies = () => {
+      return this.dependencies.map((dependency) => {
+        if (bitMap.isExistWithSameVersion(dependency.id)) {
+          return consumer.loadComponent(dependency.id);
+        }
+        // when dependencies are imported as npm packages, they are not in bit.map
+        this.dependenciesSavedAsComponents = false;
+        return consumer.scope.loadComponent(dependency.id, false);
+      });
+    };
+    const dependencies = await Promise.all(getDependencies());
+    return new ComponentWithDependencies({ component: this, dependencies });
   }
 
   static fromObject(object: Object): Component {
