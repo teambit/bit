@@ -86,7 +86,7 @@ export const NODE_PATH_SEPARATOR = '.';
 
 export const DEFAULT_COMPONENTES_DIR_PATH = `${BITS_DIRNAME}/{namespace}/{name}`;
 
-export const DEFAULT_DIR_DEPENDENCIES = '.dependencies';
+export const DEFAULT_DIR_DEPENDENCIES_PATH = '.dependencies';
 
 export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPENDENCIES}`;
 
