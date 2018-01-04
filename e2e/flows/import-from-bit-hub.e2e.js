@@ -50,6 +50,10 @@ describe('importing bit components from bitsrc.io', function () {
       const output = helper.runCmd('bit status');
       expect(output.includes('bar/foo')).to.be.false;
     });
+    it('should save the package name with the binding-prefix', () => {
+      const barFooPackageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components', 'bar', 'foo'));
+      expect(barFooPackageJson.name).to.equal('@bit/david.tests.bar.foo');
+    });
   });
   describe('when saveDependenciesAsComponents is set to TRUE in consumer bit.json', () => {
     before(() => {

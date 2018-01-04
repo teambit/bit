@@ -94,7 +94,7 @@ describe('typescript', function () {
         const packageJsonFolder = path.join(helper.localScopePath, 'components', 'bar', 'foo');
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
-          name: `${helper.remoteScope}.bar.foo`,
+          name: `@bit/${helper.remoteScope}.bar.foo`,
           version: '0.0.1',
           main: 'dist/bar/foo.js'
         });
@@ -113,7 +113,7 @@ describe('typescript', function () {
         const packageJsonFolder = path.join(helper.localScopePath, isStringPath);
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
-          name: `${helper.remoteScope}.utils.is-string`,
+          name: `@bit/${helper.remoteScope}.utils.is-string`,
           version: '0.0.1',
           main: 'dist/utils/is-string.js'
         });
@@ -132,7 +132,7 @@ describe('typescript', function () {
         const packageJsonFolder = path.join(helper.localScopePath, isTypePath);
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
         expect(packageJsonContent).to.deep.include({
-          name: `${helper.remoteScope}.utils.is-type`,
+          name: `@bit/${helper.remoteScope}.utils.is-type`,
           version: '0.0.1',
           main: 'dist/utils/is-type.js'
         });
