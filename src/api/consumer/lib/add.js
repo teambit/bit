@@ -131,6 +131,7 @@ export default (async function addAction(
 
     let componentExists = false;
     let parsedId: BitId;
+    let foundId;
     const updateIdAccordingToExistingComponent = (currentId) => {
       const existingComponentId = bitMap.getExistingComponentId(currentId);
       componentExists = !!existingComponentId;
@@ -140,12 +141,14 @@ export default (async function addAction(
       If you're trying to update a dependency component, please re-import it individually`);
       }
 
-      if (componentExists) id = existingComponentId;
+      if (componentExists) foundId = existingComponentId;
       parsedId = existingComponentId ? BitId.parse(existingComponentId) : BitId.parse(currentId);
     };
 
-    if (id) {
-      updateIdAccordingToExistingComponent(id);
+    const idOrFoundID = foundId || id;
+
+    if (idOrFoundID) {
+      updateIdAccordingToExistingComponent(idOrFoundID);
     }
 
     async function mergeTestFilesWithFiles(files: ComponentMapFile[]): ComponentMapFile[] {

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#500](https://github.com/teambit/bit/issues/500) files added under one component although it was not specified 
+
+
 ## [0.12.0-ext.11] - 2018-01-02
 
 - move `save-dependencies-as-components` flag from `bit import` command to be configurable in consumer bit.json
