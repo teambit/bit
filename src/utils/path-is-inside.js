@@ -1,3 +1,4 @@
+const { DEFAULT_SEPARATOR } = require('../constants');
 const path = require('path');
 
 module.exports = function (thePath, potentialParent) {
@@ -13,7 +14,7 @@ module.exports = function (thePath, potentialParent) {
 
   return (
     thePath.lastIndexOf(potentialParent, 0) === 0 &&
-    (thePath[potentialParent.length] === path.sep || thePath[potentialParent.length] === undefined)
+    (thePath[potentialParent.length] === DEFAULT_SEPARATOR || thePath[potentialParent.length] === undefined)
   );
 };
 
