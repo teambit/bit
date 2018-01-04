@@ -3,11 +3,12 @@ import R from 'ramda';
 import { DEFAULT_DIR_STRUCTURE, DEFAULT_DIR_DEPENDENCIES_STRUCTURE } from '../../constants';
 
 export default class BitStructure {
-  structureStr: string;
-  dependenciesDir: string;
-  constructor(structure: Object) {
-    this.structureStr = structure.components || DEFAULT_DIR_STRUCTURE;
-    this.dependenciesDir = structure.dependencies || DEFAULT_DIR_DEPENDENCIES_STRUCTURE;
+  componentsDefaultDirectory: string;
+  dependenciesDirectory: string;
+  constructor(componentsDefaultDirectory, dependenciesDirectory) {
+    this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_DIR_STRUCTURE;
+    this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DIR_DEPENDENCIES_STRUCTURE;
+    console.log('dsffds');
   }
 
   _getComponentStructurePart(componentStructure: string, componentPart: string): string {
@@ -27,11 +28,11 @@ export default class BitStructure {
   }
 
   get dependenciesDirStructure(): string {
-    return this.dependenciesDir;
+    return this.dependenciesDirectory;
   }
 
   get componentsDirStructure(): Object {
-    const dirStructure = this.structureStr;
+    const dirStructure = this.componentsDefaultDirectory;
     const staticParts = [];
     const dynamicParts = [];
     dirStructure.split('/').forEach((dir) => {

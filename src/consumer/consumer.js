@@ -93,7 +93,10 @@ export default class Consumer {
 
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
-      this._dirStructure = new DirStructure(this.bitJson.structure);
+      this._dirStructure = new DirStructure(
+        this.bitJson.componentsDefaultDirectory,
+        this.bitJson.dependenciesDirectory
+      );
     }
     return this._dirStructure;
   }
@@ -613,9 +616,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
