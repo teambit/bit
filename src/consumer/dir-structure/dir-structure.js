@@ -1,12 +1,12 @@
 // @flow
 import R from 'ramda';
-import { DEFAULT_COMPONENTES_DIR, DEFAULT_DEPENDENCIES_DIR } from '../../constants';
+import { DEFAULT_COMPONENTES_DIR_PATH, DEFAULT_DEPENDENCIES_DIR } from '../../constants';
 
 export default class BitStructure {
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   constructor(componentsDefaultDirectory, dependenciesDirectory) {
-    this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTES_DIR;
+    this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTES_DIR_PATH;
     this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR;
     console.log('dsffds');
   }
