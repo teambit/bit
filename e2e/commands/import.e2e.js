@@ -15,6 +15,10 @@ describe('bit import', function () {
     helper.destroyEnv();
   });
 
+  const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+  const isStringFixture =
+    "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+
   describe('stand alone component (without dependencies)', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -496,8 +500,7 @@ describe('bit import', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
 
-        const isTypeInternalFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.createComponent('utils', 'is-type-internal.js', isTypeInternalFixture);
+        helper.createComponent('utils', 'is-type-internal.js', isTypeFixture);
         const isTypeMainFixture = "module.exports = require('./is-type-internal');";
         helper.createComponent('utils', 'is-type-main.js', isTypeMainFixture);
         helper.addComponentWithOptions('utils/is-type-internal.js utils/is-type-main.js', {
@@ -694,11 +697,8 @@ describe('bit import', function () {
     let localConsumerFiles;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       const fooBarFixture =
@@ -880,12 +880,12 @@ describe('bit import', function () {
     let localConsumerFiles;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "export = isType; function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.ts', isTypeFixture);
+      const isTypeFixtureTS = "export = isType; function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.ts', isTypeFixtureTS);
       helper.addComponent('utils/is-type.ts');
-      const isStringFixture =
+      const isStringFixtureTS =
         "import * as isType from './is-type'; export = isString; function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.ts', isStringFixture);
+      helper.createComponent('utils', 'is-string.ts', isStringFixtureTS);
       helper.addComponent('utils/is-string.ts');
       const fooBarFixture =
         "import * as isString from '../utils/is-string'; export = foo; function foo() { return isString() + ' and got foo'; };";
@@ -1031,12 +1031,12 @@ describe('bit import', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler();
-      const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      const isTypeFixtureES6 = "export default function isType() { return 'got is-type'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixtureES6);
       helper.addComponent('utils/is-type.js');
-      const isStringFixture =
+      const isStringFixtureES6 =
         "import isType from './is-type.js'; export default function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createComponent('utils', 'is-string.js', isStringFixtureES6);
       helper.addComponent('utils/is-string.js');
       const fooBarFixture =
         "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
@@ -1221,11 +1221,8 @@ describe('bit import', function () {
      */
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
@@ -1332,12 +1329,11 @@ describe('bit import', function () {
       helper.addRemoteScope();
       helper.importComponent('utils/is-string');
 
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      const isStringFixture =
+      const isStringWithDepsFixture =
         "const isType = require('../../../utils/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('components/utils/is-string', 'is-string.js', isStringFixture); // modify utils/is-string
+      helper.createComponent('components/utils/is-string', 'is-string.js', isStringWithDepsFixture); // modify utils/is-string
       try {
         output = helper.commitAllComponents();
       } catch (err) {
@@ -1355,11 +1351,8 @@ describe('bit import', function () {
     let localConsumerFiles;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent(path.normalize('utils/is-type.js'));
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent(path.normalize('utils/is-string.js'));
       helper.commitAllComponents();
@@ -1412,8 +1405,6 @@ describe('bit import', function () {
       const isTypeFixtureV1 = "module.exports = function isType() { return 'got is-type v1'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixtureV1);
       helper.addComponent(path.normalize('utils/is-type.js'));
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent(path.normalize('utils/is-string.js'));
       helper.commitAllComponents();
@@ -1448,40 +1439,65 @@ describe('bit import', function () {
     });
   });
 
-  // @todo: fix this case. currently it does change it in the bit.map, but the link on the filesystem still direct to the .dependency dir
-  describe.skip('import component is-type as a dependency of is-string and then import is-type directly', () => {
-    let localConsumerFiles;
+  describe('creating two components: "is-type" and "is-string" while "is-string" depends on "is-type"', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent(path.normalize('utils/is-type.js'));
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent(path.normalize('utils/is-string.js'));
       helper.commitAllComponents();
       helper.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.importComponent('utils/is-string');
-      helper.importComponent('utils/is-type');
-      localConsumerFiles = helper.getConsumerFiles();
     });
-    it('should rewrite is-type directly into "components" directory', () => {
-      const expectedLocation = path.join('components', 'utils', 'is-type', 'is-type.js');
-      expect(localConsumerFiles).to.include(expectedLocation);
+    describe('import is-type as a dependency and then import it directly', () => {
+      let localConsumerFiles;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string'); // imports is-type as a dependency
+        helper.importComponent('utils/is-type');
+        localConsumerFiles = helper.getConsumerFiles();
+      });
+      it('should rewrite is-type directly into "components" directory', () => {
+        const expectedLocation = path.join('components', 'utils', 'is-type', 'is-type.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+      });
+      it('should update the existing record of is-type in bit.map from NESTED to IMPORTED', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+        expect(bitMap[`${helper.remoteScope}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
+      });
+      it('should not break the is-string component', () => {
+        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+        helper.createComponent(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+
+        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type v2 and got is-string');
+      });
     });
-    it('should update the existing record of is-type in bit.map from NESTED to IMPORTED', () => {
-      const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
-      expect(bitMap[`${helper.remoteScope}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
-    });
-    it('should not break the is-string component', () => {
-      const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-      const result = helper.runCmd('node app.js');
-      expect(result.trim()).to.equal('got is-type and got is-string');
+    describe('import is-type directly and then as a dependency', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-type');
+        helper.importComponent('utils/is-string'); // imports is-type as a dependency
+      });
+      it('should keep the existing record of is-type in bit.map as IMPORTED', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+        expect(bitMap[`${helper.remoteScope}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
+      });
+      it('changes of is-type in components directory should affect is-string', () => {
+        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+        helper.createComponent(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+
+        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type v2 and got is-string');
+      });
     });
   });
 
@@ -1489,11 +1505,8 @@ describe('bit import', function () {
     let scopeB;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
@@ -1536,11 +1549,8 @@ describe('bit import', function () {
     let localConsumerFiles;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
@@ -1655,11 +1665,8 @@ describe('bit import', function () {
     let localConsumerFiles;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createComponent(path.join('src', 'utils'), 'is-type.js', isTypeFixture);
       helper.addComponent('src/utils/is-type.js');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createComponent(path.join('src', 'utils'), 'is-string.js', isStringFixture);
       helper.addComponent('src/utils/is-string.js');
       const fooBarFixture =

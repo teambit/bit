@@ -8,6 +8,7 @@ import { BEFORE_EXPORT, BEFORE_EXPORTS } from '../../../cli/loader/loader-messag
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import IdExportedAlready from './exceptions/id-exported-already';
+import { linkComponentsToNodeModules } from '../../../links';
 
 async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string) {
   const componentsList = new ComponentsList(consumer);
@@ -68,7 +69,7 @@ async function linkComponents(ids: BitId[], consumer: Consumer, bitMap: BitMap):
   // some of the components might but authored, some might be imported.
   // when a component has dists, we need the consumer-component object to retrieve the dists info.
   const { components } = await consumer.loadComponents(ids);
-  consumer.linkComponents(components, bitMap);
+  linkComponentsToNodeModules(components, bitMap, consumer);
 }
 
 export default (async function exportAction(ids?: string[], remote: string, save: ?boolean) {
