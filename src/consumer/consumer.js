@@ -7,8 +7,6 @@ import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
 import partition from 'lodash.partition';
-import symlinkOrCopy from 'symlink-or-copy';
-import glob from 'glob';
 import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
@@ -35,15 +33,14 @@ import ComponentMap from './bit-map/component-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { getLatestVersionNumber, pathRelative, filterAsync, pathNormalizeToLinux } from '../utils';
-import * as linkGenerator from './component/link-generator';
+import { getLatestVersionNumber, filterAsync, pathNormalizeToLinux } from '../utils';
 import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
-import * as globalConfig from '../api/consumer/lib/global-config';
 import npmClient from '../npm-client';
-import { RemovedLocalObjects } from '../scope/component-remove.js';
+import { RemovedLocalObjects } from '../scope/component-remove';
+import { linkComponents } from '../links';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -249,7 +246,7 @@ export default class Consumer {
         }
         throw err;
       }
-      component.originallySharedDir = componentMap.originallySharedDir;
+      component.originallySharedDir = componentMap.originallySharedDir || null;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // no need to resolve dependencies
@@ -574,27 +571,23 @@ export default class Consumer {
         // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
         // and namespace can co-exist with different versions.
         const componentMap = bitMap.getComponent(dep.id.toString(), false);
-        return dep
-          .write({
-            bitDir: depBitPath,
-            force,
-            bitMap,
-            withPackageJson,
-            origin: COMPONENT_ORIGINS.NESTED,
-            parent: componentWithDeps.component.id,
-            consumer: this,
-            dependencies: dep.dependencies,
-            componentMap
-          })
-          .then(() => linkGenerator.writeEntryPointsForImportedComponent(dep, bitMap, this))
-          .then(() => dep);
+        return dep.write({
+          bitDir: depBitPath,
+          force,
+          bitMap,
+          withPackageJson,
+          origin: COMPONENT_ORIGINS.NESTED,
+          parent: componentWithDeps.component.id,
+          consumer: this,
+          dependencies: dep.dependencies,
+          componentMap
+        });
       });
 
       return Promise.all(writeDependenciesP);
     });
     const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
     const writtenDependencies = writtenDependenciesIncludesNull.filter(dep => dep);
-
     if (writeToPath) {
       componentsWithDependencies.forEach((componentWithDeps) => {
         const relativeWrittenPath = this.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
@@ -604,19 +597,17 @@ export default class Consumer {
         }
       });
     }
-    await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, this, createNpmLinkFiles);
-    await Promise.all(
-      componentsWithDependencies.map(componentWithDependencies =>
-        linkGenerator.writeEntryPointsForImportedComponent(componentWithDependencies.component, bitMap, this)
-      )
-    );
     await bitMap.write();
     if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
-    const allComponents = writtenDependencies
-      ? [...writtenComponents, ...R.flatten(writtenDependencies)]
-      : writtenComponents;
-    this.linkComponents(allComponents, bitMap);
-    return allComponents;
+
+    return linkComponents(
+      componentsWithDependencies,
+      writtenComponents,
+      writtenDependencies,
+      bitMap,
+      this,
+      createNpmLinkFiles
+    );
   }
 
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
@@ -820,169 +811,6 @@ export default class Consumer {
     const box = pathSplit[pathSplit.length - 2];
     const scope = pathSplit.length === 3 ? pathSplit[0] : `${pathSplit[0]}.${pathSplit[1]}`;
     return new BitId({ scope, box, name }).toString();
-  }
-
-  linkComponents(components: Component[], bitMap: BitMap): Object[] {
-    /**
-     * @param componentId
-     * @param srcPath the path where the symlink is pointing to
-     * @param destPath the path where to write the symlink
-     */
-    const createSymlinkOrCopy = (componentId, srcPath, destPath) => {
-      fs.removeSync(destPath); // in case a component has been moved
-      fs.ensureDirSync(path.dirname(destPath));
-      try {
-        logger.debug(`generating a symlink on ${destPath} pointing to ${srcPath}`);
-        symlinkOrCopy.sync(srcPath, destPath);
-      } catch (err) {
-        throw new Error(`failed to link a component ${componentId.toString()}.
-         Symlink (or copy for Windows) from: ${srcPath}, to: ${destPath} was failed.
-         Original error: ${err}`);
-      }
-    };
-    const writeDependencyLink = (parentRootDir: string, bitId: BitId, rootDir: string, bindingPrefix: string) => {
-      const relativeDestPath = Consumer.getNodeModulesPathOfComponent(bindingPrefix, bitId);
-      const destPath = path.join(parentRootDir, relativeDestPath);
-      createSymlinkOrCopy(bitId, rootDir, destPath);
-
-      return { from: parentRootDir, to: rootDir };
-    };
-
-    const writeDependenciesLinks = (component, componentMap) => {
-      return component.dependencies.map((dependency) => {
-        const dependencyComponentMap = bitMap.getComponent(dependency.id);
-        const writtenLinks = [];
-        writtenLinks.push(
-          writeDependencyLink(
-            path.join(this.getPath(), componentMap.rootDir),
-            dependency.id,
-            path.join(this.getPath(), dependencyComponentMap.rootDir),
-            component.bindingPrefix
-          )
-        );
-        if (!this.shouldDistsBeInsideTheComponent()) {
-          const from = component.getDistDirForConsumer(this, componentMap.rootDir);
-          const to = component.getDistDirForConsumer(this, dependencyComponentMap.rootDir);
-          writtenLinks.push(writeDependencyLink(from, dependency.id, to, component.bindingPrefix));
-          symlinkPackages(from, to);
-        }
-        return writtenLinks;
-      });
-    };
-
-    const writeMissingLinks = (component, componentMap) => {
-      return component.missingDependencies.missingLinks.map((dependencyIdStr) => {
-        const dependencyId = bitMap.getExistingComponentId(dependencyIdStr);
-        if (!dependencyId) return null;
-
-        const dependencyComponentMap = bitMap.getComponent(dependencyId);
-        return writeDependencyLink(
-          componentMap.rootDir,
-          BitId.parse(dependencyId),
-          dependencyComponentMap.rootDir,
-          component.bindingPrefix
-        );
-      });
-    };
-
-    /**
-     * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
-     * root-dir. The solution is to go through the node_modules packages one by one and symlink them.
-     */
-    const symlinkPackages = (from: string, to: string, dependenciesSavedAsComponents: boolean = true) => {
-      const fromNodeModules = path.join(from, 'node_modules');
-      const toNodeModules = path.join(to, 'node_modules');
-      const dirsIncludesBindingPrefix = glob.sync('*', { cwd: fromNodeModules });
-      // when dependenciesSavedAsComponents the node_modules/@bit has real link files, we don't want to touch them
-      // otherwise, node_modules/@bit has packages as any other directory in node_modules
-      const dirs = dependenciesSavedAsComponents
-        ? dirsIncludesBindingPrefix.filter(dir => dir !== this.bitJson.bindingPrefix)
-        : dirsIncludesBindingPrefix;
-      if (!dirs.length) return;
-      logger.debug(`deleting the content of ${toNodeModules}`);
-      fs.emptyDirSync(toNodeModules);
-      dirs.forEach((dir) => {
-        symlinkOrCopy.sync(path.join(fromNodeModules, dir), path.join(toNodeModules, dir));
-      });
-    };
-
-    return components.map((component) => {
-      const componentId = component.id;
-      logger.debug(`linking component: ${componentId}`);
-      const componentMap: ComponentMap = bitMap.getComponent(componentId, true);
-      if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-        const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(this.bitJson.bindingPrefix, componentId);
-        const linkPath = path.join(this.getPath(), relativeLinkPath);
-        // when a user moves the component directory, use component.writtenPath to find the correct target
-        const srcTarget = component.writtenPath || path.join(this.getPath(), componentMap.rootDir);
-        if (component.dists && component._writeDistsFiles && !this.shouldDistsBeInsideTheComponent()) {
-          const distTarget = component.getDistDirForConsumer(this, componentMap.rootDir);
-          symlinkPackages(srcTarget, distTarget, component.dependenciesSavedAsComponents);
-          createSymlinkOrCopy(componentId, distTarget, linkPath);
-        } else {
-          createSymlinkOrCopy(componentId, srcTarget, linkPath);
-        }
-
-        const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
-        const boundDependencies =
-          component.dependencies && component.dependenciesSavedAsComponents
-            ? writeDependenciesLinks(component, componentMap)
-            : [];
-        const boundMissingDependencies =
-          component.missingDependencies && component.missingDependencies.missingLinks
-            ? writeMissingLinks(component, componentMap)
-            : [];
-
-        return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
-      }
-      if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-        if (!component.dependencies) return { id: componentId, bound: null };
-        const bound = writeDependenciesLinks(component, componentMap);
-        return { id: componentId, bound };
-      }
-
-      // origin is AUTHORED
-      const filesToBind = componentMap.getFilesRelativeToConsumer();
-      const bound = filesToBind.map((file) => {
-        if (!componentId.scope) return { id: componentId, bound: null }; // scope is a must to generate the link
-        const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
-        const destRelative = pathRelative(path.dirname(dest), file);
-        const fileContent = `module.exports = require('${destRelative}');`;
-        fs.outputFileSync(dest, fileContent);
-        return { from: dest, to: file };
-      });
-      return { id: componentId, bound };
-    });
-  }
-
-  async linkAll() {
-    const bitMap = await this.getBitMap();
-    const componentsMaps = bitMap.getAllComponents();
-    if (R.isEmpty(componentsMaps)) throw new Error('nothing to link');
-    const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));
-    const { components } = await this.loadComponents(componentsIds);
-    // fs.removeSync(path.join(this.getPath(), 'node_modules', this.bitJson.bindingPrefix)); // todo: move to bit-javascript
-    return this.linkComponents(components, bitMap);
-  }
-
-  async writeLinksInDist(component: Component, componentMap, bitMap: BitMap) {
-    const getDependencies = () => {
-      return component.dependencies.map((dependency) => {
-        if (bitMap.isExistWithSameVersion(dependency.id)) {
-          return this.loadComponent(dependency.id);
-        }
-        // when dependencies are imported as npm packages, they are not in bit.map
-        component.dependenciesSavedAsComponents = false;
-        return this.scope.loadComponent(dependency.id, false);
-      });
-    };
-    const dependencies = await Promise.all(getDependencies());
-    const componentWithDeps = new ComponentWithDependencies({ component, dependencies });
-    await linkGenerator.writeDependencyLinks([componentWithDeps], bitMap, this, false);
-    const newMainFile = pathNormalizeToLinux(component.calculateMainDistFile());
-    await component.updatePackageJsonAttribute(this, componentMap.rootDir, 'main', newMainFile);
-    this.linkComponents([component], bitMap);
-    return linkGenerator.writeEntryPointsForImportedComponent(component, bitMap, this);
   }
 
   composeRelativeBitPath(bitId: BitId): string {
