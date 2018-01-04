@@ -4,7 +4,7 @@ import R from 'ramda';
 import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
 import { BitJsonNotFound, BitJsonAlreadyExists, InvalidBitJson } from './exceptions';
-import { BIT_JSON, DEFAULT_DIR_STRUCTURE, DEFAULT_DIR_DEPENDENCIES_STRUCTURE } from '../../constants';
+import { BIT_JSON, DEFAULT_COMPONENTES_DIR, DEFAULT_DEPENDENCIES_DIR } from '../../constants';
 
 function composePath(bitPath: string) {
   return path.join(bitPath, BIT_JSON);
@@ -41,8 +41,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
     super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
     this.distEntry = distEntry;
-    this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_DIR_STRUCTURE;
-    this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DIR_DEPENDENCIES_STRUCTURE;
+    this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTES_DIR;
+    this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR;
     this.saveDependenciesAsComponents = saveDependenciesAsComponents || false;
   }
 
