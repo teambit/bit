@@ -4,7 +4,7 @@ import R from 'ramda';
 import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
 import { BitJsonNotFound, BitJsonAlreadyExists, InvalidBitJson } from './exceptions';
-import { BIT_JSON, DEFAULT_DIR_STRUCTURE, DEFAULT_DIR_DEPENDENCIES_STRUCTURE } from '../../constants';
+import { BIT_JSON, DEFAULT_COMPONENTES_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';
 
 function composePath(bitPath: string) {
   return path.join(bitPath, BIT_JSON);
@@ -19,7 +19,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
   // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
   // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
   distEntry: ?string;
-  structure: Object; // directory structure templates where to store imported components and dependencies
+  componentsDefaultDirectory: string;
+  dependenciesDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
 
   constructor({
@@ -32,24 +33,24 @@ export default class ConsumerBitJson extends AbstractBitJson {
     lang,
     distTarget,
     distEntry,
-    structure,
+    componentsDefaultDirectory,
+    dependenciesDirectory,
     bindingPrefix,
     extensions
   }) {
     super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
     this.distEntry = distEntry;
-    this.structure = structure || {
-      components: DEFAULT_DIR_STRUCTURE,
-      dependencies: DEFAULT_DIR_DEPENDENCIES_STRUCTURE
-    };
+    this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTES_DIR_PATH;
+    this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
     this.saveDependenciesAsComponents = saveDependenciesAsComponents || false;
   }
 
   toPlainObject() {
     const superObject = super.toPlainObject();
     const consumerObject = R.merge(superObject, {
-      structure: this.structure,
+      componentsDefaultDirectory: this.componentsDefaultDirectory,
+      dependenciesDirectory: this.dependenciesDirectory,
       saveDependenciesAsComponents: this.saveDependenciesAsComponents
     });
     if (this.distEntry || this.distTarget) {
@@ -94,17 +95,13 @@ export default class ConsumerBitJson extends AbstractBitJson {
       env,
       dependencies,
       lang,
-      structure,
+      componentsDefaultDirectory,
+      dependenciesDirectory,
       dist,
       bindingPrefix,
       extensions,
       saveDependenciesAsComponents
     } = object;
-
-    // todo: this is a backward compatibility, remove it on the next major version
-    const finalStructure = R.is(String, structure)
-      ? { components: structure, dependencies: DEFAULT_DIR_DEPENDENCIES_STRUCTURE }
-      : structure;
 
     return new ConsumerBitJson({
       impl: R.propOr(undefined, 'impl', sources),
@@ -116,7 +113,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
       extensions,
       dependencies,
       saveDependenciesAsComponents,
-      structure: finalStructure || {},
+      componentsDefaultDirectory,
+      dependenciesDirectory,
       distTarget: R.propOr(undefined, 'target', dist),
       distEntry: R.propOr(undefined, 'entry', dist)
     });

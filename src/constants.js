@@ -84,11 +84,11 @@ export const DEFAULT_BINDINGS_PREFIX = '@bit';
 
 export const NODE_PATH_SEPARATOR = '.';
 
-export const DEFAULT_DIR_STRUCTURE = `${BITS_DIRNAME}/{namespace}/{name}`;
+export const DEFAULT_COMPONENTES_DIR_PATH = `${BITS_DIRNAME}/{namespace}/{name}`;
 
 export const DEFAULT_DIR_DEPENDENCIES = '.dependencies';
 
-export const DEFAULT_DIR_DEPENDENCIES_STRUCTURE = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPENDENCIES}`;
+export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPENDENCIES}`;
 
 export const DEFAULT_SEPARATOR = '/';
 
