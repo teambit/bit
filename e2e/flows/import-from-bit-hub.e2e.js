@@ -127,4 +127,23 @@ describe('importing bit components from bitsrc.io', function () {
       });
     });
   });
+  describe('importing a component directly and then as a dependency of other component', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.runCmd('bit import david.tests/utils/is-type'); // import is-type directly
+      helper.runCmd('bit import david.tests/utils/is-string'); // is-string imports is-type as a dependency
+    });
+    describe('changing the directly imported dependency component', () => {
+      before(() => {
+        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+        helper.createComponent(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+      });
+      it('should affect its dependent', () => {
+        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type v2 and got is-string');
+      });
+    });
+  });
 });
