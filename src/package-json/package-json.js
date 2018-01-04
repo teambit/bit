@@ -56,7 +56,7 @@ export default class PackageJson {
   scripts: Object;
 
   constructor(componentRootFolder: string, { name, version, homepage, main, dependencies, devDependencies, peerDependencies, license, scripts }: PackageJsonProps) {
-    this.name = name.replace(/\//g, '.');
+    this.name = name;
     this.version = version;
     this.homepage = homepage;
     this.main = main;
