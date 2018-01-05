@@ -27,7 +27,7 @@ jobs:
           paths:
             - ~/.ssh/id_rsa
 
-  set_bitsrc_registry:    
+  set_bitsrc_registry:
     docker:
         - image: circleci/node:6.10.3
     working_directory: ~/bit
@@ -57,18 +57,18 @@ jobs:
             # A real solution will be to clear all the cache once circle will support it (for v2)
             # or move the packakge.json resotre to be from workspace instead of cache, then we can run
             # this step without cache
-            - npm-deps3-{{ checksum "package.json" }}
+            - npm-deps4-{{ checksum "package.json" }}
             # Find the most recent cache used from any branch
-            - npm-deps3
+            - npm-deps4
       - run:
           name: Insatll npm dependencies
           command: 'npm install'
       - save_cache:
-          key: npm-deps3-{{ checksum "package.json" }}
+          key: npm-deps4-{{ checksum "package.json" }}
           paths:
             - node_modules
       - save_cache:
-          key: npm-deps3
+          key: npm-deps4
           paths:
             - node_modules
 
@@ -87,9 +87,9 @@ jobs:
           keys:
             # Find a cache corresponding to this specific package.json checksum
             # when this file is changed, this key will fail
-            - npm-deps3-{{ checksum "package.json" }}
+            - npm-deps4-{{ checksum "package.json" }}
             # Find the most recent cache used from any branch
-            - npm-deps3
+            - npm-deps4
       - run:
           name: Build bit source code
           command: npm run build
