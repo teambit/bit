@@ -10,22 +10,14 @@ function composePath(componentRootFolder: string) {
   return path.join(componentRootFolder, PACKAGE_JSON);
 }
 
-function convertComponenstsToValidPackageNames(registryPrefix: string, bitDependencies: Object): Object {
+function convertComponentsToValidPackageNames(registryPrefix: string, bitDependencies: Object): Object {
   const obj = {};
   if (R.isEmpty(bitDependencies) || R.isNil(bitDependencies)) return obj;
-  Object.keys(bitDependencies).forEach(key => {
-    var name = `${registryPrefix}/${key.replace(/\//g, '.')}`;
+  Object.keys(bitDependencies).forEach((key) => {
+    const name = `${registryPrefix}/${key.replace(/\//g, '.')}`;
     obj[name] = bitDependencies[key];
   });
   return obj;
-}
-function hasExisting(componentRootFolder: string, throws?: boolean = false): boolean {
-  const packageJsonPath = composePath(componentRootFolder);
-  const exists = fs.pathExistsSync(packageJsonPath);
-  if (!exists && throws) {
-    throw (new PackageJsonNotFound(packageJsonPath));
-  }
-  return exists;
 }
 
 const PackageJsonPropsNames = ['name', 'version', 'homepage', 'main', 'dependencies', 'devDependencies', 'peerDependencies', 'license', 'scripts'];
@@ -88,15 +80,24 @@ export default class PackageJson {
   }
 
   setDependencies(dependencies, bitDependencies: Object, registryPrefix: string) {
-    this.dependencies = Object.assign({}, dependencies, convertComponenstsToValidPackageNames(registryPrefix, bitDependencies));
+    this.dependencies = Object.assign({}, dependencies, convertComponentsToValidPackageNames(registryPrefix, bitDependencies));
+  }
+
+  static hasExisting(componentRootFolder: string, throws?: boolean = false): boolean {
+    const packageJsonPath = composePath(componentRootFolder);
+    const exists = fs.pathExistsSync(packageJsonPath);
+    if (!exists && throws) {
+      throw (new PackageJsonNotFound(packageJsonPath));
+    }
+    return exists;
   }
 
   async write({ override = true }: { override?: boolean }): Promise<boolean> {
-    if (!override && hasExisting(this.componentRootFolder)) {
+    if (!override && PackageJson.hasExisting(this.componentRootFolder)) {
       return Promise.reject(new PackageJsonAlreadyExists(this.componentRootFolder));
     }
     const plain = this.toPlainObject();
-    return fs.outputJSON(composePath(this.componentRootFolder), plain, { spaces: '\t' });
+    return fs.outputJSON(composePath(this.componentRootFolder), plain, { spaces: 2 });
   }
 
   static create(componentRootFolder: string): PackageJson {
@@ -114,8 +115,27 @@ export default class PackageJson {
   static async load(componentRootFolder: string): Promise<PackageJson> {
     const THROWS = true;
     const composedPath = composePath(componentRootFolder);
-    hasExisting(componentRootFolder, THROWS);
+    PackageJson.hasExisting(componentRootFolder, THROWS);
     const componentJsonObject = await fs.readJson(composedPath);
     return new PackageJson(componentRootFolder, componentJsonObject);
+  }
+
+  /**
+   * For an existing package.json file of the root project, we don't want to do any change, other than what needed.
+   * That's why this method doesn't use the 'load' and 'write' methods of this class. Otherwise, it'd write only the
+   * PackageJsonPropsNames attributes.
+   * Also, in case there is no package.json file in this project, it generates a new one with only the 'dependencies'
+   * attribute. Nothing more, nothing less.
+   */
+  static async addComponentsIntoExistingPackageJson(rootDir: string, components: Array, registryPrefix: string) {
+    const getRawObject = () => fs.readJson(composePath(rootDir));
+    const saveRawObject = obj => fs.outputJSON(composePath(rootDir), obj, { spaces: 2 });
+    const getPackageJson = async () => {
+      const exist = PackageJson.hasExisting(rootDir);
+      return exist ? getRawObject() : { dependencies: {} };
+    };
+    const packageJson = await getPackageJson();
+    packageJson.dependencies = Object.assign({}, packageJson.dependencies, convertComponentsToValidPackageNames(registryPrefix, components));
+    await saveRawObject(packageJson);
   }
 }
