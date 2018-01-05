@@ -20,7 +20,9 @@ import {
   COMPONENT_ORIGINS,
   BIT_VERSION,
   NODE_PATH_SEPARATOR,
-  LATEST_BIT_VERSION
+  LATEST_BIT_VERSION,
+  CFG_REGISTRY_DOMAIN_PREFIX,
+  DEFAULT_REGISTRY_DOMAIN_PREFIX
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -41,6 +43,7 @@ import ComponentNotFoundInPath from './component/exceptions/component-not-found-
 import npmClient from '../npm-client';
 import { RemovedLocalObjects } from '../scope/component-remove';
 import { linkComponents } from '../links';
+import { getSync } from '../api/consumer/lib/global-config';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -602,6 +605,7 @@ export default class Consumer {
     }
     await bitMap.write();
     if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
+    await this.addComponentsToRootPackageJson(writtenComponents, bitMap);
 
     return linkComponents(
       componentsWithDependencies,
@@ -613,12 +617,35 @@ export default class Consumer {
     );
   }
 
+  static getRegistryPrefix() {
+    return getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
+  }
+
+  async addComponentsToRootPackageJson(components: Component[], bitMap: BitMap) {
+    const importedComponents = await filterAsync(components, (component: Component) => {
+      const componentMap = component.getComponentMap(bitMap);
+      return componentMap.origin === COMPONENT_ORIGINS.IMPORTED;
+    });
+    if (!importedComponents || !importedComponents.length) return;
+
+    const driver = await this.driver.getDriver(false);
+    const PackageJson = driver.PackageJson;
+    const componentsToAdd = R.fromPairs(
+      importedComponents.map((component) => {
+        const location = `./${this.getPathRelativeToConsumer(component.writtenPath)}`;
+        return [component.id.toStringWithoutVersion(), location];
+      })
+    );
+    const registryPrefix = Consumer.getRegistryPrefix();
+    await PackageJson.addComponentsIntoExistingPackageJson(this.getPath(), componentsToAdd, registryPrefix);
+  }
+
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);

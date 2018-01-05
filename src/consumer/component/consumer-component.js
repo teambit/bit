@@ -27,7 +27,6 @@ import loader from '../../cli/loader';
 import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
-import { getSync } from '../../api/consumer/lib/global-config';
 import { writeLinksInDist } from '../../links';
 import { Component as ModelComponent } from '../../scope/models';
 import {
@@ -38,9 +37,7 @@ import {
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
   DEFAULT_DIST_DIRNAME,
-  BIT_JSON,
-  DEFAULT_REGISTRY_DOMAIN_PREFIX,
-  CFG_REGISTRY_DOMAIN_PREFIX
+  BIT_JSON
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 
@@ -245,7 +242,6 @@ export default class Component {
     writeBitDependencies?: boolean = false,
     dependencies: Array<Component>
   ): Promise<boolean> {
-    const registryDomainPrefix = getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
     const PackageJson = driver.getDriver(false).PackageJson;
     let postInstallLinkData = [];
     const mainFile = this.calculateMainDistFile();
@@ -268,8 +264,8 @@ export default class Component {
         : [];
     }
 
-    const domainPrefix = getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
-    const name = `${domainPrefix}/${this.id.toStringWithoutVersion().replace(/\//g, '.')}`;
+    const registryPrefix = Consumer.getRegistryPrefix();
+    const name = `${registryPrefix}/${this.id.toStringWithoutVersion().replace(/\//g, '.')}`;
     const packageJson = new PackageJson(bitDir, {
       name,
       version: this.version,
@@ -280,8 +276,8 @@ export default class Component {
       componentRootFolder: bitDir,
       license: `SEE LICENSE IN ${!R.isEmpty(this.license) ? 'LICENSE' : 'UNLICENSED'}`
     });
-    packageJson.setDependencies(this.packageDependencies, bitDependencies, registryDomainPrefix);
-    packageJson.setScripts(postInstallLinkData, domainPrefix);
+    packageJson.setDependencies(this.packageDependencies, bitDependencies, registryPrefix);
+    packageJson.setScripts(postInstallLinkData, registryPrefix);
 
     return packageJson.write({ override: force });
   }
@@ -447,6 +443,10 @@ export default class Component {
     if (this.license && this.license.src) await this.license.write(bitDir, force);
     logger.debug('component has been written successfully');
     return this;
+  }
+
+  getComponentMap(bitMap: BitMap): ComponentMap {
+    return bitMap.getComponent(this.id);
   }
 
   _addComponentToBitMap(bitMap: BitMap, rootDir: string, origin: string, parent?: string): ComponentMap {

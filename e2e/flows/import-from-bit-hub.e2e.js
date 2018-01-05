@@ -54,6 +54,10 @@ describe('importing bit components from bitsrc.io', function () {
       const barFooPackageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components', 'bar', 'foo'));
       expect(barFooPackageJson.name).to.equal('@bit/david.tests.bar.foo');
     });
+    it('should save the imported component as a dependency in the package.json of the project', () => {
+      const barFooPackageJson = helper.readPackageJson();
+      expect(barFooPackageJson.dependencies).to.deep.include({ '@bit/david.tests.bar.foo': './components/bar/foo' });
+    });
   });
   describe('when saveDependenciesAsComponents is set to TRUE in consumer bit.json', () => {
     before(() => {
