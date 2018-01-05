@@ -154,4 +154,25 @@ describe('importing bit components from bitsrc.io', function () {
       });
     });
   });
+  describe('installing as a package and then importing it', () => {
+    let packageJsonBeforeImport;
+    let packageJsonAfterImport;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.runCmd('npm init -y');
+      helper.runCmd('npm i @bit/david.tests.utils.is-type');
+      packageJsonBeforeImport = helper.readPackageJson();
+      helper.runCmd('bit import david.tests/utils/is-type');
+      packageJsonAfterImport = helper.readPackageJson();
+    });
+    it('should not remove any property of the package.json created by npm', () => {
+      Object.keys(packageJsonBeforeImport).forEach(prop => expect(packageJsonAfterImport).to.have.property(prop));
+    });
+    it('should update the root package.json and change the dependency from a package to a local path', () => {
+      expect(packageJsonBeforeImport.dependencies['@bit/david.tests.utils.is-type']).to.equal('0.0.1');
+      expect(packageJsonAfterImport.dependencies['@bit/david.tests.utils.is-type']).to.equal(
+        './components/utils/is-type'
+      );
+    });
+  });
 });
