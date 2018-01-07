@@ -817,10 +817,8 @@ export default class Consumer {
   }
 
   composeRelativeBitPath(bitId: BitId): string {
-    const { staticParts, dynamicParts } = this.dirStructure.componentsDirStructure;
-    const dynamicDirs = dynamicParts.map(part => bitId[part]);
-    const addToPath = [...staticParts, ...dynamicDirs];
-    return path.join(...addToPath);
+    const { componentsDefaultDirectory } = this.dirStructure;
+    return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope, namespace: bitId.box });
   }
 
   composeComponentPath(bitId: BitId): string {
@@ -1105,6 +1103,11 @@ export default class Consumer {
     componentsWithDependencies: ComponentWithDependencies[],
     verbose: boolean = false
   ): Promise<*> {
+    const packageManager = this.bitJson.packageManager;
+    const packageManagerArgs = this.bitJson.packageManagerArgs;
+    const packageManagerProcessOptions = this.bitJson.packageManagerProcessOptions;
+    const useWorkspaces = this.bitJson.useWorkspaces;
+
     // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
     // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
     const componentsWithDependenciesFlatten = R.flatten(
@@ -1114,17 +1117,29 @@ export default class Consumer {
           : [oneComponentWithDependencies.component];
       })
     );
+
+    const componentDirs = componentsWithDependenciesFlatten.map(component => component.writtenPath);
     loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
-    const results = await Promise.all(
-      componentsWithDependenciesFlatten.map((component) => {
-        // don't pass the packages to npmClient.install function.
-        // otherwise, it'll try to npm install the packages in one line 'npm install packageA packageB' and when
-        // there are mix of public and private packages it fails with 404 error.
-        // passing an empty array, results in installing packages from the package.json file
-        return npmClient.install([], { cwd: component.writtenPath }, verbose);
-      })
-    );
+
+    // don't pass the packages to npmClient.install function.
+    // otherwise, it'll try to npm install the packages in one line 'npm install packageA packageB' and when
+    // there are mix of public and private packages it fails with 404 error.
+    // passing an empty array, results in installing packages from the package.json file
+    let results = await npmClient.install({
+      modules: [],
+      packageManager,
+      packageManagerArgs,
+      packageManagerProcessOptions,
+      useWorkspaces,
+      dirs: componentDirs,
+      rootDir: this.getPath(),
+      verbose
+    });
+
     loader.stop();
+    if (!Array.isArray(results)) {
+      results = [results];
+    }
     results.forEach((result) => {
       if (result) npmClient.printResults(result);
     });

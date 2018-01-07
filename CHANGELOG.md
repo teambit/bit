@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- rename default extension to core extension 
 - when a nested dependency is imported directly, re-link all its dependents
 - [#527](https://github.com/teambit/bit/issues/527) rename structure property in bit.json
 - [#500](https://github.com/teambit/bit/issues/500) files added under one component although it was not specified 
-
+- [#508](https://github.com/teambit/bit/issues/508) structure do not support anything other than one dynamic param per folder
+- support yarn as package manager
+- add package manager config to bit.json
 
 ## [0.12.0-ext.11] - 2018-01-02
 

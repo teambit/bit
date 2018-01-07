@@ -89,6 +89,11 @@ export default class Helper {
     const bitMapPath = path.join(this.localScopePath, '.bit.map.json');
     return fs.writeJSONSync(bitMapPath, bitMap);
   }
+  setComponentsDirInBitJson(content: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+    const bitJson = this.readBitJson(bitJsonPath);
+    bitJson.componentsDefaultDirectory = content;
+    this.writeBitJson(bitJson);
+  }
   writeGitIgnore(list: string[]) {
     const gitIgnorePath = path.join(this.localScopePath, '.gitignore');
     return fs.writeFileSync(gitIgnorePath, list.join('\n'));
