@@ -67,7 +67,7 @@ export const DEFAULT_EXTENSIONS = {
   'ext-docs-parser': {
     config: {},
     options: {
-      default: true
+      core: true
     }
   }
 };

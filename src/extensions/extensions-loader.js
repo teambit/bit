@@ -9,7 +9,7 @@ import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
 
 /**
  * Load all extensions
- * Regular, defaults, globals
+ * Regular, core, globals
  */
 export default (async function loadExtensions(): Extension[] {
   try {
