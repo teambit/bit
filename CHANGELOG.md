@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - when a nested dependency is imported directly, re-link all its dependents
 - [#527](https://github.com/teambit/bit/issues/527) rename structure property in bit.json
+- support yarn as package manager
+- add package manager config to bit.json
 
 ## [0.12.0-ext.11] - 2018-01-02
 
