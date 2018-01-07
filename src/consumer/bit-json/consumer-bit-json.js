@@ -4,7 +4,12 @@ import R from 'ramda';
 import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
 import { BitJsonNotFound, BitJsonAlreadyExists, InvalidBitJson } from './exceptions';
-import { BIT_JSON, DEFAULT_COMPONENTES_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';
+import {
+  BIT_JSON,
+  DEFAULT_COMPONENTES_DIR_PATH,
+  DEFAULT_DEPENDENCIES_DIR_PATH,
+  DEFAULT_PACKAGE_MANAGER
+} from '../../constants';
 
 function composePath(bitPath: string) {
   return path.join(bitPath, BIT_JSON);
@@ -14,6 +19,26 @@ function hasExisting(bitPath: string): boolean {
   return fs.existsSync(composePath(bitPath));
 }
 
+type consumerBitJsonProps = {
+  impl?: string,
+  spec?: string,
+  compiler?: string,
+  tester?: string,
+  dependencies?: { [string]: string },
+  saveDependenciesAsComponents?: boolean,
+  lang?: string,
+  distTarget?: ?string,
+  distEntry?: ?string,
+  componentsDefaultDirectory?: string,
+  dependenciesDirectory?: string,
+  bindingPrefix?: string,
+  extensions?: Object,
+  packageManager?: 'npm' | 'yarn',
+  packageManagerArgs?: string[],
+  packageManagerProcessOptions?: Object,
+  useWorkspaces?: boolean
+};
+
 export default class ConsumerBitJson extends AbstractBitJson {
   distTarget: ?string; // path where to store build artifacts
   // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
@@ -22,6 +47,10 @@ export default class ConsumerBitJson extends AbstractBitJson {
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
+  packageManager: 'npm' | 'yarn'; // package manager client to use
+  packageManagerArgs: ?(string[]); // package manager client to use
+  packageManagerProcessOptions: ?Object; // package manager process options
+  useWorkspaces: boolean; // Enables integration with Yarn Workspaces
 
   constructor({
     impl,
@@ -36,14 +65,22 @@ export default class ConsumerBitJson extends AbstractBitJson {
     componentsDefaultDirectory,
     dependenciesDirectory,
     bindingPrefix,
-    extensions
-  }) {
+    extensions,
+    packageManager = DEFAULT_PACKAGE_MANAGER,
+    packageManagerArgs,
+    packageManagerProcessOptions,
+    useWorkspaces = false
+  }: consumerBitJsonProps) {
     super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
     this.distEntry = distEntry;
     this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTES_DIR_PATH;
     this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
     this.saveDependenciesAsComponents = saveDependenciesAsComponents || false;
+    this.packageManager = packageManager;
+    this.packageManagerArgs = packageManagerArgs;
+    this.packageManagerProcessOptions = packageManagerProcessOptions;
+    this.useWorkspaces = useWorkspaces;
   }
 
   toPlainObject() {
@@ -51,7 +88,11 @@ export default class ConsumerBitJson extends AbstractBitJson {
     const consumerObject = R.merge(superObject, {
       componentsDefaultDirectory: this.componentsDefaultDirectory,
       dependenciesDirectory: this.dependenciesDirectory,
-      saveDependenciesAsComponents: this.saveDependenciesAsComponents
+      saveDependenciesAsComponents: this.saveDependenciesAsComponents,
+      packageManager: this.packageManager,
+      packageManagerArgs: this.packageManagerArgs,
+      packageManagerProcessOptions: this.packageManagerProcessOptions,
+      useWorkspaces: this.useWorkspaces
     });
     if (this.distEntry || this.distTarget) {
       const dist = {};
@@ -100,7 +141,11 @@ export default class ConsumerBitJson extends AbstractBitJson {
       dist,
       bindingPrefix,
       extensions,
-      saveDependenciesAsComponents
+      saveDependenciesAsComponents,
+      packageManager,
+      packageManagerArgs,
+      packageManagerProcessOptions,
+      useWorkspaces
     } = object;
 
     return new ConsumerBitJson({
@@ -115,6 +160,10 @@ export default class ConsumerBitJson extends AbstractBitJson {
       saveDependenciesAsComponents,
       componentsDefaultDirectory,
       dependenciesDirectory,
+      packageManager,
+      packageManagerArgs,
+      packageManagerProcessOptions,
+      useWorkspaces,
       distTarget: R.propOr(undefined, 'target', dist),
       distEntry: R.propOr(undefined, 'entry', dist)
     });
