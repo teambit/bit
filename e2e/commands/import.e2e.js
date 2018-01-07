@@ -12,10 +12,10 @@ chai.use(require('chai-fs'));
 describe('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
-  /*
+
   after(() => {
     helper.destroyEnv();
-  }); */
+  });
 
   const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
   const isStringFixture =
