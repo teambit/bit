@@ -817,10 +817,8 @@ export default class Consumer {
   }
 
   composeRelativeBitPath(bitId: BitId): string {
-    const { staticParts, dynamicParts } = this.dirStructure.componentsDirStructure;
-    const dynamicDirs = dynamicParts.map(part => bitId[part]);
-    const addToPath = [...staticParts, ...dynamicDirs];
-    return path.join(...addToPath);
+    const { componentsDefaultDirectory } = this.dirStructure;
+    return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope, namespace: bitId.box });
   }
 
   composeComponentPath(bitId: BitId): string {
