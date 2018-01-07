@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - rename default extension to core extension 
 - when a nested dependency is imported directly, re-link all its dependents
 - [#527](https://github.com/teambit/bit/issues/527) rename structure property in bit.json
+- [#508](https://github.com/teambit/bit/issues/508) structure do not support anything other than one dynamic param per folder
+
 
 ## [0.12.0-ext.11] - 2018-01-02
 
