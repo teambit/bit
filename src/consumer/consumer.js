@@ -970,13 +970,14 @@ export default class Consumer {
         const component = id.isLocal()
           ? bitMap.getComponent(bitMap.getExistingComponentId(id.toStringWithoutVersion()))
           : bitMap.getComponent(id);
+        if (!component) return;
         if (
-          (component.origin && component.origin == COMPONENT_ORIGINS.IMPORTED) ||
-          component.origin == COMPONENT_ORIGINS.NESTED
+          (component.origin && component.origin === COMPONENT_ORIGINS.IMPORTED) ||
+          component.origin === COMPONENT_ORIGINS.NESTED
         ) {
           return fs.remove(path.join(this.getPath(), component.rootDir));
-        } else if (component.origin == COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
-          return Promise.all(component.files.map(async file => await fs.remove(file.relativePath)));
+        } else if (component.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
+          return Promise.all(component.files.map(file => fs.remove(file.relativePath)));
         }
       })
     );
