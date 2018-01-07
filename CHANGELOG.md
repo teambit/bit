@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [#527](https://github.com/teambit/bit/issues/527) rename structure property in bit.json
 - support yarn as package manager
 - add package manager config to bit.json
+- [#543](https://github.com/teambit/bit/issues/543) remove imported component not working
+
 
 ## [0.12.0-ext.11] - 2018-01-02
 
