@@ -80,10 +80,15 @@ export default (async function addAction(
               if (bitMapComponentId && foundComponentFromBitMap.rootDir) {
                 // throw error in case user didnt add id to imported component or the id is incorrect
                 if (!id) throw new MissingComponentIdForImportedComponent(parsedBitId.toStringWithoutVersion());
-                if (parsedBitId.toStringWithoutScopeAndVersion() !== id && parsedBitId.toStringWithoutVersion() !== id) { throw new IncorrectIdForImportedComponent(parsedBitId.toStringWithoutVersion(), id); }
+                if (
+                  parsedBitId.toStringWithoutScopeAndVersion() !== id &&
+                  parsedBitId.toStringWithoutVersion() !== id
+                ) {
+                  throw new IncorrectIdForImportedComponent(parsedBitId.toStringWithoutVersion(), id);
+                }
 
                 const tempFile = path.relative(foundComponentFromBitMap.rootDir, file.relativePath);
-                const foundFile = find(foundComponentFromBitMap.files, x => x.relativePath === tempFile);
+                const foundFile = find(foundComponentFromBitMap.files, file => file.relativePath === tempFile);
 
                 if (foundFile) {
                   foundFile.relativePath = path.join(foundComponentFromBitMap.rootDir, foundFile.relativePath);
