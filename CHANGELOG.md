@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+## [0.10.8-dev.6] - 2018-01-08
+
 - dont show missing packages if they appear in package.json
+- remove pack command
+
+## [0.10.8-dev.5] - 2018-01-05
+
+- add a new method to PackageJson class: addComponentsIntoExistingPackageJson
 
 ## [0.10.8-dev.1] - 2017-12-04
 
