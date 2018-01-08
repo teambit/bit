@@ -7,6 +7,7 @@ import R from 'ramda';
 import generateTree from './generate-tree-madge';
 import PackageJson from '../package-json/package-json';
 import partition from 'lodash.partition';
+import { DEFAULT_BINDINGS_PREFIX } from '../constants';
 
 /**
  * Import Specifier data.
@@ -70,7 +71,7 @@ export type Tree = {
  */
 const byType = (list, bindingPrefix) => {
   const grouped = R.groupBy((item) => {
-    if (item.includes(`node_modules/${bindingPrefix}`)) return 'bits';
+    if (item.includes(`node_modules/${bindingPrefix}`) || item.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`)) return 'bits';
     return item.includes('node_modules') ? 'packages' : 'files';
   });
   return grouped(list);
@@ -227,7 +228,7 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
    * @returns {Function} function which group the dependencies
    */
   const byPathType = R.groupBy((item) => {
-    if (item.startsWith(`${bindingPrefix}/`)) return 'bits';
+    if (item.startsWith(`${bindingPrefix}/`) || item.startsWith(`${DEFAULT_BINDINGS_PREFIX}/`)) return 'bits';
     return item.startsWith('.') ? 'files' : 'packages';
   });
   const groups = byPathType(missing, bindingPrefix);
