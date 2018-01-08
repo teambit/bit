@@ -1493,6 +1493,16 @@ describe('bit import', function () {
         expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
         expect(bitMap[`${helper.remoteScope}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
       });
+      it('should not show any component in bit status', () => {
+        const output = helper.runCmd('bit status');
+        expect(output.includes('utils/is-string')).to.be.true;
+        expect(output.includes('utils/is-type')).to.be.true;
+        expect(output.includes('no new components')).to.be.true;
+        expect(output.includes('no modified components')).to.be.true;
+        expect(output.includes('no staged components')).to.be.true;
+        expect(output.includes('no auto-tag pending components')).to.be.true;
+        expect(output.includes('no deleted components')).to.be.true;
+      });
       it('should not break the is-string component', () => {
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
         helper.createComponent(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);

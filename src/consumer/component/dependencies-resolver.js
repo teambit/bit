@@ -101,7 +101,7 @@ function findComponentsOfDepsFiles(
         // it is verified now that this depFile is an auto-generated file, therefore the sourceRelativePath and the
         // destinationRelativePath should be a partial-path and not full-relative-to-consumer path.
         const componentMap = bitMap.getComponent(componentId);
-        if (componentMap) destination = componentMap.mainFile;
+        if (componentMap) destination = componentMap.getOriginallyMainFilePath();
         else {
           // when there is no componentMap, the bit dependency was imported as a npm package.
           // we're missing two things, which can be obtained from the model: 1) version. 2) mainFile.
