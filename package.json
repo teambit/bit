@@ -15,8 +15,7 @@
     "test-circle": "mocha --compilers js:babel-core/register --reporter mocha-circleci-reporter ./specs/**/*.spec.js",
     "mocha-circleci": "mocha --compilers js:babel-core/register --reporter mocha-circleci-reporter",
     "e2e-test": "mocha --compilers js:babel-core/register ./e2e/**/*.e2e.js",
-    "e2e-test:appveyor":
-      "mocha --compilers js:babel-core/register --reporter mocha-appveyor-reporter ./e2e/**/*.e2e.js",
+    "e2e-test:appveyor": "mocha --compilers js:babel-core/register --reporter mocha-appveyor-reporter ./e2e/**/*.e2e.js",
     "e2e-test-circle": "mocha --compilers js:babel-core/register --reporter mocha-circleci-reporter ./e2e/**/*.e2e.js",
     "clean": "rm -rf dist",
     "build": "babel src specs -d dist",
@@ -35,7 +34,7 @@
   "dependencies": {
     "array-difference": "^0.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "0.10.8-dev.4",
+    "bit-javascript": "0.10.8-dev.5",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
     "chokidar": "^1.7.0",
@@ -127,6 +126,9 @@
     "posix": "^4.1.1"
   },
   "lint-staged": {
-    "*.{js,json,css}": ["prettier-eslint --write", "git add"]
+    "*.{js,css}": [
+      "prettier-eslint --write",
+      "git add"
+    ]
   }
 }

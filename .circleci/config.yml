@@ -27,7 +27,7 @@ jobs:
           paths:
             - ~/.ssh/id_rsa
 
-  set_bitsrc_registry:    
+  set_bitsrc_registry:
     docker:
         - image: circleci/node:6.10.3
     working_directory: ~/bit
