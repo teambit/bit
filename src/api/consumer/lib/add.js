@@ -377,12 +377,9 @@ export default (async function addAction(
 
     added = await Promise.all(addedP);
     validateNoDuplicateIds(added);
-    added.forEach(
-      component =>
-        (!R.isEmpty(component.files)
-          ? addOrUpdateExistingComponentsInBitMap(consumer.projectPath, bitMap, component)
-          : /* addToBitMap(bitMap, component) */ '')
-    );
+    added.forEach((component) => {
+      if (!R.isEmpty(component.files)) addOrUpdateExistingComponentsInBitMap(consumer.projectPath, bitMap, component);
+    });
   } else {
     logger.debug('bit add - one component');
     // when a user enters more than one directory, he would like to keep the directories names
