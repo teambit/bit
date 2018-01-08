@@ -64,6 +64,7 @@ function writeDependenciesLinks(component, componentMap, bitMap, consumer) {
   return component.dependencies.map((dependency) => {
     const dependencyComponentMap = bitMap.getComponent(dependency.id);
     const writtenLinks = [];
+    if (!dependencyComponentMap) return writtenLinks;
     writtenLinks.push(
       writeDependencyLink(
         path.join(consumer.getPath(), componentMap.rootDir),
@@ -100,7 +101,7 @@ function writeMissingLinks(component, componentMap, bitMap) {
 export default function linkComponents(components: Component[], bitMap: BitMap, consumer: Consumer): Object[] {
   return components.map((component) => {
     const componentId = component.id;
-    logger.debug(`linking component: ${componentId}`);
+    logger.debug(`linking component to node_modules: ${componentId}`);
     const componentMap: ComponentMap = bitMap.getComponent(componentId, true);
     if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
       const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(consumer.bitJson.bindingPrefix, componentId);
@@ -116,10 +117,9 @@ export default function linkComponents(components: Component[], bitMap: BitMap, 
       }
 
       const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
-      const boundDependencies =
-        component.dependencies && component.dependenciesSavedAsComponents
-          ? writeDependenciesLinks(component, componentMap, bitMap, consumer)
-          : [];
+      const boundDependencies = component.dependencies
+        ? writeDependenciesLinks(component, componentMap, bitMap, consumer)
+        : [];
       const boundMissingDependencies =
         component.missingDependencies && component.missingDependencies.missingLinks
           ? writeMissingLinks(component, componentMap, bitMap)

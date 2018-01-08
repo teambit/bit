@@ -13,7 +13,7 @@ import HooksManager, { HookAction } from '../hooks';
 import { HOOKS_NAMES } from '../constants';
 
 const HooksManagerInstance = HooksManager.getInstance();
-const DEFAULT_EXTENSIONS_PATH = './default-extensions';
+const CORE_EXTENSIONS_PATH = './core-extensions';
 
 type NewCommand = {
   name: string,
@@ -118,7 +118,7 @@ export default class Extension {
    * The file path is relative to the bit.json of the project or absolute
    * @param {string} name - name of the extension
    * @param {Object} rawConfig - raw config for the extension
-   * @param {Object} options - extension options such as - disabled, file, default
+   * @param {Object} options - extension options such as - disabled, file, core
    * @param {string} consumerPath - path to the consumer folder (to load the file relatively)
    * @param {string} scopePath - scope which stores the extension code
    */
@@ -140,7 +140,7 @@ export default class Extension {
     }
     // Require extension from scope
     try {
-      const componentPath = _getExtensionPath(name, scopePath, options.default);
+      const componentPath = _getExtensionPath(name, scopePath, options.core);
       return Extension.loadFromFile(name, componentPath, rawConfig, options);
     } catch (err) {
       logger.error(`loading extension ${name} faild`);
@@ -215,8 +215,8 @@ const _loadScope = async (scopePath: ?string) => {
   return consumer.scope;
 };
 
-const _getDefaultExtensionPath = (name: string): string => {
-  const componentPath = path.join(__dirname, DEFAULT_EXTENSIONS_PATH, name);
+const _getCoreExtensionPath = (name: string): string => {
+  const componentPath = path.join(__dirname, CORE_EXTENSIONS_PATH, name);
   return componentPath;
 };
 
@@ -228,9 +228,9 @@ const _getRegularExtensionPath = (name: string, scopePath: string): string => {
   return componentPath;
 };
 
-const _getExtensionPath = (name: string, scopePath: string, isDefault: boolean = false): string => {
-  if (isDefault) {
-    return _getDefaultExtensionPath(name);
+const _getExtensionPath = (name: string, scopePath: string, isCore: boolean = false): string => {
+  if (isCore) {
+    return _getCoreExtensionPath(name);
   }
   return _getRegularExtensionPath(name, scopePath);
 };
