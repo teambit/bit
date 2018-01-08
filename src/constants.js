@@ -47,7 +47,9 @@ export const IGNORE_LIST = [
   '**/bit.json',
   '**/bitBindings.js',
   '**/node_modules/**',
-  '**/package.json'
+  '**/package.json',
+  '**/package-lock.json',
+  '**/yarn.lock'
 ];
 
 export const COMPONENT_ORIGINS = {
