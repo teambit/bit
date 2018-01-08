@@ -86,10 +86,10 @@ describe('importing bit components from bitsrc.io', function () {
     });
   });
   describe('ES6 component', () => {
-    describe('with --dist flag', () => {
+    describe('without --ignore-flag flag', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.runCmd(`bit import ${componentES6TestId} --dist`);
+        helper.runCmd(`bit import ${componentES6TestId} `);
       });
       it('should generate all the links in the dists dir correctly and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo-es6'); console.log(barFoo());";
@@ -98,10 +98,10 @@ describe('importing bit components from bitsrc.io', function () {
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
     });
-    describe('without --dist flag and running bit build afterwards', () => {
+    describe('with --ignore-dist flag and running bit build afterwards', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.runCmd(`bit import ${componentES6TestId}`);
+        helper.runCmd(`bit import ${componentES6TestId} --ignore-dist`);
         helper.build('bar/foo-es6');
       });
       it('should generate all the links in the dists dir correctly and print results from all dependencies', () => {
