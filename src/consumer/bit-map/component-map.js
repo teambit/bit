@@ -135,4 +135,13 @@ export default class ComponentMap {
     });
     return { allFiles, nonTestsFiles, testsFiles };
   }
+
+  /**
+   * get the main file path including the originallySharedDir if applicable
+   */
+  getOriginallyMainFilePath(): string {
+    return this.originallySharedDir
+      ? pathNormalizeToLinux(path.join(this.originallySharedDir, this.mainFile))
+      : this.mainFile;
+  }
 }
