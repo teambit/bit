@@ -140,6 +140,8 @@ export default class ComponentMap {
    * get the main file path including the originallySharedDir if applicable
    */
   getOriginallyMainFilePath(): string {
-    return this.originallySharedDir ? path.join(this.originallySharedDir, this.mainFile) : this.mainFile;
+    return this.originallySharedDir
+      ? pathNormalizeToLinux(path.join(this.originallySharedDir, this.mainFile))
+      : this.mainFile;
   }
 }
