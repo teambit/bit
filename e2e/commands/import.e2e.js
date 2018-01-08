@@ -1,11 +1,13 @@
 // covers also init, create, commit, modify commands
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import glob from 'glob';
 import normalize from 'normalize-path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 import { AUTO_GENERATED_MSG } from '../../src/constants';
+
+chai.use(require('chai-fs'));
 
 describe('bit import', function () {
   this.timeout(0);
@@ -133,6 +135,30 @@ describe('bit import', function () {
       });
       it('should import the component successfully', () => {
         expect(output).to.have.string('successfully imported one component');
+      });
+    });
+    describe('import component with custom dsl as destenation dir for import', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.setComponentsDirInBitJson('{scope}/{namespace}-{name}');
+        helper.addRemoteScope();
+        helper.importComponent('global/simple');
+        output = helper.importComponent('global/simple');
+      });
+      it('should import the component successfully', () => {
+        expect(output).to.have.string('successfully imported one component');
+      });
+      it('should import the component into new dir structure according to dsl', () => {
+        expect(path.join(helper.localScopePath, helper.remoteScope, 'global-simple')).to.be.a.directory(
+          'should not be empty'
+        ).and.not.empty;
+      });
+      it('bitmap should contain component with correct rootDir according to dsl', () => {
+        const bitMap = helper.readBitMap();
+        const cmponentId = `${helper.remoteScope}/global/simple@0.0.1`;
+        expect(bitMap).to.have.property(cmponentId);
+        expect(bitMap[cmponentId].rootDir).to.equal(`${helper.remoteScope}/global-simple`);
       });
     });
   });
