@@ -218,7 +218,7 @@ export default class Helper {
     fs.removeSync(path.join(this.localScopePath, 'components'));
     this.runCmd('bit init');
     this.addRemoteScope();
-    return withDist ? this.runCmd('bit import --dist') : this.runCmd('bit import');
+    return withDist ? this.runCmd('bit import') : this.runCmd('bit import --ignore-dist');
   }
 
   getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true) {

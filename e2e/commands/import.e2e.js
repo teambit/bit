@@ -9,13 +9,15 @@ import { AUTO_GENERATED_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-describe('bit import', function () {
+describe.only('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
 
+  /*
   after(() => {
     helper.destroyEnv();
   });
+*/
 
   const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
   const isStringFixture =
@@ -204,11 +206,11 @@ describe('bit import', function () {
         const expectedLocationImprelDist = path.join(imprelDir, 'dist', 'imprel.js');
         const expectedLocationImprelSpecDist = path.join(imprelDir, 'dist', 'imprel.spec.js');
         const expectedLocationMyUtilDist = path.join(imprelDir, 'dist', 'utils', 'myUtil.js');
-        describe('with --dist flag', () => {
+        describe('without --no-dist flag', () => {
           before(() => {
             helper.reInitLocalScope();
             helper.addRemoteScope();
-            helper.importComponent('imprel/impreldist --dist');
+            helper.importComponent('imprel/impreldist');
             localConsumerFiles = helper.getConsumerFiles();
           });
           it('should write the internal files according to their relative paths', () => {
@@ -238,12 +240,12 @@ describe('bit import', function () {
             });
           });
         });
-        describe('with --dist flag when dist is set to a non-default directory', () => {
+        describe('with --no-dis flag set to false when dist is set to a non-default directory', () => {
           before(() => {
             helper.reInitLocalScope();
             helper.addRemoteScope();
             helper.modifyFieldInBitJson('dist', { target: 'another-dist' });
-            helper.importComponent('imprel/impreldist --dist');
+            helper.importComponent('imprel/impreldist');
             localConsumerFiles = helper.getConsumerFiles();
           });
           it('should write the dist files according to the new dist-target set in bit.json', () => {
@@ -256,11 +258,11 @@ describe('bit import', function () {
             expect(localConsumerFiles).to.include(newLocationMyUtilDist);
           });
         });
-        describe('without --dist flag', () => {
+        describe('with --no-dist flag', () => {
           before(() => {
             helper.reInitLocalScope();
             helper.addRemoteScope();
-            helper.importComponent('imprel/impreldist');
+            helper.importComponent('imprel/impreldist --ignore-dist');
             localConsumerFiles = helper.getConsumerFiles();
           });
           it('should write the internal files according to their relative paths', () => {
@@ -1072,7 +1074,7 @@ describe('bit import', function () {
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo --dist');
+      helper.importComponent('bar/foo');
       localConsumerFiles = helper.getConsumerFiles();
     });
     const isStringLocation = path.join(
@@ -1190,11 +1192,11 @@ describe('bit import', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
-    describe('importing without --dist flag', () => {
+    describe('importing with --no-dist flag', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo');
+        helper.importComponent('bar/foo --ignore-dist');
         localConsumerFiles = helper.getConsumerFiles();
       });
       it('should not write anything to the dist folder of the main component', () => {
@@ -1207,7 +1209,7 @@ describe('bit import', function () {
         expect(indexFileContent).to.have.string("require('./bar/foo')");
         expect(indexFileContent).to.not.have.string('dist');
       });
-      describe('bit build after importing without --dist flag', () => {
+      describe('bit build after importing without --no-dist flag', () => {
         before(() => {
           helper.build('bar/foo');
         });

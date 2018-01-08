@@ -21,7 +21,7 @@ export default class Import extends Command {
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['f', 'force', 'ignore local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
-    ['', 'dist', 'write dist files (when exist) to the configured directory'],
+    ['', 'ignore-dist', 'write dist files (when exist) to the configured directory'],
     ['', 'conf', 'write the configuration file (bit.json)'],
     [
       '',
@@ -48,7 +48,7 @@ export default class Import extends Command {
       environment,
       force = false,
       verbose = false,
-      dist = false,
+      ignoreDist = false,
       conf = false,
       skipNpmInstall = false,
       ignorePackageJson = false
@@ -61,7 +61,7 @@ export default class Import extends Command {
       displayDependencies?: boolean,
       environment?: boolean,
       force?: boolean,
-      dist?: boolean,
+      ignoreDist?: boolean,
       conf?: boolean,
       skipNpmInstall?: boolean,
       ignorePackageJson?: boolean
@@ -80,7 +80,7 @@ export default class Import extends Command {
       prefix,
       environment,
       force,
-      dist,
+      dist: !ignoreDist,
       conf,
       installNpmPackages: !skipNpmInstall,
       withPackageJson: !ignorePackageJson
