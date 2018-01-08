@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- rename default extension to core extension 
-- when a nested dependency is imported directly, re-link all its dependents
+## [0.12.0-ext.12] - 2018-01-08
+
+- [#562](https://github.com/teambit/bit/issues/562) rename default extension to core extension 
+- [#517](https://github.com/teambit/bit/issues/517) when a nested dependency is imported directly, re-link all its dependents
 - [#527](https://github.com/teambit/bit/issues/527) rename structure property in bit.json
 - [#500](https://github.com/teambit/bit/issues/500) files added under one component although it was not specified 
 - [#508](https://github.com/teambit/bit/issues/508) structure do not support anything other than one dynamic param per folder
-- support yarn as package manager
-- add package manager config to bit.json
+- [#540](https://github.com/teambit/bit/issues/540) support yarn as package manager
+- [#541](https://github.com/teambit/bit/issues/541) add package manager config to bit.json
 - [#543](https://github.com/teambit/bit/issues/543) remove imported component not working
 - [#537](https://github.com/teambit/bit/issues/537) - change dist flag to --ignore-dist and by default create dist files
 
