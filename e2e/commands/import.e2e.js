@@ -1495,13 +1495,13 @@ describe('bit import', function () {
       });
       it('should not show any component in bit status', () => {
         const output = helper.runCmd('bit status');
-        expect(output.includes('utils/is-string')).to.be.true;
-        expect(output.includes('utils/is-type')).to.be.true;
-        expect(output.includes('no new components')).to.be.true;
-        expect(output.includes('no modified components')).to.be.true;
-        expect(output.includes('no staged components')).to.be.true;
-        expect(output.includes('no auto-tag pending components')).to.be.true;
-        expect(output.includes('no deleted components')).to.be.true;
+        expect(output).to.not.have.a.string('utils/is-string');
+        expect(output).to.not.have.a.string('utils/is-type');
+        expect(output).to.have.a.string('no new components');
+        expect(output).to.have.a.string('no modified components');
+        expect(output).to.have.a.string('no staged components');
+        expect(output).to.have.a.string('no deleted components');
+        expect(output).to.have.a.string('no auto-tag pending components');
       });
       it('should not break the is-string component', () => {
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";

@@ -27,9 +27,9 @@ describe('bit status command', function () {
     });
     it('should indicate that there are no components', () => {
       const output = helper.runCmd('bit status');
-      expect(output.includes('no new components')).to.be.true;
-      expect(output.includes('no modified components')).to.be.true;
-      expect(output.includes('no staged components')).to.be.true;
+      expect(output).to.have.a.string('no new components');
+      expect(output).to.have.a.string('no modified components');
+      expect(output).to.have.a.string('no staged components');
     });
   });
 
@@ -41,9 +41,9 @@ describe('bit status command', function () {
     });
     it('should indicate that there are no components and should not throw an error', () => {
       const output = helper.runCmd('bit status');
-      expect(output.includes('no new components')).to.be.true;
-      expect(output.includes('no modified components')).to.be.true;
-      expect(output.includes('no staged components')).to.be.true;
+      expect(output).to.have.a.string('no new components');
+      expect(output).to.have.a.string('no modified components');
+      expect(output).to.have.a.string('no staged components');
     });
   });
   describe('when a component is created and added but not committed', () => {
