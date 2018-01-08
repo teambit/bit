@@ -9,15 +9,13 @@ import { AUTO_GENERATED_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-describe.only('bit import', function () {
+describe('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
 
-  /*
   after(() => {
     helper.destroyEnv();
   });
-*/
 
   const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
   const isStringFixture =
