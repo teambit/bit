@@ -160,7 +160,7 @@ describe('importing bit components from bitsrc.io', function () {
     before(() => {
       helper.reInitLocalScope();
       helper.runCmd('npm init -y');
-      helper.runCmd('npm i @bit/david.tests.utils.is-type');
+      helper.runCmd('npm i @bit/david.tests.utils.is-type --save');
       packageJsonBeforeImport = helper.readPackageJson();
       helper.runCmd('bit import david.tests/utils/is-type');
       packageJsonAfterImport = helper.readPackageJson();
