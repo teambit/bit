@@ -388,7 +388,6 @@ export default (async function addAction(
     const addedOne = await addOneComponent(componentPathsStats, bitMap, consumer, ignoreList);
     if (!R.isEmpty(addedOne.files)) {
       const addedComponents = addOrUpdateExistingComponentsInBitMap(consumer.projectPath, bitMap, addedOne);
-      // addToBitMap(bitMap, addedOne);
       added.push(addedComponents);
     }
   }
