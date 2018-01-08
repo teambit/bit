@@ -7,7 +7,6 @@ import assignwith from 'lodash.assignwith';
 import groupby from 'lodash.groupby';
 import unionBy from 'lodash.unionby';
 import find from 'lodash.find';
-import clone from 'clone';
 
 import {
   glob,
