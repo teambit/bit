@@ -632,8 +632,9 @@ export default class Consumer {
     const PackageJson = driver.PackageJson;
     const componentsToAdd = R.fromPairs(
       importedComponents.map((component) => {
-        const location = `./${this.getPathRelativeToConsumer(component.writtenPath)}`;
-        return [component.id.toStringWithoutVersion(), location];
+        const locationRelativeToConsumer = this.getPathRelativeToConsumer(component.writtenPath);
+        const locationAsUnixFormat = `./${pathNormalizeToLinux(locationRelativeToConsumer)}`;
+        return [component.id.toStringWithoutVersion(), locationAsUnixFormat];
       })
     );
     const registryPrefix = Consumer.getRegistryPrefix();
