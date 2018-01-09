@@ -202,7 +202,7 @@ function resolveModulePath(nmPath, workingDir, root) {
 function findPackagesInPackageJson(packageJson: Object, packagesNames: string[]) {
   const { dependencies, devDependencies, peerDependencies } = packageJson;
   const foundPackages = {};
-  const mergedDependencies = Object.assign(dependencies, devDependencies, peerDependencies);
+  const mergedDependencies = Object.assign({}, dependencies, devDependencies, peerDependencies);
   if (packagesNames && packagesNames.length && !R.isNil(mergedDependencies)) {
     const [foundPackagesPartition, missingPackages] = partition(packagesNames, item => item in mergedDependencies);
     foundPackagesPartition.forEach(pack => foundPackages[pack] = mergedDependencies[pack]);
