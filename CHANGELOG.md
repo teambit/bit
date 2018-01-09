@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bump bit-javascript version to 0.10.8-dev.9
+
 ## [0.12.0-ext.14] - 2018-01-09
 
-bump bit-javascript version to 0.10.8-dev.8
+- bump bit-javascript version to 0.10.8-dev.8
 
 ## [0.12.0-ext.14] - 2018-01-09
 
