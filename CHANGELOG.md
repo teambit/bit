@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
-## [0.10.8-dev.6] - 2018-01-09
+## [0.10.8-dev.7] - 2018-01-09
 
 - dont try to resolve dependencies from package.json if dosent exist
 
