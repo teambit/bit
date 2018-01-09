@@ -54,6 +54,10 @@ describe('importing bit components from bitsrc.io', function () {
       const barFooPackageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components', 'bar', 'foo'));
       expect(barFooPackageJson.name).to.equal('@bit/david.tests.bar.foo');
     });
+    it('should save the imported component as a dependency in the package.json of the project', () => {
+      const barFooPackageJson = helper.readPackageJson();
+      expect(barFooPackageJson.dependencies).to.deep.include({ '@bit/david.tests.bar.foo': './components/bar/foo' });
+    });
   });
   describe('when saveDependenciesAsComponents is set to TRUE in consumer bit.json', () => {
     before(() => {
@@ -86,10 +90,10 @@ describe('importing bit components from bitsrc.io', function () {
     });
   });
   describe('ES6 component', () => {
-    describe('with --dist flag', () => {
+    describe('without --ignore-flag flag', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.runCmd(`bit import ${componentES6TestId} --dist`);
+        helper.runCmd(`bit import ${componentES6TestId} `);
       });
       it('should generate all the links in the dists dir correctly and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo-es6'); console.log(barFoo());";
@@ -98,10 +102,10 @@ describe('importing bit components from bitsrc.io', function () {
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
     });
-    describe('without --dist flag and running bit build afterwards', () => {
+    describe('with --ignore-dist flag and running bit build afterwards', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.runCmd(`bit import ${componentES6TestId}`);
+        helper.runCmd(`bit import ${componentES6TestId} --ignore-dist`);
         helper.build('bar/foo-es6');
       });
       it('should generate all the links in the dists dir correctly and print results from all dependencies', () => {
@@ -148,6 +152,27 @@ describe('importing bit components from bitsrc.io', function () {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
       });
+    });
+  });
+  describe('installing as a package and then importing it', () => {
+    let packageJsonBeforeImport;
+    let packageJsonAfterImport;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.runCmd('npm init -y');
+      helper.runCmd('npm i @bit/david.tests.utils.is-type --save');
+      packageJsonBeforeImport = helper.readPackageJson();
+      helper.runCmd('bit import david.tests/utils/is-type');
+      packageJsonAfterImport = helper.readPackageJson();
+    });
+    it('should not remove any property of the package.json created by npm', () => {
+      Object.keys(packageJsonBeforeImport).forEach(prop => expect(packageJsonAfterImport).to.have.property(prop));
+    });
+    it('should update the root package.json and change the dependency from a package to a local path', () => {
+      expect(packageJsonBeforeImport.dependencies['@bit/david.tests.utils.is-type']).to.equal('0.0.1');
+      expect(packageJsonAfterImport.dependencies['@bit/david.tests.utils.is-type']).to.equal(
+        './components/utils/is-type'
+      );
     });
   });
 });

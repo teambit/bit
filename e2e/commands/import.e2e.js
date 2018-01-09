@@ -204,11 +204,11 @@ describe('bit import', function () {
         const expectedLocationImprelDist = path.join(imprelDir, 'dist', 'imprel.js');
         const expectedLocationImprelSpecDist = path.join(imprelDir, 'dist', 'imprel.spec.js');
         const expectedLocationMyUtilDist = path.join(imprelDir, 'dist', 'utils', 'myUtil.js');
-        describe('with --dist flag', () => {
+        describe('without --ignore-dist flag', () => {
           before(() => {
             helper.reInitLocalScope();
             helper.addRemoteScope();
-            helper.importComponent('imprel/impreldist --dist');
+            helper.importComponent('imprel/impreldist');
             localConsumerFiles = helper.getConsumerFiles();
           });
           it('should write the internal files according to their relative paths', () => {
@@ -238,12 +238,12 @@ describe('bit import', function () {
             });
           });
         });
-        describe('with --dist flag when dist is set to a non-default directory', () => {
+        describe('with --no-dis flag set to false when dist is set to a non-default directory', () => {
           before(() => {
             helper.reInitLocalScope();
             helper.addRemoteScope();
             helper.modifyFieldInBitJson('dist', { target: 'another-dist' });
-            helper.importComponent('imprel/impreldist --dist');
+            helper.importComponent('imprel/impreldist');
             localConsumerFiles = helper.getConsumerFiles();
           });
           it('should write the dist files according to the new dist-target set in bit.json', () => {
@@ -256,11 +256,11 @@ describe('bit import', function () {
             expect(localConsumerFiles).to.include(newLocationMyUtilDist);
           });
         });
-        describe('without --dist flag', () => {
+        describe('with --ignore-dist flag', () => {
           before(() => {
             helper.reInitLocalScope();
             helper.addRemoteScope();
-            helper.importComponent('imprel/impreldist');
+            helper.importComponent('imprel/impreldist --ignore-dist');
             localConsumerFiles = helper.getConsumerFiles();
           });
           it('should write the internal files according to their relative paths', () => {
@@ -1072,7 +1072,7 @@ describe('bit import', function () {
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo --dist');
+      helper.importComponent('bar/foo');
       localConsumerFiles = helper.getConsumerFiles();
     });
     const isStringLocation = path.join(
@@ -1190,11 +1190,11 @@ describe('bit import', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
-    describe('importing without --dist flag', () => {
+    describe('importing with --ignore-dist flag', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo');
+        helper.importComponent('bar/foo --ignore-dist');
         localConsumerFiles = helper.getConsumerFiles();
       });
       it('should not write anything to the dist folder of the main component', () => {
@@ -1207,7 +1207,7 @@ describe('bit import', function () {
         expect(indexFileContent).to.have.string("require('./bar/foo')");
         expect(indexFileContent).to.not.have.string('dist');
       });
-      describe('bit build after importing without --dist flag', () => {
+      describe('bit build after importing without --ignore-dist flag', () => {
         before(() => {
           helper.build('bar/foo');
         });
@@ -1245,34 +1245,70 @@ describe('bit import', function () {
      * to be updated as well so then their 'dependencies' attribute includes the latest version of is-type.
      * In this case, is-string should be updated to include is-type with v2.
      */
-    before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
-      helper.commitAllComponents();
+    describe('as AUTHORED', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponent('utils', 'is-type.js', isTypeFixture);
+        helper.addComponent('utils/is-type.js');
+        helper.createComponent('utils', 'is-string.js', isStringFixture);
+        helper.addComponent('utils/is-string.js');
+        helper.commitAllComponents();
 
-      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
-      const statusOutput = helper.runCmd('bit status');
-      expect(statusOutput).to.have.string('components pending to be tagged automatically');
-      const commitOutput = helper.commitComponent('utils/is-type');
-      expect(commitOutput).to.have.string('auto-tagged components');
-      expect(commitOutput).to.have.string('utils/is-string');
-      // notice how is-string is not manually committed again!
-      helper.exportAllComponents();
+        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+        helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('components pending to be tagged automatically');
+        const commitOutput = helper.commitComponent('utils/is-type');
+        expect(commitOutput).to.have.string('auto-tagged components');
+        expect(commitOutput).to.have.string('utils/is-string');
+        // notice how is-string is not manually committed again!
+        helper.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.importComponent('utils/is-string');
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string');
+      });
+      it('should use the updated dependencies and print the results from the latest versions', () => {
+        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        // notice the "v2" (!)
+        expect(result.trim()).to.equal('got is-type v2 and got is-string');
+      });
     });
-    it('should use the updated dependencies and print the results from the latest versions', () => {
-      const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-      const result = helper.runCmd('node app.js');
-      // notice the "v2" (!)
-      expect(result.trim()).to.equal('got is-type v2 and got is-string');
+    describe('as IMPORTED', () => {
+      let commitOutput;
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponent('utils', 'is-type.js', isTypeFixture);
+        helper.addComponent('utils/is-type.js');
+        helper.createComponent('utils', 'is-string.js', isStringFixture);
+        helper.addComponent('utils/is-string.js');
+        helper.commitAllComponents();
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string');
+        helper.importComponent('utils/is-type');
+
+        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+        helper.createComponent(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2); // modify is-type
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('components pending to be tagged automatically');
+        commitOutput = helper.commitComponent('utils/is-type');
+      });
+      it('should auto-tag the dependents', () => {
+        expect(commitOutput).to.not.have.string('no auto-tag pending components');
+        expect(commitOutput).to.have.string('auto-tagged components');
+        expect(commitOutput).to.have.string('utils/is-string');
+      });
+      it('should use the updated dependencies and print the results from the latest versions', () => {
+        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type v2 and got is-string'); // notice the "v2"
+      });
     });
   });
 
@@ -1492,6 +1528,16 @@ describe('bit import', function () {
         const bitMap = helper.readBitMap();
         expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
         expect(bitMap[`${helper.remoteScope}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
+      });
+      it('should not show any component in bit status', () => {
+        const output = helper.runCmd('bit status');
+        expect(output).to.not.have.a.string('utils/is-string');
+        expect(output).to.not.have.a.string('utils/is-type');
+        expect(output).to.have.a.string('no new components');
+        expect(output).to.have.a.string('no modified components');
+        expect(output).to.have.a.string('no staged components');
+        expect(output).to.have.a.string('no deleted components');
+        expect(output).to.have.a.string('no auto-tag pending components');
       });
       it('should not break the is-string component', () => {
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
