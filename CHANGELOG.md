@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.12.0-ext.14] - 2018-01-09
 
+bump bit-javascript version to 0.10.8-dev.8
+
+## [0.12.0-ext.14] - 2018-01-09
+
 - workaround for old bit binding prefix
 
 ## [0.12.0-ext.13] - 2018-01-09
