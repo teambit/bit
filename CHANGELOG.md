@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.14] - 2018-01-09
+
+- workaround for old bit binding prefix
+
 ## [0.12.0-ext.13] - 2018-01-09
 
 - [#571](https://github.com/teambit/bit/issues/571) apply the auto-tagging mechanism for imported components 
