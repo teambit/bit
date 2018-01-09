@@ -84,9 +84,10 @@ Use Bit to turn any shared-lib into a dynamic collection of individual component
 
 Additional use cases: **GraphQL APIs**, **Serverless functions**, **Utility functions** and any encapsulated, reusable functionality.
 
-
 ## Quick Start (workflow)
-Let's add Bit to a repository to isolate and share components, import them into other repositories and update them between them.
+Let's use Bit to isolate and share components from a repository, import them into other repositories and update changes between them.
+
+Note that the same flow described below also works for multiple packages indside a single repository.
 
 ### Install Bit
 `npm install bit-bin -g`
@@ -108,12 +109,13 @@ A scope is a collection of shared components with a common theme or ownership.
 
 It’s key role is to serve as a source of truth for syncing shared code across different repositories. It also helps to organize and make all your shared components discoverable.
 
-Much like Git repositories, Scopes are lightweight and can also be [set up on any server](https://teambit.github.io/docs/advanced.html#host-your-own-scope).
+Much like Git repositories, scopes are lightweight and can be [set up on any server](https://teambit.github.io/docs/advanced.html#host-your-own-scope).
 
-Let's create a free Scope on the [Bit community hub](https://bitsrc.io/signup).
+Let's create a free Scope on the [Bit community hub](https://bitsrc.io/signup) - so we could view it through a more discoverable UI, run component tests in isolation and later install them using Yarn / NPM.
 
 ### Share source code components directly from your repository
-To break the overhead of sharing more modules, Bit enables you to track subsets of files in your repository as reusable components and isolate them with everything they need to execute.
+
+To break the overhead of sharing more code, Bit enables you to track subsets of files in your repository as reusable components and isolate them with everything they need in order to execute.
 
 Let's isolate the UI components `button`, `login` and `logo` in the following project's directory structure.
 ```
@@ -138,7 +140,7 @@ MacbookPro:src bit$ tree . -I node_modules
 └── index.js
 4 directories, 13 files
 ```
-To command Bit to start tracking these UI components, use the `bit add` command.
+To tell Bit to start tracking these UI components, use the `bit add` command.
 This command also accepts a glob pattern, so you can track multiple components at once.
 
 In this case, we have 3 components in the "components" directory. Let's track all of them.
