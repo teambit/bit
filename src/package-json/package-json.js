@@ -5,7 +5,6 @@ import parents from 'parents';
 import path from 'path';
 import { PackageJsonAlreadyExists, PackageJsonNotFound } from '../exceptions';
 import { PACKAGE_JSON } from '../constants';
-import generatePostInstallScript from './postInstall';
 
 function composePath(componentRootFolder: string) {
   return path.join(componentRootFolder, PACKAGE_JSON);
@@ -74,10 +73,6 @@ export default class PackageJson {
   toJson(readable: boolean = true) {
     if (!readable) return JSON.stringify(this.toPlainObject());
     return JSON.stringify(this.toPlainObject(), null, 4);
-  }
-
-  setScripts(postInstallLinkData: Array<Object> = [], domainPrefix: string) {
-    this.scripts = R.isEmpty(postInstallLinkData) ? {} : generatePostInstallScript(this.componentRootFolder, postInstallLinkData, domainPrefix);
   }
 
   setDependencies(dependencies, bitDependencies: Object, registryPrefix: string) {
