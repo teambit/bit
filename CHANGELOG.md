@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#571](https://github.com/teambit/bit/issues/571) apply the auto-tagging mechanism for imported components 
+
 ## [0.12.0-ext.12] - 2018-01-08
 
 - [#562](https://github.com/teambit/bit/issues/562) rename default extension to core extension 
