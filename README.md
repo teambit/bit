@@ -176,7 +176,7 @@ bit add empty-component.js
 bit tag --all
 bit export {{owner}}.{{scope}}
 ```
-### Install / import the shared components
+### Import the shared components
 
 Once shared, you can install these components using the Yarn or NPM client from the bitsrc registry, or- **import** them into other repositories using Bit.
 
@@ -194,6 +194,9 @@ You can now use the component in your new project:
 ```
 const component = require('./components/button');
 ```
+
+**Note that once shared to [bitsrc](https://bitsrc.io), components and modules can also be installed with your native NPM/Yarn client**.
+
 ### Updating Components
 
 A component can be updated from any project using Bit.
