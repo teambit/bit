@@ -69,14 +69,16 @@ Bit helps to track and manage changes to shared code in any number of repositori
 
 Bit helps you create a single source of truth for the building blocks shared throughout your projects and packages. You can easily discover your team’s technological assets, choose the ones you need and eliminate duplications. With Bit, you can also easily learn which components are used by who and where, to safely make multiple changes in multiple projects / packages.
 
-### Extend Bit 
+### Extending Bit 
 
 Bit can be extended to optimize the workflow around reusable components and modules. You can render UI components, test and build components and modules in an isolated environment, parse docs and examples from the source code itself and even publish components to NPM.
 
 ## Tutorials And Examples
 
 #### UI / Web components
+
 Share and sync UI components (React, Angular, Vue etc) between projects.
+
 * Tutorial: [Bit with React](https://docs.bitsrc.io/react-tutorial.html).
 * An [example React app](https://hub.com/itaymendel/movie-app) with 9 React components shared and made [individually available](https://bitsrc.io/bit/movie-app) with Bit.
 
