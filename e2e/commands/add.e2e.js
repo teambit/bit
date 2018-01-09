@@ -44,6 +44,7 @@ describe('bit add command', function () {
       const remote = helper.remoteScopePath;
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('bar', 'foo2.js');
+      helper.importCompiler();
       helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo ' });
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
@@ -72,7 +73,7 @@ describe('bit add command', function () {
         }/bar/foo" to "test/test`
       );
     });
-    it('Should not add files to imported component', () => {
+    it('Should not add files and dists to imported component', () => {
       helper.addComponentWithOptions(
         '.',
         { i: 'bar/foo' },
@@ -727,6 +728,7 @@ describe('bit add command', function () {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
       helper.addRemoteScope();
+      helper.importCompiler();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
