@@ -665,15 +665,15 @@ export default class Consumer {
 
   async candidateComponentsForAutoTagging(modifiedComponents: BitId[]) {
     const bitMap = await this.getBitMap();
-    const authoredComponents = bitMap.getAllComponents(COMPONENT_ORIGINS.AUTHORED);
-    if (!authoredComponents) return null;
+    const candidateComponents = bitMap.getAllComponents([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    if (!candidateComponents) return null;
     const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
       modifiedComponent.toStringWithoutVersion()
     );
-    const authoredComponentsIds = Object.keys(authoredComponents).map(id => BitId.parse(id));
-    // if a modified component is in authored array, remove it from the array as it will be already tagged with the
+    const candidateComponentsIds = Object.keys(candidateComponents).map(id => BitId.parse(id));
+    // if a modified component is in candidates array, remove it from the array as it will be already tagged with the
     // correct version
-    return authoredComponentsIds.filter(
+    return candidateComponentsIds.filter(
       component => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
     );
   }

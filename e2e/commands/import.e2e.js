@@ -1245,34 +1245,70 @@ describe('bit import', function () {
      * to be updated as well so then their 'dependencies' attribute includes the latest version of is-type.
      * In this case, is-string should be updated to include is-type with v2.
      */
-    before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
-      helper.commitAllComponents();
+    describe('as AUTHORED', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponent('utils', 'is-type.js', isTypeFixture);
+        helper.addComponent('utils/is-type.js');
+        helper.createComponent('utils', 'is-string.js', isStringFixture);
+        helper.addComponent('utils/is-string.js');
+        helper.commitAllComponents();
 
-      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
-      const statusOutput = helper.runCmd('bit status');
-      expect(statusOutput).to.have.string('components pending to be tagged automatically');
-      const commitOutput = helper.commitComponent('utils/is-type');
-      expect(commitOutput).to.have.string('auto-tagged components');
-      expect(commitOutput).to.have.string('utils/is-string');
-      // notice how is-string is not manually committed again!
-      helper.exportAllComponents();
+        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+        helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('components pending to be tagged automatically');
+        const commitOutput = helper.commitComponent('utils/is-type');
+        expect(commitOutput).to.have.string('auto-tagged components');
+        expect(commitOutput).to.have.string('utils/is-string');
+        // notice how is-string is not manually committed again!
+        helper.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.importComponent('utils/is-string');
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string');
+      });
+      it('should use the updated dependencies and print the results from the latest versions', () => {
+        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        // notice the "v2" (!)
+        expect(result.trim()).to.equal('got is-type v2 and got is-string');
+      });
     });
-    it('should use the updated dependencies and print the results from the latest versions', () => {
-      const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-      const result = helper.runCmd('node app.js');
-      // notice the "v2" (!)
-      expect(result.trim()).to.equal('got is-type v2 and got is-string');
+    describe('as IMPORTED', () => {
+      let commitOutput;
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponent('utils', 'is-type.js', isTypeFixture);
+        helper.addComponent('utils/is-type.js');
+        helper.createComponent('utils', 'is-string.js', isStringFixture);
+        helper.addComponent('utils/is-string.js');
+        helper.commitAllComponents();
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string');
+        helper.importComponent('utils/is-type');
+
+        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+        helper.createComponent(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2); // modify is-type
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('components pending to be tagged automatically');
+        commitOutput = helper.commitComponent('utils/is-type');
+      });
+      it('should auto-tag the dependents', () => {
+        expect(commitOutput).to.not.have.string('no auto-tag pending components');
+        expect(commitOutput).to.have.string('auto-tagged components');
+        expect(commitOutput).to.have.string('utils/is-string');
+      });
+      it('should use the updated dependencies and print the results from the latest versions', () => {
+        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type v2 and got is-string'); // notice the "v2"
+      });
     });
   });
 
