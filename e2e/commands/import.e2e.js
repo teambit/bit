@@ -204,7 +204,7 @@ describe('bit import', function () {
         const expectedLocationImprelDist = path.join(imprelDir, 'dist', 'imprel.js');
         const expectedLocationImprelSpecDist = path.join(imprelDir, 'dist', 'imprel.spec.js');
         const expectedLocationMyUtilDist = path.join(imprelDir, 'dist', 'utils', 'myUtil.js');
-        describe('without --no-dist flag', () => {
+        describe('without --ignore-dist flag', () => {
           before(() => {
             helper.reInitLocalScope();
             helper.addRemoteScope();
@@ -256,7 +256,7 @@ describe('bit import', function () {
             expect(localConsumerFiles).to.include(newLocationMyUtilDist);
           });
         });
-        describe('with --no-dist flag', () => {
+        describe('with --ignore-dist flag', () => {
           before(() => {
             helper.reInitLocalScope();
             helper.addRemoteScope();
@@ -1190,7 +1190,7 @@ describe('bit import', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
-    describe('importing with --no-dist flag', () => {
+    describe('importing with --ignore-dist flag', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -1207,7 +1207,7 @@ describe('bit import', function () {
         expect(indexFileContent).to.have.string("require('./bar/foo')");
         expect(indexFileContent).to.not.have.string('dist');
       });
-      describe('bit build after importing without --no-dist flag', () => {
+      describe('bit build after importing without --ignore-dist flag', () => {
         before(() => {
           helper.build('bar/foo');
         });
