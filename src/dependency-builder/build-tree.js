@@ -199,15 +199,16 @@ function resolveModulePath(nmPath, workingDir, root) {
  * @param {string []} packagesNames
  * @returns new object with found and missing
  */
-function findPackagesInPackageJson (packageJson: Object, packagesNames: string[] ) {
+function findPackagesInPackageJson(packageJson: Object, packagesNames: string[]) {
   const { dependencies, devDependencies, peerDependencies } = packageJson;
-  const mergedDependencies = Object.assign(dependencies, devDependencies, peerDependencies)
+  const foundPackages = {};
+  const mergedDependencies = Object.assign(dependencies, devDependencies, peerDependencies);
   if (packagesNames && packagesNames.length && !R.isNil(mergedDependencies)) {
-    const [foundPackages, missingPackages] = partition(packagesNames, item => item in mergedDependencies);
-    foundPackages.forEach(pack => foundPackages[pack] = mergedDependencies[pack] )
+    const [foundPackagesPartition, missingPackages] = partition(packagesNames, item => item in mergedDependencies);
+    foundPackagesPartition.forEach(pack => foundPackages[pack] = mergedDependencies[pack]);
     return { foundPackages, missingPackages };
   }
-  return { foundPackages: {}, missingPackages: packagesNames}
+  return { foundPackages: {}, missingPackages: packagesNames };
 }
 /**
  * Run over each entry in the missing array and transform the missing from list of paths
