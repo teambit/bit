@@ -40,6 +40,7 @@ import {
   BIT_JSON
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
+import * as packageJson from './package-json';
 
 export type RelativePath = {
   sourceRelativePath: string,
@@ -242,20 +243,7 @@ export default class Component {
     writeBitDependencies?: boolean = false,
     dependencies: Array<Component>
   ): Promise<boolean> {
-    const driver: ?Driver = consumer ? consumer.driver : undefined;
-    const PackageJson = driver.getDriver(false).PackageJson;
     let postInstallLinkData = [];
-    const mainFile = this.calculateMainDistFile();
-    const getBitDependencies = async () => {
-      if (!writeBitDependencies) return {};
-      const dependenciesPackages = this.dependencies.map(async (dep) => {
-        const packageDependency = await consumer.getPackageDependency(dep.id, this.id);
-        return [dep.id.toStringWithoutVersion(), packageDependency];
-      });
-      return R.fromPairs(await Promise.all(dependenciesPackages));
-    };
-    const bitDependencies = await getBitDependencies();
-
     if (writeBitDependencies) {
       const fullPathRequiresComponents = this.dependencies
         .filter(component => R.isEmpty(component.relativePaths))
@@ -269,35 +257,7 @@ export default class Component {
         ? componentsRequiredByFullPath.map(component => component.getPackageNameAndPath())
         : [];
     }
-
-    const registryPrefix = Consumer.getRegistryPrefix();
-    const name = `${registryPrefix}/${this.id.toStringWithoutVersion().replace(/\//g, '.')}`;
-    const packageJson = new PackageJson(bitDir, {
-      name,
-      version: this.version,
-      homepage: this._getHomepage(),
-      main: mainFile,
-      devDependencies: this.devPackageDependencies,
-      peerDependencies: this.peerPackageDependencies,
-      componentRootFolder: bitDir,
-      license: `SEE LICENSE IN ${!R.isEmpty(this.license) ? 'LICENSE' : 'UNLICENSED'}`
-    });
-    packageJson.setDependencies(this.packageDependencies, bitDependencies, registryPrefix);
-    packageJson.setScripts(postInstallLinkData, registryPrefix);
-
-    return packageJson.write({ override: force });
-  }
-
-  async updatePackageJsonAttribute(consumer: Consumer, componentDir, attributeName, attributeValue): Promise<*> {
-    const PackageJson = consumer.driver.getDriver(false).PackageJson;
-    try {
-      const packageJson = await PackageJson.load(componentDir);
-      packageJson[attributeName] = attributeValue;
-      return packageJson.write({ override: true });
-    } catch (e) {
-      // package.json doesn't exist, that's fine, no need to update anything
-      return Promise.resolve();
-    }
+    return packageJson.write(consumer, this, bitDir, force, writeBitDependencies, postInstallLinkData);
   }
 
   dependencies(): BitIds {

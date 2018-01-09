@@ -10,6 +10,7 @@ import * as linkGenerator from '../links/link-generator';
 import linkComponentsToNodeModules from './node-modules-linker';
 import Consumer from '../consumer/consumer';
 import ComponentWithDependencies from '../scope/component-dependencies';
+import * as packageJson from '../consumer/component/package-json';
 
 export async function linkAllToNodeModules(consumer: Consumer) {
   const bitMap = await consumer.getBitMap();
@@ -24,7 +25,7 @@ export async function writeLinksInDist(component: Component, componentMap, bitMa
   const componentWithDeps = await component.toComponentWithDependencies(bitMap, consumer);
   await linkGenerator.writeDependencyLinks([componentWithDeps], bitMap, consumer, false);
   const newMainFile = pathNormalizeToLinux(component.calculateMainDistFile());
-  await component.updatePackageJsonAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
+  await packageJson.updateAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
   linkComponentsToNodeModules([component], bitMap, consumer);
   return linkGenerator.writeEntryPointsForComponent(component, bitMap, consumer);
 }
@@ -87,7 +88,7 @@ export async function linkComponents(
   const directDependentComponents = await findDirectDependentComponents(writtenComponents, bitMap, consumer);
   if (directDependentComponents.length) {
     await reLinkDirectlyImportedDependencies(directDependentComponents, bitMap, consumer);
-    await consumer.changeDependenciesToRelativeSyntaxInPackageJson(directDependentComponents, writtenComponents);
+    await packageJson.changeDependenciesToRelativeSyntax(consumer, directDependentComponents, writtenComponents);
   }
   return allComponents;
 }
