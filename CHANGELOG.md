@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+## [0.12.0-ext.16] - 2018-01-09
+
+- remove auto generated post install scripts
+- bump bit-javascript version to 0.10.8-dev.10
+
+## [0.12.0-ext.15] - 2018-01-09
 
 - bump bit-javascript version to 0.10.8-dev.9
 
