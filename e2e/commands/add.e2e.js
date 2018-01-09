@@ -104,6 +104,16 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'foo.js', test: false, name: 'foo.js' });
       expect(files).to.deep.include({ relativePath: 'testDir/newFile.js', test: false, name: 'newFile.js' });
     });
+    it('Should not add dist files to imported component when distTarget is not specified', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
+      const component = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
+      const files = component.files;
+      expect(files).to.be.array();
+      expect(files).to.be.ofSize(2);
+      expect(files).to.not.deep.include({ relativePath: 'dist/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.not.deep.include({ relativePath: 'dist/testDir/newFile.js', test: false, name: 'newFile.js' });
+    });
     it('Should only add test file to imported component', () => {
       helper.createFile(path.join('components', 'bar', 'foo', 'testDir'), 'test.spec.js', 'console.log("test");');
       helper.addComponentWithOptions(
