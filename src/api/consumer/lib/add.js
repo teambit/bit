@@ -44,7 +44,7 @@ export default (async function addAction(
   override: boolean
 ): Promise<Object> {
   /**
-   * Group files by id
+   * Group files by componentId
    *
    * @param {BitId} componentId - consumer path
    * @param {Object[]} files consumer bitMap
@@ -56,9 +56,9 @@ export default (async function addAction(
       const bitMapComponentId = !R.isEmpty(foundComponentFromBitMap)
         ? Object.keys(foundComponentFromBitMap)[0]
         : undefined;
-      return { id: bitMapComponentId || componentId, file };
+      return { componentId: bitMapComponentId || componentId, file };
     });
-    const groudComponentIdsFile = R.groupBy(componentFromMap => componentFromMap.id);
+    const groudComponentIdsFile = R.groupBy(componentFromMap => componentFromMap.componentId);
     return groudComponentIdsFile(filesWithId);
   }
   /**
@@ -330,7 +330,7 @@ export default (async function addAction(
   if (!bitJson.distTarget) {
     const importedComponents = bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
     const distDirsOfImportedComponents = Object.keys(importedComponents).map(key =>
-      path.join(importedComponents[key].rootDir, DEFAULT_DIST_DIRNAME)
+      path.join(importedComponents[key].rootDir, DEFAULT_DIST_DIRNAME, '**')
     );
     ignoreList = ignoreList.concat(distDirsOfImportedComponents);
   }
