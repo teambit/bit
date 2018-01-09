@@ -23,9 +23,9 @@ Multiple repositories provide great modularity, separation of concerns, clear ow
 
 Some projects choose to manage multiple packages in a single repository to avoid the overhead of multiple repositories and for better development testing.
 
-In both cases, sharing common code between repositories or packages can get painful.
+In both cases, sharing common code between repositories or packages and managing changes can get painful.
 
-Bit works with Git and NPM to help share more code and manage changes for shared code, with greater discoverability and less overhead. It’s a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
+Bit works with Git and NPM to help share more code and easily manage changes across repositories and packages, with greater discoverability and less overhead. It’s a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
 - [Use Cases](#use-cases)
 - [How It Works](#how-it-works)
