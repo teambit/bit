@@ -15,57 +15,75 @@
 
 [Community](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/)
 
-Multiple repositories provide better modularity, separation of concerns, clear ownerships, shorter learning curves and mitigation of development pain.
-However, over time it becomes hard to track and manage changes to common code across these repositories.
+Multiple repositories provide great modularity, separation of concerns, clear ownerships, shorter learning curves and mitigation of development pain.
 
-**Bit extends Git and integrates into package managers to make it simple to share more modules and merge changes across repositories.**
+Some projects choose to manage multiple packages in a single repository to avoid the overhead of multiple repositories and for better development testing.
 
-It also provides better discoverability to track and control shared code across your entire codebase.
-Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
+In both cases, sharing common code between repositories or packages can get painful.
 
-### How it works
+**Bit makes it easier to manage shared code in both multi-repo and mono-repo architectures**. 
 
-##### Easily share more modules:
-Bit helps you isolate and share source code components (subsets of files) from any Javascript repository and use them as managed modules in other repositories without having to change the original repository's source code or maintain any additional repositories. This shared code can be managed by Bit or installed using NPM or Yarn, as you choose.
+Bit works with Git and NPM to help share more code and manage changes for shared code, with greater discoverability and less overhead.
 
-##### Merging cross-repo changes:
-Bit extends Git to track and merge changes across multiple repositories without being handicapped by ownership or the overhead of changing packages. Instead, you can sync changes to shared code done in one repository to all other repositories its shared in. 
-
-##### Discoverability across your codebase
-Bit provides simple discoverability to learn exactly what shared components are available and which component is being used in which repository. It also helps you gain absolute control over tour dependency graph across the entire codebase. For a mono-repo architecture, Bit helps discover and organize the building blocks which that repo is built from.
-
-##### Extend Bit 
-To benefit from working with shared source code at the resolution of smaller components, by visually discovering them , testing them, compiling them and parsing useful information directly from their source code without writing documentation. You can also extend Bit to publish components straight to the NPM registry.
+It’s a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
 ### Use Cases
 
-#### Multiple Javascript repositories
-Bit negates most of the pains of working multi-repo by making it easy to share code directly from any repository source code without changing it, track and keep it synced across different repositories by leveraging extensions to Git’s comparison and merge utilities. 
+#### Multiple Javascript repositories (multi-repo)
 
-#### Single Javascript repository (monorepo)
-Bit helps to decouple the representation of different components from the project’s file system to provide greater discoverability in the repository, shorten learning curves, increase flexibility of dependency upgrade and make the repository less intimidating 
-### Examples
+Sharing code and managing changes across multiple repositories can become very hard very quickly.
+Bit solves this issue by helping you share more code, and easily manage changes across multiple repositories. 
+
+Bit lets you share components and modules directly from any repository’s source code without changing it, without maintaining more repositories and libraries.
+
+Shared components and modules can also be installed with the Yarn / NPM client from the [bisrc registry](https://bitsrc.io) - and updated by changing your original source code and re-sharing it.
+
+Shared code can also be managed and changed across multiple repositories with updates leveraging Git’s compare and merge utilities, by using Bit to import shared components and syncing them in different project (still under development).
+
+
+#### A multi-package repository (mono-repo)
+
+When managing multiple packages in a single repository (with tools like [Lerna](https://github.com/lerna/lerna)), many of these packages still share smaller components and modules. While these smaller components shouldn’t be packages of their own, we often can’t or don’t want to put them in one package and use them in others (separation of concerns).
+
+Bit helps you share these components and modules between these different packages without having to copy-paste code, and provides better discoverability and control over changes.
+
+### How it works
+
+#### Simplified code sharing
+
+Bit helps you isolate and share source code components (subsets of files) from any Javascript repository and use them as managed modules in other repositories without having to change the original repository's source code or maintain any additional repositories.  This workflow provides the speed and efficiency of copy-pasting, while still keeping it managed.
+
+#### Managing changes across repos / packages
+
+Bit helps to track and manage changes to shared code in any number of repositories. You can use NPM / Yarn to install shared modules and components in different repositories, keep track, and easily update changes in all of them together without working hard or being handicapped by ownership. You can also use Bit to import and source shared components in multiple repositories, develop them, and merge changes by extending Git’s compare and merge utilities (still in development).
+
+#### Discoverability and control
+
+Bit helps you create a single source of truth for the building blocks shared throughout your projects and packages. You can easily discover your team’s technological assets, choose the ones you need and eliminate duplications. With Bit, you can also easily learn which components are used by who and where, to safely make multiple changes in multiple projects / packages.
+
+#### Extend Bit 
+
+Bit can be extended to optimize the workflow around reusable components and modules. You can render UI components, test and build components and modules in an isolated environment, parse docs and examples from the source code itself and even publish components to NPM.
+
+### Tutorials and examples
 
 ##### UI / Web components
-Share and sync React, Vue and Angular components.
-
+Share and sync UI components (React, Angular, Vue etc) between projects.
 * Tutorial: [Bit with React](https://docs.bitsrc.io/react-tutorial.html).
 * An [example React app](https://hub.com/itaymendel/movie-app) with 9 React components shared and made [individually available](https://bitsrc.io/bit/movie-app) with Bit.
 
 ##### Node.js modules
+
 Share and sync Node.js modules between micro-services in a multi-repo architecture.
 * Tutorial: [Bit with Node.js](https://docs.bitsrc.io/node-tutorial.html).
 
-##### Shared Libraries
-Use Bit to turn any shared-lib into a dynamic collection of individual components.
+##### Eliminating shared Libraries
 
+Use Bit to turn any shared-lib into a dynamic collection of individual components.
 * Tutorial: [Bit with Shared Libraries](https://docs.bitsrc.io/shared-lib-main.html).
 
 Additional use cases: **GraphQL APIs**, **Serverless functions**, **Utility functions** and any encapsulated, reusable functionality.
 
-## Supported Languages
-Bit's design is language agnostic. Still, it requires language-specific drivers for language-sensitive features (binding etc):
-* [bit-javascript](https://github.com/teambit/bit-javascript).
 
 ## Quick Start (workflow)
 Let's add Bit to a repository to isolate and share components, import them into other repositories and update them between them.
@@ -190,17 +208,18 @@ Now you can go back to your browser, and see that there's a new version for `com
 
 ## Motivation
 
-Many words has been written on working multi-repo vs. working mono-repo.
-Multiple repositories provides many advantages such as better modularity, clear ownerships, better scale, mitigation of development times and pain, shorter learning curves and more.
+Modularity has always been the holy grail of software development.
 
-However, over time it becomes harder and harder to manage hundreds or thousands of repositories and to effectively share source code between them. Duplicate code and rewrites begin to grow, maintenance becomes harder and a technological debt accumulates. 
+Wether it's being strived for through multiple repositoires or through multi-package repositoires, it provides greater flexabilty, reusbality, testabilty and seperation of concerns (see the [FIRST principle](https://addyosmani.com/first/) by Addy Osmani).
 
-Package managers were built for large projects. The overhead of publishing and changing packages, along with ownership problems, makes it hard to share enough code and manage changes across different repositories. Shared libraries fail to provide a solution, as they are cumbersome and static, making them hard to adapt in the test of time.
+Regardless of architecture, Bit was created to enable better modulairty and compisition of smaller pieces to build larger things. It does so by making it easier to share code, manage it and collaborate together to compose it into new applications.
 
-So, Bit was created to solve the pains of sharing and managing shared code across multiple repositories, by extending and completing the existing Git - Package management ecosystem. 
+Feel free to [visit our website](https://bitsrc.io) or [learn more on Hackernoon](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca).
 
-Feel free to get started.
-Learn more on Hackernoon: "[How we started sharing components as a team](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)".*
+## Supported Languages
+Bit's design is language agnostic. Still, it requires language-specific drivers for language-sensitive features (binding etc):
+
+* [bit-javascript](https://github.com/teambit/bit-javascript).
 
 ## Contributing
 
