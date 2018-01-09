@@ -277,7 +277,6 @@ export default class Component {
       license: `SEE LICENSE IN ${!R.isEmpty(this.license) ? 'LICENSE' : 'UNLICENSED'}`
     });
     packageJson.setDependencies(this.packageDependencies, bitDependencies, registryPrefix);
-    packageJson.setScripts(postInstallLinkData, registryPrefix);
 
     return packageJson.write({ override: force });
   }
