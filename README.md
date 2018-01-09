@@ -15,6 +15,7 @@
 
 [Community](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=vm_oOghNEYs) • [Examples](https://bitsrc.io/bit/movie-app#styles) • [Gitter](https://gitter.im/bit-src/Bit) • [Blog](https://blog.bitsrc.io/)
 
+## About 
 Multiple repositories provide great modularity, separation of concerns, clear ownerships, shorter learning curves and mitigation of development pain.
 
 Some projects choose to manage multiple packages in a single repository to avoid the overhead of multiple repositories and for better development testing.
@@ -27,9 +28,9 @@ Bit works with Git and NPM to help share more code and manage changes for shared
 
 It’s a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
-### Use Cases
+## Use Cases
 
-#### Multiple Javascript repositories (multi-repo)
+### Multiple Javascript repositories (multi-repo)
 
 Sharing code and managing changes across multiple repositories can become very hard very quickly.
 Bit solves this issue by helping you share more code, and easily manage changes across multiple repositories. 
@@ -41,43 +42,43 @@ Shared components and modules can also be installed with the Yarn / NPM client f
 Shared code can also be managed and changed across multiple repositories with updates leveraging Git’s compare and merge utilities, by using Bit to import shared components and syncing them in different project (still under development).
 
 
-#### A multi-package repository (mono-repo)
+### A multi-package repository (mono-repo)
 
 When managing multiple packages in a single repository (with tools like [Lerna](https://github.com/lerna/lerna)), many of these packages still share smaller components and modules. While these smaller components shouldn’t be packages of their own, we often can’t or don’t want to put them in one package and use them in others (separation of concerns).
 
 Bit helps you share these components and modules between these different packages without having to copy-paste code, and provides better discoverability and control over changes.
 
-### How it works
+## How it works
 
-#### Simplified code sharing
+### Simplified code sharing
 
 Bit helps you isolate and share source code components (subsets of files) from any Javascript repository and use them as managed modules in other repositories without having to change the original repository's source code or maintain any additional repositories.  This workflow provides the speed and efficiency of copy-pasting, while still keeping it managed.
 
-#### Managing changes across repos / packages
+### Managing changes across repos / packages
 
 Bit helps to track and manage changes to shared code in any number of repositories. You can use NPM / Yarn to install shared modules and components in different repositories, keep track, and easily update changes in all of them together without working hard or being handicapped by ownership. You can also use Bit to import and source shared components in multiple repositories, develop them, and merge changes by extending Git’s compare and merge utilities (still in development).
 
-#### Discoverability and control
+### Discoverability and control
 
 Bit helps you create a single source of truth for the building blocks shared throughout your projects and packages. You can easily discover your team’s technological assets, choose the ones you need and eliminate duplications. With Bit, you can also easily learn which components are used by who and where, to safely make multiple changes in multiple projects / packages.
 
-#### Extend Bit 
+### Extend Bit 
 
 Bit can be extended to optimize the workflow around reusable components and modules. You can render UI components, test and build components and modules in an isolated environment, parse docs and examples from the source code itself and even publish components to NPM.
 
-### Tutorials and examples
+## Tutorials and examples
 
-##### UI / Web components
+#### UI / Web components
 Share and sync UI components (React, Angular, Vue etc) between projects.
 * Tutorial: [Bit with React](https://docs.bitsrc.io/react-tutorial.html).
 * An [example React app](https://hub.com/itaymendel/movie-app) with 9 React components shared and made [individually available](https://bitsrc.io/bit/movie-app) with Bit.
 
-##### Node.js modules
+#### Node.js modules
 
 Share and sync Node.js modules between micro-services in a multi-repo architecture.
 * Tutorial: [Bit with Node.js](https://docs.bitsrc.io/node-tutorial.html).
 
-##### Eliminating shared Libraries
+#### Eliminating shared Libraries
 
 Use Bit to turn any shared-lib into a dynamic collection of individual components.
 * Tutorial: [Bit with Shared Libraries](https://docs.bitsrc.io/shared-lib-main.html).
