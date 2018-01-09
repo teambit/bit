@@ -14,9 +14,9 @@ chai.use(assertArrays);
 describe('bit add command', function () {
   this.timeout(0);
   const helper = new Helper();
-  /*  after(() => {
+  after(() => {
     helper.destroyEnv();
-  }); */
+  });
 
   describe('add before running "bit init"', () => {
     it('Should return message to run "bit init"', () => {
@@ -218,7 +218,7 @@ describe('bit add command', function () {
     it.skip('should not allow adding a component with an existing box-name and component-name', () => {});
   });
 
-  describe.only('adding file to existing tagged component', () => {
+  describe('adding file to existing tagged component', () => {
     let bitMap;
     let files;
     before(() => {
