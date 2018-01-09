@@ -644,9 +644,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
@@ -825,11 +825,15 @@ export default class Consumer {
 
   static getNodeModulesPathOfComponent(bindingPrefix, id) {
     if (!id.scope) throw new Error(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`);
+    // Temp fix to support old components before the migraion has been running
+    bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
     return path.join('node_modules', bindingPrefix, [id.scope, id.box, id.name].join(NODE_PATH_SEPARATOR));
   }
 
   static getComponentIdFromNodeModulesPath(requirePath, bindingPrefix) {
     requirePath = pathNormalizeToLinux(requirePath);
+    // Temp fix to support old components before the migraion has been running
+    bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
     const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : `${bindingPrefix}/`;
     const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
     const componentName = withoutPrefix.includes('/')
