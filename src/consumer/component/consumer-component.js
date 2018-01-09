@@ -235,20 +235,26 @@ export default class Component {
     return { packageName, packagePath };
   }
 
-  writePackageJson(
-    driver: Driver,
+  async writePackageJson(
+    consumer: Consumer,
     bitDir: string,
     force?: boolean = true,
     writeBitDependencies?: boolean = false,
     dependencies: Array<Component>
   ): Promise<boolean> {
+    const driver: ?Driver = consumer ? consumer.driver : undefined;
     const PackageJson = driver.getDriver(false).PackageJson;
     let postInstallLinkData = [];
     const mainFile = this.calculateMainDistFile();
-    // Replace all the / with - because / is not valid on package.json name key
-    const bitDependencies = writeBitDependencies
-      ? R.fromPairs(this.dependencies.map(dep => [dep.id.toStringWithoutVersion(), dep.id.version]))
-      : {};
+    const getBitDependencies = async () => {
+      if (!writeBitDependencies) return {};
+      const dependenciesPackages = this.dependencies.map(async (dep) => {
+        const packageDependency = await consumer.getPackageDependency(dep.id, this.id);
+        return [dep.id.toStringWithoutVersion(), packageDependency];
+      });
+      return R.fromPairs(await Promise.all(dependenciesPackages));
+    };
+    const bitDependencies = await getBitDependencies();
 
     if (writeBitDependencies) {
       const fullPathRequiresComponents = this.dependencies
@@ -416,7 +422,7 @@ export default class Component {
     bitDir,
     withBitJson,
     withPackageJson,
-    driver,
+    consumer,
     force = true,
     writeBitDependencies = false,
     dependencies,
@@ -425,7 +431,7 @@ export default class Component {
     bitDir: string,
     withBitJson: boolean,
     withPackageJson: boolean,
-    driver: Driver,
+    consumer: Consumer,
     force?: boolean,
     writeBitDependencies?: boolean,
     dependencies: Component[],
@@ -439,7 +445,7 @@ export default class Component {
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists && this._writeDistsFiles) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
-    if (withPackageJson) await this.writePackageJson(driver, bitDir, force, writeBitDependencies, dependencies);
+    if (withPackageJson) await this.writePackageJson(consumer, bitDir, force, writeBitDependencies, dependencies);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
     logger.debug('component has been written successfully');
     return this;
@@ -555,7 +561,6 @@ export default class Component {
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     const consumerPath: ?string = consumer ? consumer.getPath() : undefined;
-    const driver: ?Driver = consumer ? consumer.driver : undefined;
     if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
     // Take the bitdir from the files (it will be the same for all the files of course)
     const calculatedBitDir = bitDir || this.files[0].base;
@@ -572,7 +577,7 @@ export default class Component {
         bitDir: calculatedBitDir,
         withBitJson,
         withPackageJson,
-        driver,
+        consumer,
         force,
         writeBitDependencies,
         dependencies
@@ -624,7 +629,7 @@ export default class Component {
       bitDir: newBase,
       withBitJson,
       withPackageJson: actualWithPackageJson,
-      driver,
+      consumer,
       force,
       writeBitDependencies,
       dependencies,

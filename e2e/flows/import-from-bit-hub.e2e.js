@@ -122,6 +122,11 @@ describe('importing bit components from bitsrc.io', function () {
       helper.runCmd('bit import david.tests/utils/is-string'); // is-string imports is-type as a dependency
       helper.runCmd('bit import david.tests/utils/is-type'); // import is-type directly
     });
+    it('should update the package.json of the dependent with relative-path of the dependency', () => {
+      const isStringDir = path.join(helper.localScopePath, 'components', 'utils', 'is-string');
+      const packageJsonIsString = helper.readPackageJson(isStringDir);
+      expect(packageJsonIsString.dependencies['@bit/david.tests.utils.is-type']).to.equal('../is-type');
+    });
     describe('changing the directly imported dependency component', () => {
       before(() => {
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
@@ -145,6 +150,11 @@ describe('importing bit components from bitsrc.io', function () {
       before(() => {
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
         helper.createComponent(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+      });
+      it('should update the package.json of the dependent with relative-path of the dependency', () => {
+        const isStringDir = path.join(helper.localScopePath, 'components', 'utils', 'is-string');
+        const packageJsonIsString = helper.readPackageJson(isStringDir);
+        expect(packageJsonIsString.dependencies['@bit/david.tests.utils.is-type']).to.equal('../is-type');
       });
       it('should affect its dependent', () => {
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";

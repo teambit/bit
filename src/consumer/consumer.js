@@ -35,7 +35,7 @@ import ComponentMap from './bit-map/component-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { getLatestVersionNumber, filterAsync, pathNormalizeToLinux } from '../utils';
+import { getLatestVersionNumber, filterAsync, pathNormalizeToLinux, pathRelative } from '../utils';
 import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
@@ -641,12 +641,65 @@ export default class Consumer {
     await PackageJson.addComponentsIntoExistingPackageJson(this.getPath(), componentsToAdd, registryPrefix);
   }
 
+  /**
+   * Only imported components should be saved with relative path in package.json
+   * If a component is nested or imported as a package dependency, it should be saved with the version
+   */
+  getPackageDependencyValue(
+    dependencyId: BitId,
+    parentComponentMap: ComponentMap,
+    dependencyComponentMap?: ComponentMap
+  ) {
+    if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
+      return dependencyId.toStringWithoutVersion();
+    }
+    const dependencyRootDir = dependencyComponentMap.rootDir;
+    const rootDirRelative = pathRelative(parentComponentMap.rootDir, dependencyRootDir);
+    return rootDirRelative.startsWith('.') ? rootDirRelative : `./${rootDirRelative}`;
+  }
+
+  async getPackageDependency(dependencyId: BitId, parentId: BitId) {
+    const bitMap = await this.getBitMap();
+    const dependencyComponentMap = bitMap.getComponent(dependencyId);
+    const parentComponentMap = bitMap.getComponent(parentId);
+    return this.getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);
+  }
+
+  async changeDependenciesToRelativeSyntaxInPackageJson(components: Component[], dependencies: Component[]) {
+    const bitMap = await this.getBitMap();
+    const dependenciesIds = dependencies.map(dependency => dependency.id.toStringWithoutVersion());
+    const driver = await this.driver.getDriver(false);
+    const PackageJson = driver.PackageJson;
+    const updateComponent = async (component) => {
+      const componentMap = component.getComponentMap(bitMap);
+      let packageJson;
+      try {
+        packageJson = await PackageJson.load(componentMap.rootDir);
+      } catch (e) {
+        return Promise.resolve(); // package.json doesn't exist, that's fine, no need to update anything
+      }
+      const packages = component.dependencies.map((dependency) => {
+        const dependencyId = dependency.id.toStringWithoutVersion();
+        if (dependenciesIds.includes(dependencyId)) {
+          const dependencyComponent = dependencies.find(d => d.id.toStringWithoutVersion() === dependencyId);
+          const dependencyComponentMap = dependencyComponent.getComponentMap(bitMap);
+          const dependencyLocation = this.getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);
+          return [dependencyId, dependencyLocation];
+        }
+        return [];
+      });
+      packageJson.setDependencies(packageJson.packageDependencies, R.fromPairs(packages), Consumer.getRegistryPrefix());
+      return packageJson.write({ override: true });
+    };
+    return Promise.all(components.map(component => updateComponent(component)));
+  }
+
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);

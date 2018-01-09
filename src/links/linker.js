@@ -29,20 +29,22 @@ export async function writeLinksInDist(component: Component, componentMap, bitMa
   return linkGenerator.writeEntryPointsForComponent(component, bitMap, consumer);
 }
 
+function findDirectDependentComponents(
+  potentialDependencies: Component[],
+  bitMap: BitMap,
+  consumer: Consumer
+): Promise<Component[]> {
+  const fsComponents = bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+  const fsComponentsIds = Object.keys(fsComponents).map(component => BitId.parse(component));
+  const potentialDependenciesIds = potentialDependencies.map(c => c.id);
+  return consumer.scope.findDirectDependentComponents(fsComponentsIds, potentialDependenciesIds);
+}
+
 /**
  * an IMPORTED component might be NESTED before.
  * find those components and re-link all their dependents
  */
-async function reLinkDirectlyImportedDependencies(
-  potentialDependencies: Component[],
-  bitMap: BitMap,
-  consumer: Consumer
-): void {
-  const fsComponents = bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
-  const fsComponentsIds = Object.keys(fsComponents).map(component => BitId.parse(component));
-  const potentialDependenciesIds = potentialDependencies.map(c => c.id);
-  const components = await consumer.scope.findDirectDependentComponents(fsComponentsIds, potentialDependenciesIds);
-  if (!components.length) return;
+async function reLinkDirectlyImportedDependencies(components: Component[], bitMap: BitMap, consumer: Consumer): void {
   logger.debug('reLinkDirectlyImportedDependencies: found components to re-link');
   const componentsWithDependencies = await Promise.all(
     components.map(component => component.toComponentWithDependencies(bitMap, consumer))
@@ -82,6 +84,10 @@ export async function linkComponents(
     writtenComponents.map(component => linkGenerator.writeEntryPointsForComponent(component, bitMap, consumer))
   );
   linkComponentsToNodeModules(allComponents, bitMap, consumer);
-  await reLinkDirectlyImportedDependencies(writtenComponents, bitMap, consumer);
+  const directDependentComponents = await findDirectDependentComponents(writtenComponents, bitMap, consumer);
+  if (directDependentComponents.length) {
+    await reLinkDirectlyImportedDependencies(directDependentComponents, bitMap, consumer);
+    await consumer.changeDependenciesToRelativeSyntaxInPackageJson(directDependentComponents, writtenComponents);
+  }
   return allComponents;
 }
