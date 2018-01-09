@@ -249,9 +249,15 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
     return packageWithVersion ? Object.assign(foundPackages, packageWithVersion) :
                                 missingPackages.push(packageWithVersion);
   });
-  const result = findPackagesInPackageJson(packageJson, missingPackages);
-  groups.packages = result.missingPackages;
-  return { groups, foundPackages: Object.assign(foundPackages, result.foundPackages) };
+  groups.packages = missingPackages;
+
+  if (packageJson) {
+    const result = findPackagesInPackageJson(packageJson, missingPackages);
+    groups.packages = result.missingPackages;
+    Object.assign(foundPackages, result.foundPackages)
+  }
+
+  return { groups, foundPackages };
 }
 
 /**
