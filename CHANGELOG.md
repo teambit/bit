@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.10.8-dev.7] - 2018-01-09
 
+- fix bug with resolve dependencies from package.json
+
+## [0.10.8-dev.7] - 2018-01-09
+
 - dont try to resolve dependencies from package.json if dosent exist
 
 ## [0.10.8-dev.6] - 2018-01-08
