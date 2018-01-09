@@ -23,7 +23,7 @@ import {
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
-import { COMPONENT_ORIGINS, REGEX_PATTERN, AUTO_GENERATED_STAMP } from '../../../constants';
+import { COMPONENT_ORIGINS, REGEX_PATTERN, DEFAULT_DIST_DIRNAME } from '../../../constants';
 import logger from '../../../logger/logger';
 import PathNotExists from './exceptions/path-not-exists';
 import MissingComponentIdForImportedComponent from './exceptions/missing-id-imported-component';
@@ -50,7 +50,7 @@ export default (async function addAction(
    * @param {Object[]} files consumer bitMap
    * @returns {ComponentMap[]} componentMap
    */
-  function groupFilesById(componentId: BitId, files: Object[], bitMap: BitMap): Object {
+  function groupFilesByComponentId(componentId: BitId, files: Object[], bitMap: BitMap): Object {
     const filesWithId = files.map((file) => {
       const foundComponentFromBitMap = bitMap.getComponentObjectOfFileByPath(file.relativePath);
       const bitMapComponentId = !R.isEmpty(foundComponentFromBitMap)
@@ -58,8 +58,8 @@ export default (async function addAction(
         : undefined;
       return { id: bitMapComponentId || componentId, file };
     });
-    const groupFilesById = R.groupBy(componentFromMap => componentFromMap.id);
-    return groupFilesById(filesWithId);
+    const groudComponentIdsFile = R.groupBy(componentFromMap => componentFromMap.id);
+    return groudComponentIdsFile(filesWithId);
   }
   /**
    * Add or update existing(imported and new) components according to bitmap
@@ -74,7 +74,7 @@ export default (async function addAction(
     bitmap: BitMap,
     component: Object
   ): componentMaps[] => {
-    const groupedById = groupFilesById(component.componentId, component.files, bitmap);
+    const groupedById = groupFilesByComponentId(component.componentId, component.files, bitmap);
     return Object.keys(groupedById).map((bitMapComponentId) => {
       const parsedBitId = BitId.parse(bitMapComponentId);
       const files = groupedById[bitMapComponentId].map(({ file }) => file);
@@ -100,7 +100,6 @@ export default (async function addAction(
                   foundFile.relativePath = path.join(foundComponentFromBitMap.rootDir, foundFile.relativePath);
                   return foundFile;
                 }
-                return file;
               }
               return file;
             }
@@ -325,7 +324,17 @@ export default (async function addAction(
 
   const consumer: Consumer = await loadConsumer();
   const bitMap = await BitMap.load(consumer.getPath());
-  const ignoreList = retrieveIgnoreList(consumer.getPath());
+  const bitJson = await consumer.bitJson;
+
+  let ignoreList = retrieveIgnoreList(consumer.getPath());
+  if (!bitJson.distTarget) {
+    const importedComponents = bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
+    const distDirsOfImportedComponents = Object.keys(importedComponents).map(key =>
+      path.join(importedComponents[key].rootDir, DEFAULT_DIST_DIRNAME)
+    );
+    ignoreList = ignoreList.concat(distDirsOfImportedComponents);
+  }
+
   // check unknown test files
   const missingFiles = getMissingTestFiles(tests);
   if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
