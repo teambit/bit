@@ -53,7 +53,7 @@ Shared code can also be managed and changed across multiple repositories with up
 
 When managing multiple packages in a single repository (with tools like [Lerna](https://github.com/lerna/lerna)), many of these packages still share smaller components and modules. While these smaller components shouldn’t be packages of their own, we often can’t or don’t want to put them in one package and use them in others (separation of concerns).
 
-Bit helps you share these components and modules between these different packages without having to copy-paste code, and provides better discoverability and control over changes.
+Bit helps you share these components between different teams working with different mono-repos and between different packages within the same repository, without having to copy-paste code. It also provides better discoverability and control over all these smaller ingredients.
 
 ## How It Works
 
