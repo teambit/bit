@@ -1,4 +1,4 @@
-# Bit
+
 [![Bit communit hub](https://storage.googleapis.com/bit-assets/Github/readme-github-3.jpg)](http://bitsrc.io)
 
 <div style="text-align:left">
