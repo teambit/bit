@@ -651,7 +651,7 @@ export default class Consumer {
     dependencyComponentMap?: ComponentMap
   ) {
     if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      return dependencyId.toStringWithoutVersion();
+      return dependencyId.version;
     }
     const dependencyRootDir = dependencyComponentMap.rootDir;
     const rootDirRelative = pathRelative(parentComponentMap.rootDir, dependencyRootDir);
