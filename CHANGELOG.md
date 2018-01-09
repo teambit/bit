@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [#540](https://github.com/teambit/bit/issues/540) support yarn as package manager
 - [#541](https://github.com/teambit/bit/issues/541) add package manager config to bit.json
 - [#543](https://github.com/teambit/bit/issues/543) remove imported component not working
+- [#537](https://github.com/teambit/bit/issues/537) - change dist flag to --ignore-dist and by default create dist files
 
 
 ## [0.12.0-ext.11] - 2018-01-02
