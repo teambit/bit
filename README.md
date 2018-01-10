@@ -146,6 +146,7 @@ MacbookPro:src bit$ tree . -I node_modules
 │       └── index.js
 ├── favicon.ico
 └── index.js
+
 4 directories, 13 files
 ```
 
@@ -241,6 +242,7 @@ Bit's design is language agnostic. Still, it requires language-specific drivers 
 ## Contributing
 
 Contributions are always welcome, no matter how large or small. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
+
 See [Contributing](CONTRIBUTING.md).
 
 ## Feedback
