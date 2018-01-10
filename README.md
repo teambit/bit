@@ -44,7 +44,7 @@ You can tell Bit which components you would like to share, and then lock their v
 
 This workflow provides the speed and efficiency of copy-pasting, while still keeping everything tracked and managed.
 
-### Simplified cross-repo changes
+### Simplifying cross-repo changes
 
 Bit helps you easily track and manage changes to shared code in any number of repositories, using a remote source of truth called a Scope.
 
@@ -52,7 +52,7 @@ You can use Bit to import the components you share into other projects, and simu
 
 If you share your components to the open [bitsrc registry](https://bitsrc.io), you can also install components using NPM or Yarn. Changes can still be applied to the shared source-code and shared back out to the Scope, enabling updates across the the consuming repositories. 
 
-### Discoverability and control
+### Providing discoverability and control
 
 Bit helps you create a single source where you can organize and discover the building blocks shared throughout your projects and packages. You can learn which pieces of source code already exist (sometimes more than once), organize different versions for different teams and search for components throughout your entire database.
 
