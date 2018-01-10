@@ -277,7 +277,6 @@ export default class Component {
       license: `SEE LICENSE IN ${!R.isEmpty(this.license) ? 'LICENSE' : 'UNLICENSED'}`
     });
     packageJson.setDependencies(this.packageDependencies, bitDependencies, registryPrefix);
-    packageJson.setScripts(postInstallLinkData, registryPrefix);
 
     return packageJson.write({ override: force });
   }
@@ -1072,7 +1071,7 @@ export default class Component {
     componentFromModel: ModelComponent
   }): Component {
     const deprecated = componentFromModel ? componentFromModel.component.deprecated : false;
-    const dists = componentFromModel ? componentFromModel.component.dists : undefined;
+    let dists = componentFromModel ? componentFromModel.component.dists : undefined;
     let packageDependencies;
     let bitJson = consumerBitJson;
     const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
@@ -1118,6 +1117,11 @@ export default class Component {
     // use the component from the model to get their bit.json values
     if (!fs.existsSync(path.join(bitDir, BIT_JSON)) && componentFromModel) {
       bitJson.mergeWithComponentData(componentFromModel.component);
+    }
+
+    // Remove dists if compiler has been deleted
+    if (dists && !bitJson.compilerId) {
+      dists = undefined;
     }
 
     return new Component({

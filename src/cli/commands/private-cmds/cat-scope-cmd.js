@@ -26,7 +26,7 @@ export default class CatScope extends Command {
       };
 
       const table = new Table(header, [], opts);
-      payload.forEach(co => table.push([co.id(), co.hash().toString()]));
+      payload.forEach(co => table.push([co.id(), `obj: ${co.hash().toString()}`]));
       return table.render();
     }
 
