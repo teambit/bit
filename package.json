@@ -119,7 +119,8 @@
     "mocha-appveyor-reporter": "^0.4.0",
     "mocha-circleci-reporter": "0.0.2",
     "mocha-junit-reporter": "^1.13.0",
-    "prettier-eslint-cli": "^4.3.0",
+    "prettier-eslint-cli": "4.4.0",
+    "prettier-eslint": "8.2.2",
     "sinon": "^4.1.2"
   },
   "optionalDependencies": {

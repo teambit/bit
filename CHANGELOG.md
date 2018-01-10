@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - workaround for old bit binding prefix
 
+- [#495](https://github.com/teambit/bit/issues/495) support adding files to imported components and ignoring existing files
+
 ## [0.12.0-ext.13] - 2018-01-09
 
 - [#571](https://github.com/teambit/bit/issues/571) apply the auto-tagging mechanism for imported components 
