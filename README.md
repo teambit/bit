@@ -42,7 +42,7 @@ Bit works with Git and NPM to help share more code and easily manage changes acr
 Sharing code and managing changes across multiple repositories can become very hard very quickly.
 Bit solves this issue by helping you share more code, and easily manage changes across multiple repositories. 
 
-Bit lets you share components and modules directly from any repository’s source code without changing it, without maintaining more repositories and libraries.
+Bit lets you share components and modules directly from any repository’s source code without changing it or having to maintain additional repositories and libraries.
 
 Shared components and modules can also be installed with the Yarn / NPM client from the [bisrc registry](https://bitsrc.io) - and updated by changing your original source code and re-sharing it.
 
