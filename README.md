@@ -36,7 +36,7 @@ Bit is a collaborative open source project, actively maintained by a venture-bac
 
 ## How It Works
 
-### Super-fast sharing of components and modules
+### Super-fast code sharing
 
 Bit helps you isolate and share source code components (subsets of files) from any Javascript repository and use them as managed modules in other repositories without having to change the original repository's source code or maintain any additional repositories. 
 
