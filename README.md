@@ -43,7 +43,7 @@ You can tell Bit which components you would like to share, and then lock their v
 
 This workflow provides the speed and efficiency of copy-pasting, while still keeping everything tracked and managed.
 
-### Simplified cross-repo updates
+### Simplified cross-repo changes
 
 Bit helps you easily track and manage changes to shared code in any number of repositories, using a remote source of truth called a Scope.
 
