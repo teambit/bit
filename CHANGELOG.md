@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+- support yarn workspaces in package.json
+
 ## [0.10.8-dev.10] - 2018-01-09
 
 - remove auto generated post install scripts

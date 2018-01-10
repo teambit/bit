@@ -20,7 +20,7 @@ function convertComponentsToValidPackageNames(registryPrefix: string, bitDepende
   return obj;
 }
 
-const PackageJsonPropsNames = ['name', 'version', 'homepage', 'main', 'dependencies', 'devDependencies', 'peerDependencies', 'license', 'scripts'];
+const PackageJsonPropsNames = ['name', 'version', 'homepage', 'main', 'dependencies', 'devDependencies', 'peerDependencies', 'license', 'scripts', 'workspaces', 'private'];
 
 export type PackageJsonProps = {
   name?: string,
@@ -32,6 +32,8 @@ export type PackageJsonProps = {
   peerDependencies?: Object,
   license?: string,
   scripts?: Object,
+  workspaces: string[];
+  private?: boolean
 };
 
 export default class PackageJson {
@@ -45,8 +47,9 @@ export default class PackageJson {
   componentRootFolder: string; // path where to write the package.json
   license: string;
   scripts: Object;
+  workspaces: string[];
 
-  constructor(componentRootFolder: string, { name, version, homepage, main, dependencies, devDependencies, peerDependencies, license, scripts }: PackageJsonProps) {
+  constructor(componentRootFolder: string, { name, version, homepage, main, dependencies, devDependencies, peerDependencies, license, scripts, workspaces }: PackageJsonProps) {
     this.name = name;
     this.version = version;
     this.homepage = homepage;
@@ -57,6 +60,7 @@ export default class PackageJson {
     this.componentRootFolder = componentRootFolder;
     this.license = license;
     this.scripts = scripts;
+    this.workspaces = workspaces;
   }
 
   toPlainObject(): Object {
@@ -67,6 +71,7 @@ export default class PackageJson {
     };
 
     R.forEach(addToResult, PackageJsonPropsNames);
+    if (this.workspaces) result.private = true;
     return result;
   }
 
@@ -108,10 +113,9 @@ export default class PackageJson {
     return new PackageJson(componentRootFolder, object);
   }
 
-  static async load(componentRootFolder: string): Promise<PackageJson> {
-    const THROWS = true;
+  static async load(componentRootFolder: string, throwError: boolean = true): Promise<PackageJson> {
     const composedPath = composePath(componentRootFolder);
-    PackageJson.hasExisting(componentRootFolder, THROWS);
+    if(!PackageJson.hasExisting(componentRootFolder, throwError)) return null;
     const componentJsonObject = await fs.readJson(composedPath);
     return new PackageJson(componentRootFolder, componentJsonObject);
   }
