@@ -17,7 +17,7 @@
 
 ## About 
 
-**Bit makes it easier to share and manage changes to common code in multiple projects**. 
+**Bit makes it easier to share and manage changes to common components in multiple projects**. 
 
 Multiple repositories provide great modularity, separation of concerns, clear ownerships, shorter learning curves and mitigation of development pain.
 
