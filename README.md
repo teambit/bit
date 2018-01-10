@@ -115,9 +115,9 @@ A scope is a collection of shared components with a common theme or ownership.
 
 It’s key role is to serve as a source of truth for syncing shared code across different repositories. It also helps to organize and make all your shared components discoverable.
 
-Much like Git repositories, scopes are lightweight and can be [set up on any server](https://teambit.github.io/docs/advanced.html#host-your-own-scope).
+Let's create a free Scope on the [Bit community hub](https://bitsrc.io/signup) - so we could gain more discoverability, run tests in isolation and install components using Yarn / NPM if we choose to.
 
-Let's create a free Scope on the [Bit community hub](https://bitsrc.io/signup) - so we could view it through a more discoverable UI, run component tests in isolation and later install them using Yarn / NPM.
+Much like Git repositories, scopes are lightweight and can be [set up on any server](https://teambit.github.io/docs/advanced.html#host-your-own-scope).
 
 ### Share source code components directly from your repository
 
