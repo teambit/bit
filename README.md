@@ -27,6 +27,8 @@ Bit works with Git and NPM to make it easy to share more code and manage changes
 
 Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
+#### Contents
+
 - [How It Works](#how-it-works)
 - [Use Cases And Examples](#use-cases-and-examples)
 - [Getting Started](#getting-started)
