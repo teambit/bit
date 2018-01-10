@@ -29,7 +29,7 @@ Bit is a collaborative open source project, actively maintained by a venture-bac
 
 - [How It Works](#how-it-works)
 - [Use Cases And Examples](#use-cases-and-examples)
-- [Getting Started (Workflow)](#getting-started)
+- [Getting Started](#getting-started)
 - [Motivation](#motivation)
 - [Contributing](#contributing)
 - [Docs](https://docs.bitsrc.io)
