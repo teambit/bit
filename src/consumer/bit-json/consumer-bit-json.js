@@ -72,7 +72,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     packageManagerArgs,
     packageManagerProcessOptions,
     useWorkspaces = false,
-    manageWorkspaces = false
+    manageWorkspaces = true
   }: consumerBitJsonProps) {
     super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;

@@ -22,7 +22,10 @@ import {
   NODE_PATH_SEPARATOR,
   LATEST_BIT_VERSION,
   CFG_REGISTRY_DOMAIN_PREFIX,
-  DEFAULT_REGISTRY_DOMAIN_PREFIX
+  DEFAULT_REGISTRY_DOMAIN_PREFIX,
+  DEFAULT_SEPARATOR,
+  BIT_DEPENDECIES_REGEX,
+  YARN_WORKSPACES_REGEX
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -481,6 +484,30 @@ export default class Consumer {
   }
 
   /**
+   * Adds workspace array to package.json - only if user wants to work with yarn workspaces
+   */
+  async addWorkspacesToPackageJson() {
+    const driver = await this.driver.getDriver();
+    const PackageJson = driver.PackageJson;
+    const pkg = await PackageJson.load(this.getPath());
+    const workSpaces = pkg.workspaces || [];
+    if (pkg) {
+      workSpaces.push(this.bitJson.dependenciesDirectory + BIT_DEPENDECIES_REGEX);
+      const formatedComponentsPath = format(this.bitJson.componentsDefaultDirectory, {
+        name: YARN_WORKSPACES_REGEX,
+        scope: YARN_WORKSPACES_REGEX,
+        namespace: YARN_WORKSPACES_REGEX
+      });
+      const formatedRegexPath = formatedComponentsPath
+        .split(DEFAULT_SEPARATOR)
+        .map(part => (R.contains(YARN_WORKSPACES_REGEX, part) ? YARN_WORKSPACES_REGEX : part))
+        .join(DEFAULT_SEPARATOR);
+      workSpaces.push(formatedRegexPath);
+      pkg.workspaces = R.uniq(workSpaces);
+      await pkg.write({ override: true });
+    }
+  }
+  /**
    * write the components into '/components' dir (or according to the bit.map) and its dependencies in the
    * '/components/.dependencies' dir. Both directories are configurable in bit.json
    * For example: global/a has a dependency my-scope/global/b@1. The directories will be:
@@ -603,6 +630,10 @@ export default class Consumer {
         }
       });
     }
+
+    // add workspaces if flag is true
+    if (this.bitJson.manageWorkspaces) await this.addWorkspacesToPackageJson();
+
     await bitMap.write();
     if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
     await this.addComponentsToRootPackageJson(writtenComponents, bitMap);
