@@ -17,7 +17,7 @@
 
 ## About 
 
-**Bit makes it easier to manage shared code in both multi-repo and mono-repo architectures**. 
+**Bit makes it easier to share code and manage changes in both multi-repo and mono-repo architectures**. 
 
 Multiple repositories provide great modularity, separation of concerns, clear ownerships, shorter learning curves and mitigation of development pain.
 
