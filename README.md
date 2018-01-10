@@ -36,7 +36,7 @@ Bit is a collaborative open source project, actively maintained by a venture-bac
 
 ## How It Works
 
-### Super-fast code sharing
+### Super-quick code sharing
 
 Bit helps you isolate and share source code components (subsets of files) from any Javascript repository and use them as managed modules in other repositories without having to change the original repository's source code or maintain any additional repositories. 
 
@@ -90,8 +90,6 @@ Additional use cases: **GraphQL APIs**, **Serverless functions**, **Utility func
 
 Let's use Bit to isolate and share components from a repository, import them into other repositories and update changes between them.
 
-Note that the same flow described below also works for multiple packages inside a single repository.
-
 ### Install Bit
 
 `npm install bit-bin -g`
@@ -101,6 +99,7 @@ See additional [installation methods](https://teambit.github.io/bit/installation
 ### Initialize Bit on a repository
 
 To start isolating components in your repository you will need to initialize Bit for your repository.  
+
 Go to your repository root directory and execute `bit init`.
 
 ```sh
@@ -111,10 +110,10 @@ successfully initialized Bit on the repository.
 
 ### Organize your shared code
 
-To organize your shared components and modules Bit uses scopes.
-A scope is a collection of shared components with a common theme or ownership. 
+To organize your shared components Bit uses scopes.
 
-It’s key role is to serve as a source of truth for syncing shared code across different repositories. It also helps to organize and make all your shared components discoverable.
+A scope is a collection of shared components with a common theme or ownership. 
+It’s key role is to serve as a source of truth for shared code across different repositories.
 
 Let's create a free Scope on the [Bit community hub](https://bitsrc.io/signup) - so we could gain more discoverability, run tests in isolation and install components using Yarn / NPM if we choose to.
 
@@ -122,7 +121,7 @@ Much like Git repositories, scopes are lightweight and can be [set up on any ser
 
 ### Share source code components directly from your repository
 
-To break the overhead of sharing more code, Bit enables you to track subsets of files in your repository as reusable components and isolate them with everything they need in order to execute.
+Bit enables you to track subsets of files in your repository as reusable components and isolate them so that when they are shared they are also ready to execute.
 
 Let's isolate the UI components `button`, `login` and `logo` in the following project's directory structure.
 
@@ -150,11 +149,12 @@ MacbookPro:src bit$ tree . -I node_modules
 4 directories, 13 files
 ```
 
-To tell Bit to start tracking these UI components, use the `bit add` command.
+To start tracking these UI components use the `bit add` command.
 This command also accepts a glob pattern, so you can track multiple components at once.
 
 In this case, we have 3 components in the "components" directory. Let's track all of them.
-We'll also use the `bit tag` command to lock component **versions** and **dependencies** in place (note that Bit uses **automatic dependency definition** to make sharing faster). 
+
+We'll also use the `bit tag` command to lock component **versions** and **dependencies** in place (note that Bit uses **automatic dependency definition** to make sharing even quicker). 
 
 ```sh
 bit add components/*
@@ -169,7 +169,7 @@ bit export {{owner}}.{{scope}}
 
 That's it.
 
-Once done, you can discovered the components you just shared on your Scope (example). 
+Once done, you can discovere the components you just shared in your Scope ([example](https://bitsrc.io/bit/movie-app)). 
 For additional usage examples [click here]({{docs}}/usage.html#adding-component).
 
 #### You can also create an empty component
@@ -182,9 +182,11 @@ bit export {{owner}}.{{scope}}
 ```
 ### Import the shared components
 
-Once shared, you can install these components using the Yarn or NPM client from the bitsrc registry, or- **import** them into other repositories using Bit.
+You can **import** shared components into other repositories using Bit.
 
-Importing means you can install a component as an application-part in any destination on your project’s file system. It will still be tracked by Bit, so you can continue to develop it from both repositories and sync updates between them.
+Importing means you can install a component as an application-part in any destination on your project’s file system. It will still be tracked by Bit, so you can continue to develop it from different repositories and update changes between them.
+
+**Note that if shared to the [bitsrc registry](https://bitsrc.io), components and modules can also be installed with your native NPM/Yarn client**.
 
 Let's import the components we just created to a new project.
 
@@ -196,17 +198,15 @@ Let's import the components we just created to a new project.
 bit import <username>.<scopename>/components/button
 ```
 You can now use the component in your new project:
+
 ```
 const component = require('./components/button');
 ```
-**Note that once shared to the [bitsrc registry](https://bitsrc.io), components and modules can also be installed with your native NPM/Yarn client**.
 
 ### Updating Components
 
-A component can be updated from any project using Bit.
-To update a component, simply change the code from inside your project's context. 
-
-Then tag it again, and export it back to your scope as a new version of your component.
+A component can be easily updated between projects by simply changing the code from inside your project's context,
+tagging it again, and exporting it back to your scope as a new version of the component.
 
 1. Open the file you just imported.
 2. Make changes.
