@@ -128,7 +128,7 @@ const installAction = ({
   rootDir,
   verbose = false
 }: installArgs) => {
-  if (useWorkspaces) {
+  if (useWorkspaces && packageManager === 'yarn') {
     return _installInOneDirectory({
       modules,
       packageManager,
