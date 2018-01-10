@@ -57,7 +57,7 @@ Bit helps you share these components between different teams working with differ
 
 ## How It Works
 
-### Faster, simplified code sharing
+### Fatser, simplified code sharing
 
 Bit helps you isolate and share source code components (subsets of files) from any Javascript repository and use them as managed modules in other repositories without having to change the original repository's source code or maintain any additional repositories.  This workflow provides the speed and efficiency of copy-pasting, while still keeping it managed.
 
