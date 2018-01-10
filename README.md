@@ -38,15 +38,15 @@ Bit is a collaborative open source project, actively maintained by a venture-bac
 
 ## How It Works
 
-### Super-quick code sharing
+### Share code from any project
 
-Bit helps you isolate and share source code components (subsets of files) from any Javascript repository and use them as managed modules in other repositories without having to change the original repository's source code or maintain any additional repositories. 
+Bit helps you isolate and share source code components (subsets of files) directly from any path in your Javascript repository and use them in other repositories without having to change the original repository's source code or maintain additional ones. 
 
 You can tell Bit which components you would like to share, and then lock their versions and dependencies (Bit applies an automatic dependency definition to speed sharing) to share them into a remote source of truth that allows you to easily sync them between different projects. 
 
 This workflow provides the speed and efficiency of copy-pasting, while still keeping everything tracked and managed.
 
-### Simplifying cross-repo changes
+### Managing cross-repo changes
 
 Bit helps you easily track and manage changes to shared code in any number of repositories, using a remote source of truth called a Scope.
 
