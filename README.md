@@ -25,14 +25,14 @@ However, sharing code and managing changes across multiple repositories can beco
 
 Bit works with Git and NPM to make it easy to share more code and manage changes across multiple repositories and projects, providing greate greater discoverability and less maintenance overhead- so you can save your energy for building new things.
 
+Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
+
 - [How It Works](#how-it-works)
 - [Use Cases And Examples](#use-cases-and-examples)
 - [Getting Started](#getting-started)
 - [Motivation](#motivation)
 - [Contributing](#contributing)
 - [Docs](https://docs.bitsrc.io)
-
-Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
 ## How It Works
 
