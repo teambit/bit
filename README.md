@@ -17,13 +17,13 @@
 
 ## About 
 
-**Bit makes it easier to share and manage changes to common components in multiple projects**. 
+**Bit makes it easier to share code and update changes across multiple projects**. 
 
-Multiple repositories provide great modularity, separation of concerns, clear ownerships, shorter learning curves and mitigation of development pain.
+Seperating concerns provides great modularity, creates clear ownerships, shorter learning curves and helps to mitigate development pain.
 
-However, sharing code and managing changes across multiple repositories can become very hard very quickly and generate a lot of painful overhead.
+However, sharing code and managing changes across multiple projects can become very hard very quickly and generate a lot of painful overhead.
 
-Bit works with Git and NPM to make it easy to share more code and manage changes across multiple repositories and projects, with greater discoverability and less overhead- so you can save your energy for building new things.
+Bit works with Git and NPM to make it easy to share more code and manage changes across multiple repositories, with greater discoverability and less overhead- so you can focus your energy on building new things.
 
 Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
