@@ -19,9 +19,9 @@
 
 **Bit makes it easier to share code and update changes across multiple projects**. 
 
-Seperating concerns provides great modularity, creates clear ownerships, shorter learning curves and helps to mitigate development pain.
+Seperating concerns provides greater modularity, clear ownerships, shorter learning curves and helps to mitigate development pain.
 
-However, sharing code and managing changes across multiple projects can become very hard very quickly and generate a lot of painful overhead.
+However, sharing code and managing changes across multiple projects and teams can become very hard very quickly, generating a lot of painful overhead.
 
 Bit works with Git and NPM to make it easy to share more code and manage changes across multiple repositories, with greater discoverability and less overhead- so you can focus your energy on building new things.
 
@@ -42,7 +42,7 @@ Bit is a collaborative open source project, actively maintained by a venture-bac
 
 Bit helps you isolate and share source code components (subsets of files) directly from any path in your Javascript repository and use them in other repositories without having to change the original repository's source code or maintain additional ones. 
 
-You can tell Bit which components you would like to share, and then lock their versions and dependencies (Bit applies an automatic dependency definition to speed sharing) to share them into a remote source of truth that allows you to easily sync them between different projects. 
+You can point Bit to the components you would like to share, isolate them (Bit applies an automatic dependency definition to speed sharing) and share them into a remote source of truth that allows you to easily sync them between different projects. 
 
 This workflow provides the speed and efficiency of copy-pasting, while still keeping everything tracked and managed.
 
@@ -50,15 +50,15 @@ This workflow provides the speed and efficiency of copy-pasting, while still kee
 
 Bit helps you easily track and manage changes to shared code in any number of repositories, using a remote source of truth called a Scope.
 
-You can use Bit to import the components you share into other projects, and simultaneously develop them from different repositories. Changes can be shared back to the Scope from any repository (creating a new version), to update them in other repositories if needed.
+You can import shared components into other projects and simultaneously develop them from different repositories. Changes made to imported components can be shared back to the Scope (creating a new version), and updated across different repositories.
 
-If you share your components to the open [bitsrc registry](https://bitsrc.io), you can also install components using NPM or Yarn. Changes can still be applied to the shared source-code and shared back out to the Scope, enabling updates across the the consuming repositories. 
+If you share your components to the open [bitsrc registry](https://bitsrc.io), you can also install components using NPM or Yarn. Changes can still be applied to the shared source-code and shared back to the Scope, enabling updates across the consuming repositories. 
 
 ### Greater discoverability and control
 
-Bit helps you create a single source where you can organize and discover the building blocks shared throughout your projects and packages. You can learn which pieces of source code already exist (sometimes more than once), organize different versions for different teams and search for components throughout your entire database.
+Bit helps you create a single place where you can organize and discover the building blocks shared throughout your projects. You can learn which pieces of source code already exist (sometimes more than once) in your different repositories, organize different versions for different teams and search for components throughout your entire database.
 
-You can also easily learn which components are used by who and where, to safely make multiple changes in multiple repositories with absolute control over your dependency graph.
+Bit also makes it easy to learn exactly which components are used by who and where, to safely make multiple changes in multiple repositories with absolute control over your dependency graph.
 
 ### Extending Bit 
 
