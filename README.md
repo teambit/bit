@@ -55,7 +55,7 @@ You can import shared components into other projects and simultaneously develop 
 
 If you share your components to the open [bitsrc registry](https://bitsrc.io), you can also install components using NPM or Yarn. Changes can still be applied to the shared source-code and shared back to the Scope, enabling updates across the consuming repositories. 
 
-### Greater discoverability and control
+### Instant discoverability and control
 
 Bit helps you create a single place where you can organize and discover the building blocks shared throughout your projects. You can learn which pieces of source code already exist (sometimes more than once) in your different repositories, organize different versions for different teams and search for components throughout your entire database.
 
