@@ -123,7 +123,7 @@ export default class HooksManager {
       return Promise.resolve()
         .then(() => {
           logger.info(`running action ${action.name} on hook ${hookName}`);
-          return action.run(args);
+          return action.run(args, headers);
         })
         .catch((e) => {
           logger.error(`running action ${action.name} on hook ${hookName} failed, err:`);
