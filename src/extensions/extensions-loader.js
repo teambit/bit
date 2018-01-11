@@ -11,11 +11,20 @@ import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
  * Load all extensions
  * Regular, core, globals
  */
-export default (async function loadExtensions(): Extension[] {
+export default (async function loadExtensions(): Promise<Extension[]> {
   try {
     logger.info('start loading extensions');
-    const consumer: Consumer = await loadConsumer();
-    let rawExtensions = consumer.bitJson.extensions || {};
+    const consumer: Consumer = await loadConsumer(null, false);
+    let consumerPath = null;
+    let scopePath = null;
+
+    let rawExtensions = {};
+    if (consumer) {
+      rawExtensions = consumer.bitJson.extensions || {};
+      consumerPath = consumer.getPath();
+      scopePath = consumer.scope.path;
+    }
+
     // Load global extensions
     const globalBitJson = await _getGlobalBitJson(false);
     const globalRawExtensions = globalBitJson && globalBitJson.extensions;
@@ -25,9 +34,7 @@ export default (async function loadExtensions(): Extension[] {
     if (globalRawExtensions) {
       rawExtensions = R.mergeDeepLeft(rawExtensions, globalRawExtensions);
     }
-    const extensions = R.values(
-      R.mapObjIndexed(_loadExtension(consumer.getPath(), consumer.scope.path), rawExtensions)
-    );
+    const extensions = R.values(R.mapObjIndexed(_loadExtension(consumerPath, scopePath), rawExtensions));
     return Promise.all(extensions);
   } catch (err) {
     logger.error('loading extensions failed');
@@ -41,7 +48,7 @@ export default (async function loadExtensions(): Extension[] {
  * @param {string} consumerPath
  * @param {string} scopePath
  */
-const _loadExtension = (consumerPath: string, scopePath: string) => (
+const _loadExtension = (consumerPath: ?string, scopePath: ?string) => (
   rawConfig: Object = {},
   name: string
 ): Promise<Extension> => {

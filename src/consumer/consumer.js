@@ -913,9 +913,12 @@ export default class Consumer {
     });
   }
 
-  static async load(currentPath: string): Promise<Consumer> {
+  static async load(currentPath: string, throws: boolean = true): Promise<?Consumer> {
     const projectPath = locateConsumer(currentPath);
-    if (!projectPath) return Promise.reject(new ConsumerNotFound());
+    if (!projectPath) {
+      if (throws) return Promise.reject(new ConsumerNotFound());
+      return Promise.resolve(null);
+    }
     if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
       await Consumer.create(currentPath).then(consumer => consumer.write());
     }

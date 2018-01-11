@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix loading global extension from non consumer folders
+
 ## [0.12.0-ext.17] - 2018-01-11
 
 - add headers to hook run action
