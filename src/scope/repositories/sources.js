@@ -261,6 +261,7 @@ export default class SourceRepository {
       date: Date.now().toString()
     };
     component.addVersion(version, releaseType);
+    component.local = true;
     return this.put({ component, objects: [version] });
   }
 

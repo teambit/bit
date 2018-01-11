@@ -1,12 +1,11 @@
 /** @flow */
 import path from 'path';
 import decamelize from 'decamelize';
+import R from 'ramda';
 import Version from '../version';
 import { InvalidBitId, InvalidIdChunk } from './exceptions';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER, NO_PLUGIN_TYPE } from '../constants';
 import { isValidIdChunk, isValidScopeName } from '../utils';
-import R from 'ramda';
-import logger from '../logger/logger';
 
 export type BitIdProps = {
   scope?: string,

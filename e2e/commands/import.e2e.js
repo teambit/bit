@@ -1304,6 +1304,12 @@ describe('bit import', function () {
         expect(commitOutput).to.have.string('utils/is-string');
       });
       it('should use the updated dependencies and print the results from the latest versions', () => {
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string');
+
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
