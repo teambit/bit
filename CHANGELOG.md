@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+
+## [0.12.0-ext.17] - 2018-01-11
+
+- add headers to hook run action
+
 ## [0.12.0-ext.16] - 2018-01-09
 
 - remove auto generated post install scripts
