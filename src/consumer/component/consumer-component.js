@@ -240,8 +240,7 @@ export default class Component {
     consumer: Consumer,
     bitDir: string,
     force?: boolean = true,
-    writeBitDependencies?: boolean = false,
-    dependencies: Array<Component>
+    writeBitDependencies?: boolean = false
   ): Promise<boolean> {
     return packageJson.write(consumer, this, bitDir, force, writeBitDependencies);
   }
@@ -371,7 +370,6 @@ export default class Component {
     consumer,
     force = true,
     writeBitDependencies = false,
-    dependencies,
     deleteBitDirContent = false
   }: {
     bitDir: string,
@@ -380,7 +378,6 @@ export default class Component {
     consumer: Consumer,
     force?: boolean,
     writeBitDependencies?: boolean,
-    dependencies: Component[],
     deleteBitDirContent?: boolean
   }) {
     if (deleteBitDirContent) {
@@ -391,7 +388,7 @@ export default class Component {
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists && this._writeDistsFiles) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
-    if (withPackageJson) await this.writePackageJson(consumer, bitDir, force, writeBitDependencies, dependencies);
+    if (withPackageJson) await this.writePackageJson(consumer, bitDir, force, writeBitDependencies);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
     logger.debug('component has been written successfully');
     return this;
@@ -490,7 +487,6 @@ export default class Component {
     parent,
     consumer,
     writeBitDependencies = false,
-    dependencies,
     componentMap
   }: {
     bitDir?: string,
@@ -502,7 +498,6 @@ export default class Component {
     parent?: BitId,
     consumer?: Consumer,
     writeBitDependencies?: boolean,
-    dependencies: Array<Components>,
     componentMap: ComponentMap
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
@@ -525,8 +520,7 @@ export default class Component {
         withPackageJson,
         consumer,
         force,
-        writeBitDependencies,
-        dependencies
+        writeBitDependencies
       });
     }
     if (!componentMap) {
@@ -578,7 +572,6 @@ export default class Component {
       consumer,
       force,
       writeBitDependencies,
-      dependencies,
       deleteBitDirContent
     });
 
@@ -1023,7 +1016,7 @@ export default class Component {
     componentFromModel: ModelComponent
   }): Component {
     const deprecated = componentFromModel ? componentFromModel.component.deprecated : false;
-    const dists = componentFromModel ? componentFromModel.component.dists : undefined;
+    let dists = componentFromModel ? componentFromModel.component.dists : undefined;
     let packageDependencies;
     let bitJson = consumerBitJson;
     const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
@@ -1069,6 +1062,11 @@ export default class Component {
     // use the component from the model to get their bit.json values
     if (!fs.existsSync(path.join(bitDir, BIT_JSON)) && componentFromModel) {
       bitJson.mergeWithComponentData(componentFromModel.component);
+    }
+
+    // Remove dists if compiler has been deleted
+    if (dists && !bitJson.compilerId) {
+      dists = undefined;
     }
 
     return new Component({

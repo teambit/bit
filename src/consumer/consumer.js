@@ -546,7 +546,6 @@ export default class Consumer {
         origin,
         consumer: this,
         writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
-        dependencies: componentWithDeps.dependencies,
         componentMap
       });
     });
@@ -585,7 +584,6 @@ export default class Consumer {
           origin: COMPONENT_ORIGINS.NESTED,
           parent: componentWithDeps.component.id,
           consumer: this,
-          dependencies: dep.dependencies,
           componentMap
         });
       });
@@ -722,7 +720,7 @@ export default class Consumer {
   async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
     const getStatus = async () => {
       const status: ComponentStatus = {};
-      const componentFromModel = await this.scope.sources.get(id);
+      const componentFromModel: ModelComponent = await this.scope.sources.get(id);
       let componentFromFileSystem;
       try {
         componentFromFileSystem = await this.loadComponent(BitId.parse(id.toStringWithoutVersion()));
@@ -889,9 +887,12 @@ export default class Consumer {
     });
   }
 
-  static async load(currentPath: string): Promise<Consumer> {
+  static async load(currentPath: string, throws: boolean = true): Promise<?Consumer> {
     const projectPath = locateConsumer(currentPath);
-    if (!projectPath) return Promise.reject(new ConsumerNotFound());
+    if (!projectPath) {
+      if (throws) return Promise.reject(new ConsumerNotFound());
+      return Promise.resolve(null);
+    }
     if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
       await Consumer.create(currentPath).then(consumer => consumer.write());
     }

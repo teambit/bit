@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.12.0-ext.15",
+  "version": "0.12.0-ext.19",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
@@ -34,7 +34,7 @@
   "dependencies": {
     "array-difference": "^0.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "0.10.8-dev.8",
+    "bit-javascript": "0.10.8-dev.10",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
     "chokidar": "^1.7.0",
@@ -119,7 +119,8 @@
     "mocha-appveyor-reporter": "^0.4.0",
     "mocha-circleci-reporter": "0.0.2",
     "mocha-junit-reporter": "^1.13.0",
-    "prettier-eslint-cli": "^4.3.0",
+    "prettier-eslint-cli": "4.4.0",
+    "prettier-eslint": "8.2.2",
     "sinon": "^4.1.2"
   },
   "optionalDependencies": {

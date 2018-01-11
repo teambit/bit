@@ -1,6 +1,7 @@
 /** @flow */
 import path from 'path';
 import decamelize from 'decamelize';
+import R from 'ramda';
 import Version from '../version';
 import { InvalidBitId, InvalidIdChunk } from './exceptions';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER, NO_PLUGIN_TYPE } from '../constants';
@@ -141,6 +142,28 @@ export default class BitId {
     }
 
     throw new InvalidBitId();
+  }
+
+  static getValidScopeName(scope: string) {
+    const suggestedName = scope.toLowerCase();
+    let cleanName = suggestedName
+      .split('')
+      .map((char) => {
+        if (/^[$\-_!.a-z0-9]+$/.test(char)) return char;
+        return '';
+      })
+      .join('');
+
+    // allow only one dot
+    const nameSplitByDot = cleanName.split('.');
+    if (nameSplitByDot.length > 1) {
+      cleanName = `${R.head(nameSplitByDot)}.${R.tail(nameSplitByDot).join('')}`;
+    }
+
+    if (!cleanName) {
+      throw new Error('scope name created by directory name have to contains at least one character or number');
+    }
+    return cleanName;
   }
 
   static getValidBitId(box: string, name: string): BitId {

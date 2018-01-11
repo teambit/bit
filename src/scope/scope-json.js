@@ -3,6 +3,7 @@ import pathlib from 'path';
 import { writeFile, cleanObject, readFile, existsSync } from '../utils';
 import { Remote } from '../remotes';
 import { SCOPE_JSON } from '../constants';
+import BitId from '../bit-id/bit-id';
 
 export function getPath(scopePath: string): string {
   return pathlib.join(scopePath, SCOPE_JSON);
@@ -35,20 +36,7 @@ export class ScopeJson {
   }
 
   set name(suggestedName: string) {
-    suggestedName = suggestedName.toLowerCase();
-    const cleanName = suggestedName
-      .split('')
-      .map((char) => {
-        if (/^[$\-_!a-z0-9]+$/.test(char)) return char;
-        return '';
-      })
-      .join('');
-
-    if (!cleanName) {
-      throw new Error('scope name created by directory name have to contains at least one character or number');
-    }
-
-    this._name = cleanName;
+    this._name = BitId.getValidScopeName(suggestedName);
     return this;
   }
 

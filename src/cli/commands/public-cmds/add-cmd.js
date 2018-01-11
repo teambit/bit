@@ -68,7 +68,7 @@ export default class Add extends Command {
         if (result.files.length === 0) {
           return chalk.underline.red(`could not track component ${chalk.bold(result.id)}: no files to track`);
         }
-        const title = chalk.underline(`tracking component ${chalk.bold(result.componentId)}:\n`);
+        const title = chalk.underline(`tracking component ${chalk.bold(result.id)}:\n`);
         const files = result.files.map(file => chalk.green(`added ${file.relativePath}`));
         return title + files.join('\n');
       })

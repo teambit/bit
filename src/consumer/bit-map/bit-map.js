@@ -9,7 +9,7 @@ import logger from '../../logger/logger';
 import { BIT_MAP, DEFAULT_INDEX_NAME, COMPONENT_ORIGINS, DEFAULT_SEPARATOR, DEFAULT_INDEX_EXTS } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
-import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux, isDir } from '../../utils';
+import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } from '../../utils';
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin } from './component-map';
 
@@ -301,7 +301,9 @@ export default class BitMap {
       return;
     }
     if (olderComponentsIds.length > 1) {
-      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
+      throw new Error(`Your ${
+        BIT_MAP
+      } file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
       are authored or imported. This scenario is not supported`);
     }
     const olderComponentId = olderComponentsIds[0];
@@ -360,6 +362,17 @@ export default class BitMap {
     });
   }
 
+  /**
+   * Return a potential componentMap if file is supposed to be part of it
+   * by a path exist in the files object
+   *
+   * @param {string} componentPath relative to consumer - as stored in bit.map files object
+   * @returns {ComponentMap} componentMap
+   */
+  getComponentObjectOfFileByPath(componentPath: string): BitMapComponents {
+    const components = this.getAllComponents();
+    return R.pickBy(component => pathIsInside(componentPath, component.rootDir || this.projectRoot), components);
+  }
   /**
    *
    * Return the full component object by a root path for the component, means:

@@ -38,8 +38,102 @@ describe('bit add command', function () {
       expect(output).to.contain('tracking component bar/foo');
     });
   });
+  describe('add to imported component', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const remote = helper.remoteScopePath;
+      helper.createComponent('bar', 'foo.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.importCompiler();
+      helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo ' });
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope(remote);
+      helper.importComponent('bar/foo');
+    });
+    it('Should throw error when trying to add files to imported component without specifying id', () => {
+      const addCmd = () => helper.addComponent('.', path.join(helper.localScopePath, 'components', 'bar', 'foo'));
+      expect(addCmd).to.throw(
+        `error - unable to add new files to the imported component "${
+          helper.remoteScope
+        }/bar/foo" without specifying '--id`
+      );
+    });
+    it('Should throw error when trying to add files to imported component without specifying correct id', () => {
+      const addCmd = () =>
+        helper.addComponentWithOptions(
+          '.',
+          { i: 'test/test' },
+          path.join(helper.localScopePath, 'components', 'bar', 'foo')
+        );
+      expect(addCmd).to.throw(
+        `error - unable to add new files from the root directory of the imported component  "${
+          helper.remoteScope
+        }/bar/foo" to "test/test`
+      );
+    });
+    it('Should not add files and dists to imported component', () => {
+      helper.addComponentWithOptions(
+        '.',
+        { i: 'bar/foo' },
+        path.join(helper.localScopePath, 'components', 'bar', 'foo')
+      );
+      const expectTestFile = { relativePath: 'foo.js', test: false, name: 'foo.js' };
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
+      const component = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
+      const files = component.files;
+      expect(files).to.be.array();
+      expect(files).to.be.ofSize(1);
+      expect(files).to.deep.include(expectTestFile);
+    });
+    it('Should only add new files to imported component', () => {
+      helper.createFile(path.join('components', 'bar', 'foo', 'testDir'), 'newFile.js', 'console.log("test");');
+      helper.addComponentWithOptions(
+        '.',
+        { i: 'bar/foo' },
+        path.join(helper.localScopePath, 'components', 'bar', 'foo')
+      );
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
+      const component = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
+      const files = component.files;
+      expect(files).to.be.array();
+      expect(files).to.be.ofSize(2);
+      expect(files).to.deep.include({ relativePath: 'foo.js', test: false, name: 'foo.js' });
+      expect(files).to.deep.include({ relativePath: 'testDir/newFile.js', test: false, name: 'newFile.js' });
+    });
+    it('Should not add dist files to imported component when distTarget is not specified', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
+      const component = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
+      const files = component.files;
+      expect(files).to.be.array();
+      expect(files).to.be.ofSize(2);
+      expect(files).to.not.deep.include({ relativePath: 'dist/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.not.deep.include({ relativePath: 'dist/testDir/newFile.js', test: false, name: 'newFile.js' });
+    });
+    it('Should only add test file to imported component', () => {
+      helper.createFile(path.join('components', 'bar', 'foo', 'testDir'), 'test.spec.js', 'console.log("test");');
+      helper.addComponentWithOptions(
+        'testDir/test.spec.js',
+        {
+          t: 'testDir/test.spec.js',
+          i: 'bar/foo'
+        },
+        path.join(helper.localScopePath, 'components', 'bar', 'foo')
+      );
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
+      const component = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
+      const files = component.files;
+      expect(files).to.be.array();
+      expect(files).to.be.ofSize(3);
+      expect(files).to.deep.include({ relativePath: 'testDir/test.spec.js', test: true, name: 'test.spec.js' });
+    });
+  });
   describe('add one component', () => {
-    let errorMessage;
     beforeEach(() => {
       helper.reInitLocalScope();
     });
@@ -180,7 +274,6 @@ describe('bit add command', function () {
       const addCmd = () => helper.addComponent('non-existing-file.js');
       expect(addCmd).to.throw('fatal: the file "non-existing-file.js" was not found');
     });
-
     it.skip('Bitmap should contain multiple files for component with more than one file', () => {});
     it.skip('Bitmap should contain impl files and test files  in different fields', () => {});
     it('Bitmap origin should be AUTHORED', () => {
@@ -645,6 +738,7 @@ describe('bit add command', function () {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
       helper.addRemoteScope();
+      helper.importCompiler();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
@@ -666,9 +760,9 @@ describe('bit add command', function () {
       it('should throw an error', () => {
         const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${
-            helper.bitBin
-          } add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
+          `Command failed: ${helper.bitBin} add ${
+            barFoo2Path
+          } -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
         );
       });
     });

@@ -7,13 +7,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.19] - 2018-01-11
+
+- fix #595, allow one dot in the scope name
+
+## [0.12.0-ext.18] - 2018-01-11
+
+- fix loading global extension from non consumer folders
+
+## [0.12.0-ext.17] - 2018-01-11
+
+- add headers to hook run action
+
+## [0.12.0-ext.16] - 2018-01-09
+
+- remove auto generated post install scripts
+- bump bit-javascript version to 0.10.8-dev.10
+
+## [0.12.0-ext.15] - 2018-01-09
+
+- bump bit-javascript version to 0.10.8-dev.9
+
 ## [0.12.0-ext.14] - 2018-01-09
 
-bump bit-javascript version to 0.10.8-dev.8
+- bump bit-javascript version to 0.10.8-dev.8
 
 ## [0.12.0-ext.14] - 2018-01-09
 
 - workaround for old bit binding prefix
+
+- [#495](https://github.com/teambit/bit/issues/495) support adding files to imported components and ignoring existing files
 
 ## [0.12.0-ext.13] - 2018-01-09
 

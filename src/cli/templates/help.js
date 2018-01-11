@@ -8,7 +8,7 @@ const baseTemplate = (extensionsTemplate) => {
   )}
   ${chalk.grey('Easily share, reuse, maintain and discover code components from any project.')}
 
-  ${chalk.grey('Bit documantation: https://docs.bitsrc.io')}
+  ${chalk.grey('Bit documentation: https://docs.bitsrc.io')}
 
   ${chalk.underline('start a working area')}
     ${chalk.cyan('init')}       create or reinitialize an empty Bit scope or reinitialize an existing one
@@ -44,9 +44,7 @@ const baseTemplate = (extensionsTemplate) => {
   ${chalk.underline('general purpose commands')}
     ${chalk.cyan('config')}     global config management
     ${chalk.cyan('cc')}         clears Bit's cache from current working machine
-
   ${extensionsTemplate}
-
   ${chalk.grey("please use 'bit <command> --help' for more information and guides on specific commands.")}`;
 };
 
