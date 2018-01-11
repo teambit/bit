@@ -60,6 +60,7 @@ export default class Environment {
       saveDependenciesAsComponents: true,
       dist: opts.dist,
       installNpmPackages: opts.installPackages,
+      addToRootPackageJson: false,
       verbose: opts.verbose
     };
     await this.consumer.writeToComponentsDir(concreteOpts);

@@ -243,21 +243,7 @@ export default class Component {
     writeBitDependencies?: boolean = false,
     dependencies: Array<Component>
   ): Promise<boolean> {
-    let postInstallLinkData = [];
-    if (writeBitDependencies) {
-      const fullPathRequiresComponents = this.dependencies
-        .filter(component => R.isEmpty(component.relativePaths))
-        .map(component => component.id.toStringWithoutVersion());
-      const componentsRequiredByFullPath = !R.isEmpty(fullPathRequiresComponents)
-        ? dependencies.filter(depId =>
-          fullPathRequiresComponents.filter(dep => depId.id.toStringWithoutVersion() === depId)
-        )
-        : [];
-      postInstallLinkData = !R.isEmpty(componentsRequiredByFullPath)
-        ? componentsRequiredByFullPath.map(component => component.getPackageNameAndPath())
-        : [];
-    }
-    return packageJson.write(consumer, this, bitDir, force, writeBitDependencies, postInstallLinkData);
+    return packageJson.write(consumer, this, bitDir, force, writeBitDependencies);
   }
 
   dependencies(): BitIds {

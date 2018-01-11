@@ -499,6 +499,7 @@ export default class Consumer {
     dist = true,
     saveDependenciesAsComponents = false,
     installNpmPackages = true,
+    addToRootPackageJson = true,
     verbose = false
   }: {
     componentsWithDependencies: ComponentWithDependencies[],
@@ -511,6 +512,7 @@ export default class Consumer {
     dist?: boolean,
     saveDependenciesAsComponents?: boolean, // as opposed to npm packages
     installNpmPackages?: boolean,
+    addToRootPackageJson?: boolean,
     verbose?: boolean
   }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
@@ -603,7 +605,7 @@ export default class Consumer {
     }
     await bitMap.write();
     if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
-    await packageJson.addComponentsToRoot(this, writtenComponents, bitMap);
+    if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents, bitMap);
 
     return linkComponents(
       componentsWithDependencies,

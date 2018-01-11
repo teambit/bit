@@ -99,8 +99,7 @@ async function write(
   component: Component,
   bitDir: string,
   force?: boolean = true,
-  writeBitDependencies?: boolean = false,
-  postInstallLinkData?: Array = []
+  writeBitDependencies?: boolean = false
 ): Promise<boolean> {
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
   const getBitDependencies = async () => {
@@ -125,7 +124,6 @@ async function write(
     license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
   });
   packageJson.setDependencies(component.packageDependencies, bitDependencies, registryPrefix);
-  packageJson.setScripts(postInstallLinkData, registryPrefix);
 
   return packageJson.write({ override: force });
 }
