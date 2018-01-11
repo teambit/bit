@@ -17,8 +17,7 @@ Seperating concerns provides greater modularity, clear ownerships, shorter learn
 
 However, sharing code and managing changes across multiple projects and teams can become very hard very quickly, generating a lot of painful overhead.
 
-Bit works with Git and NPM to make it easy to share code and manage changes across multiple repositories, with greater discoverability and less overhead- so you can focus your energy on building new things.
-Its workflow provides the speed and efficiency of copy-pasting, while still keeping everything tracked and managed.
+Bit works with Git and NPM to make it easy to share code and manage changes across multiple repositories, with greater discoverability and less overhead. Its workflow provides the speed and efficiency of copy-pasting, while still keeping everything tracked and managed.
 
 Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
