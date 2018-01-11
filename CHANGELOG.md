@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.19] - 2018-01-11
+
+- fix #595, allow one dot in the scope name
+
 ## [0.12.0-ext.18] - 2018-01-11
 
 - fix loading global extension from non consumer folders
