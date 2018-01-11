@@ -1858,6 +1858,15 @@ describe('bit import', function () {
       expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*');
       expect(pkgJson.private).to.be.true;
     });
+    it('component dep should be install as npm package', () => {
+      const modulePath = path.join(
+        helper.localScopePath,
+        'node_modules',
+        '@bit',
+        `${helper.remoteScope}.global.simple`
+      );
+      expect(modulePath).to.be.a.directory('should contain component dep as npm package dep').and.not.empty;
+    });
   });
   describe.skip('Import compiler', () => {
     before(() => {
