@@ -126,8 +126,8 @@ export default class Extension {
     name: string,
     rawConfig: Object = {},
     options: Object = {},
-    consumerPath: string,
-    scopePath: string
+    consumerPath: ?string,
+    scopePath: ?string
   ): Promise<Extension> {
     // logger.info(`loading extension ${name}`);
     // Require extension from _debugFile
