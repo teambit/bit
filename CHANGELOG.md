@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.18] - 2018-01-11
+
 - fix loading global extension from non consumer folders
 
 ## [0.12.0-ext.17] - 2018-01-11
