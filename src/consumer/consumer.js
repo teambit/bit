@@ -489,9 +489,9 @@ export default class Consumer {
   async addWorkspacesToPackageJson() {
     const driver = await this.driver.getDriver();
     const PackageJson = driver.PackageJson;
-    const pkg = await PackageJson.load(this.getPath());
-    const workSpaces = pkg.workspaces || [];
+    const pkg = await PackageJson.load(this.getPath(), false);
     if (pkg) {
+      const workSpaces = pkg.workspaces || [];
       workSpaces.push(this.bitJson.dependenciesDirectory + BIT_DEPENDECIES_REGEX);
       const formatedComponentsPath = format(this.bitJson.componentsDefaultDirectory, {
         name: YARN_WORKSPACES_REGEX,
