@@ -17,7 +17,7 @@
 
 ## About 
 
-**Bit makes it easier to share code and update changes across multiple projects**. 
+**Bit makes it easier to share code and update changes in multiple projects**. 
 
 Seperating concerns provides greater modularity, clear ownerships, shorter learning curves and helps to mitigate development pain.
 
