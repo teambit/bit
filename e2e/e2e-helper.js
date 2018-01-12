@@ -270,6 +270,12 @@ export default class Helper {
     return this.runCmd(`bit import ${this.remoteScope}/${id} ${value}`);
   }
 
+  isolateComponent(id: string, flags: string): string {
+    const isolatedEnvOutput = this.runCmd(`bit isolate ${this.remoteScope}/${id} ${this.remoteScopePath} ${flags}`);
+    const isolatedEnvOutputArray = isolatedEnvOutput.split('\n').filter(str => str);
+    return isolatedEnvOutputArray[isolatedEnvOutputArray.length - 1];
+  }
+
   createCompiler() {
     if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
 
