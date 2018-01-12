@@ -157,6 +157,10 @@ export default class Component extends BitObject {
     return this.scope ? [this.scope, this.box, this.name].join('/') : [this.box, this.name].join('/');
   }
 
+  toBitId(): BitId {
+    return new BitId({ scope: this.scope, box: this.box, name: this.name, version: this.latest() });
+  }
+
   toObject() {
     function versions(vers: { [string]: Ref }) {
       const obj = {};

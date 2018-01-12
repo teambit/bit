@@ -1105,43 +1105,66 @@ export default class Scope {
 
   async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {
     const componentsObjects = await this.sources.getMany(componentsToUpdate);
-    const componentsToUpdateP = componentsObjects.map(async (componentObjects) => {
-      const component = componentObjects.component;
-      if (!component) return null;
-      const latestVersion = await component.loadVersion(component.latest(), this.objects);
-      let pendingUpdate = false;
-      latestVersion.dependencies.forEach((dependency) => {
-        const committedComponentId = committedComponents.find(
-          committedComponent => committedComponent.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
-        );
 
-        if (!committedComponentId) return;
-        if (persist && semver.gt(committedComponentId.version, dependency.id.version)) {
-          pendingUpdate = true;
-          dependency.id.version = committedComponentId.version;
-          const flattenDependencyToUpdate = latestVersion.flattenedDependencies.find(
-            flattenDependency => flattenDependency.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
+    const updateComponents = async (changedComponents, isRound2 = false) => {
+      const componentsToUpdateP = componentsObjects.map(async (componentObjects) => {
+        const component = componentObjects.component;
+        if (!component) return null;
+        const latestVersion = await component.loadVersion(component.latest(), this.objects);
+        let pendingUpdate = false;
+        latestVersion.flattenedDependencies.forEach((flattenedDependency) => {
+          const changedComponentId = changedComponents.find(
+            changedComponent =>
+              changedComponent.toStringWithoutVersion() === flattenedDependency.toStringWithoutVersion()
           );
-          flattenDependencyToUpdate.version = committedComponentId.version;
-        } else if (!persist && semver.gte(committedComponentId.version, dependency.id.version)) {
-          // if !persist, we only check whether a modified component may cause auto-tagging
-          // since it's only modified on the file-system, its version might be the same as the version stored in its
-          // dependents. That's why "semver.gte" is used instead of "server.gt".
-          pendingUpdate = true;
+
+          if (!changedComponentId) return;
+          if (persist && semver.gt(changedComponentId.version, flattenedDependency.version)) {
+            pendingUpdate = true;
+            flattenedDependency.version = changedComponentId.version;
+            const dependencyToUpdate = latestVersion.dependencies.find(
+              dependency => dependency.id.toStringWithoutVersion() === flattenedDependency.toStringWithoutVersion()
+            );
+            if (dependencyToUpdate) {
+              // it's a direct dependency
+              dependencyToUpdate.id.version = changedComponentId.version;
+            }
+          } else if (!persist && semver.gte(changedComponentId.version, flattenedDependency.version)) {
+            // if !persist, we only check whether a modified component may cause auto-tagging
+            // since it's only modified on the file-system, its version might be the same as the version stored in its
+            // dependents. That's why "semver.gte" is used instead of "server.gt".
+            pendingUpdate = true;
+          }
+        });
+        if (pendingUpdate) {
+          if (!persist) return componentObjects.component;
+          const message = 'bump dependencies versions';
+          if (isRound2) {
+            delete componentObjects.component.versions[componentObjects.component.latest()];
+          }
+          return this.sources.putAdditionalVersion(componentObjects.component, latestVersion, message);
         }
+        return null;
       });
-      if (pendingUpdate) {
-        if (!persist) return componentObjects.component;
-        const message = 'bump dependencies versions';
-        return this.sources.putAdditionalVersion(componentObjects.component, latestVersion, message);
-      }
-      return null;
-    });
-    const updatedComponentsAll = await Promise.all(componentsToUpdateP);
-    const updatedComponents = removeNils(updatedComponentsAll);
-    if (!R.isEmpty(updatedComponents) && persist) {
+      const updatedComponentsAll = await Promise.all(componentsToUpdateP);
+      return removeNils(updatedComponentsAll);
+    };
+    const updatedComponents = await updateComponents(committedComponents);
+    if (updatedComponents.length && persist) {
+      // it's easier to understand why another round of updateComponents() is needed by an example.
+      // say we have 3 components, bar/foo@0.0.1 depends on utils/is-string, utils/is-string@0.0.1 depends on
+      // utils/is-type, utils/is-type@0.0.1 with no dependencies.
+      // when utils/is-type is tagged, utils/is-string and bar/foo are updated in the first updateComponents() round.
+      // by looking at bar/foo dependencies, we find out that its utils/is-type dependency was updated to 0.0.2
+      // however, its utils/is-string dependency stays with 0.0.1, because utils/is-string was never part of
+      // committedComponents array.
+      // this second round of updateComponents() makes sure that the auto-tagged components will be updated as well.
+      const ids = updatedComponents.map(component => component.toBitId());
+      await updateComponents(ids, true);
+
       await this.objects.persist();
     }
+
     return updatedComponents;
   }
 

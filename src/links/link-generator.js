@@ -264,8 +264,8 @@ async function writeDependencyLinks(
     const links = directDependencies.map((dep: Dependency) => {
       if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
       let resolveDepVersion = dep.id;
-      // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
-      // Actual version number, because on the bitmap we have only specific versions
+      // Check if the dependency is latest, if yes we need to resolve it from the flatten dependencies to get the
+      // actual version number, because on the bitmap we have only specific versions
       if (dep.id.getVersion().latest) {
         resolveDepVersion = flattenedDependencies.resolveVersion(dep.id).toString();
       }
@@ -274,6 +274,9 @@ async function writeDependencyLinks(
       const _byComponentId = dependency => dependency.id.toString() === resolveDepVersion.toString();
       // Get the real dependency component
       const depComponent = R.find(_byComponentId, dependencies);
+      if (!depComponent) {
+        throw new Error(`dependency ${resolveDepVersion.toString()} was not found`);
+      }
 
       const currLinks = dep.relativePaths.map((relativePath: RelativePath) => {
         return componentLink(resolveDepVersion, depComponent, relativePath, parentComponent, parentComponentMap);
