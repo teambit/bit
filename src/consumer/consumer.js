@@ -635,7 +635,8 @@ export default class Consumer {
 
   async candidateComponentsForAutoTagging(modifiedComponents: BitId[]) {
     const bitMap = await this.getBitMap();
-    const candidateComponents = bitMap.getAllComponents([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    // const candidateComponents = bitMap.getAllComponents([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    const candidateComponents = bitMap.getAllComponents();
     if (!candidateComponents) return null;
     const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
       modifiedComponent.toStringWithoutVersion()

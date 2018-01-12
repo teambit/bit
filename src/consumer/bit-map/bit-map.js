@@ -292,8 +292,8 @@ export default class BitMap {
     const olderComponentsIds = Object.keys(this.components).filter(
       componentId =>
         BitId.parse(componentId).toStringWithoutScopeAndVersion() === id.toStringWithoutScopeAndVersion() &&
-        componentId !== newIdString &&
-        this.components[componentId].origin !== COMPONENT_ORIGINS.NESTED
+        componentId !== newIdString
+      // && this.components[componentId].origin !== COMPONENT_ORIGINS.NESTED
     );
 
     if (!olderComponentsIds.length) {
