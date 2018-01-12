@@ -421,10 +421,6 @@ export default class Consumer {
       installNpmPackages = false;
       saveDependenciesAsComponents = true;
     }
-    if (!installNpmPackages) {
-      // if npm packages are not installed, don't install dependencies as npm packages
-      saveDependenciesAsComponents = true;
-    }
     if (!rawIds || R.isEmpty(rawIds)) {
       return this.importAccordingToBitJsonAndBitMap(
         verbose,
