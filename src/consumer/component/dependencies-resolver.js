@@ -200,8 +200,15 @@ function findComponentsOfDepsFiles(
     if (currentBitsDeps && !R.isEmpty(currentBitsDeps)) {
       currentBitsDeps.forEach((bitDep) => {
         const componentId = Consumer.getComponentIdFromNodeModulesPath(bitDep, bindingPrefix);
-
-        const existingId = bitMap.getExistingComponentId(componentId);
+        const getExistingId = () => {
+          const existingId = bitMap.getExistingComponentId(componentId);
+          if (existingId) return existingId;
+          // maybe the dependencies were imported as npm packages
+          const modelDep = componentFromModel.dependencies.find(dep => dep.id.toStringWithoutVersion() === componentId);
+          if (modelDep) return modelDep.id.toString();
+          return null;
+        };
+        const existingId = getExistingId();
         if (existingId) {
           const currentComponentsDeps = { [existingId]: [] };
           if (!componentsDeps[existingId]) {

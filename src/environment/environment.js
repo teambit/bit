@@ -59,7 +59,8 @@ export default class Environment {
       createNpmLinkFiles: opts.npmLinks,
       saveDependenciesAsComponents: true,
       dist: opts.dist,
-      installNpmPackages: opts.installPackages,
+      installNpmPackages: !!opts.installPackages, // convert to boolean
+      addToRootPackageJson: false,
       verbose: opts.verbose
     };
     await this.consumer.writeToComponentsDir(concreteOpts);

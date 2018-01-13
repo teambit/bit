@@ -46,7 +46,7 @@ import ComponentNotFoundInPath from './component/exceptions/component-not-found-
 import npmClient from '../npm-client';
 import { RemovedLocalObjects } from '../scope/component-remove';
 import { linkComponents } from '../links';
-import { getSync } from '../api/consumer/lib/global-config';
+import * as packageJson from './component/package-json';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -426,10 +426,6 @@ export default class Consumer {
       installNpmPackages = false;
       saveDependenciesAsComponents = true;
     }
-    if (!installNpmPackages) {
-      // if npm packages are not installed, don't install dependencies as npm packages
-      saveDependenciesAsComponents = true;
-    }
     if (!rawIds || R.isEmpty(rawIds)) {
       return this.importAccordingToBitJsonAndBitMap(
         verbose,
@@ -528,6 +524,7 @@ export default class Consumer {
     dist = true,
     saveDependenciesAsComponents = false,
     installNpmPackages = true,
+    addToRootPackageJson = true,
     verbose = false
   }: {
     componentsWithDependencies: ComponentWithDependencies[],
@@ -540,6 +537,7 @@ export default class Consumer {
     dist?: boolean,
     saveDependenciesAsComponents?: boolean, // as opposed to npm packages
     installNpmPackages?: boolean,
+    addToRootPackageJson?: boolean,
     verbose?: boolean
   }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
@@ -573,7 +571,6 @@ export default class Consumer {
         origin,
         consumer: this,
         writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
-        dependencies: componentWithDeps.dependencies,
         componentMap
       });
     });
@@ -612,7 +609,6 @@ export default class Consumer {
           origin: COMPONENT_ORIGINS.NESTED,
           parent: componentWithDeps.component.id,
           consumer: this,
-          dependencies: dep.dependencies,
           componentMap
         });
       });
@@ -636,7 +632,7 @@ export default class Consumer {
 
     await bitMap.write();
     if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
-    await this.addComponentsToRootPackageJson(writtenComponents, bitMap);
+    if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents, bitMap);
 
     return linkComponents(
       componentsWithDependencies,
@@ -646,30 +642,6 @@ export default class Consumer {
       this,
       createNpmLinkFiles
     );
-  }
-
-  static getRegistryPrefix() {
-    return getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
-  }
-
-  async addComponentsToRootPackageJson(components: Component[], bitMap: BitMap) {
-    const importedComponents = await filterAsync(components, (component: Component) => {
-      const componentMap = component.getComponentMap(bitMap);
-      return componentMap.origin === COMPONENT_ORIGINS.IMPORTED;
-    });
-    if (!importedComponents || !importedComponents.length) return;
-
-    const driver = await this.driver.getDriver(false);
-    const PackageJson = driver.PackageJson;
-    const componentsToAdd = R.fromPairs(
-      importedComponents.map((component) => {
-        const locationRelativeToConsumer = this.getPathRelativeToConsumer(component.writtenPath);
-        const locationAsUnixFormat = `./${pathNormalizeToLinux(locationRelativeToConsumer)}`;
-        return [component.id.toStringWithoutVersion(), locationAsUnixFormat];
-      })
-    );
-    const registryPrefix = Consumer.getRegistryPrefix();
-    await PackageJson.addComponentsIntoExistingPackageJson(this.getPath(), componentsToAdd, registryPrefix);
   }
 
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
@@ -777,7 +749,7 @@ export default class Consumer {
   async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
     const getStatus = async () => {
       const status: ComponentStatus = {};
-      const componentFromModel = await this.scope.sources.get(id);
+      const componentFromModel: ModelComponent = await this.scope.sources.get(id);
       let componentFromFileSystem;
       try {
         componentFromFileSystem = await this.loadComponent(BitId.parse(id.toStringWithoutVersion()));

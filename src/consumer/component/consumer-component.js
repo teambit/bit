@@ -40,6 +40,7 @@ import {
   BIT_JSON
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
+import * as packageJson from './package-json';
 
 export type RelativePath = {
   sourceRelativePath: string,
@@ -235,62 +236,13 @@ export default class Component {
     return { packageName, packagePath };
   }
 
-  writePackageJson(
-    driver: Driver,
+  async writePackageJson(
+    consumer: Consumer,
     bitDir: string,
     force?: boolean = true,
-    writeBitDependencies?: boolean = false,
-    dependencies: Array<Component>
+    writeBitDependencies?: boolean = false
   ): Promise<boolean> {
-    const PackageJson = driver.getDriver(false).PackageJson;
-    let postInstallLinkData = [];
-    const mainFile = this.calculateMainDistFile();
-    // Replace all the / with - because / is not valid on package.json name key
-    const bitDependencies = writeBitDependencies
-      ? R.fromPairs(this.dependencies.map(dep => [dep.id.toStringWithoutVersion(), dep.id.version]))
-      : {};
-
-    if (writeBitDependencies) {
-      const fullPathRequiresComponents = this.dependencies
-        .filter(component => R.isEmpty(component.relativePaths))
-        .map(component => component.id.toStringWithoutVersion());
-      const componentsRequiredByFullPath = !R.isEmpty(fullPathRequiresComponents)
-        ? dependencies.filter(depId =>
-          fullPathRequiresComponents.filter(dep => depId.id.toStringWithoutVersion() === depId)
-        )
-        : [];
-      postInstallLinkData = !R.isEmpty(componentsRequiredByFullPath)
-        ? componentsRequiredByFullPath.map(component => component.getPackageNameAndPath())
-        : [];
-    }
-
-    const registryPrefix = Consumer.getRegistryPrefix();
-    const name = `${registryPrefix}/${this.id.toStringWithoutVersion().replace(/\//g, '.')}`;
-    const packageJson = new PackageJson(bitDir, {
-      name,
-      version: this.version,
-      homepage: this._getHomepage(),
-      main: mainFile,
-      devDependencies: this.devPackageDependencies,
-      peerDependencies: this.peerPackageDependencies,
-      componentRootFolder: bitDir,
-      license: `SEE LICENSE IN ${!R.isEmpty(this.license) ? 'LICENSE' : 'UNLICENSED'}`
-    });
-    packageJson.setDependencies(this.packageDependencies, bitDependencies, registryPrefix);
-
-    return packageJson.write({ override: force });
-  }
-
-  async updatePackageJsonAttribute(consumer: Consumer, componentDir, attributeName, attributeValue): Promise<*> {
-    const PackageJson = consumer.driver.getDriver(false).PackageJson;
-    try {
-      const packageJson = await PackageJson.load(componentDir);
-      packageJson[attributeName] = attributeValue;
-      return packageJson.write({ override: true });
-    } catch (e) {
-      // package.json doesn't exist, that's fine, no need to update anything
-      return Promise.resolve();
-    }
+    return packageJson.write(consumer, this, bitDir, force, writeBitDependencies);
   }
 
   dependencies(): BitIds {
@@ -415,19 +367,17 @@ export default class Component {
     bitDir,
     withBitJson,
     withPackageJson,
-    driver,
+    consumer,
     force = true,
     writeBitDependencies = false,
-    dependencies,
     deleteBitDirContent = false
   }: {
     bitDir: string,
     withBitJson: boolean,
     withPackageJson: boolean,
-    driver: Driver,
+    consumer: Consumer,
     force?: boolean,
     writeBitDependencies?: boolean,
-    dependencies: Component[],
     deleteBitDirContent?: boolean
   }) {
     if (deleteBitDirContent) {
@@ -438,7 +388,7 @@ export default class Component {
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists && this._writeDistsFiles) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
-    if (withPackageJson) await this.writePackageJson(driver, bitDir, force, writeBitDependencies, dependencies);
+    if (withPackageJson) await this.writePackageJson(consumer, bitDir, force, writeBitDependencies);
     if (this.license && this.license.src) await this.license.write(bitDir, force);
     logger.debug('component has been written successfully');
     return this;
@@ -537,7 +487,6 @@ export default class Component {
     parent,
     consumer,
     writeBitDependencies = false,
-    dependencies,
     componentMap
   }: {
     bitDir?: string,
@@ -549,12 +498,10 @@ export default class Component {
     parent?: BitId,
     consumer?: Consumer,
     writeBitDependencies?: boolean,
-    dependencies: Array<Components>,
     componentMap: ComponentMap
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     const consumerPath: ?string = consumer ? consumer.getPath() : undefined;
-    const driver: ?Driver = consumer ? consumer.driver : undefined;
     if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
     // Take the bitdir from the files (it will be the same for all the files of course)
     const calculatedBitDir = bitDir || this.files[0].base;
@@ -571,10 +518,9 @@ export default class Component {
         bitDir: calculatedBitDir,
         withBitJson,
         withPackageJson,
-        driver,
+        consumer,
         force,
-        writeBitDependencies,
-        dependencies
+        writeBitDependencies
       });
     }
     if (!componentMap) {
@@ -623,10 +569,9 @@ export default class Component {
       bitDir: newBase,
       withBitJson,
       withPackageJson: actualWithPackageJson,
-      driver,
+      consumer,
       force,
       writeBitDependencies,
-      dependencies,
       deleteBitDirContent
     });
 
