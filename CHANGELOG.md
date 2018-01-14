@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
+
+- fix #608 - absolute components dependencies for new components throw an error
+
 ## [0.12.0-ext.20] - 2018-01-14
 
 - fix #605 - component with modified dependencies doesn't recognize as modified
