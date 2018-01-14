@@ -677,6 +677,19 @@ export default class Consumer {
 
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
 
+      // sometime dependencies from the FS don't have an exact version, copy the version from the model
+      version.dependencies.forEach((dependency) => {
+        if (!dependency.id.hasVersion()) {
+          const idWithoutVersion = dependency.id.toStringWithoutVersion();
+          const dependencyFromModel = componentFromModel.dependencies.find(
+            modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
+          );
+          if (dependencyFromModel) {
+            dependency.id = dependencyFromModel.id;
+          }
+        }
+      });
+
       // uncomment to easily understand why two components are considered as modified
       // if (componentFromModel.hash().hash !== version.hash().hash) {
       //   console.log('-------------------componentFromModel------------------------');
