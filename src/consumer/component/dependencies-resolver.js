@@ -37,7 +37,8 @@ function findComponentsOfDepsFiles(
   bitMap: BitMap,
   consumerPath: string,
   bindingPrefix: string,
-  componentFromModel
+  componentFromModel,
+  driver: Driver
 ): Object {
   const packagesDeps = {};
   const componentsDeps = {};
@@ -201,11 +202,25 @@ function findComponentsOfDepsFiles(
       currentBitsDeps.forEach((bitDep) => {
         const componentId = Consumer.getComponentIdFromNodeModulesPath(bitDep, bindingPrefix);
         const getExistingId = () => {
-          const existingId = bitMap.getExistingComponentId(componentId);
+          let existingId = bitMap.getExistingComponentId(componentId);
           if (existingId) return existingId;
+
           // maybe the dependencies were imported as npm packages
-          const modelDep = componentFromModel.dependencies.find(dep => dep.id.toStringWithoutVersion() === componentId);
-          if (modelDep) return modelDep.id.toString();
+          if (bitDep.startsWith('node_modules')) {
+            const depPath = path.join(consumerPath, bitDep);
+            const packageJson = driver.driver.PackageJson.findPackage(depPath);
+            if (packageJson) {
+              const depVersion = packageJson.version;
+              existingId = BitId.parse(componentId, depVersion);
+              return existingId.toString();
+            }
+          }
+          if (componentFromModel) {
+            const modelDep = componentFromModel.dependencies.find(
+              dep => dep.id.toStringWithoutVersion() === componentId
+            );
+            if (modelDep) return modelDep.id.toString();
+          }
           return null;
         };
         const existingId = getExistingId();
@@ -334,7 +349,8 @@ export default (async function loadDependenciesForComponent(
     bitMap,
     consumerPath,
     component.bindingPrefix,
-    componentFromModel
+    componentFromModel,
+    driver
   );
   const traversedCompDeps = traversedDeps.componentsDeps;
   component.dependencies = Object.keys(traversedCompDeps).map((depId) => {
