@@ -33,9 +33,9 @@ jobs:
     working_directory: ~/bit
     steps:
       # prod registry
-      - run: npm config set @bit:registry https://node.bitsrc.io
+      #- run: npm config set @bit:registry https://node.bitsrc.io
       # stage registry
-      #- run: npm config set @bit:registry https://node-stg.bitsrc.io
+      - run: npm config set @bit:registry https://node-stg.bitsrc.io
       - save_cache:
           key: bitsrc-registry
           paths:
