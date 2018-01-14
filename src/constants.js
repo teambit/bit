@@ -274,9 +274,9 @@ export const BIT_CACHE_DIRNAME = 'cache';
 
 export const LATEST_TESTED_MARK = '*';
 
-export const BIT_DEPENDECIES_REGEX = '/*/*/*/*';
+export const ASTERISK = '*';
 
-export const YARN_WORKSPACES_REGEX = '*';
+export const COMPONENTES_DEPENDECIES_REGEX = '/*/*/*/*';
 
 export const SCOPE_JSON = 'scope.json';
 

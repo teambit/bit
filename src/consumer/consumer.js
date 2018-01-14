@@ -20,12 +20,7 @@ import {
   COMPONENT_ORIGINS,
   BIT_VERSION,
   NODE_PATH_SEPARATOR,
-  LATEST_BIT_VERSION,
-  CFG_REGISTRY_DOMAIN_PREFIX,
-  DEFAULT_REGISTRY_DOMAIN_PREFIX,
-  DEFAULT_SEPARATOR,
-  BIT_DEPENDECIES_REGEX,
-  YARN_WORKSPACES_REGEX
+  LATEST_BIT_VERSION
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -34,7 +29,6 @@ import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION, BEFORE_INSTALL_NPM_DEPENDENCIES, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
-import ComponentMap from './bit-map/component-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
@@ -480,30 +474,6 @@ export default class Consumer {
   }
 
   /**
-   * Adds workspace array to package.json - only if user wants to work with yarn workspaces
-   */
-  async addWorkspacesToPackageJson() {
-    const driver = await this.driver.getDriver();
-    const PackageJson = driver.PackageJson;
-    const pkg = await PackageJson.load(this.getPath(), false);
-    if (pkg) {
-      const workSpaces = pkg.workspaces || [];
-      workSpaces.push(this.bitJson.dependenciesDirectory + BIT_DEPENDECIES_REGEX);
-      const formatedComponentsPath = format(this.bitJson.componentsDefaultDirectory, {
-        name: YARN_WORKSPACES_REGEX,
-        scope: YARN_WORKSPACES_REGEX,
-        namespace: YARN_WORKSPACES_REGEX
-      });
-      const formatedRegexPath = formatedComponentsPath
-        .split(DEFAULT_SEPARATOR)
-        .map(part => (R.contains(YARN_WORKSPACES_REGEX, part) ? YARN_WORKSPACES_REGEX : part))
-        .join(DEFAULT_SEPARATOR);
-      workSpaces.push(formatedRegexPath);
-      pkg.workspaces = R.uniq(workSpaces);
-      await pkg.write({ override: true });
-    }
-  }
-  /**
    * write the components into '/components' dir (or according to the bit.map) and its dependencies in the
    * '/components/.dependencies' dir. Both directories are configurable in bit.json
    * For example: global/a has a dependency my-scope/global/b@1. The directories will be:
@@ -628,7 +598,13 @@ export default class Consumer {
     }
 
     // add workspaces if flag is true
-    if (this.bitJson.manageWorkspaces) await this.addWorkspacesToPackageJson();
+    await packageJson.addWorkspacesToPackageJson(
+      this,
+      this.getPath(),
+      this.bitJson.componentsDefaultDirectory,
+      this.bitJson.dependenciesDirectory,
+      writeToPath
+    );
 
     await bitMap.write();
     if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
