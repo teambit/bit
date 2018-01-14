@@ -61,7 +61,8 @@ export default class Environment {
       dist: opts.dist,
       installNpmPackages: !!opts.installPackages, // convert to boolean
       addToRootPackageJson: false,
-      verbose: opts.verbose
+      verbose: opts.verbose,
+      excludeRegistryPrefix: !!opts.excludeRegistryPrefix
     };
     await this.consumer.writeToComponentsDir(concreteOpts);
     return R.head(componentsWithDependencies);
