@@ -36,7 +36,8 @@ type consumerBitJsonProps = {
   packageManager?: 'npm' | 'yarn',
   packageManagerArgs?: string[],
   packageManagerProcessOptions?: Object,
-  useWorkspaces?: boolean
+  useWorkspaces?: boolean,
+  manageWorkspaces?: boolean
 };
 
 export default class ConsumerBitJson extends AbstractBitJson {
@@ -51,6 +52,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
   packageManagerArgs: ?(string[]); // package manager client to use
   packageManagerProcessOptions: ?Object; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
+  manageWorkspaces: boolean; // manage workspaces with yarn
 
   constructor({
     impl,
@@ -69,7 +71,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
     packageManager = DEFAULT_PACKAGE_MANAGER,
     packageManagerArgs,
     packageManagerProcessOptions,
-    useWorkspaces = false
+    useWorkspaces = false,
+    manageWorkspaces = true
   }: consumerBitJsonProps) {
     super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
@@ -81,6 +84,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     this.packageManagerArgs = packageManagerArgs;
     this.packageManagerProcessOptions = packageManagerProcessOptions;
     this.useWorkspaces = useWorkspaces;
+    this.manageWorkspaces = manageWorkspaces;
   }
 
   toPlainObject() {
@@ -92,7 +96,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
       packageManager: this.packageManager,
       packageManagerArgs: this.packageManagerArgs,
       packageManagerProcessOptions: this.packageManagerProcessOptions,
-      useWorkspaces: this.useWorkspaces
+      useWorkspaces: this.useWorkspaces,
+      manageWorkspaces: this.manageWorkspaces
     });
     if (this.distEntry || this.distTarget) {
       const dist = {};
@@ -145,7 +150,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
       packageManager,
       packageManagerArgs,
       packageManagerProcessOptions,
-      useWorkspaces
+      useWorkspaces,
+      manageWorkspaces
     } = object;
 
     return new ConsumerBitJson({
@@ -164,6 +170,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       packageManagerArgs,
       packageManagerProcessOptions,
       useWorkspaces,
+      manageWorkspaces,
       distTarget: R.propOr(undefined, 'target', dist),
       distEntry: R.propOr(undefined, 'entry', dist)
     });

@@ -9,6 +9,10 @@ import { AUTO_GENERATED_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
+const assertArrays = require('chai-arrays');
+
+chai.use(assertArrays);
+
 describe('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
@@ -1816,7 +1820,96 @@ describe('bit import', function () {
       });
     });
   });
-
+  describe('import component with dependencies with yarn workspaces', () => {
+    let dependencies;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      dependencies = path.join(
+        helper.localScopePath,
+        'components',
+        '.dependencies',
+        'global',
+        'simple',
+        helper.remoteScope,
+        '0.0.1'
+      );
+      helper.addNpmPackage('lodash.isboolean', '3.0.0');
+      const simpleFixture = 'import a from "lodash.isboolean"; ';
+      helper.createFile('global', 'simple.js', simpleFixture);
+      helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
+      helper.commitComponent('simple');
+      helper.exportComponent('simple');
+      helper.addNpmPackage('lodash.isstring', '4.0.0');
+      const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';
+      helper.createFile('', 'with-deps.js', withDepsFixture);
+      helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });
+      helper.commitAllComponents();
+      helper.exportComponent('comp/with-deps');
+      helper.reInitLocalScope();
+      helper.createPackageJson();
+      helper.addRemoteScope(helper.remoteScopePath);
+      helper.manageWorkspaces();
+      helper.importComponent('comp/with-deps');
+      helper.addkeyValueToPackageJson({ customField: 'bit is awsome' });
+    });
+    it('should install component dependencie as separate packages with yarn workspaces', () => {
+      expect(dependencies).to.be.a.directory('should not be empty').and.not.empty;
+    });
+    it('Should contain yarn lock file', () => {
+      expect(path.join(helper.localScopePath, 'yarn.lock')).to.be.a.file('no yarn lock file');
+    });
+    it('should install  global/simple package dependencies with yarn', () => {
+      expect(path.join(helper.localScopePath, 'node_modules')).to.be.a.directory('should not be empty').and.not.empty;
+      expect(path.join(helper.localScopePath, 'node_modules', 'lodash.isboolean')).to.be.a.directory(
+        'should contain lodash.isboolean'
+      ).and.not.empty;
+    });
+    it('should contain  workspaces array in package.json  and private true', () => {
+      const pkgJson = helper.readPackageJson(helper.localScopePath);
+      expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*');
+      expect(pkgJson.private).to.be.true;
+    });
+    it('component dep should be install as npm package', () => {
+      const modulePath = path.join(
+        helper.localScopePath,
+        'node_modules',
+        '@bit',
+        `${helper.remoteScope}.global.simple`
+      );
+      expect(modulePath).to.be.a.directory('should contain component dep as npm package dep').and.not.empty;
+    });
+    it('Should not contain duplicate regex in workspaces dir if we run import again ', () => {
+      helper.importComponent('comp/with-deps -f');
+      const pkgJson = helper.readPackageJson(helper.localScopePath);
+      expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*');
+      expect(pkgJson.workspaces).to.be.ofSize(2);
+      expect(path.join(helper.localScopePath, 'yarn.lock')).to.be.a.file('no yarn lock file');
+    });
+    it('Should not delete custom fields in package.json', () => {
+      helper.importComponent('comp/with-deps -f');
+      const pkgJson = helper.readPackageJson();
+      expect(pkgJson).to.have.property('customField');
+      expect(pkgJson.customField).to.equal('bit is awsome');
+    });
+    it('Should not delete delete workspaces that already existed in package.json', () => {
+      helper.addkeyValueToPackageJson({ workspaces: ['comp'] });
+      helper.importComponent('comp/with-deps -f');
+      const pkgJson = helper.readPackageJson();
+      expect(pkgJson.workspaces).to.include(
+        'components/.dependencies/*/*/*/*',
+        'components/*/*',
+        'test/comp/with-deps'
+      );
+    });
+    it('Should save workspaces with custom import path ', () => {
+      helper.reInitLocalScope();
+      helper.addRemoteScope(helper.remoteScopePath);
+      helper.manageWorkspaces();
+      helper.importComponent('comp/with-deps -p test');
+      const pkgJson = helper.readPackageJson();
+      expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*', 'test');
+    });
+  });
   describe.skip('Import compiler', () => {
     before(() => {
       helper.reInitLocalScope();

@@ -64,6 +64,25 @@ export default class Helper {
     return fs.readJSONSync(bitJsonPath) || {};
   }
 
+  createPackageJson(
+    name: string = 'test',
+    version: string = '0.0.1',
+    packageJsonPath: string = path.join(this.localScopePath, 'package.json')
+  ) {
+    const packageJson = { name, version };
+    fs.writeJSONSync(packageJsonPath, packageJson);
+  }
+  manageWorkspaces(withWorkspaces: boolean = true, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+    const bitJson = this.readBitJson(bitJsonPath);
+    bitJson.packageManager = 'yarn';
+    bitJson.manageWorkspaces = withWorkspaces;
+    bitJson.useWorkspaces = withWorkspaces;
+    this.writeBitJson(bitJson);
+  }
+  addkeyValueToPackageJson(data: Object, pkgJsonPath: string = path.join(this.localScopePath)) {
+    const pkgJson = this.readPackageJson(pkgJsonPath);
+    fs.writeJSONSync(path.join(pkgJsonPath, 'package.json'), Object.assign(pkgJson, data));
+  }
   readPackageJson(packageJsonFolder: string = this.localScopePath) {
     const packageJsonPath = path.join(packageJsonFolder, 'package.json');
     return fs.readJSONSync(packageJsonPath) || {};

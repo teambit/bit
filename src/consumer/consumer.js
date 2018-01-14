@@ -29,7 +29,6 @@ import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import loader from '../cli/loader';
 import { BEFORE_IMPORT_ACTION, BEFORE_INSTALL_NPM_DEPENDENCIES, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
-import ComponentMap from './bit-map/component-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
@@ -597,6 +596,16 @@ export default class Consumer {
         }
       });
     }
+
+    // add workspaces if flag is true
+    await packageJson.addWorkspacesToPackageJson(
+      this,
+      this.getPath(),
+      this.bitJson.componentsDefaultDirectory,
+      this.bitJson.dependenciesDirectory,
+      writeToPath
+    );
+
     await bitMap.write();
     if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
     if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents, bitMap);
