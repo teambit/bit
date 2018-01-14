@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.22] - 2018-01-14
+
 - fix #608 - absolute components dependencies for new components throw an error
+- [#577](https://github.com/teambit/bit/issues/577) - auto add workspaces to root package.json
+- support excludeRegistryPrefix for npm extention 
 
 ## [0.12.0-ext.20] - 2018-01-14
 
