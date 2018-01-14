@@ -614,9 +614,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
@@ -676,15 +676,17 @@ export default class Consumer {
       });
 
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
-      version.flattenedDependencies = componentFromModel.flattenedDependencies;
-      // dependencies from the FS don't have an exact version, copy the version from the model
+
+      // sometime dependencies from the FS don't have an exact version, copy the version from the model
       version.dependencies.forEach((dependency) => {
-        const idWithoutVersion = dependency.id.toStringWithoutVersion();
-        const dependencyFromModel = componentFromModel.dependencies.find(
-          modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
-        );
-        if (dependencyFromModel) {
-          dependency.id = dependencyFromModel.id;
+        if (!dependency.id.hasVersion()) {
+          const idWithoutVersion = dependency.id.toStringWithoutVersion();
+          const dependencyFromModel = componentFromModel.dependencies.find(
+            modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
+          );
+          if (dependencyFromModel) {
+            dependency.id = dependencyFromModel.id;
+          }
         }
       });
 
