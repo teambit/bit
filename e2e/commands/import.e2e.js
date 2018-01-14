@@ -9,6 +9,10 @@ import { AUTO_GENERATED_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
+const assertArrays = require('chai-arrays');
+
+chai.use(assertArrays);
+
 describe('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
