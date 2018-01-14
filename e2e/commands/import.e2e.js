@@ -1844,8 +1844,9 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.createPackageJson();
       helper.addRemoteScope(helper.remoteScopePath);
-      helper.changePackageManagerToYarn();
+      helper.manageWorkspaces();
       helper.importComponent('comp/with-deps');
+      helper.addkeyValueToPackageJson({ customField: 'bit is awsome' });
     });
     it('should install component dependencie as separate packages with yarn workspaces', () => {
       expect(dependencies).to.be.a.directory('should not be empty').and.not.empty;
@@ -1872,6 +1873,37 @@ describe('bit import', function () {
         `${helper.remoteScope}.global.simple`
       );
       expect(modulePath).to.be.a.directory('should contain component dep as npm package dep').and.not.empty;
+    });
+    it('Should not contain duplicate regex in workspaces dir if we run import again ', () => {
+      helper.importComponent('comp/with-deps -f');
+      const pkgJson = helper.readPackageJson(helper.localScopePath);
+      expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*');
+      expect(pkgJson.workspaces).to.be.ofSize(2);
+      expect(path.join(helper.localScopePath, 'yarn.lock')).to.be.a.file('no yarn lock file');
+    });
+    it('Should not delete custom fields in package.json', () => {
+      helper.importComponent('comp/with-deps -f');
+      const pkgJson = helper.readPackageJson();
+      expect(pkgJson).to.have.property('customField');
+      expect(pkgJson.customField).to.equal('bit is awsome');
+    });
+    it('Should not delete delete workspaces that already existed in package.json', () => {
+      helper.addkeyValueToPackageJson({ workspaces: ['comp'] });
+      helper.importComponent('comp/with-deps -f');
+      const pkgJson = helper.readPackageJson();
+      expect(pkgJson.workspaces).to.include(
+        'components/.dependencies/*/*/*/*',
+        'components/*/*',
+        'test/comp/with-deps'
+      );
+    });
+    it('Should save workspaces with custom import path ', () => {
+      helper.reInitLocalScope();
+      helper.addRemoteScope(helper.remoteScopePath);
+      helper.manageWorkspaces();
+      helper.importComponent('comp/with-deps -p test');
+      const pkgJson = helper.readPackageJson();
+      expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*', 'test');
     });
   });
   describe.skip('Import compiler', () => {
