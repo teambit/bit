@@ -191,7 +191,7 @@ export default class PackageJson {
     const saveRawObject = obj => fs.outputJSON(composePath(rootDir), obj, { spaces: 2 });
     const getPackageJson = async () => {
       const exist = PackageJson.hasExisting(rootDir);
-      return exist ? getRawObject() : { workspaces: {}, private: true };
+      return exist ? getRawObject() : { workspaces: [], private: true };
     };
     const pkg = await getPackageJson();
     pkg.private = pkg.private || true;
