@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+## [0.10.8-dev.12] - 2018-01-14
+
+- improve yarn workspaces support in package.json
+
 ## [0.10.8-dev.11] - 2018-01-11
 
 - support yarn workspaces in package.json
