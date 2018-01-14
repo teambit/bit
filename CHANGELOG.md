@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-ext.20] - 2018-01-14
+
+- fix #591 - recongnize dependencies that were imported as packages in bit status
+- fix #592 - auto-tagged component were not shown as staged in bit status
+- fix #515 - save direct dependencies in package.json with relative paths
+- fix 539 - skip-npm-install shouldn't enable the save-dependencies-as-components
+
 ## [0.12.0-ext.19] - 2018-01-11
 
 - fix #595, allow one dot in the scope name
