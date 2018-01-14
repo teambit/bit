@@ -496,7 +496,8 @@ export default class Consumer {
     saveDependenciesAsComponents = false,
     installNpmPackages = true,
     addToRootPackageJson = true,
-    verbose = false
+    verbose = false,
+    excludeRegistryPrefix = false
   }: {
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
@@ -509,7 +510,8 @@ export default class Consumer {
     saveDependenciesAsComponents?: boolean, // as opposed to npm packages
     installNpmPackages?: boolean,
     addToRootPackageJson?: boolean,
-    verbose?: boolean
+    verbose?: boolean,
+    excludeRegistryPrefix?: boolean
   }): Promise<Component[]> {
     const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
@@ -542,7 +544,8 @@ export default class Consumer {
         origin,
         consumer: this,
         writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
-        componentMap
+        componentMap,
+        excludeRegistryPrefix
       });
     });
     const writtenComponents = await Promise.all(writeComponentsP);
@@ -580,7 +583,8 @@ export default class Consumer {
           origin: COMPONENT_ORIGINS.NESTED,
           parent: componentWithDeps.component.id,
           consumer: this,
-          componentMap
+          componentMap,
+          excludeRegistryPrefix
         });
       });
 

@@ -240,9 +240,10 @@ export default class Component {
     consumer: Consumer,
     bitDir: string,
     force?: boolean = true,
-    writeBitDependencies?: boolean = false
+    writeBitDependencies?: boolean = false,
+    excludeRegistryPrefix?: boolean = false
   ): Promise<boolean> {
-    return packageJson.write(consumer, this, bitDir, force, writeBitDependencies);
+    return packageJson.write(consumer, this, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
   }
 
   dependencies(): BitIds {
@@ -370,7 +371,8 @@ export default class Component {
     consumer,
     force = true,
     writeBitDependencies = false,
-    deleteBitDirContent = false
+    deleteBitDirContent = false,
+    excludeRegistryPrefix = false
   }: {
     bitDir: string,
     withBitJson: boolean,
@@ -378,7 +380,8 @@ export default class Component {
     consumer: Consumer,
     force?: boolean,
     writeBitDependencies?: boolean,
-    deleteBitDirContent?: boolean
+    deleteBitDirContent?: boolean,
+    excludeRegistryPrefix?: boolean
   }) {
     if (deleteBitDirContent) {
       fs.emptydirSync(bitDir);
@@ -388,7 +391,7 @@ export default class Component {
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists && this._writeDistsFiles) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
-    if (withPackageJson) await this.writePackageJson(consumer, bitDir, force, writeBitDependencies);
+    if (withPackageJson) { await this.writePackageJson(consumer, bitDir, force, writeBitDependencies, excludeRegistryPrefix); }
     if (this.license && this.license.src) await this.license.write(bitDir, force);
     logger.debug('component has been written successfully');
     return this;
@@ -487,7 +490,8 @@ export default class Component {
     parent,
     consumer,
     writeBitDependencies = false,
-    componentMap
+    componentMap,
+    excludeRegistryPrefix = false
   }: {
     bitDir?: string,
     withBitJson?: boolean,
@@ -498,7 +502,8 @@ export default class Component {
     parent?: BitId,
     consumer?: Consumer,
     writeBitDependencies?: boolean,
-    componentMap: ComponentMap
+    componentMap: ComponentMap,
+    excludeRegistryPrefix?: boolean
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     const consumerPath: ?string = consumer ? consumer.getPath() : undefined;
@@ -520,7 +525,8 @@ export default class Component {
         withPackageJson,
         consumer,
         force,
-        writeBitDependencies
+        writeBitDependencies,
+        excludeRegistryPrefix
       });
     }
     if (!componentMap) {
@@ -572,7 +578,8 @@ export default class Component {
       consumer,
       force,
       writeBitDependencies,
-      deleteBitDirContent
+      deleteBitDirContent,
+      excludeRegistryPrefix
     });
 
     if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map

@@ -99,7 +99,8 @@ async function write(
   component: Component,
   bitDir: string,
   force?: boolean = true,
-  writeBitDependencies?: boolean = false
+  writeBitDependencies?: boolean = false,
+  excludeRegistryPrefix?: boolean
 ): Promise<boolean> {
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
   const getBitDependencies = async () => {
@@ -112,7 +113,9 @@ async function write(
   };
   const bitDependencies = await getBitDependencies();
   const registryPrefix = getRegistryPrefix();
-  const name = `${registryPrefix}/${component.id.toStringWithoutVersion().replace(/\//g, '.')}`;
+  const name = excludeRegistryPrefix
+    ? component.id.toStringWithoutVersion().replace(/\//g, '.')
+    : `${registryPrefix}/${component.id.toStringWithoutVersion().replace(/\//g, '.')}`;
   const packageJson = new PackageJson(bitDir, {
     name,
     version: component.version,
