@@ -179,4 +179,27 @@ export default class PackageJson {
     packageJson.dependencies = Object.assign({}, packageJson.dependencies, convertComponentsToValidPackageNames(registryPrefix, components));
     await saveRawObject(packageJson);
   }
+  /*
+   * For an existing package.json file of the root project, we don't want to do any change, other than what needed.
+   * That's why this method doesn't use the 'load' and 'write' methods of this class. Otherwise, it'd write only the
+   * PackageJsonPropsNames attributes.
+   * Also, in case there is no package.json file in this project, it generates a new one with only the 'dependencies'
+   * adds workspaces with private flag if dosent exist.
+   */
+  static async addWorkspacesToPackageJson(rootDir: string, componentsDefaultDirectory: string, dependenciesDirectory: string, customImportPath: ?string ) {
+    const getRawObject = () => fs.readJson(composePath(rootDir));
+    const saveRawObject = obj => fs.outputJSON(composePath(rootDir), obj, { spaces: 2 });
+    const getPackageJson = async () => {
+      const exist = PackageJson.hasExisting(rootDir);
+      return exist ? getRawObject() : { workspaces: {}, private: true };
+    };
+    const pkg = await getPackageJson();
+    pkg.private = pkg.private || true;
+    const workSpaces = pkg.workspaces || [];
+    workSpaces.push(dependenciesDirectory);
+    workSpaces.push(componentsDefaultDirectory);
+    if(customImportPath) workSpaces.push(customImportPath);
+    pkg.workspaces = R.uniq(workSpaces);
+    await saveRawObject(pkg);
+  }
 }
