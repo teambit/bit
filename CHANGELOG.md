@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix bug with pub ssh key for hooks
+
 ## [0.12.0-ext.22] - 2018-01-14
 
 - fix #608 - absolute components dependencies for new components throw an error
