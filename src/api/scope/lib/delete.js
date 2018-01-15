@@ -11,8 +11,8 @@ export default function remove({ path, ids, force }, headers: ?Object): Promise<
   const args = { path, bitIds, force };
   HooksManagerInstance.triggerHook(PRE_REMOVE_REMOTE, args, headers);
   return loadScope(path).then((scope) => {
-    return scope.removeMany(bitIds, force).then((res) => {
-      HooksManagerInstance.triggerHook(
+    return scope.removeMany(bitIds, force).then(async (res) => {
+      await HooksManagerInstance.triggerHook(
         POST_REMOVE_REMOTE,
         {
           removedComponentsIds: res.bitIds,

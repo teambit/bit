@@ -11,8 +11,8 @@ export default function deprecate({ path, ids }, headers: ?Object): Promise<stri
   const args = { path, bitIds };
   HooksManagerInstance.triggerHook(PRE_DEPRECATE_REMOTE, args, headers);
   return loadScope(path).then((scope) => {
-    return scope.deprecateMany(bitIds).then((res) => {
-      HooksManagerInstance.triggerHook(
+    return scope.deprecateMany(bitIds).then(async (res) => {
+      await HooksManagerInstance.triggerHook(
         POST_DEPRECATE_REMOTE,
         {
           deprecatedComponentsIds: res.bitIds,

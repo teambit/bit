@@ -12,8 +12,8 @@ export default function fetch(path: string, ids: string[], noDependencies: boole
   HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
   return loadScope(path).then((scope) => {
     if (noDependencies) return scope.manyOneObjects(bitIds);
-    return scope.getObjects(bitIds).then((componentObjects) => {
-      HooksManagerInstance.triggerHook(
+    return scope.getObjects(bitIds).then(async (componentObjects) => {
+      await HooksManagerInstance.triggerHook(
         POST_SEND_OBJECTS,
         {
           componentObjects,

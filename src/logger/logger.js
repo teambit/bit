@@ -79,18 +79,14 @@ logger.exitAfterFlush = (code: number = 0, commandName: string) => {
         logger.transports[k]._stream.once('finish', () => {
           numFlushed += 1;
           if (numFlushes === numFlushed) {
-            setTimeout(() => {
-              process.exit(code);
-            }, 1000);
+            process.exit(code);
           }
         });
         logger.transports[k]._stream.end();
       }
     });
     if (numFlushes === 0) {
-      setTimeout(() => {
-        process.exit(code);
-      }, 1000);
+      process.exit(code);
     }
   });
 };
