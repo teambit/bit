@@ -2,6 +2,7 @@
 import winston from 'winston';
 import path from 'path';
 import { GLOBAL_LOGS } from '../constants';
+import { setTimeout } from 'timers';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
 // in case the extension developer use api.logger more than once
@@ -78,14 +79,18 @@ logger.exitAfterFlush = (code: number = 0, commandName: string) => {
         logger.transports[k]._stream.once('finish', () => {
           numFlushed += 1;
           if (numFlushes === numFlushed) {
-            process.exit(code);
+            setTimeout(() => {
+              process.exit(code);
+            }, 1000);
           }
         });
         logger.transports[k]._stream.end();
       }
     });
     if (numFlushes === 0) {
-      process.exit(code);
+      setTimeout(() => {
+        process.exit(code);
+      }, 1000);
     }
   });
 };
