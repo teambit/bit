@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - implement #613, change `bit install` command to install all packages and link all components
 
+## [0.12.0-dev.26] - 2018-01-15
+
+- fix bit remove and bit deprecate commands on server
+
 ## [0.12.0-dev.25] - 2018-01-15
 
 - wait for server side hooks to finish
