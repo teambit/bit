@@ -1322,6 +1322,40 @@ describe('bit import', function () {
     });
   });
 
+  describe('modifying a dependent and a dependency at the same time', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      helper.commitAllComponents();
+
+      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+      helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+      const isStringFixtureV2 =
+        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
+      helper.createComponent('utils', 'is-string.js', isStringFixtureV2); // modify is-string
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-string');
+    });
+    it('the dependent should have the updated version of the dependency', () => {
+      const output = helper.showComponentParsed('utils/is-string');
+      expect(output.dependencies[0].id).to.have.string('is-type@0.0.2');
+    });
+    it('should use the updated dependent and dependencies and print the results from the latest versions', () => {
+      const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type v2 and got is-string v2');
+    });
+  });
+
   describe('to an inner directory (not consumer root)', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
