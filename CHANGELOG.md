@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-dev.23] - 2018-01-15
+
 - fix bug with pub ssh key for hooks
 
 ## [0.12.0-ext.22] - 2018-01-14
