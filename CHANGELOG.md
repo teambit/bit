@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.12.0-dev.25] - 2018-01-15
+## [0.12.0-dev.26] - 2018-01-15
 
 - fix bit remove and bit deprecate commands on server
 
