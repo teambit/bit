@@ -7,6 +7,8 @@ import path from 'path';
 import Helper from '../e2e-helper';
 import { AUTO_GENERATED_MSG, DEFAULT_INDEX_EXTS } from '../../src/constants';
 
+chai.use(require('chai-fs'));
+
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
@@ -14,6 +16,7 @@ chai.use(assertArrays);
 describe('bit add command', function () {
   this.timeout(0);
   const helper = new Helper();
+
   after(() => {
     helper.destroyEnv();
   });
@@ -133,6 +136,7 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'testDir/test.spec.js', test: true, name: 'test.spec.js' });
     });
   });
+
   describe('add one component', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
@@ -201,7 +205,7 @@ describe('bit add command', function () {
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('bar', 'foo.spec.js');
       helper.addComponentWithOptions(osComponentName, { t: `${osFilePathName}       ` });
-      const bitMap = fs.readFileSync(path.join(helper.localScopePath, '.bit.map.json')).toString();
+      const bitMap = fs.readFileSync(path.join(helper.localScopePath, '.bitmap')).toString();
       expect(bitMap).to.have.string(AUTO_GENERATED_MSG);
     });
     it('Should not add component to bitmap because test file does not exists', () => {
@@ -865,6 +869,39 @@ describe('bit add command', function () {
       expect(files).to.be.array();
       expect(files).to.be.ofSize(2);
       expect(files).to.deep.equal(expectedArray);
+    });
+  });
+  describe('add one component to project with existing .bit.map.json file', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createBitMap(
+        helper.localScopePath,
+        {
+          'bar/foo': {
+            files: [
+              {
+                relativePath: 'bar/foo.js',
+                test: false,
+                name: 'foo.js'
+              }
+            ],
+            mainFile: 'bar/foo.js',
+            origin: 'AUTHORED'
+          }
+        },
+        true
+      );
+
+      helper.createComponent('bar', 'foo2.js');
+      helper.addComponent(path.normalize('bar/foo2.js'));
+    });
+    it('Should update .bit.map.json file and not create ', () => {
+      const oldBitMap = helper.readBitMap(path.join(helper.localScopePath, '.bit.map.json'));
+      expect(oldBitMap).to.have.property('bar/foo2');
+    });
+    it('Should not create .bitmap ', () => {
+      const newBitMapPath = path.join(helper.localScopePath, '.bitmap');
+      expect(newBitMapPath).to.not.be.a.path('.bitmap Should not exist');
     });
   });
 });

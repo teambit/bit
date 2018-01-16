@@ -93,7 +93,7 @@ export default class Helper {
     return fs.writeJSONSync(bitJsonPath, bitJson);
   }
 
-  readBitMap(bitMapPath: string = path.join(this.localScopePath, '.bit.map.json'), withoutComment: boolean = true) {
+  readBitMap(bitMapPath: string = path.join(this.localScopePath, '.bitmap'), withoutComment: boolean = true) {
     const map = fs.readFileSync(bitMapPath) || {};
     return json.parse(map.toString('utf8'), null, withoutComment);
   }
@@ -105,7 +105,7 @@ export default class Helper {
   }
 
   writeBitMap(bitMap: Object) {
-    const bitMapPath = path.join(this.localScopePath, '.bit.map.json');
+    const bitMapPath = path.join(this.localScopePath, '.bitmap');
     return fs.writeJSONSync(bitMapPath, bitMap);
   }
   setComponentsDirInBitJson(content: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
@@ -157,9 +157,10 @@ export default class Helper {
         mainFile: 'bar/foo.js',
         origin: 'AUTHORED'
       }
-    }
+    },
+    oldBitMapFile: boolean = false
   ) {
-    const bitmapFile = path.join(cwd, '.bit.map.json');
+    const bitmapFile = path.join(cwd, oldBitMapFile ? '.bit.map.json' : '.bitmap');
 
     const bitmap = {
       version: '0.11.1-testing'
