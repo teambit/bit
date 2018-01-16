@@ -299,8 +299,8 @@ export default class Scope {
 
         // Calculate the flatten dependencies
         if (
-          sortedConsumerComponentsIds.includes(dependency.id.toStringWithoutVersion()) ||
-          sortedConsumerComponentsIds.includes(dependency.id.toString())
+          consumerComponentsIdsMap.has(dependency.id.toStringWithoutVersion()) ||
+          consumerComponentsIdsMap.has(dependency.id.toString())
         ) {
           // when a dependency includes in the components list to tag, don't use the existing version, because the
           // existing version will be obsolete once it's tagged. Instead, remove the version, and later on, when
