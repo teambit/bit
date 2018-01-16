@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-dev.29] - 2018-01-16
+
 - change commit hash to tag version in bit logs
 - fix server side hooks for import with no dependencies flag
+- fix #621 - dists files are written into the source files
 
 ## [0.12.0-dev.28] - 2018-01-16
 
