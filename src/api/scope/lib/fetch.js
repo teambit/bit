@@ -3,6 +3,7 @@ import { loadScope } from '../../../scope';
 import { BitIds } from '../../../bit-id';
 import { PRE_SEND_OBJECTS, POST_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
+import logger from '../../../logger/logger';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
