@@ -46,6 +46,7 @@ type installArgs = {
   useWorkspaces: boolean,
   dirs: string[],
   rootDir: ?string, // Used for yarn workspace
+  installRootPackageJson: ?boolean,
   verbose: boolean
 };
 
@@ -118,7 +119,7 @@ const _installInOneDirectory = ({
 /**
  * when modules is empty, it runs 'npm install' without any package, which installs according to package.json file
  */
-const installAction = ({
+const installAction = async ({
   modules,
   packageManager = DEFAULT_PACKAGE_MANAGER,
   packageManagerArgs = [],
@@ -126,6 +127,7 @@ const installAction = ({
   useWorkspaces = false,
   dirs = [],
   rootDir,
+  installRootPackageJson = false,
   verbose = false
 }: installArgs) => {
   if (useWorkspaces && packageManager === 'yarn') {
@@ -138,10 +140,26 @@ const installAction = ({
       verbose
     });
   }
+
+  const results = [];
+  if (installRootPackageJson) {
+    // installation of the root package.json has to be completed before installing the sub-directories package.json.
+    const rootDirResults = await _installInOneDirectory({
+      modules,
+      packageManager,
+      packageManagerArgs,
+      packageManagerProcessOptions,
+      dir: rootDir,
+      verbose
+    });
+    results.push(rootDirResults);
+  }
+
   const promises = dirs.map(dir =>
     _installInOneDirectory({ modules, packageManager, packageManagerArgs, packageManagerProcessOptions, dir, verbose })
   );
-  return Promise.all(promises);
+
+  return results.concat(await Promise.all(promises));
 };
 
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {

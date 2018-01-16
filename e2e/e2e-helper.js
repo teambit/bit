@@ -240,6 +240,18 @@ export default class Helper {
     return withDist ? this.runCmd('bit import') : this.runCmd('bit import --ignore-dist');
   }
 
+  mimicGitCloneLocalProjectWithoutImport() {
+    fs.removeSync(path.join(this.localScopePath, '.bit'));
+    this.runCmd('bit init');
+    const directories = glob.sync(path.normalize('**/'), { cwd: this.localScopePath, dot: true });
+    // delete all node-modules from all directories
+    directories.forEach((dir) => {
+      if (dir.includes('node_modules')) {
+        fs.removeSync(path.join(this.localScopePath, dir));
+      }
+    });
+  }
+
   getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true) {
     return glob
       .sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: includeDot })

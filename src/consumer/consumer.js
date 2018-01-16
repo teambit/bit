@@ -39,7 +39,7 @@ import MissingFilesFromComponent from './component/exceptions/missing-files-from
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import npmClient from '../npm-client';
 import { RemovedLocalObjects } from '../scope/component-remove';
-import { linkComponents } from '../links';
+import { linkComponents, linkAllToNodeModules } from '../links';
 import * as packageJson from './component/package-json';
 
 export type ConsumerProps = {
@@ -611,7 +611,7 @@ export default class Consumer {
     );
 
     await bitMap.write();
-    if (installNpmPackages) await this.installNpmPackages(componentsWithDependencies, verbose);
+    if (installNpmPackages) await this.installNpmPackagesForComponents(componentsWithDependencies, verbose);
     if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents, bitMap);
 
     return linkComponents(
@@ -627,9 +627,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
@@ -1120,26 +1120,12 @@ export default class Consumer {
     });
   }
 
-  async installNpmPackages(
-    componentsWithDependencies: ComponentWithDependencies[],
-    verbose: boolean = false
-  ): Promise<*> {
+  async _installPackages(dirs: string[], verbose: boolean, installRootPackageJson: boolean = false) {
     const packageManager = this.bitJson.packageManager;
     const packageManagerArgs = this.bitJson.packageManagerArgs;
     const packageManagerProcessOptions = this.bitJson.packageManagerProcessOptions;
     const useWorkspaces = this.bitJson.useWorkspaces;
 
-    // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
-    // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
-    const componentsWithDependenciesFlatten = R.flatten(
-      componentsWithDependencies.map((oneComponentWithDependencies) => {
-        return oneComponentWithDependencies.component.dependenciesSavedAsComponents
-          ? [oneComponentWithDependencies.component, ...oneComponentWithDependencies.dependencies]
-          : [oneComponentWithDependencies.component];
-      })
-    );
-
-    const componentDirs = componentsWithDependenciesFlatten.map(component => component.writtenPath);
     loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
 
     // don't pass the packages to npmClient.install function.
@@ -1152,8 +1138,9 @@ export default class Consumer {
       packageManagerArgs,
       packageManagerProcessOptions,
       useWorkspaces,
-      dirs: componentDirs,
+      dirs,
       rootDir: this.getPath(),
+      installRootPackageJson,
       verbose
     });
 
@@ -1164,5 +1151,39 @@ export default class Consumer {
     results.forEach((result) => {
       if (result) npmClient.printResults(result);
     });
+  }
+
+  async installNpmPackagesForComponents(
+    componentsWithDependencies: ComponentWithDependencies[],
+    verbose: boolean = false
+  ): Promise<*> {
+    // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
+    // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
+    const componentsWithDependenciesFlatten = R.flatten(
+      componentsWithDependencies.map((oneComponentWithDependencies) => {
+        return oneComponentWithDependencies.component.dependenciesSavedAsComponents
+          ? [oneComponentWithDependencies.component, ...oneComponentWithDependencies.dependencies]
+          : [oneComponentWithDependencies.component];
+      })
+    );
+
+    const componentDirs = componentsWithDependenciesFlatten.map(component => component.writtenPath);
+    return this._installPackages(componentDirs, verbose);
+  }
+
+  /**
+   * does the following (the order is important):
+   * 1) install npm packages of the consumer root.
+   * 2) install npm packages of all imported and nested components
+   * 3) link all components
+   */
+  async install(verbose) {
+    const bitMap = await this.getBitMap();
+    const candidateComponents = bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.NESTED]);
+    const dirs = Object.keys(candidateComponents)
+      .map(id => candidateComponents[id].rootDir || null)
+      .filter(dir => dir);
+    await this._installPackages(dirs, verbose, true);
+    return linkAllToNodeModules(this);
   }
 }
