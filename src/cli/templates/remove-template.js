@@ -1,17 +1,21 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import { RemovedObjects, RemovedLocalObjects } from '../../scope/component-remove';
+import { BitId } from '../../bit-id';
 
 export default ({ dependentBits, modifiedComponents = [], removedComponentIds, missingComponents }) => {
-  const paintMissingComponents = (missingComponents) => {
-    return !R.isEmpty(missingComponents)
-      ? chalk.red.underline('missing components:') +
-          chalk(
-            ` ${missingComponents.map(id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}\n`
-          )
-      : '';
+  const paintMissingComponents = () => {
+    if (R.isEmpty(missingComponents)) return '';
+    return (
+      chalk.red.underline('missing components:') +
+      chalk(
+        ` ${missingComponents.map((id) => {
+          if (!(id instanceof BitId)) id = new BitId(id); // when the id was received from a remote it's not an instance of BitId
+          return id.version === 'latest' ? id.toStringWithoutVersion() : id.toString();
+        })}\n`
+      )
+    );
   };
-  const paintRemoved = removedComponentIds =>
+  const paintRemoved = () =>
     (!R.isEmpty(removedComponentIds)
       ? chalk.green.underline('successfully removed components:') +
         chalk(
@@ -19,7 +23,7 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
         )
       : '');
 
-  const paintUnRemovedComponents = (dependentBits) => {
+  const paintUnRemovedComponents = () => {
     if (!R.isEmpty(dependentBits)) {
       return Object.keys(dependentBits)
         .map((key) => {
@@ -34,7 +38,7 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
     return '';
   };
 
-  const paintModifiedComponents = modifiedComponents =>
+  const paintModifiedComponents = () =>
     (!R.isEmpty(modifiedComponents)
       ? `${chalk.red.underline('error: unable to remove modified components:') +
           chalk(

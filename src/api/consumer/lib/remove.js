@@ -1,5 +1,5 @@
 /** @flow */
-import { loadConsumer } from '../../../consumer';
+import { loadConsumer, Consumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOVE } from '../../../cli/loader/loader-messages';
 
@@ -15,6 +15,6 @@ export default (async function remove({
   deleteFiles: boolean
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
-  const consumer = await loadConsumer();
+  const consumer: Consumer = await loadConsumer();
   return consumer.remove(ids, force, track, deleteFiles);
 });
