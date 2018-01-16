@@ -8,7 +8,7 @@ import ComponentMap from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
-import { pathNormalizeToLinux, pathRelative, getWithoutExt } from '../../utils';
+import { pathNormalizeToLinux, pathRelative, pathJoinLinux } from '../../utils';
 import logger from '../../logger/logger';
 import { Consumer } from '../../consumer';
 import type { RelativePath } from './consumer-component';
@@ -117,7 +117,7 @@ function findComponentsOfDepsFiles(
           );
         }
         const originallySource = entryComponentMap.originallySharedDir
-          ? path.join(entryComponentMap.originallySharedDir, depFile)
+          ? pathJoinLinux(entryComponentMap.originallySharedDir, depFile)
           : depFile;
         const relativePath: RelativePath = dependency.relativePaths.find(
           r => r.sourceRelativePath === originallySource
@@ -125,7 +125,7 @@ function findComponentsOfDepsFiles(
         if (!relativePath) {
           throw new Error(
             `unable to find ${originallySource} path in the dependencies relativePaths of ${componentFromModel.id}`
-          ); 
+          );
         }
 
         componentId = dependency.id.toString();
