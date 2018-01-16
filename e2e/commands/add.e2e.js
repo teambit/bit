@@ -365,7 +365,7 @@ describe('bit add command', function () {
       expect(errorMessage).to.have.string("error: option `-n, --namespace <namespace>' argument missing");
     });
     it('Define dynamic main file ', () => {
-      const mainFileOs = path.normalize('{PARENT_FOLDER}/{PARENT_FOLDER}.js');
+      const mainFileOs = path.normalize('{PARENT}/{PARENT}.js');
       helper.createComponent('bar', 'bar.js');
       helper.createComponent('bar', 'foo1.js');
       helper.addComponentWithOptions('bar', { m: mainFileOs, n: 'test' });
@@ -473,7 +473,7 @@ describe('bit add command', function () {
       helper.addComponentWithOptions('bar/', {
         i: 'bar/foo',
         m: path.normalize('bar/foo.js'),
-        t: 'test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,test/{FILE_NAME}.spec.js'
+        t: 'test/{PARENT}/{FILE_NAME}.spec.js,test/{FILE_NAME}.spec.js'
       });
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo'].files;
@@ -493,7 +493,7 @@ describe('bit add command', function () {
       helper.addComponentWithOptions('bar/*.js', {
         i: 'bar/foo',
         m: path.normalize('bar/foo.js'),
-        t: 'test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,bar/foo.spec.js,test/{FILE_NAME}.spec.js'
+        t: 'test/{PARENT}/{FILE_NAME}.spec.js,bar/foo.spec.js,test/{FILE_NAME}.spec.js'
       });
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo'].files;
@@ -514,7 +514,7 @@ describe('bit add command', function () {
       helper.addComponentWithOptions('bar/', {
         i: 'bar/foo',
         m: path.normalize('bar/foo.js'),
-        t: 'test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,test/*.spec.js'
+        t: 'test/{PARENT}/{FILE_NAME}.spec.js,test/*.spec.js'
       });
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo'].files;
@@ -549,7 +549,7 @@ describe('bit add command', function () {
       helper.addComponentWithOptions('bar/', {
         i: 'bar/foo',
         m: path.normalize('bar/foo.js'),
-        t: 'test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,test/*.spec.js',
+        t: 'test/{PARENT}/{FILE_NAME}.spec.js,test/*.spec.js',
         e: 'test/*.spec.js'
       });
       const bitMap = helper.readBitMap();
@@ -619,8 +619,8 @@ describe('bit add command', function () {
       helper.addComponentWithOptions('bar/*.js', {
         i: 'bar/foo',
         m: path.normalize('bar/foo.js'),
-        t: 'test/{PARENT_FOLDER}/{FILE_NAME}.spec.js,bar/foo.spec.js,test/{FILE_NAME}.spec.js',
-        e: 'test/{PARENT_FOLDER}/*.example.*'
+        t: 'test/{PARENT}/{FILE_NAME}.spec.js,bar/foo.spec.js,test/{FILE_NAME}.spec.js',
+        e: 'test/{PARENT}/*.example.*'
       });
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo'].files;
