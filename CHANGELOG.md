@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fixed remove local component
+
 ## [0.12.0-dev.28] - 2018-01-16
 
 - change .bit.map.json to .bitmap
