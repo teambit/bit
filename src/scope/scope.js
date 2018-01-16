@@ -815,6 +815,7 @@ export default class Scope {
 
     await this.removeComponent(bitId, componentList, false);
     if (Object.keys(component.component.versions).length <= 1) bitId.version = LATEST_BIT_VERSION;
+
     return { bitId, removedDependencies };
   }
 
@@ -902,7 +903,8 @@ export default class Scope {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const deprecateComponents = () => foundComponents.map(async bitId => this.deprecateSingle(bitId));
     const deprecatedComponents = await Promise.all(deprecateComponents());
-    return { bitIds: deprecatedComponents, missingComponents };
+    const missingComponentsStrings = missingComponents.map(id => id.toStringWithoutVersion());
+    return { bitIds: deprecatedComponents, missingComponents: missingComponentsStrings };
   }
 
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
