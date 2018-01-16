@@ -703,6 +703,19 @@ export default class Consumer {
         }
       });
 
+      /*
+        sort packageDependencies for comparing
+       */
+      const sortObject = (obj) => {
+        return Object.keys(obj)
+          .sort()
+          .reduce(function (result, key) {
+            result[key] = obj[key];
+            return result;
+          }, {});
+      };
+      version.packageDependencies = sortObject(version.packageDependencies);
+      componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
       // uncomment to easily understand why two components are considered as modified
       // if (componentFromModel.hash().hash !== version.hash().hash) {
       //   console.log('-------------------componentFromModel------------------------');
