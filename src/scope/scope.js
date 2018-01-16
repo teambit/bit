@@ -325,7 +325,7 @@ export default class Scope {
     logger.debug('scope.putMany: sequentially build all components');
     loader.start(BEFORE_RUNNING_BUILD);
     for (const consumerComponentId of sortedConsumerComponentsIds) {
-      const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
+      const consumerComponent: Component = consumerComponentsIdsMap.get(consumerComponentId);
       if (consumerComponent) {
         await consumerComponent.build({ scope: this, consumer });
       }
@@ -334,6 +334,7 @@ export default class Scope {
     logger.debug('scope.putMany: sequentially test all components');
     loader.start(BEFORE_RUNNING_SPECS);
     const specsResults = {};
+    const bitMap = consumer ? await consumer.getBitMap() : undefined;
     for (const consumerComponentId of sortedConsumerComponentsIds) {
       const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
       if (consumerComponent) {
@@ -341,6 +342,7 @@ export default class Scope {
           scope: this,
           rejectOnFailure: !force,
           consumer,
+          bitMap,
           verbose
         });
       }

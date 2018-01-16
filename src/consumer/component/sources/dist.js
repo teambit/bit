@@ -9,7 +9,8 @@ import AbstractVinyl from './abstract-vinyl';
  * These modifications of the paths are taken care in different stages depends on the scenario.
  * 1) using 'bit build'.
  * If the component wasn't change since the last build, it'll load the dists from the model, strip the
- * sharedOriginallyDir and then write them. (See consumer-component.build()).
+ * sharedOriginallyDir (See consumer-component.build()), takes care of dist.entry and dist.target and then write them.
+ * (see consumer-component.writeDists()).
  * If the component was changed, it will re-build it. The dists path are cloned from the files, since the files are
  * sharedOriginallyDir stripped, so will be the dists files. The only thing needed is to strip the dist.entry, which is
  * done after getting the files from the compiler. (See consumer-component.buildIfNeeded()).
