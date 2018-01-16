@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - implement #613, change `bit install` command to install all packages and link all components
+- change commit hash to tag version in bit logs
 
 ## [0.12.0-dev.26] - 2018-01-15
 

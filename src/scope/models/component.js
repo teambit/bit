@@ -122,8 +122,7 @@ export default class Component extends BitObject {
   collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } }> {
     return repo.findMany(this.versionArray).then((versions) => {
       const indexedLogs = fromPairs(zip(keys(this.versions), map(prop('log'), versions)));
-      const indexedHashes = mapObjIndexed(ref => objOf('hash', ref.toString()), this.versions);
-      return mergeWith(merge, indexedLogs, indexedHashes);
+      return indexedLogs;
     });
   }
 
