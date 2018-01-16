@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- change commit hash to tag version in bit logs
+- fix server side hooks for import with no dependencies flag
+
 ## [0.12.0-dev.28] - 2018-01-16
 
 - change .bit.map.json to .bitmap
-- change commit hash to tag version in bit logs
 
 ## [0.12.0-dev.27] - 2018-01-16
 
