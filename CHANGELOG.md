@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.12.0-dev.28] - 2018-01-16
 
 - change .bit.map.json to .bitmap
+- change commit hash to tag version in bit logs
 
 ## [0.12.0-dev.27] - 2018-01-16
 

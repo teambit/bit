@@ -12,19 +12,20 @@ export default class Show extends Command {
   migration = true;
 
   action([id]: [string]): Promise<*> {
-    return getComponentLogs(id).then(logs =>
-      R.reverse(R.values(logs)).map(
+    return getComponentLogs(id).then((logs) => {
+      Object.keys(logs).forEach(key => (logs[key].tag = key));
+      return R.reverse(R.values(logs)).map(
         R.evolve({
           date: n => new Date(parseInt(n)).toLocaleString()
         })
-      )
-    );
+      );
+    });
   }
 
   report(
     logs: Array<{
       message: string,
-      hash: string,
+      tag: string,
       date: string,
       username: ?string,
       email: ?string
