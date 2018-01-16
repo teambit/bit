@@ -108,8 +108,9 @@ export default class AbstractBitJson {
   toPlainObject(): Object {
     const isPropDefaultOrNull = (val, key) => {
       if (!val) return false;
-      if (key === 'lang') return !(key === 'lang' && val === DEFAULT_LANGUAGE);
-      if (key === 'bindingPrefix') return !(key === 'bindingPrefix' && val === DEFAULT_BINDINGS_PREFIX);
+      if (key === 'lang') return val !== DEFAULT_LANGUAGE;
+      if (key === 'bindingPrefix') return val !== DEFAULT_BINDINGS_PREFIX;
+      if (key === 'extensions') return !R.equals(val, DEFAULT_EXTENSIONS);
       return true;
     };
 

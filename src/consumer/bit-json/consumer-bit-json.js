@@ -10,6 +10,7 @@ import {
   DEFAULT_DEPENDENCIES_DIR_PATH,
   DEFAULT_PACKAGE_MANAGER
 } from '../../constants';
+import filterObject from '../../utils/filter-object';
 
 function composePath(bitPath: string) {
   return path.join(bitPath, BIT_JSON);
@@ -18,6 +19,10 @@ function composePath(bitPath: string) {
 function hasExisting(bitPath: string): boolean {
   return fs.existsSync(composePath(bitPath));
 }
+
+const DEFAULT_USE_WORKSPACES = false;
+const DEFAULT_MANAGE_WORKSPACES = true;
+const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
 type consumerBitJsonProps = {
   impl?: string,
@@ -60,26 +65,26 @@ export default class ConsumerBitJson extends AbstractBitJson {
     compiler,
     tester,
     dependencies,
-    saveDependenciesAsComponents,
+    saveDependenciesAsComponents = DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS,
     lang,
     distTarget,
     distEntry,
-    componentsDefaultDirectory,
-    dependenciesDirectory,
+    componentsDefaultDirectory = DEFAULT_COMPONENTES_DIR_PATH,
+    dependenciesDirectory = DEFAULT_DEPENDENCIES_DIR_PATH,
     bindingPrefix,
     extensions,
     packageManager = DEFAULT_PACKAGE_MANAGER,
     packageManagerArgs,
     packageManagerProcessOptions,
-    useWorkspaces = false,
-    manageWorkspaces = true
+    useWorkspaces = DEFAULT_USE_WORKSPACES,
+    manageWorkspaces = DEFAULT_MANAGE_WORKSPACES
   }: consumerBitJsonProps) {
     super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
     this.distEntry = distEntry;
-    this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTES_DIR_PATH;
-    this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
-    this.saveDependenciesAsComponents = saveDependenciesAsComponents || false;
+    this.componentsDefaultDirectory = componentsDefaultDirectory;
+    this.dependenciesDirectory = dependenciesDirectory;
+    this.saveDependenciesAsComponents = saveDependenciesAsComponents;
     this.packageManager = packageManager;
     this.packageManagerArgs = packageManagerArgs;
     this.packageManagerProcessOptions = packageManagerProcessOptions;
@@ -89,7 +94,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
 
   toPlainObject() {
     const superObject = super.toPlainObject();
-    const consumerObject = R.merge(superObject, {
+    let consumerObject = R.merge(superObject, {
       componentsDefaultDirectory: this.componentsDefaultDirectory,
       dependenciesDirectory: this.dependenciesDirectory,
       saveDependenciesAsComponents: this.saveDependenciesAsComponents,
@@ -103,9 +108,18 @@ export default class ConsumerBitJson extends AbstractBitJson {
       const dist = {};
       if (this.distEntry) dist.entry = this.distEntry;
       if (this.distTarget) dist.target = this.distTarget;
-      return R.merge(consumerObject, { dist });
+      consumerObject = R.merge(consumerObject, { dist });
     }
-    return consumerObject;
+
+    const isPropDefault = (val, key) => {
+      if (key === 'dependenciesDirectory') return val !== DEFAULT_DEPENDENCIES_DIR_PATH;
+      if (key === 'useWorkspaces') return val !== DEFAULT_USE_WORKSPACES;
+      if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
+      if (key === 'saveDependenciesAsComponents') return val !== DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
+      return true;
+    };
+
+    return filterObject(consumerObject, isPropDefault);
   }
 
   write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {

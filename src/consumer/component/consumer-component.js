@@ -391,7 +391,9 @@ export default class Component {
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists && this._writeDistsFiles) await this.dists.forEach(dist => dist.write(undefined, force));
     if (withBitJson) await this.writeBitJson(bitDir, force);
-    if (withPackageJson) { await this.writePackageJson(consumer, bitDir, force, writeBitDependencies, excludeRegistryPrefix); }
+    if (withPackageJson) {
+      await this.writePackageJson(consumer, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
+    }
     if (this.license && this.license.src) await this.license.write(bitDir, force);
     logger.debug('component has been written successfully');
     return this;
@@ -467,7 +469,7 @@ export default class Component {
     if (this.dists) {
       const newDistBase = this.getDistDirForConsumer(consumer, componentMap.rootDir);
       const getNewRelative = (dist) => {
-        if (consumer.bitJson.distEntry && componentMap.rootDir) {
+        if (consumer.bitJson.distEntry) {
           return dist.relative.replace(consumer.bitJson.distEntry, '');
         }
       };
@@ -802,6 +804,8 @@ export default class Component {
       logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
       if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         this.stripOriginallySharedDir(bitMap);
+        // don't worry about the dist.entry and dist.target at this point. It'll be done later on once the files are
+        // written, probably by this.writeDists()
       }
       return this.dists;
     }

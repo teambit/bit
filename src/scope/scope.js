@@ -298,7 +298,10 @@ export default class Scope {
         if (flattenedDependencies) return Promise.resolve(flattenedDependencies);
 
         // Calculate the flatten dependencies
-        if (sortedConsumerComponentsIds.includes(dependency.id.toStringWithoutVersion())) {
+        if (
+          sortedConsumerComponentsIds.includes(dependency.id.toStringWithoutVersion()) ||
+          sortedConsumerComponentsIds.includes(dependency.id.toString())
+        ) {
           // when a dependency includes in the components list to tag, don't use the existing version, because the
           // existing version will be obsolete once it's tagged. Instead, remove the version, and later on, when
           // importDependencies is called, it'll fetch the newly tagged version.
@@ -325,7 +328,7 @@ export default class Scope {
     logger.debug('scope.putMany: sequentially build all components');
     loader.start(BEFORE_RUNNING_BUILD);
     for (const consumerComponentId of sortedConsumerComponentsIds) {
-      const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
+      const consumerComponent: Component = consumerComponentsIdsMap.get(consumerComponentId);
       if (consumerComponent) {
         await consumerComponent.build({ scope: this, consumer });
       }
@@ -334,6 +337,7 @@ export default class Scope {
     logger.debug('scope.putMany: sequentially test all components');
     loader.start(BEFORE_RUNNING_SPECS);
     const specsResults = {};
+    const bitMap = consumer ? await consumer.getBitMap() : undefined;
     for (const consumerComponentId of sortedConsumerComponentsIds) {
       const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
       if (consumerComponent) {
@@ -341,6 +345,7 @@ export default class Scope {
           scope: this,
           rejectOnFailure: !force,
           consumer,
+          bitMap,
           verbose
         });
       }

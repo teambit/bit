@@ -627,9 +627,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
@@ -972,8 +972,7 @@ export default class Consumer {
     enrichContextFromGlobal(context);
     const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
       const resolvedRemote = await remotes.resolve(key, this.scope);
-      const result = await resolvedRemote.deleteMany(groupedBitsByScope[key], force, context);
-      return result;
+      return resolvedRemote.deleteMany(groupedBitsByScope[key], force, context);
     });
 
     return Promise.all(removeP);

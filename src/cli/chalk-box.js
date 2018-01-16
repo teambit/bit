@@ -10,9 +10,9 @@ export const formatBit = ({ scope, box, name, version }: any): string =>
 
 export const formatPlainComponentItem = ({ scope, box, name, version, deprecated }: any): string =>
   c.cyan(
-    `- ${scope ? `${scope}/` : ''}${box}/${name}@${version ? version.toString() : 'latest'}  ${deprecated
-      ? c.yellow('[Deprecated]')
-      : ''}`
+    `- ${scope ? `${scope}/` : ''}${box}/${name}@${version ? version.toString() : 'latest'}  ${
+      deprecated ? c.yellow('[Deprecated]') : ''
+    }`
   );
 
 export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);
@@ -42,18 +42,18 @@ const paintAuthor = (email: ?string, username: ?string): string => {
 export const paintLog = ({
   message,
   date,
-  hash,
+  tag,
   username,
   email
 }: {
   message: string,
-  hash: string,
+  tag: string,
   date: string,
   username: ?string,
   email: ?string
 }): string => {
   return (
-    c.yellow(`commit ${hash}\n`) +
+    c.yellow(`tag ${tag}\n`) +
     paintAuthor(email, username) +
     c.white(`Date: ${date}\n`) +
     c.white(`\n      ${message}\n`)
