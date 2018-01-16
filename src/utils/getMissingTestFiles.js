@@ -3,7 +3,7 @@ import isGlob from 'is-glob';
 import fs from 'fs';
 import { pathNormalizeToLinux } from './index';
 
-const DSL = ['{PARENT_FOLDER}', '{FILE_NAME}'];
+const DSL = ['{PARENT}', '{FILE_NAME}'];
 
 export default function getMissingTestFiles(tests) {
   let missingTestFiles = [];
