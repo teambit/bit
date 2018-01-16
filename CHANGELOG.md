@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-dev.27] - 2018-01-16
+
 - implement #613, change `bit install` command to install all packages and link all components
 - change .bit.map.json to .bitmap
 - change {PARENT_FOLDER} variable to {PARENT} in dsl of add
 - add getParsedComponent function to component-objects class
-
 
 ## [0.12.0-dev.26] - 2018-01-15
 
