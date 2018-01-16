@@ -134,7 +134,7 @@ describe('bit import', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         helper.importComponent('global/simple');
-        fs.removeSync(path.join(helper.localScopePath, '.bit.map.json'));
+        fs.removeSync(path.join(helper.localScopePath, '.bitmap'));
         output = helper.importComponent('global/simple');
       });
       it('should import the component successfully', () => {

@@ -19,6 +19,7 @@ export default class Repository {
 
   constructor(scope: Scope, objectTypes: Function[] = []) {
     this.scope = scope;
+    // TODO: use typesToObject from object-registrar
     this.types = objectTypes.reduce((map, objectType) => {
       map[objectType.name] = objectType;
       return map;

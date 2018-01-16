@@ -5,7 +5,7 @@ import linkTemplate from '../../templates/link-template';
 
 export default class Install extends Command {
   name = 'install';
-  description = 'install bit components from bit.json file';
+  description = 'install packages of all components and link them';
   alias = '';
   opts = [['v', 'verbose', 'show a more verbose output when possible']];
   loader = true;
