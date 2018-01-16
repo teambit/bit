@@ -627,9 +627,9 @@ export default class Consumer {
   moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = bitMap.getComponent(component.id);
@@ -703,6 +703,19 @@ export default class Consumer {
         }
       });
 
+      /*
+        sort packageDependencies for comparing
+       */
+      const sortObject = (obj) => {
+        return Object.keys(obj)
+          .sort()
+          .reduce(function (result, key) {
+            result[key] = obj[key];
+            return result;
+          }, {});
+      };
+      version.packageDependencies = sortObject(version.packageDependencies);
+      componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
       // uncomment to easily understand why two components are considered as modified
       // if (componentFromModel.hash().hash !== version.hash().hash) {
       //   console.log('-------------------componentFromModel------------------------');
