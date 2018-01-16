@@ -37,14 +37,16 @@ export default class BitObject {
     return `${this.constructor.name} ${this.hash().toString()} ${this.toBuffer().toString().length}${NULL_BYTE}`;
   }
 
-  collectRefs(repo: Repository): Ref[] {
+  collectRefs(repo: Repository, throws: boolean = true): Ref[] {
     const refsCollection = [];
 
     function addRefs(object: BitObject) {
       const refs = object.refs();
-      const objs = refs.map((ref) => {
-        return ref.loadSync(repo);
-      });
+      const objs = refs
+        .map((ref) => {
+          return ref.loadSync(repo, throws);
+        })
+        .filter(x => x);
 
       refsCollection.push(...refs);
       objs.forEach(obj => addRefs(obj));
@@ -54,6 +56,24 @@ export default class BitObject {
     return refsCollection;
   }
 
+  collectExistingRefs(repo: Repository, throws: boolean = true): Ref[] {
+    const refsCollection = [];
+
+    function addRefs(object: BitObject) {
+      const refs = object.refs();
+      const objs = refs
+        .map((ref) => {
+          return ref.loadSync(repo, throws);
+        })
+        .filter(x => x);
+      const filtered = refs.filter(ref => repo.loadSync(ref, false));
+      refsCollection.push(...filtered);
+      objs.forEach(obj => addRefs(obj));
+    }
+
+    addRefs(this);
+    return refsCollection;
+  }
   collectRaw(repo: Repository): Promise<Buffer[]> {
     return Promise.all(this.collectRefs(repo).map(ref => ref.loadRaw(repo)));
   }
