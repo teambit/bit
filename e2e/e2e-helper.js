@@ -157,9 +157,10 @@ export default class Helper {
         mainFile: 'bar/foo.js',
         origin: 'AUTHORED'
       }
-    }
+    },
+    oldBitMapFile: boolean = false
   ) {
-    const bitmapFile = path.join(cwd, '.bitmap');
+    const bitmapFile = path.join(cwd, oldBitMapFile ? '.bit.map.json' : '.bitmap');
 
     const bitmap = {
       version: '0.11.1-testing'

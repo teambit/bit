@@ -14,6 +14,7 @@ chai.use(assertArrays);
 describe('bit add command', function () {
   this.timeout(0);
   const helper = new Helper();
+
   after(() => {
     helper.destroyEnv();
   });
@@ -133,6 +134,7 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'testDir/test.spec.js', test: true, name: 'test.spec.js' });
     });
   });
+
   describe('add one component', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
@@ -865,6 +867,39 @@ describe('bit add command', function () {
       expect(files).to.be.array();
       expect(files).to.be.ofSize(2);
       expect(files).to.deep.equal(expectedArray);
+    });
+  });
+  describe('add one component to project with existing .bit.map.json file', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createBitMap(
+        helper.localScopePath,
+        {
+          'bar/foo': {
+            files: [
+              {
+                relativePath: 'bar/foo.js',
+                test: false,
+                name: 'foo.js'
+              }
+            ],
+            mainFile: 'bar/foo.js',
+            origin: 'AUTHORED'
+          }
+        },
+        true
+      );
+
+      helper.createComponent('bar', 'foo2.js');
+      helper.addComponent(path.normalize('bar/foo2.js'));
+    });
+    it('Should update .bit.map.json file and not create ', () => {
+      const oldBitMap = helper.readBitMap(path.join(helper.localScopePath, '.bit.map.json'));
+      expect(oldBitMap).to.have.property('bar/foo2');
+    });
+    it('Should update .bit.map.json file and not create ', () => {
+      const newBitMapPath = path.join(helper.localScopePath, '.bitmap');
+      expect(newBitMapPath).to.not.be.a.path('.bitmap Should not exist');
     });
   });
 });
