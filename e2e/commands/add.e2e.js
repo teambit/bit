@@ -7,6 +7,8 @@ import path from 'path';
 import Helper from '../e2e-helper';
 import { AUTO_GENERATED_MSG, DEFAULT_INDEX_EXTS } from '../../src/constants';
 
+chai.use(require('chai-fs'));
+
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
@@ -897,7 +899,7 @@ describe('bit add command', function () {
       const oldBitMap = helper.readBitMap(path.join(helper.localScopePath, '.bit.map.json'));
       expect(oldBitMap).to.have.property('bar/foo2');
     });
-    it('Should update .bit.map.json file and not create ', () => {
+    it('Should not create .bitmap ', () => {
       const newBitMapPath = path.join(helper.localScopePath, '.bitmap');
       expect(newBitMapPath).to.not.be.a.path('.bitmap Should not exist');
     });
