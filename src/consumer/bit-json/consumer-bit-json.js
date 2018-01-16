@@ -21,6 +21,7 @@ function hasExisting(bitPath: string): boolean {
 }
 
 const DEFAULT_USE_WORKSPACES = false;
+const DEFAULT_MANAGE_WORKSPACES = true;
 const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
 type consumerBitJsonProps = {
@@ -76,7 +77,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     packageManagerArgs,
     packageManagerProcessOptions,
     useWorkspaces = DEFAULT_USE_WORKSPACES,
-    manageWorkspaces = true
+    manageWorkspaces = DEFAULT_MANAGE_WORKSPACES
   }: consumerBitJsonProps) {
     super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
@@ -113,6 +114,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     const isPropDefault = (val, key) => {
       if (key === 'dependenciesDirectory') return val !== DEFAULT_DEPENDENCIES_DIR_PATH;
       if (key === 'useWorkspaces') return val !== DEFAULT_USE_WORKSPACES;
+      if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
       if (key === 'saveDependenciesAsComponents') return val !== DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
       return true;
     };

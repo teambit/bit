@@ -41,6 +41,7 @@ describe('run bit init', function () {
       expect(bitJson).to.not.have.property('dependenciesDirectory');
       expect(bitJson).to.not.have.property('saveDependenciesAsComponents');
       expect(bitJson).to.not.have.property('useWorkspaces');
+      expect(bitJson).to.not.have.property('manageWorkspaces');
     });
   });
 });
