@@ -201,7 +201,7 @@ describe('bit add command', function () {
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('bar', 'foo.spec.js');
       helper.addComponentWithOptions(osComponentName, { t: `${osFilePathName}       ` });
-      const bitMap = fs.readFileSync(path.join(helper.localScopePath, '.bit.map.json')).toString();
+      const bitMap = fs.readFileSync(path.join(helper.localScopePath, '.bitmap')).toString();
       expect(bitMap).to.have.string(AUTO_GENERATED_MSG);
     });
     it('Should not add component to bitmap because test file does not exists', () => {
