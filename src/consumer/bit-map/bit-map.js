@@ -43,9 +43,10 @@ export default class BitMap {
 
   static async load(dirPath: string): Promise<BitMap> {
     // support old bitmaps
-    const mapPath = fs.existsSync(path.join(dirPath, OLD_BIT_MAP))
-      ? path.join(dirPath, OLD_BIT_MAP)
-      : path.join(dirPath, BIT_MAP);
+    const mapPath =
+      fs.existsSync(path.join(dirPath, OLD_BIT_MAP)) && !fs.existsSync(path.join(dirPath, BIT_MAP))
+        ? path.join(dirPath, OLD_BIT_MAP)
+        : path.join(dirPath, BIT_MAP);
     const components = {};
     let version;
     if (fs.existsSync(mapPath)) {
