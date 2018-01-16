@@ -5,7 +5,7 @@
  */
 import * as pathlib from 'path';
 import * as fs from 'fs';
-import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP } from '../constants';
+import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP, OLD_BIT_MAP } from '../constants';
 
 function composeBitHiddenDirPath(path: string) {
   return pathlib.join(path, BIT_HIDDEN_DIR);
@@ -26,7 +26,7 @@ export function pathHasConsumer(path: string) {
  * determine whether given path has a bitmap
  */
 export function pathHasBitMap(path: string) {
-  return fs.existsSync(pathlib.join(path, BIT_MAP));
+  return fs.existsSync(pathlib.join(path, BIT_MAP)) || fs.existsSync(pathlib.join(path, OLD_BIT_MAP));
 }
 /**
  * determine whether given path has a bit.Json
