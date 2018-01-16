@@ -972,8 +972,7 @@ export default class Consumer {
     enrichContextFromGlobal(context);
     const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
       const resolvedRemote = await remotes.resolve(key, this.scope);
-      const result = await resolvedRemote.deleteMany(groupedBitsByScope[key], force, context);
-      return result;
+      return resolvedRemote.deleteMany(groupedBitsByScope[key], force, context);
     });
 
     return Promise.all(removeP);
