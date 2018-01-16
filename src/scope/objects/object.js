@@ -4,6 +4,7 @@ import Repository from './repository';
 import { deflate, inflate, sha1 } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import Ref from './ref';
+// import logger from '../../logger/logger';
 
 function parse(buffer: Buffer, types: { [string]: Function }): BitObject {
   const firstNullByteLocation = buffer.indexOf(NULL_BYTE);
