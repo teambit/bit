@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-dev.31] - 2018-01-17
+
 - fix ci-update workflow  
 
 ## [0.12.0-dev.30] - 2018-01-17
