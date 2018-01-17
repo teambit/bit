@@ -34,6 +34,7 @@ jobs:
     steps:
       # prod registry
       - run: npm config set @bit:registry https://node.bitsrc.io
+      - run: echo "//registry.npmjs.org/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
       # - run: npm config set @bit:registry https://node-stg.bitsrc.io
       - save_cache:
