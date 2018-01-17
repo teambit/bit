@@ -491,7 +491,7 @@ export default class Scope {
   async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<string[]> {
     logger.debug(`exportManyBareScope: Going to save ${componentsObjects.length} components`);
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
-    await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true)));
+    await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true, false)));
     const manyCompVersions = await Promise.all(
       manyObjects.map(objects => objects.component.toComponentVersion(LATEST))
     );
