@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.0-dev.30] - 2018-01-17
+
 - strip manageWorkspaces from consumer bit.json by default
 - bug fix - when removing a missing component from a remote, it was showing an obscure error "id.toStringWithoutVersion is not a function"
 - fixed remove local component
