@@ -12,7 +12,8 @@ export default function testInScope({
   verbose,
   scopePath,
   directory,
-  keep
+  keep,
+  isCI = true
 }: {
   id: string,
   environment?: ?boolean,
@@ -20,7 +21,8 @@ export default function testInScope({
   verbose?: ?boolean,
   scopePath: string,
   directory?: string,
-  keep?: boolean
+  keep?: boolean,
+  isCI?: boolean
 }) {
   logger.debug(`testInScope, id: ${id}, scopePath: ${scopePath}`);
   function loadFromScope(initialError: ?Error) {
@@ -35,7 +37,8 @@ export default function testInScope({
           verbose,
           isolated: true,
           directory,
-          keep
+          keep,
+          isCI
         });
       })
       .catch(e => Promise.reject(e));
@@ -50,7 +53,8 @@ export default function testInScope({
         environment,
         save,
         verbose,
-        isolated: true
+        isolated: true,
+        isCI
       });
     });
   }

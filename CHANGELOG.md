@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix ci-update workflow  
+
 ## [0.12.0-dev.30] - 2018-01-17
 
 - strip manageWorkspaces from consumer bit.json by default

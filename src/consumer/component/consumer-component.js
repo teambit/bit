@@ -283,8 +283,7 @@ export default class Component {
     scope,
     verbose,
     directory,
-    keep,
-    ciComponent
+    keep
   }: {
     condition?: ?boolean,
     files: File[],
@@ -294,8 +293,7 @@ export default class Component {
     scope: Scope,
     verbose: boolean,
     directory: ?string,
-    keep: ?boolean,
-    ciComponent: any
+    keep: ?boolean
   }): Promise<?{ code: string, mappings?: string }> {
     if (!condition) {
       return Promise.resolve({ code: '' });
@@ -354,7 +352,6 @@ export default class Component {
       };
       const componetWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
       const component = componetWithDependencies.component;
-      ciComponent.comp = component;
       const result = await runBuild(component.writtenPath);
       if (!keep) await isolatedEnvironment.destroy();
       return result;
@@ -613,7 +610,8 @@ export default class Component {
     verbose,
     isolated,
     directory,
-    keep
+    keep,
+    isCI = false
   }: {
     scope: Scope,
     rejectOnFailure?: boolean,
@@ -624,7 +622,8 @@ export default class Component {
     verbose?: boolean,
     isolated?: boolean,
     directory?: string,
-    keep?: boolean
+    keep?: boolean,
+    isCI?: boolean
   }): Promise<?Results> {
     // TODO: The same function exactly exists in this file under build function
     // Should merge them to one
@@ -737,7 +736,7 @@ export default class Component {
           : component.files.filter(file => file.test);
         const results = await run(component.mainFile, testFilesList);
         if (!keep) await isolatedEnvironment.destroy();
-        return results;
+        return isCI ? { specResults: results, mainFile: this.calculateMainDistFile() } : results;
       } catch (e) {
         await isolatedEnvironment.destroy();
         return Promise.reject(e);
@@ -760,7 +759,7 @@ export default class Component {
     verbose,
     directory,
     keep,
-    ciComponent
+    isCI
   }: {
     scope: Scope,
     environment?: boolean,
@@ -770,7 +769,7 @@ export default class Component {
     verbose?: boolean,
     directory: ?string,
     keep: ?boolean,
-    ciComponent: any
+    isCI: ?boolean
   }): Promise<string> {
     logger.debug(`consumer-component.build ${this.id}`);
     // @TODO - write SourceMap Type
@@ -807,7 +806,8 @@ export default class Component {
         // don't worry about the dist.entry and dist.target at this point. It'll be done later on once the files are
         // written, probably by this.writeDists()
       }
-      return this.dists;
+
+      return isCI ? { mainFile: this.calculateMainDistFile(), dists: this.dists } : this.dist;
     }
 
     logger.debug('compilerId found, start building');
@@ -849,8 +849,7 @@ export default class Component {
       componentMap,
       scope,
       directory,
-      keep,
-      ciComponent
+      keep
     });
 
     // return buildFilesP.then((buildedFiles) => {

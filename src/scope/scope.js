@@ -1184,7 +1184,8 @@ export default class Scope {
     verbose,
     isolated,
     directory,
-    keep
+    keep,
+    isCI = false
   }: {
     bitId: BitId,
     consumer?: ?Consumer,
@@ -1193,7 +1194,8 @@ export default class Scope {
     verbose?: ?boolean,
     isolated?: boolean,
     directory?: string,
-    keep?: boolean
+    keep?: boolean,
+    isCI?: boolean
   }): Promise<?any> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run specs on remote component');
@@ -1208,7 +1210,8 @@ export default class Scope {
       verbose,
       isolated,
       directory,
-      keep
+      keep,
+      isCI
     });
   }
 
@@ -1220,7 +1223,7 @@ export default class Scope {
     verbose,
     directory,
     keep,
-    ciComponent
+    isCI
   }: {
     bitId: BitId,
     environment?: ?boolean,
@@ -1229,13 +1232,13 @@ export default class Scope {
     verbose?: ?boolean,
     directory: ?string,
     keep: ?boolean,
-    ciComponent: any
+    isCI: ?boolean
   }): Promise<string> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run build on remote component');
     }
     const component = await this.loadComponent(bitId);
-    return component.build({ scope: this, environment, save, consumer, verbose, directory, keep, ciComponent });
+    return component.build({ scope: this, environment, save, consumer, verbose, directory, keep, isCI });
   }
 
   /**

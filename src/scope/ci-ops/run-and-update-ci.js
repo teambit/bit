@@ -2,7 +2,7 @@
 import serializeError from 'serialize-error';
 import { buildInScope, testInScope, modifyCIProps } from '../../api/scope';
 
-function runAndUpdateCI({
+async function runAndUpdateCI({
   id,
   scopePath,
   verbose,
@@ -34,25 +34,12 @@ function runAndUpdateCI({
     // define options
     const environment = false; // the environments are installed automatically when missing
     const save = true;
-    return buildInScope({
-      id,
-      scopePath,
-      environment,
-      save,
-      verbose,
-      directory,
-      keep
-    }).then(({ component, buildResults }) => {
-      return testInScope({ id, scopePath, environment, save, verbose, directory, keep })
-        .then((specsResults) => {
-          return addCIAttrsInTheModel({ startTime }).then(() => ({ specsResults, buildResults, component }));
-        })
-        .catch((e) => {
-          return addCIAttrsInTheModel({ error: e, startTime }).then(() => {
-            throw e;
-          });
-        });
-    });
+    const buildResults = await buildInScope({ id, scopePath, environment, save, verbose, directory, keep, isCI: true });
+    const testResults = await testInScope({ id, scopePath, environment, save, verbose, directory, keep, isCI: true });
+    const dists = buildResults ? buildResults.dists : null;
+    const mainFile = buildResults ? buildResults.mainFile : testResults.mainFile;
+    await addCIAttrsInTheModel({ startTime });
+    return { specsResults: testResults.specResults, dists, mainFile };
   } catch (e) {
     return addCIAttrsInTheModel({ error: e, startTime }).then(() => {
       throw e;
