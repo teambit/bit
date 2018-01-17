@@ -149,7 +149,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
       }, all files were deleted, please remove the component using bit remove command`;
     }
   ],
-  [MissingBitMapComponent, err => `fatal: the component ${chalk.bold(err.id)} was not found in the bit.map file`],
+  [MissingBitMapComponent, err => `fatal: the component ${chalk.bold(err.id)} was not found in the .bitmap file`],
   [PathNotExists, err => `fatal: the file "${chalk.bold(err.path)}" was not found`],
   [
     MissingComponentIdForImportedComponent,
