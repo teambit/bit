@@ -57,7 +57,7 @@ export default class Environment {
       withBitJson: opts.conf,
       writeBitDependencies: opts.writeBitDependencies,
       createNpmLinkFiles: opts.npmLinks,
-      saveDependenciesAsComponents: true,
+      saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       dist: opts.dist,
       installNpmPackages: !!opts.installPackages, // convert to boolean
       addToRootPackageJson: false,
