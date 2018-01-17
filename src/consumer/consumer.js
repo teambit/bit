@@ -1036,6 +1036,7 @@ export default class Consumer {
         realId.version = LATEST_BIT_VERSION;
         return realId;
       }
+      if (component) return BitId.parse(realName);
       return id;
     });
   }
