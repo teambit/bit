@@ -204,7 +204,7 @@ export default class Component extends BitObject {
    * @memberof Component
    */
   remove(repo: Repository, deepRemove: boolean = false): Promise {
-    const objectRefs = deepRemove ? this.collectRefs(repo) : this.versionArray;
+    const objectRefs = deepRemove ? this.collectExistingRefs(repo, false).filter(x => x) : this.versionArray;
     const uniqRefs = uniqBy(objectRefs, 'hash');
     return repo.removeMany(uniqRefs.concat([this.hash()]));
   }

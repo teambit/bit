@@ -8,9 +8,10 @@ import ComponentMap from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
-import { pathNormalizeToLinux, pathRelative, getWithoutExt } from '../../utils';
+import { pathNormalizeToLinux, pathRelative, pathJoinLinux } from '../../utils';
 import logger from '../../logger/logger';
 import { Consumer } from '../../consumer';
+import type { RelativePath } from './consumer-component';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -96,22 +97,39 @@ function findComponentsOfDepsFiles(
     // find the component file by the auto-generated file.
     // We make sure also that rootDir is there, otherwise, it's an AUTHORED component, which shouldn't have
     // auto-generated files.
-    if (rootDir && !componentId) {
+    if (!componentId && rootDir) {
       componentId = traverseTreeForComponentId(depFile);
       if (componentId) {
         // it is verified now that this depFile is an auto-generated file, therefore the sourceRelativePath and the
         // destinationRelativePath should be a partial-path and not full-relative-to-consumer path.
-        const componentMap = bitMap.getComponent(componentId);
-        if (componentMap) destination = componentMap.getOriginallyMainFilePath();
-        else {
-          // when there is no componentMap, the bit dependency was imported as a npm package.
-          // we're missing two things, which can be obtained from the model: 1) version. 2) mainFile.
-          const dependency = componentFromModel.dependencies.find(
-            dep => dep.id.toStringWithoutVersion() === componentId
+        // since the dep-file is a generated file, it is safe to assume that the componentFromModel has in its
+        // dependencies array this component with the relativePaths array. Find the relativePath of this dep-file
+        // to get the correct destinationRelativePath. There is no other way to obtain this info.
+        const componentBitId = BitId.parse(componentId);
+        const dependency = componentFromModel.component.dependencies.find(
+          dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion()
+        );
+        if (!dependency) {
+          throw new Error(
+            `the auto-generated file ${depFile} should be connected to ${
+              componentId
+            }, however, it's not part of the model dependencies of ${componentFromModel.id}`
           );
-          destination = dependency.mainFile;
-          componentId = dependency.id.toString();
         }
+        const originallySource = entryComponentMap.originallySharedDir
+          ? pathJoinLinux(entryComponentMap.originallySharedDir, depFile)
+          : depFile;
+        const relativePath: RelativePath = dependency.relativePaths.find(
+          r => r.sourceRelativePath === originallySource
+        );
+        if (!relativePath) {
+          throw new Error(
+            `unable to find ${originallySource} path in the dependencies relativePaths of ${componentFromModel.id}`
+          );
+        }
+
+        componentId = dependency.id.toString();
+        destination = relativePath.destinationRelativePath;
 
         depFileRelative = depFile; // change it back to partial-part, this will be later on the sourceRelativePath
       }

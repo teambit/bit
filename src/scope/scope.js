@@ -299,8 +299,8 @@ export default class Scope {
 
         // Calculate the flatten dependencies
         if (
-          sortedConsumerComponentsIds.includes(dependency.id.toStringWithoutVersion()) ||
-          sortedConsumerComponentsIds.includes(dependency.id.toString())
+          consumerComponentsIdsMap.has(dependency.id.toStringWithoutVersion()) ||
+          consumerComponentsIdsMap.has(dependency.id.toString())
         ) {
           // when a dependency includes in the components list to tag, don't use the existing version, because the
           // existing version will be obsolete once it's tagged. Instead, remove the version, and later on, when
@@ -842,6 +842,7 @@ export default class Scope {
         const loadedVersions = await Promise.all(
           Object.keys(component.versions).map(async (version) => {
             const componentVersion = await component.loadVersion(version, this.objects);
+            if (!componentVersion) return;
             componentVersion.id = BitId.parse(component.id());
             return componentVersion;
           })
@@ -849,16 +850,16 @@ export default class Scope {
         return loadedVersions.filter(x => x);
       })
     );
-    const allConsumerComponents = R.flatten(allComponentVersions.filter(x => x != null));
+    const allScopeComponents = R.flatten(allComponentVersions);
     const dependentBits = {};
     bitIds.forEach((bitId) => {
       const dependencies = [];
-      allConsumerComponents.forEach((stagedComponent) => {
-        stagedComponent.flattenedDependencies.forEach((flattenedDependence) => {
+      allScopeComponents.forEach((scopeComponents) => {
+        scopeComponents.flattenedDependencies.forEach((flattenedDependence) => {
           if (flattenedDependence.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
             returnResultsWithVersion
-              ? dependencies.push(stagedComponent.id.toString())
-              : dependencies.push(stagedComponent.id.toStringWithoutVersion());
+              ? dependencies.push(scopeComponents.id.toString())
+              : dependencies.push(scopeComponents.id.toStringWithoutVersion());
           }
         });
       });
