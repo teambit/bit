@@ -302,14 +302,15 @@ export default class SourceRepository {
    *
    * When this function get called originally from import command, the 'force' parameter is true. Otherwise, if it was
    * originated from export command, it'll be false.
-   * If the 'force' is true, it doesn't check for discrepancies, but simply override the existing component.
+   * If the 'force' is true and the existing component wasn't changed locally (existingComponent.local if false), it
+   * doesn't check for discrepancies, but simply override the existing component.
    * When using import command, it makes sense to override a component in case of discrepancies because the source of
-   * true should be the remote scope from where the import fetch the component.
+   * true should be the remote scope from where the import fetches the component.
    */
   merge({ component, objects }: ComponentTree, inScope: boolean = false, force: boolean = true): Promise<Component> {
     if (inScope) component.scope = this.scope.name;
-    return this.findComponent(component).then((existingComponent) => {
-      if (!existingComponent || force || component.compatibleWith(existingComponent)) {
+    return this.findComponent(component).then((existingComponent: ?Component) => {
+      if (!existingComponent || (force && !existingComponent.local) || component.compatibleWith(existingComponent)) {
         return this.put({ component, objects });
       }
 
