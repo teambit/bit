@@ -20,6 +20,7 @@ import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Consumer } from '../../consumer';
 import logger from '../../logger/logger';
+import Repository from '../objects/repository';
 
 export type ComponentTree = {
   component: Component,
@@ -267,9 +268,25 @@ export default class SourceRepository {
 
   put({ component, objects }: ComponentTree): Component {
     logger.debug(`sources.put, id: ${component.id()}`);
-    const repo = this.objects();
+    const repo: Repository = this.objects();
     repo.add(component);
-    objects.forEach(obj => repo.add(obj));
+
+    const isObjectShouldBeAdded = (obj) => {
+      // don't add a component if it's already exist locally with more versions
+      if (obj instanceof Component) {
+        const loaded = repo.loadSync(obj.hash(), false);
+        if (loaded) {
+          if (Object.keys(loaded.versions) > Object.keys(obj.versions)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+
+    objects.forEach((obj) => {
+      if (isObjectShouldBeAdded(obj)) repo.add(obj);
+    });
     return component;
   }
   /**
