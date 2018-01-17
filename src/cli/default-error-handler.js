@@ -13,6 +13,7 @@ import {
 } from '../consumer/exceptions';
 import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
+import BuildException from '../consumer/component/exceptions/build-exception';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
@@ -106,6 +107,10 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [SSHInvalidResponse, () => 'fatal: received an invalid response from the remote SSH server'],
   [ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init --bare`'],
   [ComponentSpecsFailed, () => "component's specs does not pass, fix them and tag"],
+  [
+    BuildException,
+    err => `error - bit failed to build ${err.id} with the following exception:\n ${err.message} \n ${err.stack || ''}`
+  ],
   [
     MissingDependencies,
     (err) => {
