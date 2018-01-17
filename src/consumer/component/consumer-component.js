@@ -433,11 +433,13 @@ export default class Component {
       return pathStr.replace(partToRemove, '');
     };
     this.files.forEach((file) => {
-      file.path = pathWithoutSharedDir(file.path, originallySharedDir, false);
+      const newRelative = pathWithoutSharedDir(file.relative, originallySharedDir, false);
+      file.updatePaths({ newBase: file.base, newRelative });
     });
     if (this.dists) {
       this.dists.forEach((distFile) => {
-        distFile.path = pathWithoutSharedDir(distFile.path, originallySharedDir, false);
+        const newRelative = pathWithoutSharedDir(distFile.relative, originallySharedDir, false);
+        distFile.updatePaths({ newBase: distFile.base, newRelative });
       });
     }
     this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir, true);
