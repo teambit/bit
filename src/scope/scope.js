@@ -1103,18 +1103,23 @@ export default class Scope {
       verbose
     };
     const idsWithoutNils = removeNils(ids);
-    const isolateComponentsP = idsWithoutNils.map(async (id) => {
-      let concreteId = id;
-      if (id.getVersion().latest) {
-        const concreteIds = await this.fetchRemoteVersions([id]);
-        concreteId = concreteIds[0];
-      }
-      const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
-      const env = new IsolatedEnvironment(this, dir);
-      await env.create();
-      return env.isolateComponent(id, isolateOpts);
+    let sequence = Promise.resolve();
+
+    idsWithoutNils.map(async (id) => {
+      sequence = sequence.then(async () => {
+        let concreteId = id;
+        if (id.getVersion().latest) {
+          const concreteIds = await this.fetchRemoteVersions([id]);
+          concreteId = concreteIds[0];
+          return sequence;
+        }
+        const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
+        const env = new IsolatedEnvironment(this, dir);
+        await env.create();
+        return env.isolateComponent(id, isolateOpts);
+      });
     });
-    return Promise.all(isolateComponentsP);
+    return sequence;
   }
 
   async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {
