@@ -26,37 +26,32 @@ export default class CiUpdate extends Command {
     }: { verbose: ?boolean, directory: ?string, output: ?string, keep: boolean }
   ): Promise<any> {
     verbose = true; // During ci-update we always want to see verbose outputs
-    return ciUpdateAction(
-      id,
-      scopePath || process.cwd(),
-      verbose,
-      directory,
-      keep
-    ).then(({ specsResults, buildResults, component }) => ({ specsResults, buildResults, component, output }));
+    return ciUpdateAction(id, scopePath || process.cwd(), verbose, directory, keep).then(
+      ({ specsResults, dists, mainFile }) => ({ specsResults, dists, mainFile, output, directory })
+    );
   }
 
-  report({ specsResults, buildResults, component, output }): string {
-    if (!specsResults && !buildResults) {
+  report({ specsResults, dists, mainFile, output, directory }): string {
+    if (!specsResults && !dists) {
       return 'no results found';
     }
 
     if (specsResults instanceof Error) {
       return specsResults.message;
     }
-    if (buildResults instanceof Error) {
-      return buildResults.message;
+    if (dists instanceof Error) {
+      return dists.message;
     }
     // check if there is build results
-    if (output && buildResults) {
+    if (output && dists) {
       const ci = {};
       ci.specResults = specsResults;
-      ci.mainDistFile = component.calculateMainDistFile();
-      ci.component = component;
-      ci.cwd = component.writtenPath;
-      ci.buildResults = buildResults;
+      ci.mainDistFile = mainFile;
+      ci.cwd = directory || process.cwd;
+      ci.buildResults = dists;
       outputJsonFile(output, ci);
     }
 
-    return paintCiResults({ specsResults, buildResults });
+    return paintCiResults({ specsResults, dists });
   }
 }

@@ -12,7 +12,8 @@ export default function buildInScope({
   verbose,
   scopePath,
   directory,
-  keep
+  keep,
+  isCI = true
 }: {
   id: string,
   environment: ?boolean,
@@ -20,7 +21,8 @@ export default function buildInScope({
   verbose: ?boolean,
   scopePath: string,
   directory: ?string,
-  keep: boolean
+  keep: boolean,
+  isCI: boolean
 }) {
   logger.debug(`buildInScope, id: ${id}, scopePath: ${scopePath}`);
   function loadFromScope(initialError: ?Error) {
@@ -28,10 +30,7 @@ export default function buildInScope({
       .catch(newErr => Promise.reject(initialError || newErr))
       .then((scope: Scope) => {
         const bitId = BitId.parse(id);
-        const ciComponent = {};
-        return scope
-          .build({ bitId, environment, save, verbose, directory, keep, ciComponent })
-          .then(buildResults => ({ component: ciComponent.comp, buildResults }));
+        return scope.build({ bitId, environment, save, verbose, directory, keep, isCI });
       })
       .catch(e => Promise.reject(e));
   }
