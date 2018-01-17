@@ -9,20 +9,20 @@ export default class Build extends Command {
   name = 'build [id]';
   description = 'build any set of components with configured compiler (component compiler or as defined in bit.json)';
   alias = '';
-  opts = [['v', 'verbose', 'showing npm verbose output for inspection']];
+  opts = [['v', 'verbose [boolean]', 'showing npm verbose output for inspection']];
   loader = true;
   migration = true;
 
   action(
     [id]: string[],
     {
-      verbose
+      verbose = false
     }: {
       verbose: ?boolean
     }
   ): Promise<any> {
-    if (!id) return buildAll();
-    return build(id);
+    if (!id) return buildAll(verbose);
+    return build(id, verbose);
   }
 
   report(res: ?(string[]) | string | Object): string {

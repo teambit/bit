@@ -14,6 +14,7 @@ import docsParser, { Doclet } from '../../jsdoc/parser';
 import specsRunner from '../../specs-runner';
 import SpecsResults from '../specs-results';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
+import BuildException from './exceptions/build-exception';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment, { IsolateOptions } from '../../environment';
@@ -329,8 +330,13 @@ export default class Component {
           });
         }
       }
-
-      return Promise.resolve(compiler.compile(sourceFiles, rootDistFolder));
+      try {
+        const result = compiler.compile(sourceFiles, rootDistFolder);
+        return Promise.resolve(result);
+      } catch (e) {
+        if (verbose) return Promise.reject(new BuildException(this.id.toString(), e.stack));
+        return Promise.reject(new BuildException(this.id.toString(), e.message));
+      }
     };
 
     if (!compiler.build && !compiler.compile) {
@@ -759,7 +765,7 @@ export default class Component {
     verbose,
     directory,
     keep,
-    isCI
+    isCI = false
   }: {
     scope: Scope,
     environment?: boolean,
@@ -849,7 +855,8 @@ export default class Component {
       componentMap,
       scope,
       directory,
-      keep
+      keep,
+      verbose
     });
 
     // return buildFilesP.then((buildedFiles) => {
