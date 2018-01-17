@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- exception handling for bit build
 - fix bug in npm/yarn lock when installing both component envs at the same time 
+
+## [0.12.0-dev.32] - 2018-01-17
+
+- exception handling for bit build 
+- fix wrong strip for shared dir when there is build and tests
 
 ## [0.12.0-dev.31] - 2018-01-17
 
