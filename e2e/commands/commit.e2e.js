@@ -208,7 +208,7 @@ describe('bit tag command', function () {
       } catch (err) {
         output = err.message;
       }
-      expect(output).to.have.string('fatal: the component non/existing was not found in the bit.map file');
+      expect(output).to.have.string('fatal: the component non/existing was not found in the .bitmap file');
     });
 
     it.skip('should print warning if the a driver is not installed', () => {

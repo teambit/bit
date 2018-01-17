@@ -90,7 +90,7 @@ describe('bit test command', function () {
       } catch (err) {
         output = err.message;
       }
-      expect(output).to.have.string('fatal: the component bar/foo was not found in the bit.map file');
+      expect(output).to.have.string('fatal: the component bar/foo was not found in the .bitmap file');
     });
   });
   describe('when there is before hook which fail', () => {
