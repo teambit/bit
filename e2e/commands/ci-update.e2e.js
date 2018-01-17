@@ -41,6 +41,7 @@ describe('bit ci-update', function () {
         "var level0 = require('./level0'); module.exports = function comp() { return 'comp ' + level0()};";
       helper.createFile('', 'file.js', fileFixture);
       helper.createFile('', 'file.spec.js', fileSpecFixture(true));
+      helper.addNpmPackage('chai', '4.1.2');
       helper.addComponentWithOptions('file.js', { i: 'comp/comp', t: 'file.spec.js' });
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -68,6 +69,7 @@ describe('bit ci-update', function () {
       helper.addComponentBarFoo();
 
       helper.createFile('bar', 'foo.spec.js', barFooSpecFixture(true));
+      helper.addNpmPackage('chai', '4.1.2');
       helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
       helper.build(); // needed for building the dependencies
       helper.commitAllComponents();
