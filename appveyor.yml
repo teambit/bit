@@ -29,6 +29,8 @@ environment:
     secure: UHrmNjH6IaU79OhRU9ina1f5jPX1EXBlsm9w+QfqWA/jNLPx4t+XMottVjJHZVtr
   ReleaseServerStable:
     secure: y7mz8E9mkcwCaCVvFs9WX+5k8jg+t8HwFpZhMYlYEfZhdnFH1U7gWCJTi+zVLiT9
+  registryProdToken:
+    secure: /hQECyuDPlps8FDi5+wSvCMB2wbekR4SrP3EG9c3kkEpV2yqPU8t+PJlu9E0gxcN
   matrix:
   - ruby_version: Ruby23-x64
 install:
