@@ -332,12 +332,13 @@ export default (async function loadDependenciesForComponent(
   const missingDependencies = {};
   const { allFiles, nonTestsFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
   const getDependenciesTree = async () => {
-    const nonTestsTree = await driver.getDependencyTree(bitDir, consumerPath, nonTestsFiles, component.bindingPrefix);
-    if (!testsFiles.length) return nonTestsTree;
-    const testsTree = await driver.getDependencyTree(bitDir, consumerPath, testsFiles, component.bindingPrefix);
-    // ignore package dependencies of tests for now
-    testsTree.missing.packages = [];
-    return mergeDependencyTrees([nonTestsTree, testsTree]);
+    return driver.getDependencyTree(bitDir, consumerPath, allFiles, component.bindingPrefix);
+    // const nonTestsTree = await driver.getDependencyTree(bitDir, consumerPath, nonTestsFiles, component.bindingPrefix);
+    // if (!testsFiles.length) return nonTestsTree;
+    // const testsTree = await driver.getDependencyTree(bitDir, consumerPath, testsFiles, component.bindingPrefix);
+    // // ignore package dependencies of tests for now
+    // testsTree.missing.packages = [];
+    // return mergeDependencyTrees([nonTestsTree, testsTree]);
   };
   // find the dependencies (internal files and packages) through automatic dependency resolution
   const dependenciesTree = await getDependenciesTree();
