@@ -41,7 +41,8 @@ install:
   # prod registry
   - cmd: npm config set @bit:registry https://node.bitsrc.io
   - ps: '"//node.bitsrc.io/:_authToken=$env:registryProdToken`n" | out-file "$env:userprofile\.npmrc" -Encoding ASCII'
-  - npm whoami https://node.bitsrc.io
+  - npm config ls
+  - Get-Content "$env:userprofile\.npmrc"
   # stage registry
   #- cmd: npm config set @bit:registry https://node-stg.bitsrc.io
   - cmd: npm config ls
