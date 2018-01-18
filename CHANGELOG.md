@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.12.0-dev.33] - 2018-01-18
 
+- change migration version number
+- slim version
+
+## [0.12.0-dev.33] - 2018-01-18
+
 - fix bug in npm/yarn lock when installing both component envs at the same time
 
 ## [0.12.0-dev.32] - 2018-01-17
