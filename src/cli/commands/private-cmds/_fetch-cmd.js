@@ -11,14 +11,14 @@ export default class Fetch extends Command {
   private = true;
   description = 'fetch components(s) from a scope';
   alias = '';
-  opts = [['i', 'ignore-dependencies', 'do not include component dependencies']];
+  opts = [['n', 'no-dependencies', 'do not include component dependencies']];
 
-  action([path, args]: [string, string], { ignoreDependencies }: any): Promise<any> {
+  action([path, args]: [string, string], { noDependencies }: any): Promise<any> {
     const { payload, headers } = unpackCommand(args);
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
     return migrate(scopePath, false).then(() => {
-      return fetch(scopePath, payload, ignoreDependencies, headers);
+      return fetch(scopePath, payload, noDependencies, headers);
     });
   }
 

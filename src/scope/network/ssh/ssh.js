@@ -248,7 +248,7 @@ export default class SSH implements Network {
   fetch(ids: BitIds, noDeps: boolean = false, context: ?Object): Promise<ComponentObjects[]> {
     let options = '';
     ids = ids.map(bitId => bitId.toString());
-    if (noDeps) options = '--ignore-dependencies';
+    if (noDeps) options = '--no-dependencies';
     return this.exec(`_fetch ${options}`, ids, context).then((str: string) => {
       const { payload, headers } = JSON.parse(str);
       checkVersionCompatibility(headers.version);
