@@ -647,6 +647,10 @@ export default class Component {
       return Promise.resolve();
     };
 
+    if (consumer && !bitMap) {
+      bitMap = await consumer.getBitMap();
+    }
+
     const testFiles = this.files.filter(file => file.test);
     if (!this.testerId || !testFiles || R.isEmpty(testFiles)) return null;
 
