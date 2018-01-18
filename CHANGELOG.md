@@ -7,48 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
-## [0.10.8-dev.13] - 2018-01-14
+## [0.10.8] - 2018-01-18
 
-- improve yarn workspaces support in package.json
-
-## [0.10.8-dev.12] - 2018-01-14
-
-- improve yarn workspaces support in package.json
-
-## [0.10.8-dev.11] - 2018-01-11
-
-- support yarn workspaces in package.json
-
-## [0.10.8-dev.10] - 2018-01-09
-
-- remove auto generated post install scripts
-
-## [0.10.8-dev.9] - 2018-01-09
-
-- fix bug with package.json without dependencies
-
-## [0.10.8-dev.8] - 2018-01-09
-
-## [0.10.8-dev.7] - 2018-01-09
-
-- fix bug with resolve dependencies from package.json
-
-## [0.10.8-dev.7] - 2018-01-09
-
-- dont try to resolve dependencies from package.json if dosent exist
-
-## [0.10.8-dev.6] - 2018-01-08
-
-- dont show missing packages if they appear in package.json
 - remove pack command
-
-## [0.10.8-dev.5] - 2018-01-05
-
+- support yarn workspaces in package.json
+- remove auto generated post install scripts
+- fix bug with package.json without dependencies
+- fix bug with resolve dependencies from package.json
+- dont try to resolve dependencies from package.json if dosent exist
+- dont show missing packages if they appear in package.json
 - add a new method to PackageJson class: addComponentsIntoExistingPackageJson
-
-## [0.10.8-dev.1] - 2017-12-04
-
-- Add domain prefix to post install script
 
 ## [0.10.7] - 2017-11-29
 
