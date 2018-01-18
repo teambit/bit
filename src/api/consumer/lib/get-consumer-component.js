@@ -2,6 +2,7 @@
 import { loadConsumer, Consumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import NothingToCompareTo from './exceptions/nothing-to-compare-to';
+import { COMPONENT_ORIGINS } from '../../../constants';
 
 export default (async function getConsumerBit({
   id,
@@ -27,7 +28,10 @@ export default (async function getConsumerBit({
     try {
       const componentModel = await consumer.scope.loadRemoteComponent(component.id);
       const bitMap = await consumer.getBitMap();
-      componentModel.stripOriginallySharedDir(bitMap);
+      const componentMap = component.getComponentMap(bitMap);
+      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+        componentModel.stripOriginallySharedDir(bitMap);
+      }
       return { component, componentModel };
     } catch (err) {
       throw new NothingToCompareTo(id);
