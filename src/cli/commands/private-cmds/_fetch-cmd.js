@@ -11,7 +11,7 @@ export default class Fetch extends Command {
   private = true;
   description = 'fetch components(s) from a scope';
   alias = '';
-  opts = [['n', 'no-dependencies', 'do not include component dependencies']];
+  opts = [['n', 'noDependencies', 'do not include component dependencies']];
 
   action([path, args]: [string, string], { noDependencies }: any): Promise<any> {
     const { payload, headers } = unpackCommand(args);
