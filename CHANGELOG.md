@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- enable command options starting with "no-" (e.g. --no-dependencies)
+- avoid fetching the dependencies of versions older than the current imported one 
+
 ## [0.12.0] - 2018-01-18
 
 ### New
