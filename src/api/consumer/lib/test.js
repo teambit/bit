@@ -6,6 +6,7 @@ import BitMap from '../../../consumer/bit-map';
 import ComponentsList from '../../../consumer/component/components-list';
 import Bit from '../../../consumer/component';
 import { BEFORE_LOADING_COMPONENTS, BEFORE_RUNNING_SPECS } from '../../../cli/loader/loader-messages';
+import { build } from './build';
 
 export default (async function test(id?: string, verbose: boolean = true): Promise<Bit> {
   const consumer: Consumer = await loadConsumer();
@@ -22,6 +23,7 @@ export default (async function test(id?: string, verbose: boolean = true): Promi
   }
 
   loader.start(BEFORE_RUNNING_SPECS);
+  await Promise.all(components.map(component => build(component.id.toString(), verbose)));
   const specsResults = components.map(async (component) => {
     if (!component.testerId) {
       return { component, missingTester: true };
