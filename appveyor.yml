@@ -38,6 +38,8 @@ install:
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
   # prod registry
   - cmd: npm config set @bit:registry https://node.bitsrc.io
+  - ps: '"//node.bitsrc.io/:_authToken=$env:registryProdToken`n" | out-file "$env:userprofile\.npmrc" -Encoding ASCII'
+  - npm whoami
   # stage registry
   #- cmd: npm config set @bit:registry https://node-stg.bitsrc.io
   - cmd: npm config ls
