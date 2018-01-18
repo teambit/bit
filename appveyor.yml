@@ -39,12 +39,13 @@ install:
   - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
   # prod registry
-  - cmd: npm config set @bit:registry https://node.bitsrc.io
-  - ps: '"//node.bitsrc.io/:_authToken=$env:registryProdToken`n" | out-file "$env:userprofile\.npmrc" -Encoding ASCII'
+  # - cmd: npm config set @bit:registry https://node.bitsrc.io
+  - ps: $npmrcContent = "@bit:registry=https://node.bitsrc.io/`n" 
+  - ps: $npmrcContent += "//node.bitsrc.io/:_authToken=$env:registryProdToken`n" 
+  # - ps: '"//node.bitsrc.io/:_authToken=$env:registryProdToken`n" | out-file "$env:userprofile\.npmrc" -Encoding ASCII'
+  - ps: Set-Content $env:userprofile\.npmrc $npmrcContent
   - npm config ls
   - ps: 'Get-Content "$env:userprofile\.npmrc"'
-  # stage registry
-  #- cmd: npm config set @bit:registry https://node-stg.bitsrc.io
   - cmd: npm config ls
   - ps: Install-Product node 6
   - "npm i"
