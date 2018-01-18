@@ -65,7 +65,7 @@ Share and sync UI components (React, Angular, Vue etc) between projects.
 
 * Tutorial: [Bit with React](https://docs.bitsrc.io/react-tutorial.html).
 
-* An [example React app](https://hub.com/itaymendel/movie-app) with 9 React components shared and made [individually available](https://bitsrc.io/bit/movie-app) with Bit.
+* An [example React app](https://github.com/itaymendel/movie-app) with 9 React components shared and made [individually available](https://bitsrc.io/bit/movie-app) with Bit.
 
 #### Node.js modules
 
