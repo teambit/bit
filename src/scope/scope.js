@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
 import find from 'lodash.find';
+import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
@@ -1103,7 +1104,8 @@ export default class Scope {
       verbose
     };
     const idsWithoutNils = removeNils(ids);
-    const isolateComponentsP = idsWithoutNils.map(async (id) => {
+
+    const importEnv = async (id) => {
       let concreteId = id;
       if (id.getVersion().latest) {
         const concreteIds = await this.fetchRemoteVersions([id]);
@@ -1113,8 +1115,8 @@ export default class Scope {
       const env = new IsolatedEnvironment(this, dir);
       await env.create();
       return env.isolateComponent(id, isolateOpts);
-    });
-    return Promise.all(isolateComponentsP);
+    };
+    return pMapSeries(idsWithoutNils, importEnv);
   }
 
   async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {
