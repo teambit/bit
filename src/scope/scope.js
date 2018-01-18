@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
 import find from 'lodash.find';
+import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
@@ -491,7 +492,7 @@ export default class Scope {
   async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<string[]> {
     logger.debug(`exportManyBareScope: Going to save ${componentsObjects.length} components`);
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
-    await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true)));
+    await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true, false)));
     const manyCompVersions = await Promise.all(
       manyObjects.map(objects => objects.component.toComponentVersion(LATEST))
     );
@@ -1103,23 +1104,19 @@ export default class Scope {
       verbose
     };
     const idsWithoutNils = removeNils(ids);
-    let sequence = Promise.resolve();
 
-    idsWithoutNils.map(async (id) => {
-      sequence = sequence.then(async () => {
-        let concreteId = id;
-        if (id.getVersion().latest) {
-          const concreteIds = await this.fetchRemoteVersions([id]);
-          concreteId = concreteIds[0];
-          return sequence;
-        }
-        const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
-        const env = new IsolatedEnvironment(this, dir);
-        await env.create();
-        return env.isolateComponent(id, isolateOpts);
-      });
-    });
-    return sequence;
+    const importEnv = async (id) => {
+      let concreteId = id;
+      if (id.getVersion().latest) {
+        const concreteIds = await this.fetchRemoteVersions([id]);
+        concreteId = concreteIds[0];
+      }
+      const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
+      const env = new IsolatedEnvironment(this, dir);
+      await env.create();
+      return env.isolateComponent(id, isolateOpts);
+    };
+    return pMapSeries(idsWithoutNils, importEnv);
   }
 
   async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {

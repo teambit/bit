@@ -199,6 +199,7 @@ describe('bit tag command', function () {
       });`;
       helper.createComponentBarFoo();
       helper.createFile('bar', 'foo.spec.js', failingTest);
+      helper.addNpmPackage('chai', '4.1.2');
       helper.addComponentWithOptions('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
     });
     it('should throw error if the bit id does not exists', () => {
