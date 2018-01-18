@@ -29,6 +29,8 @@ environment:
     secure: UHrmNjH6IaU79OhRU9ina1f5jPX1EXBlsm9w+QfqWA/jNLPx4t+XMottVjJHZVtr
   ReleaseServerStable:
     secure: y7mz8E9mkcwCaCVvFs9WX+5k8jg+t8HwFpZhMYlYEfZhdnFH1U7gWCJTi+zVLiT9
+  registryProdToken:
+    secure: /hQECyuDPlps8FDi5+wSvCMB2wbekR4SrP3EG9c3kkEpV2yqPU8t+PJlu9E0gxcN
   matrix:
   - ruby_version: Ruby23-x64
 install:
@@ -37,10 +39,10 @@ install:
   - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
   # prod registry
-  - cmd: npm config set @bit:registry https://node.bitsrc.io
-  # stage registry
-  #- cmd: npm config set @bit:registry https://node-stg.bitsrc.io
-  - cmd: npm config ls
+  - ps: $npmrcContent = "@bit:registry=https://node.bitsrc.io/`n" 
+  - ps: $npmrcContent += "//node.bitsrc.io/:_authToken=$env:registryProdToken`n" 
+  - ps: Set-Content $env:userprofile\.npmrc $npmrcContent
+  - npm config ls
   - ps: Install-Product node 6
   - "npm i"
   - "npm run build"
