@@ -329,7 +329,6 @@ export default class Scope {
     await this.buildMultiple(componentsToBuild, consumer);
 
     logger.debug('scope.putMany: sequentially test all components');
-    const bitMap = consumer ? await consumer.getBitMap() : undefined;
     loader.start(BEFORE_RUNNING_SPECS);
     const specsResults = {};
     for (const consumerComponentId of sortedConsumerComponentsIds) {
@@ -409,11 +408,10 @@ export default class Scope {
     // @todo: to make them all run in parallel, we have to first get all compilers from all components, install all
     // environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
     logger.debug('scope.buildMultiple: sequentially build multiple components');
-    const bitMap = await consumer.getBitMap();
     loader.start(BEFORE_RUNNING_BUILD);
     for (const component of components) {
       await component.build({ scope: this, consumer });
-      if (writeDists) await component.writeDists(consumer, bitMap);
+      if (writeDists) await component.writeDists(consumer);
     }
   }
 

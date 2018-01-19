@@ -633,8 +633,7 @@ export default class Component {
 
     const getTester = async () => {
       try {
-        // eslint-disable-next-line
-        const testerPath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
+        const testerPath = await scope.loadEnvironment(this.testerId, { pathOnly: true }); // eslint-disable-line
         return testerPath;
       } catch (err) {
         if (err instanceof ResolutionException) {
@@ -804,8 +803,7 @@ export default class Component {
     // verify whether the environment is installed
     const getCompiler = async () => {
       try {
-        // eslint-disable-next-line
-        const compiler = await scope.loadEnvironment(this.compilerId);
+        const compiler = await scope.loadEnvironment(this.compilerId); // eslint-disable-line
         return compiler;
       } catch (err) {
         if (err instanceof ResolutionException) {
