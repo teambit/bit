@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add link-file for authored exported components from the root node_modules of a component to its main-file  
 - enable command options starting with "no-" (e.g. --no-dependencies)
 - avoid fetching the dependencies of versions older than the current imported one 
 
