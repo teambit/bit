@@ -13,6 +13,11 @@ import logger from '../logger/logger';
 import { pathRelative } from '../utils';
 import Consumer from '../consumer/consumer';
 
+export type LinksResult = {
+  id: BitId,
+  bound: Array<{ from: string, to: string }>
+};
+
 /**
  * @param componentId
  * @param srcPath the path where the symlink is pointing to
@@ -83,6 +88,20 @@ function writeDependenciesLinks(component, componentMap, bitMap, consumer) {
   });
 }
 
+/**
+ * Link from node_modules/@bit/component-name/index.js to the component's main file.
+ * It is needed for Authored components only.
+ * Since an authored component doesn't have rootDir, it's impossible to symlink to the component directory.
+ * It makes it easier for Author to use absolute syntax between their own components.
+ */
+function linkToMainFile(component, componentMap, componentId) {
+  const mainFile = componentMap.mainDistFile || componentMap.mainFile;
+  const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), 'index.js');
+  const destRelative = pathRelative(path.dirname(dest), mainFile);
+  const fileContent = `module.exports = require('${destRelative}');`;
+  fs.outputFileSync(dest, fileContent);
+}
+
 function writeMissingLinks(component, componentMap, bitMap) {
   return component.missingDependencies.missingLinks.map((dependencyIdStr) => {
     const dependencyId = bitMap.getExistingComponentId(dependencyIdStr);
@@ -98,7 +117,7 @@ function writeMissingLinks(component, componentMap, bitMap) {
   });
 }
 
-export default function linkComponents(components: Component[], bitMap: BitMap, consumer: Consumer): Object[] {
+export default function linkComponents(components: Component[], bitMap: BitMap, consumer: Consumer): LinksResult[] {
   return components.map((component) => {
     const componentId = component.id;
     logger.debug(`linking component to node_modules: ${componentId}`);
@@ -128,21 +147,22 @@ export default function linkComponents(components: Component[], bitMap: BitMap, 
       return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
     }
     if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      if (!component.dependencies) return { id: componentId, bound: null };
+      if (!component.dependencies) return { id: componentId, bound: [] };
       const bound = writeDependenciesLinks(component, componentMap, bitMap, consumer);
       return { id: componentId, bound };
     }
 
     // origin is AUTHORED
     const filesToBind = componentMap.getFilesRelativeToConsumer();
+    if (!componentId.scope) return { id: componentId, bound: [] }; // scope is a must to generate the link
     const bound = filesToBind.map((file) => {
-      if (!componentId.scope) return { id: componentId, bound: null }; // scope is a must to generate the link
       const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
       const destRelative = pathRelative(path.dirname(dest), file);
       const fileContent = `module.exports = require('${destRelative}');`;
       fs.outputFileSync(dest, fileContent);
       return { from: dest, to: file };
     });
+    linkToMainFile(component, componentMap, componentId);
     return { id: componentId, bound };
   });
 }

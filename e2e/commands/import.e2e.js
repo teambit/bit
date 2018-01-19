@@ -353,11 +353,6 @@ describe('bit import', function () {
         expect(fileName.startsWith('components')).to.be.false;
       });
     });
-    it('should not create any link file', () => {
-      localConsumerFiles.forEach((fileName) => {
-        expect(fileName.includes('index.js')).to.be.false;
-      });
-    });
   });
 
   describe('import from bit json', () => {
@@ -1700,11 +1695,6 @@ describe('bit import', function () {
     it('should not write any file into components directory', () => {
       localConsumerFiles.forEach((fileName) => {
         expect(fileName.startsWith('components')).to.be.false;
-      });
-    });
-    it('should not create any link file', () => {
-      localConsumerFiles.forEach((fileName) => {
-        expect(fileName.includes('index.js')).to.be.false;
       });
     });
   });
