@@ -62,8 +62,8 @@ export default class Consumer {
   created: boolean;
   bitJson: ConsumerBitJson;
   scope: Scope;
+  bitMap: BitMap;
   _driver: Driver;
-  _bitMap: BitMap;
   _dirStructure: DirStructure;
   _componentsCache: Object = {}; // cache loaded components
   _componentsStatusCache: Object = {}; // cache loaded components
@@ -73,6 +73,7 @@ export default class Consumer {
     this.bitJson = bitJson;
     this.created = created;
     this.scope = scope;
+    this.bitMap = BitMap.load(projectPath);
     this.warnForMissingDriver();
   }
 
@@ -101,13 +102,6 @@ export default class Consumer {
     return this._dirStructure;
   }
 
-  async getBitMap(): Promise<BitMap> {
-    if (!this._bitMap) {
-      this._bitMap = await BitMap.load(this.getPath());
-    }
-    return this._bitMap;
-  }
-
   /**
    * Check if the driver installed and print message if not
    *
@@ -123,7 +117,7 @@ export default class Consumer {
     } catch (err) {
       msg = msg
         ? format(msg, err)
-        : `Warning: Bit is not be able to run the link command. Please install bit-${
+        : `Warning: Bit is not able to run the link command. Please install bit-${
           err.lang
         } driver and run the link command.`;
       if (err instanceof DriverNotFound) {
@@ -147,8 +141,7 @@ export default class Consumer {
     // bitmap migrate
     if (verbose) console.log('running migration process for consumer'); // eslint-disable-line
     // We start to use this process after version 0.10.9, so we assume the scope is in the last production version
-    const bitMap = await this.getBitMap();
-    const bitmapVersion = bitMap.version || '0.10.9';
+    const bitmapVersion = this.bitMap.version || '0.10.9';
 
     if (semver.gte(bitmapVersion, BIT_VERSION)) {
       logger.debug('bit.map version is up to date');
@@ -159,7 +152,7 @@ export default class Consumer {
 
     loader.start(BEFORE_MIGRATION);
 
-    const result: ConsumerMigrationResult = await migrate(bitmapVersion, migratonManifest, bitMap, verbose);
+    const result: ConsumerMigrationResult = await migrate(bitmapVersion, migratonManifest, this.bitMap, verbose);
     result.bitMap.version = BIT_VERSION;
     await result.bitMap.write();
 
@@ -212,17 +205,18 @@ export default class Consumer {
     });
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, deletedComponents };
 
-    const bitMap: BitMap = await this.getBitMap();
-
     const driverExists = this.warnForMissingDriver(
       'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.'
     );
 
     const components = idsToProcess.map(async (id: BitId) => {
-      const idWithConcreteVersionString = getLatestVersionNumber(Object.keys(bitMap.getAllComponents()), id.toString());
+      const idWithConcreteVersionString = getLatestVersionNumber(
+        Object.keys(this.bitMap.getAllComponents()),
+        id.toString()
+      );
       const idWithConcreteVersion = BitId.parse(idWithConcreteVersionString);
 
-      const componentMap = bitMap.getComponent(idWithConcreteVersion, true);
+      const componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
       let bitDir = this.getPath();
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
@@ -232,11 +226,9 @@ export default class Consumer {
       try {
         component = await Component.loadFromFileSystem({
           bitDir,
-          consumerBitJson: this.bitJson,
           componentMap,
           id: idWithConcreteVersion,
-          consumerPath: this.getPath(),
-          bitMap,
+          consumer: this,
           componentFromModel
         });
       } catch (err) {
@@ -260,7 +252,6 @@ export default class Consumer {
         componentMap,
         bitDir,
         this,
-        bitMap,
         idWithConcreteVersionString,
         componentFromModel
       );
@@ -276,7 +267,7 @@ export default class Consumer {
         allComponents.push(component);
       }
     }
-    if (bitMap.hasChanged) await bitMap.write();
+    if (this.bitMap.hasChanged) await this.bitMap.write();
 
     return { components: allComponents.concat(alreadyLoadedComponents), deletedComponents };
   }
@@ -293,8 +284,7 @@ export default class Consumer {
     saveDependenciesAsComponents?: boolean = false
   ): Promise<> {
     const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
-    const bitMap = await this.getBitMap();
-    const componentsFromBitMap = bitMap.getAuthoredExportedComponents();
+    const componentsFromBitMap = this.bitMap.getAuthoredExportedComponents();
 
     if ((R.isNil(dependenciesFromBitJson) || R.isEmpty(dependenciesFromBitJson)) && R.isEmpty(componentsFromBitMap)) {
       if (!withEnvironments) {
@@ -512,7 +502,6 @@ export default class Consumer {
     verbose?: boolean,
     excludeRegistryPrefix?: boolean
   }): Promise<Component[]> {
-    const bitMap: BitMap = await this.getBitMap();
     const dependenciesIdsCache = [];
     const remotes = await this.scope.remotes();
     const writeComponentsP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
@@ -523,13 +512,13 @@ export default class Consumer {
         saveDependenciesAsComponents || remotes.get(componentWithDeps.component.scope);
       // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
       // find the component in bit.map
-      const componentMap = bitMap.getComponent(componentWithDeps.component.id.toStringWithoutVersion(), false);
+      const componentMap = this.bitMap.getComponent(componentWithDeps.component.id.toStringWithoutVersion(), false);
       const origin =
         componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
           ? COMPONENT_ORIGINS.AUTHORED
           : COMPONENT_ORIGINS.IMPORTED;
       if (origin === COMPONENT_ORIGINS.IMPORTED) {
-        componentWithDeps.component.stripOriginallySharedDir(bitMap);
+        componentWithDeps.component.stripOriginallySharedDir(this.bitMap);
       }
       // don't write dists files for authored components as the author has its own mechanism to generate them
       // also, don't write dists file for imported component, unless the user used '--dist' flag
@@ -537,7 +526,6 @@ export default class Consumer {
       return componentWithDeps.component.write({
         bitDir,
         force,
-        bitMap,
         withBitJson,
         withPackageJson,
         origin,
@@ -553,19 +541,19 @@ export default class Consumer {
       if (!componentWithDeps.component.dependenciesSavedAsComponents) return Promise.resolve(null);
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
-        const depFromBitMap = bitMap.getComponent(dependencyId, false);
+        const depFromBitMap = this.bitMap.getComponent(dependencyId, false);
         if (depFromBitMap && fs.existsSync(depFromBitMap.rootDir)) {
           dep.writtenPath = depFromBitMap.rootDir;
           logger.debug(
             `writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map and file system`
           );
-          bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
+          this.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
         if (dependenciesIdsCache[dependencyId]) {
           logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
           dep.writtenPath = dependenciesIdsCache[dependencyId];
-          bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
+          this.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
         const depBitPath = this.composeDependencyPath(dep.id);
@@ -573,11 +561,10 @@ export default class Consumer {
         dependenciesIdsCache[dependencyId] = depBitPath;
         // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
         // and namespace can co-exist with different versions.
-        const componentMap = bitMap.getComponent(dep.id.toString(), false);
+        const componentMap = this.bitMap.getComponent(dep.id.toString(), false);
         return dep.write({
           bitDir: depBitPath,
           force,
-          bitMap,
           withPackageJson,
           origin: COMPONENT_ORIGINS.NESTED,
           parent: componentWithDeps.component.id,
@@ -596,7 +583,7 @@ export default class Consumer {
         const relativeWrittenPath = this.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
         if (relativeWrittenPath && path.resolve(relativeWrittenPath) !== path.resolve(writeToPath)) {
           const component = componentWithDeps.component;
-          this.moveExistingComponent(bitMap, component, relativeWrittenPath, writeToPath);
+          this.moveExistingComponent(component, relativeWrittenPath, writeToPath);
         }
       });
     }
@@ -610,29 +597,22 @@ export default class Consumer {
       writeToPath
     );
 
-    await bitMap.write();
+    await this.bitMap.write();
     if (installNpmPackages) await this.installNpmPackagesForComponents(componentsWithDependencies, verbose);
-    if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents, bitMap);
+    if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents);
 
-    return linkComponents(
-      componentsWithDependencies,
-      writtenComponents,
-      writtenDependencies,
-      bitMap,
-      this,
-      createNpmLinkFiles
-    );
+    return linkComponents(componentsWithDependencies, writtenComponents, writtenDependencies, this, createNpmLinkFiles);
   }
 
-  moveExistingComponent(bitMap: BitMap, component: Component, oldPath: string, newPath: string) {
+  moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
-    const componentMap = bitMap.getComponent(component.id);
+    const componentMap = this.bitMap.getComponent(component.id);
     componentMap.updateDirLocation(oldPath, newPath);
     fs.moveSync(oldPath, newPath);
     component.writtenPath = newPath;
@@ -647,8 +627,7 @@ export default class Consumer {
   }
 
   async candidateComponentsForAutoTagging(modifiedComponents: BitId[]) {
-    const bitMap = await this.getBitMap();
-    const candidateComponents = bitMap.getAllComponents([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    const candidateComponents = this.bitMap.getAllComponents([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
     if (!candidateComponents) return null;
     const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
       modifiedComponent.toStringWithoutVersion()
@@ -679,8 +658,7 @@ export default class Consumer {
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
     if (typeof componentFromFileSystem._isModified === 'undefined') {
-      const bitMap = await this.getBitMap();
-      const componentMap = bitMap.getComponent(componentFromFileSystem.id, true);
+      const componentMap = this.bitMap.getComponent(componentFromFileSystem.id, true);
       if (componentMap.originallySharedDir) {
         componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
       }
@@ -872,13 +850,12 @@ export default class Consumer {
 
     const fromRelative = this.getPathRelativeToConsumer(from);
     const toRelative = this.getPathRelativeToConsumer(to);
-    const bitMap = await this.getBitMap();
-    const changes = bitMap.updatePathLocation(fromRelative, toRelative, fromExists);
+    const changes = this.bitMap.updatePathLocation(fromRelative, toRelative, fromExists);
     if (fromExists && !toExists) {
       // user would like to physically move the file. Otherwise (!fromExists and toExists), user would like to only update bit.map
       fs.moveSync(from, to);
     }
-    await bitMap.write();
+    await this.bitMap.write();
     return changes;
   }
 
@@ -993,15 +970,14 @@ export default class Consumer {
   /**
    * delete files from fs according to imported/created
    * @param {BitIds} bitIds - list of remote component ids to delete
-   * @param {BitMap} bitMap - delete component that are used by other components.
    * @param {boolean} deleteFiles - delete component that are used by other components.
    */
-  async removeComponentFromFs(bitIds: BitIds, bitMap: BitMap, deleteFiles: boolean) {
+  async removeComponentFromFs(bitIds: BitIds, deleteFiles: boolean) {
     return Promise.all(
       bitIds.map(async (id) => {
         const component = id.isLocal()
-          ? bitMap.getComponent(bitMap.getExistingComponentId(id.toStringWithoutVersion()))
-          : bitMap.getComponent(id);
+          ? this.bitMap.getComponent(this.bitMap.getExistingComponentId(id.toStringWithoutVersion()))
+          : this.bitMap.getComponent(id);
         if (!component) return;
         if (
           (component.origin && component.origin === COMPONENT_ORIGINS.IMPORTED) ||
@@ -1020,14 +996,12 @@ export default class Consumer {
    * local = utils/is-string
    * if component is imported then cant remove version only component
    * @param {BitIds} bitIds - list of remote component ids to delete
-   * @param {BitMap} bitMap - delete component that are used by other components.
-   * @param {boolean} deleteFiles - delete component that are used by other components.
    */
-  resolveLocalComponentIds(bitIds: BitIds, bitMap: BitMap) {
+  resolveLocalComponentIds(bitIds: BitIds) {
     return bitIds.map((id) => {
-      const realName = bitMap.getExistingComponentId(id.toStringWithoutVersion());
+      const realName = this.bitMap.getExistingComponentId(id.toStringWithoutVersion());
       if (!realName) return id;
-      const component = bitMap.getComponent(realName);
+      const component = this.bitMap.getComponent(realName);
       if (
         component &&
         (component.origin === COMPONENT_ORIGINS.IMPORTED || component.origin === COMPONENT_ORIGINS.NESTED)
@@ -1043,17 +1017,16 @@ export default class Consumer {
 
   /**
    * cleanBitMapAndBitJson - clean up removed components from bitmap and bit.json file
-   * @param {BitMap} bitMap - list of remote component ids to delete
-   * @param {BitIds} componensToRemoveFromFs - delete component that are used by other components.
+   * @param {BitIds} componentsToRemoveFromFs - delete component that are used by other components.
    * @param {BitIds} removedDependencies - delete component that are used by other components.
    */
-  async cleanBitMapAndBitJson(bitMap: BitMap, componensToRemoveFromFs: BitIds, removedDependencies: BitIds) {
+  async cleanBitMapAndBitJson(componentsToRemoveFromFs: BitIds, removedDependencies: BitIds) {
     const bitJson = this.bitJson;
-    bitMap.removeComponents(componensToRemoveFromFs);
-    bitMap.removeComponents(removedDependencies);
-    componensToRemoveFromFs.map(x => delete bitJson.dependencies[x.toStringWithoutVersion()]);
+    this.bitMap.removeComponents(componentsToRemoveFromFs);
+    this.bitMap.removeComponents(removedDependencies);
+    componentsToRemoveFromFs.map(x => delete bitJson.dependencies[x.toStringWithoutVersion()]);
     bitJson.write({ bitDir: this.projectPath });
-    return await bitMap.write();
+    return this.bitMap.write();
   }
   /**
    * removeLocal - remove local (imported, new staged components) from modules and bitmap  accoriding to flags
@@ -1063,10 +1036,9 @@ export default class Consumer {
    */
   async removeLocal(bitIds: BitIds, force: boolean, track: boolean, deleteFiles: boolean) {
     // local remove in case user wants to delete commited components
-    const bitMap = await this.getBitMap();
     const modifiedComponents = [];
     const regularComponents = [];
-    const resolvedIDs = this.resolveLocalComponentIds(bitIds, bitMap);
+    const resolvedIDs = this.resolveLocalComponentIds(bitIds);
     if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects();
     if (!force) {
       await Promise.all(
@@ -1085,11 +1057,11 @@ export default class Consumer {
 
     const componensToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
     if (!R.isEmpty(removedComponentIds)) {
-      await this.removeComponentFromFs(componensToRemoveFromFs, bitMap, deleteFiles);
-      await this.removeComponentFromFs(removedDependencies, bitMap, false);
+      await this.removeComponentFromFs(componensToRemoveFromFs, deleteFiles);
+      await this.removeComponentFromFs(removedDependencies, false);
     }
     if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) {
-      await this.cleanBitMapAndBitJson(bitMap, componensToRemoveFromFs, removedDependencies);
+      await this.cleanBitMapAndBitJson(componensToRemoveFromFs, removedDependencies);
     }
     return new RemovedLocalObjects(
       removedComponentIds,
@@ -1191,8 +1163,7 @@ export default class Consumer {
    * 3) link all components
    */
   async install(verbose) {
-    const bitMap = await this.getBitMap();
-    const candidateComponents = bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.NESTED]);
+    const candidateComponents = this.bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.NESTED]);
     const dirs = Object.keys(candidateComponents)
       .map(id => candidateComponents[id].rootDir || null)
       .filter(dir => dir);

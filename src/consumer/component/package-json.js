@@ -12,7 +12,6 @@ import {
   ASTERISK,
   COMPONENTES_DEPENDECIES_REGEX
 } from '../../constants';
-import BitMap from '../bit-map/bit-map';
 import ComponentMap from '../bit-map/component-map';
 import { filterAsync, pathNormalizeToLinux, pathRelative } from '../../utils';
 import { getSync } from '../../api/consumer/lib/global-config';
@@ -21,9 +20,9 @@ import Consumer from '../consumer';
 /**
  * Add components as dependencies to root package.json
  */
-async function addComponentsToRoot(consumer: Consumer, components: Component[], bitMap: BitMap) {
+async function addComponentsToRoot(consumer: Consumer, components: Component[]) {
   const importedComponents = await filterAsync(components, (component: Component) => {
-    const componentMap = component.getComponentMap(bitMap);
+    const componentMap = component.getComponentMap(consumer.bitMap);
     return componentMap.origin === COMPONENT_ORIGINS.IMPORTED;
   });
   if (!importedComponents || !importedComponents.length) return;
@@ -59,9 +58,8 @@ function getPackageDependencyValue(
 }
 
 async function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId) {
-  const bitMap = await consumer.getBitMap();
-  const dependencyComponentMap = bitMap.getComponent(dependencyId);
-  const parentComponentMap = bitMap.getComponent(parentId);
+  const dependencyComponentMap = consumer.bitMap.getComponent(dependencyId);
+  const parentComponentMap = consumer.bitMap.getComponent(parentId);
   return getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);
 }
 
@@ -70,12 +68,11 @@ async function changeDependenciesToRelativeSyntax(
   components: Component[],
   dependencies: Component[]
 ) {
-  const bitMap = await consumer.getBitMap();
   const dependenciesIds = dependencies.map(dependency => dependency.id.toStringWithoutVersion());
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   const updateComponent = async (component) => {
-    const componentMap = component.getComponentMap(bitMap);
+    const componentMap = component.getComponentMap(consumer.bitMap);
     let packageJson;
     try {
       packageJson = await PackageJson.load(componentMap.rootDir);
@@ -86,7 +83,7 @@ async function changeDependenciesToRelativeSyntax(
       const dependencyId = dependency.id.toStringWithoutVersion();
       if (dependenciesIds.includes(dependencyId)) {
         const dependencyComponent = dependencies.find(d => d.id.toStringWithoutVersion() === dependencyId);
-        const dependencyComponentMap = dependencyComponent.getComponentMap(bitMap);
+        const dependencyComponentMap = dependencyComponent.getComponentMap(consumer.bitMap);
         const dependencyLocation = getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);
         return [dependencyId, dependencyLocation];
       }
