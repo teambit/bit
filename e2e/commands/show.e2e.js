@@ -419,6 +419,24 @@ function add(a, b) {
         expect(showCmd).to.throw('error - nothing to compare no previous versions found');
       });
     });
+    describe('when the component is AUTHORED', () => {
+      before(() => {
+        helper.commitAllComponents();
+      });
+      it('should not throw an error "nothing to compare no previous versions found"', () => {
+        const showCmd = () => helper.showComponent('bar/foo --compare');
+        expect(showCmd).not.to.throw();
+      });
+      it('model and file-system should have the same main file and files, regardless the originallySharedDir (bar)', () => {
+        const result = helper.showComponent('bar/foo --compare --json');
+        const { componentFromFileSystem, componentFromModel } = JSON.parse(result);
+        expect(componentFromFileSystem.mainFile).to.equal(componentFromModel.mainFile);
+        expect(componentFromFileSystem.files).to.deep.equal(componentFromModel.files);
+
+        // files should contain the originallySharedDir
+        expect(componentFromModel.mainFile).to.have.string('bar');
+      });
+    });
     describe('when importing a component', () => {
       before(() => {
         helper.commitAllComponents();
@@ -438,6 +456,9 @@ function add(a, b) {
         const { componentFromFileSystem, componentFromModel } = JSON.parse(result);
         expect(componentFromFileSystem.mainFile).to.equal(componentFromModel.mainFile);
         expect(componentFromFileSystem.files).to.deep.equal(componentFromModel.files);
+
+        // files should not contain the originallySharedDir
+        expect(componentFromFileSystem.mainFile).to.not.have.string('bar');
       });
     });
   });
