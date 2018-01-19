@@ -638,7 +638,20 @@ export default class Component {
     const testFiles = this.files.filter(file => file.test);
     if (!this.testerId || !testFiles || R.isEmpty(testFiles)) return null;
 
-    let testerFilePath = await this._getTester(scope);
+    const getTester = async () => {
+      try {
+        // eslint-disable-next-line
+        const testerPath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
+        return testerPath;
+      } catch (err) {
+        if (err instanceof ResolutionException) {
+          logger.debug(`Unable to find tester ${this.testerId}, will try to import it`);
+          return null;
+        }
+        return Promise.reject(err);
+      }
+    };
+    let testerFilePath = await getTester();
     if (!testerFilePath) {
       loader.start(BEFORE_IMPORT_ENVIRONMENT);
       await scope.installEnvironment({
@@ -740,34 +753,6 @@ export default class Component {
     this.dists = this.files.map(file => new Dist({ base: file.base, path: file.path, contents: file.contents }));
   }
 
-  async _getCompiler(scope) {
-    try {
-      // eslint-disable-next-line
-      const compiler = await scope.loadEnvironment(this.compilerId);
-      return compiler;
-    } catch (err) {
-      if (err instanceof ResolutionException) {
-        logger.debug(`Unable to find compiler ${this.compilerId}, will try to import it`);
-        return null;
-      }
-      return Promise.reject(err);
-    }
-  }
-
-  async _getTester(scope) {
-    try {
-      // eslint-disable-next-line
-      const testerPath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
-      return testerPath;
-    } catch (err) {
-      if (err instanceof ResolutionException) {
-        logger.debug(`Unable to find tester ${this.testerId}, will try to import it`);
-        return null;
-      }
-      return Promise.reject(err);
-    }
-  }
-
   async build({
     scope,
     save,
@@ -828,7 +813,20 @@ export default class Component {
 
     logger.debug('compilerId found, start building');
     // verify whether the environment is installed
-    let compiler = await this._getCompiler(scope);
+    const getCompiler = async () => {
+      try {
+        // eslint-disable-next-line
+        const compiler = await scope.loadEnvironment(this.compilerId);
+        return compiler;
+      } catch (err) {
+        if (err instanceof ResolutionException) {
+          logger.debug(`Unable to find compiler ${this.compilerId}, will try to import it`);
+          return null;
+        }
+        return Promise.reject(err);
+      }
+    };
+    let compiler = await getCompiler();
     if (!compiler) {
       loader.start(BEFORE_IMPORT_ENVIRONMENT);
       await scope.installEnvironment({
