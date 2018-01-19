@@ -32,10 +32,9 @@ async function runAndUpdateCI({
 
   try {
     // define options
-    const environment = false; // the environments are installed automatically when missing
     const save = true;
-    const buildResults = await buildInScope({ id, scopePath, environment, save, verbose, directory, keep, isCI: true });
-    const testResults = await testInScope({ id, scopePath, environment, save, verbose, directory, keep, isCI: true });
+    const buildResults = await buildInScope({ id, scopePath, save, verbose, directory, keep, isCI: true });
+    const testResults = await testInScope({ id, scopePath, save, verbose, directory, keep, isCI: true });
     const dists = buildResults ? buildResults.dists : null;
     const mainFile = buildResults ? buildResults.mainFile : testResults.mainFile;
     await addCIAttrsInTheModel({ startTime });

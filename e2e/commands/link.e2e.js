@@ -36,17 +36,27 @@ describe('bit link', function () {
         helper.addComponent('utils/is-type.js');
         helper.commitAllComponents();
         helper.exportAllComponents();
-        const isStringFixture = `const isType = require('@bit/${
-          helper.remoteScope
-        }.utils.is-type/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
+
+        // requiring is-type through the internal file (@bit/remoteScope.utils.is-type/utils/is-type)
+        const isStringFixture = `const isType = require('@bit/${helper.remoteScope}.utils.is-type/utils/is-type');
+module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.createComponent('utils', 'is-string.js', isStringFixture);
         helper.addComponent('utils/is-string.js');
         const appJsFixture = "const isString = require('./utils/is-string'); console.log(isString());";
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+
+        // requiring is-type through the main index file (@bit/remoteScope.utils.is-type)
+        const appJSMainFixture = `const isType = require('@bit/${helper.remoteScope}.utils.is-type');
+console.log(isType());`;
+        fs.outputFileSync(path.join(helper.localScopePath, 'app-main.js'), appJSMainFixture);
       });
-      it('should generate the links as part of the export process', () => {
+      it('should generate links to all component files as part of the export process', () => {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string');
+      });
+      it('should generate a link form node_modules/@bit/component-name root to the main file as part of the export process', () => {
+        const result = helper.runCmd('node app-main.js');
+        expect(result.trim()).to.equal('got is-type');
       });
       describe('after deleting node_modules and running bit link', () => {
         before(() => {
@@ -56,6 +66,9 @@ describe('bit link', function () {
         it('should re-generate the links successfully', () => {
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string');
+
+          const resultMain = helper.runCmd('node app-main.js');
+          expect(resultMain.trim()).to.equal('got is-type');
         });
       });
     });

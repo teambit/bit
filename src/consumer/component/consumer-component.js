@@ -611,7 +611,6 @@ export default class Component {
     scope,
     rejectOnFailure,
     consumer,
-    environment,
     save,
     verbose,
     isolated,
@@ -622,7 +621,6 @@ export default class Component {
     scope: Scope,
     rejectOnFailure?: boolean,
     consumer?: Consumer,
-    environment?: boolean,
     save?: boolean,
     verbose?: boolean,
     isolated?: boolean,
@@ -630,41 +628,34 @@ export default class Component {
     keep?: boolean,
     isCI?: boolean
   }): Promise<?Results> {
-    // TODO: The same function exactly exists in this file under build function
-    // Should merge them to one
-    const installEnvironmentsIfNeeded = (): Promise<any> => {
-      if (environment) {
-        loader.start(BEFORE_IMPORT_ENVIRONMENT);
-        return scope.installEnvironment({
-          ids: [this.compilerId, this.testerId],
-          verbose
-        });
-      }
-
-      return Promise.resolve();
-    };
-
     const testFiles = this.files.filter(file => file.test);
     if (!this.testerId || !testFiles || R.isEmpty(testFiles)) return null;
 
-    let testerFilePath;
-    try {
-      testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
-    } catch (err) {
-      if (err instanceof ResolutionException) {
-        logger.debug(`Unable to find tester ${this.testerId}, will try to import it`);
-        environment = true;
-        // todo: once we agree about this approach, get rid of the environment variable
-      } else throw err;
-    }
-
-    await installEnvironmentsIfNeeded();
-    logger.debug('Environment components are installed.');
-    try {
-      if (!testerFilePath) {
-        testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
+    const getTester = async () => {
+      try {
+        // eslint-disable-next-line
+        const testerPath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
+        return testerPath;
+      } catch (err) {
+        if (err instanceof ResolutionException) {
+          logger.debug(`Unable to find tester ${this.testerId}, will try to import it`);
+          return null;
+        }
+        return Promise.reject(err);
       }
+    };
+    let testerFilePath = await getTester();
+    if (!testerFilePath) {
+      loader.start(BEFORE_IMPORT_ENVIRONMENT);
+      await scope.installEnvironment({
+        ids: [this.testerId],
+        verbose
+      });
+      testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
+    }
+    logger.debug('Environment components are installed.');
 
+    try {
       const run = async (mainFile: string, distTestFiles: Dist[]) => {
         loader.start(BEFORE_RUNNING_SPECS);
         try {
@@ -711,7 +702,7 @@ export default class Component {
 
       if (!isolated && consumer) {
         logger.debug('Building the component before running the tests');
-        await this.build({ scope, environment, verbose, consumer });
+        await this.build({ scope, verbose, consumer });
         await this.writeDists(consumer);
         const testDists = this.dists ? this.dists.filter(dist => dist.test) : this.files.filter(file => file.test);
         return run(this.mainFile, testDists);
@@ -731,7 +722,7 @@ export default class Component {
         component.isolatedEnvironment = isolatedEnvironment;
         logger.debug(`the component ${this.id.toString()} has been imported successfully into an isolated environment`);
 
-        await component.build({ scope, environment, verbose });
+        await component.build({ scope, verbose });
         if (component.dists) {
           const specDistWrite = component.dists.map(file => file.write());
           await Promise.all(specDistWrite);
@@ -757,7 +748,6 @@ export default class Component {
 
   async build({
     scope,
-    environment,
     save,
     consumer,
     verbose,
@@ -766,7 +756,6 @@ export default class Component {
     isCI = false
   }: {
     scope: Scope,
-    environment?: boolean,
     save?: boolean,
     consumer?: Consumer,
     verbose?: boolean,
@@ -813,35 +802,29 @@ export default class Component {
 
     logger.debug('compilerId found, start building');
     // verify whether the environment is installed
-    let compiler;
-    try {
-      compiler = await scope.loadEnvironment(this.compilerId);
-    } catch (err) {
-      if (err instanceof ResolutionException) {
-        environment = true;
-        // todo: once we agree about this approach, get rid of the environment variable
-      } else {
+    const getCompiler = async () => {
+      try {
+        // eslint-disable-next-line
+        const compiler = await scope.loadEnvironment(this.compilerId);
+        return compiler;
+      } catch (err) {
+        if (err instanceof ResolutionException) {
+          logger.debug(`Unable to find compiler ${this.compilerId}, will try to import it`);
+          return null;
+        }
         return Promise.reject(err);
       }
-    }
-
-    const installEnvironmentIfNeeded = async (): Promise<any> => {
-      if (environment) {
-        loader.start(BEFORE_IMPORT_ENVIRONMENT);
-        return scope.installEnvironment({
-          ids: [this.compilerId],
-          verbose
-        });
-      }
-
-      return Promise.resolve();
     };
-
-    await installEnvironmentIfNeeded();
-
+    let compiler = await getCompiler();
     if (!compiler) {
+      loader.start(BEFORE_IMPORT_ENVIRONMENT);
+      await scope.installEnvironment({
+        ids: [this.compilerId],
+        verbose
+      });
       compiler = await scope.loadEnvironment(this.compilerId);
     }
+
     const builtFiles = await this.buildIfNeeded({
       condition: !!this.compilerId,
       compiler,
