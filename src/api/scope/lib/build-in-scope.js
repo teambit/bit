@@ -7,7 +7,6 @@ import logger from '../../../logger/logger';
 
 export default function buildInScope({
   id,
-  environment,
   save,
   verbose,
   scopePath,
@@ -16,7 +15,6 @@ export default function buildInScope({
   isCI = true
 }: {
   id: string,
-  environment: ?boolean,
   save: ?boolean,
   verbose: ?boolean,
   scopePath: string,
@@ -30,7 +28,7 @@ export default function buildInScope({
       .catch(newErr => Promise.reject(initialError || newErr))
       .then((scope: Scope) => {
         const bitId = BitId.parse(id);
-        return scope.build({ bitId, environment, save, verbose, directory, keep, isCI });
+        return scope.build({ bitId, save, verbose, directory, keep, isCI });
       })
       .catch(e => Promise.reject(e));
   }
@@ -38,7 +36,7 @@ export default function buildInScope({
   function loadFromConsumer() {
     return loadConsumer().then((consumer) => {
       const bitId = BitId.parse(id);
-      return consumer.scope.build({ bitId, environment, save, consumer, verbose });
+      return consumer.scope.build({ bitId, save, consumer, verbose });
     });
   }
 

@@ -6,7 +6,6 @@ import BitMap from '../../../consumer/bit-map';
 import ComponentsList from '../../../consumer/component/components-list';
 import Bit from '../../../consumer/component';
 import { BEFORE_LOADING_COMPONENTS, BEFORE_RUNNING_SPECS } from '../../../cli/loader/loader-messages';
-import { build } from './build';
 
 export default (async function test(id?: string, verbose: boolean = true): Promise<Bit> {
   const consumer: Consumer = await loadConsumer();
@@ -20,10 +19,13 @@ export default (async function test(id?: string, verbose: boolean = true): Promi
     const componentsList = new ComponentsList(consumer);
     loader.start(BEFORE_LOADING_COMPONENTS);
     components = await componentsList.newAndModifiedComponents();
+
+    // when testing multiple components, we need to build all of them first.
+    // building only the one we test, won't be sufficient because it may depends on another pre-build component
+    await consumer.scope.buildMultiple(components, consumer, true);
   }
 
   loader.start(BEFORE_RUNNING_SPECS);
-  await Promise.all(components.map(component => build(component.id.toString(), verbose)));
   const specsResults = components.map(async (component) => {
     if (!component.testerId) {
       return { component, missingTester: true };
