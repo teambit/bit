@@ -41,7 +41,7 @@ export default class BitMap {
     this.paths = {};
   }
 
-  static async load(dirPath: string): Promise<BitMap> {
+  static load(dirPath: string): BitMap {
     // support old bitmaps
     const mapPath =
       fs.existsSync(path.join(dirPath, OLD_BIT_MAP)) && !fs.existsSync(path.join(dirPath, BIT_MAP))
@@ -51,7 +51,7 @@ export default class BitMap {
     let version;
     if (fs.existsSync(mapPath)) {
       try {
-        const mapFileContent = await readFile(mapPath);
+        const mapFileContent = fs.readFileSync(mapPath);
         const componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
         version = componentsJson.version;
         // Don't treat version like component
@@ -312,7 +312,9 @@ export default class BitMap {
       return;
     }
     if (olderComponentsIds.length > 1) {
-      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
+      throw new Error(`Your ${
+        BIT_MAP
+      } file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
       are authored or imported. This scenario is not supported`);
     }
     const olderComponentId = olderComponentsIds[0];

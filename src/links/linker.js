@@ -13,29 +13,24 @@ import ComponentWithDependencies from '../scope/component-dependencies';
 import * as packageJson from '../consumer/component/package-json';
 
 export async function linkAllToNodeModules(consumer: Consumer) {
-  const bitMap = await consumer.getBitMap();
-  const componentsMaps = bitMap.getAllComponents();
+  const componentsMaps = consumer.bitMap.getAllComponents();
   if (R.isEmpty(componentsMaps)) throw new Error('nothing to link');
   const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));
   const { components } = await consumer.loadComponents(componentsIds);
-  return linkComponentsToNodeModules(components, bitMap, consumer);
+  return linkComponentsToNodeModules(components, consumer);
 }
 
-export async function writeLinksInDist(component: Component, componentMap, bitMap: BitMap, consumer: Consumer) {
-  const componentWithDeps = await component.toComponentWithDependencies(bitMap, consumer);
-  await linkGenerator.writeDependencyLinks([componentWithDeps], bitMap, consumer, false);
+export async function writeLinksInDist(component: Component, componentMap, consumer: Consumer) {
+  const componentWithDeps = await component.toComponentWithDependencies(consumer);
+  await linkGenerator.writeDependencyLinks([componentWithDeps], consumer, false);
   const newMainFile = pathNormalizeToLinux(component.calculateMainDistFile());
   await packageJson.updateAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
-  linkComponentsToNodeModules([component], bitMap, consumer);
-  return linkGenerator.writeEntryPointsForComponent(component, bitMap, consumer);
+  linkComponentsToNodeModules([component], consumer);
+  return linkGenerator.writeEntryPointsForComponent(component, consumer);
 }
 
-function findDirectDependentComponents(
-  potentialDependencies: Component[],
-  bitMap: BitMap,
-  consumer: Consumer
-): Promise<Component[]> {
-  const fsComponents = bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+function findDirectDependentComponents(potentialDependencies: Component[], consumer: Consumer): Promise<Component[]> {
+  const fsComponents = consumer.bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
   const fsComponentsIds = Object.keys(fsComponents).map(component => BitId.parse(component));
   const potentialDependenciesIds = potentialDependencies.map(c => c.id);
   return consumer.scope.findDirectDependentComponents(fsComponentsIds, potentialDependenciesIds);
@@ -45,13 +40,13 @@ function findDirectDependentComponents(
  * an IMPORTED component might be NESTED before.
  * find those components and re-link all their dependents
  */
-async function reLinkDirectlyImportedDependencies(components: Component[], bitMap: BitMap, consumer: Consumer): void {
+async function reLinkDirectlyImportedDependencies(components: Component[], consumer: Consumer): void {
   logger.debug('reLinkDirectlyImportedDependencies: found components to re-link');
   const componentsWithDependencies = await Promise.all(
-    components.map(component => component.toComponentWithDependencies(bitMap, consumer))
+    components.map(component => component.toComponentWithDependencies(consumer))
   );
-  await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, consumer, false);
-  linkComponentsToNodeModules(components, bitMap, consumer);
+  await linkGenerator.writeDependencyLinks(componentsWithDependencies, consumer, false);
+  linkComponentsToNodeModules(components, consumer);
 }
 
 /**
@@ -66,28 +61,25 @@ export async function linkComponents(
   componentsWithDependencies: ComponentWithDependencies[],
   writtenComponents: Component[],
   writtenDependencies: ?(Component[]),
-  bitMap: BitMap,
   consumer: Consumer,
   createNpmLinkFiles: boolean
 ) {
   const allComponents = writtenDependencies
     ? [...writtenComponents, ...R.flatten(writtenDependencies)]
     : writtenComponents;
-  await linkGenerator.writeDependencyLinks(componentsWithDependencies, bitMap, consumer, createNpmLinkFiles);
+  await linkGenerator.writeDependencyLinks(componentsWithDependencies, consumer, createNpmLinkFiles);
   if (writtenDependencies) {
     await Promise.all(
-      R.flatten(writtenDependencies).map(component =>
-        linkGenerator.writeEntryPointsForComponent(component, bitMap, consumer)
-      )
+      R.flatten(writtenDependencies).map(component => linkGenerator.writeEntryPointsForComponent(component, consumer))
     );
   }
   await Promise.all(
-    writtenComponents.map(component => linkGenerator.writeEntryPointsForComponent(component, bitMap, consumer))
+    writtenComponents.map(component => linkGenerator.writeEntryPointsForComponent(component, consumer))
   );
-  linkComponentsToNodeModules(allComponents, bitMap, consumer);
-  const directDependentComponents = await findDirectDependentComponents(writtenComponents, bitMap, consumer);
+  linkComponentsToNodeModules(allComponents, consumer);
+  const directDependentComponents = await findDirectDependentComponents(writtenComponents, consumer);
   if (directDependentComponents.length) {
-    await reLinkDirectlyImportedDependencies(directDependentComponents, bitMap, consumer);
+    await reLinkDirectlyImportedDependencies(directDependentComponents, consumer);
     await packageJson.changeDependenciesToRelativeSyntax(consumer, directDependentComponents, writtenComponents);
   }
   return allComponents;

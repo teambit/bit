@@ -7,7 +7,6 @@ import glob from 'glob';
 import { BitId } from '../bit-id';
 import Component from '../consumer/component';
 import { COMPONENT_ORIGINS } from '../constants';
-import BitMap from '../consumer/bit-map/bit-map';
 import ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
 import { pathRelative } from '../utils';
@@ -65,9 +64,9 @@ function symlinkPackages(from: string, to: string, consumer, dependenciesSavedAs
   });
 }
 
-function writeDependenciesLinks(component, componentMap, bitMap, consumer) {
+function writeDependenciesLinks(component, componentMap, consumer) {
   return component.dependencies.map((dependency) => {
-    const dependencyComponentMap = bitMap.getComponent(dependency.id);
+    const dependencyComponentMap = consumer.bitMap.getComponent(dependency.id);
     const writtenLinks = [];
     if (!dependencyComponentMap) return writtenLinks;
     writtenLinks.push(
@@ -117,11 +116,11 @@ function writeMissingLinks(component, componentMap, bitMap) {
   });
 }
 
-export default function linkComponents(components: Component[], bitMap: BitMap, consumer: Consumer): LinksResult[] {
+export default function linkComponents(components: Component[], consumer: Consumer): Object[] {
   return components.map((component) => {
     const componentId = component.id;
     logger.debug(`linking component to node_modules: ${componentId}`);
-    const componentMap: ComponentMap = bitMap.getComponent(componentId, true);
+    const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId, true);
     if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
       const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(consumer.bitJson.bindingPrefix, componentId);
       const linkPath = path.join(consumer.getPath(), relativeLinkPath);
@@ -136,19 +135,17 @@ export default function linkComponents(components: Component[], bitMap: BitMap, 
       }
 
       const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
-      const boundDependencies = component.dependencies
-        ? writeDependenciesLinks(component, componentMap, bitMap, consumer)
-        : [];
+      const boundDependencies = component.dependencies ? writeDependenciesLinks(component, componentMap, consumer) : [];
       const boundMissingDependencies =
         component.missingDependencies && component.missingDependencies.missingLinks
-          ? writeMissingLinks(component, componentMap, bitMap)
+          ? writeMissingLinks(component, componentMap, consumer.bitMap)
           : [];
 
       return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
     }
     if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       if (!component.dependencies) return { id: componentId, bound: [] };
-      const bound = writeDependenciesLinks(component, componentMap, bitMap, consumer);
+      const bound = writeDependenciesLinks(component, componentMap, consumer);
       return { id: componentId, bound };
     }
 

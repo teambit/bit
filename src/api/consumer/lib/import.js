@@ -103,9 +103,8 @@ export default (async function importAction({
     installNpmPackages
   );
   const bitIds = dependencies.map(R.path(['component', 'id']));
-  const bitMap = await consumer.getBitMap();
   const notAuthored = (bitId) => {
-    const componentMap = bitMap.getComponent(bitId);
+    const componentMap = consumer.bitMap.getComponent(bitId);
     return componentMap && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED;
   };
   const notAuthoredBitIds = R.filter(notAuthored, bitIds);

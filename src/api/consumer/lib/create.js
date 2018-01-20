@@ -2,7 +2,6 @@
 import { loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
-import BitMap from '../../../consumer/bit-map';
 import { COMPONENT_ORIGINS } from '../../../constants';
 
 /**
@@ -20,7 +19,7 @@ export default (async function create(
   const defaultImpl = consumer.bitJson.getImplBasename();
   const files = { [defaultImpl]: defaultImpl };
   const mainFile = defaultImpl;
-  const component = Component.create(
+  const component: Component = Component.create(
     {
       name: id.name,
       box: id.box,
@@ -33,9 +32,8 @@ export default (async function create(
     },
     consumer.scope
   );
-  const bitMap = await BitMap.load(consumer.getPath());
-  await component.write({ withBitJson, force, bitMap, driver: consumer.driver, origin: COMPONENT_ORIGINS.AUTHORED });
-  await bitMap.write();
+  await component.write({ withBitJson, force, driver: consumer.driver, origin: COMPONENT_ORIGINS.AUTHORED });
+  await consumer.bitMap.write();
   // await consumer.driver.runHook('onCreate', component);
   return component;
 });

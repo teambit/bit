@@ -6,7 +6,6 @@ import groupBy from 'lodash.groupby';
 import {
   DEFAULT_INDEX_NAME,
   COMPONENT_ORIGINS,
-  AUTO_GENERATED_MSG,
   CFG_REGISTRY_DOMAIN_PREFIX,
   DEFAULT_REGISTRY_DOMAIN_PREFIX
 } from '../constants';
@@ -15,7 +14,6 @@ import logger from '../logger/logger';
 import { ComponentWithDependencies } from '../scope';
 import Component from '../consumer/component';
 import { Dependency, RelativePath } from '../consumer/component/consumer-component';
-import BitMap from '../consumer/bit-map/bit-map';
 import { BitIds } from '../bit-id';
 import fileTypesPlugins from '../plugins/file-types-plugins';
 import { getSync } from '../api/consumer/lib/global-config';
@@ -157,7 +155,6 @@ function _getLinkContent(
  */
 async function writeDependencyLinks(
   componentDependencies: ComponentWithDependencies[],
-  bitMap: BitMap,
   consumer: Consumer,
   createNpmLinkFiles: boolean
 ): Promise<any> {
@@ -215,7 +212,7 @@ async function writeDependencyLinks(
     let distLinkPath;
     const linkFiles = [];
     const depComponentMap = parentComponent.dependenciesSavedAsComponents
-      ? bitMap.getComponent(depId, true)
+      ? consumer.bitMap.getComponent(depId, true)
       : undefined;
 
     const depRootDir = depComponentMap ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
@@ -296,7 +293,7 @@ async function writeDependencyLinks(
   };
 
   const allLinksP = componentDependencies.map((componentWithDeps: ComponentWithDependencies) => {
-    const componentMap = bitMap.getComponent(componentWithDeps.component.id, true);
+    const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id, true);
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       logger.debug(
         `writeDependencyLinks, ignoring a component ${componentWithDeps.component.id} as it is an author component`
@@ -305,13 +302,13 @@ async function writeDependencyLinks(
     }
     // it must be IMPORTED. We don't pass NESTED to this function
     logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
-    componentWithDeps.component.stripOriginallySharedDir(bitMap);
+    componentWithDeps.component.stripOriginallySharedDir(consumer.bitMap);
 
     const directLinksP = componentLinks(componentWithDeps.dependencies, componentWithDeps.component, componentMap);
 
     if (componentWithDeps.component.dependenciesSavedAsComponents) {
       const indirectLinksP = componentWithDeps.dependencies.map((dep: Component) => {
-        const depComponentMap = bitMap.getComponent(dep.id, true);
+        const depComponentMap = consumer.bitMap.getComponent(dep.id, true);
         // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
         // also the indirect ones
         // The dep.dependencies contain only an id and relativePaths and not the full object
@@ -327,9 +324,9 @@ async function writeDependencyLinks(
 /**
  * Relevant for IMPORTED and NESTED only
  */
-async function writeEntryPointsForComponent(component: Component, bitMap: BitMap, consumer: Consumer): Promise<any> {
+async function writeEntryPointsForComponent(component: Component, consumer: Consumer): Promise<any> {
   const componentId = component.id.toString();
-  const componentMap = bitMap.getComponent(componentId);
+  const componentMap = consumer.bitMap.getComponent(componentId);
   const componentRoot = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
   const mainFile = component.calculateMainDistFile();
