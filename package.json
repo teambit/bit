@@ -44,7 +44,7 @@
     "decamelize": "^1.2.0",
     "doctrine": "^2.0.2",
     "execa": "^0.8.0",
-    "fs-extra": "^4.0.1",
+    "fs-extra": "^5.0.0",
     "fstream": "^1.0.10",
     "glob": "^7.1.1",
     "group-array": "^0.3.3",
