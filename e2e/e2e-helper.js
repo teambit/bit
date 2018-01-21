@@ -201,6 +201,18 @@ export default class Helper {
     return this.runCmd('bit init');
   }
 
+  initNewGitRepo() {
+    return this.runCmd('git init');
+  }
+
+  addGitConfig(key, val, location = 'local') {
+    return this.runCmd(`git config --${location} ${key} ${val}`);
+  }
+
+  unsetGitConfig(key, location = 'local') {
+    return this.runCmd(`git config --unset --${location} ${key}`);
+  }
+
   addRemoteScope(remoteScopePath: string = this.remoteScopePath, localScopePath: string = this.localScopePath) {
     if (process.env.npm_config_with_ssh) {
       return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath}`, localScopePath);
@@ -233,7 +245,7 @@ export default class Helper {
     return { scopeName, scopePath };
   }
 
-  mimicGitCloneLocalProject(withDist = false) {
+  CloneLocalProject(withDist = false) {
     fs.removeSync(path.join(this.localScopePath, '.bit'));
     fs.removeSync(path.join(this.localScopePath, 'components'));
     this.runCmd('bit init');
