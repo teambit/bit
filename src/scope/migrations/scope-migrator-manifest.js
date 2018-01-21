@@ -18,8 +18,11 @@ export default {
   '0.11.1': {
     Version: [versionMigrations.changeImportSpecifiersToArray, versionMigrations.ensureMainFileDeclartaion]
   },
-  '0.12.0-ext.4': {
+  '0.12.0': {
     Component: [componentMigrations.updateBindingPrefixToNewDefault],
     Version: [versionMigrations.updateBindingPrefixToNewDefault]
+  },
+  '0.12.1-dev.1': {
+    Version: [versionMigrations.removeLatestFromCompiler]
   }
 };

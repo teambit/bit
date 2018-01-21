@@ -7,7 +7,6 @@ import logger from '../../../logger/logger';
 
 export default function testInScope({
   id,
-  environment,
   save,
   verbose,
   scopePath,
@@ -16,7 +15,6 @@ export default function testInScope({
   isCI = true
 }: {
   id: string,
-  environment?: ?boolean,
   save?: ?boolean,
   verbose?: ?boolean,
   scopePath: string,
@@ -32,7 +30,6 @@ export default function testInScope({
         const bitId = BitId.parse(id);
         return scope.runComponentSpecs({
           bitId,
-          environment,
           save,
           verbose,
           isolated: true,
@@ -50,7 +47,6 @@ export default function testInScope({
       return consumer.scope.runComponentSpecs({
         consumer,
         bitId,
-        environment,
         save,
         verbose,
         isolated: true,

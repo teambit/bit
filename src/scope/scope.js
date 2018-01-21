@@ -324,21 +324,13 @@ export default class Scope {
       return Promise.all(flattenedDependenciesP);
     };
 
-    // @todo: to make them all run in parallel, we have to first get all compilers from all components, install all
-    // environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
     logger.debug('scope.putMany: sequentially build all components');
-    loader.start(BEFORE_RUNNING_BUILD);
-    for (const consumerComponentId of sortedConsumerComponentsIds) {
-      const consumerComponent: Component = consumerComponentsIdsMap.get(consumerComponentId);
-      if (consumerComponent) {
-        await consumerComponent.build({ scope: this, consumer });
-      }
-    }
+    const componentsToBuild = sortedConsumerComponentsIds.map(id => consumerComponentsIdsMap.get(id)).filter(c => c);
+    await this.buildMultiple(componentsToBuild, consumer);
 
     logger.debug('scope.putMany: sequentially test all components');
     loader.start(BEFORE_RUNNING_SPECS);
     const specsResults = {};
-    const bitMap = consumer ? await consumer.getBitMap() : undefined;
     for (const consumerComponentId of sortedConsumerComponentsIds) {
       const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
       if (consumerComponent) {
@@ -346,7 +338,6 @@ export default class Scope {
           scope: this,
           rejectOnFailure: !force,
           consumer,
-          bitMap,
           verbose
         });
       }
@@ -408,6 +399,20 @@ export default class Scope {
     await this.objects.persist();
 
     return components;
+  }
+
+  /**
+   * Build multiple components sequentially, not in parallel.
+   */
+  async buildMultiple(components: Component[], consumer: Consumer, writeDists = false) {
+    // @todo: to make them all run in parallel, we have to first get all compilers from all components, install all
+    // environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
+    logger.debug('scope.buildMultiple: sequentially build multiple components');
+    loader.start(BEFORE_RUNNING_BUILD);
+    for (const component of components) {
+      await component.build({ scope: this, consumer });
+      if (writeDists) await component.writeDists(consumer);
+    }
   }
 
   /**
@@ -1181,7 +1186,6 @@ export default class Scope {
   async runComponentSpecs({
     bitId,
     consumer,
-    environment,
     save,
     verbose,
     isolated,
@@ -1191,7 +1195,6 @@ export default class Scope {
   }: {
     bitId: BitId,
     consumer?: ?Consumer,
-    environment?: ?boolean,
     save?: ?boolean,
     verbose?: ?boolean,
     isolated?: boolean,
@@ -1207,7 +1210,6 @@ export default class Scope {
     return component.runSpecs({
       scope: this,
       consumer,
-      environment,
       save,
       verbose,
       isolated,
@@ -1219,7 +1221,6 @@ export default class Scope {
 
   async build({
     bitId,
-    environment,
     save,
     consumer,
     verbose,
@@ -1228,7 +1229,6 @@ export default class Scope {
     isCI
   }: {
     bitId: BitId,
-    environment?: ?boolean,
     save?: ?boolean,
     consumer?: Consumer,
     verbose?: ?boolean,
@@ -1240,7 +1240,7 @@ export default class Scope {
       throw new Error('cannot run build on remote component');
     }
     const component = await this.loadComponent(bitId);
-    return component.build({ scope: this, environment, save, consumer, verbose, directory, keep, isCI });
+    return component.build({ scope: this, save, consumer, verbose, directory, keep, isCI });
   }
 
   /**

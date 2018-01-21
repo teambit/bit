@@ -492,7 +492,6 @@ export default class Component {
     withBitJson = true,
     withPackageJson = true,
     force = true,
-    bitMap,
     origin,
     parent,
     consumer,
@@ -504,7 +503,6 @@ export default class Component {
     withBitJson?: boolean,
     withPackageJson?: boolean,
     force?: boolean,
-    bitMap?: BitMap,
     origin?: string,
     parent?: BitId,
     consumer?: Consumer,
@@ -514,6 +512,7 @@ export default class Component {
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     const consumerPath: ?string = consumer ? consumer.getPath() : undefined;
+    const bitMap: ?BitMap = consumer ? consumer.bitMap : undefined;
     if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
     // Take the bitdir from the files (it will be the same for all the files of course)
     const calculatedBitDir = bitDir || this.files[0].base;
@@ -594,16 +593,16 @@ export default class Component {
     return this;
   }
 
-  async writeDists(consumer?: Consumer, bitMap?: BitMap, writeLinks?: boolean = true): Promise<?(string[])> {
+  async writeDists(consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
     if (!this.dists) return null;
     let componentMap;
-    if (consumer && bitMap) {
-      componentMap = bitMap.getComponent(this.id);
+    if (consumer) {
+      componentMap = consumer.bitMap.getComponent(this.id);
       this.updateDistsPerConsumerBitJson(consumer, componentMap);
     }
     const saveDist = this.dists.map(distFile => distFile.write());
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-      await writeLinksInDist(this, componentMap, bitMap, consumer);
+      await writeLinksInDist(this, componentMap, consumer);
     }
     return Promise.all(saveDist);
   }
@@ -612,9 +611,7 @@ export default class Component {
     scope,
     rejectOnFailure,
     consumer,
-    environment,
     save,
-    bitMap,
     verbose,
     isolated,
     directory,
@@ -624,54 +621,40 @@ export default class Component {
     scope: Scope,
     rejectOnFailure?: boolean,
     consumer?: Consumer,
-    environment?: boolean,
     save?: boolean,
-    bitMap?: BitMap,
     verbose?: boolean,
     isolated?: boolean,
     directory?: string,
     keep?: boolean,
     isCI?: boolean
   }): Promise<?Results> {
-    // TODO: The same function exactly exists in this file under build function
-    // Should merge them to one
-    const installEnvironmentsIfNeeded = (): Promise<any> => {
-      if (environment) {
-        loader.start(BEFORE_IMPORT_ENVIRONMENT);
-        return scope.installEnvironment({
-          ids: [this.compilerId, this.testerId],
-          verbose
-        });
-      }
-
-      return Promise.resolve();
-    };
-
-    if (consumer && !bitMap) {
-      bitMap = await consumer.getBitMap();
-    }
-
     const testFiles = this.files.filter(file => file.test);
     if (!this.testerId || !testFiles || R.isEmpty(testFiles)) return null;
 
-    let testerFilePath;
-    try {
-      testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
-    } catch (err) {
-      if (err instanceof ResolutionException) {
-        logger.debug(`Unable to find tester ${this.testerId}, will try to import it`);
-        environment = true;
-        // todo: once we agree about this approach, get rid of the environment variable
-      } else throw err;
-    }
-
-    await installEnvironmentsIfNeeded();
-    logger.debug('Environment components are installed.');
-    try {
-      if (!testerFilePath) {
-        testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
+    const getTester = async () => {
+      try {
+        const testerPath = await scope.loadEnvironment(this.testerId, { pathOnly: true }); // eslint-disable-line
+        return testerPath;
+      } catch (err) {
+        if (err instanceof ResolutionException) {
+          logger.debug(`Unable to find tester ${this.testerId}, will try to import it`);
+          return null;
+        }
+        return Promise.reject(err);
       }
+    };
+    let testerFilePath = await getTester();
+    if (!testerFilePath) {
+      loader.start(BEFORE_IMPORT_ENVIRONMENT);
+      await scope.installEnvironment({
+        ids: [this.testerId],
+        verbose
+      });
+      testerFilePath = await scope.loadEnvironment(this.testerId, { pathOnly: true });
+    }
+    logger.debug('Environment components are installed.');
 
+    try {
       const run = async (mainFile: string, distTestFiles: Dist[]) => {
         loader.start(BEFORE_RUNNING_SPECS);
         try {
@@ -718,8 +701,8 @@ export default class Component {
 
       if (!isolated && consumer) {
         logger.debug('Building the component before running the tests');
-        await this.build({ scope, environment, bitMap, verbose, consumer });
-        await this.writeDists(consumer, bitMap);
+        await this.build({ scope, verbose, consumer });
+        await this.writeDists(consumer);
         const testDists = this.dists ? this.dists.filter(dist => dist.test) : this.files.filter(file => file.test);
         return run(this.mainFile, testDists);
       }
@@ -738,7 +721,7 @@ export default class Component {
         component.isolatedEnvironment = isolatedEnvironment;
         logger.debug(`the component ${this.id.toString()} has been imported successfully into an isolated environment`);
 
-        await component.build({ scope, environment, verbose });
+        await component.build({ scope, verbose });
         if (component.dists) {
           const specDistWrite = component.dists.map(file => file.write());
           await Promise.all(specDistWrite);
@@ -764,20 +747,16 @@ export default class Component {
 
   async build({
     scope,
-    environment,
     save,
     consumer,
-    bitMap,
     verbose,
     directory,
     keep,
     isCI = false
   }: {
     scope: Scope,
-    environment?: boolean,
     save?: boolean,
     consumer?: Consumer,
-    bitMap?: BitMap,
     verbose?: boolean,
     directory: ?string,
     keep: ?boolean,
@@ -805,9 +784,7 @@ export default class Component {
       return componentStatus.modified;
     };
 
-    if (!bitMap && consumer) {
-      bitMap = await consumer.getBitMap();
-    }
+    const bitMap = consumer ? consumer.bitMap : undefined;
     const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
     const needToRebuild = await isNeededToReBuild();
@@ -824,35 +801,28 @@ export default class Component {
 
     logger.debug('compilerId found, start building');
     // verify whether the environment is installed
-    let compiler;
-    try {
-      compiler = await scope.loadEnvironment(this.compilerId);
-    } catch (err) {
-      if (err instanceof ResolutionException) {
-        environment = true;
-        // todo: once we agree about this approach, get rid of the environment variable
-      } else {
+    const getCompiler = async () => {
+      try {
+        const compiler = await scope.loadEnvironment(this.compilerId); // eslint-disable-line
+        return compiler;
+      } catch (err) {
+        if (err instanceof ResolutionException) {
+          logger.debug(`Unable to find compiler ${this.compilerId}, will try to import it`);
+          return null;
+        }
         return Promise.reject(err);
       }
-    }
-
-    const installEnvironmentIfNeeded = async (): Promise<any> => {
-      if (environment) {
-        loader.start(BEFORE_IMPORT_ENVIRONMENT);
-        return scope.installEnvironment({
-          ids: [this.compilerId],
-          verbose
-        });
-      }
-
-      return Promise.resolve();
     };
-
-    await installEnvironmentIfNeeded();
-
+    let compiler = await getCompiler();
     if (!compiler) {
+      loader.start(BEFORE_IMPORT_ENVIRONMENT);
+      await scope.installEnvironment({
+        ids: [this.compilerId],
+        verbose
+      });
       compiler = await scope.loadEnvironment(this.compilerId);
     }
+
     const builtFiles = await this.buildIfNeeded({
       condition: !!this.compilerId,
       compiler,
@@ -958,10 +928,10 @@ export default class Component {
     this.originallySharedDir = sharedStart.substring(0, lastPathSeparator);
   }
 
-  async toComponentWithDependencies(bitMap: BitMap, consumer: Consumer): Promise<ComponentWithDependencies> {
+  async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
     const getDependencies = () => {
       return this.dependencies.map((dependency) => {
-        if (bitMap.isExistWithSameVersion(dependency.id)) {
+        if (consumer.bitMap.isExistWithSameVersion(dependency.id)) {
           return consumer.loadComponent(dependency.id);
         }
         // when dependencies are imported as npm packages, they are not in bit.map
@@ -1023,21 +993,20 @@ export default class Component {
 
   static loadFromFileSystem({
     bitDir,
-    consumerBitJson,
     componentMap,
     id,
-    consumerPath,
-    bitMap,
+    consumer,
     componentFromModel
   }: {
     bitDir: string,
-    consumerBitJson: ConsumerBitJson,
     componentMap: ComponentMap,
     id: BitId,
-    consumerPath: string,
-    bitMap: BitMap,
+    consumer: Consumer,
     componentFromModel: ModelComponent
   }): Component {
+    const consumerPath = consumer.getPath();
+    const consumerBitJson: ConsumerBitJson = consumer.bitJson;
+    const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.component.deprecated : false;
     let dists = componentFromModel ? componentFromModel.component.dists : undefined;
     let packageDependencies;

@@ -7,196 +7,52 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.12.0-dev.33] - 2018-01-18
+- add link-file for authored exported components from the root node_modules of a component to its main-file  
+- enable command options starting with "no-" (e.g. --no-dependencies)
+- avoid fetching the dependencies of versions older than the current imported one 
+- migration - remove latest from compiler
 
-- fix bug in npm/yarn lock when installing both component envs at the same time
+## [0.12.0] - 2018-01-18
 
-## [0.12.0-dev.32] - 2018-01-17
-
-- exception handling for bit build 
-- fix wrong strip for shared dir when there is build and tests
-
-## [0.12.0-dev.31] - 2018-01-17
-
-- fix ci-update workflow  
-
-## [0.12.0-dev.30] - 2018-01-17
-
-- strip manageWorkspaces from consumer bit.json by default
-- bug fix - when removing a missing component from a remote, it was showing an obscure error "id.toStringWithoutVersion is not a function"
-- fixed remove local component
-- fix comparing package dependencies
-
-## [0.12.0-dev.29] - 2018-01-16
-
-- change commit hash to tag version in bit logs
-- fix server side hooks for import with no dependencies flag
-- fix #621 - dists files are written into the source files
-
-## [0.12.0-dev.28] - 2018-01-16
-
-- change .bit.map.json to .bitmap
-
-## [0.12.0-dev.27] - 2018-01-16
-
-- implement #613, change `bit install` command to install all packages and link all components
-- change {PARENT_FOLDER} variable to {PARENT} in dsl of add
-- add getParsedComponent function to component-objects class
-
-## [0.12.0-dev.26] - 2018-01-15
-
-- fix bit remove and bit deprecate commands on server
-
-## [0.12.0-dev.25] - 2018-01-15
-
-- wait for server side hooks to finish
-
-## [0.12.0-dev.24] - 2018-01-15
-
-- temp fix for extensions loggers
-
-## [0.12.0-dev.23] - 2018-01-15
-
-- fix bug with pub ssh key for hooks
-
-## [0.12.0-ext.22] - 2018-01-14
-
-- fix #608 - absolute components dependencies for new components throw an error
-- [#577](https://github.com/teambit/bit/issues/577) - auto add workspaces to root package.json
-- support excludeRegistryPrefix for npm extention 
-
-## [0.12.0-ext.20] - 2018-01-14
-
-- fix #605 - component with modified dependencies doesn't recognize as modified
-
-## [0.12.0-ext.20] - 2018-01-14
-
-- fix #591 - recongnize dependencies that were imported as packages in bit status
-- fix #592 - auto-tagged component were not shown as staged in bit status
-- fix #515 - save direct dependencies in package.json with relative paths
-- fix 539 - skip-npm-install shouldn't enable the save-dependencies-as-components
-
-## [0.12.0-ext.19] - 2018-01-11
-
-- fix #595, allow one dot in the scope name
-
-## [0.12.0-ext.18] - 2018-01-11
-
-- fix loading global extension from non consumer folders
-
-## [0.12.0-ext.17] - 2018-01-11
-
-- add headers to hook run action
-
-## [0.12.0-ext.16] - 2018-01-09
-
-- remove auto generated post install scripts
-- bump bit-javascript version to 0.10.8-dev.10
-
-## [0.12.0-ext.15] - 2018-01-09
-
-- bump bit-javascript version to 0.10.8-dev.9
-
-## [0.12.0-ext.14] - 2018-01-09
-
-- bump bit-javascript version to 0.10.8-dev.8
-
-## [0.12.0-ext.14] - 2018-01-09
-
-- workaround for old bit binding prefix
-
-- [#495](https://github.com/teambit/bit/issues/495) support adding files to imported components and ignoring existing files
-
-## [0.12.0-ext.13] - 2018-01-09
-
-- [#571](https://github.com/teambit/bit/issues/571) apply the auto-tagging mechanism for imported components 
-- [#537](https://github.com/teambit/bit/issues/537) change dist flag to --ignore-dist and by default create dist files
-
-## [0.12.0-ext.12] - 2018-01-08
-
-- [#562](https://github.com/teambit/bit/issues/562) rename default extension to core extension 
-- [#517](https://github.com/teambit/bit/issues/517) when a nested dependency is imported directly, re-link all its dependents
-- [#527](https://github.com/teambit/bit/issues/527) rename structure property in bit.json
-- [#500](https://github.com/teambit/bit/issues/500) files added under one component although it was not specified 
-- [#508](https://github.com/teambit/bit/issues/508) structure do not support anything other than one dynamic param per folder
-- [#540](https://github.com/teambit/bit/issues/540) support yarn as package manager
+### New
+- [extension system (beta)](https://docs.bitsrc.io/docs/ext-concepts.html)
+- [#540](https://github.com/teambit/bit/issues/540) support Yarn as package manager
+- `bit import`: install hub dependencies as npm packages by default
+- `bit import`: install npm packages by default
+- [#613](https://github.com/teambit/bit/issues/613) `bit install` command to install all packages and link all components
+- [#577](https://github.com/teambit/bit/issues/577) auto add workspaces to root package.json
+- [#515](https://github.com/teambit/bit/issues/515) save direct dependencies in package.json with relative paths
+- [#571](https://github.com/teambit/bit/issues/571) apply auto-tagging mechanism for imported components 
 - [#541](https://github.com/teambit/bit/issues/541) add package manager config to bit.json
-- [#543](https://github.com/teambit/bit/issues/543) remove imported component not working
-
-
-## [0.12.0-ext.11] - 2018-01-02
-
-- move `save-dependencies-as-components` flag from `bit import` command to be configurable in consumer bit.json
-- misc bugs for `bit remove`
-
-## [0.12.0-ext.10] - 2017-12-27
-
-- add unsafe-perm for installing packages inside components
-
-## [0.12.0-ext.9] - 2017-12-27
-
-- validte public ssh key exists before reading it
-
-## [0.12.0-ext.8] - 2017-12-27
-
-- add unsafe-perm for installing packages inside components
-- add public ssh key to context for server side hooks
-
-## [0.12.0-ext.7] - 2017-12-27
-
-## [0.12.0-ext.6] - 2017-12-26
-
-- `bit import`: install hub dependencies as npm packages, unless `--save-dependencies-as-components` flag is set
-- `bit import`: install npm packages by default, unless `--skip-npm-install` flag is set
-
-## [0.12.0-ext.5] - 2017-12-21
-
+- support saving dists files on a pre-configured directory relative to consumer root
+- support `bit show --compare` with json format
+### Changes
 - change auto-generated node_modules links to be the same as NPM installation of components (@bit/scope.box.name)
-- add context to all server side hooks
-
-## [0.12.0-ext.4] - 2017-12-19
-
-- support saving dists files on a pre-configured directory relative to consumer root (rather than saving them inside the component dir) 
-- remove 'dist' attribute from consumer bit.json by default
-- add headers to server side hooks
-- add context to PRE_RECEIVE_OBJECTS hook
-
-## [0.12.0-ext.3] - 2017-12-14
-
-- improve args for post-x-remote hooks
-
-## [0.12.0-ext.2] - 2017-12-13
-
 - rename `bit bind` command to `bit link`
-
-## [0.12.0-ext.1] - 2017-12-11
-
-- new extension system (beta)
-- add `bit isolate` command
-- avoid building process when a component was not modified and the dists are saved in the model
-- bug fix - importing an older version of a component ended up showing the component in "modified" and "staged" sections of bit status
+- reanme {PARENT_FOLDER} variable to {PARENT} in dsl of add
+- rename .bit.map.json to .bitmap
+- avoid writing long files paths for imported components when there is a shared directory among the component files and its dependencies
+- `bit log` now shows semver instead of version hash
+- [#537](https://github.com/teambit/bit/issues/537) rename dist flag to --ignore-dist and by default create dist files
+- [#527](https://github.com/teambit/bit/issues/527) rename structure property in bit.json
+- remove 'dist' attribute from root bit.json by default
 - rename `no_dependencies` flag to `no-dependencies` on `bit import` 
 - rename `no_package_json` flag to `ignore-package-json` on `bit import` 
-- support `bit show --compare` with json format (`bit show component-name --json --compare`)
 - change `bit remote rm` to `bit remote del`
-- run bit init (on every command) if dir is not initialized but contains bit.map.json
-
-## [0.11.2-dev.4] - 2017-12-05
-
+- run bit init automatically if dir is not initialized but contains .bitmap file
 - do not write the component's bit.json file, unless `--conf` flag is set
-- write dist files for imported components according to dist.target configuration in bit.json
-- do not write dist files for imported components, unless `--dist` flag is used
-
-## [0.11.2-dev.3] - 2017-12-05
-
+### Bug Fixes
+- [#517](https://github.com/teambit/bit/issues/517) when a nested dependency is imported directly, re-link all its dependents
+- [#608](https://github.com/teambit/bit/issues/608) absolute components dependencies for new components throw an error
+- [#605](https://github.com/teambit/bit/issues/605) component with modified dependencies doesn't recognize as modified
+- [#592](https://github.com/teambit/bit/issues/592) auto-tagged component were not shown as staged in bit status
+- [#495](https://github.com/teambit/bit/issues/495) support adding files to imported components and ignoring existing files
+- [#500](https://github.com/teambit/bit/issues/500) files added under one component although it was not specified 
+- [#508](https://github.com/teambit/bit/issues/508) componentsDefaultDirectory do not support anything other than one dynamic param per folder
+- [#543](https://github.com/teambit/bit/issues/543) remove imported component not working
+- avoid building process when a component was not modified
 - prevent overriding index file if exists
 
-## [0.11.2-dev.1] - 2017-12-04
-
-- generate link for npm as scoped packages
-- prevent adding AUTHORED component to an IMPORTED component using require relative syntax
-- avoid writing long files paths for imported components when there is a shared directory among the component files and its dependencies
-- fixed bit add output tracking component undefined
 ## [0.11.1] - 2017-11-29
 
 - support tagging the entire local scope and all imported components to a specific tag using `--scope` and `--include_imported` flags

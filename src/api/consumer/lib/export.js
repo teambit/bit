@@ -5,7 +5,6 @@ import ConsumerComponent from '../../../consumer/component/consumer-component';
 import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
 import { BEFORE_EXPORT, BEFORE_EXPORTS } from '../../../cli/loader/loader-messages';
-import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import IdExportedAlready from './exceptions/id-exported-already';
 import { linkComponentsToNodeModules } from '../../../links';
@@ -64,12 +63,12 @@ async function addToBitJson(ids: BitId[], consumer: Consumer) {
   return Promise.all(componentsIdsP);
 }
 
-async function linkComponents(ids: BitId[], consumer: Consumer, bitMap: BitMap): void {
+async function linkComponents(ids: BitId[], consumer: Consumer): void {
   // we don't have much of a choice here, we have to load all the exported components in order to link them
   // some of the components might but authored, some might be imported.
   // when a component has dists, we need the consumer-component object to retrieve the dists info.
   const { components } = await consumer.loadComponents(ids);
-  linkComponentsToNodeModules(components, bitMap, consumer);
+  linkComponentsToNodeModules(components, consumer);
 }
 
 export default (async function exportAction(ids?: string[], remote: string, save: ?boolean) {
@@ -80,9 +79,8 @@ export default (async function exportAction(ids?: string[], remote: string, save
   if (R.isEmpty(idsToExport)) return [];
   const componentsIds = await consumer.scope.exportMany(idsToExport, remote);
   if (save) await addToBitJson(componentsIds, consumer);
-  const bitMap = await consumer.getBitMap();
-  componentsIds.map(componentsId => bitMap.updateComponentId(componentsId));
-  await bitMap.write();
-  await linkComponents(componentsIds, consumer, bitMap);
+  componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
+  await consumer.bitMap.write();
+  await linkComponents(componentsIds, consumer);
   return componentsIds;
 });

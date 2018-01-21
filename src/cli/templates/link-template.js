@@ -1,7 +1,8 @@
 // @flow
 import chalk from 'chalk';
+import type { LinksResult } from '../../links/node-modules-linker';
 
-export default (results: Array<{ id: string, bound: ?Object }>): string => {
+export default (results: LinksResult[]): string => {
   const reportComponents = results
     .map((result) => {
       const bounds = result.bound

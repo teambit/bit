@@ -4,7 +4,6 @@ import semver from 'semver';
 import R from 'ramda';
 import { Version, Component as ModelComponent } from '../../scope/models';
 import { Scope } from '../../scope';
-import { CorruptedComponent } from '../../scope/exceptions';
 import Component from '../component';
 import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
@@ -18,7 +17,7 @@ export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 export default class ComponentsList {
   consumer: Consumer;
   scope: Scope;
-  _bitMap: Object;
+  bitMap: BitMap;
   _fromFileSystem: Promise<string[]> = [];
   _fromBitMap: Object = {};
   _fromObjects: ObjectsList;
@@ -26,6 +25,7 @@ export default class ComponentsList {
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.scope = consumer.scope;
+    this.bitMap = consumer.bitMap;
   }
 
   /**
@@ -143,9 +143,8 @@ export default class ComponentsList {
     const allNewComponents = await this.listNewComponents(true);
     const newComponents = [];
     const importPendingComponents = [];
-    const bitMap = await this.getBitMap();
     allNewComponents.forEach((component) => {
-      const componentMap = bitMap.getComponent(component.id);
+      const componentMap = this.bitMap.getComponent(component.id);
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && component.id.scope) {
         importPendingComponents.push(component);
       } else {
@@ -219,7 +218,6 @@ export default class ComponentsList {
     const { staticParts, dynamicParts } = this.consumer.dirStructure.componentsDirStructure;
     const asterisks = Array(dynamicParts.length).fill('*'); // e.g. ['*', '*', '*']
     const cwd = path.join(this.consumer.getPath(), ...staticParts);
-    const bitMap = await this.getBitMap();
     const idsFromBitMap = await this.idsFromBitMap();
     const idsFromBitMapWithoutScope = await this.idsFromBitMap(false);
     const files = await glob(path.join(...asterisks), { cwd });
@@ -227,7 +225,7 @@ export default class ComponentsList {
     files.forEach((componentDynamicDirStr) => {
       const rootDir = path.join(...staticParts, componentDynamicDirStr);
       // This is an imported components
-      const componentFromBitMap = bitMap.getComponentObjectByRootPath(rootDir);
+      const componentFromBitMap = this.bitMap.getComponentObjectByRootPath(rootDir);
       if (!R.isEmpty(componentFromBitMap)) return;
       const componentDynamicDir = componentDynamicDirStr.split(path.sep);
       const bitIdObj = {};
@@ -280,17 +278,9 @@ export default class ComponentsList {
   async getFromBitMap(origin?: string): Object {
     const cacheKeyName = origin || 'all';
     if (!this._fromBitMap[cacheKeyName]) {
-      const bitMap = await this.getBitMap();
-      this._fromBitMap[cacheKeyName] = bitMap.getAllComponents(origin);
+      this._fromBitMap[cacheKeyName] = this.bitMap.getAllComponents(origin);
     }
     return this._fromBitMap[cacheKeyName];
-  }
-
-  async getBitMap(): Promise<BitMap> {
-    if (!this._bitMap) {
-      this._bitMap = await BitMap.load(this.consumer.getPath());
-    }
-    return this._bitMap;
   }
 
   static sortComponentsByName(components: Component[] | string[]): Component[] | string[] {

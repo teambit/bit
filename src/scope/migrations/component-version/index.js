@@ -5,6 +5,7 @@ import implSpecsToFilesDeclartaion from './to-files';
 import ensureMainFileDeclartaion from './ensure-main-file';
 import specsResultstoArrayDeclartaion from './specs-results-to-array';
 import updateBindingPrefixToNewDefault from './update-binding-prefix-to-new-default';
+import removeLatestFromCompiler from './remove-latest-from-compiler';
 
 export {
   addBindingPrefixDeclartaion,
@@ -13,5 +14,6 @@ export {
   specsResultstoArrayDeclartaion,
   ensureMainFileDeclartaion,
   changeImportSpecifiersToArray,
-  updateBindingPrefixToNewDefault
+  updateBindingPrefixToNewDefault,
+  removeLatestFromCompiler
 };
