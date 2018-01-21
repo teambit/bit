@@ -21,5 +21,8 @@ export default {
   '0.12.0': {
     Component: [componentMigrations.updateBindingPrefixToNewDefault],
     Version: [versionMigrations.updateBindingPrefixToNewDefault]
+  },
+  '0.12.1-dev.1': {
+    Version: [versionMigrations.removeLatestFromCompiler]
   }
 };
