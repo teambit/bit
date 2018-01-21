@@ -1089,6 +1089,12 @@ export default class Consumer {
       await this.removeComponentFromFs(removedDependencies, bitMap, false);
     }
     if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) {
+      await packageJson.removeComponentsFromWorkspacesAndDependencies(
+        this,
+        this.getPath(),
+        bitMap,
+        componensToRemoveFromFs
+      );
       await this.cleanBitMapAndBitJson(bitMap, componensToRemoveFromFs, removedDependencies);
     }
     return new RemovedLocalObjects(
