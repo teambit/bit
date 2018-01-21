@@ -39,7 +39,9 @@ export const BIT_JSON = 'bit.json';
 
 export const GIT_IGNORE = '.gitignore';
 
-export const BIT_MAP = '.bit.map.json';
+export const BIT_MAP = '.bitmap';
+
+export const OLD_BIT_MAP = '.bit.map.json';
 
 export const IGNORE_LIST = [
   '**/.bit.map.json',
@@ -273,6 +275,10 @@ export const BIT_TMP_DIRNAME = 'tmp';
 export const BIT_CACHE_DIRNAME = 'cache';
 
 export const LATEST_TESTED_MARK = '*';
+
+export const ASTERISK = '*';
+
+export const COMPONENTES_DEPENDECIES_REGEX = '/*/*/*/*';
 
 export const SCOPE_JSON = 'scope.json';
 

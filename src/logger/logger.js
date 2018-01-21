@@ -2,6 +2,7 @@
 import winston from 'winston';
 import path from 'path';
 import { GLOBAL_LOGS } from '../constants';
+import { setTimeout } from 'timers';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
 // in case the extension developer use api.logger more than once

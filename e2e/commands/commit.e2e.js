@@ -199,6 +199,7 @@ describe('bit tag command', function () {
       });`;
       helper.createComponentBarFoo();
       helper.createFile('bar', 'foo.spec.js', failingTest);
+      helper.addNpmPackage('chai', '4.1.2');
       helper.addComponentWithOptions('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
     });
     it('should throw error if the bit id does not exists', () => {
@@ -208,7 +209,7 @@ describe('bit tag command', function () {
       } catch (err) {
         output = err.message;
       }
-      expect(output).to.have.string('fatal: the component non/existing was not found in the bit.map file');
+      expect(output).to.have.string('fatal: the component non/existing was not found in the .bitmap file');
     });
 
     it.skip('should print warning if the a driver is not installed', () => {

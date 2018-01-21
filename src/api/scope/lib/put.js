@@ -21,8 +21,8 @@ export default function put(
   HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, componentObjects }, headers);
 
   return loadScope(path).then((scope) => {
-    return scope.exportManyBareScope(componentObjects).then((componentsIds) => {
-      HooksManagerInstance.triggerHook(
+    return scope.exportManyBareScope(componentObjects).then(async (componentsIds) => {
+      await HooksManagerInstance.triggerHook(
         POST_RECEIVE_OBJECTS,
         {
           componentObjects,

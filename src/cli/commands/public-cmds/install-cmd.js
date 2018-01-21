@@ -1,58 +1,20 @@
 /** @flow */
 import Command from '../../command';
-import { importAction } from '../../../api/consumer';
-import Component from '../../../consumer/component';
-import { ComponentWithDependencies } from '../../../scope';
-import Import from './import-cmd';
+import { installAction } from '../../../api/consumer';
+import linkTemplate from '../../templates/link-template';
 
-/**
- * @deprecated
- */
 export default class Install extends Command {
   name = 'install';
-  description = 'install bit components from bit.json file';
+  description = 'install packages of all components and link them';
   alias = '';
-  opts = [
-    ['e', 'environment', 'install development environment dependencies (compiler | tester)'],
-    ['v', 'verbose', 'show a more verbose output when possible'],
-    ['p', 'prefix', 'install components into a specific directory']
-  ];
+  opts = [['v', 'verbose', 'show a more verbose output when possible']];
   loader = true;
-  private = true;
 
-  action(
-    args: string[],
-    {
-      verbose,
-      prefix,
-      environment
-    }: {
-      verbose?: boolean,
-      prefix?: boolean,
-      environment?: boolean
-    }
-  ): Promise<any> {
-    if (prefix) {
-      return Promise.reject(new Error('prefix option currently not supported'));
-    }
-
-    return importAction({ ids: [], tester: false, compiler: false, verbose, prefix, environment });
+  action(args: string[], { verbose }: { verbose?: boolean }): Promise<any> {
+    return installAction(verbose);
   }
 
-  report({
-    dependencies,
-    envDependencies,
-    warnings
-  }: {
-    dependencies?: ComponentWithDependencies[],
-    envDependencies?: Component[],
-    warnings?: {
-      notInPackageJson: [],
-      notInNodeModules: [],
-      notInBoth: []
-    }
-  }): string {
-    const importCmd = new Import();
-    return importCmd.report({ dependencies, envDependencies, warnings });
+  report(results): string {
+    return linkTemplate(results);
   }
 }

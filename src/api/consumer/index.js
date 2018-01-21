@@ -9,6 +9,7 @@ import status from './lib/status';
 import { build, buildAll } from './lib/build';
 import reset from './lib/reset';
 import importAction from './lib/import';
+import installAction from './lib/install';
 import exportAction from './lib/export';
 import getConsumerComponent from './lib/get-consumer-component';
 import getScopeComponent from './lib/get-scope-component';
@@ -40,6 +41,7 @@ export {
   build,
   reset,
   importAction,
+  installAction,
   getConsumerComponent,
   getScopeComponent,
   getComponentLogs,

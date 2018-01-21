@@ -6,7 +6,14 @@ import find from 'lodash.find';
 import pickBy from 'lodash.pickby';
 import json from 'comment-json';
 import logger from '../../logger/logger';
-import { BIT_MAP, DEFAULT_INDEX_NAME, COMPONENT_ORIGINS, DEFAULT_SEPARATOR, DEFAULT_INDEX_EXTS } from '../../constants';
+import {
+  BIT_MAP,
+  OLD_BIT_MAP,
+  DEFAULT_INDEX_NAME,
+  COMPONENT_ORIGINS,
+  DEFAULT_SEPARATOR,
+  DEFAULT_INDEX_EXTS
+} from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
 import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } from '../../utils';
@@ -34,13 +41,17 @@ export default class BitMap {
     this.paths = {};
   }
 
-  static async load(dirPath: string): Promise<BitMap> {
-    const mapPath = path.join(dirPath, BIT_MAP);
+  static load(dirPath: string): BitMap {
+    // support old bitmaps
+    const mapPath =
+      fs.existsSync(path.join(dirPath, OLD_BIT_MAP)) && !fs.existsSync(path.join(dirPath, BIT_MAP))
+        ? path.join(dirPath, OLD_BIT_MAP)
+        : path.join(dirPath, BIT_MAP);
     const components = {};
     let version;
     if (fs.existsSync(mapPath)) {
       try {
-        const mapFileContent = await readFile(mapPath);
+        const mapFileContent = fs.readFileSync(mapPath);
         const componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
         version = componentsJson.version;
         // Don't treat version like component

@@ -1,10 +1,17 @@
 /** @flow */
 
 import R from 'ramda';
+import format from 'string-format';
 import { BitId } from '../../bit-id';
 import Component from '../component';
-import { COMPONENT_ORIGINS, CFG_REGISTRY_DOMAIN_PREFIX, DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
-import BitMap from '../bit-map/bit-map';
+import {
+  COMPONENT_ORIGINS,
+  CFG_REGISTRY_DOMAIN_PREFIX,
+  DEFAULT_REGISTRY_DOMAIN_PREFIX,
+  DEFAULT_SEPARATOR,
+  ASTERISK,
+  COMPONENTES_DEPENDECIES_REGEX
+} from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import { filterAsync, pathNormalizeToLinux, pathRelative } from '../../utils';
 import { getSync } from '../../api/consumer/lib/global-config';
@@ -13,9 +20,9 @@ import Consumer from '../consumer';
 /**
  * Add components as dependencies to root package.json
  */
-async function addComponentsToRoot(consumer: Consumer, components: Component[], bitMap: BitMap) {
+async function addComponentsToRoot(consumer: Consumer, components: Component[]) {
   const importedComponents = await filterAsync(components, (component: Component) => {
-    const componentMap = component.getComponentMap(bitMap);
+    const componentMap = component.getComponentMap(consumer.bitMap);
     return componentMap.origin === COMPONENT_ORIGINS.IMPORTED;
   });
   if (!importedComponents || !importedComponents.length) return;
@@ -51,9 +58,8 @@ function getPackageDependencyValue(
 }
 
 async function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId) {
-  const bitMap = await consumer.getBitMap();
-  const dependencyComponentMap = bitMap.getComponent(dependencyId);
-  const parentComponentMap = bitMap.getComponent(parentId);
+  const dependencyComponentMap = consumer.bitMap.getComponent(dependencyId);
+  const parentComponentMap = consumer.bitMap.getComponent(parentId);
   return getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);
 }
 
@@ -62,12 +68,11 @@ async function changeDependenciesToRelativeSyntax(
   components: Component[],
   dependencies: Component[]
 ) {
-  const bitMap = await consumer.getBitMap();
   const dependenciesIds = dependencies.map(dependency => dependency.id.toStringWithoutVersion());
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   const updateComponent = async (component) => {
-    const componentMap = component.getComponentMap(bitMap);
+    const componentMap = component.getComponentMap(consumer.bitMap);
     let packageJson;
     try {
       packageJson = await PackageJson.load(componentMap.rootDir);
@@ -78,7 +83,7 @@ async function changeDependenciesToRelativeSyntax(
       const dependencyId = dependency.id.toStringWithoutVersion();
       if (dependenciesIds.includes(dependencyId)) {
         const dependencyComponent = dependencies.find(d => d.id.toStringWithoutVersion() === dependencyId);
-        const dependencyComponentMap = dependencyComponent.getComponentMap(bitMap);
+        const dependencyComponentMap = dependencyComponent.getComponentMap(consumer.bitMap);
         const dependencyLocation = getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);
         return [dependencyId, dependencyLocation];
       }
@@ -99,7 +104,8 @@ async function write(
   component: Component,
   bitDir: string,
   force?: boolean = true,
-  writeBitDependencies?: boolean = false
+  writeBitDependencies?: boolean = false,
+  excludeRegistryPrefix?: boolean
 ): Promise<boolean> {
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
   const getBitDependencies = async () => {
@@ -112,7 +118,9 @@ async function write(
   };
   const bitDependencies = await getBitDependencies();
   const registryPrefix = getRegistryPrefix();
-  const name = `${registryPrefix}/${component.id.toStringWithoutVersion().replace(/\//g, '.')}`;
+  const name = excludeRegistryPrefix
+    ? component.id.toStringWithoutVersion().replace(/\//g, '.')
+    : `${registryPrefix}/${component.id.toStringWithoutVersion().replace(/\//g, '.')}`;
   const packageJson = new PackageJson(bitDir, {
     name,
     version: component.version,
@@ -140,4 +148,44 @@ async function updateAttribute(consumer: Consumer, componentDir, attributeName, 
   }
 }
 
-export { addComponentsToRoot, changeDependenciesToRelativeSyntax, write, updateAttribute };
+/**
+ * Adds workspace array to package.json - only if user wants to work with yarn workspaces
+ *
+ * formatedComponentsPath- used to resolve import path dsl. replacing all {}->*
+ * for example {components/{namespace} -> components/*
+ *
+ */
+async function addWorkspacesToPackageJson(
+  consumer: Consumer,
+  rootDir: string,
+  componentsDefaultDirectory: string,
+  dependenciesDirectory: string,
+  customImportPath: ?string
+) {
+  if (
+    consumer.bitJson.manageWorkspaces &&
+    consumer.bitJson.packageManager === 'yarn' &&
+    consumer.bitJson.useWorkspaces
+  ) {
+    const formatedComponentsPath = format(componentsDefaultDirectory, {
+      name: ASTERISK,
+      scope: ASTERISK,
+      namespace: ASTERISK
+    });
+    const formatedRegexPath = formatedComponentsPath
+      .split(DEFAULT_SEPARATOR)
+      .map(part => (R.contains(ASTERISK, part) ? ASTERISK : part))
+      .join(DEFAULT_SEPARATOR);
+    const driver = await consumer.driver.getDriver(false);
+    const PackageJson = driver.PackageJson;
+
+    await PackageJson.addWorkspacesToPackageJson(
+      rootDir,
+      formatedRegexPath,
+      dependenciesDirectory + COMPONENTES_DEPENDECIES_REGEX,
+      customImportPath
+    );
+  }
+}
+
+export { addComponentsToRoot, changeDependenciesToRelativeSyntax, write, updateAttribute, addWorkspacesToPackageJson };

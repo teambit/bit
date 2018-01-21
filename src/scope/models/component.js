@@ -122,8 +122,7 @@ export default class Component extends BitObject {
   collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } }> {
     return repo.findMany(this.versionArray).then((versions) => {
       const indexedLogs = fromPairs(zip(keys(this.versions), map(prop('log'), versions)));
-      const indexedHashes = mapObjIndexed(ref => objOf('hash', ref.toString()), this.versions);
-      return mergeWith(merge, indexedLogs, indexedHashes);
+      return indexedLogs;
     });
   }
 
@@ -205,7 +204,7 @@ export default class Component extends BitObject {
    * @memberof Component
    */
   remove(repo: Repository, deepRemove: boolean = false): Promise {
-    const objectRefs = deepRemove ? this.collectRefs(repo) : this.versionArray;
+    const objectRefs = deepRemove ? this.collectExistingRefs(repo, false).filter(x => x) : this.versionArray;
     const uniqRefs = uniqBy(objectRefs, 'hash');
     return repo.removeMany(uniqRefs.concat([this.hash()]));
   }

@@ -64,6 +64,25 @@ export default class Helper {
     return fs.readJSONSync(bitJsonPath) || {};
   }
 
+  createPackageJson(
+    name: string = 'test',
+    version: string = '0.0.1',
+    packageJsonPath: string = path.join(this.localScopePath, 'package.json')
+  ) {
+    const packageJson = { name, version };
+    fs.writeJSONSync(packageJsonPath, packageJson);
+  }
+  manageWorkspaces(withWorkspaces: boolean = true, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+    const bitJson = this.readBitJson(bitJsonPath);
+    bitJson.packageManager = 'yarn';
+    bitJson.manageWorkspaces = withWorkspaces;
+    bitJson.useWorkspaces = withWorkspaces;
+    this.writeBitJson(bitJson);
+  }
+  addkeyValueToPackageJson(data: Object, pkgJsonPath: string = path.join(this.localScopePath)) {
+    const pkgJson = this.readPackageJson(pkgJsonPath);
+    fs.writeJSONSync(path.join(pkgJsonPath, 'package.json'), Object.assign(pkgJson, data));
+  }
   readPackageJson(packageJsonFolder: string = this.localScopePath) {
     const packageJsonPath = path.join(packageJsonFolder, 'package.json');
     return fs.readJSONSync(packageJsonPath) || {};
@@ -74,7 +93,7 @@ export default class Helper {
     return fs.writeJSONSync(bitJsonPath, bitJson);
   }
 
-  readBitMap(bitMapPath: string = path.join(this.localScopePath, '.bit.map.json'), withoutComment: boolean = true) {
+  readBitMap(bitMapPath: string = path.join(this.localScopePath, '.bitmap'), withoutComment: boolean = true) {
     const map = fs.readFileSync(bitMapPath) || {};
     return json.parse(map.toString('utf8'), null, withoutComment);
   }
@@ -86,7 +105,7 @@ export default class Helper {
   }
 
   writeBitMap(bitMap: Object) {
-    const bitMapPath = path.join(this.localScopePath, '.bit.map.json');
+    const bitMapPath = path.join(this.localScopePath, '.bitmap');
     return fs.writeJSONSync(bitMapPath, bitMap);
   }
   setComponentsDirInBitJson(content: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
@@ -138,9 +157,10 @@ export default class Helper {
         mainFile: 'bar/foo.js',
         origin: 'AUTHORED'
       }
-    }
+    },
+    oldBitMapFile: boolean = false
   ) {
-    const bitmapFile = path.join(cwd, '.bit.map.json');
+    const bitmapFile = path.join(cwd, oldBitMapFile ? '.bit.map.json' : '.bitmap');
 
     const bitmap = {
       version: '0.11.1-testing'
@@ -219,6 +239,18 @@ export default class Helper {
     this.runCmd('bit init');
     this.addRemoteScope();
     return withDist ? this.runCmd('bit import') : this.runCmd('bit import --ignore-dist');
+  }
+
+  mimicGitCloneLocalProjectWithoutImport() {
+    fs.removeSync(path.join(this.localScopePath, '.bit'));
+    this.runCmd('bit init');
+    const directories = glob.sync(path.normalize('**/'), { cwd: this.localScopePath, dot: true });
+    // delete all node-modules from all directories
+    directories.forEach((dir) => {
+      if (dir.includes('node_modules')) {
+        fs.removeSync(path.join(this.localScopePath, dir));
+      }
+    });
   }
 
   getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true) {

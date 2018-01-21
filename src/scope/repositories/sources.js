@@ -20,6 +20,7 @@ import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Consumer } from '../../consumer';
 import logger from '../../logger/logger';
+import Repository from '../objects/repository';
 
 export type ComponentTree = {
   component: Component,
@@ -267,9 +268,25 @@ export default class SourceRepository {
 
   put({ component, objects }: ComponentTree): Component {
     logger.debug(`sources.put, id: ${component.id()}`);
-    const repo = this.objects();
+    const repo: Repository = this.objects();
     repo.add(component);
-    objects.forEach(obj => repo.add(obj));
+
+    const isObjectShouldBeAdded = (obj) => {
+      // don't add a component if it's already exist locally with more versions
+      if (obj instanceof Component) {
+        const loaded = repo.loadSync(obj.hash(), false);
+        if (loaded) {
+          if (Object.keys(loaded.versions) > Object.keys(obj.versions)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+
+    objects.forEach((obj) => {
+      if (isObjectShouldBeAdded(obj)) repo.add(obj);
+    });
     return component;
   }
   /**
@@ -293,20 +310,24 @@ export default class SourceRepository {
   clean(bitId: BitId, deepRemove: boolean = false): Promise<void> {
     return this.get(bitId).then((component) => {
       if (!component) return;
-      if (bitId.version !== LATEST_BIT_VERSION && Object.keys(component.versions).length > 1) {
-        return this.removeVersion(component, bitId);
-      }
       return component.remove(this.objects(), deepRemove);
     });
   }
 
   /**
    * Adds the objects into scope.object array, in-memory. It doesn't save anything to the file-system.
+   *
+   * When this function get called originally from import command, the 'force' parameter is true. Otherwise, if it was
+   * originated from export command, it'll be false.
+   * If the 'force' is true and the existing component wasn't changed locally (existingComponent.local if false), it
+   * doesn't check for discrepancies, but simply override the existing component.
+   * When using import command, it makes sense to override a component in case of discrepancies because the source of
+   * true should be the remote scope from where the import fetches the component.
    */
-  merge({ component, objects }: ComponentTree, inScope: boolean = false): Promise<Component> {
+  merge({ component, objects }: ComponentTree, inScope: boolean = false, force: boolean = true): Promise<Component> {
     if (inScope) component.scope = this.scope.name;
-    return this.findComponent(component).then((existingComponent) => {
-      if (!existingComponent || component.compatibleWith(existingComponent)) {
+    return this.findComponent(component).then((existingComponent: ?Component) => {
+      if (!existingComponent || (force && !existingComponent.local) || component.compatibleWith(existingComponent)) {
         return this.put({ component, objects });
       }
 

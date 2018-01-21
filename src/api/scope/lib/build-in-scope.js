@@ -7,20 +7,20 @@ import logger from '../../../logger/logger';
 
 export default function buildInScope({
   id,
-  environment,
   save,
   verbose,
   scopePath,
   directory,
-  keep
+  keep,
+  isCI = true
 }: {
   id: string,
-  environment: ?boolean,
   save: ?boolean,
   verbose: ?boolean,
   scopePath: string,
   directory: ?string,
-  keep: boolean
+  keep: boolean,
+  isCI: boolean
 }) {
   logger.debug(`buildInScope, id: ${id}, scopePath: ${scopePath}`);
   function loadFromScope(initialError: ?Error) {
@@ -28,10 +28,7 @@ export default function buildInScope({
       .catch(newErr => Promise.reject(initialError || newErr))
       .then((scope: Scope) => {
         const bitId = BitId.parse(id);
-        const ciComponent = {};
-        return scope
-          .build({ bitId, environment, save, verbose, directory, keep, ciComponent })
-          .then(buildResults => ({ component: ciComponent.comp, buildResults }));
+        return scope.build({ bitId, save, verbose, directory, keep, isCI });
       })
       .catch(e => Promise.reject(e));
   }
@@ -39,7 +36,7 @@ export default function buildInScope({
   function loadFromConsumer() {
     return loadConsumer().then((consumer) => {
       const bitId = BitId.parse(id);
-      return consumer.scope.build({ bitId, environment, save, consumer, verbose });
+      return consumer.scope.build({ bitId, save, consumer, verbose });
     });
   }
 

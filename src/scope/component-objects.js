@@ -2,6 +2,8 @@
 import BitObject from './objects/object';
 import Repository from './objects/repository';
 import { toBase64ArrayBuffer } from '../utils';
+import { typesObj } from './object-registrar';
+// import logger from '../logger/logger';
 
 export default class ComponentObjects {
   component: Buffer;
@@ -17,6 +19,12 @@ export default class ComponentObjects {
       component: toBase64ArrayBuffer(this.component),
       objects: this.objects.map(toBase64ArrayBuffer)
     });
+  }
+
+  // Used mainly by server side hooks
+  getParsedComponent(): BitObject {
+    const component = BitObject.parseSync(this.component, typesObj);
+    return component;
   }
 
   // @TODO optimize ASAP.

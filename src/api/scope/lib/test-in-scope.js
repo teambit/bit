@@ -7,20 +7,20 @@ import logger from '../../../logger/logger';
 
 export default function testInScope({
   id,
-  environment,
   save,
   verbose,
   scopePath,
   directory,
-  keep
+  keep,
+  isCI = true
 }: {
   id: string,
-  environment?: ?boolean,
   save?: ?boolean,
   verbose?: ?boolean,
   scopePath: string,
   directory?: string,
-  keep?: boolean
+  keep?: boolean,
+  isCI?: boolean
 }) {
   logger.debug(`testInScope, id: ${id}, scopePath: ${scopePath}`);
   function loadFromScope(initialError: ?Error) {
@@ -30,12 +30,12 @@ export default function testInScope({
         const bitId = BitId.parse(id);
         return scope.runComponentSpecs({
           bitId,
-          environment,
           save,
           verbose,
           isolated: true,
           directory,
-          keep
+          keep,
+          isCI
         });
       })
       .catch(e => Promise.reject(e));
@@ -47,10 +47,10 @@ export default function testInScope({
       return consumer.scope.runComponentSpecs({
         consumer,
         bitId,
-        environment,
         save,
         verbose,
-        isolated: true
+        isolated: true,
+        isCI
       });
     });
   }

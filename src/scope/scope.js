@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
 import find from 'lodash.find';
+import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
@@ -298,6 +299,15 @@ export default class Scope {
         if (flattenedDependencies) return Promise.resolve(flattenedDependencies);
 
         // Calculate the flatten dependencies
+        if (
+          consumerComponentsIdsMap.has(dependency.id.toStringWithoutVersion()) ||
+          consumerComponentsIdsMap.has(dependency.id.toString())
+        ) {
+          // when a dependency includes in the components list to tag, don't use the existing version, because the
+          // existing version will be obsolete once it's tagged. Instead, remove the version, and later on, when
+          // importDependencies is called, it'll fetch the newly tagged version.
+          dependency.id.version = undefined;
+        }
         const versionDependencies = await this.importDependencies([dependency.id]);
         // Copy the exact version from flattenedDependency to dependencies
         if (!dependency.id.hasVersion()) {
@@ -314,16 +324,9 @@ export default class Scope {
       return Promise.all(flattenedDependenciesP);
     };
 
-    // @todo: to make them all run in parallel, we have to first get all compilers from all components, install all
-    // environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
     logger.debug('scope.putMany: sequentially build all components');
-    loader.start(BEFORE_RUNNING_BUILD);
-    for (const consumerComponentId of sortedConsumerComponentsIds) {
-      const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
-      if (consumerComponent) {
-        await consumerComponent.build({ scope: this, consumer });
-      }
-    }
+    const componentsToBuild = sortedConsumerComponentsIds.map(id => consumerComponentsIdsMap.get(id)).filter(c => c);
+    await this.buildMultiple(componentsToBuild, consumer);
 
     logger.debug('scope.putMany: sequentially test all components');
     loader.start(BEFORE_RUNNING_SPECS);
@@ -396,6 +399,20 @@ export default class Scope {
     await this.objects.persist();
 
     return components;
+  }
+
+  /**
+   * Build multiple components sequentially, not in parallel.
+   */
+  async buildMultiple(components: Component[], consumer: Consumer, writeDists = false) {
+    // @todo: to make them all run in parallel, we have to first get all compilers from all components, install all
+    // environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
+    logger.debug('scope.buildMultiple: sequentially build multiple components');
+    loader.start(BEFORE_RUNNING_BUILD);
+    for (const component of components) {
+      await component.build({ scope: this, consumer });
+      if (writeDists) await component.writeDists(consumer);
+    }
   }
 
   /**
@@ -480,7 +497,7 @@ export default class Scope {
   async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<string[]> {
     logger.debug(`exportManyBareScope: Going to save ${componentsObjects.length} components`);
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
-    await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true)));
+    await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true, false)));
     const manyCompVersions = await Promise.all(
       manyObjects.map(objects => objects.component.toComponentVersion(LATEST))
     );
@@ -809,6 +826,7 @@ export default class Scope {
 
     await this.removeComponent(bitId, componentList, false);
     if (Object.keys(component.component.versions).length <= 1) bitId.version = LATEST_BIT_VERSION;
+
     return { bitId, removedDependencies };
   }
 
@@ -830,6 +848,7 @@ export default class Scope {
         const loadedVersions = await Promise.all(
           Object.keys(component.versions).map(async (version) => {
             const componentVersion = await component.loadVersion(version, this.objects);
+            if (!componentVersion) return;
             componentVersion.id = BitId.parse(component.id());
             return componentVersion;
           })
@@ -837,16 +856,16 @@ export default class Scope {
         return loadedVersions.filter(x => x);
       })
     );
-    const allConsumerComponents = R.flatten(allComponentVersions.filter(x => x != null));
+    const allScopeComponents = R.flatten(allComponentVersions);
     const dependentBits = {};
     bitIds.forEach((bitId) => {
       const dependencies = [];
-      allConsumerComponents.forEach((stagedComponent) => {
-        stagedComponent.flattenedDependencies.forEach((flattenedDependence) => {
+      allScopeComponents.forEach((scopeComponents) => {
+        scopeComponents.flattenedDependencies.forEach((flattenedDependence) => {
           if (flattenedDependence.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
             returnResultsWithVersion
-              ? dependencies.push(stagedComponent.id.toString())
-              : dependencies.push(stagedComponent.id.toStringWithoutVersion());
+              ? dependencies.push(scopeComponents.id.toString())
+              : dependencies.push(scopeComponents.id.toStringWithoutVersion());
           }
         });
       });
@@ -896,7 +915,8 @@ export default class Scope {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const deprecateComponents = () => foundComponents.map(async bitId => this.deprecateSingle(bitId));
     const deprecatedComponents = await Promise.all(deprecateComponents());
-    return { bitIds: deprecatedComponents, missingComponents };
+    const missingComponentsStrings = missingComponents.map(id => id.toStringWithoutVersion());
+    return { bitIds: deprecatedComponents, missingComponents: missingComponentsStrings };
   }
 
   reset({ bitId, consumer }: { bitId: BitId, consumer?: Consumer }): Promise<consumerComponent> {
@@ -1089,7 +1109,8 @@ export default class Scope {
       verbose
     };
     const idsWithoutNils = removeNils(ids);
-    const isolateComponentsP = idsWithoutNils.map(async (id) => {
+
+    const importEnv = async (id) => {
       let concreteId = id;
       if (id.getVersion().latest) {
         const concreteIds = await this.fetchRemoteVersions([id]);
@@ -1099,8 +1120,8 @@ export default class Scope {
       const env = new IsolatedEnvironment(this, dir);
       await env.create();
       return env.isolateComponent(id, isolateOpts);
-    });
-    return Promise.all(isolateComponentsP);
+    };
+    return pMapSeries(idsWithoutNils, importEnv);
   }
 
   async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {
@@ -1165,21 +1186,21 @@ export default class Scope {
   async runComponentSpecs({
     bitId,
     consumer,
-    environment,
     save,
     verbose,
     isolated,
     directory,
-    keep
+    keep,
+    isCI = false
   }: {
     bitId: BitId,
     consumer?: ?Consumer,
-    environment?: ?boolean,
     save?: ?boolean,
     verbose?: ?boolean,
     isolated?: boolean,
     directory?: string,
-    keep?: boolean
+    keep?: boolean,
+    isCI?: boolean
   }): Promise<?any> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run specs on remote component');
@@ -1189,39 +1210,37 @@ export default class Scope {
     return component.runSpecs({
       scope: this,
       consumer,
-      environment,
       save,
       verbose,
       isolated,
       directory,
-      keep
+      keep,
+      isCI
     });
   }
 
   async build({
     bitId,
-    environment,
     save,
     consumer,
     verbose,
     directory,
     keep,
-    ciComponent
+    isCI
   }: {
     bitId: BitId,
-    environment?: ?boolean,
     save?: ?boolean,
     consumer?: Consumer,
     verbose?: ?boolean,
     directory: ?string,
     keep: ?boolean,
-    ciComponent: any
+    isCI: ?boolean
   }): Promise<string> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run build on remote component');
     }
     const component = await this.loadComponent(bitId);
-    return component.build({ scope: this, environment, save, consumer, verbose, directory, keep, ciComponent });
+    return component.build({ scope: this, save, consumer, verbose, directory, keep, isCI });
   }
 
   /**

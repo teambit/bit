@@ -16,7 +16,7 @@ export default function searchFilesIgnoreExt(
 
   if (files && !R.isEmpty(files)) {
     const foundFile = R.find(_byFileNoExt, files);
-    const foundFileResult = returnProp ? foundFile[returnProp] : foundFile;
+    const foundFileResult = foundFile && returnProp && foundFile[returnProp] ? foundFile[returnProp] : foundFile;
     return foundFileResult;
   }
   return null;

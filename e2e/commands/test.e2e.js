@@ -90,7 +90,7 @@ describe('bit test command', function () {
       } catch (err) {
         output = err.message;
       }
-      expect(output).to.have.string('fatal: the component bar/foo was not found in the bit.map file');
+      expect(output).to.have.string('fatal: the component bar/foo was not found in the .bitmap file');
     });
   });
   describe('when there is before hook which fail', () => {
@@ -146,6 +146,7 @@ describe('bit test command', function () {
       helper.createComponent('utils', 'is-type.js', isTypeFixture);
       helper.createComponent('utils', 'is-type.spec.js', isTypeSpecFixture(true));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
+      helper.addNpmPackage('chai', '4.1.2');
       helper.commitComponent('utils/is-type');
 
       helper.reInitRemoteScope();

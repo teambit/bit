@@ -17,7 +17,7 @@ export default class Deprecate extends Command {
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
     return migrate(scopePath, false).then(() => {
-      return deprecate({ path: scopePath, bitIds: payload.bitIds }, headers);
+      return deprecate({ path: scopePath, ids: payload.bitIds }, headers);
     });
   }
 

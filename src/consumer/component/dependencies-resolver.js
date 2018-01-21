@@ -2,15 +2,14 @@
 import path from 'path';
 import R from 'ramda';
 import { DEFAULT_INDEX_NAME, COMPONENT_ORIGINS } from '../../constants';
-import BitMap from '../bit-map/bit-map';
-import type { ComponentMapFile } from '../bit-map/component-map';
 import ComponentMap from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
-import { pathNormalizeToLinux, pathRelative, getWithoutExt } from '../../utils';
+import { pathNormalizeToLinux, pathRelative, pathJoinLinux } from '../../utils';
 import logger from '../../logger/logger';
 import { Consumer } from '../../consumer';
+import type { RelativePath } from './consumer-component';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -25,26 +24,28 @@ import { Consumer } from '../../consumer';
  * @param {Object} tree - contains direct deps for each file
  * @param {string[]} files - component files to search
  * @param {string} entryComponentId - component id for the entry of traversing - used to know which of the files are part of that component
- * @param {BitMap} bitMap
- * @param {string} consumerPath
+ * @param {consumer} consumer
  * @param {string} bindingPrefix
  * @param componentFromModel
+ * @param driver
  */
 function findComponentsOfDepsFiles(
   tree: Object,
   files: string[],
   entryComponentId: string,
-  bitMap: BitMap,
-  consumerPath: string,
+  consumer: Consumer,
   bindingPrefix: string,
-  componentFromModel
+  componentFromModel,
+  driver: Driver
 ): Object {
   const packagesDeps = {};
   const componentsDeps = {};
   const untrackedDeps = [];
   const relativeDeps = []; // dependencies that are required with relative path (and should be required using 'bit/').
   const missingDeps = [];
-  const entryComponentMap = bitMap.getComponent(entryComponentId);
+
+  const consumerPath = consumer.getPath();
+  const entryComponentMap = consumer.bitMap.getComponent(entryComponentId);
   const rootDir = entryComponentMap.rootDir;
   const processedFiles = [];
 
@@ -55,7 +56,7 @@ function findComponentsOfDepsFiles(
       for (const file of tree[depFile].files) {
         const fullDepFile = path.resolve(rootDirFullPath, file);
         const depRelativeToConsumer = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
-        const componentId = bitMap.getComponentIdByPath(depRelativeToConsumer);
+        const componentId = consumer.bitMap.getComponentIdByPath(depRelativeToConsumer);
         if (componentId) return componentId;
       }
     }
@@ -90,27 +91,44 @@ function findComponentsOfDepsFiles(
       depFileRelative = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
     }
 
-    componentId = bitMap.getComponentIdByPath(depFileRelative);
+    componentId = consumer.bitMap.getComponentIdByPath(depFileRelative);
     // if not found here, the file is not a component file. It might be a bit-auto-generated file.
     // find the component file by the auto-generated file.
     // We make sure also that rootDir is there, otherwise, it's an AUTHORED component, which shouldn't have
     // auto-generated files.
-    if (rootDir && !componentId) {
+    if (!componentId && rootDir) {
       componentId = traverseTreeForComponentId(depFile);
       if (componentId) {
         // it is verified now that this depFile is an auto-generated file, therefore the sourceRelativePath and the
         // destinationRelativePath should be a partial-path and not full-relative-to-consumer path.
-        const componentMap = bitMap.getComponent(componentId);
-        if (componentMap) destination = componentMap.getOriginallyMainFilePath();
-        else {
-          // when there is no componentMap, the bit dependency was imported as a npm package.
-          // we're missing two things, which can be obtained from the model: 1) version. 2) mainFile.
-          const dependency = componentFromModel.dependencies.find(
-            dep => dep.id.toStringWithoutVersion() === componentId
+        // since the dep-file is a generated file, it is safe to assume that the componentFromModel has in its
+        // dependencies array this component with the relativePaths array. Find the relativePath of this dep-file
+        // to get the correct destinationRelativePath. There is no other way to obtain this info.
+        const componentBitId = BitId.parse(componentId);
+        const dependency = componentFromModel.component.dependencies.find(
+          dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion()
+        );
+        if (!dependency) {
+          throw new Error(
+            `the auto-generated file ${depFile} should be connected to ${
+              componentId
+            }, however, it's not part of the model dependencies of ${componentFromModel.id}`
           );
-          destination = dependency.mainFile;
-          componentId = dependency.id.toString();
         }
+        const originallySource = entryComponentMap.originallySharedDir
+          ? pathJoinLinux(entryComponentMap.originallySharedDir, depFile)
+          : depFile;
+        const relativePath: RelativePath = dependency.relativePaths.find(
+          r => r.sourceRelativePath === originallySource
+        );
+        if (!relativePath) {
+          throw new Error(
+            `unable to find ${originallySource} path in the dependencies relativePaths of ${componentFromModel.id}`
+          );
+        }
+
+        componentId = dependency.id.toString();
+        destination = relativePath.destinationRelativePath;
 
         depFileRelative = depFile; // change it back to partial-part, this will be later on the sourceRelativePath
       }
@@ -133,7 +151,7 @@ function findComponentsOfDepsFiles(
     // happens when in the same component one file requires another one. In this case, there is noting to do
     if (componentId === entryComponentId) return;
 
-    const componentMap = bitMap.getComponent(componentId);
+    const componentMap = consumer.bitMap.getComponent(componentId);
     // found a dependency component. Add it to componentsDeps
     const depRootDir = componentMap ? componentMap.rootDir : undefined;
     const destinationRelativePath =
@@ -201,11 +219,25 @@ function findComponentsOfDepsFiles(
       currentBitsDeps.forEach((bitDep) => {
         const componentId = Consumer.getComponentIdFromNodeModulesPath(bitDep, bindingPrefix);
         const getExistingId = () => {
-          const existingId = bitMap.getExistingComponentId(componentId);
+          let existingId = consumer.bitMap.getExistingComponentId(componentId);
           if (existingId) return existingId;
+
           // maybe the dependencies were imported as npm packages
-          const modelDep = componentFromModel.dependencies.find(dep => dep.id.toStringWithoutVersion() === componentId);
-          if (modelDep) return modelDep.id.toString();
+          if (bitDep.startsWith('node_modules')) {
+            const depPath = path.join(consumerPath, bitDep);
+            const packageJson = driver.driver.PackageJson.findPackage(depPath);
+            if (packageJson) {
+              const depVersion = packageJson.version;
+              existingId = BitId.parse(componentId, depVersion);
+              return existingId.toString();
+            }
+          }
+          if (componentFromModel) {
+            const modelDep = componentFromModel.dependencies.find(
+              dep => dep.id.toStringWithoutVersion() === componentId
+            );
+            if (modelDep) return modelDep.id.toString();
+          }
           return null;
         };
         const existingId = getExistingId();
@@ -247,28 +279,28 @@ function findComponentsOfDepsFiles(
  * @param {Array<Object>} depTrees
  * @return {{missing: {packages: Array, files: Array}, tree: {}}}
  */
-function mergeDependencyTrees(depTrees: Array<Object>): Object {
-  const dependencyTree = {
-    missing: { packages: [], files: [], bits: [] },
-    tree: {}
-  };
-  depTrees.forEach((dep) => {
-    if (dep.missing.packages.length) {
-      dependencyTree.missing.packages.push(...dep.missing.packages);
-    }
-    if (dep.missing.files && dep.missing.files.length) {
-      dependencyTree.missing.files.push(...dep.missing.files);
-    }
-    if (dep.missing.bits) {
-      dependencyTree.missing.bits.push(...dep.missing.bits);
-    }
-    Object.assign(dependencyTree.tree, dep.tree);
-  });
-  dependencyTree.missing.packages = R.uniq(dependencyTree.missing.packages);
-  dependencyTree.missing.files = R.uniq(dependencyTree.missing.files);
-  dependencyTree.missing.bits = R.uniq(dependencyTree.missing.bits);
-  return dependencyTree;
-}
+// function mergeDependencyTrees(depTrees: Array<Object>): Object {
+//   const dependencyTree = {
+//     missing: { packages: [], files: [], bits: [] },
+//     tree: {}
+//   };
+//   depTrees.forEach((dep) => {
+//     if (dep.missing.packages.length) {
+//       dependencyTree.missing.packages.push(...dep.missing.packages);
+//     }
+//     if (dep.missing.files && dep.missing.files.length) {
+//       dependencyTree.missing.files.push(...dep.missing.files);
+//     }
+//     if (dep.missing.bits) {
+//       dependencyTree.missing.bits.push(...dep.missing.bits);
+//     }
+//     Object.assign(dependencyTree.tree, dep.tree);
+//   });
+//   dependencyTree.missing.packages = R.uniq(dependencyTree.missing.packages);
+//   dependencyTree.missing.files = R.uniq(dependencyTree.missing.files);
+//   dependencyTree.missing.bits = R.uniq(dependencyTree.missing.bits);
+//   return dependencyTree;
+// }
 
 /**
  * Load components and packages dependencies for a component. The process is as follows:
@@ -290,7 +322,6 @@ export default (async function loadDependenciesForComponent(
   componentMap: ComponentMap,
   bitDir: string,
   consumer: Consumer,
-  bitMap: BitMap,
   idWithConcreteVersionString: string,
   componentFromModel: Component
 ): Promise<Component> {
@@ -299,12 +330,13 @@ export default (async function loadDependenciesForComponent(
   const missingDependencies = {};
   const { allFiles, nonTestsFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
   const getDependenciesTree = async () => {
-    const nonTestsTree = await driver.getDependencyTree(bitDir, consumerPath, nonTestsFiles, component.bindingPrefix);
-    if (!testsFiles.length) return nonTestsTree;
-    const testsTree = await driver.getDependencyTree(bitDir, consumerPath, testsFiles, component.bindingPrefix);
-    // ignore package dependencies of tests for now
-    testsTree.missing.packages = [];
-    return mergeDependencyTrees([nonTestsTree, testsTree]);
+    return driver.getDependencyTree(bitDir, consumerPath, allFiles, component.bindingPrefix);
+    // const nonTestsTree = await driver.getDependencyTree(bitDir, consumerPath, nonTestsFiles, component.bindingPrefix);
+    // if (!testsFiles.length) return nonTestsTree;
+    // const testsTree = await driver.getDependencyTree(bitDir, consumerPath, testsFiles, component.bindingPrefix);
+    // // ignore package dependencies of tests for now
+    // testsTree.missing.packages = [];
+    // return mergeDependencyTrees([nonTestsTree, testsTree]);
   };
   // find the dependencies (internal files and packages) through automatic dependency resolution
   const dependenciesTree = await getDependenciesTree();
@@ -320,7 +352,7 @@ export default (async function loadDependenciesForComponent(
     dependenciesTree.missing.bits.forEach((missingBit) => {
       const componentId = Consumer.getComponentIdFromNodeModulesPath(missingBit, component.bindingPrefix);
       // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
-      if (bitMap.getExistingComponentId(componentId)) missingLinks.push(componentId);
+      if (consumer.bitMap.getExistingComponentId(componentId)) missingLinks.push(componentId);
       else missingComponents.push(componentId);
     });
   }
@@ -331,10 +363,10 @@ export default (async function loadDependenciesForComponent(
     dependenciesTree.tree,
     allFiles,
     idWithConcreteVersionString,
-    bitMap,
-    consumerPath,
+    consumer,
     component.bindingPrefix,
-    componentFromModel
+    componentFromModel,
+    driver
   );
   const traversedCompDeps = traversedDeps.componentsDeps;
   component.dependencies = Object.keys(traversedCompDeps).map((depId) => {
