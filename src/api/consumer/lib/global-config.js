@@ -1,4 +1,5 @@
 /** @flow */
+import gitconfig from 'gitconfig';
 import { GlobalConfig } from '../../../global-config';
 import Config from '../../../global-config/config';
 
@@ -32,13 +33,18 @@ export function delSync(key: string): Config {
 
 export function get(key: string): Promise<?string> {
   return GlobalConfig.load().then((config) => {
-    return config.get(key);
+    const val = config.get(key);
+    if (val) return val;
+    return gitconfig.get(key);
   });
 }
 
 export function getSync(key: string): ?string {
   const config = GlobalConfig.loadSync();
-  return config.get(key);
+  const val = config.get(key);
+  if (val) return val;
+  const gitVal = gitconfig.get.sync(key);
+  return gitVal;
 }
 
 export function list(): Promise<any> {
