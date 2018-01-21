@@ -1064,7 +1064,7 @@ export default class Consumer {
       await packageJson.removeComponentsFromWorkspacesAndDependencies(
         this,
         this.getPath(),
-        bitMap,
+        this.bitMap,
         componensToRemoveFromFs
       );
       await this.cleanBitMapAndBitJson(componensToRemoveFromFs, removedDependencies);

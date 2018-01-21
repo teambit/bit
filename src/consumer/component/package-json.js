@@ -183,7 +183,7 @@ async function addWorkspacesToPackageJson(
       rootDir,
       formatedRegexPath,
       dependenciesDirectory + COMPONENTES_DEPENDECIES_REGEX,
-      consumer.getPathRelativeToConsumer(customImportPath)
+      customImportPath ? consumer.getPathRelativeToConsumer(customImportPath) : customImportPath
     );
   }
 }
