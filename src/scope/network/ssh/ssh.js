@@ -22,6 +22,7 @@ import checkVersionCompatibilityFunction from '../check-version-compatibility';
 import logger from '../../../logger/logger';
 import type { Network } from '../network';
 import { DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
+import { RemovedObjects } from '../../component-remove';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
@@ -177,7 +178,7 @@ export default class SSH implements Network {
       context
     ).then((data: string) => {
       const { payload } = this._unpack(data);
-      return Promise.resolve(payload);
+      return Promise.resolve(RemovedObjects.fromObjects(payload));
     });
   }
   deprecateMany(bitIds: string, context: ?Object): Promise<ComponentObjects[]> {

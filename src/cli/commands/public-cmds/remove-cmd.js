@@ -2,7 +2,7 @@
 
 import Command from '../../command';
 import { remove } from '../../../api/consumer';
-import { RemovedObjects, RemovedLocalObjects } from '../../../scope/component-remove.js';
+import { RemovedObjects, RemovedLocalObjects } from '../../../scope/component-remove';
 import paintRemoved from '../../templates/remove-template';
 
 export default class Remove extends Command {

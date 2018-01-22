@@ -607,9 +607,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -1039,7 +1039,7 @@ export default class Consumer {
     const modifiedComponents = [];
     const regularComponents = [];
     const resolvedIDs = this.resolveLocalComponentIds(bitIds);
-    if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects();
+    if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects({});
     if (!force) {
       await Promise.all(
         resolvedIDs.map(async (id) => {
@@ -1063,13 +1063,13 @@ export default class Consumer {
     if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) {
       await this.cleanBitMapAndBitJson(componensToRemoveFromFs, removedDependencies);
     }
-    return new RemovedLocalObjects(
+    return new RemovedLocalObjects({
       removedComponentIds,
       missingComponents,
       modifiedComponents,
       dependentBits,
       removedDependencies
-    );
+    });
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {

@@ -904,9 +904,9 @@ export default class Scope {
       );
       const ids = removedComponents.map(x => x.bitId);
       const removedDependencies = R.flatten(removedComponents.map(x => x.removedDependencies));
-      return new RemovedObjects(ids, missingComponents, removedDependencies, {});
+      return new RemovedObjects({ removedComponentIds: ids, missingComponents, removedDependencies });
     }
-    return new RemovedObjects([], missingComponents, [], dependentBits);
+    return new RemovedObjects({ missingComponents, dependentBits });
   }
   /**
    * deprecate components from scope

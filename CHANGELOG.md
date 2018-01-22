@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - enable command options starting with "no-" (e.g. --no-dependencies)
 - avoid fetching the dependencies of versions older than the current imported one 
 - migration - remove latest from compiler
+- fixed deserialize bug with bit remove
 
 ## [0.12.0] - 2018-01-18
 
