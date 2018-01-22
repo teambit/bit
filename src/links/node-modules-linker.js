@@ -11,6 +11,7 @@ import ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
 import { pathRelative } from '../utils';
 import Consumer from '../consumer/consumer';
+import { getLinkContent, getIndexFileName } from './link-generator';
 
 export type LinksResult = {
   id: BitId,
@@ -93,11 +94,13 @@ function writeDependenciesLinks(component, componentMap, consumer) {
  * Since an authored component doesn't have rootDir, it's impossible to symlink to the component directory.
  * It makes it easier for Author to use absolute syntax between their own components.
  */
-function linkToMainFile(component, componentMap, componentId) {
-  const mainFile = componentMap.mainDistFile || componentMap.mainFile;
-  const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), 'index.js');
+function linkToMainFile(component: Component, componentMap: ComponentMap, componentId: BitId, consumer: Consumer) {
+  component.updateDistsPerConsumerBitJson(consumer, componentMap);
+  const mainFile = component.calculateMainDistFileForAuthored(consumer, componentMap);
+  const indexFileName = getIndexFileName(mainFile);
+  const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), indexFileName);
   const destRelative = pathRelative(path.dirname(dest), mainFile);
-  const fileContent = `module.exports = require('${destRelative}');`;
+  const fileContent = getLinkContent(destRelative);
   fs.outputFileSync(dest, fileContent);
 }
 
@@ -159,7 +162,7 @@ export default function linkComponents(components: Component[], consumer: Consum
       fs.outputFileSync(dest, fileContent);
       return { from: dest, to: file };
     });
-    linkToMainFile(component, componentMap, componentId);
+    linkToMainFile(component, componentMap, componentId, consumer);
     return { id: componentId, bound };
   });
 }

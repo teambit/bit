@@ -109,6 +109,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
    * utils/is-string depends on utils/is-type
    */
   describe('when using relative import syntax', () => {
+    let clonedScope;
     before(() => {
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.reInitRemoteScope();
@@ -123,18 +124,39 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
-      helper.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.modifyFieldInBitJson('dist', { target: 'dist' });
-      helper.importComponent('bar/foo');
+      clonedScope = helper.cloneLocalScope();
     });
-    it('should be able to require its direct dependency and print results from all dependencies', () => {
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-      const result = helper.runCmd('node app.js');
-      expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    describe('as author', () => {
+      // this tests also the node_modules generated link for authored component. See similar test without dist in link.e2e file.
+      before(() => {
+        helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+        helper.build();
+        helper.commitAllComponents();
+        helper.exportAllComponents();
+      });
+      it('should be able to require its direct dependency and print results from all dependencies', () => {
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
     });
+    describe('as imported', () => {
+      before(() => {
+        helper.getClonedLocalScope(clonedScope);
+        helper.commitAllComponents();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.modifyFieldInBitJson('dist', { target: 'dist' });
+        helper.importComponent('bar/foo');
+      });
+      it('should be able to require its direct dependency and print results from all dependencies', () => {
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
+
     describe('when adding an external package', () => {
       // the node-modules of the dist should handle both, symlinks to the external packages and actual links
       before(() => {
