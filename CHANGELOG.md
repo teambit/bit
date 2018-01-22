@@ -7,12 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.12.1-dev.1] - 2018-01-18
+## [0.12.1] - 2018-01-18
 
 - add link-file for authored exported components from the root node_modules of a component to its main-file  
-- enable command options starting with "no-" (e.g. --no-dependencies)
 - avoid fetching the dependencies of versions older than the current imported one 
-- migration - remove latest from compiler
+- fix bug with importing old components with compiler defined
 - fixed deserialize bug with bit remove
 
 ## [0.12.0] - 2018-01-18
