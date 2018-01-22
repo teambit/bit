@@ -245,7 +245,7 @@ export default class Helper {
     return { scopeName, scopePath };
   }
 
-  CloneLocalProject(withDist = false) {
+  mimicGitCloneLocalProject(withDist = false) {
     fs.removeSync(path.join(this.localScopePath, '.bit'));
     fs.removeSync(path.join(this.localScopePath, 'components'));
     this.runCmd('bit init');
