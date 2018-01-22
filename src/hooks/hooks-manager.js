@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import { HOOKS_NAMES } from '../constants';
 import logger from '../logger/logger';
 import * as errors from './exceptions';
@@ -112,9 +113,9 @@ export default class HooksManager {
       throw new errors.HookNotExists(hookName);
     }
     logger.info(
-      `triggering hook ${hookName} with args:\n ${_stringifyIfNeeded(args)} \n and headers \n ${_stringifyIfNeeded(
-        headers
-      )}`
+      `triggering hook ${hookName} with args:\n ${_stringifyIfNeeded(
+        _stripArgs(args)
+      )} \n and headers \n ${_stringifyIfNeeded(_stripHeaders(headers))}`
     );
     const actions = this.hooks.get(hookName);
     const actionsP = actions.map((action) => {
@@ -139,4 +140,31 @@ export default class HooksManager {
 
 function _stringifyIfNeeded(val) {
   return typeof val === 'string' ? val : JSON.stringify(val);
+}
+
+/**
+ * Remove some data from the logs (because it's too verbose or because it's sensitive)
+ * @param {Object} args
+ */
+function _stripArgs(args) {
+  // Create deep clone
+  const res = R.clone(args);
+  if (res.componentObjects) {
+    res.componentObjects = res.componentObjects.length;
+  }
+  return res;
+}
+
+/**
+ * Remove some data from the logs (because it's too verbose or because it's sensitive)
+ * @param {Object} headers
+ */
+function _stripHeaders(headers) {
+  // Create deep clone
+  const res = R.clone(headers);
+  if (res.context && res.context.pubSshKey) {
+    const key = res.context.pubSshKey;
+    res.context.pubSshKey = `last 70 characters: ${key.substr(key.length - 70)}`;
+  }
+  return res;
 }
