@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#653](https://github.com/teambit/bit/issues/653) read config keys from Git config in case it's not found in bit config 
+
 ## [0.12.1] - 2018-01-18
 
 - add link-file for authored exported components from the root node_modules of a component to its main-file  
 - avoid fetching the dependencies of versions older than the current imported one 
+- migration - remove latest from compiler
 - fix bug with importing old components with compiler defined
 - fixed deserialize bug with bit remove
 

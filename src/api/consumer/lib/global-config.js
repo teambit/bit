@@ -1,4 +1,5 @@
 /** @flow */
+import gitconfig from 'gitconfig';
 import { GlobalConfig } from '../../../global-config';
 import Config from '../../../global-config/config';
 
@@ -30,15 +31,30 @@ export function delSync(key: string): Config {
   return config;
 }
 
-export function get(key: string): Promise<?string> {
-  return GlobalConfig.load().then((config) => {
-    return config.get(key);
-  });
+export async function get(key: string): Promise<?string> {
+  const config = await GlobalConfig.load();
+  const val = config.get(key);
+  if (val) return val;
+  try {
+    const gitVal = await gitconfig.get(key);
+    return gitVal;
+    // Ignore error from git config get
+  } catch (err) {
+    return undefined;
+  }
 }
 
 export function getSync(key: string): ?string {
   const config = GlobalConfig.loadSync();
-  return config.get(key);
+  const val = config.get(key);
+  if (val) return val;
+  try {
+    const gitVal = gitconfig.get.sync(key);
+    return gitVal;
+    // Ignore error from git config get
+  } catch (err) {
+    return undefined;
+  }
 }
 
 export function list(): Promise<any> {
