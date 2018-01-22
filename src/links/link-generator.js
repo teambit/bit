@@ -42,12 +42,12 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
 const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
 
 // todo: move to bit-javascript
-function _getIndexFileName(mainFile: string): string {
+function getIndexFileName(mainFile: string): string {
   return `${DEFAULT_INDEX_NAME}.${getExt(mainFile)}`;
 }
 
 // todo: move to bit-javascript
-function _getLinkContent(
+function getLinkContent(
   filePath: string,
   importSpecifiers?: Object,
   createNpmLinkFiles?: boolean,
@@ -173,11 +173,11 @@ async function writeDependencyLinks(
       DEFAULT_REGISTRY_DOMAIN_PREFIX}/${componentId.toStringWithoutVersion().replace(/\//g, '.')}`;
     let actualFilePath = depRootDir ? path.join(depRootDir, relativePathInDependency) : relativePathInDependency;
     if (relativePathInDependency === mainFile) {
-      actualFilePath = depRootDir ? path.join(depRootDir, _getIndexFileName(mainFile)) : _getIndexFileName(mainFile);
+      actualFilePath = depRootDir ? path.join(depRootDir, getIndexFileName(mainFile)) : getIndexFileName(mainFile);
     }
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
     const importSpecifiers = relativePath.importSpecifiers;
-    const linkContent = _getLinkContent(relativeFilePath, importSpecifiers, isNpmLink, packagePath);
+    const linkContent = getLinkContent(relativeFilePath, importSpecifiers, isNpmLink, packagePath);
     logger.debug(`writeLinkFile, on ${linkPath}`);
     const linkPathExt = getExt(linkPath);
     const isEs6 = importSpecifiers && linkPathExt === 'js';
@@ -330,8 +330,8 @@ async function writeEntryPointsForComponent(component: Component, consumer: Cons
   const componentRoot = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
   const mainFile = component.calculateMainDistFile();
-  const indexName = _getIndexFileName(mainFile); // Move to bit-javascript
-  const entryPointFileContent = _getLinkContent(`./${mainFile}`);
+  const indexName = getIndexFileName(mainFile); // Move to bit-javascript
+  const entryPointFileContent = getLinkContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
   if (component.dists && component._writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
     const distDir = component.getDistDirForConsumer(consumer, componentMap.rootDir);
@@ -343,4 +343,4 @@ async function writeEntryPointsForComponent(component: Component, consumer: Cons
   return outputFile({ filePath: entryPointPath, content: entryPointFileContent, override: false });
 }
 
-export { writeEntryPointsForComponent, writeDependencyLinks };
+export { writeEntryPointsForComponent, writeDependencyLinks, getLinkContent, getIndexFileName };

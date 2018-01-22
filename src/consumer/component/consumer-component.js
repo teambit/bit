@@ -471,15 +471,15 @@ export default class Component {
   }
 
   updateDistsPerConsumerBitJson(consumer: Consumer, componentMap: ComponentMap): void {
-    if (this.dists) {
-      const newDistBase = this.getDistDirForConsumer(consumer, componentMap.rootDir);
-      const getNewRelative = (dist) => {
-        if (consumer.bitJson.distEntry) {
-          return dist.relative.replace(consumer.bitJson.distEntry, '');
-        }
-      };
-      this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase, newRelative: getNewRelative(dist) }));
-    }
+    if (this._distsPathsAreUpdated || !this.dists) return;
+    const newDistBase = this.getDistDirForConsumer(consumer, componentMap.rootDir);
+    const getNewRelative = (dist) => {
+      if (consumer.bitJson.distEntry) {
+        return dist.relative.replace(consumer.bitJson.distEntry, '');
+      }
+    };
+    this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase, newRelative: getNewRelative(dist) }));
+    this._distsPathsAreUpdated = true;
   }
 
   /**
@@ -899,6 +899,24 @@ export default class Component {
       if (mainFile) return path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
     return this.mainFile;
+  }
+
+  /**
+   * authored components have the dists outside the components dir and they don't have rootDir.
+   * it returns the main file or main dist file relative to consumer-root.
+   */
+  calculateMainDistFileForAuthored(consumer: Consumer): string {
+    if (!this.dists) return this.mainFile;
+    const getMainFileToSearch = () => {
+      const mainFile = path.normalize(this.mainFile);
+      if (consumer.bitJson.distEntry) return mainFile.replace(`${consumer.bitJson.distEntry}/`, '');
+      return mainFile;
+    };
+    const mainFileToSearch = getMainFileToSearch();
+    const distMainFile = searchFilesIgnoreExt(this.dists, mainFileToSearch, 'relative', 'relative');
+    if (!distMainFile) return this.mainFile;
+    const distTarget = consumer.bitJson.distTarget || DEFAULT_DIST_DIRNAME;
+    return path.join(distTarget, distMainFile);
   }
 
   /**

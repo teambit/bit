@@ -109,6 +109,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
    * utils/is-string depends on utils/is-type
    */
   describe('when using relative import syntax', () => {
+    let clonedScope;
     before(() => {
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.reInitRemoteScope();
@@ -123,57 +124,79 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
-      helper.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.modifyFieldInBitJson('dist', { target: 'dist' });
-      helper.importComponent('bar/foo');
+      clonedScope = helper.cloneLocalScope();
     });
-    it('should be able to require its direct dependency and print results from all dependencies', () => {
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-      const result = helper.runCmd('node app.js');
-      expect(result.trim()).to.equal('got is-type and got is-string and got foo');
-    });
-    describe('when adding an external package', () => {
-      // the node-modules of the dist should handle both, symlinks to the external packages and actual links
+    describe('as author', () => {
+      // this tests also the node_modules generated link for authored component. See similar test without dist in link.e2e file.
       before(() => {
-        helper.runCmd(
-          'npm install --save lodash.isstring',
-          path.join(helper.localScopePath, 'components', 'bar', 'foo')
-        );
-        helper.runCmd('bit link'); // after npm install, all @bit symlinks are deleted, we have to re-link them.
-        const fooBarFixtureV2 = `import isString from '${helper.getRequireBitPath('utils', 'is-string')}';
-import lodashIsString from 'lodash.isstring';
-lodashIsString();
-export default function foo() { return isString() + ' and got foo v2'; };`;
-        helper.createComponent('components/bar/foo/bar', 'foo.js', fooBarFixtureV2); // update component
-        helper.addRemoteEnvironment();
+        helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
         helper.build();
-      });
-      it('should symlink the external packages as well into dist', () => {
-        expect(
-          path.join(helper.localScopePath, 'dist', 'components', 'bar', 'foo', 'node_modules', 'lodash.isstring')
-        ).to.be.a.path();
+        helper.commitAllComponents();
+        helper.exportAllComponents();
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
-        expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
-      describe('after importing a component with external packages', () => {
+    });
+    describe('as imported', () => {
+      before(() => {
+        helper.getClonedLocalScope(clonedScope);
+        helper.commitAllComponents();
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.modifyFieldInBitJson('dist', { target: 'dist' });
+        helper.importComponent('bar/foo');
+      });
+      it('should be able to require its direct dependency and print results from all dependencies', () => {
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+      describe('when adding an external package', () => {
+        // the node-modules of the dist should handle both, symlinks to the external packages and actual links
         before(() => {
-          helper.commitAllComponents();
-          helper.exportAllComponents();
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
-          helper.modifyFieldInBitJson('dist', { target: 'dist' });
-          helper.importComponent('bar/foo');
+          helper.runCmd(
+            'npm install --save lodash.isstring',
+            path.join(helper.localScopePath, 'components', 'bar', 'foo')
+          );
+          helper.runCmd('bit link'); // after npm install, all @bit symlinks are deleted, we have to re-link them.
+          const fooBarFixtureV2 = `import isString from '${helper.getRequireBitPath('utils', 'is-string')}';
+import lodashIsString from 'lodash.isstring';
+lodashIsString();
+export default function foo() { return isString() + ' and got foo v2'; };`;
+          helper.createComponent('components/bar/foo/bar', 'foo.js', fooBarFixtureV2); // update component
+          helper.addRemoteEnvironment();
+          helper.build();
+        });
+        it('should symlink the external packages as well into dist', () => {
+          expect(
+            path.join(helper.localScopePath, 'dist', 'components', 'bar', 'foo', 'node_modules', 'lodash.isstring')
+          ).to.be.a.path();
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
+        });
+        describe('after importing a component with external packages', () => {
+          before(() => {
+            helper.commitAllComponents();
+            helper.exportAllComponents();
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.modifyFieldInBitJson('dist', { target: 'dist' });
+            helper.importComponent('bar/foo');
+          });
+          it('should be able to require its direct dependency and print results from all dependencies', () => {
+            fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+            const result = helper.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
+          });
         });
       });
     });
