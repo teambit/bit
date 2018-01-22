@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+## [0.10.9-dev.1] - 2018-01-22
+
 - support removing components from workspaces and dependecies in package.json
 
 ## [0.10.8] - 2018-01-18
