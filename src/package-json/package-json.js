@@ -188,7 +188,7 @@ export default class PackageJson {
    * attribute. Nothing more, nothing less.
    */
   static async addComponentsIntoExistingPackageJson(rootDir: string, components: Array, registryPrefix: string) {
--    const packageJson = (await PackageJson.getPackageJson(rootDir)) || { dependencies: {} } ;
+    const packageJson = (await PackageJson.getPackageJson(rootDir)) || { dependencies: {} } ;
     packageJson.dependencies = Object.assign({}, packageJson.dependencies, convertComponentsToValidPackageNames(registryPrefix, components));
     await PackageJson.saveRawObject(rootDir, packageJson);
   }
