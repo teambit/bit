@@ -46,7 +46,7 @@
     "execa": "^0.8.0",
     "fs-extra": "^5.0.0",
     "fstream": "^1.0.10",
-    "gitconfig": "^2.0.3",
+    "gitconfig": "teambit/node-gitconfig",
     "glob": "^7.1.1",
     "group-array": "^0.3.3",
     "is-array-buffer-x": "^1.0.13",
