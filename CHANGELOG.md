@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- print message in case of cyclic dependencies
 - `bit build` with no parameter, builds all authored and imported components regardless whether they're modified
 
 ## [0.12.2-dev.1] - 2018-01-23
