@@ -88,6 +88,11 @@ export default class Helper {
     return fs.readJSONSync(packageJsonPath) || {};
   }
 
+  catScope() {
+    const result = this.runCmd('bit cat-scope --json');
+    return JSON.parse(result);
+  }
+
   writeBitJson(bitJson: Object) {
     const bitJsonPath = path.join(this.localScopePath, 'bit.json');
     return fs.writeJSONSync(bitJsonPath, bitJson);
@@ -499,14 +504,29 @@ export default class Helper {
     return clonedScopePath;
   }
 
-  getRequireBitPath(box, name) {
-    return `@bit/${this.remoteScope}.${box}.${name}`;
-  }
-
   getClonedLocalScope(clonedScopePath) {
     fs.removeSync(this.localScopePath);
     if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.localScopePath}`);
     fs.copySync(clonedScopePath, this.localScopePath);
+  }
+
+  cloneRemoteScope() {
+    const clonedScope = v4();
+    const clonedScopePath = path.join(this.e2eDir, clonedScope);
+    if (this.debugMode) console.log(`cloning a scope from ${this.remoteScopePath} to ${clonedScopePath}`);
+    fs.copySync(this.remoteScopePath, clonedScopePath);
+    this.clonedScopes.push(clonedScopePath);
+    return clonedScopePath;
+  }
+
+  getClonedRemoteScope(clonedScopePath) {
+    fs.removeSync(this.remoteScopePath);
+    if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.remoteScopePath}`);
+    fs.copySync(clonedScopePath, this.remoteScopePath);
+  }
+
+  getRequireBitPath(box, name) {
+    return `@bit/${this.remoteScope}.${box}.${name}`;
   }
 
   createRemoteScopeWithComponentsFixture() {

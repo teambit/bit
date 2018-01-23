@@ -1209,6 +1209,9 @@ describe('bit import', function () {
       describe('bit build after importing without --ignore-dist flag', () => {
         before(() => {
           helper.build('bar/foo');
+
+          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         });
         it('main index file should point to the dist and not to the source', () => {
           const indexFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'index.js');
@@ -1221,10 +1224,18 @@ describe('bit import', function () {
           expect(packageJson.main).to.equal('dist/bar/foo.js');
         });
         it('should generate all the links in the dists directory and be able to require its direct dependency', () => {
-          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+        describe('bit build all', () => {
+          before(() => {
+            fs.removeSync(path.join(helper.localScopePath, 'components', 'bar', 'foo', 'dist'));
+            helper.build();
+          });
+          it('should build the imported component although it was not modified', () => {
+            const result = helper.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+          });
         });
       });
     });

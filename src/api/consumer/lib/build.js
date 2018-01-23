@@ -1,8 +1,9 @@
 /** @flow */
+import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
-import ComponentsList from '../../../consumer/component/components-list';
+import { COMPONENT_ORIGINS } from '../../../constants';
 import loader from '../../../cli/loader';
 import { BEFORE_LOADING_COMPONENTS, BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 
@@ -32,15 +33,18 @@ async function buildAllResults(components, consumer: Consumer, verbose: boolean)
 }
 
 export async function buildAll(verbose: boolean): Promise<Object> {
-  const consumer = await loadConsumer();
-  const componentsList = new ComponentsList(consumer);
-  loader.start(BEFORE_LOADING_COMPONENTS);
-  const newAndModifiedComponents = await componentsList.newAndModifiedComponents();
-  if (!newAndModifiedComponents || !newAndModifiedComponents.length) return Promise.reject('nothing to build');
-  const compilerIds = newAndModifiedComponents.map(c => c.compilerId);
+  const consumer: Consumer = await loadConsumer();
+  const authoredAndImported = consumer.bitMap.getAllComponents([
+    COMPONENT_ORIGINS.IMPORTED,
+    COMPONENT_ORIGINS.AUTHORED
+  ]);
+  if (R.isEmpty(authoredAndImported)) return Promise.reject('nothing to build');
+  const authoredAndImportedIds = Object.keys(authoredAndImported).map(id => BitId.parse(id));
+  const { components } = await consumer.loadComponents(authoredAndImportedIds);
+  const compilerIds = components.map(c => c.compilerId);
   loader.start(BEFORE_IMPORT_ENVIRONMENT);
   await consumer.scope.installEnvironment({ ids: compilerIds, verbose });
-  const buildAllP = await buildAllResults(newAndModifiedComponents, consumer, verbose);
+  const buildAllP = await buildAllResults(components, consumer, verbose);
   const allComponents = await Promise.all(buildAllP);
   const componentsObj = {};
   allComponents.forEach((component) => {
