@@ -9,7 +9,7 @@ export default class CiUpdate extends Command {
   description = 'run an update for build and test of a certain bit-component';
   alias = '';
   opts = [
-    ['v', 'verbose', 'showing npm verbose output for inspection'],
+    ['v', 'verbose [boolean]', 'showing npm verbose output for inspection'],
     ['d', 'directory [file]', 'directory to run ci-update'],
     ['k', 'keep', 'keep test environment after run (default false)'],
     ['o', 'output [file]', 'save ci results to file system']
@@ -19,7 +19,7 @@ export default class CiUpdate extends Command {
   action(
     [id, scopePath]: [string, ?string],
     {
-      verbose,
+      verbose = false,
       directory,
       output,
       keep = false
