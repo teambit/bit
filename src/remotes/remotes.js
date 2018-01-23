@@ -29,6 +29,11 @@ export default class Remotes extends Map<string, Remote> {
     });
   }
 
+  isHub(scope) {
+    // if a scope is listed as a remote, it doesn't go to the hub
+    return !this.get(scope);
+  }
+
   async fetch(
     ids: BitId[],
     thisScope: Scope,

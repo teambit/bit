@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add `--eject` flag for `bit export` for quickly remove local components after export and install them by the npm client
 - print message in case of cyclic dependencies
 - `bit build` with no parameter, builds all authored and imported components regardless whether they're modified
 

@@ -10,12 +10,15 @@ export default class Export extends Command {
   name = 'export <remote> [id...]';
   description = 'export components to a remote scope.';
   alias = 'e';
-  opts = [['f', 'forget', 'do not save to bit.json after export']];
+  opts = [
+    ['f', 'forget', 'do not save to bit.json after export'],
+    ['', 'eject', 'once the export is done, remove the exported components locally and install them by the NPM client']
+  ];
   loader = true;
   migration = true;
 
-  action([remote, ids]: [string, string[]], { forget }: any): Promise<*> {
-    return exportAction(ids, remote, !forget).then(componentId => ({ componentId, remote }));
+  action([remote, ids]: [string, string[]], { forget, eject }: any): Promise<*> {
+    return exportAction(ids, remote, !forget, eject).then(componentId => ({ componentId, remote }));
   }
 
   report({ componentId, remote }: { componentId: BitId | BitId[], remote: string }): string {

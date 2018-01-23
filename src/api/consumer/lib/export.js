@@ -71,13 +71,14 @@ async function linkComponents(ids: BitId[], consumer: Consumer): void {
   linkComponentsToNodeModules(components, consumer);
 }
 
-export default (async function exportAction(ids?: string[], remote: string, save: ?boolean) {
+export default (async function exportAction(ids?: string[], remote: string, save: ?boolean, eject: ?boolean) {
   const consumer: Consumer = await loadConsumer();
   const idsToExport = await getComponentsToExport(ids, consumer, remote);
   // todo: what happens when some failed? we might consider avoid Promise.all
   // in case we don't have anything to export
   if (R.isEmpty(idsToExport)) return [];
-  const componentsIds = await consumer.scope.exportMany(idsToExport, remote);
+  const componentsIds = await consumer.scope.exportMany(idsToExport, remote, undefined, eject);
+  if (eject) return consumer.eject(componentsIds);
   if (save) await addToBitJson(componentsIds, consumer);
   componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
   await consumer.bitMap.write();
