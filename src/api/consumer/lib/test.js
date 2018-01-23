@@ -4,7 +4,11 @@ import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import ComponentsList from '../../../consumer/component/components-list';
 import Bit from '../../../consumer/component';
-import { BEFORE_LOADING_COMPONENTS, BEFORE_RUNNING_SPECS } from '../../../cli/loader/loader-messages';
+import {
+  BEFORE_LOADING_COMPONENTS,
+  BEFORE_RUNNING_SPECS,
+  BEFORE_IMPORT_ENVIRONMENT
+} from '../../../cli/loader/loader-messages';
 
 export default (async function test(id?: string, verbose: boolean = true): Promise<Bit> {
   const consumer: Consumer = await loadConsumer();
@@ -20,6 +24,11 @@ export default (async function test(id?: string, verbose: boolean = true): Promi
 
     // when testing multiple components, we need to build all of them first.
     // building only the one we test, won't be sufficient because it may depends on another pre-build component
+    const testersIds = components.map(c => c.testerId);
+    const compilerIds = components.map(c => c.compilerId);
+    const allEnvsIds = testersIds.concat(compilerIds);
+    loader.start(BEFORE_IMPORT_ENVIRONMENT);
+    await consumer.scope.installEnvironment({ ids: allEnvsIds, verbose });
     await consumer.scope.buildMultiple(components, consumer, true);
   }
 
