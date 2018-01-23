@@ -83,7 +83,8 @@ const _installInOneDirectory = ({
 
   // Add npm verbose flag
   if (verbose && packageManager === 'npm') {
-    concretePackageManagerArgs.push('--verbose');
+    // we may want to use it later. For now, it print too much information
+    // concretePackageManagerArgs.push('--verbose');
   }
 
   fs.ensureDirSync(path.join(cwd, 'node_modules'));
