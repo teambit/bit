@@ -802,8 +802,8 @@ export default class Component {
     }
 
     logger.debug('compilerId found, start building');
+    let compiler = await scope.loadEnvironment(this.compilerId, { throws: false });
     if (ensureCompiler) {
-      let compiler = await scope.loadEnvironment(this.compilerId, { throws: false });
       if (!compiler) {
         loader.start(BEFORE_IMPORT_ENVIRONMENT);
         await scope.installEnvironment({
