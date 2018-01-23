@@ -1086,6 +1086,7 @@ export default class Scope {
         if (!throws) return null;
         throw new Error(`Unable to find an env component ${bitId.toString()}`);
       } catch (e) {
+        if (!throws) return null;
         throw new ResolutionException(e.message);
       }
     }
