@@ -22,7 +22,7 @@ import {
 import { loadConsumer, Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
-import { COMPONENT_ORIGINS, REGEX_PATTERN, DEFAULT_DIST_DIRNAME } from '../../../constants';
+import { COMPONENT_ORIGINS, REGEX_PATTERN, DEFAULT_DIST_DIRNAME, IGNORE_LIST } from '../../../constants';
 import logger from '../../../logger/logger';
 import PathNotExists from './exceptions/path-not-exists';
 import MissingComponentIdForImportedComponent from './exceptions/missing-id-imported-component';
@@ -321,7 +321,7 @@ export default (async function addAction(
   const bitMap: BitMap = consumer.bitMap;
   const bitJson = await consumer.bitJson;
 
-  let ignoreList = retrieveIgnoreList(consumer.getPath());
+  let ignoreList = IGNORE_LIST;
   if (!bitJson.distTarget) {
     const importedComponents = bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
     const distDirsOfImportedComponents = Object.keys(importedComponents).map(key =>
@@ -335,12 +335,8 @@ export default (async function addAction(
   if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
 
   const componentPathsStats = {};
-  const resolvedComponentPathsWithGitIgnore = R.flatten(
-    await Promise.all(componentPaths.map(componentPath => glob(componentPath, { ignore: ignoreList })))
-  );
-  const resolvedComponentPathsWithoutGitIgnore = R.flatten(
-    await Promise.all(componentPaths.map(componentPath => glob(componentPath)))
-  );
+  const resolvedComponentPathsWithGitIgnore = await glob(componentPaths, { ignore: ignoreList, gitignore: true });
+  const resolvedComponentPathsWithoutGitIgnore = await glob(componentPaths, { ignore: ignoreList });
 
   // Run diff on both arrays to see what was filtered out because of the gitignore file
   const diff = arrayDiff(resolvedComponentPathsWithGitIgnore, resolvedComponentPathsWithoutGitIgnore);
