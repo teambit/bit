@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - [#653](https://github.com/teambit/bit/issues/653) read config keys from Git config in case it's not found in bit config 
 - install missing environments before start build / test process
+- fixed ci-update from failing when no compiler or tester
 
 ## [0.12.1] - 2018-01-18
 
