@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- `bit build` with no parameter, builds all authored and imported components regardless whether they're modified
 - [#653](https://github.com/teambit/bit/issues/653) read config keys from Git config in case it's not found in bit config 
 
 ## [0.12.1] - 2018-01-18

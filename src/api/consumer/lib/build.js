@@ -1,8 +1,9 @@
 /** @flow */
+import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
-import ComponentsList from '../../../consumer/component/components-list';
+import { COMPONENT_ORIGINS } from '../../../constants';
 
 export async function build(id: string, verbose: boolean): Promise<?Array<string>> {
   const bitId = BitId.parse(id);
@@ -30,11 +31,15 @@ async function buildAllResults(components, consumer: Consumer, verbose: boolean)
 }
 
 export async function buildAll(verbose: boolean): Promise<Object> {
-  const consumer = await loadConsumer();
-  const componentsList = new ComponentsList(consumer);
-  const newAndModifiedComponents = await componentsList.newAndModifiedComponents();
-  if (!newAndModifiedComponents || !newAndModifiedComponents.length) return Promise.reject('nothing to build');
-  const buildAllP = await buildAllResults(newAndModifiedComponents, consumer, verbose);
+  const consumer: Consumer = await loadConsumer();
+  const authoredAndImported = consumer.bitMap.getAllComponents([
+    COMPONENT_ORIGINS.IMPORTED,
+    COMPONENT_ORIGINS.AUTHORED
+  ]);
+  if (R.isEmpty(authoredAndImported)) return Promise.reject('nothing to build');
+  const authoredAndImportedIds = Object.keys(authoredAndImported).map(id => BitId.parse(id));
+  const { components } = await consumer.loadComponents(authoredAndImportedIds);
+  const buildAllP = await buildAllResults(components, consumer, verbose);
   const allComponents = await Promise.all(buildAllP);
   const componentsObj = {};
   allComponents.forEach((component) => {
