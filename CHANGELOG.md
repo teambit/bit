@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- print message in case of cyclic dependencies
+
 ## [0.12.2-dev.1] - 2018-01-23
 
 - [#653](https://github.com/teambit/bit/issues/653) read config keys from Git config in case it's not found in bit config
