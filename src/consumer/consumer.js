@@ -607,9 +607,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -668,16 +668,17 @@ export default class Consumer {
 
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
 
-      // sometime dependencies from the FS don't have an exact version, copy the version from the model
+      // sometime dependencies from the FS don't have an exact version.
+      // in case of auto-tag, the files can be identical between the model and the FS, but the dependency version would
+      // be different.
+      // we don't want to show the component as modified in such cases, so copy the version from the model
       version.dependencies.forEach((dependency) => {
-        if (!dependency.id.hasVersion()) {
-          const idWithoutVersion = dependency.id.toStringWithoutVersion();
-          const dependencyFromModel = componentFromModel.dependencies.find(
-            modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
-          );
-          if (dependencyFromModel) {
-            dependency.id = dependencyFromModel.id;
-          }
+        const idWithoutVersion = dependency.id.toStringWithoutVersion();
+        const dependencyFromModel = componentFromModel.dependencies.find(
+          modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
+        );
+        if (dependencyFromModel) {
+          dependency.id = dependencyFromModel.id;
         }
       });
 
