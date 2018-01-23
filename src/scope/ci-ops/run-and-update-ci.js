@@ -33,10 +33,13 @@ async function runAndUpdateCI({
   try {
     // define options
     const save = true;
-    const buildResults = await buildInScope({ id, scopePath, save, verbose, directory, keep, isCI: true });
-    const testResults = await testInScope({ id, scopePath, save, verbose, directory, keep, isCI: true });
+    const isCI = true;
+    const buildResults = await buildInScope({ id, scopePath, save, verbose, directory, keep, isCI });
+    const testResults = await testInScope({ id, scopePath, save, verbose, directory, keep, isCI });
     const dists = buildResults ? buildResults.dists : null;
-    const mainFile = buildResults || testResults ? buildResults.mainFile || testResults.mainFile : null;
+    let mainFile;
+    if (buildResults) mainFile = buildResults.mainFile;
+    if (!mainFile && testResults) mainFile = testResults.mainFile;
     await addCIAttrsInTheModel({ startTime });
     return { specsResults: testResults ? testResults.specResults : [], dists, mainFile };
   } catch (e) {
