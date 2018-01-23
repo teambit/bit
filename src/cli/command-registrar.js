@@ -33,12 +33,15 @@ function getOpts(c, opts: [[string, string, string]]): { [string]: boolean | str
   const options = {};
 
   opts.forEach(([, name]) => {
-    const parsedName = camelCase(parseCommandName(name));
-    options[parsedName] = c[parsedName];
+    const parsedName = parseCommandName(name);
+    const camelCaseName = camelCase(parsedName);
+
     if (name.startsWith('no-')) {
       // from commander help: "Note that multi-word options starting with --no prefix negate the boolean value of the following word. For example, --no-sauce sets the value of program.sauce to false."
       // we don't want this feature, so we do the opposite action.
-      options[parsedName] = !c[name.replace('no-', '')];
+      options[camelCaseName] = !c[camelCase(parsedName.replace('no-', ''))];
+    } else {
+      options[camelCaseName] = c[camelCaseName];
     }
   });
 

@@ -123,7 +123,7 @@ export default class Consumer {
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
-      return false;
+      throw new Error(`Failed loading the driver for ${this.bitJson.lang}. Got an error from the driver: ${err}`);
     }
   }
 
@@ -607,9 +607,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);

@@ -19,6 +19,12 @@ import AbstractVinyl from './abstract-vinyl';
  * consumer-component.stripOriginallySharedDir() )/
  * Then, Before writing the dists to the file-system, the dist-entry is taken care of. (see
  * consumer-component.updateDistsPerConsumerBitJson() ).
+ * 3) using 'bit link'.
+ * When linking authored components, we generate an index file from node_modules/component-name to the main dist file.
+ * It might happen during the import, when updateDistsPerConsumerBitJson() was running already, and it might happen
+ * during the 'bit link' command. Therefore, before linking, the updateDistsPerConsumerBitJson() is running while making
+ * sure it doesn't run twice.
+ * (see node-modules-linker.linkToMainFile() and consumer-component.calculateMainDistFileForAuthored()).
  *
  * The opposite action is taken when a component is tagged. We load the component from the file-system while the dist
  * paths are stripped from consumer dist.entry and originallySharedDir. Then, before writing them to the model, we add
