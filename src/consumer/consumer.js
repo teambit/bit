@@ -607,9 +607,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -1061,6 +1061,12 @@ export default class Consumer {
       await this.removeComponentFromFs(removedDependencies, false);
     }
     if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) {
+      await packageJson.removeComponentsFromWorkspacesAndDependencies(
+        this,
+        this.getPath(),
+        this.bitMap,
+        componensToRemoveFromFs
+      );
       await this.cleanBitMapAndBitJson(componensToRemoveFromFs, removedDependencies);
     }
     return new RemovedLocalObjects({

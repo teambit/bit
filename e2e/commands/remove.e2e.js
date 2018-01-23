@@ -149,7 +149,31 @@ describe('bit remove command', function () {
       expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple`);
     });
   });
+  describe('with imported components , no dependecies and yarn workspace', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      // export a new simple component
+      helper.createComponent('global', 'simple.js');
+      helper.addComponent(path.normalize('global/simple.js'));
+      helper.commitComponent('global/simple');
+      helper.exportComponent('global/simple');
 
+      helper.reInitLocalScope();
+      helper.createPackageJson();
+      helper.manageWorkspaces();
+      helper.addRemoteScope();
+      helper.importComponent('global/simple -p ./test');
+      helper.removeComponent('global/simple');
+    });
+    it('should  remove component from package.json that points to relative path', () => {
+      const pkgJson = helper.readPackageJson();
+      expect(pkgJson.dependencies).to.not.have.property(`@bit/${helper.remoteScope}.global.simple`);
+    });
+    it('should not remove component with dependencies when -f flag is false', () => {
+      const pkgJson = helper.readPackageJson();
+      expect(pkgJson.workspaces).to.not.include('test');
+    });
+  });
   describe.skip('remove versions from local scope', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();

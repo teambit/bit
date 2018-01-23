@@ -144,6 +144,6 @@ export const paintBuildResults = (buildResults: []): string => {
   }
   return '';
 };
-export const paintCiResults = ({ buildResults, specsResults }): string => {
-  return paintBuildResults(buildResults) + paintSpecsResults(specsResults);
+export const paintCiResults = ({ dists, specsResults }): string => {
+  return paintBuildResults(dists) + paintSpecsResults(specsResults);
 };

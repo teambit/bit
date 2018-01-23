@@ -183,9 +183,39 @@ async function addWorkspacesToPackageJson(
       rootDir,
       formatedRegexPath,
       dependenciesDirectory + COMPONENTES_DEPENDECIES_REGEX,
-      customImportPath
+      customImportPath ? consumer.getPathRelativeToConsumer(customImportPath) : customImportPath
     );
   }
 }
 
-export { addComponentsToRoot, changeDependenciesToRelativeSyntax, write, updateAttribute, addWorkspacesToPackageJson };
+async function removeComponentsFromWorkspacesAndDependencies(
+  consumer: Consumer,
+  rootDir: string,
+  bitMap: BitMap,
+  componentIds: string[]
+) {
+  const driver = await consumer.driver.getDriver(false);
+  const PackageJson = driver.PackageJson;
+  if (
+    consumer.bitJson.manageWorkspaces &&
+    consumer.bitJson.packageManager === 'yarn' &&
+    consumer.bitJson.useWorkspaces
+  ) {
+    const dirsToRemove = componentIds.map(id => bitMap.getComponent(id.toStringWithoutVersion()).rootDir);
+    await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemove);
+  }
+  await PackageJson.removeComponentsFromDependencies(
+    rootDir,
+    getRegistryPrefix(),
+    componentIds.map(id => id.toStringWithoutVersion())
+  );
+}
+
+export {
+  addComponentsToRoot,
+  changeDependenciesToRelativeSyntax,
+  write,
+  updateAttribute,
+  addWorkspacesToPackageJson,
+  removeComponentsFromWorkspacesAndDependencies
+};
