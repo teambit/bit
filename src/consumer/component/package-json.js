@@ -214,7 +214,12 @@ async function addWorkspacesToPackageJson(
 
 async function removeComponentsFromNodeModules(consumer: Consumer, componentIds: BitId[]) {
   const registryPrefix = getRegistryPrefix();
-  const pathsToRemove = componentIds.map(id => Consumer.getNodeModulesPathOfComponent(registryPrefix, id));
+  // paths without scope name, don't have a symlink in node-modules
+  const pathsToRemove = componentIds
+    .map((id) => {
+      return id.scope ? Consumer.getNodeModulesPathOfComponent(registryPrefix, id) : null;
+    })
+    .filter(a => a); // remove null
 
   return Promise.all(pathsToRemove.map(componentPath => fs.remove(path.join(consumer.getPath(), componentPath))));
 }
