@@ -21,7 +21,7 @@ export async function build(id: string, verbose: boolean): Promise<?Array<string
 
 async function buildAllResults(components, consumer: Consumer, verbose: boolean) {
   return components.map(async (component: Component) => {
-    const result = await component.build({ scope: consumer.scope, consumer, verbose });
+    const result = await component.build({ scope: consumer.scope, consumer, verbose, ensureCompiler: false });
     const bitId = new BitId({ box: component.box, name: component.name });
     if (result === null) {
       return { component: bitId.toString(), buildResults: null };

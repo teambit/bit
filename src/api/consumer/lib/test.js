@@ -25,10 +25,11 @@ export default (async function test(id?: string, verbose: boolean = true): Promi
     // when testing multiple components, we need to build all of them first.
     // building only the one we test, won't be sufficient because it may depends on another pre-build component
     const testersIds = components.map(c => c.testerId);
-    const compilerIds = components.map(c => c.compilerId);
-    const allEnvsIds = testersIds.concat(compilerIds);
+    // No need to install compilers since we do it in the buildMultiple function
+    // const compilerIds = components.map(c => c.compilerId);
+    // const allEnvsIds = testersIds.concat(compilerIds);
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
-    await consumer.scope.installEnvironment({ ids: allEnvsIds, verbose });
+    await consumer.scope.installEnvironment({ ids: testersIds, verbose });
     await consumer.scope.buildMultiple(components, consumer, true);
   }
 

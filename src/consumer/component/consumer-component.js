@@ -752,7 +752,8 @@ export default class Component {
     verbose,
     directory,
     keep,
-    isCI = false
+    isCI = false,
+    ensureCompiler = true
   }: {
     scope: Scope,
     save?: boolean,
@@ -760,7 +761,8 @@ export default class Component {
     verbose?: boolean,
     directory: ?string,
     keep: ?boolean,
-    isCI: ?boolean
+    isCI: boolean,
+    ensureCompiler: boolean
   }): Promise<string> {
     logger.debug(`consumer-component.build ${this.id}`);
     // @TODO - write SourceMap Type
@@ -800,27 +802,16 @@ export default class Component {
     }
 
     logger.debug('compilerId found, start building');
-    // verify whether the environment is installed
-    const getCompiler = async () => {
-      try {
-        const compiler = await scope.loadEnvironment(this.compilerId); // eslint-disable-line
-        return compiler;
-      } catch (err) {
-        if (err instanceof ResolutionException) {
-          logger.debug(`Unable to find compiler ${this.compilerId}, will try to import it`);
-          return null;
-        }
-        return Promise.reject(err);
+    if (ensureCompiler) {
+      let compiler = await scope.loadEnvironment(this.compilerId, { throws: false });
+      if (!compiler) {
+        loader.start(BEFORE_IMPORT_ENVIRONMENT);
+        await scope.installEnvironment({
+          ids: [this.compilerId],
+          verbose
+        });
+        compiler = await scope.loadEnvironment(this.compilerId);
       }
-    };
-    let compiler = await getCompiler();
-    if (!compiler) {
-      loader.start(BEFORE_IMPORT_ENVIRONMENT);
-      await scope.installEnvironment({
-        ids: [this.compilerId],
-        verbose
-      });
-      compiler = await scope.loadEnvironment(this.compilerId);
     }
 
     const builtFiles = await this.buildIfNeeded({

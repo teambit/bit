@@ -47,10 +47,10 @@ import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
 import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
   BEFORE_IMPORT_PUT_ON_SCOPE,
-  BEFORE_INSTALL_NPM_DEPENDENCIES,
   BEFORE_MIGRATION,
   BEFORE_RUNNING_BUILD,
-  BEFORE_RUNNING_SPECS
+  BEFORE_RUNNING_SPECS,
+  BEFORE_IMPORT_ENVIRONMENT
 } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
 import logger from '../logger/logger';
@@ -404,14 +404,19 @@ export default class Scope {
    * Build multiple components sequentially, not in parallel.
    */
   async buildMultiple(components: Component[], consumer: Consumer, writeDists = false) {
-    // todo: to make them all run in parallel, we have to first get all compilers from all components, install all
-    // environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
     logger.debug('scope.buildMultiple: sequentially build multiple components');
+    const compilerIds = components.map(c => c.compilerId);
+    loader.start(BEFORE_IMPORT_ENVIRONMENT);
+    await this.installEnvironment({ ids: compilerIds });
     loader.start(BEFORE_RUNNING_BUILD);
-    for (const component of components) {
-      await component.build({ scope: this, consumer });
-      if (writeDists) await component.writeDists(consumer);
-    }
+    const buildP = components.map((component) => {
+      // Pass ensureCompiler false, since we already ensure it's installed
+      return component.build({ scope: this, consumer, ensureCompiler: false }).then(() => {
+        if (writeDists) return component.writeDists(consumer);
+        return null;
+      });
+    });
+    return Promise.all(buildP);
   }
 
   /**
@@ -1083,7 +1088,6 @@ export default class Scope {
       try {
         const envPath = componentResolver(bitId.toString(), null, this.getPath());
         if (fs.existsSync(envPath)) return envPath;
-        if (!throws) return null;
         throw new Error(`Unable to find an env component ${bitId.toString()}`);
       } catch (e) {
         if (!throws) return null;
