@@ -121,6 +121,9 @@ describe('importing bit components from bitsrc.io', function () {
       helper.reInitLocalScope();
       helper.runCmd('bit import david.tests/utils/is-string'); // is-string imports is-type as a dependency
       helper.runCmd('bit import david.tests/utils/is-type'); // import is-type directly
+
+      const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
     });
     it('should update the package.json of the dependent with relative-path of the dependency', () => {
       const isStringDir = path.join(helper.localScopePath, 'components', 'utils', 'is-string');
@@ -133,10 +136,21 @@ describe('importing bit components from bitsrc.io', function () {
         helper.createComponent(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
       });
       it('should affect its dependent', () => {
-        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
+      });
+      describe('As publisher, change to absolute syntax, another, non-bit user clones the project and install npm', () => {
+        before(() => {
+          const isStringFixtureV2 = `const isType = require('@bit/david.tests.utils.is-type');
+module.exports = function isString() { return isType() +  ' and got is-string'; };`;
+          helper.createComponent(path.join('components', 'utils', 'is-string'), 'is-string.js', isStringFixtureV2);
+          helper.mimicGitCloneLocalProjectWithoutImport();
+          helper.runCmd('npm install');
+        });
+        it("that user should see the updated version of the component, same as the publisher, although it does'nt have bit installed ", () => {
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type v2 and got is-string');
+        });
       });
     });
   });
