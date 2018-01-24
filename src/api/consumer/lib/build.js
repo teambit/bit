@@ -5,6 +5,7 @@ import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import loader from '../../../cli/loader';
+import ComponentsList from '../../../consumer/component/components-list';
 import { BEFORE_LOADING_COMPONENTS, BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 
 export async function build(id: string, verbose: boolean): Promise<?Array<string>> {
@@ -34,6 +35,16 @@ async function buildAllResults(components, consumer: Consumer, verbose: boolean)
 
 export async function buildAll(verbose: boolean): Promise<Object> {
   const consumer: Consumer = await loadConsumer();
+  const componentsList = new ComponentsList(consumer);
+  loader.start(BEFORE_LOADING_COMPONENTS);
+
+  // Install all compilers for new and modified components
+  // TODO: we should filter the authoredAndImported to get only the modified, it will be better in terms of performenct
+  const newAndModifiedComponents = await componentsList.newAndModifiedComponents();
+  const compilerIds = newAndModifiedComponents.map(c => c.compilerId);
+  loader.start(BEFORE_IMPORT_ENVIRONMENT);
+  await consumer.scope.installEnvironment({ ids: compilerIds, verbose });
+
   const authoredAndImported = consumer.bitMap.getAllComponents([
     COMPONENT_ORIGINS.IMPORTED,
     COMPONENT_ORIGINS.AUTHORED
@@ -41,9 +52,7 @@ export async function buildAll(verbose: boolean): Promise<Object> {
   if (R.isEmpty(authoredAndImported)) return Promise.reject('nothing to build');
   const authoredAndImportedIds = Object.keys(authoredAndImported).map(id => BitId.parse(id));
   const { components } = await consumer.loadComponents(authoredAndImportedIds);
-  const compilerIds = components.map(c => c.compilerId);
-  loader.start(BEFORE_IMPORT_ENVIRONMENT);
-  await consumer.scope.installEnvironment({ ids: compilerIds, verbose });
+
   const buildAllP = await buildAllResults(components, consumer, verbose);
   const allComponents = await Promise.all(buildAllP);
   const componentsObj = {};

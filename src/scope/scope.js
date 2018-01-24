@@ -412,20 +412,17 @@ export default class Scope {
   /**
    * Build multiple components sequentially, not in parallel.
    */
-  async buildMultiple(components: Component[], consumer: Consumer, writeDists = false) {
+  async buildMultiple(components: Component[], consumer: Consumer, writeDists: boolean = false) {
+    // todo: to make them all run in parallel, we have to first get all compilers from all components, install all
+    // todo: environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
+    // todo: the method called from the test api (where we install all the compilers first) but also from put many
+    // todo: where we didn't make sure everything already installed
     logger.debug('scope.buildMultiple: sequentially build multiple components');
-    const compilerIds = components.map(c => c.compilerId);
-    loader.start(BEFORE_IMPORT_ENVIRONMENT);
-    await this.installEnvironment({ ids: compilerIds });
     loader.start(BEFORE_RUNNING_BUILD);
-    const buildP = components.map((component) => {
-      // Pass ensureCompiler false, since we already ensure it's installed
-      return component.build({ scope: this, consumer, ensureCompiler: false }).then(() => {
-        if (writeDists) return component.writeDists(consumer);
-        return null;
-      });
-    });
-    return Promise.all(buildP);
+    for (const component of components) {
+      await component.build({ scope: this, consumer });
+      if (writeDists) await component.writeDists(consumer);
+    }
   }
 
   /**
