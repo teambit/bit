@@ -1234,6 +1234,33 @@ describe('bit import', function () {
         });
       });
     });
+    describe('re-import with a specific path', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        helper.importComponent('bar/foo -p new-location');
+        localConsumerFiles = helper.getConsumerFiles();
+      });
+      it('should move the component directory to the new location', () => {
+        const newLocation = path.join('new-location', 'bar', 'foo.js');
+        const oldLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
+        expect(localConsumerFiles).to.include(newLocation);
+        expect(localConsumerFiles).not.to.include(oldLocation);
+      });
+      it('should update the rootDir in bit.map to the new location', () => {
+        const bitMap = helper.readBitMap();
+        const componentMap = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
+        expect(componentMap.rootDir).to.equal('new-location');
+      });
+      it('should be able to require its direct dependency and print results from all dependencies', () => {
+        const appJsFixture = `const barFoo = require('${helper.getRequireBitPath('bar', 'foo')}');
+console.log(barFoo.default());`;
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
   });
 
   describe('modifying a dependent and a dependency at the same time', () => {

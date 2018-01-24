@@ -392,7 +392,7 @@ export default class Component {
       await mkdirp(bitDir);
     }
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
-    if (this.dists && this._writeDistsFiles) await this.dists.forEach(dist => dist.write(undefined, force));
+    if (this.dists && this._writeDistsFiles) await this.writeDists(consumer, false);
     if (withBitJson) await this.writeBitJson(bitDir, force);
     if (withPackageJson) {
       await this.writePackageJson(consumer, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
@@ -570,7 +570,6 @@ export default class Component {
       componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
-    this.updateDistsPerConsumerBitJson(consumer, componentMap);
     const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
     this.writtenPath = newBase;
     this.files.forEach(file => file.updatePaths({ newBase }));

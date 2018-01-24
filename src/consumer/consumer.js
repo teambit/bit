@@ -508,7 +508,6 @@ export default class Consumer {
     const remotes: Remotes = await this.scope.remotes();
     const writeComponentsP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
       const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
-      componentWithDeps.component.writtenPath = bitDir;
       // if a it doesn't go to the hub, it can't import dependencies as packages
       componentWithDeps.component.dependenciesSavedAsComponents =
         saveDependenciesAsComponents || !remotes.isHub(componentWithDeps.component.scope);
