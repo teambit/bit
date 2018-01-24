@@ -7,7 +7,7 @@ import assignwith from 'lodash.assignwith';
 import groupby from 'lodash.groupby';
 import unionBy from 'lodash.unionby';
 import find from 'lodash.find';
-
+import ignore from 'ignore';
 import {
   glob,
   isDir,
@@ -330,14 +330,17 @@ export default (async function addAction(
     ignoreList = ignoreList.concat(distDirsOfImportedComponents);
   }
 
+  const ig = ignore().add(ignoreList);
   // check unknown test files
   const missingFiles = getMissingTestFiles(tests);
   if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
 
   const componentPathsStats = {};
-  const resolvedComponentPathsWithGitIgnore = R.flatten(
-    await Promise.all(componentPaths.map(componentPath => glob(componentPath, { ignore: ignoreList })))
+  let resolvedComponentPathsWithGitIgnore = R.flatten(
+    await Promise.all(componentPaths.map(componentPath => glob(componentPath)))
   );
+  resolvedComponentPathsWithGitIgnore = ig.filter(resolvedComponentPathsWithGitIgnore);
+
   const resolvedComponentPathsWithoutGitIgnore = R.flatten(
     await Promise.all(componentPaths.map(componentPath => glob(componentPath)))
   );
