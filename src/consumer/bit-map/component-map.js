@@ -22,6 +22,8 @@ export type ComponentMapData = {
   originallySharedDir: ?string // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
 };
 
+export type PathChange = { from: string, to: string };
+
 export default class ComponentMap {
   files: ComponentMapFile[];
   mainFile: string;
@@ -72,7 +74,7 @@ export default class ComponentMap {
     });
   }
 
-  updateFileLocation(fileFrom: string, fileTo: string): Array<Object> {
+  updateFileLocation(fileFrom: string, fileTo: string): PathChange[] {
     fileFrom = pathNormalizeToLinux(fileFrom);
     fileTo = pathNormalizeToLinux(fileTo);
     const currentFile = this._findFile(fileFrom);
@@ -88,7 +90,7 @@ export default class ComponentMap {
     return changes;
   }
 
-  updateDirLocation(dirFrom: string, dirTo: string) {
+  updateDirLocation(dirFrom: string, dirTo: string): PathChange[] {
     dirFrom = pathNormalizeToLinux(dirFrom);
     dirTo = pathNormalizeToLinux(dirTo);
     const changes = [];

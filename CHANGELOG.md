@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- `bit move` - updates links to node_modules and updates package.json dependencies with the new directory 
+
 ## [0.12.2-dev.3] - 2018-01-24
 
 - install missing environments before start build / test process

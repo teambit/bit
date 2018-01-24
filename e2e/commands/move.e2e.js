@@ -103,7 +103,9 @@ describe('bit move command', function () {
     });
     it('should throw an error', () => {
       expect(output).to.have.string(
-        `Command failed: ${helper.bitBin} move bar/non-exist-source.js utils/non-exist-dest.js\nboth paths from (bar/non-exist-source.js) and to (utils/non-exist-dest.js) do not exist\n`
+        `Command failed: ${
+          helper.bitBin
+        } move bar/non-exist-source.js utils/non-exist-dest.js\nboth paths from (bar/non-exist-source.js) and to (utils/non-exist-dest.js) do not exist\n`
       );
     });
   });
@@ -130,7 +132,9 @@ describe('bit move command', function () {
       const barFooPath = path.join('bar', 'foo.js');
       const utilsFooPath = path.join('utils', 'foo.js');
       expect(output).to.have.string(
-        `Command failed: ${helper.bitBin} move ${barFooPath} ${utilsFooPath}\nunable to move because both paths from (${barFooPath}) and to (${utilsFooPath}) already exist\n`
+        `Command failed: ${helper.bitBin} move ${barFooPath} ${utilsFooPath}\nunable to move because both paths from (${
+          barFooPath
+        }) and to (${utilsFooPath}) already exist\n`
       );
     });
     it('should not physically move any file', () => {
@@ -185,7 +189,9 @@ describe('bit move command', function () {
     it('should move physically the directory', () => {
       const localConsumerFiles = helper.getConsumerFiles();
       localConsumerFiles.forEach((file) => {
-        expect(file.startsWith(newPath)).to.be.true;
+        if (!file.startsWith('node_modules')) {
+          expect(file.startsWith(newPath), `checking file: ${file}`).to.be.true;
+        }
       });
     });
     it('should update the file path in bit.map', () => {
@@ -195,6 +201,13 @@ describe('bit move command', function () {
     it('should not recognize the component as modified', () => {
       const output = helper.runCmd('bit status');
       expect(output.includes('no modified components')).to.be.true;
+    });
+    it('should fix the links and be able to require the component with absolute syntax', () => {
+      const appJS = `const barFoo = require('${helper.getRequireBitPath('bar', 'foo')}');
+console.log(barFoo());`;
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJS);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got foo');
     });
   });
 });
