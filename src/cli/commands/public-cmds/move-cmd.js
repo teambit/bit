@@ -2,6 +2,7 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { move } from '../../../api/consumer';
+import type { PathChangeResult } from '../../../consumer/bit-map/bit-map';
 
 export default class Move extends Command {
   name = 'move <from> <to>';
@@ -14,9 +15,11 @@ export default class Move extends Command {
     return move({ from, to });
   }
 
-  report(filesChanged: Array<{ from: string, to: string }>): string {
-    const output = filesChanged.map((file) => {
-      return chalk.green(`successfully moved ${chalk.bold(file.from)} to ${chalk.bold(file.to)}`);
+  report(componentsChanged: PathChangeResult[]): string {
+    const output = componentsChanged.map((component) => {
+      const title = chalk.green(`Updated component ${component.id}:\n`);
+      const files = component.changes.map(file => `\tfrom ${chalk.bold(file.from)} to ${chalk.bold(file.to)}\n`);
+      return title + files;
     });
     return output.join('\n');
   }

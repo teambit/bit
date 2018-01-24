@@ -23,9 +23,9 @@ import Consumer from '../consumer';
 /**
  * Add components as dependencies to root package.json
  */
-async function addComponentsToRoot(consumer: Consumer, components: Component[]) {
-  const importedComponents = await filterAsync(components, (component: Component) => {
-    const componentMap = component.getComponentMap(consumer.bitMap);
+async function addComponentsToRoot(consumer: Consumer, componentsIds: BitId[]) {
+  const importedComponents = componentsIds.filter((id) => {
+    const componentMap = consumer.bitMap.getComponent(id);
     return componentMap.origin === COMPONENT_ORIGINS.IMPORTED;
   });
   if (!importedComponents || !importedComponents.length) return;
@@ -33,10 +33,10 @@ async function addComponentsToRoot(consumer: Consumer, components: Component[]) 
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   const componentsToAdd = R.fromPairs(
-    importedComponents.map((component) => {
-      const locationRelativeToConsumer = consumer.getPathRelativeToConsumer(component.writtenPath);
-      const locationAsUnixFormat = `./${pathNormalizeToLinux(locationRelativeToConsumer)}`;
-      return [component.id.toStringWithoutVersion(), locationAsUnixFormat];
+    importedComponents.map((componentId) => {
+      const componentMap = consumer.bitMap.getComponent(componentId);
+      const locationAsUnixFormat = `./${componentMap.rootDir}`;
+      return [componentId.toStringWithoutVersion(), locationAsUnixFormat];
     })
   );
   const registryPrefix = getRegistryPrefix();

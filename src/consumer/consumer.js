@@ -39,9 +39,10 @@ import MissingFilesFromComponent from './component/exceptions/missing-files-from
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import npmClient from '../npm-client';
 import { RemovedLocalObjects } from '../scope/component-remove';
-import { linkComponents, linkAllToNodeModules } from '../links';
+import { linkComponents, linkAllToNodeModules, linkComponentsToNodeModules } from '../links';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
+import type { PathChangeResult } from './bit-map/bit-map';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -600,7 +601,7 @@ export default class Consumer {
 
     await this.bitMap.write();
     if (installNpmPackages) await this.installNpmPackagesForComponents(componentsWithDependencies, verbose);
-    if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents);
+    if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents.map(c => c.id));
 
     return linkComponents(componentsWithDependencies, writtenComponents, writtenDependencies, this, createNpmLinkFiles);
   }
@@ -608,9 +609,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -842,7 +843,7 @@ export default class Consumer {
     return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
   }
 
-  async movePaths({ from, to }: { from: string, to: string }) {
+  async movePaths({ from, to }: { from: string, to: string }): PathChangeResult[] {
     const fromExists = fs.existsSync(from);
     const toExists = fs.existsSync(to);
     if (fromExists && toExists) {
@@ -858,6 +859,12 @@ export default class Consumer {
       fs.moveSync(from, to);
     }
     await this.bitMap.write();
+    if (!R.isEmpty(changes)) {
+      const componentsIds = changes.map(c => BitId.parse(c.id));
+      await packageJson.addComponentsToRoot(this, componentsIds);
+      const { components } = await this.loadComponents(componentsIds);
+      linkComponentsToNodeModules(components, this);
+    }
     return changes;
   }
 
