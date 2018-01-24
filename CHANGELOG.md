@@ -5,14 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [unreleased
+## [unreleased]
 
-## [0.10.9-dev.2] - 2018-01-22
+## [0.10.9] - 2018-01-24
 
 - support case when there is no package.json
-
-## [0.10.9-dev.1] - 2018-01-22
-
 - support removing components from workspaces and dependecies in package.json
 
 ## [0.10.8] - 2018-01-18
