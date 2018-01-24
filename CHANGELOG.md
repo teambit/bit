@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.2-dev.3] - 2018-01-24
+
 - install missing environments before start build / test process
 
 ## [0.12.2-dev.2] - 2018-01-24
