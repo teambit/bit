@@ -65,13 +65,17 @@ export type ComponentProps = {
   compilerId?: ?BitId,
   testerId?: ?BitId,
   dependencies?: Dependency[],
+  devDependencies?: Dependency[],
   flattenedDependencies?: ?BitIds,
+  flattenedDevDependencies?: ?BitIds,
   packageDependencies?: ?Object,
+  devPackageDependencies?: ?Object,
   files?: ?(SourceFile[]) | [],
   docs?: ?(Doclet[]),
   dists?: ?(Dist[]),
   specsResults?: ?SpecsResults,
   license?: ?License,
+  deprecated: ?boolean,
   log?: ?Log
 };
 
@@ -86,8 +90,11 @@ export default class Component {
   compilerId: ?BitId;
   testerId: ?BitId;
   dependencies: Dependency[];
+  devDependencies: Dependency[];
+  flattenedDevDependencies: BitIds;
   flattenedDependencies: BitIds;
   packageDependencies: Object;
+  devPackageDependencies: Object;
   _docs: ?(Doclet[]);
   _files: ?(SourceFile[]) | [];
   dists: ?(Dist[]);
@@ -163,8 +170,11 @@ export default class Component {
     compilerId,
     testerId,
     dependencies,
+    devDependencies,
     flattenedDependencies,
+    flattenedDevDependencies,
     packageDependencies,
+    devPackageDependencies,
     files,
     docs,
     dists,
@@ -183,8 +193,11 @@ export default class Component {
     this.compilerId = compilerId;
     this.testerId = testerId;
     this.dependencies = dependencies || [];
+    this.devDependencies = devDependencies || [];
     this.flattenedDependencies = flattenedDependencies || new BitIds();
+    this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
+    this.devPackageDependencies = devPackageDependencies || {};
     this._files = files;
     this._docs = docs;
     this.dists = dists;
@@ -202,8 +215,9 @@ export default class Component {
     }
   }
 
-  _dependenciesAsWritableObject() {
-    return R.mergeAll(this.dependencies.map(dependency => dependency.id.toObject()));
+  _dependenciesAsWritableObject(dev: boolean = false) {
+    const deps = dev ? this.devDependencies : this.dependencies;
+    return R.mergeAll(deps.map(dependency => dependency.id.toObject()));
   }
 
   _getHomepage() {
@@ -227,7 +241,9 @@ export default class Component {
       compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this._dependenciesAsWritableObject(),
-      packageDependencies: this.packageDependencies
+      devDependencies: this._dependenciesAsWritableObject(true),
+      packageDependencies: this.packageDependencies,
+      devPackageDependencies: this.devPackageDependencies
     }).write({ bitDir, override: force });
   }
 

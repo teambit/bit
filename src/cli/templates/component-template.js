@@ -15,7 +15,9 @@ const fields = [
   'language',
   'mainFile',
   'dependencies',
+  'devDependencies',
   'packages',
+  'devPackages',
   'files',
   'specs',
   'deprecated'
@@ -39,6 +41,11 @@ function comparator(a, b) {
 
 function convertObjectToPrintable(component, isFromFs, includeDependecies = false) {
   const obj = {};
+  const parsePackages = (packages) => {
+    return !R.isEmpty(packages) && !R.isNil(packages)
+      ? Object.keys(packages).map(key => `${key}@${packages[key]}`)
+      : null;
+  };
   const {
     name,
     box,
@@ -46,7 +53,9 @@ function convertObjectToPrintable(component, isFromFs, includeDependecies = fals
     compilerId,
     testerId,
     dependencies,
+    devDependencies,
     packageDependencies,
+    devPackageDependencies,
     files,
     mainFile,
     deprecated,
@@ -58,11 +67,12 @@ function convertObjectToPrintable(component, isFromFs, includeDependecies = fals
   obj.language = lang || null;
   obj.tester = testerId ? testerId.toString() : null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
-  if (includeDependecies) obj.dependencies = dependencies.map(dep => dep.id.toString());
-  obj.packages =
-    !R.isEmpty(packageDependencies) && !R.isNil(packageDependencies)
-      ? Object.keys(packageDependencies).map(key => `${key}@${packageDependencies[key]}`)
-      : null;
+  if (includeDependecies) {
+    obj.dependencies = dependencies.map(dep => dep.id.toString());
+    obj.devDependencies = devDependencies.map(dep => dep.id.toString());
+  }
+  obj.packages = parsePackages(packageDependencies);
+  obj.devPackages = parsePackages(devPackageDependencies);
   obj.files =
     !R.isEmpty(files) && !R.isNil(files)
       ? files.filter(file => !file.test).map(file => normalize(file.relative))
@@ -76,8 +86,13 @@ function convertObjectToPrintable(component, isFromFs, includeDependecies = fals
   return obj;
 }
 
-function generateDependenciesTable(component, showRemoteVersion, compareD) {
-  if (!component.dependencies || !component.dependencies.length) return '';
+function generateDependenciesTable(component, showRemoteVersion) {
+  if (
+    (!component.dependencies || !component.dependencies.length) &&
+    (!component.devDependencies || !component.devDependencies.length)
+  ) {
+    return '';
+  }
   const dependencyHeader = [];
   if (showRemoteVersion) {
     dependencyHeader.push({ value: 'Dependency ID', width: 80, headerColor: 'cyan' });
@@ -87,28 +102,35 @@ function generateDependenciesTable(component, showRemoteVersion, compareD) {
   } else {
     dependencyHeader.push({ value: 'Dependencies', width: 80, headerColor: 'cyan' });
   }
-  const dependencyRows = [];
-  component.dependencies.forEach((dependency) => {
-    const dependencyId = showRemoteVersion ? dependency.id.toStringWithoutVersion() : dependency.id.toString();
-    const row = [dependencyId];
-    if (showRemoteVersion) {
-      const dependencyVersion = parseInt(dependency.currentVersion);
-      const localVersion = parseInt(dependency.localVersion);
-      const remoteVersion = dependency.remoteVersion ? parseInt(dependency.remoteVersion) : null;
-      // if all versions are equal, paint them with green. Otherwise, paint with red
-      const color =
-        (remoteVersion && remoteVersion === localVersion && remoteVersion === dependencyVersion) ||
-        (!remoteVersion && localVersion === dependencyVersion)
-          ? 'green'
-          : 'red';
-      row.push(c[color](dependencyVersion));
-      row.push(c[color](localVersion));
-      row.push(remoteVersion ? c[color](remoteVersion) : 'N/A');
-    }
-    dependencyRows.push(row);
-  });
+  const getDependenciesRows = (dependencies, isDev: boolean = false) => {
+    const dependencyRows = [];
+    dependencies.forEach((dependency) => {
+      let dependencyId = showRemoteVersion ? dependency.id.toStringWithoutVersion() : dependency.id.toString();
+      dependencyId = isDev ? `${dependencyId} (dev)` : dependencyId;
+      const row = [dependencyId];
+      if (showRemoteVersion) {
+        const dependencyVersion = parseInt(dependency.currentVersion);
+        const localVersion = parseInt(dependency.localVersion);
+        const remoteVersion = dependency.remoteVersion ? parseInt(dependency.remoteVersion) : null;
+        // if all versions are equal, paint them with green. Otherwise, paint with red
+        const color =
+          (remoteVersion && remoteVersion === localVersion && remoteVersion === dependencyVersion) ||
+          (!remoteVersion && localVersion === dependencyVersion)
+            ? 'green'
+            : 'red';
+        row.push(c[color](dependencyVersion));
+        row.push(c[color](localVersion));
+        row.push(remoteVersion ? c[color](remoteVersion) : 'N/A');
+      }
+      dependencyRows.push(row);
+    });
+    return dependencyRows;
+  };
+  const dependenciesRows = getDependenciesRows(component.dependencies);
+  const devDependenciesRows = getDependenciesRows(component.devDependencies, true);
+  const allDependenciesRows = R.concat(dependenciesRows, devDependenciesRows);
 
-  const dependenciesTable = new Table(dependencyHeader, dependencyRows);
+  const dependenciesTable = new Table(dependencyHeader, allDependenciesRows);
   return dependenciesTable.render();
 }
 
@@ -125,7 +147,7 @@ function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: bo
       }
       arr.push(c.cyan(title));
       if (!printableComponent[field]) return null;
-      printableComponent[field] ? arr.push(printableComponent[field]) : null;
+      if (printableComponent[field]) arr.push(printableComponent[field]);
       return arr;
     })
     .filter(x => x);

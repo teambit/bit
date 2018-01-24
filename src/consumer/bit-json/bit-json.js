@@ -22,7 +22,9 @@ export type BitJsonProps = {
   compiler?: string,
   tester?: string,
   dependencies?: Object,
+  devDependencies?: Object,
   packageDependencies?: Object,
+  devPackageDependencies?: Object,
   extensions?: Object
 };
 
@@ -38,13 +40,16 @@ export default class BitJson extends AbstractBitJson {
     compiler,
     tester,
     dependencies,
+    devDependencies,
     packageDependencies,
+    devPackageDependencies,
     lang,
     bindingPrefix,
     extensions
   }: BitJsonProps) {
-    super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix, extensions });
+    super({ impl, spec, compiler, tester, dependencies, devDependencies, lang, bindingPrefix, extensions });
     this.packageDependencies = packageDependencies || {};
+    this.devPackageDependencies = devPackageDependencies || {};
   }
 
   toPlainObject() {
