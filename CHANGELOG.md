@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - install missing environments before start build / test process
-- add `--eject` flag for `bit export` for quickly remove local components after export and install them by the npm client
+
+## [0.12.2-dev.2] - 2018-01-24
+
+- [#516](https://github.com/teambit/bit/issues/516) add `--eject` flag for `bit export` for quickly remove local components after export and install them by the npm client
 - print message in case of cyclic dependencies
 - `bit build` with no parameter, builds all authored and imported components regardless whether they're modified
 
