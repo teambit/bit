@@ -26,7 +26,13 @@ import {
   LATEST_BIT_VERSION
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
+import {
+  ScopeNotFound,
+  ComponentNotFound,
+  ResolutionException,
+  DependencyNotFound,
+  CyclicDependencies
+} from './exceptions';
 import IsolatedEnvironment from '../environment';
 import { RemoteScopeNotFound, PermissionDenied } from './network/exceptions';
 import { Tmp } from './repositories';
@@ -277,7 +283,6 @@ export default class Scope {
     const topSort = new Toposort();
     const allDependencies = new Map();
     const consumerComponentsIdsMap = new Map();
-
     // Concat and unique all the dependencies from all the components so we will not import
     // the same dependency more then once, it's mainly for performance purpose
     consumerComponents.forEach((consumerComponent) => {
@@ -288,9 +293,13 @@ export default class Scope {
       topSort.add(componentIdString, dependenciesIdsStrings || []);
     });
 
+    let sortedConsumerComponentsIds;
     // Sort the consumerComponents by the dependency order so we can commit those without the dependencies first
-    const sortedConsumerComponentsIds = topSort.sort().reverse();
-
+    try {
+      sortedConsumerComponentsIds = topSort.sort().reverse();
+    } catch (e) {
+      throw new CyclicDependencies(e);
+    }
     const getFlattenForComponent = (consumerComponent, cache) => {
       const flattenedDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
         // Try to get the flatten dependencies from cache
@@ -1025,9 +1034,12 @@ export default class Scope {
     return this.objects.add(symlink);
   }
 
-  async exportMany(ids: string[], remoteName: string, context: Object = {}): Promise<BitId[]> {
+  async exportMany(ids: string[], remoteName: string, context: Object = {}, eject: boolean): Promise<BitId[]> {
     logger.debug(`exportMany, ids: ${ids.join(', ')}`);
     const remotes = await this.remotes();
+    if (eject && !remotes.isHub(remoteName)) {
+      return Promise.reject('--eject flag is relevant only when the remote is a hub');
+    }
     const remote = await remotes.resolve(remoteName, this);
     const componentIds = ids.map(id => BitId.parse(id));
     const componentObjectsP = componentIds.map(id => this.sources.getObjects(id));

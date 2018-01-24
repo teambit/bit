@@ -41,6 +41,7 @@ import npmClient from '../npm-client';
 import { RemovedLocalObjects } from '../scope/component-remove';
 import { linkComponents, linkAllToNodeModules } from '../links';
 import * as packageJson from './component/package-json';
+import Remotes from '../remotes/remotes';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -503,13 +504,13 @@ export default class Consumer {
     excludeRegistryPrefix?: boolean
   }): Promise<Component[]> {
     const dependenciesIdsCache = [];
-    const remotes = await this.scope.remotes();
+    const remotes: Remotes = await this.scope.remotes();
     const writeComponentsP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
       const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
       componentWithDeps.component.writtenPath = bitDir;
-      // if a component.scope is listed as a remote, it doesn't go to the hub and therefore it can't import dependencies as packages
+      // if a it doesn't go to the hub, it can't import dependencies as packages
       componentWithDeps.component.dependenciesSavedAsComponents =
-        saveDependenciesAsComponents || remotes.get(componentWithDeps.component.scope);
+        saveDependenciesAsComponents || !remotes.isHub(componentWithDeps.component.scope);
       // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
       // find the component in bit.map
       const componentMap = this.bitMap.getComponent(componentWithDeps.component.id.toStringWithoutVersion(), false);
@@ -668,16 +669,17 @@ export default class Consumer {
 
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
 
-      // sometime dependencies from the FS don't have an exact version, copy the version from the model
+      // sometime dependencies from the FS don't have an exact version.
+      // in case of auto-tag, the files can be identical between the model and the FS, but the dependency version would
+      // be different.
+      // we don't want to show the component as modified in such cases, so copy the version from the model
       version.dependencies.forEach((dependency) => {
-        if (!dependency.id.hasVersion()) {
-          const idWithoutVersion = dependency.id.toStringWithoutVersion();
-          const dependencyFromModel = componentFromModel.dependencies.find(
-            modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
-          );
-          if (dependencyFromModel) {
-            dependency.id = dependencyFromModel.id;
-          }
+        const idWithoutVersion = dependency.id.toStringWithoutVersion();
+        const dependencyFromModel = componentFromModel.dependencies.find(
+          modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
+        );
+        if (dependencyFromModel) {
+          dependency.id = dependencyFromModel.id;
         }
       });
 
@@ -1175,5 +1177,13 @@ export default class Consumer {
       .filter(dir => dir);
     await this._installPackages(dirs, verbose, true);
     return linkAllToNodeModules(this);
+  }
+
+  async eject(componentsIds) {
+    const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
+    await this.remove(componentIdsWithoutScope, true, false);
+    await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
+    await this._installPackages([], true, true);
+    return componentsIds;
   }
 }

@@ -45,6 +45,7 @@ export const OLD_BIT_MAP = '.bit.map.json';
 
 export const IGNORE_LIST = [
   '**/.bit.map.json',
+  '**/.bitmap',
   '**/.gitignore',
   '**/bit.json',
   '**/bitBindings.js',
