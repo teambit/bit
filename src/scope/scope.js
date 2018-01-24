@@ -4,7 +4,6 @@ import semver from 'semver';
 import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
-import find from 'lodash.find';
 import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
@@ -54,10 +53,10 @@ import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
 import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
   BEFORE_IMPORT_PUT_ON_SCOPE,
-  BEFORE_INSTALL_NPM_DEPENDENCIES,
   BEFORE_MIGRATION,
   BEFORE_RUNNING_BUILD,
-  BEFORE_RUNNING_SPECS
+  BEFORE_RUNNING_SPECS,
+  BEFORE_IMPORT_ENVIRONMENT
 } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
 import logger from '../logger/logger';
@@ -413,9 +412,11 @@ export default class Scope {
   /**
    * Build multiple components sequentially, not in parallel.
    */
-  async buildMultiple(components: Component[], consumer: Consumer, writeDists = false) {
-    // @todo: to make them all run in parallel, we have to first get all compilers from all components, install all
-    // environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
+  async buildMultiple(components: Component[], consumer: Consumer, writeDists: boolean = false) {
+    // todo: to make them all run in parallel, we have to first get all compilers from all components, install all
+    // todo: environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
+    // todo: the method called from the test api (where we install all the compilers first) but also from put many
+    // todo: where we didn't make sure everything already installed
     logger.debug('scope.buildMultiple: sequentially build multiple components');
     loader.start(BEFORE_RUNNING_BUILD);
     for (const component of components) {
@@ -1084,8 +1085,12 @@ export default class Scope {
   /**
    * sync method that loads the environment/(path to environment component)
    */
-  async loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean }): Promise<> {
+  async loadEnvironment(
+    bitId: BitId,
+    opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean, throws: boolean }
+  ): Promise<> {
     logger.debug(`scope.loadEnvironment, id: ${bitId}`);
+    const throws = !(opts && opts.throws === false);
     if (!bitId) throw new ResolutionException();
 
     if (opts && opts.pathOnly) {
@@ -1094,6 +1099,7 @@ export default class Scope {
         if (fs.existsSync(envPath)) return envPath;
         throw new Error(`Unable to find an env component ${bitId.toString()}`);
       } catch (e) {
+        if (!throws) return null;
         throw new ResolutionException(e.message);
       }
     }
@@ -1103,6 +1109,7 @@ export default class Scope {
       logger.debug(`Requiring an environment file at ${envFile}`);
       return require(envFile);
     } catch (e) {
+      if (!throws) return null;
       throw new ResolutionException(e);
     }
   }
@@ -1121,6 +1128,19 @@ export default class Scope {
       verbose
     };
     const idsWithoutNils = removeNils(ids);
+    const predicate = id => id.toString(); // TODO: should be moved to BitId class
+    const uniqIds = R.uniqBy(predicate)(idsWithoutNils);
+    const nonExisteingEnvsIds = [];
+    // Filter already exists envs
+    const nonExisteingEnvsIdsP = uniqIds.map((id) => {
+      return this.loadEnvironment(id, { pathOnly: true, throws: false }).then((exists) => {
+        if (!exists) {
+          nonExisteingEnvsIds.push(id);
+        }
+      });
+    });
+
+    await Promise.all(nonExisteingEnvsIdsP);
 
     const importEnv = async (id) => {
       let concreteId = id;
@@ -1133,7 +1153,7 @@ export default class Scope {
       await env.create();
       return env.isolateComponent(id, isolateOpts);
     };
-    return pMapSeries(idsWithoutNils, importEnv);
+    return pMapSeries(nonExisteingEnvsIds, importEnv);
   }
 
   async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {
