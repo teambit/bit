@@ -11,6 +11,7 @@ import HashNotFound from './hash-not-found';
 import ResolutionException from './resolution-exception';
 import DependencyNotFound from './dependency-not-found';
 import CorruptedComponent from './corrupted-component';
+import CyclicDependencies from './cyclic-dependencie';
 
 export {
   ScopeNotFound,
@@ -24,5 +25,6 @@ export {
   BitNotInScope,
   ResolutionException,
   DependencyNotFound,
-  CorruptedComponent
+  CorruptedComponent,
+  CyclicDependencies
 };

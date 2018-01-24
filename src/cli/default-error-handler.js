@@ -33,7 +33,8 @@ import {
   DependencyNotFound,
   CorruptedComponent,
   VersionAlreadyExists,
-  MergeConflict
+  MergeConflict,
+  CyclicDependencies
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
@@ -103,6 +104,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
         err.id
       }.\nTo resolve it, please import the latest version of the remote component, and only then export your changes.`
   ],
+  [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
   [UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
   [SSHInvalidResponse, () => 'fatal: received an invalid response from the remote SSH server'],
   [ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init --bare`'],

@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.12.2-dev.1] - 2018-01-23
+## [0.12.2] - 2018-01-24
 
-- [#653](https://github.com/teambit/bit/issues/653) read config keys from Git config in case it's not found in bit config
+### New
+- [#653](https://github.com/teambit/bit/issues/653) read config keys from Git config in case it's not found in bit config 
+- [#516](https://github.com/teambit/bit/issues/516) add `--eject` flag for `bit export` for quickly remove local components after export and install them by the npm client
+### Changes
+- `bit build` with no parameter, builds all authored and imported components regardless whether they're modified
+### Bug Fixes
+- `bit move` - updates links to node_modules and updates package.json dependencies with the new directory 
+- install missing environments before start build / test process
+- print message in case of cyclic dependencies
 - fixed ci-update from failing when no compiler or tester
 
 ## [0.12.1] - 2018-01-22

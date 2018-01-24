@@ -9,13 +9,16 @@ export default class CatScope extends Command {
   description = 'cat a scope and show all the contents';
   private = true;
   alias = '';
-  opts = [['f', 'full', 'show all of the objects in the scope']];
+  opts = [['f', 'full', 'show all of the objects in the scope'], ['j', 'json', 'print the results as a json object']];
 
-  action([scopePath]: [string], { full }: { full: ?boolean }): Promise<any> {
-    return catScope(scopePath || process.cwd(), full).then(payload => ({ payload, full }));
+  action([scopePath]: [string], { full, json }: { full: ?boolean, json: ?boolean }): Promise<any> {
+    return catScope(scopePath || process.cwd(), full).then(payload => ({ payload, full, json }));
   }
 
-  report({ payload, full }: { payload: componentObject[], full: ?boolean }): string {
+  report({ payload, full, json }: { payload: componentObject[], full: ?boolean, json: ?boolean }): string {
+    if (json) {
+      return JSON.stringify(payload);
+    }
     if (!full) {
       const header = [
         { value: 'Id', width: 70, headerColor: 'cyan' },

@@ -1,6 +1,8 @@
 /** @flow */
 
 import R from 'ramda';
+import path from 'path';
+import fs from 'fs-extra';
 import format from 'string-format';
 import { BitId } from '../../bit-id';
 import Component from '../component';
@@ -10,7 +12,8 @@ import {
   DEFAULT_REGISTRY_DOMAIN_PREFIX,
   DEFAULT_SEPARATOR,
   ASTERISK,
-  COMPONENTES_DEPENDECIES_REGEX
+  COMPONENTES_DEPENDECIES_REGEX,
+  NODE_PATH_SEPARATOR
 } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import { filterAsync, pathNormalizeToLinux, pathRelative } from '../../utils';
@@ -20,9 +23,9 @@ import Consumer from '../consumer';
 /**
  * Add components as dependencies to root package.json
  */
-async function addComponentsToRoot(consumer: Consumer, components: Component[]) {
-  const importedComponents = await filterAsync(components, (component: Component) => {
-    const componentMap = component.getComponentMap(consumer.bitMap);
+async function addComponentsToRoot(consumer: Consumer, componentsIds: BitId[]) {
+  const importedComponents = componentsIds.filter((id) => {
+    const componentMap = consumer.bitMap.getComponent(id);
     return componentMap.origin === COMPONENT_ORIGINS.IMPORTED;
   });
   if (!importedComponents || !importedComponents.length) return;
@@ -30,14 +33,29 @@ async function addComponentsToRoot(consumer: Consumer, components: Component[]) 
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   const componentsToAdd = R.fromPairs(
-    importedComponents.map((component) => {
-      const locationRelativeToConsumer = consumer.getPathRelativeToConsumer(component.writtenPath);
-      const locationAsUnixFormat = `./${pathNormalizeToLinux(locationRelativeToConsumer)}`;
-      return [component.id.toStringWithoutVersion(), locationAsUnixFormat];
+    importedComponents.map((componentId) => {
+      const componentMap = consumer.bitMap.getComponent(componentId);
+      const locationAsUnixFormat = `./${componentMap.rootDir}`;
+      return [componentId.toStringWithoutVersion(), locationAsUnixFormat];
     })
   );
   const registryPrefix = getRegistryPrefix();
   await PackageJson.addComponentsIntoExistingPackageJson(consumer.getPath(), componentsToAdd, registryPrefix);
+}
+
+/**
+ * Add given components with their versions to root package.json
+ */
+async function addComponentsWithVersionToRoot(consumer: Consumer, componentsIds: BitId[]) {
+  const driver = await consumer.driver.getDriver(false);
+  const PackageJson = driver.PackageJson;
+
+  const componentsToAdd = R.fromPairs(
+    componentsIds.map((id) => {
+      return [id.toStringWithoutVersion(), id.version];
+    })
+  );
+  await PackageJson.addComponentsIntoExistingPackageJson(consumer.getPath(), componentsToAdd, getRegistryPrefix());
 }
 
 /**
@@ -95,8 +113,14 @@ async function changeDependenciesToRelativeSyntax(
   return Promise.all(components.map(component => updateComponent(component)));
 }
 
-function getRegistryPrefix() {
+function getRegistryPrefix(): string {
   return getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
+}
+
+function convertIdToNpmName(id: BitId, withVersion = false): string {
+  const registryPrefix = getRegistryPrefix();
+  const npmName = `${registryPrefix}/${id.toStringWithoutVersion().replace(/\//g, NODE_PATH_SEPARATOR)}`;
+  return withVersion ? `${npmName}@${id.version}` : npmName;
 }
 
 async function write(
@@ -120,7 +144,7 @@ async function write(
   const registryPrefix = getRegistryPrefix();
   const name = excludeRegistryPrefix
     ? component.id.toStringWithoutVersion().replace(/\//g, '.')
-    : `${registryPrefix}/${component.id.toStringWithoutVersion().replace(/\//g, '.')}`;
+    : convertIdToNpmName(component.id);
   const packageJson = new PackageJson(bitDir, {
     name,
     version: component.version,
@@ -188,11 +212,23 @@ async function addWorkspacesToPackageJson(
   }
 }
 
+async function removeComponentsFromNodeModules(consumer: Consumer, componentIds: BitId[]) {
+  const registryPrefix = getRegistryPrefix();
+  // paths without scope name, don't have a symlink in node-modules
+  const pathsToRemove = componentIds
+    .map((id) => {
+      return id.scope ? Consumer.getNodeModulesPathOfComponent(registryPrefix, id) : null;
+    })
+    .filter(a => a); // remove null
+
+  return Promise.all(pathsToRemove.map(componentPath => fs.remove(path.join(consumer.getPath(), componentPath))));
+}
+
 async function removeComponentsFromWorkspacesAndDependencies(
   consumer: Consumer,
   rootDir: string,
   bitMap: BitMap,
-  componentIds: string[]
+  componentIds: BitId[]
 ) {
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
@@ -209,12 +245,14 @@ async function removeComponentsFromWorkspacesAndDependencies(
     getRegistryPrefix(),
     componentIds.map(id => id.toStringWithoutVersion())
   );
+  await removeComponentsFromNodeModules(consumer, componentIds);
 }
 
 export {
   addComponentsToRoot,
   changeDependenciesToRelativeSyntax,
   write,
+  addComponentsWithVersionToRoot,
   updateAttribute,
   addWorkspacesToPackageJson,
   removeComponentsFromWorkspacesAndDependencies

@@ -4,7 +4,6 @@ import semver from 'semver';
 import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import Toposort from 'toposort-class';
-import find from 'lodash.find';
 import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
@@ -27,7 +26,13 @@ import {
   LATEST_BIT_VERSION
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import { ScopeNotFound, ComponentNotFound, ResolutionException, DependencyNotFound } from './exceptions';
+import {
+  ScopeNotFound,
+  ComponentNotFound,
+  ResolutionException,
+  DependencyNotFound,
+  CyclicDependencies
+} from './exceptions';
 import IsolatedEnvironment from '../environment';
 import { RemoteScopeNotFound, PermissionDenied } from './network/exceptions';
 import { Tmp } from './repositories';
@@ -48,10 +53,10 @@ import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
 import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
   BEFORE_IMPORT_PUT_ON_SCOPE,
-  BEFORE_INSTALL_NPM_DEPENDENCIES,
   BEFORE_MIGRATION,
   BEFORE_RUNNING_BUILD,
-  BEFORE_RUNNING_SPECS
+  BEFORE_RUNNING_SPECS,
+  BEFORE_IMPORT_ENVIRONMENT
 } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
 import logger from '../logger/logger';
@@ -278,7 +283,6 @@ export default class Scope {
     const topSort = new Toposort();
     const allDependencies = new Map();
     const consumerComponentsIdsMap = new Map();
-
     // Concat and unique all the dependencies from all the components so we will not import
     // the same dependency more then once, it's mainly for performance purpose
     consumerComponents.forEach((consumerComponent) => {
@@ -289,9 +293,13 @@ export default class Scope {
       topSort.add(componentIdString, dependenciesIdsStrings || []);
     });
 
+    let sortedConsumerComponentsIds;
     // Sort the consumerComponents by the dependency order so we can commit those without the dependencies first
-    const sortedConsumerComponentsIds = topSort.sort().reverse();
-
+    try {
+      sortedConsumerComponentsIds = topSort.sort().reverse();
+    } catch (e) {
+      throw new CyclicDependencies(e);
+    }
     const getFlattenForComponent = (consumerComponent, cache) => {
       const flattenedDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
         // Try to get the flatten dependencies from cache
@@ -404,9 +412,11 @@ export default class Scope {
   /**
    * Build multiple components sequentially, not in parallel.
    */
-  async buildMultiple(components: Component[], consumer: Consumer, writeDists = false) {
-    // @todo: to make them all run in parallel, we have to first get all compilers from all components, install all
-    // environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
+  async buildMultiple(components: Component[], consumer: Consumer, writeDists: boolean = false) {
+    // todo: to make them all run in parallel, we have to first get all compilers from all components, install all
+    // todo: environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
+    // todo: the method called from the test api (where we install all the compilers first) but also from put many
+    // todo: where we didn't make sure everything already installed
     logger.debug('scope.buildMultiple: sequentially build multiple components');
     loader.start(BEFORE_RUNNING_BUILD);
     for (const component of components) {
@@ -1021,9 +1031,12 @@ export default class Scope {
     return this.objects.add(symlink);
   }
 
-  async exportMany(ids: string[], remoteName: string, context: Object = {}): Promise<BitId[]> {
+  async exportMany(ids: string[], remoteName: string, context: Object = {}, eject: boolean): Promise<BitId[]> {
     logger.debug(`exportMany, ids: ${ids.join(', ')}`);
     const remotes = await this.remotes();
+    if (eject && !remotes.isHub(remoteName)) {
+      return Promise.reject('--eject flag is relevant only when the remote is a hub');
+    }
     const remote = await remotes.resolve(remoteName, this);
     const componentIds = ids.map(id => BitId.parse(id));
     const componentObjectsP = componentIds.map(id => this.sources.getObjects(id));
@@ -1072,8 +1085,12 @@ export default class Scope {
   /**
    * sync method that loads the environment/(path to environment component)
    */
-  async loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean }): Promise<> {
+  async loadEnvironment(
+    bitId: BitId,
+    opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean, throws: boolean }
+  ): Promise<> {
     logger.debug(`scope.loadEnvironment, id: ${bitId}`);
+    const throws = !(opts && opts.throws === false);
     if (!bitId) throw new ResolutionException();
 
     if (opts && opts.pathOnly) {
@@ -1082,6 +1099,7 @@ export default class Scope {
         if (fs.existsSync(envPath)) return envPath;
         throw new Error(`Unable to find an env component ${bitId.toString()}`);
       } catch (e) {
+        if (!throws) return null;
         throw new ResolutionException(e.message);
       }
     }
@@ -1091,6 +1109,7 @@ export default class Scope {
       logger.debug(`Requiring an environment file at ${envFile}`);
       return require(envFile);
     } catch (e) {
+      if (!throws) return null;
       throw new ResolutionException(e);
     }
   }
@@ -1109,6 +1128,19 @@ export default class Scope {
       verbose
     };
     const idsWithoutNils = removeNils(ids);
+    const predicate = id => id.toString(); // TODO: should be moved to BitId class
+    const uniqIds = R.uniqBy(predicate)(idsWithoutNils);
+    const nonExisteingEnvsIds = [];
+    // Filter already exists envs
+    const nonExisteingEnvsIdsP = uniqIds.map((id) => {
+      return this.loadEnvironment(id, { pathOnly: true, throws: false }).then((exists) => {
+        if (!exists) {
+          nonExisteingEnvsIds.push(id);
+        }
+      });
+    });
+
+    await Promise.all(nonExisteingEnvsIdsP);
 
     const importEnv = async (id) => {
       let concreteId = id;
@@ -1121,7 +1153,7 @@ export default class Scope {
       await env.create();
       return env.isolateComponent(id, isolateOpts);
     };
-    return pMapSeries(idsWithoutNils, importEnv);
+    return pMapSeries(nonExisteingEnvsIds, importEnv);
   }
 
   async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {

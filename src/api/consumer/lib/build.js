@@ -1,8 +1,12 @@
 /** @flow */
+import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
+import { COMPONENT_ORIGINS } from '../../../constants';
+import loader from '../../../cli/loader';
 import ComponentsList from '../../../consumer/component/components-list';
+import { BEFORE_LOADING_COMPONENTS, BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 
 export async function build(id: string, verbose: boolean): Promise<?Array<string>> {
   const bitId = BitId.parse(id);
@@ -19,7 +23,7 @@ export async function build(id: string, verbose: boolean): Promise<?Array<string
 
 async function buildAllResults(components, consumer: Consumer, verbose: boolean) {
   return components.map(async (component: Component) => {
-    const result = await component.build({ scope: consumer.scope, consumer, verbose });
+    const result = await component.build({ scope: consumer.scope, consumer, verbose, ensureCompiler: false });
     const bitId = new BitId({ box: component.box, name: component.name });
     if (result === null) {
       return { component: bitId.toString(), buildResults: null };
@@ -30,11 +34,26 @@ async function buildAllResults(components, consumer: Consumer, verbose: boolean)
 }
 
 export async function buildAll(verbose: boolean): Promise<Object> {
-  const consumer = await loadConsumer();
+  const consumer: Consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
+  loader.start(BEFORE_LOADING_COMPONENTS);
+
+  // Install all compilers for new and modified components
+  // TODO: we should filter the authoredAndImported to get only the modified, it will be better in terms of performenct
   const newAndModifiedComponents = await componentsList.newAndModifiedComponents();
-  if (!newAndModifiedComponents || !newAndModifiedComponents.length) return Promise.reject('nothing to build');
-  const buildAllP = await buildAllResults(newAndModifiedComponents, consumer, verbose);
+  const compilerIds = newAndModifiedComponents.map(c => c.compilerId);
+  loader.start(BEFORE_IMPORT_ENVIRONMENT);
+  await consumer.scope.installEnvironment({ ids: compilerIds, verbose });
+
+  const authoredAndImported = consumer.bitMap.getAllComponents([
+    COMPONENT_ORIGINS.IMPORTED,
+    COMPONENT_ORIGINS.AUTHORED
+  ]);
+  if (R.isEmpty(authoredAndImported)) return Promise.reject('nothing to build');
+  const authoredAndImportedIds = Object.keys(authoredAndImported).map(id => BitId.parse(id));
+  const { components } = await consumer.loadComponents(authoredAndImportedIds);
+
+  const buildAllP = await buildAllResults(components, consumer, verbose);
   const allComponents = await Promise.all(buildAllP);
   const componentsObj = {};
   allComponents.forEach((component) => {

@@ -18,11 +18,13 @@ import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './except
 import { BitId, BitIds } from '../../bit-id';
 import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } from '../../utils';
 import ComponentMap from './component-map';
-import type { ComponentMapFile, ComponentOrigin } from './component-map';
+import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 
 const SHOULD_THROW = true;
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
+
+export type PathChangeResult = { id: string, changes: PathChange[] };
 
 export default class BitMap {
   projectRoot: string;
@@ -312,7 +314,9 @@ export default class BitMap {
       return;
     }
     if (olderComponentsIds.length > 1) {
-      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
+      throw new Error(`Your ${
+        BIT_MAP
+      } file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
       are authored or imported. This scenario is not supported`);
     }
     const olderComponentId = olderComponentsIds[0];
@@ -446,23 +450,23 @@ export default class BitMap {
     });
   }
 
-  updatePathLocation(from: string, to: string, fromExists: boolean): Array<Object> {
+  updatePathLocation(from: string, to: string, fromExists: boolean): PathChangeResult[] {
     const existingPath = fromExists ? from : to;
     const isPathDir = isDir(existingPath);
     const allChanges = [];
     Object.keys(this.components).forEach((componentId) => {
       const componentMap: ComponentMap = this.components[componentId];
       const changes = isPathDir ? componentMap.updateDirLocation(from, to) : componentMap.updateFileLocation(from, to);
-      if (changes) allChanges.push(changes);
+      if (changes && changes.length) allChanges.push({ id: componentId, changes });
     });
     if (R.isEmpty(allChanges)) {
       const errorMsg = isPathDir
-        ? `neither one of the files use the directory ${existingPath}`
+        ? `neither one of the files use the directory ${from}`
         : `the file ${existingPath} is untracked`;
       throw new Error(errorMsg);
     }
-    const flattenedArray = Array.prototype.concat(...allChanges);
-    return flattenedArray.filter(file => fs.pathExistsSync(file.to) || fs.pathExistsSync(file.from));
+
+    return allChanges;
   }
 
   write(): Promise<any> {
