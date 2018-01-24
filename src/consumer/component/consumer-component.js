@@ -731,7 +731,9 @@ export default class Component {
           : component.files.filter(file => file.test);
         const results = await run(component.mainFile, testFilesList);
         if (!keep) await isolatedEnvironment.destroy();
-        return isCI ? { specResults: results, mainFile: this.calculateMainDistFile() } : results;
+        return isCI
+          ? { mainFile: component.mainFile, specResults: results, mainDistFile: this.calculateMainDistFile() }
+          : results;
       } catch (e) {
         await isolatedEnvironment.destroy();
         return Promise.reject(e);
@@ -752,7 +754,8 @@ export default class Component {
     verbose,
     directory,
     keep,
-    isCI = false
+    isCI = false,
+    ensureCompiler = true
   }: {
     scope: Scope,
     save?: boolean,
@@ -760,7 +763,8 @@ export default class Component {
     verbose?: boolean,
     directory: ?string,
     keep: ?boolean,
-    isCI: ?boolean
+    isCI: boolean,
+    ensureCompiler: boolean
   }): Promise<string> {
     logger.debug(`consumer-component.build ${this.id}`);
     // @TODO - write SourceMap Type
@@ -796,31 +800,37 @@ export default class Component {
         // written, probably by this.writeDists()
       }
 
-      return isCI ? { mainFile: this.calculateMainDistFile(), dists: this.dists } : this.dist;
+      if (isCI) {
+        const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
+        try {
+          await isolatedEnvironment.create();
+          const isolateOpts = {
+            verbose,
+            installPackages: true,
+            noPackageJson: false
+          };
+          const { component } = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
+          if (!keep) await isolatedEnvironment.destroy();
+          return { mainFile: component.mainFile, mainDistFile: this.calculateMainDistFile(), dists: this.dists };
+        } catch (err) {
+          await isolatedEnvironment.destroy();
+          return Promise.reject(err);
+        }
+      }
+      return this.dist;
     }
 
     logger.debug('compilerId found, start building');
-    // verify whether the environment is installed
-    const getCompiler = async () => {
-      try {
-        const compiler = await scope.loadEnvironment(this.compilerId); // eslint-disable-line
-        return compiler;
-      } catch (err) {
-        if (err instanceof ResolutionException) {
-          logger.debug(`Unable to find compiler ${this.compilerId}, will try to import it`);
-          return null;
-        }
-        return Promise.reject(err);
+    let compiler = await scope.loadEnvironment(this.compilerId, { throws: false });
+    if (ensureCompiler) {
+      if (!compiler) {
+        loader.start(BEFORE_IMPORT_ENVIRONMENT);
+        await scope.installEnvironment({
+          ids: [this.compilerId],
+          verbose
+        });
+        compiler = await scope.loadEnvironment(this.compilerId);
       }
-    };
-    let compiler = await getCompiler();
-    if (!compiler) {
-      loader.start(BEFORE_IMPORT_ENVIRONMENT);
-      await scope.installEnvironment({
-        ids: [this.compilerId],
-        verbose
-      });
-      compiler = await scope.loadEnvironment(this.compilerId);
     }
 
     const builtFiles = await this.buildIfNeeded({

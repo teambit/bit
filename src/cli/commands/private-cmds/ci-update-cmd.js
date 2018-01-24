@@ -27,11 +27,18 @@ export default class CiUpdate extends Command {
   ): Promise<any> {
     verbose = true; // During ci-update we always want to see verbose outputs
     return ciUpdateAction(id, scopePath || process.cwd(), verbose, directory, keep).then(
-      ({ specsResults, dists, mainFile }) => ({ specsResults, dists, mainFile, output, directory })
+      ({ specsResults, dists, mainFile, mainDistFile }) => ({
+        specsResults,
+        dists,
+        mainFile,
+        output,
+        directory,
+        mainDistFile
+      })
     );
   }
 
-  report({ specsResults, dists, mainFile, output, directory }): string {
+  report({ specsResults, dists, mainFile, output, directory, mainDistFile }): string {
     if (!specsResults && !dists) {
       return 'no results found';
     }
@@ -46,7 +53,8 @@ export default class CiUpdate extends Command {
     if (output && dists) {
       const ci = {};
       ci.specResults = specsResults;
-      ci.mainDistFile = mainFile;
+      ci.mainDistFile = mainDistFile;
+      ci.mainFile = mainFile;
       ci.cwd = directory || process.cwd;
       ci.buildResults = dists;
       outputJsonFile(output, ci);
