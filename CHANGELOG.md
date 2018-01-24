@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.10.9] - 2018-01-24
 
 - support case when there is no package.json
-- support removing components from workspaces and dependecies in package.json
+- support removing components from workspaces and dependencies in package.json
 
 ## [0.10.8] - 2018-01-18
 
