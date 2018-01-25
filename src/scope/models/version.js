@@ -131,6 +131,11 @@ export default class Version extends BitObject {
       return dependencies;
     };
 
+    const filterFunction = (val, key) => {
+      if (key === 'devDependencies' || key === 'devPackageDependencies') return !R.isEmpty(val);
+      return !!val;
+    };
+
     return JSON.stringify(
       filterObject(
         {
@@ -145,7 +150,7 @@ export default class Version extends BitObject {
           devPackageDependencies: obj.devPackageDependencies,
           bindingPrefix: obj.bindingPrefix
         },
-        val => !!val
+        filterFunction
       )
     );
   }
@@ -245,7 +250,7 @@ export default class Version extends BitObject {
       devPackageDependencies,
       packageDependencies
     } = JSON.parse(contents);
-    const getDependencies = (deps) => {
+    const getDependencies = (deps = []) => {
       if (deps.length && R.is(String, first(deps))) {
         // backward compatibility
         return deps.map(dependency => ({ id: BitId.parse(dependency) }));
