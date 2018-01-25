@@ -148,7 +148,7 @@ export default class SourceRepository {
    * @param consumerComponent
    * @param consumer
    * @param message
-   * @param depIds
+   * @param flattenedDependencies
    * @param dists
    * @param specsResults
    * @return {Promise.<{version: Version, dists: *, files: *}>}
@@ -156,14 +156,16 @@ export default class SourceRepository {
   async consumerComponentToVersion({
     consumerComponent,
     message,
-    depIds,
+    flattenedDependencies,
+    flattenedDevDependencies,
     dists,
     specsResults
   }: {
     consumerComponent: ConsumerComponent,
     consumer: Consumer,
     message?: string,
-    depIds?: Object,
+    flattenedDependencies?: Object,
+    flattenedDevDependencies?: Object,
     force?: boolean,
     verbose?: boolean,
     forHashOnly?: boolean,
@@ -201,7 +203,8 @@ export default class SourceRepository {
       component: consumerComponent,
       files,
       dists,
-      flattenedDeps: depIds,
+      flattenedDependencies,
+      flattenedDevDependencies,
       specsResults,
       message,
       username,
@@ -213,7 +216,8 @@ export default class SourceRepository {
 
   async addSource({
     source,
-    depIds,
+    flattenedDependencies,
+    flattenedDevDependencies,
     message,
     exactVersion,
     releaseType,
@@ -221,7 +225,8 @@ export default class SourceRepository {
     specsResults
   }: {
     source: ConsumerComponent,
-    depIds: BitId[],
+    flattenedDependencies: BitId[],
+    flattenedDevDependencies: BitId[],
     message: string,
     exactVersion: ?string,
     releaseType: string,
@@ -235,7 +240,8 @@ export default class SourceRepository {
     const { version, files } = await this.consumerComponentToVersion({
       consumerComponent: source,
       message,
-      depIds,
+      flattenedDependencies,
+      flattenedDevDependencies,
       dists,
       specsResults
     });

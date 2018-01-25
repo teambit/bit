@@ -48,8 +48,11 @@ export type VersionProps = {
   specsResults?: ?Results,
   docs?: Doclet[],
   dependencies?: BitIds,
+  devDependencies?: BitIds,
   flattenedDependencies?: BitIds,
+  flattenedDevDependencies?: BitIds,
   packageDependencies?: { [string]: string },
+  devPackageDependencies?: { [string]: string },
   bindingPrefix?: string
 };
 
@@ -64,8 +67,11 @@ export default class Version extends BitObject {
   specsResults: ?Results;
   docs: ?(Doclet[]);
   dependencies: Array<Object>;
+  devDependencies: Array<Object>;
   flattenedDependencies: BitIds;
+  flattenedDevDependencies: BitIds;
   packageDependencies: { [string]: string };
+  devPackageDependencies: { [string]: string };
   bindingPrefix: string;
 
   constructor({
@@ -76,11 +82,14 @@ export default class Version extends BitObject {
     tester,
     log,
     dependencies,
+    devDependencies,
     docs,
     ci,
     specsResults,
     flattenedDependencies,
+    flattenedDevDependencies,
     packageDependencies,
+    devPackageDependencies,
     bindingPrefix
   }: VersionProps) {
     super();
@@ -91,11 +100,14 @@ export default class Version extends BitObject {
     this.tester = tester;
     this.log = log;
     this.dependencies = dependencies || [];
+    this.devDependencies = devDependencies || [];
     this.docs = docs;
     this.ci = ci || {};
     this.specsResults = specsResults;
     this.flattenedDependencies = flattenedDependencies || new BitIds();
+    this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
+    this.devPackageDependencies = devPackageDependencies || {};
     this.bindingPrefix = bindingPrefix;
   }
 
@@ -104,16 +116,20 @@ export default class Version extends BitObject {
 
     // remove importSpecifiers from the ID, it's not needed for the ID calculation.
     // @todo: remove the entire dependencies.relativePaths from the ID (it's going to be a breaking change)
-    const dependencies = R.clone(obj.dependencies);
-    if (dependencies && dependencies.length) {
-      dependencies.forEach((dependency) => {
-        if (dependency.relativePaths && dependency.relativePaths.length) {
-          dependency.relativePaths.forEach((relativePath) => {
-            if (relativePath.importSpecifiers) delete relativePath.importSpecifiers;
-          });
-        }
-      });
-    }
+
+    const getDependencies = (deps) => {
+      const dependencies = R.clone(deps);
+      if (dependencies && dependencies.length) {
+        dependencies.forEach((dependency) => {
+          if (dependency.relativePaths && dependency.relativePaths.length) {
+            dependency.relativePaths.forEach((relativePath) => {
+              if (relativePath.importSpecifiers) delete relativePath.importSpecifiers;
+            });
+          }
+        });
+      }
+      return dependencies;
+    };
 
     return JSON.stringify(
       filterObject(
@@ -123,8 +139,10 @@ export default class Version extends BitObject {
           compiler: obj.compiler,
           tester: obj.tester,
           log: obj.log,
-          dependencies,
+          dependencies: getDependencies(obj.dependencies),
+          devDependencies: getDependencies(obj.devDependencies),
           packageDependencies: obj.packageDependencies,
+          devPackageDependencies: obj.devPackageDependencies,
           bindingPrefix: obj.bindingPrefix
         },
         val => !!val
@@ -134,9 +152,10 @@ export default class Version extends BitObject {
 
   collectDependencies(scope: Scope, withEnvironments?: boolean): Promise<ComponentVersion[]> {
     const envDependencies = [this.compiler, this.tester];
-    const allDependencies = withEnvironments
+    const dependencies = withEnvironments
       ? this.flattenedDependencies.concat(envDependencies)
       : this.flattenedDependencies;
+    const allDependencies = dependencies.concat(this.flattenedDevDependencies);
     return scope.importManyOnes(allDependencies, true);
   }
 
@@ -147,11 +166,13 @@ export default class Version extends BitObject {
   }
 
   toObject() {
-    const dependencies = this.dependencies.map((dependency) => {
-      const dependencyClone = R.clone(dependency);
-      dependencyClone.id = dependency.id.toString();
-      return dependencyClone;
-    });
+    const getDependencies = (deps) => {
+      return deps.map((dependency) => {
+        const dependencyClone = R.clone(dependency);
+        dependencyClone.id = dependency.id.toString();
+        return dependencyClone;
+      });
+    };
     return filterObject(
       {
         files: this.files
@@ -187,9 +208,12 @@ export default class Version extends BitObject {
         ci: this.ci,
         specsResults: this.specsResults,
         docs: this.docs,
-        dependencies,
+        dependencies: getDependencies(this.dependencies),
+        devDependencies: getDependencies(this.devDependencies),
         flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
-        packageDependencies: this.packageDependencies
+        flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.toString()),
+        packageDependencies: this.packageDependencies,
+        devPackageDependencies: this.devPackageDependencies
       },
       val => !!val
     );
@@ -216,15 +240,18 @@ export default class Version extends BitObject {
       specsResults,
       dependencies,
       flattenedDependencies,
+      devDependencies,
+      flattenedDevDependencies,
+      devPackageDependencies,
       packageDependencies
     } = JSON.parse(contents);
-    const getDependencies = () => {
-      if (dependencies.length && R.is(String, first(dependencies))) {
+    const getDependencies = (deps) => {
+      if (deps.length && R.is(String, first(deps))) {
         // backward compatibility
-        return dependencies.map(dependency => ({ id: BitId.parse(dependency) }));
+        return deps.map(dependency => ({ id: BitId.parse(dependency) }));
       }
 
-      return dependencies.map(dependency => ({
+      return deps.map(dependency => ({
         id: BitId.parse(dependency.id),
         relativePaths: dependency.relativePaths
       }));
@@ -254,8 +281,11 @@ export default class Version extends BitObject {
       ci,
       specsResults,
       docs,
-      dependencies: getDependencies(),
+      dependencies: getDependencies(dependencies),
       flattenedDependencies: BitIds.deserialize(flattenedDependencies),
+      devDependencies: getDependencies(devDependencies),
+      flattenedDevDependencies: BitIds.deserialize(flattenedDevDependencies),
+      devPackageDependencies,
       packageDependencies
     });
   }
@@ -268,7 +298,8 @@ export default class Version extends BitObject {
     component,
     files,
     dists,
-    flattenedDeps,
+    flattenedDependencies,
+    flattenedDevDependencies,
     message,
     specsResults,
     username,
@@ -276,7 +307,8 @@ export default class Version extends BitObject {
   }: {
     component: ConsumerComponent,
     files: ?Array<SourceFile>,
-    flattenedDeps: BitId[],
+    flattenedDependencies: BitId[],
+    flattenedDevDependencies: BitId[],
     message: string,
     dists: ?Array<DistFile>,
     specsResults: ?Results,
@@ -307,8 +339,11 @@ export default class Version extends BitObject {
       specsResults,
       docs: component.docs,
       packageDependencies: component.packageDependencies,
-      flattenedDependencies: flattenedDeps,
-      dependencies: component.dependencies
+      devPackageDependencies: component.devPackageDependencies,
+      flattenedDependencies,
+      flattenedDevDependencies,
+      dependencies: component.dependencies,
+      devDependencies: component.devDependencies
     });
   }
 

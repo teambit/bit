@@ -25,6 +25,10 @@ export default class ComponentVersion {
     return this.getVersion(repository).then(version => version.flattenedDependencies);
   }
 
+  flattenedDevDependencies(repository: Repository): Promise<BitId[]> {
+    return this.getVersion(repository).then(version => version.flattenedDevDependencies);
+  }
+
   toId() {
     return new BitId({
       scope: this.component.scope,
@@ -42,8 +46,9 @@ export default class ComponentVersion {
     return this.getVersion(scope.objects).then((version) => {
       if (!version) {
         logger.debug(
-          `toVersionDependencies, component ${this.component.id().toString()}, version ${this
-            .version} not found, going to fetch from a remote`
+          `toVersionDependencies, component ${this.component.id().toString()}, version ${
+            this.version
+          } not found, going to fetch from a remote`
         );
         if (this.component.scope === scope.name) {
           // it should have been fetched locally, since it wasn't found, this is an error
@@ -59,8 +64,9 @@ export default class ComponentVersion {
       }
 
       logger.debug(
-        `toVersionDependencies, component ${this.component.id().toString()}, version ${this
-          .version} found, going to collect its dependencies`
+        `toVersionDependencies, component ${this.component.id().toString()}, version ${
+          this.version
+        } found, going to collect its dependencies`
       );
       return version
         .collectDependencies(scope, withEnvironments)

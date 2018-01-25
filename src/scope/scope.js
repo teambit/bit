@@ -384,7 +384,8 @@ export default class Scope {
 
       const component = await this.sources.addSource({
         source: consumerComponent,
-        depIds: flattenedDependencies,
+        flattenedDependencies,
+        flattenedDevDependencies: [], // @todo implement
         message,
         exactVersion,
         releaseType,

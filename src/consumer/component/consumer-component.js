@@ -271,6 +271,10 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDependencies);
   }
 
+  flattenedDevDependencies(): BitIds {
+    return BitIds.fromObject(this.flattenedDevDependencies);
+  }
+
   /**
    * When dists are written by a consumer (as opposed to isolated-environment for example), the dist-entry and
    * dist-target are taken into account for calculating the path.

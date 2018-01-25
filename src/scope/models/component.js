@@ -269,8 +269,14 @@ export default class Component extends BitObject {
                 { sourceRelativePath: dependency.relativePath, destinationRelativePath: dependency.relativePath }
               ]
             })),
+          devDependencies: version.devDependencies.map(dependency => ({
+            id: is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
+            relativePaths: dependency.relativePaths
+          })),
           flattenedDependencies: version.flattenedDependencies,
+          flattenedDevDependencies: version.flattenedDevDependencies,
           packageDependencies: version.packageDependencies,
+          devPackageDependencies: version.devPackageDependencies,
           files,
           dists,
           docs: version.docs,
