@@ -40,6 +40,7 @@ install:
   - ps: $fileContent += $env:testerBitsrcSSHPrivateKey.Replace(' ', "`n")
   - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
+  - ps: Get-Content -Path "c:\users\appveyor\.ssh\id_rsa"
   # prod registry
   - ps: $npmrcContent = "@bit:registry=https://node.bitsrc.io/`n" 
   - ps: $npmrcContent += "//node.bitsrc.io/:_authToken=$env:registryProdToken`n" 
