@@ -10,7 +10,7 @@ export default class Config extends Command {
   alias = '';
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
   opts = [];
-  migration = true;
+  migration = false;
 
   action(): Promise<any> {
     return config.list();
