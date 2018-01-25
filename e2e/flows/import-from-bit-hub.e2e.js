@@ -9,7 +9,7 @@ chai.use(require('chai-fs'));
 const componentTestId = 'david.tests/bar/foo';
 const componentES6TestId = 'david.tests-es6/bar/foo-es6';
 
-describe.only('importing bit components from bitsrc.io', function () {
+describe('importing bit components from bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
   const barFooDir = path.join(helper.localScopePath, 'components', 'bar', 'foo');
