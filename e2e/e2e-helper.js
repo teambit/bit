@@ -255,7 +255,7 @@ export default class Helper {
     fs.removeSync(path.join(this.localScopePath, 'components'));
     this.runCmd('bit init');
     this.addRemoteScope();
-    return withDist ? this.runCmd('bit import') : this.runCmd('bit import --ignore-dist');
+    return withDist ? this.runCmd('bit import --force') : this.runCmd('bit import --ignore-dist --force');
   }
 
   mimicGitCloneLocalProjectWithoutImport() {
