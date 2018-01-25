@@ -20,7 +20,7 @@ jobs:
     working_directory: ~/.ssh
     steps:
       - run: "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
-      - run: echo ${bithubKey} >> id_rsa
+      - run: echo ${testerBitsrcSSHPrivateKey} >> id_rsa
       - run: "echo \"-----END RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
       - save_cache:
           key: bitsrc-ssh-key
@@ -154,6 +154,8 @@ jobs:
       - run:
           name: npm link
           command: npm link
+      - run: bit config set user.name tester
+      - run: bit config set user.email ci@bitsrc.io
       - run:
           name: Run e2e tests
           command: circleci tests glob "e2e/**/*.e2e.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
