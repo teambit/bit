@@ -730,7 +730,9 @@ export default class Component {
           : component.files.filter(file => file.test);
         const results = await run(component.mainFile, testFilesList);
         if (!keep) await isolatedEnvironment.destroy();
-        return isCI ? { specResults: results, mainFile: this.calculateMainDistFile() } : results;
+        return isCI
+          ? { mainFile: component.mainFile, specResults: results, mainDistFile: this.calculateMainDistFile() }
+          : results;
       } catch (e) {
         await isolatedEnvironment.destroy();
         return Promise.reject(e);
@@ -797,7 +799,24 @@ export default class Component {
         // written, probably by this.writeDists()
       }
 
-      return isCI ? { mainFile: this.calculateMainDistFile(), dists: this.dists } : this.dist;
+      if (isCI) {
+        const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
+        try {
+          await isolatedEnvironment.create();
+          const isolateOpts = {
+            verbose,
+            installPackages: true,
+            noPackageJson: false
+          };
+          const { component } = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
+          if (!keep) await isolatedEnvironment.destroy();
+          return { mainFile: component.mainFile, mainDistFile: this.calculateMainDistFile(), dists: this.dists };
+        } catch (err) {
+          await isolatedEnvironment.destroy();
+          return Promise.reject(err);
+        }
+      }
+      return this.dist;
     }
 
     logger.debug('compilerId found, start building');
