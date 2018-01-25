@@ -297,7 +297,7 @@ export default class Consumer {
     }
     if (!force) {
       const allComponentsIds = dependenciesFromBitJson.concat(componentsFromBitMap);
-      await this.warnForModifiedComponents(allComponentsIds);
+      await this.warnForModifiedOrNewComponents(allComponentsIds);
     }
 
     let componentsAndDependenciesBitJson = [];
@@ -341,9 +341,9 @@ export default class Consumer {
     return { dependencies: componentsAndDependencies };
   }
 
-  async warnForModifiedComponents(ids: BitId[]) {
+  async warnForModifiedOrNewComponents(ids: BitId[]) {
     const modifiedComponents = await filterAsync(ids, (id) => {
-      return this.getComponentStatusById(id).then(status => status.modified);
+      return this.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
     });
 
     if (modifiedComponents.length) {
@@ -375,7 +375,7 @@ export default class Consumer {
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = rawIds.map(raw => BitId.parse(raw));
     if (!force) {
-      await this.warnForModifiedComponents(bitIds);
+      await this.warnForModifiedOrNewComponents(bitIds);
     }
     const componentsWithDependencies = await this.scope.getManyWithAllVersions(bitIds, cache);
     await this.writeToComponentsDir({
