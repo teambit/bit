@@ -300,36 +300,43 @@ export default class Scope {
     } catch (e) {
       throw new CyclicDependencies(e);
     }
-    const getFlattenForComponent = (consumerComponent, cache) => {
-      const flattenedDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
-        // Try to get the flatten dependencies from cache
-        let flattenedDependencies = cache.get(dependency.id.toString());
-        if (flattenedDependencies) return Promise.resolve(flattenedDependencies);
 
-        // Calculate the flatten dependencies
-        if (
-          consumerComponentsIdsMap.has(dependency.id.toStringWithoutVersion()) ||
-          consumerComponentsIdsMap.has(dependency.id.toString())
-        ) {
-          // when a dependency includes in the components list to tag, don't use the existing version, because the
-          // existing version will be obsolete once it's tagged. Instead, remove the version, and later on, when
-          // importDependencies is called, it'll fetch the newly tagged version.
-          dependency.id.version = undefined;
-        }
-        const versionDependencies = await this.importDependencies([dependency.id]);
-        // Copy the exact version from flattenedDependency to dependencies
-        if (!dependency.id.hasVersion()) {
-          dependency.id.version = first(versionDependencies).component.version;
-        }
+    const getFlattenForDependency = async (dependency, cache) => {
+      // Try to get the flatten dependencies from cache
+      let flattenedDependencies = cache.get(dependency.id.toString());
+      if (flattenedDependencies) return Promise.resolve(flattenedDependencies);
 
-        flattenedDependencies = await flattenDependencyIds(versionDependencies, this.objects);
+      // Calculate the flatten dependencies
+      if (
+        consumerComponentsIdsMap.has(dependency.id.toStringWithoutVersion()) ||
+        consumerComponentsIdsMap.has(dependency.id.toString())
+      ) {
+        // when a dependency includes in the components list to tag, don't use the existing version, because the
+        // existing version will be obsolete once it's tagged. Instead, remove the version, and later on, when
+        // importDependencies is called, it'll fetch the newly tagged version.
+        dependency.id.version = undefined;
+      }
+      const versionDependencies = await this.importDependencies([dependency.id]);
+      // Copy the exact version from flattenedDependency to dependencies
+      if (!dependency.id.hasVersion()) {
+        dependency.id.version = first(versionDependencies).component.version;
+      }
 
-        // Store the flatten dependencies in cache
-        cache.set(dependency.id.toString(), flattenedDependencies);
+      flattenedDependencies = await flattenDependencyIds(versionDependencies, this.objects);
 
-        return flattenedDependencies;
-      });
-      return Promise.all(flattenedDependenciesP);
+      // Store the flatten dependencies in cache
+      cache.set(dependency.id.toString(), flattenedDependencies);
+
+      return flattenedDependencies;
+    };
+
+    const getFlattenForComponent = async (consumerComponent, cache, dev = false) => {
+      const dependencies = dev ? consumerComponent.devDependencies : consumerComponent.dependencies;
+      const flattenedDependenciesP = dependencies.map(dependency => getFlattenForDependency(dependency, cache));
+      let flattenedDependencies = await Promise.all(flattenedDependenciesP);
+      flattenedDependencies = R.flatten(flattenedDependencies);
+      const predicate = id => id.toString(); // TODO: should be moved to BitId class
+      return R.uniqBy(predicate)(flattenedDependencies);
     };
 
     logger.debug('scope.putMany: sequentially build all components');
@@ -356,10 +363,8 @@ export default class Scope {
       const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
       // This happens when there is a dependency which have been already committed
       if (!consumerComponent) return Promise.resolve([]);
-      let flattenedDependencies = await getFlattenForComponent(consumerComponent, allDependencies);
-      flattenedDependencies = R.flatten(flattenedDependencies);
-      const predicate = id => id.toString(); // TODO: should be moved to BitId class
-      flattenedDependencies = R.uniqBy(predicate)(flattenedDependencies);
+      const flattenedDependencies = await getFlattenForComponent(consumerComponent, allDependencies);
+      const flattenedDevDependencies = await getFlattenForComponent(consumerComponent, allDependencies, true);
 
       const addSharedDirAndDistEntry = (pathStr) => {
         const withSharedDir = consumerComponent.originallySharedDir
@@ -385,7 +390,7 @@ export default class Scope {
       const component = await this.sources.addSource({
         source: consumerComponent,
         flattenedDependencies,
-        flattenedDevDependencies: [], // @todo implement
+        flattenedDevDependencies,
         message,
         exactVersion,
         releaseType,
