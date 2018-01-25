@@ -21,6 +21,7 @@ import Test from './commands/public-cmds/test-cmd';
 import Show from './commands/public-cmds/show-cmd';
 import Status from './commands/public-cmds/status-cmd';
 import CatObject from './commands/private-cmds/cat-object-cmd';
+import CatComponent from './commands/private-cmds/cat-component-cmd';
 import DescribeScope from './commands/private-cmds/_scope-cmd';
 import Put from './commands/private-cmds/_put-cmd';
 import Fetch from './commands/private-cmds/_fetch-cmd';
@@ -62,6 +63,7 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new ClearCache(),
       new Remote(),
       new CatObject(),
+      new CatComponent(),
       new Show(),
       new Log(),
       new Search(),
