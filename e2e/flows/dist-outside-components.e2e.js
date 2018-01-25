@@ -5,7 +5,7 @@ import Helper from '../e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe('dists file are written outside the components dir', function () {
+describe.only('dists file are written outside the components dir', function () {
   this.timeout(0);
   const helper = new Helper();
   const appJsFixture = `const barFoo = require('${helper.getRequireBitPath(
@@ -248,7 +248,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         helper.importComponent('bar/foo');
         clonedScope = helper.cloneLocalScope();
       });
-      describe('with dist.entry populated', () => {
+      describe.only('with dist.entry populated', () => {
         before(() => {
           helper.modifyFieldInBitJson('dist', { entry: 'src' });
           helper.build('bar/foo');
