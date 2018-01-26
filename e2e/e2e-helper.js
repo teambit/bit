@@ -93,6 +93,11 @@ export default class Helper {
     return JSON.parse(result);
   }
 
+  catComponent(id: string): Object {
+    const result = this.runCmd(`bit cat-component ${id}`);
+    return JSON.parse(result);
+  }
+
   writeBitJson(bitJson: Object) {
     const bitJsonPath = path.join(this.localScopePath, 'bit.json');
     return fs.writeJSONSync(bitJsonPath, bitJson);

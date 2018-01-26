@@ -678,17 +678,22 @@ export default class Consumer {
 
       // sometime dependencies from the FS don't have an exact version.
       // in case of auto-tag, the files can be identical between the model and the FS, but the dependency version would
-      // be different.
-      // we don't want to show the component as modified in such cases, so copy the version from the model
-      version.dependencies.forEach((dependency) => {
-        const idWithoutVersion = dependency.id.toStringWithoutVersion();
-        const dependencyFromModel = componentFromModel.dependencies.find(
-          modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
-        );
-        if (dependencyFromModel) {
-          dependency.id = dependencyFromModel.id;
-        }
-      });
+      // be different. We don't want to show the component as modified in such cases, so copy the version from the model
+      const copyDependenciesVersionsFromModelToFS = (dev = false) => {
+        const dependenciesFS = dev ? version.devDependencies : version.dependencies;
+        const dependenciesModel = dev ? componentFromModel.devDependencies : componentFromModel.dependencies;
+        dependenciesFS.forEach((dependency) => {
+          const idWithoutVersion = dependency.id.toStringWithoutVersion();
+          const dependencyFromModel = dependenciesModel.find(
+            modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
+          );
+          if (dependencyFromModel) {
+            dependency.id = dependencyFromModel.id;
+          }
+        });
+      };
+      copyDependenciesVersionsFromModelToFS();
+      copyDependenciesVersionsFromModelToFS(true);
 
       /*
         sort packageDependencies for comparing
