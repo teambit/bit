@@ -60,7 +60,7 @@ describe('dev-dependencies functionality', function () {
         expect(barFoo.flattenedDependencies).to.include('utils/is-string@0.0.1');
       });
     });
-    describe.only('without dependencies and with dev-dependencies', () => {
+    describe('without dependencies and with dev-dependencies', () => {
       let barFoo;
       before(() => {
         // foo.js doesn't have any dependencies. foo.spec.js does have dependencies.
