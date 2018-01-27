@@ -194,7 +194,7 @@ export default class SourceRepository {
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
     consumerComponent.mainFile = pathNormalizeToLinux(addSharedDir(consumerComponent.mainFile));
-    consumerComponent.dependencies.forEach((dependency) => {
+    consumerComponent.getAllDependencies().forEach((dependency) => {
       dependency.relativePaths.forEach((relativePath) => {
         relativePath.sourceRelativePath = addSharedDir(relativePath.sourceRelativePath);
       });

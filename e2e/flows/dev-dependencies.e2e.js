@@ -119,7 +119,7 @@ describe('foo', () => {
         expect(output).to.have.a.string('no new components');
         expect(output).to.have.a.string('no modified components');
       });
-      describe.skip('export and import to a new scope', () => {
+      describe('export and import to a new scope', () => {
         before(() => {
           helper.exportAllComponents();
           helper.reInitLocalScope();
@@ -127,7 +127,8 @@ describe('foo', () => {
           helper.importComponent('bar/foo');
         });
         it('tests should pass', () => {
-          const testResults = helper.testComponent('bar/foo');
+          const output = helper.testComponent('bar/foo');
+          expect(output).to.have.string('tests passed');
         });
       });
     });

@@ -1,7 +1,7 @@
 /** @flow */
 import path from 'path';
 import R from 'ramda';
-import { DEFAULT_INDEX_NAME, COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import Component from '../component';
@@ -9,7 +9,8 @@ import { Driver } from '../../driver';
 import { pathNormalizeToLinux, pathRelative, pathJoinLinux } from '../../utils';
 import logger from '../../logger/logger';
 import { Consumer } from '../../consumer';
-import type { RelativePath } from './consumer-component';
+import type { RelativePath } from './dependencies/dependency';
+import { Dependencies } from './dependencies';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -37,7 +38,7 @@ function findComponentsOfDepsFiles(
   entryComponentId: string,
   consumer: Consumer,
   bindingPrefix: string,
-  componentFromModel,
+  componentFromModel: Component,
   driver: Driver
 ): Object {
   const packagesDeps = {};
@@ -109,9 +110,9 @@ function findComponentsOfDepsFiles(
         // dependencies array this component with the relativePaths array. Find the relativePath of this dep-file
         // to get the correct destinationRelativePath. There is no other way to obtain this info.
         const componentBitId = BitId.parse(componentId);
-        const dependency = componentFromModel.component.dependencies.find(
-          dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion()
-        );
+        const dependency = componentFromModel.component
+          .getAllDependencies()
+          .find(dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion());
         if (!dependency) {
           throw new Error(
             `the auto-generated file ${depFile} should be connected to ${
@@ -262,9 +263,9 @@ function findComponentsOfDepsFiles(
             }
           }
           if (componentFromModel) {
-            const modelDep = componentFromModel.dependencies.find(
-              dep => dep.id.toStringWithoutVersion() === componentId
-            );
+            const modelDep = componentFromModel
+              .getAllDependencies()
+              .find(dep => dep.id.toStringWithoutVersion() === componentId);
             if (modelDep) return modelDep.id.toString();
           }
           return null;
@@ -418,12 +419,14 @@ export default (async function loadDependenciesForComponent(
   const traversedCompDeps = traversedDeps.componentsDeps;
   const traversedCompDevDeps = traversedDeps.devComponentsDeps;
 
-  component.dependencies = Object.keys(traversedCompDeps).map((depId) => {
+  const dependencies = Object.keys(traversedCompDeps).map((depId) => {
     return { id: BitId.parse(depId), relativePaths: traversedCompDeps[depId] };
   });
-  component.devDependencies = Object.keys(traversedCompDevDeps).map((depId) => {
+  component.setDependencies(dependencies);
+  const devDependencies = Object.keys(traversedCompDevDeps).map((depId) => {
     return { id: BitId.parse(depId), relativePaths: traversedCompDevDeps[depId] };
   });
+  component.setDevDependencies(devDependencies);
   const untrackedDependencies = traversedDeps.untrackedDeps;
   if (!R.isEmpty(untrackedDependencies)) missingDependencies.untrackedDependencies = untrackedDependencies;
   component.packageDependencies = traversedDeps.packagesDeps;

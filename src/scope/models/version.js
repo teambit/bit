@@ -10,6 +10,7 @@ import ComponentVersion from '../component-version';
 import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
+import { Dependencies } from '../../consumer/component/dependencies';
 
 type CiProps = {
   error: Object,
@@ -66,8 +67,8 @@ export default class Version extends BitObject {
   ci: CiProps | {};
   specsResults: ?Results;
   docs: ?(Doclet[]);
-  dependencies: Array<Object>;
-  devDependencies: Array<Object>;
+  dependencies: Dependencies;
+  devDependencies: Dependencies;
   flattenedDependencies: BitIds;
   flattenedDevDependencies: BitIds;
   packageDependencies: { [string]: string };
@@ -99,8 +100,8 @@ export default class Version extends BitObject {
     this.compiler = compiler;
     this.tester = tester;
     this.log = log;
-    this.dependencies = dependencies || [];
-    this.devDependencies = devDependencies || [];
+    this.dependencies = new Dependencies(dependencies);
+    this.devDependencies = new Dependencies(devDependencies);
     this.docs = docs;
     this.ci = ci || {};
     this.specsResults = specsResults;
@@ -155,11 +156,18 @@ export default class Version extends BitObject {
     );
   }
 
-  collectDependencies(scope: Scope, withEnvironments?: boolean): Promise<ComponentVersion[]> {
+  getAllFlattenedDependencies() {
+    return this.flattenedDependencies.concat(this.flattenedDevDependencies);
+  }
+
+  getAllDependencies() {
+    return this.dependencies.dependencies.concat(this.devDependencies.dependencies);
+  }
+
+  collectDependencies(scope: Scope, withEnvironments?: boolean, dev?: boolean = false): Promise<ComponentVersion[]> {
     const envDependencies = [this.compiler, this.tester];
-    const dependencies = withEnvironments
-      ? this.flattenedDependencies.concat(envDependencies)
-      : this.flattenedDependencies;
+    const flattenedDependencies = dev ? this.flattenedDevDependencies : this.flattenedDependencies;
+    const dependencies = withEnvironments ? flattenedDependencies.concat(envDependencies) : flattenedDependencies;
     const allDependencies = dependencies.concat(this.flattenedDevDependencies);
     return scope.importManyOnes(allDependencies, true);
   }
@@ -171,13 +179,6 @@ export default class Version extends BitObject {
   }
 
   toObject() {
-    const getDependencies = (deps) => {
-      return deps.map((dependency) => {
-        const dependencyClone = R.clone(dependency);
-        dependencyClone.id = dependency.id.toString();
-        return dependencyClone;
-      });
-    };
     return filterObject(
       {
         files: this.files
@@ -213,8 +214,8 @@ export default class Version extends BitObject {
         ci: this.ci,
         specsResults: this.specsResults,
         docs: this.docs,
-        dependencies: getDependencies(this.dependencies),
-        devDependencies: getDependencies(this.devDependencies),
+        dependencies: this.dependencies.cloneAsString(),
+        devDependencies: this.devDependencies.cloneAsString(),
         flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
         flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.toString()),
         packageDependencies: this.packageDependencies,
@@ -347,8 +348,8 @@ export default class Version extends BitObject {
       devPackageDependencies: component.devPackageDependencies,
       flattenedDependencies,
       flattenedDevDependencies,
-      dependencies: component.dependencies,
-      devDependencies: component.devDependencies
+      dependencies: component.dependencies.get(),
+      devDependencies: component.devDependencies.get()
     });
   }
 

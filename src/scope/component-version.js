@@ -42,36 +42,36 @@ export default class ComponentVersion {
     return this.toId();
   }
 
-  toVersionDependencies(scope: Scope, source: string, withEnvironments?: boolean): Promise<VersionDependencies> {
-    return this.getVersion(scope.objects).then((version) => {
-      if (!version) {
-        logger.debug(
-          `toVersionDependencies, component ${this.component.id().toString()}, version ${
-            this.version
-          } not found, going to fetch from a remote`
-        );
-        if (this.component.scope === scope.name) {
-          // it should have been fetched locally, since it wasn't found, this is an error
-          throw new Error(
-            `Version ${this.version} of ${this.component.id().toString()} was not found in scope ${scope.name}`
-          );
-        }
-        return scope.remotes().then((remotes) => {
-          const src = this.id;
-          src.scope = source;
-          return scope.getExternal({ id: src, remotes, localFetch: false, withEnvironments });
-        });
-      }
-
+  async toVersionDependencies(scope: Scope, source: string, withEnvironments?: boolean): Promise<VersionDependencies> {
+    const version = await this.getVersion(scope.objects);
+    if (!version) {
       logger.debug(
         `toVersionDependencies, component ${this.component.id().toString()}, version ${
           this.version
-        } found, going to collect its dependencies`
+        } not found, going to fetch from a remote`
       );
-      return version
-        .collectDependencies(scope, withEnvironments)
-        .then(dependencies => new VersionDependencies(this, dependencies, source));
-    });
+      if (this.component.scope === scope.name) {
+        // it should have been fetched locally, since it wasn't found, this is an error
+        throw new Error(
+          `Version ${this.version} of ${this.component.id().toString()} was not found in scope ${scope.name}`
+        );
+      }
+      return scope.remotes().then((remotes) => {
+        const src = this.id;
+        src.scope = source;
+        return scope.getExternal({ id: src, remotes, localFetch: false, withEnvironments });
+      });
+    }
+
+    logger.debug(
+      `toVersionDependencies, component ${this.component.id().toString()}, version ${
+        this.version
+      } found, going to collect its dependencies`
+    );
+    const dependencies = await version.collectDependencies(scope, withEnvironments);
+    const devDependencies = await version.collectDependencies(scope, withEnvironments, true);
+
+    return new VersionDependencies(this, dependencies, devDependencies, source);
   }
 
   toConsumer(repo: Repository) {

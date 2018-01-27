@@ -13,7 +13,8 @@ import { outputFile, getWithoutExt, searchFilesIgnoreExt, getExt } from '../util
 import logger from '../logger/logger';
 import { ComponentWithDependencies } from '../scope';
 import Component from '../consumer/component';
-import { Dependency, RelativePath } from '../consumer/component/consumer-component';
+import { Dependency } from '../consumer/component/dependencies';
+import { RelativePath } from '../consumer/component/dependencies/dependency';
 import { BitIds } from '../bit-id';
 import fileTypesPlugins from '../plugins/file-types-plugins';
 import { getSync } from '../api/consumer/lib/global-config';
@@ -250,13 +251,12 @@ async function writeDependencyLinks(
   };
 
   const componentLinks = (
-    // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
-    dependencies: Component[],
+    dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
     parentComponent: Component,
     parentComponentMap: ComponentMap
   ) => {
-    const directDependencies: Dependency[] = parentComponent.dependencies;
-    const flattenedDependencies: BitIds = parentComponent.flattenedDependencies;
+    const directDependencies: Dependency[] = parentComponent.getAllDependencies();
+    const flattenedDependencies: BitIds = parentComponent.getAllFlattenedDependencies();
     if (!directDependencies || !directDependencies.length) return [];
     const links = directDependencies.map((dep: Dependency) => {
       if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
@@ -304,15 +304,15 @@ async function writeDependencyLinks(
     logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
     componentWithDeps.component.stripOriginallySharedDir(consumer.bitMap);
 
-    const directLinksP = componentLinks(componentWithDeps.dependencies, componentWithDeps.component, componentMap);
+    const directLinksP = componentLinks(componentWithDeps.allDependencies, componentWithDeps.component, componentMap);
 
     if (componentWithDeps.component.dependenciesSavedAsComponents) {
-      const indirectLinksP = componentWithDeps.dependencies.map((dep: Component) => {
+      const indirectLinksP = componentWithDeps.allDependencies.map((dep: Component) => {
         const depComponentMap = consumer.bitMap.getComponent(dep.id, true);
         // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
         // also the indirect ones
         // The dep.dependencies contain only an id and relativePaths and not the full object
-        return componentLinks(componentWithDeps.dependencies, dep, depComponentMap);
+        return componentLinks(componentWithDeps.allDependencies, dep, depComponentMap);
       });
       return Promise.all([directLinksP, ...indirectLinksP]);
     }

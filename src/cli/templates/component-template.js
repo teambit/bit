@@ -39,7 +39,7 @@ function comparator(a, b) {
   return a === b;
 }
 
-function convertObjectToPrintable(component, isFromFs, includeDependecies = false) {
+function convertObjectToPrintable(component: ConsumerComponent, isFromFs, includeDependencies = false) {
   const obj = {};
   const parsePackages = (packages) => {
     return !R.isEmpty(packages) && !R.isNil(packages)
@@ -67,9 +67,9 @@ function convertObjectToPrintable(component, isFromFs, includeDependecies = fals
   obj.language = lang || null;
   obj.tester = testerId ? testerId.toString() : null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
-  if (includeDependecies) {
-    obj.dependencies = dependencies.map(dep => dep.id.toString());
-    obj.devDependencies = devDependencies.map(dep => dep.id.toString());
+  if (includeDependencies) {
+    obj.dependencies = dependencies.toStringOfIds();
+    obj.devDependencies = devDependencies.toStringOfIds();
   }
   obj.packages = parsePackages(packageDependencies);
   obj.devPackages = parsePackages(devPackageDependencies);
@@ -86,11 +86,8 @@ function convertObjectToPrintable(component, isFromFs, includeDependecies = fals
   return obj;
 }
 
-function generateDependenciesTable(component, showRemoteVersion) {
-  if (
-    (!component.dependencies || !component.dependencies.length) &&
-    (!component.devDependencies || !component.devDependencies.length)
-  ) {
+function generateDependenciesTable(component: ConsumerComponent, showRemoteVersion) {
+  if (!component.hasDependencies()) {
     return '';
   }
   const dependencyHeader = [];
