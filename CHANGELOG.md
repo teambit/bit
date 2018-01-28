@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - support separating dev-dependencies and dev-packages from dependencies and packages when they originated from tests files 
+
+## [0.12.3] - 2018-01-28
+
 - avoid overriding not only modified components but also new components when running `bit import`, unless `--force' flag is used
 - validate version number during tag action
 - allow `bit config` to run in non initialized directory
