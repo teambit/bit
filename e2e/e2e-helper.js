@@ -279,8 +279,8 @@ export default class Helper {
   commitComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
     return this.runCmd(`bit tag ${id} -m ${commitMsg} ${options}`);
   }
-  tagWithoutMessage(id: string, options: string = '') {
-    return this.runCmd(`bit tag ${id} ${options}`);
+  tagWithoutMessage(id: string, version: string = '', options: string = '') {
+    return this.runCmd(`bit tag ${id} ${version} ${options}`);
   }
   removeComponent(id: string, flags: string = '') {
     return this.runCmd(`bit remove ${id} ${flags}`);

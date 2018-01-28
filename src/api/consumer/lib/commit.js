@@ -1,10 +1,12 @@
 /** @flow */
+import semver from 'semver';
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import { BitId } from '../../../bit-id';
 import HooksManager from '../../../hooks';
 import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from '../../../constants';
+import InvalidVersion from './exceptions/invalid-version';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -18,6 +20,7 @@ export async function commitAction(args: {
   ignoreMissingDependencies?: boolean
 }) {
   const { id, message, exactVersion, releaseType, force, verbose, ignoreMissingDependencies } = args;
+  const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_HOOK, args);
   const consumer: Consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
@@ -29,7 +32,7 @@ export async function commitAction(args: {
   const commitResults = await consumer.commit(
     [id],
     message,
-    exactVersion,
+    validExactVersion,
     releaseType,
     force,
     verbose,
@@ -75,6 +78,7 @@ export async function commitAllAction(args: {
     scope,
     includeImported
   } = args;
+  const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_ALL_HOOK, args);
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
@@ -89,7 +93,7 @@ export async function commitAllAction(args: {
   const commitResults = await consumer.commit(
     commitPendingComponents,
     message,
-    exactVersion,
+    validExactVersion,
     releaseType,
     force,
     verbose,
@@ -100,4 +104,13 @@ export async function commitAllAction(args: {
   commitResults.newComponents = newComponents;
   HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, commitResults);
   return commitResults;
+}
+
+function _validateVersion(version) {
+  if (version) {
+    const validVersion = semver.valid(version);
+    if (!validVersion) throw new InvalidVersion(version);
+    return validVersion;
+  }
+  return null;
 }

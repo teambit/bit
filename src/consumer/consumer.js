@@ -508,7 +508,7 @@ export default class Consumer {
     const remotes: Remotes = await this.scope.remotes();
     const writeComponentsP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
       const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
-      // if a it doesn't go to the hub, it can't import dependencies as packages
+      // if it doesn't go to the hub, it can't import dependencies as packages
       componentWithDeps.component.dependenciesSavedAsComponents =
         saveDependenciesAsComponents || !remotes.isHub(componentWithDeps.component.scope);
       // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
@@ -539,10 +539,17 @@ export default class Consumer {
     const writtenComponents = await Promise.all(writeComponentsP);
 
     const allDependenciesP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
-      if (!componentWithDeps.component.dependenciesSavedAsComponents) return Promise.resolve(null);
       const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         const depFromBitMap = this.bitMap.getComponent(dependencyId, false);
+        if (!componentWithDeps.component.dependenciesSavedAsComponents && !depFromBitMap) {
+          // when depFromBitMap is true, it means that this component was imported as a component already before
+          // don't change it now from a component to a package. (a user can do it at any time by using export --eject).
+          logger.debug(
+            `writeToComponentsDir, ignore dependency ${dependencyId}. It'll be installed later using npm-client`
+          );
+          return Promise.resolve(null);
+        }
         if (depFromBitMap && fs.existsSync(depFromBitMap.rootDir)) {
           dep.writtenPath = depFromBitMap.rootDir;
           logger.debug(
@@ -575,7 +582,7 @@ export default class Consumer {
         });
       });
 
-      return Promise.all(writeDependenciesP);
+      return Promise.all(writeDependenciesP).then(deps => deps.filter(dep => dep));
     });
     const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
     const writtenDependencies = writtenDependenciesIncludesNull.filter(dep => dep);
@@ -608,9 +615,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);

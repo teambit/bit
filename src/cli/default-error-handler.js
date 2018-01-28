@@ -38,6 +38,7 @@ import {
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
+import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
@@ -191,6 +192,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     IdExportedAlready,
     err => `error - the component ${chalk.bold(err.id)} has been already exported to ${chalk.bold(err.remote)}`
   ],
+  [InvalidVersion, err => `error - The version ${chalk.bold(err.version)} is not a valid semantic version.`],
   [
     invalidIdOnCommit,
     err => `error - Unable to tag. ${chalk.bold(err.id)} not found.

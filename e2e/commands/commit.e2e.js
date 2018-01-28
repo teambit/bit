@@ -45,6 +45,13 @@ describe('bit tag command', function () {
         helper.addComponent('components/*.js');
         helper.commitAllComponents();
       });
+      it('Should not allow invalid semver', () => {
+        helper.createFile('components', 'default.js');
+        helper.addComponent('components/default.js');
+        const version = 'invalidVersion';
+        const tag = () => helper.tagWithoutMessage('components/default', version);
+        expect(tag).to.throw(`error - The version ${version} is not a valid semantic version.`);
+      });
       it('Should set the version to default version in tag new component', () => {
         helper.createFile('components', 'default.js');
         helper.addComponent('components/default.js');
@@ -115,6 +122,11 @@ describe('bit tag command', function () {
         helper.createFile('components', 'a.js');
         helper.createFile('components', 'b.js');
         helper.addComponent('components/*.js');
+      });
+      it('Should not allow invalid semver', () => {
+        const version = 'invalidVersion';
+        const tag = () => helper.tagAllWithoutMessage(version);
+        expect(tag).to.throw(`error - The version ${version} is not a valid semantic version.`);
       });
       it('Should set the version to default version in tag new component', () => {
         helper.commitAllComponents();

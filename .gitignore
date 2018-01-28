@@ -83,3 +83,6 @@ _book
 
 # pkg
 releases/
+
+# sonarcloud dir
+.scannerwork
