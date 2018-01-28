@@ -1,9 +1,10 @@
 /** @flow */
-
+import yn from 'yn';
 import Command from '../../command';
 import { remove } from '../../../api/consumer';
 import { RemovedObjects, RemovedLocalObjects } from '../../../scope/component-remove';
 import paintRemoved from '../../templates/remove-template';
+import { removePrompt } from '../../../prompts';
 
 export default class Remove extends Command {
   name = 'remove <ids...>';
@@ -13,7 +14,7 @@ export default class Remove extends Command {
     ['f', 'force [boolean]', 'force remove (default = false)'],
     ['t', 'track [boolean]', 'keep tracking component (default = false)'],
     ['d', 'delete-files [boolean]', 'delete local component files'],
-    ['i', 'ignore-prompt [boolean]', "don't prompt when removing remote component"]
+    ['s', 'silent [boolean]', "don't prompt when removing remote component"]
   ];
   loader = true;
   migration = true;
@@ -24,13 +25,26 @@ export default class Remove extends Command {
       force = false,
       track = false,
       deleteFiles = false,
-      ignorePrompt = false
-    }: { force: boolean, track: boolean, deleteFiles: boolean, ignorePrompt: boolean }
+      silent = false
+    }: { force: boolean, track: boolean, deleteFiles: boolean, silent: boolean }
   ): Promise<any> {
-    return remove({ ids, force, track, deleteFiles, ignorePrompt });
+    if (!silent) {
+      return removePrompt().then(({ shoudRemove }) => {
+        if (yn(shoudRemove)) {
+          return remove({ ids, force, track, deleteFiles });
+        }
+        return { localResult: new RemovedLocalObjects({}), remoteResult: [] };
+      });
+    }
+    return remove({ ids, force, track, deleteFiles });
   }
-
-  report({ localResult, remoteResult }: { localResult: RemovedLocalObjects, remoteResult: RemovedObjects }): string {
+  report({
+    localResult = new RemovedLocalObjects({}),
+    remoteResult = []
+  }: {
+    localResult: RemovedLocalObjects,
+    remoteResult: RemovedObjects
+  }): string {
     return paintRemoved(localResult) + this.paintArray(remoteResult);
   }
   paintArray(removedObjectsArray: RemovedObjects) {
