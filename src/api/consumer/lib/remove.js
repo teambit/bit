@@ -7,14 +7,16 @@ export default (async function remove({
   ids,
   force,
   track,
-  deleteFiles
+  deleteFiles,
+  ignorePrompt
 }: {
   ids: string[],
   force: boolean,
   track: boolean,
-  deleteFiles: boolean
+  deleteFiles: boolean,
+  ignorePrompt: boolean
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
   const consumer: Consumer = await loadConsumer();
-  return consumer.remove(ids, force, track, deleteFiles);
+  return consumer.remove(ids, force, track, deleteFiles, ignorePrompt);
 });

@@ -12,16 +12,22 @@ export default class Remove extends Command {
   opts = [
     ['f', 'force [boolean]', 'force remove (default = false)'],
     ['t', 'track [boolean]', 'keep tracking component (default = false)'],
-    ['d', 'delete-files [boolean]', 'delete local component files']
+    ['d', 'delete-files [boolean]', 'delete local component files'],
+    ['i', 'ignore-prompt [boolean]', "don't prompt when removing remote component"]
   ];
   loader = true;
   migration = true;
 
   action(
     [ids]: [string],
-    { force = false, track = false, deleteFiles = false }: { force: boolean, track: boolean, deleteFiles: boolean }
+    {
+      force = false,
+      track = false,
+      deleteFiles = false,
+      ignorePrompt = false
+    }: { force: boolean, track: boolean, deleteFiles: boolean, ignorePrompt: boolean }
   ): Promise<any> {
-    return remove({ ids, force, track, deleteFiles });
+    return remove({ ids, force, track, deleteFiles, ignorePrompt });
   }
 
   report({ localResult, remoteResult }: { localResult: RemovedLocalObjects, remoteResult: RemovedObjects }): string {

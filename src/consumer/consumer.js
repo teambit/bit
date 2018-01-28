@@ -7,6 +7,7 @@ import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
 import partition from 'lodash.partition';
+import yn from 'yn';
 import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
@@ -14,6 +15,8 @@ import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
+import { removePrompt } from '../prompts';
+
 import {
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
@@ -615,9 +618,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -691,7 +694,7 @@ export default class Consumer {
       });
 
       /*
-        sort packageDependencies for comparing
+       sort packageDependencies for comparing
        */
       const sortObject = (obj) => {
         return Object.keys(obj)
@@ -952,7 +955,7 @@ export default class Consumer {
    * @param {boolean} track - keep tracking local staged components in bitmap.
    * @param {boolean} deleteFiles - delete local added files from fs.
    */
-  async remove(ids: string[], force: boolean, track: boolean, deleteFiles: boolean) {
+  async remove(ids: string[], force: boolean, track: boolean, deleteFiles: boolean, ignorePrompt: boolean) {
     // added this to remove support for remove version
     const bitIds = ids.map(bitId => BitId.parse(bitId)).map((id) => {
       id.version = LATEST_BIT_VERSION;
@@ -960,7 +963,7 @@ export default class Consumer {
     });
     const [localIds, remoteIds] = partition(bitIds, id => id.isLocal());
     const localResult = await this.removeLocal(localIds, force, track, deleteFiles);
-    const remoteResult = await this.removeRemote(remoteIds, force);
+    const remoteResult = !R.isEmpty(remoteIds) ? await this.removeRemote(remoteIds, force, ignorePrompt) : [];
     return { localResult, remoteResult };
   }
 
@@ -970,17 +973,21 @@ export default class Consumer {
    * @param {BitIds} bitIds - list of remote component ids to delete
    * @param {boolean} force - delete component that are used by other components.
    */
-  async removeRemote(bitIds: BitIds, force: boolean) {
-    const groupedBitsByScope = groupArray(bitIds, 'scope');
-    const remotes = await this.scope.remotes();
-    const context = {};
-    enrichContextFromGlobal(context);
-    const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
-      const resolvedRemote = await remotes.resolve(key, this.scope);
-      return resolvedRemote.deleteMany(groupedBitsByScope[key], force, context);
-    });
+  async removeRemote(bitIds: BitIds, force: boolean, ignorePrompt: boolean) {
+    const { shoudRemove } = !ignorePrompt ? await removePrompt() : '';
+    if (ignorePrompt || yn(shoudRemove)) {
+      const groupedBitsByScope = groupArray(bitIds, 'scope');
+      const remotes = await this.scope.remotes();
+      const context = {};
+      enrichContextFromGlobal(context);
+      const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
+        const resolvedRemote = await remotes.resolve(key, this.scope);
+        return resolvedRemote.deleteMany(groupedBitsByScope[key], force, context);
+      });
 
-    return Promise.all(removeP);
+      return Promise.all(removeP);
+    }
+    return Promise.resolve([]);
   }
   /**
    * delete files from fs according to imported/created
