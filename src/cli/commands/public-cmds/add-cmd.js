@@ -6,6 +6,7 @@ import Command from '../../command';
 import { add } from '../../../api/consumer';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 import { pathNormalizeToLinux } from '../../../utils';
+import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 
 export default class Add extends Command {
   name = 'add [path...]';
@@ -52,7 +53,7 @@ export default class Add extends Command {
 
     // check if user is trying to add test files only without id
     if (!R.isEmpty(tests) && !id && R.isEmpty(normalizedPathes)) {
-      return Promise.reject("You can't add test files without specifying component id");
+      throw new AddTestsWithoutId();
     }
     return add(
       normalizedPathes,

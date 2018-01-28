@@ -53,6 +53,8 @@ import { MissingMainFile, MissingBitMapComponent } from '../consumer/bit-map/exc
 import EmptyDirectory from '../api/consumer/lib/exceptions/empty-directory';
 import logger from '../logger/logger';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
+import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
+
 import missingDepsTemplate from './templates/missing-dependencies-template';
 
 const errorsMap: [[Error, (err: Error) => string]] = [
@@ -63,6 +65,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
         'fatal: remote url must be defined. please use: `ssh://`, `file://` or `bit://` protocols to define remote access'
       )
   ],
+  [AddTestsWithoutId, () => "You can't add test files without specifying component id"],
   [ConsumerAlreadyExists, () => "there's already a scope"],
   [VersionAlreadyExists, err => `the version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`'],
