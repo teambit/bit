@@ -1,13 +1,14 @@
 /** @flow */
 import chalk from 'chalk';
 import path from 'path';
+import R from 'ramda';
 import Command from '../../command';
 import { add } from '../../../api/consumer';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 import { pathNormalizeToLinux } from '../../../utils';
 
 export default class Add extends Command {
-  name = 'add <path...>';
+  name = 'add [path...]';
   description = 'add any subset of files to be tracked as a component(s)';
   alias = 'a';
   opts = [
@@ -48,6 +49,11 @@ export default class Add extends Command {
     const exludedFiles = exclude
       ? this.splitList(exclude).map(filePath => pathNormalizeToLinux(filePath.trim()))
       : undefined;
+
+    // check if user is trying to add test files only without id
+    if (!R.isEmpty(tests) && !id && R.isEmpty(normalizedPathes)) {
+      return Promise.reject("You can't add test files without specifying component id");
+    }
     return add(
       normalizedPathes,
       id,

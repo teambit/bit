@@ -43,6 +43,24 @@ export default (async function addAction(
   override: boolean
 ): Promise<Object> {
   /**
+   * validatePaths - validate if paths entered by user exist and if not throw error
+   *
+   * @param {string[]} fileArray - array of paths
+   * @returns {Object} componentPathsStats
+   */
+  function validatePaths(fileArray: string[]): Object {
+    const componentPathsStats = {};
+    fileArray.forEach((componentPath) => {
+      if (!existsSync(componentPath)) {
+        throw new PathNotExists(componentPath);
+      }
+      componentPathsStats[componentPath] = {
+        isDir: isDir(componentPath)
+      };
+    });
+    return componentPathsStats;
+  }
+  /**
    * Group files by componentId
    *
    * @param {BitId} componentId - consumer path
@@ -334,7 +352,7 @@ export default (async function addAction(
   const missingFiles = getMissingTestFiles(tests);
   if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
 
-  const componentPathsStats = {};
+  let componentPathsStats = {};
   const resolvedComponentPathsWithGitIgnore = R.flatten(
     await Promise.all(componentPaths.map(componentPath => glob(componentPath, { ignore: ignoreList })))
   );
@@ -345,20 +363,17 @@ export default (async function addAction(
   // Run diff on both arrays to see what was filtered out because of the gitignore file
   const diff = arrayDiff(resolvedComponentPathsWithGitIgnore, resolvedComponentPathsWithoutGitIgnore);
 
-  if (R.isEmpty(resolvedComponentPathsWithoutGitIgnore)) throw new PathNotExists(componentPaths);
-  if (!R.isEmpty(resolvedComponentPathsWithGitIgnore)) {
-    resolvedComponentPathsWithGitIgnore.forEach((componentPath) => {
-      if (!existsSync(componentPath)) {
-        throw new PathNotExists(componentPath);
-      }
-      componentPathsStats[componentPath] = {
-        isDir: isDir(componentPath)
-      };
-    });
+  if (!R.isEmpty(tests) && id && R.isEmpty(resolvedComponentPathsWithoutGitIgnore)) {
+    const resolvedTestFiles = R.flatten(await Promise.all(tests.map(componentPath => glob(componentPath))));
+    componentPathsStats = validatePaths(resolvedTestFiles);
   } else {
-    throw new NoFiles(diff);
+    if (R.isEmpty(resolvedComponentPathsWithoutGitIgnore)) throw new PathNotExists(componentPaths);
+    if (!R.isEmpty(resolvedComponentPathsWithGitIgnore)) {
+      componentPathsStats = validatePaths(resolvedComponentPathsWithGitIgnore);
+    } else {
+      throw new NoFiles(diff);
+    }
   }
-
   // if a user entered multiple paths and entered an id, he wants all these paths to be one component
   const isMultipleComponents = Object.keys(componentPathsStats).length > 1 && !id;
   let added = [];
