@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support adding test files to existing component
+
 ## [0.12.3] - 2018-01-28
 
 - avoid overriding not only modified components but also new components when running `bit import`, unless `--force' flag is used
