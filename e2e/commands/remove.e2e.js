@@ -100,7 +100,7 @@ describe('bit remove command', function () {
       helper.exportAllComponents();
     });
     it('should remove remote component', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/bar/foo`);
+      const output = helper.removeComponent(`${helper.remoteScope}/bar/foo -i`);
       expect(output).to.contain.string(`removed components: ${helper.remoteScope}/bar/foo`);
     });
   });
@@ -119,13 +119,13 @@ describe('bit remove command', function () {
       helper.exportAllComponents();
     });
     it('should not remove component with dependencies when -f flag is false', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/${componentName}`);
+      const output = helper.removeComponent(`${helper.remoteScope}/${componentName} -i`);
       expect(output).to.contain.string(
         `error: unable to delete ${helper.remoteScope}/${componentName}, because the following components depend on it:`
       );
     });
     it('should  remove component with dependencies when -f flag is true', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/${componentName}`, '-f');
+      const output = helper.removeComponent(`${helper.remoteScope}/${componentName}`, '-f -i');
       expect(output).to.contain.string(`removed components: ${helper.remoteScope}/${componentName}`);
     });
   });
@@ -143,7 +143,7 @@ describe('bit remove command', function () {
       helper.importComponent('global/simple');
     });
     it('should not remove component with dependencies when -f flag is false', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/global/simple`);
+      const output = helper.removeComponent(`${helper.remoteScope}/global/simple -i`);
       expect(output).to.contain.string(`removed components: ${helper.remoteScope}/global/simple`);
       const bitMap = helper.readBitMap();
       expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple`);
@@ -248,7 +248,7 @@ describe('bit remove command', function () {
       helper.exportAllComponents();
     });
     it('should remove component version only', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.2`);
+      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.2 -i`);
       expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/is-string@0.0.2`);
     });
     it('should display version 0.0.1 for component', () => {
@@ -305,7 +305,7 @@ describe('bit remove command', function () {
       helper.exportComponent('utils/is-string2');
     });
     it.skip('should remove component version only', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.1`);
+      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.1 -i`);
       expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/is-string@0.0.1`);
     });
     it('should import component is-string with no issues', () => {

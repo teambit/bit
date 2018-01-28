@@ -7,8 +7,8 @@ export default {
   properties: {
     shoudRemove: {
       required: true,
-      description: "are you shure you want to remove from remote(yes/no)'",
-      message: 'please answer y or n.',
+      description: "are you sure you want to remove from remote scope (yes/no)'",
+      message: 'please answer yes or no.',
       type: 'string',
       conform(value) {
         return (
