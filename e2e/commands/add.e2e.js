@@ -147,6 +147,14 @@ describe('bit add command', function () {
       const output = helper.addComponent(path.normalize('bar/foo2.js'));
       expect(output).to.contain('tracking component bar/foo2');
     });
+    it('Should print warning when trying to add file that is already tracked with different id and not add it as a new one', () => {
+      helper.createComponent('bar', 'foo2.js');
+      helper.addComponent(path.normalize('bar/foo2.js'));
+      const output = helper.addComponent(`${path.normalize('bar/foo2.js')} -i bar/new`);
+      expect(output).to.contain('warning: files: bar/foo2.js already belongs to componentId: bar/foo2');
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.not.have.property('bar/new');
+    });
     it('Should add component to bitmap with folder as default namespace', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'));
