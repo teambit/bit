@@ -330,7 +330,8 @@ export default (async function addAction(
     ignoreList = ignoreList.concat(distDirsOfImportedComponents);
   }
 
-  const ig = ignore().add(ignoreList);
+  // add ignore list
+  const gitIgnore = ignore().add(ignoreList);
   // check unknown test files
   const missingFiles = getMissingTestFiles(tests);
   if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
@@ -339,7 +340,7 @@ export default (async function addAction(
   let resolvedComponentPathsWithGitIgnore = R.flatten(
     await Promise.all(componentPaths.map(componentPath => glob(componentPath)))
   );
-  resolvedComponentPathsWithGitIgnore = ig.filter(resolvedComponentPathsWithGitIgnore);
+  resolvedComponentPathsWithGitIgnore = gitIgnore.filter(resolvedComponentPathsWithGitIgnore);
 
   const resolvedComponentPathsWithoutGitIgnore = R.flatten(
     await Promise.all(componentPaths.map(componentPath => glob(componentPath)))
