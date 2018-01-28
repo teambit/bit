@@ -182,8 +182,8 @@ export default class Component {
     this.mainFile = mainFile;
     this.compilerId = compilerId;
     this.testerId = testerId;
-    this.dependencies = this.setDependencies(dependencies);
-    this.devDependencies = this.setDevDependencies(devDependencies);
+    this.setDependencies(dependencies);
+    this.setDevDependencies(devDependencies);
     this.flattenedDependencies = flattenedDependencies || new BitIds();
     this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
