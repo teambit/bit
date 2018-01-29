@@ -344,7 +344,7 @@ export default class Scope {
     await this.buildMultiple(componentsToBuild, consumer, verbose);
 
     logger.debug('scope.putMany: sequentially test all components');
-    const testsResults = await this.testMultiple(componentsToBuild, consumer, verbose, force);
+    const testsResults = await this.testMultiple(componentsToBuild, consumer, verbose, !force);
 
     logger.debug('scope.putMany: sequentially persist all components');
     const persistComponentsP = sortedConsumerComponentsIds.map(consumerComponentId => async () => {
@@ -435,8 +435,8 @@ export default class Scope {
   async testMultiple(
     components: Component[],
     consumer: Consumer,
-    verbose,
-    force
+    verbose: boolean,
+    rejectOnFailure: boolean
   ): Promise<{ component: Component, specsResults: Object }> {
     logger.debug('scope.testMultiple: sequentially test multiple components');
     loader.start(BEFORE_RUNNING_SPECS);
@@ -446,7 +446,7 @@ export default class Scope {
       }
       const specs = await component.runSpecs({
         scope: this,
-        rejectOnFailure: !force,
+        rejectOnFailure,
         consumer,
         verbose
       });
