@@ -65,7 +65,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
         'fatal: remote url must be defined. please use: `ssh://`, `file://` or `bit://` protocols to define remote access'
       )
   ],
-  [AddTestsWithoutId, () => "You can't add test files without specifying component id"],
+  [AddTestsWithoutId, () => "you can't add test files without specifying the component ID"],
   [ConsumerAlreadyExists, () => "there's already a scope"],
   [VersionAlreadyExists, err => `the version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`'],
