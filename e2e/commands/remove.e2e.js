@@ -6,7 +6,7 @@ chai.use(require('chai-fs'));
 
 const assert = chai.assert;
 
-describe('bit remove command', function () {
+describe.only('bit remove command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -31,7 +31,7 @@ describe('bit remove command', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      output = helper.removeComponent('bar/foo');
+      output = helper.removeComponent('bar/foo -s');
     });
     it('should remove component', () => {
       expect(output).to.contain.string('removed components: bar/foo');
@@ -59,7 +59,7 @@ describe('bit remove command', function () {
       helper.createComponent('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
-      output = helper.removeComponent('utils/is-string', '-d');
+      output = helper.removeComponent('utils/is-string', '-d -s');
     });
     it('should remove local component', () => {
       expect(output).to.contain.string('removed components: utils/is-string');
@@ -77,7 +77,7 @@ describe('bit remove command', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
-      helper.removeComponent('bar/foo', '-t');
+      helper.removeComponent('bar/foo', '-t -s');
     });
     it('should  show in bitmap', () => {
       const bitMap = helper.readBitMap();
@@ -163,7 +163,7 @@ describe('bit remove command', function () {
       helper.manageWorkspaces();
       helper.addRemoteScope();
       helper.importComponent('global/simple -p ./test');
-      helper.removeComponent('global/simple');
+      helper.removeComponent('global/simple -s');
     });
     it('should  remove component from package.json that points to relative path', () => {
       const pkgJson = helper.readPackageJson();
@@ -192,21 +192,21 @@ describe('bit remove command', function () {
         'is-string.js',
         "module.exports = function isType() { return 'got is-type'; };console.log('sdfsdfsdf')"
       );
-      const output = helper.removeComponent('utils/is-string@0.0.1');
+      const output = helper.removeComponent('utils/is-string@0.0.1 -s');
       expect(output).to.contain.string('error: unable to remove modified components: utils/is-string@0.0.1');
     });
     it('should not remove component when component is modified', () => {
-      const output = helper.removeComponent('utils/is-string');
+      const output = helper.removeComponent('utils/is-string -s');
       expect(output).to.contain.string('error: unable to remove modified components: utils/is-string');
     });
     it('should print error msg when trying to remove missing component', () => {
       helper.commitAllComponents();
-      const output = helper.removeComponent('utils/is-string@0.0.10');
+      const output = helper.removeComponent('utils/is-string@0.0.10 -s');
       expect(output).to.contain.string('missing components: utils/is-string@0.0.10');
       helper.commitAllComponents();
     });
     it('should remove component version only', () => {
-      const output = helper.removeComponent('utils/is-string@0.0.2');
+      const output = helper.removeComponent('utils/is-string@0.0.2 -s');
       expect(output).to.contain.string('successfully removed components: utils/is-string@0.0.2');
     });
     it('should display version 0.0.1 for component', () => {
@@ -218,7 +218,7 @@ describe('bit remove command', function () {
       expect(bitMap).to.have.property('utils/is-string');
     });
     it('should remove entire component if specified version is the only one', () => {
-      const output = helper.removeComponent('utils/is-string@0.0.1', '-f');
+      const output = helper.removeComponent('utils/is-string@0.0.1', '-f -s');
       expect(output).to.contain.string('successfully removed components: utils/is-string');
       const bitMap = helper.readBitMap();
       expect(bitMap).to.not.have.property('utils/is-string');
@@ -256,7 +256,7 @@ describe('bit remove command', function () {
       expect(output).to.contain.string(`${helper.remoteScope}/utils/is-string@0.0.1`);
     });
     it('should remove entire component if specified version is the only one', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.1`);
+      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.1 -s`);
       expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/is-string`);
       const listOutput = helper.listRemoteScope(true);
       expect(listOutput).to.not.contain.string(`${helper.remoteScope}/utils/is-string`);
@@ -268,7 +268,7 @@ describe('bit remove command', function () {
       expect(output.includes('copy/is-type')).to.be.true;
     });
     it('2 components with same file hash should still work if one component is deleted', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/copy/is-type`);
+      const output = helper.removeComponent(`${helper.remoteScope}/copy/is-type -s`);
       expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/copy/is-type`);
       const listOutput = helper.listRemoteScope(true);
       expect(listOutput).to.contain.string(`${helper.remoteScope}/utils/is-type`);
@@ -331,7 +331,7 @@ describe('bit remove command', function () {
         helper2.remoteScope
       );
 
-      const output = helper.removeComponent('utils/is-string2');
+      const output = helper.removeComponent('utils/is-string2 -s');
       expect(output).to.contain.string(`successfully removed components: ${helper.remoteScope}/utils/is-string2`);
       assert.isEmptyDirectory(importedComponentDir, 'directory not empty');
       assert.isEmptyDirectory(importedDependeceDir, 'directory not empty');
