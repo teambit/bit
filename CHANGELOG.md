@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - avoid overriding not only modified components but also new components when running `bit import`, unless `--force' flag is used
 - validate version number during tag action
 - allow `bit config` to run in non initialized directory
+- ignore tracked files when running bit add and print warning message 
 
 ## [0.12.2] - 2018-01-24
 
