@@ -6,7 +6,7 @@ import R from 'ramda';
 import { Scope, ComponentWithDependencies } from '../scope';
 import { BitId } from '../bit-id';
 import { ISOLATED_ENV_ROOT } from '../constants';
-import { mkdirp } from '../utils';
+import { mkdirp, outputFile } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
 
@@ -21,6 +21,8 @@ export type IsolateOptions = {
   conf: ?boolean, // Write bit.json file
   verbose: boolean // Print more logs
 };
+
+const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';
 
 export default class Environment {
   path: string;
@@ -49,9 +51,10 @@ export default class Environment {
   async isolateComponent(rawId: string | BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
     const bitId = typeof rawId === 'string' ? BitId.parse(rawId) : rawId;
     const componentsWithDependencies = await this.scope.getMany([bitId]);
+    const writeToPath = opts.writeToPath || this.path;
     const concreteOpts = {
       componentsWithDependencies,
-      writeToPath: opts.writeToPath || this.path,
+      writeToPath,
       force: opts.override,
       withPackageJson: !opts.noPackageJson,
       withBitJson: opts.conf,
@@ -65,7 +68,18 @@ export default class Environment {
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix
     };
     await this.consumer.writeToComponentsDir(concreteOpts);
+    await Environment.markEnvironmentAsInstalled(writeToPath);
     return R.head(componentsWithDependencies);
+  }
+
+  static markEnvironmentAsInstalled(dir) {
+    const filePath = path.join(dir, ENV_IS_INSTALLED_FILENAME);
+    return outputFile({ filePath, content: '' });
+  }
+
+  static isEnvironmentInstalled(dir) {
+    const filePath = path.join(dir, ENV_IS_INSTALLED_FILENAME);
+    return fs.existsSync(filePath);
   }
 
   getPath(): string {

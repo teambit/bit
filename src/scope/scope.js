@@ -20,7 +20,6 @@ import {
   LATEST,
   OBJECTS_DIR,
   BITS_DIRNAME,
-  DEFAULT_DIST_DIRNAME,
   BIT_VERSION,
   DEFAULT_BIT_VERSION,
   LATEST_BIT_VERSION
@@ -55,8 +54,7 @@ import {
   BEFORE_IMPORT_PUT_ON_SCOPE,
   BEFORE_MIGRATION,
   BEFORE_RUNNING_BUILD,
-  BEFORE_RUNNING_SPECS,
-  BEFORE_IMPORT_ENVIRONMENT
+  BEFORE_RUNNING_SPECS
 } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
 import logger from '../logger/logger';
@@ -1115,31 +1113,25 @@ export default class Scope {
   /**
    * sync method that loads the environment/(path to environment component)
    */
-  async loadEnvironment(
-    bitId: BitId,
-    opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean, throws: boolean }
-  ): Promise<> {
+  loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean }) {
     logger.debug(`scope.loadEnvironment, id: ${bitId}`);
-    const throws = !(opts && opts.throws === false);
     if (!bitId) throw new ResolutionException();
 
+    const envPath = componentResolver(bitId.toString(), null, this.getPath());
+
+    if (!IsolatedEnvironment.isEnvironmentInstalled(envPath)) {
+      logger.debug(`Unable to find an env component ${bitId.toString()}`);
+      return false;
+    }
+
     if (opts && opts.pathOnly) {
-      try {
-        const envPath = componentResolver(bitId.toString(), null, this.getPath());
-        if (fs.existsSync(envPath)) return envPath;
-        throw new Error(`Unable to find an env component ${bitId.toString()}`);
-      } catch (e) {
-        if (!throws) return null;
-        throw new ResolutionException(e.message);
-      }
+      return envPath;
     }
 
     try {
-      const envFile = componentResolver(bitId.toString(), null, this.getPath());
-      logger.debug(`Requiring an environment file at ${envFile}`);
-      return require(envFile);
+      logger.debug(`Requiring an environment file at ${envPath}`);
+      return require(envPath);
     } catch (e) {
-      if (!throws) return null;
       throw new ResolutionException(e);
     }
   }
@@ -1160,17 +1152,9 @@ export default class Scope {
     const idsWithoutNils = removeNils(ids);
     const predicate = id => id.toString(); // TODO: should be moved to BitId class
     const uniqIds = R.uniqBy(predicate)(idsWithoutNils);
-    const nonExisteingEnvsIds = [];
-    // Filter already exists envs
-    const nonExisteingEnvsIdsP = uniqIds.map((id) => {
-      return this.loadEnvironment(id, { pathOnly: true, throws: false }).then((exists) => {
-        if (!exists) {
-          nonExisteingEnvsIds.push(id);
-        }
-      });
+    const nonExistingEnvsIds = uniqIds.filter((id) => {
+      return !this.loadEnvironment(id, { pathOnly: true });
     });
-
-    await Promise.all(nonExisteingEnvsIdsP);
 
     const importEnv = async (id) => {
       let concreteId = id;
@@ -1183,7 +1167,7 @@ export default class Scope {
       await env.create();
       return env.isolateComponent(id, isolateOpts);
     };
-    return pMapSeries(nonExisteingEnvsIds, importEnv);
+    return pMapSeries(nonExistingEnvsIds, importEnv);
   }
 
   async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {
