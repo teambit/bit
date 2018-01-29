@@ -72,6 +72,10 @@ export default class Environment {
     return R.head(componentsWithDependencies);
   }
 
+  /**
+   * It helps to make sure an environment is installed. Otherwise, in case a user interrupts the environment
+   * installation process, it won't be installed again.
+   */
   static markEnvironmentAsInstalled(dir) {
     const filePath = path.join(dir, ENV_IS_INSTALLED_FILENAME);
     return outputFile({ filePath, content: '' });
