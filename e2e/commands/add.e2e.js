@@ -151,7 +151,7 @@ describe('bit add command', function () {
       helper.createComponent('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'));
       const output = helper.addComponent(`${path.normalize('bar/foo2.js')} -i bar/new`);
-      expect(output).to.contain('warning: files: bar/foo2.js already belongs to componentId: bar/foo2');
+      expect(output).to.have.string('warning: files bar/foo2.js already used by component: bar/foo2');
       const bitMap = helper.readBitMap();
       expect(bitMap).to.not.have.property('bar/new');
     });
@@ -173,7 +173,7 @@ describe('bit add command', function () {
       helper.createComponent('bar', 'foo2.spec.js');
       helper.addComponent(path.normalize('bar/foo2.js'));
       const addCmd = () => helper.addComponent(` -t ${path.normalize('bar/foo2.spec.js')}`);
-      expect(addCmd).to.throw("You can't add test files without specifying component id");
+      expect(addCmd).to.throw("you can't add test files without specifying the component ID");
     });
 
     it('Should add component to bitmap with folder as default namespace', () => {
@@ -793,9 +793,9 @@ describe('bit add command', function () {
       it('should throw an error', () => {
         const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${
-            helper.bitBin
-          } add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
+          `Command failed: ${helper.bitBin} add ${
+            barFoo2Path
+          } -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
         );
       });
     });
