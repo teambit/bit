@@ -309,8 +309,8 @@ export default class Helper {
     return this.runCmd(`bit export ${scope} ${id}`);
   }
 
-  exportAllComponents() {
-    return this.runCmd(`bit export ${this.remoteScope}`);
+  exportAllComponents(scope: string = this.remoteScope) {
+    return this.runCmd(`bit export ${scope}`);
   }
 
   importComponent(id) {
