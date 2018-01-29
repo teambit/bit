@@ -115,9 +115,9 @@ function findComponentsOfDepsFiles(
           .find(dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion());
         if (!dependency) {
           throw new Error(
-            `the auto-generated file ${depFile} should be connected to ${
-              componentId
-            }, however, it's not part of the model dependencies of ${componentFromModel.id}`
+            `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
+              componentFromModel.id
+            }`
           );
         }
         const originallySource = entryComponentMap.originallySharedDir

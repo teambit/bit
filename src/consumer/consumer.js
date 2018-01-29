@@ -14,6 +14,7 @@ import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
+
 import {
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
@@ -697,7 +698,7 @@ export default class Consumer {
       copyDependenciesVersionsFromModelToFS(true);
 
       /*
-        sort packageDependencies for comparing
+       sort packageDependencies for comparing
        */
       const sortObject = (obj) => {
         return Object.keys(obj)
@@ -966,7 +967,7 @@ export default class Consumer {
     });
     const [localIds, remoteIds] = partition(bitIds, id => id.isLocal());
     const localResult = await this.removeLocal(localIds, force, track, deleteFiles);
-    const remoteResult = await this.removeRemote(remoteIds, force);
+    const remoteResult = !R.isEmpty(remoteIds) ? await this.removeRemote(remoteIds, force) : [];
     return { localResult, remoteResult };
   }
 

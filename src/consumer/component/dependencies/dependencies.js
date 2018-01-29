@@ -26,8 +26,9 @@ export default class Dependencies {
   deserialize(dependencies) {
     return dependencies.map(dependency => ({
       id: R.is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
-      relativePaths: dependency.relativePaths || // backward compatibility. (previously, it was "relativePath" without the ending 's' and was not an array.
-      [{ sourceRelativePath: dependency.relativePath, destinationRelativePath: dependency.relativePath }]
+      relativePaths: dependency.relativePaths || [ // backward compatibility. (previously, it was "relativePath" without the ending 's' and was not an array.
+        { sourceRelativePath: dependency.relativePath, destinationRelativePath: dependency.relativePath }
+      ]
     }));
   }
 
