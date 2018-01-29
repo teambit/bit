@@ -70,7 +70,9 @@ export default class Add extends Command {
     const paintWarning = () => {
       if (warnings) {
         const warn = Object.keys(warnings)
-          .map(key => chalk.yellow(`warning: files: ${warnings[key]} already belongs to componentId: ${key}`))
+          .map(key =>
+            chalk.yellow(`warning: files ${chalk.bold(warnings[key].join(', '))} already used by component: ${key}`)
+          )
           .filter(x => x)
           .join('\n');
         if (!R.isEmpty(warn)) return `${warn}\n`;
