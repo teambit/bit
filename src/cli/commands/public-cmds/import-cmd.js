@@ -107,7 +107,10 @@ export default class Import extends Command {
 
     if (dependencies && !R.isEmpty(dependencies)) {
       const components = dependencies.map(R.prop('component'));
-      const peerDependencies = R.flatten(dependencies.map(R.prop('dependencies')));
+      const peerDependencies = R.flatten(
+        dependencies.map(R.prop('dependencies')),
+        dependencies.map(R.prop('devDependencies'))
+      );
 
       let componentDependenciesOutput = '';
       if (components.length === 1) {

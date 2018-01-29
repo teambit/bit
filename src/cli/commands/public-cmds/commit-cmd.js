@@ -38,7 +38,7 @@ export default class Export extends Command {
       force,
       verbose,
       ignoreMissingDependencies = false,
-      scope = null
+      scope
     }: {
       message: string,
       all: ?boolean,
@@ -47,7 +47,7 @@ export default class Export extends Command {
       major: ?boolean,
       force: ?boolean,
       verbose: ?boolean,
-      ignoreMissingDependencies: ?boolean,
+      ignoreMissingDependencies: boolean,
       scope: ?string
     }
   ): Promise<any> {

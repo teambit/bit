@@ -65,8 +65,8 @@ function symlinkPackages(from: string, to: string, consumer, dependenciesSavedAs
   });
 }
 
-function writeDependenciesLinks(component, componentMap, consumer) {
-  return component.dependencies.map((dependency) => {
+function writeDependenciesLinks(component: Component, componentMap, consumer) {
+  return component.getAllDependencies().map((dependency) => {
     const dependencyComponentMap = consumer.bitMap.getComponent(dependency.id);
     const writtenLinks = [];
     if (!dependencyComponentMap) return writtenLinks;
@@ -138,7 +138,9 @@ export default function linkComponents(components: Component[], consumer: Consum
       }
 
       const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
-      const boundDependencies = component.dependencies ? writeDependenciesLinks(component, componentMap, consumer) : [];
+      const boundDependencies = component.hasDependencies()
+        ? writeDependenciesLinks(component, componentMap, consumer)
+        : [];
       const boundMissingDependencies =
         component.missingDependencies && component.missingDependencies.missingLinks
           ? writeMissingLinks(component, componentMap, consumer.bitMap)
@@ -147,7 +149,7 @@ export default function linkComponents(components: Component[], consumer: Consum
       return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
     }
     if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      if (!component.dependencies) return { id: componentId, bound: [] };
+      if (!component.hasDependencies()) return { id: componentId, bound: [] };
       const bound = writeDependenciesLinks(component, componentMap, consumer);
       return { id: componentId, bound };
     }
