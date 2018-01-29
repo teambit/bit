@@ -752,8 +752,7 @@ export default class Component {
     verbose,
     directory,
     keep,
-    isCI = false,
-    ensureCompiler = true
+    isCI = false
   }: {
     scope: Scope,
     save?: boolean,
@@ -761,8 +760,7 @@ export default class Component {
     verbose?: boolean,
     directory: ?string,
     keep: ?boolean,
-    isCI: boolean,
-    ensureCompiler: boolean
+    isCI: boolean
   }): Promise<string> {
     logger.debug(`consumer-component.build ${this.id}`);
     // @TODO - write SourceMap Type
@@ -803,15 +801,13 @@ export default class Component {
 
     logger.debug('compilerId found, start building');
     let compiler = await scope.loadEnvironment(this.compilerId, { throws: false });
-    if (ensureCompiler) {
-      if (!compiler) {
-        loader.start(BEFORE_IMPORT_ENVIRONMENT);
-        await scope.installEnvironment({
-          ids: [this.compilerId],
-          verbose
-        });
-        compiler = await scope.loadEnvironment(this.compilerId);
-      }
+    if (!compiler) {
+      loader.start(BEFORE_IMPORT_ENVIRONMENT);
+      await scope.installEnvironment({
+        ids: [this.compilerId],
+        verbose
+      });
+      compiler = await scope.loadEnvironment(this.compilerId);
     }
 
     const builtFiles = await this.buildIfNeeded({
