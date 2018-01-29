@@ -53,8 +53,12 @@ export default class Repository {
       .then((fileContents) => {
         return BitObject.parseObject(fileContents, this.types);
       })
-      .catch(() => {
-        logger.debug(`Failed reading a ref file ${this.objectPath(ref)}`);
+      .catch((err) => {
+        if (err.code === 'ENOENT') {
+          logger.debug(`Failed finding a ref file ${this.objectPath(ref)}.`);
+        } else {
+          logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
+        }
         return null;
       });
   }

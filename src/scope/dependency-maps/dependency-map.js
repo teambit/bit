@@ -22,10 +22,6 @@ export class DependencyMap extends Map<string, BitIds> {
     return super.get(bitId.toString());
   }
 
-  getBitIds(dependencies: BitId[]) {
-    return new BitIds(...dependencies);
-  }
-
   toObject() {
     const obj = {};
     this.forEach((bitIds, bitId) => {

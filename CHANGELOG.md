@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support separating dev-dependencies and dev-packages from dependencies and packages when they originated from tests files 
 - support adding test files to existing component
+- ignore tracked files when running bit add and print warning message 
 
 ## [0.12.3] - 2018-01-28
 

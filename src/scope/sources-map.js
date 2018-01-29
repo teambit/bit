@@ -28,15 +28,6 @@ export class SourcesMap extends Map<string, BitIds> {
     return this;
   }
 
-  getBitIds(dependencies: BitId[]) {
-    return new BitIds(...dependencies);
-  }
-
-  setBit(id: BitId, bits: Bit[]) {
-    super.set(id.toStringWithoutScope(), new BitIds(...bits.map(bit => bit.getId())));
-    return this;
-  }
-
   toObject() {
     const obj = {};
     this.forEach((bitIds, bitId) => {

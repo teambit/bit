@@ -42,17 +42,7 @@ import {
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
-
-export type RelativePath = {
-  sourceRelativePath: string,
-  destinationRelativePath: string,
-  importSpecifiers?: Object
-};
-
-export type Dependency = {
-  id: BitId,
-  relativePaths: RelativePath[]
-};
+import { Dependency, Dependencies } from './dependencies';
 
 export type ComponentProps = {
   name: string,
@@ -65,13 +55,17 @@ export type ComponentProps = {
   compilerId?: ?BitId,
   testerId?: ?BitId,
   dependencies?: Dependency[],
+  devDependencies?: Dependency[],
   flattenedDependencies?: ?BitIds,
+  flattenedDevDependencies?: ?BitIds,
   packageDependencies?: ?Object,
+  devPackageDependencies?: ?Object,
   files?: ?(SourceFile[]) | [],
   docs?: ?(Doclet[]),
   dists?: ?(Dist[]),
   specsResults?: ?SpecsResults,
   license?: ?License,
+  deprecated: ?boolean,
   log?: ?Log
 };
 
@@ -85,9 +79,12 @@ export default class Component {
   mainFile: string;
   compilerId: ?BitId;
   testerId: ?BitId;
-  dependencies: Dependency[];
+  dependencies: Dependencies;
+  devDependencies: Dependencies;
+  flattenedDevDependencies: BitIds;
   flattenedDependencies: BitIds;
   packageDependencies: Object;
+  devPackageDependencies: Object;
   _docs: ?(Doclet[]);
   _files: ?(SourceFile[]) | [];
   dists: ?(Dist[]);
@@ -163,8 +160,11 @@ export default class Component {
     compilerId,
     testerId,
     dependencies,
+    devDependencies,
     flattenedDependencies,
+    flattenedDevDependencies,
     packageDependencies,
+    devPackageDependencies,
     files,
     docs,
     dists,
@@ -182,9 +182,12 @@ export default class Component {
     this.mainFile = mainFile;
     this.compilerId = compilerId;
     this.testerId = testerId;
-    this.dependencies = dependencies || [];
+    this.setDependencies(dependencies);
+    this.setDevDependencies(devDependencies);
     this.flattenedDependencies = flattenedDependencies || new BitIds();
+    this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
+    this.devPackageDependencies = devPackageDependencies || {};
     this._files = files;
     this._docs = docs;
     this.dists = dists;
@@ -192,6 +195,14 @@ export default class Component {
     this.license = license;
     this.log = log;
     this.deprecated = deprecated || false;
+  }
+
+  setDependencies(dependencies: Dependency[]) {
+    this.dependencies = new Dependencies(dependencies);
+  }
+
+  setDevDependencies(devDependencies: Dependency[]) {
+    this.devDependencies = new Dependencies(devDependencies);
   }
 
   getFileExtension(): string {
@@ -202,20 +213,12 @@ export default class Component {
     }
   }
 
-  _dependenciesAsWritableObject() {
-    return R.mergeAll(this.dependencies.map(dependency => dependency.id.toObject()));
-  }
-
   _getHomepage() {
     // TODO: Validate somehow that this scope is really on bitsrc (maybe check if it contains . ?)
     const homepage = this.scope
       ? `https://bitsrc.io/${this.scope.replace('.', '/')}/${this.box}/${this.name}`
       : undefined;
     return homepage;
-  }
-
-  static _dependenciesFromWritableObject(dependencies) {
-    return BitIds.fromObject(dependencies).map(dependency => ({ id: dependency }));
   }
 
   writeBitJson(bitDir: string, force?: boolean = true): Promise<Component> {
@@ -226,8 +229,10 @@ export default class Component {
       bindingPrefix: this.bindingPrefix,
       compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
-      dependencies: this._dependenciesAsWritableObject(),
-      packageDependencies: this.packageDependencies
+      dependencies: this.dependencies.asWritableObject(),
+      devDependencies: this.devDependencies.asWritableObject(),
+      packageDependencies: this.packageDependencies,
+      devPackageDependencies: this.devPackageDependencies
     }).write({ bitDir, override: force });
   }
 
@@ -247,12 +252,24 @@ export default class Component {
     return packageJson.write(consumer, this, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
   }
 
-  dependencies(): BitIds {
-    return BitIds.fromObject(this.dependencies);
-  }
-
   flattenedDependencies(): BitIds {
     return BitIds.fromObject(this.flattenedDependencies);
+  }
+
+  flattenedDevDependencies(): BitIds {
+    return BitIds.fromObject(this.flattenedDevDependencies);
+  }
+
+  getAllDependencies(): Dependency[] {
+    return this.dependencies.dependencies.concat(this.devDependencies.dependencies);
+  }
+
+  hasDependencies(): boolean {
+    return !this.dependencies.isEmpty() || !this.devDependencies.isEmpty();
+  }
+
+  getAllFlattenedDependencies(): BitId[] {
+    return this.flattenedDependencies.concat(this.flattenedDevDependencies);
   }
 
   /**
@@ -301,18 +318,18 @@ export default class Component {
     }
 
     const runBuild = (componentRoot: string): Promise<any> => {
-      const metaData = {
-        entry: this.mainFile,
-        files: this.files,
-        root: componentRoot,
-        packageDependencies: this.packageDependencies,
-        dependencies: this.dependencies
-      };
+      // const metaData = {
+      //   entry: this.mainFile,
+      //   files: this.files,
+      //   root: componentRoot,
+      //   packageDependencies: this.packageDependencies,
+      //   dependencies: this.dependencies
+      // };
 
-      if (compiler.build) {
-        // @todo: is it still needed?
-        return compiler.build(metaData); // returns a promise
-      }
+      // if (compiler.build) {
+      //   // @todo: is it still needed?
+      //   return compiler.build(metaData); // returns a promise
+      // }
 
       // the compiler have one of the following (build/compile)
       let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
@@ -356,8 +373,8 @@ export default class Component {
         installPackages: true,
         noPackageJson: false
       };
-      const componetWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
-      const component = componetWithDependencies.component;
+      const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
+      const component = componentWithDependencies.component;
       const result = await runBuild(component.writtenPath);
       if (!keep) await isolatedEnvironment.destroy();
       return result;
@@ -449,24 +466,8 @@ export default class Component {
       });
     }
     this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir, true);
-    this.dependencies.forEach((dependency) => {
-      const dependencyId = dependency.id.toString();
-      const depFromBitMap = bitMap.getComponent(dependencyId);
-      dependency.relativePaths.forEach((relativePath: RelativePath) => {
-        relativePath.sourceRelativePath = pathWithoutSharedDir(
-          relativePath.sourceRelativePath,
-          originallySharedDir,
-          true
-        );
-        if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-          relativePath.destinationRelativePath = pathWithoutSharedDir(
-            relativePath.destinationRelativePath,
-            depFromBitMap.originallySharedDir,
-            true
-          );
-        }
-      });
-    });
+    this.dependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
+    this.devDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this._wasOriginallySharedDirStripped = true;
   }
 
@@ -864,8 +865,10 @@ export default class Component {
       bindingPrefix: this.bindingPrefix,
       compilerId: this.compilerId ? this.compilerId.toString() : null,
       testerId: this.testerId ? this.testerId.toString() : null,
-      dependencies: this.dependencies.map(dep => Object.assign({}, dep, { id: dep.id.toString() })), // this._dependenciesAsWritableObject(),
+      dependencies: this.dependencies.serialize(),
+      devDependencies: this.devDependencies.serialize(),
       packageDependencies: this.packageDependencies,
+      devPackageDependencies: this.devPackageDependencies,
       files: this.files,
       docs: this.docs,
       dists: this.dists,
@@ -926,10 +929,9 @@ export default class Component {
     };
     const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
     const filePaths = this.files.map(file => pathNormalizeToLinux(file.relative));
-    const dependenciesPaths = this.dependencies.map(dependency =>
-      dependency.relativePaths.map(relativePath => relativePath.sourceRelativePath)
-    );
-    const allPaths = [...filePaths, ...R.flatten(dependenciesPaths)];
+    const dependenciesPaths = this.dependencies.getSourcesPaths();
+    const devDependenciesPaths = this.devDependencies.getSourcesPaths();
+    const allPaths = [...filePaths, ...dependenciesPaths, ...devDependenciesPaths];
     const sharedStart = sharedStartOfArray(allPaths);
     if (!sharedStart || !sharedStart.includes(pathSep)) return;
     const lastPathSeparator = sharedStart.lastIndexOf(pathSep);
@@ -937,18 +939,9 @@ export default class Component {
   }
 
   async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
-    const getDependencies = () => {
-      return this.dependencies.map((dependency) => {
-        if (consumer.bitMap.isExistWithSameVersion(dependency.id)) {
-          return consumer.loadComponent(dependency.id);
-        }
-        // when dependencies are imported as npm packages, they are not in bit.map
-        this.dependenciesSavedAsComponents = false;
-        return consumer.scope.loadComponent(dependency.id, false);
-      });
-    };
-    const dependencies = await Promise.all(getDependencies());
-    return new ComponentWithDependencies({ component: this, dependencies });
+    const dependencies = await this.dependencies.getDependenciesComponents(consumer, this);
+    const devDependencies = await this.devDependencies.getDependenciesComponents(consumer, this);
+    return new ComponentWithDependencies({ component: this, dependencies, devDependencies });
   }
 
   static fromObject(object: Object): Component {
@@ -962,7 +955,9 @@ export default class Component {
       compilerId,
       testerId,
       dependencies,
+      devDependencies,
       packageDependencies,
+      devPackageDependencies,
       docs,
       mainFile,
       dists,
@@ -980,8 +975,10 @@ export default class Component {
       bindingPrefix,
       compilerId: compilerId ? BitId.parse(compilerId) : null,
       testerId: testerId ? BitId.parse(testerId) : null,
-      dependencies: dependencies.map(dep => Object.assign({}, dep, { id: BitId.parse(dep.id) })), // this._dependenciesFromWritableObject(dependencies),
+      dependencies,
+      devDependencies,
       packageDependencies,
+      devPackageDependencies,
       mainFile,
       files,
       docs,
@@ -1018,6 +1015,7 @@ export default class Component {
     const deprecated = componentFromModel ? componentFromModel.component.deprecated : false;
     let dists = componentFromModel ? componentFromModel.component.dists : undefined;
     let packageDependencies;
+    let devPackageDependencies;
     let bitJson = consumerBitJson;
     const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
       const sourceFiles = [];
@@ -1055,6 +1053,7 @@ export default class Component {
       bitJson = BitJson.loadSync(bitDir, consumerBitJson);
       if (bitJson) {
         packageDependencies = bitJson.packageDependencies;
+        devPackageDependencies = bitJson.devPackageDependencies;
       }
     }
 
@@ -1082,6 +1081,7 @@ export default class Component {
       files: getLoadedFiles(files),
       dists,
       packageDependencies,
+      devPackageDependencies,
       deprecated
     });
   }

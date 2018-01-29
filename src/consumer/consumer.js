@@ -42,6 +42,7 @@ import { RemovedLocalObjects } from '../scope/component-remove';
 import { linkComponents, linkAllToNodeModules, linkComponentsToNodeModules } from '../links';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
+import { Dependencies } from './component/dependencies';
 import type { PathChangeResult } from './bit-map/bit-map';
 
 export type ConsumerProps = {
@@ -539,7 +540,7 @@ export default class Consumer {
     const writtenComponents = await Promise.all(writeComponentsP);
 
     const allDependenciesP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
-      const writeDependenciesP = componentWithDeps.dependencies.map((dep: Component) => {
+      const writeDependenciesP = componentWithDeps.allDependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         const depFromBitMap = this.bitMap.getComponent(dependencyId, false);
         if (!componentWithDeps.component.dependenciesSavedAsComponents && !depFromBitMap) {
@@ -615,9 +616,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -678,17 +679,22 @@ export default class Consumer {
 
       // sometime dependencies from the FS don't have an exact version.
       // in case of auto-tag, the files can be identical between the model and the FS, but the dependency version would
-      // be different.
-      // we don't want to show the component as modified in such cases, so copy the version from the model
-      version.dependencies.forEach((dependency) => {
-        const idWithoutVersion = dependency.id.toStringWithoutVersion();
-        const dependencyFromModel = componentFromModel.dependencies.find(
-          modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion
-        );
-        if (dependencyFromModel) {
-          dependency.id = dependencyFromModel.id;
-        }
-      });
+      // be different. We don't want to show the component as modified in such cases, so copy the version from the model
+      const copyDependenciesVersionsFromModelToFS = (dev = false) => {
+        const dependenciesFS = dev ? version.devDependencies : version.dependencies;
+        const dependenciesModel = dev ? componentFromModel.devDependencies : componentFromModel.dependencies;
+        dependenciesFS.get().forEach((dependency) => {
+          const idWithoutVersion = dependency.id.toStringWithoutVersion();
+          const dependencyFromModel = dependenciesModel
+            .get()
+            .find(modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion);
+          if (dependencyFromModel) {
+            dependency.id = dependencyFromModel.id;
+          }
+        });
+      };
+      copyDependenciesVersionsFromModelToFS();
+      copyDependenciesVersionsFromModelToFS(true);
 
       /*
         sort packageDependencies for comparing
@@ -1095,35 +1101,21 @@ export default class Consumer {
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
     logger.debug(`addRemoteAndLocalVersionsToDependencies for ${component.id.toString()}`);
-    let modelDependencies = [];
+    let modelDependencies = new Dependencies([]);
+    let modelDevDependencies = new Dependencies([]);
     if (loadedFromFileSystem) {
       // when loaded from file-system, the dependencies versions are fetched from bit.map.
       // try to find the model version of the component to get the stored versions of the dependencies
       try {
-        const mainComponentFromModel = await this.scope.loadRemoteComponent(component.id);
+        const mainComponentFromModel: Component = await this.scope.loadRemoteComponent(component.id);
         modelDependencies = mainComponentFromModel.dependencies;
+        modelDevDependencies = mainComponentFromModel.devDependencies;
       } catch (e) {
         // do nothing. the component is probably on the file-system only and not on the model.
       }
     }
-    const dependenciesIds = component.dependencies.map(dependency => dependency.id);
-    const localDependencies = await this.scope.latestVersions(dependenciesIds);
-    const remoteVersionsDependencies = await this.scope.fetchRemoteVersions(dependenciesIds);
-    component.dependencies.forEach((dependency) => {
-      const dependencyIdWithoutVersion = dependency.id.toStringWithoutVersion();
-      const removeVersionId = remoteVersionsDependencies.find(
-        remoteId => remoteId.toStringWithoutVersion() === dependencyIdWithoutVersion
-      );
-      const localVersionId = localDependencies.find(
-        localId => localId.toStringWithoutVersion() === dependencyIdWithoutVersion
-      );
-      const modelVersionId = modelDependencies.find(
-        modelDependency => modelDependency.id.toStringWithoutVersion() === dependencyIdWithoutVersion
-      );
-      dependency.remoteVersion = removeVersionId ? removeVersionId.version : null;
-      dependency.localVersion = localVersionId ? localVersionId.version : null;
-      dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
-    });
+    await component.dependencies.addRemoteAndLocalVersions(this.scope, modelDependencies);
+    await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
   }
 
   async _installPackages(dirs: string[], verbose: boolean, installRootPackageJson: boolean = false) {

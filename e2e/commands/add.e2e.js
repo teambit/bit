@@ -147,6 +147,14 @@ describe('bit add command', function () {
       const output = helper.addComponent(path.normalize('bar/foo2.js'));
       expect(output).to.contain('tracking component bar/foo2');
     });
+    it('Should print warning when trying to add file that is already tracked with different id and not add it as a new one', () => {
+      helper.createComponent('bar', 'foo2.js');
+      helper.addComponent(path.normalize('bar/foo2.js'));
+      const output = helper.addComponent(`${path.normalize('bar/foo2.js')} -i bar/new`);
+      expect(output).to.contain('warning: files: bar/foo2.js already belongs to componentId: bar/foo2');
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.not.have.property('bar/new');
+    });
     it('Should add test to tracked component', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.createComponent('bar', 'foo2.spec.js');
@@ -837,7 +845,7 @@ describe('bit add command', function () {
     });
     it('Should show warning msg in case there are no files to add beacuse of gitignore', () => {
       helper.createComponent('bar', 'foo2.js');
-      helper.writeGitIgnore([path.normalize('bar/foo2.js')]);
+      helper.writeGitIgnore(['bar/foo2.js']);
 
       try {
         helper.addComponent(path.normalize('bar/foo2.js'));
