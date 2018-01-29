@@ -6,7 +6,7 @@ chai.use(require('chai-fs'));
 
 const assert = chai.assert;
 
-describe.only('bit remove command', function () {
+describe('bit remove command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
