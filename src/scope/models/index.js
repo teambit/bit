@@ -5,11 +5,4 @@ import Source from './source';
 import Version from './version';
 import Symlink from './symlink';
 
-module.exports = {
-  Component,
-  ExternalComponent,
-  ScopeMeta,
-  Source,
-  Version,
-  Symlink
-};
+export { Component, ExternalComponent, ScopeMeta, Source, Version, Symlink };

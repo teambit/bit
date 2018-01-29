@@ -8,8 +8,7 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 import { flattenDependencies } from '../../../scope/flatten-dependencies';
-import { COMPONENT_ORIGINS, VERSION_DELIMITER } from '../../../constants';
-import { forEach } from '../../../utils/index';
+import { COMPONENT_ORIGINS } from '../../../constants';
 import { BitId } from '../../../bit-id';
 
 const key = R.compose(R.head, R.keys);
@@ -41,7 +40,8 @@ export default (async function importAction({
   conf: boolean,
   installNpmPackages: boolean,
   withPackageJson: ?boolean,
-  writeBitDependencies: ?boolean
+  saveDependenciesAsComponents: ?boolean,
+  writeBitDependencies: boolean
 }): Promise<any> {
   async function importEnvironment(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
@@ -167,7 +167,7 @@ const warnForPackageDependencies = ({ dependencies, consumer, installNpmPackages
     notInNodeModules: [],
     notInBoth: []
   };
-  if (installNpmPackages) return warnings;
+  if (installNpmPackages) return Promise.resolve(warnings);
   const projectDir = consumer.getPath();
   const getPackageJson = (dir) => {
     try {

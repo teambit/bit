@@ -3,10 +3,11 @@ import { flatten, values } from '../utils';
 import VersionDependencies from './version-dependencies';
 import Repository from './objects/repository';
 import { BitId } from '../bit-id';
+import ComponentWithDependencies from './component-dependencies';
 
-export function flattenDependencies(dependencies: VersionDependencies[]) {
+export function flattenDependencies(dependencies: ComponentWithDependencies[]) {
   return values(
-    flatten(dependencies.map(dep => dep.dependencies.concat(dep.component))).reduce((components, component) => {
+    flatten(dependencies.map(dep => dep.allDependencies.concat(dep.component))).reduce((components, component) => {
       components[component.id.toString()] = component;
       return components;
     }, {})

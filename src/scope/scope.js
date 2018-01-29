@@ -7,7 +7,7 @@ import Toposort from 'toposort-class';
 import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
-import { flattenDependencyIds, flattenDependencies } from './flatten-dependencies';
+import { flattenDependencyIds } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
 import Source from './models/source';
@@ -289,7 +289,7 @@ export default class Scope {
       const componentIdString = consumerComponent.id.toString();
       // Store it in a map so we can take it easily from the sorted array which contain only the id
       consumerComponentsIdsMap.set(componentIdString, consumerComponent);
-      const dependenciesIdsStrings = consumerComponent.dependencies.map(dependency => dependency.id.toString());
+      const dependenciesIdsStrings = consumerComponent.getAllDependencies().map(dependency => dependency.id.toString());
       topSort.add(componentIdString, dependenciesIdsStrings || []);
     });
 
@@ -300,36 +300,43 @@ export default class Scope {
     } catch (e) {
       throw new CyclicDependencies(e);
     }
-    const getFlattenForComponent = (consumerComponent, cache) => {
-      const flattenedDependenciesP = consumerComponent.dependencies.map(async (dependency) => {
-        // Try to get the flatten dependencies from cache
-        let flattenedDependencies = cache.get(dependency.id.toString());
-        if (flattenedDependencies) return Promise.resolve(flattenedDependencies);
 
-        // Calculate the flatten dependencies
-        if (
-          consumerComponentsIdsMap.has(dependency.id.toStringWithoutVersion()) ||
-          consumerComponentsIdsMap.has(dependency.id.toString())
-        ) {
-          // when a dependency includes in the components list to tag, don't use the existing version, because the
-          // existing version will be obsolete once it's tagged. Instead, remove the version, and later on, when
-          // importDependencies is called, it'll fetch the newly tagged version.
-          dependency.id.version = undefined;
-        }
-        const versionDependencies = await this.importDependencies([dependency.id]);
-        // Copy the exact version from flattenedDependency to dependencies
-        if (!dependency.id.hasVersion()) {
-          dependency.id.version = first(versionDependencies).component.version;
-        }
+    const getFlattenForDependency = async (dependency, cache) => {
+      // Try to get the flatten dependencies from cache
+      let flattenedDependencies = cache.get(dependency.id.toString());
+      if (flattenedDependencies) return Promise.resolve(flattenedDependencies);
 
-        flattenedDependencies = await flattenDependencyIds(versionDependencies, this.objects);
+      // Calculate the flatten dependencies
+      if (
+        consumerComponentsIdsMap.has(dependency.id.toStringWithoutVersion()) ||
+        consumerComponentsIdsMap.has(dependency.id.toString())
+      ) {
+        // when a dependency includes in the components list to tag, don't use the existing version, because the
+        // existing version will be obsolete once it's tagged. Instead, remove the version, and later on, when
+        // importDependencies is called, it'll fetch the newly tagged version.
+        dependency.id.version = undefined;
+      }
+      const versionDependencies = await this.importDependencies([dependency.id]);
+      // Copy the exact version from flattenedDependency to dependencies
+      if (!dependency.id.hasVersion()) {
+        dependency.id.version = first(versionDependencies).component.version;
+      }
 
-        // Store the flatten dependencies in cache
-        cache.set(dependency.id.toString(), flattenedDependencies);
+      flattenedDependencies = await flattenDependencyIds(versionDependencies, this.objects);
 
-        return flattenedDependencies;
-      });
-      return Promise.all(flattenedDependenciesP);
+      // Store the flatten dependencies in cache
+      cache.set(dependency.id.toString(), flattenedDependencies);
+
+      return flattenedDependencies;
+    };
+
+    const getFlattenForComponent = async (consumerComponent, cache, dev = false) => {
+      const dependencies = dev ? consumerComponent.devDependencies : consumerComponent.dependencies;
+      const flattenedDependenciesP = dependencies.get().map(dependency => getFlattenForDependency(dependency, cache));
+      let flattenedDependencies = await Promise.all(flattenedDependenciesP);
+      flattenedDependencies = R.flatten(flattenedDependencies);
+      const predicate = id => id.toString(); // TODO: should be moved to BitId class
+      return R.uniqBy(predicate)(flattenedDependencies);
     };
 
     logger.debug('scope.putMany: sequentially build all components');
@@ -356,10 +363,8 @@ export default class Scope {
       const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
       // This happens when there is a dependency which have been already committed
       if (!consumerComponent) return Promise.resolve([]);
-      let flattenedDependencies = await getFlattenForComponent(consumerComponent, allDependencies);
-      flattenedDependencies = R.flatten(flattenedDependencies);
-      const predicate = id => id.toString(); // TODO: should be moved to BitId class
-      flattenedDependencies = R.uniqBy(predicate)(flattenedDependencies);
+      const flattenedDependencies = await getFlattenForComponent(consumerComponent, allDependencies);
+      const flattenedDevDependencies = await getFlattenForComponent(consumerComponent, allDependencies, true);
 
       const addSharedDirAndDistEntry = (pathStr) => {
         const withSharedDir = consumerComponent.originallySharedDir
@@ -384,7 +389,8 @@ export default class Scope {
 
       const component = await this.sources.addSource({
         source: consumerComponent,
-        depIds: flattenedDependencies,
+        flattenedDependencies,
+        flattenedDevDependencies,
         message,
         exactVersion,
         releaseType,
@@ -473,13 +479,13 @@ export default class Scope {
       }
     };
 
-    componentsObjects.objects.forEach((object: BitObject) => {
+    componentsObjects.objects.forEach((object: Version) => {
       if (object instanceof Version) {
         const hashBefore = object.hash().toString();
-        object.dependencies.forEach((dependency) => {
+        object.getAllDependencies().forEach((dependency) => {
           changeScopeIfNeeded(dependency.id);
         });
-        object.flattenedDependencies.forEach((dependency) => {
+        object.getAllFlattenedDependencies().forEach((dependency) => {
           changeScopeIfNeeded(dependency);
         });
         const hashAfter = object.hash().toString();
@@ -759,7 +765,7 @@ export default class Scope {
   // todo: improve performance by finding all versions needed and fetching them in one request from the server
   // currently it goes to the server twice. First, it asks for the last version of each id, and then it goes again to
   // ask for the older versions.
-  async getManyWithAllVersions(ids: BitId[], cache?: boolean = true): Promise<ConsumerComponent[]> {
+  async getManyWithAllVersions(ids: BitId[], cache?: boolean = true): Promise<ComponentWithDependencies[]> {
     logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
@@ -1161,9 +1167,9 @@ export default class Scope {
     const componentsToUpdateP = componentsObjects.map(async (componentObjects) => {
       const component = componentObjects.component;
       if (!component) return null;
-      const latestVersion = await component.loadVersion(component.latest(), this.objects);
+      const latestVersion: Version = await component.loadVersion(component.latest(), this.objects);
       let pendingUpdate = false;
-      latestVersion.dependencies.forEach((dependency) => {
+      latestVersion.getAllDependencies().forEach((dependency) => {
         const committedComponentId = committedComponents.find(
           committedComponent => committedComponent.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
         );
@@ -1205,10 +1211,10 @@ export default class Scope {
     const componentsVersions = await this.loadLocalComponents(componentsPool);
     const potentialDependenciesWithoutVersions = potentialDependencies.map(id => id.toStringWithoutVersion());
     const dependentsP = componentsVersions.map(async (componentVersion: ComponentVersion) => {
-      const component = await componentVersion.getVersion(this.objects);
-      const found = component.dependencies.find(dependency =>
-        potentialDependenciesWithoutVersions.includes(dependency.id.toStringWithoutVersion())
-      );
+      const component: Version = await componentVersion.getVersion(this.objects);
+      const found = component
+        .getAllDependencies()
+        .find(dependency => potentialDependenciesWithoutVersions.includes(dependency.id.toStringWithoutVersion()));
       return found ? componentVersion.toConsumer(this.objects) : null;
     });
     const dependents = await Promise.all(dependentsP);

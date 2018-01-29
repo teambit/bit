@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
+import * as fixtures from '../fixtures/fixtures';
 
 const fileSpecFixture = testShouldPass => `const expect = require('chai').expect;
 const comp = require('./file');
@@ -7,15 +8,6 @@ const comp = require('./file');
 describe('comp', () => {
   it('should display "comp level0 level1"', () => {
     expect(comp())${testShouldPass ? '' : '.not'}.to.equal('comp level0 level1');
-  });
-});`;
-
-const barFooSpecFixture = testShouldPass => `const expect = require('chai').expect;
-const foo = require('./foo.js');
-
-describe('foo', () => {
-  it('should display "got is-type and got is-string and got foo"', () => {
-    expect(foo())${testShouldPass ? '' : '.not'}.to.equal('got is-type and got is-string and got foo');
   });
 });`;
 
@@ -56,19 +48,14 @@ describe('bit ci-update', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler('bit.envs/compilers/babel');
       helper.importTester('bit.envs/testers/mocha');
-      const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createComponent('utils', 'is-type.js', fixtures.isTypeES6);
       helper.addComponent('utils/is-type.js');
-      const isStringFixture =
-        "import isType from './is-type.js'; export default function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createComponent('utils', 'is-string.js', fixtures.isStringES6);
       helper.addComponent('utils/is-string.js');
-      const fooBarFixture =
-        "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
-      helper.createComponentBarFoo(fooBarFixture);
+      helper.createComponentBarFoo(fixtures.barFooES6);
       helper.addComponentBarFoo();
 
-      helper.createFile('bar', 'foo.spec.js', barFooSpecFixture(true));
+      helper.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
       helper.addNpmPackage('chai', '4.1.2');
       helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
       helper.build(); // needed for building the dependencies

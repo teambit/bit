@@ -24,7 +24,6 @@ import Version from './version';
 import {
   DEFAULT_BOX_NAME,
   DEFAULT_LANGUAGE,
-  DEFAULT_DIST_DIRNAME,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION
@@ -261,16 +260,12 @@ export default class Component extends BitObject {
           mainFile: version.mainFile || null,
           compilerId: version.compiler,
           testerId: version.tester,
-          dependencies: version.dependencies // todo: understand why sometimes the dependencies are not parsed
-            .map(dependency => ({
-              id: is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
-              // After the || is backward compatibility stuff
-              relativePaths: dependency.relativePaths || [
-                { sourceRelativePath: dependency.relativePath, destinationRelativePath: dependency.relativePath }
-              ]
-            })),
+          dependencies: version.dependencies.get(),
+          devDependencies: version.devDependencies.get(),
           flattenedDependencies: version.flattenedDependencies,
+          flattenedDevDependencies: version.flattenedDevDependencies,
           packageDependencies: version.packageDependencies,
+          devPackageDependencies: version.devPackageDependencies,
           files,
           dists,
           docs: version.docs,

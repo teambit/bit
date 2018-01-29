@@ -1,6 +1,7 @@
 /** @flow */
 import chalk from 'chalk';
 import path from 'path';
+import R from 'ramda';
 import Command from '../../command';
 import { add } from '../../../api/consumer';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
@@ -59,19 +60,34 @@ export default class Add extends Command {
     );
   }
 
-  report(results: Array<{ id: string, files: ComponentMapFile[] }>): string {
-    if (results.length > 1) {
-      return chalk.green(`tracking ${results.length} new components`);
+  report({ addedComponents, warnings }): string {
+    const paintWarning = () => {
+      if (warnings) {
+        const warn = Object.keys(warnings)
+          .map(key => chalk.yellow(`warning: files: ${warnings[key]} already belongs to componentId: ${key}`))
+          .filter(x => x)
+          .join('\n');
+        if (!R.isEmpty(warn)) return `${warn}\n`;
+      }
+      return '';
+    };
+
+    if (addedComponents.length > 1) {
+      return paintWarning() + chalk.green(`tracking ${addedComponents.length} new components`);
     }
-    return results
-      .map((result) => {
-        if (result.files.length === 0) {
-          return chalk.underline.red(`could not track component ${chalk.bold(result.id)}: no files to track`);
-        }
-        const title = chalk.underline(`tracking component ${chalk.bold(result.id)}:\n`);
-        const files = result.files.map(file => chalk.green(`added ${file.relativePath}`));
-        return title + files.join('\n');
-      })
-      .join('\n\n');
+
+    return (
+      paintWarning() +
+      R.flatten(
+        addedComponents.map((result) => {
+          if (result.files.length === 0) {
+            return chalk.underline.red(`could not track component ${chalk.bold(result.id)}: no files to track`);
+          }
+          const title = chalk.underline(`tracking component ${chalk.bold(result.id)}:\n`);
+          const files = result.files.map(file => chalk.green(`added ${file.relativePath}`));
+          return title + files.join('\n');
+        })
+      ).join('\n\n')
+    );
   }
 }

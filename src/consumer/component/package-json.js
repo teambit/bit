@@ -16,9 +16,10 @@ import {
   NODE_PATH_SEPARATOR
 } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
-import { filterAsync, pathNormalizeToLinux, pathRelative } from '../../utils';
+import { pathRelative } from '../../utils';
 import { getSync } from '../../api/consumer/lib/global-config';
 import Consumer from '../consumer';
+import { Dependencies } from './dependencies';
 
 /**
  * Add components as dependencies to root package.json
@@ -97,7 +98,7 @@ async function changeDependenciesToRelativeSyntax(
     } catch (e) {
       return Promise.resolve(); // package.json doesn't exist, that's fine, no need to update anything
     }
-    const packages = component.dependencies.map((dependency) => {
+    const packages = component.getAllDependencies().map((dependency) => {
       const dependencyId = dependency.id.toStringWithoutVersion();
       if (dependenciesIds.includes(dependencyId)) {
         const dependencyComponent = dependencies.find(d => d.id.toStringWithoutVersion() === dependencyId);
@@ -132,15 +133,19 @@ async function write(
   excludeRegistryPrefix?: boolean
 ): Promise<boolean> {
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
-  const getBitDependencies = async () => {
+  const getBitDependencies = async (dev: boolean = false) => {
     if (!writeBitDependencies) return {};
-    const dependenciesPackages = component.dependencies.map(async (dep) => {
+    const dependencies: Dependencies = dev ? component.devDependencies : component.dependencies;
+    const dependenciesPackages = dependencies.get().map(async (dep) => {
       const packageDependency = await getPackageDependency(consumer, dep.id, component.id);
       return [dep.id.toStringWithoutVersion(), packageDependency];
     });
     return R.fromPairs(await Promise.all(dependenciesPackages));
   };
   const bitDependencies = await getBitDependencies();
+  // @todo: bitDevDependencies should probably be part of devDependencies
+  const bitDevDependencies = await getBitDependencies(true);
+  const allBitDependencies = Object.assign({}, bitDependencies, bitDevDependencies);
   const registryPrefix = getRegistryPrefix();
   const name = excludeRegistryPrefix
     ? component.id.toStringWithoutVersion().replace(/\//g, '.')
@@ -155,7 +160,7 @@ async function write(
     componentRootFolder: bitDir,
     license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
   });
-  packageJson.setDependencies(component.packageDependencies, bitDependencies, registryPrefix);
+  packageJson.setDependencies(component.packageDependencies, allBitDependencies, registryPrefix);
 
   return packageJson.write({ override: force });
 }
