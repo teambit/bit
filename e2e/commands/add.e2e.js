@@ -816,7 +816,7 @@ describe('bit add command', function () {
     });
     it('Should show warning msg in case there are no files to add beacuse of gitignore', () => {
       helper.createComponent('bar', 'foo2.js');
-      helper.writeGitIgnore([path.normalize('bar/foo2.js')]);
+      helper.writeGitIgnore(['bar/foo2.js']);
 
       try {
         helper.addComponent(path.normalize('bar/foo2.js'));
