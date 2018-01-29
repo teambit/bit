@@ -123,8 +123,8 @@ function generateDependenciesTable(component: ConsumerComponent, showRemoteVersi
     });
     return dependencyRows;
   };
-  const dependenciesRows = getDependenciesRows(component.dependencies);
-  const devDependenciesRows = getDependenciesRows(component.devDependencies, true);
+  const dependenciesRows = getDependenciesRows(component.dependencies.get());
+  const devDependenciesRows = getDependenciesRows(component.devDependencies.get(), true);
   const allDependenciesRows = R.concat(dependenciesRows, devDependenciesRows);
 
   const dependenciesTable = new Table(dependencyHeader, allDependenciesRows);

@@ -42,6 +42,7 @@ import { RemovedLocalObjects } from '../scope/component-remove';
 import { linkComponents, linkAllToNodeModules, linkComponentsToNodeModules } from '../links';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
+import { Dependencies } from './component/dependencies';
 import type { PathChangeResult } from './bit-map/bit-map';
 
 export type ConsumerProps = {
@@ -615,9 +616,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -1100,8 +1101,8 @@ export default class Consumer {
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
     logger.debug(`addRemoteAndLocalVersionsToDependencies for ${component.id.toString()}`);
-    let modelDependencies = [];
-    let modelDevDependencies = [];
+    let modelDependencies = new Dependencies([]);
+    let modelDevDependencies = new Dependencies([]);
     if (loadedFromFileSystem) {
       // when loaded from file-system, the dependencies versions are fetched from bit.map.
       // try to find the model version of the component to get the stored versions of the dependencies
