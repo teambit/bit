@@ -6,7 +6,7 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
   const paintMissingComponents = () => {
     if (R.isEmpty(missingComponents)) return '';
     return (
-      chalk.red.underline('missing components:') +
+      chalk.red('missing components:') +
       chalk(
         ` ${missingComponents.map((id) => {
           if (!(id instanceof BitId)) id = new BitId(id); // when the id was received from a remote it's not an instance of BitId
@@ -17,7 +17,7 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
   };
   const paintRemoved = () =>
     (!R.isEmpty(removedComponentIds)
-      ? chalk.green.underline('successfully removed components:') +
+      ? chalk.green('successfully removed components:') +
         chalk(
           ` ${removedComponentIds.map(id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}\n`
         )
