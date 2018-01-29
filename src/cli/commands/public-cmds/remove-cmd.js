@@ -14,7 +14,7 @@ export default class Remove extends Command {
     ['f', 'force [boolean]', 'force remove (default = false)'],
     ['t', 'track [boolean]', 'keep tracking component (default = false)'],
     ['d', 'delete-files [boolean]', 'delete local component files'],
-    ['s', 'silent [boolean]', "don't prompt when removing remote component"]
+    ['s', 'silent [boolean]', 'skip confirmation']
   ];
   loader = true;
   migration = true;
