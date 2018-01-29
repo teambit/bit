@@ -155,6 +155,27 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.not.have.property('bar/new');
     });
+    it('Should add test to tracked component', () => {
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo2.spec.js');
+      helper.addComponent(path.normalize('bar/foo2.js'));
+      helper.addComponent(` -t ${path.normalize('bar/foo2.spec.js')} --id bar/foo2`);
+      const bitMap = helper.readBitMap();
+      const files = bitMap['bar/foo2'].files;
+      const expectImplFile = { relativePath: 'bar/foo2.js', test: false, name: 'foo2.js' };
+      const expectTestFile = { relativePath: 'bar/foo2.spec.js', test: true, name: 'foo2.spec.js' };
+      expect(files).to.be.ofSize(2);
+      expect(files).to.deep.include(expectTestFile);
+      expect(files).to.deep.include(expectImplFile);
+    });
+    it('Should throw message if adding test files without id', () => {
+      helper.createComponent('bar', 'foo2.js');
+      helper.createComponent('bar', 'foo2.spec.js');
+      helper.addComponent(path.normalize('bar/foo2.js'));
+      const addCmd = () => helper.addComponent(` -t ${path.normalize('bar/foo2.spec.js')}`);
+      expect(addCmd).to.throw("You can't add test files without specifying component id");
+    });
+
     it('Should add component to bitmap with folder as default namespace', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'));

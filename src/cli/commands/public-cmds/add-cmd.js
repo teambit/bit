@@ -6,9 +6,10 @@ import Command from '../../command';
 import { add } from '../../../api/consumer';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 import { pathNormalizeToLinux } from '../../../utils';
+import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 
 export default class Add extends Command {
-  name = 'add <path...>';
+  name = 'add [path...]';
   description = 'add any subset of files to be tracked as a component(s)';
   alias = 'a';
   opts = [
@@ -49,6 +50,11 @@ export default class Add extends Command {
     const exludedFiles = exclude
       ? this.splitList(exclude).map(filePath => pathNormalizeToLinux(filePath.trim()))
       : undefined;
+
+    // check if user is trying to add test files only without id
+    if (!R.isEmpty(tests) && !id && R.isEmpty(normalizedPathes)) {
+      throw new AddTestsWithoutId();
+    }
     return add(
       normalizedPathes,
       id,
