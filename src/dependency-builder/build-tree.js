@@ -221,7 +221,8 @@ function findPackagesInPackageJson(packageJson: Object, packagesNames: string[])
  * @returns new object with grouped missing
  */
 function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
-  const packageJson = PackageJson.findPackage(cwd);
+  // temporarily disable this functionality since it cause few bugs: explanation below (on using the packageJson)
+  // const packageJson = PackageJson.findPackage(cwd);
 
   /**
    * Group missing dependencies by types (files, bits, packages)
@@ -252,11 +253,14 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
   });
   groups.packages = missingPackages;
 
-  if (packageJson) {
-    const result = findPackagesInPackageJson(packageJson, missingPackages);
-    groups.packages = result.missingPackages;
-    Object.assign(foundPackages, result.foundPackages)
-  }
+  // temporarily disable this functionality since it cause this bugs:
+  // https://github.com/teambit/bit/issues/635
+  // https://github.com/teambit/bit/issues/690
+  // if (packageJson) {
+  //   const result = findPackagesInPackageJson(packageJson, missingPackages);
+  //   groups.packages = result.missingPackages;
+  //   Object.assign(foundPackages, result.foundPackages)
+  // }
 
   return { groups, foundPackages };
 }
