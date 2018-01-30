@@ -1116,13 +1116,18 @@ export default class Scope {
   loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean }) {
     logger.debug(`scope.loadEnvironment, id: ${bitId}`);
     if (!bitId) throw new ResolutionException();
-
-    const envPath = componentResolver(bitId.toString(), null, this.getPath());
-
-    if (!IsolatedEnvironment.isEnvironmentInstalled(envPath)) {
+    const notFound = () => {
       logger.debug(`Unable to find an env component ${bitId.toString()}`);
       return false;
+    };
+
+    let envPath;
+    try {
+      envPath = componentResolver(bitId.toString(), null, this.getPath());
+    } catch (err) {
+      return notFound();
     }
+    if (!IsolatedEnvironment.isEnvironmentInstalled(envPath)) return notFound();
 
     if (opts && opts.pathOnly) {
       return envPath;
