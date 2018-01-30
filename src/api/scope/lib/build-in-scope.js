@@ -1,5 +1,5 @@
 /** @flow */
-import { loadConsumer } from '../../../consumer';
+import { loadConsumer, Consumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
@@ -34,7 +34,7 @@ export default function buildInScope({
   }
 
   function loadFromConsumer() {
-    return loadConsumer().then((consumer) => {
+    return loadConsumer().then((consumer: Consumer) => {
       const bitId = BitId.parse(id);
       return consumer.scope.build({ bitId, save, consumer, verbose });
     });

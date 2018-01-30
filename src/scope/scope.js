@@ -20,7 +20,6 @@ import {
   LATEST,
   OBJECTS_DIR,
   BITS_DIRNAME,
-  DEFAULT_DIST_DIRNAME,
   BIT_VERSION,
   DEFAULT_BIT_VERSION,
   LATEST_BIT_VERSION
@@ -55,8 +54,7 @@ import {
   BEFORE_IMPORT_PUT_ON_SCOPE,
   BEFORE_MIGRATION,
   BEFORE_RUNNING_BUILD,
-  BEFORE_RUNNING_SPECS,
-  BEFORE_IMPORT_ENVIRONMENT
+  BEFORE_RUNNING_SPECS
 } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
 import logger from '../logger/logger';
@@ -341,22 +339,10 @@ export default class Scope {
 
     logger.debug('scope.putMany: sequentially build all components');
     const componentsToBuild = sortedConsumerComponentsIds.map(id => consumerComponentsIdsMap.get(id)).filter(c => c);
-    await this.buildMultiple(componentsToBuild, consumer);
+    await this.buildMultiple(componentsToBuild, consumer, verbose);
 
     logger.debug('scope.putMany: sequentially test all components');
-    loader.start(BEFORE_RUNNING_SPECS);
-    const specsResults = {};
-    for (const consumerComponentId of sortedConsumerComponentsIds) {
-      const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
-      if (consumerComponent) {
-        specsResults[consumerComponentId] = await consumerComponent.runSpecs({
-          scope: this,
-          rejectOnFailure: !force,
-          consumer,
-          verbose
-        });
-      }
-    }
+    const testsResults = await this.testMultiple(componentsToBuild, consumer, verbose, !force);
 
     logger.debug('scope.putMany: sequentially persist all components');
     const persistComponentsP = sortedConsumerComponentsIds.map(consumerComponentId => async () => {
@@ -387,6 +373,8 @@ export default class Scope {
           })
           : null;
 
+      const testResult = testsResults.find(result => result.component.id.toString() === consumerComponentId);
+
       const component = await this.sources.addSource({
         source: consumerComponent,
         flattenedDependencies,
@@ -395,7 +383,7 @@ export default class Scope {
         exactVersion,
         releaseType,
         dists,
-        specsResults: specsResults[consumerComponentId]
+        specsResults: testResult ? testResult.specs : undefined
       });
       const deps = await component.toVersionDependencies(LATEST, this, this.name);
       consumerComponent.version = deps.component.version;
@@ -417,18 +405,52 @@ export default class Scope {
 
   /**
    * Build multiple components sequentially, not in parallel.
+   *
+   * Two reasons why not running them in parallel:
+   * 1) when several components have the same environment, it'll try to install them multiple times.
+   * 2) npm throws errors when running 'npm install' from several directories
    */
-  async buildMultiple(components: Component[], consumer: Consumer, writeDists: boolean = false) {
-    // todo: to make them all run in parallel, we have to first get all compilers from all components, install all
-    // todo: environments, then build them all. Otherwise, it'll try to npm-install the same compiler multiple times
-    // todo: the method called from the test api (where we install all the compilers first) but also from put many
-    // todo: where we didn't make sure everything already installed
+  async buildMultiple(
+    components: Component[],
+    consumer: Consumer,
+    verbose
+  ): Promise<{ component: string, buildResults: Object }> {
     logger.debug('scope.buildMultiple: sequentially build multiple components');
     loader.start(BEFORE_RUNNING_BUILD);
-    for (const component of components) {
-      await component.build({ scope: this, consumer });
-      if (writeDists) await component.writeDists(consumer);
-    }
+    const build = async (component: Component) => {
+      await component.build({ scope: this, consumer, verbose });
+      const buildResults = await component.writeDists(consumer);
+      return { component: component.id.toString(), buildResults };
+    };
+    return pMapSeries(components, build);
+  }
+
+  /**
+   * Test multiple components sequentially, not in parallel.
+   *
+   * See the reason not to run them in parallel at @buildMultiple()
+   */
+  async testMultiple(
+    components: Component[],
+    consumer: Consumer,
+    verbose: boolean,
+    rejectOnFailure: boolean
+  ): Promise<{ component: Component, specsResults: Object }> {
+    logger.debug('scope.testMultiple: sequentially test multiple components');
+    loader.start(BEFORE_RUNNING_SPECS);
+    const test = async (component) => {
+      if (!component.testerId) {
+        return { component, missingTester: true };
+      }
+      const specs = await component.runSpecs({
+        scope: this,
+        rejectOnFailure,
+        consumer,
+        verbose
+      });
+      return { component, specs };
+    };
+    return pMapSeries(components, test);
   }
 
   /**
@@ -1091,31 +1113,30 @@ export default class Scope {
   /**
    * sync method that loads the environment/(path to environment component)
    */
-  async loadEnvironment(
-    bitId: BitId,
-    opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean, throws: boolean }
-  ): Promise<> {
+  loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean }) {
     logger.debug(`scope.loadEnvironment, id: ${bitId}`);
-    const throws = !(opts && opts.throws === false);
     if (!bitId) throw new ResolutionException();
+    const notFound = () => {
+      logger.debug(`Unable to find an env component ${bitId.toString()}`);
+      return false;
+    };
+
+    let envPath;
+    try {
+      envPath = componentResolver(bitId.toString(), null, this.getPath());
+    } catch (err) {
+      return notFound();
+    }
+    if (!IsolatedEnvironment.isEnvironmentInstalled(envPath)) return notFound();
 
     if (opts && opts.pathOnly) {
-      try {
-        const envPath = componentResolver(bitId.toString(), null, this.getPath());
-        if (fs.existsSync(envPath)) return envPath;
-        throw new Error(`Unable to find an env component ${bitId.toString()}`);
-      } catch (e) {
-        if (!throws) return null;
-        throw new ResolutionException(e.message);
-      }
+      return envPath;
     }
 
     try {
-      const envFile = componentResolver(bitId.toString(), null, this.getPath());
-      logger.debug(`Requiring an environment file at ${envFile}`);
-      return require(envFile);
+      logger.debug(`Requiring an environment file at ${envPath}`);
+      return require(envPath);
     } catch (e) {
-      if (!throws) return null;
       throw new ResolutionException(e);
     }
   }
@@ -1136,17 +1157,9 @@ export default class Scope {
     const idsWithoutNils = removeNils(ids);
     const predicate = id => id.toString(); // TODO: should be moved to BitId class
     const uniqIds = R.uniqBy(predicate)(idsWithoutNils);
-    const nonExisteingEnvsIds = [];
-    // Filter already exists envs
-    const nonExisteingEnvsIdsP = uniqIds.map((id) => {
-      return this.loadEnvironment(id, { pathOnly: true, throws: false }).then((exists) => {
-        if (!exists) {
-          nonExisteingEnvsIds.push(id);
-        }
-      });
+    const nonExistingEnvsIds = uniqIds.filter((id) => {
+      return !this.loadEnvironment(id, { pathOnly: true });
     });
-
-    await Promise.all(nonExisteingEnvsIdsP);
 
     const importEnv = async (id) => {
       let concreteId = id;
@@ -1159,7 +1172,7 @@ export default class Scope {
       await env.create();
       return env.isolateComponent(id, isolateOpts);
     };
-    return pMapSeries(nonExisteingEnvsIds, importEnv);
+    return pMapSeries(nonExistingEnvsIds, importEnv);
   }
 
   async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {
@@ -1277,7 +1290,7 @@ export default class Scope {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run build on remote component');
     }
-    const component = await this.loadComponent(bitId);
+    const component: Component = await this.loadComponent(bitId);
     return component.build({ scope: this, save, consumer, verbose, directory, keep, isCI });
   }
 
