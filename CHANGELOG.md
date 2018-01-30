@@ -10,10 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.12.4] - 2018-01-30
 
 - support separating dev-dependencies and dev-packages from dependencies and packages when they originated from tests files 
-- prompt user when trying to remove from remote scope
+- prompt user when trying to remove a component
 - restore old behavior of requiring package installation
 - support adding test files to existing component
-- ignore tracked files when running bit add and print warning message 
+- ignore tracked files when running bit add and print a warning message 
 - bug fix - bit test fails when the same environment installation was canceled before
 
 ## [0.12.3] - 2018-01-28
