@@ -453,6 +453,10 @@ export default class Helper {
     return this.runCmd(`bit untrack ${id}`, cwd);
   }
 
+  getFixturesDir() {
+    return path.join(__dirname, 'fixtures');
+  }
+
   copyFixtureComponents(dir: string = '', cwd = this.localScopePath) {
     const sourceDir = path.join(__dirname, 'fixtures', 'components');
     fs.copySync(sourceDir, cwd);

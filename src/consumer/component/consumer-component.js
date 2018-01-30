@@ -478,9 +478,14 @@ export default class Component {
     if (this._distsPathsAreUpdated || !this.dists) return;
     const newDistBase = this.getDistDirForConsumer(consumer, componentMap.rootDir);
     const getNewRelative = (dist) => {
-      if (consumer.bitJson.distEntry) {
+      if (
+        componentMap.origin !== COMPONENT_ORIGINS.NESTED &&
+        consumer.bitJson.distEntry &&
+        dist.relative.startsWith(consumer.bitJson.distEntry)
+      ) {
         return dist.relative.replace(consumer.bitJson.distEntry, '');
       }
+      return dist.relative;
     };
     this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase, newRelative: getNewRelative(dist) }));
     this._distsPathsAreUpdated = true;

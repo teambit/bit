@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bug fix - dists had incorrect paths in the model when originallySharedDir was the same as dist.entry
+- strip dist.entry for imported and authored components only, not for nested.  
+
 ## [0.12.4] - 2018-01-30
 
 - support separating dev-dependencies and dev-packages from dependencies and packages when they originated from tests files 
