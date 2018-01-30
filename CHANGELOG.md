@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - bug fix - bit test fails when the same environment installation was canceled before
+- restore old behavior of requiring package installation
 
 ## [0.12.4-dev.1] - 2018-01-29
 
