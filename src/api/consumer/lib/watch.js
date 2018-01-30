@@ -28,7 +28,6 @@ export async function watchAll(verbose) {
     ignored: '**/dist/**'
   });
 
-  const log = console.log.bind(console); // eslint-disable-line
   console.log(`Starting watch for changes`); // eslint-disable-line
 
   if (verbose) {

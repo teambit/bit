@@ -12,8 +12,7 @@ export type IsolateOptions = {
   dist: ?boolean,
   conf: ?boolean,
   noPackageJson: ?boolean,
-  override: ?boolean,
-  dist: ?boolean
+  override: ?boolean
 };
 
 export default (async function isolate(componentId: string, scopePath: string, opts: IsolateOptions): Promise<string> {
