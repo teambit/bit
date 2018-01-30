@@ -4,7 +4,7 @@ import AbstractVinyl from './abstract-vinyl';
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
  * are in the consumer-root/dist.target dir. If dist.entry is set the paths should be stripped from dist.entry.
- * If there is originallySharedDir, it should be stripped as well.
+ * If there is originallySharedDir, it should be stripped as well but for IMPORTED components only.
  *
  * These modifications of the paths are taken care in different stages depends on the scenario.
  * 1) using 'bit build'.
