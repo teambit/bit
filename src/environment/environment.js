@@ -37,7 +37,7 @@ export default class Environment {
 
   async create(): Promise<> {
     await mkdirp(this.path);
-    this.consumer = await Consumer.createWithExistingScope(this.path, this.scope);
+    this.consumer = await Consumer.createWithExistingScope(this.path, this.scope, true);
   }
 
   /**

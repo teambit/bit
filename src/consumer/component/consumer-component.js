@@ -411,7 +411,10 @@ export default class Component {
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists && this._writeDistsFiles) await this.writeDists(consumer, false);
     if (withBitJson) await this.writeBitJson(bitDir, force);
-    if (withPackageJson) {
+    // make sure the project's package.json is not overridden by Bit
+    // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
+    // of compilers / testers / extensions)
+    if (withPackageJson && (consumer.isolated || bitDir !== consumer.getPath())) {
       await this.writePackageJson(consumer, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
     }
     if (this.license && this.license.src) await this.license.write(bitDir, force);

@@ -49,6 +49,7 @@ import type { PathChangeResult } from './bit-map/bit-map';
 export type ConsumerProps = {
   projectPath: string,
   created?: boolean,
+  isolated?: boolean,
   bitJson: ConsumerBitJson,
   scope: Scope
 };
@@ -67,15 +68,17 @@ export default class Consumer {
   bitJson: ConsumerBitJson;
   scope: Scope;
   bitMap: BitMap;
+  isolated: boolean = false; // Mark that the consumer instance is of isolated env and not real
   _driver: Driver;
   _dirStructure: DirStructure;
   _componentsCache: Object = {}; // cache loaded components
   _componentsStatusCache: Object = {}; // cache loaded components
 
-  constructor({ projectPath, bitJson, scope, created = false }: ConsumerProps) {
+  constructor({ projectPath, bitJson, scope, created = false, isolated = false }: ConsumerProps) {
     this.projectPath = projectPath;
     this.bitJson = bitJson;
     this.created = created;
+    this.isolated = isolated;
     this.scope = scope;
     this.bitMap = BitMap.load(projectPath);
     this.warnForMissingDriver();
@@ -617,9 +620,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -899,13 +902,18 @@ export default class Consumer {
     });
   }
 
-  static async createWithExistingScope(consumerPath: string, scope: Scope): Promise<Consumer> {
+  static async createWithExistingScope(
+    consumerPath: string,
+    scope: Scope,
+    isolated: boolean = false
+  ): Promise<Consumer> {
     if (pathHasConsumer(consumerPath)) return Promise.reject(new ConsumerAlreadyExists());
     const bitJson = await ConsumerBitJson.ensure(consumerPath);
     return new Consumer({
       projectPath: consumerPath,
       created: true,
       scope,
+      isolated,
       bitJson
     });
   }
