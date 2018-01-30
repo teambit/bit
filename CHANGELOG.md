@@ -7,15 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- bug fix - bit test fails when the same environment installation was canceled before
-- restore old behavior of requiring package installation
-
-## [0.12.4-dev.1] - 2018-01-29
+## [0.12.4] - 2018-01-30
 
 - support separating dev-dependencies and dev-packages from dependencies and packages when they originated from tests files 
+- prompt user when trying to remove from remote scope
+- restore old behavior of requiring package installation
 - support adding test files to existing component
 - ignore tracked files when running bit add and print warning message 
-- prompt user when trying to remove from remote scope
+- bug fix - bit test fails when the same environment installation was canceled before
 
 ## [0.12.3] - 2018-01-28
 
