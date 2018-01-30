@@ -7,10 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.10.10-dev.1] - 2018-01-30
+## [0.10.10] - 2018-01-30
 
 - restore old behavior of requiring package installation
-
 
 ## [0.10.9] - 2018-01-24
 
