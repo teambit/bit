@@ -68,11 +68,9 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs, includ
   obj.tester = testerId ? testerId.toString() : null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
   if (includeDependencies) {
-    obj.dependencies = dependencies.toStringOfIds();
-    obj.devDependencies = devDependencies.toStringOfIds();
+    obj.dependencies = dependencies.toStringOfIds().concat(parsePackages(packageDependencies));
+    obj.devDependencies = devDependencies.toStringOfIds().concat(parsePackages(devPackageDependencies));
   }
-  obj.packages = parsePackages(packageDependencies);
-  obj.devPackages = parsePackages(devPackageDependencies);
   obj.files =
     !R.isEmpty(files) && !R.isNil(files)
       ? files.filter(file => !file.test).map(file => normalize(file.relative))
