@@ -8,13 +8,12 @@ import chalk from 'chalk';
 import format from 'string-format';
 import partition from 'lodash.partition';
 import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locator';
-import { ConsumerAlreadyExists, ConsumerNotFound, NothingToImport, MissingDependencies } from './exceptions';
+import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-
 import {
   BITS_DIRNAME,
   BIT_HIDDEN_DIR,
@@ -28,12 +27,12 @@ import migratonManifest from './migrations/consumer-migrator-manifest';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import loader from '../cli/loader';
-import { BEFORE_IMPORT_ACTION, BEFORE_INSTALL_NPM_DEPENDENCIES, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
+import { BEFORE_INSTALL_NPM_DEPENDENCIES, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { getLatestVersionNumber, filterAsync, pathNormalizeToLinux } from '../utils';
+import { getLatestVersionNumber, pathNormalizeToLinux } from '../utils';
 import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
@@ -45,6 +44,8 @@ import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
 import { Dependencies } from './component/dependencies';
 import type { PathChangeResult } from './bit-map/bit-map';
+import ImportComponents from './component/import-components';
+import type { ImportOptions, ImportResult } from './component/import-components';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -279,170 +280,9 @@ export default class Consumer {
     return { components: allComponents.concat(alreadyLoadedComponents), deletedComponents };
   }
 
-  async importAccordingToBitJsonAndBitMap(
-    verbose?: boolean,
-    withEnvironments: ?boolean,
-    cache?: boolean = true,
-    withPackageJson?: boolean = true,
-    force?: boolean = false,
-    dist?: boolean = false,
-    conf?: boolean = false,
-    installNpmPackages?: boolean = true,
-    saveDependenciesAsComponents?: boolean = false
-  ): Promise<> {
-    const dependenciesFromBitJson = BitIds.fromObject(this.bitJson.dependencies);
-    const componentsFromBitMap = this.bitMap.getAuthoredExportedComponents();
-
-    if ((R.isNil(dependenciesFromBitJson) || R.isEmpty(dependenciesFromBitJson)) && R.isEmpty(componentsFromBitMap)) {
-      if (!withEnvironments) {
-        return Promise.reject(new NothingToImport());
-      } else if (R.isNil(this.testerId) && R.isNil(this.compilerId)) {
-        return Promise.reject(new NothingToImport());
-      }
-    }
-    if (!force) {
-      const allComponentsIds = dependenciesFromBitJson.concat(componentsFromBitMap);
-      await this.warnForModifiedOrNewComponents(allComponentsIds);
-    }
-
-    let componentsAndDependenciesBitJson = [];
-    let componentsAndDependenciesBitMap = [];
-    if (dependenciesFromBitJson) {
-      componentsAndDependenciesBitJson = await this.scope.getManyWithAllVersions(dependenciesFromBitJson, cache);
-      await this.writeToComponentsDir({
-        componentsWithDependencies: componentsAndDependenciesBitJson,
-        withPackageJson,
-        withBitJson: conf,
-        dist,
-        saveDependenciesAsComponents,
-        installNpmPackages,
-        verbose
-      });
-    }
-    if (componentsFromBitMap.length) {
-      componentsAndDependenciesBitMap = await this.scope.getManyWithAllVersions(componentsFromBitMap, cache);
-      // Don't write the package.json for an authored component, because its dependencies probably managed by the root
-      // package.json. Also, don't install npm packages for the same reason.
-      await this.writeToComponentsDir({
-        componentsWithDependencies: componentsAndDependenciesBitMap,
-        force: false,
-        withPackageJson: false,
-        installNpmPackages: false,
-        withBitJson: conf,
-        dist
-      });
-    }
-    const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
-    if (withEnvironments) {
-      const envComponents = await this.scope.installEnvironment({
-        ids: [this.testerId, this.compilerId],
-        verbose
-      });
-      return {
-        dependencies: componentsAndDependencies,
-        envDependencies: envComponents
-      };
-    }
-    return { dependencies: componentsAndDependencies };
-  }
-
-  async warnForModifiedOrNewComponents(ids: BitId[]) {
-    const modifiedComponents = await filterAsync(ids, (id) => {
-      return this.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
-    });
-
-    if (modifiedComponents.length) {
-      return Promise.reject(
-        chalk.yellow(
-          `unable to import the following components due to local changes, use --force flag to override your local changes\n${modifiedComponents.join(
-            '\n'
-          )} `
-        )
-      );
-    }
-    return Promise.resolve();
-  }
-
-  async importSpecificComponents(
-    rawIds: ?(string[]),
-    cache?: boolean,
-    writeToPath?: string,
-    withPackageJson?: boolean = true,
-    writeBitDependencies?: boolean = false,
-    force?: boolean = false,
-    verbose?: boolean = false,
-    dist?: boolean = false,
-    conf?: boolean = false,
-    installNpmPackages?: boolean = true,
-    saveDependenciesAsComponents?: boolean = false
-  ) {
-    logger.debug(`importSpecificComponents, Ids: ${rawIds.join(', ')}`);
-    // $FlowFixMe - we check if there are bitIds before we call this function
-    const bitIds = rawIds.map(raw => BitId.parse(raw));
-    if (!force) {
-      await this.warnForModifiedOrNewComponents(bitIds);
-    }
-    const componentsWithDependencies = await this.scope.getManyWithAllVersions(bitIds, cache);
-    await this.writeToComponentsDir({
-      componentsWithDependencies,
-      writeToPath,
-      withPackageJson,
-      withBitJson: conf,
-      writeBitDependencies,
-      dist,
-      saveDependenciesAsComponents,
-      installNpmPackages,
-      verbose
-    });
-    return { dependencies: componentsWithDependencies };
-  }
-
-  import(
-    rawIds: ?(string[]),
-    verbose?: boolean,
-    withEnvironments: ?boolean,
-    cache?: boolean = true,
-    writeToPath?: string,
-    withPackageJson?: boolean = true,
-    writeBitDependencies?: boolean = false,
-    force?: boolean = false,
-    dist?: boolean = false,
-    conf?: boolean = false,
-    installNpmPackages?: boolean = true
-  ): Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }> {
-    loader.start(BEFORE_IMPORT_ACTION);
-    let saveDependenciesAsComponents = this.bitJson.saveDependenciesAsComponents;
-    if (!withPackageJson) {
-      // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
-      installNpmPackages = false;
-      saveDependenciesAsComponents = true;
-    }
-    if (!rawIds || R.isEmpty(rawIds)) {
-      return this.importAccordingToBitJsonAndBitMap(
-        verbose,
-        withEnvironments,
-        cache,
-        withPackageJson,
-        force,
-        dist,
-        conf,
-        installNpmPackages,
-        saveDependenciesAsComponents
-      );
-    }
-    return this.importSpecificComponents(
-      rawIds,
-      cache,
-      writeToPath,
-      withPackageJson,
-      writeBitDependencies,
-      force,
-      verbose,
-      dist,
-      conf,
-      installNpmPackages,
-      saveDependenciesAsComponents
-    );
+  importComponents(importOptions: ImportOptions): ImportResult {
+    const importComponents = new ImportComponents(this, importOptions);
+    return importComponents.importComponents();
   }
 
   importEnvironment(rawId: ?string, verbose?: boolean) {
@@ -450,12 +290,7 @@ export default class Consumer {
       throw new Error('you must specify bit id for importing');
     } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId);
-    return this.scope.installEnvironment({ ids: [bitId], verbose }).then((envDependencies) => {
-      // todo: do we need the environment in bit.map?
-      // this.bitMap.addComponent(bitId.toString(), this.composeRelativeBitPath(bitId));
-      // this.bitMap.write();
-      return envDependencies;
-    });
+    return this.scope.installEnvironment({ ids: [bitId], verbose });
   }
 
   removeFromComponents(id: BitId, currentVersionOnly: boolean = false): Promise<any> {
@@ -620,9 +455,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
