@@ -19,7 +19,7 @@ export type ComponentMapData = {
   origin: ComponentOrigin,
   dependencies: string[], // needed for the link process
   mainDistFile?: string, // needed when there is a build process involved
-  originallySharedDir: ?string // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
+  originallySharedDir?: string // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
 };
 
 export type PathChange = { from: string, to: string };

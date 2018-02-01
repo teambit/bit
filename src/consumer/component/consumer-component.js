@@ -120,11 +120,6 @@ export default class Component {
   }
 
   get id(): BitId {
-    // if (!this.scope || !this.version) {
-    //   console.error(this);
-    //   throw new Error('cant produce id because scope or version are missing');
-    // }
-
     return new BitId({
       scope: this.scope,
       box: this.box,
@@ -318,37 +313,12 @@ export default class Component {
     }
 
     const runBuild = (componentRoot: string): Promise<any> => {
-      // const metaData = {
-      //   entry: this.mainFile,
-      //   files: this.files,
-      //   root: componentRoot,
-      //   packageDependencies: this.packageDependencies,
-      //   dependencies: this.dependencies
-      // };
-
-      // if (compiler.build) {
-      //   // @todo: is it still needed?
-      //   return compiler.build(metaData); // returns a promise
-      // }
-
-      // the compiler have one of the following (build/compile)
       let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
-      let sourceFiles = files;
       if (componentMap) {
         rootDistFolder = this.getDistDirForConsumer(consumer, componentMap.rootDir);
-        if (consumer.bitJson.distEntry) {
-          // when dist.entry is set, it should be removed from the calculated path of the dists files
-          // the `sourceFiles` paths are used later on in the compiler code for the dists
-          sourceFiles = files.map((file) => {
-            const clonedFile = file.clone();
-            const newRelative = file.relative.replace(consumer.bitJson.distEntry, '');
-            clonedFile.path = path.join(file.base, newRelative);
-            return clonedFile;
-          });
-        }
       }
       try {
-        const result = compiler.compile(sourceFiles, rootDistFolder);
+        const result = compiler.compile(files, rootDistFolder);
         return Promise.resolve(result);
       } catch (e) {
         if (verbose) return Promise.reject(new BuildException(this.id.toString(), e.stack));
@@ -356,9 +326,9 @@ export default class Component {
       }
     };
 
-    if (!compiler.build && !compiler.compile) {
+    if (!compiler.compile) {
       return Promise.reject(
-        `"${this.compilerId.toString()}" does not have a valid compiler interface, it has to expose a build method`
+        `"${this.compilerId.toString()}" does not have a valid compiler interface, it has to expose a compile method`
       );
     }
 
@@ -453,6 +423,9 @@ export default class Component {
     if (this._wasOriginallySharedDirStripped) return;
     this.setOriginallySharedDir();
     const originallySharedDir = this.originallySharedDir;
+    if (originallySharedDir) {
+      logger.debug(`stripping originallySharedDir "${originallySharedDir}" from ${this.id}`);
+    }
     const pathWithoutSharedDir = (pathStr, sharedDir, isLinuxFormat) => {
       if (!sharedDir) return pathStr;
       const partToRemove = isLinuxFormat ? `${sharedDir}/` : path.normalize(sharedDir) + path.sep;
@@ -477,13 +450,28 @@ export default class Component {
   updateDistsPerConsumerBitJson(consumer: Consumer, componentMap: ComponentMap): void {
     if (this._distsPathsAreUpdated || !this.dists) return;
     const newDistBase = this.getDistDirForConsumer(consumer, componentMap.rootDir);
+    const distEntry = consumer.bitJson.distEntry;
+    const shouldDistEntryBeStripped = () => {
+      if (!distEntry || componentMap.origin === COMPONENT_ORIGINS.NESTED) return false;
+      const areAllDistsStartWithDistEntry = () => {
+        return this.dists.map(dist => dist.relative.startsWith(distEntry)).every(x => x);
+      };
+      if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+        return areAllDistsStartWithDistEntry();
+      }
+      // it's IMPORTED. We first check that rootDir starts with dist.entry, it happens mostly when a user imports into
+      // a specific directory (e.g. bit import --path src/). Then, we make sure all dists files start with that
+      // dist.entry. In a case when originallySharedDir is the same as dist.entry, this second check returns false.
+      return componentMap.rootDir.startsWith(distEntry) && areAllDistsStartWithDistEntry();
+    };
+    const distEntryShouldBeStripped = shouldDistEntryBeStripped();
+    if (distEntryShouldBeStripped) {
+      logger.debug(`stripping dist.entry "${distEntry}" from ${this.id}`);
+      this.distEntryShouldBeStripped = true;
+    }
     const getNewRelative = (dist) => {
-      if (
-        componentMap.origin !== COMPONENT_ORIGINS.NESTED &&
-        consumer.bitJson.distEntry &&
-        dist.relative.startsWith(consumer.bitJson.distEntry)
-      ) {
-        return dist.relative.replace(consumer.bitJson.distEntry, '');
+      if (distEntryShouldBeStripped) {
+        return dist.relative.replace(distEntry, '');
       }
       return dist.relative;
     };
@@ -579,6 +567,7 @@ export default class Component {
       componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) withBitJson = false;
     const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
     this.writtenPath = newBase;
     this.files.forEach(file => file.updatePaths({ newBase }));
@@ -895,7 +884,7 @@ export default class Component {
     if (!this.dists) return this.mainFile;
     const getMainFileToSearch = () => {
       const mainFile = path.normalize(this.mainFile);
-      if (consumer.bitJson.distEntry) return mainFile.replace(`${consumer.bitJson.distEntry}/`, '');
+      if (consumer.bitJson.distEntry) return mainFile.replace(`${consumer.bitJson.distEntry}${path.sep}`, '');
       return mainFile;
     };
     const mainFileToSearch = getMainFileToSearch();

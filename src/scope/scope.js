@@ -356,10 +356,9 @@ export default class Scope {
         const withSharedDir = consumerComponent.originallySharedDir
           ? pathLib.join(consumerComponent.originallySharedDir, pathStr)
           : pathStr;
-        const withDistEntry =
-          consumer.bitJson.distEntry && consumer.bitJson.distEntry !== consumerComponent.originallySharedDir
-            ? pathLib.join(consumer.bitJson.distEntry, withSharedDir)
-            : withSharedDir;
+        const withDistEntry = consumerComponent.distEntryShouldBeStripped
+          ? pathLib.join(consumer.bitJson.distEntry, withSharedDir)
+          : withSharedDir;
         return pathNormalizeToLinux(withDistEntry);
       };
       const dists =
