@@ -81,11 +81,12 @@ export default class ImportComponents {
     }
     if (componentsFromBitMap.length) {
       componentsAndDependenciesBitMap = await this.consumer.scope.getManyWithAllVersions(componentsFromBitMap, false);
-      // Don't write the package.json for an authored component, because its dependencies probably managed by the root
+      // don't write the package.json for an authored component, because its dependencies probably managed by the root
       // package.json. Also, don't install npm packages for the same reason.
       this.options.writePackageJson = false;
       this.options.installNpmPackages = false;
-      await this._writeToFileSystem(componentsAndDependenciesBitMap);
+      // don't force the writing to the filesystem because as an author I may have some modified files
+      await this._writeToFileSystem(componentsAndDependenciesBitMap, false);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     if (this.options.withEnvironments) {
@@ -122,7 +123,7 @@ export default class ImportComponents {
     return Promise.resolve();
   }
 
-  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies) {
+  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies, force = true) {
     if (this.options.objectsOnly) return;
     await this.consumer.writeToComponentsDir({
       componentsWithDependencies,
@@ -131,7 +132,8 @@ export default class ImportComponents {
       writeBitJson: this.options.writeBitJson,
       writeDists: this.options.writeDists,
       installNpmPackages: this.options.installNpmPackages,
-      verbose: this.options.verbose
+      verbose: this.options.verbose,
+      force
     });
   }
 }
