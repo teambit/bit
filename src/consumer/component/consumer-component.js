@@ -567,6 +567,7 @@ export default class Component {
       componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) withBitJson = false;
     const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
     this.writtenPath = newBase;
     this.files.forEach(file => file.updatePaths({ newBase }));
@@ -883,7 +884,7 @@ export default class Component {
     if (!this.dists) return this.mainFile;
     const getMainFileToSearch = () => {
       const mainFile = path.normalize(this.mainFile);
-      if (consumer.bitJson.distEntry) return mainFile.replace(`${consumer.bitJson.distEntry}/`, '');
+      if (consumer.bitJson.distEntry) return mainFile.replace(`${consumer.bitJson.distEntry}${path.sep}`, '');
       return mainFile;
     };
     const mainFileToSearch = getMainFileToSearch();
