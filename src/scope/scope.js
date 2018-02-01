@@ -352,6 +352,12 @@ export default class Scope {
       const flattenedDependencies = await getFlattenForComponent(consumerComponent, allDependencies);
       const flattenedDevDependencies = await getFlattenForComponent(consumerComponent, allDependencies, true);
 
+      // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
+      // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
+      // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
+      // consumerComponent.distEntryShouldBeStripped is set to true.
+      // because the model always has the paths of the original author, in case part of the path was stripped, add it
+      // back before saving to the model. this way, when the author updates the components, the paths will be correct.
       const addSharedDirAndDistEntry = (pathStr) => {
         const withSharedDir = consumerComponent.originallySharedDir
           ? pathLib.join(consumerComponent.originallySharedDir, pathStr)

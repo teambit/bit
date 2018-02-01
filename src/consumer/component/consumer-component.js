@@ -590,6 +590,10 @@ export default class Component {
     return this;
   }
 
+  /**
+   * write dists file to the filesystem. In case there is a consumer and dist.entry should be stripped, it will be
+   * done before writing the files. The originallySharedDir should be already stripped before accessing this method.
+   */
   async writeDists(consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
     if (!this.dists) return null;
     let componentMap;
@@ -807,7 +811,6 @@ export default class Component {
       keep,
       verbose
     });
-
     // return buildFilesP.then((buildedFiles) => {
     builtFiles.forEach((file) => {
       if (file && (!file.contents || !isString(file.contents.toString()))) {
