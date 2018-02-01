@@ -109,15 +109,19 @@ function findComponentsOfDepsFiles(
         // since the dep-file is a generated file, it is safe to assume that the componentFromModel has in its
         // dependencies array this component with the relativePaths array. Find the relativePath of this dep-file
         // to get the correct destinationRelativePath. There is no other way to obtain this info.
+        if (!componentFromModel) {
+          throw new Error(`Failed to resolve ${componentId} dependencies because the component is not in the model.
+Try to run "bit import ${componentId} --objects" to get the component saved in the model`);
+        }
         const componentBitId = BitId.parse(componentId);
         const dependency = componentFromModel.component
           .getAllDependencies()
           .find(dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion());
         if (!dependency) {
           throw new Error(
-            `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
-              componentFromModel.id
-            }`
+            `the auto-generated file ${depFile} should be connected to ${
+              componentId
+            }, however, it's not part of the model dependencies of ${componentFromModel.id}`
           );
         }
         const originallySource = entryComponentMap.originallySharedDir

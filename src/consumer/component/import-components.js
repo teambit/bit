@@ -51,20 +51,9 @@ export default class ImportComponents {
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = this.options.ids.map(raw => BitId.parse(raw));
-    if (!this.options.force) {
-      await this.warnForModifiedOrNewComponents(bitIds);
-    }
+    await this._warnForModifiedOrNewComponents(bitIds);
     const componentsWithDependencies = await this.consumer.scope.getManyWithAllVersions(bitIds, false);
-    await this.consumer.writeToComponentsDir({
-      componentsWithDependencies,
-      writeToPath: this.options.writeToPath,
-      withPackageJson: this.options.writePackageJson,
-      withBitJson: this.options.writeBitJson,
-      dist: this.options.writeDists,
-      saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
-      installNpmPackages: this.options.installNpmPackages,
-      verbose: this.options.verbose
-    });
+    await this._writeToFileSystem(componentsWithDependencies);
     return { dependencies: componentsWithDependencies };
   }
 
@@ -79,10 +68,7 @@ export default class ImportComponents {
         return Promise.reject(new NothingToImport());
       }
     }
-    if (!this.options.force) {
-      const allComponentsIds = dependenciesFromBitJson.concat(componentsFromBitMap);
-      await this.warnForModifiedOrNewComponents(allComponentsIds);
-    }
+    await this._warnForModifiedOrNewComponents(dependenciesFromBitJson.concat(componentsFromBitMap));
 
     let componentsAndDependenciesBitJson = [];
     let componentsAndDependenciesBitMap = [];
@@ -91,28 +77,15 @@ export default class ImportComponents {
         dependenciesFromBitJson,
         false
       );
-      await this.consumer.writeToComponentsDir({
-        componentsWithDependencies: componentsAndDependenciesBitJson,
-        withPackageJson: this.options.writePackageJson,
-        withBitJson: this.options.writeBitJson,
-        dist: this.options.writeDists,
-        saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
-        installNpmPackages: this.options.installNpmPackages,
-        verbose: this.options.verbose
-      });
+      await this._writeToFileSystem(componentsAndDependenciesBitJson);
     }
     if (componentsFromBitMap.length) {
       componentsAndDependenciesBitMap = await this.consumer.scope.getManyWithAllVersions(componentsFromBitMap, false);
       // Don't write the package.json for an authored component, because its dependencies probably managed by the root
       // package.json. Also, don't install npm packages for the same reason.
-      await this.consumer.writeToComponentsDir({
-        componentsWithDependencies: componentsAndDependenciesBitMap,
-        force: false,
-        withPackageJson: false,
-        installNpmPackages: false,
-        withBitJson: this.options.writeBitJson,
-        dist: this.options.writeDists
-      });
+      this.options.writePackageJson = false;
+      this.options.installNpmPackages = false;
+      await this._writeToFileSystem(componentsAndDependenciesBitMap);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     if (this.options.withEnvironments) {
@@ -128,7 +101,11 @@ export default class ImportComponents {
     return { dependencies: componentsAndDependencies };
   }
 
-  async warnForModifiedOrNewComponents(ids: BitId[]) {
+  async _warnForModifiedOrNewComponents(ids: BitId[]) {
+    // the typical objectsOnly option is when a user cloned a project with components committed to the source code, but
+    // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
+    // on the model objects when there are dependencies
+    if (this.options.force || this.options.objectsOnly) return Promise.resolve();
     const modifiedComponents = await filterAsync(ids, (id) => {
       return this.consumer.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
     });
@@ -143,5 +120,18 @@ export default class ImportComponents {
       );
     }
     return Promise.resolve();
+  }
+
+  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies) {
+    if (this.options.objectsOnly) return;
+    await this.consumer.writeToComponentsDir({
+      componentsWithDependencies,
+      writeToPath: this.options.writeToPath,
+      writePackageJson: this.options.writePackageJson,
+      writeBitJson: this.options.writeBitJson,
+      writeDists: this.options.writeDists,
+      installNpmPackages: this.options.installNpmPackages,
+      verbose: this.options.verbose
+    });
   }
 }

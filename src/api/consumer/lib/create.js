@@ -10,7 +10,7 @@ import { COMPONENT_ORIGINS } from '../../../constants';
 export default (async function create(
   idRaw: string,
   withSpecs: boolean = false,
-  withBitJson: boolean = false,
+  writeBitJson: boolean = false,
   force: boolean = false
 ): Promise<Component> {
   const consumer = await loadConsumer();
@@ -32,7 +32,7 @@ export default (async function create(
     },
     consumer.scope
   );
-  await component.write({ withBitJson, force, driver: consumer.driver, origin: COMPONENT_ORIGINS.AUTHORED });
+  await component.write({ writeBitJson, force, driver: consumer.driver, origin: COMPONENT_ORIGINS.AUTHORED });
   await consumer.bitMap.write();
   // await consumer.driver.runHook('onCreate', component);
   return component;

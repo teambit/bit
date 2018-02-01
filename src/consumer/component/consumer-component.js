@@ -356,8 +356,8 @@ export default class Component {
 
   async _writeToComponentDir({
     bitDir,
-    withBitJson,
-    withPackageJson,
+    writeBitJson,
+    writePackageJson,
     consumer,
     force = true,
     writeBitDependencies = false,
@@ -365,8 +365,8 @@ export default class Component {
     excludeRegistryPrefix = false
   }: {
     bitDir: string,
-    withBitJson: boolean,
-    withPackageJson: boolean,
+    writeBitJson: boolean,
+    writePackageJson: boolean,
     consumer: Consumer,
     force?: boolean,
     writeBitDependencies?: boolean,
@@ -380,11 +380,11 @@ export default class Component {
     }
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
     if (this.dists && this._writeDistsFiles) await this.writeDists(consumer, false);
-    if (withBitJson) await this.writeBitJson(bitDir, force);
+    if (writeBitJson) await this.writeBitJson(bitDir, force);
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
-    if (withPackageJson && (consumer.isolated || bitDir !== consumer.getPath())) {
+    if (writePackageJson && (consumer.isolated || bitDir !== consumer.getPath())) {
       await this.writePackageJson(consumer, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
     }
     if (this.license && this.license.src) await this.license.write(bitDir, force);
@@ -486,8 +486,8 @@ export default class Component {
    */
   async write({
     bitDir,
-    withBitJson = true,
-    withPackageJson = true,
+    writeBitJson = true,
+    writePackageJson = true,
     force = true,
     origin,
     parent,
@@ -497,8 +497,8 @@ export default class Component {
     excludeRegistryPrefix = false
   }: {
     bitDir?: string,
-    withBitJson?: boolean,
-    withPackageJson?: boolean,
+    writeBitJson?: boolean,
+    writePackageJson?: boolean,
     force?: boolean,
     origin?: string,
     parent?: BitId,
@@ -524,8 +524,8 @@ export default class Component {
     if (!bitMap) {
       return this._writeToComponentDir({
         bitDir: calculatedBitDir,
-        withBitJson,
-        withPackageJson,
+        writeBitJson,
+        writePackageJson,
         consumer,
         force,
         writeBitDependencies,
@@ -567,17 +567,17 @@ export default class Component {
       componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) withBitJson = false;
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) writeBitJson = false;
     const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
     this.writtenPath = newBase;
     this.files.forEach(file => file.updatePaths({ newBase }));
     // Don't write the package.json for an authored component, because it's dependencies probably managed
     // By the root package.json
-    const actualWithPackageJson = withPackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
+    const actualWithPackageJson = writePackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
     await this._writeToComponentDir({
       bitDir: newBase,
-      withBitJson,
-      withPackageJson: actualWithPackageJson,
+      writeBitJson,
+      writePackageJson: actualWithPackageJson,
       consumer,
       force,
       writeBitDependencies,

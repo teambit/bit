@@ -319,11 +319,11 @@ export default class Consumer {
     componentsWithDependencies,
     writeToPath,
     force = true,
-    withPackageJson = true,
-    withBitJson = true,
+    writePackageJson = true,
+    writeBitJson = true,
     writeBitDependencies = false,
     createNpmLinkFiles = false,
-    dist = true,
+    writeDists = true,
     saveDependenciesAsComponents = false,
     installNpmPackages = true,
     addToRootPackageJson = true,
@@ -333,11 +333,11 @@ export default class Consumer {
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
     force?: boolean,
-    withPackageJson?: boolean,
-    withBitJson?: boolean,
+    writePackageJson?: boolean,
+    writeBitJson?: boolean,
     writeBitDependencies?: boolean,
     createNpmLinkFiles?: boolean,
-    dist?: boolean,
+    writeDists?: boolean,
     saveDependenciesAsComponents?: boolean, // as opposed to npm packages
     installNpmPackages?: boolean,
     addToRootPackageJson?: boolean,
@@ -363,12 +363,12 @@ export default class Consumer {
       }
       // don't write dists files for authored components as the author has its own mechanism to generate them
       // also, don't write dists file for imported component, unless the user used '--dist' flag
-      componentWithDeps.component._writeDistsFiles = dist && origin === COMPONENT_ORIGINS.IMPORTED;
+      componentWithDeps.component._writeDistsFiles = writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return componentWithDeps.component.write({
         bitDir,
         force,
-        withBitJson,
-        withPackageJson,
+        writeBitJson,
+        writePackageJson,
         origin,
         consumer: this,
         writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
@@ -413,7 +413,7 @@ export default class Consumer {
         return dep.write({
           bitDir: depBitPath,
           force,
-          withPackageJson,
+          writePackageJson,
           origin: COMPONENT_ORIGINS.NESTED,
           parent: componentWithDeps.component.id,
           consumer: this,
