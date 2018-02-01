@@ -12,7 +12,8 @@ import {
   DEFAULT_INDEX_NAME,
   COMPONENT_ORIGINS,
   DEFAULT_SEPARATOR,
-  DEFAULT_INDEX_EXTS
+  DEFAULT_INDEX_EXTS,
+  BIT_VERSION
 } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
@@ -43,6 +44,12 @@ export default class BitMap {
     this.paths = {};
   }
 
+  static ensure(dirPath): Promise<ConsumerBitJson> {
+    return new Promise((resolve) => {
+      return resolve(this.load(dirPath));
+    });
+  }
+
   static load(dirPath: string): BitMap {
     // support old bitmaps
     const mapPath =
@@ -68,7 +75,7 @@ export default class BitMap {
       logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will probably create a new one if needed`);
     }
 
-    return new BitMap(dirPath, mapPath, components, version);
+    return new BitMap(dirPath, mapPath, components, version || BIT_VERSION);
   }
 
   getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): BitMapComponents {

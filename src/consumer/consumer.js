@@ -74,13 +74,13 @@ export default class Consumer {
   _componentsCache: Object = {}; // cache loaded components
   _componentsStatusCache: Object = {}; // cache loaded components
 
-  constructor({ projectPath, bitJson, scope, created = false, isolated = false }: ConsumerProps) {
+  constructor({ projectPath, bitJson, scope, created = false, isolated = false, bitMap }: ConsumerProps) {
     this.projectPath = projectPath;
     this.bitJson = bitJson;
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
-    this.bitMap = BitMap.load(projectPath);
+    this.bitMap = bitMap || BitMap.load(projectPath);
     this.warnForMissingDriver();
   }
 
@@ -173,6 +173,7 @@ export default class Consumer {
     return this.bitJson
       .write({ bitDir: this.projectPath })
       .then(() => this.scope.ensureDir())
+      .then(() => this.bitMap.write())
       .then(() => this);
   }
 
@@ -620,9 +621,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -891,13 +892,15 @@ export default class Consumer {
   static ensure(projectPath: string = process.cwd()): Promise<Consumer> {
     const scopeP = Scope.ensure(path.join(projectPath, BIT_HIDDEN_DIR));
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
+    const bitMapP = BitMap.ensure(projectPath);
 
-    return Promise.all([scopeP, bitJsonP]).then(([scope, bitJson]) => {
+    return Promise.all([scopeP, bitJsonP, bitMapP]).then(([scope, bitJson, bitMap]) => {
       return new Consumer({
         projectPath,
         created: true,
         scope,
-        bitJson
+        bitJson,
+        bitMap
       });
     });
   }
