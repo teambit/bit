@@ -903,6 +903,7 @@ describe('bit add command', function () {
   describe('add one component to project with existing .bit.map.json file', () => {
     before(() => {
       helper.reInitLocalScope();
+      helper.deleteFile('.bitmap');
       helper.createBitMap(
         helper.localScopePath,
         {
