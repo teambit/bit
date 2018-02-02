@@ -50,7 +50,7 @@ function getIndexFileName(mainFile: string): string {
 
 // todo: move to bit-javascript
 function getLinkContent(
-  filePath: string,
+  filePath: PathOsBased,
   importSpecifiers?: Object,
   createNpmLinkFiles?: boolean,
   bitPackageName: string

@@ -154,7 +154,7 @@ async function write(
     name,
     version: component.version,
     homepage: component._getHomepage(),
-    main: component.calculateMainDistFile(),
+    main: path.normalize(component.calculateMainDistFile()),
     devDependencies: component.devPackageDependencies,
     peerDependencies: component.peerPackageDependencies,
     componentRootFolder: bitDir,
