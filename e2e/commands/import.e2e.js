@@ -239,7 +239,7 @@ describe('bit import', function () {
             });
           });
         });
-        describe('with --no-dis flag set to false when dist is set to a non-default directory', () => {
+        describe('when dist is set to a non-default directory', () => {
           before(() => {
             helper.reInitLocalScope();
             helper.addRemoteScope();
@@ -717,6 +717,7 @@ describe('bit import', function () {
      *
      */
     let localConsumerFiles;
+    let clonedLocalScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponent('utils', 'is-type.js', fixtures.isType);
@@ -731,6 +732,7 @@ describe('bit import', function () {
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
       localConsumerFiles = helper.getConsumerFiles();
+      clonedLocalScope = helper.cloneLocalScope();
     });
     it('should keep the original directory structure of the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
@@ -752,7 +754,7 @@ describe('bit import', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
-    describe('when cloning the project to somewhere else', () => {
+    describe('when cloning the project to somewhere else and running bit import', () => {
       before(() => {
         helper.mimicGitCloneLocalProject();
       });
@@ -761,6 +763,36 @@ describe('bit import', function () {
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
+    describe('when cloning the project to somewhere else', () => {
+      before(() => {
+        helper.createComponent('components/bar/foo/bar', 'foo.js', fixtures.barFooFixtureV2);
+        helper.mimicGitCloneLocalProjectWithoutImport();
+        helper.addRemoteScope();
+      });
+      after(() => {
+        helper.getClonedLocalScope(clonedLocalScope);
+      });
+      it('local scope should be empty', () => {
+        const output = helper.listLocalScope();
+        expect(output).to.have.string('found 0 components in local scope');
+      });
+      describe('after running bit import --objects', () => {
+        before(() => {
+          helper.runCmd('bit import --objects');
+        });
+        it('local scope should contain all the components', () => {
+          const output = helper.listLocalScope();
+          expect(output).to.have.string('found 3 components in local scope');
+        });
+        it('should not override the current files', () => {
+          // as opposed to running import without '--objects', the files should remain intact
+          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
+        });
       });
     });
     describe('re-import with a specific path', () => {
