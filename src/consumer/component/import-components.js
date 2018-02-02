@@ -132,6 +132,7 @@ export default class ImportComponents {
       writeBitJson: this.options.writeBitJson,
       writeDists: this.options.writeDists,
       installNpmPackages: this.options.installNpmPackages,
+      saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
       verbose: this.options.verbose,
       force
     });
