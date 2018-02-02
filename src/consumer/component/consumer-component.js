@@ -42,7 +42,7 @@ import {
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
-import type { PathOsBased } from '../../utils/path';
+import type { PathLinux, PathOsBased } from '../../utils/path';
 
 export type ComponentProps = {
   name: string,
@@ -93,7 +93,7 @@ export default class Component {
   log: ?Log;
   writtenPath: ?string; // needed for generate links
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
-  originallySharedDir: ?string; // needed to reduce a potentially long path that was used by the author
+  originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
   _writeDistsFiles: ?boolean = true;
   _areDistsInsideComponentDir: ?boolean = true;
@@ -174,7 +174,7 @@ export default class Component {
     this.scope = scope;
     this.lang = lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = bindingPrefix || DEFAULT_BINDINGS_PREFIX;
-    this.mainFile = mainFile;
+    this.mainFile = path.normalize(mainFile);
     this.compilerId = compilerId;
     this.testerId = testerId;
     this.setDependencies(dependencies);
@@ -426,22 +426,22 @@ export default class Component {
     if (originallySharedDir) {
       logger.debug(`stripping originallySharedDir "${originallySharedDir}" from ${this.id}`);
     }
-    const pathWithoutSharedDir = (pathStr, sharedDir, isLinuxFormat) => {
+    const pathWithoutSharedDir = (pathStr: PathOsBased, sharedDir: PathLinux): PathOsBased => {
       if (!sharedDir) return pathStr;
-      const partToRemove = isLinuxFormat ? `${sharedDir}/` : path.normalize(sharedDir) + path.sep;
+      const partToRemove = path.normalize(sharedDir) + path.sep;
       return pathStr.replace(partToRemove, '');
     };
     this.files.forEach((file) => {
-      const newRelative = pathWithoutSharedDir(file.relative, originallySharedDir, false);
+      const newRelative = pathWithoutSharedDir(file.relative, originallySharedDir);
       file.updatePaths({ newBase: file.base, newRelative });
     });
     if (this.dists) {
       this.dists.forEach((distFile) => {
-        const newRelative = pathWithoutSharedDir(distFile.relative, originallySharedDir, false);
+        const newRelative = pathWithoutSharedDir(distFile.relative, originallySharedDir);
         distFile.updatePaths({ newBase: distFile.base, newRelative });
       });
     }
-    this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir, true);
+    this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir);
     this.dependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this.devDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this._wasOriginallySharedDirStripped = true;
@@ -644,7 +644,7 @@ export default class Component {
     logger.debug('Environment components are installed.');
 
     try {
-      const run = async (mainFile: string, distTestFiles: Dist[]) => {
+      const run = async (mainFile: PathOsBased, distTestFiles: Dist[]) => {
         loader.start(BEFORE_RUNNING_SPECS);
         try {
           const specsResultsP = distTestFiles.map(async (testFile) => {
@@ -653,7 +653,7 @@ export default class Component {
               testerFilePath,
               testerId: this.testerId,
               mainFile,
-              testFilePath: testFile.path
+              testFile
             });
           });
           const specsResults = await Promise.all(specsResultsP);
@@ -873,7 +873,7 @@ export default class Component {
   // (or index.js if key not exists)
   calculateMainDistFile(): PathOsBased {
     if (this._writeDistsFiles && this._areDistsInsideComponentDir) {
-      const mainFile = searchFilesIgnoreExt(this.dists, path.normalize(this.mainFile), 'relative', 'relative');
+      const mainFile = searchFilesIgnoreExt(this.dists, this.mainFile, 'relative', 'relative');
       if (mainFile) return path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
     return this.mainFile;
@@ -883,12 +883,12 @@ export default class Component {
    * authored components have the dists outside the components dir and they don't have rootDir.
    * it returns the main file or main dist file relative to consumer-root.
    */
-  calculateMainDistFileForAuthored(consumer: Consumer): string {
+  calculateMainDistFileForAuthored(consumer: Consumer): PathOsBased {
     if (!this.dists) return this.mainFile;
-    const getMainFileToSearch = () => {
-      const mainFile = path.normalize(this.mainFile);
-      if (consumer.bitJson.distEntry) return mainFile.replace(`${consumer.bitJson.distEntry}${path.sep}`, '');
-      return mainFile;
+    const getMainFileToSearch = (): PathOsBased => {
+      if (!consumer.bitJson.distEntry) return this.mainFile;
+      const distEntryNormalized = path.normalize(consumer.bitJson.distEntry);
+      return this.mainFile.replace(`${distEntryNormalized}${path.sep}`, '');
     };
     const mainFileToSearch = getMainFileToSearch();
     const distMainFile = searchFilesIgnoreExt(this.dists, mainFileToSearch, 'relative', 'relative');
@@ -900,7 +900,7 @@ export default class Component {
   /**
    * find a shared directory among the files of the main component and its dependencies
    */
-  setOriginallySharedDir() {
+  setOriginallySharedDir(): void {
     if (this.originallySharedDir !== undefined) return;
     // taken from https://stackoverflow.com/questions/1916218/find-the-longest-common-starting-substring-in-a-set-of-strings
     // It sorts the array, and then looks just at the first and last items
