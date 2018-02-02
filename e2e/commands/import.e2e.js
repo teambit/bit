@@ -769,6 +769,7 @@ describe('bit import', function () {
       before(() => {
         helper.createComponent('components/bar/foo/bar', 'foo.js', fixtures.barFooFixtureV2);
         helper.mimicGitCloneLocalProjectWithoutImport();
+        helper.addRemoteScope();
       });
       after(() => {
         helper.getClonedLocalScope(clonedLocalScope);

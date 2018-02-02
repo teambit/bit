@@ -266,7 +266,6 @@ export default class Helper {
   mimicGitCloneLocalProjectWithoutImport() {
     fs.removeSync(path.join(this.localScopePath, '.bit'));
     this.runCmd('bit init');
-    this.addRemoteScope();
     const directories = glob.sync(path.normalize('**/'), { cwd: this.localScopePath, dot: true });
     // delete all node-modules from all directories
     directories.forEach((dir) => {
