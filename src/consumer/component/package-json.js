@@ -16,7 +16,7 @@ import {
   NODE_PATH_SEPARATOR
 } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
-import { pathRelative } from '../../utils';
+import { pathRelativeLinux } from '../../utils';
 import { getSync } from '../../api/consumer/lib/global-config';
 import Consumer from '../consumer';
 import { Dependencies } from './dependencies';
@@ -72,7 +72,7 @@ function getPackageDependencyValue(
     return dependencyId.version;
   }
   const dependencyRootDir = dependencyComponentMap.rootDir;
-  const rootDirRelative = pathRelative(parentComponentMap.rootDir, dependencyRootDir);
+  const rootDirRelative = pathRelativeLinux(parentComponentMap.rootDir, dependencyRootDir);
   return rootDirRelative.startsWith('.') ? rootDirRelative : `./${rootDirRelative}`;
 }
 

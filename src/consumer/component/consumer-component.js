@@ -19,7 +19,6 @@ import MissingFilesFromComponent from './exceptions/missing-files-from-component
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment, { IsolateOptions } from '../../environment';
 import type { Log } from '../../scope/models/version';
-import { ResolutionException } from '../../scope/exceptions';
 import BitMap from '../bit-map';
 import type { ComponentMapFile } from '../bit-map/component-map';
 import ComponentMap from '../bit-map/component-map';
@@ -43,6 +42,7 @@ import {
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
+import type { PathOsBased } from '../../utils/path';
 
 export type ComponentProps = {
   name: string,
@@ -51,7 +51,7 @@ export type ComponentProps = {
   scope?: ?string,
   lang?: string,
   bindingPrefix?: string,
-  mainFile?: string,
+  mainFile?: PathOsBased,
   compilerId?: ?BitId,
   testerId?: ?BitId,
   dependencies?: Dependency[],
@@ -76,7 +76,7 @@ export default class Component {
   scope: ?string;
   lang: string;
   bindingPrefix: string;
-  mainFile: string;
+  mainFile: PathOsBased;
   compilerId: ?BitId;
   testerId: ?BitId;
   dependencies: Dependencies;
@@ -871,7 +871,7 @@ export default class Component {
   // In case there are dist files, we want to point the index to the main dist file, not to source.
   // This important since when you require a module without specify file, it will give you the file specified under this key
   // (or index.js if key not exists)
-  calculateMainDistFile(): string {
+  calculateMainDistFile(): PathOsBased {
     if (this._writeDistsFiles && this._areDistsInsideComponentDir) {
       const mainFile = searchFilesIgnoreExt(this.dists, path.normalize(this.mainFile), 'relative', 'relative');
       if (mainFile) return path.join(DEFAULT_DIST_DIRNAME, mainFile);
@@ -988,7 +988,7 @@ export default class Component {
     consumer,
     componentFromModel
   }: {
-    bitDir: string,
+    bitDir: PathOsBased,
     componentMap: ComponentMap,
     id: BitId,
     consumer: Consumer,

@@ -9,6 +9,7 @@ import { ISOLATED_ENV_ROOT } from '../constants';
 import { mkdirp, outputFile } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
+import type { PathOsBased } from '../utils/path';
 
 export type IsolateOptions = {
   writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
@@ -25,7 +26,7 @@ export type IsolateOptions = {
 const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';
 
 export default class Environment {
-  path: string;
+  path: PathOsBased;
   scope: Scope;
   consumer: Consumer;
 

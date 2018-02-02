@@ -46,6 +46,7 @@ import { Dependencies } from './component/dependencies';
 import type { PathChangeResult } from './bit-map/bit-map';
 import ImportComponents from './component/import-components';
 import type { ImportOptions, ImportResult } from './component/import-components';
+import type { PathOsBased } from '../utils/path';
 
 export type ConsumerProps = {
   projectPath: string,
@@ -64,7 +65,7 @@ type ComponentStatus = {
 };
 
 export default class Consumer {
-  projectPath: string;
+  projectPath: PathOsBased;
   created: boolean;
   bitJson: ConsumerBitJson;
   scope: Scope;
@@ -177,15 +178,15 @@ export default class Consumer {
       .then(() => this);
   }
 
-  getComponentsPath(): string {
+  getComponentsPath(): PathOsBased {
     return path.join(this.projectPath, BITS_DIRNAME);
   }
 
-  getPath(): string {
+  getPath(): PathOsBased {
     return this.projectPath;
   }
 
-  getPathRelativeToConsumer(pathToCheck: string): string {
+  getPathRelativeToConsumer(pathToCheck: string): PathOsBased {
     const absolutePath = path.resolve(pathToCheck);
     return path.relative(this.getPath(), absolutePath);
   }
@@ -653,7 +654,7 @@ export default class Consumer {
     return { components, autoUpdatedComponents };
   }
 
-  static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId) {
+  static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
     if (!id.scope) throw new Error(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`);
     // Temp fix to support old components before the migration has been running
     bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
@@ -683,18 +684,18 @@ export default class Consumer {
     return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope, namespace: bitId.box });
   }
 
-  composeComponentPath(bitId: BitId): string {
+  composeComponentPath(bitId: BitId): PathOsBased {
     const addToPath = [this.getPath(), this.composeRelativeBitPath(bitId)];
     logger.debug(`component dir path: ${addToPath.join('/')}`);
     return path.join(...addToPath);
   }
 
-  composeDependencyPath(bitId: BitId): string {
+  composeDependencyPath(bitId: BitId): PathOsBased {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
     return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
   }
 
-  async movePaths({ from, to }: { from: string, to: string }): PathChangeResult[] {
+  async movePaths({ from, to }: { from: PathOsBased, to: PathOsBased }): PathChangeResult[] {
     const fromExists = fs.existsSync(from);
     const toExists = fs.existsSync(to);
     if (fromExists && toExists) {
@@ -723,7 +724,7 @@ export default class Consumer {
     return this.ensure(projectPath);
   }
 
-  static ensure(projectPath: string = process.cwd()): Promise<Consumer> {
+  static ensure(projectPath: PathOsBased = process.cwd()): Promise<Consumer> {
     const scopeP = Scope.ensure(path.join(projectPath, BIT_HIDDEN_DIR));
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
 
@@ -738,7 +739,7 @@ export default class Consumer {
   }
 
   static async createWithExistingScope(
-    consumerPath: string,
+    consumerPath: PathOsBased,
     scope: Scope,
     isolated: boolean = false
   ): Promise<Consumer> {

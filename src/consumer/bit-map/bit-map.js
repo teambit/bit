@@ -16,7 +16,7 @@ import {
 } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
-import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } from '../../utils';
+import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } from '../../utils';
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 
@@ -351,28 +351,6 @@ export default class BitMap {
   getRootDirOfComponent(id: string) {
     const component = this.getComponent(id, SHOULD_THROW);
     return component.rootDir;
-  }
-
-  /**
-   *
-   * Return the full component object means:
-   * {
-   *    componentId: component
-   * }
-   *
-   * @param {string} filePath relative to root dir - as stored in bit.map files object
-   * @returns {Object<string, ComponentMap>}
-   * @memberof BitMap
-   */
-  getComponentObjectByPath(filePath: string): BitMapComponents {
-    return pickBy(this.components, (componentObject) => {
-      const rootDir = componentObject.rootDir;
-      const sharedDir = componentObject.originallySharedDir;
-      return find(componentObject.files, (file) => {
-        const relativePath = sharedDir ? pathJoinLinux(sharedDir, file.relativePath) : file.relativePath;
-        return relativePath === filePath || (rootDir && pathJoinLinux(rootDir, relativePath) === filePath);
-      });
-    });
   }
 
   /**

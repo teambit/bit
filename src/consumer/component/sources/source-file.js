@@ -3,16 +3,17 @@ import vinylFile from 'vinyl-file';
 import AbstractVinyl from './abstract-vinyl';
 import FileSourceNotFound from '../exceptions/file-source-not-found';
 import logger from '../../../logger/logger';
+import type { PathOsBased } from '../../../utils/path';
 
 export default class SourceFile extends AbstractVinyl {
   // TODO: remove this distFilePath?
   distFilePath: ?string;
 
   static load(
-    filePath: string,
-    distTarget: string,
-    base: string = consumerPath,
-    consumerPath: string,
+    filePath: PathOsBased,
+    distTarget: PathOsBased,
+    base: PathOsBased = consumerPath,
+    consumerPath: PathOsBased,
     extendedProps: Object
   ): SourceFile | null {
     try {
