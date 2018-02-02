@@ -114,29 +114,14 @@ describe('bit test command', function () {
       expect(output).to.have.string('✔   isType before hook describe should pass test');
     });
     it('should indicate that testes are failed if all other tests (except the before) are passed', () => {
-      // This implemented this way because when we got the files from the bit test we got it with /private as prefix
-      // but on windows we will got it with other prefix.
-      // So this is a hack to make sure it will run correctly on windows.
-      // (you can see on comments below the version for linux only)
       const testFailedLineIndex = outputLines.indexOf('tests failed');
       const testFailedFilePathLine = outputLines[testFailedLineIndex + 1];
-      const failedFilePath = path.join(helper.localScopePath, 'utils', 'is-type-before-fail.spec.js');
-      // const failedFilePath = path.join('/private', helper.localScopePath, 'utils', 'is-type-before-fail.spec.js');
-      // expect(output).to.have.string(`tests failed\nfile: ${failedFilePath}`);
-      expect(testFailedFilePathLine).to.have.string(failedFilePath);
+      expect(testFailedFilePathLine).to.have.string('utils/is-type-before-fail.spec.js');
     });
     it('should indicate that testes in other specs files are passed', () => {
-      // This implemented this way because when we got the files from the bit test we got it with /private as prefix
-      // but on windows we will got it with other prefix.
-      // So this is a hack to make sure it will run correctly on windows.
-      // (you can see on comments below the version for linux only)
       const testPassedLineIndex = outputLines.indexOf('tests passed');
       const testPassedFilePathLine = outputLines[testPassedLineIndex + 1];
-      const passedFilePath = path.join(helper.localScopePath, 'utils', 'is-type.spec.js');
-
-      // const passFilePath = path.join('/private', helper.localScopePath, 'utils', 'is-type.spec.js');
-      // expect(output).to.have.string(`tests passed\nfile: ${passFilePath}`);
-      expect(testPassedFilePathLine).to.have.string(passedFilePath);
+      expect(testPassedFilePathLine).to.have.string('utils/is-type.spec.js');
       expect(output).to.have.string('✔   isType should display "got is-type"');
     });
   });

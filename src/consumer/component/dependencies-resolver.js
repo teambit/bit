@@ -51,7 +51,7 @@ function findComponentsOfDepsFiles(
 
   const consumerPath = consumer.getPath();
   const entryComponentMap = consumer.bitMap.getComponent(entryComponentId);
-  const rootDir = entryComponentMap.rootDir;
+  const rootDir: PathLinux = entryComponentMap.rootDir;
   const processedFiles = [];
 
   const traverseTreeForComponentId = (depFile) => {

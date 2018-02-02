@@ -273,7 +273,7 @@ export default class Component {
    * By default, the dists path is inside the component. If dist attribute is populated in bit.json, the path is
    * relative to consumer root.
    */
-  getDistDirForConsumer(consumer: Consumer, componentRootDir: string): string {
+  getDistDirForConsumer(consumer: Consumer, componentRootDir?: PathLinux): PathOsBased {
     const consumerBitJson = consumer.bitJson;
     let rootDir = componentRootDir || '.';
     if (consumer.shouldDistsBeInsideTheComponent()) {

@@ -42,6 +42,13 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       const output = helper.testComponent('string/pad-left');
       expect(output).to.have.string('tests passed');
     });
+    it('should save the paths in the model as Linux format', () => {
+      const isString = helper.catComponent(`${helper.remoteScope}/string/is-string@latest`);
+      expect(isString.docs[0].filePath).to.equal('src/is-string/is-string.js');
+      expect(isString.specsResults[0].specFile).to.equal('is-string/is-string.spec.js');
+      isString.dists.forEach(dist => expect(dist.relativePath.startsWith('src/is-string')).to.be.true);
+      isString.files.forEach(file => expect(file.relativePath.startsWith('src/is-string')).to.be.true);
+    });
     describe('changing to absolute syntax and tagging', () => {
       before(() => {
         const padLeftFile = path.join(helper.localScopePath, 'src', 'pad-left', 'pad-left', 'pad-left.js');

@@ -1,21 +1,7 @@
 /** @flow */
 import semver from 'semver';
 import uniqBy from 'lodash.uniqby';
-import {
-  is,
-  equals,
-  zip,
-  fromPairs,
-  keys,
-  mapObjIndexed,
-  objOf,
-  mergeWith,
-  merge,
-  map,
-  prop,
-  forEachObjIndexed
-} from 'ramda';
-import path from 'path';
+import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
