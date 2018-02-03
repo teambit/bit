@@ -158,7 +158,7 @@ Note that using the `--eject` flag you can remove an exported component from you
 
 That’s it. You can now install components using NPM and Yarn or use Bit to easily edit and update their code from any project. 
 
-[Get started](https://docs.bitsrc.io/docs/quick-start.html)
+[GET STARTED HERE](https://docs.bitsrc.io/docs/quick-start.html)
 
 #### Example project
 
