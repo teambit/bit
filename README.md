@@ -148,7 +148,7 @@ $ bit tag --all 1.0.0
 added components:  components/button@1.0.0, components/login@1.0.0, components/logo@1.0.0
 ```
 
-Now let’s share the component to a [remote Scope](https://bitsrc.io)
+Now let’s share the components to a [remote Scope](https://bitsrc.io)
 
 ```
 $ bit export username.scopename  # Share components to this Scope
@@ -156,7 +156,7 @@ exported 3 components to scope username.scopename
 ```
 Note that using the `--eject` flag you can remove an exported component from your source-code and add it as a package dependency in your project’s `package.json` file.
 
-That’s it. You can now install components using NPM and Yarn or use Bit to edit their source code from any project. 
+That’s it. You can now install components using NPM and Yarn or use Bit to easily edit and update their code from any project. 
 
 [Get started](https://docs.bitsrc.io/docs/quick-start.html)
 
