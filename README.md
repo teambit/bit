@@ -65,8 +65,8 @@ Bit can be extended and integrated to your favorite dev tools so that you can op
 
 ### Tutorials
 
-* [Quick Start](https://docs.bitsrc.io/docs/quick-start.html).  
-* [Bit with React](https://docs.bitsrc.io/tutorial/react-tutorial.html). 
+* [Quick Start](https://docs.bitsrc.io/docs/quick-start.html)
+* [Bit with React](https://docs.bitsrc.io/tutorial/react-tutorial.html)
 
 ### Basics
 
@@ -213,5 +213,7 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
+
+
 
 
