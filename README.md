@@ -14,7 +14,7 @@
 
 **Bit makes it easier to share code and manage it across projects**. 
 
-Building larger projects from smaller components provides greater modularity and reusability, separation of concerns, clear ownerships, shorter learning curves and helps to mitigate development pain.
+Separating concerns provides greater modularity and reusability, clear ownerships, shorter learning curves and helps to mitigate development pain.
 
 However, sharing code and tracking changes between projects and team members can quickly become very painful and generate a lot of overhead.
 
@@ -215,7 +215,4 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
-
-
-
 
