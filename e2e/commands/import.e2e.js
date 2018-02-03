@@ -860,10 +860,7 @@ describe('bit import', function () {
       expect(localConsumerFiles).to.include(expectedLocation);
       const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
-      expect(indexFileContent).to.have.string(
-        "module.exports = require('./bar/foo');",
-        'index file point to the wrong place'
-      );
+      expect(indexFileContent).to.have.string("module.exports = require('./bar/foo');");
     });
     it('should create an index.css file on the style dependency root dir pointing to the main file', () => {
       const expectedLocation = path.join(
@@ -878,10 +875,7 @@ describe('bit import', function () {
       expect(localConsumerFiles).to.include(expectedLocation);
       const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
-      expect(indexFileContent).to.have.string(
-        "@import './style/style.css';",
-        'dependency index file point to the wrong place'
-      );
+      expect(indexFileContent).to.have.string("@import './style/style.css';");
     });
     it('should save the style dependency nested to the main component', () => {
       const expectedLocation = path.join(
@@ -902,8 +896,7 @@ describe('bit import', function () {
       const indexPath = path.join(helper.localScopePath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
       expect(indexFileContent).to.have.string(
-        `@import '../../../.dependencies/style/style/${helper.remoteScope}/0.0.1/index.css';`,
-        'dependency link file point to the wrong place'
+        `@import '../../../.dependencies/style/style/${helper.remoteScope}/0.0.1/index.css';`
       );
     });
   });

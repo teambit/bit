@@ -2,36 +2,37 @@
 import path from 'path';
 import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS } from '../../constants';
-import { pathNormalizeToLinux } from '../../utils';
+import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux } from '../../utils';
+import type { PathLinux, PathOsBased } from '../../utils/path';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
 export type ComponentMapFile = {
   name: string,
-  relativePath: string,
-  test: string
+  relativePath: PathLinux,
+  test: boolean
 };
 
 export type ComponentMapData = {
   files: ComponentMapFile[],
-  mainFile: string,
-  rootDir?: string, // needed to search for the component's bit.json. If it's undefined, the component probably don't have bit.json
+  mainFile: PathLinux,
+  rootDir?: PathLinux, // needed to search for the component's bit.json. If it's undefined, the component probably don't have bit.json
   origin: ComponentOrigin,
   dependencies: string[], // needed for the link process
-  mainDistFile?: string, // needed when there is a build process involved
-  originallySharedDir?: string // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
+  mainDistFile?: PathLinux, // needed when there is a build process involved
+  originallySharedDir?: PathLinux // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
 };
 
-export type PathChange = { from: string, to: string };
+export type PathChange = { from: PathLinux, to: PathLinux };
 
 export default class ComponentMap {
   files: ComponentMapFile[];
-  mainFile: string;
-  rootDir: ?string;
+  mainFile: PathLinux;
+  rootDir: ?PathLinux;
   origin: ComponentOrigin;
   dependencies: string[];
-  mainDistFile: ?string;
-  originallySharedDir: ?string;
+  mainDistFile: ?PathLinux;
+  originallySharedDir: ?PathLinux;
   constructor({ files, mainFile, rootDir, origin, dependencies, mainDistFile, originallySharedDir }: ComponentMapData) {
     this.files = files;
     this.mainFile = mainFile;
@@ -46,8 +47,8 @@ export default class ComponentMap {
     return new ComponentMap(componentMapObj);
   }
 
-  static getPathWithoutRootDir(rootDir, filePath) {
-    const newPath = path.relative(rootDir, filePath);
+  static getPathWithoutRootDir(rootDir, filePath): PathLinux {
+    const newPath = pathRelativeLinux(rootDir, filePath);
     if (newPath.startsWith('..')) {
       // this is forbidden for security reasons. Allowing files to be written outside the components directory may
       // result in overriding OS files.
@@ -56,7 +57,7 @@ export default class ComponentMap {
     return newPath;
   }
 
-  static changeFilesPathAccordingToItsRootDir(existingRootDir, files) {
+  static changeFilesPathAccordingToItsRootDir(existingRootDir, files): PathChange[] {
     const changes = [];
     files.forEach((file) => {
       const newPath = this.getPathWithoutRootDir(existingRootDir, file.relativePath);
@@ -66,15 +67,14 @@ export default class ComponentMap {
     return changes;
   }
 
-  _findFile(fileName: string): ?ComponentMapFile {
-    fileName = pathNormalizeToLinux(fileName);
+  _findFile(fileName: PathLinux): ?ComponentMapFile {
     return this.files.find((file) => {
-      const filePath = this.rootDir ? path.join(this.rootDir, file.relativePath) : file.relativePath;
+      const filePath = this.rootDir ? pathJoinLinux(this.rootDir, file.relativePath) : file.relativePath;
       return filePath === fileName;
     });
   }
 
-  updateFileLocation(fileFrom: string, fileTo: string): PathChange[] {
+  updateFileLocation(fileFrom: PathOsBased, fileTo: PathOsBased): PathChange[] {
     fileFrom = pathNormalizeToLinux(fileFrom);
     fileTo = pathNormalizeToLinux(fileTo);
     const currentFile = this._findFile(fileFrom);
@@ -90,7 +90,7 @@ export default class ComponentMap {
     return changes;
   }
 
-  updateDirLocation(dirFrom: string, dirTo: string): PathChange[] {
+  updateDirLocation(dirFrom: PathOsBased, dirTo: PathOsBased): PathChange[] {
     dirFrom = pathNormalizeToLinux(dirFrom);
     dirTo = pathNormalizeToLinux(dirTo);
     const changes = [];
@@ -116,14 +116,10 @@ export default class ComponentMap {
     return changes;
   }
 
-  getFilesRelativeToConsumer() {
+  getFilesRelativeToConsumer(): PathLinux[] {
     return this.files.map((file) => {
-      return this.rootDir ? path.join(this.rootDir, file.relativePath) : file.relativePath;
+      return this.rootDir ? pathJoinLinux(this.rootDir, file.relativePath) : file.relativePath;
     });
-  }
-
-  getMainFileRelativeToConsumer() {
-    return this.rootDir ? path.join(this.rootDir, this.mainFile) : this.mainFile;
   }
 
   getFilesGroupedByBeingTests(): Object {
@@ -136,14 +132,5 @@ export default class ComponentMap {
       else nonTestsFiles.push(file.relativePath);
     });
     return { allFiles, nonTestsFiles, testsFiles };
-  }
-
-  /**
-   * get the main file path including the originallySharedDir if applicable
-   */
-  getOriginallyMainFilePath(): string {
-    return this.originallySharedDir
-      ? pathNormalizeToLinux(path.join(this.originallySharedDir, this.mainFile))
-      : this.mainFile;
   }
 }

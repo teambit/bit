@@ -6,11 +6,11 @@ import ComponentMap from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
-import { pathNormalizeToLinux, pathRelative, pathJoinLinux } from '../../utils';
+import { pathNormalizeToLinux, pathRelativeLinux, pathJoinLinux } from '../../utils';
 import logger from '../../logger/logger';
 import { Consumer } from '../../consumer';
 import type { RelativePath } from './dependencies/dependency';
-import { Dependencies } from './dependencies';
+import type { PathLinux } from '../../utils/path';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -51,7 +51,7 @@ function findComponentsOfDepsFiles(
 
   const consumerPath = consumer.getPath();
   const entryComponentMap = consumer.bitMap.getComponent(entryComponentId);
-  const rootDir = entryComponentMap.rootDir;
+  const rootDir: PathLinux = entryComponentMap.rootDir;
   const processedFiles = [];
 
   const traverseTreeForComponentId = (depFile) => {
@@ -82,8 +82,8 @@ function findComponentsOfDepsFiles(
     }
   };
 
-  const getComponentIdByDepFile = (depFile) => {
-    let depFileRelative: string = depFile; // dependency file path relative to consumer root
+  const getComponentIdByDepFile = (depFile: PathLinux) => {
+    let depFileRelative: PathLinux = depFile; // dependency file path relative to consumer root
     let componentId: ?string;
     let destination: ?string;
 
@@ -124,7 +124,7 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
             }, however, it's not part of the model dependencies of ${componentFromModel.id}`
           );
         }
-        const originallySource = entryComponentMap.originallySharedDir
+        const originallySource: PathLinux = entryComponentMap.originallySharedDir
           ? pathJoinLinux(entryComponentMap.originallySharedDir, depFile)
           : depFile;
         const relativePath: RelativePath = dependency.relativePaths.find(
@@ -171,7 +171,7 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
     const destinationRelativePath =
       destination ||
       (depRootDir && depFileRelative.startsWith(depRootDir)
-        ? pathRelative(depRootDir, depFileRelative)
+        ? pathRelativeLinux(depRootDir, depFileRelative)
         : depFileRelative);
 
     let sourceRelativePath;

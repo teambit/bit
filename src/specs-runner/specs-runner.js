@@ -4,6 +4,8 @@ import R from 'ramda';
 import { fork } from 'child_process';
 import Scope from '../scope/scope';
 import { Results } from '../consumer/specs-results';
+import type { PathOsBased } from '../utils/path';
+import AbstractVinyl from '../consumer/component/sources/abstract-vinyl';
 
 export type Tester = {
   run: (filePath: string) => Promise<Results>,
@@ -15,13 +17,13 @@ function run({
   testerFilePath,
   testerId,
   mainFile,
-  testFilePath
+  testFile
 }: {
   scope: Scope,
   testerFilePath: string,
   testerId: Object,
-  mainFile: string,
-  testFilePath: string
+  mainFile: PathOsBased,
+  testFile: AbstractVinyl
 }) {
   function getDebugPort(): ?number {
     const debugPortArgName = '--debug-brk';
@@ -45,7 +47,7 @@ function run({
       silent: false,
       env: {
         __mainFile__: mainFile,
-        __testFilePath__: testFilePath,
+        __testFilePath__: testFile.path,
         __tester__: testerFilePath,
         __testerId__: testerId.toString()
       }
@@ -57,6 +59,7 @@ function run({
 
     child.on('message', ({ type, payload }: { type: string, payload: Object }) => {
       if (type === 'error') return reject(payload);
+      if (payload.specPath) payload.specPath = testFile.relative;
       return resolve(payload);
     });
 

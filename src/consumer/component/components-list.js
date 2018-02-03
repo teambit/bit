@@ -214,36 +214,6 @@ export default class ComponentsList {
     return ids.map(id => BitId.parse(id).toStringWithoutScopeAndVersion());
   }
 
-  async onFileSystemAndNotOnBitMap(): Promise<Component[]> {
-    const { staticParts, dynamicParts } = this.consumer.dirStructure.componentsDirStructure;
-    const asterisks = Array(dynamicParts.length).fill('*'); // e.g. ['*', '*', '*']
-    const cwd = path.join(this.consumer.getPath(), ...staticParts);
-    const idsFromBitMap = await this.idsFromBitMap();
-    const idsFromBitMapWithoutScope = await this.idsFromBitMap(false);
-    const files = await glob(path.join(...asterisks), { cwd });
-    const componentsP = [];
-    files.forEach((componentDynamicDirStr) => {
-      const rootDir = path.join(...staticParts, componentDynamicDirStr);
-      // This is an imported components
-      const componentFromBitMap = this.bitMap.getComponentObjectByRootPath(rootDir);
-      if (!R.isEmpty(componentFromBitMap)) return;
-      const componentDynamicDir = componentDynamicDirStr.split(path.sep);
-      const bitIdObj = {};
-      // combine componentDynamicDir (e.g. ['array', 'sort']) and dynamicParts
-      // (e.g. ['namespace', 'name']) into one object.
-      // (e.g. { namespace: 'array', name: 'sort' } )
-      componentDynamicDir.forEach((dir, idx) => {
-        const key = dynamicParts[idx];
-        bitIdObj[key] = dir;
-      });
-      const parsedId = new BitId(bitIdObj);
-      if (!idsFromBitMap.includes(parsedId.toString()) && !idsFromBitMapWithoutScope.includes(parsedId.toString())) {
-        componentsP.push(this.consumer.loadComponent(parsedId));
-      }
-    });
-    return Promise.all(componentsP);
-  }
-
   /**
    * Finds all components that are saved in the file system.
    * Components might be stored in the default component directory and also might be outside
