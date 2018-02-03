@@ -61,7 +61,6 @@ It also provides useful visual information for your components via it’s Hub, i
 
 Bit can be extended and integrated to your favorite dev tools so that you can optimize the workflow around reusable components and modules. You can extend Bit build and test components, render UI components, parse docs and examples and even publish shared code to NPM.
 
-
 ## Getting Started
 
 ### Tutorials
@@ -79,11 +78,11 @@ Bit can be extended and integrated to your favorite dev tools so that you can op
 6. [Installing with NPM/Yarn](https://docs.bitsrc.io/docs/installing-components-using-package-managers.html).
 7. [Updating components from different projects](https://docs.bitsrc.io/docs/importing-components.html): component source code distribution.
 
-## Usage: 
+### Usage: 
 
 * [CLI reference](https://docs.bitsrc.io/docs/cli-add.html).
 
-## Advanced:
+### Advanced:
 
 * [Building components](https://docs.bitsrc.io/docs/building-components.html).
 * [Testing components](https://docs.bitsrc.io/docs/testing-components.html).
@@ -214,4 +213,5 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
+
 
