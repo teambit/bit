@@ -156,13 +156,15 @@ exported 3 components to scope username.scopename
 ```
 Note that using the `--eject` flag you can remove an exported component from your source-code and add it as a package dependency in your project’s `package.json` file.
 
-That’s it. You can now install components using NPM and Yarn or use Bit to edit their source code from any project.
+That’s it. You can now install components using NPM and Yarn or use Bit to edit their source code from any project. 
+
+[Get started](https://docs.bitsrc.io/docs/quick-start.html)
 
 #### Example project
 
-Here is a simple React app with 8 reusable components located in its src/components directory and one component which is the global styles.
+Here is a simple [React app](https://github.com/itaymendel/movie-app) with 8 reusable components located in its src/components directory and one component which is the global styles.
 
-By using Bit to track and share these components, they are now made available to install from this Scope with NPM and Yarn. Their source code can also be imported with Bit into any project for further modifications, while updating changes between all projects using them.
+By using Bit to track and share these components, they are now made available to discover, install and update from [this Scope)[https://bitsrc.io/bit/movie-app).
 
 #### Use cases:
 
