@@ -12,7 +12,7 @@
 
 ## About 
 
-**Bit makes it easier to share code and manage it across projects**. 
+**Bit makes it easier to share code and manage changes across projects**. 
 
 Separating concerns provides greater modularity and reusability, clear ownerships, shorter learning curves and helps to mitigate development pain.
 
@@ -37,8 +37,7 @@ Bit is a collaborative open source project, actively maintained by a venture-bac
 
 ### Faster sharing
 
-Keeping separate repositories for shared components and modules requires a lot of overhead.  
-Bit eliminates this overhead by letting you share code directly from its original project, without having to restructure it or configure multiple packages within it. Shared code can still be installed with **NPM** and other package managers like **Yarn**.
+Keeping separate repositories or boilerplating multiple packages for different components and modules requires a lot of overhead. Bit eliminates this overhead by letting you share code directly from its original project, without having to restructure it or configure multiple packages within it. Shared code can still be installed with package managers like **NPM** and **Yarn**.
 
 To share code you can simply point Bit to the components you would like to share, isolate them (Bit applies an automatic dependency definition to speed sharing) and share them into a remote source of truth that allows you to easily sync them between different projects.
 
@@ -215,4 +214,3 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
-
