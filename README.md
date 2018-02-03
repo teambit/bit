@@ -18,7 +18,7 @@ Separating concerns provides greater modularity and reusability, clear ownership
 
 However, sharing code and tracking changes between projects and team members can quickly become very painful and generate a lot of overhead.
 
-Bit works with Git and NPM to simplify and improve this workflow, providing the speed and efficiency of copy-pasting while keeping shared code easily tracked and managed.
+Bit works with Git and NPM to make it easy to share code and manage changes across multiple repositories, with greater discoverability and less overhead. Its workflow provides the speed and efficiency of copy-pasting, while still keeping everything tracked and managed.
 
 Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities.
 
@@ -37,18 +37,18 @@ Bit is a collaborative open source project, actively maintained by a venture-bac
 
 ### Faster sharing
 
-Keeping separate repositories or boilerplating multiple packages for different components and modules requires a lot of overhead. Bit eliminates this overhead by letting you share code directly from its original project, without having to restructure it or configure multiple packages within it. Shared code can still be installed with package managers like **NPM** and **Yarn**.
+Keeping separate repositories or boilerplating multiple packages for different components and modules requires a lot of overhead. Bit eliminates this overhead by letting you share code directly from its original project, without having to restructure it or configure multiple packages within it. 
 
-To share code you can simply point Bit to the components you would like to share, isolate them (Bit applies an automatic dependency definition to speed sharing) and share them into a remote source of truth that allows you to easily sync them between different projects.
+To share code you can simply point Bit to the components you would like to share, isolate them (Bit applies an automatic dependency definition to speed sharing) and share them into a remote source of truth from which they can be installed with package managers like NPM and Yarn. You can also use Bit to source components in different projects, edit them, and track changes.
 
-### Simpler cross-repo changes
 
-Changing a package’s source code also usually up a lot of time and effort.  
-Bit helps you easily track and manage changes to shared code in any number of repositories, using a remote source of truth called a Scope. From the Scope components can be installed using package managers or imported into different projects to continue to develop their source code in a distributed workflow. 
+### Tracking changes and simple updates
 
-This means you can change any component and update any package by simply importing it’s source code, changing it, and sharing it back out (creating a new version). Bit also helps to reduce the overhead of configuring build and test environments for different component by allowing you to configure simple environments for you shared Scope (see docs).
+Changing a package’s source code also usually up a lot of time and effort. Bit helps you mitigate this pain using a remote source of truth called a Scope. From the Scope components can be installed using package managers or imported into different repositories to continue to develop their source code in a distributed workflow. 
 
-Bit also makes it easy to learn exactly which components are used in which project to safely make multiple changes in multiple projects without breaking anything, while gaining universal control over your dependency graph.
+This means you can change and edit any component from any project, and let Bit track changes for your. To update a package you will simply need to import it’s source code, change it, and share it back out while making sure to require the bumped version if you choose to. Bit also helps to reduce the overhead of configuring build and test environments for multiple components by allowing you to configure simple environments for your Scope (see docs).
+
+Using Bit you can easily learn exactly which components are used in which project to safely make multiple changes in multiple projects without breaking anything, while gaining universal control over your dependency graph.
 
 ### Full discoverability
 
@@ -214,3 +214,4 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
+
