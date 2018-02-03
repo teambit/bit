@@ -39,16 +39,13 @@ Bit is a collaborative open source project, actively maintained by a venture-bac
 
 Keeping separate repositories or boilerplating multiple packages for different components and modules requires a lot of overhead. Bit eliminates this overhead by letting you share code directly from its original project, without having to restructure it or configure multiple packages within it. 
 
-To share code you can simply point Bit to the components you would like to share, isolate them (Bit applies an automatic dependency definition to speed sharing) and share them into a remote source of truth from which they can be installed with package managers like NPM and Yarn. You can also use Bit to source components in different projects, edit them, and track changes.
+To share code you can simply point Bit to the components you would like to share, isolate them (Bit applies an automatic dependency definition to speed sharing) and share them into a remote source of truth called a Scope. From there, they can be installed with package managers like NPM and Yarn or sourced in multiple projects. Bit also helps to reduce the overhead of configuring build and test environments for multiple components by allowing you to define a component environment for components shared from your project.
 
-
-### Tracking changes and simple updates
+### Updating and tracking changes
 
 Changing a package’s source code also usually up a lot of time and effort. Bit helps you mitigate this pain using a remote source of truth called a Scope. From the Scope components can be installed using package managers or imported into different repositories to continue to develop their source code in a distributed workflow. 
 
-This means you can change and edit any component from any project, and let Bit track changes for your. To update a package you will simply need to import it’s source code, change it, and share it back out while making sure to require the bumped version if you choose to. Bit also helps to reduce the overhead of configuring build and test environments for multiple components by allowing you to configure simple environments for your Scope (see docs).
-
-Using Bit you can easily learn exactly which components are used in which project to safely make multiple changes in multiple projects without breaking anything, while gaining universal control over your dependency graph.
+This means you can change and edit any component from any project, and let Bit track changes for your. To update a package you will simply need to import it’s source code, change it, and share it back out while making sure to require the bumped version if you choose to.  Using Bit you can easily learn exactly which components are used in which project to safely make multiple changes in multiple projects without breaking anything, while gaining universal control over your dependency graph.
 
 ### Full discoverability
 
@@ -157,8 +154,9 @@ Now let’s share the component to a [remote Scope](https://bitsrc.io)
 $ bit export username.scopename  # Share components to this Scope
 exported 3 components to scope username.scopename
 ```
+Note that using the `--eject` flag you can remove an exported component from your source-code and add it as a package dependency in your project’s `package.json` file.
 
-That’s it. You can now install components using NPM and Yarn or use Bit to change their source code from any project and update changes between projects.
+That’s it. You can now install components using NPM and Yarn or use Bit to edit their source code from any project.
 
 #### Example project
 
@@ -213,5 +211,4 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
-
 
