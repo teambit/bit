@@ -172,7 +172,8 @@ By using Bit to track and share these components, they are now made available to
 
 Share and sync UI components (React, Angular, Vue etc) between projects.
 
-* Tutorial: [Bit with React](https://docs.bitsrc.io/tutorial/react-tutorial.html).
+Tutorial: [Bit with React](https://docs.bitsrc.io/tutorial/react-tutorial.html)
+
 
 ##### Node.js modules
 
