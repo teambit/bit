@@ -70,27 +70,27 @@ Bit can be extended and integrated to your favorite dev tools so that you can op
 
 ### Basics
 
-1. [Installation](https://docs.bitsrc.io/docs/installation.html). 
-2. [Initializing Bit on a project](https://docs.bitsrc.io/docs/initializing-bit.html).
-3. [Isolating and tracking components](https://docs.bitsrc.io/docs/isolating-and-tracking-components.html).
-4. [Versioning and locking dependencies](https://docs.bitsrc.io/docs/versioning-tracked-components.html).
-5. [Sharing from your project](https://docs.bitsrc.io/docs/organizing-components-in-scopes.html).
-6. [Installing with NPM/Yarn](https://docs.bitsrc.io/docs/installing-components-using-package-managers.html).
-7. [Updating components from different projects](https://docs.bitsrc.io/docs/importing-components.html): component source code distribution.
+1. [Installation](https://docs.bitsrc.io/docs/installation.html)
+2. [Initializing Bit on a project](https://docs.bitsrc.io/docs/initializing-bit.html)
+3. [Isolating and tracking components](https://docs.bitsrc.io/docs/isolating-and-tracking-components.html)
+4. [Versioning and locking dependencies](https://docs.bitsrc.io/docs/versioning-tracked-components.html)
+5. [Sharing from your project](https://docs.bitsrc.io/docs/organizing-components-in-scopes.html)
+6. [Installing with NPM/Yarn](https://docs.bitsrc.io/docs/installing-components-using-package-managers.html)
+7. [Component source code distribution](https://docs.bitsrc.io/docs/importing-components.html)
 
 ### Usage: 
 
-* [CLI reference](https://docs.bitsrc.io/docs/cli-add.html).
+* [CLI reference](https://docs.bitsrc.io/docs/cli-add.html)
 
 ### Advanced:
 
-* [Building components](https://docs.bitsrc.io/docs/building-components.html).
-* [Testing components](https://docs.bitsrc.io/docs/testing-components.html).
-* [Documenting components](https://docs.bitsrc.io/docs/documenting-components.html).
-* [Removing components](https://docs.bitsrc.io/docs/removing-components.html).
-* [Extending Bit](https://docs.bitsrc.io/docs/ext-concepts.html).
-* [Configuring Bit](https://docs.bitsrc.io/docs/conf-bit-json.html).
-* [Troubleshooting](https://docs.bitsrc.io/docs/latest-version.html).
+* [Building components](https://docs.bitsrc.io/docs/building-components.html)
+* [Testing components](https://docs.bitsrc.io/docs/testing-components.html)
+* [Documenting components](https://docs.bitsrc.io/docs/documenting-components.html)
+* [Removing components](https://docs.bitsrc.io/docs/removing-components.html)
+* [Extending Bit](https://docs.bitsrc.io/docs/ext-concepts.html)
+* [Configuring Bit](https://docs.bitsrc.io/docs/conf-bit-json.html)
+* [Troubleshooting](https://docs.bitsrc.io/docs/latest-version.html)
 
 
 ## Use Cases And Examples
