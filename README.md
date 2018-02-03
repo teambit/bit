@@ -124,13 +124,13 @@ $ tree
 5 directories, 13 files
 ```
 
-First we can install Bit
+First let’s install Bit
 
 ```
 npm install bit-bin -g
 ```
 
-let’s init Bit for the project
+Let’s init Bit for the project
 
 ```
 cd project-directory
@@ -143,7 +143,7 @@ Now let’s point Bit to these components
 bit add src/components/* # use a glob pattern to track multiple components or a single path to track a single component.
 ```
 
-let’s lock a version and define dependencies
+Tell Bit to lock a version and define dependencies
 
 ```
 $ bit tag --all 1.0.0
@@ -213,7 +213,5 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
-
-
 
 
