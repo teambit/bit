@@ -164,7 +164,7 @@ That’s it. You can now install components using NPM and Yarn or use Bit to eas
 
 Here is a simple [React app](https://github.com/itaymendel/movie-app) with 8 reusable components located in its src/components directory and one component which is the global styles.
 
-By using Bit to track and share these components, they are now made available to discover, install and update from [this Scope)[https://bitsrc.io/bit/movie-app).
+By using Bit to track and share these components, they are now made available to discover, install and update from [this Scope](https://bitsrc.io/bit/movie-app).
 
 #### Use cases:
 
@@ -213,4 +213,3 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
-
