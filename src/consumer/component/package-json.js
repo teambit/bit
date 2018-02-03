@@ -1,5 +1,4 @@
 /** @flow */
-
 import R from 'ramda';
 import path from 'path';
 import fs from 'fs-extra';
@@ -20,6 +19,7 @@ import { pathRelativeLinux } from '../../utils';
 import { getSync } from '../../api/consumer/lib/global-config';
 import Consumer from '../consumer';
 import { Dependencies } from './dependencies';
+import { pathNormalizeToLinux } from '../../utils/path';
 
 /**
  * Add components as dependencies to root package.json
@@ -154,7 +154,7 @@ async function write(
     name,
     version: component.version,
     homepage: component._getHomepage(),
-    main: path.normalize(component.calculateMainDistFile()),
+    main: pathNormalizeToLinux(component.calculateMainDistFile()),
     devDependencies: component.devPackageDependencies,
     peerDependencies: component.peerPackageDependencies,
     componentRootFolder: bitDir,
