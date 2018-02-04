@@ -193,20 +193,20 @@ Sharing code really shouldn’t be this hard.
 Modularity has always been the holy grail of software development.  
 One of the key benefits of modularity is reusability. However, over time boilerplating new repos, maintaining more packages and making changes across projects can get messy and create a lot of overhead. 
 
-We decided it didn’t make sense to create new repos or refactor existing projects just to share code. We also sought simpler maintenance and better discoverability for the code we share.
+It doesn't make sense to create new repos or refactor existing projects just to share code. We should also have simpler maintenance and better discoverability for the code we share.
 
-We realized that the way to achieve the kind of workflow we wanted was to create a virtual layer on top of our projects, which can decouple the representation of shared source code from the projects’ file systems and track the shared code across projects. 
-This enables us to share reusable parts (we call them “code components”) from any repository without changing a single line in its source code or having to set up new ones. We also automated smart processes and eliminated the need to manually define dependencies and configure build, test, config files and docs for sharing common pieces of our projects.
+The way to achieve the kind of workflow is to create a virtual layer on top of our projects, which can decouple the representation of shared source code from the projects’ file systems and track the shared code across projects. 
+This makes it possible to share reusable parts (we call them “code components”) from any repository without changing a single line in its source code or having to set up new ones. To make it even simpler, Bit automates smart processes and eliminated the need to manually define dependencies and configure build, test, config files and docs for sharing pieces from our project.
 
-To reduce build and test configuration overhead we wrapped components with a component environment which uses integrations to different dev tools to seamlessly build our components when sharing. We also made it extendable so that people can create their own integrations.
+To reduce build and test configuration overhead Bit wrappes components with a component environment which uses integrations to different dev tools to seamlessly build our components when sharing. It's extendable so that everyone can create their own integrations.
 
-To be fully compatible with the ecosystem and provide better discoverability, we created a [hub](https://bitsrc.io) for Bit that enables us to install shared components with [NPM and Yarn](https://blog.bitsrc.io/introducing-bits-npm-package-registry-f4892de57b0c) from a package registry and organize them in searchable and visual collections for our team.
+To be fully compatible with the ecosystem and provide better discoverability, we also created a [hub](https://bitsrc.io) for Bit that enables everyone to install shared components with [NPM and Yarn](https://blog.bitsrc.io/introducing-bits-npm-package-registry-f4892de57b0c) from a package registry and organize them in searchable and visual collections for their team.
 
-Finally, to eliminate the overhead of modifying our packages, we created our favorite feature of Bit which is it’s component source code distribution. We can use Bit to import any component’s source code into any projects, edit it, and let Bit track and update changes across our projects.
+Finally, to eliminate the overhead of modifying our packages, Bit introduces it’s crown jewel feature- component source code distribution. You can use Bit to import any component’s source code into any project, edit it, and let Bit track and update changes across your projects.
 
 Using Bit we are now able to easily share code without thinking about it too much, make changes to multiple components and modules in different projects and keep universal control over our dependency graph. We also found that code redundancies were eliminated, the learning curve for new team members was drastically shortened and collaboration increased.
 
-After using it for over 10 months, and after being now used by additional teams and communities, we welcome you to join and use it for your projects.
+After using it for over 10 months, and after being used by additional teams and communities, we welcome you to join and use it for your projects.
 
 Learn more on [Hackernoon](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)
 
