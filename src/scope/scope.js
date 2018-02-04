@@ -22,7 +22,9 @@ import {
   BITS_DIRNAME,
   BIT_VERSION,
   DEFAULT_BIT_VERSION,
-  LATEST_BIT_VERSION
+  LATEST_BIT_VERSION,
+  BIT_GIT_DIR,
+  DOT_GIT_DIR
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import {
@@ -64,7 +66,7 @@ import { RemovedObjects } from './component-remove';
 import Component from '../consumer/component/consumer-component';
 
 const removeNils = R.reject(R.isNil);
-const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
+const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR, pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR)]);
 
 export type ScopeDescriptor = {
   name: string
