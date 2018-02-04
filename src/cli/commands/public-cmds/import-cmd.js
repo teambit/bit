@@ -7,6 +7,8 @@ import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem } from '../../chalk-box';
 import Component from '../../../consumer/component';
 import { ComponentWithDependencies } from '../../../scope';
+import type { ImportOptions } from '../../../consumer/component/import-components';
+import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
 
 export default class Import extends Command {
   name = 'import [ids...]';
@@ -18,6 +20,7 @@ export default class Import extends Command {
     ['', 'extension', 'import an extension component'],
     ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
     ['p', 'path <path>', 'import components into a specific directory'],
+    ['o', 'objects', "import components objects only, don't write the components to the filesystem"],
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['f', 'force', 'ignore local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
@@ -40,12 +43,13 @@ export default class Import extends Command {
   action(
     [ids]: [string[]],
     {
-      tester,
-      compiler,
-      extension,
+      tester = false,
+      compiler = false,
+      extension = false,
       path,
-      displayDependencies,
-      environment,
+      objects = false,
+      displayDependencies = false,
+      environment = false,
       force = false,
       verbose = false,
       ignoreDist = false,
@@ -56,11 +60,12 @@ export default class Import extends Command {
       tester?: boolean,
       compiler?: boolean,
       extension?: boolean,
-      verbose?: boolean,
       path?: string,
+      objects?: boolean,
       displayDependencies?: boolean,
       environment?: boolean,
       force?: boolean,
+      verbose?: boolean,
       ignoreDist?: boolean,
       conf?: boolean,
       skipNpmInstall?: boolean,
@@ -71,20 +76,27 @@ export default class Import extends Command {
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
     }
-    return importAction({
-      ids,
+    const environmentOptions: EnvironmentOptions = {
       tester,
       compiler,
-      extension,
+      extension
+    };
+
+    const importOptions: ImportOptions = {
+      ids,
       verbose,
-      importPath: path,
-      environment,
+      writeToPath: path,
+      objectsOnly: objects,
+      withEnvironments: environment,
       force,
-      dist: !ignoreDist,
-      conf,
+      writeDists: !ignoreDist,
+      writeBitJson: conf,
       installNpmPackages: !skipNpmInstall,
-      withPackageJson: !ignorePackageJson
-    }).then(importResults => R.assoc('displayDependencies', displayDependencies, importResults));
+      writePackageJson: !ignorePackageJson
+    };
+    return importAction(environmentOptions, importOptions).then(importResults =>
+      R.assoc('displayDependencies', displayDependencies, importResults)
+    );
   }
 
   report({

@@ -6,6 +6,8 @@ export const isStringES6 =
   "import isType from './is-type.js'; export default function isString() { return isType() +  ' and got is-string'; };";
 export const barFooFixture =
   "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
+export const barFooFixtureV2 =
+  "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
 export const barFooES6 =
   "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
 export const barFooSpecES6 = testShouldPass => `const expect = require('chai').expect;

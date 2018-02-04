@@ -77,7 +77,7 @@ export default class Show extends Command {
 
     if (!component) return 'could not find the requested component';
     if (json) {
-      const makeComponentReadable = (comp) => {
+      const makeComponentReadable = (comp: ConsumerComponent) => {
         if (!comp) return comp;
         const componentObj = comp.toObject();
         componentObj.files = comp.files.map(file => file.toReadableString());
