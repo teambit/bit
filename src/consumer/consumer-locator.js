@@ -5,10 +5,14 @@
  */
 import * as pathlib from 'path';
 import * as fs from 'fs';
-import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP, OLD_BIT_MAP } from '../constants';
+import { BIT_JSON, BIT_HIDDEN_DIR, BIT_GIT_DIR, BIT_MAP, OLD_BIT_MAP, DOT_GIT_FOLDER } from '../constants';
 
-function composeBitHiddenDirPath(path: string) {
-  return pathlib.join(path, BIT_HIDDEN_DIR);
+export function composeBitHiddenDirPath(path: string, noGit: boolean = false) {
+  if (fs.existsSync(pathlib.join(path, BIT_HIDDEN_DIR))) return pathlib.join(path, BIT_HIDDEN_DIR);
+  if (fs.existsSync(pathlib.join(path, DOT_GIT_FOLDER, BIT_GIT_DIR))) { return pathlib.join(path, DOT_GIT_FOLDER, BIT_GIT_DIR); }
+  return fs.existsSync(pathlib.join(path, DOT_GIT_FOLDER)) && !noGit
+    ? pathlib.join(path, DOT_GIT_FOLDER, BIT_GIT_DIR)
+    : pathlib.join(path, BIT_HIDDEN_DIR);
 }
 
 function composeBitJsonPath(path: string) {

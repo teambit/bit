@@ -41,6 +41,8 @@ export const GIT_IGNORE = '.gitignore';
 
 export const BIT_MAP = '.bitmap';
 
+export const DOT_GIT_FOLDER = '.git';
+
 export const OLD_BIT_MAP = '.bit.map.json';
 
 export const IGNORE_LIST = [
@@ -252,6 +254,8 @@ export const SOURCES_MAP = 'sources.json';
 export const GLOBAL_REMOTES = 'global-remotes.json';
 
 export const BIT_HIDDEN_DIR = '.bit';
+
+export const BIT_GIT_DIR = 'bit';
 
 /**
  * modules cache filename

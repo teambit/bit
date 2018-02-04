@@ -17,6 +17,8 @@ import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy, pathNormalizeToLinux } from '../utils';
 import {
   BIT_HIDDEN_DIR,
+  BIT_GIT_DIR,
+  DOT_GIT_FOLDER,
   LATEST,
   OBJECTS_DIR,
   BITS_DIRNAME,
@@ -64,7 +66,8 @@ import { RemovedObjects } from './component-remove';
 import Component from '../consumer/component/consumer-component';
 
 const removeNils = R.reject(R.isNil);
-const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
+const pathHasScope =
+  pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]) || pathHas([OBJECTS_DIR, pathLib(DOT_GIT_FOLDER, BIT_GIT_DIR)]);
 
 export type ScopeDescriptor = {
   name: string
@@ -1322,13 +1325,9 @@ export default class Scope {
   }
 
   static load(absPath: string): Promise<Scope> {
-    let scopePath = propogateUntil(absPath, pathHasScope);
+    const scopePath = propogateUntil(absPath, pathHasScope);
     if (!scopePath) throw new ScopeNotFound();
-    if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
-      scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
-    }
     const path = scopePath;
-
     return readFile(getScopeJsonPath(scopePath)).then((rawScopeJson) => {
       const scopeJson = ScopeJson.loadFromJson(rawScopeJson.toString());
       return new Scope({ path, scopeJson });
