@@ -24,7 +24,7 @@ jobs:
       - run: "echo \"-----END RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
       - run: echo ${testerBitsrcSSHPublicKey} >> id_rsa.pub
       - save_cache:
-          key: bitsrc-ssh-key2
+          key: bitsrc-ssh-key3
           paths:
             - ~/.ssh/id_rsa
             - ~/.ssh/id_rsa.pub
@@ -145,7 +145,7 @@ jobs:
           name: create global npm directory (to avoid using sudo for npm link)
           command: mkdir ~/.npm-global
       - restore_cache:
-          key: bitsrc-ssh-key2
+          key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry
           # key: bitsrc-registry-stg
