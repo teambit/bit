@@ -2,8 +2,10 @@ import requestify from 'requestify';
 
 // const apiBaseUrl = process.env.NODE_ENV === 'production' ? 'https://api.bitsrc.io' : 'https://api-stg.bitsrc.io';
 const apiBaseUrl = 'https://api.bitsrc.io';
-const username = 'tester';
+const username = process.env.testerBitsrcUsername || 'tester';
 const password = process.env.testerBitsrcPassword;
+
+export { username };
 
 export default class BitsrcTester {
   cookies;
