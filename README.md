@@ -172,7 +172,7 @@ By using Bit to track and share these components, they are now made available to
 
 Share and sync UI components (React, Angular, Vue etc) between projects.
 
-Tutorial: [Bit with React](https://docs.bitsrc.io/tutorial/react-tutorial.html)
+[Bit with React](https://docs.bitsrc.io/tutorial/react-tutorial.html)
 
 
 ##### Node.js modules
@@ -188,15 +188,32 @@ Additional use cases: **GraphQL APIs**, **Serverless functions**, **Utility func
 
 ## Motivation
 
-Modularity has always been the holy grail of software development.
+Sharing code really shouldn’t be this hard.
 
-Whether it's being strived for through multiple repositories or through multi-package repositories, it provides greater flexibility, reusability, testability and separation of concerns through smaller encapsulated pieces (see the [FIRST principle](https://addyosmani.com/first/) by Addy Osmani).
+Modularity has always been the holy grail of software development.  
+One of the key benefits of modularity is reusability. However, over time boilerplating new repos, maintaining more packages and making changes across projects can get messy and create a lot of overhead. 
 
-Regardless of architecture, Bit was created to make it easy to **share**, **discover** and **update** shared source code components. It enables better modularity and composition of smaller pieces to build larger things. It does so by making it easier to share code, manage it and collaborate together to compose it into new applications. Feel free to [visit our website](https://bitsrc.io) or [learn more on Hackernoon](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca).
+We decided it didn’t make sense to create new repos or refactor existing projects just to share code. We also sought simpler maintenance and better discoverability for the code we share.
+
+We realized that the way to achieve the kind of workflow we wanted was to create a virtual layer on top of our projects, which can decouple the representation of shared source code from the projects’ file systems and track the shared code across projects. 
+This enables us to share reusable parts (we call them “code components”) from any repository without changing a single line in its source code or having to set up new ones. We also automated smart processes and eliminated the need to manually define dependencies and configure build, test, config files and docs for sharing common pieces of our projects.
+
+To reduce build and test configuration overhead we wrapped components with a component environment which uses integrations to different dev tools to seamlessly build our components when sharing. We also made it extendable so that people can create their own integrations.
+
+To be fully compatible with the ecosystem and provide better discoverability, we created a [hub](https://bitsrc.io) for Bit that enables us to install shared components with [NPM and Yarn](https://blog.bitsrc.io/introducing-bits-npm-package-registry-f4892de57b0c) from a package registry and organize them in searchable and visual collections for our team.
+
+Finally, to eliminate the overhead of modifying our packages, we created our favorite feature of Bit which is it’s component source code distribution. We can use Bit to import any component’s source code into any projects, edit it, and let Bit track and update changes across our projects.
+
+Using Bit we are now able to easily share code without thinking about it too much, make changes to multiple components and modules in different projects and keep universal control over our dependency graph. We also found that code redundancies were eliminated, the learning curve for new team members was drastically shortened and collaboration increased.
+
+After using it for over 10 months, and after being now used by additional teams and communities, we welcome you to join and use it for your projects.
+
+Learn more on [Hackernoon](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)
 
 ## Supported Languages
 
-Bit's design is language agnostic. Still, it requires language-specific drivers for language-sensitive features (binding etc):
+Bit's design is language agnostic but as of today it requires language-specific drivers for language-sensitive features (binding etc).
+
 * [bit-javascript](https://github.com/teambit/bit-javascript).
 
 ## Contributing
@@ -214,3 +231,4 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
+
