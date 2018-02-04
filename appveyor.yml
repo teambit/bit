@@ -82,6 +82,8 @@ after_test:
     .\scripts\copyArtifacts.ps1
 
 artifacts:
+- path: '%APPDATA%\Local\Bit\logs\debug.log'
+  name: bitLogs
 - path: artifacts\*.msi
   name: Installer
 - path: artifacts\bit.${VERSION}.nupkg
