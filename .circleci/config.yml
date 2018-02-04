@@ -40,7 +40,7 @@ jobs:
       # stage registry
       # - run: npm config set @bit:registry https://node-stg.bitsrc.io
       - save_cache:
-          key: bitsrc-registry
+          key: bitsrc-registry1
           # key: bitsrc-registry-stg
           paths:
             - ~/.npmrc
@@ -147,7 +147,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry
+          key: bitsrc-registry1
           # key: bitsrc-registry-stg
       - restore_cache:
           keys:
