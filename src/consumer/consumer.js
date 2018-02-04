@@ -723,14 +723,15 @@ export default class Consumer {
     return changes;
   }
 
-  static create(projectPath: string = process.cwd()): Promise<Consumer> {
-    return this.ensure(projectPath);
+  static create(projectPath: string = process.cwd(), noGit: boolean = false): Promise<Consumer> {
+    return this.ensure(projectPath, noGit);
   }
 
-  static ensure(projectPath: PathOsBased = process.cwd()): Promise<Consumer> {
-    const resolvedPath = fs.existsSync(path.join(projectPath, DOT_GIT_DIR))
-      ? path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR)
-      : path.join(projectPath, BIT_HIDDEN_DIR);
+  static ensure(projectPath: PathOsBased = process.cwd(), noGit: boolean = false): Promise<Consumer> {
+    const resolvedPath =
+      !noGit && fs.existsSync(path.join(projectPath, DOT_GIT_DIR))
+        ? path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR)
+        : path.join(projectPath, BIT_HIDDEN_DIR);
     const scopeP = Scope.ensure(resolvedPath);
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
     const bitMapP = BitMap.ensure(projectPath);

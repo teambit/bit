@@ -11,10 +11,11 @@ export default class Init extends Command {
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
-    ['s', 'shared <groupname>', 'add group write permissions to a scope properly']
+    ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
+    ['t', 'standalone [boolean]', 'standalone ']
   ];
 
-  action([path]: [string], { bare, shared }: any): Promise<{ [string]: any }> {
+  action([path]: [string], { bare, shared, standalone }: any): Promise<{ [string]: any }> {
     if (path) path = pathlib.resolve(path);
 
     if (bare) {
@@ -27,7 +28,7 @@ export default class Init extends Command {
       });
     }
 
-    return init(path).then(({ created }) => {
+    return init(path, standalone).then(({ created }) => {
       return {
         created
       };
