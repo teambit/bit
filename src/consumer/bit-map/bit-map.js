@@ -45,9 +45,7 @@ export default class BitMap {
   }
 
   static ensure(dirPath): Promise<ConsumerBitJson> {
-    return new Promise((resolve) => {
-      return resolve(this.load(dirPath));
-    });
+    return Promise.resolve(this.load(dirPath));
   }
 
   static load(dirPath: string): BitMap {
@@ -68,13 +66,13 @@ export default class BitMap {
         Object.keys(componentsJson).forEach((componentId) => {
           components[componentId] = ComponentMap.fromJson(componentsJson[componentId]);
         });
+
+        return new BitMap(dirPath, mapPath, components, version);
       } catch (e) {
         throw new InvalidBitMap(mapPath);
       }
-    } else {
-      logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will probably create a new one if needed`);
     }
-
+    logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will probably create a new one if needed`);
     return new BitMap(dirPath, mapPath, components, version || BIT_VERSION);
   }
 
