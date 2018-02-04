@@ -152,9 +152,9 @@ jobs:
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
-      - add_ssh_keys:
-          fingerprints:
-            - "c6:bf:d3:d6:70:81:94:35:3e:db:2e:0b:a8:65:cf:9c"
+        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      - run: chmod 400 ~/.ssh/id_rsa
+      - run: ssh-add ~/.ssh/id_rsa
       - run: mkdir junit
       - run:
           name: npm link
