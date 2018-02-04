@@ -6,7 +6,7 @@ import childProcess from 'child_process';
 import fs from 'fs-extra';
 import json from 'comment-json';
 import v4 from 'uuid';
-import { VERSION_DELIMITER } from '../src/constants';
+import { VERSION_DELIMITER, BIT_VERSION } from '../src/constants';
 
 export default class Helper {
   debugMode: boolean;
@@ -538,6 +538,9 @@ export default class Helper {
     return `@bit/${this.remoteScope}.${box}.${name}`;
   }
 
+  getBitVersion() {
+    return BIT_VERSION;
+  }
   createRemoteScopeWithComponentsFixture() {
     if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
 

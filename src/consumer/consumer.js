@@ -69,13 +69,13 @@ export default class Consumer {
   _componentsCache: Object = {}; // cache loaded components
   _componentsStatusCache: Object = {}; // cache loaded components
 
-  constructor({ projectPath, bitJson, scope, created = false, isolated = false }: ConsumerProps) {
+  constructor({ projectPath, bitJson, scope, created = false, isolated = false, bitMap }: ConsumerProps) {
     this.projectPath = projectPath;
     this.bitJson = bitJson;
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
-    this.bitMap = BitMap.load(projectPath);
+    this.bitMap = bitMap || BitMap.load(projectPath);
     this.warnForMissingDriver();
   }
 
@@ -168,6 +168,7 @@ export default class Consumer {
     return this.bitJson
       .write({ bitDir: this.projectPath })
       .then(() => this.scope.ensureDir())
+      .then(() => this.bitMap.write())
       .then(() => this);
   }
 
@@ -720,13 +721,15 @@ export default class Consumer {
   static ensure(projectPath: PathOsBased = process.cwd(), noGit: boolean = false): Promise<Consumer> {
     const scopeP = Scope.ensure(composeBitHiddenDirPath(projectPath, noGit));
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
+    const bitMapP = BitMap.ensure(projectPath);
 
-    return Promise.all([scopeP, bitJsonP]).then(([scope, bitJson]) => {
+    return Promise.all([scopeP, bitJsonP, bitMapP]).then(([scope, bitJson, bitMap]) => {
       return new Consumer({
         projectPath,
         created: true,
         scope,
-        bitJson
+        bitJson,
+        bitMap
       });
     });
   }
