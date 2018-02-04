@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
-import BitsrcTester from '../bitsrc-tester';
+import BitsrcTester, { username } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 
@@ -21,6 +21,7 @@ describe.only('export --eject functionality using bitsrc.io', function () {
   });
   after(() => {
     helper.destroyEnv();
+    console.log('deleting scope on bitsrc.io ', scopeName);
     return bitsrcTester.deleteScope(scopeName);
   });
   describe('as author', () => {
@@ -29,13 +30,15 @@ describe.only('export --eject functionality using bitsrc.io', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.tagAllWithoutMessage();
-      helper.exportAllComponents(`tester.${scopeName} --eject`);
+      helper.exportAllComponents(`${username}.${scopeName} --eject`);
     });
     it('should delete the original component files from the file-system', () => {
       expect(path.join(helper.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
     });
     it('should have the component files as a package (in node_modules)', () => {
-      expect(path.join(helper.localScopePath, 'node_modules', '@bit', `${scopeName}.bar.foo`, 'foo.js')).to.be.a.path();
+      expect(
+        path.join(helper.localScopePath, 'node_modules', '@bit', `${username}.${scopeName}.bar.foo`, 'foo.js')
+      ).to.be.a.path();
     });
     it('should delete the component from bit.map', () => {
       const bitMap = helper.readBitMap();
