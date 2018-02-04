@@ -9,7 +9,7 @@ import Component from '../consumer/component';
 import { COMPONENT_ORIGINS } from '../constants';
 import ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
-import { pathRelative } from '../utils';
+import { pathRelativeLinux } from '../utils';
 import Consumer from '../consumer/consumer';
 import { getLinkContent, getIndexFileName } from './link-generator';
 
@@ -99,7 +99,7 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
   const mainFile = component.calculateMainDistFileForAuthored(consumer, componentMap);
   const indexFileName = getIndexFileName(mainFile);
   const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), indexFileName);
-  const destRelative = pathRelative(path.dirname(dest), mainFile);
+  const destRelative = pathRelativeLinux(path.dirname(dest), mainFile);
   const fileContent = getLinkContent(destRelative);
   fs.outputFileSync(dest, fileContent);
 }
@@ -155,11 +155,11 @@ export default function linkComponents(components: Component[], consumer: Consum
     }
 
     // origin is AUTHORED
-    const filesToBind = componentMap.getFilesRelativeToConsumer();
     if (!componentId.scope) return { id: componentId, bound: [] }; // scope is a must to generate the link
+    const filesToBind = componentMap.getFilesRelativeToConsumer();
     const bound = filesToBind.map((file) => {
       const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
-      const destRelative = pathRelative(path.dirname(dest), file);
+      const destRelative = pathRelativeLinux(path.dirname(dest), file);
       const fileContent = `module.exports = require('${destRelative}');`;
       fs.outputFileSync(dest, fileContent);
       return { from: dest, to: file };

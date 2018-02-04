@@ -6,6 +6,7 @@ import Version from '../version';
 import { InvalidBitId, InvalidIdChunk } from './exceptions';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER, NO_PLUGIN_TYPE } from '../constants';
 import { isValidIdChunk, isValidScopeName } from '../utils';
+import type { PathOsBased } from '../utils/path';
 
 export type BitIdProps = {
   scope?: string,
@@ -75,7 +76,7 @@ export default class BitId {
     return { [key]: value };
   }
 
-  toFullPath() {
+  toFullPath(): PathOsBased {
     return path.join(this.box, this.name, this.scope, this.version);
   }
 

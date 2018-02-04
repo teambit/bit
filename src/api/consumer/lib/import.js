@@ -10,57 +10,35 @@ import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 import { flattenDependencies } from '../../../scope/flatten-dependencies';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import { BitId } from '../../../bit-id';
+import type { ImportOptions } from '../../../consumer/component/import-components';
 
 const key = R.compose(R.head, R.keys);
 
-export default (async function importAction({
-  ids,
-  tester,
-  compiler,
-  extension,
-  verbose,
-  importPath,
-  environment,
-  force,
-  dist,
-  conf,
-  installNpmPackages,
-  withPackageJson,
-  writeBitDependencies = false
-}: {
-  ids: string,
-  tester: ?boolean,
-  compiler: ?boolean,
-  extension: ?boolean,
-  verbose: ?boolean,
-  importPath: ?string,
-  environment: ?boolean,
-  force: boolean,
-  dist: boolean,
-  conf: boolean,
-  installNpmPackages: boolean,
-  withPackageJson: ?boolean,
-  saveDependenciesAsComponents: ?boolean,
-  writeBitDependencies: boolean
-}): Promise<any> {
+export type EnvironmentOptions = {
+  tester: boolean,
+  compiler: boolean,
+  extension: boolean
+};
+
+export default (async function importAction(environmentOptions: EnvironmentOptions, importOptions: ImportOptions) {
   async function importEnvironment(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
 
     // TODO - import environment on multiple environments
-    const envDependencies = await consumer.importEnvironment(ids[0], verbose);
+    const envDependencies = await consumer.importEnvironment(importOptions.ids[0], importOptions.verbose);
     const id = envDependencies[0].component.id.toString();
     function writeToBitJsonIfNeeded() {
-      if (compiler) {
+      if (environmentOptions.compiler) {
         consumer.bitJson.compilerId = id;
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
-      if (tester) {
+      if (environmentOptions.tester) {
         consumer.bitJson.testerId = id;
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
-      if (extension) {
+      if (environmentOptions.extension) {
         const idWithoutVersion = BitId.getStringWithoutVersion(id);
         // don't create the same extension twice - check if older version exists and override it
         const oldVersion = Object.keys(consumer.bitJson.extensions).find((ext) => {
@@ -85,23 +63,10 @@ export default (async function importAction({
   }
 
   const consumer: Consumer = await loadConsumer();
-  if (tester || compiler || extension) {
+  if (environmentOptions.tester || environmentOptions.compiler || environmentOptions.extension) {
     return importEnvironment(consumer);
   }
-  const cache = false;
-  const { dependencies, envDependencies } = await consumer.import(
-    ids,
-    verbose,
-    environment,
-    cache,
-    importPath,
-    withPackageJson,
-    writeBitDependencies,
-    force,
-    dist,
-    conf,
-    installNpmPackages
-  );
+  const { dependencies, envDependencies } = await consumer.importComponents(importOptions);
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const notAuthored = (bitId) => {
     const componentMap = consumer.bitMap.getComponent(bitId);
@@ -117,7 +82,7 @@ export default (async function importAction({
     dependencies: flattenDependencies(dependencies),
     envDependencies,
     consumer,
-    installNpmPackages
+    installNpmPackages: importOptions.installNpmPackages
   });
   return { dependencies, envDependencies, warnings };
 });

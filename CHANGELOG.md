@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- added `--objects` flag to `bit import` for fetching objects only and making no changes to the filesystem
 - bug fix - dists had incorrect paths in the model when originallySharedDir was the same as dist.entry
 - strip dist.entry for imported and authored components only, not for nested.  
 - write .bitmap on bit init command

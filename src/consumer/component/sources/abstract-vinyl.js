@@ -3,8 +3,13 @@ import path from 'path';
 import fs from 'fs-extra';
 import Vinyl from 'vinyl';
 import logger from '../../../logger/logger';
+import type { PathOsBased } from '../../../utils/path';
 
 export default class AbstractVinyl extends Vinyl {
+  base: PathOsBased;
+  path: PathOsBased;
+  relative: PathOsBased;
+
   // Update the base path and keep the relative value to be the same
   updatePaths({ newBase, newRelative, newCwd }: { newBase: string, newRelative?: string, newCwd?: string }) {
     const relative = newRelative || this.relative;
