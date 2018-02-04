@@ -27,12 +27,12 @@ export function pathHas(patterns: string[]): (absPath: string) => boolean {
 /**
  * propogates the FS from given path and until passing pattern function test.
  * @name propogateUntil
- * @param {string} fromPath 
- * @param {(path: string) => boolean} pattern 
+ * @param {string} fromPath
+ * @param {(path: string) => boolean} pattern
  * @returns {string|null} first path to pass the test.
  * @example
  * ```js
- *  propogateUntil('/usr/local/var', (path) => path.indexOf('/usr') !== -1); 
+ *  propogateUntil('/usr/local/var', (path) => path.indexOf('/usr') !== -1);
  *  // => '/usr/local/var'
  * ```
  */

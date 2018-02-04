@@ -7,21 +7,14 @@ import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
 import partition from 'lodash.partition';
-import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locator';
+import { locateConsumer, pathHasConsumer, pathHasBitMap, composeBitHiddenDirPath } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
-import {
-  BITS_DIRNAME,
-  BIT_HIDDEN_DIR,
-  COMPONENT_ORIGINS,
-  BIT_VERSION,
-  NODE_PATH_SEPARATOR,
-  LATEST_BIT_VERSION
-} from '../constants';
+import { BITS_DIRNAME, COMPONENT_ORIGINS, BIT_VERSION, NODE_PATH_SEPARATOR, LATEST_BIT_VERSION } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
@@ -720,12 +713,12 @@ export default class Consumer {
     return changes;
   }
 
-  static create(projectPath: string = process.cwd()): Promise<Consumer> {
-    return this.ensure(projectPath);
+  static create(projectPath: string = process.cwd(), noGit: boolean = false): Promise<Consumer> {
+    return this.ensure(projectPath, noGit);
   }
 
-  static ensure(projectPath: PathOsBased = process.cwd()): Promise<Consumer> {
-    const scopeP = Scope.ensure(path.join(projectPath, BIT_HIDDEN_DIR));
+  static ensure(projectPath: PathOsBased = process.cwd(), noGit: boolean = false): Promise<Consumer> {
+    const scopeP = Scope.ensure(composeBitHiddenDirPath(projectPath, noGit));
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
 
     return Promise.all([scopeP, bitJsonP]).then(([scope, bitJson]) => {
@@ -763,7 +756,7 @@ export default class Consumer {
     if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
       await Consumer.create(currentPath).then(consumer => consumer.write());
     }
-    const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
+    const scopeP = Scope.load(composeBitHiddenDirPath(projectPath));
     const bitJsonP = ConsumerBitJson.load(projectPath);
     return Promise.all([scopeP, bitJsonP]).then(
       ([scope, bitJson]) =>

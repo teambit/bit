@@ -11,10 +11,11 @@ export default class Init extends Command {
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
-    ['s', 'shared <groupname>', 'add group write permissions to a scope properly']
+    ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
+    ['n', 'no-git [boolean]', 'dont create bit dir in .git directory (default = false)']
   ];
 
-  action([path]: [string], { bare, shared }: any): Promise<{ [string]: any }> {
+  action([path]: [string], { bare, shared, noGit = false }: any): Promise<{ [string]: any }> {
     if (path) path = pathlib.resolve(path);
 
     if (bare) {
@@ -27,7 +28,7 @@ export default class Init extends Command {
       });
     }
 
-    return init(path).then(({ created }) => {
+    return init(path, noGit).then(({ created }) => {
       return {
         created
       };
