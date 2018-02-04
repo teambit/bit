@@ -763,7 +763,9 @@ export default class Consumer {
   }
 
   static locateProjectScope(projectPath) {
-    if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) { return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR); }
+    if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) {
+      return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR);
+    }
     if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) return path.join(projectPath, BIT_HIDDEN_DIR);
   }
   static async load(currentPath: string, throws: boolean = true): Promise<?Consumer> {
