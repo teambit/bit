@@ -10,7 +10,7 @@ import {
   BEFORE_IMPORT_ENVIRONMENT
 } from '../../../cli/loader/loader-messages';
 
-export default (async function test(id?: string, verbose: boolean = true): Promise<Bit> {
+export default (async function test(id?: string, verbose: ?boolean): Promise<Bit> {
   const consumer: Consumer = await loadConsumer();
   const getComponents = async () => {
     if (id) {

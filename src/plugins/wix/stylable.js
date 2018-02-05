@@ -1,3 +1,5 @@
+import R from 'ramda';
+
 const pluginType = 'file-type';
 
 function getExtension() {
@@ -6,8 +8,16 @@ function getExtension() {
 
 function getTemplate(importSpecifiers) {
   let stNamed = '';
+
   if (importSpecifiers && importSpecifiers.length) {
-    const specifiers = importSpecifiers.map(importSpecifier => importSpecifier.mainFile.name).join(', ');
+    const specifiers = importSpecifiers
+      .map((importSpecifier) => {
+        const mainFile =
+          R.path(['importSpecifier', 'mainFile'], importSpecifier) ||
+          R.path(['importSpecifier', 'importSpecifiers', 'mainFile'], importSpecifier);
+        return mainFile;
+      })
+      .join(', ');
     stNamed = `-st-named: ${specifiers};`;
   }
   return `:import { 

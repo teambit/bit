@@ -8,11 +8,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - default `bit import` with no id to import objects only, unless `--write` flag is used
+- decrease verbosity of npm during bit test
+
+## [0.12.5-dev.1] - 2018-02-05
+
 - added `--objects` flag to `bit import` for fetching objects only and making no changes to the filesystem
 - bug fix - dists had incorrect paths in the model when originallySharedDir was the same as dist.entry
 - strip dist.entry for imported and authored components only, not for nested.  
 - write .bitmap on bit init command
 - aggregate dependencies and package dependencies in bit show
+- add entered username from prompt to context for server side hooks
 
 ## [0.12.4] - 2018-01-30
 

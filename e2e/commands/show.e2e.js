@@ -80,7 +80,10 @@ describe('bit show command', function () {
 
       it('should render the compiler correctly', () => {
         expect(output).to.have.string('Compiler', 'Compiler row is missing');
-        expect(output).to.have.string(`${helper.envScope}/compilers/babel`, 'compiler is wrong');
+        expect(output).to.have.string(
+          `${helper.envScope}/compil  │\n  │                   │ers/babel@0.0.1`,
+          'compiler is wrong'
+        );
       });
 
       it('should render the language correctly', () => {

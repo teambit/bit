@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.12.4",
+  "version": "0.12.5-dev.1",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
@@ -78,7 +78,6 @@
     "prompt": "^1.0.0",
     "ramda": "^0.24.1",
     "regenerator-runtime": "^0.11.0",
-    "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",
     "semver": "^5.4.1",
     "serialize-error": "^2.1.0",
@@ -126,6 +125,7 @@
     "mocha-junit-reporter": "^1.13.0",
     "prettier-eslint": "8.2.2",
     "prettier-eslint-cli": "4.4.0",
+    "requestify": "^0.2.5",
     "sinon": "^4.1.2"
   },
   "optionalDependencies": {
