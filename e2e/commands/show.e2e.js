@@ -78,7 +78,7 @@ describe('bit show command', function () {
         expect(output).to.have.string('comp/comp', 'component id is wrong');
       });
 
-      it.only('should render the compiler correctly', () => {
+      it('should render the compiler correctly', () => {
         expect(output).to.have.string('Compiler', 'Compiler row is missing');
         expect(output).to.have.string(
           `${helper.envScope}/compil  │\n  │                   │ers/babel@0.0.1`,
