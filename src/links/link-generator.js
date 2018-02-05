@@ -20,6 +20,7 @@ import fileTypesPlugins from '../plugins/file-types-plugins';
 import { getSync } from '../api/consumer/lib/global-config';
 import { Consumer } from '../consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
+import type { PathOsBased } from '../utils/path';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -49,7 +50,7 @@ function getIndexFileName(mainFile: string): string {
 
 // todo: move to bit-javascript
 function getLinkContent(
-  filePath: string,
+  filePath: PathOsBased,
   importSpecifiers?: Object,
   createNpmLinkFiles?: boolean,
   bitPackageName: string
@@ -159,14 +160,14 @@ async function writeDependencyLinks(
   consumer: Consumer,
   createNpmLinkFiles: boolean
 ): Promise<any> {
-  const consumerPath: string = consumer.getPath();
+  const consumerPath: PathOsBased = consumer.getPath();
   const prepareLinkFile = (
     componentId: string,
-    mainFile: string,
+    mainFile: PathOsBased,
     linkPath: string,
-    relativePathInDependency: string,
+    relativePathInDependency: PathOsBased,
     relativePath: Object,
-    depRootDir: ?string,
+    depRootDir: ?PathOsBased,
     isNpmLink: boolean
   ) => {
     // this is used to convert the component name to a valid npm package  name
@@ -193,16 +194,12 @@ async function writeDependencyLinks(
     parentComponentMap: ComponentMap
   ) => {
     const parentDir = parentComponent.writtenPath || parentComponentMap.rootDir; // when running from bit build, the writtenPath is not available
-    const relativePathInDependency = relativePath.destinationRelativePath;
-    const mainFile = depComponent.calculateMainDistFile();
+    const relativePathInDependency = path.normalize(relativePath.destinationRelativePath);
+    const mainFile: PathOsBased = depComponent.calculateMainDistFile();
     const hasDist = parentComponent._writeDistsFiles && parentComponent.dists && !R.isEmpty(parentComponent.dists);
-    const distRoot = parentComponent.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
+    const distRoot: PathOsBased = parentComponent.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
 
-    let relativeDistPathInDependency = searchFilesIgnoreExt(
-      depComponent.dists,
-      path.normalize(relativePathInDependency),
-      'relative'
-    );
+    let relativeDistPathInDependency = searchFilesIgnoreExt(depComponent.dists, relativePathInDependency, 'relative');
     relativeDistPathInDependency = relativeDistPathInDependency
       ? relativeDistPathInDependency.relative
       : relativePathInDependency;
@@ -210,13 +207,13 @@ async function writeDependencyLinks(
     const relativeDistExtInDependency = getExt(relativeDistPathInDependency);
     const sourceRelativePath = relativePath.sourceRelativePath;
     const linkPath = path.join(parentDir, sourceRelativePath);
-    let distLinkPath;
+    let distLinkPath: PathOsBased;
     const linkFiles = [];
     const depComponentMap = parentComponent.dependenciesSavedAsComponents
       ? consumer.bitMap.getComponent(depId, true)
       : undefined;
 
-    const depRootDir = depComponentMap ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
+    const depRootDir: ?PathOsBased = depComponentMap ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
     const isNpmLink = createNpmLinkFiles || !parentComponent.dependenciesSavedAsComponents;
     if (hasDist) {
       const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;

@@ -1,5 +1,4 @@
 /** @flow */
-
 import R from 'ramda';
 import path from 'path';
 import fs from 'fs-extra';
@@ -16,10 +15,11 @@ import {
   NODE_PATH_SEPARATOR
 } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
-import { pathRelative } from '../../utils';
+import { pathRelativeLinux } from '../../utils';
 import { getSync } from '../../api/consumer/lib/global-config';
 import Consumer from '../consumer';
 import { Dependencies } from './dependencies';
+import { pathNormalizeToLinux } from '../../utils/path';
 
 /**
  * Add components as dependencies to root package.json
@@ -72,7 +72,7 @@ function getPackageDependencyValue(
     return dependencyId.version;
   }
   const dependencyRootDir = dependencyComponentMap.rootDir;
-  const rootDirRelative = pathRelative(parentComponentMap.rootDir, dependencyRootDir);
+  const rootDirRelative = pathRelativeLinux(parentComponentMap.rootDir, dependencyRootDir);
   return rootDirRelative.startsWith('.') ? rootDirRelative : `./${rootDirRelative}`;
 }
 
@@ -154,7 +154,7 @@ async function write(
     name,
     version: component.version,
     homepage: component._getHomepage(),
-    main: component.calculateMainDistFile(),
+    main: pathNormalizeToLinux(component.calculateMainDistFile()),
     devDependencies: component.devPackageDependencies,
     peerDependencies: component.peerPackageDependencies,
     componentRootFolder: bitDir,

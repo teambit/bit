@@ -39,7 +39,7 @@ function comparator(a, b) {
   return a === b;
 }
 
-function convertObjectToPrintable(component: ConsumerComponent, isFromFs, includeDependencies = false) {
+function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
   const obj = {};
   const parsePackages = (packages) => {
     return !R.isEmpty(packages) && !R.isNil(packages)
@@ -67,12 +67,9 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs, includ
   obj.language = lang || null;
   obj.tester = testerId ? testerId.toString() : null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
-  if (includeDependencies) {
-    obj.dependencies = dependencies.toStringOfIds();
-    obj.devDependencies = devDependencies.toStringOfIds();
-  }
-  obj.packages = parsePackages(packageDependencies);
-  obj.devPackages = parsePackages(devPackageDependencies);
+  obj.dependencies = dependencies.toStringOfIds().concat(parsePackages(packageDependencies));
+  obj.devDependencies = devDependencies.toStringOfIds().concat(parsePackages(devPackageDependencies));
+
   obj.files =
     !R.isEmpty(files) && !R.isNil(files)
       ? files.filter(file => !file.test).map(file => normalize(file.relative))
@@ -132,7 +129,7 @@ function generateDependenciesTable(component: ConsumerComponent, showRemoteVersi
 }
 
 function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: boolean) {
-  const printableComponent = convertObjectToPrintable(component, false, !showRemoteVersion);
+  const printableComponent = convertObjectToPrintable(component, false);
   const rows = fields
     .map((field) => {
       const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
@@ -161,8 +158,8 @@ function paintWithCompare(
   componentToCompareTo: ConsumerComponent,
   showRemoteVersion: boolean
 ) {
-  const printableOriginalComponent = convertObjectToPrintable(originalComponent, true, true);
-  const printableComponentToCompare = convertObjectToPrintable(componentToCompareTo, false, true);
+  const printableOriginalComponent = convertObjectToPrintable(originalComponent, true);
+  const printableComponentToCompare = convertObjectToPrintable(componentToCompareTo, false);
 
   const componentsDiffs = diff.custom(
     {

@@ -1,9 +1,11 @@
 // @flow
 import doctrine from 'doctrine';
 import exampleTagParser from './example-tag-parser';
+import type { PathLinux, PathOsBased } from '../utils/path';
+import { pathNormalizeToLinux } from '../utils';
 
 export type Doclet = {
-  filePath: string,
+  filePath: PathLinux,
   name: string,
   description: string,
   args?: Array,
@@ -28,7 +30,7 @@ function formatTag(tag: Object): Object {
   return tag;
 }
 
-function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: string) {
+function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsBased) {
   const commentsAst = doctrine.parse(doc.trim(), { unwrap: true, recoverable: true });
   if (!commentsAst) return;
 
@@ -84,7 +86,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: string)
     }
   });
 
-  const doclet = {
+  const doclet: Doclet = {
     name, // todo: find the function/method name by regex
     description,
     args,
@@ -94,17 +96,18 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: string)
     render,
     properties,
     static: isStatic,
-    filePath
+    filePath: pathNormalizeToLinux(filePath)
   };
   doclets.push(doclet);
 }
 
-export default function parse(data: string, filePath: string): Doclet | [] {
+export default function parse(data: string, filePath: PathOsBased): Doclet | [] {
   const doclets: Array<Doclet> = [];
   try {
     const jsdocRegex = /[ \t]*\/\*\*\s*\n([^*]*(\*[^/])?)*\*\//g;
     const docs = data.match(jsdocRegex);
-    docs.map(doc => extractDataRegex(doc, doclets, filePath));
+    // populate doclets array
+    docs.forEach(doc => extractDataRegex(doc, doclets, filePath));
   } catch (e) {
     // never mind, ignore the doc of this source
   }

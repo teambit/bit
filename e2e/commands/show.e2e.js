@@ -105,7 +105,7 @@ describe('bit show command', function () {
       });
 
       it('should render the package dependencies correctly', () => {
-        expect(output).to.have.string('Packages', 'Packages row is missing');
+        expect(output).to.not.have.string('Packages', 'Packages row is missing');
         expect(output).to.have.string('lodash.get', 'Packages are wrong');
       });
 
@@ -156,7 +156,7 @@ describe('bit show command', function () {
       });
 
       it('should render the main file correctly', () => {
-        expect(output).to.include({ mainFile: 'src/mainFile.js' });
+        expect(output).to.include({ mainFile: path.normalize('src/mainFile.js') });
       });
 
       it('should include the dependencies correctly', () => {
@@ -186,7 +186,7 @@ describe('bit show command', function () {
 
       // TODO: change this to src/mainFile.js once we change the main file to store relative instead of path
       it('should include the main file correctly', () => {
-        expect(output).to.include({ mainFile: 'src/mainFile.js' });
+        expect(output).to.include({ mainFile: path.normalize('src/mainFile.js') });
       });
 
       describe('when the compiler is changed in the consumer bit.json', () => {

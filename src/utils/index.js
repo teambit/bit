@@ -68,7 +68,7 @@ import getWithoutExt from './fs/fs-no-ext';
 import getExt from './fs/get-ext';
 import outputJsonFile from './fs-output-json-sync';
 import searchFilesIgnoreExt from './fs/search-files-ignore-ext';
-import { pathNormalizeToLinux, pathJoinLinux, pathRelative, pathResolve, pathJoinOs } from './path';
+import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, pathResolveToLinux } from './path';
 import getMissingTestFiles from './getMissingTestFiles';
 import identityFile from './ssh/identity-file';
 import camelCase from './string/camel-case';
@@ -149,9 +149,8 @@ export {
   getExt,
   pathNormalizeToLinux,
   pathJoinLinux,
-  pathRelative,
-  pathResolve,
-  pathJoinOs,
+  pathRelativeLinux,
+  pathResolveToLinux,
   outputJsonFile,
   searchFilesIgnoreExt,
   getMissingTestFiles,

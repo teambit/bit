@@ -42,6 +42,13 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       const output = helper.testComponent('string/pad-left');
       expect(output).to.have.string('tests passed');
     });
+    it('should save the paths in the model as Linux format', () => {
+      const isString = helper.catComponent(`${helper.remoteScope}/string/is-string@latest`);
+      expect(isString.docs[0].filePath).to.equal('src/is-string/is-string.js');
+      expect(isString.specsResults[0].specFile).to.equal('is-string/is-string.spec.js');
+      isString.dists.forEach(dist => expect(dist.relativePath.startsWith('src/is-string')).to.be.true);
+      isString.files.forEach(file => expect(file.relativePath.startsWith('src/is-string')).to.be.true);
+    });
     describe('changing to absolute syntax and tagging', () => {
       before(() => {
         const padLeftFile = path.join(helper.localScopePath, 'src', 'pad-left', 'pad-left', 'pad-left.js');
@@ -50,10 +57,30 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         const absoluteSyntax = helper.getRequireBitPath('string', 'is-string');
         fs.outputFileSync(padLeftFile, padLeftContent.replace(relativeSyntax, absoluteSyntax));
         helper.tagAllWithoutMessage();
+        helper.exportAllComponents();
       });
       it('should not add both originallySharedDir and dist.entry because they are the same', () => {
-        const padLeftModel = helper.catComponent(`${helper.remoteScope}/string/pad-left@0.0.2`);
+        const padLeftModel = helper.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
+      });
+      it('should not add the dist.entry if it was not removed before', () => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'any' });
+        helper.importComponent('string/pad-left -p src/pad-left');
+        helper.commitComponent('string/pad-left', 'msg', '-f');
+        const padLeftModel = helper.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
+        padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
+      });
+      describe('importing back to the original repo', () => {
+        before(() => {
+          helper.getClonedLocalScope(originalScope);
+          helper.importComponent('string/pad-left');
+        });
+        it('should be able to pass the tests', () => {
+          const output = helper.testComponent('string/pad-left');
+          expect(output).to.have.string('tests passed');
+        });
       });
     });
   });

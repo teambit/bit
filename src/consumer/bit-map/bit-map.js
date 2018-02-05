@@ -2,8 +2,6 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
-import find from 'lodash.find';
-import pickBy from 'lodash.pickby';
 import json from 'comment-json';
 import logger from '../../logger/logger';
 import {
@@ -12,15 +10,15 @@ import {
   DEFAULT_INDEX_NAME,
   COMPONENT_ORIGINS,
   DEFAULT_SEPARATOR,
-  DEFAULT_INDEX_EXTS
+  DEFAULT_INDEX_EXTS,
+  BIT_VERSION
 } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
-import { readFile, outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } from '../../utils';
+import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } from '../../utils';
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
-
-const SHOULD_THROW = true;
+import type { PathLinux, PathOsBased } from '../../utils/path';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -43,7 +41,11 @@ export default class BitMap {
     this.paths = {};
   }
 
-  static load(dirPath: string): BitMap {
+  static ensure(dirPath): Promise<ConsumerBitJson> {
+    return Promise.resolve(this.load(dirPath));
+  }
+
+  static load(dirPath: PathOsBased): BitMap {
     // support old bitmaps
     const mapPath =
       fs.existsSync(path.join(dirPath, OLD_BIT_MAP)) && !fs.existsSync(path.join(dirPath, BIT_MAP))
@@ -61,14 +63,14 @@ export default class BitMap {
         Object.keys(componentsJson).forEach((componentId) => {
           components[componentId] = ComponentMap.fromJson(componentsJson[componentId]);
         });
+
+        return new BitMap(dirPath, mapPath, components, version);
       } catch (e) {
         throw new InvalidBitMap(mapPath);
       }
-    } else {
-      logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will probably create a new one if needed`);
     }
-
-    return new BitMap(dirPath, mapPath, components, version);
+    logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will probably create a new one if needed`);
+    return new BitMap(dirPath, mapPath, components, version || BIT_VERSION);
   }
 
   getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): BitMapComponents {
@@ -90,7 +92,7 @@ export default class BitMap {
     return componentsIds;
   }
 
-  _makePathRelativeToProjectRoot(pathToChange: string): string {
+  _makePathRelativeToProjectRoot(pathToChange: string): PathOsBased {
     const absolutePath = path.resolve(pathToChange);
     return path.relative(this.projectRoot, absolutePath);
   }
@@ -201,12 +203,12 @@ export default class BitMap {
   }: {
     componentId: BitId,
     files: ComponentMapFile[],
-    mainFile?: string,
+    mainFile?: PathOsBased,
     origin: ComponentOrigin,
     parent?: BitId,
     rootDir?: string,
     override: boolean,
-    originallySharedDir?: string
+    originallySharedDir?: PathLinux
   }): ComponentMap {
     const isDependency = origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = componentId.toString();
@@ -343,38 +345,6 @@ export default class BitMap {
     return this.components[idWithVersion];
   }
 
-  getMainFileOfComponent(id: string) {
-    const component = this.getComponent(id, SHOULD_THROW);
-    return component.mainFile;
-  }
-
-  getRootDirOfComponent(id: string) {
-    const component = this.getComponent(id, SHOULD_THROW);
-    return component.rootDir;
-  }
-
-  /**
-   *
-   * Return the full component object means:
-   * {
-   *    componentId: component
-   * }
-   *
-   * @param {string} filePath relative to root dir - as stored in bit.map files object
-   * @returns {Object<string, ComponentMap>}
-   * @memberof BitMap
-   */
-  getComponentObjectByPath(filePath: string): BitMapComponents {
-    return pickBy(this.components, (componentObject) => {
-      const rootDir = componentObject.rootDir;
-      const sharedDir = componentObject.originallySharedDir;
-      return find(componentObject.files, (file) => {
-        const relativePath = sharedDir ? pathJoinLinux(sharedDir, file.relativePath) : file.relativePath;
-        return relativePath === filePath || (rootDir && pathJoinLinux(rootDir, relativePath) === filePath);
-      });
-    });
-  }
-
   /**
    * Return a potential componentMap if file is supposed to be part of it
    * by a path exist in the files object
@@ -385,33 +355,6 @@ export default class BitMap {
   getComponentObjectOfFileByPath(componentPath: string): BitMapComponents {
     const components = this.getAllComponents();
     return R.pickBy(component => pathIsInside(componentPath, component.rootDir || this.projectRoot), components);
-  }
-  /**
-   *
-   * Return the full component object by a root path for the component, means:
-   * {
-   *    componentId: component
-   * }
-   *
-   * @param {string} rootPath relative to consumer - as stored in bit.map files object
-   * @returns {Object<string, ComponentMap>}
-   * @memberof BitMap
-   */
-  getComponentObjectByRootPath(rootPath: string): BitMapComponents {
-    return pickBy(this.components, componentObject => componentObject.rootDir === rootPath);
-  }
-
-  /**
-   * Return a component id as listed in bit.map file
-   * by a root path of the component
-   *
-   * @param {string} rootPath relative to consumer - as stored in bit.map files object
-   * @returns {string} component id
-   * @memberof BitMap
-   */
-  getComponentIdByRootPath(rootPath: string): string {
-    const componentObject = this.getComponentObjectByRootPath(rootPath);
-    return R.keys(componentObject)[0];
   }
 
   /**
@@ -450,7 +393,7 @@ export default class BitMap {
     });
   }
 
-  updatePathLocation(from: string, to: string, fromExists: boolean): PathChangeResult[] {
+  updatePathLocation(from: PathOsBased, to: PathOsBased, fromExists: boolean): PathChangeResult[] {
     const existingPath = fromExists ? from : to;
     const isPathDir = isDir(existingPath);
     const allChanges = [];

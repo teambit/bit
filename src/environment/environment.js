@@ -9,6 +9,7 @@ import { ISOLATED_ENV_ROOT } from '../constants';
 import { mkdirp, outputFile } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
+import type { PathOsBased } from '../utils/path';
 
 export type IsolateOptions = {
   writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
@@ -25,7 +26,7 @@ export type IsolateOptions = {
 const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';
 
 export default class Environment {
-  path: string;
+  path: PathOsBased;
   scope: Scope;
   consumer: Consumer;
 
@@ -56,12 +57,12 @@ export default class Environment {
       componentsWithDependencies,
       writeToPath,
       force: opts.override,
-      withPackageJson: !opts.noPackageJson,
-      withBitJson: opts.conf,
+      writePackageJson: !opts.noPackageJson,
+      writeBitJson: opts.conf,
       writeBitDependencies: opts.writeBitDependencies,
       createNpmLinkFiles: opts.npmLinks,
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
-      dist: opts.dist,
+      writeDists: opts.dist,
       installNpmPackages: !!opts.installPackages, // convert to boolean
       addToRootPackageJson: false,
       verbose: opts.verbose,
