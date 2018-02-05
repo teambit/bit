@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - strip dist.entry for imported and authored components only, not for nested.  
 - write .bitmap on bit init command
 - aggregate dependencies and package dependencies in bit show
+- add entered username from prompt to context for server side hooks
 
 ## [0.12.4] - 2018-01-30
 

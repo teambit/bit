@@ -9,7 +9,8 @@ import logger from '../../logger/logger';
 export default function connect(host: string): Promise<Network> {
   if (host.startsWith('ssh://') || host.startsWith('bit://')) {
     logger.debug(`Establishing a new SSH connection to ${host}`);
-    return new SSH(parseSSHUrl(host)).connect();
+    const sshProps = parseSSHUrl(host);
+    return new SSH(sshProps).connect();
   }
 
   if (host.startsWith('file://')) {
