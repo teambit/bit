@@ -79,9 +79,14 @@ export default class Import extends Command {
       ignorePackageJson?: boolean
     }
   ): Promise<any> {
-    // @TODO - import should support multiple components
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
+    }
+    if (objects && write) {
+      throw new Error('you cant use --objects and --write flags combined');
+    }
+    if (ids.length && write) {
+      throw new Error('you cant use --write flag when importing specific ids');
     }
     const environmentOptions: EnvironmentOptions = {
       tester,
