@@ -104,9 +104,10 @@ const _installInOneDirectory = ({
 
   return childProcess
     .then(({ stdout, stderr }) => {
-      stdout = verbose
-        ? stdout
-        : `successfully ran ${packageManager} install at ${cwd} with args: ${concretePackageManagerArgs}`;
+      // Remove the install from args since it's always there
+      const printArgs = concretePackageManagerArgs.filter(arg => arg !== 'install');
+      const argsString = printArgs && printArgs.length > 0 ? `with args: ${printArgs}` : '';
+      stdout = verbose ? stdout : `successfully ran ${packageManager} install at ${cwd} ${argsString}`;
       stderr = verbose ? stderr : '';
       return { stdout, stderr };
     })
