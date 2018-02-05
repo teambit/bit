@@ -105,7 +105,7 @@ describe('bit show command', function () {
       });
 
       it('should render the package dependencies correctly', () => {
-        expect(output).to.have.string('Packages', 'Packages row is missing');
+        expect(output).to.not.have.string('Packages', 'Packages row is missing');
         expect(output).to.have.string('lodash.get', 'Packages are wrong');
       });
 

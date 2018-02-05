@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - bug fix - dists had incorrect paths in the model when originallySharedDir was the same as dist.entry
 - strip dist.entry for imported and authored components only, not for nested.  
 - write .bitmap on bit init command
+- aggregate dependencies and package dependencies in bit show
 
 ## [0.12.4] - 2018-01-30
 
