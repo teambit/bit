@@ -12,7 +12,7 @@ export default class Init extends Command {
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
-    ['t', 'standalone [boolean]', 'standalone ']
+    ['t', 'standalone [boolean]', 'do not nest component store within .git direcoty ']
   ];
 
   action([path]: [string], { bare, shared, standalone }: any): Promise<{ [string]: any }> {
