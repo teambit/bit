@@ -23,7 +23,7 @@ describe('bit import command with no ids', function () {
       helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/bar/foo`]: '0.0.1' });
     });
     it('should display a successful message with the list of installed components', () => {
-      const output = helper.runCmd('bit import');
+      const output = helper.importAllComponents(true);
       expect(output.includes('successfully imported one component')).to.be.true;
     });
   });
@@ -40,7 +40,7 @@ describe('bit import command with no ids', function () {
       helper.writeBitMap(bitMap);
     });
     it('should display a successful message with the list of installed components', () => {
-      const output = helper.runCmd('bit import');
+      const output = helper.importAllComponents(true);
       expect(output.includes('successfully imported one component')).to.be.true;
     });
   });
@@ -62,7 +62,7 @@ describe('bit import command with no ids', function () {
       helper.writeBitMap(bitMap);
       const bitJsonPath = path.join(helper.localScopePath, 'bit.json');
       helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/bar/foo2`]: '0.0.1' });
-      helper.runCmd('bit import');
+      helper.importAllComponents(true);
       const barFooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; };";
       helper.createComponent('bar', 'foo.js', barFooFixtureV2);
       helper.createComponent(path.join('components', 'bar', 'foo2'), 'foo2.js', barFooFixtureV2);
@@ -71,7 +71,7 @@ describe('bit import command with no ids', function () {
       let output;
       before(() => {
         try {
-          helper.runCmd('bit import');
+          helper.importAllComponents(true);
         } catch (err) {
           output = err.toString();
         }
@@ -108,7 +108,7 @@ describe('bit import command with no ids', function () {
     });
     it('should not try to import that component as it was not exported yet', () => {
       try {
-        helper.runCmd('bit import');
+        helper.importAllComponents(true);
       } catch (err) {
         expect(err.toString()).to.have.string('nothing to import');
       }

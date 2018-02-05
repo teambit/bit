@@ -13,6 +13,7 @@ chai.use(require('chai-fs'));
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
+chai.use(require('chai-string'));
 
 describe('bit import', function () {
   this.timeout(0);
@@ -181,7 +182,9 @@ describe('bit import', function () {
       describe('when a project is cloned somewhere else as AUTHORED', () => {
         let localConsumerFiles;
         before(() => {
-          helper.mimicGitCloneLocalProject();
+          helper.mimicGitCloneLocalProject(false);
+          helper.addRemoteScope();
+          helper.runCmd('bit import --write --force');
           localConsumerFiles = helper.getConsumerFiles();
         });
         it('should write the internal files according to their original paths', () => {
@@ -224,7 +227,9 @@ describe('bit import', function () {
           });
           describe('when a project is cloned somewhere else as IMPORTED', () => {
             before(() => {
-              helper.mimicGitCloneLocalProject(true);
+              helper.mimicGitCloneLocalProject(false);
+              helper.addRemoteScope();
+              helper.runCmd('bit import --force --write');
               localConsumerFiles = helper.getConsumerFiles();
             });
             it('should write the internal files according to their relative paths', () => {
@@ -276,7 +281,9 @@ describe('bit import', function () {
           });
           describe('when a project is cloned somewhere else as IMPORTED', () => {
             before(() => {
-              helper.mimicGitCloneLocalProject();
+              helper.mimicGitCloneLocalProject(false);
+              helper.addRemoteScope();
+              helper.runCmd('bit import --write --ignore-dist --force');
               localConsumerFiles = helper.getConsumerFiles();
             });
             it('should write the internal files according to their relative paths', () => {
@@ -380,7 +387,7 @@ describe('bit import', function () {
           [`${helper.remoteScope}/comp/comp1`]: '0.0.1',
           [`${helper.remoteScope}/comp/comp2`]: '0.0.1'
         });
-        output = helper.runCmd('bit import');
+        output = helper.importAllComponents(true);
         localConsumerFiles = helper.getConsumerFiles();
       });
       it('should print the imported component correctly', () => {
@@ -731,8 +738,8 @@ describe('bit import', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
-      localConsumerFiles = helper.getConsumerFiles();
       clonedLocalScope = helper.cloneLocalScope();
+      localConsumerFiles = helper.getConsumerFiles();
     });
     it('should keep the original directory structure of the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
@@ -754,40 +761,55 @@ describe('bit import', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
-    describe('when cloning the project to somewhere else and running bit import', () => {
+    describe('when cloning the project to somewhere else without component files. (component files are not under git)', () => {
       before(() => {
-        helper.mimicGitCloneLocalProject();
-      });
-      it('should be able to require its direct dependency and print results from all dependencies', () => {
-        const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-        const result = helper.runCmd('node app.js');
-        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
-      });
-    });
-    describe('when cloning the project to somewhere else', () => {
-      before(() => {
-        helper.createComponent('components/bar/foo/bar', 'foo.js', fixtures.barFooFixtureV2);
-        helper.mimicGitCloneLocalProjectWithoutImport();
+        helper.mimicGitCloneLocalProject(false);
         helper.addRemoteScope();
       });
-      after(() => {
+      describe('and running bit import without "--write" flag', () => {
+        before(() => {
+          helper.importAllComponents();
+          localConsumerFiles = helper.getConsumerFiles();
+        });
+        it('should not write the components files', () => {
+          localConsumerFiles.forEach((file) => {
+            expect(file).to.not.startsWith('components');
+          });
+        });
+      });
+      describe('and running bit import with "--write" flag', () => {
+        before(() => {
+          helper.runCmd('bit import --write --force');
+        });
+        it('should write the components files back', () => {
+          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
+    });
+    describe('when cloning the project to somewhere else with component files (component files are under git)', () => {
+      before(() => {
         helper.getClonedLocalScope(clonedLocalScope);
+        helper.createComponent('components/bar/foo/bar', 'foo.js', fixtures.barFooFixtureV2);
+        helper.mimicGitCloneLocalProject();
+        helper.addRemoteScope();
       });
       it('local scope should be empty', () => {
         const output = helper.listLocalScope();
         expect(output).to.have.string('found 0 components in local scope');
       });
-      describe('after running bit import --objects', () => {
+      describe('after running bit import (without --write flag)', () => {
         before(() => {
-          helper.runCmd('bit import --objects');
+          helper.importAllComponents();
         });
         it('local scope should contain all the components', () => {
           const output = helper.listLocalScope();
           expect(output).to.have.string('found 3 components in local scope');
         });
         it('should not override the current files', () => {
-          // as opposed to running import without '--objects', the files should remain intact
+          // as opposed to running import without '--write', the files should remain intact
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
           const result = helper.runCmd('node app.js');
@@ -797,6 +819,7 @@ describe('bit import', function () {
     });
     describe('re-import with a specific path', () => {
       before(() => {
+        helper.getClonedLocalScope(clonedLocalScope);
         helper.importComponent('bar/foo -p new-location');
         localConsumerFiles = helper.getConsumerFiles();
       });
@@ -1435,7 +1458,7 @@ console.log(barFoo.default());`;
       bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '0.0.1';
       bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '0.0.1';
       helper.writeBitJson(bitJson);
-      helper.runCmd('bit import');
+      helper.importAllComponents(true);
       localConsumerFiles = helper.getConsumerFiles();
     });
     it('should write is-type directly in components directory', () => {
@@ -1493,7 +1516,7 @@ console.log(barFoo.default());`;
       bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '0.0.1';
       bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '0.0.2';
       helper.writeBitJson(bitJson);
-      helper.runCmd('bit import');
+      helper.importAllComponents(true);
     });
     it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
       const requirePath = helper.getRequireBitPath('utils', 'is-string');
@@ -1787,7 +1810,9 @@ console.log(barFoo.default());`;
     });
     describe('when cloning the project to somewhere else', () => {
       before(() => {
-        helper.mimicGitCloneLocalProject();
+        helper.mimicGitCloneLocalProject(false);
+        helper.addRemoteScope();
+        helper.runCmd('bit import --write --force');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";

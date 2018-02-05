@@ -170,7 +170,7 @@ describe('bit test command', function () {
     it('Should not be able to test without building first', () => {
       let output;
       try {
-        helper.testComponent('utils/is-type');
+        helper.testComponent('utils/is-type -v');
       } catch (err) {
         output = err.message;
       }

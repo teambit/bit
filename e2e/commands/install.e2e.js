@@ -47,7 +47,7 @@ console.log('isBoolean: ' + isBoolean(true) + ', ' + barFoo());`;
     describe('cloning the project to somewhere else without the node-modules directories', () => {
       let output;
       before(() => {
-        helper.mimicGitCloneLocalProjectWithoutImport();
+        helper.mimicGitCloneLocalProject();
         output = helper.runCmd('bit install');
       });
       it('bit install should npm-install all missing node-modules and link all components', () => {

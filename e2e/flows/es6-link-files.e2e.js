@@ -66,11 +66,12 @@ describe('es6 components with link files', function () {
 
       helper.commitAllComponents();
       helper.exportAllComponents();
-      helper.mimicGitCloneLocalProject();
     });
     describe('when the project cloned to somewhere else as AUTHORED', () => {
       before(() => {
-        helper.mimicGitCloneLocalProject();
+        helper.mimicGitCloneLocalProject(false);
+        helper.addRemoteScope();
+        helper.runCmd('bit import --write --force');
       });
       it('should not override the original link file', () => {
         const currentUtilIndex = fs.readFileSync(path.join(helper.localScopePath, 'utils', 'index.js'));

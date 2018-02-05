@@ -20,7 +20,12 @@ export default class Import extends Command {
     ['', 'extension', 'import an extension component'],
     ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
     ['p', 'path <path>', 'import components into a specific directory'],
-    ['o', 'objects', "import components objects only, don't write the components to the filesystem"],
+    [
+      'o',
+      'objects',
+      "import components objects only, don't write the components to the file system. This is a default behavior for import with no id"
+    ],
+    ['', 'write', 'in case of import-all (when no id is specified), write the components to the file system'],
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['f', 'force', 'ignore local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
@@ -48,6 +53,7 @@ export default class Import extends Command {
       extension = false,
       path,
       objects = false,
+      write = false,
       displayDependencies = false,
       environment = false,
       force = false,
@@ -62,6 +68,7 @@ export default class Import extends Command {
       extension?: boolean,
       path?: string,
       objects?: boolean,
+      write?: boolean,
       displayDependencies?: boolean,
       environment?: boolean,
       force?: boolean,
@@ -72,9 +79,14 @@ export default class Import extends Command {
       ignorePackageJson?: boolean
     }
   ): Promise<any> {
-    // @TODO - import should support multiple components
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
+    }
+    if (objects && write) {
+      throw new Error('you cant use --objects and --write flags combined');
+    }
+    if (ids.length && write) {
+      throw new Error('you cant use --write flag when importing specific ids');
     }
     const environmentOptions: EnvironmentOptions = {
       tester,
@@ -87,6 +99,7 @@ export default class Import extends Command {
       verbose,
       writeToPath: path,
       objectsOnly: objects,
+      writeToFs: write,
       withEnvironments: environment,
       force,
       writeDists: !ignoreDist,

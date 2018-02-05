@@ -255,24 +255,17 @@ export default class Helper {
     return { scopeName, scopePath };
   }
 
-  mimicGitCloneLocalProject(withDist = false) {
+  mimicGitCloneLocalProject(cloneWithComponentsFiles = true) {
     fs.removeSync(path.join(this.localScopePath, '.bit'));
-    fs.removeSync(path.join(this.localScopePath, 'components'));
-    this.runCmd('bit init');
-    this.addRemoteScope();
-    return withDist ? this.runCmd('bit import --force') : this.runCmd('bit import --ignore-dist --force');
-  }
-
-  mimicGitCloneLocalProjectWithoutImport() {
-    fs.removeSync(path.join(this.localScopePath, '.bit'));
-    this.runCmd('bit init');
-    const directories = glob.sync(path.normalize('**/'), { cwd: this.localScopePath, dot: true });
+    if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.localScopePath, 'components'));
     // delete all node-modules from all directories
+    const directories = glob.sync(path.normalize('**/'), { cwd: this.localScopePath, dot: true });
     directories.forEach((dir) => {
       if (dir.includes('node_modules')) {
         fs.removeSync(path.join(this.localScopePath, dir));
       }
     });
+    this.runCmd('bit init');
   }
 
   getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true) {
@@ -322,6 +315,10 @@ export default class Helper {
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit import ${this.remoteScope}/${id} ${value}`);
+  }
+
+  importAllComponents(writeToFileSystem = false) {
+    return this.runCmd(`bit import ${writeToFileSystem ? '--write' : ''}`);
   }
 
   isolateComponent(id: string, flags: string): string {

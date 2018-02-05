@@ -144,7 +144,7 @@ describe('importing bit components from bitsrc.io', function () {
           const isStringFixtureV2 = `const isType = require('@bit/david.tests.utils.is-type');
 module.exports = function isString() { return isType() +  ' and got is-string'; };`;
           helper.createComponent(path.join('components', 'utils', 'is-string'), 'is-string.js', isStringFixtureV2);
-          helper.mimicGitCloneLocalProjectWithoutImport();
+          helper.mimicGitCloneLocalProject();
           helper.runCmd('npm install');
         });
         it("that user should see the updated version of the component, same as the publisher, although it does'nt have bit installed ", () => {
