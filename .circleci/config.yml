@@ -22,10 +22,12 @@ jobs:
       - run: "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
       - run: echo ${testerBitsrcSSHPrivateKey} >> id_rsa
       - run: "echo \"-----END RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
+      - run: echo ${testerBitsrcSSHPublicKey} >> id_rsa.pub
       - save_cache:
-          key: bitsrc-ssh-key1
+          key: bitsrc-ssh-key3
           paths:
             - ~/.ssh/id_rsa
+            - ~/.ssh/id_rsa.pub
 
   set_bitsrc_registry:
     docker:
@@ -38,7 +40,7 @@ jobs:
       # stage registry
       # - run: npm config set @bit:registry https://node-stg.bitsrc.io
       - save_cache:
-          key: bitsrc-registry
+          key: bitsrc-registry1
           # key: bitsrc-registry-stg
           paths:
             - ~/.npmrc
@@ -143,13 +145,16 @@ jobs:
           name: create global npm directory (to avoid using sudo for npm link)
           command: mkdir ~/.npm-global
       - restore_cache:
-          key: bitsrc-ssh-key1
+          key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry
+          key: bitsrc-registry1
           # key: bitsrc-registry-stg
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
+        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      - run: chmod 400 ~/.ssh/id_rsa
+      - run: ssh-add ~/.ssh/id_rsa
       - run: mkdir junit
       - run:
           name: npm link
@@ -158,7 +163,8 @@ jobs:
       - run: bit config set user.email ci@bitsrc.io
       - run:
           name: Run e2e tests
-          command: circleci tests glob "e2e/**/*.e2e.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
+        #   command: circleci tests glob "e2e/**/*.e2e.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
+          command: npm run e2e-test-circle
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
@@ -166,7 +172,9 @@ jobs:
           path: junit
       - store_artifacts:
           path: junit
-
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs/debug.log
+          
 workflows:
   version: 2
   build_and_test:
