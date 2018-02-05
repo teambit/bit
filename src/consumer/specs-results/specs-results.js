@@ -1,4 +1,7 @@
 /** @flow */
+import type { PathLinux, PathOsBased } from '../../utils/path';
+import { pathNormalizeToLinux } from '../../utils';
+
 type ErrorObj = {
   message: string,
   stack: string
@@ -44,7 +47,8 @@ type StatsProps = {
 export type ResultsProps = {
   tests: TestProps[],
   stats: StatsProps,
-  pass: ?boolean
+  pass: ?boolean,
+  specPath: PathOsBased
 };
 
 export default class SpecsResults {
@@ -52,14 +56,14 @@ export default class SpecsResults {
   stats: Stats;
   pass: boolean;
   failures: Failure[];
-  specFile: string;
+  specFile: PathLinux;
 
   constructor({ tests, stats, pass, failures, specFile }: Results) {
     this.tests = tests;
     this.stats = stats;
     this.pass = pass;
     this.failures = failures;
-    this.specFile = specFile;
+    this.specFile = pathNormalizeToLinux(specFile);
   }
 
   serialize() {

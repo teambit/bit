@@ -1,9 +1,11 @@
 import chai, { expect } from 'chai';
+import path from 'path';
 import Helper from '../e2e-helper';
 
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
+chai.use(require('chai-fs'));
 
 describe('run bit init', function () {
   this.timeout(0);
@@ -31,6 +33,15 @@ describe('run bit init', function () {
     it('should not tell you there is already a scope when running "bit init"', () => {
       const init = helper.initLocalScope();
       expect(init).to.have.string('successfully initialized an empty bit scope');
+    });
+    it('should create bitmap"', () => {
+      const bitmapPath = path.join(helper.localScopePath, '.bitmap');
+      expect(bitmapPath).to.be.a.file('missing bitmap');
+    });
+    it('bitmap should contain  version"', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('version');
+      expect(bitMap.version).to.equal(helper.getBitVersion());
     });
   });
   describe('default consumer bit.json', () => {

@@ -11,8 +11,9 @@ import {
   DEFAULT_PACKAGE_MANAGER
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
+import type { PathOsBased } from '../../utils/path';
 
-function composePath(bitPath: string) {
+function composePath(bitPath: PathOsBased): PathOsBased {
   return path.join(bitPath, BIT_JSON);
 }
 

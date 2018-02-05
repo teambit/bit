@@ -11,6 +11,7 @@ import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies } from '../../consumer/component/dependencies';
+import type { PathLinux } from '../../utils/path';
 
 type CiProps = {
   error: Object,
@@ -20,17 +21,12 @@ type CiProps = {
 
 type SourceFile = {
   name: string,
-  path: string,
+  relativePath: PathLinux,
   test: boolean,
   file: Ref
 };
 
-type DistFile = {
-  name: string,
-  path: string,
-  test: boolean,
-  file: Ref
-};
+type DistFile = SourceFile;
 
 export type Log = {
   message: string,
@@ -58,7 +54,7 @@ export type VersionProps = {
 };
 
 export default class Version extends BitObject {
-  mainFile: string;
+  mainFile: PathLinux;
   files: ?Array<SourceFile>;
   dists: ?Array<DistFile>;
   compiler: ?BitId;

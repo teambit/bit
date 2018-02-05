@@ -6,12 +6,13 @@ import { BIT_JSON } from '../../constants';
 import { InvalidBitJson } from './exceptions';
 import AbstractBitJson from './abstract-bit-json';
 import ConsumerBitJson from './consumer-bit-json';
+import type { PathOsBased } from '../../utils/path';
 
-export function composePath(bitPath: string) {
+export function composePath(bitPath: PathOsBased): PathOsBased {
   return path.join(bitPath, BIT_JSON);
 }
 
-export function hasExisting(bitPath: string): boolean {
+export function hasExisting(bitPath: PathOsBased): boolean {
   return fs.existsSync(composePath(bitPath));
 }
 
@@ -143,7 +144,7 @@ export default class BitJson extends AbstractBitJson {
     });
   }
 
-  static loadSync(dirPath: string, protoBJ?: ConsumerBitJson) {
+  static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitJson) {
     let thisBJ = {};
     if (dirPath) {
       const bitJsonPath = composePath(dirPath);

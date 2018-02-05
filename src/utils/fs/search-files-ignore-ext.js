@@ -2,13 +2,14 @@
 import R from 'ramda';
 import Vinyl from 'vinyl';
 import { getWithoutExt } from '../';
+import type { PathOsBased } from '../path';
 
 export default function searchFilesIgnoreExt(
-  files: string[] | Vinyl[],
-  fileName: string,
+  files: PathOsBased[] | Vinyl[],
+  fileName: PathOsBased,
   fileNameProp?: string,
   returnProp?: string
-) {
+): PathOsBased | Vinyl {
   const _byFileNoExt = (file) => {
     const fileNameToCheck = fileNameProp ? file[fileNameProp] : file;
     return getWithoutExt(fileNameToCheck) === getWithoutExt(fileName);
