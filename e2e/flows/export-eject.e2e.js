@@ -5,7 +5,7 @@ import BitsrcTester, { username } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 
-describe.only('export --eject functionality using bitsrc.io', function () {
+describe('export --eject functionality using bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();
@@ -15,13 +15,11 @@ describe.only('export --eject functionality using bitsrc.io', function () {
       .loginToBitSrc()
       .then(() => bitsrcTester.createScope())
       .then((scope) => {
-        console.log('a new scope has been generated on bitsrc.io ', scope);
         scopeName = scope;
       });
   });
   after(() => {
     helper.destroyEnv();
-    console.log('deleting scope on bitsrc.io ', scopeName);
     return bitsrcTester.deleteScope(scopeName);
   });
   describe('as author', () => {
