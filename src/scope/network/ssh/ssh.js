@@ -52,6 +52,7 @@ export default class SSH implements Network {
   username: string;
   port: number;
   host: string;
+  _sshUsername: ?string; // Username entered by the user on the prompt user/pass process
 
   constructor({ path, username, port, host }: SSHProps) {
     this.path = path;
@@ -66,6 +67,11 @@ export default class SSH implements Network {
 
   exec(commandName: string, payload: any, context: ?Object): Promise<any> {
     logger.debug(`ssh: going to run a remote command ${commandName}, path: ${this.path}`);
+    // Add the entered username to context
+    if (this._sshUsername) {
+      context = context || {};
+      context.sshUsername = this._sshUsername;
+    }
     return new Promise((resolve, reject) => {
       let res = '';
       let err;
@@ -283,7 +289,10 @@ export default class SSH implements Network {
       return Promise.resolve(merge(base, { privateKey: keyBuffer }));
     }
 
-    return promptUserpass().then(({ username, password }) => merge(base, { username, password }));
+    return promptUserpass().then(({ username, password }) => {
+      this._sshUsername = username;
+      return merge(base, { username, password });
+    });
   }
 
   hasAgentSocket() {
