@@ -23,7 +23,7 @@ const fields = [
   'deprecated'
 ];
 
-const header = [{ value: 'ID', width: 20, headerColor: 'cyan' }];
+const header = [{ value: 'ID', width: 20, headerColor: 'cyan', headerAlign: 'left', align: 'left' }];
 const opts = {
   borderStyle: 1,
   paddingBottom: 0,
@@ -62,7 +62,7 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
     version,
     docs
   } = component;
-  obj.id = isFromFs ? `${box}/${name}@${version} \n[file system]` : `${box}/${name}@${version}`;
+  obj.id = isFromFs ? `${box}/${name}@${version} [file system]` : `${box}/${name}@${version}`;
   obj.compiler = compilerId ? compilerId.toString() : null;
   obj.language = lang || null;
   obj.tester = testerId ? testerId.toString() : null;
@@ -89,12 +89,36 @@ function generateDependenciesTable(component: ConsumerComponent, showRemoteVersi
   }
   const dependencyHeader = [];
   if (showRemoteVersion) {
-    dependencyHeader.push({ value: 'Dependency ID', width: 80, headerColor: 'cyan' });
-    dependencyHeader.push({ value: 'Current Version', width: 20, headerColor: 'cyan' });
-    dependencyHeader.push({ value: 'Local Version', width: 20, headerColor: 'cyan' });
-    dependencyHeader.push({ value: 'Remote Version', width: 20, headerColor: 'cyan' });
+    dependencyHeader.push({
+      value: 'Dependency ID',
+      width: 50,
+      headerColor: 'cyan',
+      headerAlign: 'left',
+      align: 'left'
+    });
+    dependencyHeader.push({
+      value: 'Current Version',
+      width: 20,
+      headerColor: 'cyan',
+      headerAlign: 'left',
+      align: 'left'
+    });
+    dependencyHeader.push({
+      value: 'Local Version',
+      width: 20,
+      headerColor: 'cyan',
+      headerAlign: 'left',
+      align: 'left'
+    });
+    dependencyHeader.push({
+      value: 'Remote Version',
+      width: 20,
+      headerColor: 'cyan',
+      headerAlign: 'left',
+      align: 'left'
+    });
   } else {
-    dependencyHeader.push({ value: 'Dependencies', width: 80, headerColor: 'cyan' });
+    dependencyHeader.push({ value: 'Dependencies', width: 50, headerColor: 'cyan' });
   }
   const getDependenciesRows = (dependencies, isDev: boolean = false) => {
     const dependencyRows = [];
@@ -136,12 +160,23 @@ function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: bo
       const arr = [];
       if (!printableComponent[field]) return null;
       if (field === 'id') {
-        header.push({ value: printableComponent[field], width: 70, headerColor: 'white' });
+        header.push({
+          value: printableComponent[field],
+          width: 50,
+          headerColor: 'white',
+          headerAlign: 'left',
+          align: 'left'
+        });
         return null;
       }
       arr.push(c.cyan(title));
       if (!printableComponent[field]) return null;
-      if (printableComponent[field]) arr.push(printableComponent[field]);
+
+      if (printableComponent[field]) {
+        if (printableComponent[field] instanceof Array) {
+          arr.push(printableComponent[field].join('\n'));
+        } else arr.push(printableComponent[field]);
+      }
       return arr;
     })
     .filter(x => x);
@@ -174,8 +209,20 @@ function paintWithCompare(
       if (!printableOriginalComponent[field] && !printableComponentToCompare[field]) return null;
       const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
       if (field === 'id') {
-        header.push({ value: printableComponentToCompare[field], width: 70, headerColor: 'white' });
-        header.push({ value: printableOriginalComponent[field], width: 70, headerColor: 'white' });
+        header.push({
+          value: printableComponentToCompare[field],
+          width: 50,
+          headerColor: 'white',
+          headerAlign: 'left',
+          align: 'left'
+        });
+        header.push({
+          value: printableOriginalComponent[field],
+          width: 50,
+          headerColor: 'white',
+          headerAlign: 'left',
+          align: 'left'
+        });
         return null;
       }
       const arr = field in componentsDiffs && field !== 'id' ? [c.red(title)] : [c.cyan(title)];
