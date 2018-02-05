@@ -13,16 +13,17 @@ import { filterAsync } from '../../utils';
 
 export type ImportOptions = {
   ids?: string[],
-  verbose: boolean,
-  withEnvironments: boolean,
+  verbose: boolean, // default: false
+  withEnvironments: boolean, // default: false
   writeToPath?: string,
-  writePackageJson: boolean,
-  writeBitJson: boolean,
-  writeDists: boolean,
-  force: boolean,
-  installNpmPackages: boolean,
-  objectsOnly: boolean,
-  saveDependenciesAsComponents?: boolean
+  writePackageJson: boolean, // default: true
+  writeBitJson: boolean, // default: false
+  writeDists: boolean, // default: true
+  force: boolean, // default: false
+  installNpmPackages: boolean, // default: true
+  objectsOnly: boolean, // default: false
+  writeToFs: boolean, // default: false. relevant only for import-all, where "objectsOnly" flag is default to true.
+  saveDependenciesAsComponents?: boolean // default: false
 };
 
 export type ImportResult = Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }>;
@@ -58,6 +59,8 @@ export default class ImportComponents {
   }
 
   async importAccordingToBitJsonAndBitMap(): ImportResult {
+    this.options.objectsOnly = !this.options.writeToFs;
+
     const dependenciesFromBitJson = BitIds.fromObject(this.consumer.bitJson.dependencies);
     const componentsFromBitMap = this.consumer.bitMap.getAuthoredExportedComponents();
 

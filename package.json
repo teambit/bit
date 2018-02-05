@@ -109,6 +109,7 @@
     "chai": "^4.1.2",
     "chai-arrays": "^1.0.0",
     "chai-fs": "^1.0.0",
+    "chai-string": "^1.4.0",
     "eslint": "4.12.1",
     "eslint-config-airbnb": "^15.1.0",
     "eslint-plugin-flowtype": "^2.35.1",
