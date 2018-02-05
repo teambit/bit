@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.5-dev.1] - 2018-02-05
+
 - added `--objects` flag to `bit import` for fetching objects only and making no changes to the filesystem
 - bug fix - dists had incorrect paths in the model when originallySharedDir was the same as dist.entry
 - strip dist.entry for imported and authored components only, not for nested.  
