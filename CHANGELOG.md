@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.5-dev.2] - 2018-02-06
+
 - default `bit import` with no id to import objects only, unless `--write` flag is used
 - decrease verbosity of npm during bit test
 
