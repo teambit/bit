@@ -80,6 +80,8 @@ jobs:
             - node_modules
 
   lint:
+     docker:
+       - image: circleci/node:6.10.3
      working_directory: ~/bit
      steps:
        - run: npm run lint-circle
