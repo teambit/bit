@@ -302,10 +302,10 @@ export default class SourceRepository {
    */
   async removeVersion(component: Component, bitId: BitId): Promise<void> {
     const objectRepo = this.objects();
-    const modifiedCompoent = await component.removeVersion(objectRepo, bitId.version);
-    objectRepo.add(modifiedCompoent);
+    const modifiedComponent = await component.removeVersion(objectRepo, bitId.version);
+    objectRepo.add(modifiedComponent);
     await objectRepo.persist();
-    return modifiedCompoent;
+    return modifiedComponent;
   }
 
   /**

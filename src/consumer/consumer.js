@@ -999,6 +999,18 @@ export default class Consumer {
     });
   }
 
+  async removeTag(id: BitId): Promise<{ id: BitId, versions: string[] }> {
+    const status = await this.getComponentStatusById(id);
+    if (!status.staged) return Promise.reject(`unable to revert ${id}, the ${id.version} is not staged`);
+    const componentFromModel: ModelComponent = await this.scope.sources.get(id);
+    if (componentFromModel.versionArray.length === 1) {
+      await componentFromModel.remove(this.scope.objects);
+    } else {
+      await componentFromModel.removeVersion(this.scope.objects, id.version);
+    }
+    return { id, versions: [id.version] };
+  }
+
   async installNpmPackagesForComponents(
     componentsWithDependencies: ComponentWithDependencies[],
     verbose: boolean = false
