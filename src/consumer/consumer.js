@@ -1006,7 +1006,7 @@ export default class Consumer {
     if (componentFromModel.versionArray.length === 1) {
       await componentFromModel.remove(this.scope.objects);
     } else {
-      await componentFromModel.removeVersion(this.scope.objects, id.version);
+      await this.scope.sources.removeVersion(componentFromModel, id);
     }
     return { id, versions: [id.version] };
   }

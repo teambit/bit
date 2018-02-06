@@ -193,6 +193,10 @@ export default class Component extends BitObject {
     const uniqRefs = uniqBy(objectRefs, 'hash');
     return repo.removeMany(uniqRefs.concat([this.hash()]));
   }
+
+  /**
+   * to delete a version from a component, don't call this method directly. Instead, use sources.removeVersion()
+   */
   async removeVersion(repo: Repository, version: string): Promise<Component> {
     const objectRefs = this.versions[version];
     delete this.versions[version];
