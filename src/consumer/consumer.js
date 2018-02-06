@@ -271,7 +271,7 @@ export default class Consumer {
     const allComponents = [];
     for (const componentP of components) {
       // load the components one after another (not in parallel).
-      const component = await componentP; // eslint-disable-line
+      const component = await componentP; // eslint-disable-line no-await-in-loop
       if (component) {
         this._componentsCache[component.id.toString()] = component;
         logger.debug(`Finished loading the component, ${component.id.toString()}`);

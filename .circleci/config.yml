@@ -144,7 +144,7 @@ jobs:
             - npm-deps3
       - run:
             name: run ESLint
-            command: npm run eslint-circle
+            command: npm run lint-circle
       - store_test_results:
           path: junit
       - store_artifacts:
