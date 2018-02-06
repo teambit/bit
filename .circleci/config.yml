@@ -210,7 +210,7 @@ workflows:
             - build
       - lint:
           requires:
-            - checkout_code
+            - install_npm_deps
 #      - e2e_test:
 #          requires:
 #            - build
