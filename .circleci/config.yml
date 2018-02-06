@@ -139,7 +139,7 @@ jobs:
             key: builded-{{ checksum ".circle-sha" }}
       - run:
             name: run ESLint
-            command: npm run lint-circle
+            command: npm run eslint-circle
       - store_test_results:
           path: junit
       - store_artifacts:
