@@ -250,6 +250,9 @@ workflows:
       - lint_flow:
           requires:
             - build
+      - lint_flow_coverage:
+          requires:
+            - build
 #      - e2e_test:
 #          requires:
 #            - build
