@@ -51,7 +51,7 @@ export type ComponentProps = {
   scope?: ?string,
   lang?: string,
   bindingPrefix?: string,
-  mainFile?: PathOsBased,
+  mainFile: PathOsBased,
   compilerId?: ?BitId,
   testerId?: ?BitId,
   dependencies?: Dependency[],
@@ -190,6 +190,14 @@ export default class Component {
     this.license = license;
     this.log = log;
     this.deprecated = deprecated || false;
+    this.validateComponent();
+  }
+
+  validateComponent() {
+    const nonEmptyFields = ['name', 'box', 'mainFile'];
+    nonEmptyFields.forEach((field) => {
+      if (!this[field]) throw new Error(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
+    });
   }
 
   setDependencies(dependencies: Dependency[]) {
