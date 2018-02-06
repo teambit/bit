@@ -127,7 +127,7 @@ jobs:
       - store_artifacts:
           path: junit
 
-  lint:
+  lint_eslint:
     docker:
       - image: circleci/node:6.10.3
     working_directory: ~/bit
@@ -140,6 +140,24 @@ jobs:
       - run:
             name: run ESLint
             command: npm run lint-circle
+      - store_test_results:
+          path: junit
+      - store_artifacts:
+          path: junit
+
+  lint_flow:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - restore_cache:
+            key: builded-{{ checksum ".circle-sha" }}
+      - run:
+            name: run Flow type
+            command: npm run flow-circle
       - store_test_results:
           path: junit
       - store_artifacts:
@@ -208,7 +226,10 @@ workflows:
       - unit_test:
           requires:
             - build
-      - lint:
+      - lint_eslint:
+          requires:
+            - build
+      - lint_flow:
           requires:
             - build
 #      - e2e_test:
