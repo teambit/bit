@@ -917,7 +917,7 @@ export default class Component {
       const firstItem = sortedArray[0];
       const lastItem = sortedArray[sortedArray.length - 1];
       let i = 0;
-      while (i < firstItem.length && firstItem.charAt(i) === lastItem.charAt(i)) i++;
+      while (i < firstItem.length && firstItem.charAt(i) === lastItem.charAt(i)) i += 1;
       return firstItem.substring(0, i);
     };
     const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux

@@ -270,7 +270,7 @@ export default class Consumer {
     const allComponents = [];
     for (const componentP of components) {
       // load the components one after another (not in parallel).
-      const component = await componentP;
+      const component = await componentP; // eslint-disable-line
       if (component) {
         this._componentsCache[component.id.toString()] = component;
         logger.debug(`Finished loading the component, ${component.id.toString()}`);
@@ -847,7 +847,7 @@ export default class Consumer {
         const component = id.isLocal()
           ? this.bitMap.getComponent(this.bitMap.getExistingComponentId(id.toStringWithoutVersion()))
           : this.bitMap.getComponent(id);
-        if (!component) return;
+        if (!component) return null;
         if (
           (component.origin && component.origin === COMPONENT_ORIGINS.IMPORTED) ||
           component.origin === COMPONENT_ORIGINS.NESTED
@@ -856,6 +856,7 @@ export default class Consumer {
         } else if (component.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
           return Promise.all(component.files.map(file => fs.remove(file.relativePath)));
         }
+        return null;
       })
     );
   }

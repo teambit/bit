@@ -1,5 +1,4 @@
 /** @flow */
-import path from 'path';
 import semver from 'semver';
 import R from 'ramda';
 import { Version, Component as ModelComponent } from '../../scope/models';
@@ -9,7 +8,7 @@ import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import BitMap from '../bit-map/bit-map';
 import Consumer from '../consumer';
-import { glob, filterAsync } from '../../utils';
+import { filterAsync } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;

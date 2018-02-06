@@ -62,23 +62,23 @@ function findComponentsOfDepsFiles(
         const fullDepFile = path.resolve(rootDirFullPath, file);
         const depRelativeToConsumer = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
         const componentId = consumer.bitMap.getComponentIdByPath(depRelativeToConsumer);
-        if (componentId) return componentId;
+        if (componentId) return componentId; // eslint-disable-line
       }
     }
     if (tree[depFile].bits && tree[depFile].bits.length) {
       for (const bit of tree[depFile].bits) {
         const componentId = Consumer.getComponentIdFromNodeModulesPath(bit, bindingPrefix);
-        if (componentId) return componentId;
+        if (componentId) return componentId; // eslint-disable-line
       }
     }
 
     for (const file of tree[depFile].files) {
-      if (file === depFile) {
+      if (file !== depFile) {
+        const componentId = traverseTreeForComponentId(file);
+        if (componentId) return componentId; // eslint-disable-line
+      } else {
         logger.warn(`traverseTreeForComponentId found a cyclic dependency. ${file} depends on itself`);
-        continue;
       }
-      const componentId = traverseTreeForComponentId(file);
-      if (componentId) return componentId;
     }
   };
 
@@ -379,7 +379,7 @@ export default (async function loadDependenciesForComponent(
   const driver: Driver = consumer.driver;
   const consumerPath = consumer.getPath();
   const missingDependencies = {};
-  const { allFiles, nonTestsFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
+  const { allFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
   const getDependenciesTree = async () => {
     return driver.getDependencyTree(bitDir, consumerPath, allFiles, component.bindingPrefix);
     // const nonTestsTree = await driver.getDependencyTree(bitDir, consumerPath, nonTestsFiles, component.bindingPrefix);
