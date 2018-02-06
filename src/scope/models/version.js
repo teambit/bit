@@ -55,7 +55,7 @@ export type VersionProps = {
 
 export default class Version extends BitObject {
   mainFile: PathLinux;
-  files: ?Array<SourceFile>;
+  files: Array<SourceFile>;
   dists: ?Array<DistFile>;
   compiler: ?BitId;
   tester: ?BitId;
@@ -106,6 +106,14 @@ export default class Version extends BitObject {
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.bindingPrefix = bindingPrefix;
+    this.validateVersion();
+  }
+
+  validateVersion() {
+    const nonEmptyFields = ['mainFile', 'files'];
+    nonEmptyFields.forEach((field) => {
+      if (!this[field]) throw new Error(`failed creating a version object, the field "${field}" can't be empty`);
+    });
   }
 
   id() {
