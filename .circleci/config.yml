@@ -79,6 +79,11 @@ jobs:
           paths:
             - node_modules
 
+  lint:
+     working_directory: ~/bit
+     steps:
+       - run: npm run lint-circle
+
   build:
      docker:
        - image: circleci/node:6.10.3
@@ -173,7 +178,7 @@ jobs:
           path: junit
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs/debug.log
-          
+
 workflows:
   version: 2
   build_and_test:
@@ -183,15 +188,18 @@ workflows:
       - set_bitsrc_registry
       - install_npm_deps:
           requires:
-              - checkout_code
+            - checkout_code
+      - lint:
+          requires:
+            - install_npm_deps
       - build:
           requires:
             - install_npm_deps
       - unit_test:
           requires:
             - build
-      - e2e_test:
-          requires:
-            - build
-            - set_ssh_key
-            - set_bitsrc_registry
+#      - e2e_test:
+#          requires:
+#            - build
+#            - set_ssh_key
+#            - set_bitsrc_registry
