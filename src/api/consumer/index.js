@@ -1,6 +1,5 @@
 import init from './lib/init';
 import isolate from './lib/isolate';
-import create from './lib/create';
 import remove from './lib/remove';
 import deprecate from './lib/deprecate';
 import listScope from './lib/list-scope';
@@ -30,7 +29,6 @@ export {
   isolate,
   config,
   exportAction,
-  create,
   remove,
   deprecate,
   buildAll,

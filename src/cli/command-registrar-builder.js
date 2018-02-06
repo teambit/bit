@@ -6,7 +6,6 @@ import Isolate from './commands/public-cmds/isolate-cmd';
 import ScopeList from './commands/private-cmds/_list-cmd';
 import ScopeSearch from './commands/private-cmds/_search-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
-import Create from './commands/public-cmds/create-cmd';
 import Export from './commands/public-cmds/export-cmd';
 import List from './commands/public-cmds/list-cmd';
 import Reset from './commands/public-cmds/reset-cmd';
@@ -51,7 +50,6 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
     [
       new Init(),
       new Isolate(),
-      new Create(),
       new Commit(),
       new Import(),
       new Install(),
