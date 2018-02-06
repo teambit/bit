@@ -48,12 +48,13 @@ import ImportComponents from './component/import-components';
 import type { ImportOptions, ImportResult } from './component/import-components';
 import type { PathOsBased } from '../utils/path';
 
-export type ConsumerProps = {
+type ConsumerProps = {
   projectPath: string,
+  bitJson: ConsumerBitJson,
+  scope: Scope,
   created?: boolean,
   isolated?: boolean,
-  bitJson: ConsumerBitJson,
-  scope: Scope
+  bitMap: BitMap
 };
 
 type ComponentStatus = {

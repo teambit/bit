@@ -145,6 +145,24 @@ jobs:
       - store_artifacts:
           path: junit
 
+  lint_flow_coverage:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - restore_cache:
+            key: builded-{{ checksum ".circle-sha" }}
+      - run:
+            name: run Flow type Coverage Report
+            command: npm run flow-coverage-circle
+      - store_test_results:
+          path: junit
+      - store_artifacts:
+          path: junit
+
   lint_flow:
     docker:
       - image: circleci/node:6.10.3
