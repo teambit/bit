@@ -85,6 +85,10 @@ jobs:
      working_directory: ~/bit
      steps:
        - run: npm run lint-circle
+       - store_test_results:
+           path: junit
+       - store_artifacts:
+           path: junit
 
   build:
      docker:
