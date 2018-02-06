@@ -28,10 +28,6 @@ export default class BitId {
     this.version = version || null;
   }
 
-  clone(): BitId {
-    return new BitId(this);
-  }
-
   changeScope(newScope: string): BitId {
     return new BitId({ scope: newScope, box: this.box, name: this.name, version: this.version });
   }
@@ -54,6 +50,7 @@ export default class BitId {
     const componentStr = ignoreScope || !scope ? [box, name].join('/') : [scope, box, name].join('/');
     // when there is no scope and the version is latest, omit the version.
     if (ignoreVersion || !this.hasVersion()) return componentStr;
+    // $FlowFixMe version here is a string because this.hasVersion() is true
     return componentStr.concat(`${VERSION_DELIMITER}${version}`);
   }
 

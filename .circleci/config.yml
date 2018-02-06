@@ -136,7 +136,12 @@ jobs:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
       - restore_cache:
-            key: builded-{{ checksum ".circle-sha" }}
+          keys:
+            - repo-{{ checksum ".circle-sha" }}
+      - restore_cache:
+          keys:
+            - npm-deps3-{{ checksum "package.json" }}
+            - npm-deps3
       - run:
             name: run ESLint
             command: npm run eslint-circle
