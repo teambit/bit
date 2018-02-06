@@ -62,20 +62,20 @@ function findComponentsOfDepsFiles(
         const fullDepFile = path.resolve(rootDirFullPath, file);
         const depRelativeToConsumer = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
         const componentId = consumer.bitMap.getComponentIdByPath(depRelativeToConsumer);
-        if (componentId) return componentId; // eslint-disable-line
+        if (componentId) return componentId; // eslint-disable-line consistent-return
       }
     }
     if (tree[depFile].bits && tree[depFile].bits.length) {
       for (const bit of tree[depFile].bits) {
         const componentId = Consumer.getComponentIdFromNodeModulesPath(bit, bindingPrefix);
-        if (componentId) return componentId; // eslint-disable-line
+        if (componentId) return componentId; // eslint-disable-line consistent-return
       }
     }
 
     for (const file of tree[depFile].files) {
       if (file !== depFile) {
         const componentId = traverseTreeForComponentId(file);
-        if (componentId) return componentId; // eslint-disable-line
+        if (componentId) return componentId; // eslint-disable-line consistent-return
       } else {
         logger.warn(`traverseTreeForComponentId found a cyclic dependency. ${file} depends on itself`);
       }

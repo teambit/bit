@@ -210,7 +210,7 @@ workflows:
             - build
       - lint:
           requires:
-            - build
+            - checkout_code
 #      - e2e_test:
 #          requires:
 #            - build
