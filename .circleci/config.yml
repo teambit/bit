@@ -84,7 +84,11 @@ jobs:
        - image: circleci/node:6.10.3
      working_directory: ~/bit
      steps:
-       - run: npm run lint-circle
+       - restore_cache:
+           key: builded-{{ checksum ".circle-sha" }}
+       - run:
+           name: run ESLint
+           command: npm run lint-circle
        - store_test_results:
            path: junit
        - store_artifacts:
