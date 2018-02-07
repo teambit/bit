@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- init local scope inside .git
+
 ## [0.12.5] - 2018-02-06
 
 - default `bit import` with no id to import objects only, unless `--write` flag is used
