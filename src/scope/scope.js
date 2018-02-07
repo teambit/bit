@@ -1079,7 +1079,7 @@ export default class Scope {
     enrichContextFromGlobal(context);
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(this.objects);
-      componentAndObject.component.local = false;
+      componentAndObject.component.clearStateData();
       this._convertNonScopeToCorrectScope(componentAndObject, remoteName);
       componentsAndObjects.push(componentAndObject);
       const componentBuffer = await componentAndObject.component.compress();

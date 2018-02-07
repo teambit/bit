@@ -1,6 +1,7 @@
 /** @flow */
 import semver from 'semver';
 import uniqBy from 'lodash.uniqby';
+import R from 'ramda';
 import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
@@ -24,6 +25,8 @@ import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 
+type State = { versions?: { [string]: { local?: boolean } } };
+
 export type ComponentProps = {
   scope?: string,
   box?: string,
@@ -32,7 +35,12 @@ export type ComponentProps = {
   lang?: string,
   deprecated: boolean,
   bindingPrefix?: string,
-  local?: boolean // whether a component was tagged locally. It's set to true once committed and to false once exported.
+  /**
+   * @deprecated since 0.12.6. It's currently stored in 'state' attribute
+   * whether a component was tagged locally. It's set to true once committed and to false once exported.
+   */
+  local?: boolean,
+  state?: State
 };
 
 export default class Component extends BitObject {
@@ -44,6 +52,7 @@ export default class Component extends BitObject {
   deprecated: boolean;
   bindingPrefix: string;
   local: boolean;
+  state: State;
 
   constructor(props: ComponentProps) {
     super();
@@ -55,6 +64,7 @@ export default class Component extends BitObject {
     this.deprecated = props.deprecated || false;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.local = props.local;
+    this.state = props.state || {};
   }
 
   get versionArray(): Ref[] {
@@ -119,16 +129,17 @@ export default class Component extends BitObject {
     );
   }
 
-  addVersion(version: Version, releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: ?string) {
-    // Add exact version instead of using the semver mechanism
-    if (exactVersion) {
-      // Version already exists
-      if (this.versions[exactVersion]) throw new VersionAlreadyExists(exactVersion, this.id());
-      this.versions[exactVersion] = version.hash();
-      return this;
+  /**
+   * if exactVersion is defined, add exact version instead of using the semver mechanism
+   */
+  addVersion(version: Version, releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: ?string): string {
+    if (exactVersion && this.versions[exactVersion]) {
+      throw new VersionAlreadyExists(exactVersion, this.id());
     }
-    this.versions[this.version(releaseType)] = version.hash();
-    return this;
+    const versionToAdd = exactVersion || this.version(releaseType);
+    this.versions[versionToAdd] = version.hash();
+    this.markVersionAsLocal(versionToAdd);
+    return versionToAdd;
   }
 
   version(releaseType: string = DEFAULT_BIT_RELEASE_TYPE) {
@@ -158,7 +169,8 @@ export default class Component extends BitObject {
       lang: this.lang,
       deprecated: this.deprecated,
       bindingPrefix: this.bindingPrefix,
-      local: this.local
+      local: this.local,
+      state: this.state
     };
   }
 
@@ -291,6 +303,30 @@ export default class Component extends BitObject {
     return versionComp.toVersionDependencies(scope, source, withDevDependencies);
   }
 
+  /**
+   * Clear data that is relevant only for the local scope and should not be moved to the remote scope
+   */
+  clearStateData() {
+    this.local = false; // backward compatibility for components created before 0.12.6
+    this.state = {};
+  }
+
+  markVersionAsLocal(version: string) {
+    if (!this.state.versions) this.state = { versions: {} };
+    // $FlowFixMe
+    if (!this.state.versions[version]) this.state.versions[version] = {};
+    // $FlowFixMe
+    this.state.versions[version].local = true;
+  }
+
+  isLocallyChanged(): boolean {
+    if (this.local) return true; // backward compatibility for components created before 0.12.6
+    if (R.isEmpty(this.state) || R.isEmpty(this.state.versions)) return false;
+    // $FlowFixMe
+    const localVersions = Object.keys(this.state.versions).filter(version => this.state.versions[version].local);
+    return localVersions.length > 0;
+  }
+
   static parse(contents: string): Component {
     const rawComponent = JSON.parse(contents);
     return Component.from({
@@ -301,7 +337,8 @@ export default class Component extends BitObject {
       lang: rawComponent.lang,
       deprecated: rawComponent.deprecated,
       bindingPrefix: rawComponent.bindingPrefix,
-      local: rawComponent.local
+      local: rawComponent.local,
+      state: rawComponent.state
     });
   }
 
