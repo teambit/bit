@@ -29,6 +29,8 @@ export type ImportOptions = {
 export type ImportResult = Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }>;
 
 export default class ImportComponents {
+  consumer: Consumer;
+  options: ImportOptions;
   constructor(consumer: Consumer, options: ImportOptions) {
     this.consumer = consumer;
     this.options = options;
@@ -49,6 +51,7 @@ export default class ImportComponents {
   }
 
   async importSpecificComponents(): ImportResult {
+    // $FlowFixMe - we make sure the ids are populated before.
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = this.options.ids.map(raw => BitId.parse(raw));
@@ -126,7 +129,7 @@ export default class ImportComponents {
     return Promise.resolve();
   }
 
-  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies, force = true) {
+  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies, force: boolean = true) {
     if (this.options.objectsOnly) return;
     await this.consumer.writeToComponentsDir({
       componentsWithDependencies,

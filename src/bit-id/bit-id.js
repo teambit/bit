@@ -54,6 +54,7 @@ export default class BitId {
     const componentStr = ignoreScope || !scope ? [box, name].join('/') : [scope, box, name].join('/');
     // when there is no scope and the version is latest, omit the version.
     if (ignoreVersion || !this.hasVersion()) return componentStr;
+    // $FlowFixMe version here is a string because this.hasVersion() is true
     return componentStr.concat(`${VERSION_DELIMITER}${version}`);
   }
 
