@@ -1,8 +1,7 @@
 /** @flow */
 import semver from 'semver';
 import uniqBy from 'lodash.uniqby';
-import R from 'ramda';
-import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed } from 'ramda';
+import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
@@ -161,17 +160,19 @@ export default class Component extends BitObject {
       return obj;
     }
 
-    return {
+    const componentObject = {
       box: this.box,
       name: this.name,
       scope: this.scope,
       versions: versions(this.versions),
       lang: this.lang,
       deprecated: this.deprecated,
-      bindingPrefix: this.bindingPrefix,
-      local: this.local,
-      state: this.state
+      bindingPrefix: this.bindingPrefix
     };
+    if (this.local) componentObject.local = this.local;
+    if (!isEmpty(this.state)) componentObject.state = this.state;
+
+    return componentObject;
   }
 
   async loadVersion(version: string, repository: Repository): Promise<Version> {
@@ -321,7 +322,7 @@ export default class Component extends BitObject {
 
   isLocallyChanged(): boolean {
     if (this.local) return true; // backward compatibility for components created before 0.12.6
-    if (R.isEmpty(this.state) || R.isEmpty(this.state.versions)) return false;
+    if (isEmpty(this.state) || isEmpty(this.state.versions)) return false;
     // $FlowFixMe
     const localVersions = Object.keys(this.state.versions).filter(version => this.state.versions[version].local);
     return localVersions.length > 0;
