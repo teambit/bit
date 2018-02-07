@@ -51,7 +51,7 @@ export type ComponentProps = {
   scope?: ?string,
   lang?: string,
   bindingPrefix?: string,
-  mainFile?: PathOsBased,
+  mainFile: PathOsBased,
   compilerId?: ?BitId,
   testerId?: ?BitId,
   dependencies?: Dependency[],
@@ -190,6 +190,14 @@ export default class Component {
     this.license = license;
     this.log = log;
     this.deprecated = deprecated || false;
+    this.validateComponent();
+  }
+
+  validateComponent() {
+    const nonEmptyFields = ['name', 'box', 'mainFile'];
+    nonEmptyFields.forEach((field) => {
+      if (!this[field]) throw new Error(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
+    });
   }
 
   setDependencies(dependencies: Dependency[]) {
@@ -909,7 +917,7 @@ export default class Component {
       const firstItem = sortedArray[0];
       const lastItem = sortedArray[sortedArray.length - 1];
       let i = 0;
-      while (i < firstItem.length && firstItem.charAt(i) === lastItem.charAt(i)) i++;
+      while (i < firstItem.length && firstItem.charAt(i) === lastItem.charAt(i)) i += 1;
       return firstItem.substring(0, i);
     };
     const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
@@ -1068,56 +1076,6 @@ export default class Component {
       packageDependencies,
       devPackageDependencies,
       deprecated
-    });
-  }
-
-  static create(
-    {
-      scopeName,
-      name,
-      box,
-      withSpecs,
-      files,
-      mainFile,
-      consumerBitJson,
-      bitPath,
-      consumerPath
-    }: {
-      consumerBitJson: ConsumerBitJson,
-      name: string,
-      mainFile: string,
-      box: string,
-      scopeName?: ?string,
-      withSpecs?: ?boolean
-    },
-    scope: Scope
-  ): Component {
-    const specsFile = consumerBitJson.getSpecBasename();
-    const compilerId = BitId.parse(consumerBitJson.compilerId);
-    const testerId = BitId.parse(consumerBitJson.testerId);
-    const lang = consumerBitJson.lang;
-    const bindingPrefix = consumerBitJson.bindingPrefix;
-    const implVinylFile = new SourceFile({
-      cwd: consumerPath,
-      base: path.join(consumerPath, bitPath),
-      path: path.join(consumerPath, bitPath, files['impl.js']),
-      contents: new Buffer(Impl.create(name, compilerId, scope).src)
-    });
-    implVinylFile.test = false;
-
-    return new Component({
-      name,
-      box,
-      lang,
-      bindingPrefix,
-      version: LATEST_BIT_VERSION,
-      scope: scopeName,
-      specsFile,
-      files: [implVinylFile],
-      mainFile,
-      compilerId,
-      testerId,
-      specs: withSpecs ? Specs.create(name, testerId, scope) : undefined
     });
   }
 }

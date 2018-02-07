@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 
-const baseTemplate = (extensionsTemplate) => {
+const baseTemplate = extensionsTemplate => {
   return `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
 
   ${chalk.grey(
@@ -23,7 +23,7 @@ const baseTemplate = (extensionsTemplate) => {
   ${chalk.underline('collaborate and share components')}
     ${chalk.cyan('import')}     import components into your current working area.
     ${chalk.cyan('export')}     export components to a remote scope.
-    ${chalk.cyan('insall')}     install node packages of all components and calls the link command.
+    ${chalk.cyan('install')}    install node packages of all components and calls the link command.
     ${chalk.cyan('remote')}     manage set of tracked bit scope(s).
     ${chalk.cyan('remove')}     remove component(s) from your working area, or a remote scope.
     ${chalk.cyan('link')}       call the driver link action to link components to their required packages.
@@ -37,11 +37,11 @@ const baseTemplate = (extensionsTemplate) => {
 
   ${chalk.underline('component environment operations')}
     ${chalk.cyan(
-    'build'
-  )}      build any set of components with configured compiler (component compiler or as defined in bit.json)
+      'build'
+    )}      build any set of components with configured compiler (component compiler or as defined in bit.json)
     ${chalk.cyan(
-    'test'
-  )}       test any set of components with configured tester (component tester or as defined in bit.json)
+      'test'
+    )}       test any set of components with configured tester (component tester or as defined in bit.json)
 
   ${chalk.underline('general purpose commands')}
     ${chalk.cyan('config')}     global config management
@@ -50,19 +50,19 @@ const baseTemplate = (extensionsTemplate) => {
   ${chalk.grey("please use 'bit <command> --help' for more information and guides on specific commands.")}`;
 };
 
-const extensionsCommandTemplate = (extensionsCommand) => {
+const extensionsCommandTemplate = extensionsCommand => {
   return `  ${chalk.cyan(extensionsCommand.name)}   ${extensionsCommand.description}
   `;
 };
 
-const extensionsCommandsTemplate = (extensionsCommands) => {
+const extensionsCommandsTemplate = extensionsCommands => {
   if (!extensionsCommands || !extensionsCommands.length) return '';
   return `${chalk.underline('extensions commands')}
   ${extensionsCommands.map(extensionsCommandTemplate)}
   `;
 };
 
-module.exports = function (extensionsCommands) {
+module.exports = function(extensionsCommands) {
   const extensionsTemplate = extensionsCommandsTemplate(extensionsCommands);
   return baseTemplate(extensionsTemplate);
 };

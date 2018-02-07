@@ -14,10 +14,12 @@ import type { PathOsBased } from '../utils/path';
 export type IsolateOptions = {
   writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
   writeBitDependencies: ?boolean, // Write bit dependencies as package dependencies in package.json
-  links: ?boolean, // Fix the links to dependencies to be links to the package
+  npmLinks: ?boolean, // Fix the links to dependencies to be links to the package
+  saveDependenciesAsComponents: ?boolean, // import the dependencies as bit components instead of as npm packages
   installPackages: ?boolean, // Install the package dependencies
   noPackageJson: ?boolean, // Don't write the package.json
   override: ?boolean, // Override existing files in the folder
+  excludeRegistryPrefix: ?boolean, // exclude the registry prefix from the component's name in the package.json
   dist: ?boolean, // Write dist files
   conf: ?boolean, // Write bit.json file
   verbose: boolean // Print more logs

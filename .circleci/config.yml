@@ -127,6 +127,29 @@ jobs:
       - store_artifacts:
           path: junit
 
+  lint:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit
+    steps:
+      - run:
+          name: save SHA to a file
+          command: echo $CIRCLE_SHA1 > .circle-sha
+      - restore_cache:
+          keys:
+            - repo-{{ checksum ".circle-sha" }}
+      - restore_cache:
+          keys:
+            - npm-deps3-{{ checksum "package.json" }}
+            - npm-deps3
+      - run:
+            name: run ESLint
+            command: npm run lint-circle
+      - store_test_results:
+          path: junit
+      - store_artifacts:
+          path: junit
+
   e2e_test:
     docker:
       - image: circleci/node:6.10.3
@@ -173,7 +196,7 @@ jobs:
           path: junit
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs/debug.log
-          
+
 workflows:
   version: 2
   build_and_test:
@@ -183,13 +206,16 @@ workflows:
       - set_bitsrc_registry
       - install_npm_deps:
           requires:
-              - checkout_code
+            - checkout_code
       - build:
           requires:
             - install_npm_deps
       - unit_test:
           requires:
             - build
+      - lint:
+          requires:
+            - install_npm_deps
       - e2e_test:
           requires:
             - build

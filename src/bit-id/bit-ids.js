@@ -21,7 +21,7 @@ export default class BitIds extends Array<BitId> {
    * @returns {BitId} - The bit id found in the array (with actual version)
    * @memberof BitIds
    */
-  resolveVersion(idWithLatest) {
+  resolveVersion(idWithLatest: BitId) {
     return getLatestVersionNumber(this, idWithLatest);
   }
 
