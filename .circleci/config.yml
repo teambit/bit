@@ -216,8 +216,8 @@ workflows:
       - lint:
           requires:
             - install_npm_deps
-#      - e2e_test:
-#          requires:
-#            - build
-#            - set_ssh_key
-#            - set_bitsrc_registry
+      - e2e_test:
+          requires:
+            - build
+            - set_ssh_key
+            - set_bitsrc_registry
