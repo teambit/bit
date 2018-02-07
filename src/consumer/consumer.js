@@ -20,7 +20,9 @@ import {
   COMPONENT_ORIGINS,
   BIT_VERSION,
   NODE_PATH_SEPARATOR,
-  LATEST_BIT_VERSION
+  LATEST_BIT_VERSION,
+  BIT_GIT_DIR,
+  DOT_GIT_DIR
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -722,12 +724,16 @@ export default class Consumer {
     return changes;
   }
 
-  static create(projectPath: string = process.cwd()): Promise<Consumer> {
-    return this.ensure(projectPath);
+  static create(projectPath: string = process.cwd(), noGit: boolean = false): Promise<Consumer> {
+    return this.ensure(projectPath, noGit);
   }
 
-  static ensure(projectPath: PathOsBased = process.cwd()): Promise<Consumer> {
-    const scopeP = Scope.ensure(path.join(projectPath, BIT_HIDDEN_DIR));
+  static ensure(projectPath: PathOsBased = process.cwd(), noGit: boolean = false): Promise<Consumer> {
+    const resolvedPath =
+      !noGit && fs.existsSync(path.join(projectPath, DOT_GIT_DIR))
+        ? path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR)
+        : path.join(projectPath, BIT_HIDDEN_DIR);
+    const scopeP = Scope.ensure(resolvedPath);
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
     const bitMapP = BitMap.ensure(projectPath);
 
@@ -758,6 +764,12 @@ export default class Consumer {
     });
   }
 
+  static locateProjectScope(projectPath) {
+    if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) {
+      return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR);
+    }
+    if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) return path.join(projectPath, BIT_HIDDEN_DIR);
+  }
   static async load(currentPath: string, throws: boolean = true): Promise<?Consumer> {
     const projectPath = locateConsumer(currentPath);
     if (!projectPath) {
@@ -767,7 +779,7 @@ export default class Consumer {
     if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
       await Consumer.create(currentPath).then(consumer => consumer.write());
     }
-    const scopeP = Scope.load(path.join(projectPath, BIT_HIDDEN_DIR));
+    const scopeP = Scope.load(Consumer.locateProjectScope(projectPath));
     const bitJsonP = ConsumerBitJson.load(projectPath);
     return Promise.all([scopeP, bitJsonP]).then(
       ([scope, bitJson]) =>
