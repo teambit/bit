@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
+import * as fixtures from '../fixtures/fixtures';
 
-describe.only('bit untag command', function () {
+describe('bit untag command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -154,6 +155,44 @@ describe.only('bit untag command', function () {
         expect(output).to.have.string('found 3 components');
         expect(output).to.have.string('0.0.1');
         expect(output).to.not.have.string('0.0.5');
+      });
+    });
+  });
+  describe('components with dependencies', () => {
+    let localScope;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponent('utils', 'is-type.js', fixtures.isType);
+      helper.addComponent('utils/is-type.js');
+      helper.createComponent('utils', 'is-string.js', fixtures.isString);
+      helper.addComponent('utils/is-string.js');
+      helper.commitAllComponents();
+      localScope = helper.cloneLocalScope();
+    });
+    describe('untag only the dependency', () => {
+      describe('without force flag', () => {
+        let untagOutput;
+        before(() => {
+          try {
+            helper.runCmd('bit untag utils/is-type');
+          } catch (err) {
+            untagOutput = err.message;
+          }
+        });
+        it('should throw a descriptive error', () => {
+          expect(untagOutput).to.have.string(
+            'unable to untag utils/is-type, the version 0.0.1 has the following dependent(s) utils/is-string@0.0.1'
+          );
+        });
+      });
+      describe('with force flag', () => {
+        let untagOutput;
+        before(() => {
+          untagOutput = helper.runCmd('bit untag utils/is-type --force');
+        });
+        it('should untag successfully', () => {
+          expect(untagOutput).to.have.string('1 component(s) were untagged');
+        });
       });
     });
   });
