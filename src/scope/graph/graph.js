@@ -36,10 +36,11 @@ export default class DependencyGraph {
           Object.keys(component.versions).map(async (version) => {
             const componentVersion = await component.loadVersion(version, repository);
             if (!componentVersion) return;
-            graph.setNode(`${component.id()}@${version}`, componentVersion);
-            graph.setParent(`${component.id()}@${version}`, component.id());
+            const idWithVersion = `${component.id()}${VERSION_DELIMITER}${version}`;
+            graph.setNode(idWithVersion, componentVersion);
+            graph.setParent(idWithVersion, component.id());
             componentVersion.id = component.toBitId();
-            depObj[`${component.id()}@${version}`] = componentVersion;
+            depObj[idWithVersion] = componentVersion;
           })
         );
       })
