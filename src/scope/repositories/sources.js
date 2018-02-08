@@ -246,7 +246,6 @@ export default class SourceRepository {
       specsResults
     });
     component.addVersion(version, releaseType, exactVersion);
-    component.local = true;
     objectRepo.add(version).add(component);
 
     if (files) files.forEach(file => objectRepo.add(file.file));
@@ -268,7 +267,6 @@ export default class SourceRepository {
       date: Date.now().toString()
     };
     component.addVersion(version, releaseType);
-    component.local = true;
     return this.put({ component, objects: [version] });
   }
 
@@ -295,17 +293,20 @@ export default class SourceRepository {
     });
     return component;
   }
+
   /**
    * removeVersion - remove specific component version from component
    * @param {Component} component - component to remove version from
-   * @param {BitId} bitId - bitid with version to remove.
+   * @param {string} version - version to remove.
+   * @param persist
    */
-  async removeVersion(component: Component, bitId: BitId): Promise<void> {
+  async removeVersion(component: Component, version: string, persist: boolean = true): Promise<void> {
+    logger.debug(`removing version ${version} of ${component.id()} from a local scope`);
     const objectRepo = this.objects();
-    const modifiedCompoent = await component.removeVersion(objectRepo, bitId.version);
-    objectRepo.add(modifiedCompoent);
-    await objectRepo.persist();
-    return modifiedCompoent;
+    const modifiedComponent = await component.removeVersion(objectRepo, version);
+    objectRepo.add(modifiedComponent);
+    if (persist) await objectRepo.persist();
+    return modifiedComponent;
   }
 
   /**
@@ -325,15 +326,19 @@ export default class SourceRepository {
    *
    * When this function get called originally from import command, the 'force' parameter is true. Otherwise, if it was
    * originated from export command, it'll be false.
-   * If the 'force' is true and the existing component wasn't changed locally (existingComponent.local if false), it
-   * doesn't check for discrepancies, but simply override the existing component.
+   * If the 'force' is true and the existing component wasn't changed locally, it doesn't check for
+   * discrepancies, but simply override the existing component.
    * When using import command, it makes sense to override a component in case of discrepancies because the source of
    * true should be the remote scope from where the import fetches the component.
    */
   merge({ component, objects }: ComponentTree, inScope: boolean = false, force: boolean = true): Promise<Component> {
     if (inScope) component.scope = this.scope.name;
     return this.findComponent(component).then((existingComponent: ?Component) => {
-      if (!existingComponent || (force && !existingComponent.local) || component.compatibleWith(existingComponent)) {
+      if (
+        !existingComponent ||
+        (force && !existingComponent.isLocallyChanged()) ||
+        component.compatibleWith(existingComponent)
+      ) {
         return this.put({ component, objects });
       }
 
