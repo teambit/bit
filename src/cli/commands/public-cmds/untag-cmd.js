@@ -6,7 +6,7 @@ const chalk = require('chalk');
 
 export default class Untag extends Command {
   name = 'untag [id] [version]';
-  description = 'revert "tag" operation';
+  description = 'revert version(s) tagged for component(s)';
   alias = '';
   opts = [['a', 'all', 'revert tag for all tagged components']];
   loader = true;
@@ -14,7 +14,7 @@ export default class Untag extends Command {
 
   action([id, version]: string[], { all }: { all: ?boolean }): Promise<any> {
     if (!id && !all) {
-      throw new Error('Please specify an id or use --all flag');
+      throw new Error('please specify a component ID or use --all flag');
     }
 
     if (all) {
@@ -25,9 +25,9 @@ export default class Untag extends Command {
   }
 
   report(results): string {
-    const title = chalk.green(`${results.length} component(s) were un-tagged:\n`);
+    const title = chalk.green(`${results.length} component(s) were untagged:\n`);
     const components = results.map((result) => {
-      return `\t${chalk.cyan(result.id.toStringWithoutVersion())}. Version(s): ${result.versions.join(', ')}`;
+      return `\t${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;
     });
     return title + components.join('\n');
   }
