@@ -195,5 +195,34 @@ describe('bit untag command', function () {
         });
       });
     });
+    describe('untag all components', () => {
+      describe('when all components have only local versions', () => {
+        before(() => {
+          helper.getClonedLocalScope(localScope);
+          helper.runCmd('bit untag --all');
+        });
+        it('should remove all the components because it does not leave a damaged component without dependency', () => {
+          const output = helper.listLocalScope();
+          expect(output).to.have.string('found 0 components');
+        });
+      });
+      describe('with specifying a version and the dependent has a different version than its dependency', () => {
+        let untagOutput;
+        before(() => {
+          helper.getClonedLocalScope(localScope);
+          helper.commitComponent('utils/is-string', undefined, '-f');
+          try {
+            helper.runCmd('bit untag 0.0.1 --all');
+          } catch (err) {
+            untagOutput = err.message;
+          }
+        });
+        it('should throw a descriptive error', () => {
+          expect(untagOutput).to.have.string(
+            'unable to untag utils/is-type@0.0.1, the version 0.0.1 has the following dependent(s)'
+          );
+        });
+      });
+    });
   });
 });

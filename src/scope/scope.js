@@ -98,6 +98,7 @@ export default class Scope {
   path: string;
   // sources: SourcesRepository; // for some reason it interferes with the IDE autocomplete
   objects: Repository;
+  _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
 
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
@@ -106,6 +107,13 @@ export default class Scope {
     this.tmp = scopeProps.tmp || new Tmp(this);
     this.sources = scopeProps.sources || new SourcesRepository(this);
     this.objects = scopeProps.objects || new Repository(this, types());
+  }
+
+  async getDependencyGraph(): DependencyGraph {
+    if (!this._dependencyGraph) {
+      this._dependencyGraph = await DependencyGraph.load(this.objects);
+    }
+    return this._dependencyGraph;
   }
 
   get groupName(): ?string {
@@ -1323,7 +1331,7 @@ export default class Scope {
     const versionsToRemove = version ? [version] : localVersions;
 
     if (!force) {
-      const dependencyGraph = await DependencyGraph.load(this.objects);
+      const dependencyGraph = await this.getDependencyGraph();
       versionsToRemove.forEach((versionToRemove) => {
         const idWithVersion = id.clone();
         idWithVersion.version = versionToRemove;
@@ -1363,7 +1371,7 @@ export default class Scope {
 
     // if no version is given, there is risk of deleting dependencies version without their dependents.
     if (!force && version) {
-      const dependencyGraph = await DependencyGraph.load(this.objects);
+      const dependencyGraph = await this.getDependencyGraph();
       const candidateComponentsIds = candidateComponents.map((component) => {
         const bitId = component.toBitId();
         bitId.version = version;
