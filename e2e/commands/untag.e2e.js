@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe('bit untag command', function () {
+describe.only('bit untag command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
   });
-  describe('unTag single component', () => {
+  describe('untag single component', () => {
     let localScope;
     before(() => {
       helper.reInitLocalScope();
@@ -84,7 +84,7 @@ describe('bit untag command', function () {
         const catComponent = helper.catComponent('bar/foo');
         expect(catComponent.versions).to.have.property('0.0.2');
       });
-      describe('un-tagging an exported version', () => {
+      describe('untagging an exported version', () => {
         let output;
         before(() => {
           try {
@@ -94,10 +94,10 @@ describe('bit untag command', function () {
           }
         });
         it('should throw an error', () => {
-          expect(output).to.have.string('unable to un-tag bar/foo, the version 0.0.1 was exported already');
+          expect(output).to.have.string('unable to untag bar/foo, the version 0.0.1 was exported already');
         });
       });
-      describe('un-tagging without version', () => {
+      describe('untagging without version', () => {
         before(() => {
           helper.runCmd('bit untag bar/foo');
         });
@@ -109,7 +109,7 @@ describe('bit untag command', function () {
       });
     });
   });
-  describe('unTag multiple components (--all flag)', () => {
+  describe('untag multiple components (--all flag)', () => {
     let localScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();

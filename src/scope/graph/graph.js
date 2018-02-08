@@ -9,34 +9,46 @@ import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../../constants';
 
 const Graph = GraphLib.Graph;
 
-export class DependencyGraph {
+export default class DependencyGraph {
+  repository: Repository;
   graph: Graph;
 
-  async load(repo: Repository) {
-    this.graph = await this.buildDependencieGraph(repo);
-    return this;
+  constructor(repository, graph) {
+    this.repository = repository;
+    this.graph = graph;
   }
-  async buildDependencieGraph(repo: Repository): Graph {
+
+  static async load(repository: Repository) {
+    const graph = await DependencyGraph.buildDependenciesGraph(repository);
+    return new DependencyGraph(repository, graph);
+  }
+
+  static async buildDependenciesGraph(repository): Graph {
     const graph = new Graph({ compound: true });
-    const depObj = {};
-    const allComponents = await repo.listComponents(false);
+    const depObj: { [id: string]: Version } = {};
+    const allComponents = await repository.listComponents(false);
+    // build all nodes. a node is either a Version object or Component object.
+    // each Version node has a parent of Component node. Component node doesn't have a parent.
     await Promise.all(
       allComponents.map(async (component) => {
-        graph.setNode(component.id().toString(), component);
+        graph.setNode(component.id(), component);
         await Promise.all(
           Object.keys(component.versions).map(async (version) => {
-            const componentVersion = await component.loadVersion(version, repo);
+            const componentVersion = await component.loadVersion(version, repository);
             if (!componentVersion) return;
             graph.setNode(`${component.id()}@${version}`, componentVersion);
-            graph.setParent(`${component.id()}@${version}`, component.id().toString());
-            componentVersion.id = BitId.parse(component.id());
+            graph.setParent(`${component.id()}@${version}`, component.id());
+            componentVersion.id = component.toBitId();
             depObj[`${component.id()}@${version}`] = componentVersion;
           })
         );
       })
     );
-    Object.keys(depObj).forEach(key =>
-      depObj[key].flattenedDependencies.forEach(dep => graph.setEdge(key, dep.toString(), 'require'))
+    // set all edges
+    // @todo: currently the label is "require". Change it to be "direct" and "indirect" depends on whether it comes from
+    // flattenedDependencies or from dependencies.
+    Object.keys(depObj).forEach(id =>
+      depObj[id].flattenedDependencies.forEach(dep => graph.setEdge(id, dep.toString(), 'require'))
     );
     return Promise.resolve(graph);
   }
@@ -53,6 +65,12 @@ export class DependencyGraph {
       return this.graph.node(`${id.toStringWithoutVersion()}${VERSION_DELIMITER}${latestVersion}`);
     }
     return this.graph.node(id.toString());
+  }
+
+  getDependentsPerId(id: BitId): string[] {
+    const nodeEdges = this.graph.nodeEdges(id.toString());
+    if (!nodeEdges) return [];
+    return nodeEdges.map(node => node.v);
   }
 
   getComponentVersions(id: BitId): Version[] {
@@ -78,7 +96,9 @@ export class DependencyGraph {
         children.forEach((child) => {
           const requiredBy = this.graph.predecessors(child);
           if (requiredBy && !R.isEmpty(requiredBy)) {
-            if (dependentIds[id.toStringWithoutVersion()]) { dependentIds[id.toStringWithoutVersion()] = dependentIds[id.toStringWithoutVersion()].concat(requiredBy); } else dependentIds[id.toStringWithoutVersion()] = requiredBy;
+            if (dependentIds[id.toStringWithoutVersion()]) {
+              dependentIds[id.toStringWithoutVersion()] = dependentIds[id.toStringWithoutVersion()].concat(requiredBy);
+            } else dependentIds[id.toStringWithoutVersion()] = requiredBy;
           }
         });
       } else {
