@@ -131,7 +131,7 @@ describe('bit untag command', function () {
         untagOutput = helper.runCmd('bit untag --all');
       });
       it('should display a descriptive successful message', () => {
-        expect(untagOutput).to.have.string('2 component(s) were un-tagged');
+        expect(untagOutput).to.have.string('2 component(s) were untagged');
       });
       it('should remove only local components from the model', () => {
         const output = helper.listLocalScope();
@@ -147,7 +147,7 @@ describe('bit untag command', function () {
         untagOutput = helper.runCmd('bit untag 0.0.5 --all');
       });
       it('should display a descriptive successful message', () => {
-        expect(untagOutput).to.have.string('3 component(s) were un-tagged');
+        expect(untagOutput).to.have.string('3 component(s) were untagged');
       });
       it('should remove only the specified version from the model', () => {
         const output = helper.listLocalScope();
