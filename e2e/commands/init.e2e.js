@@ -61,11 +61,12 @@ describe('run bit init', function () {
       expect(bitJson).to.not.have.property('manageWorkspaces');
     });
   });
-  describe.only('git integration', () => {
+  describe('git integration', () => {
     describe('when .git exists', () => {
       let gitFolder;
       let gitHooksFolder;
       before(() => {
+        helper.cleanLocalScope();
         helper.initNewGitRepo();
         helper.initLocalScope();
         gitFolder = path.join(helper.localScopePath, '.git');
