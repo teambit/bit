@@ -157,7 +157,7 @@ jobs:
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
-    parallelism: 7
+    parallelism: 1
     steps:
       - run: sudo npm i -g yarn
       - run: echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
@@ -186,7 +186,8 @@ jobs:
       - run: bit config set user.email ci@bitsrc.io
       - run:
           name: Run e2e tests
-          command: circleci tests glob "e2e/**/*.e2e.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
+        #   command: circleci tests glob "e2e/**/*.e2e.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
+          command: npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always

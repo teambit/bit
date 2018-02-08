@@ -61,7 +61,7 @@ describe('run bit init', function () {
       expect(bitJson).to.not.have.property('manageWorkspaces');
     });
   });
-  describe('git integration', () => {
+  describe.only('git integration', () => {
     describe('when .git exists', () => {
       let gitFolder;
       let gitHooksFolder;
