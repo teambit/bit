@@ -36,6 +36,9 @@ export default class Helper {
   setLocalScope(localScope?: string) {
     this.localScope = localScope || `${v4()}-local`;
     this.localScopePath = path.join(this.e2eDir, this.localScope);
+    if (!fs.existsSync(this.localScopePath)) {
+      fs.ensureDirSync(this.localScopePath);
+    }
   }
 
   runCmd(cmd: string, cwd: string = this.localScopePath) {
@@ -127,6 +130,10 @@ export default class Helper {
     const gitIgnorePath = path.join(this.localScopePath, '.gitignore');
     return fs.writeFileSync(gitIgnorePath, list.join('\n'));
   }
+  writeToGitHook(hookName: string, content: string) {
+    const hookPath = path.join(this.localScopePath, '.git', 'hooks', hookName);
+    return fs.outputFileSync(hookPath, content);
+  }
 
   cleanEnv() {
     fs.emptyDirSync(this.localScopePath);
@@ -145,14 +152,26 @@ export default class Helper {
     }
   }
 
-  reInitLocalScope() {
+  cleanLocalScope() {
     fs.emptyDirSync(this.localScopePath);
+  }
+
+  reInitLocalScope() {
+    this.cleanLocalScope();
     this.initLocalScope();
   }
 
   initLocalScope() {
     return this.runCmd('bit init');
   }
+
+  initLocalScopeWithOptions(options: ?Object) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit init ${value}`);
+  }
+
   createBitMap(
     cwd: string = this.localScopePath,
     componentObject = {
