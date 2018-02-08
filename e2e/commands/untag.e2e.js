@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
+import * as fixtures from '../fixtures/fixtures';
 
 describe('bit untag command', function () {
   this.timeout(0);
@@ -7,7 +8,7 @@ describe('bit untag command', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('unTag single component', () => {
+  describe('untag single component', () => {
     let localScope;
     before(() => {
       helper.reInitLocalScope();
@@ -84,7 +85,7 @@ describe('bit untag command', function () {
         const catComponent = helper.catComponent('bar/foo');
         expect(catComponent.versions).to.have.property('0.0.2');
       });
-      describe('un-tagging an exported version', () => {
+      describe('untagging an exported version', () => {
         let output;
         before(() => {
           try {
@@ -94,10 +95,10 @@ describe('bit untag command', function () {
           }
         });
         it('should throw an error', () => {
-          expect(output).to.have.string('unable to un-tag bar/foo, the version 0.0.1 was exported already');
+          expect(output).to.have.string('unable to untag bar/foo, the version 0.0.1 was exported already');
         });
       });
-      describe('un-tagging without version', () => {
+      describe('untagging without version', () => {
         before(() => {
           helper.runCmd('bit untag bar/foo');
         });
@@ -109,7 +110,7 @@ describe('bit untag command', function () {
       });
     });
   });
-  describe('unTag multiple components (--all flag)', () => {
+  describe('untag multiple components (--all flag)', () => {
     let localScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -154,6 +155,73 @@ describe('bit untag command', function () {
         expect(output).to.have.string('found 3 components');
         expect(output).to.have.string('0.0.1');
         expect(output).to.not.have.string('0.0.5');
+      });
+    });
+  });
+  describe('components with dependencies', () => {
+    let localScope;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponent('utils', 'is-type.js', fixtures.isType);
+      helper.addComponent('utils/is-type.js');
+      helper.createComponent('utils', 'is-string.js', fixtures.isString);
+      helper.addComponent('utils/is-string.js');
+      helper.commitAllComponents();
+      localScope = helper.cloneLocalScope();
+    });
+    describe('untag only the dependency', () => {
+      describe('without force flag', () => {
+        let untagOutput;
+        before(() => {
+          try {
+            helper.runCmd('bit untag utils/is-type');
+          } catch (err) {
+            untagOutput = err.message;
+          }
+        });
+        it('should throw a descriptive error', () => {
+          expect(untagOutput).to.have.string(
+            'unable to untag utils/is-type, the version 0.0.1 has the following dependent(s) utils/is-string@0.0.1'
+          );
+        });
+      });
+      describe('with force flag', () => {
+        let untagOutput;
+        before(() => {
+          untagOutput = helper.runCmd('bit untag utils/is-type --force');
+        });
+        it('should untag successfully', () => {
+          expect(untagOutput).to.have.string('1 component(s) were untagged');
+        });
+      });
+    });
+    describe('untag all components', () => {
+      describe('when all components have only local versions', () => {
+        before(() => {
+          helper.getClonedLocalScope(localScope);
+          helper.runCmd('bit untag --all');
+        });
+        it('should remove all the components because it does not leave a damaged component without dependency', () => {
+          const output = helper.listLocalScope();
+          expect(output).to.have.string('found 0 components');
+        });
+      });
+      describe('with specifying a version and the dependent has a different version than its dependency', () => {
+        let untagOutput;
+        before(() => {
+          helper.getClonedLocalScope(localScope);
+          helper.commitComponent('utils/is-string', undefined, '-f');
+          try {
+            helper.runCmd('bit untag 0.0.1 --all');
+          } catch (err) {
+            untagOutput = err.message;
+          }
+        });
+        it('should throw a descriptive error', () => {
+          expect(untagOutput).to.have.string(
+            'unable to untag utils/is-type@0.0.1, the version 0.0.1 has the following dependent(s)'
+          );
+        });
       });
     });
   });
