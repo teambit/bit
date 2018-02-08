@@ -30,7 +30,8 @@ const LINKS_CONTENT_TEMPLATES = {
   css: "@import '{filePath}.css';",
   scss: "@import '{filePath}.scss';",
   sass: "@import '{filePath}.sass';",
-  less: "@import '{filePath}.less';"
+  less: "@import '{filePath}.less';",
+  vue: "module.exports = require('{filePath}');"
 };
 
 const PACKAGES_LINKS_CONTENT_TEMPLATES = {
