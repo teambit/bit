@@ -41,7 +41,7 @@ export default class BitsrcTester {
 
   createScope(scope = this.generateRandomName()) {
     return requestify
-      .request(`${apiBaseUrl}/scope/`, { method: 'POST', cookies: this.cookies, body: { scope } })
+      .request(`${apiBaseUrl}/scope/`, { method: 'POST', cookies: this.cookies, body: { scope, private: true } })
       .then(() => scope)
       .catch((res) => {
         throw new Error(`Failed to create scope with error: ${res.getBody().message}`);

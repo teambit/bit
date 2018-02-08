@@ -253,6 +253,10 @@ export const GLOBAL_REMOTES = 'global-remotes.json';
 
 export const BIT_HIDDEN_DIR = '.bit';
 
+export const BIT_GIT_DIR = 'bit';
+
+export const DOT_GIT_DIR = '.git';
+
 /**
  * modules cache filename
  */
