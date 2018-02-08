@@ -11,6 +11,10 @@ function composeBitHiddenDirPath(path: string) {
   return pathlib.join(path, BIT_HIDDEN_DIR);
 }
 
+function composeBitGitHiddenDirPath(path: string) {
+  return pathlib.join(path, 'git', 'bit');
+}
+
 function composeBitJsonPath(path: string) {
   return pathlib.join(path, BIT_JSON);
 }
@@ -19,7 +23,10 @@ function composeBitJsonPath(path: string) {
  * determine whether given path has a consumer
  */
 export function pathHasConsumer(path: string) {
-  return fs.existsSync(composeBitHiddenDirPath(path)) && fs.existsSync(composeBitJsonPath(path));
+  return (
+    (fs.existsSync(composeBitHiddenDirPath(path)) || composeBitGitHiddenDirPath(path)) &&
+    fs.existsSync(composeBitJsonPath(path))
+  );
 }
 
 /**
