@@ -17,9 +17,9 @@ describe('bit add command', function () {
   this.timeout(0);
   const helper = new Helper();
 
-  /*  after(() => {
+  after(() => {
     helper.destroyEnv();
-  }); */
+  });
 
   describe('add before running "bit init"', () => {
     it('Should return message to run "bit init"', () => {
