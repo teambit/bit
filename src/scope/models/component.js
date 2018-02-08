@@ -23,8 +23,15 @@ import ComponentVersion from '../component-version';
 import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
+import logger from '../../logger/logger';
 
-type State = { versions?: { [string]: { local?: boolean } } };
+type State = {
+  versions?: {
+    [string]: {
+      local?: boolean // whether a component was changed locally
+    }
+  }
+};
 
 export type ComponentProps = {
   scope?: string,
@@ -36,10 +43,9 @@ export type ComponentProps = {
   bindingPrefix?: string,
   /**
    * @deprecated since 0.12.6. It's currently stored in 'state' attribute
-   * whether a component was tagged locally. It's set to true once committed and to false once exported.
    */
-  local?: boolean,
-  state?: State
+  local?: boolean, // get deleted after export
+  state?: State // get deleted after export
 };
 
 export default class Component extends BitObject {
@@ -78,6 +84,10 @@ export default class Component extends BitObject {
     }
 
     return versions.sort(semver.compare).reverse();
+  }
+
+  hasVersion(version: string): boolean {
+    return !!this.versions[version];
   }
 
   compatibleWith(component: Component) {
@@ -151,6 +161,10 @@ export default class Component extends BitObject {
     return this.scope ? [this.scope, this.box, this.name].join('/') : [this.box, this.name].join('/');
   }
 
+  toBitId(): BitId {
+    return new BitId({ scope: this.scope, box: this.box, name: this.name });
+  }
+
   toObject() {
     function versions(vers: { [string]: Ref }) {
       const obj = {};
@@ -202,6 +216,7 @@ export default class Component extends BitObject {
    * @memberof Component
    */
   remove(repo: Repository, deepRemove: boolean = false): Promise {
+    logger.debug(`removing a component ${this.id()} from a local scope`);
     const objectRefs = deepRemove ? this.collectExistingRefs(repo, false).filter(x => x) : this.versionArray;
     const uniqRefs = uniqBy(objectRefs, 'hash');
     return repo.removeMany(uniqRefs.concat([this.hash()]));
@@ -213,6 +228,7 @@ export default class Component extends BitObject {
   async removeVersion(repo: Repository, version: string): Promise<Component> {
     const objectRefs = this.versions[version];
     delete this.versions[version];
+    if (this.state.versions && this.state.versions[version]) delete this.state.versions[version];
     await repo.removeMany([objectRefs.hash]);
     return this;
   }
@@ -320,11 +336,16 @@ export default class Component extends BitObject {
     this.state.versions[version].local = true;
   }
 
+  getLocalVersions(): string[] {
+    if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
+    return Object.keys(this.state.versions).filter(version => this.state.versions[version].local);
+  }
+
   isLocallyChanged(): boolean {
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return false;
     // $FlowFixMe
-    const localVersions = Object.keys(this.state.versions).filter(version => this.state.versions[version].local);
+    const localVersions = this.getLocalVersions();
     return localVersions.length > 0;
   }
 

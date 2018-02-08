@@ -293,16 +293,19 @@ export default class SourceRepository {
     });
     return component;
   }
+
   /**
    * removeVersion - remove specific component version from component
    * @param {Component} component - component to remove version from
-   * @param {BitId} bitId - bitid with version to remove.
+   * @param {string} version - version to remove.
+   * @param persist
    */
-  async removeVersion(component: Component, bitId: BitId): Promise<void> {
+  async removeVersion(component: Component, version: string, persist: boolean = true): Promise<void> {
+    logger.debug(`removing version ${version} of ${component.id()} from a local scope`);
     const objectRepo = this.objects();
-    const modifiedComponent = await component.removeVersion(objectRepo, bitId.version);
+    const modifiedComponent = await component.removeVersion(objectRepo, version);
     objectRepo.add(modifiedComponent);
-    await objectRepo.persist();
+    if (persist) await objectRepo.persist();
     return modifiedComponent;
   }
 

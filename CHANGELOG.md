@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- introduced a new command `bit untag` for reverting un-exported tags. 
+
 ## [0.12.5] - 2018-02-06
 
 - default `bit import` with no id to import objects only, unless `--write` flag is used

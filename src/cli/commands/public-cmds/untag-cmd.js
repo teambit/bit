@@ -18,16 +18,17 @@ export default class Untag extends Command {
     }
 
     if (all) {
+      version = id;
       return unTagAllAction(version);
     }
     return unTagAction(id, version);
   }
 
   report(results): string {
-    const title = chalk.bold('the following components were un-tagged:\n');
+    const title = chalk.green(`${results.length} component(s) were un-tagged:\n`);
     const components = results.map((result) => {
-      return `\tid: ${result.id.toStringWithoutVersion()}, versions: ${result.versions.join(', ')}`;
+      return `\t${chalk.cyan(result.id.toStringWithoutVersion())}. Version(s): ${result.versions.join(', ')}`;
     });
-    return title + components;
+    return title + components.join('\n');
   }
 }

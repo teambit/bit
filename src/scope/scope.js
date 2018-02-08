@@ -1301,6 +1301,44 @@ export default class Scope {
   }
 
   /**
+   * If not specified version, remove all local versions.
+   */
+  async removeLocalVersion(id: BitId, version?: string): Promise<{ id: BitId, versions: string[] }> {
+    const component: ComponentModel = await this.sources.get(id);
+    const localVersions = component.getLocalVersions();
+
+    if (!localVersions.length) return Promise.reject(`unable to un-tag ${id}, the component is not staged`);
+    if (version && !component.hasVersion(version)) { return Promise.reject(`unable to un-tag ${id}, the version ${version} does not exist`); }
+    if (version && !localVersions.includes(version)) { return Promise.reject(`unable to un-tag ${id}, the version ${version} was exported already`); }
+
+    const versionsToRemove = version ? [version] : localVersions;
+    await Promise.all(versionsToRemove.map(ver => this.sources.removeVersion(component, ver, false)));
+    await this.objects.persist();
+
+    if (!component.versionArray.length) {
+      // if all versions were deleted, delete also the component itself from the model
+      await component.remove(this.objects);
+    }
+
+    return { id, versions: versionsToRemove };
+  }
+
+  async removeLocalVersionsForAllComponents(version?: string) {
+    const components = await this.objects.listComponents(false);
+    const candidateComponents = components.filter((component: ComponentModel) => {
+      const localVersions = component.getLocalVersions();
+      if (!localVersions.length) return false;
+      return version ? localVersions.includes(version) : true;
+    });
+    if (!candidateComponents.length) {
+      const versionOutput = version ? `${version} ` : '';
+      return Promise.reject(`No components found with local version ${versionOutput}to un-tag`);
+    }
+    logger.debug(`found ${candidateComponents.length} components to un-tag`);
+    return Promise.all(candidateComponents.map(component => this.removeLocalVersion(component.toBitId(), version)));
+  }
+
+  /**
    * import a component end to end. Including importing the dependencies and installing the npm
    * packages.
    *
