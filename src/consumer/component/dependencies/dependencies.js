@@ -26,7 +26,8 @@ export default class Dependencies {
   deserialize(dependencies) {
     return dependencies.map(dependency => ({
       id: R.is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
-      relativePaths: dependency.relativePaths || [ // backward compatibility. (previously, it was "relativePath" without the ending 's' and was not an array.
+      relativePaths: dependency.relativePaths || [
+        // backward compatibility. (previously, it was "relativePath" without the ending 's' and was not an array.
         { sourceRelativePath: dependency.relativePath, destinationRelativePath: dependency.relativePath }
       ]
     }));
@@ -100,7 +101,7 @@ export default class Dependencies {
 
     this.dependencies.forEach((dependency) => {
       const dependencyIdWithoutVersion = dependency.id.toStringWithoutVersion();
-      const removeVersionId = remoteVersionsDependencies.find(
+      const remoteVersionId = remoteVersionsDependencies.find(
         remoteId => remoteId.toStringWithoutVersion() === dependencyIdWithoutVersion
       );
       const localVersionId = localDependencies.find(
@@ -109,7 +110,7 @@ export default class Dependencies {
       const modelVersionId = modelDependencies
         .get()
         .find(modelDependency => modelDependency.id.toStringWithoutVersion() === dependencyIdWithoutVersion);
-      dependency.remoteVersion = removeVersionId ? removeVersionId.version : null;
+      dependency.remoteVersion = remoteVersionId ? remoteVersionId.version : null;
       dependency.localVersion = localVersionId ? localVersionId.version : null;
       dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
     });

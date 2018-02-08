@@ -602,8 +602,7 @@ export default class Consumer {
         status.newlyCreated = true;
         return status;
       }
-      // "!componentFromModel.scope" is for backward compatibility, and won't be needed for components created since v0.11.3.
-      status.staged = componentFromModel.local || !componentFromModel.scope;
+      status.staged = componentFromModel.isLocallyChanged();
       const versionFromFs = componentFromFileSystem.id.version;
       const latestVersionFromModel = componentFromModel.latest();
       // Consider the following two scenarios:

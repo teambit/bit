@@ -20,6 +20,7 @@ import getDriver from './lib/get-driver';
 import { watchAll } from './lib/watch';
 import add from './lib/add';
 import untrack from './lib/untrack';
+import { unTagAction, unTagAllAction } from './lib/untag';
 import move from './lib/move';
 import link from './lib/link';
 import migrate from './lib/migrate';
@@ -51,6 +52,8 @@ export {
   watchAll,
   add,
   untrack,
+  unTagAction,
+  unTagAllAction,
   move,
   link,
   migrate

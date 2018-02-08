@@ -34,6 +34,7 @@ import Link from './commands/public-cmds/link-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
 import Add from './commands/public-cmds/add-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
+import Untag from './commands/public-cmds/untag-cmd';
 import Move from './commands/public-cmds/move-cmd';
 import Remove from './commands/public-cmds/remove-cmd';
 import Deprecate from './commands/public-cmds/deprecate-cmd';
@@ -81,6 +82,7 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Watch(),
       new Add(),
       new Untrack(),
+      new Untag(),
       new Move(),
       new Remove(),
       new Deprecate(),
