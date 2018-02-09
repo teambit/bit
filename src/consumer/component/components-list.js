@@ -254,12 +254,17 @@ export default class ComponentsList {
     return this._fromBitMap[cacheKeyName];
   }
 
-  static sortComponentsByName(components: Component[] | string[]): Component[] | string[] {
+  static sortComponentsByName(components: Component[] | ModelComponent | string[]): Component[] | string[] {
+    const getName = (component) => {
+      let name;
+      if (R.is(ModelComponent, component)) name = component.id();
+      else if (R.is(Component, component)) name = component.id.toString();
+      else name = component;
+      return name.toUpperCase(); // ignore upper and lowercase
+    };
     return components.sort((a, b) => {
-      let nameA = a.id || a;
-      let nameB = b.id || b;
-      nameA = nameA.toString().toUpperCase(); // ignore upper and lowercase
-      nameB = nameB.toString().toUpperCase(); // ignore upper and lowercase
+      const nameA = getName(a);
+      const nameB = getName(b);
       if (nameA < nameB) {
         return -1;
       }
