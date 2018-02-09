@@ -141,8 +141,7 @@ function getLinkContent(
   }
 
   if (!template) {
-    // @todo: throw an exception?
-    logger.error(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
+    throw new Error(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
   }
   return template.replace(/{filePath}/g, normalize(filePathWithoutExt));
 }
@@ -175,7 +174,7 @@ async function writeDependencyLinks(
       DEFAULT_REGISTRY_DOMAIN_PREFIX}/${componentId.toStringWithoutVersion().replace(/\//g, '.')}`;
     let actualFilePath = depRootDir ? path.join(depRootDir, relativePathInDependency) : relativePathInDependency;
     if (relativePathInDependency === mainFile) {
-      actualFilePath = depRootDir ? path.join(depRootDir, getIndexFileName(mainFile)) : getIndexFileName(mainFile);
+      actualFilePath = depRootDir ? path.join(depRootDir, mainFile) : mainFile;
     }
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
     const importSpecifiers = relativePath.importSpecifiers;
