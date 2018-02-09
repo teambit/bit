@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- `bit status` shows a list of staged versions in 'staged components' section 
 - introduced a new command `bit untag` for reverting un-exported tags. 
 - init local scope inside .git
 - generate git hooks during `bit init`

@@ -65,6 +65,10 @@ describe('bit untag command', function () {
         helper.commitComponent('bar/foo', undefined, '-f');
         const catComponent = helper.catComponent('bar/foo');
         expect(catComponent.versions).to.have.property('0.0.2');
+        const componentStatus = helper.runCmd('bit status');
+        expect(componentStatus).to.have.string('staged components');
+        expect(componentStatus).to.not.have.string('no staged components');
+        expect(componentStatus).to.have.string('bar/foo. versions: 0.0.1, 0.0.2... ok');
 
         helper.runCmd('bit untag bar/foo@0.0.2');
       });

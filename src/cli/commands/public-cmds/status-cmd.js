@@ -43,16 +43,21 @@ export default class Status extends Command {
       return `       ${missingStr}\n`;
     }
 
-    function format(component: string | Component): string {
+    function format(component: string | Component, showVersions: boolean = false): string {
       const missing = componentsWithMissingDeps.find((missingComp: Component) => {
         const compId = component.id ? component.id.toString() : component;
         return missingComp.id.toString() === compId;
       });
 
-      // @TODO component must not be a string
       if (isString(component)) return `${formatBitString(component)}... ${chalk.green('ok')}`;
-      if (!missing) return `${formatNewBit(component)}... ${chalk.green('ok')}`;
-      return `${formatNewBit(component)}... ${chalk.red('missing dependencies')}${formatMissing(missing)}`;
+      let bitFormatted = `${formatNewBit(component)}`;
+      if (showVersions) {
+        const localVersions = component.getLocalVersions();
+        bitFormatted += `. versions: ${localVersions.join(', ')}`;
+      }
+      bitFormatted += '...';
+      if (!missing) return `${bitFormatted} ${chalk.green('ok')}`;
+      return `${bitFormatted} ${chalk.red('missing dependencies')}${formatMissing(missing)}`;
     }
 
     const importPendingWarning = importPendingComponents.length
@@ -86,7 +91,7 @@ export default class Status extends Command {
     ).join('\n');
 
     const stagedComponentsOutput = immutableUnshift(
-      stagedComponents.map(format),
+      stagedComponents.map(c => format(c, true)),
       stagedComponents.length ? chalk.underline.white('staged components') : chalk.green('no staged components')
     ).join('\n');
 

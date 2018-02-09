@@ -192,11 +192,13 @@ export default class ComponentsList {
    * Also, components that their model version is higher than their bit.map version.
    * @return {Promise<string[]>}
    */
-  async listExportPendingComponents(): Promise<string[]> {
+  async listExportPendingComponents(load: boolean = false): Promise<string[] | ModelComponent[]> {
     const idsFromObjects = await this.idsFromObjects();
-    return filterAsync(idsFromObjects, (componentId) => {
+    const ids = await filterAsync(idsFromObjects, (componentId) => {
       return this.consumer.getComponentStatusById(BitId.parse(componentId)).then(status => status.staged);
     });
+    if (!load) return ids;
+    return Promise.all(ids.map(id => this.scope.sources.get(BitId.parse(id))));
   }
 
   async listAutoTagPendingComponents(): Promise<ModelComponent[]> {
