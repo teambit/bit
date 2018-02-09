@@ -147,8 +147,8 @@ export default class Consumer {
       msg = msg
         ? format(msg, err)
         : `Warning: Bit is not able to run the link command. Please install bit-${
-            err.lang
-          } driver and run the link command.`;
+          err.lang
+        } driver and run the link command.`;
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
@@ -225,7 +225,7 @@ export default class Consumer {
     const alreadyLoadedComponents = [];
     const idsToProcess = [];
     const deletedComponents = [];
-    ids.forEach(id => {
+    ids.forEach((id) => {
       if (this._componentsCache[id.toString()]) {
         logger.debug(`the component ${id.toString()} has been already loaded, use the cached component`);
         alreadyLoadedComponents.push(this._componentsCache[id.toString()]);
@@ -320,7 +320,7 @@ export default class Consumer {
     const componentDir = path.join(componentsDir, id.box, id.name, id.scope, currentVersionOnly ? id.version : '');
 
     return new Promise((resolve, reject) => {
-      return fs.remove(componentDir, err => {
+      return fs.remove(componentDir, (err) => {
         if (err) return reject(err);
         return resolve();
       });
@@ -449,7 +449,7 @@ export default class Consumer {
     const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
     const writtenDependencies = writtenDependenciesIncludesNull.filter(dep => dep);
     if (writeToPath) {
-      componentsWithDependencies.forEach(componentWithDeps => {
+      componentsWithDependencies.forEach((componentWithDeps) => {
         const relativeWrittenPath = this.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
         if (relativeWrittenPath && path.resolve(relativeWrittenPath) !== path.resolve(writeToPath)) {
           const component = componentWithDeps.component;
@@ -471,15 +471,22 @@ export default class Consumer {
     if (installNpmPackages) await this.installNpmPackagesForComponents(componentsWithDependencies, verbose);
     if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents.map(c => c.id));
 
-    return linkComponents(componentsWithDependencies, writtenComponents, writtenDependencies, this, createNpmLinkFiles);
+    return linkComponents(
+      componentsWithDependencies,
+      writtenComponents,
+      writtenDependencies,
+      this,
+      createNpmLinkFiles,
+      writePackageJson
+    );
   }
 
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -544,7 +551,7 @@ export default class Consumer {
       const copyDependenciesVersionsFromModelToFS = (dev = false) => {
         const dependenciesFS = dev ? version.devDependencies : version.dependencies;
         const dependenciesModel = dev ? componentFromModel.devDependencies : componentFromModel.dependencies;
-        dependenciesFS.get().forEach(dependency => {
+        dependenciesFS.get().forEach((dependency) => {
           const idWithoutVersion = dependency.id.toStringWithoutVersion();
           const dependencyFromModel = dependenciesModel
             .get()
@@ -560,10 +567,10 @@ export default class Consumer {
       /*
        sort packageDependencies for comparing
        */
-      const sortObject = obj => {
+      const sortObject = (obj) => {
         return Object.keys(obj)
           .sort()
-          .reduce(function(result, key) {
+          .reduce(function (result, key) {
             result[key] = obj[key];
             return result;
           }, {});
@@ -655,7 +662,7 @@ export default class Consumer {
     // Run over the components to check if there is missing dependencies
     // If there is at least one we won't commit anything
     if (!ignoreMissingDependencies) {
-      const componentsWithMissingDeps = components.filter(component => {
+      const componentsWithMissingDeps = components.filter((component) => {
         return Boolean(component.missingDependencies);
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
@@ -820,7 +827,7 @@ export default class Consumer {
     const remotes = await this.scope.remotes();
     const context = {};
     enrichContextFromGlobal(context);
-    const deprecateP = Object.keys(groupedBitsByScope).map(async scopeName => {
+    const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
       const resolvedRemote = await remotes.resolve(scopeName, this.scope);
       const deprecateResult = await resolvedRemote.deprecateMany(groupedBitsByScope[scopeName], context);
       return deprecateResult;
@@ -846,7 +853,7 @@ export default class Consumer {
    */
   async remove(ids: string[], force: boolean, track: boolean, deleteFiles: boolean) {
     // added this to remove support for remove version
-    const bitIds = ids.map(bitId => BitId.parse(bitId)).map(id => {
+    const bitIds = ids.map(bitId => BitId.parse(bitId)).map((id) => {
       id.version = LATEST_BIT_VERSION;
       return id;
     });
@@ -867,7 +874,7 @@ export default class Consumer {
     const remotes = await this.scope.remotes();
     const context = {};
     enrichContextFromGlobal(context);
-    const removeP = Object.keys(groupedBitsByScope).map(async key => {
+    const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
       const resolvedRemote = await remotes.resolve(key, this.scope);
       return resolvedRemote.deleteMany(groupedBitsByScope[key], force, context);
     });
@@ -881,7 +888,7 @@ export default class Consumer {
    */
   async removeComponentFromFs(bitIds: BitIds, deleteFiles: boolean) {
     return Promise.all(
-      bitIds.map(async id => {
+      bitIds.map(async (id) => {
         const component = id.isLocal()
           ? this.bitMap.getComponent(this.bitMap.getExistingComponentId(id.toStringWithoutVersion()))
           : this.bitMap.getComponent(id);
@@ -906,7 +913,7 @@ export default class Consumer {
    * @param {BitIds} bitIds - list of remote component ids to delete
    */
   resolveLocalComponentIds(bitIds: BitIds) {
-    return bitIds.map(id => {
+    return bitIds.map((id) => {
       const realName = this.bitMap.getExistingComponentId(id.toStringWithoutVersion());
       if (!realName) return id;
       const component = this.bitMap.getComponent(realName);
@@ -950,7 +957,7 @@ export default class Consumer {
     if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects({});
     if (!force) {
       await Promise.all(
-        resolvedIDs.map(async id => {
+        resolvedIDs.map(async (id) => {
           const componentStatus = await this.getComponentStatusById(id);
           if (componentStatus.modified) modifiedComponents.push(id);
           else regularComponents.push(id);
@@ -1033,7 +1040,7 @@ export default class Consumer {
     if (!Array.isArray(results)) {
       results = [results];
     }
-    results.forEach(result => {
+    results.forEach((result) => {
       if (result) npmClient.printResults(result);
     });
   }
@@ -1045,7 +1052,7 @@ export default class Consumer {
     // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
     // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
     const componentsWithDependenciesFlatten = R.flatten(
-      componentsWithDependencies.map(oneComponentWithDependencies => {
+      componentsWithDependencies.map((oneComponentWithDependencies) => {
         return oneComponentWithDependencies.component.dependenciesSavedAsComponents
           ? [oneComponentWithDependencies.component, ...oneComponentWithDependencies.dependencies]
           : [oneComponentWithDependencies.component];
