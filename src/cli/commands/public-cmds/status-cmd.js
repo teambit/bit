@@ -67,26 +67,26 @@ export default class Status extends Command {
     const splitByMissing = R.groupBy((component) => {
       return component.includes('missing dependencies') ? 'missing' : 'nonMissing';
     });
-    const { missing, nonMissing } = splitByMissing(newComponents.map(format));
+    const { missing, nonMissing } = splitByMissing(newComponents.map(c => format(c)));
     const newComponentsTitle = newComponents.length
       ? chalk.underline.white('new components')
       : chalk.green('no new components');
     const newComponentsOutput = [newComponentsTitle, ...(nonMissing || []), ...(missing || [])].join('\n');
 
     const modifiedComponentOutput = immutableUnshift(
-      modifiedComponent.map(format),
+      modifiedComponent.map(c => format(c)),
       modifiedComponent.length ? chalk.underline.white('modified components') : chalk.green('no modified components')
     ).join('\n');
 
     const autoTagPendingOutput = immutableUnshift(
-      autoTagPendingComponents.map(format),
+      autoTagPendingComponents.map(c => format(c)),
       autoTagPendingComponents.length
         ? chalk.underline.white('components pending to be tagged automatically (when their dependencies are tagged)')
         : chalk.green('no auto-tag pending components')
     ).join('\n');
 
     const deletedComponentOutput = immutableUnshift(
-      deletedComponents.map(format),
+      deletedComponents.map(c => format(c)),
       deletedComponents.length ? chalk.underline.white('deleted components') : chalk.green('no deleted components')
     ).join('\n');
 
