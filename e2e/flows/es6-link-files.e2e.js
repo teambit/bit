@@ -40,8 +40,8 @@ describe('es6 components with link files', function () {
     });
     it('should not consider that index file as a dependency', () => {
       output = helper.runCmd('bit status');
-      expect(output.includes('bar/foo... ok')).to.be.true;
-      expect(output.includes('missing dependencies')).to.be.false;
+      expect(output).to.have.string('bar/foo... ok');
+      expect(output).to.not.have.string('missing dependencies');
     });
   });
 

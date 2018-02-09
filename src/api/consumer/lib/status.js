@@ -2,11 +2,12 @@
 import { loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component';
+import { Component as ModelComponent } from '../../../scope/models';
 
 export type StatusResult = {
   newComponents: Component[],
   modifiedComponent: Component[],
-  stagedComponents: string[],
+  stagedComponents: ModelComponent[],
   componentsWithMissingDeps: Component[],
   importPendingComponents: Component[],
   autoTagPendingComponents: string[],
@@ -19,7 +20,7 @@ export default (async function status(): Promise<StatusResult> {
   const newAndImportPendingComponents = await componentsList.listNewComponentsAndImportPending();
   const { newComponents, importPendingComponents } = newAndImportPendingComponents;
   const modifiedComponent = await componentsList.listModifiedComponents(true);
-  const stagedComponents = await componentsList.listExportPendingComponents();
+  const stagedComponents = await componentsList.listExportPendingComponents(true);
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
   const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
   const deletedComponents = await componentsList.listDeletedComponents();

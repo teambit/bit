@@ -192,11 +192,13 @@ export default class ComponentsList {
    * Also, components that their model version is higher than their bit.map version.
    * @return {Promise<string[]>}
    */
-  async listExportPendingComponents(): Promise<string[]> {
+  async listExportPendingComponents(load: boolean = false): Promise<string[] | ModelComponent[]> {
     const idsFromObjects = await this.idsFromObjects();
-    return filterAsync(idsFromObjects, (componentId) => {
+    const ids = await filterAsync(idsFromObjects, (componentId) => {
       return this.consumer.getComponentStatusById(BitId.parse(componentId)).then(status => status.staged);
     });
+    if (!load) return ids;
+    return Promise.all(ids.map(id => this.scope.sources.get(BitId.parse(id))));
   }
 
   async listAutoTagPendingComponents(): Promise<ModelComponent[]> {
@@ -252,12 +254,17 @@ export default class ComponentsList {
     return this._fromBitMap[cacheKeyName];
   }
 
-  static sortComponentsByName(components: Component[] | string[]): Component[] | string[] {
+  static sortComponentsByName(components: Component[] | ModelComponent | string[]): Component[] | string[] {
+    const getName = (component) => {
+      let name;
+      if (R.is(ModelComponent, component)) name = component.id();
+      else if (R.is(Component, component)) name = component.id.toString();
+      else name = component;
+      return name.toUpperCase(); // ignore upper and lowercase
+    };
     return components.sort((a, b) => {
-      let nameA = a.id || a;
-      let nameB = b.id || b;
-      nameA = nameA.toString().toUpperCase(); // ignore upper and lowercase
-      nameB = nameB.toString().toUpperCase(); // ignore upper and lowercase
+      const nameA = getName(a);
+      const nameB = getName(b);
       if (nameA < nameB) {
         return -1;
       }
