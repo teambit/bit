@@ -70,13 +70,14 @@ export async function linkComponents(
     ? [...writtenComponents, ...R.flatten(writtenDependencies)]
     : writtenComponents;
   await linkGenerator.writeDependencyLinks(componentsWithDependencies, consumer, createNpmLinkFiles);
+
+  // no need for entry-point file if package.json is written.
+  if (writtenDependencies) {
+    await Promise.all(
+      R.flatten(writtenDependencies).map(component => linkGenerator.writeEntryPointsForComponent(component, consumer))
+    );
+  }
   if (!writePackageJson) {
-    // no need for entry-point file if package.json is written.
-    if (writtenDependencies) {
-      await Promise.all(
-        R.flatten(writtenDependencies).map(component => linkGenerator.writeEntryPointsForComponent(component, consumer))
-      );
-    }
     await Promise.all(
       writtenComponents.map(component => linkGenerator.writeEntryPointsForComponent(component, consumer))
     );
