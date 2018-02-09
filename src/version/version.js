@@ -8,12 +8,12 @@ export default class Version {
   versionNum: ?string;
   latest: boolean;
 
-  constructor(versionNum: string, latest: boolean) {
+  constructor(versionNum: ?string, latest: boolean) {
     this.versionNum = versionNum;
     this.latest = latest;
   }
 
-  increase(releaseType = DEFAULT_BIT_RELEASE_TYPE): Version {
+  increase(releaseType: string = DEFAULT_BIT_RELEASE_TYPE): Version {
     if (!this.versionNum) throw new InvalidVersionChange();
     this.versionNum = semver.inc(this.versionNum, releaseType);
     return this;
@@ -34,6 +34,7 @@ export default class Version {
   }
 
   static parse(versionStr: string): Version {
+    // $FlowFixMe unclear error, might be a bug, try to remove with next Flow version
     return versionParser(versionStr);
   }
 
