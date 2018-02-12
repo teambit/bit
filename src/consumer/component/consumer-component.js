@@ -2,9 +2,9 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
-import { mkdirp, isString, pathNormalizeToLinux, searchFilesIgnoreExt } from '../../utils';
+import { mkdirp, isString, pathNormalizeToLinux } from '../../utils';
 import BitJson from '../bit-json';
-import { Impl, Specs, Dist, License, SourceFile } from '../component/sources';
+import { Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
@@ -27,11 +27,9 @@ import loader from '../../cli/loader';
 import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
-import { writeLinksInDist } from '../../links';
 import { Component as ModelComponent } from '../../scope/models';
 import {
   DEFAULT_BOX_NAME,
-  LATEST_BIT_VERSION,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
@@ -44,6 +42,7 @@ import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
 import type { PathLinux, PathOsBased } from '../../utils/path';
+import type { RawTestsResults } from '../specs-results/specs-results';
 
 export type ComponentProps = {
   name: string,
@@ -565,7 +564,7 @@ export default class Component {
     directory?: string,
     keep?: boolean,
     isCI?: boolean
-  }): Promise<?Results> {
+  }): Promise<?SpecsResults> {
     const testFiles = this.files.filter(file => file.test);
     if (!this.testerId || !testFiles || R.isEmpty(testFiles)) return null;
 
@@ -593,7 +592,7 @@ export default class Component {
               testFile
             });
           });
-          const specsResults = await Promise.all(specsResultsP);
+          const specsResults: RawTestsResults[] = await Promise.all(specsResultsP);
           this.specsResults = specsResults.map(specRes => SpecsResults.createFromRaw(specRes));
           if (rejectOnFailure && !this.specsResults.every(element => element.pass)) {
             return Promise.reject(new ComponentSpecsFailed());
