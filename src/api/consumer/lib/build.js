@@ -14,7 +14,7 @@ export async function build(id: string, verbose: boolean): Promise<?Array<string
   const component: Component = await consumer.loadComponent(bitId);
   const result = await component.build({ scope: consumer.scope, consumer, verbose });
   if (result === null) return null;
-  const distFilePaths = await component.dists.writeDists(component.id, consumer);
+  const distFilePaths = await component.dists.writeDists(component, consumer);
   consumer.bitMap.addMainDistFileToComponent(component.id, distFilePaths);
   await consumer.bitMap.write();
   // await consumer.driver.runHook('onBuild', [component]);

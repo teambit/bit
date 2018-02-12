@@ -1712,7 +1712,7 @@ console.log(barFoo.default());`;
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
-      localConsumerFiles = helper.getConsumerFiles();
+      localConsumerFiles = helper.getConsumerFiles('*.{js,json}');
     });
     it('should change the original directory structure of the main component and remove the shared directory', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');

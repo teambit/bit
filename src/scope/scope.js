@@ -435,7 +435,7 @@ export default class Scope {
     loader.start(BEFORE_RUNNING_BUILD);
     const build = async (component: Component) => {
       await component.build({ scope: this, consumer, verbose });
-      const buildResults = await component.dists.writeDists(component.id, consumer);
+      const buildResults = await component.dists.writeDists(component, consumer);
       return { component: component.id.toString(), buildResults };
     };
     return pMapSeries(components, build);

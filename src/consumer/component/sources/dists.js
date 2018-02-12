@@ -9,6 +9,7 @@ import logger from '../../../logger/logger';
 import { writeLinksInDist } from '../../../links';
 import { searchFilesIgnoreExt } from '../../../utils';
 import { BitId } from '../../../bit-id';
+import Component from '../consumer-component';
 
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
@@ -130,16 +131,16 @@ export default class Dists {
    * write dists file to the filesystem. In case there is a consumer and dist.entry should be stripped, it will be
    * done before writing the files. The originallySharedDir should be already stripped before accessing this method.
    */
-  async writeDists(id: BitId, consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
+  async writeDists(component: Component, consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
     if (this.isEmpty()) return null;
     let componentMap;
     if (consumer) {
-      componentMap = consumer.bitMap.getComponent(id);
-      this.updateDistsPerConsumerBitJson(id, consumer, componentMap);
+      componentMap = consumer.bitMap.getComponent(component.id);
+      this.updateDistsPerConsumerBitJson(component.id, consumer, componentMap);
     }
     const saveDist = this.dists.map(distFile => distFile.write());
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-      await writeLinksInDist(this, componentMap, consumer);
+      await writeLinksInDist(component, componentMap, consumer);
     }
     return Promise.all(saveDist);
   }

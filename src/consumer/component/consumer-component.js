@@ -371,7 +371,7 @@ export default class Component {
       await mkdirp(bitDir);
     }
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
-    if (this.dists.writeDistsFiles) await this.dists.writeDists(this.id, consumer, false);
+    if (this.dists.writeDistsFiles) await this.dists.writeDists(this, consumer, false);
     if (writeBitJson) await this.writeBitJson(bitDir, force);
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
@@ -628,7 +628,7 @@ export default class Component {
       if (!isolated && consumer) {
         logger.debug('Building the component before running the tests');
         await this.build({ scope, verbose, consumer });
-        await this.dists.writeDists(this.id, consumer);
+        await this.dists.writeDists(this, consumer);
         const testDists = !this.dists.isEmpty()
           ? this.dists.get().filter(dist => dist.test)
           : this.files.filter(file => file.test);
@@ -909,7 +909,7 @@ export default class Component {
     const consumerBitJson: ConsumerBitJson = consumer.bitJson;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.component.deprecated : false;
-    let dists = componentFromModel ? componentFromModel.component.dists : undefined;
+    let dists = componentFromModel ? componentFromModel.component.dists.get() : undefined;
     let packageDependencies;
     let devPackageDependencies;
     let bitJson = consumerBitJson;
