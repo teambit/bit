@@ -42,6 +42,7 @@ import {
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
+import Dists from './sources/dists';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 
 export type ComponentProps = {
@@ -62,7 +63,7 @@ export type ComponentProps = {
   devPackageDependencies?: ?Object,
   files?: ?(SourceFile[]) | [],
   docs?: ?(Doclet[]),
-  dists?: ?(Dist[]),
+  dists?: Dist[],
   specsResults?: ?SpecsResults,
   license?: ?License,
   deprecated: ?boolean,
@@ -87,7 +88,7 @@ export default class Component {
   devPackageDependencies: Object;
   _docs: ?(Doclet[]);
   _files: ?(SourceFile[]) | [];
-  dists: ?(Dist[]);
+  dists: Dists;
   specsResults: ?(SpecsResults[]);
   license: ?License;
   log: ?Log;
@@ -95,8 +96,6 @@ export default class Component {
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
   originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
-  _writeDistsFiles: ?boolean = true;
-  _areDistsInsideComponentDir: ?boolean = true;
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
   deprecated: boolean;
@@ -185,7 +184,7 @@ export default class Component {
     this.devPackageDependencies = devPackageDependencies || {};
     this._files = files;
     this._docs = docs;
-    this.dists = dists;
+    this.setDists(dists);
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
@@ -200,12 +199,16 @@ export default class Component {
     });
   }
 
-  setDependencies(dependencies: Dependency[]) {
+  setDependencies(dependencies?: Dependency[]) {
     this.dependencies = new Dependencies(dependencies);
   }
 
-  setDevDependencies(devDependencies: Dependency[]) {
+  setDevDependencies(devDependencies?: Dependency[]) {
     this.devDependencies = new Dependencies(devDependencies);
+  }
+
+  setDists(dists?: Dist[]) {
+    this.dists = new Dists(dists);
   }
 
   getFileExtension(): string {
@@ -275,26 +278,6 @@ export default class Component {
     return this.flattenedDependencies.concat(this.flattenedDevDependencies);
   }
 
-  /**
-   * When dists are written by a consumer (as opposed to isolated-environment for example), the dist-entry and
-   * dist-target are taken into account for calculating the path.
-   * By default, the dists path is inside the component. If dist attribute is populated in bit.json, the path is
-   * relative to consumer root.
-   */
-  getDistDirForConsumer(consumer: Consumer, componentRootDir?: PathLinux): PathOsBased {
-    const consumerBitJson = consumer.bitJson;
-    let rootDir = componentRootDir || '.';
-    if (consumer.shouldDistsBeInsideTheComponent()) {
-      // should be relative to component
-      return path.join(consumer.getPath(), rootDir, DEFAULT_DIST_DIRNAME);
-    }
-    // should be relative to consumer root
-    if (consumerBitJson.distEntry) rootDir = rootDir.replace(consumerBitJson.distEntry, '');
-    const distTarget = consumerBitJson.distTarget || DEFAULT_DIST_DIRNAME;
-    this._areDistsInsideComponentDir = false;
-    return path.join(consumer.getPath(), distTarget, rootDir);
-  }
-
   async buildIfNeeded({
     condition,
     files,
@@ -323,7 +306,8 @@ export default class Component {
     const runBuild = (componentRoot: string): Promise<any> => {
       let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
       if (componentMap) {
-        rootDistFolder = this.getDistDirForConsumer(consumer, componentMap.rootDir);
+        // $FlowFixMe
+        rootDistFolder = this.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       }
       try {
         const result = compiler.compile(files, rootDistFolder);
@@ -387,7 +371,7 @@ export default class Component {
       await mkdirp(bitDir);
     }
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
-    if (this.dists && this._writeDistsFiles) await this.writeDists(consumer, false);
+    await this.dists.writeDists(this, consumer, false);
     if (writeBitJson) await this.writeBitJson(bitDir, force);
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
@@ -443,48 +427,11 @@ export default class Component {
       const newRelative = pathWithoutSharedDir(file.relative, originallySharedDir);
       file.updatePaths({ newBase: file.base, newRelative });
     });
-    if (this.dists) {
-      this.dists.forEach((distFile) => {
-        const newRelative = pathWithoutSharedDir(distFile.relative, originallySharedDir);
-        distFile.updatePaths({ newBase: distFile.base, newRelative });
-      });
-    }
+    this.dists.stripOriginallySharedDir(originallySharedDir, pathWithoutSharedDir);
     this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir);
     this.dependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this.devDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this._wasOriginallySharedDirStripped = true;
-  }
-
-  updateDistsPerConsumerBitJson(consumer: Consumer, componentMap: ComponentMap): void {
-    if (this._distsPathsAreUpdated || !this.dists) return;
-    const newDistBase = this.getDistDirForConsumer(consumer, componentMap.rootDir);
-    const distEntry = consumer.bitJson.distEntry;
-    const shouldDistEntryBeStripped = () => {
-      if (!distEntry || componentMap.origin === COMPONENT_ORIGINS.NESTED) return false;
-      const areAllDistsStartWithDistEntry = () => {
-        return this.dists.map(dist => dist.relative.startsWith(distEntry)).every(x => x);
-      };
-      if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-        return areAllDistsStartWithDistEntry();
-      }
-      // it's IMPORTED. We first check that rootDir starts with dist.entry, it happens mostly when a user imports into
-      // a specific directory (e.g. bit import --path src/). Then, we make sure all dists files start with that
-      // dist.entry. In a case when originallySharedDir is the same as dist.entry, this second check returns false.
-      return componentMap.rootDir.startsWith(distEntry) && areAllDistsStartWithDistEntry();
-    };
-    const distEntryShouldBeStripped = shouldDistEntryBeStripped();
-    if (distEntryShouldBeStripped) {
-      logger.debug(`stripping dist.entry "${distEntry}" from ${this.id}`);
-      this.distEntryShouldBeStripped = true;
-    }
-    const getNewRelative = (dist) => {
-      if (distEntryShouldBeStripped) {
-        return dist.relative.replace(distEntry, '');
-      }
-      return dist.relative;
-    };
-    this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase, newRelative: getNewRelative(dist) }));
-    this._distsPathsAreUpdated = true;
   }
 
   /**
@@ -523,7 +470,7 @@ export default class Component {
     const calculatedBitDir = bitDir || this.files[0].base;
     // Update files base dir according to bitDir
     if (this.files && bitDir) this.files.forEach(file => file.updatePaths({ newBase: bitDir }));
-    if (this.dists && bitDir) this.dists.forEach(dist => dist.updatePaths({ newBase: bitDir }));
+    if (!this.dists.isEmpty() && bitDir) this.dists.get().forEach(dist => dist.updatePaths({ newBase: bitDir }));
 
     // if bitMap parameter is empty, for instance, when it came from the scope, ignore bitMap altogether.
     // otherwise, check whether this component is in bitMap:
@@ -544,7 +491,7 @@ export default class Component {
       // if there is no componentMap, the component is new to this project and should be written to bit.map
       componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
     }
-    if (!consumer.shouldDistsBeInsideTheComponent() && !this.dists) {
+    if (!consumer.shouldDistsBeInsideTheComponent() && this.dists.isEmpty()) {
       // since the dists are set to be outside the components dir, the source files must be saved there
       // otherwise, other components in dists won't be able to link to this component
       this.copyFilesIntoDists();
@@ -596,24 +543,6 @@ export default class Component {
     if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
     this._addComponentToBitMap(bitMap, componentMap.rootDir, origin, parent);
     return this;
-  }
-
-  /**
-   * write dists file to the filesystem. In case there is a consumer and dist.entry should be stripped, it will be
-   * done before writing the files. The originallySharedDir should be already stripped before accessing this method.
-   */
-  async writeDists(consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
-    if (!this.dists) return null;
-    let componentMap;
-    if (consumer) {
-      componentMap = consumer.bitMap.getComponent(this.id);
-      this.updateDistsPerConsumerBitJson(consumer, componentMap);
-    }
-    const saveDist = this.dists.map(distFile => distFile.write());
-    if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-      await writeLinksInDist(this, componentMap, consumer);
-    }
-    return Promise.all(saveDist);
   }
 
   async runSpecs({
@@ -699,8 +628,10 @@ export default class Component {
       if (!isolated && consumer) {
         logger.debug('Building the component before running the tests');
         await this.build({ scope, verbose, consumer });
-        await this.writeDists(consumer);
-        const testDists = this.dists ? this.dists.filter(dist => dist.test) : this.files.filter(file => file.test);
+        await this.dists.writeDists(this, consumer);
+        const testDists = !this.dists.isEmpty()
+          ? this.dists.get().filter(dist => dist.test)
+          : this.files.filter(file => file.test);
         return run(this.mainFile, testDists);
       }
 
@@ -719,16 +650,16 @@ export default class Component {
         logger.debug(`the component ${this.id.toString()} has been imported successfully into an isolated environment`);
 
         await component.build({ scope, verbose });
-        if (component.dists) {
-          const specDistWrite = component.dists.map(file => file.write());
+        if (!component.dists.isEmpty()) {
+          const specDistWrite = component.dists.get().map(file => file.write());
           await Promise.all(specDistWrite);
         }
-        const testFilesList = component.dists
-          ? component.dists.filter(dist => dist.test)
+        const testFilesList = !component.dists.isEmpty()
+          ? component.dists.get().filter(dist => dist.test)
           : component.files.filter(file => file.test);
         const results = await run(component.mainFile, testFilesList);
         if (!keep) await isolatedEnvironment.destroy();
-        return isCI ? { specResults: results, mainFile: this.calculateMainDistFile() } : results;
+        return isCI ? { specResults: results, mainFile: this.dists.calculateMainDistFile(this.mainFile) } : results;
       } catch (e) {
         await isolatedEnvironment.destroy();
         return Promise.reject(e);
@@ -736,10 +667,6 @@ export default class Component {
     } catch (err) {
       return Promise.reject(err);
     }
-  }
-
-  copyFilesIntoDists() {
-    this.dists = this.files.map(file => new Dist({ base: file.base, path: file.path, contents: file.contents }));
   }
 
   async build({
@@ -785,15 +712,15 @@ export default class Component {
     const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
     const needToRebuild = await isNeededToReBuild();
-    if (!needToRebuild && this.dists) {
+    if (!needToRebuild && !this.dists.isEmpty()) {
       logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
       if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         this.stripOriginallySharedDir(bitMap);
         // don't worry about the dist.entry and dist.target at this point. It'll be done later on once the files are
-        // written, probably by this.writeDists()
+        // written, probably by this.dists.writeDists()
       }
 
-      return isCI ? { mainFile: this.calculateMainDistFile(), dists: this.dists } : this.dist;
+      return isCI ? { mainFile: this.dists.calculateMainDistFile(this.mainFile), dists: this.dists.get() } : this.dists;
     }
 
     logger.debug('compilerId found, start building');
@@ -826,7 +753,7 @@ export default class Component {
       }
     });
 
-    this.dists = builtFiles.map(file => new Dist(file));
+    this.setDists(builtFiles.map(file => new Dist(file)));
 
     if (save) {
       await scope.sources.updateDist({ source: this });
@@ -876,33 +803,9 @@ export default class Component {
     return JSON.stringify(this.toObject());
   }
 
-  // In case there are dist files, we want to point the index to the main dist file, not to source.
-  // This important since when you require a module without specify file, it will give you the file specified under this key
-  // (or index.js if key not exists)
-  calculateMainDistFile(): PathOsBased {
-    if (this._writeDistsFiles && this._areDistsInsideComponentDir) {
-      const mainFile = searchFilesIgnoreExt(this.dists, this.mainFile, 'relative', 'relative');
-      if (mainFile) return path.join(DEFAULT_DIST_DIRNAME, mainFile);
-    }
-    return this.mainFile;
-  }
-
-  /**
-   * authored components have the dists outside the components dir and they don't have rootDir.
-   * it returns the main file or main dist file relative to consumer-root.
-   */
-  calculateMainDistFileForAuthored(consumer: Consumer): PathOsBased {
-    if (!this.dists) return this.mainFile;
-    const getMainFileToSearch = (): PathOsBased => {
-      if (!consumer.bitJson.distEntry) return this.mainFile;
-      const distEntryNormalized = path.normalize(consumer.bitJson.distEntry);
-      return this.mainFile.replace(`${distEntryNormalized}${path.sep}`, '');
-    };
-    const mainFileToSearch = getMainFileToSearch();
-    const distMainFile = searchFilesIgnoreExt(this.dists, mainFileToSearch, 'relative', 'relative');
-    if (!distMainFile) return this.mainFile;
-    const distTarget = consumer.bitJson.distTarget || DEFAULT_DIST_DIRNAME;
-    return path.join(distTarget, distMainFile);
+  copyFilesIntoDists() {
+    const dists = this.files.map(file => new Dist({ base: file.base, path: file.path, contents: file.contents }));
+    this.setDists(dists);
   }
 
   /**
@@ -1006,7 +909,7 @@ export default class Component {
     const consumerBitJson: ConsumerBitJson = consumer.bitJson;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.component.deprecated : false;
-    let dists = componentFromModel ? componentFromModel.component.dists : undefined;
+    let dists = componentFromModel ? componentFromModel.component.dists.get() : undefined;
     let packageDependencies;
     let devPackageDependencies;
     let bitJson = consumerBitJson;

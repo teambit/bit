@@ -150,17 +150,29 @@ async function write(
   const name = excludeRegistryPrefix
     ? component.id.toStringWithoutVersion().replace(/\//g, '.')
     : convertIdToNpmName(component.id);
-  const packageJson = new PackageJson(bitDir, {
-    name,
-    version: component.version,
-    homepage: component._getHomepage(),
-    main: pathNormalizeToLinux(component.calculateMainDistFile()),
-    devDependencies: component.devPackageDependencies,
-    peerDependencies: component.peerPackageDependencies,
-    componentRootFolder: bitDir,
-    license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
-  });
-  packageJson.setDependencies(component.packageDependencies, allBitDependencies, registryPrefix);
+
+  const getPackageJsonInstance = (dir) => {
+    const packageJson = new PackageJson(dir, {
+      name,
+      version: component.version,
+      homepage: component._getHomepage(),
+      main: pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile)),
+      devDependencies: component.devPackageDependencies,
+      peerDependencies: component.peerPackageDependencies,
+      componentRootFolder: dir,
+      license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
+    });
+    packageJson.setDependencies(component.packageDependencies, allBitDependencies, registryPrefix);
+    return packageJson;
+  };
+  const packageJson = getPackageJsonInstance(bitDir);
+
+  if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
+    const distRootDir = component.dists.distsRootDir;
+    if (!distRootDir) throw new Error('component.dists.distsRootDir is not defined yet');
+    const distPackageJson = getPackageJsonInstance(distRootDir);
+    await distPackageJson.write({ override: force });
+  }
 
   return packageJson.write({ override: force });
 }
