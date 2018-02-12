@@ -94,11 +94,6 @@ console.log(isType());`;
           path.join(helper.localScopePath, 'node_modules', 'testLink', `${helper.remoteScope}.bar.foo`)
         ).to.be.a.path();
       });
-      it('should point to generated symlink', () => {
-        expect(
-          path.join(helper.localScopePath, 'node_modules', 'testLink', `${helper.remoteScope}.bar.foo`, 'index.js')
-        ).to.be.a.file();
-      });
     });
     describe('manual linking', () => {
       before(() => {
@@ -112,11 +107,6 @@ console.log(isType());`;
         expect(
           path.join(helper.localScopePath, 'node_modules', 'testLink', `${helper.remoteScope}.bar.foo`)
         ).to.be.a.path();
-      });
-      it('should point to generated symlink', () => {
-        expect(
-          path.join(helper.localScopePath, 'node_modules', 'testLink', `${helper.remoteScope}.bar.foo`, 'index.js')
-        ).to.be.a.file();
       });
     });
   });
