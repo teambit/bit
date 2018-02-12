@@ -47,9 +47,10 @@ export default class Init extends Command {
     let initMessage = `${chalk.green('successfully initialized an empty bit scope.')}`;
 
     if (!created) initMessage = `${chalk.grey('successfully reinitialized a bit scope.')}`;
-    const addedGitHooksTemplate = _generateAddedGitHooksTemplate(addedGitHooks);
-    const existingGitHooksTemplate = _generateExistingGitHooksTemplate(existingGitHooks);
-    return `${initMessage}\n${addedGitHooksTemplate}\n${existingGitHooksTemplate}`;
+    // const addedGitHooksTemplate = _generateAddedGitHooksTemplate(addedGitHooks);
+    // const existingGitHooksTemplate = _generateExistingGitHooksTemplate(existingGitHooks);
+    // return `${initMessage}\n${addedGitHooksTemplate}\n${existingGitHooksTemplate}`;
+    return initMessage;
   }
 }
 
