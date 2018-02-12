@@ -45,12 +45,12 @@ import Component from '../consumer-component';
  */
 export default class Dists {
   dists: Dist[];
-  writeDistsFiles: ?boolean = true;
+  writeDistsFiles: boolean = true; // changed only when importing a component
   areDistsInsideComponentDir: ?boolean = true;
   distEntryShouldBeStripped: ?boolean = false;
-  distsPathsAreUpdated: ?boolean = false;
-  distsRootDir: ?string;
-  constructor(dists: Dist[] = []) {
+  _distsPathsAreUpdated: ?boolean = false; // makes sure to not update twice
+  distsRootDir: ?string; // populated only after getDistDirForConsumer() is called
+  constructor(dists?: ?(Dist[])) {
     this.dists = dists || []; // cover also case of null (when it comes from the model)
   }
 
@@ -89,7 +89,7 @@ export default class Dists {
   }
 
   updateDistsPerConsumerBitJson(id: BitId, consumer: Consumer, componentMap: ComponentMap): void {
-    if (this.distsPathsAreUpdated || this.isEmpty()) return;
+    if (this._distsPathsAreUpdated || this.isEmpty()) return;
     // $FlowFixMe
     const newDistBase = this.getDistDirForConsumer(consumer, componentMap.rootDir);
     const distEntry = consumer.bitJson.distEntry;
@@ -120,7 +120,7 @@ export default class Dists {
       return dist.relative;
     };
     this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase, newRelative: getNewRelative(dist) }));
-    this.distsPathsAreUpdated = true;
+    this._distsPathsAreUpdated = true;
   }
 
   stripOriginallySharedDir(originallySharedDir: string, pathWithoutSharedDir: Function) {
@@ -135,7 +135,7 @@ export default class Dists {
    * done before writing the files. The originallySharedDir should be already stripped before accessing this method.
    */
   async writeDists(component: Component, consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
-    if (this.isEmpty()) return null;
+    if (this.isEmpty() || !this.writeDistsFiles) return null;
     let componentMap;
     if (consumer) {
       componentMap = consumer.bitMap.getComponent(component.id);

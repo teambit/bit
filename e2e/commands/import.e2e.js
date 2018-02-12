@@ -5,7 +5,6 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import normalize from 'normalize-path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
-import { AUTO_GENERATED_MSG } from '../../src/constants';
 import * as fixtures from '../fixtures/fixtures';
 
 chai.use(require('chai-fs'));

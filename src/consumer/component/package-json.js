@@ -167,8 +167,9 @@ async function write(
   };
   const packageJson = getPackageJsonInstance(bitDir);
 
-  if (!component.dists.areDistsInsideComponentDir) {
+  if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
     const distRootDir = component.dists.distsRootDir;
+    if (!distRootDir) throw new Error('component.dists.distsRootDir is not defined yet');
     const distPackageJson = getPackageJsonInstance(distRootDir);
     await distPackageJson.write({ override: force });
   }

@@ -371,7 +371,7 @@ export default class Component {
       await mkdirp(bitDir);
     }
     if (this.files) await this.files.forEach(file => file.write(undefined, force));
-    if (this.dists.writeDistsFiles) await this.dists.writeDists(this, consumer, false);
+    await this.dists.writeDists(this, consumer, false);
     if (writeBitJson) await this.writeBitJson(bitDir, force);
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
