@@ -49,6 +49,7 @@ export default class Dists {
   areDistsInsideComponentDir: ?boolean = true;
   distEntryShouldBeStripped: ?boolean = false;
   distsPathsAreUpdated: ?boolean = false;
+  distsRootDir: ?string;
   constructor(dists: Dist[] = []) {
     this.dists = dists || []; // cover also case of null (when it comes from the model)
   }
@@ -76,13 +77,15 @@ export default class Dists {
     let rootDir = componentRootDir || '.';
     if (consumer.shouldDistsBeInsideTheComponent()) {
       // should be relative to component
-      return path.join(consumer.getPath(), rootDir, DEFAULT_DIST_DIRNAME);
+      this.distsRootDir = path.join(consumer.getPath(), rootDir, DEFAULT_DIST_DIRNAME);
+    } else {
+      // should be relative to consumer root
+      if (consumerBitJson.distEntry) rootDir = rootDir.replace(consumerBitJson.distEntry, '');
+      const distTarget = consumerBitJson.distTarget || DEFAULT_DIST_DIRNAME;
+      this.areDistsInsideComponentDir = false;
+      this.distsRootDir = path.join(consumer.getPath(), distTarget, rootDir);
     }
-    // should be relative to consumer root
-    if (consumerBitJson.distEntry) rootDir = rootDir.replace(consumerBitJson.distEntry, '');
-    const distTarget = consumerBitJson.distTarget || DEFAULT_DIST_DIRNAME;
-    this.areDistsInsideComponentDir = false;
-    return path.join(consumer.getPath(), distTarget, rootDir);
+    return this.distsRootDir;
   }
 
   updateDistsPerConsumerBitJson(id: BitId, consumer: Consumer, componentMap: ComponentMap): void {
