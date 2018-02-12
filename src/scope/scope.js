@@ -366,29 +366,28 @@ export default class Scope {
       // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
       // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
       // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
-      // consumerComponent.distEntryShouldBeStripped is set to true.
+      // consumerComponent.dists.distEntryShouldBeStripped is set to true.
       // because the model always has the paths of the original author, in case part of the path was stripped, add it
       // back before saving to the model. this way, when the author updates the components, the paths will be correct.
       const addSharedDirAndDistEntry = (pathStr) => {
         const withSharedDir = consumerComponent.originallySharedDir
           ? pathLib.join(consumerComponent.originallySharedDir, pathStr)
           : pathStr;
-        const withDistEntry = consumerComponent.distEntryShouldBeStripped
+        const withDistEntry = consumerComponent.dists.distEntryShouldBeStripped
           ? pathLib.join(consumer.bitJson.distEntry, withSharedDir)
           : withSharedDir;
         return pathNormalizeToLinux(withDistEntry);
       };
-      const dists =
-        consumerComponent.dists && consumerComponent.dists.length
-          ? consumerComponent.dists.map((dist) => {
-            return {
-              name: dist.basename,
-              relativePath: addSharedDirAndDistEntry(dist.relative),
-              file: Source.from(dist.contents),
-              test: dist.test
-            };
-          })
-          : null;
+      const dists = !consumerComponent.dists.isEmpty()
+        ? consumerComponent.dists.get().map((dist) => {
+          return {
+            name: dist.basename,
+            relativePath: addSharedDirAndDistEntry(dist.relative),
+            file: Source.from(dist.contents),
+            test: dist.test
+          };
+        })
+        : null;
 
       const testResult = testsResults.find(result => result.component.id.toString() === consumerComponentId);
 
@@ -436,7 +435,7 @@ export default class Scope {
     loader.start(BEFORE_RUNNING_BUILD);
     const build = async (component: Component) => {
       await component.build({ scope: this, consumer, verbose });
-      const buildResults = await component.writeDists(consumer);
+      const buildResults = await component.dists.writeDists(component.id, consumer);
       return { component: component.id.toString(), buildResults };
     };
     return pMapSeries(components, build);

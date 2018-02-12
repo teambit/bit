@@ -23,7 +23,7 @@ export async function linkAllToNodeModules(consumer: Consumer) {
 export async function writeLinksInDist(component: Component, componentMap, consumer: Consumer) {
   const componentWithDeps = await component.toComponentWithDependencies(consumer);
   await linkGenerator.writeDependencyLinks([componentWithDeps], consumer, false);
-  const newMainFile = pathNormalizeToLinux(component.calculateMainDistFile());
+  const newMainFile = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
   await packageJson.updateAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
   linkComponentsToNodeModules([component], consumer);
   return linkGenerator.writeEntryPointsForComponent(component, consumer);

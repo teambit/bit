@@ -385,7 +385,7 @@ export default class Consumer {
       }
       // don't write dists files for authored components as the author has its own mechanism to generate them
       // also, don't write dists file for imported component, unless the user used '--dist' flag
-      componentWithDeps.component._writeDistsFiles = writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
+      componentWithDeps.component.dists.writeDistsFiles = writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return componentWithDeps.component.write({
         bitDir,
         force,

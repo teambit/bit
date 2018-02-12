@@ -194,11 +194,15 @@ async function writeDependencyLinks(
   ) => {
     const parentDir = parentComponent.writtenPath || parentComponentMap.rootDir; // when running from bit build, the writtenPath is not available
     const relativePathInDependency = path.normalize(relativePath.destinationRelativePath);
-    const mainFile: PathOsBased = depComponent.calculateMainDistFile();
-    const hasDist = parentComponent._writeDistsFiles && parentComponent.dists && !R.isEmpty(parentComponent.dists);
-    const distRoot: PathOsBased = parentComponent.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
+    const mainFile: PathOsBased = depComponent.dists.calculateMainDistFile(depComponent.mainFile);
+    const hasDist = parentComponent.dists.writeDistsFiles && !parentComponent.dists.isEmpty();
+    const distRoot: PathOsBased = parentComponent.dists.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
 
-    let relativeDistPathInDependency = searchFilesIgnoreExt(depComponent.dists, relativePathInDependency, 'relative');
+    let relativeDistPathInDependency = searchFilesIgnoreExt(
+      depComponent.dists.get(),
+      relativePathInDependency,
+      'relative'
+    );
     relativeDistPathInDependency = relativeDistPathInDependency
       ? relativeDistPathInDependency.relative
       : relativePathInDependency;
@@ -217,7 +221,7 @@ async function writeDependencyLinks(
     if (hasDist) {
       const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
       const depRootDirDist = depComponentMap
-        ? depComponent.getDistDirForConsumer(consumer, depComponentMap.rootDir)
+        ? depComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
         : undefined;
       distLinkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
       // Generate a link file inside dist folder of the dependent component
@@ -325,12 +329,12 @@ async function writeEntryPointsForComponent(component: Component, consumer: Cons
   const componentMap = consumer.bitMap.getComponent(componentId);
   const componentRoot = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
-  const mainFile = component.calculateMainDistFile();
+  const mainFile = component.dists.calculateMainDistFile(component.mainFile);
   const indexName = getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = getLinkContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
-  if (component.dists && component._writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
-    const distDir = component.getDistDirForConsumer(consumer, componentMap.rootDir);
+  if (!component.dists.isEmpty() && component.dists.writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
+    const distDir = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
     const entryPointDist = path.join(distDir, indexName);
     logger.debug(`writeEntryPointFile, on ${entryPointDist}`);
     await outputFile({ filePath: entryPointDist, content: entryPointFileContent, override: false });
