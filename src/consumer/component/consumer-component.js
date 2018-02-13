@@ -60,6 +60,7 @@ export type ComponentProps = {
   flattenedDevDependencies?: ?BitIds,
   packageDependencies?: ?Object,
   devPackageDependencies?: ?Object,
+  peerPackageDependencies?: ?Object,
   files?: ?(SourceFile[]) | [],
   docs?: ?(Doclet[]),
   dists?: Dist[],
@@ -85,6 +86,7 @@ export default class Component {
   flattenedDependencies: BitIds;
   packageDependencies: Object;
   devPackageDependencies: Object;
+  peerPackageDependencies: Object;
   _docs: ?(Doclet[]);
   _files: ?(SourceFile[]) | [];
   dists: Dists;
@@ -158,6 +160,7 @@ export default class Component {
     flattenedDevDependencies,
     packageDependencies,
     devPackageDependencies,
+    peerPackageDependencies,
     files,
     docs,
     dists,
@@ -181,6 +184,7 @@ export default class Component {
     this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
+    this.peerPackageDependencies = peerPackageDependencies || {};
     this._files = files;
     this._docs = docs;
     this.setDists(dists);
@@ -237,7 +241,8 @@ export default class Component {
       dependencies: this.dependencies.asWritableObject(),
       devDependencies: this.devDependencies.asWritableObject(),
       packageDependencies: this.packageDependencies,
-      devPackageDependencies: this.devPackageDependencies
+      devPackageDependencies: this.devPackageDependencies,
+      peerPackageDependencies: this.peerPackageDependencies
     }).write({ bitDir, override: force });
   }
 
@@ -788,6 +793,7 @@ export default class Component {
       devDependencies: this.devDependencies.serialize(),
       packageDependencies: this.packageDependencies,
       devPackageDependencies: this.devPackageDependencies,
+      peerPackageDependencies: this.peerPackageDependencies,
       files: this.files,
       docs: this.docs,
       dists: this.dists,
@@ -853,6 +859,7 @@ export default class Component {
       devDependencies,
       packageDependencies,
       devPackageDependencies,
+      peerPackageDependencies,
       docs,
       mainFile,
       dists,
@@ -874,6 +881,7 @@ export default class Component {
       devDependencies,
       packageDependencies,
       devPackageDependencies,
+      peerPackageDependencies,
       mainFile,
       files,
       docs,
@@ -911,6 +919,7 @@ export default class Component {
     let dists = componentFromModel ? componentFromModel.component.dists.get() : undefined;
     let packageDependencies;
     let devPackageDependencies;
+    let peerPackageDependencies;
     let bitJson = consumerBitJson;
     const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
       const sourceFiles = [];
@@ -949,6 +958,7 @@ export default class Component {
       if (bitJson) {
         packageDependencies = bitJson.packageDependencies;
         devPackageDependencies = bitJson.devPackageDependencies;
+        peerPackageDependencies = bitJson.peerPackageDependencies;
       }
     }
 
@@ -977,6 +987,7 @@ export default class Component {
       dists,
       packageDependencies,
       devPackageDependencies,
+      peerPackageDependencies,
       deprecated
     });
   }

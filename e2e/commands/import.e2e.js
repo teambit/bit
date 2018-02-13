@@ -1792,7 +1792,6 @@ console.log(barFoo.default());`;
       helper.commitAllComponents();
       helper.exportComponent('comp/with-deps');
       helper.reInitLocalScope();
-      helper.createPackageJson();
       helper.addRemoteScope(helper.remoteScopePath);
       helper.manageWorkspaces();
       helper.importComponent('comp/with-deps');

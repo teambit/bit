@@ -67,14 +67,11 @@ export default class Helper {
     return fs.readJSONSync(bitJsonPath) || {};
   }
 
-  createPackageJson(
-    name: string = 'test',
-    version: string = '0.0.1',
-    packageJsonPath: string = path.join(this.localScopePath, 'package.json')
-  ) {
-    const packageJson = { name, version };
-    fs.writeJSONSync(packageJsonPath, packageJson);
+  createPackageJson(data: Object, location: string = this.localScopePath) {
+    const packageJsonPath = path.join(location, 'package.json');
+    fs.writeJSONSync(packageJsonPath, data, { spaces: 2 });
   }
+
   manageWorkspaces(withWorkspaces: boolean = true, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     const bitJson = this.readBitJson(bitJsonPath);
     bitJson.packageManager = 'yarn';
