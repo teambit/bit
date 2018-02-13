@@ -754,14 +754,14 @@ export default class Consumer {
   static ensure(projectPath: PathOsBased = process.cwd(), noGit: boolean = false): Promise<Consumer> {
     const gitDirPath = path.join(projectPath, DOT_GIT_DIR);
     let resolvedScopePath = path.join(projectPath, BIT_HIDDEN_DIR);
-    let addedGitHooks;
+    // let addedGitHooks;
     let existingGitHooks;
     if (!noGit && fs.existsSync(gitDirPath)) {
       resolvedScopePath = path.join(gitDirPath, BIT_GIT_DIR);
-      const gitHooksManager = GitHooksManager.init(gitDirPath);
-      const writeHooksResult = gitHooksManager.writeAllHooks();
-      addedGitHooks = writeHooksResult.added;
-      existingGitHooks = writeHooksResult.alreadyExist;
+      // const gitHooksManager = GitHooksManager.init(gitDirPath);
+      // const writeHooksResult = gitHooksManager.writeAllHooks();
+      // addedGitHooks = writeHooksResult.added;
+      // existingGitHooks = writeHooksResult.alreadyExist;
     }
     const scopeP = Scope.ensure(resolvedScopePath);
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
@@ -774,7 +774,7 @@ export default class Consumer {
         scope,
         bitJson,
         bitMap,
-        addedGitHooks,
+        // addedGitHooks,
         existingGitHooks
       });
     });
