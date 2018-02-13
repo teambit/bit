@@ -278,16 +278,23 @@ export default class SSH implements Network {
       readyTimeout: DEFAULT_SSH_READY_TIMEOUT
     };
 
+    logger.debug('SSH: checking if ssh agent has socket');
+
     // if ssh-agent socket exists, use it.
     if (this.hasAgentSocket() && !skipAgent) {
+      logger.debug('SSH: connecting using ssh agent socket');
       return Promise.resolve(merge(base, { agent: process.env.SSH_AUTH_SOCK }));
     }
+    logger.debug('SSH: there is no ssh agent socket (or its been disabled)');
+    logger.debug(`SSH: reading ssh key file ${key}`);
 
     // otherwise just search for merge
     const keyBuffer = keyGetter(key);
     if (keyBuffer) {
       return Promise.resolve(merge(base, { privateKey: keyBuffer }));
     }
+    logger.debug('SSH: reading ssh key file failed');
+    logger.debug('SSH: prompt for username and password');
 
     return promptUserpass().then(({ username, password }) => {
       this._sshUsername = username;
@@ -303,14 +310,18 @@ export default class SSH implements Network {
   connect(key: ?string, passphrase: ?string, skipAgent: boolean = false): Promise<SSH> {
     const self = this;
 
+    logger.debug('SSH: starting ssh connection process');
+
     return this.composeConnectionObject(key, passphrase, skipAgent)
       .then((sshConfig) => {
         return new Promise((resolve, reject) => {
           function prompt() {
+            logger.debug('SSH: prompt for passphrase');
             return promptPassphrase()
               .then((res) => {
                 cachedPassphrase = res.passphrase;
                 return self.connect(key, cachedPassphrase).catch(() => {
+                  logger.debug('SSH: connecting using passphrase failed, trying again');
                   return prompt();
                 });
               })
@@ -321,12 +332,18 @@ export default class SSH implements Network {
           try {
             conn
               .on('error', (err) => {
+                logger.debug('SSH: connection on error event');
+
                 if (this.hasAgentSocket() && err.message === AUTH_FAILED_MESSAGE) {
+                  logger.debug('SSH: retry in case ssh-agent failed');
+
                   // retry in case ssh-agent failed
                   reject({
                     skip: true
                   });
                 }
+
+                logger.debug('SSH: auth failed', err);
 
                 if (err.message === AUTH_FAILED_MESSAGE) {
                   return reject(new AuthenticationFailed());
@@ -341,8 +358,10 @@ export default class SSH implements Network {
               .connect(sshConfig);
           } catch (e) {
             if (e.message === PASSPHRASE_MESSAGE) {
+              logger.debug('SSH: Encrypted private key detected, but no passphrase given');
               conn.end();
               if (cachedPassphrase) {
+                logger.debug('SSH: trying to use cached passphrase');
                 return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
               }
 
@@ -357,6 +376,8 @@ export default class SSH implements Network {
         if (err.skip) {
           return this.connect(key, passphrase, true);
         }
+
+        logger.debug('SSH: connection failed', err);
 
         throw err;
       });
