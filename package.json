@@ -9,6 +9,8 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "flow-coverage": "flow-coverage-report -i \"./src/**/*.js\"",
     "lint": "eslint \"{src,specs,e2e}/**/*.js\" && flow check",
+    "lint:table": "eslint \"{src,specs,e2e}/**/*.js\" --format table && flow check",
+    "lint:html": "eslint \"{src,specs,e2e}/**/*.js\" --format html -o eslint-report.html && flow check",
     "lint-circle": "eslint \"{src,specs,e2e}/**/*.js\" --ignore-path .eslintignore-circle --format junit -o junit/eslint-results.xml",
     "lint-circle-debug": "eslint \"{src,specs,e2e}/**/*.js\" --ignore-path .eslintignore-circle",
     "format": "prettier-eslint \"{src,specs,e2e}/**/*.js\" --write",
