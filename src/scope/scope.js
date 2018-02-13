@@ -96,7 +96,7 @@ export default class Scope {
   scopeJson: ScopeJson;
   tmp: Tmp;
   path: string;
-  // sources: SourcesRepository; // for some reason it interferes with the IDE autocomplete
+  sources: SourcesRepository;
   objects: Repository;
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
 

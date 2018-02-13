@@ -3,7 +3,6 @@ import R from 'ramda';
 import { BitId } from '../bit-id';
 import Component from '../consumer/component';
 import { COMPONENT_ORIGINS } from '../constants';
-import BitMap from '../consumer/bit-map/bit-map';
 import logger from '../logger/logger';
 import { pathNormalizeToLinux } from '../utils';
 import * as linkGenerator from '../links/link-generator';
@@ -11,8 +10,9 @@ import linkComponentsToNodeModules from './node-modules-linker';
 import Consumer from '../consumer/consumer';
 import ComponentWithDependencies from '../scope/component-dependencies';
 import * as packageJson from '../consumer/component/package-json';
+import type { LinksResult } from './node-modules-linker';
 
-export async function linkAllToNodeModules(consumer: Consumer) {
+export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
   const componentsMaps = consumer.bitMap.getAllComponents();
   if (R.isEmpty(componentsMaps)) throw new Error('nothing to link');
   const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));

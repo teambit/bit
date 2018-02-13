@@ -1,11 +1,11 @@
 /** @flow */
-import { loadScope } from '../../../scope';
+import { loadScope, Scope } from '../../../scope';
 import { BitId } from '../../../bit-id';
 import Version from '../../../scope/models/version';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../../../constants';
 
 export default (async function catComponent(id: string) {
-  const scope = await loadScope();
+  const scope: Scope = await loadScope();
   const bitId = BitId.parse(id);
   const component = await scope.sources.get(bitId);
   if (!component) return Promise.reject('component was not found');

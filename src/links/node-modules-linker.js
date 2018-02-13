@@ -119,7 +119,7 @@ function writeMissingLinks(component, componentMap, bitMap) {
   });
 }
 
-export default function linkComponents(components: Component[], consumer: Consumer): Object[] {
+export default function linkComponents(components: Component[], consumer: Consumer): LinksResult[] {
   return components.map((component) => {
     const componentId = component.id;
     logger.debug(`linking component to node_modules: ${componentId}`);
