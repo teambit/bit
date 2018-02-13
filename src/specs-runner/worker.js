@@ -21,14 +21,14 @@ try {
 
   // register globals
   if (tester.globals) {
-    tester.globals.forEach((g) => {
+    Object.keys(tester.globals).forEach((g) => {
       global[g] = tester.globals[g];
     });
   }
 
   // register modules
   if (tester.modules) {
-    tester.modules.forEach((m) => {
+    Object.keys(tester.modules).forEach((m) => {
       mockery.registerMock(m, tester.modules[m]);
     });
   }
