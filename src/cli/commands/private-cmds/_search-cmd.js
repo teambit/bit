@@ -2,7 +2,7 @@
 import Command from '../../command';
 import { fromBase64, unpackCommand, buildCommandMessage, packCommand } from '../../../utils';
 import { searchAdapter } from '../../../search';
-import { Doc } from '../../../search/indexer';
+import type { Doc } from '../../../search/indexer';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 

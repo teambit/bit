@@ -4,7 +4,7 @@ import requestify from 'requestify';
 import Command from '../../command';
 import { searchAdapter } from '../../../search';
 import { formatter } from '../../../search/searcher';
-import { Doc } from '../../../search/indexer';
+import type { Doc } from '../../../search/indexer';
 import loader from '../../../cli/loader';
 import { SEARCH_DOMAIN } from '../../../constants';
 import { BEFORE_REMOTE_SEARCH } from '../../../cli/loader/loader-messages';
@@ -17,7 +17,7 @@ export default class Search extends Command {
   loader = true;
   migration = true;
 
-  action([query]: [string[]], { scope, reindex }: { scope: string, reindex: boolean }) {
+  action([query]: [string[]], { scope, reindex }: { scope: string, reindex: boolean }): Promise<any> {
     const queryStr = query.join(' ');
     if (scope) {
       loader.start(BEFORE_REMOTE_SEARCH({ scope, queryStr }));

@@ -44,6 +44,7 @@ import npmClient from '../npm-client';
 import GitHooksManager from '../git-hooks/git-hooks-manager';
 import { RemovedLocalObjects } from '../scope/component-remove';
 import { linkComponents, linkAllToNodeModules, linkComponentsToNodeModules } from '../links';
+import type { LinksResult } from '../links/node-modules-linker';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
 import { Dependencies } from './component/dependencies';
@@ -1069,7 +1070,7 @@ export default class Consumer {
    * 2) install npm packages of all imported and nested components
    * 3) link all components
    */
-  async install(verbose) {
+  async install(verbose: boolean): Promise<LinksResult[]> {
     const candidateComponents = this.bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.NESTED]);
     const dirs = Object.keys(candidateComponents)
       .map(id => candidateComponents[id].rootDir || null)

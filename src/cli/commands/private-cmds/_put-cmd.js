@@ -1,6 +1,5 @@
 /** @flow */
 import Command from '../../command';
-import ComponentObjects from '../../../scope/component-objects';
 import { fromBase64, buildCommandMessage, packCommand, unpackCommand } from '../../../utils';
 import { put } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';

@@ -1,6 +1,6 @@
 import path from 'path';
 import chai, { expect } from 'chai';
-import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+import Helper from '../e2e-helper';
 
 const assertArrays = require('chai-arrays');
 
