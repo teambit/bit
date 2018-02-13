@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - support peerDependencies (in the model for now)
 
+## [0.12.6-dev.2] - 2018-02-13
+
 ## [0.12.6-dev.1] - 2018-02-13
 
 - `bit status` shows a list of staged versions in 'staged components' section
