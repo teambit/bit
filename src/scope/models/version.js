@@ -141,7 +141,9 @@ export default class Version extends BitObject {
     };
 
     const filterFunction = (val, key) => {
-      if (key === 'devDependencies' || key === 'devPackageDependencies' || key === 'peerPackageDependencies') { return !R.isEmpty(val); }
+      if (key === 'devDependencies' || key === 'devPackageDependencies' || key === 'peerPackageDependencies') {
+        return !R.isEmpty(val);
+      }
       return !!val;
     };
 
@@ -228,6 +230,7 @@ export default class Version extends BitObject {
         flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
         flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.toString()),
         packageDependencies: this.packageDependencies,
+        devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies
       },
       val => !!val
