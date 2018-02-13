@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import fs from 'fs-extra';
 import R from 'ramda';
 import { COMPONENT_ORIGINS } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
@@ -325,6 +326,19 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
   return { componentsDeps, devComponentsDeps, packagesDeps, devPackagesDeps, untrackedDeps, relativeDeps, missingDeps };
 }
 
+function findPeerDependencies(consumerPath: string): Object {
+  const packageJsonLocation = path.join(consumerPath, 'package.json');
+  let peerDependencies = {};
+  if (!fs.existsSync(packageJsonLocation)) return peerDependencies;
+  try {
+    const packageJson = fs.readJsonSync(packageJsonLocation);
+    if (packageJson.peerDependencies) peerDependencies = packageJson.peerDependencies;
+  } catch (err) {
+    logger.error(`Failed reading the project package.json. Error Message: ${err.message}`);
+  }
+  return peerDependencies;
+}
+
 /**
  * Merge the dependencies-trees we got from all files to one big dependency-tree
  * @param {Array<Object>} depTrees
@@ -435,6 +449,7 @@ export default (async function loadDependenciesForComponent(
   if (!R.isEmpty(untrackedDependencies)) missingDependencies.untrackedDependencies = untrackedDependencies;
   component.packageDependencies = traversedDeps.packagesDeps;
   component.devPackageDependencies = traversedDeps.devPackagesDeps;
+  component.peerPackageDependencies = findPeerDependencies(consumerPath);
   if (!R.isEmpty(traversedDeps.relativeDeps)) {
     missingDependencies.relativeComponents = traversedDeps.relativeDeps;
   }

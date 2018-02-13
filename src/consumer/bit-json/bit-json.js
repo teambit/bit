@@ -26,6 +26,7 @@ export type BitJsonProps = {
   devDependencies?: Object,
   packageDependencies?: Object,
   devPackageDependencies?: Object,
+  peerPackageDependencies?: Object,
   extensions?: Object
 };
 
@@ -34,6 +35,8 @@ export type BitJsonProps = {
  */
 export default class BitJson extends AbstractBitJson {
   packageDependencies: { [string]: string };
+  devPackageDependencies: ?Object;
+  peerPackageDependencies: ?Object;
 
   constructor({
     impl,
@@ -44,6 +47,7 @@ export default class BitJson extends AbstractBitJson {
     devDependencies,
     packageDependencies,
     devPackageDependencies,
+    peerPackageDependencies,
     lang,
     bindingPrefix,
     extensions
@@ -51,6 +55,7 @@ export default class BitJson extends AbstractBitJson {
     super({ impl, spec, compiler, tester, dependencies, devDependencies, lang, bindingPrefix, extensions });
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
+    this.peerPackageDependencies = peerPackageDependencies || {};
   }
 
   toPlainObject() {

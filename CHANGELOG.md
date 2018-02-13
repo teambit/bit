@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support peerDependencies (in the model for now)
+
 ## [0.12.6-dev.1] - 2018-02-13
 
-- `bit status` shows a list of staged versions in 'staged components' section 
-- introduced a new command `bit untag` for reverting un-exported tags. 
+- `bit status` shows a list of staged versions in 'staged components' section
+- introduced a new command `bit untag` for reverting un-exported tags.
 - init local scope inside .git
 
 ## [0.12.5] - 2018-02-06
@@ -19,7 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - decrease verbosity of npm during bit test
 - added `--objects` flag to `bit import` for fetching objects only and making no changes to the filesystem
 - bug fix - dists had incorrect paths in the model when originallySharedDir was the same as dist.entry
-- strip dist.entry for imported and authored components only, not for nested.  
+- strip dist.entry for imported and authored components only, not for nested.
 - write .bitmap on bit init command
 - aggregate dependencies and package dependencies in bit show
 - add entered username from prompt to context for server side hooks
@@ -27,11 +29,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.12.4] - 2018-01-30
 
-- support separating dev-dependencies and dev-packages from dependencies and packages when they originated from tests files 
+- support separating dev-dependencies and dev-packages from dependencies and packages when they originated from tests files
 - prompt user when trying to remove a component
 - restore old behavior of requiring package installation
 - support adding test files to existing component
-- ignore tracked files when running bit add and print a warning message 
+- ignore tracked files when running bit add and print a warning message
 - bug fix - bit test fails when the same environment installation was canceled before
 
 ## [0.12.3] - 2018-01-28
@@ -43,20 +45,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.12.2] - 2018-01-24
 
 ### New
-- [#653](https://github.com/teambit/bit/issues/653) read config keys from Git config in case it's not found in bit config 
+- [#653](https://github.com/teambit/bit/issues/653) read config keys from Git config in case it's not found in bit config
 - [#516](https://github.com/teambit/bit/issues/516) add `--eject` flag for `bit export` for quickly remove local components after export and install them by the npm client
 ### Changes
 - `bit build` with no parameter, builds all authored and imported components regardless whether they're modified
 ### Bug Fixes
-- `bit move` - updates links to node_modules and updates package.json dependencies with the new directory 
+- `bit move` - updates links to node_modules and updates package.json dependencies with the new directory
 - install missing environments before start build / test process
 - print message in case of cyclic dependencies
 - fixed ci-update from failing when no compiler or tester
 
 ## [0.12.1] - 2018-01-22
 
-- add link-file for authored exported components from the root node_modules of a component to its main-file  
-- avoid fetching the dependencies of versions older than the current imported one 
+- add link-file for authored exported components from the root node_modules of a component to its main-file
+- avoid fetching the dependencies of versions older than the current imported one
 - migration - remove latest from compiler
 - fix bug with importing old components with compiler defined
 - fixed deserialize bug with bit remove
@@ -71,7 +73,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [#613](https://github.com/teambit/bit/issues/613) `bit install` command to install all packages and link all components
 - [#577](https://github.com/teambit/bit/issues/577) auto add workspaces to root package.json
 - [#515](https://github.com/teambit/bit/issues/515) save direct dependencies in package.json with relative paths
-- [#571](https://github.com/teambit/bit/issues/571) apply auto-tagging mechanism for imported components 
+- [#571](https://github.com/teambit/bit/issues/571) apply auto-tagging mechanism for imported components
 - [#541](https://github.com/teambit/bit/issues/541) add package manager config to bit.json
 - support saving dists files on a pre-configured directory relative to consumer root
 - support `bit show --compare` with json format
@@ -85,8 +87,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [#537](https://github.com/teambit/bit/issues/537) rename dist flag to --ignore-dist and by default create dist files
 - [#527](https://github.com/teambit/bit/issues/527) rename structure property in bit.json
 - remove 'dist' attribute from root bit.json by default
-- rename `no_dependencies` flag to `no-dependencies` on `bit import` 
-- rename `no_package_json` flag to `ignore-package-json` on `bit import` 
+- rename `no_dependencies` flag to `no-dependencies` on `bit import`
+- rename `no_package_json` flag to `ignore-package-json` on `bit import`
 - change `bit remote rm` to `bit remote del`
 - run bit init automatically if dir is not initialized but contains .bitmap file
 - do not write the component's bit.json file, unless `--conf` flag is set
@@ -96,7 +98,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [#605](https://github.com/teambit/bit/issues/605) component with modified dependencies doesn't recognize as modified
 - [#592](https://github.com/teambit/bit/issues/592) auto-tagged component were not shown as staged in bit status
 - [#495](https://github.com/teambit/bit/issues/495) support adding files to imported components and ignoring existing files
-- [#500](https://github.com/teambit/bit/issues/500) files added under one component although it was not specified 
+- [#500](https://github.com/teambit/bit/issues/500) files added under one component although it was not specified
 - [#508](https://github.com/teambit/bit/issues/508) componentsDefaultDirectory do not support anything other than one dynamic param per folder
 - [#543](https://github.com/teambit/bit/issues/543) remove imported component not working
 - avoid building process when a component was not modified
@@ -107,9 +109,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - support tagging the entire local scope and all imported components to a specific tag using `--scope` and `--include_imported` flags
 - add bit pack command to build packages for registry
 - tag command now accepts a version
-- `bit test` - paint a summary table when testing multiple components 
+- `bit test` - paint a summary table when testing multiple components
 - `bit status` - add a new section "deleted components" for components that were deleted from the file-system manually
-- `bit import` - prevent overriding local changes unless --force flag was used 
+- `bit import` - prevent overriding local changes unless --force flag was used
 - sort `bit show` and `bit list` components alphabetically
 - Auto update .bit.map.json to semantic versions
 - improve stability and performance of the dependency resolution mechanism
@@ -118,14 +120,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - message in tag command is now optional
 - `--all` and `--scope` accepts version (optional for `--all` and mandatory for `--scope`)
 - fixed bug on windows that created test files as components
-- fixed bit add bug when adding test files with DSL 
+- fixed bit add bug when adding test files with DSL
 - fixed output to be the same for tag command
 - fixed bit list command display for deprecated components
 - fixed bit show with compare flag to display dependencies
 - don't write dists files for authored components
 - bug fix - components that were not indicated as staged-components by `bit status` were exported by `bit export`
-- bug fix - tests files saved with incorrect path when `bit add` was running from non-consumer root  
-- `bit add` - exclude a component when its main file is excluded 
+- bug fix - tests files saved with incorrect path when `bit add` was running from non-consumer root
+- `bit add` - exclude a component when its main file is excluded
 - bug fix - generated .ts links were not valid
 
 ## [0.11.0] - 2017-11-12
@@ -142,7 +144,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - bug fix - dependencies were not written to the file-system when cloning a project with an existing bit.map file
 - disable the local search
 - fix a bug which prevents the ci running tests in some cases
-- bug fix - re-adding a component after exporting it was considered as a new component 
+- bug fix - re-adding a component after exporting it was considered as a new component
 - fix a bug which makes bit test command not work when a component use bit/ to require another component
 - prevent bare-scope corruption when the export process fails
 - fixed stderr maxBuffer exceeded bug in ci-update cmd
