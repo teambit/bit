@@ -21,18 +21,16 @@ try {
 
   // register globals
   if (tester.globals) {
-    for (const g in tester.globals) {
-      // eslint-disable-line
+    Object.keys(tester.globals).forEach((g) => {
       global[g] = tester.globals[g];
-    }
+    });
   }
 
   // register modules
   if (tester.modules) {
-    for (const m in tester.modules) {
-      // eslint-disable-line
+    Object.keys(tester.modules).forEach((m) => {
       mockery.registerMock(m, tester.modules[m]);
-    }
+    });
   }
 
   if (!tester.run) {

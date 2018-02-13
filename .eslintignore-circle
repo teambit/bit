@@ -6,11 +6,12 @@ dist-legacy
 gulpfile.js
 specs/jsdoc/fixtures
 
-# temporarily, until we fix the errors in these paths
+# less important
 specs
 e2e
-src/consumer
-src/scope
+src/search
+
+# temporarily, until we fix the errors in these paths
 src/api
 src/bit-id
 src/cli
@@ -29,8 +30,9 @@ src/migration
 src/npm-client
 src/plugins
 src/prompts
+# 11 problems
 src/remotes
+# 250 problems
 src/scope
-src/search
-src/specs-runner
+# 49 problems
 src/utils
