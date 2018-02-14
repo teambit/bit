@@ -12,5 +12,7 @@
 
 ## Specifications
 
-  - Version:
+  - Bit version:
+  - Node version:
+  - npm / yarn version:
   - Platform:
