@@ -40,7 +40,7 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
   sass: "@import '~{filePath}';",
   less: "@import '~{filePath}';",
   'st.css': ':import { -st-from: "{filePath}";}',
-  vue: "module.exports = require('{filePath}');"
+  vue: "<script>\nmodule.exports = require('{filePath}.vue');\n</script>"
 };
 
 const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
