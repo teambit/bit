@@ -90,14 +90,14 @@ jobs:
       - save_cache:
           key: npm-deps5-{{ checksum "./bit/package.json" }}
           paths:
-            - ~/bit/node_modules
+            - ./bit/node_modules
       - save_cache:
           key: npm-deps5
           paths:
-            - ~/bit/node_modules
-      - run: ls ~/bit
+            - ./bit/node_modules
+      - run: ls ./bit
       - persist_to_workspace:
-          root: ~/bit
+          root: ./bit
           paths:
             - node_modules
 
