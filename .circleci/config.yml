@@ -264,9 +264,9 @@ workflows:
       - build_bit_javascript:
           requires:
             - install_bit_javascript_npm_deps
-      - unit_test:
-          requires:
-            - build
+      # - unit_test:
+      #     requires:
+      #       - build
       - lint:
           requires:
             - install_npm_deps
