@@ -55,7 +55,7 @@ describe('bit test command', function () {
     });
   });
 
-  describe.only('when tests are passed', () => {
+  describe('when tests are passed', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
       helper.createComponent('utils', 'is-type.js', isTypeFixture);

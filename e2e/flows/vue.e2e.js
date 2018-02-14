@@ -52,6 +52,8 @@ describe('support vue files', function () {
     });
     describe('import vue components', () => {
       before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.copyFixtureComponents('vue');
         helper.addComponent(path.normalize('directives/*.js'));
         helper.addComponent(path.normalize('styles/*'));
         helper.addComponent(`${path.normalize('*.vue')} -n vue`);
@@ -61,12 +63,12 @@ describe('support vue files', function () {
         const output = helper.commitAllComponents('message');
         expect(output).to.have.string('9 components tagged | 9 added, 0 changed, 0 auto-tagged');
       });
-      it('export tagged components', () => {
+      it('should export tagged components', () => {
         const output = helper.exportAllComponents();
         expect(output).to.have.string(`exported 9 components to scope ${helper.remoteScope}`);
       });
-      it('import vue component', () => {
-        helper.initNewLocalScope();
+      it('should import component', () => {
+        helper.reInitLocalScope();
         helper.addRemoteScope(helper.remoteScopePath);
         const output = helper.importComponent('vue/ui-autocomplete');
         expect(
