@@ -72,6 +72,8 @@ jobs:
       #       - repo-{{ checksum ".circle-sha" }}
       - attach_workspace:
           at: ./
+      - run: ls
+      - run: ls ./bit
       - restore_cache:
           keys:
             # Find a cache corresponding to this specific package.json checksum
