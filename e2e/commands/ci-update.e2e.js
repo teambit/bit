@@ -21,7 +21,7 @@ describe('bit ci-update', function () {
   describe('component with tester and nested dependencies', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.importTester('bit.envs/testers/mocha');
+      helper.importTester('bit.envs/testers/mocha@0.0.4');
       const level1Fixture = "module.exports = function level1() { return 'level1'; };";
       helper.createFile('', 'level1.js', level1Fixture);
       const level0Fixture =
@@ -47,7 +47,7 @@ describe('bit ci-update', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler('bit.envs/compilers/babel');
-      helper.importTester('bit.envs/testers/mocha');
+      helper.importTester('bit.envs/testers/mocha@0.0.4');
       helper.createComponent('utils', 'is-type.js', fixtures.isTypeES6);
       helper.addComponent('utils/is-type.js');
       helper.createComponent('utils', 'is-string.js', fixtures.isStringES6);
