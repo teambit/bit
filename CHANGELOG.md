@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - introduced a new command `bit untag` for reverting un-exported tags. 
 - init local scope inside .git
+- support vue files
 
 ## [0.12.5] - 2018-02-06
 
