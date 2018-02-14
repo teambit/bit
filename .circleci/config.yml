@@ -12,14 +12,23 @@ jobs:
       - run:
           name: clone bit-javascript
           command: ./scripts/clone-bit-javascript.sh
-      - save_cache:
-          key: repo-{{ checksum ".circle-sha" }}
+      # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job. 
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is 
+	        # taken to be the root directory of the workspace.
+          root: ~
+          # Must be relative path from root
           paths:
-            - ~/bit
-      - save_cache:
-          key: bit-js-repo-{{ checksum "~/bit-javascript/commit-hash" }}
-          paths:
-            - ~/bit-javascript
+            - bit
+            - bit-javascript
+      # - save_cache:
+      #     key: repo-{{ checksum ".circle-sha" }}
+      #     paths:
+      #       - ~/bit
+      # - save_cache:
+      #     key: bit-js-repo-{{ checksum "~/bit-javascript/commit-hash" }}
+      #     paths:
+      #       - ~/bit-javascript
 
   set_ssh_key:
     docker:
@@ -60,9 +69,11 @@ jobs:
       - run:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
-      - restore_cache:
-          keys:
-            - repo-{{ checksum ".circle-sha" }}
+      # - restore_cache:
+      #     keys:
+      #       - repo-{{ checksum ".circle-sha" }}
+      - attach_workspace:
+          at: ./
       - restore_cache:
           keys:
             # Find a cache corresponding to this specific package.json checksum
@@ -76,15 +87,27 @@ jobs:
             - npm-deps3
       - run:
           name: Insatll npm dependencies
-          command: 'npm install'
+          command: 'cd bit && npm install'
       - save_cache:
           key: npm-deps3-{{ checksum "package.json" }}
           paths:
-            - node_modules
+            - bit/node_modules
       - save_cache:
           key: npm-deps3
           paths:
-            - node_modules
+            - bit/node_modules
+
+  install_bit_javascript_npm_deps:
+    docker:
+      - image: circleci/node:6.10.3
+    working_directory: ~/bit-javascript
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: Insatll npm dependencies
+          command: 'cd bit-javascript && npm install'
+
 
   build:
      docker:
@@ -94,23 +117,15 @@ jobs:
       - run:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
-      - restore_cache:
-          keys:
-            - repo-{{ checksum ".circle-sha" }}
-      - restore_cache:
-          keys:
-            # Find a cache corresponding to this specific package.json checksum
-            # when this file is changed, this key will fail
-            - npm-deps3-{{ checksum "package.json" }}
-            # Find the most recent cache used from any branch
-            - npm-deps3
+      - attach_workspace:
+          at: ./
       - run:
           name: Build bit source code
-          command: npm run build
+          command: cd bit && npm run build
       - save_cache:
           key: builded-{{ checksum ".circle-sha" }}
           paths:
-            - ~/bit
+            - ~/bit/bit
 
   unit_test:
     docker:
@@ -120,8 +135,8 @@ jobs:
       - run:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
-      - restore_cache:
-            key: builded-{{ checksum ".circle-sha" }}
+      - attach_workspace:
+          at: ./
       - run: mkdir junit
       - run:
           name: Run unit tests
