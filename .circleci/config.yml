@@ -12,10 +12,8 @@ jobs:
       - run:
           name: clone bit-javascript
           command: ./scripts/clone-bit-javascript.sh
-      # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job. 
       - persist_to_workspace:
           root: /home/circleci
-          # Must be relative path from root
           paths:
             - bit
             - bit-javascript
@@ -96,6 +94,10 @@ jobs:
           key: npm-deps4
           paths:
             - bit/node_modules
+      - persist_to_workspace:
+          root: /home/circleci
+          paths:
+            - bit/node_modules
 
   install_bit_javascript_npm_deps:
     docker:
@@ -107,6 +109,10 @@ jobs:
       - run:
           name: Insatll npm dependencies
           command: 'cd bit-javascript && npm install'
+      - persist_to_workspace:
+          root: /home/circleci
+          paths:
+            - bit-javascript/node_modules
 
 
   build:
