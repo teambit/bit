@@ -83,6 +83,7 @@ jobs:
             - npm-deps4-{{ checksum "./bit/package.json" }}
             # Find the most recent cache used from any branch
             - npm-deps4
+      - run: ls /home/circleci/bit/node_modules
       - run:
           name: Insatll npm dependencies
           command: 'cd bit && npm install'
@@ -94,6 +95,7 @@ jobs:
           key: npm-deps4
           paths:
             - bit/node_modules
+      - run: ls /home/circleci/bit
       - persist_to_workspace:
           root: /home/circleci/bit
           paths:
