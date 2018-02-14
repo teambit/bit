@@ -98,9 +98,9 @@ jobs:
             - ./bit/node_modules
       - run: ls ./bit
       - persist_to_workspace:
-          root: ./bit
+          root: .
           paths:
-            - node_modules
+            - bit/node_modules
 
   install_bit_javascript_npm_deps:
     docker:
@@ -128,6 +128,7 @@ jobs:
           command: echo $CIRCLE_SHA1 > .circle-sha
       - attach_workspace:
           at: ./
+      - run: ls .
       - run: ls ./bit
       - run: ls ./bit/node_modules
       - run:
