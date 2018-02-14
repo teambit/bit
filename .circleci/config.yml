@@ -9,15 +9,18 @@ jobs:
       - run:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
-      - run: ls
       - run:
           name: clone bit-javascript
           command: ./scripts/clone-bit-javascript.sh
-      - run: ls ../
+      - run: echo {{ checksum "~/bit-javascript" }}
       - save_cache:
           key: repo-{{ checksum ".circle-sha" }}
           paths:
             - ~/bit
+      - save_cache:
+          key: bit-js-repo-{{ checksum "~/bit-javascript" }}
+          paths:
+            - ~/bit-javascript
 
   set_ssh_key:
     docker:
