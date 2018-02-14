@@ -157,7 +157,7 @@ jobs:
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
-    parallelism: 7
+    parallelism: 4
     steps:
       - run: sudo npm i -g yarn
       - run: echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
