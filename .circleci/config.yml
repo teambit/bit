@@ -9,6 +9,9 @@ jobs:
       - run:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
+      - run:
+          name: clone bit-javascript
+          command: ./bit/scripts/clone-bit-javascript.sh
       - save_cache:
           key: repo-{{ checksum ".circle-sha" }}
           paths:
