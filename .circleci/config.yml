@@ -9,7 +9,7 @@ jobs:
       - run:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
-      - run: pwd
+      - run: ls
       - run:
           name: clone bit-javascript
           command: ./scripts/clone-bit-javascript.sh
