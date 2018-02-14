@@ -1,8 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import fs from 'fs-extra';
 import Helper from '../e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
