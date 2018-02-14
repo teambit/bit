@@ -33,6 +33,19 @@ describe('bit add command', function () {
       expect(error).to.have.string('fatal: scope not found. to create a new scope, please use `bit init');
     });
   });
+  describe('bit add without bitmap and .git/bit initialized', () => {
+    it('Should find local scope inside .git/bit and add component', () => {
+      helper.reInitLocalScope();
+      helper.initNewGitRepo();
+      helper.deleteFile('.bitmap');
+      helper.deleteFile('.bit');
+      helper.deleteFile('bit.json');
+      helper.initLocalScope('bit init');
+      helper.createComponent('bar', 'foo.js');
+      const addCmd = () => helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo ' });
+      expect(addCmd).to.not.throw('fatal: scope not found. to create a new scope, please use `bit init`');
+    });
+  });
   describe('add before running "bit init" with .bit.map.json', () => {
     it('Should init consumer add then add component', () => {
       helper.createBitMap();
@@ -793,9 +806,9 @@ describe('bit add command', function () {
       it('should throw an error', () => {
         const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${helper.bitBin} add ${
-            barFoo2Path
-          } -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
+          `Command failed: ${
+            helper.bitBin
+          } add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
         );
       });
     });

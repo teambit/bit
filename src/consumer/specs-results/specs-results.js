@@ -28,7 +28,9 @@ type Stats = {
 export type Results = {
   tests: Test[],
   stats: Stats,
-  pass: boolean
+  pass: boolean,
+  failures: Failure[],
+  specFile: PathLinux
 };
 
 type TestProps = {
@@ -44,7 +46,7 @@ type StatsProps = {
   duration: ?number | string
 };
 
-export type ResultsProps = {
+export type RawTestsResults = {
   tests: TestProps[],
   stats: StatsProps,
   pass: ?boolean,
@@ -80,7 +82,7 @@ export default class SpecsResults {
     return new SpecsResults(plainObject);
   }
 
-  static createFromRaw(rawResults: ResultsProps): SpecsResults {
+  static createFromRaw(rawResults: RawTestsResults): SpecsResults {
     const hasFailures = rawResults.failures && rawResults.failures.length;
     const pass = rawResults.pass || (rawResults.tests.every(test => test.pass) && !hasFailures);
     let failures;

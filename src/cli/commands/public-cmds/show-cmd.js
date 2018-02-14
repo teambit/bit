@@ -81,7 +81,7 @@ export default class Show extends Command {
         if (!comp) return comp;
         const componentObj = comp.toObject();
         componentObj.files = comp.files.map(file => file.toReadableString());
-        componentObj.dists = componentObj.dists ? comp.dists.map(file => file.toReadableString()) : componentObj.dists;
+        componentObj.dists = componentObj.dists.getAsReadable();
         return componentObj;
       };
       const componentFromFileSystem = makeComponentReadable(component);

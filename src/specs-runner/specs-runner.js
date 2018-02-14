@@ -5,6 +5,7 @@ import { fork } from 'child_process';
 import Scope from '../scope/scope';
 import { Results } from '../consumer/specs-results';
 import type { PathOsBased } from '../utils/path';
+import type { RawTestsResults } from '../consumer/specs-results/specs-results';
 import AbstractVinyl from '../consumer/component/sources/abstract-vinyl';
 
 export type Tester = {
@@ -24,7 +25,7 @@ function run({
   testerId: Object,
   mainFile: PathOsBased,
   testFile: AbstractVinyl
-}) {
+}): Promise<RawTestsResults> {
   function getDebugPort(): ?number {
     const debugPortArgName = '--debug-brk';
     try {

@@ -79,8 +79,8 @@ function writeDependenciesLinks(component: Component, componentMap, consumer) {
       )
     );
     if (!consumer.shouldDistsBeInsideTheComponent()) {
-      const from = component.getDistDirForConsumer(consumer, componentMap.rootDir);
-      const to = component.getDistDirForConsumer(consumer, dependencyComponentMap.rootDir);
+      const from = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
+      const to = component.dists.getDistDirForConsumer(consumer, dependencyComponentMap.rootDir);
       writtenLinks.push(writeDependencyLink(from, dependency.id, to, component.bindingPrefix));
       symlinkPackages(from, to, consumer);
     }
@@ -95,8 +95,8 @@ function writeDependenciesLinks(component: Component, componentMap, consumer) {
  * It makes it easier for Author to use absolute syntax between their own components.
  */
 function linkToMainFile(component: Component, componentMap: ComponentMap, componentId: BitId, consumer: Consumer) {
-  component.updateDistsPerConsumerBitJson(consumer, componentMap);
-  const mainFile = component.calculateMainDistFileForAuthored(consumer, componentMap);
+  component.dists.updateDistsPerConsumerBitJson(component.id, consumer, componentMap);
+  const mainFile = component.dists.calculateMainDistFileForAuthored(component.mainFile, consumer);
   const indexFileName = getIndexFileName(mainFile);
   const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), indexFileName);
   const destRelative = pathRelativeLinux(path.dirname(dest), mainFile);
@@ -119,7 +119,7 @@ function writeMissingLinks(component, componentMap, bitMap) {
   });
 }
 
-export default function linkComponents(components: Component[], consumer: Consumer): Object[] {
+export default function linkComponents(components: Component[], consumer: Consumer): LinksResult[] {
   return components.map((component) => {
     const componentId = component.id;
     logger.debug(`linking component to node_modules: ${componentId}`);
@@ -129,8 +129,12 @@ export default function linkComponents(components: Component[], consumer: Consum
       const linkPath = path.join(consumer.getPath(), relativeLinkPath);
       // when a user moves the component directory, use component.writtenPath to find the correct target
       const srcTarget = component.writtenPath || path.join(consumer.getPath(), componentMap.rootDir);
-      if (component.dists && component._writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
-        const distTarget = component.getDistDirForConsumer(consumer, componentMap.rootDir);
+      if (
+        !component.dists.isEmpty() &&
+        component.dists.writeDistsFiles &&
+        !consumer.shouldDistsBeInsideTheComponent()
+      ) {
+        const distTarget = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
         symlinkPackages(srcTarget, distTarget, consumer, component.dependenciesSavedAsComponents);
         createSymlinkOrCopy(componentId, distTarget, linkPath);
       } else {

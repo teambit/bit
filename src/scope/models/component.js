@@ -285,6 +285,7 @@ export default class Component extends BitObject {
           flattenedDevDependencies: version.flattenedDevDependencies,
           packageDependencies: version.packageDependencies,
           devPackageDependencies: version.devPackageDependencies,
+          peerPackageDependencies: version.peerPackageDependencies,
           files,
           dists,
           docs: version.docs,

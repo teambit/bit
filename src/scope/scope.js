@@ -64,6 +64,7 @@ import componentResolver from '../component-resolver';
 import ComponentsList from '../consumer/component/components-list';
 import { RemovedObjects } from './component-remove';
 import Component from '../consumer/component/consumer-component';
+import DependencyGraph from './graph/graph';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR, pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR)]);
@@ -95,8 +96,9 @@ export default class Scope {
   scopeJson: ScopeJson;
   tmp: Tmp;
   path: string;
-  // sources: SourcesRepository; // for some reason it interferes with the IDE autocomplete
+  sources: SourcesRepository;
   objects: Repository;
+  _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
 
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
@@ -105,6 +107,13 @@ export default class Scope {
     this.tmp = scopeProps.tmp || new Tmp(this);
     this.sources = scopeProps.sources || new SourcesRepository(this);
     this.objects = scopeProps.objects || new Repository(this, types());
+  }
+
+  async getDependencyGraph(): DependencyGraph {
+    if (!this._dependencyGraph) {
+      this._dependencyGraph = await DependencyGraph.load(this.objects);
+    }
+    return this._dependencyGraph;
   }
 
   get groupName(): ?string {
@@ -357,29 +366,28 @@ export default class Scope {
       // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
       // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
       // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
-      // consumerComponent.distEntryShouldBeStripped is set to true.
+      // consumerComponent.dists.distEntryShouldBeStripped is set to true.
       // because the model always has the paths of the original author, in case part of the path was stripped, add it
       // back before saving to the model. this way, when the author updates the components, the paths will be correct.
       const addSharedDirAndDistEntry = (pathStr) => {
         const withSharedDir = consumerComponent.originallySharedDir
           ? pathLib.join(consumerComponent.originallySharedDir, pathStr)
           : pathStr;
-        const withDistEntry = consumerComponent.distEntryShouldBeStripped
+        const withDistEntry = consumerComponent.dists.distEntryShouldBeStripped
           ? pathLib.join(consumer.bitJson.distEntry, withSharedDir)
           : withSharedDir;
         return pathNormalizeToLinux(withDistEntry);
       };
-      const dists =
-        consumerComponent.dists && consumerComponent.dists.length
-          ? consumerComponent.dists.map((dist) => {
-            return {
-              name: dist.basename,
-              relativePath: addSharedDirAndDistEntry(dist.relative),
-              file: Source.from(dist.contents),
-              test: dist.test
-            };
-          })
-          : null;
+      const dists = !consumerComponent.dists.isEmpty()
+        ? consumerComponent.dists.get().map((dist) => {
+          return {
+            name: dist.basename,
+            relativePath: addSharedDirAndDistEntry(dist.relative),
+            file: Source.from(dist.contents),
+            test: dist.test
+          };
+        })
+        : null;
 
       const testResult = testsResults.find(result => result.component.id.toString() === consumerComponentId);
 
@@ -427,7 +435,7 @@ export default class Scope {
     loader.start(BEFORE_RUNNING_BUILD);
     const build = async (component: Component) => {
       await component.build({ scope: this, consumer, verbose });
-      const buildResults = await component.writeDists(consumer);
+      const buildResults = await component.dists.writeDists(component, consumer);
       return { component: component.id.toString(), buildResults };
     };
     return pMapSeries(components, build);
@@ -1305,19 +1313,38 @@ export default class Scope {
   /**
    * If not specified version, remove all local versions.
    */
-  async removeLocalVersion(id: BitId, version?: string): Promise<{ id: BitId, versions: string[] }> {
+  async removeLocalVersion(
+    id: BitId,
+    version?: string,
+    force?: boolean = false
+  ): Promise<{ id: BitId, versions: string[] }> {
     const component: ComponentModel = await this.sources.get(id);
     const localVersions = component.getLocalVersions();
-
-    if (!localVersions.length) return Promise.reject(`unable to un-tag ${id}, the component is not staged`);
+    if (!localVersions.length) return Promise.reject(`unable to untag ${id}, the component is not staged`);
     if (version && !component.hasVersion(version)) {
-      return Promise.reject(`unable to un-tag ${id}, the version ${version} does not exist`);
+      return Promise.reject(`unable to untag ${id}, the version ${version} does not exist`);
     }
     if (version && !localVersions.includes(version)) {
-      return Promise.reject(`unable to un-tag ${id}, the version ${version} was exported already`);
+      return Promise.reject(`unable to untag ${id}, the version ${version} was exported already`);
+    }
+    const versionsToRemove = version ? [version] : localVersions;
+
+    if (!force) {
+      const dependencyGraph = await this.getDependencyGraph();
+      versionsToRemove.forEach((versionToRemove) => {
+        const idWithVersion = id.clone();
+        idWithVersion.version = versionToRemove;
+        const dependents = dependencyGraph.getDependentsPerId(idWithVersion);
+        if (dependents.length) {
+          throw new Error(
+            `unable to untag ${id}, the version ${versionToRemove} has the following dependent(s) ${dependents.join(
+              ', '
+            )}`
+          );
+        }
+      });
     }
 
-    const versionsToRemove = version ? [version] : localVersions;
     await Promise.all(versionsToRemove.map(ver => this.sources.removeVersion(component, ver, false)));
     await this.objects.persist();
 
@@ -1329,7 +1356,7 @@ export default class Scope {
     return { id, versions: versionsToRemove };
   }
 
-  async removeLocalVersionsForAllComponents(version?: string) {
+  async removeLocalVersionsForAllComponents(version?: string, force?: boolean = false) {
     const components = await this.objects.listComponents(false);
     const candidateComponents = components.filter((component: ComponentModel) => {
       const localVersions = component.getLocalVersions();
@@ -1338,10 +1365,34 @@ export default class Scope {
     });
     if (!candidateComponents.length) {
       const versionOutput = version ? `${version} ` : '';
-      return Promise.reject(`No components found with local version ${versionOutput}to un-tag`);
+      return Promise.reject(`No components found with local version ${versionOutput}to untag`);
     }
-    logger.debug(`found ${candidateComponents.length} components to un-tag`);
-    return Promise.all(candidateComponents.map(component => this.removeLocalVersion(component.toBitId(), version)));
+
+    // if no version is given, there is risk of deleting dependencies version without their dependents.
+    if (!force && version) {
+      const dependencyGraph = await this.getDependencyGraph();
+      const candidateComponentsIds = candidateComponents.map((component) => {
+        const bitId = component.toBitId();
+        bitId.version = version;
+        return bitId;
+      });
+      const candidateComponentsIdsStr = candidateComponentsIds.map(id => id.toString());
+
+      candidateComponentsIds.forEach((bitId: BitId) => {
+        const dependents = dependencyGraph.getDependentsPerId(bitId);
+        const dependentsNotCandidates = dependents.filter(dependent => !candidateComponentsIdsStr.includes(dependent));
+        if (dependentsNotCandidates.length) {
+          throw new Error(
+            `unable to untag ${bitId}, the version ${version} has the following dependent(s) ${dependents.join(', ')}`
+          );
+        }
+      });
+    }
+
+    logger.debug(`found ${candidateComponents.length} components to untag`);
+    return Promise.all(
+      candidateComponents.map(component => this.removeLocalVersion(component.toBitId(), version, true))
+    );
   }
 
   /**

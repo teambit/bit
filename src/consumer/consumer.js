@@ -26,7 +26,8 @@ import {
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
-import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
+import migrate from './migrations/consumer-migrator';
+import type { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
@@ -40,8 +41,10 @@ import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import npmClient from '../npm-client';
+import GitHooksManager from '../git-hooks/git-hooks-manager';
 import { RemovedLocalObjects } from '../scope/component-remove';
 import { linkComponents, linkAllToNodeModules, linkComponentsToNodeModules } from '../links';
+import type { LinksResult } from '../links/node-modules-linker';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
 import { Dependencies } from './component/dependencies';
@@ -56,7 +59,9 @@ type ConsumerProps = {
   scope: Scope,
   created?: boolean,
   isolated?: boolean,
-  bitMap: BitMap
+  bitMap: BitMap,
+  addedGitHooks: ?(string[]),
+  existingGitHooks: ?(string[])
 };
 
 type ComponentStatus = {
@@ -74,18 +79,31 @@ export default class Consumer {
   scope: Scope;
   bitMap: BitMap;
   isolated: boolean = false; // Mark that the consumer instance is of isolated env and not real
+  addedGitHooks: ?(string[]); // list of git hooks added during init process
+  existingGitHooks: ?(string[]); // list of git hooks already exists during init process
   _driver: Driver;
   _dirStructure: DirStructure;
   _componentsCache: Object = {}; // cache loaded components
   _componentsStatusCache: Object = {}; // cache loaded components
 
-  constructor({ projectPath, bitJson, scope, created = false, isolated = false, bitMap }: ConsumerProps) {
+  constructor({
+    projectPath,
+    bitJson,
+    scope,
+    created = false,
+    isolated = false,
+    bitMap,
+    addedGitHooks,
+    existingGitHooks
+  }: ConsumerProps) {
     this.projectPath = projectPath;
     this.bitJson = bitJson;
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
     this.bitMap = bitMap || BitMap.load(projectPath);
+    this.addedGitHooks = addedGitHooks;
+    this.existingGitHooks = existingGitHooks;
     this.warnForMissingDriver();
   }
 
@@ -368,7 +386,7 @@ export default class Consumer {
       }
       // don't write dists files for authored components as the author has its own mechanism to generate them
       // also, don't write dists file for imported component, unless the user used '--dist' flag
-      componentWithDeps.component._writeDistsFiles = writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
+      componentWithDeps.component.dists.writeDistsFiles = writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return componentWithDeps.component.write({
         bitDir,
         force,
@@ -454,7 +472,14 @@ export default class Consumer {
     if (installNpmPackages) await this.installNpmPackagesForComponents(componentsWithDependencies, verbose);
     if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents.map(c => c.id));
 
-    return linkComponents(componentsWithDependencies, writtenComponents, writtenDependencies, this, createNpmLinkFiles);
+    return linkComponents(
+      componentsWithDependencies,
+      writtenComponents,
+      writtenDependencies,
+      this,
+      createNpmLinkFiles,
+      writePackageJson
+    );
   }
 
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
@@ -728,11 +753,18 @@ export default class Consumer {
   }
 
   static ensure(projectPath: PathOsBased = process.cwd(), noGit: boolean = false): Promise<Consumer> {
-    const resolvedPath =
-      !noGit && fs.existsSync(path.join(projectPath, DOT_GIT_DIR))
-        ? path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR)
-        : path.join(projectPath, BIT_HIDDEN_DIR);
-    const scopeP = Scope.ensure(resolvedPath);
+    const gitDirPath = path.join(projectPath, DOT_GIT_DIR);
+    let resolvedScopePath = path.join(projectPath, BIT_HIDDEN_DIR);
+    // let addedGitHooks;
+    let existingGitHooks;
+    if (!noGit && fs.existsSync(gitDirPath)) {
+      resolvedScopePath = path.join(gitDirPath, BIT_GIT_DIR);
+      // const gitHooksManager = GitHooksManager.init(gitDirPath);
+      // const writeHooksResult = gitHooksManager.writeAllHooks();
+      // addedGitHooks = writeHooksResult.added;
+      // existingGitHooks = writeHooksResult.alreadyExist;
+    }
+    const scopeP = Scope.ensure(resolvedScopePath);
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
     const bitMapP = BitMap.ensure(projectPath);
 
@@ -742,7 +774,9 @@ export default class Consumer {
         created: true,
         scope,
         bitJson,
-        bitMap
+        bitMap,
+        // addedGitHooks,
+        existingGitHooks
       });
     });
   }
@@ -1036,7 +1070,7 @@ export default class Consumer {
    * 2) install npm packages of all imported and nested components
    * 3) link all components
    */
-  async install(verbose) {
+  async install(verbose: boolean): Promise<LinksResult[]> {
     const candidateComponents = this.bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.NESTED]);
     const dirs = Object.keys(candidateComponents)
       .map(id => candidateComponents[id].rootDir || null)

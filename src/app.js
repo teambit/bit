@@ -24,6 +24,6 @@ loadExtensions().then((extensions) => {
   try {
     registrar.run();
   } catch (err) {
-    console.error('loud rejected:', err);
+    console.error('loud rejected:', err); // eslint-disable-line no-console
   }
 });

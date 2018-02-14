@@ -23,7 +23,7 @@ function isRegular(versionStr: string) {
   return semver.valid(versionStr);
 }
 
-function returnRegular(versionStr: string) {
+function returnRegular(versionStr: string): Version {
   return new Version(versionStr, false);
 }
 

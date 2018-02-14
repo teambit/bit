@@ -36,6 +36,9 @@ export default class Helper {
   setLocalScope(localScope?: string) {
     this.localScope = localScope || `${v4()}-local`;
     this.localScopePath = path.join(this.e2eDir, this.localScope);
+    if (!fs.existsSync(this.localScopePath)) {
+      fs.ensureDirSync(this.localScopePath);
+    }
   }
 
   runCmd(cmd: string, cwd: string = this.localScopePath) {
@@ -64,14 +67,11 @@ export default class Helper {
     return fs.readJSONSync(bitJsonPath) || {};
   }
 
-  createPackageJson(
-    name: string = 'test',
-    version: string = '0.0.1',
-    packageJsonPath: string = path.join(this.localScopePath, 'package.json')
-  ) {
-    const packageJson = { name, version };
-    fs.writeJSONSync(packageJsonPath, packageJson);
+  createPackageJson(data: Object, location: string = this.localScopePath) {
+    const packageJsonPath = path.join(location, 'package.json');
+    fs.writeJSONSync(packageJsonPath, data, { spaces: 2 });
   }
+
   manageWorkspaces(withWorkspaces: boolean = true, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     const bitJson = this.readBitJson(bitJsonPath);
     bitJson.packageManager = 'yarn';
@@ -127,6 +127,10 @@ export default class Helper {
     const gitIgnorePath = path.join(this.localScopePath, '.gitignore');
     return fs.writeFileSync(gitIgnorePath, list.join('\n'));
   }
+  writeToGitHook(hookName: string, content: string) {
+    const hookPath = path.join(this.localScopePath, '.git', 'hooks', hookName);
+    return fs.outputFileSync(hookPath, content);
+  }
 
   cleanEnv() {
     fs.emptyDirSync(this.localScopePath);
@@ -145,14 +149,26 @@ export default class Helper {
     }
   }
 
-  reInitLocalScope() {
+  cleanLocalScope() {
     fs.emptyDirSync(this.localScopePath);
+  }
+
+  reInitLocalScope() {
+    this.cleanLocalScope();
     this.initLocalScope();
   }
 
   initLocalScope() {
     return this.runCmd('bit init');
   }
+
+  initLocalScopeWithOptions(options: ?Object) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit init ${value}`);
+  }
+
   createBitMap(
     cwd: string = this.localScopePath,
     componentObject = {

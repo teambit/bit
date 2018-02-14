@@ -1,6 +1,6 @@
 import path from 'path';
 import chai, { expect } from 'chai';
-import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+import Helper from '../e2e-helper';
 
 const assertArrays = require('chai-arrays');
 
@@ -208,7 +208,7 @@ describe('bit status command', function () {
       expect(output.includes('no staged components')).to.be.false;
 
       expect(output.includes('staged components')).to.be.true;
-      expect(output.includes(`bar/foo${VERSION_DELIMITER}0.0.2`)).to.be.true;
+      expect(output.includes('bar/foo. versions: 0.0.2')).to.be.true;
     });
     it('should not display that component as new', () => {
       expect(output.includes('no new components')).to.be.true;

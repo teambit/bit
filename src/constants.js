@@ -166,6 +166,15 @@ export const CFG_CI_FUNCTION_PATH_KEY = 'ci_function_path';
 export const CFG_CI_ENABLE_KEY = 'ci_enable';
 
 /**
+ * git hooks
+ */
+export const POST_CHECKOUT = 'post-checkout';
+
+export const POST_MERGE = 'post-merge';
+
+export const GIT_HOOKS_NAMES = [POST_CHECKOUT, POST_MERGE];
+
+/**
  * bit hooks
  */
 export const PRE_TAG_HOOK = 'pre-tag';

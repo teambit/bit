@@ -24,7 +24,7 @@ describe('bit remove command', function () {
       );
     });
   });
-  describe('with commited components and -t=false ', () => {
+  describe('with committed components and -t=false ', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
@@ -149,7 +149,7 @@ describe('bit remove command', function () {
       expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple`);
     });
   });
-  describe('with imported components , no dependecies and yarn workspace', () => {
+  describe('with imported components, no dependencies and yarn workspace', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       // export a new simple component
@@ -159,7 +159,6 @@ describe('bit remove command', function () {
       helper.exportComponent('global/simple');
 
       helper.reInitLocalScope();
-      helper.createPackageJson();
       helper.manageWorkspaces();
       helper.addRemoteScope();
       helper.importComponent('global/simple -p ./test');
