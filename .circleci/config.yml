@@ -80,14 +80,14 @@ jobs:
             # A real solution will be to clear all the cache once circle will support it (for v2)
             # or move the packakge.json resotre to be from workspace instead of cache, then we can run
             # this step without cache
-            - npm-deps3-{{ checksum "package.json" }}
+            - npm-deps3-{{ checksum "./bit/package.json" }}
             # Find the most recent cache used from any branch
             - npm-deps3
       - run:
           name: Insatll npm dependencies
           command: 'cd bit && npm install'
       - save_cache:
-          key: npm-deps3-{{ checksum "package.json" }}
+          key: npm-deps3-{{ checksum "./bit/package.json" }}
           paths:
             - bit/node_modules
       - save_cache:
@@ -120,10 +120,6 @@ jobs:
       - run:
           name: Build bit source code
           command: cd bit && npm run build
-      - save_cache:
-          key: builded-{{ checksum ".circle-sha" }}
-          paths:
-            - ~/bit/bit
 
   unit_test:
     docker:
@@ -135,17 +131,17 @@ jobs:
           command: echo $CIRCLE_SHA1 > .circle-sha
       - attach_workspace:
           at: ./
-      - run: mkdir junit
+      - run: cd bit && mkdir junit
       - run:
           name: Run unit tests
-          command: npm run test-circle
+          command: cd bit && npm run test-circle
           environment:
             MOCHA_FILE: junit/unit-test-results.xml
           when: always
       - store_test_results:
-          path: junit
+          path: bit/junit
       - store_artifacts:
-          path: junit
+          path: bit/junit
 
   lint:
     docker:
@@ -158,17 +154,19 @@ jobs:
       - restore_cache:
           keys:
             - repo-{{ checksum ".circle-sha" }}
+      - attach_workspace:
+          at: ./
       - restore_cache:
           keys:
             - npm-deps3-{{ checksum "package.json" }}
             - npm-deps3
       - run:
             name: run ESLint
-            command: npm run lint-circle
+            command: cd bit && npm run lint-circle
       - store_test_results:
-          path: junit
+          path: bit/junit
       - store_artifacts:
-          path: junit
+          path: bit/junit
 
   e2e_test:
     docker:
