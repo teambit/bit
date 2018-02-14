@@ -128,7 +128,7 @@ jobs:
           name: Build bit source code
           command: cd bit && npm run build
       - persist_to_workspace:
-          root: ./bit-javascript
+          root: ./bit
           paths:
             - dist
 
