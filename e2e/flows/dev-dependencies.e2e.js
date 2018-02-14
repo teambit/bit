@@ -15,7 +15,7 @@ describe('dev-dependencies functionality', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler('bit.envs/compilers/babel');
-      helper.importTester('bit.envs/testers/mocha');
+      helper.importTester('bit.envs/testers/mocha@0.0.4');
       clonedScope = helper.cloneLocalScope();
     });
     describe('with dev-dependencies same as dependencies', () => {
