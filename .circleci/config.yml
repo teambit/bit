@@ -95,7 +95,7 @@ jobs:
           key: npm-deps5
           paths:
             - ~/bit/node_modules
-      - run: ls ~/bit/node_modules
+      - run: ls ~/bit
       - persist_to_workspace:
           root: ~/bit
           paths:
