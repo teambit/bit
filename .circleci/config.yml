@@ -83,7 +83,7 @@ jobs:
             - npm-deps5-{{ checksum "./bit/package.json" }}
             # Find the most recent cache used from any branch
             - npm-deps5
-      - run: ls ~/bit/node_modules
+      # - run: ls ~/bit/node_modules
       - run:
           name: Insatll npm dependencies
           command: 'cd bit && npm install'
