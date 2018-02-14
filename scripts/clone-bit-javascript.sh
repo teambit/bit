@@ -1,5 +1,4 @@
 #!/bin/sh
-set -x
 BIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 echo "bit branch: $BIT_BRANCH" 
 BIT_JS_BRANCH_EXISTS=$(git ls-remote --heads https://github.com/teambit/bit-javascript $BIT_BRANCH | wc -l)
