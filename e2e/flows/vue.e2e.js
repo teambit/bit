@@ -22,7 +22,7 @@ describe('support vue files', function () {
         helper.addComponent(path.normalize('directives/*.js'));
         helper.addComponent(path.normalize('styles/*'));
         helper.addComponent(path.normalize('UiAutocomplete.vue'));
-        helper.runCmd('npm i fuzzysearch lodash');
+        helper.runCmd('npm i fuzzysearch');
       });
       it('should find missing vue dependencies', () => {
         const output = helper.runCmd('bit s');
@@ -57,7 +57,7 @@ describe('support vue files', function () {
         helper.addComponent(path.normalize('directives/*.js'));
         helper.addComponent(path.normalize('styles/*'));
         helper.addComponent(`${path.normalize('*.vue')} -n vue`);
-        helper.runCmd('npm i fuzzysearch lodash');
+        helper.runCmd('npm i fuzzysearch');
       });
       it('should find missing vue dependencies', () => {
         const output = helper.commitAllComponents('message');
