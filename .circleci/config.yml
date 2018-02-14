@@ -200,7 +200,7 @@ jobs:
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
-    parallelism: 1
+    parallelism: 7
     steps:
       - attach_workspace:
           at: ./
