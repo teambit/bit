@@ -11,4 +11,6 @@ if [ "$BIT_JS_BRANCH_EXISTS" -eq "1" ]; then
 fi
 echo "cloneing bit javascript: $BIT_JS_BRANCH" 
 
+cd ../
+
 git clone --depth 1 https://github.com/teambit/bit-javascript -b $BIT_JS_BRANCH

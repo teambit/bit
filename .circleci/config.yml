@@ -13,6 +13,7 @@ jobs:
       - run:
           name: clone bit-javascript
           command: ./scripts/clone-bit-javascript.sh
+      - run: ls ../
       - save_cache:
           key: repo-{{ checksum ".circle-sha" }}
           paths:
