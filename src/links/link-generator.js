@@ -31,7 +31,7 @@ const LINKS_CONTENT_TEMPLATES = {
   scss: "@import '{filePath}.scss';",
   sass: "@import '{filePath}.sass';",
   less: "@import '{filePath}.less';",
-  vue: "module.exports = require('{filePath}');"
+  vue: "<script>\nmodule.exports = require('{filePath}.vue');\n</script>"
 };
 
 const PACKAGES_LINKS_CONTENT_TEMPLATES = {
@@ -39,7 +39,8 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
   scss: "@import '~{filePath}';",
   sass: "@import '~{filePath}';",
   less: "@import '~{filePath}';",
-  'st.css': ':import { -st-from: "{filePath}";}'
+  'st.css': ':import { -st-from: "{filePath}";}',
+  vue: "module.exports = require('{filePath}');"
 };
 
 const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
