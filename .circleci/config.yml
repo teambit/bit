@@ -84,6 +84,7 @@ jobs:
             # Find the most recent cache used from any branch
             - npm-deps6
       # - run: ls ~/bit/node_modules
+      - run: ls ./bit
       - run:
           name: Insatll npm dependencies
           command: 'cd bit && npm install'
@@ -104,7 +105,7 @@ jobs:
   install_bit_javascript_npm_deps:
     docker:
       - image: circleci/node:6.10.3
-    working_directory: ~/bit-javascript
+    working_directory: ~/bit
     steps:
       - attach_workspace:
           at: ./
@@ -112,7 +113,7 @@ jobs:
           name: Insatll npm dependencies
           command: 'cd bit-javascript && npm install'
       - persist_to_workspace:
-          root: /home/circleci/bit-javascript
+          root: ./bit-javascript
           paths:
             - node_modules
 
@@ -127,6 +128,8 @@ jobs:
           command: echo $CIRCLE_SHA1 > .circle-sha
       - attach_workspace:
           at: ./
+      - run: ls ./bit
+      - run: ls ./bit/node_modules
       - run:
           name: Build bit source code
           command: cd bit && npm run build
