@@ -36,7 +36,7 @@
   "dependencies": {
     "array-difference": "^0.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "git+https://github.com/teambit/bit-javascript.git#vue-support",
+    "bit-javascript": "git+https://github.com/teambit/bit-javascript.git#feature/vue-support",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
     "chokidar": "^1.7.0",
