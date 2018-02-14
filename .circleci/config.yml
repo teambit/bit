@@ -128,9 +128,9 @@ jobs:
           name: Build bit source code
           command: cd bit && npm run build
       - persist_to_workspace:
-          root: ./bit
+          root: .
           paths:
-            - dist
+            - bit/dist
 
   build_bit_javascript:
      docker:
@@ -146,9 +146,9 @@ jobs:
           name: Build bit javascript source code
           command: cd bit-javascript && npm run build
       - persist_to_workspace:
-          root: ./bit-javascript
+          root: .
           paths:
-            - dist
+            - bit-javascript/dist
 
   unit_test:
     docker:
@@ -264,9 +264,9 @@ workflows:
       - build_bit_javascript:
           requires:
             - install_bit_javascript_npm_deps
-      # - unit_test:
-      #     requires:
-      #       - build
+      - unit_test:
+          requires:
+            - build
       - lint:
           requires:
             - install_npm_deps
