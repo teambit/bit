@@ -255,9 +255,15 @@ workflows:
       - install_npm_deps:
           requires:
             - checkout_code
+      - install_bit_javascript_npm_deps:
+          requires:
+            - checkout_code
       - build:
           requires:
             - install_npm_deps
+      - build_bit_javascript:
+          requires:
+            - install_bit_javascript_npm_deps
       - unit_test:
           requires:
             - build
