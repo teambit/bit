@@ -384,7 +384,6 @@ function findPeerDependencies(consumerPath: string): Object {
  */
 export default (async function loadDependenciesForComponent(
   component: Component,
-  componentMap: ComponentMap,
   bitDir: string,
   consumer: Consumer,
   idWithConcreteVersionString: string,
@@ -392,6 +391,7 @@ export default (async function loadDependenciesForComponent(
 ): Promise<Component> {
   const driver: Driver = consumer.driver;
   const consumerPath = consumer.getPath();
+  const componentMap: ComponentMap = component.componentMap;
   const missingDependencies = {};
   const { allFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
   const getDependenciesTree = async () => {
