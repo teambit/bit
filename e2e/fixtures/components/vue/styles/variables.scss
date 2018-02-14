@@ -1,0 +1,133 @@
+// The Material Design color palette
+@import 'md-colors';
+
+// The UI font stack
+$font-stack             : Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !default;
+
+// Base font size
+$base-font-size         : 100% !default; // typically 16px in most browsers
+
+// Brand colors
+$brand-primary-color    : $md-blue !default;
+$brand-accent-color     : $md-purple-a400 !default;
+
+// Primary text color
+$primary-text-color     : rgba(black, 0.87) !default;
+
+// Secondary text color
+$secondary-text-color   : rgba(black, 0.54) !default;
+
+// Hint text color
+$hint-text-color        : rgba(black, 0.38) !default;
+
+// Disabled text color
+$disabled-text-color    : rgba(black, 0.38) !default;
+
+// Divider color
+$divider-color          : rgba(black, 0.12) !default;
+
+// ================================================
+// Input fields
+// ================================================
+
+$ui-input-height                    : rem-calc(32px) !default;
+$ui-input-margin-bottom             : rem-calc(16px) !default;
+
+// Input label
+$ui-input-label-color               : $secondary-text-color !default;
+$ui-input-label-color--hover        : rgba(black, 0.75) !default;
+$ui-input-label-color--active       : $brand-primary-color !default;
+$ui-input-label-color--invalid      : $md-red !default;
+$ui-input-label-font-size           : rem-calc(15px) !default;
+$ui-input-label-line-height         : normal !default;
+$ui-input-label-margin-bottom       : 0 !default;
+$ui-input-label-top--inline         : rem-calc(26px) !default;
+
+// Input text
+$ui-input-text-color                : $primary-text-color !default;
+$ui-input-text-font-size            : rem-calc(16px) !default;
+$ui-input-text-color--disabled      : $disabled-text-color !default;
+$ui-input-text-color--invalid       : $md-red !default;
+
+// Input border
+$ui-input-border-color              : $divider-color !default;
+$ui-input-border-color--hover       : rgba(black, 0.3) !default;
+$ui-input-border-color--active      : $brand-primary-color !default;
+$ui-input-border-color--invalid     : $md-red !default;
+$ui-input-border-width              : 1px !default;
+$ui-input-border-width--active      : 2px !default;
+$ui-input-border-style--disabled    : dotted !default;
+
+// Input icons
+$ui-input-icon-color                    : $secondary-text-color !default;
+$ui-input-icon-opacity--disabled        : 0.6 !default;
+$ui-input-icon-margin-right             : rem-calc(12px) !default;
+$ui-input-icon-margin-top               : rem-calc(4px) !default;
+$ui-input-icon-margin-top--with-label   : rem-calc(24px) !default;
+
+// Input buttons (dropdown button icon, clear input button icon)
+$ui-input-button-color                  : $secondary-text-color !default;
+$ui-input-button-color--hover           : $primary-text-color !default;
+$ui-input-button-opacity--disabled      : 0.6 !default;
+$ui-input-button-size                   : rem-calc(18px) !default;
+$ui-input-button-margin-top             : rem-calc(7px) !default;
+$ui-input-button-margin-top--with-label : rem-calc(27px) !default;
+
+// Input feedback, help and error text
+$ui-input-feedback-font-size            : rem-calc(14px) !default;
+$ui-input-feedback-line-height          : 1.2 !default;
+$ui-input-feedback-padding-top          : rem-calc(4px) !default;
+$ui-input-feedback-opacity--disabled    : 0.8 !default;
+$ui-input-feedback-color                : $secondary-text-color !default;
+$ui-input-feedback-color--invalid       : $md-red !default;
+
+// ================================================
+// Buttons (UiButton, UiFileupload)
+// ================================================
+
+$ui-button-font-size                : rem-calc(14px) !default;
+$ui-button-font-size--small         : rem-calc(14px) !default;
+$ui-button-font-size--large         : rem-calc(16px) !default;
+$ui-button-height                   : rem-calc(36px) !default;
+$ui-button-height--small            : rem-calc(32px) !default;
+$ui-button-height--large            : rem-calc(48px) !default;
+
+// ================================================
+// Dropdowns (UiAutocomplete, UiPopover, UiMenu, UiSelect)
+// ================================================
+
+$ui-dropdown-item-font-size         : rem-calc(15px) !default;
+
+// ================================================
+// UiCalendar
+// ================================================
+
+$ui-calendar-cell-size              : rem-calc(36px) !default;
+$ui-calendar-controls-height        : rem-calc(40px) !default;
+$ui-calendar-month-header-height    : rem-calc(40px) !default;
+
+// ================================================
+// Border radius
+// ================================================
+
+$ui-default-border-radius       : rem-calc(2px) !default;
+
+// ================================================
+// Z-index
+// ================================================
+
+// Z-index levels
+$z-index-level-1        : 20 !default;
+$z-index-level-2        : 30 !default;
+$z-index-level-3        : 40 !default;
+$z-index-level-4        : 50 !default;
+$z-index-level-5        : 60 !default;
+$z-index-level-6        : 70 !default;
+
+// Z-index usage
+$z-index-toolbar        : $z-index-level-1 !default;
+$z-index-fab            : $z-index-level-2 !default;
+$z-index-nav-drawer     : $z-index-level-3 !default;
+$z-index-modal          : $z-index-level-4 !default;
+$z-index-dropdown       : $z-index-level-5 !default;
+$z-index-tooltip        : $z-index-level-6 !default;

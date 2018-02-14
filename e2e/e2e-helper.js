@@ -455,13 +455,13 @@ export default class Helper {
   }
 
   copyFixtureComponents(dir: string = '', cwd = this.localScopePath) {
-    const sourceDir = path.join(__dirname, 'fixtures', 'components');
+    const sourceDir = path.join(__dirname, 'fixtures', 'components', dir);
     fs.copySync(sourceDir, cwd);
     // update with the correct remote-scope
-    const heroPath = path.join(cwd, 'hero', 'Hero.js');
+    /*    const heroPath = path.join(cwd, 'hero', 'Hero.js');
     const heroContent = fs.readFileSync(heroPath).toString();
     const newContent = heroContent.replace(/{remoteScope}/g, this.remoteScope);
-    fs.writeFileSync(heroPath, newContent);
+    fs.writeFileSync(heroPath, newContent); */
   }
 
   addFixtureComponents() {}
