@@ -17,14 +17,6 @@ jobs:
           paths:
             - bit
             - bit-javascript
-      # - save_cache:
-      #     key: repo-{{ checksum ".circle-sha" }}
-      #     paths:
-      #       - ~/bit
-      # - save_cache:
-      #     key: bit-js-repo-{{ checksum "~/bit-javascript/commit-hash" }}
-      #     paths:
-      #       - ~/bit-javascript
 
   set_ssh_key:
     docker:
@@ -65,9 +57,6 @@ jobs:
       - run:
           name: save SHA to a file
           command: echo $CIRCLE_SHA1 > .circle-sha
-      # - restore_cache:
-      #     keys:
-      #       - repo-{{ checksum ".circle-sha" }}
       - attach_workspace:
           at: ./
       - restore_cache:
