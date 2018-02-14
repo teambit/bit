@@ -95,9 +95,9 @@ jobs:
           paths:
             - bit/node_modules
       - persist_to_workspace:
-          root: /home/circleci
+          root: /home/circleci/bit
           paths:
-            - bit/node_modules
+            - node_modules
 
   install_bit_javascript_npm_deps:
     docker:
@@ -110,9 +110,9 @@ jobs:
           name: Insatll npm dependencies
           command: 'cd bit-javascript && npm install'
       - persist_to_workspace:
-          root: /home/circleci
+          root: /home/circleci/bit-javascript
           paths:
-            - bit-javascript/node_modules
+            - node_modules
 
 
   build:
@@ -164,10 +164,10 @@ jobs:
             - repo-{{ checksum ".circle-sha" }}
       - attach_workspace:
           at: ./
-      - restore_cache:
-          keys:
-            - npm-deps3-{{ checksum "package.json" }}
-            - npm-deps3
+      # - restore_cache:
+      #     keys:
+      #       - npm-deps3-{{ checksum "package.json" }}
+      #       - npm-deps3
       - run:
             name: run ESLint
             command: cd bit && npm run lint-circle
