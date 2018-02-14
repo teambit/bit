@@ -82,18 +82,18 @@ jobs:
             # A real solution will be to clear all the cache once circle will support it (for v2)
             # or move the packakge.json resotre to be from workspace instead of cache, then we can run
             # this step without cache
-            - npm-deps3-{{ checksum "./bit/package.json" }}
+            - npm-deps4-{{ checksum "./bit/package.json" }}
             # Find the most recent cache used from any branch
-            - npm-deps3
+            - npm-deps4
       - run:
           name: Insatll npm dependencies
           command: 'cd bit && npm install'
       - save_cache:
-          key: npm-deps3-{{ checksum "./bit/package.json" }}
+          key: npm-deps4-{{ checksum "./bit/package.json" }}
           paths:
             - bit/node_modules
       - save_cache:
-          key: npm-deps3
+          key: npm-deps4
           paths:
             - bit/node_modules
 
