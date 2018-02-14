@@ -13,3 +13,7 @@ echo "cloneing bit javascript: $BIT_JS_BRANCH"
 cd ../
 
 git clone --depth 1 https://github.com/teambit/bit-javascript -b $BIT_JS_BRANCH
+
+cd ./bit-javascript
+
+git rev-parse HEAD > commit-hash
