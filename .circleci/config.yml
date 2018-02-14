@@ -226,7 +226,7 @@ jobs:
       - run: cd bit && mkdir junit
       - run:
           name: npm link bit-javascript to bit
-          command: cd bit && npm link ../
+          command: cd bit && npm link ../bit-javascript
       - run:
           name: npm link bit to global
           command: cd bit && npm link
