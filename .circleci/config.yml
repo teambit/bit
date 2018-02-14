@@ -109,9 +109,9 @@ jobs:
           name: Insatll npm dependencies
           command: 'cd bit-javascript && npm install'
       - persist_to_workspace:
-          root: ./bit-javascript
+          root: .
           paths:
-            - node_modules
+            - bit-javascript/node_modules
 
 
   build:
