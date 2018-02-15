@@ -48,6 +48,7 @@
     "decamelize": "^1.2.0",
     "doctrine": "^2.0.2",
     "execa": "^0.8.0",
+    "find-up": "^2.1.0",
     "fs-extra": "^5.0.0",
     "fstream": "^1.0.10",
     "gitconfig": "teambit/node-gitconfig",
