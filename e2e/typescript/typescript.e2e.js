@@ -9,7 +9,7 @@ import Helper from '../e2e-helper';
 const helper = new Helper();
 
 // todo: once the bind is implemented, make it work
-describe('typescript', function () {
+describe.only('typescript', function () {
   this.timeout(0);
   after(() => {
     helper.destroyEnv();
@@ -231,6 +231,9 @@ export class List extends React.Component {
       });
       it('should be able to parse .tsx syntax successfully and recognize the dependencies', () => {
         const output = helper.showComponent('list/list --json');
+        console.log('----------------------------');
+        console.log(output);
+        console.log('----------------------------');
         const outputParsed = JSON.parse(output);
         expect(outputParsed.dependencies).to.have.lengthOf(1);
         expect(outputParsed.dependencies[0].id).to.equal('item/item');
