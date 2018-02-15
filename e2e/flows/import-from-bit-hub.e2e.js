@@ -22,6 +22,7 @@ describe('importing bit components from bitsrc.io', function () {
       .then((scope) => {
         scopeName = scope;
         scopeId = `${username}.${scopeName}`;
+        helper.reInitLocalScope();
         helper.createComponent('utils', 'is-type.js', fixtures.isType);
         helper.addComponent('utils/is-type.js');
         helper.createComponent('utils', 'is-string.js', fixtures.isString);
