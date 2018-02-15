@@ -40,7 +40,7 @@ describe('importing bit components from bitsrc.io', function () {
         helper.addComponent('utils/is-string-es6.js');
         helper.createComponent(
           'bar',
-          'foo-es6',
+          'foo-es6.js',
           "import isString from '../utils/is-string-es6.js'; export default function foo() { return isString() + ' and got foo'; };"
         );
         helper.addComponent('bar/foo-es6.js');
