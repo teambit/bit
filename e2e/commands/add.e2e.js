@@ -17,9 +17,9 @@ describe('bit add command', function () {
   this.timeout(0);
   const helper = new Helper();
 
-  after(() => {
-    helper.destroyEnv();
-  });
+  /*  after(() => {
+   helper.destroyEnv();
+   }); */
 
   describe('add before running "bit init"', () => {
     it('Should return message to run "bit init"', () => {
@@ -806,9 +806,9 @@ describe('bit add command', function () {
       it('should throw an error', () => {
         const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${
-            helper.bitBin
-          } add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
+          `Command failed: ${helper.bitBin} add ${
+            barFoo2Path
+          } -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
         );
       });
     });
@@ -945,6 +945,30 @@ describe('bit add command', function () {
     it('Should not create .bitmap ', () => {
       const newBitMapPath = path.join(helper.localScopePath, '.bitmap');
       expect(newBitMapPath).to.not.be.a.path('.bitmap Should not exist');
+    });
+  });
+
+  describe('add existing files to exported component', () => {
+    let bitMap;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.remoteScopePath;
+      helper.createComponent('bar', 'index.js');
+      helper.createComponent('bar', 'foo2.js');
+      helper.addComponentWithOptions('bar/', { i: 'bar/foo ' });
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+      helper.deleteFile('bar/foo2.js');
+      helper.addComponentWithOptions('bar/', { i: 'bar/foo ' });
+      helper.runCmd('bit s');
+      bitMap = helper.readBitMap();
+    });
+    it('Should not create duplicate ids in bitmap', () => {
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
+      expect(bitMap).to.not.have.property('bar/foo');
+    });
+    it('Should contian only one file', () => {
+      expect(bitMap[`${helper.remoteScope}/bar/foo@0.0.1`].files).to.be.ofSize(1);
     });
   });
 });
