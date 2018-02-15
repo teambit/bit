@@ -3,8 +3,7 @@
 import chokidar from 'chokidar';
 import R from 'ramda';
 import { loadConsumer } from '../../../consumer';
-import { build, buildAll } from '../index';
-import logger from '../../../logger/logger';
+import { buildAll } from '../index';
 import ComponentsList from '../../../consumer/component/components-list';
 
 /**

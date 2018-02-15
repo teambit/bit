@@ -13,7 +13,7 @@ export default function removeFile(path: string, propogateDirs: boolean = false)
           if (files.length !== 0) return resolve(res);
           return fs.remove(dir, (error) => {
             if (err) return reject(error);
-            resolve(res);
+            return resolve(res);
           });
         });
       } else {

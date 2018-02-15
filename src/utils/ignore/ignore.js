@@ -1,3 +1,4 @@
+/** @flow */
 import gitignore from 'parse-gitignore';
 import { IGNORE_LIST, GIT_IGNORE } from '../../constants';
 import { findFile } from '../index';

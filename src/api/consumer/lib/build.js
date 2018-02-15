@@ -5,8 +5,7 @@ import Component from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import loader from '../../../cli/loader';
-import ComponentsList from '../../../consumer/component/components-list';
-import { BEFORE_LOADING_COMPONENTS, BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
+import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 
 export async function build(id: string, verbose: boolean): Promise<?Array<string>> {
   const bitId = BitId.parse(id);
