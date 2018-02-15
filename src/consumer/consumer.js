@@ -251,7 +251,10 @@ export default class Consumer {
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
-      const componentFromModel = await this.scope.getFromLocalIfExist(idWithConcreteVersion);
+      const componentWithDependenciesFromModel = await this.scope.getFromLocalIfExist(idWithConcreteVersion);
+      const componentFromModel = componentWithDependenciesFromModel
+        ? componentWithDependenciesFromModel.component
+        : undefined;
       let component;
       try {
         component = await Component.loadFromFileSystem({

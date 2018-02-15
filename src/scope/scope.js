@@ -768,7 +768,7 @@ export default class Scope {
     });
   }
 
-  async get(id: BitId): Promise<ConsumerComponent> {
+  async get(id: BitId): Promise<ComponentWithDependencies> {
     return this.import(id).then((versionDependencies) => {
       return versionDependencies.toConsumer(this.objects);
     });
@@ -778,7 +778,7 @@ export default class Scope {
    * return a component only when it's stored locally. Don't go to any remote server and don't throw an exception if the
    * component is not there.
    */
-  async getFromLocalIfExist(id: BitId): Promise<?ConsumerComponent> {
+  async getFromLocalIfExist(id: BitId): Promise<?ComponentWithDependencies> {
     const componentFromSources = await this.sources.get(id);
     if (!componentFromSources) return null;
     const versionDependencies = await componentFromSources.toVersionDependencies(id.version, this, this.name);

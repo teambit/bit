@@ -841,8 +841,20 @@ export default class Component {
   }
 
   async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
-    const dependencies = await this.dependencies.getDependenciesComponents(consumer, this);
-    const devDependencies = await this.devDependencies.getDependenciesComponents(consumer, this);
+    const getDependenciesComponents = (ids: BitIds) => {
+      return Promise.all(
+        ids.map((dependencyId) => {
+          if (consumer.bitMap.isExistWithSameVersion(dependencyId)) {
+            return consumer.loadComponent(dependencyId);
+          }
+          // when dependencies are imported as npm packages, they are not in bit.map
+          this.dependenciesSavedAsComponents = false;
+          return consumer.scope.loadComponent(dependencyId, false);
+        })
+      );
+    };
+    const dependencies = await getDependenciesComponents(this.flattenedDependencies);
+    const devDependencies = await getDependenciesComponents(this.flattenedDevDependencies);
     return new ComponentWithDependencies({ component: this, dependencies, devDependencies });
   }
 
@@ -911,13 +923,13 @@ export default class Component {
     componentMap: ComponentMap,
     id: BitId,
     consumer: Consumer,
-    componentFromModel: ModelComponent
+    componentFromModel: Component
   }): Component {
     const consumerPath = consumer.getPath();
     const consumerBitJson: ConsumerBitJson = consumer.bitJson;
     const bitMap: BitMap = consumer.bitMap;
-    const deprecated = componentFromModel ? componentFromModel.component.deprecated : false;
-    let dists = componentFromModel ? componentFromModel.component.dists.get() : undefined;
+    const deprecated = componentFromModel ? componentFromModel.deprecated : false;
+    let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
     let packageDependencies;
     let devPackageDependencies;
     let peerPackageDependencies;
@@ -948,7 +960,7 @@ export default class Component {
 
       return sourceFiles;
     };
-    if (!fs.existsSync(bitDir)) return Promise.reject(new ComponentNotFoundInPath(bitDir));
+    if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
     const files = componentMap.files;
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
@@ -966,7 +978,7 @@ export default class Component {
     // by default, imported components are not written with bit.json file.
     // use the component from the model to get their bit.json values
     if (!fs.existsSync(path.join(bitDir, BIT_JSON)) && componentFromModel) {
-      bitJson.mergeWithComponentData(componentFromModel.component);
+      bitJson.mergeWithComponentData(componentFromModel);
     }
 
     // Remove dists if compiler has been deleted

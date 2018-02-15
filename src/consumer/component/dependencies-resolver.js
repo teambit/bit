@@ -115,7 +115,7 @@ function findComponentsOfDepsFiles(
 Try to run "bit import ${componentId} --objects" to get the component saved in the model`);
         }
         const componentBitId = BitId.parse(componentId);
-        const dependency = componentFromModel.component
+        const dependency = componentFromModel
           .getAllDependencies()
           .find(dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion());
         if (!dependency) {
