@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.6-dev.3] - 2018-02-15
+
 - support `bit install` of specific ids
 - support peerDependencies (in the model for now)
 
