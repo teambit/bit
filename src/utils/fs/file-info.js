@@ -11,7 +11,7 @@ import path from 'path';
  *  currentDirName() // => 'bit'
  * ```
  */
-export default function calculateFileInfo(relativePath: string): Object {
+export default function calculateFileInfo(relativePath: string): { PARENT: string, FILE_NAME: string } {
   const fileInfo = path.parse(relativePath);
   const fullPath = path.dirname(relativePath);
   const rootDir = path.dirname(fullPath);
