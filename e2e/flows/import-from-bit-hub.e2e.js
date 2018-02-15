@@ -29,7 +29,11 @@ describe('importing bit components from bitsrc.io', function () {
         helper.addComponent('utils/is-string.js');
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
+        helper.commitAllComponents();
+        helper.exportAllComponents(scopeId);
 
+        helper.reInitLocalScope();
+        helper.importCompiler('bit.envs/compilers/babel');
         helper.createComponent('utils', 'is-type-es6.js', fixtures.isTypeES6);
         helper.addComponent('utils/is-type-es6.js');
         helper.createComponent(
