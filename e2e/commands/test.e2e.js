@@ -37,7 +37,7 @@ describe('bit test command', function () {
   let clonedScopePath;
   before(() => {
     helper.reInitLocalScope();
-    helper.importTester('bit.envs/testers/mocha');
+    helper.importTester('bit.envs/testers/mocha@0.0.4');
     clonedScopePath = helper.cloneLocalScope();
   });
   after(() => {
@@ -67,7 +67,7 @@ describe('bit test command', function () {
       expect(output).to.have.string('tests passed');
     });
     it('Should not be able to run tests with wrong tester env', () => {
-      helper.importTester('bit.envs/testers/jest');
+      helper.importTester('bit.envs/testers/jest@0.0.18');
       const output = helper.testComponent('utils/is-type');
       expect(output).to.have.string('❌   Jest failure');
     });
