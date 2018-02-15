@@ -97,7 +97,9 @@ export default class Component {
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
   originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
-  componentMap: ?ComponentMap; // always populated when the component was loaded via Consumer
+  loadedFromFileSystem: boolean = false; // whether a component was loaded from the file system or converted from the model
+  componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
+  componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
   deprecated: boolean;
@@ -841,6 +843,11 @@ export default class Component {
   }
 
   async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
+    const getFlatten = (dev: boolean = false) => {
+      const field = dev ? 'flattenedDevDependencies' : 'flattenedDependencies';
+      // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
+      return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
+    };
     const getDependenciesComponents = (ids: BitIds) => {
       return Promise.all(
         ids.map((dependencyId) => {
@@ -853,8 +860,9 @@ export default class Component {
         })
       );
     };
-    const dependencies = await getDependenciesComponents(this.flattenedDependencies);
-    const devDependencies = await getDependenciesComponents(this.flattenedDevDependencies);
+
+    const dependencies = await getDependenciesComponents(getFlatten());
+    const devDependencies = await getDependenciesComponents(getFlatten(true));
     return new ComponentWithDependencies({ component: this, dependencies, devDependencies });
   }
 

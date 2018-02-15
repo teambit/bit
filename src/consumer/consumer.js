@@ -274,14 +274,16 @@ export default class Consumer {
         }
         throw err;
       }
+      component.loadedFromFileSystem = true;
       component.originallySharedDir = componentMap.originallySharedDir || null;
       component.componentMap = componentMap;
+      component.componentFromModel = componentFromModel;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // no need to resolve dependencies
         return component;
       }
-      return loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString, componentFromModel);
+      return loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString);
     });
 
     const allComponents = [];

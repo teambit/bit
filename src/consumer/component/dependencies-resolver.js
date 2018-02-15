@@ -403,12 +403,12 @@ export default (async function loadDependenciesForComponent(
   component: Component,
   bitDir: string,
   consumer: Consumer,
-  idWithConcreteVersionString: string,
-  componentFromModel: Component
+  idWithConcreteVersionString: string
 ): Promise<Component> {
   const driver: Driver = consumer.driver;
   const consumerPath = consumer.getPath();
   const componentMap: ComponentMap = component.componentMap;
+  const componentFromModel: Component = component.componentFromModel;
   const missingDependencies = {};
   const { allFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
   const getDependenciesTree = async () => {
