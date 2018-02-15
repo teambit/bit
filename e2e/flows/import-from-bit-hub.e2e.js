@@ -124,10 +124,11 @@ describe('importing bit components from bitsrc.io', function () {
     });
   });
   describe('ES6 component', () => {
-    const componentES6TestId = `${scopeId}/bar/foo-es6`;
+    let componentES6TestId;
     describe('without --ignore-flag flag', () => {
       before(() => {
         helper.reInitLocalScope();
+        componentES6TestId = `${scopeId}/bar/foo-es6`;
         helper.runCmd(`bit import ${componentES6TestId} `);
       });
       it('should generate all the links in the dists dir correctly and print results from all dependencies', () => {
