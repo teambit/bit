@@ -130,7 +130,10 @@ export default (async function addAction(
               }
             })
             .filter(file => !R.isNil(file));
-          component.componentId = BitId.parse(bitMapComponentId);
+          const locatedIDFromBitMap = bitmap.getExistingComponentId(bitMapComponentId);
+          component.componentId = locatedIDFromBitMap
+            ? BitId.parse(locatedIDFromBitMap)
+            : BitId.parse(bitMapComponentId);
           return addToBitMap(bitMap, component);
         }
         // if id is not in bitmap check that files are not tracked by another component

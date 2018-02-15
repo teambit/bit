@@ -338,7 +338,9 @@ export default class BitMap {
     }
     const idWithVersion = Object.keys(this.components).find(
       // $FlowFixMe
-      componentId => BitId.parse(componentId).toStringWithoutVersion() === id.toStringWithoutVersion()
+      componentId =>
+        BitId.parse(componentId).toStringWithoutVersion() === id.toStringWithoutVersion() ||
+        BitId.parse(componentId).toStringWithoutScopeAndVersion() === id.toStringWithoutScopeAndVersion()
     );
     if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(id);
     // $FlowFixMe
