@@ -326,17 +326,34 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
   return { componentsDeps, devComponentsDeps, packagesDeps, devPackagesDeps, untrackedDeps, relativeDeps, missingDeps };
 }
 
-function findPeerDependencies(consumerPath: string): Object {
-  const packageJsonLocation = path.join(consumerPath, 'package.json');
-  let peerDependencies = {};
-  if (!fs.existsSync(packageJsonLocation)) return peerDependencies;
-  try {
-    const packageJson = fs.readJsonSync(packageJsonLocation);
-    if (packageJson.peerDependencies) peerDependencies = packageJson.peerDependencies;
-  } catch (err) {
-    logger.error(`Failed reading the project package.json. Error Message: ${err.message}`);
-  }
-  return peerDependencies;
+// @todo: move to bit-javascript
+function findPeerDependencies(consumerPath: string, component: Component): Object {
+  const getPeerDependencies = (): Object => {
+    const packageJsonLocation = path.join(consumerPath, 'package.json');
+    if (fs.existsSync(packageJsonLocation)) {
+      try {
+        const packageJson = fs.readJsonSync(packageJsonLocation);
+        if (packageJson.peerDependencies) return packageJson.peerDependencies;
+      } catch (err) {
+        logger.error(`Failed reading the project package.json. Error Message: ${err.message}`);
+      }
+    }
+    return {};
+  };
+  const projectPeerDependencies = getPeerDependencies();
+  const peerPackages = {};
+  if (R.isEmpty(projectPeerDependencies)) return {};
+  // check whether the peer-dependencies was actually require in the code. if so, remove it from
+  // the packages/dev-packages and add it as a peer-package.
+  Object.keys(projectPeerDependencies).forEach((pkg) => {
+    ['packageDependencies', 'devPackageDependencies'].forEach((field) => {
+      if (Object.keys(component[field]).includes(pkg)) {
+        delete component[field][pkg];
+        peerPackages[pkg] = projectPeerDependencies[pkg];
+      }
+    });
+  });
+  return peerPackages;
 }
 
 /**
@@ -449,7 +466,7 @@ export default (async function loadDependenciesForComponent(
   if (!R.isEmpty(untrackedDependencies)) missingDependencies.untrackedDependencies = untrackedDependencies;
   component.packageDependencies = traversedDeps.packagesDeps;
   component.devPackageDependencies = traversedDeps.devPackagesDeps;
-  component.peerPackageDependencies = findPeerDependencies(consumerPath);
+  component.peerPackageDependencies = findPeerDependencies(consumerPath, component);
   if (!R.isEmpty(traversedDeps.relativeDeps)) {
     missingDependencies.relativeComponents = traversedDeps.relativeDeps;
   }
