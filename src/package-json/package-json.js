@@ -82,8 +82,12 @@ export default class PackageJson {
     return JSON.stringify(this.toPlainObject(), null, 4);
   }
 
-  setDependencies(dependencies, bitDependencies: Object, registryPrefix: string) {
-    this.dependencies = Object.assign({}, dependencies, convertComponentsToValidPackageNames(registryPrefix, bitDependencies));
+  addDependencies(bitDependencies: Object, registryPrefix: string) {
+    this.dependencies = Object.assign({}, this.dependencies, convertComponentsToValidPackageNames(registryPrefix, bitDependencies));
+  }
+
+  addDevDependencies(bitDevDependencies: Object, registryPrefix: string) {
+    this.devDependencies = Object.assign({}, this.devDependencies, convertComponentsToValidPackageNames(registryPrefix, bitDevDependencies));
   }
 
   static hasExisting(componentRootFolder: string, throws?: boolean = false): boolean {
