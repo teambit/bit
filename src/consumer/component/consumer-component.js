@@ -97,7 +97,7 @@ export default class Component {
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
   originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
-  loadedFromFileSystem: boolean = false; // whether a component was loaded from the file system or converted from the model
+  loadedFromFileSystem: boolean = false; // whether a component was loaded from the filesystem or converted from the model
   componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
   componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
   isolatedEnvironment: IsolatedEnvironment;
