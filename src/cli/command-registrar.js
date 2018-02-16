@@ -1,5 +1,6 @@
 /** @flow */
 import serializeError from 'serialize-error';
+import R from 'ramda';
 import commander from 'commander';
 import chalk from 'chalk';
 import type Command from './command';
@@ -50,9 +51,14 @@ function getOpts(c, opts: [[string, string, string]]): { [string]: boolean | str
 
 function execAction(command, concrete, args) {
   // $FlowFixMe
-  const opts = getOpts(concrete, command.opts);
+  const flags = getOpts(concrete, command.opts);
   const relevantArgs = args.slice(0, args.length - 1);
-  logger.info(`[*] started a new command: "${command.name}" with the following data:`, { args: relevantArgs, opts });
+  const packageManagerArgs = concrete.parent.packageManagerArgs;
+  logger.info(`[*] started a new command: "${command.name}" with the following data:`, {
+    args: relevantArgs,
+    flags,
+    packageManagerArgs
+  });
   if (command.loader) {
     loader.on();
   }
@@ -67,7 +73,7 @@ function execAction(command, concrete, args) {
 
   migrateWrapper(command.migration)
     .then(() => {
-      return command.action(relevantArgs, opts).then((data) => {
+      return command.action(relevantArgs, flags, packageManagerArgs).then((data) => {
         loader.off();
         return logAndExit(command.report(data), command.name);
       });
@@ -219,11 +225,14 @@ export default class CommandRegistrar {
       return this;
     }
 
+    const [params, packageManagerArgs] = R.splitWhen(R.equals('--'), process.argv);
+    packageManagerArgs.shift(); // the first item, '--', is not needed.
     this.registerBaseCommand();
     this.registerCommands();
     this.registerExtenstionsCommands();
     this.outputHelp();
-    commander.parse(process.argv);
+    commander.packageManagerArgs = packageManagerArgs; // it's a hack, I didn't find a better way to pass them
+    commander.parse(params);
 
     return this;
   }

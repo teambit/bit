@@ -10,7 +10,7 @@ export default class Cmd {
   loader: ?boolean;
 
   // eslint-disable-next-line no-unused-vars
-  action(params: any, opts: { [string]: any }): Promise<any> {
+  action(params: any, opts: { [string]: any }, packageManagerArgs: string[]): Promise<any> {
     console.log('"action" method not implemented on this command');
     return new Promise(resolve => resolve({}));
   }

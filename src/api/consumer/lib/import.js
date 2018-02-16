@@ -20,7 +20,11 @@ export type EnvironmentOptions = {
   extension: boolean
 };
 
-export default (async function importAction(environmentOptions: EnvironmentOptions, importOptions: ImportOptions) {
+export default (async function importAction(
+  environmentOptions: EnvironmentOptions,
+  importOptions: ImportOptions,
+  packageManagerArgs: string[]
+) {
   async function importEnvironment(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
 
@@ -63,6 +67,7 @@ export default (async function importAction(environmentOptions: EnvironmentOptio
   }
 
   const consumer: Consumer = await loadConsumer();
+  consumer.packageManagerArgs = packageManagerArgs;
   if (environmentOptions.tester || environmentOptions.compiler || environmentOptions.extension) {
     return importEnvironment(consumer);
   }

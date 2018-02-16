@@ -102,18 +102,19 @@ const _installInOneDirectory = ({
     concretePackageManagerProcessOptions
   );
 
+  // Remove the install from args since it's always there
+  const printArgs = concretePackageManagerArgs.filter(arg => arg !== 'install');
+  const argsString = printArgs && printArgs.length > 0 ? `with args: ${printArgs}` : '';
+
   return childProcess
     .then(({ stdout, stderr }) => {
-      // Remove the install from args since it's always there
-      const printArgs = concretePackageManagerArgs.filter(arg => arg !== 'install');
-      const argsString = printArgs && printArgs.length > 0 ? `with args: ${printArgs}` : '';
       stdout = verbose ? stdout : `successfully ran ${packageManager} install at ${cwd} ${argsString}`;
       stderr = verbose ? stderr : '';
       return { stdout, stderr };
     })
     .catch((err) => {
-      const stderr = verbose ? err.stderr : stripNonNpmErrors(err.stderr);
-      // return Promise.reject(`${stderr}\n\n${err.message}`);
+      let stderr = `failed running ${packageManager} install at ${cwd} ${argsString} \n`;
+      stderr += verbose ? err.stderr : stripNonNpmErrors(err.stderr);
       return Promise.reject(`${stderr}`);
     });
 };
