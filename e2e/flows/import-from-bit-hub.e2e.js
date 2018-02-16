@@ -2,19 +2,61 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import Helper from '../e2e-helper';
+import BitsrcTester, { username } from '../bitsrc-tester';
+import * as fixtures from '../fixtures/fixtures';
 
 chai.use(require('chai-fs'));
-
-// see the content of this component here: https://bitsrc.io/david/tests/bar/foo
-const componentTestId = 'david.tests/bar/foo';
-const componentES6TestId = 'david.tests-es6/bar/foo-es6';
 
 describe('importing bit components from bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
+  const bitsrcTester = new BitsrcTester();
   const barFooDir = path.join(helper.localScopePath, 'components', 'bar', 'foo');
+  let scopeName;
+  let scopeId;
+  let componentTestId;
+  before(() => {
+    return bitsrcTester
+      .loginToBitSrc()
+      .then(() => bitsrcTester.createScope())
+      .then((scope) => {
+        scopeName = scope;
+        scopeId = `${username}.${scopeName}`;
+        helper.reInitLocalScope();
+        helper.createComponent('utils', 'is-type.js', fixtures.isType);
+        helper.addComponent('utils/is-type.js');
+        helper.createComponent('utils', 'is-string.js', fixtures.isString);
+        helper.addComponent('utils/is-string.js');
+        helper.createComponentBarFoo(fixtures.barFooFixture);
+        helper.addComponentBarFoo();
+        helper.commitAllComponents();
+        helper.exportAllComponents(scopeId);
+
+        helper.reInitLocalScope();
+        helper.importCompiler('bit.envs/compilers/babel');
+        helper.createComponent('utils', 'is-type-es6.js', fixtures.isTypeES6);
+        helper.addComponent('utils/is-type-es6.js');
+        helper.createComponent(
+          'utils',
+          'is-string-es6.js',
+          "import isType from './is-type-es6.js'; export default function isString() { return isType() +  ' and got is-string'; };"
+        );
+        helper.addComponent('utils/is-string-es6.js');
+        helper.createComponent(
+          'bar',
+          'foo-es6.js',
+          "import isString from '../utils/is-string-es6.js'; export default function foo() { return isString() + ' and got foo'; };"
+        );
+        helper.addComponent('bar/foo-es6.js');
+
+        helper.commitAllComponents();
+        helper.exportAllComponents(scopeId);
+        componentTestId = `${scopeId}/bar/foo`;
+      });
+  });
   after(() => {
     helper.destroyEnv();
+    return bitsrcTester.deleteScope(scopeName);
   });
   describe('when saveDependenciesAsComponents is the default (FALSE) in consumer bit.json', () => {
     before(() => {
@@ -26,15 +68,13 @@ describe('importing bit components from bitsrc.io', function () {
     });
     it('should not write the dependencies in bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('david.tests/bar/foo@0.0.1');
-      expect(bitMap).to.not.have.property('david.tests/utils/is-string@0.0.1');
-      expect(bitMap).to.not.have.property('david.tests/utils/is-type@0.0.1');
+      expect(bitMap).to.have.property(`${scopeId}/bar/foo@0.0.1`);
+      expect(bitMap).to.not.have.property(`${scopeId}/utils/is-string@0.0.1`);
+      expect(bitMap).to.not.have.property(`${scopeId}/utils/is-type@0.0.1`);
     });
     it('should install the dependencies as npm packages', () => {
-      expect(
-        path.join(barFooDir, 'node_modules', '@bit', 'david.tests.utils.is-string', 'is-string.js')
-      ).to.be.a.path();
-      expect(path.join(barFooDir, 'node_modules', '@bit', 'david.tests.utils.is-type', 'is-type.js')).to.be.a.path();
+      expect(path.join(barFooDir, 'node_modules', '@bit', `${scopeId}.utils.is-string`, 'is-string.js')).to.be.a.path();
+      expect(path.join(barFooDir, 'node_modules', '@bit', `${scopeId}.utils.is-type`, 'is-type.js')).to.be.a.path();
     });
     it('should generate all the links correctly and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -44,7 +84,7 @@ describe('importing bit components from bitsrc.io', function () {
     });
     it('should recognize the npm packages as dependencies when loading from the file system', () => {
       const showOutput = helper.showComponentParsed();
-      expect(showOutput.dependencies[0].id).to.equal('david.tests/utils/is-string@0.0.1');
+      expect(showOutput.dependencies[0].id).to.equal(`${scopeId}/utils/is-string@0.0.1`);
     });
     it("bit status should not show the component (because it's not new/modified/staged etc)", () => {
       const output = helper.runCmd('bit status');
@@ -52,11 +92,11 @@ describe('importing bit components from bitsrc.io', function () {
     });
     it('should save the package name with the binding-prefix', () => {
       const barFooPackageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components', 'bar', 'foo'));
-      expect(barFooPackageJson.name).to.equal('@bit/david.tests.bar.foo');
+      expect(barFooPackageJson.name).to.equal(`@bit/${scopeId}.bar.foo`);
     });
     it('should save the imported component as a dependency in the package.json of the project', () => {
       const barFooPackageJson = helper.readPackageJson();
-      expect(barFooPackageJson.dependencies).to.deep.include({ '@bit/david.tests.bar.foo': './components/bar/foo' });
+      expect(barFooPackageJson.dependencies).to.deep.include({ [`@bit/${scopeId}.bar.foo`]: './components/bar/foo' });
     });
   });
   describe('when saveDependenciesAsComponents is set to TRUE in consumer bit.json', () => {
@@ -70,17 +110,15 @@ describe('importing bit components from bitsrc.io', function () {
     });
     it('should write the dependencies in bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('david.tests/bar/foo@0.0.1');
-      expect(bitMap).to.have.property('david.tests/utils/is-string@0.0.1');
-      expect(bitMap).to.have.property('david.tests/utils/is-type@0.0.1');
+      expect(bitMap).to.have.property(`${scopeId}/bar/foo@0.0.1`);
+      expect(bitMap).to.have.property(`${scopeId}/utils/is-string@0.0.1`);
+      expect(bitMap).to.have.property(`${scopeId}/utils/is-type@0.0.1`);
     });
     it('should not install the dependencies as npm packages', () => {
       expect(
-        path.join(barFooDir, 'node_modules', '@bit', 'david.tests.utils.is-string', 'is-string.js')
+        path.join(barFooDir, 'node_modules', '@bit', `${scopeId}.utils.is-string`, 'is-string.js')
       ).to.not.be.a.path();
-      expect(
-        path.join(barFooDir, 'node_modules', '@bit', 'david.tests.utils.is-type', 'is-type.js')
-      ).to.not.be.a.path();
+      expect(path.join(barFooDir, 'node_modules', '@bit', `${scopeId}.utils.is-type`, 'is-type.js')).to.not.be.a.path();
     });
     it('should generate all the links correctly and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -90,9 +128,11 @@ describe('importing bit components from bitsrc.io', function () {
     });
   });
   describe('ES6 component', () => {
+    let componentES6TestId;
     describe('without --ignore-flag flag', () => {
       before(() => {
         helper.reInitLocalScope();
+        componentES6TestId = `${scopeId}/bar/foo-es6`;
         helper.runCmd(`bit import ${componentES6TestId} `);
       });
       it('should generate all the links in the dists dir correctly and print results from all dependencies', () => {
@@ -119,8 +159,8 @@ describe('importing bit components from bitsrc.io', function () {
   describe('importing a component as a dependency of other component and then importing it directly', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.runCmd('bit import david.tests/utils/is-string'); // is-string imports is-type as a dependency
-      helper.runCmd('bit import david.tests/utils/is-type'); // import is-type directly
+      helper.runCmd(`bit import ${scopeId}/utils/is-string`); // is-string imports is-type as a dependency
+      helper.runCmd(`bit import ${scopeId}/utils/is-type`); // import is-type directly
 
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
@@ -128,7 +168,7 @@ describe('importing bit components from bitsrc.io', function () {
     it('should update the package.json of the dependent with relative-path of the dependency', () => {
       const isStringDir = path.join(helper.localScopePath, 'components', 'utils', 'is-string');
       const packageJsonIsString = helper.readPackageJson(isStringDir);
-      expect(packageJsonIsString.dependencies['@bit/david.tests.utils.is-type']).to.equal('../is-type');
+      expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('../is-type');
     });
     describe('changing the directly imported dependency component', () => {
       before(() => {
@@ -141,13 +181,13 @@ describe('importing bit components from bitsrc.io', function () {
       });
       describe('As publisher, change to absolute syntax, another, non-bit user clones the project and install npm', () => {
         before(() => {
-          const isStringFixtureV2 = `const isType = require('@bit/david.tests.utils.is-type');
+          const isStringFixtureV2 = `const isType = require('@bit/${scopeId}.utils.is-type');
 module.exports = function isString() { return isType() +  ' and got is-string'; };`;
           helper.createComponent(path.join('components', 'utils', 'is-string'), 'is-string.js', isStringFixtureV2);
           helper.mimicGitCloneLocalProject();
           helper.runCmd('npm install');
         });
-        it("that user should see the updated version of the component, same as the publisher, although it does'nt have bit installed ", () => {
+        it("that user should see the updated version of the component, same as the publisher, although it doesn't have bit installed ", () => {
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type v2 and got is-string');
         });
@@ -157,8 +197,8 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
   describe('importing a component directly and then as a dependency of other component', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.runCmd('bit import david.tests/utils/is-type'); // import is-type directly
-      helper.runCmd('bit import david.tests/utils/is-string'); // is-string imports is-type as a dependency
+      helper.runCmd(`bit import ${scopeId}/utils/is-type`); // import is-type directly
+      helper.runCmd(`bit import ${scopeId}/utils/is-string`); // is-string imports is-type as a dependency
     });
     describe('changing the directly imported dependency component', () => {
       before(() => {
@@ -168,7 +208,7 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
       it('should update the package.json of the dependent with relative-path of the dependency', () => {
         const isStringDir = path.join(helper.localScopePath, 'components', 'utils', 'is-string');
         const packageJsonIsString = helper.readPackageJson(isStringDir);
-        expect(packageJsonIsString.dependencies['@bit/david.tests.utils.is-type']).to.equal('../is-type');
+        expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('../is-type');
       });
       it('should affect its dependent', () => {
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
@@ -184,17 +224,17 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
     before(() => {
       helper.reInitLocalScope();
       helper.runCmd('npm init -y');
-      helper.runCmd('npm i @bit/david.tests.utils.is-type --save');
+      helper.runCmd(`npm i @bit/${scopeId}.utils.is-type --save`);
       packageJsonBeforeImport = helper.readPackageJson();
-      helper.runCmd('bit import david.tests/utils/is-type');
+      helper.runCmd(`bit import ${scopeId}/utils/is-type`);
       packageJsonAfterImport = helper.readPackageJson();
     });
     it('should not remove any property of the package.json created by npm', () => {
       Object.keys(packageJsonBeforeImport).forEach(prop => expect(packageJsonAfterImport).to.have.property(prop));
     });
     it('should update the root package.json and change the dependency from a package to a local path', () => {
-      expect(packageJsonBeforeImport.dependencies['@bit/david.tests.utils.is-type']).to.equal('0.0.1');
-      expect(packageJsonAfterImport.dependencies['@bit/david.tests.utils.is-type']).to.equal(
+      expect(packageJsonBeforeImport.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('0.0.1');
+      expect(packageJsonAfterImport.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal(
         './components/utils/is-type'
       );
     });
