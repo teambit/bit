@@ -68,7 +68,8 @@ type ComponentStatus = {
   newlyCreated: boolean,
   deleted: boolean,
   staged: boolean,
-  notExist: boolean
+  notExist: boolean,
+  nested: boolean // when a component is nested, it doesn't matter whether it was modified
 };
 
 export default class Consumer {
@@ -623,6 +624,10 @@ export default class Consumer {
       }
       if (!componentFromModel) {
         status.newlyCreated = true;
+        return status;
+      }
+      if (componentFromFileSystem.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+        status.nested = true;
         return status;
       }
       status.staged = componentFromModel.isLocallyChanged();
