@@ -143,9 +143,7 @@ async function write(
     return R.fromPairs(await Promise.all(dependenciesPackages));
   };
   const bitDependencies = await getBitDependencies();
-  // @todo: bitDevDependencies should probably be part of devDependencies
   const bitDevDependencies = await getBitDependencies(true);
-  const allBitDependencies = Object.assign({}, bitDependencies, bitDevDependencies);
   const registryPrefix = getRegistryPrefix();
   const name = excludeRegistryPrefix
     ? component.id.toStringWithoutVersion().replace(/\//g, '.')
@@ -157,12 +155,14 @@ async function write(
       version: component.version,
       homepage: component._getHomepage(),
       main: pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile)),
+      dependencies: component.packageDependencies,
       devDependencies: component.devPackageDependencies,
       peerDependencies: component.peerPackageDependencies,
       componentRootFolder: dir,
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
     });
-    packageJson.setDependencies(component.packageDependencies, allBitDependencies, registryPrefix);
+    packageJson.addDependencies(bitDependencies, registryPrefix);
+    packageJson.addDevDependencies(bitDevDependencies, registryPrefix);
     return packageJson;
   };
   const packageJson = getPackageJsonInstance(bitDir);
