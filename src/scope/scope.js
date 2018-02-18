@@ -22,9 +22,7 @@ import {
   BITS_DIRNAME,
   BIT_VERSION,
   DEFAULT_BIT_VERSION,
-  LATEST_BIT_VERSION,
-  BIT_GIT_DIR,
-  DOT_GIT_DIR
+  LATEST_BIT_VERSION
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import {
@@ -67,7 +65,7 @@ import Component from '../consumer/component/consumer-component';
 import DependencyGraph from './graph/graph';
 
 const removeNils = R.reject(R.isNil);
-const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR, pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR)]);
+const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
 
 export type ScopeDescriptor = {
   name: string
@@ -768,7 +766,7 @@ export default class Scope {
     });
   }
 
-  async get(id: BitId): Promise<ConsumerComponent> {
+  async get(id: BitId): Promise<ComponentWithDependencies> {
     return this.import(id).then((versionDependencies) => {
       return versionDependencies.toConsumer(this.objects);
     });
@@ -778,7 +776,7 @@ export default class Scope {
    * return a component only when it's stored locally. Don't go to any remote server and don't throw an exception if the
    * component is not there.
    */
-  async getFromLocalIfExist(id: BitId): Promise<?ConsumerComponent> {
+  async getFromLocalIfExist(id: BitId): Promise<?ComponentWithDependencies> {
     const componentFromSources = await this.sources.get(id);
     if (!componentFromSources) return null;
     const versionDependencies = await componentFromSources.toVersionDependencies(id.version, this, this.name);
@@ -1417,7 +1415,7 @@ export default class Scope {
   }
 
   static load(absPath: string): Promise<Scope> {
-    let scopePath = propogateUntil(absPath, pathHasScope);
+    let scopePath = propogateUntil(absPath);
     if (!scopePath) throw new ScopeNotFound();
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);

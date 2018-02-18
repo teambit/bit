@@ -115,7 +115,7 @@ function findComponentsOfDepsFiles(
 Try to run "bit import ${componentId} --objects" to get the component saved in the model`);
         }
         const componentBitId = BitId.parse(componentId);
-        const dependency = componentFromModel.component
+        const dependency = componentFromModel
           .getAllDependencies()
           .find(dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion());
         if (!dependency) {
@@ -403,12 +403,12 @@ export default (async function loadDependenciesForComponent(
   component: Component,
   bitDir: string,
   consumer: Consumer,
-  idWithConcreteVersionString: string,
-  componentFromModel: Component
+  idWithConcreteVersionString: string
 ): Promise<Component> {
   const driver: Driver = consumer.driver;
   const consumerPath = consumer.getPath();
   const componentMap: ComponentMap = component.componentMap;
+  const componentFromModel: Component = component.componentFromModel;
   const missingDependencies = {};
   const { allFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
   const getDependenciesTree = async () => {

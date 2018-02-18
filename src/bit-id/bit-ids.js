@@ -58,4 +58,9 @@ export default class BitIds extends Array<BitId> {
 
     return new BitIds(...array);
   }
+
+  static clone(bitIds?: ?BitIds = []): BitIds {
+    const cloneIds = bitIds.map(bitId => bitId.clone());
+    return new BitIds(...cloneIds);
+  }
 }

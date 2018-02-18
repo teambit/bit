@@ -68,7 +68,8 @@ type ComponentStatus = {
   newlyCreated: boolean,
   deleted: boolean,
   staged: boolean,
-  notExist: boolean
+  notExist: boolean,
+  nested: boolean // when a component is nested, it doesn't matter whether it was modified
 };
 
 export default class Consumer {
@@ -251,7 +252,10 @@ export default class Consumer {
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
-      const componentFromModel = await this.scope.getFromLocalIfExist(idWithConcreteVersion);
+      const componentWithDependenciesFromModel = await this.scope.getFromLocalIfExist(idWithConcreteVersion);
+      const componentFromModel = componentWithDependenciesFromModel
+        ? componentWithDependenciesFromModel.component
+        : undefined;
       let component;
       try {
         component = await Component.loadFromFileSystem({
@@ -271,14 +275,16 @@ export default class Consumer {
         }
         throw err;
       }
+      component.loadedFromFileSystem = true;
       component.originallySharedDir = componentMap.originallySharedDir || null;
       component.componentMap = componentMap;
+      component.componentFromModel = componentFromModel;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // no need to resolve dependencies
         return component;
       }
-      return loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString, componentFromModel);
+      return loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString);
     });
 
     const allComponents = [];
@@ -618,6 +624,10 @@ export default class Consumer {
       }
       if (!componentFromModel) {
         status.newlyCreated = true;
+        return status;
+      }
+      if (componentFromFileSystem.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+        status.nested = true;
         return status;
       }
       status.staged = componentFromModel.isLocallyChanged();

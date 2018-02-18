@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.12.6-dev.2",
+  "version": "0.12.6-dev.3",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
@@ -38,7 +38,7 @@
   "dependencies": {
     "array-difference": "^0.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "^0.10.11-dev.2",
+    "bit-javascript": "^0.10.11-dev.3",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
     "chokidar": "^1.7.0",
@@ -48,6 +48,7 @@
     "decamelize": "^1.2.0",
     "doctrine": "^2.0.2",
     "execa": "^0.8.0",
+    "find-up": "^2.1.0",
     "fs-extra": "^5.0.0",
     "fstream": "^1.0.10",
     "gitconfig": "teambit/node-gitconfig",

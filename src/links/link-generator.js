@@ -274,6 +274,14 @@ async function writeDependencyLinks(
       // Get the real dependency component
       const depComponent = R.find(_byComponentId, dependencies);
 
+      if (!depComponent) {
+        const errorMessage = `link-generation: failed finding ${resolveDepVersion.toString()} in the dependencies array of ${
+          parentComponent.id
+        }.
+The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
+        throw new Error(errorMessage);
+      }
+
       const currLinks = dep.relativePaths.map((relativePath: RelativePath) => {
         return componentLink(resolveDepVersion, depComponent, relativePath, parentComponent, parentComponentMap);
       });
