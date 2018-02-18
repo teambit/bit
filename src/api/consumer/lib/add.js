@@ -43,7 +43,7 @@ export default (async function addAction(
   override: boolean
 ): Promise<Object> {
   const warnings = {};
-
+  let gitIgnore;
   /**
    * validatePaths - validate if paths entered by user exist and if not throw error
    *
@@ -196,7 +196,7 @@ export default (async function addAction(
     });
   }
 
-  async function addOneComponent(componentPathsStats: Object, consumer: Consumer, gitIgnoreFiles: string[]) {
+  async function addOneComponent(componentPathsStats: Object, consumer: Consumer) {
     const bitMap: BitMap = consumer.bitMap;
     // remove excluded files from file list
     async function removeExcludedFiles(mapValues, excludedList) {
@@ -282,13 +282,14 @@ export default (async function addAction(
 
         const matches = await glob(path.join(relativeComponentPath, '**'), {
           cwd: consumer.getPath(),
-          nodir: true,
-          ignore: gitIgnoreFiles
+          nodir: true
         });
 
-        if (!matches.length) throw new EmptyDirectory();
+        const filteredMatches = gitIgnore.filter(matches);
 
-        let files = matches.map((match: PathOsBased) => {
+        if (!filteredMatches.length) throw new EmptyDirectory();
+
+        let files = filteredMatches.map((match: PathOsBased) => {
           return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
         });
 
@@ -371,20 +372,19 @@ export default (async function addAction(
   }
 
   // add ignore list
-  const gitIgnore = ignore().add(ignoreList);
+  gitIgnore = ignore().add(ignoreList);
+
   // check unknown test files
   const missingFiles = getMissingTestFiles(tests);
   if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
 
   let componentPathsStats = {};
-  let resolvedComponentPathsWithGitIgnore = R.flatten(
-    await Promise.all(componentPaths.map(componentPath => glob(componentPath)))
-  );
-  resolvedComponentPathsWithGitIgnore = gitIgnore.filter(resolvedComponentPathsWithGitIgnore);
 
   const resolvedComponentPathsWithoutGitIgnore = R.flatten(
     await Promise.all(componentPaths.map(componentPath => glob(componentPath)))
   );
+
+  const resolvedComponentPathsWithGitIgnore = gitIgnore.filter(resolvedComponentPathsWithoutGitIgnore);
 
   // Run diff on both arrays to see what was filtered out because of the gitignore file
   const diff = arrayDiff(resolvedComponentPathsWithGitIgnore, resolvedComponentPathsWithoutGitIgnore);
@@ -412,8 +412,7 @@ export default (async function addAction(
         {
           [onePath]: componentPathsStats[onePath]
         },
-        consumer,
-        ignoreList
+        consumer
       );
     });
 
@@ -430,7 +429,7 @@ export default (async function addAction(
     // when a user enters more than one directory, he would like to keep the directories names
     // so then when a component is imported, it will write the files into the original directories
 
-    const addedOne = await addOneComponent(componentPathsStats, consumer, ignoreList);
+    const addedOne = await addOneComponent(componentPathsStats, consumer);
     if (!R.isEmpty(addedOne.files)) {
       const addedResult = addOrUpdateExistingComponentsInBitMap(consumer.projectPath, bitMap, addedOne);
       added.push(addedResult);
