@@ -93,12 +93,13 @@ export default (async function addAction(
     bitmap: BitMap,
     component: Object
   ): componentMaps[] => {
+    const includeSearchByBoxAndNameOnly = true;
     const groupedById = groupFilesByComponentId(component.componentId, component.files, bitmap);
     const addedComponents = Object.keys(groupedById)
       .map((bitMapComponentId) => {
         const parsedBitId = BitId.parse(bitMapComponentId);
         const files = groupedById[bitMapComponentId].map(({ file }) => file);
-        const foundComponentFromBitMap = bitmap.getComponent(bitMapComponentId);
+        const foundComponentFromBitMap = bitmap.getComponent(bitMapComponentId, includeSearchByBoxAndNameOnly);
         if (foundComponentFromBitMap) {
           component.files = files
             .map((file) => {
