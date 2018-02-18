@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - support `bit install` of specific ids
 - support peerDependencies (in the model for now)
 - [#729](https://github.com/teambit/bit/issues/729) fix bit cc to clear module cache
+- [#769](https://github.com/teambit/bit/issues/769) - prevent duplicate ids in bitmap when adding existing files
 
 ## [0.12.6-dev.2] - 2018-02-13
 

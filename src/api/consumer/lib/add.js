@@ -93,12 +93,13 @@ export default (async function addAction(
     bitmap: BitMap,
     component: Object
   ): componentMaps[] => {
+    const includeSearchByBoxAndNameOnly = true;
     const groupedById = groupFilesByComponentId(component.componentId, component.files, bitmap);
     const addedComponents = Object.keys(groupedById)
       .map((bitMapComponentId) => {
         const parsedBitId = BitId.parse(bitMapComponentId);
         const files = groupedById[bitMapComponentId].map(({ file }) => file);
-        const foundComponentFromBitMap = bitmap.getComponent(bitMapComponentId);
+        const foundComponentFromBitMap = bitmap.getComponent(bitMapComponentId, includeSearchByBoxAndNameOnly);
         if (foundComponentFromBitMap) {
           component.files = files
             .map((file) => {
@@ -130,7 +131,10 @@ export default (async function addAction(
               }
             })
             .filter(file => !R.isNil(file));
-          component.componentId = BitId.parse(bitMapComponentId);
+          const locatedIDFromBitMap = bitmap.getExistingComponentId(bitMapComponentId);
+          component.componentId = locatedIDFromBitMap
+            ? BitId.parse(locatedIDFromBitMap)
+            : BitId.parse(bitMapComponentId);
           return addToBitMap(bitMap, component);
         }
         // if id is not in bitmap check that files are not tracked by another component
