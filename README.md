@@ -14,7 +14,7 @@
 
 Sharing code between repositories is essential to the development and maintenance of your codebase.
 
-However, to create packages you often have to split your project into more repositories just so you can separately boilerplate and publish them. This also make it hard to make changes to the code you share across the different repositories in your projects.
+However, to create packages you often have to split your project into multiple repositories just so you can separately boilerplate and publish them. This also makes it hard to make changes to the code you share across the different repositories in your projects.
 
 **Bit works with Git and NPM to make it easy to share code and sync changes between projects at any scale**.
 
@@ -22,7 +22,7 @@ Instead of creating new repositories for your packages, you can isolate and shar
 
 Instead of making changes to each of your packages repositories, you can change the code you share from any repository in your codebase and easily sync the changes across your projects.
 
-With Bit managed code sharing becomes as simple as copy-pasting.
+With Bit, managed code sharing becomes as simple as copy-pasting.
 
 *Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities*.
 
@@ -43,11 +43,11 @@ With Bit managed code sharing becomes as simple as copy-pasting.
 
 ### Faster code sharing
 
-Instead of splitting your project into more repositories just to publish packages, Bit enables you to isolate and share components of code (subsets of files) from your existing repository as to be installed with package managers. This also makes it possible to import the source code of your components into other repositories, continue to develop them and sync changes. This will not change your repository’s structure at all. These are the 2 key features that makes it possible.
+Instead of splitting your project into multiple repositories just to publish packages, Bit enables you to isolate and share components of code (subsets of files) from your existing repository that may then be installed with package managers. This also makes it possible to import the source code of your components into other repositories, continue to develop them and sync changes. This will not change your repository’s structure at all. These are the 2 key features that makes it possible.
 
 **Dependency definition** - Bit [automatically resolves](https://docs.bitsrc.io/docs/isolating-and-tracking-components.html) and defines the dependency tree for the components you isolate, including both package dependencies and other files from your project.
 
-**Isolated environment** - Using Bit’s understanding of the components’ dependency graph, it’s able to create an [isolated environment](https://docs.bitsrc.io/docs/ext-concepts.html) for the code you share. This effectively saves the configuration overhead for the code you share and means that these component can also be developed from any other project with their own isolated dependency graph. For example, components written in typescript can be sourced and  developed in a project written in flow-typed. 
+**Isolated environment** - Using Bit’s understanding of the components’ dependency graph, it’s able to create an [isolated environment](https://docs.bitsrc.io/docs/ext-concepts.html) for the code you share. This effectively saves the configuration overhead for the code you share and means that these components can also be developed from any other project with their own isolated dependency graph. For example, components written in typescript can be sourced and developed in a project written in flow-typed.
 
 ### Installing in other projects
 
@@ -56,9 +56,9 @@ Once Bit isolates code components from your project, you can share them to a rem
 ### Changing the code from any repository
 
 Bit decouples the representation of the code you share from your project file structure.
-As a result, you can make changes to the code you share from any repository in your codebase. 
+As a result, you can make changes to the code you share from any repository in your codebase.
 
-You can use `bit import` to bring the components actual source code into any repository, change it, and share it back to the remote Scope to sync changes across your projects. You can think of it as “automated and managed copy-pasting” that creates a distributed development workflow.
+You can use `bit import` to bring the component's actual source code into any repository, change it, and share it back to the remote Scope to sync changes across your projects. You can think of it as “automated and managed copy-pasting” that creates a distributed development workflow.
 
 ### Discoverability and control
 
@@ -136,7 +136,7 @@ $ bit import bit.envs/testers/jest --tester
 the following component environments were installed
 - bit.envs/testers/jest@0.0.7
 
-``` 
+```
 
 5. Now let’s [lock a version](https://docs.bitsrc.io/docs/versioning-tracked-components.html) and isolate the components from the project.
 
@@ -172,7 +172,7 @@ Also see: [GETTING STARTED](https://docs.bitsrc.io/docs/quick-start.html)
 6. [Installing with NPM/Yarn](https://docs.bitsrc.io/docs/installing-components-using-package-managers.html)
 7. [Component source code distribution](https://docs.bitsrc.io/docs/importing-components.html)
 
-### Usage: 
+### Usage:
 
 * [CLI reference](https://docs.bitsrc.io/docs/cli-add.html)
 
@@ -223,11 +223,11 @@ Instead of working hard to maintain and update multiple repositories just to sha
 
 Learning from what iTunes did for music sharing in the post CD-Rom, we decided to build a tool that will make managed code sharing as fast and simple as copy-pasting.
 
-The key to Bit’s capabilities lies in its ability to decouple the representation of shard code from the project’s file system. This allows the tracking of source code even when implemented and sourced in different repositories. By integrating with the existing Git / NPM ecosystem, Bit helps to smooth the code sharing workflow and makes it easier to make and sync changes across your codebase.
+The key to Bit’s capabilities lies in its ability to decouple the representation of shared code from the project’s file system. This allows the tracking of source code even when implemented and sourced in different repositories. By integrating with the existing Git / NPM ecosystem, Bit helps to smooth the code sharing workflow and makes it easier to make and sync changes across your codebase.
 
-You can use Bit to share code from a single repository (monorepo) or to share and sync code between multiple repositories in your project’s codebase, and even between projects. 
+You can use Bit to share code from a single repository (monorepo) or to share and sync code between multiple repositories in your project’s codebase, and even between projects.
 
-After using it for over a year, and after being used by more teams and communities every day, we welcome you to join and use Bit for your work or take part in its development.
+After using it for over a year, and seeing it used by more teams and communities every day, we welcome you to join and use Bit for your work or take part in its development.
 
 You can learn more on our [website](https://bitsrc.io) and [blog](https://blog.bitsrc.io/).
 
