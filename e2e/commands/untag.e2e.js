@@ -256,5 +256,20 @@ describe('bit untag command', function () {
         });
       });
     });
+    describe('untag only the dependent', () => {
+      let untagOutput;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        untagOutput = helper.runCmd('bit untag utils/is-string');
+      });
+      it('should untag successfully the dependent', () => {
+        expect(untagOutput).to.have.string('1 component(s) were untagged');
+        expect(untagOutput).to.have.string('utils/is-string');
+      });
+      it('should leave the dependency intact', () => {
+        const output = helper.listLocalScope();
+        expect(output).to.have.string('utils/is-type');
+      });
+    });
   });
 });
