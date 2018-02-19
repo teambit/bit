@@ -128,6 +128,19 @@ describe('bit untag command', function () {
         });
       });
     });
+    describe('when tagging non-existing component', () => {
+      let output;
+      before(() => {
+        try {
+          helper.runCmd('bit untag non-exist-scope/non-exist-comp');
+        } catch (err) {
+          output = err.message;
+        }
+      });
+      it('should show an descriptive error', () => {
+        expect(output).to.have.string('fatal: component with id "non-exist-scope/non-exist-comp" was not found');
+      });
+    });
   });
   describe('untag multiple components (--all flag)', () => {
     let localScope;

@@ -1317,6 +1317,7 @@ export default class Scope {
     force?: boolean = false
   ): Promise<{ id: BitId, versions: string[] }> {
     const component: ComponentModel = await this.sources.get(id);
+    if (!component) throw new ComponentNotFound(id.toString());
     const localVersions = component.getLocalVersions();
     if (!localVersions.length) return Promise.reject(`unable to untag ${id}, the component is not staged`);
     if (version && !component.hasVersion(version)) {
