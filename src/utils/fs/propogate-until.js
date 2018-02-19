@@ -39,6 +39,7 @@ export function pathHas(patterns: string[]): (absPath: string) => boolean {
  * ```
  */
 export function propogateUntil(fromPath: string): ?string {
+  if (!fromPath) return null;
   const filePath = findUp.sync(
     [OBJECTS_DIR, path.join(BIT_HIDDEN_DIR, OBJECTS_DIR), path.join(DOT_GIT_DIR, BIT_GIT_DIR, OBJECTS_DIR)],
     { cwd: fromPath }
