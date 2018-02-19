@@ -16,7 +16,7 @@ function searchFileRecursively(dir, fileToFind) {
       }
       return null;
     } catch (e) {
-      console.log(`search file recursively failed with the following error: ${e}`);
+      console.log(`search file recursively failed with the following error: ${e}`); // eslint-disable-line no-console
       return null;
     }
   });
