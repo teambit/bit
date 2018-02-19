@@ -988,13 +988,13 @@ export default class Consumer {
       );
       await this.cleanBitMapAndBitJson(componensToRemoveFromFs, removedDependencies);
     }
-    return new RemovedLocalObjects({
+    return new RemovedLocalObjects(
       removedComponentIds,
       missingComponents,
       modifiedComponents,
       dependentBits,
       removedDependencies
-    });
+    );
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
