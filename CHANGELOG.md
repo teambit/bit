@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.6-dev.4] - 2018-02-19
+
+- save bit dev-dependencies components inside devDependencies section of package.json
+- fix bit cc to clear module's cache
+- fix resolving .gitignore files
+- when adding existing files to component in bitmap don't create duplications
+
 ## [0.12.6-dev.3] - 2018-02-15
 
 - support `bit install` of specific ids
