@@ -760,7 +760,7 @@ export default class Consumer {
     let resolvedScopePath = path.join(projectPath, BIT_HIDDEN_DIR);
     // let addedGitHooks;
     let existingGitHooks;
-    if (!noGit && fs.existsSync(gitDirPath)) {
+    if (!noGit && fs.existsSync(gitDirPath) && !fs.existsSync(resolvedScopePath)) {
       resolvedScopePath = path.join(gitDirPath, BIT_GIT_DIR);
       // const gitHooksManager = GitHooksManager.init(gitDirPath);
       // const writeHooksResult = gitHooksManager.writeAllHooks();
