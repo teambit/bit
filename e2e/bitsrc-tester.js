@@ -22,7 +22,7 @@ export default class BitsrcTester {
         };
       })
       .catch((err) => {
-        console.log('Error from BitSrc Server', err);
+        console.log('Error from BitSrc Server', err); // eslint-disable-line no-console
         throw new Error(`Failed to login into ${apiBaseUrl}`);
       });
   }
