@@ -42,7 +42,6 @@ import { Repository, Ref, BitObject } from './objects';
 import ComponentWithDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
-import npmClient from '../npm-client';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
@@ -1306,92 +1305,6 @@ export default class Scope {
     }
     const component: Component = await this.loadComponent(bitId);
     return component.build({ scope: this, save, consumer, verbose, directory, keep, isCI });
-  }
-
-  /**
-   * If not specified version, remove all local versions.
-   */
-  async removeLocalVersion(
-    id: BitId,
-    version?: string,
-    force?: boolean = false
-  ): Promise<{ id: BitId, versions: string[] }> {
-    const component: ComponentModel = await this.sources.get(id);
-    if (!component) throw new ComponentNotFound(id.toString());
-    const localVersions = component.getLocalVersions();
-    if (!localVersions.length) return Promise.reject(`unable to untag ${id}, the component is not staged`);
-    if (version && !component.hasVersion(version)) {
-      return Promise.reject(`unable to untag ${id}, the version ${version} does not exist`);
-    }
-    if (version && !localVersions.includes(version)) {
-      return Promise.reject(`unable to untag ${id}, the version ${version} was exported already`);
-    }
-    const versionsToRemove = version ? [version] : localVersions;
-
-    if (!force) {
-      const dependencyGraph = await this.getDependencyGraph();
-      versionsToRemove.forEach((versionToRemove) => {
-        const idWithVersion = id.clone();
-        idWithVersion.version = versionToRemove;
-        const dependents = dependencyGraph.getDependentsPerId(idWithVersion);
-        if (dependents.length) {
-          throw new Error(
-            `unable to untag ${id}, the version ${versionToRemove} has the following dependent(s) ${dependents.join(
-              ', '
-            )}`
-          );
-        }
-      });
-    }
-
-    await Promise.all(versionsToRemove.map(ver => this.sources.removeVersion(component, ver, false)));
-    await this.objects.persist();
-
-    if (!component.versionArray.length) {
-      // if all versions were deleted, delete also the component itself from the model
-      await component.remove(this.objects);
-    }
-
-    return { id, versions: versionsToRemove };
-  }
-
-  async removeLocalVersionsForAllComponents(version?: string, force?: boolean = false) {
-    const components = await this.objects.listComponents(false);
-    const candidateComponents = components.filter((component: ComponentModel) => {
-      const localVersions = component.getLocalVersions();
-      if (!localVersions.length) return false;
-      return version ? localVersions.includes(version) : true;
-    });
-    if (!candidateComponents.length) {
-      const versionOutput = version ? `${version} ` : '';
-      return Promise.reject(`No components found with local version ${versionOutput}to untag`);
-    }
-
-    // if no version is given, there is risk of deleting dependencies version without their dependents.
-    if (!force && version) {
-      const dependencyGraph = await this.getDependencyGraph();
-      const candidateComponentsIds = candidateComponents.map((component) => {
-        const bitId = component.toBitId();
-        bitId.version = version;
-        return bitId;
-      });
-      const candidateComponentsIdsStr = candidateComponentsIds.map(id => id.toString());
-
-      candidateComponentsIds.forEach((bitId: BitId) => {
-        const dependents = dependencyGraph.getDependentsPerId(bitId);
-        const dependentsNotCandidates = dependents.filter(dependent => !candidateComponentsIdsStr.includes(dependent));
-        if (dependentsNotCandidates.length) {
-          throw new Error(
-            `unable to untag ${bitId}, the version ${version} has the following dependent(s) ${dependents.join(', ')}`
-          );
-        }
-      });
-    }
-
-    logger.debug(`found ${candidateComponents.length} components to untag`);
-    return Promise.all(
-      candidateComponents.map(component => this.removeLocalVersion(component.toBitId(), version, true))
-    );
   }
 
   /**
