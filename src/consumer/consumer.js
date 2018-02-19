@@ -1082,6 +1082,7 @@ export default class Consumer {
   async eject(componentsIds: BitId[]) {
     await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
     const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
+    await packageJson.removeComponentsFromNodeModules(this, componentsIds);
     await this.installPackages([], true, true);
     await this.remove(componentIdsWithoutScope, true, false, true);
     return componentsIds;
