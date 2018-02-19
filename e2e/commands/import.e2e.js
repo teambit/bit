@@ -1695,6 +1695,7 @@ console.log(barFoo.default());`;
      *
      */
     let localConsumerFiles;
+    let clonedScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponent(path.join('src', 'utils'), 'is-type.js', fixtures.isType);
@@ -1710,6 +1711,7 @@ console.log(barFoo.default());`;
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
+      clonedScope = helper.cloneLocalScope();
       helper.importComponent('bar/foo');
       localConsumerFiles = helper.getConsumerFiles('*.{js,json}');
     });
@@ -1763,6 +1765,19 @@ console.log(barFoo.default());`;
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
+    describe('import a component and then its dependency directly', () => {
+      // this covers several bugs found when there is originallySharedDir, a component is imported
+      // and after that its dependency is imported directly.
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(clonedScope);
+        helper.importComponent('bar/foo');
+        output = helper.importComponent('utils/is-string');
+      });
+      it('should import the dependency successfully', () => {
+        expect(output).to.have.string('successfully imported one component');
       });
     });
   });

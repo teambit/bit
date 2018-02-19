@@ -5,14 +5,14 @@ import linkTemplate from '../../templates/link-template';
 import type { LinksResult } from '../../../links/node-modules-linker';
 
 export default class Install extends Command {
-  name = 'install';
-  description = 'install packages of all components and link them';
+  name = 'install [ids...]';
+  description = 'install packages of components and link them, if no ID is specified, install all';
   alias = '';
   opts = [['v', 'verbose', 'show a more verbose output when possible']];
   loader = true;
 
-  action(args: string[], { verbose }: { verbose?: boolean }): Promise<LinksResult[]> {
-    return installAction(verbose);
+  action([ids]: [string[]], { verbose }: { verbose?: boolean }): Promise<LinksResult[]> {
+    return installAction(ids, verbose);
   }
 
   report(results: LinksResult[]): string {

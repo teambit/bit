@@ -1,7 +1,7 @@
 /** @flow */
 import semver from 'semver';
 import uniqBy from 'lodash.uniqby';
-import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty } from 'ramda';
+import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import { ScopeMeta } from '../models';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
@@ -24,6 +24,7 @@ import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
+import { BitIds } from '../../bit-id';
 
 type State = {
   versions?: {
@@ -244,7 +245,7 @@ export default class Component extends BitObject {
 
   toConsumerComponent(versionStr: string, scopeName: string, repository: Repository) {
     const componentVersion = this.toComponentVersion(versionStr);
-    return componentVersion.getVersion(repository).then((version) => {
+    return componentVersion.getVersion(repository).then((version: Version) => {
       const filesP = version.files
         ? Promise.all(
           version.files.map(file =>
@@ -269,6 +270,11 @@ export default class Component extends BitObject {
       const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
       const log = version.log || null;
       return Promise.all([filesP, distsP, scopeMetaP]).then(([files, dists, scopeMeta]) => {
+        // when generating a new ConsumerComponent out of Version, it is critical to make sure that
+        // all objects are cloned and not copied by reference. Otherwise, every time the
+        // ConsumerComponent instance is changed, the Version will be changed as well, and since
+        // the Version instance is saved in the Repository._cache, the next time a Version instance
+        // is retrieved, it'll be different than the first time.
         return new ConsumerComponent({
           name: this.name,
           box: this.box,
@@ -279,13 +285,13 @@ export default class Component extends BitObject {
           mainFile: version.mainFile || null,
           compilerId: version.compiler,
           testerId: version.tester,
-          dependencies: version.dependencies.get(),
-          devDependencies: version.devDependencies.get(),
-          flattenedDependencies: version.flattenedDependencies,
-          flattenedDevDependencies: version.flattenedDevDependencies,
-          packageDependencies: version.packageDependencies,
-          devPackageDependencies: version.devPackageDependencies,
-          peerPackageDependencies: version.peerPackageDependencies,
+          dependencies: version.dependencies.getClone(),
+          devDependencies: version.devDependencies.getClone(),
+          flattenedDependencies: BitIds.clone(version.flattenedDependencies),
+          flattenedDevDependencies: BitIds.clone(version.flattenedDevDependencies),
+          packageDependencies: clone(version.packageDependencies),
+          devPackageDependencies: clone(version.devPackageDependencies),
+          peerPackageDependencies: clone(version.peerPackageDependencies),
           files,
           dists,
           docs: version.docs,

@@ -69,7 +69,13 @@ export default class DependencyGraph {
   }
 
   getDependentsPerId(id: BitId): string[] {
-    const nodeEdges = this.graph.nodeEdges(id.toString());
+    const nodeEdges = this.graph.inEdges(id.toString());
+    if (!nodeEdges) return [];
+    return nodeEdges.map(node => node.v);
+  }
+
+  getDependenciesPerId(id: BitId): string[] {
+    const nodeEdges = this.graph.outEdges(id.toString());
     if (!nodeEdges) return [];
     return nodeEdges.map(node => node.v);
   }

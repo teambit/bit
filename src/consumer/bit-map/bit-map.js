@@ -327,7 +327,19 @@ export default class BitMap {
     this._removeFromComponentsArray(olderComponentId);
   }
 
-  getComponent(id: string | BitId, shouldThrow: boolean = false): ComponentMap {
+  /**
+   * Get component from bitmap by id if exists
+   *
+   * @param {string | BitId} id - component id
+   * @param {Boolean} shouldThrow - should throw error in case of missing
+   * @param {Boolean} includeSearchByBoxAndNameOnly - should compare with box and name of component (without scope or verison)
+   * @returns {ComponentMap} componentMap
+   */
+  getComponent(
+    id: string | BitId,
+    shouldThrow: boolean = false,
+    includeSearchByBoxAndNameOnly: boolean = false
+  ): ComponentMap {
     if (R.is(String, id)) {
       id = BitId.parse(id);
     }
@@ -338,7 +350,10 @@ export default class BitMap {
     }
     const idWithVersion = Object.keys(this.components).find(
       // $FlowFixMe
-      componentId => BitId.parse(componentId).toStringWithoutVersion() === id.toStringWithoutVersion()
+      componentId =>
+        BitId.parse(componentId).toStringWithoutVersion() === id.toStringWithoutVersion() ||
+        (includeSearchByBoxAndNameOnly &&
+          BitId.parse(componentId).toStringWithoutScopeAndVersion() === id.toStringWithoutScopeAndVersion())
     );
     if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(id);
     // $FlowFixMe

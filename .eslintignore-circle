@@ -98,7 +98,6 @@ src/cli/commands/public-cmds/init-cmd.js
 src/cli/commands/public-cmds/login-cmd.js
 src/cli/templates/bare-list-template.js
 src/consumer/bit-map/component-map.js
-src/consumer/component/dependencies/dependencies.js
 src/extensions/extension-command.js
 src/git-hooks/git-hooks-manager.js
 src/npm-client/npm-client.js

@@ -83,6 +83,7 @@ export async function linkComponents(
     );
   }
   linkComponentsToNodeModules(allComponents, consumer);
+  logger.debug('linker: check whether there are direct dependents for re-linking');
   const directDependentComponents = await findDirectDependentComponents(writtenComponents, consumer);
   if (directDependentComponents.length) {
     await reLinkDirectlyImportedDependencies(directDependentComponents, consumer);

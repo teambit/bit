@@ -44,7 +44,6 @@ import npmClient from '../npm-client';
 import GitHooksManager from '../git-hooks/git-hooks-manager';
 import { RemovedLocalObjects } from '../scope/component-remove';
 import { linkComponents, linkAllToNodeModules, linkComponentsToNodeModules } from '../links';
-import type { LinksResult } from '../links/node-modules-linker';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
 import { Dependencies } from './component/dependencies';
@@ -69,7 +68,8 @@ type ComponentStatus = {
   newlyCreated: boolean,
   deleted: boolean,
   staged: boolean,
-  notExist: boolean
+  notExist: boolean,
+  nested: boolean // when a component is nested, it doesn't matter whether it was modified
 };
 
 export default class Consumer {
@@ -241,7 +241,7 @@ export default class Consumer {
     );
 
     const components = idsToProcess.map(async (id: BitId) => {
-      const idWithConcreteVersionString = getLatestVersionNumber(
+      const idWithConcreteVersionString: string = getLatestVersionNumber(
         Object.keys(this.bitMap.getAllComponents()),
         id.toString()
       );
@@ -252,7 +252,10 @@ export default class Consumer {
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
-      const componentFromModel = await this.scope.getFromLocalIfExist(idWithConcreteVersion);
+      const componentWithDependenciesFromModel = await this.scope.getFromLocalIfExist(idWithConcreteVersion);
+      const componentFromModel = componentWithDependenciesFromModel
+        ? componentWithDependenciesFromModel.component
+        : undefined;
       let component;
       try {
         component = await Component.loadFromFileSystem({
@@ -272,20 +275,16 @@ export default class Consumer {
         }
         throw err;
       }
+      component.loadedFromFileSystem = true;
       component.originallySharedDir = componentMap.originallySharedDir || null;
+      component.componentMap = componentMap;
+      component.componentFromModel = componentFromModel;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // no need to resolve dependencies
         return component;
       }
-      return loadDependenciesForComponent(
-        component,
-        componentMap,
-        bitDir,
-        this,
-        idWithConcreteVersionString,
-        componentFromModel
-      );
+      return loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString);
     });
 
     const allComponents = [];
@@ -627,6 +626,10 @@ export default class Consumer {
         status.newlyCreated = true;
         return status;
       }
+      if (componentFromFileSystem.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+        status.nested = true;
+        return status;
+      }
       status.staged = componentFromModel.isLocallyChanged();
       const versionFromFs = componentFromFileSystem.id.version;
       const latestVersionFromModel = componentFromModel.latest();
@@ -757,7 +760,7 @@ export default class Consumer {
     let resolvedScopePath = path.join(projectPath, BIT_HIDDEN_DIR);
     // let addedGitHooks;
     let existingGitHooks;
-    if (!noGit && fs.existsSync(gitDirPath)) {
+    if (!noGit && fs.existsSync(gitDirPath) && !fs.existsSync(resolvedScopePath)) {
       resolvedScopePath = path.join(gitDirPath, BIT_GIT_DIR);
       // const gitHooksManager = GitHooksManager.init(gitDirPath);
       // const writeHooksResult = gitHooksManager.writeAllHooks();
@@ -1013,7 +1016,7 @@ export default class Consumer {
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
   }
 
-  async _installPackages(dirs: string[], verbose: boolean, installRootPackageJson: boolean = false) {
+  async installPackages(dirs: string[], verbose: boolean, installRootPackageJson: boolean = false) {
     const packageManager = this.bitJson.packageManager;
     const packageManagerArgs = this.bitJson.packageManagerArgs;
     const packageManagerProcessOptions = this.bitJson.packageManagerProcessOptions;
@@ -1061,29 +1064,14 @@ export default class Consumer {
     );
 
     const componentDirs = componentsWithDependenciesFlatten.map(component => component.writtenPath);
-    return this._installPackages(componentDirs, verbose);
-  }
-
-  /**
-   * does the following (the order is important):
-   * 1) install npm packages of the consumer root.
-   * 2) install npm packages of all imported and nested components
-   * 3) link all components
-   */
-  async install(verbose: boolean): Promise<LinksResult[]> {
-    const candidateComponents = this.bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.NESTED]);
-    const dirs = Object.keys(candidateComponents)
-      .map(id => candidateComponents[id].rootDir || null)
-      .filter(dir => dir);
-    await this._installPackages(dirs, verbose, true);
-    return linkAllToNodeModules(this);
+    return this.installPackages(componentDirs, verbose);
   }
 
   async eject(componentsIds) {
     const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
     await this.remove(componentIdsWithoutScope, true, false, true);
     await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
-    await this._installPackages([], true, true);
+    await this.installPackages([], true, true);
     return componentsIds;
   }
 }

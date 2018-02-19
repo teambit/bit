@@ -1,6 +1,8 @@
+import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import BitsrcTester, { username } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 
@@ -15,7 +17,7 @@ describe('dev-dependencies functionality', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler('bit.envs/compilers/babel');
-      helper.importTester('bit.envs/testers/mocha');
+      helper.importTester('bit.envs/testers/mocha@0.0.4');
       clonedScope = helper.cloneLocalScope();
     });
     describe('with dev-dependencies same as dependencies', () => {
@@ -62,6 +64,7 @@ describe('dev-dependencies functionality', function () {
     });
     describe('without dependencies and with dev-dependencies', () => {
       let barFoo;
+      let localScope;
       before(() => {
         // foo.js doesn't have any dependencies. foo.spec.js does have dependencies.
         helper.getClonedLocalScope(clonedScope);
@@ -88,6 +91,7 @@ describe('foo', () => {
         helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.build(); // needed for building the dependencies
         helper.commitAllComponents();
+        localScope = helper.cloneLocalScope();
         barFoo = helper.catComponent('bar/foo@0.0.1');
       });
       it('should save the dev-dependencies', () => {
@@ -129,6 +133,34 @@ describe('foo', () => {
         it('tests should pass', () => {
           const output = helper.testComponent('bar/foo');
           expect(output).to.have.string('tests passed');
+        });
+      });
+      describe('export and import dependencies as packages', () => {
+        let scopeName;
+        let scopeId;
+        let bitsrcTester;
+        before(() => {
+          bitsrcTester = new BitsrcTester();
+          helper.getClonedLocalScope(localScope);
+          return bitsrcTester
+            .loginToBitSrc()
+            .then(() => bitsrcTester.createScope())
+            .then((scope) => {
+              scopeName = scope;
+              scopeId = `${username}.${scopeName}`;
+              helper.exportAllComponents(scopeId);
+              helper.reInitLocalScope();
+              helper.runCmd(`bit import ${scopeId}/bar/foo`);
+            });
+        });
+        after(() => {
+          return bitsrcTester.deleteScope(scopeName);
+        });
+        it('should save the bit-dev-dependencies component as devDependencies packages in package.json', () => {
+          const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+          const id = `@bit/${scopeId}.utils.is-string`;
+          expect(packageJson.dependencies).to.not.have.property(id);
+          expect(packageJson.devDependencies).to.have.property(id);
         });
       });
     });

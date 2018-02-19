@@ -30,7 +30,8 @@ const LINKS_CONTENT_TEMPLATES = {
   css: "@import '{filePath}.css';",
   scss: "@import '{filePath}.scss';",
   sass: "@import '{filePath}.sass';",
-  less: "@import '{filePath}.less';"
+  less: "@import '{filePath}.less';",
+  vue: "<script>\nmodule.exports = require('{filePath}.vue');\n</script>"
 };
 
 const PACKAGES_LINKS_CONTENT_TEMPLATES = {
@@ -38,7 +39,8 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
   scss: "@import '~{filePath}';",
   sass: "@import '~{filePath}';",
   less: "@import '~{filePath}';",
-  'st.css': ':import { -st-from: "{filePath}";}'
+  'st.css': ':import { -st-from: "{filePath}";}',
+  vue: "<script>\nmodule.exports = require('{filePath}.vue');\n</script>"
 };
 
 const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
@@ -271,6 +273,14 @@ async function writeDependencyLinks(
       const _byComponentId = dependency => dependency.id.toString() === resolveDepVersion.toString();
       // Get the real dependency component
       const depComponent = R.find(_byComponentId, dependencies);
+
+      if (!depComponent) {
+        const errorMessage = `link-generation: failed finding ${resolveDepVersion.toString()} in the dependencies array of ${
+          parentComponent.id
+        }.
+The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
+        throw new Error(errorMessage);
+      }
 
       const currLinks = dep.relativePaths.map((relativePath: RelativePath) => {
         return componentLink(resolveDepVersion, depComponent, relativePath, parentComponent, parentComponentMap);

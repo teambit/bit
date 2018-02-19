@@ -201,7 +201,7 @@ describe('bit tag command', function () {
   });
   describe('tag one component', () => {
     before(() => {
-      helper.importTester('bit.envs/testers/mocha');
+      helper.importTester('bit.envs/testers/mocha@0.0.4');
       const failingTest = `const expect = require('chai').expect; 
       const foo = require('./foo.js');
       describe('failing test', () => {

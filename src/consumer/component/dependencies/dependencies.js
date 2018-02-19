@@ -1,12 +1,11 @@
 /** @flow */
 import R from 'ramda';
 import { Dependency } from './';
-import { RelativePath } from './dependency';
+import type { RelativePath } from './dependency';
 import { COMPONENT_ORIGINS } from '../../../constants';
-import Consumer from '../../consumer';
-import Component from '../consumer-component';
 import { BitId } from '../../../bit-id';
 import Scope from '../../../scope/scope';
+import BitMap from '../../bit-map';
 
 export default class Dependencies {
   dependencies: Dependency[];
@@ -19,11 +18,18 @@ export default class Dependencies {
     return this.dependencies.map(dep => Object.assign({}, dep, { id: dep.id.toString() }));
   }
 
-  get() {
+  get(): Dependency[] {
     return this.dependencies;
   }
 
-  deserialize(dependencies) {
+  getClone(): Dependency[] {
+    return this.dependencies.map(dependency => ({
+      id: dependency.id,
+      relativePaths: R.clone(dependency.relativePaths)
+    }));
+  }
+
+  deserialize(dependencies: Dependency[]): Dependency[] {
     return dependencies.map(dependency => ({
       id: R.is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
       relativePaths: dependency.relativePaths || [
@@ -37,7 +43,7 @@ export default class Dependencies {
     return this.dependencies.map(dep => dep.id.toString());
   }
 
-  isEmpty() {
+  isEmpty(): boolean {
     return !this.dependencies.length;
   }
 
@@ -53,7 +59,7 @@ export default class Dependencies {
     });
   }
 
-  stripOriginallySharedDir(bitMap, originallySharedDir) {
+  stripOriginallySharedDir(bitMap: BitMap, originallySharedDir: string): void {
     const pathWithoutSharedDir = (pathStr, sharedDir) => {
       if (!sharedDir) return pathStr;
       const partToRemove = `${sharedDir}/`;
@@ -74,24 +80,10 @@ export default class Dependencies {
     });
   }
 
-  getSourcesPaths() {
+  getSourcesPaths(): string[] {
     return R.flatten(
       this.dependencies.map(dependency => dependency.relativePaths.map(relativePath => relativePath.sourceRelativePath))
     );
-  }
-
-  getDependenciesComponents(consumer: Consumer, component: Component): Promise<Component[]> {
-    const getDependencies = () => {
-      return this.dependencies.map((dependency) => {
-        if (consumer.bitMap.isExistWithSameVersion(dependency.id)) {
-          return consumer.loadComponent(dependency.id);
-        }
-        // when dependencies are imported as npm packages, they are not in bit.map
-        component.dependenciesSavedAsComponents = false;
-        return consumer.scope.loadComponent(dependency.id, false);
-      });
-    };
-    return Promise.all(getDependencies());
   }
 
   async addRemoteAndLocalVersions(scope: Scope, modelDependencies: Dependencies) {

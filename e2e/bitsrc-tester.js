@@ -22,7 +22,8 @@ export default class BitsrcTester {
         };
       })
       .catch((err) => {
-        throw new Error(`Failed to login into ${apiBaseUrl}. Error message: ${err.message}`);
+        console.log('Error from BitSrc Server', err); // eslint-disable-line no-console
+        throw new Error(`Failed to login into ${apiBaseUrl}`);
       });
   }
 
