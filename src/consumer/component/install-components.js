@@ -15,7 +15,7 @@ import type { LinksResult } from '../../links/node-modules-linker';
 export async function install(consumer: Consumer, verbose: boolean): Promise<LinksResult[]> {
   const candidateComponents = consumer.bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.NESTED]);
   const dirs = Object.keys(candidateComponents)
-    .map(id => candidateComponents[id].rootDir || null)
+    .map(id => candidateComponents[id].rootDir)
     .filter(dir => dir);
   await installPackages(consumer, dirs, verbose, true);
   return linkAllToNodeModules(consumer);
