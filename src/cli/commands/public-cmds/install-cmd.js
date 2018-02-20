@@ -11,8 +11,12 @@ export default class Install extends Command {
   opts = [['v', 'verbose', 'show a more verbose output when possible']];
   loader = true;
 
-  action([ids]: [string[]], { verbose }: { verbose?: boolean }): Promise<LinksResult[]> {
-    return installAction(ids, verbose);
+  action(
+    [ids]: [string[]],
+    { verbose = false }: { verbose?: boolean },
+    packageManagerArgs: string[]
+  ): Promise<LinksResult[]> {
+    return installAction(ids, verbose, packageManagerArgs);
   }
 
   report(results: LinksResult[]): string {

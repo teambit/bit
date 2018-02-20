@@ -77,7 +77,8 @@ export default class Import extends Command {
       conf?: boolean,
       skipNpmInstall?: boolean,
       ignorePackageJson?: boolean
-    }
+    },
+    packageManagerArgs: string[]
   ): Promise<any> {
     if (tester && compiler) {
       throw new Error('you cant use tester and compiler flags combined');
@@ -107,7 +108,7 @@ export default class Import extends Command {
       installNpmPackages: !skipNpmInstall,
       writePackageJson: !ignorePackageJson
     };
-    return importAction(environmentOptions, importOptions).then(importResults =>
+    return importAction(environmentOptions, importOptions, packageManagerArgs).then(importResults =>
       R.assoc('displayDependencies', displayDependencies, importResults)
     );
   }
