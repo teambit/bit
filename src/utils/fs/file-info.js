@@ -1,6 +1,5 @@
 /** @flow */
 import path from 'path';
-import type { PathOsBased } from '../path';
 
 /**
  * get the current working dir name of file and file name.
@@ -12,7 +11,7 @@ import type { PathOsBased } from '../path';
  *  currentDirName() // => 'bit'
  * ```
  */
-export default function calculateFileInfo(relativePath: string): PathOsBased {
+export default function calculateFileInfo(relativePath: string): { PARENT: string, FILE_NAME: string } {
   const fileInfo = path.parse(relativePath);
   const fullPath = path.dirname(relativePath);
   const rootDir = path.dirname(fullPath);

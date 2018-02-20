@@ -128,6 +128,19 @@ describe('bit untag command', function () {
         });
       });
     });
+    describe('when tagging non-existing component', () => {
+      let output;
+      before(() => {
+        try {
+          helper.runCmd('bit untag non-exist-scope/non-exist-comp');
+        } catch (err) {
+          output = err.message;
+        }
+      });
+      it('should show an descriptive error', () => {
+        expect(output).to.have.string('fatal: component with id "non-exist-scope/non-exist-comp" was not found');
+      });
+    });
   });
   describe('untag multiple components (--all flag)', () => {
     let localScope;
@@ -213,6 +226,24 @@ describe('bit untag command', function () {
           expect(untagOutput).to.have.string('1 component(s) were untagged');
         });
       });
+      describe('after exporting the component and tagging the scope', () => {
+        let output;
+        before(() => {
+          helper.getClonedLocalScope(localScope);
+          helper.reInitRemoteScope();
+          helper.addRemoteScope();
+          helper.exportAllComponents();
+          helper.runCmd('bit tag -s 1.0.5');
+          try {
+            output = helper.runCmd('bit untag utils/is-type');
+          } catch (err) {
+            output = err.message;
+          }
+        });
+        it('should show an error', () => {
+          expect(output).to.have.string('unable to untag utils/is-type');
+        });
+      });
     });
     describe('untag all components', () => {
       describe('when all components have only local versions', () => {
@@ -241,6 +272,21 @@ describe('bit untag command', function () {
             'unable to untag utils/is-type@0.0.1, the version 0.0.1 has the following dependent(s)'
           );
         });
+      });
+    });
+    describe('untag only the dependent', () => {
+      let untagOutput;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        untagOutput = helper.runCmd('bit untag utils/is-string');
+      });
+      it('should untag successfully the dependent', () => {
+        expect(untagOutput).to.have.string('1 component(s) were untagged');
+        expect(untagOutput).to.have.string('utils/is-string');
+      });
+      it('should leave the dependency intact', () => {
+        const output = helper.listLocalScope();
+        expect(output).to.have.string('utils/is-type');
       });
     });
   });

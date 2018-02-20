@@ -43,7 +43,7 @@ export default (async function addAction(
   override: boolean
 ): Promise<Object> {
   const warnings = {};
-
+  let gitIgnore;
   /**
    * validatePaths - validate if paths entered by user exist and if not throw error
    *
@@ -93,12 +93,18 @@ export default (async function addAction(
     bitmap: BitMap,
     component: Object
   ): componentMaps[] => {
+    const includeSearchByBoxAndNameOnly = true;
+    const shouldThrow = false;
     const groupedById = groupFilesByComponentId(component.componentId, component.files, bitmap);
     const addedComponents = Object.keys(groupedById)
       .map((bitMapComponentId) => {
         const parsedBitId = BitId.parse(bitMapComponentId);
         const files = groupedById[bitMapComponentId].map(({ file }) => file);
-        const foundComponentFromBitMap = bitmap.getComponent(bitMapComponentId);
+        const foundComponentFromBitMap = bitmap.getComponent(
+          bitMapComponentId,
+          shouldThrow,
+          includeSearchByBoxAndNameOnly
+        );
         if (foundComponentFromBitMap) {
           component.files = files
             .map((file) => {
@@ -130,7 +136,10 @@ export default (async function addAction(
               }
             })
             .filter(file => !R.isNil(file));
-          component.componentId = BitId.parse(bitMapComponentId);
+          const locatedIDFromBitMap = bitmap.getExistingComponentId(bitMapComponentId);
+          component.componentId = locatedIDFromBitMap
+            ? BitId.parse(locatedIDFromBitMap)
+            : BitId.parse(bitMapComponentId);
           return addToBitMap(bitMap, component);
         }
         // if id is not in bitmap check that files are not tracked by another component
@@ -196,7 +205,7 @@ export default (async function addAction(
     });
   }
 
-  async function addOneComponent(componentPathsStats: Object, consumer: Consumer, gitIgnoreFiles: string[]) {
+  async function addOneComponent(componentPathsStats: Object, consumer: Consumer) {
     const bitMap: BitMap = consumer.bitMap;
     // remove excluded files from file list
     async function removeExcludedFiles(mapValues, excludedList) {
@@ -282,13 +291,14 @@ export default (async function addAction(
 
         const matches = await glob(path.join(relativeComponentPath, '**'), {
           cwd: consumer.getPath(),
-          nodir: true,
-          ignore: gitIgnoreFiles
+          nodir: true
         });
 
-        if (!matches.length) throw new EmptyDirectory();
+        const filteredMatches = gitIgnore.filter(matches);
 
-        let files = matches.map((match: PathOsBased) => {
+        if (!filteredMatches.length) throw new EmptyDirectory();
+
+        let files = filteredMatches.map((match: PathOsBased) => {
           return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
         });
 
@@ -371,20 +381,19 @@ export default (async function addAction(
   }
 
   // add ignore list
-  const gitIgnore = ignore().add(ignoreList);
+  gitIgnore = ignore().add(ignoreList);
+
   // check unknown test files
   const missingFiles = getMissingTestFiles(tests);
   if (!R.isEmpty(missingFiles)) throw new PathNotExists(missingFiles);
 
   let componentPathsStats = {};
-  let resolvedComponentPathsWithGitIgnore = R.flatten(
-    await Promise.all(componentPaths.map(componentPath => glob(componentPath)))
-  );
-  resolvedComponentPathsWithGitIgnore = gitIgnore.filter(resolvedComponentPathsWithGitIgnore);
 
   const resolvedComponentPathsWithoutGitIgnore = R.flatten(
     await Promise.all(componentPaths.map(componentPath => glob(componentPath)))
   );
+
+  const resolvedComponentPathsWithGitIgnore = gitIgnore.filter(resolvedComponentPathsWithoutGitIgnore);
 
   // Run diff on both arrays to see what was filtered out because of the gitignore file
   const diff = arrayDiff(resolvedComponentPathsWithGitIgnore, resolvedComponentPathsWithoutGitIgnore);
@@ -412,8 +421,7 @@ export default (async function addAction(
         {
           [onePath]: componentPathsStats[onePath]
         },
-        consumer,
-        ignoreList
+        consumer
       );
     });
 
@@ -430,7 +438,7 @@ export default (async function addAction(
     // when a user enters more than one directory, he would like to keep the directories names
     // so then when a component is imported, it will write the files into the original directories
 
-    const addedOne = await addOneComponent(componentPathsStats, consumer, ignoreList);
+    const addedOne = await addOneComponent(componentPathsStats, consumer);
     if (!R.isEmpty(addedOne.files)) {
       const addedResult = addOrUpdateExistingComponentsInBitMap(consumer.projectPath, bitMap, addedOne);
       added.push(addedResult);
