@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support passing arguments/flags to the package-manager by specifying them after '--' (e.g. bit import -- --no-optional)
+
 ## [0.12.6-dev.5] - 2018-02-20
 
 - bug fix - untagging component with dependents and local tags after export wasn't prevented as it should

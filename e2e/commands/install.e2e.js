@@ -77,5 +77,40 @@ console.log('isBoolean: ' + isBoolean(true) + ', ' + barFoo());`;
         expect(result.trim()).to.equal('isBoolean: true, isString: false and got is-string and got foo');
       });
     });
+    describe('with specific package-manager arguments', () => {
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+      });
+      describe('passing arguments via the command line', () => {
+        let output;
+        before(() => {
+          output = helper.runCmd('bit install bar/foo -- --no-optional');
+        });
+        it('npm should install the packages with the specified arguments', () => {
+          expect(output).to.have.string('successfully ran npm install at components/bar/foo with args: --no-optional');
+        });
+      });
+      describe('passing arguments via the consumer bit.json', () => {
+        let output;
+        before(() => {
+          helper.modifyFieldInBitJson('packageManagerArgs', ['--production']);
+          output = helper.runCmd('bit install bar/foo');
+        });
+        it('npm should install the packages with the specified arguments', () => {
+          expect(output).to.have.string('successfully ran npm install at components/bar/foo with args: --production');
+        });
+      });
+      describe('passing arguments via both the command line and consumer bit.json', () => {
+        let output;
+        before(() => {
+          helper.modifyFieldInBitJson('packageManagerArgs', ['--production']);
+          output = helper.runCmd('bit install bar/foo -- --no-optional');
+        });
+        it('npm should install the packages according to the command line and ignore the consumer bit.json', () => {
+          expect(output).to.have.string('successfully ran npm install at components/bar/foo with args: --no-optional');
+          expect(output).to.not.have.string('--production');
+        });
+      });
+    });
   });
 });
