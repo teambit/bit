@@ -45,7 +45,7 @@ describe('peer-dependencies functionality', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         const output = helper.importComponent('bar/foo');
-        expect(output).to.have.string('You must install peer dependencies yourself');
+        expect(output).to.have.string('requires a peer');
         helper.addNpmPackage('chai', '2.4'); // it's not automatically installed because it's a peer-dependency
       });
       it('should not be shown as modified', () => {
