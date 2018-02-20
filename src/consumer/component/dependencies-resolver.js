@@ -327,16 +327,29 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
 }
 
 // @todo: move to bit-javascript
+/**
+ * For author, the peer-dependencies are set in the root package.json
+ * For imported components, we don't want to change the peerDependencies of the author, unless
+ * we're certain the user intent to do so. Therefore, we ignore the root package.json and look for
+ * the package.json in the component's directory.
+ */
 function findPeerDependencies(consumerPath: string, component: Component): Object {
+  const componentMap = component.componentMap;
   const getPeerDependencies = (): Object => {
-    const packageJsonLocation = path.join(consumerPath, 'package.json');
+    const componentRoot = componentMap.origin === COMPONENT_ORIGINS.AUTHORED ? consumerPath : componentMap.rootDir;
+    const packageJsonLocation = path.join(componentRoot, 'package.json');
     if (fs.existsSync(packageJsonLocation)) {
       try {
         const packageJson = fs.readJsonSync(packageJsonLocation);
         if (packageJson.peerDependencies) return packageJson.peerDependencies;
       } catch (err) {
-        logger.error(`Failed reading the project package.json. Error Message: ${err.message}`);
+        logger.error(
+          `Failed reading the project package.json at ${packageJsonLocation}. Error Message: ${err.message}`
+        );
       }
+    }
+    if (component.componentFromModel && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
+      return component.componentFromModel.peerPackageDependencies;
     }
     return {};
   };

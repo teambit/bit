@@ -1810,7 +1810,7 @@ console.log(barFoo.default());`;
       helper.addRemoteScope(helper.remoteScopePath);
       helper.manageWorkspaces();
       helper.importComponent('comp/with-deps');
-      helper.addkeyValueToPackageJson({ customField: 'bit is awsome' });
+      helper.addKeyValueToPackageJson({ customField: 'bit is awsome' });
     });
     it('should install component dependencie as separate packages with yarn workspaces', () => {
       expect(dependencies).to.be.a.directory('should not be empty').and.not.empty;
@@ -1852,7 +1852,7 @@ console.log(barFoo.default());`;
       expect(pkgJson.customField).to.equal('bit is awsome');
     });
     it('Should not delete delete workspaces that already existed in package.json', () => {
-      helper.addkeyValueToPackageJson({ workspaces: ['comp'] });
+      helper.addKeyValueToPackageJson({ workspaces: ['comp'] });
       helper.importComponent('comp/with-deps -f');
       const pkgJson = helper.readPackageJson();
       expect(pkgJson.workspaces).to.include(

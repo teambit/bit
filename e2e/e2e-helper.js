@@ -79,7 +79,7 @@ export default class Helper {
     bitJson.useWorkspaces = withWorkspaces;
     this.writeBitJson(bitJson);
   }
-  addkeyValueToPackageJson(data: Object, pkgJsonPath: string = path.join(this.localScopePath)) {
+  addKeyValueToPackageJson(data: Object, pkgJsonPath: string = path.join(this.localScopePath)) {
     const pkgJson = this.readPackageJson(pkgJsonPath);
     fs.writeJSONSync(path.join(pkgJsonPath, 'package.json'), Object.assign(pkgJson, data), { spaces: 2 });
   }
