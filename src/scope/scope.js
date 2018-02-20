@@ -892,7 +892,7 @@ export default class Scope {
    * findDependentBits
    * foreach component in array find the componnet that uses that component
    */
-  async findDependentBits(bitIds: Array<BitId>, returnResultsWithVersion: boolean = false): Promise<Array<object>> {
+  async findDependentBits(bitIds: Array<BitId>, returnResultsWithVersion: boolean = false): Promise<Object> {
     const allComponents = await this.objects.listComponents(false);
     const allComponentVersions = await Promise.all(
       allComponents.map(async (component) => {
@@ -945,8 +945,8 @@ export default class Scope {
    * Remove components from scope
    * @force Boolean  - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: Array<BitId>, force: boolean, removeSameOrigin: boolean = false): Promise<any> {
-    logger.debug(`removing ${bitIds} with force flag: ${force}`);
+  async removeMany(bitIds: BitIds, force: boolean, removeSameOrigin: boolean = false): Promise<RemovedObjects> {
+    logger.debug(`removing ${bitIds} with force flag: ${force.toString()}`);
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const dependentBits = await this.findDependentBits(foundComponents);
     if (R.isEmpty(dependentBits) || force) {

@@ -1,3 +1,4 @@
+/** @flow */
 import { BitId, BitIds } from '../bit-id';
 
 export class RemovedObjects {
@@ -23,11 +24,15 @@ export class RemovedObjects {
   }
 
   static fromObjects(payload: Object): ComponentObjects {
-    let { missingComponents, removedComponentIds, removedDependencies, dependentBits } = payload;
-    missingComponents = missingComponents.map(id => new BitId(id));
-    removedComponentIds = removedComponentIds.map(id => new BitId(id));
-    removedDependencies = removedDependencies.map(id => new BitId(id));
-    return new RemovedObjects({ missingComponents, removedComponentIds, removedDependencies, dependentBits });
+    const missingComponents = payload.missingComponents.map(id => new BitId(id));
+    const removedComponentIds = payload.removedComponentIds.map(id => new BitId(id));
+    const removedDependencies = payload.removedDependencies.map(id => new BitId(id));
+    return new RemovedObjects({
+      missingComponents,
+      removedComponentIds,
+      removedDependencies,
+      dependentBits: payload.dependentBits
+    });
   }
 }
 export class RemovedLocalObjects extends RemovedObjects {
