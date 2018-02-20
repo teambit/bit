@@ -226,6 +226,24 @@ describe('bit untag command', function () {
           expect(untagOutput).to.have.string('1 component(s) were untagged');
         });
       });
+      describe('after exporting the component and tagging the scope', () => {
+        let output;
+        before(() => {
+          helper.getClonedLocalScope(localScope);
+          helper.reInitRemoteScope();
+          helper.addRemoteScope();
+          helper.exportAllComponents();
+          helper.runCmd('bit tag -s 1.0.5');
+          try {
+            output = helper.runCmd('bit untag utils/is-type');
+          } catch (err) {
+            output = err.message;
+          }
+        });
+        it('should show an error', () => {
+          expect(output).to.have.string('unable to untag utils/is-type');
+        });
+      });
     });
     describe('untag all components', () => {
       describe('when all components have only local versions', () => {

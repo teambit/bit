@@ -1,6 +1,6 @@
 /** @flow */
 import Command from '../../command';
-import { watch, watchAll } from '../../../api/consumer';
+import watchAll from '../../../api/consumer';
 
 export default class Create extends Command {
   name = 'watch';

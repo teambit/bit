@@ -28,8 +28,9 @@ export async function removeLocalVersion(
 
   if (!force) {
     const dependencyGraph = await scope.getDependencyGraph();
+
     versionsToRemove.forEach((versionToRemove) => {
-      const idWithVersion = id.clone();
+      const idWithVersion = component.toBitId();
       idWithVersion.version = versionToRemove;
       const dependents = dependencyGraph.getDependentsPerId(idWithVersion);
       if (dependents.length) {

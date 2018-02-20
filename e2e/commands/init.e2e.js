@@ -61,6 +61,16 @@ describe('run bit init', function () {
       expect(bitJson).to.not.have.property('manageWorkspaces');
     });
   });
+  describe('init .bit ', () => {
+    describe('when .git exists and bit already initialized with .bit ', () => {
+      it('should not create bit inside .git', () => {
+        helper.reInitLocalScope();
+        helper.initNewGitRepo();
+        helper.runCmd('bit init');
+        expect(path.join(helper.localScope, '.git', 'bit')).to.not.be.a.path('bit dir is missing');
+      });
+    });
+  });
   describe('git integration', () => {
     describe('when .git exists', () => {
       let gitFolder;

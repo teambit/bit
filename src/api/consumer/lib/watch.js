@@ -3,8 +3,7 @@
 import chokidar from 'chokidar';
 import R from 'ramda';
 import { loadConsumer } from '../../../consumer';
-import { build, buildAll } from '../index';
-import logger from '../../../logger/logger';
+import { buildAll } from '../index';
 import ComponentsList from '../../../consumer/component/components-list';
 
 /**
@@ -15,7 +14,7 @@ import ComponentsList from '../../../consumer/component/components-list';
  * @param {boolean} verbose - showing verbose output for inspection
  * @returns
  */
-export async function watchAll(verbose) {
+export default (async function watchAll(verbose) {
   // TODO: run build in the begining of process (it's work like this in other envs)
   const consumer = await loadConsumer();
   const consumerPath = consumer.getPath();
@@ -28,20 +27,20 @@ export async function watchAll(verbose) {
     ignored: '**/dist/**'
   });
 
-  console.log(`Starting watch for changes`); // eslint-disable-line
+  console.log('Starting watch for changes'); // eslint-disable-line no-console
 
   if (verbose) {
     // Print all watched paths
-    bitMapComponentsPaths.forEach(path => console.log(`Watching ${path}`));
+    bitMapComponentsPaths.forEach(path => console.log(`Watching ${path}`)); // eslint-disable-line no-console
   }
 
   watcher.on('change', (p) => {
-    const log = console.log.bind(console);
+    const log = console.log.bind(console); // eslint-disable-line no-console
     log(`File ${p} has been changed, calling build`);
     // TODO: Make sure the log for build is printed to console
     buildAll()
       .then((buildResult) => {
-        console.log(buildResult);
+        console.log(buildResult); // eslint-disable-line no-console
       })
       .catch((err) => {
         log(err); // eslint-disable-line
@@ -49,4 +48,4 @@ export async function watchAll(verbose) {
   });
 
   return new Promise(() => {});
-}
+});

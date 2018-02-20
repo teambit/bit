@@ -78,10 +78,20 @@ export default (async function exportAction(ids?: string[], remote: string, save
   // in case we don't have anything to export
   if (R.isEmpty(idsToExport)) return [];
   const componentsIds = await consumer.scope.exportMany(idsToExport, remote, undefined, eject);
-  if (eject) return consumer.eject(componentsIds);
+  let ejectErr;
+  if (eject) {
+    try {
+      const results = await consumer.eject(componentsIds);
+      return results;
+    } catch (err) {
+      ejectErr = `The components ${componentsIds.map(c => c.toString()).join(', ')} were exported successfully.
+      However, the eject operation has failed due to an error: ${err}`;
+    }
+  }
   if (save) await addToBitJson(componentsIds, consumer);
   componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
   await consumer.bitMap.write();
   await linkComponents(componentsIds, consumer);
+  if (ejectErr) return Promise.reject(ejectErr);
   return componentsIds;
 });

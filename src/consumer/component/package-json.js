@@ -20,6 +20,7 @@ import { getSync } from '../../api/consumer/lib/global-config';
 import Consumer from '../consumer';
 import { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
+import logger from '../../logger/logger';
 
 /**
  * Add components as dependencies to root package.json
@@ -236,6 +237,7 @@ async function addWorkspacesToPackageJson(
 }
 
 async function removeComponentsFromNodeModules(consumer: Consumer, componentIds: BitId[]) {
+  logger.debug(`removeComponentsFromNodeModules: ${componentIds.map(c => c.toString()).join(', ')}`);
   const registryPrefix = getRegistryPrefix();
   // paths without scope name, don't have a symlink in node-modules
   const pathsToRemove = componentIds
@@ -244,6 +246,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, componentIds:
     })
     .filter(a => a); // remove null
 
+  logger.debug(`deleting the following paths: ${pathsToRemove.join('\n')}`);
   return Promise.all(pathsToRemove.map(componentPath => fs.remove(path.join(consumer.getPath(), componentPath))));
 }
 
@@ -273,6 +276,7 @@ async function removeComponentsFromWorkspacesAndDependencies(
 
 export {
   addComponentsToRoot,
+  removeComponentsFromNodeModules,
   changeDependenciesToRelativeSyntax,
   write,
   addComponentsWithVersionToRoot,
