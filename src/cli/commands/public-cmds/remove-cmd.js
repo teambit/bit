@@ -2,7 +2,7 @@
 import yn from 'yn';
 import Command from '../../command';
 import { remove } from '../../../api/consumer';
-import { RemovedObjects, RemovedLocalObjects } from '../../../scope/component-remove';
+import { RemovedObjects, RemovedLocalObjects } from '../../../scope/removed-components';
 import paintRemoved from '../../templates/remove-template';
 import { removePrompt } from '../../../prompts';
 

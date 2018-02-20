@@ -22,7 +22,7 @@ import checkVersionCompatibilityFunction from '../check-version-compatibility';
 import logger from '../../../logger/logger';
 import type { Network } from '../network';
 import { DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
-import { RemovedObjects } from '../../component-remove';
+import { RemovedObjects } from '../../removed-components';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);

@@ -59,7 +59,7 @@ import performCIOps from './ci-ops';
 import logger from '../logger/logger';
 import componentResolver from '../component-resolver';
 import ComponentsList from '../consumer/component/components-list';
-import { RemovedObjects } from './component-remove';
+import { RemovedObjects } from './removed-components';
 import Component from '../consumer/component/consumer-component';
 import DependencyGraph from './graph/graph';
 

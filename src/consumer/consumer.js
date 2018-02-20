@@ -42,7 +42,7 @@ import MissingFilesFromComponent from './component/exceptions/missing-files-from
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import npmClient from '../npm-client';
 import GitHooksManager from '../git-hooks/git-hooks-manager';
-import { RemovedLocalObjects } from '../scope/component-remove';
+import { RemovedLocalObjects } from '../scope/removed-components';
 import { linkComponents, linkAllToNodeModules, linkComponentsToNodeModules } from '../links';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
