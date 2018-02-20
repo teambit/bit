@@ -10,7 +10,7 @@ export default function getMissingTestFiles(tests) {
   const realTestFiles = tests.filter((testFile) => {
     const files = DSL.filter(pattern => testFile.indexOf(pattern) > -1);
     const glob = isGlob(pathNormalizeToLinux(testFile));
-    if (!glob && R.isEmpty(files)) return testFile;
+    return !glob && R.isEmpty(files) ? testFile : undefined;
   });
   if (!R.isEmpty(realTestFiles)) {
     missingTestFiles = realTestFiles.filter(testFile => !fs.existsSync(testFile));

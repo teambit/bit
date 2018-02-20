@@ -806,9 +806,9 @@ describe('bit add command', function () {
       it('should throw an error', () => {
         const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${helper.bitBin} add ${
-            barFoo2Path
-          } -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
+          `Command failed: ${
+            helper.bitBin
+          } add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
         );
       });
     });
@@ -856,7 +856,7 @@ describe('bit add command', function () {
     before(() => {
       helper.reInitLocalScope();
     });
-    it('Should show warning msg in case there are no files to add beacuse of gitignore', () => {
+    it('Should show warning msg in case there are no files to add because of gitignore', () => {
       helper.createComponent('bar', 'foo2.js');
       helper.writeGitIgnore(['bar/foo2.js']);
 
@@ -884,16 +884,17 @@ describe('bit add command', function () {
   });
 
   describe('ignore specific files inside component', () => {
+    let output;
     before(() => {
       helper.reInitLocalScope();
-    });
-    it('Should tarck component ', () => {
       helper.createComponent('bar', 'foo.js');
       helper.createComponent('bar', 'foo3.js');
       helper.createComponent('bar', 'boo.js');
       helper.createComponent('bar', 'index.js');
       helper.writeGitIgnore(['bar/foo.js', 'bar/foo3.js']);
-      const output = helper.addComponentWithOptions(path.normalize('bar/'), { i: 'bar/foo' });
+      output = helper.addComponentWithOptions(path.normalize('bar/'), { i: 'bar/foo' });
+    });
+    it('Should track component ', () => {
       expect(output).to.contain('tracking component bar/foo');
     });
     it('Should contain component inside bitmap', () => {

@@ -1,9 +1,10 @@
+/** @flow */
+import findUp from 'find-up';
 import gitignore from 'parse-gitignore';
 import { IGNORE_LIST, GIT_IGNORE } from '../../constants';
-import { findFile } from '../index';
 
 function getGitIgnoreFile(dir: string) {
-  const gitIgnoreFile = findFile(dir, GIT_IGNORE);
+  const gitIgnoreFile = findUp.sync([GIT_IGNORE], { cwd: dir });
   return gitIgnoreFile ? gitignore(gitIgnoreFile) : [];
 }
 

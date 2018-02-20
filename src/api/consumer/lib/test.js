@@ -4,11 +4,7 @@ import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import ComponentsList from '../../../consumer/component/components-list';
 import Bit from '../../../consumer/component';
-import {
-  BEFORE_LOADING_COMPONENTS,
-  BEFORE_RUNNING_SPECS,
-  BEFORE_IMPORT_ENVIRONMENT
-} from '../../../cli/loader/loader-messages';
+import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 
 export default (async function test(id?: string, verbose: ?boolean): Promise<Bit> {
   const consumer: Consumer = await loadConsumer();
