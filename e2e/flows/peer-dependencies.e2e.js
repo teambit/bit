@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
@@ -33,6 +35,45 @@ describe('peer-dependencies functionality', function () {
       expect(output).to.have.property('peerPackageDependencies');
       expect(output.peerPackageDependencies).to.have.property('chai');
       expect(output.peerPackageDependencies.chai).to.equal('>= 2.1.2 < 5');
+    });
+    describe('when the component is imported', () => {
+      before(() => {
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        helper.addNpmPackage('chai', '2.4'); // it's not automatically installed because it's a peer-dependency
+      });
+      it('should not be shown as modified', () => {
+        const output = helper.runCmd('bit status');
+        expect(output).to.have.a.string('no new components');
+        expect(output).to.have.a.string('no modified components');
+        expect(output).to.have.a.string('no staged components');
+      });
+      describe('and the package.json of the component was changed to remove the peerDependencies', () => {
+        before(() => {
+          helper.addKeyValueToPackageJson(
+            { peerDependencies: {} },
+            path.join(helper.localScopePath, 'components/bar/foo')
+          );
+        });
+        it('should be shown as modified', () => {
+          const output = helper.runCmd('bit status');
+          expect(output).to.not.have.a.string('no modified components');
+        });
+      });
+      describe('and the package.json of the component does not exist', () => {
+        before(() => {
+          fs.removeSync(path.join(helper.localScopePath, 'components/bar/foo/package.json'));
+        });
+        it('should not be shown as modified', () => {
+          const output = helper.runCmd('bit status');
+          expect(output).to.have.a.string('no modified components');
+        });
+      });
     });
   });
 
