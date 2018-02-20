@@ -30,7 +30,7 @@ import migrate from './migrations/consumer-migrator';
 import type { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import loader from '../cli/loader';
-import { BEFORE_INSTALL_NPM_DEPENDENCIES, BEFORE_MIGRATION } from '../cli/loader/loader-messages';
+import { BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
@@ -40,10 +40,10 @@ import loadDependenciesForComponent from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
-import npmClient from '../npm-client';
+import { installPackages, installNpmPackagesForComponents } from '../npm-client/install-packages';
 import GitHooksManager from '../git-hooks/git-hooks-manager';
 import { RemovedLocalObjects } from '../scope/component-remove';
-import { linkComponents, linkAllToNodeModules, linkComponentsToNodeModules } from '../links';
+import { linkComponents, linkComponentsToNodeModules } from '../links';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
 import { Dependencies } from './component/dependencies';
@@ -469,7 +469,7 @@ export default class Consumer {
     );
 
     await this.bitMap.write();
-    if (installNpmPackages) await this.installNpmPackagesForComponents(componentsWithDependencies, verbose);
+    if (installNpmPackages) await installNpmPackagesForComponents(this, componentsWithDependencies, verbose);
     if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents.map(c => c.id));
 
     return linkComponents(
@@ -1029,64 +1029,11 @@ export default class Consumer {
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
   }
 
-  async installPackages(dirs: string[], verbose: boolean, installRootPackageJson: boolean = false) {
-    const packageManager = this.bitJson.packageManager;
-    const packageManagerArgs = this.packageManagerArgs.length
-      ? this.packageManagerArgs
-      : this.bitJson.packageManagerArgs;
-    const packageManagerProcessOptions = this.bitJson.packageManagerProcessOptions;
-    const useWorkspaces = this.bitJson.useWorkspaces;
-
-    loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
-
-    // don't pass the packages to npmClient.install function.
-    // otherwise, it'll try to npm install the packages in one line 'npm install packageA packageB' and when
-    // there are mix of public and private packages it fails with 404 error.
-    // passing an empty array, results in installing packages from the package.json file
-    let results = await npmClient.install({
-      modules: [],
-      packageManager,
-      packageManagerArgs,
-      packageManagerProcessOptions,
-      useWorkspaces,
-      dirs,
-      rootDir: this.getPath(),
-      installRootPackageJson,
-      verbose
-    });
-
-    loader.stop();
-    if (!Array.isArray(results)) {
-      results = [results];
-    }
-    results.forEach((result) => {
-      if (result) npmClient.printResults(result);
-    });
-  }
-
-  async installNpmPackagesForComponents(
-    componentsWithDependencies: ComponentWithDependencies[],
-    verbose: boolean = false
-  ): Promise<*> {
-    // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
-    // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
-    const componentsWithDependenciesFlatten = R.flatten(
-      componentsWithDependencies.map((oneComponentWithDependencies) => {
-        return oneComponentWithDependencies.component.dependenciesSavedAsComponents
-          ? [oneComponentWithDependencies.component, ...oneComponentWithDependencies.dependencies]
-          : [oneComponentWithDependencies.component];
-      })
-    );
-
-    const componentDirs = componentsWithDependenciesFlatten.map(component => component.writtenPath);
-    return this.installPackages(componentDirs, verbose);
-  }
-
   async eject(componentsIds: BitId[]) {
     await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
     const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
     await packageJson.removeComponentsFromNodeModules(this, componentsIds);
-    await this.installPackages([], true, true);
+    await installPackages(this, [], true, true);
     await this.remove(componentIdsWithoutScope, true, false, true);
     return componentsIds;
   }

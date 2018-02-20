@@ -1,5 +1,6 @@
 // @flow
 import { linkAllToNodeModules, linkComponentsToNodeModules } from '../../links';
+import { installPackages } from '../../npm-client/install-packages';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
@@ -16,7 +17,7 @@ export async function install(consumer: Consumer, verbose: boolean): Promise<Lin
   const dirs = Object.keys(candidateComponents)
     .map(id => candidateComponents[id].rootDir || null)
     .filter(dir => dir);
-  await consumer.installPackages(dirs, verbose, true);
+  await installPackages(consumer, dirs, verbose, true);
   return linkAllToNodeModules(consumer);
 }
 
@@ -28,6 +29,6 @@ export async function install(consumer: Consumer, verbose: boolean): Promise<Lin
 export async function installIds(consumer: Consumer, ids: BitId[], verbose: boolean): Promise<LinksResult[]> {
   const { components } = await consumer.loadComponents(ids);
   const dirs: string[] = components.map(component => component.componentMap.rootDir).filter(dir => dir);
-  if (dirs.length) await consumer.installPackages(dirs, verbose);
+  if (dirs.length) await installPackages(consumer, dirs, verbose);
   return linkComponentsToNodeModules(components, consumer);
 }
