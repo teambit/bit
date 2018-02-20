@@ -632,6 +632,17 @@ export default class Consumer {
       }
       status.staged = componentFromModel.isLocallyChanged();
       const versionFromFs = componentFromFileSystem.id.version;
+      if (!status.staged && !componentFromFileSystem.id.hasVersion()) {
+        throw new Error(
+          `component ${id} has an invalid state.
+           1) it has a model instance so it's not new.
+           2) it's not in staged state.
+           3) it doesn't have a version in the bitmap file.
+           Maybe the component was interrupted during the export and as a result the bitmap file wasn't updated with the new version
+           `
+        );
+      }
+
       const latestVersionFromModel = componentFromModel.latest();
       // Consider the following two scenarios:
       // 1) a user tagged v1, exported, then tagged v2.
@@ -641,6 +652,7 @@ export default class Consumer {
       //    @see reduce-path.e2e 'importing v1 of a component when a component has v2' to reproduce this case.
       const version = status.staged ? latestVersionFromModel : versionFromFs;
       const versionRef = componentFromModel.versions[version];
+      if (!versionRef) throw new Error(`version ${version} was not found in ${id}`);
       const versionFromModel = await this.scope.getObject(versionRef.hash);
       status.modified = await this.isComponentModified(versionFromModel, componentFromFileSystem);
       return status;
@@ -1067,11 +1079,12 @@ export default class Consumer {
     return this.installPackages(componentDirs, verbose);
   }
 
-  async eject(componentsIds) {
-    const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
-    await this.remove(componentIdsWithoutScope, true, false, true);
+  async eject(componentsIds: BitId[]) {
     await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
+    const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
+    await packageJson.removeComponentsFromNodeModules(this, componentsIds);
     await this.installPackages([], true, true);
+    await this.remove(componentIdsWithoutScope, true, false, true);
     return componentsIds;
   }
 }
