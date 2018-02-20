@@ -60,7 +60,7 @@ export default class Helper {
     bitJson.packageDependencies = bitJson.packageDependencies || {};
     Object.assign(bitJson.dependencies, dependencies);
     Object.assign(bitJson.packageDependencies, packageDependencies);
-    fs.writeJSONSync(bitJsonPath, bitJson);
+    fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
 
   readBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
@@ -81,7 +81,7 @@ export default class Helper {
   }
   addkeyValueToPackageJson(data: Object, pkgJsonPath: string = path.join(this.localScopePath)) {
     const pkgJson = this.readPackageJson(pkgJsonPath);
-    fs.writeJSONSync(path.join(pkgJsonPath, 'package.json'), Object.assign(pkgJson, data));
+    fs.writeJSONSync(path.join(pkgJsonPath, 'package.json'), Object.assign(pkgJson, data), { spaces: 2 });
   }
   readPackageJson(packageJsonFolder: string = this.localScopePath) {
     const packageJsonPath = path.join(packageJsonFolder, 'package.json');
@@ -116,7 +116,7 @@ export default class Helper {
 
   writeBitMap(bitMap: Object) {
     const bitMapPath = path.join(this.localScopePath, '.bitmap');
-    return fs.writeJSONSync(bitMapPath, bitMap);
+    return fs.writeJSONSync(bitMapPath, bitMap, { spaces: 2 });
   }
   setComponentsDirInBitJson(content: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     const bitJson = this.readBitJson(bitJsonPath);
@@ -193,7 +193,7 @@ export default class Helper {
     };
     Object.keys(componentObject).forEach(key => (bitmap[key] = componentObject[key]));
     fs.ensureFileSync(bitmapFile);
-    return fs.writeJsonSync(bitmapFile, bitmap);
+    return fs.writeJsonSync(bitmapFile, bitmap, { spaces: 2 });
   }
   setNewLocalAndRemoteScopes() {
     if (!this.cache) {
@@ -440,7 +440,7 @@ export default class Helper {
   modifyFieldInBitJson(key: string, value: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     const bitJson = this.readBitJson();
     bitJson[key] = value;
-    fs.writeJsonSync(bitJsonPath, bitJson);
+    fs.writeJsonSync(bitJsonPath, bitJson, { spaces: 2 });
   }
   addNpmPackage(name: string = 'lodash.get', version: string = '4.4.2') {
     const packageJsonFixture = JSON.stringify({ name, version });
@@ -605,7 +605,7 @@ export default class Helper {
 
 function ensureAndWriteJson(filePath, fileContent) {
   fs.ensureFileSync(filePath);
-  fs.writeJsonSync(filePath, fileContent);
+  fs.writeJsonSync(filePath, fileContent, { spaces: 2 });
 }
 
 export { VERSION_DELIMITER };

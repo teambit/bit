@@ -85,7 +85,7 @@ export default class Consumer {
   _dirStructure: DirStructure;
   _componentsCache: Object = {}; // cache loaded components
   _componentsStatusCache: Object = {}; // cache loaded components
-  packageManagerArgs: string[]; // args entered by the user in the command line after '--'
+  packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
 
   constructor({
     projectPath,
@@ -1031,7 +1031,9 @@ export default class Consumer {
 
   async installPackages(dirs: string[], verbose: boolean, installRootPackageJson: boolean = false) {
     const packageManager = this.bitJson.packageManager;
-    const packageManagerArgs = this.packageManagerArgs || this.bitJson.packageManagerArgs;
+    const packageManagerArgs = this.packageManagerArgs.length
+      ? this.packageManagerArgs
+      : this.bitJson.packageManagerArgs;
     const packageManagerProcessOptions = this.bitJson.packageManagerProcessOptions;
     const useWorkspaces = this.bitJson.useWorkspaces;
 
