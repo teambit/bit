@@ -580,7 +580,7 @@ export default class Component {
     if (!testerFilePath) {
       loader.start(BEFORE_IMPORT_ENVIRONMENT);
       await scope.installEnvironment({
-        ids: [this.testerId],
+        ids: [{ componentId: this.testerId, type: 'tester' }],
         verbose
       });
       testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
@@ -736,8 +736,9 @@ export default class Component {
     if (!compiler) {
       loader.start(BEFORE_IMPORT_ENVIRONMENT);
       await scope.installEnvironment({
-        ids: [this.compilerId],
-        verbose
+        ids: [{ componentId: this.compilerId, type: 'compiler' }],
+        verbose,
+        type: 'compiler'
       });
       compiler = scope.loadEnvironment(this.compilerId);
     }

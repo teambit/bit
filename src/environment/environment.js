@@ -68,7 +68,8 @@ export default class Environment {
       installNpmPackages: !!opts.installPackages, // convert to boolean
       addToRootPackageJson: false,
       verbose: opts.verbose,
-      excludeRegistryPrefix: !!opts.excludeRegistryPrefix
+      excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
+      silentClientResult: opts.silentClientResult
     };
     await this.consumer.writeToComponentsDir(concreteOpts);
     await Environment.markEnvironmentAsInstalled(writeToPath);
