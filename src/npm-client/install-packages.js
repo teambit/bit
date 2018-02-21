@@ -5,14 +5,13 @@ import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
 import { ComponentWithDependencies } from '../scope';
 import { Consumer } from '../consumer';
-import { BitId } from '../bit-id';
 
 export async function installPackages(
   consumer: Consumer,
   dirs: string[],
   verbose: boolean,
   installRootPackageJson: boolean = false,
-  silentClientResult: boolean
+  silentClientResult: boolean = false
 ) {
   const packageManager = consumer.bitJson.packageManager;
   const packageManagerArgs = consumer.packageManagerArgs.length
@@ -55,7 +54,7 @@ export async function installNpmPackagesForComponents(
   consumer: Consumer,
   componentsWithDependencies: ComponentWithDependencies[],
   verbose: boolean = false,
-  silentClientResult: boolean
+  silentClientResult: boolean = false
 ): Promise<*> {
   // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
   // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
