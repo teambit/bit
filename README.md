@@ -14,17 +14,17 @@
 
 Sharing code between repositories is essential to the development and maintenance of your codebase.
 
-However, to create packages you often have to split your project into multiple repositories just so you can separately boilerplate and publish them. This also makes it hard to make changes to the code you share across the different repositories in your projects.
+However, just to publish packages you'd have to restructure your entire project's codebase - splitting it into more repositories or configuring multiple packages in a single repository. Even then, there is no simple way to sync shared code between different projects.
 
-**Bit works with Git and NPM to make it easy to share code and sync changes between projects at any scale**.
+**Bit works with Git and NPM to make it super-easy to share code and sync changes between projects**.
 
-Instead of creating new repositories for your packages, you can isolate and share any part of any existing repository and use your favorite package manager to install it in other projects.
+Instead of creating new repositories for your packages or restructuring your project, you can instantly isolate and share any part of any existing repository and use your favorite package managers to install it in other projects.
 
-Instead of making changes to each of your packages repositories, you can change the code you share from any repository in your codebase and easily sync the changes across your projects.
+Instead of configuring and making changes to multiple packages repositories or directories, you can simply change the code you share from any other project and easily sync the changes between all your projects.
 
 With Bit, managed code sharing becomes as simple as copy-pasting.
 
-*Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities*.
+*Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities. You are welcome to join*.
 
 
 ## Contents
@@ -41,9 +41,9 @@ With Bit, managed code sharing becomes as simple as copy-pasting.
 
 ## How It Works
 
-### Faster code sharing
+### Next-generation code sharing
 
-Instead of splitting your project into multiple repositories just to publish packages, Bit enables you to isolate and share components of code (subsets of files) from your existing repository that may then be installed with package managers. This also makes it possible to import the source code of your components into other repositories, continue to develop them and sync changes. This will not change your repository’s structure at all. These are the 2 key features that makes it possible.
+Instead of splitting your project into multiple repositories just to publish packages, Bit enables you to isolate and share components of code (subsets of files) from your existing repository that may then be installed with package managers. This also makes it possible to import the source code of your components into other repositories, continue to develop them and sync changes. This will not change your repository’s structure at all. These are the 2 key features that make it possible.
 
 **Dependency definition** - Bit [automatically resolves](https://docs.bitsrc.io/docs/isolating-and-tracking-components.html) and defines the dependency tree for the components you isolate, including both package dependencies and other files from your project.
 
@@ -62,7 +62,7 @@ You can use `bit import` to bring the component's actual source code into any re
 
 ### Discoverability and control
 
-The code you share with Bit is organized in your remote Scopes which can be made available to your entire team. Bit also provides improved discoverability through a search engine and useful visual information for your shared code, including auto-parsed docs and examples, test and build results and even live rendering for UI components ([alpha example](https://bitsrc.io/bit/movie-app)).
+The code you share with Bit is organized in your remote Scopes which can be made available to your entire team. Bit also provides improved discoverability through a search engine and visual information for your shared code, including auto-parsed docs and examples, test and build results and even live rendering for UI components ([alpha example](https://bitsrc.io/bit/movie-app)).
 
 Since Bit tracks the code you share throughout your codebase, you can easily learn which components are used by who and where, and make vast changes to multiple components together with universal control over your dependency graph.
 
@@ -252,4 +252,3 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
-
