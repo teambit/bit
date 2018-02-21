@@ -149,6 +149,24 @@ describe('bit remove command', function () {
       expect(bitMap).to.not.have.property(`${helper.remoteScope}/global/simple`);
     });
   });
+  describe('remove modified component', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('utils/is-type.js');
+      helper.commitAllComponents();
+      helper.createComponent(
+        'utils',
+        'is-type.js',
+        "module.exports = function isType() { return 'got is-type'; };console.log('sdfsdfsdf')"
+      );
+    });
+    it('should not remove modified component ', () => {
+      const output = helper.removeComponent('utils/is-type@0.0.1 -s');
+      expect(output).to.contain.string('error: unable to remove modified components: utils/is-type');
+    });
+  });
   describe('with imported components, no dependencies and yarn workspace', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();

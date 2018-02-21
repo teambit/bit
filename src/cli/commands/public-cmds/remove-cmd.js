@@ -2,7 +2,7 @@
 import yn from 'yn';
 import Command from '../../command';
 import { remove } from '../../../api/consumer';
-import { RemovedObjects, RemovedLocalObjects } from '../../../scope/component-remove';
+import { RemovedObjects, RemovedLocalObjects } from '../../../scope/removed-components';
 import paintRemoved from '../../templates/remove-template';
 import { removePrompt } from '../../../prompts';
 
@@ -33,21 +33,21 @@ export default class Remove extends Command {
         if (yn(shoudRemove)) {
           return remove({ ids, force, track, deleteFiles });
         }
-        return { localResult: new RemovedLocalObjects({}), remoteResult: [] };
+        return { localResult: new RemovedLocalObjects(), remoteResult: [] };
       });
     }
     return remove({ ids, force, track, deleteFiles });
   }
   report({
-    localResult = new RemovedLocalObjects({}),
+    localResult = new RemovedLocalObjects(),
     remoteResult = []
   }: {
     localResult: RemovedLocalObjects,
-    remoteResult: RemovedObjects
+    remoteResult: RemovedObjects[]
   }): string {
     return paintRemoved(localResult) + this.paintArray(remoteResult);
   }
-  paintArray(removedObjectsArray: RemovedObjects) {
+  paintArray(removedObjectsArray: RemovedObjects[]) {
     return removedObjectsArray.map(item => paintRemoved(item));
   }
 }

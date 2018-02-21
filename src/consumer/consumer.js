@@ -42,7 +42,7 @@ import MissingFilesFromComponent from './component/exceptions/missing-files-from
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import { installPackages, installNpmPackagesForComponents } from '../npm-client/install-packages';
 import GitHooksManager from '../git-hooks/git-hooks-manager';
-import { RemovedLocalObjects } from '../scope/component-remove';
+import { RemovedLocalObjects } from '../scope/removed-components';
 import { linkComponents, linkComponentsToNodeModules } from '../links';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
@@ -1001,13 +1001,13 @@ export default class Consumer {
       );
       await this.cleanBitMapAndBitJson(componensToRemoveFromFs, removedDependencies);
     }
-    return new RemovedLocalObjects({
+    return new RemovedLocalObjects(
       removedComponentIds,
       missingComponents,
       modifiedComponents,
       dependentBits,
       removedDependencies
-    });
+    );
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {

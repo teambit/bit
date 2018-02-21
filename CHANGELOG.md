@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - bug fix - untagging component with dependents and local tags after export wasn't prevented as it should
 - bug fix - untagging component with dependencies was showing an error saying the component is depends on itself
+- bug fix - remove modified component message
 
 ## [0.12.6-dev.4] - 2018-02-19
 
