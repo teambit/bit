@@ -130,9 +130,9 @@ function generateDependenciesTable(component: ConsumerComponent, showRemoteVersi
       dependencyId = isDev ? `${dependencyId} (dev)` : dependencyId;
       const row = [dependencyId];
       if (showRemoteVersion) {
-        const dependencyVersion = parseInt(dependency.currentVersion);
-        const localVersion = parseInt(dependency.localVersion);
-        const remoteVersion = dependency.remoteVersion ? parseInt(dependency.remoteVersion) : null;
+        const dependencyVersion = dependency.currentVersion;
+        const localVersion = dependency.localVersion;
+        const remoteVersion = dependency.remoteVersion ? dependency.remoteVersion : null;
         // if all versions are equal, paint them with green. Otherwise, paint with red
         const color =
           (remoteVersion && remoteVersion === localVersion && remoteVersion === dependencyVersion) ||
