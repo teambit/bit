@@ -15,6 +15,8 @@ export type BitIdProps = {
   version?: ?string
 };
 
+export type BitIdStr = string;
+
 export default class BitId {
   name: string;
   box: string;
@@ -48,7 +50,7 @@ export default class BitId {
     return this.version && this.version !== LATEST_BIT_VERSION;
   }
 
-  toString(ignoreScope: boolean = false, ignoreVersion: boolean = false): string {
+  toString(ignoreScope: boolean = false, ignoreVersion: boolean = false): BitIdStr {
     const { name, box, version } = this;
     const scope = this.scope;
     const componentStr = ignoreScope || !scope ? [box, name].join('/') : [scope, box, name].join('/');
@@ -58,15 +60,15 @@ export default class BitId {
     return componentStr.concat(`${VERSION_DELIMITER}${version}`);
   }
 
-  toStringWithoutScope() {
+  toStringWithoutScope(): BitIdStr {
     return this.toString(true);
   }
 
-  toStringWithoutVersion() {
+  toStringWithoutVersion(): BitIdStr {
     return this.toString(false, true);
   }
 
-  toStringWithoutScopeAndVersion() {
+  toStringWithoutScopeAndVersion(): BitIdStr {
     return this.toString(true, true);
   }
 

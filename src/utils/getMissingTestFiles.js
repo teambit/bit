@@ -1,11 +1,13 @@
+// @flow
 import R from 'ramda';
 import isGlob from 'is-glob';
 import fs from 'fs';
 import { pathNormalizeToLinux } from './index';
+import type { PathOsBased } from './path';
 
 const DSL = ['{PARENT}', '{FILE_NAME}'];
 
-export default function getMissingTestFiles(tests) {
+export default function getMissingTestFiles(tests: PathOsBased[]): PathOsBased[] {
   let missingTestFiles = [];
   const realTestFiles = tests.filter((testFile) => {
     const files = DSL.filter(pattern => testFile.indexOf(pattern) > -1);

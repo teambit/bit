@@ -4,9 +4,10 @@ import path from 'path';
 import R from 'ramda';
 import Command from '../../command';
 import { add } from '../../../api/consumer';
-import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
+import type { AddActionResults, AddResult } from '../../../consumer/component/add-components/add-components';
 import { pathNormalizeToLinux } from '../../../utils';
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';
+import type { PathOsBased, PathLinux } from '../../../utils/path';
 
 export default class Add extends Command {
   name = 'add [path...]';
@@ -31,42 +32,45 @@ export default class Add extends Command {
       tests,
       namespace,
       exclude,
-      override
+      override = false
     }: {
       id: ?string,
       main: ?string,
       tests: ?(string[]),
       namespace: ?string,
       exclude: ?string,
-      override: ?boolean
+      override: boolean
     }
   ): Promise<*> {
     if (namespace && id) {
       return Promise.reject('You can use either [id] or [namespace] to add a particular component');
     }
 
-    const normalizedPathes = paths.map(p => path.normalize(p));
-    const testsArray = tests ? this.splitList(tests).map(filePath => path.normalize(filePath.trim())) : [];
-    const exludedFiles = exclude
+    const normalizedPaths: PathOsBased[] = paths.map(p => path.normalize(p));
+    const testsArray: PathOsBased[] = tests
+      ? this.splitList(tests).map(filePath => path.normalize(filePath.trim()))
+      : [];
+    const excludedFiles: ?(PathLinux[]) = exclude
       ? this.splitList(exclude).map(filePath => pathNormalizeToLinux(filePath.trim()))
       : undefined;
 
     // check if user is trying to add test files only without id
-    if (!R.isEmpty(tests) && !id && R.isEmpty(normalizedPathes)) {
+    if (!R.isEmpty(tests) && !id && R.isEmpty(normalizedPaths)) {
       throw new AddTestsWithoutId();
     }
-    return add(
-      normalizedPathes,
+
+    return add({
+      componentPaths: normalizedPaths,
       id,
-      main ? path.normalize(main) : undefined,
+      main: main ? path.normalize(main) : undefined,
       namespace,
-      testsArray,
-      exludedFiles,
-      override || false
-    );
+      tests: testsArray,
+      exclude: excludedFiles,
+      override
+    });
   }
 
-  report({ addedComponents, warnings }): string {
+  report({ addedComponents, warnings }: AddActionResults): string {
     const paintWarning = () => {
       if (warnings) {
         const warn = Object.keys(warnings)
@@ -87,7 +91,7 @@ export default class Add extends Command {
     return (
       paintWarning() +
       R.flatten(
-        addedComponents.map((result) => {
+        addedComponents.map((result: AddResult) => {
           if (result.files.length === 0) {
             return chalk.underline.red(`could not track component ${chalk.bold(result.id)}: no files to track`);
           }

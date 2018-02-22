@@ -37,25 +37,22 @@ import {
   CyclicDependencies
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
-import invalidIdOnCommit from '../api/consumer/lib/exceptions/invalid-id-on-commit';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
-import PathNotExists from '../api/consumer/lib/exceptions/path-not-exists';
-import MissingComponentIdForImportedComponent from '../api/consumer/lib/exceptions/missing-id-imported-component';
-import IncorrectIdForImportedComponent from '../api/consumer/lib/exceptions/incorrect-id-imported-component';
-import NoFiles from '../api/consumer/lib/exceptions/no-files';
-import DuplicateIds from '../api/consumer/lib/exceptions/duplicate-ids';
-
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
 import { MissingMainFile, MissingBitMapComponent } from '../consumer/bit-map/exceptions';
-import EmptyDirectory from '../api/consumer/lib/exceptions/empty-directory';
 import logger from '../logger/logger';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
-
 import missingDepsTemplate from './templates/missing-dependencies-template';
+import MissingComponentIdForImportedComponent from '../consumer/component/add-components/exceptions/missing-id-imported-component';
+import EmptyDirectory from '../consumer/component/add-components/exceptions/empty-directory';
+import NoFiles from '../consumer/component/add-components/exceptions/no-files';
+import DuplicateIds from '../consumer/component/add-components/exceptions/duplicate-ids';
+import IncorrectIdForImportedComponent from '../consumer/component/add-components/exceptions/incorrect-id-imported-component';
+import PathsNotExist from '../consumer/component/add-components/exceptions/paths-not-exist';
 
 const errorsMap: [[Error, (err: Error) => string]] = [
   [
@@ -98,7 +95,13 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found.`],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
   [ComponentNotFoundInPath, err => `fatal: component in path "${chalk.bold(err.path)}" was not found`],
-  [PermissionDenied, err => `fatal: permission to scope ${err.scope} was denied\ntroubleshoot it using https://docs.bitsrc.io/docs/authentication-issues.html`],
+  [
+    PermissionDenied,
+    err =>
+      `fatal: permission to scope ${
+        err.scope
+      } was denied\ntroubleshoot it using https://docs.bitsrc.io/docs/authentication-issues.html`
+  ],
   [RemoteNotFound, err => `fatal: remote "${chalk.bold(err.name)}" was not found`],
   [NetworkError, err => `fatal: remote failed with error: "${chalk.bold(err.remoteErr)}"`],
   [
@@ -161,7 +164,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     }
   ],
   [MissingBitMapComponent, err => `fatal: the component ${chalk.bold(err.id)} was not found in the .bitmap file`],
-  [PathNotExists, err => `fatal: the file "${chalk.bold(err.path)}" was not found`],
+  [PathsNotExist, err => `fatal: the file "${chalk.bold(err.paths.join(', '))}" was not found`],
   [
     MissingComponentIdForImportedComponent,
     err => `error - unable to add new files to the imported component "${chalk.bold(err.id)}" without specifying '--id`
@@ -196,11 +199,6 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     err => `error - the component ${chalk.bold(err.id)} has been already exported to ${chalk.bold(err.remote)}`
   ],
   [InvalidVersion, err => `error - The version ${chalk.bold(err.version)} is not a valid semantic version.`],
-  [
-    invalidIdOnCommit,
-    err => `error - Unable to tag. ${chalk.bold(err.id)} not found.
-Run \`bit status\` command to list all components available for tag.`
-  ],
   [NothingToCompareTo, err => 'error - nothing to compare no previous versions found'],
   [PromptCanceled, err => chalk.yellow('operation was aborted')],
   [AuthenticationFailed, err => 'authentication failed']
