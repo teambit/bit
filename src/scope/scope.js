@@ -1004,7 +1004,7 @@ export default class Scope {
   }
 
   loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
-    return this.getOne(id).then((component) => {
+    return this.getComponentVersion(id).then((component) => {
       if (!component) throw new ComponentNotFound(id.toString());
       return component.toConsumer(this.objects);
     });
@@ -1047,7 +1047,7 @@ export default class Scope {
     });
   }
 
-  async getOne(id: BitId): Promise<ComponentVersion> {
+  async getComponentVersion(id: BitId): Promise<ComponentVersion> {
     if (!id.isLocal(this.name)) {
       return this.remotes().then(remotes => this.getExternalOne({ id, remotes, localFetch: true }));
     }
@@ -1056,6 +1056,27 @@ export default class Scope {
       if (!component) throw new ComponentNotFound(id.toString());
       return component.toComponentVersion(id.version);
     });
+  }
+
+  /**
+   * Get ComponentModel instance per bit-id. The id can be either with or without a scope-name.
+   * In case the component is saved in the model only with the scope (imported), it loads all
+   * components and search for it.
+   * It throws an error if the component wasn't found.
+   */
+  async getComponentModel(id: BitId): Promise<ComponentModel> {
+    const component = await this.sources.get(id);
+    if (component) return component;
+    if (!id.scope) {
+      // search for the complete ID
+      const components = await this.objects.listComponents();
+      const foundComponent = components.filter(
+        c => c.toBitId().toStringWithoutScopeAndVersion() === id.toStringWithoutVersion()
+      );
+      // $FlowFixMe
+      if (foundComponent.length) return first(foundComponent);
+    }
+    throw new ComponentNotFound(id.toString());
   }
 
   /**

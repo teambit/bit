@@ -271,7 +271,7 @@ export default class Helper {
     return { scopeName, scopePath };
   }
 
-  mimicGitCloneLocalProject(cloneWithComponentsFiles = true) {
+  mimicGitCloneLocalProject(cloneWithComponentsFiles: boolean = true) {
     fs.removeSync(path.join(this.localScopePath, '.bit'));
     if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.localScopePath, 'components'));
     // delete all node-modules from all directories

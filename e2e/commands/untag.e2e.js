@@ -289,5 +289,27 @@ describe('bit untag command', function () {
         expect(output).to.have.string('utils/is-type');
       });
     });
+    describe('after import and tagging', () => {
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string');
+        helper.commitComponent('utils/is-string', undefined, '-f');
+      });
+      describe('untag using the id without scope-name', () => {
+        let output;
+        before(() => {
+          output = helper.runCmd('bit untag utils/is-string');
+        });
+        it('should untag successfully', () => {
+          expect(output).to.have.string('1 component(s) were untagged');
+          expect(output).to.have.string('utils/is-string');
+        });
+      });
+    });
   });
 });
