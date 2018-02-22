@@ -4,10 +4,9 @@ import path from 'path';
 import R from 'ramda';
 import Command from '../../command';
 import { add } from '../../../api/consumer';
-import type { AddActionResults, AddResult } from '../../../consumer/component/add-components/add-components';
-import { pathNormalizeToLinux } from '../../../utils';
+import type { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component/add-components/add-components';
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';
-import type { PathOsBased, PathLinux } from '../../../utils/path';
+import type { PathOsBased } from '../../../utils/path';
 
 export default class Add extends Command {
   name = 'add [path...]';
@@ -18,7 +17,7 @@ export default class Add extends Command {
     ['m', 'main <file>', 'implementation/index file name'],
     ['t', 'tests <file...>', 'spec/test file name or dsl (tests/{PARENT}/{FILE_NAME})'],
     ['n', 'namespace <namespace>', 'component namespace'],
-    ['e', 'exclude <file...>', 'exclude file name'],
+    ['e', 'exclude <file...>', 'exclude file name or dsl (src/{PARENT}/{FILE_NAME})'],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ];
   loader = true;
@@ -38,7 +37,7 @@ export default class Add extends Command {
       main: ?string,
       tests: ?(string[]),
       namespace: ?string,
-      exclude: ?string,
+      exclude: ?(string[]),
       override: boolean
     }
   ): Promise<*> {
@@ -47,12 +46,10 @@ export default class Add extends Command {
     }
 
     const normalizedPaths: PathOsBased[] = paths.map(p => path.normalize(p));
-    const testsArray: PathOsBased[] = tests
-      ? this.splitList(tests).map(filePath => path.normalize(filePath.trim()))
+    const testsArray: PathOrDSL[] = tests ? this.splitList(tests).map(filePath => path.normalize(filePath.trim())) : [];
+    const excludedFiles: PathOrDSL[] = exclude
+      ? this.splitList(exclude).map(filePath => path.normalize(filePath.trim()))
       : [];
-    const excludedFiles: ?(PathLinux[]) = exclude
-      ? this.splitList(exclude).map(filePath => pathNormalizeToLinux(filePath.trim()))
-      : undefined;
 
     // check if user is trying to add test files only without id
     if (!R.isEmpty(tests) && !id && R.isEmpty(normalizedPaths)) {

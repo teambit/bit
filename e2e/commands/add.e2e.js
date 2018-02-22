@@ -101,8 +101,8 @@ describe('bit add command', function () {
       const component = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
       const files = component.files;
       expect(files).to.be.array();
-      expect(files).to.be.ofSize(1);
       expect(files).to.deep.include(expectTestFile);
+      expect(files, helper.printBitMapFilesInCaseOfError(files)).to.be.ofSize(1);
     });
     it('Should only add new files to imported component', () => {
       helper.createFile(path.join('components', 'bar', 'foo', 'testDir'), 'newFile.js', 'console.log("test");');
@@ -116,7 +116,7 @@ describe('bit add command', function () {
       const component = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
       const files = component.files;
       expect(files).to.be.array();
-      expect(files).to.be.ofSize(2);
+      expect(files, helper.printBitMapFilesInCaseOfError(files)).to.be.ofSize(2);
       expect(files).to.deep.include({ relativePath: 'foo.js', test: false, name: 'foo.js' });
       expect(files).to.deep.include({ relativePath: 'testDir/newFile.js', test: false, name: 'newFile.js' });
     });
@@ -126,7 +126,7 @@ describe('bit add command', function () {
       const component = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
       const files = component.files;
       expect(files).to.be.array();
-      expect(files).to.be.ofSize(2);
+      expect(files, helper.printBitMapFilesInCaseOfError(files)).to.be.ofSize(2);
       expect(files).to.not.deep.include({ relativePath: 'dist/foo.js', test: false, name: 'foo.js' });
       expect(files).to.not.deep.include({ relativePath: 'dist/testDir/newFile.js', test: false, name: 'newFile.js' });
     });
@@ -145,7 +145,7 @@ describe('bit add command', function () {
       const component = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
       const files = component.files;
       expect(files).to.be.array();
-      expect(files).to.be.ofSize(3);
+      expect(files, helper.printBitMapFilesInCaseOfError(files)).to.be.ofSize(3);
       expect(files).to.deep.include({ relativePath: 'testDir/test.spec.js', test: true, name: 'test.spec.js' });
     });
   });

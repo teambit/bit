@@ -601,6 +601,11 @@ export default class Helper {
     this.compilerCreated = true;
     return true;
   }
+
+  printBitMapFilesInCaseOfError(files: Object[]): string {
+    const filesStr = files.map(f => f.name).join(', ');
+    return `Files in bitmap file: ${filesStr}`;
+  }
 }
 
 function ensureAndWriteJson(filePath, fileContent) {
