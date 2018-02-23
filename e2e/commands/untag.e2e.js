@@ -1,3 +1,4 @@
+import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
@@ -287,6 +288,44 @@ describe('bit untag command', function () {
       it('should leave the dependency intact', () => {
         const output = helper.listLocalScope();
         expect(output).to.have.string('utils/is-type');
+      });
+    });
+    describe('after import and tagging', () => {
+      let scopeAfterImport;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.reInitRemoteScope();
+        helper.addRemoteScope();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string');
+        scopeAfterImport = helper.cloneLocalScope();
+        helper.commitComponent('utils/is-string', undefined, '-f');
+      });
+      describe('untag using the id without scope-name', () => {
+        let output;
+        before(() => {
+          output = helper.runCmd('bit untag utils/is-string');
+        });
+        it('should untag successfully', () => {
+          expect(output).to.have.string('1 component(s) were untagged');
+          expect(output).to.have.string('utils/is-string');
+        });
+      });
+      describe('modify, tag and then untag all', () => {
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterImport);
+          helper.modifyFile(path.join(helper.localScopePath, 'components/utils/is-string/is-string.js'));
+          helper.commitAllComponents();
+          helper.runCmd('bit untag --all');
+        });
+        it('should show the component as modified', () => {
+          const output = helper.runCmd('bit status');
+          expect(output).to.not.have.a.string('no modified components');
+          expect(output).to.have.a.string('modified components');
+          expect(output).to.have.a.string('utils/is-string');
+        });
       });
     });
   });

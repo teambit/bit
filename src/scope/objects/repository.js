@@ -93,8 +93,8 @@ export default class Repository {
     );
   }
 
-  listComponents(includeSymlinks: boolean = true): Promise<Component[]> {
-    // @TODO - write
+  // @TODO - cache the results
+  listComponents(includeSymlinks: boolean = true): Promise<Component[] | Symlink[]> {
     const filterComponents = refs =>
       refs.filter(
         ref => (includeSymlinks ? ref instanceof Component || ref instanceof Symlink : ref instanceof Component)

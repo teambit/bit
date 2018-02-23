@@ -1,5 +1,4 @@
 // @flow
-import { ComponentNotFound } from '../exceptions';
 import { BitId } from '../../bit-id';
 import ComponentModel from '../models/component';
 import logger from '../../logger/logger';
@@ -14,8 +13,7 @@ export async function removeLocalVersion(
   version?: string,
   force?: boolean = false
 ): Promise<{ id: BitId, versions: string[] }> {
-  const component: ?ComponentModel = await scope.sources.get(id);
-  if (!component) throw new ComponentNotFound(id.toString());
+  const component: ComponentModel = await scope.getComponentModel(id);
   const localVersions = component.getLocalVersions();
   if (!localVersions.length) return Promise.reject(`unable to untag ${id}, the component is not staged`);
   if (version && !component.hasVersion(version)) {
