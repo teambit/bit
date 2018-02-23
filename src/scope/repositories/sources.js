@@ -311,14 +311,14 @@ export default class SourceRepository {
 
   /**
    * clean - remove component or component version
-   * @param {BitId} bitId - bitid to remove
+   * @param {BitId} bitId - id to remove
    * @param {boolean} deepRemove - remove all component refs or only version refs
    */
-  clean(bitId: BitId, deepRemove: boolean = false): Promise<void> {
-    return this.get(bitId).then((component) => {
-      if (!component) return;
-      return component.remove(this.objects(), deepRemove);
-    });
+  async clean(bitId: BitId, deepRemove: boolean = false): Promise<void> {
+    logger.debug(`sources.clean: ${bitId}, deepRemove: ${deepRemove.toString()}`);
+    const component = await this.get(bitId);
+    if (!component) return;
+    await component.remove(this.objects(), deepRemove);
   }
 
   /**
