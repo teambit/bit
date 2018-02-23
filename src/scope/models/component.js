@@ -40,7 +40,7 @@ export type ComponentProps = {
   name: string,
   versions?: { [string]: Ref },
   lang?: string,
-  deprecated: boolean,
+  deprecated?: boolean,
   bindingPrefix?: string,
   /**
    * @deprecated since 0.12.6. It's currently stored in 'state' attribute
@@ -50,14 +50,14 @@ export type ComponentProps = {
 };
 
 export default class Component extends BitObject {
-  scope: string;
+  scope: ?string;
   name: string;
   box: string;
   versions: { [string]: Ref };
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
-  local: boolean;
+  local: ?boolean;
   state: State;
 
   constructor(props: ComponentProps) {

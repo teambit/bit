@@ -454,6 +454,14 @@ export default class Helper {
     fs.outputFileSync(filePath, fixture);
   }
 
+  /**
+   * adds "\n" at the beginning of the file to make it modified.
+   */
+  modifyFile(filePath: string) {
+    const content = fs.readFileSync(filePath);
+    fs.outputFileSync(filePath, `\n${content}`);
+  }
+
   deleteFile(relativePathToLocalScope: string) {
     return fs.removeSync(path.join(this.localScopePath, relativePathToLocalScope));
   }
@@ -526,7 +534,7 @@ export default class Helper {
     return clonedScopePath;
   }
 
-  getClonedLocalScope(clonedScopePath) {
+  getClonedLocalScope(clonedScopePath: string) {
     fs.removeSync(this.localScopePath);
     if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.localScopePath}`);
     fs.copySync(clonedScopePath, this.localScopePath);
@@ -541,13 +549,13 @@ export default class Helper {
     return clonedScopePath;
   }
 
-  getClonedRemoteScope(clonedScopePath) {
+  getClonedRemoteScope(clonedScopePath: string) {
     fs.removeSync(this.remoteScopePath);
     if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.remoteScopePath}`);
     fs.copySync(clonedScopePath, this.remoteScopePath);
   }
 
-  getRequireBitPath(box, name) {
+  getRequireBitPath(box: string, name: string) {
     return `@bit/${this.remoteScope}.${box}.${name}`;
   }
 

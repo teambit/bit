@@ -1069,7 +1069,7 @@ export default class Scope {
     if (component) return component;
     if (!id.scope) {
       // search for the complete ID
-      const components = await this.objects.listComponents();
+      const components: ComponentModel[] = await this.objects.listComponents(false); // don't fetch Symlinks
       const foundComponent = components.filter(
         c => c.toBitId().toStringWithoutScopeAndVersion() === id.toStringWithoutVersion()
       );
