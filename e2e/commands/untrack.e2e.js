@@ -17,7 +17,7 @@ describe('bit untrack command', function () {
   describe('before running "bit init" with .bit.map.json', () => {
     it('Should init consumer add then run untrack ', () => {
       helper.createBitMap();
-      helper.createComponent('bar', 'foo.js');
+      helper.createFile('bar', 'foo.js');
       const output = helper.untrackComponent('bar/foo');
       expect(output).to.include('bar/foo');
     });
@@ -29,7 +29,7 @@ describe('bit untrack command', function () {
     // this is the only test in 'untrack.e2e.js' that uses readBitMap() to test the creation of the 'version' property.
     // the rest use readBitMapWithoutVersion() which removes it from the .bit.mpa.json file.
     it('Should remove new component that was added from bitmap', () => {
-      helper.createComponent('bar', 'foo2.js');
+      helper.createFile('bar', 'foo2.js');
       helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo' });
       helper.untrackComponent('bar/foo');
       const bitMap = helper.readBitMap();
@@ -41,9 +41,9 @@ describe('bit untrack command', function () {
       expect(output).to.have.string('fatal: component bar/foo did not match any component.');
     });
     it('Should remove specific component and keep all other new components', () => {
-      helper.createComponent('bar', 'foo.js');
+      helper.createFile('bar', 'foo.js');
       helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
-      helper.createComponent('bar', 'foo2.js');
+      helper.createFile('bar', 'foo2.js');
       helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.untrackComponent('bar/foo');
       const bitMap = helper.readBitMapWithoutVersion();
@@ -51,7 +51,7 @@ describe('bit untrack command', function () {
       expect(bitMap).to.have.property('bar/foo2');
     });
     it('Should be unsuccessful in untracking commited component and return a message to the user', () => {
-      helper.createComponent('bar', 'foo.js');
+      helper.createFile('bar', 'foo.js');
       helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.commitComponent('bar/foo');
       const output = helper.untrackComponent('bar/foo');
@@ -61,7 +61,7 @@ describe('bit untrack command', function () {
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Should be unsuccessful in untracking commited component and return a message to the user', () => {
-      helper.createComponent('bar', 'foo.js');
+      helper.createFile('bar', 'foo.js');
       helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.commitComponent('bar/foo');
       const output = helper.untrackComponent('bar/foo');
@@ -71,7 +71,7 @@ describe('bit untrack command', function () {
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Should resolve and untrack component and add global as prefix component ', () => {
-      helper.createComponent('bar', 'foo.js');
+      helper.createFile('bar', 'foo.js');
       helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar' });
       helper.untrackComponent('bar');
       const bitMap = helper.readBitMapWithoutVersion();
@@ -79,12 +79,12 @@ describe('bit untrack command', function () {
     });
 
     it('Should remove 2 new components and keep commited component', () => {
-      helper.createComponent('bar', 'foo.js');
+      helper.createFile('bar', 'foo.js');
       helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
-      helper.createComponent('bar', 'foo2.js');
+      helper.createFile('bar', 'foo2.js');
       helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.commitComponent('bar/foo2');
-      helper.createComponent('bar', 'foo3.js');
+      helper.createFile('bar', 'foo3.js');
       helper.addComponentWithOptions(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.untrackComponent('bar/foo bar/foo3');
       const bitMap = helper.readBitMapWithoutVersion();
@@ -92,12 +92,12 @@ describe('bit untrack command', function () {
       expect(bitMap).to.have.property('bar/foo2');
     });
     it('Should remove all new components and keep commited component', () => {
-      helper.createComponent('bar', 'foo.js');
+      helper.createFile('bar', 'foo.js');
       helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
-      helper.createComponent('bar', 'foo2.js');
+      helper.createFile('bar', 'foo2.js');
       helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.commitComponent('bar/foo2');
-      helper.createComponent('bar', 'foo3.js');
+      helper.createFile('bar', 'foo3.js');
       helper.addComponentWithOptions(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.untrackComponent();
       const bitMap = helper.readBitMapWithoutVersion();

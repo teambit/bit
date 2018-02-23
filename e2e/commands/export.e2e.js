@@ -8,7 +8,7 @@ import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 describe('bit export command', function () {
   this.timeout(0);
   const helper = new Helper();
-  const createComponent = (dir, name) => {
+  const createFile = (dir, name) => {
     const componentFixture = `module.exports = function foo() { return 'got ${name}'; };`;
     fs.outputFileSync(path.join(helper.localScopePath, dir, `${name}.js`), componentFixture);
   };
@@ -35,10 +35,10 @@ describe('bit export command', function () {
   describe('with multiple components, each has one file', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      createComponent('bar', 'foo1');
-      createComponent('bar', 'foo2');
-      createComponent('baz', 'foo1');
-      createComponent('baz', 'foo2');
+      createFile('bar', 'foo1');
+      createFile('bar', 'foo2');
+      createFile('baz', 'foo1');
+      createFile('baz', 'foo2');
       helper.runCmd('bit add bar/foo1.js');
       helper.runCmd('bit add bar/foo2.js');
       helper.runCmd('bit add baz/foo1.js');
@@ -59,10 +59,10 @@ describe('bit export command', function () {
   describe('with multiple components, each has multiple files', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      createComponent('bar', 'foo1');
-      createComponent('bar', 'foo2');
-      createComponent('baz', 'foo1');
-      createComponent('baz', 'foo2');
+      createFile('bar', 'foo1');
+      createFile('bar', 'foo2');
+      createFile('baz', 'foo1');
+      createFile('baz', 'foo2');
       helper.runCmd('bit add bar -m foo1.js');
       helper.runCmd('bit add baz -m foo1.js');
       helper.commitAllComponents();
@@ -79,8 +79,8 @@ describe('bit export command', function () {
   describe('with specifying multiple components in the CLI', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      createComponent('bar', 'foo1');
-      createComponent('bar', 'foo2');
+      createFile('bar', 'foo1');
+      createFile('bar', 'foo2');
       helper.runCmd('bit add bar/foo1.js');
       helper.runCmd('bit add bar/foo2.js');
       helper.commitAllComponents();
@@ -102,13 +102,13 @@ describe('bit export command', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       helper.commitComponent('utils/is-type');
       helper.exportComponent('utils/is-type');
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitComponent('utils/is-string');
       helper.exportComponent('utils/is-string');
@@ -125,12 +125,12 @@ describe('bit export command', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       helper.commitComponent('utils/is-type');
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitComponent('utils/is-string');
       helper.exportAllComponents();
@@ -199,11 +199,11 @@ describe('bit export command', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -226,12 +226,12 @@ describe('bit export command', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       helper.commitComponent('utils/is-type');
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitComponent('utils/is-string');
       helper.exportComponent('utils/is-type');
@@ -273,16 +273,16 @@ describe('bit export command', function () {
   describe('exporting version 3 of a component as an author', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponent('bar', 'foo.js', 'console.log("got foo v1")');
+      helper.createFile('bar', 'foo.js', 'console.log("got foo v1")');
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo(); // v1
       helper.exportComponent('bar/foo');
 
-      helper.createComponent('bar', 'foo.js', 'console.log("got foo v2")');
+      helper.createFile('bar', 'foo.js', 'console.log("got foo v2")');
       helper.commitComponentBarFoo(); // v2
       helper.exportComponent('bar/foo');
 
-      helper.createComponent('bar', 'foo.js', 'console.log("got foo v3")');
+      helper.createFile('bar', 'foo.js', 'console.log("got foo v3")');
       helper.commitComponentBarFoo(); // v3
       helper.exportComponent('bar/foo');
     });

@@ -48,9 +48,9 @@ describe('bit ci-update', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler('bit.envs/compilers/babel');
       helper.importTester('bit.envs/testers/mocha@0.0.4');
-      helper.createComponent('utils', 'is-type.js', fixtures.isTypeES6);
+      helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
       helper.addComponent('utils/is-type.js');
-      helper.createComponent('utils', 'is-string.js', fixtures.isStringES6);
+      helper.createFile('utils', 'is-string.js', fixtures.isStringES6);
       helper.addComponent('utils/is-string.js');
       helper.createComponentBarFoo(fixtures.barFooES6);
       helper.addComponentBarFoo();

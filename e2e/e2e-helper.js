@@ -5,8 +5,13 @@ import path from 'path';
 import childProcess from 'child_process';
 import fs from 'fs-extra';
 import json from 'comment-json';
-import v4 from 'uuid';
 import { VERSION_DELIMITER, BIT_VERSION } from '../src/constants';
+
+const generateRandomStr = (size: number = 8): string => {
+  return Math.random()
+    .toString(36)
+    .slice(size * -1);
+};
 
 export default class Helper {
   debugMode: boolean;
@@ -23,18 +28,18 @@ export default class Helper {
   clonedScopes: string[] = [];
   constructor() {
     this.debugMode = !!process.env.npm_config_debug;
-    this.remoteScope = `${v4()}-remote`;
+    this.remoteScope = `${generateRandomStr()}-remote`;
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
     this.setLocalScope();
     this.remoteScopePath = path.join(this.e2eDir, this.remoteScope);
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
-    this.envScope = `${v4()}-env`;
+    this.envScope = `${generateRandomStr()}-env`;
     this.envScopePath = path.join(this.e2eDir, this.envScope);
     this.compilerCreated = false;
   }
 
   setLocalScope(localScope?: string) {
-    this.localScope = localScope || `${v4()}-local`;
+    this.localScope = localScope || `${generateRandomStr()}-local`;
     this.localScopePath = path.join(this.e2eDir, this.localScope);
     if (!fs.existsSync(this.localScopePath)) {
       fs.ensureDirSync(this.localScopePath);
@@ -201,8 +206,8 @@ export default class Helper {
       this.reInitRemoteScope();
       this.addRemoteScope();
       this.cache = {
-        localScopePath: path.join(this.e2eDir, v4()),
-        remoteScopePath: path.join(this.e2eDir, v4())
+        localScopePath: path.join(this.e2eDir, generateRandomStr()),
+        remoteScopePath: path.join(this.e2eDir, generateRandomStr())
       };
       if (this.debugMode) {
         console.log(`not in the cache. cloning a scope from ${this.localScopePath} to ${this.cache.localScopePath}`);
@@ -263,7 +268,7 @@ export default class Helper {
   }
 
   getNewBareScope() {
-    const scopeName = v4();
+    const scopeName = generateRandomStr();
     const scopePath = path.join(this.e2eDir, scopeName);
     fs.emptyDirSync(scopePath);
     this.runCmd('bit init --bare', scopePath);
@@ -346,7 +351,7 @@ export default class Helper {
   createCompiler() {
     if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
 
-    const tempScope = `${v4()}-temp`;
+    const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
@@ -412,7 +417,7 @@ export default class Helper {
   }
 
   createComponentBarFoo(impl?: string) {
-    this.createComponent(undefined, undefined, impl);
+    this.createFile(undefined, undefined, impl);
   }
 
   pack(component: string, output: string = this.localScopePath) {
@@ -426,12 +431,6 @@ export default class Helper {
     return this.commitComponent('bar/foo');
   }
 
-  // TODO: delete and use create file below? it's not a comonent unless we add it only a file
-  createComponent(namespace: string = 'bar', name: string = 'foo.js', impl?: string) {
-    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
-    const filePath = path.join(this.localScopePath, namespace, name);
-    fs.outputFileSync(filePath, fixture);
-  }
   corruptBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     const bitJson = this.readBitJson();
     bitJson.corrupt = '"corrupted';
@@ -526,7 +525,7 @@ export default class Helper {
    * cloned scope.
    */
   cloneLocalScope() {
-    const clonedScope = v4();
+    const clonedScope = generateRandomStr();
     const clonedScopePath = path.join(this.e2eDir, clonedScope);
     if (this.debugMode) console.log(`cloning a scope from ${this.localScopePath} to ${clonedScopePath}`);
     fs.copySync(this.localScopePath, clonedScopePath);
@@ -541,7 +540,7 @@ export default class Helper {
   }
 
   cloneRemoteScope() {
-    const clonedScope = v4();
+    const clonedScope = generateRandomStr();
     const clonedScopePath = path.join(this.e2eDir, clonedScope);
     if (this.debugMode) console.log(`cloning a scope from ${this.remoteScopePath} to ${clonedScopePath}`);
     fs.copySync(this.remoteScopePath, clonedScopePath);
@@ -565,7 +564,7 @@ export default class Helper {
   createRemoteScopeWithComponentsFixture() {
     if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
 
-    const tempScope = `${v4()}-temp`;
+    const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 

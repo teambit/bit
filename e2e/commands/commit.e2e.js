@@ -23,7 +23,7 @@ describe('bit tag command', function () {
   describe('tag component with corrupted bitjson', () => {
     it('Should not commit component if bit.json is corrupted', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
-      helper.createComponent('bar', 'foo2.js', fixture);
+      helper.createFile('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
       const commit = () => helper.commitComponent('bar/foo2');
       helper.corruptBitJson();
@@ -202,7 +202,7 @@ describe('bit tag command', function () {
   describe('tag one component', () => {
     before(() => {
       helper.importTester('bit.envs/testers/mocha@0.0.4');
-      const failingTest = `const expect = require('chai').expect; 
+      const failingTest = `const expect = require('chai').expect;
       const foo = require('./foo.js');
       describe('failing test', () => {
         it('should fail', () => {
@@ -226,7 +226,7 @@ describe('bit tag command', function () {
 
     it.skip('should print warning if the a driver is not installed', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
-      helper.createComponent('bar', 'foo2.js', fixture);
+      helper.createFile('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
       // var myargs = logSpy.getCalls()[4].args
       // console.log("args", myargs);
@@ -446,7 +446,7 @@ describe('bit tag command', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
 
       helper.commitAllComponents();
@@ -457,7 +457,7 @@ describe('bit tag command', function () {
 
       const isStringFixture =
         "const isType = require('../components/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       try {
         helper.commitAllComponents();
@@ -615,11 +615,11 @@ describe('bit tag command', function () {
     it('should add dependencies for files which are not the main files', () => {
       helper.reInitLocalScope();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
 
       const mainFileFixture =
@@ -648,11 +648,11 @@ describe('bit tag command', function () {
     it('should add dependencies for non-main files regardless whether they are required from the main file', () => {
       helper.reInitLocalScope();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
 
       const mainFileFixture =
@@ -685,7 +685,7 @@ describe('bit tag command', function () {
     beforeEach(() => {
       helper.initNewLocalScope();
       helper.createComponentBarFoo();
-      helper.createComponent('bar', 'index.js');
+      helper.createFile('bar', 'index.js');
       helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
     });
     it('Should commit component only with the left files', () => {
@@ -701,7 +701,7 @@ describe('bit tag command', function () {
     });
     it('Should not let you tag with a non-existing dependency', () => {
       let errMsg;
-      helper.createComponent('bar', 'foo.js', 'var index = require("./index.js")');
+      helper.createFile('bar', 'foo.js', 'var index = require("./index.js")');
       helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
       helper.deleteFile('bar/index.js');
       try {
@@ -730,11 +730,11 @@ describe('bit tag command', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
 
       helper.commitAllComponents();

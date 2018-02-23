@@ -149,9 +149,9 @@ describe('bit untag command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.createComponent('bar', 'foo2.js');
+      helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar/foo2.js');
-      helper.createComponent('bar', 'foo3.js');
+      helper.createFile('bar', 'foo3.js');
       helper.addComponent('bar/foo3.js');
       helper.commitAllComponents();
       helper.exportComponent('bar/foo3');
@@ -195,9 +195,9 @@ describe('bit untag command', function () {
     let localScope;
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponent('utils', 'is-type.js', fixtures.isType);
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.addComponent('utils/is-type.js');
-      helper.createComponent('utils', 'is-string.js', fixtures.isString);
+      helper.createFile('utils', 'is-string.js', fixtures.isString);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
       localScope = helper.cloneLocalScope();
