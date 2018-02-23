@@ -19,7 +19,7 @@ describe('bit link', function () {
       before(() => {
         helper.reInitLocalScope();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.createComponent('utils', 'is-type.js', isTypeFixture);
+        helper.createFile('utils', 'is-type.js', isTypeFixture);
         helper.addComponent('utils/is-type.js');
         linkOutput = helper.runCmd('bit link');
       });
@@ -32,7 +32,7 @@ describe('bit link', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.createComponent('utils', 'is-type.js', isTypeFixture);
+        helper.createFile('utils', 'is-type.js', isTypeFixture);
         helper.addComponent('utils/is-type.js');
         helper.commitAllComponents();
         helper.exportAllComponents();
@@ -40,7 +40,7 @@ describe('bit link', function () {
         // requiring is-type through the internal file (@bit/remoteScope.utils.is-type/utils/is-type)
         const isStringFixture = `const isType = require('@bit/${helper.remoteScope}.utils.is-type/utils/is-type');
 module.exports = function isString() { return isType() +  ' and got is-string'; };`;
-        helper.createComponent('utils', 'is-string.js', isStringFixture);
+        helper.createFile('utils', 'is-string.js', isStringFixture);
         helper.addComponent('utils/is-string.js');
         const appJsFixture = "const isString = require('./utils/is-string'); console.log(isString());";
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
@@ -114,7 +114,7 @@ console.log(isType());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
-      helper.createComponent('bar2', 'foo2.js');
+      helper.createFile('bar2', 'foo2.js');
       helper.addComponent('bar/foo.js');
       helper.addComponent('bar2/foo2.js');
       helper.commitAllComponents();
@@ -137,7 +137,7 @@ console.log(isType());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -148,7 +148,7 @@ console.log(isType());`;
         'utils',
         'is-type'
       )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -166,7 +166,7 @@ console.log(isType());`;
       // is-type
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -179,7 +179,7 @@ console.log(isType());`;
       const isStringFixture = `const isType = require('bitTest/${
         helper.remoteScope
       }.utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -192,7 +192,7 @@ console.log(isType());`;
       const isStringFixture2 = `const isString = require('bitTest2/${
         helper.remoteScope
       }.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
-      helper.createComponent('test', 'is-string2.js', isStringFixture2);
+      helper.createFile('test', 'is-string2.js', isStringFixture2);
       helper.addComponent('test/is-string2.js');
       helper.commitAllComponents();
       helper.exportAllComponents();

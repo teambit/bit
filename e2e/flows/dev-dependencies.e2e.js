@@ -23,9 +23,9 @@ describe('dev-dependencies functionality', function () {
     describe('with dev-dependencies same as dependencies', () => {
       let barFoo;
       before(() => {
-        helper.createComponent('utils', 'is-type.js', fixtures.isTypeES6);
+        helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
         helper.addComponent('utils/is-type.js');
-        helper.createComponent('utils', 'is-string.js', fixtures.isStringES6);
+        helper.createFile('utils', 'is-string.js', fixtures.isStringES6);
         helper.addComponent('utils/is-string.js');
         helper.createComponentBarFoo(fixtures.barFooES6);
         helper.addComponentBarFoo();
@@ -68,9 +68,9 @@ describe('dev-dependencies functionality', function () {
       before(() => {
         // foo.js doesn't have any dependencies. foo.spec.js does have dependencies.
         helper.getClonedLocalScope(clonedScope);
-        helper.createComponent('utils', 'is-type.js', fixtures.isTypeES6);
+        helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
         helper.addComponent('utils/is-type.js');
-        helper.createComponent('utils', 'is-string.js', fixtures.isStringES6);
+        helper.createFile('utils', 'is-string.js', fixtures.isStringES6);
         helper.addComponent('utils/is-string.js');
         helper.createComponentBarFoo('console.log("got foo")');
         helper.addComponentBarFoo();

@@ -25,7 +25,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       helper.importComponent('bar/foo');
       const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
       expect(fs.existsSync(path.join(helper.localScopePath, 'components', 'bar', 'foo', 'foo.js'))).to.be.true;
-      helper.createComponent(path.join('components', 'bar', 'foo'), 'foo.js', barFooV2); // update component
+      helper.createFile(path.join('components', 'bar', 'foo'), 'foo.js', barFooV2); // update component
       helper.commitAllComponents();
       helper.exportAllComponents();
       const importedScope = helper.cloneLocalScope();

@@ -19,7 +19,7 @@ describe('bit show command', function () {
   describe('run before running "bit init" with .bit.map.json', () => {
     it('Should init consumer add then show component', () => {
       helper.createBitMap();
-      helper.createComponent('bar', 'foo.js');
+      helper.createFile('bar', 'foo.js');
       const output = helper.showComponent('bar/foo');
       expect(output).to.include('bar/foo');
     });
@@ -29,7 +29,7 @@ describe('bit show command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler();
 
-      helper.createComponent('utils', 'is-string.js');
+      helper.createFile('utils', 'is-string.js');
       helper.addComponent('utils/is-string.js');
       helper.commitComponent('utils/is-string');
 
@@ -338,7 +338,7 @@ function add(a, b) {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler();
 
-      helper.createComponent('utils', 'is-string.js');
+      helper.createFile('utils', 'is-string.js');
       helper.addComponent('utils/is-string.js');
       helper.commitComponent('utils/is-string');
     });
@@ -381,7 +381,7 @@ function add(a, b) {
     beforeEach(() => {
       helper.initNewLocalScope();
       helper.createComponentBarFoo();
-      helper.createComponent('bar', 'index.js');
+      helper.createFile('bar', 'index.js');
       helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
     });
     it('Should show component only with the left files', () => {
@@ -413,7 +413,7 @@ function add(a, b) {
     before(() => {
       helper.initNewLocalScope();
       helper.createComponentBarFoo();
-      helper.createComponent('bar', 'index.js');
+      helper.createFile('bar', 'index.js');
       helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
     });
     describe('when adding a component without committing it', () => {
@@ -470,7 +470,7 @@ function add(a, b) {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.createComponent('utils', 'is-type.js', isTypeFixture);
+        helper.createFile('utils', 'is-type.js', isTypeFixture);
         helper.addComponent('utils/is-type.js');
         helper.commitComponent('utils/is-type');
         helper.commitComponent('utils/is-type', 'msg', '-f');
@@ -484,7 +484,7 @@ function add(a, b) {
           'utils',
           'is-type'
         )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
-        helper.createComponent('utils', 'is-string.js', isStringFixture);
+        helper.createFile('utils', 'is-string.js', isStringFixture);
         helper.addComponent('utils/is-string.js');
         helper.commitAllComponents();
       });
@@ -526,7 +526,7 @@ function add(a, b) {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.createComponent('utils', 'is-type.js', isTypeFixture);
+        helper.createFile('utils', 'is-type.js', isTypeFixture);
         helper.addComponent('utils/is-type.js');
         helper.commitComponent('utils/is-type');
         helper.commitComponent('utils/is-type', 'msg', '-f');
@@ -540,7 +540,7 @@ function add(a, b) {
           'utils',
           'is-type'
         )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
-        helper.createComponent('utils', 'is-string.js', isStringFixture);
+        helper.createFile('utils', 'is-string.js', isStringFixture);
         helper.addComponent('utils/is-string.js');
         helper.commitAllComponents();
         helper.exportAllComponents();

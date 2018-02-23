@@ -21,11 +21,11 @@ describe('basic flow with dependencies', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       const fooBarFixture =
         "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
@@ -73,13 +73,13 @@ describe('basic flow with dependencies', function () {
       describe('after modifying the components', () => {
         before(() => {
           const isTypeFixture = "module.exports = function isType() { return 'got is-type v2'; };";
-          helper.createComponent('utils', 'is-type.js', isTypeFixture);
+          helper.createFile('utils', 'is-type.js', isTypeFixture);
           const isStringFixture =
             "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
-          helper.createComponent('utils', 'is-string.js', isStringFixture);
+          helper.createFile('utils', 'is-string.js', isStringFixture);
           const fooBarFixture =
             "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
-          helper.createComponent('bar', 'foo.js', fooBarFixture);
+          helper.createFile('bar', 'foo.js', fooBarFixture);
         });
         describe('bit status', () => {
           let output;
@@ -132,13 +132,13 @@ describe('basic flow with dependencies', function () {
     before(() => {
       helper.reInitLocalScope();
       const isTypeFixture = "const missingDep = require('./non-existA');";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       const isStringFixture =
         "const isType = require('./non-existB.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       const fooBarFixture =
         "const isString = require('./non-existsC.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
-      helper.createComponent('bar', 'foo.js', fooBarFixture);
+      helper.createFile('bar', 'foo.js', fooBarFixture);
       helper.addComponent('utils/is-type.js');
       helper.addComponent('utils/is-string.js');
       helper.addComponentBarFoo();
@@ -157,19 +157,19 @@ describe('basic flow with dependencies', function () {
     before(() => {
       helper.reInitLocalScope();
       const isTypeFixture = "console.log('got is-type v1')";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       const fooBarFixture =
         "const isString = require('../utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
-      helper.createComponent('bar', 'foo.js', fooBarFixture);
+      helper.createFile('bar', 'foo.js', fooBarFixture);
       helper.addComponent('utils/is-type.js');
       helper.addComponent('utils/is-string.js');
       helper.addComponentBarFoo();
       helper.commitAllComponents();
       const isTypeFixtureV2 = "console.log('got is-type v2')";
-      helper.createComponent('utils', 'is-type.js', isTypeFixtureV2);
+      helper.createFile('utils', 'is-type.js', isTypeFixtureV2);
     });
     describe('bit status', () => {
       let output;

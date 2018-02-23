@@ -46,7 +46,7 @@ describe('bit test command', function () {
   describe('when there are no tests', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
     });
     it('should indicate that there are no tests', () => {
@@ -58,8 +58,8 @@ describe('bit test command', function () {
   describe('when tests are passed', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
-      helper.createComponent('utils', 'is-type.spec.js', isTypeSpecFixture(true));
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.spec.js', isTypeSpecFixture(true));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('should indicate that testes are passed', () => {
@@ -75,8 +75,8 @@ describe('bit test command', function () {
   describe('when tests are failed', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
-      helper.createComponent('utils', 'is-type.spec.js', isTypeSpecFixture(false));
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.spec.js', isTypeSpecFixture(false));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('should indicate that testes are failed', () => {
@@ -98,9 +98,9 @@ describe('bit test command', function () {
     let outputLines;
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
-      helper.createComponent('utils', 'is-type.spec.js', isTypeSpecFixture(true));
-      helper.createComponent('utils', 'is-type-before-fail.spec.js', isTypeBeforeFailSpecFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.spec.js', isTypeSpecFixture(true));
+      helper.createFile('utils', 'is-type-before-fail.spec.js', isTypeBeforeFailSpecFixture);
       helper.addComponentWithOptions('utils/is-type.js', {
         t: 'utils/is-type.spec.js,utils/is-type-before-fail.spec.js'
       });
@@ -128,8 +128,8 @@ describe('bit test command', function () {
   describe('after importing a component with tests', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
-      helper.createComponent('utils', 'is-type.spec.js', isTypeSpecFixture(true));
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.spec.js', isTypeSpecFixture(true));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
       helper.addNpmPackage('chai', '4.1.2');
       helper.commitComponent('utils/is-type');
@@ -154,7 +154,7 @@ describe('bit test command', function () {
   describe('bit component with es6 syntax without building before testing', () => {
     const testWithEs6 = `import {expect} from 'chai';
     import isType from './is-type.js';
-    
+
     describe('isType', () => {
       it('should display "got is-type"', () => {
         expect(isType()).to.equal('got is-type');
@@ -163,8 +163,8 @@ describe('bit test command', function () {
 
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
-      helper.createComponent('utils', 'is-type.spec.js', testWithEs6);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.spec.js', testWithEs6);
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('Should not be able to test without building first', () => {
@@ -189,7 +189,7 @@ describe('bit component with no tester', function () {
   const helper = new Helper();
   before(() => {
     helper.reInitLocalScope();
-    helper.createComponent('bar', 'foo.js');
+    helper.createFile('bar', 'foo.js');
     helper.addComponent(path.join('bar', 'foo.js'));
   });
   after(() => {

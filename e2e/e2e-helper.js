@@ -412,7 +412,7 @@ export default class Helper {
   }
 
   createComponentBarFoo(impl?: string) {
-    this.createComponent(undefined, undefined, impl);
+    this.createFile(undefined, undefined, impl);
   }
 
   pack(component: string, output: string = this.localScopePath) {
@@ -426,12 +426,6 @@ export default class Helper {
     return this.commitComponent('bar/foo');
   }
 
-  // TODO: delete and use create file below? it's not a comonent unless we add it only a file
-  createComponent(namespace: string = 'bar', name: string = 'foo.js', impl?: string) {
-    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
-    const filePath = path.join(this.localScopePath, namespace, name);
-    fs.outputFileSync(filePath, fixture);
-  }
   corruptBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     const bitJson = this.readBitJson();
     bitJson.corrupt = '"corrupted';

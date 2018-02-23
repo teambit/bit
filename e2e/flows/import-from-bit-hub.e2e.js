@@ -23,9 +23,9 @@ describe('importing bit components from bitsrc.io', function () {
         scopeName = scope;
         scopeId = `${username}.${scopeName}`;
         helper.reInitLocalScope();
-        helper.createComponent('utils', 'is-type.js', fixtures.isType);
+        helper.createFile('utils', 'is-type.js', fixtures.isType);
         helper.addComponent('utils/is-type.js');
-        helper.createComponent('utils', 'is-string.js', fixtures.isString);
+        helper.createFile('utils', 'is-string.js', fixtures.isString);
         helper.addComponent('utils/is-string.js');
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
@@ -34,15 +34,15 @@ describe('importing bit components from bitsrc.io', function () {
 
         helper.reInitLocalScope();
         helper.importCompiler('bit.envs/compilers/babel');
-        helper.createComponent('utils', 'is-type-es6.js', fixtures.isTypeES6);
+        helper.createFile('utils', 'is-type-es6.js', fixtures.isTypeES6);
         helper.addComponent('utils/is-type-es6.js');
-        helper.createComponent(
+        helper.createFile(
           'utils',
           'is-string-es6.js',
           "import isType from './is-type-es6.js'; export default function isString() { return isType() +  ' and got is-string'; };"
         );
         helper.addComponent('utils/is-string-es6.js');
-        helper.createComponent(
+        helper.createFile(
           'bar',
           'foo-es6.js',
           "import isString from '../utils/is-string-es6.js'; export default function foo() { return isString() + ' and got foo'; };"
@@ -173,7 +173,7 @@ describe('importing bit components from bitsrc.io', function () {
     describe('changing the directly imported dependency component', () => {
       before(() => {
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.createComponent(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+        helper.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
       });
       it('should affect its dependent', () => {
         const result = helper.runCmd('node app.js');
@@ -183,7 +183,7 @@ describe('importing bit components from bitsrc.io', function () {
         before(() => {
           const isStringFixtureV2 = `const isType = require('@bit/${scopeId}.utils.is-type');
 module.exports = function isString() { return isType() +  ' and got is-string'; };`;
-          helper.createComponent(path.join('components', 'utils', 'is-string'), 'is-string.js', isStringFixtureV2);
+          helper.createFile(path.join('components', 'utils', 'is-string'), 'is-string.js', isStringFixtureV2);
           helper.mimicGitCloneLocalProject();
           helper.runCmd('npm install');
         });
@@ -203,7 +203,7 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
     describe('changing the directly imported dependency component', () => {
       before(() => {
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.createComponent(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+        helper.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
       });
       it('should update the package.json of the dependent with relative-path of the dependency', () => {
         const isStringDir = path.join(helper.localScopePath, 'components', 'utils', 'is-string');
