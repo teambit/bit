@@ -98,8 +98,8 @@ describe('a flow with two components: is-string and pad-left, where is-string is
               scopeName = scope;
               helper.exportAllComponents(`${username}.${scopeName}`);
               helper.reInitLocalScope();
-              helper.importComponent(`${username}.${scopeName}/string/is-string`);
-              helper.importComponent(`${username}.${scopeName}/string/pad-left`);
+              helper.runCmd(`bit import ${username}.${scopeName}/string/is-string`);
+              helper.runCmd(`bit import ${username}.${scopeName}/string/pad-left`);
               helper.runCmd('bit tag -a -s 2.0.0');
               exportOutput = helper.exportAllComponents(`${username}.${scopeName} --eject`);
             });
