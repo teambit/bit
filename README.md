@@ -191,7 +191,7 @@ Also see: [GETTING STARTED](https://docs.bitsrc.io/docs/quick-start.html)
 
 #### Example project
 
-Here is a simple [React app](https://github.com/itaymendel/movie-app) project with 8 reusable components located in its src/components directory and one component which is the global styles.
+Here is a simple [React app](https://github.com/teambit/movie-app) project with 8 reusable components located in its src/components directory and one component which is the global styles.
 
 By using Bit to track and share these components, they are now made available to discover and install from [this Scope](https://bitsrc.io/bit/movie-app).
 
