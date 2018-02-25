@@ -450,11 +450,15 @@ export default (async function loadDependenciesForComponent(
 
   dependenciesTree.missing.forEach((fileDep) => {
     if (fileDep.files && !R.isEmpty(fileDep.files)) {
-      if (missingDependenciesOnFs[fileDep.originFile]) { missingDependenciesOnFs[fileDep.originFile].concat(fileDep.files); } else missingDependenciesOnFs[fileDep.originFile] = fileDep.files;
+      if (missingDependenciesOnFs[fileDep.originFile]) {
+        missingDependenciesOnFs[fileDep.originFile].concat(fileDep.files);
+      } else missingDependenciesOnFs[fileDep.originFile] = fileDep.files;
     }
     if (fileDep.packages && !R.isEmpty(fileDep.packages)) {
       // missingDependencies.missingPackagesDependenciesOnFs = fileDep.packages;
-      if (missingPackagesDependenciesOnFs[fileDep.originFile]) { missingPackagesDependenciesOnFs[fileDep.originFile].concat(fileDep.packages); } else missingPackagesDependenciesOnFs[fileDep.originFile] = fileDep.packages;
+      if (missingPackagesDependenciesOnFs[fileDep.originFile]) {
+        missingPackagesDependenciesOnFs[fileDep.originFile].concat(fileDep.packages);
+      } else missingPackagesDependenciesOnFs[fileDep.originFile] = fileDep.packages;
     }
 
     if (fileDep.bits && !R.isEmpty(fileDep.bits)) {
@@ -470,7 +474,9 @@ export default (async function loadDependenciesForComponent(
     }
   });
   if (!R.isEmpty(missingDependenciesOnFs)) missingDependencies.missingDependenciesOnFs = missingDependenciesOnFs;
-  if (!R.isEmpty(missingPackagesDependenciesOnFs)) { missingDependencies.missingPackagesDependenciesOnFs = missingPackagesDependenciesOnFs; }
+  if (!R.isEmpty(missingPackagesDependenciesOnFs)) {
+    missingDependencies.missingPackagesDependenciesOnFs = missingPackagesDependenciesOnFs;
+  }
 
   // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
   // they are referred as "untracked components" and the user should add them later on in order to commit
