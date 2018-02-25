@@ -86,7 +86,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(output).to.have.string('tests passed');
         });
       });
-      describe.only('exporting with --eject option', () => {
+      describe('exporting with --eject option', () => {
         let scopeName;
         let exportOutput;
         before(() => {
