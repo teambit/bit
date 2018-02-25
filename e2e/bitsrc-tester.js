@@ -6,7 +6,7 @@ const username = process.env.testerBitsrcUsername || 'tester';
 const password = process.env.testerBitsrcPassword;
 
 export { username };
-
+const debugMode = !!process.env.npm_config_debug;
 export default class BitsrcTester {
   cookies;
 
@@ -41,6 +41,9 @@ export default class BitsrcTester {
   }
 
   createScope(scope = this.generateRandomName()) {
+    if (debugMode) {
+      console.log(`creating scope on bitsrc ${scope}`); // eslint-disable-line no-console
+    }
     return requestify
       .request(`${apiBaseUrl}/scope/`, { method: 'POST', cookies: this.cookies, body: { scope, private: true } })
       .then(() => scope)
@@ -50,6 +53,9 @@ export default class BitsrcTester {
   }
 
   deleteScope(scope) {
+    if (debugMode) {
+      console.log(`deleting scope on bitsrc ${scope}`); // eslint-disable-line no-console
+    }
     return requestify
       .request(`${apiBaseUrl}/scope/`, { method: 'DELETE', cookies: this.cookies, body: { scope } })
       .catch((res) => {
