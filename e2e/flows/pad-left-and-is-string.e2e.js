@@ -86,7 +86,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(output).to.have.string('tests passed');
         });
       });
-      describe('exporting with --eject option', () => {
+      describe.only('exporting with --eject option', () => {
         let scopeName;
         let exportOutput;
         before(() => {
@@ -103,6 +103,9 @@ describe('a flow with two components: is-string and pad-left, where is-string is
               helper.runCmd('bit tag -a -s 2.0.0');
               exportOutput = helper.exportAllComponents(`${username}.${scopeName} --eject`);
             });
+        });
+        after(() => {
+          return bitsrcTester.deleteScope(scopeName);
         });
         it('should export them successfully', () => {
           expect(exportOutput).to.have.a.string('exported 2 components to scope');
