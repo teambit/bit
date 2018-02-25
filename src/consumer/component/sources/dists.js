@@ -138,7 +138,7 @@ export default class Dists {
     if (this.isEmpty() || !this.writeDistsFiles) return null;
     let componentMap;
     if (consumer) {
-      componentMap = consumer.bitMap.getComponent(component.id);
+      componentMap = consumer.bitMap.getComponent(component.id, false, false, true);
       this.updateDistsPerConsumerBitJson(component.id, consumer, componentMap);
     }
     const saveDist = this.dists.map(distFile => distFile.write());

@@ -104,6 +104,9 @@ describe('a flow with two components: is-string and pad-left, where is-string is
               exportOutput = helper.exportAllComponents(`${username}.${scopeName} --eject`);
             });
         });
+        after(() => {
+          return bitsrcTester.deleteScope(scopeName);
+        });
         it('should export them successfully', () => {
           expect(exportOutput).to.have.a.string('exported 2 components to scope');
         });

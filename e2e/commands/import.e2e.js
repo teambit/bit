@@ -138,7 +138,7 @@ describe('bit import', function () {
         expect(output).to.have.string('successfully imported one component');
       });
     });
-    describe('import component with custom dsl as destenation dir for import', () => {
+    describe('import component with custom dsl as destination dir for import', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
@@ -1303,6 +1303,8 @@ console.log(barFoo.default());`;
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
       helper.addRemoteScope();
+      helper.importCompiler();
+
       const isTypeFixtureV1 = "module.exports = function isType() { return 'got is-type v1'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixtureV1);
       helper.addComponent('utils/is-type.js');
