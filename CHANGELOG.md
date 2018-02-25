@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.6-dev.6] - 2018-02-25
+
 - enable updating a component's peerDependencies after import using the component's package.json
 - show npm-client's warnings when they are about missing peer-dependencies
 - support passing arguments/flags to the package-manager by specifying them after '--' (e.g. bit import -- --no-optional)
