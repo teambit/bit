@@ -31,13 +31,20 @@ export default class Status extends Command {
     deletedComponents
   }: StatusResult): string {
     function formatMissing(missingComponent: Component) {
-      function formatMissingStr(array, label) {
-        if (!array || array.length === 0) return '';
-        return chalk.yellow(`\n       ${label}: `) + chalk.white(array.join(', '));
+      function formatMissingStr(key, array, label) {
+        if (!array || R.isEmpty(array)) return '';
+        return (
+          chalk.yellow(`\n       ${label}: \n`) +
+          chalk.white(
+            Object.keys(array)
+              .map(key => `          ${key} -> ${array[key].join(', ')}`)
+              .join('\n')
+          )
+        );
       }
 
       const missingStr = Object.keys(missingDependenciesLabels)
-        .map(key => formatMissingStr(missingComponent.missingDependencies[key], missingDependenciesLabels[key]))
+        .map(key => formatMissingStr(key, missingComponent.missingDependencies[key], missingDependenciesLabels[key]))
         .join('');
 
       return `       ${missingStr}\n`;

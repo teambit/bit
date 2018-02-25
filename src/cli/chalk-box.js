@@ -3,7 +3,7 @@ import c from 'chalk';
 import Table from 'tty-table';
 import SpecsResults from '../consumer/specs-results/specs-results';
 
-export const formatNewBit = ({ box, name }: any): string => c.white('     > ') + c.cyan(`${box}/${name}`);
+export const formatNewBit = ({ box, name }: any): string => c.white('     > ') + c.cyan(`${box}/${name} `);
 
 export const formatBit = ({ scope, box, name, version }: any): string =>
   c.white('     > ') + c.cyan(`${scope ? `${scope}/` : ''}${box}/${name} - ${version ? version.toString() : 'latest'}`);
