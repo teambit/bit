@@ -139,7 +139,7 @@ export const paintSummarySpecsResults = (results: Array<*>): string => {
 
 export const paintBuildResults = (buildResults: []): string => {
   if (buildResults) {
-    const statsHeader = c.underline.green('\nbuilded Files:\n');
+    const statsHeader = c.underline.green('\nbuilt Files:\n');
     return statsHeader + buildResults.map(file => `${c.cyan(`${file.path}`)}`).join('\n');
   }
   return '';
