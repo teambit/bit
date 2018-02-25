@@ -869,6 +869,7 @@ export default class Consumer {
    * @param {boolean} deleteFiles - delete local added files from fs.
    */
   async remove(ids: string[], force: boolean, track: boolean, deleteFiles: boolean) {
+    logger.debug(`consumer.remove: ${ids.join(', ')}. force: ${force.toString()}`);
     // added this to remove support for remove version
     const bitIds = ids.map(bitId => BitId.parse(bitId)).map((id) => {
       id.version = LATEST_BIT_VERSION;
@@ -961,13 +962,13 @@ export default class Consumer {
     return this.bitMap.write();
   }
   /**
-   * removeLocal - remove local (imported, new staged components) from modules and bitmap  accoriding to flags
+   * removeLocal - remove local (imported, new staged components) from modules and bitmap according to flags
    * @param {BitIds} bitIds - list of remote component ids to delete
    * @param {boolean} force - delete component that are used by other components.
    * @param {boolean} deleteFiles - delete component that are used by other components.
    */
   async removeLocal(bitIds: BitIds, force: boolean, track: boolean, deleteFiles: boolean) {
-    // local remove in case user wants to delete commited components
+    // local remove in case user wants to delete tagged components
     const modifiedComponents = [];
     const regularComponents = [];
     const resolvedIDs = this.resolveLocalComponentIds(bitIds);
@@ -987,9 +988,9 @@ export default class Consumer {
       true
     );
 
-    const componensToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
+    const componentsToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
     if (!R.isEmpty(removedComponentIds)) {
-      await this.removeComponentFromFs(componensToRemoveFromFs, deleteFiles);
+      await this.removeComponentFromFs(componentsToRemoveFromFs, deleteFiles);
       await this.removeComponentFromFs(removedDependencies, false);
     }
     if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) {
@@ -997,9 +998,9 @@ export default class Consumer {
         this,
         this.getPath(),
         this.bitMap,
-        componensToRemoveFromFs
+        componentsToRemoveFromFs
       );
-      await this.cleanBitMapAndBitJson(componensToRemoveFromFs, removedDependencies);
+      await this.cleanBitMapAndBitJson(componentsToRemoveFromFs, removedDependencies);
     }
     return new RemovedLocalObjects(
       removedComponentIds,

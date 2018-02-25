@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.6-dev.7] - 2018-02-25
+
 ## [0.12.6-dev.6] - 2018-02-25
 
 - enable updating a component's peerDependencies after import using the component's package.json
