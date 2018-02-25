@@ -316,9 +316,7 @@ export default class BitMap {
       return;
     }
     if (olderComponentsIds.length > 1) {
-      throw new Error(`Your ${
-        BIT_MAP
-      } file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
+      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
       are authored or imported. This scenario is not supported`);
     }
     const olderComponentId = olderComponentsIds[0];
@@ -338,13 +336,14 @@ export default class BitMap {
   getComponent(
     id: string | BitId,
     shouldThrow: boolean = false,
-    includeSearchByBoxAndNameOnly: boolean = false
+    includeSearchByBoxAndNameOnly: boolean = false,
+    ignoreVersion: boolean = false
   ): ComponentMap {
     if (R.is(String, id)) {
       id = BitId.parse(id);
     }
     // $FlowFixMe
-    if (id.hasVersion()) {
+    if (!ignoreVersion && id.hasVersion()) {
       if (!this.components[id] && shouldThrow) throw new MissingBitMapComponent(id);
       return this.components[id];
     }
