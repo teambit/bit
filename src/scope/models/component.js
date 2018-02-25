@@ -209,15 +209,17 @@ export default class Component extends BitObject {
   }
 
   /**
-   *
+   * delete all versions objects of the component from the filesystem.
+   * if deepRemove is true, it deletes also the refs associated with the deleted versions.
+   * finally, it deletes the component object itself
    *
    * @param {Repository} repo
-   * @param {boolean} [deepRemove=false] - wether to remove all the refs or only the version array
+   * @param {boolean} [deepRemove=false] - whether remove all the refs or only the version array
    * @returns {Promise}
    * @memberof Component
    */
-  remove(repo: Repository, deepRemove: boolean = false): Promise {
-    logger.debug(`removing a component ${this.id()} from a local scope`);
+  remove(repo: Repository, deepRemove: boolean = false): Promise<boolean[]> {
+    logger.debug(`models.component.remove: removing a component ${this.id()} from a local scope`);
     const objectRefs = deepRemove ? this.collectExistingRefs(repo, false).filter(x => x) : this.versionArray;
     const uniqRefs = uniqBy(objectRefs, 'hash');
     return repo.removeMany(uniqRefs.concat([this.hash()]));
