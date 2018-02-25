@@ -916,7 +916,14 @@ export default class Component {
   static fromString(str: string): Component {
     const object = JSON.parse(str);
     object.files = SourceFile.loadFromParsedStringArray(object.files);
-    object.dists = Dist.loadFromParsedStringArray(object.dists);
+
+    // added if statment to support new and old version of remote ls
+    // old version of bit returns from server array of dists  and new version return object
+    if (object.dists && Array.isArray(object.dists)) {
+      object.dists = Dist.loadFromParsedStringArray(object.dists);
+    } else if (object.dists && object.dists.dists) {
+      object.dists = Dist.loadFromParsedStringArray(object.dists.dists);
+    }
     return this.fromObject(object);
   }
 
