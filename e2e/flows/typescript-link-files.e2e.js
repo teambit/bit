@@ -40,7 +40,7 @@ describe('typescript components with link files', function () {
     });
     it('should not consider that index file as a dependency', () => {
       output = helper.runCmd('bit status');
-      expect(output.includes('bar/foo... ok')).to.be.true;
+      expect(output.includes('bar/foo ... ok')).to.be.true;
       expect(output.includes('missing dependencies')).to.be.false;
     });
   });
