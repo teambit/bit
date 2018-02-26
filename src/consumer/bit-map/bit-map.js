@@ -219,8 +219,8 @@ export default class BitMap {
     }
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
-      // const existingRootDir = this.components[componentIdStr].rootDir;
-      // if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
+      const existingRootDir = this.components[componentIdStr].rootDir;
+      if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
       if (override) {
         this.components[componentIdStr].files = files;
       } else {

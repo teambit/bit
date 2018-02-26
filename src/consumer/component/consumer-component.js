@@ -408,7 +408,6 @@ export default class Component {
       rootDir,
       origin,
       parent,
-      override: true,
       originallySharedDir: this.originallySharedDir
     });
   }
@@ -548,8 +547,10 @@ export default class Component {
       deleteBitDirContent,
       excludeRegistryPrefix
     });
-
     // if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
+    if (bitMap.isExistWithSameVersion(this.id)) {
+      bitMap.removeComponent(this.id);
+    }
     this._addComponentToBitMap(bitMap, componentMap.rootDir, origin, parent);
     return this;
   }
