@@ -366,14 +366,14 @@ export default class Component {
     bitDir: string,
     writeBitJson: boolean,
     writePackageJson: boolean,
-    consumer: Consumer,
+    consumer?: Consumer,
     force?: boolean,
     writeBitDependencies?: boolean,
     deleteBitDirContent?: boolean,
     excludeRegistryPrefix?: boolean
   }) {
     if (deleteBitDirContent) {
-      fs.emptydirSync(bitDir);
+      fs.emptyDirSync(bitDir);
     } else {
       await mkdirp(bitDir);
     }
@@ -396,6 +396,7 @@ export default class Component {
   }
 
   _addComponentToBitMap(bitMap: BitMap, rootDir: string, origin: string, parent?: string): ComponentMap {
+    // $FlowFixMe this.files can't be null at this point.
     const filesForBitMap = this.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
@@ -546,9 +547,15 @@ export default class Component {
       deleteBitDirContent,
       excludeRegistryPrefix
     });
-
-    if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
-    this._addComponentToBitMap(bitMap, componentMap.rootDir, origin, parent);
+    // if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
+    const rootDir = componentMap.rootDir;
+    if (bitMap.isExistWithSameVersion(this.id)) {
+      if (componentMap.originallySharedDir === this.originallySharedDir) return this;
+      // originallySharedDir has been changed. it affects also the relativePath of the files
+      // so it's better to just remove the old record and add a new one
+      bitMap.removeComponent(this.id);
+    }
+    this._addComponentToBitMap(bitMap, rootDir, origin, parent);
     return this;
   }
 
