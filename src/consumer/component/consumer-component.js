@@ -310,14 +310,14 @@ export default class Component {
       return Promise.resolve({ code: '' });
     }
 
-    const runBuild = (componentRoot: string): Promise<any> => {
+    const runBuild = async (componentRoot: string): Promise<any> => {
       let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
       if (componentMap) {
         // $FlowFixMe
         rootDistFolder = this.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       }
       try {
-        const result = compiler.compile(files, rootDistFolder);
+        const result = await Promise.resolve(compiler.compile(files, rootDistFolder));
         return Promise.resolve(result);
       } catch (e) {
         if (verbose) return Promise.reject(new BuildException(this.id.toString(), e.stack));
