@@ -1031,11 +1031,12 @@ export default class Consumer {
   }
 
   async eject(componentsIds: BitId[]) {
-    await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
     const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
+    await this.remove(componentIdsWithoutScope, true, false, true);
+    await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
     await packageJson.removeComponentsFromNodeModules(this, componentsIds);
     await installPackages(this, [], true, true);
-    await this.remove(componentIdsWithoutScope, true, false, true);
+
     return componentsIds;
   }
 }
