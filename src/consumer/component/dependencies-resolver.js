@@ -120,9 +120,9 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
           .find(dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion());
         if (!dependency) {
           throw new Error(
-            `the auto-generated file ${depFile} should be connected to ${
-              componentId
-            }, however, it's not part of the model dependencies of ${componentFromModel.id}`
+            `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
+              componentFromModel.id
+            }`
           );
         }
         const originallySource: PathLinux = entryComponentMap.originallySharedDir
@@ -448,29 +448,35 @@ export default (async function loadDependenciesForComponent(
   const missingComponents = {};
   const missingLinks = {};
 
+  const componentFiles = component.files;
   dependenciesTree.missing.forEach((fileDep) => {
-    if (fileDep.files && !R.isEmpty(fileDep.files)) {
-      if (missingDependenciesOnFs[fileDep.originFile]) {
-        missingDependenciesOnFs[fileDep.originFile].concat(fileDep.files);
-      } else missingDependenciesOnFs[fileDep.originFile] = fileDep.files;
-    }
-    if (fileDep.packages && !R.isEmpty(fileDep.packages)) {
-      // missingDependencies.missingPackagesDependenciesOnFs = fileDep.packages;
-      if (missingPackagesDependenciesOnFs[fileDep.originFile]) {
-        missingPackagesDependenciesOnFs[fileDep.originFile].concat(fileDep.packages);
-      } else missingPackagesDependenciesOnFs[fileDep.originFile] = fileDep.packages;
-    }
+    const doesFileExistInComponent = !R.isEmpty(
+      componentFiles.filter(componentFile => componentFile.relative === fileDep.originFile)
+    );
+    if (doesFileExistInComponent) {
+      if (fileDep.files && !R.isEmpty(fileDep.files)) {
+        if (missingDependenciesOnFs[fileDep.originFile]) {
+          missingDependenciesOnFs[fileDep.originFile].concat(fileDep.files);
+        } else missingDependenciesOnFs[fileDep.originFile] = fileDep.files;
+      }
+      if (fileDep.packages && !R.isEmpty(fileDep.packages)) {
+        // missingDependencies.missingPackagesDependenciesOnFs = fileDep.packages;
+        if (missingPackagesDependenciesOnFs[fileDep.originFile]) {
+          missingPackagesDependenciesOnFs[fileDep.originFile].concat(fileDep.packages);
+        } else missingPackagesDependenciesOnFs[fileDep.originFile] = fileDep.packages;
+      }
 
-    if (fileDep.bits && !R.isEmpty(fileDep.bits)) {
-      fileDep.bits.forEach((missingBit) => {
-        const componentId = Consumer.getComponentIdFromNodeModulesPath(missingBit, component.bindingPrefix);
-        // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
-        if (consumer.bitMap.getExistingComponentId(componentId)) {
-          if (missingLinks[fileDep.originFile]) missingLinks[fileDep.originFile].push(componentId);
-          else missingLinks[fileDep.originFile] = [componentId];
-        } else if (missingComponents[fileDep.originFile]) missingComponents[fileDep.originFile].push(componentId);
-        else missingComponents[fileDep.originFile] = [componentId];
-      });
+      if (fileDep.bits && !R.isEmpty(fileDep.bits)) {
+        fileDep.bits.forEach((missingBit) => {
+          const componentId = Consumer.getComponentIdFromNodeModulesPath(missingBit, component.bindingPrefix);
+          // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
+          if (consumer.bitMap.getExistingComponentId(componentId)) {
+            if (missingLinks[fileDep.originFile]) missingLinks[fileDep.originFile].push(componentId);
+            else missingLinks[fileDep.originFile] = [componentId];
+          } else if (missingComponents[fileDep.originFile]) missingComponents[fileDep.originFile].push(componentId);
+          else missingComponents[fileDep.originFile] = [componentId];
+        });
+      }
     }
   });
   if (!R.isEmpty(missingDependenciesOnFs)) missingDependencies.missingDependenciesOnFs = missingDependenciesOnFs;

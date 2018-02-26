@@ -56,14 +56,14 @@ export default class Status extends Command {
         return missingComp.id.toString() === compId;
       });
 
-      if (isString(component)) return `${formatBitString(component)}... ${chalk.green('ok')}`;
+      if (isString(component)) return `${formatBitString(component)} ... ${chalk.green('ok')}`;
       let bitFormatted = `${formatNewBit(component)}`;
       if (showVersions) {
         const localVersions = component.getLocalVersions();
         bitFormatted += `. versions: ${localVersions.join(', ')}`;
       }
-      bitFormatted += '...';
-      if (!missing) return `${bitFormatted} ${chalk.green('ok')}`;
+      bitFormatted += ' ... ';
+      if (!missing) return `${bitFormatted}${chalk.green('ok')}`;
       return `${bitFormatted} ${chalk.red('missing dependencies')}${formatMissing(missing)}`;
     }
 
