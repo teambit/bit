@@ -219,8 +219,8 @@ export default class BitMap {
     }
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
-      const existingRootDir = this.components[componentIdStr].rootDir;
-      if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
+      // const existingRootDir = this.components[componentIdStr].rootDir;
+      // if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
       if (override) {
         this.components[componentIdStr].files = files;
       } else {
@@ -316,7 +316,7 @@ export default class BitMap {
       return;
     }
     if (olderComponentsIds.length > 1) {
-      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they 
+      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they
       are authored or imported. This scenario is not supported`);
     }
     const olderComponentId = olderComponentsIds[0];

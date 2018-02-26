@@ -366,14 +366,14 @@ export default class Component {
     bitDir: string,
     writeBitJson: boolean,
     writePackageJson: boolean,
-    consumer: Consumer,
+    consumer?: Consumer,
     force?: boolean,
     writeBitDependencies?: boolean,
     deleteBitDirContent?: boolean,
     excludeRegistryPrefix?: boolean
   }) {
     if (deleteBitDirContent) {
-      fs.emptydirSync(bitDir);
+      fs.emptyDirSync(bitDir);
     } else {
       await mkdirp(bitDir);
     }
@@ -396,6 +396,7 @@ export default class Component {
   }
 
   _addComponentToBitMap(bitMap: BitMap, rootDir: string, origin: string, parent?: string): ComponentMap {
+    // $FlowFixMe this.files can't be null at this point.
     const filesForBitMap = this.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
@@ -407,6 +408,7 @@ export default class Component {
       rootDir,
       origin,
       parent,
+      override: true,
       originallySharedDir: this.originallySharedDir
     });
   }
@@ -547,7 +549,7 @@ export default class Component {
       excludeRegistryPrefix
     });
 
-    if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
+    // if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
     this._addComponentToBitMap(bitMap, componentMap.rootDir, origin, parent);
     return this;
   }
