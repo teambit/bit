@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.6-dev.9] - 2018-02-26
+
 - support compilers which return promises
 
 ## [0.12.6-dev.8] - 2018-02-26
