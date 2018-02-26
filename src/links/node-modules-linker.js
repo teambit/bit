@@ -65,7 +65,7 @@ function symlinkPackages(from: string, to: string, consumer, dependenciesSavedAs
   });
 }
 
-function writeDependenciesLinks(component: Component, componentMap, consumer) {
+function writeDependenciesLinks(component: Component, componentMap, consumer: Consumer) {
   return component.getAllDependencies().map((dependency) => {
     const dependencyComponentMap = consumer.bitMap.getComponent(dependency.id);
     const writtenLinks = [];

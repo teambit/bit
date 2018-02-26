@@ -548,10 +548,14 @@ export default class Component {
       excludeRegistryPrefix
     });
     // if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
+    const rootDir = componentMap.rootDir;
     if (bitMap.isExistWithSameVersion(this.id)) {
+      if (componentMap.originallySharedDir === this.originallySharedDir) return this;
+      // originallySharedDir has been changed. it affects also the relativePath of the files
+      // so it's better to just remove the old record and add a new one
       bitMap.removeComponent(this.id);
     }
-    this._addComponentToBitMap(bitMap, componentMap.rootDir, origin, parent);
+    this._addComponentToBitMap(bitMap, rootDir, origin, parent);
     return this;
   }
 
