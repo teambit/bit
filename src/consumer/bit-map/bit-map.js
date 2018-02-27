@@ -4,6 +4,8 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import json from 'comment-json';
 import logger from '../../logger/logger';
+import pathParse from 'path-parse';
+
 import {
   BIT_MAP,
   OLD_BIT_MAP,
@@ -104,7 +106,7 @@ export default class BitMap {
     let mainFileFromFiles = R.find(R.propEq('relativePath', baseMainFile))(files);
     // Search the base name of the main file and transfer to relativePath
     if (R.isNil(mainFileFromFiles)) {
-      const potentialMainFiles = files.filter(file => file.name === baseMainFile);
+      const potentialMainFiles = files.filter(file => pathParse(file.name).name === pathParse(baseMainFile).name);
       if (potentialMainFiles.length) {
         // when there are several files that met the criteria, choose the closer to the root
         const sortByNumOfDirs = (a, b) =>
