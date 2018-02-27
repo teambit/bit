@@ -89,6 +89,8 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       describe('exporting with --eject option', () => {
         let scopeName;
         let exportOutput;
+        let isStringId;
+        let padLeftId;
         before(() => {
           helper.getClonedLocalScope(scopeBeforeExport);
           return bitsrcTester
@@ -96,6 +98,8 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             .then(() => bitsrcTester.createScope())
             .then((scope) => {
               scopeName = scope;
+              isStringId = `${username}.${scopeName}.string.is-string`;
+              padLeftId = `${username}.${scopeName}.string.pad-left`;
               helper.exportAllComponents(`${username}.${scopeName}`);
               helper.reInitLocalScope();
               helper.runCmd(`bit import ${username}.${scopeName}/string/is-string`);
@@ -109,6 +113,27 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         });
         it('should export them successfully', () => {
           expect(exportOutput).to.have.a.string('exported 2 components to scope');
+        });
+        it('should delete the original component files from the file-system', () => {
+          expect(path.join(helper.localScopePath, 'components/string/is-string')).not.to.be.a.path();
+          expect(path.join(helper.localScopePath, 'components/string/pad-left')).not.to.be.a.path();
+        });
+        it('should update the package.json with the components as packages', () => {
+          const packageJson = helper.readPackageJson();
+          expect(packageJson.dependencies[`@bit/${isStringId}`]).to.equal('2.0.0');
+          expect(packageJson.dependencies[`@bit/${padLeftId}`]).to.equal('2.0.0');
+        });
+        it('should have the component files as a package (in node_modules)', () => {
+          const nodeModulesDir = path.join(helper.localScopePath, 'node_modules', '@bit');
+          expect(path.join(nodeModulesDir, isStringId)).to.be.a.path();
+          expect(path.join(nodeModulesDir, padLeftId)).to.be.a.path();
+        });
+        it('should delete the component from bit.map', () => {
+          const bitMap = helper.readBitMap();
+          Object.keys(bitMap).forEach((id) => {
+            expect(id).not.to.have.string('pad-left');
+            expect(id).not.to.have.string('is-string');
+          });
         });
       });
     });
