@@ -308,12 +308,12 @@ export default class Consumer {
     return importComponents.importComponents();
   }
 
-  importEnvironment(rawId: ?string, verbose?: boolean) {
+  importEnvironment(rawId: ?string, verbose?: boolean, dontPrintEnvMsg: boolean) {
     if (!rawId) {
       throw new Error('you must specify bit id for importing');
     } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId);
-    return this.scope.installEnvironment({ ids: [bitId], verbose });
+    return this.scope.installEnvironment({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
   }
 
   removeFromComponents(id: BitId, currentVersionOnly: boolean = false): Promise<any> {
@@ -339,6 +339,7 @@ export default class Consumer {
    * write them only once.
    */
   async writeToComponentsDir({
+    silentPackageManagerResult,
     componentsWithDependencies,
     writeToPath,
     force = true,
@@ -353,6 +354,7 @@ export default class Consumer {
     verbose = false,
     excludeRegistryPrefix = false
   }: {
+    silentPackageManagerResult: boolean,
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
     force?: boolean,
@@ -469,7 +471,9 @@ export default class Consumer {
     );
 
     await this.bitMap.write();
-    if (installNpmPackages) await installNpmPackagesForComponents(this, componentsWithDependencies, verbose);
+    if (installNpmPackages) {
+      await installNpmPackagesForComponents(this, componentsWithDependencies, verbose, silentPackageManagerResult);
+    }
     if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents.map(c => c.id));
 
     return linkComponents(
@@ -485,9 +489,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);

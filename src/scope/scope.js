@@ -3,6 +3,7 @@ import * as pathLib from 'path';
 import semver from 'semver';
 import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
+import chalk from 'chalk';
 import Toposort from 'toposort-class';
 import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
@@ -1174,7 +1175,15 @@ export default class Scope {
   }
 
   // TODO: Change name since it also used to install extension
-  async installEnvironment({ ids, verbose }: { ids: BitId[], verbose?: boolean }): Promise<any> {
+  async installEnvironment({
+    ids,
+    verbose,
+    dontPrintEnvMsg
+  }: {
+    ids: [{ componentId: BitId, type: string }],
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  }): Promise<any> {
     logger.debug(`scope.installEnvironment, ids: ${ids.join(', ')}`);
     const componentsDir = this.getComponentsPath();
     const isolateOpts = {
@@ -1184,25 +1193,28 @@ export default class Scope {
       dist: true,
       conf: true,
       override: false,
-      verbose
+      verbose,
+      silentPackageManagerResult: true
     };
     const idsWithoutNils = removeNils(ids);
-    const predicate = id => id.toString(); // TODO: should be moved to BitId class
+    const predicate = id => id.componentId.toString(); // TODO: should be moved to BitId class
     const uniqIds = R.uniqBy(predicate)(idsWithoutNils);
     const nonExistingEnvsIds = uniqIds.filter((id) => {
-      return !this.loadEnvironment(id, { pathOnly: true });
+      return !this.loadEnvironment(id.componentId, { pathOnly: true });
     });
 
     const importEnv = async (id) => {
-      let concreteId = id;
-      if (id.getVersion().latest) {
-        const concreteIds = await this.fetchRemoteVersions([id]);
+      let concreteId = id.componentId;
+      if (id.componentId.getVersion().latest) {
+        const concreteIds = await this.fetchRemoteVersions([id.componentId]);
         concreteId = concreteIds[0];
       }
       const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
       const env = new IsolatedEnvironment(this, dir);
       await env.create();
-      return env.isolateComponent(id, isolateOpts);
+      const isolatedComponent = await env.isolateComponent(id.componentId, isolateOpts);
+      if (!dontPrintEnvMsg) console.log(chalk.bold.green(`successfully installed the ${id.componentId} ${id.type}`));
+      return isolatedComponent;
     };
     return pMapSeries(nonExistingEnvsIds, importEnv);
   }
