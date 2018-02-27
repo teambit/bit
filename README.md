@@ -14,18 +14,17 @@
 
 Sharing code between repositories is essential to the development and maintenance of your codebase.
 
-However, just to publish packages you'd have to restructure your entire project's codebase - splitting it into more repositories or configuring multiple packages in a single repository. Even then, there is no simple way to sync shared code between different projects.
+However, just to publish packages you'd normally have to split your codebase into more repositories or configuring multiple packages in a single repository. Even then, there is no simple way to make and sync changes between your projects.
 
-**Bit works with Git and NPM to make it super-easy to share code and sync changes between projects**.
-
-Instead of creating new repositories for your packages or restructuring your project, you can instantly isolate and share any part of any existing repository and use your favorite package managers to install it in other projects.
-
-Instead of configuring and making changes to multiple packages repositories or directories, you can simply change the code you share from any other project and easily sync the changes between all your projects.
+**Bit works with Git and NPM to make it easy to share code and sync changes between projects**.
 
 With Bit, managed code sharing becomes as simple as copy-pasting.
 
-*Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities. You are welcome to join*.
+Instead of creating new repositories for your packages or restructuring your project, Bit helps you easily isolate and make any part of your existing repository available with NPM - without splitting it or having to configure multiple packages.
 
+Instead of making changes to multiple repositories or directories, you can use Bit to easily change the code you share from any other project and sync the changes across your codebase.
+
+*Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities. You are welcome to join*.
 
 ## Contents
 
@@ -41,7 +40,7 @@ With Bit, managed code sharing becomes as simple as copy-pasting.
 
 ## How It Works
 
-### Next-generation code sharing
+### Seamless code sharing
 
 Instead of splitting your project into multiple repositories just to publish packages, Bit enables you to isolate and share components of code (subsets of files) from your existing repository that may then be installed with package managers. This also makes it possible to import the source code of your components into other repositories, continue to develop them and sync changes. This will not change your repository’s structure at all. These are the 2 key features that make it possible.
 
@@ -49,11 +48,11 @@ Instead of splitting your project into multiple repositories just to publish pac
 
 **Isolated environment** - Using Bit’s understanding of the components’ dependency graph, it’s able to create an [isolated environment](https://docs.bitsrc.io/docs/ext-concepts.html) for the code you share. This effectively saves the configuration overhead for the code you share and means that these components can also be developed from any other project with their own isolated dependency graph. For example, components written in typescript can be sourced and developed in a project written in flow-typed.
 
-### Installing in other projects
+### Installing with NPM
 
 Once Bit isolates code components from your project, you can share them to a remote source of truth called a Scope. You can set up a Scope locally, or use Bit’s [hosting Hub](https://bitsrc.io). From there, they can be [installed](https://docs.bitsrc.io/docs/installing-components-using-package-managers.html) using NPM and Yarn in any of your projects.
 
-### Changing the code from any repository
+### Making changes from any end
 
 Bit decouples the representation of the code you share from your project file structure.
 As a result, you can make changes to the code you share from any repository in your codebase.
