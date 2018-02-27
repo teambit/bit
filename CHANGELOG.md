@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.10.11-dev.2] - 2018-01-30
+## [0.10.11] - 2018-02-27
 
 - support dependency detection for Vue files 
 
