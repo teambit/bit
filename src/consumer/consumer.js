@@ -972,7 +972,7 @@ export default class Consumer {
     const modifiedComponents = [];
     const regularComponents = [];
     const resolvedIDs = this.resolveLocalComponentIds(bitIds);
-    if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects({});
+    if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects();
     if (!force) {
       await Promise.all(
         resolvedIDs.map(async (id) => {
@@ -1006,8 +1006,8 @@ export default class Consumer {
       removedComponentIds,
       missingComponents,
       modifiedComponents,
-      dependentBits,
-      removedDependencies
+      removedDependencies,
+      dependentBits
     );
   }
 

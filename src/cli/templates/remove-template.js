@@ -24,18 +24,16 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
       : '');
 
   const paintUnRemovedComponents = () => {
-    if (!R.isEmpty(dependentBits)) {
-      return Object.keys(dependentBits)
-        .map((key) => {
-          const header = chalk.underline.red(
-            `error: unable to delete ${key}, because the following components depend on it:`
-          );
-          const body = dependentBits[key].join('\n');
-          return `${header}\n${body}`;
-        })
-        .join('\n\n');
-    }
-    return '';
+    if (R.isEmpty(dependentBits)) return '';
+    return Object.keys(dependentBits)
+      .map((key) => {
+        const header = chalk.underline.red(
+          `error: unable to delete ${key}, because the following components depend on it:`
+        );
+        const body = dependentBits[key].join('\n');
+        return `${header}\n${body}`;
+      })
+      .join('\n\n');
   };
 
   const paintModifiedComponents = () =>
