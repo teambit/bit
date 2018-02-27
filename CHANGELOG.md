@@ -7,48 +7,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.12.6-dev.9] - 2018-02-26
+## [0.12.6] - 2018-02-27
 
+### New
+- introduced a new command `bit untag` for reverting un-exported tags.
+- support .vue files
+- support `bit install` of specific ids
+- init local scope inside .git
+- support peerDependencies
+- support passing arguments/flags to the package-manager by specifying them after '--' (e.g. `bit import -- --no-optional`)
 - support compilers which return promises
 
-## [0.12.6-dev.8] - 2018-02-26
-## [0.12.6-dev.7] - 2018-02-25
-
-## [0.12.6-dev.6] - 2018-02-25
-
-- enable updating a component's peerDependencies after import using the component's package.json
-- show npm-client's warnings when they are about missing peer-dependencies
-- support passing arguments/flags to the package-manager by specifying them after '--' (e.g. bit import -- --no-optional)
-- fix outdated to print correct version numbers
-
-## [0.12.6-dev.5] - 2018-02-20
-
-- bug fix - untagging component with dependents and local tags after export wasn't prevented as it should
-- bug fix - untagging component with dependencies was showing an error saying the component is depends on itself
-- bug fix - remove modified component message
-
-## [0.12.6-dev.4] - 2018-02-19
-
+### Changes
 - save bit dev-dependencies components inside devDependencies section of package.json
-- fix bit cc to clear module's cache
-- fix resolving .gitignore files
-- when adding existing files to component in bitmap don't create duplications
+- `bit status` shows a list of staged versions in 'staged components' section
 
-## [0.12.6-dev.3] - 2018-02-15
-
-- support `bit install` of specific ids
-- support peerDependencies (in the model for now)
+### Bug Fixes
+- show npm-client's warnings when they are about missing peer-dependencies
+- fix outdated to print correct version numbers
+- remove a modified component message
+- resolving .gitignore files
 - [#729](https://github.com/teambit/bit/issues/729) fix bit cc to clear module cache
 - [#769](https://github.com/teambit/bit/issues/769) - prevent duplicate ids in bitmap when adding existing files
-
-## [0.12.6-dev.2] - 2018-02-13
-
-## [0.12.6-dev.1] - 2018-02-13
-
-- `bit status` shows a list of staged versions in 'staged components' section
-- introduced a new command `bit untag` for reverting un-exported tags.
-- init local scope inside .git
-- support vue files
 - [#736](https://github.com/teambit/bit/issues/736) - .gitignore is blocking everything
 
 ## [0.12.5] - 2018-02-06
