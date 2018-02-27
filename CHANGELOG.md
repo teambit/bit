@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix calculation of main dist file when importing component
+
 ## [0.12.6] - 2018-02-27
 
 ### New
