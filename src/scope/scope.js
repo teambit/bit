@@ -1175,7 +1175,7 @@ export default class Scope {
       conf: true,
       override: false,
       verbose,
-      silentClientResult: true
+      silentPackageManagerResult: true
     };
     const idsWithoutNils = removeNils(ids);
     const predicate = id => id.componentId.toString(); // TODO: should be moved to BitId class

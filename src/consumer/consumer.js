@@ -339,7 +339,7 @@ export default class Consumer {
    * write them only once.
    */
   async writeToComponentsDir({
-    silentClientResult,
+    silentPackageManagerResult,
     componentsWithDependencies,
     writeToPath,
     force = true,
@@ -354,7 +354,7 @@ export default class Consumer {
     verbose = false,
     excludeRegistryPrefix = false
   }: {
-    silentClientResult: boolean,
+    silentPackageManagerResult: boolean,
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
     force?: boolean,
@@ -471,7 +471,9 @@ export default class Consumer {
     );
 
     await this.bitMap.write();
-    if (installNpmPackages) { await installNpmPackagesForComponents(this, componentsWithDependencies, verbose, silentClientResult); }
+    if (installNpmPackages) {
+      await installNpmPackagesForComponents(this, componentsWithDependencies, verbose, silentPackageManagerResult);
+    }
     if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents.map(c => c.id));
 
     return linkComponents(
@@ -487,9 +489,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);

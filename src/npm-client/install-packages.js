@@ -11,7 +11,7 @@ export async function installPackages(
   dirs: string[],
   verbose: boolean,
   installRootPackageJson: boolean = false,
-  silentClientResult: boolean = false
+  silentPackageManagerResult: boolean = false
 ) {
   const packageManager = consumer.bitJson.packageManager;
   const packageManagerArgs = consumer.packageManagerArgs.length
@@ -43,7 +43,7 @@ export async function installPackages(
   if (!Array.isArray(results)) {
     results = [results];
   }
-  if (!silentClientResult) {
+  if (!silentPackageManagerResult) {
     results.forEach((result) => {
       if (result) npmClient.printResults(result);
     });
@@ -54,7 +54,7 @@ export async function installNpmPackagesForComponents(
   consumer: Consumer,
   componentsWithDependencies: ComponentWithDependencies[],
   verbose: boolean = false,
-  silentClientResult: boolean = false
+  silentPackageManagerResult: boolean = false
 ): Promise<*> {
   // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
   // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
@@ -67,5 +67,5 @@ export async function installNpmPackagesForComponents(
   );
 
   const componentDirs = componentsWithDependenciesFlatten.map(component => component.writtenPath);
-  return installPackages(consumer, componentDirs, verbose, false, silentClientResult);
+  return installPackages(consumer, componentDirs, verbose, false, silentPackageManagerResult);
 }
