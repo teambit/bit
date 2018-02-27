@@ -8,15 +8,18 @@ import { LATEST_BIT_VERSION } from '../../constants';
 import { Symlink } from '../models';
 import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
+import type { BitIdStr } from '../../bit-id/bit-id';
 
 export default class RemoveModelComponents {
   scope: Scope;
   bitIds: BitIds;
+  bitIdsStr: BitIdStr[];
   force: boolean;
   removeSameOrigin: boolean = false;
   constructor(scope: Scope, bitIds: BitIds, force: boolean, removeSameOrigin: boolean) {
     this.scope = scope;
     this.bitIds = bitIds;
+    this.bitIdsStr = bitIds.map(id => id.toStringWithoutVersion());
     this.force = force;
     this.removeSameOrigin = removeSameOrigin;
   }
@@ -73,13 +76,20 @@ export default class RemoveModelComponents {
     consumerComponentToRemove: ConsumerComponent,
     bitId: BitId
   ): Promise<BitId[]> {
-    const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (id) => {
-      const arr = dependentBits[id.toStringWithoutVersion()];
-      const name = bitId.version === LATEST_BIT_VERSION ? bitId.toStringWithoutVersion() : bitId.toString();
-      const depArr = R.reject(num => num === name || BitId.parse(num).scope !== id.scope, arr);
-      if (R.isEmpty(depArr) && (id.scope !== bitId.scope || this.removeSameOrigin)) {
-        await this._removeComponent(id, componentList, true);
-        return id;
+    const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (dependencyId: BitId) => {
+      const dependentsIdsStr: BitIdStr[] = dependentBits[dependencyId.toStringWithoutVersion()];
+      const bitIdStr = bitId.version === LATEST_BIT_VERSION ? bitId.toStringWithoutVersion() : bitId.toString();
+      const relevantDependents = R.reject(
+        dependent => dependent === bitIdStr || BitId.parse(dependent).scope !== dependencyId.scope,
+        dependentsIdsStr
+      );
+      if (
+        R.isEmpty(relevantDependents) &&
+        !this.bitIdsStr.includes(dependencyId.toStringWithoutVersion()) && // don't delete dependency if it is already deleted as an individual
+        (dependencyId.scope !== bitId.scope || this.removeSameOrigin)
+      ) {
+        await this._removeComponent(dependencyId, componentList, true);
+        return dependencyId;
       }
       return null;
     });
