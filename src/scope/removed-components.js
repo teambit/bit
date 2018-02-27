@@ -2,25 +2,25 @@
 import { BitId, BitIds } from '../bit-id';
 
 export class RemovedObjects {
-  removedComponentIds: BitIds = [];
-  missingComponents: BitIds = [];
-  dependentBits: Object = {};
-  removedDependencies: BitIds = [];
+  removedComponentIds: BitIds;
+  missingComponents: BitIds;
+  removedDependencies: BitIds;
+  dependentBits: Object;
   constructor({
-    removedComponentIds = new BitIds(),
-    missingComponents = new BitIds(),
-    removedDependencies = new BitIds(),
-    dependentBits = {}
+    removedComponentIds,
+    missingComponents,
+    removedDependencies,
+    dependentBits
   }: {
-    removedComponentIds: BitIds,
-    missingComponents: BitIds,
-    removedDependencies: BitIds,
-    dependentBits: Object
+    removedComponentIds?: BitIds,
+    missingComponents?: BitIds,
+    removedDependencies?: BitIds,
+    dependentBits?: Object
   }) {
-    this.removedComponentIds = removedComponentIds;
-    this.missingComponents = missingComponents;
-    this.dependentBits = dependentBits;
-    this.removedDependencies = removedDependencies;
+    this.removedComponentIds = removedComponentIds || new BitIds();
+    this.missingComponents = missingComponents || new BitIds();
+    this.removedDependencies = removedDependencies || new BitIds();
+    this.dependentBits = dependentBits || {};
   }
 
   static fromObjects(payload: Object): RemovedObjects {
@@ -35,14 +35,15 @@ export class RemovedObjects {
     });
   }
 }
+
 export class RemovedLocalObjects extends RemovedObjects {
   modifiedComponents: BitIds;
   constructor(
-    removedComponentIds: BitIds = [],
-    missingComponents: BitIds = [],
-    modifiedComponents: BitIds = [],
-    dependentBits: Object = {},
-    removedDependencies: BitIds = []
+    removedComponentIds?: BitIds,
+    missingComponents?: BitIds,
+    modifiedComponents?: BitIds,
+    removedDependencies?: BitIds,
+    dependentBits?: Object
   ) {
     super({ removedComponentIds, missingComponents, removedDependencies, dependentBits });
     this.modifiedComponents = modifiedComponents;
