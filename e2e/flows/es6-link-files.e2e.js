@@ -20,7 +20,7 @@ describe('es6 components with link files', function () {
    * a link-file, which only links to is-string file, we expect bar/foo to ignore this file and not
    * raise a warning about missing-dependencies
    */
-  describe.only('when a component uses index file to import single members from a module', () => {
+  describe('when a component uses index file to import single members from a module', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
