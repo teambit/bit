@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- insert dependency-resolutions packages code into bit-javascript repo
 - bug fix - specifying a component and its dependency as ids for bit remove was not working
--
 
 ## [0.12.6] - 2018-02-27
 
