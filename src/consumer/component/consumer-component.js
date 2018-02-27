@@ -287,7 +287,6 @@ export default class Component {
 
   async buildIfNeeded({
     condition,
-    files,
     compiler,
     consumer,
     componentMap,
@@ -297,7 +296,6 @@ export default class Component {
     keep
   }: {
     condition?: ?boolean,
-    files: File[],
     compiler: any,
     consumer?: Consumer,
     componentMap?: ComponentMap,
@@ -309,6 +307,7 @@ export default class Component {
     if (!condition) {
       return Promise.resolve({ code: '' });
     }
+    const files = this.files.map(file => file.clone());
 
     const runBuild = async (componentRoot: string): Promise<any> => {
       let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
@@ -699,7 +698,7 @@ export default class Component {
     directory: ?string,
     keep: ?boolean,
     isCI: boolean
-  }): Promise<string> {
+  }): Promise<?string> {
     logger.debug(`consumer-component.build ${this.id}`);
     // @TODO - write SourceMap Type
     if (!this.compilerId) {
@@ -721,7 +720,6 @@ export default class Component {
       const componentStatus = await consumer.getComponentStatusById(this.id);
       return componentStatus.modified;
     };
-
     const bitMap = consumer ? consumer.bitMap : undefined;
     const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
@@ -736,7 +734,6 @@ export default class Component {
 
       return isCI ? { mainFile: this.dists.calculateMainDistFile(this.mainFile), dists: this.dists.get() } : this.dists;
     }
-
     logger.debug('compilerId found, start building');
 
     let compiler = scope.loadEnvironment(this.compilerId);
@@ -749,11 +746,9 @@ export default class Component {
       });
       compiler = scope.loadEnvironment(this.compilerId);
     }
-
     const builtFiles = await this.buildIfNeeded({
       condition: !!this.compilerId,
       compiler,
-      files: this.files,
       consumer,
       componentMap,
       scope,
@@ -767,13 +762,11 @@ export default class Component {
         throw new Error('builder interface has to return object with a code attribute that contains string');
       }
     });
-
     this.setDists(builtFiles.map(file => new Dist(file)));
 
     if (save) {
       await scope.sources.updateDist({ source: this });
     }
-
     return this.dists;
   }
 
