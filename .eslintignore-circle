@@ -43,7 +43,6 @@ src/scope/dependency-maps/sources-map.js
 src/scope/exceptions/version-not-found.js
 src/scope/models/source.js
 src/scope/repositories/source.js
-src/scope/removed-components.js
 src/search/indexer.js
 src/utils/fs-exists-sync.js
 src/utils/is-file-auto-generated.js
