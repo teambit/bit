@@ -12,17 +12,14 @@ export default function deprecate({ path, ids }, headers: ?Object): Promise<stri
   HooksManagerInstance.triggerHook(PRE_DEPRECATE_REMOTE, args, headers);
   return loadScope(path).then((scope) => {
     return scope.deprecateMany(bitIds).then(async (res) => {
-      await HooksManagerInstance.triggerHook(
-        POST_DEPRECATE_REMOTE,
-        {
-          deprecatedComponentsIds: res.bitIds,
-          missingComponentsIds: res.missingComponents,
-          scopePath: path,
-          componentsIds: bitIds.serialize(),
-          scopeName: scope.scopeJson.name
-        },
-        headers
-      );
+      const hookArgs = {
+        deprecatedComponentsIds: res.bitIds,
+        missingComponentsIds: res.missingComponents.serialize(),
+        scopePath: path,
+        componentsIds: bitIds.serialize(),
+        scopeName: scope.scopeJson.name
+      };
+      await HooksManagerInstance.triggerHook(POST_DEPRECATE_REMOTE, hookArgs, headers);
       return res;
     });
   });

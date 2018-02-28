@@ -1,5 +1,13 @@
 /** @flow */
 import { BitId, BitIds } from '../bit-id';
+import type { BitIdStr } from '../bit-id/bit-id';
+
+export type RemovedObjectSerialized = {
+  removedComponentIds: BitIdStr[],
+  missingComponents: BitIdStr[],
+  removedDependencies: BitIdStr[],
+  dependentBits: Object
+};
 
 export class RemovedObjects {
   removedComponentIds: BitIds;
@@ -23,10 +31,19 @@ export class RemovedObjects {
     this.dependentBits = dependentBits || {};
   }
 
+  serialize(): RemovedObjectSerialized {
+    return {
+      removedComponentIds: this.removedComponentIds.serialize(),
+      missingComponents: this.missingComponents.serialize(),
+      removedDependencies: this.removedDependencies.serialize(),
+      dependentBits: this.dependentBits
+    };
+  }
+
   static fromObjects(payload: Object): RemovedObjects {
-    const missingComponents = payload.missingComponents.map(id => new BitId(id));
-    const removedComponentIds = payload.removedComponentIds.map(id => new BitId(id));
-    const removedDependencies = payload.removedDependencies.map(id => new BitId(id));
+    const missingComponents = new BitIds(...payload.missingComponents.map(id => BitId.parse(id)));
+    const removedComponentIds = new BitIds(...payload.removedComponentIds.map(id => BitId.parse(id)));
+    const removedDependencies = new BitIds(...payload.removedDependencies.map(id => BitId.parse(id)));
     return new RemovedObjects({
       missingComponents,
       removedComponentIds,
