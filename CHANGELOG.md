@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- insert dependency-resolutions packages code into this repo.
+
 ## [0.10.11] - 2018-02-27
 
-- support dependency detection for Vue files 
+- support dependency detection for Vue files
 
 ## [0.10.10] - 2018-01-30
 
@@ -36,7 +38,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Stylable support
 - improve stability and performance of resolving dependencies
 - change post install hook to work with symlink
-- bug fix - components that require dependencies with custom binding prefix were not recognized 
+- bug fix - components that require dependencies with custom binding prefix were not recognized
 
 ## [0.10.6] - 2017-11-12
 

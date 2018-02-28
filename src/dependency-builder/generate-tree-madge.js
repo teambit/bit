@@ -1,9 +1,9 @@
-//  most of the functions in this file were taken from the Madge project: https://github.com/pahen/madge
+// most of the functions in this file were taken from the Madge project: https://github.com/pahen/madge
 // reasons for not using Madge directly: 1) it has issues with TypeScript on Windows. 2) it has issues with tsx files
 
 import os from 'os';
 import path from 'path';
-import dependencyTree from 'dependency-tree';
+import dependencyTree from './dependency-tree';
 
 /**
  * Check if running on Windows.
