@@ -27,7 +27,7 @@ const baseTemplate = (extensionsTemplate) => {
     ${chalk.cyan('install')}    install node packages of all components and calls the link command.
     ${chalk.cyan('remote')}     manage set of tracked bit scope(s).
     ${chalk.cyan('remove')}     remove component(s) from your working area, or a remote scope.
-    ${chalk.cyan('link')}       call the driver link action to link components to their required packages.
+    ${chalk.cyan('link')}       generate symlinks for sourced components absolute path resolution.
 
   ${chalk.underline('discover components')}
     ${chalk.cyan('list')}       list components on a local or a remote scope.
