@@ -45,7 +45,6 @@ export default class Remove extends Command {
     localResult: RemovedLocalObjects,
     remoteResult: RemovedObjects[]
   }): string {
-    console.log('remoteResult', JSON.stringify(remoteResult));
     return paintRemoved(localResult) + this.paintArray(remoteResult);
   }
   paintArray(removedObjectsArray: RemovedObjects[]) {
