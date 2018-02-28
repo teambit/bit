@@ -882,9 +882,11 @@ export default class Scope {
   /**
    * split bit array to found and missing components (incase user misspelled id)
    */
-  async filterFoundAndMissingComponents(bitIds: Array<BitId>) {
-    const missingComponents = [];
-    const foundComponents = [];
+  async filterFoundAndMissingComponents(
+    bitIds: Array<BitId>
+  ): Promise<{ missingComponents: BitIds, foundComponents: BitIds }> {
+    const missingComponents = new BitIds();
+    const foundComponents = new BitIds();
     const resultP = bitIds.map(async (id) => {
       const component = await this.sources.get(id);
       if (!component) missingComponents.push(id);

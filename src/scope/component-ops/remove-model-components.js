@@ -24,7 +24,7 @@ export default class RemoveModelComponents {
     this.removeSameOrigin = removeSameOrigin;
   }
 
-  async remove() {
+  async remove(): Promise<RemovedObjects> {
     const { missingComponents, foundComponents } = await this.scope.filterFoundAndMissingComponents(this.bitIds);
     const dependentBits = await this.scope.findDependentBits(foundComponents);
     if (R.isEmpty(dependentBits) || this.force) {
@@ -32,8 +32,8 @@ export default class RemoveModelComponents {
       // trying to delete the same file at the same time (happens when removing a component with
       // a dependency and the dependency itself)
       const removedComponents = await pMapSeries(foundComponents, bitId => this._removeSingle(bitId));
-      const ids = removedComponents.map(x => x.bitId);
-      const removedDependencies = R.flatten(removedComponents.map(x => x.removedDependencies));
+      const ids = new BitIds(...removedComponents.map(x => x.bitId));
+      const removedDependencies = new BitIds(...R.flatten(removedComponents.map(x => x.removedDependencies)));
       return new RemovedObjects({ removedComponentIds: ids, missingComponents, removedDependencies });
     }
     // some of the components have dependents, don't remove them
@@ -45,7 +45,7 @@ export default class RemoveModelComponents {
    * @param {BitId} bitId - list of remote component ids to delete
    * @param {boolean} removeSameOrigin - remove component dependencies from same origin
    */
-  async _removeSingle(bitId: BitId): Promise<Object> {
+  async _removeSingle(bitId: BitId): Promise<{ bitId: BitId, removedDependencies: BitIds }> {
     logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${this.removeSameOrigin.toString()}`);
     // $FlowFixMe
     const component = (await this.scope.sources.get(bitId)).toComponentVersion();
@@ -75,7 +75,7 @@ export default class RemoveModelComponents {
     componentList: Array<ConsumerComponent | Symlink>,
     consumerComponentToRemove: ConsumerComponent,
     bitId: BitId
-  ): Promise<BitId[]> {
+  ): Promise<BitIds> {
     const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (dependencyId: BitId) => {
       const dependentsIdsStr: BitIdStr[] = dependentBits[dependencyId.toStringWithoutVersion()];
       const bitIdStr = bitId.version === LATEST_BIT_VERSION ? bitId.toStringWithoutVersion() : bitId.toString();
@@ -93,7 +93,9 @@ export default class RemoveModelComponents {
       }
       return null;
     });
-    return (await Promise.all(removedComponents)).filter(x => !R.isNil(x));
+    let removedDependencies = await Promise.all(removedComponents);
+    removedDependencies = removedDependencies.filter(x => !R.isNil(x));
+    return new BitIds(removedDependencies);
   }
 
   async _removeComponent(id: BitId, componentList: Array<ConsumerComponent | Symlink>, removeRefs: boolean = false) {
