@@ -23,10 +23,19 @@ export class RemovedObjects {
     this.dependentBits = dependentBits || {};
   }
 
+  serialize() {
+    return {
+      removedComponentIds: this.removedComponentIds.serialize(),
+      missingComponents: this.missingComponents.serialize(),
+      removedDependencies: this.removedDependencies.serialize(),
+      dependentBits: this.dependentBits
+    };
+  }
+
   static fromObjects(payload: Object): RemovedObjects {
-    const missingComponents = payload.missingComponents.map(id => new BitId(id));
-    const removedComponentIds = payload.removedComponentIds.map(id => new BitId(id));
-    const removedDependencies = payload.removedDependencies.map(id => new BitId(id));
+    const missingComponents = new BitIds(...payload.missingComponents.map(id => new BitId(id)));
+    const removedComponentIds = new BitIds(...payload.removedComponentIds.map(id => new BitId(id)));
+    const removedDependencies = new BitIds(...payload.removedDependencies.map(id => new BitId(id)));
     return new RemovedObjects({
       missingComponents,
       removedComponentIds,

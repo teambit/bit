@@ -4,6 +4,7 @@ import { BitIds } from '../../../bit-id';
 import { PRE_REMOVE_REMOTE, POST_REMOVE_REMOTE } from '../../../constants';
 import HooksManager from '../../../hooks';
 import { RemovedObjects } from '../../../scope/removed-components';
+import logger from '../../../logger/logger';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -16,20 +17,17 @@ export default function remove(
   HooksManagerInstance.triggerHook(PRE_REMOVE_REMOTE, args, headers);
   return loadScope(path).then((scope) => {
     return scope.removeMany(bitIds, force).then(async (res) => {
-      await HooksManagerInstance.triggerHook(
-        POST_REMOVE_REMOTE,
-        {
-          removedComponentsIds: res.removedComponentIds.serialize(),
-          missingComponentsIds: res.missingComponents.serialize(),
-          dependentBitsIds: res.dependentBits,
-          force,
-          scopePath: path,
-          componentsIds: bitIds.serialize(),
-          scopeName: scope.scopeJson.name
-        },
-        headers
-      );
-      return res;
+      const hookArgs = {
+        removedComponentsIds: res.removedComponentIds.serialize(),
+        missingComponentsIds: res.missingComponents.serialize(),
+        dependentBitsIds: res.dependentBits,
+        force,
+        scopePath: path,
+        componentsIds: bitIds.serialize(),
+        scopeName: scope.scopeJson.name
+      };
+      await HooksManagerInstance.triggerHook(POST_REMOVE_REMOTE, hookArgs, headers);
+      return res.serialize();
     });
   });
 }
