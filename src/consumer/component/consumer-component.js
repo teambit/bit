@@ -287,7 +287,6 @@ export default class Component {
 
   async buildIfNeeded({
     condition,
-    files,
     compiler,
     consumer,
     componentMap,
@@ -297,7 +296,6 @@ export default class Component {
     keep
   }: {
     condition?: ?boolean,
-    files: File[],
     compiler: any,
     consumer?: Consumer,
     componentMap?: ComponentMap,
@@ -309,15 +307,16 @@ export default class Component {
     if (!condition) {
       return Promise.resolve({ code: '' });
     }
+    const files = this.files.map(file => file.clone());
 
-    const runBuild = (componentRoot: string): Promise<any> => {
+    const runBuild = async (componentRoot: string): Promise<any> => {
       let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
       if (componentMap) {
         // $FlowFixMe
         rootDistFolder = this.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       }
       try {
-        const result = compiler.compile(files, rootDistFolder);
+        const result = await Promise.resolve(compiler.compile(files, rootDistFolder));
         return Promise.resolve(result);
       } catch (e) {
         if (verbose) return Promise.reject(new BuildException(this.id.toString(), e.stack));
@@ -366,14 +365,14 @@ export default class Component {
     bitDir: string,
     writeBitJson: boolean,
     writePackageJson: boolean,
-    consumer: Consumer,
+    consumer?: Consumer,
     force?: boolean,
     writeBitDependencies?: boolean,
     deleteBitDirContent?: boolean,
     excludeRegistryPrefix?: boolean
   }) {
     if (deleteBitDirContent) {
-      fs.emptydirSync(bitDir);
+      fs.emptyDirSync(bitDir);
     } else {
       await mkdirp(bitDir);
     }
@@ -396,6 +395,7 @@ export default class Component {
   }
 
   _addComponentToBitMap(bitMap: BitMap, rootDir: string, origin: string, parent?: string): ComponentMap {
+    // $FlowFixMe this.files can't be null at this point.
     const filesForBitMap = this.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
@@ -546,9 +546,15 @@ export default class Component {
       deleteBitDirContent,
       excludeRegistryPrefix
     });
-
-    if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
-    this._addComponentToBitMap(bitMap, componentMap.rootDir, origin, parent);
+    // if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
+    const rootDir = componentMap.rootDir;
+    if (bitMap.isExistWithSameVersion(this.id)) {
+      if (componentMap.originallySharedDir === this.originallySharedDir) return this;
+      // originallySharedDir has been changed. it affects also the relativePath of the files
+      // so it's better to just remove the old record and add a new one
+      bitMap.removeComponent(this.id);
+    }
+    this._addComponentToBitMap(bitMap, rootDir, origin, parent);
     return this;
   }
 
@@ -580,7 +586,7 @@ export default class Component {
     if (!testerFilePath) {
       loader.start(BEFORE_IMPORT_ENVIRONMENT);
       await scope.installEnvironment({
-        ids: [this.testerId],
+        ids: [{ componentId: this.testerId, type: 'tester' }],
         verbose
       });
       testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
@@ -692,7 +698,7 @@ export default class Component {
     directory: ?string,
     keep: ?boolean,
     isCI: boolean
-  }): Promise<string> {
+  }): Promise<?string> {
     logger.debug(`consumer-component.build ${this.id}`);
     // @TODO - write SourceMap Type
     if (!this.compilerId) {
@@ -714,7 +720,6 @@ export default class Component {
       const componentStatus = await consumer.getComponentStatusById(this.id);
       return componentStatus.modified;
     };
-
     const bitMap = consumer ? consumer.bitMap : undefined;
     const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
@@ -729,23 +734,21 @@ export default class Component {
 
       return isCI ? { mainFile: this.dists.calculateMainDistFile(this.mainFile), dists: this.dists.get() } : this.dists;
     }
-
     logger.debug('compilerId found, start building');
 
     let compiler = scope.loadEnvironment(this.compilerId);
     if (!compiler) {
       loader.start(BEFORE_IMPORT_ENVIRONMENT);
       await scope.installEnvironment({
-        ids: [this.compilerId],
-        verbose
+        ids: [{ componentId: this.compilerId, type: 'compiler' }],
+        verbose,
+        type: 'compiler'
       });
       compiler = scope.loadEnvironment(this.compilerId);
     }
-
     const builtFiles = await this.buildIfNeeded({
       condition: !!this.compilerId,
       compiler,
-      files: this.files,
       consumer,
       componentMap,
       scope,
@@ -759,13 +762,11 @@ export default class Component {
         throw new Error('builder interface has to return object with a code attribute that contains string');
       }
     });
-
     this.setDists(builtFiles.map(file => new Dist(file)));
 
     if (save) {
       await scope.sources.updateDist({ source: this });
     }
-
     return this.dists;
   }
 
@@ -916,7 +917,14 @@ export default class Component {
   static fromString(str: string): Component {
     const object = JSON.parse(str);
     object.files = SourceFile.loadFromParsedStringArray(object.files);
-    object.dists = Dist.loadFromParsedStringArray(object.dists);
+
+    // added if statment to support new and old version of remote ls
+    // old version of bit returns from server array of dists  and new version return object
+    if (object.dists && Array.isArray(object.dists)) {
+      object.dists = Dist.loadFromParsedStringArray(object.dists);
+    } else if (object.dists && object.dists.dists) {
+      object.dists = Dist.loadFromParsedStringArray(object.dists.dists);
+    }
     return this.fromObject(object);
   }
 

@@ -11,7 +11,7 @@ describe('bit list command', function () {
   describe('list before running "bit init" with .bit.map.json', () => {
     it('Should init consumer add then list component', () => {
       helper.createBitMap();
-      helper.createComponent('bar', 'foo.js');
+      helper.createFile('bar', 'foo.js');
       const output = helper.listLocalScope();
       expect(output.includes('found 0 components')).to.be.true;
     });
@@ -107,7 +107,7 @@ describe('bit list command', function () {
       let output;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
-        helper.createComponent('bar/baz');
+        helper.createFile('bar/baz');
         helper.addComponent('bar/baz');
         helper.commitComponent('bar/baz');
         helper.exportAllComponents();
@@ -126,7 +126,7 @@ describe('bit list command', function () {
       let output;
       before(() => {
         helper.reInitLocalScope();
-        helper.createComponent('bar/local');
+        helper.createFile('bar/local');
         helper.addComponent('bar/local');
         helper.commitComponent('bar/local');
         const stringOutput = helper.runCmd('bit list -o -j');

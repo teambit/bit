@@ -6,7 +6,9 @@ import type { LinksResult } from '../../../links/node-modules-linker';
 
 export default class Install extends Command {
   name = 'install [ids...]';
-  description = 'install packages of components and link them, if no ID is specified, install all';
+  description = `install packages of components and link them, if no ID is specified, install all   \n
+  Pass extra arguments to npm client by placing them after --
+  example: bit install -- --production --no-optional`;
   alias = '';
   opts = [['v', 'verbose', 'show a more verbose output when possible']];
   loader = true;

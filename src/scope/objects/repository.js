@@ -93,8 +93,8 @@ export default class Repository {
     );
   }
 
-  listComponents(includeSymlinks: boolean = true): Promise<Component[]> {
-    // @TODO - write
+  // @TODO - cache the results
+  listComponents(includeSymlinks: boolean = true): Promise<Component[] | Symlink[]> {
     const filterComponents = refs =>
       refs.filter(
         ref => (includeSymlinks ? ref instanceof Component || ref instanceof Symlink : ref instanceof Component)
@@ -103,11 +103,14 @@ export default class Repository {
     return this.list().then(filterComponents);
   }
 
-  remove(ref: Ref) {
-    return removeFile(this.objectPath(ref), true);
+  remove(ref: Ref): Promise<boolean> {
+    this.removeFromCache(ref);
+    const pathToDelete = this.objectPath(ref);
+    logger.debug(`repository.remove: deleting ${pathToDelete}`);
+    return removeFile(pathToDelete, true);
   }
 
-  removeMany(refs: Ref[]): Promise {
+  removeMany(refs: Ref[]): Promise<boolean[]> {
     return Promise.all(refs.map(ref => this.remove(ref)));
   }
 
@@ -140,6 +143,10 @@ export default class Repository {
 
   getCache(ref: Ref) {
     return this._cache[ref.toString()];
+  }
+
+  removeFromCache(ref: Ref) {
+    delete this._cache[ref.toString()];
   }
 
   add(object: ?BitObject): Repository {

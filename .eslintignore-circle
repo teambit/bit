@@ -5,6 +5,7 @@ dist
 dist-legacy
 gulpfile.js
 specs/jsdoc/fixtures
+e2e/fixtures
 
 # temporarily, until we fix the errors in these paths
 e2e/commands/add.e2e.js
@@ -54,7 +55,6 @@ src/cli/cli-utils.js
 src/cli/command.js
 src/cli/commands/private-cmds/_fetch-cmd.js
 src/cli/commands/private-cmds/scope-config-cmd.js
-src/cli/commands/public-cmds/add-cmd.js
 src/cli/commands/public-cmds/build-cmd.js
 src/cli/commands/public-cmds/commit-cmd.js
 src/cli/commands/public-cmds/config-cmd.js
@@ -75,8 +75,6 @@ src/search/serverless-index.js
 src/utils/array/filter-async.js
 src/utils/buffer/from.js
 src/utils/path.js
-e2e/fixtures/components/hero-button/HeroButton.js
-e2e/fixtures/components/pad-left/pad-left.js
 src/api/consumer/lib/export.js
 src/api/scope/lib/put.js
 src/bit-id/bit-ids.js
@@ -115,11 +113,8 @@ src/scope/migrations/component-version/to-semver-migration.js
 src/scope/models/scopeMeta.js
 src/scope/network/fs/fs.js
 src/scope/scope-json.js
-e2e/fixtures/components/hero-button/HeroButton.spec.js
-e2e/fixtures/testers/mocha/tester.js
 src/jsdoc/parser.js
 src/scope/objects/repository.js
-e2e/fixtures/components/hero/Hero.spec.js
 src/consumer/component/components-list.js
 src/remotes/remote.js
 src/scope/graph/graph.js
@@ -133,16 +128,13 @@ src/scope/repositories/sources.js
 src/cli/command-registrar.js
 src/links/node-modules-linker.js
 src/scope/migrations/scope-migrator.js
-e2e/fixtures/components/hero-withrelativepaths/Hero.js
 src/consumer/component/package-json.js
 src/scope/network/ssh/ssh.js
 src/hooks/hooks-manager.js
-e2e/fixtures/components/hero/Hero.js
 src/scope/component-remove.js
 src/extensions/extension.js
 src/scope/models/component.js
 src/utils/string/to-base64-array-buffer.js
-src/api/consumer/lib/add.js
 src/consumer/consumer.js
 e2e/e2e-helper.js
 src/consumer/component/consumer-component.js

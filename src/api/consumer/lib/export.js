@@ -1,13 +1,13 @@
 /** @flow */
 import R from 'ramda';
 import { Consumer, loadConsumer } from '../../../consumer';
-import ConsumerComponent from '../../../consumer/component/consumer-component';
 import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
 import { BEFORE_EXPORT, BEFORE_EXPORTS } from '../../../cli/loader/loader-messages';
 import { BitId } from '../../../bit-id';
 import IdExportedAlready from './exceptions/id-exported-already';
 import { linkComponentsToNodeModules } from '../../../links';
+import logger from '../../../logger/logger';
 
 async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string) {
   const componentsList = new ComponentsList(consumer);
@@ -63,7 +63,7 @@ async function addToBitJson(ids: BitId[], consumer: Consumer) {
   return Promise.all(componentsIdsP);
 }
 
-async function linkComponents(ids: BitId[], consumer: Consumer): void {
+async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
   // we don't have much of a choice here, we have to load all the exported components in order to link them
   // some of the components might but authored, some might be imported.
   // when a component has dists, we need the consumer-component object to retrieve the dists info.
@@ -84,6 +84,7 @@ export default (async function exportAction(ids?: string[], remote: string, save
       const results = await consumer.eject(componentsIds);
       return results;
     } catch (err) {
+      logger.error(err);
       ejectErr = `The components ${componentsIds.map(c => c.toString()).join(', ')} were exported successfully.
       However, the eject operation has failed due to an error: ${err}`;
     }

@@ -53,7 +53,7 @@ describe('bit import command with no ids', function () {
       helper.commitComponentBarFoo();
       helper.exportComponent('bar/foo');
       const bitMap = helper.readBitMap();
-      helper.createComponent('bar', 'foo2.js');
+      helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar/foo2.js');
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -64,8 +64,8 @@ describe('bit import command with no ids', function () {
       helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/bar/foo2`]: '0.0.1' });
       helper.importAllComponents(true);
       const barFooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; };";
-      helper.createComponent('bar', 'foo.js', barFooFixtureV2);
-      helper.createComponent(path.join('components', 'bar', 'foo2'), 'foo2.js', barFooFixtureV2);
+      helper.createFile('bar', 'foo.js', barFooFixtureV2);
+      helper.createFile(path.join('components', 'bar', 'foo2'), 'foo2.js', barFooFixtureV2);
     });
     describe('without --force flag', () => {
       let output;

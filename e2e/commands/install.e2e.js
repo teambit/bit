@@ -16,7 +16,7 @@ describe('run bit install', function () {
       helper.addNpmPackage('lodash.isstring', '4.0.0');
       const isStringFixture = `const lodashIsString = require('lodash.isstring');
 module.exports = function isString() { return 'isString: ' + lodashIsString() +  ' and got is-string'; };`;
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -25,7 +25,7 @@ module.exports = function isString() { return 'isString: ' + lodashIsString() + 
       const fooBarFixture = `const isString = require('${requirePath}/utils/is-string');
 module.exports = function foo() { return isString() + ' and got foo'; };`;
       helper.createComponentBarFoo(fooBarFixture);
-      helper.createComponent('bar', 'foo.js', fooBarFixture);
+      helper.createFile('bar', 'foo.js', fooBarFixture);
       helper.addComponent('bar/foo.js');
       helper.commitAllComponents();
       helper.exportAllComponents();

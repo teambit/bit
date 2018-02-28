@@ -51,7 +51,7 @@ describe('dists file are written outside the components dir', function () {
     before(() => {
       helper.getClonedLocalScope(scopeWithCompiler);
       const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -61,7 +61,7 @@ describe('dists file are written outside the components dir', function () {
 
       const isStringFixture = `import isType from '${helper.getRequireBitPath('utils', 'is-type')}';
  export default function isString() { return isType() +  ' and got is-string'; };`;
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -88,7 +88,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       before(() => {
         const fooBarFixtureV2 = `import isString from '${helper.getRequireBitPath('utils', 'is-string')}';
 export default function foo() { return isString() + ' and got foo v2'; };`;
-        helper.createComponent('components/bar/foo', 'foo.js', fooBarFixtureV2); // update component
+        helper.createFile('components/bar/foo', 'foo.js', fooBarFixtureV2); // update component
         helper.addRemoteEnvironment();
         helper.build();
       });
@@ -114,11 +114,11 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.reInitRemoteScope();
       const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       const isStringFixture =
         "import isType from './is-type.js'; export default function isString() { return isType() +  ' and got is-string'; };";
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       const fooBarFixture =
         "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
@@ -169,7 +169,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
 import lodashIsString from 'lodash.isstring';
 lodashIsString();
 export default function foo() { return isString() + ' and got foo v2'; };`;
-          helper.createComponent('components/bar/foo/bar', 'foo.js', fooBarFixtureV2); // update component
+          helper.createFile('components/bar/foo/bar', 'foo.js', fooBarFixtureV2); // update component
           helper.addRemoteEnvironment();
           helper.build();
         });
@@ -207,7 +207,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
     before(() => {
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.reInitRemoteScope();
-      helper.createComponent(path.normalize('src/bar'), 'foo.js');
+      helper.createFile(path.normalize('src/bar'), 'foo.js');
       helper.addComponent(path.normalize('src/bar/foo.js'));
       clonedScope = helper.cloneLocalScope();
     });
@@ -292,7 +292,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.reInitRemoteScope();
       const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -305,7 +305,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         'utils',
         'is-type'
       )}'); module.exports = function isString() { return isType.default() +  ' and got is-string'; };`;
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
       helper.exportAllComponents();

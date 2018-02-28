@@ -44,9 +44,9 @@ describe('merge functionality', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
 
-      helper.createComponent('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponent('utils/is-type.js');
-      helper.createComponent('utils', 'is-string.js', isStringFixture);
+      helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
 
       helper.commitAllComponents();
@@ -54,7 +54,7 @@ describe('merge functionality', function () {
       const clonedScope = helper.cloneRemoteScope();
 
       const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-      helper.createComponent('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+      helper.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
       helper.commitAllComponents();
       helper.exportAllComponents();
 

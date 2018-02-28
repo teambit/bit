@@ -3,6 +3,7 @@ import * as pathLib from 'path';
 import semver from 'semver';
 import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
+import chalk from 'chalk';
 import Toposort from 'toposort-class';
 import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
@@ -59,9 +60,10 @@ import performCIOps from './ci-ops';
 import logger from '../logger/logger';
 import componentResolver from '../component-resolver';
 import ComponentsList from '../consumer/component/components-list';
-import { RemovedObjects } from './removed-components';
 import Component from '../consumer/component/consumer-component';
+import { RemovedObjects } from './removed-components';
 import DependencyGraph from './graph/graph';
+import RemoveModelComponents from './component-ops/remove-model-components';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -821,66 +823,6 @@ export default class Scope {
     return Promise.all(versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects)));
   }
 
-  async removeComponent(id, componentList, removeRefs: boolean = false) {
-    const symlink = componentList.filter(
-      component => component instanceof Symlink && component.id() === id.toStringWithoutScopeAndVersion()
-    );
-    await this.sources.clean(id, removeRefs);
-    if (!R.isEmpty(symlink)) await this.objects.remove(symlink[0].hash());
-  }
-
-  /**
-   * Remove component dependecies
-   */
-  async removeComponentsDependences(
-    dependentBits,
-    componentList,
-    consumerComponentToRemove,
-    bitId,
-    removeSameOrigin: boolean = false
-  ): Promise<string> {
-    const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (id) => {
-      const arr = dependentBits[id.toStringWithoutVersion()];
-      const name = bitId.version === LATEST_BIT_VERSION ? bitId.toStringWithoutVersion() : bitId.toString();
-      const depArr = R.reject(num => num === name || BitId.parse(num).scope !== id.scope, arr);
-      if (R.isEmpty(depArr) && (id.scope !== bitId.scope || removeSameOrigin)) {
-        await this.removeComponent(id, componentList, true);
-        return id;
-      }
-    });
-    return (await Promise.all(removedComponents)).filter(x => !R.isNil(x));
-  }
-
-  /**
-   * removeSingle - remove single component
-   * @param {BitId} bitId - list of remote component ids to delete
-   * @param {boolean} removeSameOrigin - remove component dependencies from same origin
-   */
-  async removeSingle(bitId: BitId, removeSameOrigin: boolean = false): Promise<string> {
-    logger.debug(`removing ${bitId.toString()}`);
-    const component = (await this.sources.get(bitId)).toComponentVersion();
-    const consumerComponentToRemove = await component.toConsumer(this.objects);
-    const componentList = await this.objects.listComponents();
-
-    const dependentBits = await this.findDependentBits(
-      consumerComponentToRemove.flattenedDependencies,
-      bitId.version !== LATEST_BIT_VERSION
-    );
-
-    const removedDependencies = await this.removeComponentsDependences(
-      dependentBits,
-      componentList,
-      consumerComponentToRemove,
-      bitId,
-      removeSameOrigin
-    );
-
-    await this.removeComponent(bitId, componentList, false);
-    if (Object.keys(component.component.versions).length <= 1) bitId.version = LATEST_BIT_VERSION;
-
-    return { bitId, removedDependencies };
-  }
-
   async deprecateSingle(bitId: BitId): Promise<string> {
     const component = await this.sources.get(bitId);
     component.deprecated = true;
@@ -888,6 +830,17 @@ export default class Scope {
     await this.objects.persist();
     return bitId.toStringWithoutVersion();
   }
+
+  /**
+   * Remove components from scope
+   * @force Boolean  - remove component from scope even if other components use it
+   */
+  async removeMany(bitIds: BitIds, force: boolean, removeSameOrigin: boolean = false): Promise<RemovedObjects> {
+    logger.debug(`scope.removeMany ${bitIds} with force flag: ${force.toString()}`);
+    const removeComponents = new RemoveModelComponents(this, bitIds, force, removeSameOrigin);
+    return removeComponents.remove();
+  }
+
   /**
    * findDependentBits
    * foreach component in array find the componnet that uses that component
@@ -942,24 +895,6 @@ export default class Scope {
   }
 
   /**
-   * Remove components from scope
-   * @force Boolean  - remove component from scope even if other components use it
-   */
-  async removeMany(bitIds: BitIds, force: boolean, removeSameOrigin: boolean = false): Promise<RemovedObjects> {
-    logger.debug(`removing ${bitIds} with force flag: ${force.toString()}`);
-    const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
-    const dependentBits = await this.findDependentBits(foundComponents);
-    if (R.isEmpty(dependentBits) || force) {
-      const removedComponents = await Promise.all(
-        foundComponents.map(async bitId => this.removeSingle(bitId, removeSameOrigin))
-      );
-      const ids = removedComponents.map(x => x.bitId);
-      const removedDependencies = R.flatten(removedComponents.map(x => x.removedDependencies));
-      return new RemovedObjects({ removedComponentIds: ids, missingComponents, removedDependencies });
-    }
-    return new RemovedObjects({ missingComponents, dependentBits });
-  }
-  /**
    * deprecate components from scope
    */
   async deprecateMany(bitIds: Array<BitId>): Promise<any> {
@@ -1004,7 +939,7 @@ export default class Scope {
   }
 
   loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
-    return this.getOne(id).then((component) => {
+    return this.getComponentVersion(id).then((component) => {
       if (!component) throw new ComponentNotFound(id.toString());
       return component.toConsumer(this.objects);
     });
@@ -1047,7 +982,7 @@ export default class Scope {
     });
   }
 
-  async getOne(id: BitId): Promise<ComponentVersion> {
+  async getComponentVersion(id: BitId): Promise<ComponentVersion> {
     if (!id.isLocal(this.name)) {
       return this.remotes().then(remotes => this.getExternalOne({ id, remotes, localFetch: true }));
     }
@@ -1056,6 +991,27 @@ export default class Scope {
       if (!component) throw new ComponentNotFound(id.toString());
       return component.toComponentVersion(id.version);
     });
+  }
+
+  /**
+   * Get ComponentModel instance per bit-id. The id can be either with or without a scope-name.
+   * In case the component is saved in the model only with the scope (imported), it loads all
+   * components and search for it.
+   * It throws an error if the component wasn't found.
+   */
+  async getComponentModel(id: BitId): Promise<ComponentModel> {
+    const component = await this.sources.get(id);
+    if (component) return component;
+    if (!id.scope) {
+      // search for the complete ID
+      const components: ComponentModel[] = await this.objects.listComponents(false); // don't fetch Symlinks
+      const foundComponent = components.filter(
+        c => c.toBitId().toStringWithoutScopeAndVersion() === id.toStringWithoutVersion()
+      );
+      // $FlowFixMe
+      if (foundComponent.length) return first(foundComponent);
+    }
+    throw new ComponentNotFound(id.toString());
   }
 
   /**
@@ -1155,7 +1111,15 @@ export default class Scope {
   }
 
   // TODO: Change name since it also used to install extension
-  async installEnvironment({ ids, verbose }: { ids: BitId[], verbose?: boolean }): Promise<any> {
+  async installEnvironment({
+    ids,
+    verbose,
+    dontPrintEnvMsg
+  }: {
+    ids: [{ componentId: BitId, type: string }],
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  }): Promise<any> {
     logger.debug(`scope.installEnvironment, ids: ${ids.join(', ')}`);
     const componentsDir = this.getComponentsPath();
     const isolateOpts = {
@@ -1165,25 +1129,28 @@ export default class Scope {
       dist: true,
       conf: true,
       override: false,
-      verbose
+      verbose,
+      silentPackageManagerResult: true
     };
     const idsWithoutNils = removeNils(ids);
-    const predicate = id => id.toString(); // TODO: should be moved to BitId class
+    const predicate = id => id.componentId.toString(); // TODO: should be moved to BitId class
     const uniqIds = R.uniqBy(predicate)(idsWithoutNils);
     const nonExistingEnvsIds = uniqIds.filter((id) => {
-      return !this.loadEnvironment(id, { pathOnly: true });
+      return !this.loadEnvironment(id.componentId, { pathOnly: true });
     });
 
     const importEnv = async (id) => {
-      let concreteId = id;
-      if (id.getVersion().latest) {
-        const concreteIds = await this.fetchRemoteVersions([id]);
+      let concreteId = id.componentId;
+      if (id.componentId.getVersion().latest) {
+        const concreteIds = await this.fetchRemoteVersions([id.componentId]);
         concreteId = concreteIds[0];
       }
       const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
       const env = new IsolatedEnvironment(this, dir);
       await env.create();
-      return env.isolateComponent(id, isolateOpts);
+      const isolatedComponent = await env.isolateComponent(id.componentId, isolateOpts);
+      if (!dontPrintEnvMsg) console.log(chalk.bold.green(`successfully installed the ${id.componentId} ${id.type}`));
+      return isolatedComponent;
     };
     return pMapSeries(nonExistingEnvsIds, importEnv);
   }

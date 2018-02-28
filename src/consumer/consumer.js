@@ -308,12 +308,12 @@ export default class Consumer {
     return importComponents.importComponents();
   }
 
-  importEnvironment(rawId: ?string, verbose?: boolean) {
+  importEnvironment(rawId: ?string, verbose?: boolean, dontPrintEnvMsg: boolean) {
     if (!rawId) {
       throw new Error('you must specify bit id for importing');
     } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId);
-    return this.scope.installEnvironment({ ids: [bitId], verbose });
+    return this.scope.installEnvironment({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
   }
 
   removeFromComponents(id: BitId, currentVersionOnly: boolean = false): Promise<any> {
@@ -339,6 +339,7 @@ export default class Consumer {
    * write them only once.
    */
   async writeToComponentsDir({
+    silentPackageManagerResult,
     componentsWithDependencies,
     writeToPath,
     force = true,
@@ -353,6 +354,7 @@ export default class Consumer {
     verbose = false,
     excludeRegistryPrefix = false
   }: {
+    silentPackageManagerResult: boolean,
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
     force?: boolean,
@@ -469,7 +471,9 @@ export default class Consumer {
     );
 
     await this.bitMap.write();
-    if (installNpmPackages) await installNpmPackagesForComponents(this, componentsWithDependencies, verbose);
+    if (installNpmPackages) {
+      await installNpmPackagesForComponents(this, componentsWithDependencies, verbose, silentPackageManagerResult);
+    }
     if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents.map(c => c.id));
 
     return linkComponents(
@@ -485,9 +489,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -869,6 +873,7 @@ export default class Consumer {
    * @param {boolean} deleteFiles - delete local added files from fs.
    */
   async remove(ids: string[], force: boolean, track: boolean, deleteFiles: boolean) {
+    logger.debug(`consumer.remove: ${ids.join(', ')}. force: ${force.toString()}`);
     // added this to remove support for remove version
     const bitIds = ids.map(bitId => BitId.parse(bitId)).map((id) => {
       id.version = LATEST_BIT_VERSION;
@@ -961,17 +966,17 @@ export default class Consumer {
     return this.bitMap.write();
   }
   /**
-   * removeLocal - remove local (imported, new staged components) from modules and bitmap  accoriding to flags
+   * removeLocal - remove local (imported, new staged components) from modules and bitmap according to flags
    * @param {BitIds} bitIds - list of remote component ids to delete
    * @param {boolean} force - delete component that are used by other components.
    * @param {boolean} deleteFiles - delete component that are used by other components.
    */
   async removeLocal(bitIds: BitIds, force: boolean, track: boolean, deleteFiles: boolean) {
-    // local remove in case user wants to delete commited components
+    // local remove in case user wants to delete tagged components
     const modifiedComponents = [];
     const regularComponents = [];
     const resolvedIDs = this.resolveLocalComponentIds(bitIds);
-    if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects({});
+    if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects();
     if (!force) {
       await Promise.all(
         resolvedIDs.map(async (id) => {
@@ -987,9 +992,9 @@ export default class Consumer {
       true
     );
 
-    const componensToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
+    const componentsToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
     if (!R.isEmpty(removedComponentIds)) {
-      await this.removeComponentFromFs(componensToRemoveFromFs, deleteFiles);
+      await this.removeComponentFromFs(componentsToRemoveFromFs, deleteFiles);
       await this.removeComponentFromFs(removedDependencies, false);
     }
     if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) {
@@ -997,16 +1002,16 @@ export default class Consumer {
         this,
         this.getPath(),
         this.bitMap,
-        componensToRemoveFromFs
+        componentsToRemoveFromFs
       );
-      await this.cleanBitMapAndBitJson(componensToRemoveFromFs, removedDependencies);
+      await this.cleanBitMapAndBitJson(componentsToRemoveFromFs, removedDependencies);
     }
     return new RemovedLocalObjects(
       removedComponentIds,
       missingComponents,
       modifiedComponents,
-      dependentBits,
-      removedDependencies
+      removedDependencies,
+      dependentBits
     );
   }
 
@@ -1030,11 +1035,12 @@ export default class Consumer {
   }
 
   async eject(componentsIds: BitId[]) {
-    await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
     const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
+    await this.remove(componentIdsWithoutScope, true, false, true);
+    await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
     await packageJson.removeComponentsFromNodeModules(this, componentsIds);
     await installPackages(this, [], true, true);
-    await this.remove(componentIdsWithoutScope, true, false, true);
+
     return componentsIds;
   }
 }

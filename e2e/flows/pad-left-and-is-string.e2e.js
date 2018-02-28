@@ -2,17 +2,20 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
+import BitsrcTester, { username } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 
 describe('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function () {
   this.timeout(0);
   const helper = new Helper();
+  const bitsrcTester = new BitsrcTester();
   after(() => {
     helper.destroyEnv();
   });
   describe('when originallySharedDir is the same as dist.entry (src)', () => {
     let originalScope;
+    let scopeBeforeExport;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const sourceDir = path.join(helper.getFixturesDir(), 'components');
@@ -29,6 +32,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.runCmd('npm init -y');
       helper.runCmd('npm install chai -D');
       helper.tagAllWithoutMessage();
+      scopeBeforeExport = helper.cloneLocalScope();
       helper.exportAllComponents();
 
       originalScope = helper.cloneLocalScope();
@@ -80,6 +84,56 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         it('should be able to pass the tests', () => {
           const output = helper.testComponent('string/pad-left');
           expect(output).to.have.string('tests passed');
+        });
+      });
+      describe('exporting with --eject option', () => {
+        let scopeName;
+        let exportOutput;
+        let isStringId;
+        let padLeftId;
+        before(() => {
+          helper.getClonedLocalScope(scopeBeforeExport);
+          return bitsrcTester
+            .loginToBitSrc()
+            .then(() => bitsrcTester.createScope())
+            .then((scope) => {
+              scopeName = scope;
+              isStringId = `${username}.${scopeName}.string.is-string`;
+              padLeftId = `${username}.${scopeName}.string.pad-left`;
+              helper.exportAllComponents(`${username}.${scopeName}`);
+              helper.reInitLocalScope();
+              helper.runCmd(`bit import ${username}.${scopeName}/string/is-string`);
+              helper.runCmd(`bit import ${username}.${scopeName}/string/pad-left`);
+              helper.runCmd('bit tag -a -s 2.0.0');
+              exportOutput = helper.exportAllComponents(`${username}.${scopeName} --eject`);
+            });
+        });
+        after(() => {
+          return bitsrcTester.deleteScope(scopeName);
+        });
+        it('should export them successfully', () => {
+          expect(exportOutput).to.have.a.string('exported 2 components to scope');
+        });
+        it('should delete the original component files from the file-system', () => {
+          expect(path.join(helper.localScopePath, 'components/string/is-string')).not.to.be.a.path();
+          expect(path.join(helper.localScopePath, 'components/string/pad-left')).not.to.be.a.path();
+        });
+        it('should update the package.json with the components as packages', () => {
+          const packageJson = helper.readPackageJson();
+          expect(packageJson.dependencies[`@bit/${isStringId}`]).to.equal('2.0.0');
+          expect(packageJson.dependencies[`@bit/${padLeftId}`]).to.equal('2.0.0');
+        });
+        it('should have the component files as a package (in node_modules)', () => {
+          const nodeModulesDir = path.join(helper.localScopePath, 'node_modules', '@bit');
+          expect(path.join(nodeModulesDir, isStringId)).to.be.a.path();
+          expect(path.join(nodeModulesDir, padLeftId)).to.be.a.path();
+        });
+        it('should delete the component from bit.map', () => {
+          const bitMap = helper.readBitMap();
+          Object.keys(bitMap).forEach((id) => {
+            expect(id).not.to.have.string('pad-left');
+            expect(id).not.to.have.string('is-string');
+          });
         });
       });
     });
