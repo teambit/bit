@@ -19,8 +19,8 @@ export default function remove(
       await HooksManagerInstance.triggerHook(
         POST_REMOVE_REMOTE,
         {
-          removedComponentsIds: res.removedComponentIds,
-          missingComponentsIds: res.missingComponents,
+          removedComponentsIds: res.removedComponentIds.serialize(),
+          missingComponentsIds: res.missingComponents.serialize(),
           dependentBitsIds: res.dependentBits,
           force,
           scopePath: path,
