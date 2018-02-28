@@ -33,9 +33,9 @@ export class RemovedObjects {
   }
 
   static fromObjects(payload: Object): RemovedObjects {
-    const missingComponents = new BitIds(...payload.missingComponents.map(id => new BitId(id)));
-    const removedComponentIds = new BitIds(...payload.removedComponentIds.map(id => new BitId(id)));
-    const removedDependencies = new BitIds(...payload.removedDependencies.map(id => new BitId(id)));
+    const missingComponents = new BitIds(...payload.missingComponents.map(id => BitId.parse(id)));
+    const removedComponentIds = new BitIds(...payload.removedComponentIds.map(id => BitId.parse(id)));
+    const removedDependencies = new BitIds(...payload.removedDependencies.map(id => BitId.parse(id)));
     return new RemovedObjects({
       missingComponents,
       removedComponentIds,
