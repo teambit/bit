@@ -27,6 +27,8 @@ export default function remove(
         scopeName: scope.scopeJson.name
       };
       await HooksManagerInstance.triggerHook(POST_REMOVE_REMOTE, hookArgs, headers);
+      logger.debug('res before', JSON.stringify(res, null, 2));
+      logger.debug('res after', JSON.stringify(res.serialize, null, 2));
       return res.serialize();
     });
   });

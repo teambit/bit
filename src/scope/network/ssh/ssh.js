@@ -184,6 +184,7 @@ export default class SSH implements Network {
       context
     ).then((data: string) => {
       const { payload } = this._unpack(data);
+      console.log('payload', payload);
       return Promise.resolve(RemovedObjects.fromObjects(payload));
     });
   }
