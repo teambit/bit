@@ -3,14 +3,14 @@ import { loadScope } from '../../../scope';
 import { BitIds } from '../../../bit-id';
 import { PRE_REMOVE_REMOTE, POST_REMOVE_REMOTE } from '../../../constants';
 import HooksManager from '../../../hooks';
-import { RemovedObjects } from '../../../scope/removed-components';
+import type { RemovedObjectSerialized } from '../../../scope/removed-components';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
 export default function remove(
   { path, ids, force }: { path: string, ids: string[], force: boolean },
   headers: ?Object
-): Promise<RemovedObjects> {
+): Promise<RemovedObjectSerialized> {
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds, force };
   HooksManagerInstance.triggerHook(PRE_REMOVE_REMOTE, args, headers);
