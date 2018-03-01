@@ -19,6 +19,7 @@ import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } 
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import type { PathLinux, PathOsBased } from '../../utils/path';
+import type { BitIdStr } from '../../bit-id/bit-id';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -178,7 +179,7 @@ export default class BitMap {
   /**
    * When the given id doesn't include scope-name, there might be a similar component in bit.map with scope-name
    */
-  getExistingComponentId(componentIdStr: string): ?string {
+  getExistingComponentId(componentIdStr: BitIdStr): ?BitIdStr {
     if (this.components[componentIdStr]) return componentIdStr;
     const parsedId = BitId.parse(componentIdStr);
     if (parsedId.scope && !parsedId.hasVersion()) {
@@ -258,7 +259,7 @@ export default class BitMap {
     return this.components[componentIdStr];
   }
 
-  _removeFromComponentsArray(componentId) {
+  _removeFromComponentsArray(componentId: BitIdStr) {
     const invalidateCache = () => {
       this.paths = {};
     };

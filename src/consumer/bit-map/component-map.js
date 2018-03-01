@@ -16,11 +16,11 @@ export type ComponentMapFile = {
 export type ComponentMapData = {
   files: ComponentMapFile[],
   mainFile: PathLinux,
-  rootDir?: PathLinux, // needed to search for the component's bit.json. If it's undefined, the component probably don't have bit.json
+  rootDir?: PathLinux,
   origin: ComponentOrigin,
-  dependencies: string[], // needed for the link process
-  mainDistFile?: PathLinux, // needed when there is a build process involved
-  originallySharedDir?: PathLinux // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
+  dependencies: string[],
+  mainDistFile?: PathLinux,
+  originallySharedDir?: PathLinux
 };
 
 export type PathChange = { from: PathLinux, to: PathLinux };
@@ -28,11 +28,11 @@ export type PathChange = { from: PathLinux, to: PathLinux };
 export default class ComponentMap {
   files: ComponentMapFile[];
   mainFile: PathLinux;
-  rootDir: ?PathLinux;
+  rootDir: ?PathLinux; // always set for IMPORTED and NESTED.
   origin: ComponentOrigin;
-  dependencies: string[];
-  mainDistFile: ?PathLinux;
-  originallySharedDir: ?PathLinux;
+  dependencies: string[]; // needed for the link process
+  mainDistFile: ?PathLinux; // needed when there is a build process involved
+  originallySharedDir: ?PathLinux; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
   constructor({ files, mainFile, rootDir, origin, dependencies, mainDistFile, originallySharedDir }: ComponentMapData) {
     this.files = files;
     this.mainFile = mainFile;

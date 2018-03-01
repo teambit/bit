@@ -154,7 +154,6 @@ describe('bit add command', function () {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
-
     it('Should print tracking component: id', () => {
       helper.createFile('bar', 'foo2.js');
       const output = helper.addComponent(path.normalize('bar/foo2.js'));
@@ -257,7 +256,6 @@ describe('bit add command', function () {
       const addCmd = () => helper.addComponentWithOptions(osComponentName, { t: `${osFilePathName}       ` });
       expect(addCmd).to.throw(`fatal: the file "${osFilePathName}" was not found`);
     });
-
     it('Add component from subdir  ../someFile ', () => {
       const barPath = path.join(helper.localScopePath, 'bar/x');
       helper.createFile('bar', 'foo2.js');
@@ -294,7 +292,6 @@ describe('bit add command', function () {
       expect(files2).to.be.ofSize(1);
       expect(files2).to.deep.include({ relativePath: 'bar/boo1.js', test: false, name: 'boo1.js' });
     });
-
     it('Should throw error when no index file is found', () => {
       const file1 = 'foo1.js';
       const file2 = 'foo2.js';
@@ -310,7 +307,6 @@ describe('bit add command', function () {
         )}] was not found in the files list ${file1Path}, ${file2Path}\n`
       );
     });
-
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
       helper.createFile('bar', 'foo2.js');
       const addCmd = () => helper.addComponentWithOptions('bar/foo2.js', { n: 'test', i: 'jaja' });
@@ -356,7 +352,6 @@ describe('bit add command', function () {
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
     it.skip('should not allow adding a component with an existing box-name and component-name', () => {});
   });
-
   describe('adding file to existing tagged component', () => {
     let bitMap;
     let files;
@@ -383,7 +378,6 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo');
     });
   });
-
   describe('add multiple components', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
@@ -850,7 +844,6 @@ describe('bit add command', function () {
       expect(bitMap).not.to.have.property('bar/foo');
     });
   });
-
   describe('add component/s with gitignore', () => {
     let errorMessage;
     before(() => {
@@ -882,7 +875,6 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/boo');
     });
   });
-
   describe('ignore specific files inside component', () => {
     let output;
     before(() => {
@@ -948,7 +940,6 @@ describe('bit add command', function () {
       expect(newBitMapPath).to.not.be.a.path('.bitmap Should not exist');
     });
   });
-
   describe('add existing files to exported component', () => {
     let bitMap;
     before(() => {
