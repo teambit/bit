@@ -35,7 +35,6 @@ module.exports = function(options) {
   var results = traverse(config);
   debug('traversal complete', results);
 
-  dedupeNonExistent(config.nonExistent);
   debug('deduped list of nonExistent partials: ', config.nonExistent);
 
   var tree;
@@ -100,13 +99,13 @@ module.exports._getDependencies = function(config) {
 
   var resolvedDependencies = [];
   var pathMapDependencies = [];
-  var pathMapFile = { file: config.filename };
+  var pathMapFile = {file: config.filename};
 
   for (var i = 0, l = dependencies.length; i < l; i++) {
     var dep = dependencies[i];
     const isVue = (!Array.isArray(dep) && dep.isScript);
     var result;
-    if (!Array.isArray(dep) && dep.isScript!== undefined) { // used for vue - return array of objects
+    if (!Array.isArray(dep) && dep.isScript !== undefined) { // used for vue - return array of objects
       result = cabinet({
         partial: dep.dep,
         filename: config.filename,
@@ -126,20 +125,29 @@ module.exports._getDependencies = function(config) {
         webpackConfig: config.webpackConfig
       });
     }
+    const dependency = isVue ? dep.dep : dep;
     if (!result) {
       debug('skipping an empty filepath resolution for partial: ' + dep);
-      config.nonExistent.push(isVue? dep.dep : dep);
+      if (config.nonExistent[config.filename]) {
+        config.nonExistent[config.filename].push(dependency);
+      } else {
+        config.nonExistent[config.filename] = [dependency];
+      }
       continue;
     }
 
     var exists = fs.existsSync(result);
 
     if (!exists) {
-      config.nonExistent.push(isVue? dep.dep : dep);
+      if (config.nonExistent[config.filename]) {
+        config.nonExistent[config.filename].push(dependency);
+      } else {
+        config.nonExistent[config.filename] = [dependency];
+      }
       debug('skipping non-empty but non-existent resolution: ' + result + ' for partial: ' + dep);
       continue;
     }
-    var pathMap = { dep: isVue ? dep.dep : dep , resolvedDep: result};
+    var pathMap = {dep: dependency , resolvedDep: result};
     var importSpecifiersSupportedLang = ['es6', 'ts', 'stylable'];
     importSpecifiersSupportedLang.forEach((lang) => {
       if (precinctOptions[lang] && precinctOptions[lang].importSpecifiers && precinctOptions[lang].importSpecifiers[dep]) {
@@ -232,12 +240,3 @@ function removeDups(list) {
   return unique;
 }
 
-// Mutate the list input to do a dereferenced modification of the user-supplied list
-function dedupeNonExistent(nonExistent) {
-  var deduped = removeDups(nonExistent);
-  nonExistent.length = deduped.length;
-
-  for (var i = 0, l = deduped.length; i < l; i++) {
-    nonExistent[i] = deduped[i];
-  }
-}

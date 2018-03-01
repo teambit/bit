@@ -138,7 +138,7 @@ function addRelativePathsToPathMap(pathMap, pathCache, baseDir) {
 export default function generateTree(files, config) {
   const depTree = {};
   const visited = {};
-  const nonExistent = [];
+  const nonExistent = {};
   const npmPaths = {};
   const pathCache = {};
   const pathMap = [];

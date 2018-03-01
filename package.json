@@ -7,7 +7,7 @@
     "test": "jest",
     "test-watch": "jest --watch",
     "clean": "rm -rf dist",
-    "build": "babel src -d dist",
+    "build": "babel src -d dist  --source-maps",
     "watch": "babel --watch src -d dist --source-maps",
     "prepublishOnly": "npm run clean && npm run build",
     "build-debug": "babel src -d dist --source-maps"
@@ -49,6 +49,7 @@
     "is-relative-path": "^2.0.0",
     "lodash.flatten": "^4.4.0",
     "lodash.partition": "^4.6.0",
+    "lodash.set": "^4.3.2",
     "module-definition": "^2.2.4",
     "module-lookup-amd": "^5.0.1",
     "node-source-walk": "^3.3.0",

@@ -7,6 +7,7 @@ import R from 'ramda';
 import generateTree from './generate-tree-madge';
 import PackageJson from '../package-json/package-json';
 import partition from 'lodash.partition';
+import lset from 'lodash.set';
 import { DEFAULT_BINDINGS_PREFIX } from '../constants';
 
 /**
@@ -233,34 +234,42 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
     if (item.startsWith(`${bindingPrefix}/`) || item.startsWith(`${DEFAULT_BINDINGS_PREFIX}/`)) return 'bits';
     return item.startsWith('.') ? 'files' : 'packages';
   });
-  const groups = byPathType(missing, bindingPrefix);
-  const packages = groups.packages ? groups.packages.map(resolvePackageNameByPath) : [];
+  const groups = Object.keys(missing).map(key => Object.assign({ originFile: path.relative(cwd, key) }, byPathType(missing[key], bindingPrefix)));
+  groups.forEach((group) => {
+    if (group.packages) group.packages = group.packages.map(resolvePackageNameByPath);
+  });
   // This is a hack to solve problems that madge has with packages for type script files
   // It see them as missing even if they are exists
   const foundPackages = {};
-  const missingPackages = [];
-  packages.forEach((packageName) => {
-    // Don't add the same package twice
-    if (R.contains(packageName, missingPackages)) return;
-    const resolvedPath = resolveModulePath(packageName, cwd, consumerPath);
-    if (!resolvedPath) {
-      return missingPackages.push(packageName);
-    }
-    const packageWithVersion = resolveNodePackage(cwd, resolvedPath);
+  const packageJson = PackageJson.findPackage(cwd);
 
-    return packageWithVersion ? Object.assign(foundPackages, packageWithVersion) :
-                                missingPackages.push(packageWithVersion);
+  groups.forEach((group) => {
+    const missingPackages = [];
+    if (group.packages) {
+      group.packages.forEach((packageName) => {
+      // Don't add the same package twice
+        if (R.contains(packageName, missingPackages)) return;
+        const resolvedPath = resolveModulePath(packageName, cwd, consumerPath);
+        if (!resolvedPath) {
+          return missingPackages.push(packageName);
+        }
+        const packageWithVersion = resolveNodePackage(cwd, resolvedPath);
+
+        return packageWithVersion ? Object.assign(foundPackages, packageWithVersion) :
+        missingPackages.push(packageWithVersion);
+      });
+    }
+    if (packageJson) {
+      const result = findPackagesInPackageJson(packageJson, missingPackages);
+      groups.packages = result.missingPackages;
+      Object.assign(foundPackages, result.foundPackages);
+    }
   });
-  groups.packages = missingPackages;
 
   // temporarily disable this functionality since it cause this bugs:
   // https://github.com/teambit/bit/issues/635
   // https://github.com/teambit/bit/issues/690
-  // if (packageJson) {
-  //   const result = findPackagesInPackageJson(packageJson, missingPackages);
-  //   groups.packages = result.missingPackages;
-  //   Object.assign(foundPackages, result.foundPackages)
-  // }
+
 
   return { groups, foundPackages };
 }
@@ -362,23 +371,23 @@ function updateTreeWithLinkFilesAndImportSpecifiers(tree: Tree, pathMap: PathMap
  * @param bindingPrefix
  * @return {Promise<{missing, tree}>}
  */
-export default async function getDependencyTree(baseDir: string, consumerPath: string, filePaths: string[], bindingPrefix: string):
-  Promise<{ missing: Object, tree: Tree}> {
+export default async function getDependencyTree(baseDir: string, consumerPath: string, filePaths: string[], bindingPrefix: string): Promise<{ missing: Object, tree: Tree}> {
   const config = { baseDir, includeNpm: true, requireConfig: null, webpackConfig: null, visited: {}, nonExistent: [] };
   const result = generateTree(filePaths, config);
   const { groups, foundPackages } = groupMissing(result.skipped, baseDir, consumerPath, bindingPrefix);
   const tree: Tree = groupDependencyTree(result.tree, baseDir, bindingPrefix);
-  const relativeFilePaths = filePaths.map(filePath => path.relative(baseDir, filePath));
+  // const relativeFilePaths = filePaths.map(filePath => path.relative(baseDir, filePath));
   // Merge manually found packages with madge founded packages
   if (foundPackages && !R.isEmpty(foundPackages)) {
     // Madge found packages so we need to merge them with the manual
-    relativeFilePaths.forEach((relativeFilePath) => {
-      if (tree[relativeFilePath].packages) {
-        Object.assign(tree[relativeFilePath].packages, foundPackages);
-        // There is only manually found packages
-      } else {
-        tree[relativeFilePath].packages = foundPackages;
-      }
+    Object.keys(foundPackages).forEach((pkg) => {
+      // locate package in groups(contains missing)
+      groups.forEach((fileDep) => {
+        if (fileDep.packages && fileDep.packages.includes(pkg)) {
+          fileDep.packages = fileDep.packages.filter(packageName => packageName !== pkg);
+          lset(tree[fileDep['originFile']],`packages.${pkg}`, foundPackages[pkg]);
+        }
+      });
     });
   }
 
