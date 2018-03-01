@@ -105,18 +105,22 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
 }
 
 function writeMissingLinks(component, componentMap, bitMap) {
-  return component.missingDependencies.missingLinks.map((dependencyIdStr) => {
-    const dependencyId = bitMap.getExistingComponentId(dependencyIdStr);
-    if (!dependencyId) return null;
+  const missingLinks = component.missingDependencies.missingLinks;
+  const result = Object.keys(component.missingDependencies.missingLinks).map((key) => {
+    return missingLinks[key].map((dependencyIdStr) => {
+      const dependencyId = bitMap.getExistingComponentId(dependencyIdStr);
+      if (!dependencyId) return null;
 
-    const dependencyComponentMap = bitMap.getComponent(dependencyId);
-    return writeDependencyLink(
-      componentMap.rootDir,
-      BitId.parse(dependencyId),
-      dependencyComponentMap.rootDir,
-      component.bindingPrefix
-    );
+      const dependencyComponentMap = bitMap.getComponent(dependencyId);
+      return writeDependencyLink(
+        componentMap.rootDir,
+        BitId.parse(dependencyId),
+        dependencyComponentMap.rootDir,
+        component.bindingPrefix
+      );
+    });
   });
+  return R.flatten(result);
 }
 
 export default function linkComponents(components: Component[], consumer: Consumer): LinksResult[] {

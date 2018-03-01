@@ -46,8 +46,8 @@ function findComponentsOfDepsFiles(
   let devPackagesDeps = {};
   const componentsDeps = {};
   let devComponentsDeps = {};
-  const untrackedDeps = [];
-  const relativeDeps = []; // dependencies that are required with relative path (and should be required using 'bit/').
+  const untrackedDeps = {};
+  const relativeDeps = {}; // dependencies that are required with relative path (and should be required using 'bit/').
   const missingDeps = [];
 
   const consumerPath = consumer.getPath();
@@ -120,9 +120,9 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
           .find(dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion());
         if (!dependency) {
           throw new Error(
-            `the auto-generated file ${depFile} should be connected to ${
-              componentId
-            }, however, it's not part of the model dependencies of ${componentFromModel.id}`
+            `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
+              componentFromModel.id
+            }`
           );
         }
         const originallySource: PathLinux = entryComponentMap.originallySharedDir
@@ -148,6 +148,7 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
   };
 
   const processDepFile = (
+    originFile: string,
     depFile: string,
     importSpecifiers?: Object,
     linkFile?: string,
@@ -159,7 +160,8 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
     const { componentId, depFileRelative, destination } = getComponentIdByDepFile(depFile);
     // the file dependency doesn't have any counterpart component. Add it to untrackedDeps
     if (!componentId) {
-      untrackedDeps.push(depFileRelative);
+      if (untrackedDeps[originFile]) untrackedDeps[originFile].push(depFileRelative);
+      else untrackedDeps[originFile] = [depFileRelative];
       return;
     }
 
@@ -199,7 +201,8 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
       // also prevent adding AUTHORED component to an IMPORTED component using relative syntax. The reason is that when
       // this component is imported somewhere else, a link-file between the IMPORTED and the AUTHORED must be written
       // outside the component directory, which might override user files.
-      relativeDeps.push(componentId);
+      if (relativeDeps[originFile]) relativeDeps[originFile].push(componentId);
+      else relativeDeps[originFile] = [componentId];
       return;
     }
 
@@ -215,20 +218,25 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
     }
   };
 
-  const processLinkFile = (linkFile: Object, isTestFile: boolean = false) => {
+  const processLinkFile = (originFile: string, linkFile: Object, isTestFile: boolean = false) => {
     if (!linkFile.dependencies || R.isEmpty(linkFile.dependencies)) return;
     linkFile.dependencies.forEach((dependency) => {
       const component = getComponentIdByDepFile(linkFile.file);
       if (component.componentId) {
         // the linkFile is already a component, no need to treat it differently than other depFile
-        processDepFile(linkFile.file, dependency.importSpecifiers, undefined, isTestFile);
+        processDepFile(originFile, linkFile.file, dependency.importSpecifiers, undefined, isTestFile);
       } else {
-        processDepFile(dependency.file, dependency.importSpecifiers, linkFile.file, isTestFile);
+        processDepFile(originFile, dependency.file, dependency.importSpecifiers, linkFile.file, isTestFile);
       }
     });
   };
 
-  const processDepFiles = (allDepsFiles: string[], importSpecifiers: Object, isTestFile: boolean = false) => {
+  const processDepFiles = (
+    originFile: string,
+    allDepsFiles: string[],
+    importSpecifiers: Object,
+    isTestFile: boolean = false
+  ) => {
     if (allDepsFiles && !R.isEmpty(allDepsFiles)) {
       allDepsFiles.forEach((depFile) => {
         let finalImportSpecifiers = R.clone(importSpecifiers);
@@ -236,15 +244,15 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
           const importSpecifiersFound = importSpecifiers.find(specifierFile => specifierFile.file === depFile);
           if (importSpecifiersFound) finalImportSpecifiers = importSpecifiersFound.importSpecifiers;
         }
-        processDepFile(depFile, finalImportSpecifiers, undefined, isTestFile);
+        processDepFile(originFile, depFile, finalImportSpecifiers, undefined, isTestFile);
       });
     }
   };
 
-  const processLinkFiles = (allLinkFiles: Object[], isTestFile: boolean = false) => {
+  const processLinkFiles = (originFile: string, allLinkFiles: Object[], isTestFile: boolean = false) => {
     if (allLinkFiles && !R.isEmpty(allLinkFiles)) {
       allLinkFiles.forEach((linkFile) => {
-        processLinkFile(linkFile, isTestFile);
+        processLinkFile(originFile, linkFile, isTestFile);
       });
     }
   };
@@ -292,7 +300,7 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
     }
   };
 
-  const processPackages = (packages, isTestFile) => {
+  const processPackages = (originFile, packages, isTestFile) => {
     if (packages && !R.isEmpty(packages)) {
       if (isTestFile) {
         Object.assign(devPackagesDeps, packages);
@@ -316,10 +324,10 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
 
   files.forEach((file) => {
     const isTestFile = R.contains(file, testsFiles);
-    processPackages(tree[file].packages, isTestFile);
+    processPackages(file, tree[file].packages, isTestFile);
     processBits(tree[file].bits, isTestFile);
-    processDepFiles(tree[file].files, tree[file].importSpecifiers, isTestFile);
-    processLinkFiles(tree[file].linkFiles, isTestFile);
+    processDepFiles(file, tree[file].files, tree[file].importSpecifiers, isTestFile);
+    processLinkFiles(file, tree[file].linkFiles, isTestFile);
   });
   removeDevDepsIfTheyAlsoRegulars();
 
@@ -435,21 +443,45 @@ export default (async function loadDependenciesForComponent(
   };
   // find the dependencies (internal files and packages) through automatic dependency resolution
   const dependenciesTree = await getDependenciesTree();
-  if (dependenciesTree.missing.files && !R.isEmpty(dependenciesTree.missing.files)) {
-    missingDependencies.missingDependenciesOnFs = dependenciesTree.missing.files;
-  }
-  if (dependenciesTree.missing.packages && !R.isEmpty(dependenciesTree.missing.packages)) {
-    missingDependencies.missingPackagesDependenciesOnFs = dependenciesTree.missing.packages;
-  }
-  const missingLinks = [];
-  let missingComponents = [];
-  if (dependenciesTree.missing.bits && !R.isEmpty(dependenciesTree.missing.bits)) {
-    dependenciesTree.missing.bits.forEach((missingBit) => {
-      const componentId = Consumer.getComponentIdFromNodeModulesPath(missingBit, component.bindingPrefix);
-      // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
-      if (consumer.bitMap.getExistingComponentId(componentId)) missingLinks.push(componentId);
-      else missingComponents.push(componentId);
-    });
+  const missingDependenciesOnFs = {};
+  const missingPackagesDependenciesOnFs = {};
+  const missingComponents = {};
+  const missingLinks = {};
+
+  const componentFiles = component.files;
+  dependenciesTree.missing.forEach((fileDep) => {
+    const doesFileExistInComponent = !R.isEmpty(
+      componentFiles.filter(componentFile => componentFile.relative === fileDep.originFile)
+    );
+    if (doesFileExistInComponent) {
+      if (fileDep.files && !R.isEmpty(fileDep.files)) {
+        if (missingDependenciesOnFs[fileDep.originFile]) {
+          missingDependenciesOnFs[fileDep.originFile].concat(fileDep.files);
+        } else missingDependenciesOnFs[fileDep.originFile] = fileDep.files;
+      }
+      if (fileDep.packages && !R.isEmpty(fileDep.packages)) {
+        // missingDependencies.missingPackagesDependenciesOnFs = fileDep.packages;
+        if (missingPackagesDependenciesOnFs[fileDep.originFile]) {
+          missingPackagesDependenciesOnFs[fileDep.originFile].concat(fileDep.packages);
+        } else missingPackagesDependenciesOnFs[fileDep.originFile] = fileDep.packages;
+      }
+
+      if (fileDep.bits && !R.isEmpty(fileDep.bits)) {
+        fileDep.bits.forEach((missingBit) => {
+          const componentId = Consumer.getComponentIdFromNodeModulesPath(missingBit, component.bindingPrefix);
+          // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
+          if (consumer.bitMap.getExistingComponentId(componentId)) {
+            if (missingLinks[fileDep.originFile]) missingLinks[fileDep.originFile].push(componentId);
+            else missingLinks[fileDep.originFile] = [componentId];
+          } else if (missingComponents[fileDep.originFile]) missingComponents[fileDep.originFile].push(componentId);
+          else missingComponents[fileDep.originFile] = [componentId];
+        });
+      }
+    }
+  });
+  if (!R.isEmpty(missingDependenciesOnFs)) missingDependencies.missingDependenciesOnFs = missingDependenciesOnFs;
+  if (!R.isEmpty(missingPackagesDependenciesOnFs)) {
+    missingDependencies.missingPackagesDependenciesOnFs = missingPackagesDependenciesOnFs;
   }
 
   // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
@@ -483,11 +515,13 @@ export default (async function loadDependenciesForComponent(
   if (!R.isEmpty(traversedDeps.relativeDeps)) {
     missingDependencies.relativeComponents = traversedDeps.relativeDeps;
   }
-  if (!R.isEmpty(traversedDeps.missingDeps)) {
+  /*  if (!R.isEmpty(traversedDeps.missingDeps)) {
+    if (missingComponents[fileDep.originFile]) missingComponents[fileDep.originFile].push(componentId);
+    else missingComponents[fileDep.originFile] = [componentId];
     missingComponents = missingComponents.concat(traversedDeps.missingDeps);
-  }
-  if (missingLinks.length) missingDependencies.missingLinks = missingLinks;
-  if (missingComponents.length) missingDependencies.missingComponents = missingComponents;
+  } */
+  if (!R.isEmpty(missingLinks)) missingDependencies.missingLinks = missingLinks;
+  if (!R.isEmpty(missingComponents)) missingDependencies.missingComponents = missingComponents;
   // assign missingDependencies to component only when it has data.
   // Otherwise, when it's empty, component.missingDependencies will be an empty object ({}), and for some weird reason,
   // Ramda.isEmpty returns false when the component is received after async/await of Array.map.

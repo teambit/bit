@@ -26,13 +26,13 @@ describe('support vue files', function () {
       });
       it('should find missing vue dependencies', () => {
         const output = helper.runCmd('bit s');
-        expect(output).to.have.string(' untracked file dependencies: UiAutocompleteSuggestion.vue, UiIcon.vue');
+        expect(output).to.have.string(' untracked file dependencies:');
+        expect(output).to.have.string('UiAutocomplete.vue -> UiAutocompleteSuggestion.vue, UiIcon.vue');
       });
       it('should say that all is resolved', () => {
         helper.addComponent('UiAutocompleteSuggestion.vue');
         helper.addComponent('UiIcon.vue');
         const output = helper.runCmd('bit s');
-
         expect(output.includes('no new components')).to.be.false;
       });
       it('should display that component as a new component', () => {
