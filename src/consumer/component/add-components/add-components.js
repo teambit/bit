@@ -185,6 +185,8 @@ export default class AddComponents {
             // $FlowFixMe $this.id is not null at this point
             throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id);
           }
+          // don't send rootDir attribute to bitmap for imported component, it should never changed
+          delete component.rootDir;
         } else if (idOfFileIsDifferent) {
           // not imported component file but exists in bitmap
           if (this.warnings[existingIdOfFile]) this.warnings[existingIdOfFile].push(file.relativePath);

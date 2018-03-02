@@ -2,7 +2,6 @@
 
 import fs from 'fs';
 import chai, { expect } from 'chai';
-import normalize from 'normalize-path';
 import path from 'path';
 import Helper from '../e2e-helper';
 import { AUTO_GENERATED_MSG, DEFAULT_INDEX_EXTS } from '../../src/constants';
@@ -793,8 +792,7 @@ describe('bit add command', function () {
     });
     it('should identify the closest index file as the main file', () => {
       const bitMap = helper.readBitMap();
-      const expectedMainFile = normalize(path.join('bar', 'index.js'));
-      expect(bitMap['bar/foo'].mainFile).to.equal(expectedMainFile);
+      expect(bitMap['bar/foo'].mainFile).to.equal('index.js');
     });
   });
   describe('adding files to an imported component', () => {
@@ -826,7 +824,7 @@ describe('bit add command', function () {
         expect(output).to.have.string(
           `Command failed: ${helper.bitBin} add ${
             barFoo2Path
-          } -i bar/foo\nunable to add file bar/foo2.js because it\'s located outside the component root dir components/bar/foo\n`
+          } -i bar/foo\nunable to add file bar/foo2.js because it's located outside the component root dir components/bar/foo\n`
         );
       });
     });
