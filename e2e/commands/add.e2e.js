@@ -159,6 +159,16 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('utils/bar');
       expect(bitMap['utils/bar'].rootDir).to.equal('utils/bar');
     });
+    describe('tagging the component', () => {
+      before(() => {
+        helper.commitAllComponents();
+      });
+      it('should save the files with relativePaths relative to consumer root', () => {
+        const output = helper.catComponent('utils/bar@latest');
+        expect(output.files[0].relativePath).to.equal('utils/bar/foo.js');
+        expect(output.mainFile).to.equal('utils/bar/foo.js');
+      });
+    });
     describe('then, add a file outside of that directory', () => {
       let output;
       before(() => {

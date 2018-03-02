@@ -221,7 +221,11 @@ export default class BitMap {
         if (this.components[componentIdStr].origin === COMPONENT_ORIGINS.AUTHORED) {
           try {
             files = ComponentMap.getFilesRelativeToRootDir(existingRootDir, files);
-            mainFile = mainFile ? ComponentMap.getPathWithoutRootDir(existingRootDir, mainFile) : mainFile;
+            try {
+              mainFile = mainFile ? ComponentMap.getPathWithoutRootDir(existingRootDir, mainFile) : mainFile;
+            } catch (err) {
+              // the mainFile was probably added relative to rootDir already
+            }
           } catch (err) {
             // author added files outside the original rootDir, remove the rootDir.
             delete this.components[componentIdStr].rootDir;
@@ -250,7 +254,11 @@ export default class BitMap {
       if (isAuthored && rootDir) {
         try {
           files = ComponentMap.getFilesRelativeToRootDir(rootDir, files);
-          mainFile = mainFile ? ComponentMap.getPathWithoutRootDir(rootDir, mainFile) : mainFile;
+          try {
+            mainFile = mainFile ? ComponentMap.getPathWithoutRootDir(rootDir, mainFile) : mainFile;
+          } catch (err) {
+            // the mainFile was probably added relative to rootDir already
+          }
         } catch (err) {
           // author added test files outside the original rootDir, remove the rootDir.
           rootDir = undefined;
