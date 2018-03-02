@@ -94,53 +94,46 @@ export default class BitMap {
   }
 
   _makePathRelativeToProjectRoot(pathToChange: string): PathOsBased {
-    const absolutePath = path.resolve(pathToChange);
-    return path.relative(this.projectRoot, absolutePath);
+    return path.isAbsolute(pathToChange) ? path.relative(this.projectRoot, pathToChange) : pathToChange;
   }
 
-  // todo - need to move to bit-javascript
-  _searchMainFile(baseMainFile: string, files: ComponentMapFile[], originalMainFile: string) {
-    let newBaseMainFile;
-    // Search the relativePath of the main file
-    let mainFileFromFiles = R.find(R.propEq('relativePath', baseMainFile))(files);
-    // Search the base name of the main file and transfer to relativePath
-    if (R.isNil(mainFileFromFiles)) {
-      const potentialMainFiles = files.filter(file => file.name === baseMainFile);
-      if (potentialMainFiles.length) {
-        // when there are several files that met the criteria, choose the closer to the root
-        const sortByNumOfDirs = (a, b) =>
-          a.relativePath.split(DEFAULT_SEPARATOR).length - b.relativePath.split(DEFAULT_SEPARATOR).length;
-        potentialMainFiles.sort(sortByNumOfDirs);
-        mainFileFromFiles = R.head(potentialMainFiles);
-      }
-      newBaseMainFile = mainFileFromFiles ? mainFileFromFiles.relativePath : baseMainFile;
-      return { mainFileFromFiles, baseMainFile: newBaseMainFile || baseMainFile };
-    }
-    return { mainFileFromFiles, baseMainFile: originalMainFile };
+  _searchMainFile(baseMainFile: string, files: ComponentMapFile[]): ?PathLinux {
+    // search for an exact relative-path
+    let mainFileFromFiles = files.find(file => file.relativePath === baseMainFile);
+    if (mainFileFromFiles) return baseMainFile;
+    // search for a file-name
+    const potentialMainFiles = files.filter(file => file.name === baseMainFile);
+    if (!potentialMainFiles.length) return null;
+    // when there are several files that met the criteria, choose the closer to the root
+    const sortByNumOfDirs = (a, b) =>
+      a.relativePath.split(DEFAULT_SEPARATOR).length - b.relativePath.split(DEFAULT_SEPARATOR).length;
+    potentialMainFiles.sort(sortByNumOfDirs);
+    mainFileFromFiles = R.head(potentialMainFiles);
+    return mainFileFromFiles.relativePath;
   }
 
-  _getMainFile(mainFile?: string, componentMap: ComponentMap) {
+  _getMainFile(mainFile?: PathLinux, componentMap: ComponentMap): PathLinux {
     const files = componentMap.files.filter(file => !file.test);
-    // Take the file path as main in case there is only one file
-    if (!mainFile && files.length === 1) return files[0].relativePath;
-    // search main file (index.js or index.ts) in case no main file was entered - move to bit-javascript
-    let searchResult = this._searchMainFile(mainFile, files, mainFile);
-    if (!searchResult.mainFileFromFiles) {
+    // scenario 1) user entered mainFile => search the mainFile in the files array
+    if (mainFile) {
+      const foundMainFile = this._searchMainFile(mainFile, files);
+      if (foundMainFile) return foundMainFile;
+      throw new MissingMainFile(mainFile, files.map(file => path.normalize(file.relativePath)));
+    }
+    // scenario 2) user didn't enter mainFile and the component has only one file => use that file as the main file.
+    if (files.length === 1) return files[0].relativePath;
+    // scenario 3) user didn't enter mainFile and the component has multiple files => search for default main files (such as index.js)
+    let searchResult;
+    DEFAULT_INDEX_EXTS.forEach((ext) => {
       // TODO: can be improved - stop loop if finding main file
-      DEFAULT_INDEX_EXTS.forEach((ext) => {
-        if (!searchResult.mainFileFromFiles) {
-          const mainFileNameToSearch = `${DEFAULT_INDEX_NAME}.${ext}`;
-          searchResult = this._searchMainFile(mainFileNameToSearch, files, mainFile);
-        }
-      });
-    }
-
-    // When there is more then one file and the main file not found there
-    if (R.isNil(searchResult.mainFileFromFiles)) {
-      const mainFileString = mainFile || `${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`;
-      throw new MissingMainFile(mainFileString, files.map(file => path.normalize(file.relativePath)));
-    }
-    return searchResult.baseMainFile;
+      if (!searchResult) {
+        const mainFileNameToSearch = `${DEFAULT_INDEX_NAME}.${ext}`;
+        searchResult = this._searchMainFile(mainFileNameToSearch, files);
+      }
+    });
+    if (searchResult) return searchResult;
+    const mainFileString = `${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`;
+    throw new MissingMainFile(mainFileString, files.map(file => path.normalize(file.relativePath)));
   }
 
   addDependencyToParent(parent: BitId, dependency: string): void {

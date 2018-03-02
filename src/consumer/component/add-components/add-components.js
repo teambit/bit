@@ -185,14 +185,6 @@ export default class AddComponents {
             // $FlowFixMe $this.id is not null at this point
             throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id);
           }
-          if (foundComponentFromBitMap) {
-            const tempFile = path.relative(foundComponentFromBitMap.rootDir, file.relativePath);
-            const foundFile = find(foundComponentFromBitMap.files, fileObject => fileObject.relativePath === tempFile);
-            if (foundFile) {
-              foundFile.relativePath = path.join(foundComponentFromBitMap.rootDir, foundFile.relativePath);
-              return foundFile;
-            }
-          }
         } else if (idOfFileIsDifferent) {
           // not imported component file but exists in bitmap
           if (this.warnings[existingIdOfFile]) this.warnings[existingIdOfFile].push(file.relativePath);
