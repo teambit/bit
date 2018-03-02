@@ -138,11 +138,12 @@ export default class AddComponents {
     });
   }
 
-  addToBitMap({ componentId, files, mainFile }: AddedComponent): AddResult {
+  addToBitMap({ componentId, files, mainFile, rootDir }: AddedComponent): AddResult {
     const componentMap: ComponentMap = this.bitMap.addComponent({
       componentId,
       files,
       mainFile,
+      rootDir,
       origin: COMPONENT_ORIGINS.AUTHORED,
       override: this.override
     });

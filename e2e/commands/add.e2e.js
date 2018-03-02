@@ -149,7 +149,33 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'testDir/test.spec.js', test: true, name: 'test.spec.js' });
     });
   });
-
+  describe('add a directory as authored', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('utils/bar', 'foo.js');
+      helper.addComponent('utils/bar');
+    });
+    it('should add the directory as rootDir in bitmap file', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('utils/bar');
+      expect(bitMap['utils/bar'].rootDir).to.equal('utils/bar');
+    });
+    describe('then, add a file outside of that directory', () => {
+      let output;
+      before(() => {
+        helper.createFile('utils', 'a.js');
+        output = helper.addComponent('utils/a.js --id utils/bar');
+      });
+      it('should add the file successfully', () => {
+        expect(output).to.have.string('added utils/a.js');
+      });
+      it('should remove the rootDir property from bitmap file', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('utils/bar');
+        expect(bitMap['utils/bar']).to.not.have.property('rootDir');
+      });
+    });
+  });
   describe('add one component', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
@@ -295,8 +321,6 @@ describe('bit add command', function () {
     it('Should throw error when no index file is found', () => {
       const file1 = 'foo1.js';
       const file2 = 'foo2.js';
-      const file1Path = path.normalize(`bar/${file1}`);
-      const file2Path = path.normalize(`bar/${file2}`);
       helper.createFile('bar', file1);
       helper.createFile('bar', file2);
 
@@ -304,7 +328,7 @@ describe('bit add command', function () {
       expect(addCmd).to.throw(
         `Command failed: ${helper.bitBin} add bar -n test\nfatal: the main file index.[${DEFAULT_INDEX_EXTS.join(
           ', '
-        )}] was not found in the files list ${file1Path}, ${file2Path}\n`
+        )}] was not found in the files list ${file1}, ${file2}\n`
       );
     });
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
@@ -412,7 +436,7 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       const mainFile = bitMap['test/bar'].mainFile;
       expect(bitMap).to.have.property('test/bar');
-      expect(mainFile).to.equal('bar/bar.js');
+      expect(mainFile).to.equal('bar.js');
     });
     it('Should add component with spec file from another dir according to dsl', () => {
       const dslOs = path.normalize('test/{FILE_NAME}.spec.js');
@@ -896,8 +920,8 @@ describe('bit add command', function () {
     it('Should contain inside bitmap only files that are not inside gitignore', () => {
       const bitMap = helper.readBitMap();
       const expectedArray = [
-        { relativePath: 'bar/boo.js', test: false, name: 'boo.js' },
-        { relativePath: 'bar/index.js', test: false, name: 'index.js' }
+        { relativePath: 'boo.js', test: false, name: 'boo.js' },
+        { relativePath: 'index.js', test: false, name: 'index.js' }
       ];
       expect(bitMap).to.have.property('bar/foo');
       const files = bitMap['bar/foo'].files;
@@ -955,11 +979,11 @@ describe('bit add command', function () {
       helper.runCmd('bit s');
       bitMap = helper.readBitMap();
     });
-    it('Should not create duplicate ids in bitmap', () => {
+    it('should not create duplicate ids in bitmap', () => {
       expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
       expect(bitMap).to.not.have.property('bar/foo');
     });
-    it('Should contian only one file', () => {
+    it('should contain only one file', () => {
       expect(bitMap[`${helper.remoteScope}/bar/foo@0.0.1`].files).to.be.ofSize(1);
     });
   });
