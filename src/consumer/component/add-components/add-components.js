@@ -6,7 +6,6 @@ import format from 'string-format';
 import assignwith from 'lodash.assignwith';
 import groupby from 'lodash.groupby';
 import unionBy from 'lodash.unionby';
-import find from 'lodash.find';
 import ignore from 'ignore';
 import arrayDiff from 'array-difference';
 import {
@@ -185,14 +184,6 @@ export default class AddComponents {
             const existingIdWithoutVersion = BitId.parse(existingIdOfFile).toStringWithoutVersion();
             // $FlowFixMe $this.id is not null at this point
             throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id);
-          }
-          if (foundComponentFromBitMap) {
-            const tempFile = path.relative(foundComponentFromBitMap.rootDir, file.relativePath);
-            const foundFile = find(foundComponentFromBitMap.files, fileObject => fileObject.relativePath === tempFile);
-            if (foundFile) {
-              foundFile.relativePath = path.join(foundComponentFromBitMap.rootDir, foundFile.relativePath);
-              return foundFile;
-            }
           }
         } else if (idOfFileIsDifferent) {
           // not imported component file but exists in bitmap
