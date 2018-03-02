@@ -6,7 +6,6 @@ import format from 'string-format';
 import assignwith from 'lodash.assignwith';
 import groupby from 'lodash.groupby';
 import unionBy from 'lodash.unionby';
-import find from 'lodash.find';
 import ignore from 'ignore';
 import arrayDiff from 'array-difference';
 import {

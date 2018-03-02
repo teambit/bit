@@ -94,7 +94,8 @@ export default class BitMap {
   }
 
   _makePathRelativeToProjectRoot(pathToChange: string): PathOsBased {
-    return path.isAbsolute(pathToChange) ? path.relative(this.projectRoot, pathToChange) : pathToChange;
+    const absolutePath = path.resolve(pathToChange);
+    return path.relative(this.projectRoot, absolutePath);
   }
 
   _searchMainFile(baseMainFile: string, files: ComponentMapFile[]): ?PathLinux {
