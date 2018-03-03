@@ -42,7 +42,7 @@ type PathsStats = { [string]: { isDir: boolean } };
 type AddedComponent = {
   componentId: BitId,
   files: ComponentMapFile[],
-  mainFile?: string,
+  mainFile?: ?PathOsBased,
   rootDir?: string // set only when one directory is added by author
 };
 
@@ -203,7 +203,7 @@ export default class AddComponents {
     const files = R.flatten(componentsWithFiles.map(x => x.files.map(i => i.relativePath)));
     const resolvedExcludedFiles = await this.getFilesAccordingToDsl(files, this.exclude);
     componentsWithFiles.forEach((componentWithFiles: AddedComponent) => {
-      const mainFile = pathNormalizeToLinux(componentWithFiles.mainFile);
+      const mainFile = componentWithFiles.mainFile ? pathNormalizeToLinux(componentWithFiles.mainFile) : undefined;
       if (resolvedExcludedFiles.includes(mainFile)) {
         componentWithFiles.files = [];
       } else {
@@ -284,7 +284,7 @@ export default class AddComponents {
       finalBitId = this._getIdAccordingToExistingComponent(this.id);
     }
 
-    const componentsWithFilesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
+    const componentsWithFilesP = Object.keys(componentPathsStats).map(async (componentPath) => {
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
         const absoluteComponentPath = path.resolve(componentPath);

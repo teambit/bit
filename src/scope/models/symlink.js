@@ -46,7 +46,7 @@ export default class Symlink extends BitObject {
     };
   }
 
-  toBuffer(pretty: boolean) {
+  toBuffer(pretty?: boolean) {
     const args = getStringifyArgs(pretty);
     return new Buffer(JSON.stringify(this.toObject(), ...args));
   }
