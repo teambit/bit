@@ -30,7 +30,7 @@ export default class Untag extends Command {
   report(results): string {
     const title = chalk.green(`${results.length} component(s) were untagged:\n`);
     const components = results.map((result) => {
-      return `\t${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;
+      return `${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;
     });
     return title + components.join('\n');
   }
