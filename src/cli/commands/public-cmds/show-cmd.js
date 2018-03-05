@@ -24,9 +24,9 @@ export default class Show extends Command {
     {
       json,
       versions,
-      outdated,
+      outdated = false,
       compare = false
-    }: { json: ?boolean, versions: ?boolean, outdated: ?boolean, compare?: boolean }
+    }: { json?: boolean, versions: ?boolean, outdated?: boolean, compare?: boolean }
   ): Promise<*> {
     function getBitComponent(allVersions: ?boolean) {
       const bitId = BitId.parse(id);
@@ -61,11 +61,11 @@ export default class Show extends Command {
     outdated
   }: {
     component: ?ConsumerComponent,
-    modelComponent?: ConsumerComponent,
+    componentModel?: ConsumerComponent,
     json: ?boolean,
     versions: ?boolean,
     components: ?(ConsumerComponent[]),
-    outdated: ?boolean
+    outdated: boolean
   }): string {
     if (versions) {
       if (R.isNil(components) || R.isEmpty(components)) {
