@@ -442,29 +442,6 @@ export default class Component {
   }
 
   /**
-   * for authored components, when rootDir exists is only for internal use of keep tracking on that
-   * dir. for the end-user it's confusing to see the path without that rootDir.
-   */
-  addRootDirForAuthored(): void {
-    if (!this.componentMap || this.componentMap.origin !== COMPONENT_ORIGINS.AUTHORED || !this.componentMap.rootDir) { return; }
-    const rootDir: string = this.componentMap.rootDir;
-    logger.debug(`concatenating rootDir ${rootDir} for ${this.id.toString()}`);
-    const pathWithRootDir = (pathStr) => {
-      return path.join(rootDir, pathStr);
-    };
-    this.files.forEach((file) => {
-      const newRelative = pathWithRootDir(file.relative);
-      file.updatePaths({ newBase: file.base, newRelative });
-    });
-    this.dists.get().forEach((file) => {
-      const newRelative = pathWithRootDir(file.relative);
-      file.updatePaths({ newBase: file.base, newRelative });
-    });
-    this.mainFile = pathWithRootDir(this.mainFile);
-    // @todo: should dependencies and devDependencies be changed as well?
-  }
-
-  /**
    * When using this function please check if you really need to pass the bitDir or not
    * It's better to init the files with the correct base, cwd and path than pass it here
    * It's mainly here for cases when we write from the model so this is the first point we actually have the dir

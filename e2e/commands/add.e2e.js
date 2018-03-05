@@ -163,10 +163,10 @@ describe('bit add command', function () {
       before(() => {
         helper.commitAllComponents();
       });
-      it('should save the files with relativePaths relative to consumer root', () => {
+      it('should save the files with relativePaths relative to rootDir', () => {
         const output = helper.catComponent('utils/bar@latest');
-        expect(output.files[0].relativePath).to.equal('utils/bar/foo.js');
-        expect(output.mainFile).to.equal('utils/bar/foo.js');
+        expect(output.files[0].relativePath).to.equal('foo.js');
+        expect(output.mainFile).to.equal('foo.js');
       });
     });
     describe('then, add a file outside of that directory', () => {

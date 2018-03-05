@@ -173,16 +173,10 @@ export default class SourceRepository {
     dists?: Object,
     specsResults?: any
   }): Promise<Object> {
-    const addSharedDirAndRootDir = (pathStr): PathLinux => {
-      const withRootDir =
-        consumerComponent.componentMap &&
-        consumerComponent.componentMap.rootDir &&
-        consumerComponent.componentMap.origin === COMPONENT_ORIGINS.AUTHORED
-          ? path.join(consumerComponent.componentMap.rootDir, pathStr)
-          : pathStr;
+    const addSharedDir = (pathStr): PathLinux => {
       const withSharedDir = consumerComponent.originallySharedDir
-        ? path.join(consumerComponent.originallySharedDir, withRootDir)
-        : withRootDir;
+        ? path.join(consumerComponent.originallySharedDir, pathStr)
+        : pathStr;
       return pathNormalizeToLinux(withSharedDir);
     };
     const files =
@@ -190,7 +184,7 @@ export default class SourceRepository {
         ? consumerComponent.files.map((file) => {
           return {
             name: file.basename,
-            relativePath: addSharedDirAndRootDir(file.relative),
+            relativePath: addSharedDir(file.relative),
             file: Source.from(file.contents),
             test: file.test
           };
@@ -200,10 +194,10 @@ export default class SourceRepository {
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
-    consumerComponent.mainFile = addSharedDirAndRootDir(consumerComponent.mainFile);
+    consumerComponent.mainFile = addSharedDir(consumerComponent.mainFile);
     consumerComponent.getAllDependencies().forEach((dependency) => {
       dependency.relativePaths.forEach((relativePath) => {
-        relativePath.sourceRelativePath = addSharedDirAndRootDir(relativePath.sourceRelativePath);
+        relativePath.sourceRelativePath = addSharedDir(relativePath.sourceRelativePath);
       });
     });
     const version = Version.fromComponent({
