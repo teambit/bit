@@ -51,13 +51,20 @@ describe('bit move command', function () {
         expect(file.startsWith('utils')).to.be.true;
       });
     });
-    it('should update the rootDir in bit.map', () => {
+    it('should update the file path in bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap['bar/foo'].rootDir).to.equal('utils');
+
+      bitMap['bar/foo'].files.forEach((file) => {
+        expect(file.relativePath.startsWith('utils')).to.be.true;
+      });
     });
-    it('should keep the mainFile of bit.map the same because only rootDir has changed', () => {
+    it('should update the mainFile of bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap['bar/foo'].mainFile).to.equal('foo1.js');
+      expect(bitMap['bar/foo'].mainFile).to.equal('utils/foo1.js');
+    });
+    it('should update the trackDir of bit.map', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap['bar/foo'].trackDir).to.equal('utils');
     });
   });
   describe('when the file was moved already', () => {

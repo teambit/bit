@@ -376,11 +376,7 @@ export default class Scope {
         const withDistEntry = consumerComponent.dists.distEntryShouldBeStripped
           ? pathLib.join(consumer.bitJson.distEntry, withSharedDir)
           : withSharedDir;
-        const withRootDir =
-          consumerComponent.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && consumerComponent.componentMap.rootDir
-            ? pathLib.join(consumerComponent.componentMap.rootDir, pathStr)
-            : withDistEntry;
-        return pathNormalizeToLinux(withRootDir);
+        return pathNormalizeToLinux(withDistEntry);
       };
       const dists = !consumerComponent.dists.isEmpty()
         ? consumerComponent.dists.get().map((dist) => {

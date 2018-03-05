@@ -43,7 +43,7 @@ type AddedComponent = {
   componentId: BitId,
   files: ComponentMapFile[],
   mainFile?: ?PathOsBased,
-  rootDir?: string // set only when one directory is added by author
+  trackDir?: PathOsBased // set only when one directory is added by author
 };
 
 /**
@@ -137,12 +137,12 @@ export default class AddComponents {
     });
   }
 
-  addToBitMap({ componentId, files, mainFile, rootDir }: AddedComponent): AddResult {
+  addToBitMap({ componentId, files, mainFile, trackDir }: AddedComponent): AddResult {
     const componentMap: ComponentMap = this.bitMap.addComponent({
       componentId,
       files,
       mainFile,
-      rootDir,
+      trackDir,
       origin: COMPONENT_ORIGINS.AUTHORED,
       override: this.override
     });
@@ -185,8 +185,6 @@ export default class AddComponents {
             // $FlowFixMe $this.id is not null at this point
             throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id);
           }
-          // don't send rootDir attribute to bitmap for imported component, it should never changed
-          delete component.rootDir;
         } else if (idOfFileIsDifferent) {
           // not imported component file but exists in bitmap
           if (this.warnings[existingIdOfFile]) this.warnings[existingIdOfFile].push(file.relativePath);
@@ -317,9 +315,9 @@ export default class AddComponents {
           finalBitId = this._getIdAccordingToExistingComponent(idFromPath.toString());
         }
 
-        const rootDir = Object.keys(componentPathsStats).length === 1 ? relativeComponentPath : undefined;
+        const trackDir = Object.keys(componentPathsStats).length === 1 ? relativeComponentPath : undefined;
 
-        return { componentId: finalBitId, files, mainFile: resolvedMainFile, rootDir };
+        return { componentId: finalBitId, files, mainFile: resolvedMainFile, trackDir };
       }
       // is file
       const resolvedPath = path.resolve(componentPath);
@@ -367,7 +365,7 @@ export default class AddComponents {
       componentId,
       files: uniqComponents,
       mainFile: R.head(componentsWithFiles).mainFile,
-      rootDir: R.head(componentsWithFiles).rootDir
+      trackDir: R.head(componentsWithFiles).trackDir
     };
   }
 

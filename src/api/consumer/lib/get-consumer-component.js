@@ -24,7 +24,6 @@ export default (async function getConsumerBit({
   if (showRemoteVersions) {
     await consumer.addRemoteAndLocalVersionsToDependencies(component, true);
   }
-  component.addRootDirForAuthored();
   if (compare) {
     try {
       const componentModel = await consumer.scope.loadRemoteComponent(component.id);

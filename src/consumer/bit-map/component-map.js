@@ -18,6 +18,7 @@ export type ComponentMapData = {
   files: ComponentMapFile[],
   mainFile: PathLinux,
   rootDir?: PathLinux,
+  trackDir?: PathLinux,
   origin: ComponentOrigin,
   dependencies: string[],
   mainDistFile?: PathLinux,
@@ -29,15 +30,26 @@ export type PathChange = { from: PathLinux, to: PathLinux };
 export default class ComponentMap {
   files: ComponentMapFile[];
   mainFile: PathLinux;
-  rootDir: ?PathLinux; // always set for IMPORTED and NESTED. For AUTHORED it's set when a component was added as a directory
+  rootDir: ?PathLinux; // always set for IMPORTED and NESTED.
+  trackDir: ?PathLinux; // relevant for AUTHORED only when a component was added as a directory
   origin: ComponentOrigin;
   dependencies: string[]; // needed for the link process
   mainDistFile: ?PathLinux; // needed when there is a build process involved
   originallySharedDir: ?PathLinux; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
-  constructor({ files, mainFile, rootDir, origin, dependencies, mainDistFile, originallySharedDir }: ComponentMapData) {
+  constructor({
+    files,
+    mainFile,
+    rootDir,
+    trackDir,
+    origin,
+    dependencies,
+    mainDistFile,
+    originallySharedDir
+  }: ComponentMapData) {
     this.files = files;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
+    this.trackDir = trackDir;
     this.origin = origin;
     this.dependencies = dependencies;
     this.mainDistFile = mainDistFile;
@@ -58,14 +70,14 @@ export default class ComponentMap {
     return newPath;
   }
 
-  static getFilesRelativeToRootDir(rootDir, files): ComponentMapFile[] {
-    const newFiles = [];
+  static changeFilesPathAccordingToItsRootDir(existingRootDir, files): PathChange[] {
+    const changes = [];
     files.forEach((file) => {
-      const newFile = R.clone(file);
-      newFile.relativePath = this.getPathWithoutRootDir(rootDir, file.relativePath);
-      newFiles.push(newFile);
+      const newPath = this.getPathWithoutRootDir(existingRootDir, file.relativePath);
+      changes.push({ from: file.relativePath, to: newPath });
+      file.relativePath = newPath;
     });
-    return newFiles;
+    return changes;
   }
 
   _findFile(fileName: PathLinux): ?ComponentMapFile {

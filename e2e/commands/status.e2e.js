@@ -437,7 +437,7 @@ describe('bit status command', function () {
         helper.deleteFile('bar/index.js');
         const output = helper.runCmd('bit status');
         expect(output).to.have.string('non-existing dependency files:');
-        expect(output).to.have.string('foo.js -> ./index.js');
+        expect(output).to.have.string('bar/foo.js -> ./index.js');
       });
     });
     describe('when all of the files were deleted', () => {
