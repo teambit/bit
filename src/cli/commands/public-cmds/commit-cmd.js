@@ -119,11 +119,7 @@ export default class Export extends Command {
       return comps
         .map((comp) => {
           if (comp instanceof ModelComponent) return comp.id();
-          // Replace the @1 only if it ends with @1 to prevent id between 10-19 to shown wrong ->
-          // myId@10 will be myId0 which is wrong
-          return comp.id.toString().endsWith(DEFAULT_BIT_VERSION)
-            ? comp.id.toString().replace(`@${DEFAULT_BIT_VERSION}`, '')
-            : comp.id.toString();
+          return comp.id.toString();
         })
         .join(', ');
     }

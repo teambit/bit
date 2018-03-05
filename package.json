@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.12.7",
+  "version": "0.12.8-dev.1",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
@@ -121,7 +121,7 @@
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-jsx-a11y": "5.1.1",
     "eslint-plugin-react": "^7.5.1",
-    "flow-bin": "^0.54.1",
+    "flow-bin": "^0.66.0",
     "flow-coverage-report": "^0.3.0",
     "husky": "^0.14.3",
     "lint-staged": "^4.1.3",
