@@ -123,7 +123,7 @@ export default class ComponentMap {
     });
   }
 
-  getFilesGroupedByBeingTests(): Object {
+  getFilesGroupedByBeingTests(): { allFiles: string[], nonTestsFiles: string[], testsFiles: string[] } {
     const allFiles = [];
     const nonTestsFiles = [];
     const testsFiles = [];
@@ -139,7 +139,9 @@ export default class ComponentMap {
     const errorMessage = `failed adding a component-map record (to ${BIT_MAP} file).`;
     if (!this.mainFile) throw new Error(`${errorMessage} mainFile attribute is missing`);
     // if it's an environment component (such as compiler) the rootDir is an empty string
-    if (this.rootDir === undefined && this.origin !== COMPONENT_ORIGINS.AUTHORED) { throw new Error(`${errorMessage} rootDir attribute is missing`); }
+    if (this.rootDir === undefined && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
+      throw new Error(`${errorMessage} rootDir attribute is missing`);
+    }
     // $FlowFixMe
     if (this.rootDir && (this.rootDir.startsWith('./') || this.rootDir.startsWith('../'))) {
       throw new Error(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);

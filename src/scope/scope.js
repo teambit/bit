@@ -23,7 +23,8 @@ import {
   BITS_DIRNAME,
   BIT_VERSION,
   DEFAULT_BIT_VERSION,
-  LATEST_BIT_VERSION
+  LATEST_BIT_VERSION,
+  COMPONENT_ORIGINS
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import {
@@ -375,7 +376,11 @@ export default class Scope {
         const withDistEntry = consumerComponent.dists.distEntryShouldBeStripped
           ? pathLib.join(consumer.bitJson.distEntry, withSharedDir)
           : withSharedDir;
-        return pathNormalizeToLinux(withDistEntry);
+        const withRootDir =
+          consumerComponent.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && consumerComponent.componentMap.rootDir
+            ? pathLib.join(consumerComponent.componentMap.rootDir, pathStr)
+            : withDistEntry;
+        return pathNormalizeToLinux(withRootDir);
       };
       const dists = !consumerComponent.dists.isEmpty()
         ? consumerComponent.dists.get().map((dist) => {
