@@ -21,6 +21,7 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Consumer } from '../../consumer';
 import logger from '../../logger/logger';
 import Repository from '../objects/repository';
+import type { PathLinux } from '../../utils/path';
 
 export type ComponentTree = {
   component: Component,
@@ -172,7 +173,7 @@ export default class SourceRepository {
     dists?: Object,
     specsResults?: any
   }): Promise<Object> {
-    const addSharedDir = (pathStr) => {
+    const addSharedDir = (pathStr): PathLinux => {
       const withSharedDir = consumerComponent.originallySharedDir
         ? path.join(consumerComponent.originallySharedDir, pathStr)
         : pathStr;
@@ -183,7 +184,7 @@ export default class SourceRepository {
         ? consumerComponent.files.map((file) => {
           return {
             name: file.basename,
-            relativePath: pathNormalizeToLinux(addSharedDir(file.relative)),
+            relativePath: addSharedDir(file.relative),
             file: Source.from(file.contents),
             test: file.test
           };
@@ -193,7 +194,7 @@ export default class SourceRepository {
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
-    consumerComponent.mainFile = pathNormalizeToLinux(addSharedDir(consumerComponent.mainFile));
+    consumerComponent.mainFile = addSharedDir(consumerComponent.mainFile);
     consumerComponent.getAllDependencies().forEach((dependency) => {
       dependency.relativePaths.forEach((relativePath) => {
         relativePath.sourceRelativePath = addSharedDir(relativePath.sourceRelativePath);

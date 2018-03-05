@@ -1,7 +1,8 @@
 /** @flow */
 import path from 'path';
+import R from 'ramda';
 import logger from '../../logger/logger';
-import { COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux } from '../../utils';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 
@@ -28,7 +29,7 @@ export type PathChange = { from: PathLinux, to: PathLinux };
 export default class ComponentMap {
   files: ComponentMapFile[];
   mainFile: PathLinux;
-  rootDir: ?PathLinux; // always set for IMPORTED and NESTED.
+  rootDir: ?PathLinux; // always set for IMPORTED and NESTED. For AUTHORED it's set when a component was added as a directory
   origin: ComponentOrigin;
   dependencies: string[]; // needed for the link process
   mainDistFile: ?PathLinux; // needed when there is a build process involved
@@ -57,14 +58,14 @@ export default class ComponentMap {
     return newPath;
   }
 
-  static changeFilesPathAccordingToItsRootDir(existingRootDir, files): PathChange[] {
-    const changes = [];
+  static getFilesRelativeToRootDir(rootDir, files): ComponentMapFile[] {
+    const newFiles = [];
     files.forEach((file) => {
-      const newPath = this.getPathWithoutRootDir(existingRootDir, file.relativePath);
-      changes.push({ from: file.relativePath, to: newPath });
-      file.relativePath = newPath;
+      const newFile = R.clone(file);
+      newFile.relativePath = this.getPathWithoutRootDir(rootDir, file.relativePath);
+      newFiles.push(newFile);
     });
-    return changes;
+    return newFiles;
   }
 
   _findFile(fileName: PathLinux): ?ComponentMapFile {
@@ -132,5 +133,17 @@ export default class ComponentMap {
       else nonTestsFiles.push(file.relativePath);
     });
     return { allFiles, nonTestsFiles, testsFiles };
+  }
+
+  validate() {
+    const errorMessage = `failed adding a component-map record (to ${BIT_MAP} file).`;
+    if (!this.mainFile) throw new Error(`${errorMessage} mainFile attribute is missing`);
+    // if it's an environment component (such as compiler) the rootDir is an empty string
+    if (this.rootDir === undefined && this.origin !== COMPONENT_ORIGINS.AUTHORED) { throw new Error(`${errorMessage} rootDir attribute is missing`); }
+    // $FlowFixMe
+    if (this.rootDir && (this.rootDir.startsWith('./') || this.rootDir.startsWith('../'))) {
+      throw new Error(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
+    }
+    if (!this.files || !this.files.length) throw new Error(`${errorMessage} files list is missing`);
   }
 }

@@ -137,11 +137,12 @@ export default class AddComponents {
     });
   }
 
-  addToBitMap({ componentId, files, mainFile }: AddedComponent): AddResult {
+  addToBitMap({ componentId, files, mainFile, rootDir }: AddedComponent): AddResult {
     const componentMap: ComponentMap = this.bitMap.addComponent({
       componentId,
       files,
       mainFile,
+      rootDir,
       origin: COMPONENT_ORIGINS.AUTHORED,
       override: this.override
     });
@@ -184,6 +185,8 @@ export default class AddComponents {
             // $FlowFixMe $this.id is not null at this point
             throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id);
           }
+          // don't send rootDir attribute to bitmap for imported component, it should never changed
+          delete component.rootDir;
         } else if (idOfFileIsDifferent) {
           // not imported component file but exists in bitmap
           if (this.warnings[existingIdOfFile]) this.warnings[existingIdOfFile].push(file.relativePath);

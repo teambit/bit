@@ -205,17 +205,35 @@ export default class BitMap {
     override: boolean,
     originallySharedDir?: PathLinux
   }): ComponentMap {
-    const isDependency = origin === COMPONENT_ORIGINS.NESTED;
+    const isAuthored = origin === COMPONENT_ORIGINS.AUTHORED;
+    const isImported = origin === COMPONENT_ORIGINS.IMPORTED;
+    const isNested = origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
-    if (isDependency) {
+    if (isNested) {
       if (!parent) throw new Error(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`);
       this.addDependencyToParent(parent, componentIdStr);
     }
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
       const existingRootDir = this.components[componentIdStr].rootDir;
-      if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
+      if (existingRootDir) {
+        if (this.components[componentIdStr].origin === COMPONENT_ORIGINS.AUTHORED) {
+          try {
+            files = ComponentMap.getFilesRelativeToRootDir(existingRootDir, files);
+            try {
+              mainFile = mainFile ? ComponentMap.getPathWithoutRootDir(existingRootDir, mainFile) : mainFile;
+            } catch (err) {
+              // the mainFile was probably added relative to rootDir already
+            }
+          } catch (err) {
+            // author added files outside the original rootDir, remove the rootDir.
+            delete this.components[componentIdStr].rootDir;
+          }
+        } else {
+          files = ComponentMap.getFilesRelativeToRootDir(existingRootDir, files);
+        }
+      }
       if (override) {
         this.components[componentIdStr].files = files;
       } else {
@@ -232,6 +250,20 @@ export default class BitMap {
         );
       }
     } else {
+      // add new
+      if (isAuthored && rootDir) {
+        try {
+          files = ComponentMap.getFilesRelativeToRootDir(rootDir, files);
+          try {
+            mainFile = mainFile ? ComponentMap.getPathWithoutRootDir(rootDir, mainFile) : mainFile;
+          } catch (err) {
+            // the mainFile was probably added relative to rootDir already
+          }
+        } catch (err) {
+          // author added test files outside the original rootDir, remove the rootDir.
+          rootDir = undefined;
+        }
+      }
       this.components[componentIdStr] = new ComponentMap({ files, origin });
       this.components[componentIdStr].mainFile = this._getMainFile(
         pathNormalizeToLinux(mainFile),
@@ -245,11 +277,11 @@ export default class BitMap {
     if (originallySharedDir) {
       this.components[componentIdStr].originallySharedDir = originallySharedDir;
     }
-    if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
+    if (isImported || isAuthored) {
       // if there are older versions, the user is updating an existing component, delete old ones from bit.map
       this.deleteOlderVersionsOfComponent(componentId);
     }
-
+    this.components[componentIdStr].validate();
     return this.components[componentIdStr];
   }
 

@@ -290,7 +290,7 @@ export default class Scope {
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
     const topSort = new Toposort();
     const allDependencies = new Map();
-    const consumerComponentsIdsMap = new Map();
+    const consumerComponentsIdsMap: Map<string, ConsumerComponent> = new Map();
     // Concat and unique all the dependencies from all the components so we will not import
     // the same dependency more then once, it's mainly for performance purpose
     consumerComponents.forEach((consumerComponent) => {

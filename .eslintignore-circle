@@ -8,7 +8,6 @@ specs/jsdoc/fixtures
 e2e/fixtures
 
 # temporarily, until we fix the errors in these paths
-e2e/commands/add.e2e.js
 e2e/commands/extentsion.e2e.js
 e2e/commands/init.e2e.js
 specs/scope/migrations/objectsFixtures/simple-component.js
@@ -79,7 +78,6 @@ src/api/consumer/lib/export.js
 src/api/scope/lib/put.js
 src/bit-id/bit-ids.js
 src/cli/commands/private-cmds/ci-update-cmd.js
-src/cli/commands/public-cmds/show-cmd.js
 src/consumer/specs-results/specs-results.js
 src/driver/driver.js
 src/extensions/core-extensions/ext-docs-parser.js
