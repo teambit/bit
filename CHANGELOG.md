@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- send component's metadata to compiler
+
 ## [0.12.7] - 2018-02-28
 
 - bug fix - specifying a component and its dependency as ids for bit remove was not working

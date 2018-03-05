@@ -316,7 +316,7 @@ export default class Component {
         rootDistFolder = this.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       }
       try {
-        const result = await Promise.resolve(compiler.compile(files, rootDistFolder));
+        const result = await Promise.resolve(compiler.compile(files, rootDistFolder, this.toObject()));
         return Promise.resolve(result);
       } catch (e) {
         if (verbose) return Promise.reject(new BuildException(this.id.toString(), e.stack));
