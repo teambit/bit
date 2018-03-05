@@ -16,16 +16,7 @@ import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy, pathNormalizeToLinux } from '../utils';
-import {
-  BIT_HIDDEN_DIR,
-  LATEST,
-  OBJECTS_DIR,
-  BITS_DIRNAME,
-  BIT_VERSION,
-  DEFAULT_BIT_VERSION,
-  LATEST_BIT_VERSION,
-  COMPONENT_ORIGINS
-} from '../constants';
+import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, BIT_VERSION, DEFAULT_BIT_VERSION } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import {
   ScopeNotFound,

@@ -19,7 +19,7 @@ export type ComponentMapData = {
   rootDir?: PathLinux,
   trackDir?: PathLinux,
   origin: ComponentOrigin,
-  dependencies: string[],
+  dependencies?: string[],
   mainDistFile?: PathLinux,
   originallySharedDir?: PathLinux
 };
@@ -36,7 +36,7 @@ export default class ComponentMap {
   // dependencies paths won't work).
   trackDir: ?PathLinux; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
   origin: ComponentOrigin;
-  dependencies: string[]; // needed for the link process
+  dependencies: ?(string[]); // needed for the link process
   mainDistFile: ?PathLinux; // needed when there is a build process involved
   originallySharedDir: ?PathLinux; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
   constructor({
