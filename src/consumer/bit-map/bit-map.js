@@ -247,6 +247,7 @@ export default class BitMap {
     if (trackDir) {
       this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);
     }
+    this.components[componentIdStr].removeTrackDirIfNeeded();
     if (originallySharedDir) {
       this.components[componentIdStr].originallySharedDir = originallySharedDir;
     }
