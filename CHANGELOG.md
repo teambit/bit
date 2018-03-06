@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve handling of errors from compilers which return promises
+
 ## [0.12.8-dev.1] - 2018-03-05
 
 - send component's metadata to compiler
