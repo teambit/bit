@@ -315,13 +315,14 @@ export default class Component {
         // $FlowFixMe
         rootDistFolder = this.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       }
-      try {
-        const result = await Promise.resolve(compiler.compile(files, rootDistFolder, this.toObject()));
-        return Promise.resolve(result);
-      } catch (e) {
-        if (verbose) return Promise.reject(new BuildException(this.id.toString(), e.stack));
-        return Promise.reject(new BuildException(this.id.toString(), e.message));
-      }
+      return Promise.resolve()
+        .then(() => {
+          return compiler.compile(files, rootDistFolder, this.toObject());
+        })
+        .catch((e) => {
+          if (verbose) throw new BuildException(this.id.toString(), e.stack || e);
+          throw new BuildException(this.id.toString(), e.message || e);
+        });
     };
 
     if (!compiler.compile) {
