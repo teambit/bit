@@ -6,7 +6,7 @@ export default class BuildException extends Error {
   constructor(id: string, message?: string, stack?: string) {
     super();
     this.id = id;
-    this.message = message;
-    this.stack = stack;
+    this.message = message || '';
+    this.stack = stack || '';
   }
 }
