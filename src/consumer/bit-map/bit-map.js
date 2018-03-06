@@ -42,7 +42,7 @@ export default class BitMap {
     this.paths = {};
   }
 
-  static ensure(dirPath): Promise<ConsumerBitJson> {
+  static ensure(dirPath: string): Promise<BitMap> {
     return Promise.resolve(this.load(dirPath));
   }
 
@@ -77,6 +77,7 @@ export default class BitMap {
   getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): BitMapComponents {
     if (!origin) return this.components;
     const isOriginMatch = component => component.origin === origin;
+    // $FlowFixMe we know origin is an array in that case
     const isOriginMatchArray = component => origin.includes(component.origin);
     const filter = Array.isArray(origin) ? isOriginMatchArray : isOriginMatch;
     return R.filter(filter, this.components);
@@ -154,6 +155,7 @@ export default class BitMap {
       this.components[parentId].dependencies = [dependency];
     }
     if (!this.components[parentId].dependencies.includes(dependency)) {
+      // $FlowFixMe at this stage we know that dependencies is not null
       this.components[parentId].dependencies.push(dependency);
     }
   }
@@ -193,6 +195,7 @@ export default class BitMap {
     origin,
     parent,
     rootDir,
+    trackDir,
     override,
     originallySharedDir
   }: {
@@ -202,6 +205,7 @@ export default class BitMap {
     origin: ComponentOrigin,
     parent?: BitId,
     rootDir?: string,
+    trackDir?: PathOsBased,
     override: boolean,
     originallySharedDir?: PathLinux
   }): ComponentMap {
@@ -232,6 +236,7 @@ export default class BitMap {
         );
       }
     } else {
+      // $FlowFixMe not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
       this.components[componentIdStr] = new ComponentMap({ files, origin });
       this.components[componentIdStr].mainFile = this._getMainFile(
         pathNormalizeToLinux(mainFile),
@@ -242,6 +247,10 @@ export default class BitMap {
       const root = this._makePathRelativeToProjectRoot(rootDir);
       this.components[componentIdStr].rootDir = root ? pathNormalizeToLinux(root) : root;
     }
+    if (trackDir) {
+      this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);
+    }
+    this.components[componentIdStr].removeTrackDirIfNeeded();
     if (originallySharedDir) {
       this.components[componentIdStr].originallySharedDir = originallySharedDir;
     }
@@ -250,6 +259,7 @@ export default class BitMap {
       this.deleteOlderVersionsOfComponent(componentId);
     }
 
+    this.components[componentIdStr].validate();
     return this.components[componentIdStr];
   }
 
@@ -264,7 +274,7 @@ export default class BitMap {
   removeComponent(id: string | BitId) {
     const bitId = id instanceof BitId ? id : BitId.parse(id);
     const bitmapComponent = this.getExistingComponentId(bitId.toStringWithoutScopeAndVersion());
-    this._removeFromComponentsArray(bitmapComponent);
+    if (bitmapComponent) this._removeFromComponentsArray(bitmapComponent);
     return bitmapComponent;
   }
   removeComponents(ids: BitIds) {
@@ -334,22 +344,18 @@ export default class BitMap {
     includeSearchByBoxAndNameOnly: boolean = false,
     ignoreVersion: boolean = false
   ): ComponentMap {
-    if (R.is(String, id)) {
-      id = BitId.parse(id);
-    }
-    // $FlowFixMe
-    if (!ignoreVersion && id.hasVersion()) {
-      if (!this.components[id] && shouldThrow) throw new MissingBitMapComponent(id);
-      return this.components[id];
+    const bitId: BitId = R.is(String, id) ? BitId.parse(id) : id;
+    if (!ignoreVersion && bitId.hasVersion()) {
+      if (!this.components[bitId] && shouldThrow) throw new MissingBitMapComponent(bitId);
+      return this.components[bitId];
     }
     const idWithVersion = Object.keys(this.components).find(
-      // $FlowFixMe
       componentId =>
-        BitId.parse(componentId).toStringWithoutVersion() === id.toStringWithoutVersion() ||
+        BitId.parse(componentId).toStringWithoutVersion() === bitId.toStringWithoutVersion() ||
         (includeSearchByBoxAndNameOnly &&
-          BitId.parse(componentId).toStringWithoutScopeAndVersion() === id.toStringWithoutScopeAndVersion())
+          BitId.parse(componentId).toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion())
     );
-    if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(id);
+    if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(bitId);
     // $FlowFixMe
     return this.components[idWithVersion];
   }
