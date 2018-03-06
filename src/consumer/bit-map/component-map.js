@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import path from 'path';
 import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
@@ -170,7 +171,16 @@ export default class ComponentMap {
     }
   }
 
-  validate() {
+  /**
+   * directory to track for changes (such as files added/renamed)
+   */
+  getTrackDir(): ?PathLinux {
+    if (this.trackDir) return this.trackDir; // for authored components
+    if (this.rootDir) return this.rootDir; // for imported/nested components
+    return null;
+  }
+
+  validate(): void {
     const isPathValid = (pathStr) => {
       if (pathStr.startsWith('./') || pathStr.startsWith('../') || pathStr.includes('\\')) return false;
       return true;
@@ -200,6 +210,10 @@ export default class ComponentMap {
         throw new Error(`${errorMessage} file path ${file.relativePath} is invalid`);
       }
     });
+    const foundMainFile = this.files.find(file => file.relativePath === this.mainFile);
+    if (!foundMainFile || R.isEmpty(foundMainFile)) {
+      throw new Error(`${errorMessage} mainFile ${this.mainFile} is not in the files list`);
+    }
     if (this.trackDir) {
       const trackDir = this.trackDir;
       this.files.forEach((file) => {

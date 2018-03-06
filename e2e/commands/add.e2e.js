@@ -149,18 +149,40 @@ describe('bit add command', function () {
     });
   });
   describe('add a directory as authored', () => {
+    let localScope;
     before(() => {
       helper.reInitLocalScope();
       helper.createFile('utils/bar', 'foo.js');
       helper.addComponent('utils/bar');
+      localScope = helper.cloneLocalScope();
     });
     it('should add the directory as trackDir in bitmap file', () => {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('utils/bar');
       expect(bitMap['utils/bar'].trackDir).to.equal('utils/bar');
     });
+    describe('creating another file in the same directory', () => {
+      let statusOutput;
+      before(() => {
+        helper.createFile('utils/bar', 'foo2.js');
+        statusOutput = helper.runCmd('bit status');
+      });
+      it('bit status should still show the component as new', () => {
+        expect(statusOutput).to.have.string('new components');
+        expect(statusOutput).to.have.string('no modified components');
+        expect(statusOutput).to.not.have.string('no new components');
+      });
+      it('bit status should update bitmap and add the new file', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('utils/bar');
+        const files = bitMap['utils/bar'].files;
+        expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
+        expect(files).to.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
+      });
+    });
     describe('tagging the component', () => {
       before(() => {
+        helper.getClonedLocalScope(localScope);
         helper.commitAllComponents();
       });
       it('should save the files with relativePaths relative to consumer root', () => {
@@ -168,10 +190,30 @@ describe('bit add command', function () {
         expect(output.files[0].relativePath).to.equal('utils/bar/foo.js');
         expect(output.mainFile).to.equal('utils/bar/foo.js');
       });
+      describe('then adding a new file to the directory', () => {
+        let statusOutput;
+        before(() => {
+          helper.createFile('utils/bar', 'foo2.js');
+          statusOutput = helper.runCmd('bit status');
+        });
+        it('bit status should show the component as modified', () => {
+          expect(statusOutput).to.have.string('no new components');
+          expect(statusOutput).to.not.have.string('no modified components');
+          expect(statusOutput).to.have.string('modified components');
+        });
+        it('bit status should update bitmap and add the new file', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property('utils/bar');
+          const files = bitMap['utils/bar'].files;
+          expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
+          expect(files).to.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
+        });
+      });
     });
-    describe('then, add a file outside of that directory', () => {
+    describe('adding a file outside of that directory', () => {
       let output;
       before(() => {
+        helper.getClonedLocalScope(localScope);
         helper.createFile('utils', 'a.js');
         output = helper.addComponent('utils/a.js --id utils/bar');
       });

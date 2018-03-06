@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bit status shows a component as modified in case a new file has added to its rootDir or one of the files has renamed
+- track directories for files changes and update .bitmap automatically
 - bug fix - tests files were ignored during bit add when they're weren't part of the files array and .gitignore contained a record with leading exclamation mark
 - improve handling of errors from compilers which return promises
 

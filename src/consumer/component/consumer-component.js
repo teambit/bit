@@ -43,6 +43,9 @@ import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
+import AddComponents from './add-components';
+import NoFiles from './add-components/exceptions/no-files';
+import EmptyDirectory from './add-components/exceptions/empty-directory';
 
 export type ComponentProps = {
   name: string,
@@ -929,7 +932,7 @@ export default class Component {
     return this.fromObject(object);
   }
 
-  static loadFromFileSystem({
+  static async loadFromFileSystem({
     bitDir,
     componentMap,
     id,
@@ -941,7 +944,7 @@ export default class Component {
     id: BitId,
     consumer: Consumer,
     componentFromModel: Component
-  }): Component {
+  }): Promise<Component> {
     const consumerPath = consumer.getPath();
     const consumerBitJson: ConsumerBitJson = consumer.bitJson;
     const bitMap: BitMap = consumer.bitMap;
@@ -951,10 +954,36 @@ export default class Component {
     let devPackageDependencies;
     let peerPackageDependencies;
     let bitJson = consumerBitJson;
-    const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
+    const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
+      const trackDir = componentMap.getTrackDir();
+      if (trackDir) {
+        const addParams = {
+          componentPaths: [trackDir],
+          id: id.toString(),
+          override: false, // this makes sure to not override existing files of componentMap
+          writeToBitMap: false
+        };
+        const numOfFilesBefore = componentMap.files.length;
+        const addComponents = new AddComponents(consumer, addParams);
+        try {
+          await addComponents.add();
+        } catch (err) {
+          if (err instanceof NoFiles || err instanceof EmptyDirectory) {
+            // it might happen that a component is imported and current .gitignore configuration
+            // are effectively removing all files from bitmap. we should ignore the error in that
+            // case
+          } else {
+            throw err;
+          }
+        }
+        if (componentMap.files.length > numOfFilesBefore) {
+          logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
+          bitMap.hasChanged = true;
+        }
+      }
       const filesKeysToDelete = [];
-      files.forEach((file, key) => {
+      componentMap.files.forEach((file, key) => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
           const sourceFile = SourceFile.load(filePath, consumerBitJson.distTarget, bitDir, consumerPath, {
@@ -971,14 +1000,12 @@ export default class Component {
         throw new MissingFilesFromComponent(id.toString());
       }
       if (filesKeysToDelete.length) {
-        filesKeysToDelete.forEach(key => files.splice(key, 1));
+        filesKeysToDelete.forEach(key => componentMap.files.splice(key, 1));
         bitMap.hasChanged = true;
       }
-
       return sourceFiles;
     };
     if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
-    const files = componentMap.files;
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
@@ -1013,7 +1040,7 @@ export default class Component {
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,
-      files: getLoadedFiles(files),
+      files: await getLoadedFiles(),
       dists,
       packageDependencies,
       devPackageDependencies,

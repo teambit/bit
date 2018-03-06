@@ -223,6 +223,7 @@ export default class BitMap {
       if (override) {
         this.components[componentIdStr].files = files;
       } else {
+        // do not override existing files, only new files are added
         this.components[componentIdStr].files = R.unionWith(
           R.eqBy(R.prop('relativePath')),
           files,
