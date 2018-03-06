@@ -124,11 +124,13 @@ export default class AddComponents {
       const filesListMatch = files.map(async (file) => {
         const fileInfo = calculateFileInfo(file);
         const generatedFile = format(dsl, fileInfo);
-        const matches = await glob(generatedFile, { ignore: this.ignoreList });
-        return matches.filter(match => fs.existsSync(match));
+        const matches = await glob(generatedFile);
+        const matchesAfterGitIgnore = this.gitIgnore.filter(matches);
+        return matchesAfterGitIgnore.filter(match => fs.existsSync(match));
       });
       return Promise.all(filesListMatch);
     });
+
     const filesListFlatten = R.flatten(await Promise.all(filesListAllMatches));
     const filesListUnique = R.uniq(filesListFlatten);
     return filesListUnique.map((file) => {
