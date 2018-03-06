@@ -62,6 +62,10 @@ describe('bit move command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap['bar/foo'].mainFile).to.equal('utils/foo1.js');
     });
+    it('should update the trackDir of bit.map', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap['bar/foo'].trackDir).to.equal('utils');
+    });
   });
   describe('when the file was moved already', () => {
     const oldPath = path.join('bar', 'foo.js');

@@ -465,11 +465,11 @@ export default class Helper {
     return fs.removeSync(path.join(this.localScopePath, relativePathToLocalScope));
   }
 
-  addComponent(filePaths: string = path.normalize('bar/foo.js'), cwd = this.localScopePath) {
+  addComponent(filePaths: string = path.normalize('bar/foo.js'), cwd: string = this.localScopePath) {
     return this.runCmd(`bit add ${filePaths}`, cwd);
   }
 
-  untrackComponent(id: string = '', cwd = this.localScopePath) {
+  untrackComponent(id: string = '', cwd: string = this.localScopePath) {
     return this.runCmd(`bit untrack ${id}`, cwd);
   }
 
@@ -477,7 +477,7 @@ export default class Helper {
     return path.join(__dirname, 'fixtures');
   }
 
-  copyFixtureComponents(dir: string = '', cwd = this.localScopePath) {
+  copyFixtureComponents(dir: string = '', cwd: string = this.localScopePath) {
     const sourceDir = path.join(__dirname, 'fixtures', 'components', dir);
     fs.copySync(sourceDir, cwd);
     // update with the correct remote-scope
