@@ -246,7 +246,11 @@ export default class AddComponents {
           mainFile = foundFile.relativePath;
         }
         if (fs.existsSync(generatedFile) && !foundFile) {
-          files.push({ relativePath: generatedFile, test: false, name: path.basename(generatedFile) });
+          files.push({
+            relativePath: pathNormalizeToLinux(generatedFile),
+            test: false,
+            name: path.basename(generatedFile)
+          });
           mainFile = generatedFile;
         }
       });
