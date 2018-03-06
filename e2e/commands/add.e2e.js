@@ -940,6 +940,34 @@ describe('bit add command', function () {
       expect(files).to.deep.equal(expectedArray);
     });
   });
+  describe('ignore files with exclamation mark pattern', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('bar', 'foo.js');
+      helper.createFile('bar', 'foo.spec.js');
+      helper.createFile('bar', 'index.js');
+      // we don't expect this pattern to do anything. it just makes sure we don't repeat the bug we
+      // had before where having ANY entry in .gitignore with "!", the test file was ignored.
+      helper.writeGitIgnore(['!bar']);
+      output = helper.addComponentWithOptions('bar/foo.js', { t: 'bar/foo.spec.js' });
+    });
+    it('should track the component', () => {
+      expect(output).to.contain('tracking component bar/foo');
+    });
+    it('bitmap should include the file and the test file correctly', () => {
+      const bitMap = helper.readBitMap();
+      const expectedArray = [
+        { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' },
+        { relativePath: 'bar/foo.js', test: false, name: 'foo.js' }
+      ];
+      expect(bitMap).to.have.property('bar/foo');
+      const files = bitMap['bar/foo'].files;
+      expect(files).to.be.array();
+      expect(files).to.deep.equal(expectedArray);
+      expect(files).to.be.ofSize(2);
+    });
+  });
   describe('add one component to project with existing .bit.map.json file', () => {
     before(() => {
       helper.reInitLocalScope();
