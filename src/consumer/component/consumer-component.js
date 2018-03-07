@@ -971,7 +971,7 @@ export default class Component {
         throw new MissingFilesFromComponent(id.toString());
       }
       if (filesKeysToDelete.length) {
-        filesKeysToDelete.forEach(key => componentMap.files.splice(key, 1));
+        componentMap.deleteFilesPerKeys(filesKeysToDelete);
         bitMap.hasChanged = true;
       }
       return sourceFiles;

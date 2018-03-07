@@ -218,6 +218,11 @@ export default class ComponentMap {
     }
   }
 
+  deleteFilesPerKeys(keys: number[]) {
+    keys.forEach(key => this.files.splice(key, 1));
+    this.validate();
+  }
+
   validate(): void {
     const isPathValid = (pathStr) => {
       if (pathStr.startsWith('./') || pathStr.startsWith('../') || pathStr.includes('\\')) return false;

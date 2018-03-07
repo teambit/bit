@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import fs from 'fs';
+import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
@@ -163,6 +163,7 @@ describe('bit add command', function () {
     describe('creating another file in the same directory', () => {
       let statusOutput;
       before(() => {
+        helper.getClonedLocalScope(localScope);
         helper.createFile('utils/bar', 'foo2.js');
         statusOutput = helper.runCmd('bit status');
       });
@@ -177,6 +178,44 @@ describe('bit add command', function () {
         const files = bitMap['utils/bar'].files;
         expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
         expect(files).to.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
+      });
+      describe('rename a non-main file', () => {
+        before(() => {
+          const currentFile = path.join(helper.localScopePath, 'utils/bar/foo2.js');
+          const newFile = path.join(helper.localScopePath, 'utils/bar/foo3.js');
+          fs.moveSync(currentFile, newFile);
+          statusOutput = helper.runCmd('bit status');
+        });
+        it('should rename the file in bitmap', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property('utils/bar');
+          const files = bitMap['utils/bar'].files;
+          expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
+          expect(files).to.not.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
+          expect(files).to.deep.include({ relativePath: 'utils/bar/foo3.js', test: false, name: 'foo3.js' });
+          expect(files).to.have.lengthOf(2);
+        });
+      });
+    });
+    describe('rename the file which is a main file', () => {
+      let statusOutput;
+      before(() => {
+        const currentFile = path.join(helper.localScopePath, 'utils/bar/foo.js');
+        const newFile = path.join(helper.localScopePath, 'utils/bar/foo2.js');
+        fs.moveSync(currentFile, newFile);
+        try {
+          statusOutput = helper.runCmd('bit status');
+        } catch (err) {
+          statusOutput = err.message;
+        }
+      });
+      it('bit status should throw an error', () => {
+        expect(statusOutput).to.have.string('mainFile utils/bar/foo.js is not in the files list');
+      });
+      it('should not rename the file in bitmap file', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('utils/bar');
+        expect(bitMap['utils/bar'].files[0].relativePath).to.equal('utils/bar/foo.js');
       });
     });
     describe('tagging the component', () => {
