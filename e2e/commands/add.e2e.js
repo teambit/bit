@@ -1,5 +1,4 @@
-// covers also init, create, commit, import and export commands
-
+/* eslint-disable max-lines */
 import fs from 'fs';
 import chai, { expect } from 'chai';
 import path from 'path';
