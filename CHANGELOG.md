@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.8-dev.2] - 2018-03-07
+
 - bug fix - tests files were ignored during bit add when they're weren't part of the files array and .gitignore contained a record with leading exclamation mark
 - improve handling of errors from compilers which return promises
 - symlink tester env in isolated envs 
