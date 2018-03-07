@@ -38,6 +38,7 @@ import existsSync from './fs-exists-sync';
 import resolveHomePath from './os-resolve-home-path';
 import currentDirName from './fs/current-dir-name';
 import removeFile from './fs-remove-file';
+import createSymlinkOrCopy from './fs/create-symlink-or-copy';
 import allSettled from './promise-all-settled';
 import values from './object/values';
 import glob from './glob';
@@ -126,6 +127,7 @@ export {
   listDirectories,
   isDirEmpty,
   removeFile,
+  createSymlinkOrCopy,
   isDirEmptySync,
   flatMap,
   flatten,

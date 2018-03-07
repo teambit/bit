@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
-import { mkdirp, isString, pathNormalizeToLinux } from '../../utils';
+import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
 import BitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -594,13 +594,13 @@ export default class Component {
     logger.debug('Environment components are installed.');
 
     try {
-      const run = async (mainFile: PathOsBased, distTestFiles: Dist[]) => {
+      const run = async (mainFile: PathOsBased, distTestFiles: Dist[], actualTesterFilePath: PathOsBased) => {
         loader.start(BEFORE_RUNNING_SPECS);
         try {
           const specsResultsP = distTestFiles.map(async (testFile) => {
             return specsRunner.run({
               scope,
-              testerFilePath,
+              testerFilePath: actualTesterFilePath,
               testerId: this.testerId,
               mainFile,
               testFile
@@ -645,10 +645,11 @@ export default class Component {
         const testDists = !this.dists.isEmpty()
           ? this.dists.get().filter(dist => dist.test)
           : this.files.filter(file => file.test);
-        return run(this.mainFile, testDists);
+        return run(this.mainFile, testDists, testerFilePath);
       }
 
       const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
+
       try {
         await isolatedEnvironment.create();
         const isolateOpts = {
@@ -657,7 +658,10 @@ export default class Component {
           installPackages: true,
           noPackageJson: false
         };
+        const localTesterPath = path.join(isolatedEnvironment.getPath(), 'tester');
         const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
+
+        createSymlinkOrCopy(testerFilePath, localTesterPath);
         const component = componentWithDependencies.component;
         component.isolatedEnvironment = isolatedEnvironment;
         logger.debug(`the component ${this.id.toString()} has been imported successfully into an isolated environment`);
@@ -670,7 +674,7 @@ export default class Component {
         const testFilesList = !component.dists.isEmpty()
           ? component.dists.get().filter(dist => dist.test)
           : component.files.filter(file => file.test);
-        const results = await run(component.mainFile, testFilesList);
+        const results = await run(component.mainFile, testFilesList, localTesterPath);
         if (!keep) await isolatedEnvironment.destroy();
         return isCI ? { specResults: results, mainFile: this.dists.calculateMainDistFile(this.mainFile) } : results;
       } catch (e) {
