@@ -326,7 +326,8 @@ export default class AddComponents {
           finalBitId = this._getIdAccordingToExistingComponent(idFromPath.toString());
         }
 
-        const trackDir = Object.keys(componentPathsStats).length === 1 ? relativeComponentPath : undefined;
+        const trackDir =
+          Object.keys(componentPathsStats).length === 1 && !this.exclude.length ? relativeComponentPath : undefined;
 
         return { componentId: finalBitId, files, mainFile: resolvedMainFile, trackDir };
       }
