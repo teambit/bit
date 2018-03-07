@@ -25,12 +25,14 @@ import { BitId } from '../../../bit-id';
 import type { BitIdStr } from '../../../bit-id/bit-id';
 import { COMPONENT_ORIGINS, REGEX_PATTERN, DEFAULT_DIST_DIRNAME } from '../../../constants';
 import logger from '../../../logger/logger';
-import PathsNotExist from './exceptions/paths-not-exist';
-import MissingComponentIdForImportedComponent from './exceptions/missing-id-imported-component';
-import IncorrectIdForImportedComponent from './exceptions/incorrect-id-imported-component';
-import NoFiles from './exceptions/no-files';
-import DuplicateIds from './exceptions/duplicate-ids';
-import EmptyDirectory from './exceptions/empty-directory';
+import {
+  PathsNotExist,
+  MissingComponentIdForImportedComponent,
+  IncorrectIdForImportedComponent,
+  NoFiles,
+  DuplicateIds,
+  EmptyDirectory
+} from './exceptions';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import ComponentMap from '../../bit-map/component-map';

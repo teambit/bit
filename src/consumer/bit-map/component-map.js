@@ -5,6 +5,10 @@ import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux } from '../../utils';
 import type { PathLinux, PathOsBased } from '../../utils/path';
+import { Consumer } from '..';
+import { BitId } from '../../bit-id';
+import AddComponents from '../component/add-components';
+import { NoFiles, EmptyDirectory } from '../component/add-components/exceptions';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
@@ -175,9 +179,43 @@ export default class ComponentMap {
    * directory to track for changes (such as files added/renamed)
    */
   getTrackDir(): ?PathLinux {
-    if (this.trackDir) return this.trackDir; // for authored components
-    if (this.rootDir) return this.rootDir; // for imported/nested components
+    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
+    if (this.origin === COMPONENT_ORIGINS.IMPORTED) return this.rootDir;
+    // DO NOT track nested components!
     return null;
+  }
+
+  /**
+   * in case new files were created in the track-dir directory, add them to the component-map
+   * so then they'll be tracked by bitmap
+   */
+  async trackDirectoryChanges(consumer: Consumer, id: BitId) {
+    const trackDir = this.getTrackDir();
+    if (trackDir) {
+      const addParams = {
+        componentPaths: [trackDir],
+        id: id.toString(),
+        override: false, // this makes sure to not override existing files of componentMap
+        writeToBitMap: false
+      };
+      const numOfFilesBefore = this.files.length;
+      const addComponents = new AddComponents(consumer, addParams);
+      try {
+        await addComponents.add();
+      } catch (err) {
+        if (err instanceof NoFiles || err instanceof EmptyDirectory) {
+          // it might happen that a component is imported and current .gitignore configuration
+          // are effectively removing all files from bitmap. we should ignore the error in that
+          // case
+        } else {
+          throw err;
+        }
+      }
+      if (this.files.length > numOfFilesBefore) {
+        logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
+        consumer.bitMap.hasChanged = true;
+      }
+    }
   }
 
   validate(): void {

@@ -20,7 +20,6 @@ import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment, { IsolateOptions } from '../../environment';
 import type { Log } from '../../scope/models/version';
 import BitMap from '../bit-map';
-import type { ComponentMapFile } from '../bit-map/component-map';
 import ComponentMap from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
@@ -43,9 +42,6 @@ import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
-import AddComponents from './add-components';
-import NoFiles from './add-components/exceptions/no-files';
-import EmptyDirectory from './add-components/exceptions/empty-directory';
 
 export type ComponentProps = {
   name: string,
@@ -956,32 +952,7 @@ export default class Component {
     let bitJson = consumerBitJson;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
-      const trackDir = componentMap.getTrackDir();
-      if (trackDir) {
-        const addParams = {
-          componentPaths: [trackDir],
-          id: id.toString(),
-          override: false, // this makes sure to not override existing files of componentMap
-          writeToBitMap: false
-        };
-        const numOfFilesBefore = componentMap.files.length;
-        const addComponents = new AddComponents(consumer, addParams);
-        try {
-          await addComponents.add();
-        } catch (err) {
-          if (err instanceof NoFiles || err instanceof EmptyDirectory) {
-            // it might happen that a component is imported and current .gitignore configuration
-            // are effectively removing all files from bitmap. we should ignore the error in that
-            // case
-          } else {
-            throw err;
-          }
-        }
-        if (componentMap.files.length > numOfFilesBefore) {
-          logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
-          bitMap.hasChanged = true;
-        }
-      }
+      await componentMap.trackDirectoryChanges(consumer, id);
       const filesKeysToDelete = [];
       componentMap.files.forEach((file, key) => {
         const filePath = path.join(bitDir, file.relativePath);
