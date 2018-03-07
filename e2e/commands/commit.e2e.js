@@ -689,8 +689,8 @@ describe('bit tag command', function () {
     });
     it('Should commit component only with the left files', () => {
       const beforeRemoveBitMap = helper.readBitMap();
-      const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
-      expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+      const beforeRemoveBitMapFiles = beforeRemoveBitMap['bar/foo'].files;
+      expect(beforeRemoveBitMapFiles).to.be.ofSize(2);
       helper.deleteFile('bar/foo.js');
       helper.commitAllComponents();
       const bitMap = helper.readBitMap();
@@ -700,9 +700,10 @@ describe('bit tag command', function () {
     });
     it('Should not let you tag with a non-existing dependency', () => {
       let errMsg;
-      helper.createFile('bar', 'foo.js', 'var index = require("./index.js")');
+      helper.createFile('bar', 'foo.js', '');
+      helper.createFile('bar', 'index.js', 'var foo = require("./foo.js")');
       helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
-      helper.deleteFile('bar/index.js');
+      helper.deleteFile('bar/foo.js');
       try {
         helper.runCmd('bit tag -a');
       } catch (err) {

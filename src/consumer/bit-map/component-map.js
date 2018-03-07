@@ -218,8 +218,11 @@ export default class ComponentMap {
     }
   }
 
-  deleteFilesPerKeys(keys: number[]) {
-    keys.forEach(key => this.files.splice(key, 1));
+  removeFiles(files: ComponentMapFile[]): void {
+    const relativePaths = files.map(file => file.relativePath);
+    this.files = this.files.reduce((accumulator, file) => {
+      return relativePaths.includes(file.relativePath) ? accumulator : accumulator.concat(file);
+    }, []);
     this.validate();
   }
 
@@ -228,7 +231,7 @@ export default class ComponentMap {
       if (pathStr.startsWith('./') || pathStr.startsWith('../') || pathStr.includes('\\')) return false;
       return true;
     };
-    const errorMessage = `failed adding a component-map record (to ${BIT_MAP} file).`;
+    const errorMessage = `failed adding or updating a component-map record (of ${BIT_MAP} file).`;
     if (!this.mainFile) throw new Error(`${errorMessage} mainFile attribute is missing`);
     if (!isPathValid(this.mainFile)) {
       throw new Error(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);

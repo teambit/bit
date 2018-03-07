@@ -953,8 +953,8 @@ export default class Component {
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
-      const filesKeysToDelete = [];
-      componentMap.files.forEach((file, key) => {
+      const filesToDelete = [];
+      componentMap.files.forEach((file) => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
           const sourceFile = SourceFile.load(filePath, consumerBitJson.distTarget, bitDir, consumerPath, {
@@ -964,14 +964,14 @@ export default class Component {
         } catch (err) {
           if (!(err instanceof FileSourceNotFound)) throw err;
           logger.warn(`a file ${filePath} will be deleted from bit.map as it does not exist on the file system`);
-          filesKeysToDelete.push(key);
+          filesToDelete.push(file);
         }
       });
-      if (filesKeysToDelete.length && !sourceFiles.length) {
+      if (filesToDelete.length && !sourceFiles.length) {
         throw new MissingFilesFromComponent(id.toString());
       }
-      if (filesKeysToDelete.length) {
-        componentMap.deleteFilesPerKeys(filesKeysToDelete);
+      if (filesToDelete.length) {
+        componentMap.removeFiles(filesToDelete);
         bitMap.hasChanged = true;
       }
       return sourceFiles;
