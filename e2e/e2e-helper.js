@@ -26,8 +26,9 @@ export default class Helper {
   compilerCreated: boolean;
   cache: Object;
   clonedScopes: string[] = [];
+  keepEnvs: boolean;
   constructor() {
-    this.debugMode = !!process.env.npm_config_debug;
+    this.debugMode = !!process.env.npm_config_debug; // default = false
     this.remoteScope = `${generateRandomStr()}-remote`;
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
     this.setLocalScope();
@@ -36,6 +37,7 @@ export default class Helper {
     this.envScope = `${generateRandomStr()}-env`;
     this.envScopePath = path.join(this.e2eDir, this.envScope);
     this.compilerCreated = false;
+    this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
   }
 
   setLocalScope(localScope?: string) {
@@ -143,6 +145,7 @@ export default class Helper {
   }
 
   destroyEnv() {
+    if (this.keepEnvs) return;
     fs.removeSync(this.localScopePath);
     fs.removeSync(this.remoteScopePath);
     if (this.cache) {
