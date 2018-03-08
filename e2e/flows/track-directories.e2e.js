@@ -129,6 +129,50 @@ describe('track directories functionality', function () {
       });
     });
   });
+  describe('add multiple directories', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('utils/foo', 'index.js');
+      helper.createFile('utils/bar', 'index.js');
+      helper.createFile('utils/baz', 'index.js');
+      helper.addComponent('utils/**');
+    });
+    it('should add trackDir property for each one of the directories', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap['utils/foo']).to.have.property('trackDir');
+      expect(bitMap['utils/foo'].trackDir).to.equal('utils/foo');
+
+      expect(bitMap['utils/bar']).to.have.property('trackDir');
+      expect(bitMap['utils/bar'].trackDir).to.equal('utils/bar');
+
+      expect(bitMap['utils/baz']).to.have.property('trackDir');
+      expect(bitMap['utils/baz'].trackDir).to.equal('utils/baz');
+    });
+  });
+  describe('add directory with tests', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('utils/bar', 'foo.js');
+      helper.createFile('utils/bar', 'foo.spec.js');
+      helper.addComponentWithOptions('utils/bar', { t: 'utils/bar/foo.spec.js' });
+      helper.createFile('utils/bar', 'foo2.js');
+      helper.runCmd('bit status');
+    });
+    it('should track the directories without changing the test files', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap['utils/bar']).to.have.property('trackDir');
+      expect(bitMap['utils/bar'].files).to.deep.include({
+        relativePath: 'utils/bar/foo.spec.js',
+        test: true,
+        name: 'foo.spec.js'
+      });
+      expect(bitMap['utils/bar'].files).to.deep.include({
+        relativePath: 'utils/bar/foo2.js',
+        test: false,
+        name: 'foo2.js'
+      });
+    });
+  });
   describe('add a directory with exclude', () => {
     before(() => {
       helper.reInitLocalScope();
