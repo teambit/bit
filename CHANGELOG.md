@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - bit status shows a component as modified in case a new file has added to its rootDir or one of the files has renamed
 - track directories for files changes and update .bitmap automatically
 
+## [0.12.8-dev.3] - 2018-03-08
+
+- merge process.env from the main process to tester process fork
+
 ## [0.12.8-dev.2] - 2018-03-07
 
 - bug fix - tests files were ignored during bit add when they're weren't part of the files array and .gitignore contained a record with leading exclamation mark
