@@ -42,16 +42,20 @@ function run({
   return new Promise((resolve, reject) => {
     const debugPort = getDebugPort();
     const openPort = debugPort ? debugPort + 1 : null;
+    const baseEnv = {
+      __mainFile__: mainFile,
+      __testFilePath__: testFile.path,
+      __tester__: testerFilePath,
+      __testerId__: testerId.toString()
+    };
+
+    // Merge process.env from the main process
+    const env = Object.assign({}, process.env, baseEnv);
 
     const child = fork(path.join(__dirname, 'worker.js'), {
       execArgv: openPort ? [`--debug=${openPort.toString()}`] : [],
       silent: false,
-      env: {
-        __mainFile__: mainFile,
-        __testFilePath__: testFile.path,
-        __tester__: testerFilePath,
-        __testerId__: testerId.toString()
-      }
+      env
     });
 
     process.on('exit', () => {
