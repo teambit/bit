@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.8-dev.3] - 2018-03-08
+
 - merge process.env from the main process to tester process fork
 
 ## [0.12.8-dev.2] - 2018-03-07
