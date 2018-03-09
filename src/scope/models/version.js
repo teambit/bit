@@ -3,7 +3,7 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
-import { filterObject, first, bufferFrom, getStringifyArgs } from '../../utils';
+import { filterObject, first, bufferFrom, getStringifyArgs, isValidPath } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
@@ -383,5 +383,35 @@ export default class Version extends BitObject {
 
   setCIProps(ci: CiProps) {
     this.ci = ci;
+  }
+
+  validate(): void {
+    const message = 'unable to save Version object';
+    if (!this.mainFile) throw new Error(`${message}, the mainFile is missing`);
+    if (!isValidPath(this.mainFile)) throw new Error(`${message}, the mainFile ${this.mainFile} is invalid`);
+    if (!this.files || !this.files.length) throw new Error(`${message}, the files are missing`);
+    this.files.forEach((file) => {
+      if (!isValidPath(file.relativePath)) {
+        throw new Error(`${message}, the file ${file.relativePath} is invalid`);
+      }
+      if (!file.name) throw new Error(`${message}, the file ${file.relativePath} is missing the name attribute`);
+    });
+    if (this.dists && this.dists.length) {
+      this.dists.forEach((file) => {
+        if (!isValidPath(file.relativePath)) {
+          throw new Error(`${message}, the dist-file ${file.relativePath} is invalid`);
+        }
+        if (!file.name) throw new Error(`${message}, the dist-file ${file.relativePath} is missing the name attribute`);
+      });
+    }
+    this.dependencies.validate();
+    this.devDependencies.validate();
+    if (!this.dependencies.isEmpty() && !this.flattenedDependencies.length) {
+      throw new Error(`${message}, it has dependencies but its flattenedDependencies is empty`);
+    }
+    if (!this.devDependencies.isEmpty() && !this.flattenedDevDependencies.length) {
+      throw new Error(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
+    }
+    if (!this.log) throw new Error(`${message},the log object is missing`);
   }
 }
