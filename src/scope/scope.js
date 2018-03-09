@@ -56,6 +56,7 @@ import Component from '../consumer/component/consumer-component';
 import { RemovedObjects } from './removed-components';
 import DependencyGraph from './graph/graph';
 import RemoveModelComponents from './component-ops/remove-model-components';
+import { ComponentSpecsFailed } from '../consumer/exceptions';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -268,7 +269,7 @@ export default class Scope {
     releaseType,
     force,
     consumer,
-    verbose
+    verbose = false
   }: {
     consumerComponents: ConsumerComponent[],
     message: string,
@@ -276,7 +277,7 @@ export default class Scope {
     releaseType: string,
     force: ?boolean,
     consumer: Consumer,
-    verbose: ?boolean
+    verbose?: boolean
   }): Promise<ComponentWithDependencies> {
     // TODO: Change the return type
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
@@ -344,7 +345,21 @@ export default class Scope {
     await this.buildMultiple(componentsToBuild, consumer, verbose);
 
     logger.debug('scope.putMany: sequentially test all components');
-    const testsResults = await this.testMultiple(componentsToBuild, consumer, verbose, !force);
+    let testsResults = [];
+    try {
+      testsResults = await this.testMultiple({
+        components: componentsToBuild,
+        consumer,
+        verbose,
+        rejectOnFailure: !force
+      });
+    } catch (err) {
+      // if force is true, ignore the tests and continue
+      if (!force) {
+        if (!verbose) throw new ComponentSpecsFailed();
+        throw err;
+      }
+    }
 
     logger.debug('scope.putMany: sequentially persist all components');
     const persistComponentsP = sortedConsumerComponentsIds.map(consumerComponentId => async () => {
@@ -420,7 +435,7 @@ export default class Scope {
   async buildMultiple(
     components: Component[],
     consumer: Consumer,
-    verbose
+    verbose: boolean
   ): Promise<{ component: string, buildResults: Object }> {
     logger.debug('scope.buildMultiple: sequentially build multiple components');
     loader.start(BEFORE_RUNNING_BUILD);
@@ -437,15 +452,20 @@ export default class Scope {
    *
    * See the reason not to run them in parallel at @buildMultiple()
    */
-  async testMultiple(
+  async testMultiple({
+    components,
+    consumer,
+    verbose,
+    rejectOnFailure = false
+  }: {
     components: Component[],
     consumer: Consumer,
     verbose: boolean,
-    rejectOnFailure: boolean
-  ): Promise<{ component: Component, specsResults: Object }> {
+    rejectOnFailure?: boolean
+  }): Promise<Array<{ component: Component, specs: Object }>> {
     logger.debug('scope.testMultiple: sequentially test multiple components');
     loader.start(BEFORE_RUNNING_SPECS);
-    const test = async (component) => {
+    const test = async (component: Component) => {
       if (!component.testerId) {
         return { component, missingTester: true };
       }

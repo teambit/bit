@@ -22,5 +22,5 @@ export default (async function test(id?: string, verbose: ?boolean): Promise<Bit
   };
   const components = await getComponents();
 
-  return consumer.scope.testMultiple(components, consumer, verbose);
+  return consumer.scope.testMultiple({ components, consumer, verbose });
 });

@@ -351,7 +351,7 @@ export default class Consumer {
     saveDependenciesAsComponents = false,
     installNpmPackages = true,
     addToRootPackageJson = true,
-    verbose = false,
+    verbose = false, // display the npm output
     excludeRegistryPrefix = false
   }: {
     silentPackageManagerResult: boolean,
