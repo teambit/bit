@@ -78,7 +78,7 @@ describe('bit status command', function () {
     it('Should show missing dependencies', () => {
       output = helper.runCmd('bit status');
       expect(output).to.have.string('untracked file dependencies:');
-      expect(output).to.have.string(`${path.normalize('bar/foo2.js')} -> bar/foo.js`);
+      expect(output).to.have.string('bar/foo2.js -> bar/foo.js');
     });
   });
   describe('when a component is created and added without its package dependencies', () => {
