@@ -7,6 +7,8 @@ import path from 'path';
 import logger from '../logger/logger';
 import { DEFAULT_PACKAGE_MANAGER } from '../constants';
 
+type PackageManagerResults = { stdout: string, stderr: string };
+
 const objectToArray = obj => map(join('@'), toPairs(obj));
 const rejectNils = R.reject(isNil);
 
@@ -79,7 +81,7 @@ const _installInOneDirectory = ({
   packageManagerProcessOptions = {},
   dir,
   verbose = false
-}) => {
+}): Promise<PackageManagerResults> => {
   // Handle process options
   const allowedPackageManagerProcessOptions = getAllowdPackageManagerProcessOptions(packageManagerProcessOptions);
   const concretePackageManagerProcessOptions = merge(
@@ -154,7 +156,7 @@ const installAction = async ({
   rootDir,
   installRootPackageJson = false,
   verbose = false
-}: installArgs) => {
+}: installArgs): Promise<PackageManagerResults | PackageManagerResults[]> => {
   if (useWorkspaces && packageManager === 'yarn') {
     return _installInOneDirectory({
       modules,

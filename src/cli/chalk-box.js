@@ -93,8 +93,8 @@ const paintStats = (results) => {
   return `${statsHeader}\n${totalDuration}\n`;
 };
 
-export const paintSpecsResults = (results: SpecsResults[]): string => {
-  if (!results) return '';
+export const paintSpecsResults = (results?: SpecsResults[]): string[] => {
+  if (!results) return [];
   return results.map((specResult) => {
     const stats = paintStats(specResult);
     const tests = specResult.tests ? `${specResult.tests.map(paintTest).join('\n')}\n` : '';

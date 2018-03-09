@@ -389,8 +389,5 @@ export default class Component extends BitObject {
     const message = 'unable to save Component object';
     if (!this.name) throw new Error(`${message} the name is missing`);
     if (!this.box) throw new Error(`${message} the box is missing`);
-    if (!this.versions || !Object.keys(this.versions).length) {
-      throw new Error(`${message} ${this.name}, its versions array is empty`);
-    }
   }
 }

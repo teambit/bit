@@ -390,12 +390,15 @@ export default class Version extends BitObject {
     if (!this.mainFile) throw new Error(`${message}, the mainFile is missing`);
     if (!isValidPath(this.mainFile)) throw new Error(`${message}, the mainFile ${this.mainFile} is invalid`);
     if (!this.files || !this.files.length) throw new Error(`${message}, the files are missing`);
+    let foundMainFile = false;
     this.files.forEach((file) => {
       if (!isValidPath(file.relativePath)) {
         throw new Error(`${message}, the file ${file.relativePath} is invalid`);
       }
       if (!file.name) throw new Error(`${message}, the file ${file.relativePath} is missing the name attribute`);
+      if (file.relativePath === this.mainFile) foundMainFile = true;
     });
+    if (!foundMainFile) throw new Error(`${message}, unable to find the mainFile ${this.mainFile} in the file list`);
     if (this.dists && this.dists.length) {
       this.dists.forEach((file) => {
         if (!isValidPath(file.relativePath)) {
