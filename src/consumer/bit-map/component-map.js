@@ -3,7 +3,7 @@ import R from 'ramda';
 import path from 'path';
 import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
-import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux } from '../../utils';
+import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } from '../../utils';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
@@ -227,13 +227,9 @@ export default class ComponentMap {
   }
 
   validate(): void {
-    const isPathValid = (pathStr) => {
-      if (pathStr.startsWith('./') || pathStr.startsWith('../') || pathStr.includes('\\')) return false;
-      return true;
-    };
     const errorMessage = `failed adding or updating a component-map record (of ${BIT_MAP} file).`;
     if (!this.mainFile) throw new Error(`${errorMessage} mainFile attribute is missing`);
-    if (!isPathValid(this.mainFile)) {
+    if (!isValidPath(this.mainFile)) {
       throw new Error(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
     }
     // if it's an environment component (such as compiler) the rootDir is an empty string
@@ -241,7 +237,7 @@ export default class ComponentMap {
       throw new Error(`${errorMessage} rootDir attribute is missing`);
     }
     // $FlowFixMe
-    if (this.rootDir && !isPathValid(this.rootDir)) {
+    if (this.rootDir && !isValidPath(this.rootDir)) {
       throw new Error(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
     }
     if (this.rootDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
@@ -252,7 +248,7 @@ export default class ComponentMap {
     }
     if (!this.files || !this.files.length) throw new Error(`${errorMessage} files list is missing`);
     this.files.forEach((file) => {
-      if (!isPathValid(file.relativePath)) {
+      if (!isValidPath(file.relativePath)) {
         throw new Error(`${errorMessage} file path ${file.relativePath} is invalid`);
       }
     });

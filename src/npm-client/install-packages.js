@@ -9,9 +9,9 @@ import { Consumer } from '../consumer';
 export async function installPackages(
   consumer: Consumer,
   dirs: string[],
-  verbose: boolean,
+  verbose: boolean, // true shows all messages, false shows only a successful message
   installRootPackageJson: boolean = false,
-  silentPackageManagerResult: boolean = false
+  silentPackageManagerResult: boolean = false // don't shows packageManager results at all
 ) {
   const packageManager = consumer.bitJson.packageManager;
   const packageManagerArgs = consumer.packageManagerArgs.length
@@ -43,7 +43,7 @@ export async function installPackages(
   if (!Array.isArray(results)) {
     results = [results];
   }
-  if (!silentPackageManagerResult) {
+  if (!silentPackageManagerResult || verbose) {
     results.forEach((result) => {
       if (result) npmClient.printResults(result);
     });

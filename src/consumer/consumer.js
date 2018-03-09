@@ -351,7 +351,7 @@ export default class Consumer {
     saveDependenciesAsComponents = false,
     installNpmPackages = true,
     addToRootPackageJson = true,
-    verbose = false,
+    verbose = false, // display the npm output
     excludeRegistryPrefix = false
   }: {
     silentPackageManagerResult: boolean,
@@ -489,9 +489,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -806,7 +806,8 @@ export default class Consumer {
     scope: Scope,
     isolated: boolean = false
   ): Promise<Consumer> {
-    if (pathHasConsumer(consumerPath)) return Promise.reject(new ConsumerAlreadyExists());
+    // if it's an isolated environment, it's normal to have already the consumer
+    if (pathHasConsumer(consumerPath) && !isolated) return Promise.reject(new ConsumerAlreadyExists());
     const bitJson = await ConsumerBitJson.ensure(consumerPath);
     return new Consumer({
       projectPath: consumerPath,

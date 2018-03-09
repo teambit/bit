@@ -6,6 +6,7 @@ import { COMPONENT_ORIGINS } from '../../../constants';
 import { BitId } from '../../../bit-id';
 import Scope from '../../../scope/scope';
 import BitMap from '../../bit-map';
+import { isValidPath } from '../../../utils';
 
 export default class Dependencies {
   dependencies: Dependency[];
@@ -105,6 +106,38 @@ export default class Dependencies {
       dependency.remoteVersion = remoteVersionId ? remoteVersionId.version : null;
       dependency.localVersion = localVersionId ? localVersionId.version : null;
       dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
+    });
+  }
+
+  validate(): void {
+    if (!Array.isArray(this.dependencies)) throw new Error('dependencies must be an array');
+    this.dependencies.forEach((dependency) => {
+      if (!dependency.id) throw new Error('one of the dependencies is missing ID');
+      if (!dependency.relativePaths) {
+        throw new Error(`a dependency ${dependency.id.toString()} is missing relativePaths`);
+      }
+      dependency.relativePaths.forEach((relativePath) => {
+        if (!relativePath.sourceRelativePath) {
+          throw new Error(`a dependency ${dependency.id.toString()} is missing relativePaths.sourceRelativePath`);
+        }
+        if (!relativePath.destinationRelativePath) {
+          throw new Error(`a dependency ${dependency.id.toString()} is missing relativePaths.destinationRelativePath`);
+        }
+        if (!isValidPath(relativePath.sourceRelativePath)) {
+          throw new Error(
+            `a dependency ${dependency.id.toString()} has an invalid sourceRelativePath ${
+              relativePath.sourceRelativePath
+            }`
+          );
+        }
+        if (!isValidPath(relativePath.destinationRelativePath)) {
+          throw new Error(
+            `a dependency ${dependency.id.toString()} has an invalid destinationRelativePath ${
+              relativePath.destinationRelativePath
+            }`
+          );
+        }
+      });
     });
   }
 }

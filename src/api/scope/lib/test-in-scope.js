@@ -8,7 +8,7 @@ import logger from '../../../logger/logger';
 export default function testInScope({
   id,
   save,
-  verbose,
+  verbose, // gets called during CI, verbose is always true
   scopePath,
   directory,
   keep,

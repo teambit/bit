@@ -39,7 +39,7 @@ export default class Environment {
     logger.debug(`creating a new isolated environment at ${this.path}`);
   }
 
-  async create(): Promise<> {
+  async create(): Promise<void> {
     await mkdirp(this.path);
     this.consumer = await Consumer.createWithExistingScope(this.path, this.scope, true);
   }

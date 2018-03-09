@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - bit status shows a component as modified in case a new file has added to its rootDir or one of the files has renamed
 - track directories for files changes and update .bitmap automatically
+- prevent saving invalid components into the model
+- fix `bit tag` with `--force` flag to force tagging when exceptions occurred during test
+- fix `bit test` error message to display the actual exception if occurred
+- improve error message of `bit tag --verbose` when tests failed to include tests results
 
 ## [0.12.8-dev.3] - 2018-03-08
 

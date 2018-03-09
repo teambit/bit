@@ -151,6 +151,7 @@ export default class Repository {
 
   add(object: ?BitObject): Repository {
     if (!object) return this;
+    object.validate();
     // leave the following commented log message, it is very useful for debugging but too verbose when not needed.
     // logger.debug(`repository: adding object ${object.hash().toString()} which consist of the following id: ${object.id()}`);
     this.objects.push(object);
