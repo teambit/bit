@@ -384,4 +384,10 @@ export default class Component extends BitObject {
       scope: bitId.scope
     });
   }
+
+  validate(): void {
+    const message = 'unable to save Component object';
+    if (!this.name) throw new Error(`${message} the name is missing`);
+    if (!this.box) throw new Error(`${message} the box is missing`);
+  }
 }

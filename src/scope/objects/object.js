@@ -115,6 +115,10 @@ export default class BitObject {
     return Buffer.concat([new Buffer(this.header), this.toBuffer()]);
   }
 
+  validate(): void {
+    throw new Error('validate() was not implemented...');
+  }
+
   static parseObject(fileContents: Buffer, types: { [string]: Function }): Promise<BitObject> {
     return inflate(fileContents).then(buffer => parse(buffer, types));
   }

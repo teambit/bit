@@ -32,7 +32,25 @@ describe('bit tag command', function () {
       );
     });
   });
-
+  describe('tag component with invalid mainFile in bitmap', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      const bitMap = helper.readBitMap();
+      bitMap['bar/foo'].mainFile = '';
+      helper.writeBitMap(bitMap);
+      try {
+        helper.commitComponent('bar/foo');
+      } catch (err) {
+        output = err.toString();
+      }
+    });
+    it('should not tag the component', () => {
+      expect(output).to.have.string('unable to find the mainFile');
+    });
+  });
   describe('semver flags', () => {
     let output;
     describe('tag specific component', () => {

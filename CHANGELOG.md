@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- prevent saving invalid components into the model
 - fix `bit tag` with `--force` flag to force tagging when exceptions occurred during test
 - fix `bit test` error message to display the actual exception if occurred
 - improve error message of `bit tag --verbose` when tests failed to include tests results
