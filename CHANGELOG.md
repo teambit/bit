@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix `bit tag` with `--force` flag to force tagging when exceptions occurred during test
+- fix `bit test` error message to display the actual exception if occurred
+- improve error message of `bit tag --verbose` when tests failed to include tests results
+
 ## [0.12.8-dev.3] - 2018-03-08
 
 - merge process.env from the main process to tester process fork
@@ -15,7 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - bug fix - tests files were ignored during bit add when they're weren't part of the files array and .gitignore contained a record with leading exclamation mark
 - improve handling of errors from compilers which return promises
-- symlink tester env in isolated envs 
+- symlink tester env in isolated envs
 
 ## [0.12.8-dev.1] - 2018-03-05
 

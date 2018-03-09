@@ -1,11 +1,10 @@
 /** @flow */
-import semver from 'semver';
 import Command from '../../command';
 import { commitAction, commitAllAction } from '../../../api/consumer';
 import Component from '../../../consumer/component';
 import { isString } from '../../../utils';
 import ModelComponent from '../../../scope/models/component';
-import { DEFAULT_BIT_VERSION, DEFAULT_BIT_RELEASE_TYPE } from '../../../constants';
+import { DEFAULT_BIT_RELEASE_TYPE } from '../../../constants';
 
 const chalk = require('chalk');
 
@@ -21,7 +20,7 @@ export default class Export extends Command {
     ['mi', 'minor', 'increment the minor version number'],
     ['ma', 'major', 'increment the major version number'],
     ['f', 'force', 'forcely tag even if tests are failing and even when component has not changed'],
-    ['v', 'verbose', 'show specs output on tag'],
+    ['v', 'verbose', 'show specs output on failure'],
     ['i', 'ignore-missing-dependencies', 'ignore missing dependencies (default = false)']
   ];
   loader = true;

@@ -199,7 +199,7 @@ describe('bit tag command', function () {
       });
     });
   });
-  describe('tag one component', () => {
+  describe('tag one component with failing tests', () => {
     before(() => {
       helper.importTester('bit.envs/testers/mocha@0.0.4');
       const failingTest = `const expect = require('chai').expect;
@@ -223,7 +223,6 @@ describe('bit tag command', function () {
       }
       expect(output).to.have.string('fatal: the component non/existing was not found in the .bitmap file');
     });
-
     it.skip('should print warning if the a driver is not installed', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
       helper.createFile('bar', 'foo2.js', fixture);
@@ -236,23 +235,62 @@ describe('bit tag command', function () {
         )
       ).to.be.true;
     });
-
     it.skip('should persist the model in the scope', () => {});
-
     it.skip('should run the onCommit hook', () => {});
-
     it.skip('should throw error if the build failed', () => {});
-
-    it('should throw error if the tests failed', () => {
+    describe('tagging without --verbose flag', () => {
       let output;
-      try {
-        helper.tagWithoutMessage('bar/foo');
-      } catch (err) {
-        output = err.message;
-      }
-      expect(output).to.have.string("component's specs does not pass, fix them and tag");
+      before(() => {
+        try {
+          helper.tagWithoutMessage('bar/foo');
+        } catch (err) {
+          output = err.message;
+        }
+      });
+      it('should throw a general error saying the tests failed', () => {
+        expect(output).to.have.string("component's specs does not pass, fix them and tag");
+      });
+      it('should not display the tests results', () => {
+        expect(output).to.not.have.string('failing test should fail');
+        expect(output).to.not.have.string('expected true to equal false');
+      });
     });
-
+    describe('tagging with --verbose flag', () => {
+      let output;
+      before(() => {
+        try {
+          helper.tagWithoutMessage('bar/foo --verbose');
+        } catch (err) {
+          output = err.toString() + err.stdout.toString();
+        }
+      });
+      it('should display the failing tests results', () => {
+        expect(output).to.have.string('failing test should fail');
+        expect(output).to.have.string('expected true to equal false');
+      });
+      it('should display the failed component', () => {
+        expect(output).to.have.string('bar/foo');
+      });
+      it('should display the failed test file', () => {
+        expect(output).to.have.string('file: bar/foo.spec.js');
+      });
+      it('should also display a general error saying the tests failed', () => {
+        expect(output).to.have.string("component's specs does not pass, fix them and tag");
+      });
+    });
+    describe('tagging with --force flag', () => {
+      let output;
+      before(() => {
+        output = helper.tagWithoutMessage('bar/foo --force');
+      });
+      it('should tag successfully although the tests failed', () => {
+        expect(output).to.have.string('1 components tagged');
+      });
+      it('should not display any data about the tests', () => {
+        expect(output).to.not.have.string("component's specs does not pass, fix them and tag");
+        expect(output).to.not.have.string('failing test should fail');
+      });
+    });
     describe.skip('tag imported component', () => {
       it('should index the component', () => {});
 
