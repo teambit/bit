@@ -54,7 +54,7 @@ import DuplicateIds from '../consumer/component/add-components/exceptions/duplic
 import IncorrectIdForImportedComponent from '../consumer/component/add-components/exceptions/incorrect-id-imported-component';
 import PathsNotExist from '../consumer/component/add-components/exceptions/paths-not-exist';
 
-const errorsMap: [[Error, (err: Error) => string]] = [
+const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     RemoteUndefined,
     () =>
