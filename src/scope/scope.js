@@ -57,6 +57,8 @@ import { RemovedObjects } from './removed-components';
 import DependencyGraph from './graph/graph';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import { ComponentSpecsFailed } from '../consumer/exceptions';
+import Dists from '../consumer/component/sources/dists';
+import SpecsResults from '../consumer/specs-results';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -1235,8 +1237,7 @@ export default class Scope {
     verbose,
     isolated,
     directory,
-    keep,
-    isCI = false
+    keep
   }: {
     bitId: BitId,
     consumer?: ?Consumer,
@@ -1244,9 +1245,8 @@ export default class Scope {
     verbose?: ?boolean,
     isolated?: boolean,
     directory?: string,
-    keep?: boolean,
-    isCI?: boolean
-  }): Promise<?any> {
+    keep?: boolean
+  }): Promise<?SpecsResults> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run specs on remote component');
     }
@@ -1259,8 +1259,7 @@ export default class Scope {
       verbose,
       isolated,
       directory,
-      keep,
-      isCI
+      keep
     });
   }
 
@@ -1270,22 +1269,20 @@ export default class Scope {
     consumer,
     verbose,
     directory,
-    keep,
-    isCI
+    keep
   }: {
     bitId: BitId,
-    save?: ?boolean,
+    save?: boolean,
     consumer?: Consumer,
     verbose?: ?boolean,
     directory: ?string,
-    keep: ?boolean,
-    isCI: ?boolean
-  }): Promise<string> {
+    keep: ?boolean
+  }): Promise<?Dists> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run build on remote component');
     }
     const component: Component = await this.loadComponent(bitId);
-    return component.build({ scope: this, save, consumer, verbose, directory, keep, isCI });
+    return component.build({ scope: this, save, consumer, verbose, directory, keep });
   }
 
   /**
