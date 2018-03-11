@@ -4,7 +4,7 @@ import fs from 'fs';
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
-import { AUTO_GENERATED_MSG, DEFAULT_INDEX_EXTS } from '../../src/constants';
+import { AUTO_GENERATED_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
