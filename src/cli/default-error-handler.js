@@ -72,7 +72,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       )
   ],
   [ConsumerAlreadyExists, () => 'workspace already exists'],
-  [VersionAlreadyExists, err => `version ${err.version} already exists for ${err.componentId}`],
+  [VersionAlreadyExists, err => `error: version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'workspace not found. to initiate a new workspace, please use `bit init`'],
   // [
   //   PluginNotFound,
@@ -93,7 +93,13 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
         err.version
       } is missing. please report this issue on Github https://github.com/teambit/bit/issues`
   ],
-  [DependencyNotFound, err => `error: dependency "${chalk.bold(err.id)}" was not found.`],
+  [
+    DependencyNotFound,
+    err =>
+      `error: dependency "${chalk.bold(
+        err.id
+      )}" was not found. please track this component or use --ignore-missing-dependencies flag (not recommended)`
+  ],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
   [ComponentNotFoundInPath, err => `error: component in path "${chalk.bold(err.path)}" was not found`],
   [
@@ -104,13 +110,13 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       } was denied\nsee troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html`
   ],
   [RemoteNotFound, err => `error: remote "${chalk.bold(err.name)}" was not found`],
-  [NetworkError, err => `error: remote failed with error: "${chalk.bold(err.remoteErr)}"`],
+  [NetworkError, err => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
   [
     MergeConflict,
     err =>
       `error: merge conflict occurred when exporting the component ${
         err.id
-      }.\nto resolve it, please import the latest version of the remote component, and only then apply and export your changes.`
+      }.\nto resolve it, please import the latest version of the remote component, and apply your changes before exporting the component.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
   [UnexpectedNetworkError, () => 'error: unexpected network error has occurred'],
@@ -138,9 +144,9 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     InvalidIdChunk,
     err =>
-      `invalid ID part in "${chalk.bold(
+      `error: "${chalk.bold(
         err.id
-      )}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+      )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
   ],
   [InvalidBitJson, err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.`],
 
@@ -155,30 +161,32 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     MissingMainFile,
     err =>
-      `error: the main file ${chalk.bold(err.mainFile)} was not found in the files list ${chalk.bold(
+      `error: a main file ${chalk.bold(err.mainFile)} was not found among the component's files ${chalk.bold(
         err.files.join(', ')
-      )}`
+      )}. please use 'bit add' --main flag to specify a different main file`
   ],
   [
     MissingFilesFromComponent,
     (err) => {
-      return `invalid component ${
+      return `component ${
         err.id
-      }, all files were deleted, please remove the component using bit remove command`;
+      } is invalid as part or all of the component files were deleted. please use \'bit remove\' to resolve the issue`;
     }
   ],
   [
     MissingBitMapComponent,
     err =>
-      `error: component ${chalk.bold(
+      `error: component "${chalk.bold(
         err.id
-      )} was not found on your local workspace.\nplease spceify a valid component ID or track the component using 'bit add' (see 'bit add --help')`
+      )}" was not found on your local workspace.\nplease spceify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
   ],
-  [PathsNotExist, err => `error: the file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
+  [PathsNotExist, err => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
   [
     MissingComponentIdForImportedComponent,
     err =>
-      `error: unable to add new files to the component "${chalk.bold(err.id)}" without specifying an ID using '--id`
+      `error: unable to add new files to the component "${chalk.bold(
+        err.id
+      )}" without specifying a component ID. please define the component ID using the --id flag.`
   ],
   [
     IncorrectIdForImportedComponent,
@@ -208,7 +216,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [IdExportedAlready, err => `component ${chalk.bold(err.id)} has been already exported to ${chalk.bold(err.remote)}`],
   [
     InvalidVersion,
-    err => `version ${chalk.bold(err.version)} is not a valid semantic version. learn more: https://semver.org`
+    err => `error: version ${chalk.bold(err.version)} is not a valid semantic version. learn more: https://semver.org`
   ],
   [NothingToCompareTo, err => 'no previous versions to comapre'],
   [PromptCanceled, err => chalk.yellow('operation was aborted')],
