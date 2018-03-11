@@ -7,7 +7,7 @@ import { init } from '../../../api/consumer';
 
 export default class Init extends Command {
   name = 'init [path]';
-  description = 'initialize an empty bit scope';
+  description = 'initialize an empty bit scope\n  https://docs.bitsrc.io/docs/cli-status.html';
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
@@ -44,9 +44,9 @@ export default class Init extends Command {
       return `${chalk.green('successfully initialized an empty bare bit scope.')}`;
     }
 
-    let initMessage = `${chalk.green('successfully initialized an empty bit scope.')}`;
+    let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
 
-    if (!created) initMessage = `${chalk.grey('successfully reinitialized a bit scope.')}`;
+    if (!created) initMessage = `${chalk.grey('successfully reinitialized a bit workspace.')}`;
     // const addedGitHooksTemplate = _generateAddedGitHooksTemplate(addedGitHooks);
     // const existingGitHooksTemplate = _generateExistingGitHooksTemplate(existingGitHooks);
     // return `${initMessage}\n${addedGitHooksTemplate}\n${existingGitHooksTemplate}`;

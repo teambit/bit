@@ -6,7 +6,7 @@ import linkTemplate from '../../templates/link-template';
 
 export default class Create extends Command {
   name = 'link';
-  description = 'Call the driver link action';
+  description = 'generate symlinks for sourced components absolute path resolution.\n  https://docs.bitsrc.io/docs/cli-link.html';
   alias = 'b';
   opts = [];
   private = true;

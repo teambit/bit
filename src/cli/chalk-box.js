@@ -105,7 +105,7 @@ export const paintSpecsResults = (results?: SpecsResults[]): string[] => {
 };
 
 export const paintAllSpecsResults = (results: Array<*>): string => {
-  if (results.length === 0) return c.red('There are no components to test');
+  if (results.length === 0) return c.red('nothing to test');
   return results
     .map((result) => {
       if (result.missingTester) return paintMissingTester(result.component);

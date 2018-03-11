@@ -12,9 +12,7 @@ import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
 
 export default class Import extends Command {
   name = 'import [ids...]';
-  description = `import components into your current working area.   \n
-  Pass extra arguments to npm client by placing them after --
-  example: bit import -- --production --no-optional`;
+  description = 'import components into your current workspace.\n  https://docs.bitsrc.io/docs/importing-components.html';
   alias = 'i';
   opts = [
     ['t', 'tester', 'import a tester environment component'],

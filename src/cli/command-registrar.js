@@ -207,9 +207,7 @@ export default class CommandRegistrar {
     ) {
       process.stdout.write(
         chalk.yellow(
-          `warning: no command named '${chalk.bold(
-            subcommand
-          )}' was found...\nsee 'bit --help' for additional information.\n`
+          `warning: '${chalk.bold(subcommand)}' is not a valid command.\nsee 'bit --help' for additional information.\n`
         )
       );
       return this;

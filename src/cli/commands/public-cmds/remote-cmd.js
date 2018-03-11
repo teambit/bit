@@ -8,7 +8,7 @@ import RemoteUndefined from '../exceptions/remote-undefined';
 
 export default class Remote extends Command {
   name = 'remote';
-  description = 'manage set of tracked bit scope(s)';
+  description = 'manage set of tracked bit scope(s)\n  https://docs.bitsrc.io/docs/cli-remote.html';
   alias = '';
   opts = [['g', 'global', 'see globally configured remotes']];
   migration = true;

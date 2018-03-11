@@ -6,7 +6,7 @@ import { untrack } from '../../../api/consumer';
 
 export default class Untrack extends Command {
   name = 'untrack [ids...]';
-  description = 'untrack a new component(s)';
+  description = 'untrack a new component(s)\n  https://docs.bitsrc.io/docs/cli-untrack.html';
   alias = 'u';
   opts = [];
   loader = true;

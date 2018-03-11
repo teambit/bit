@@ -6,7 +6,7 @@ import type { PathChangeResult } from '../../../consumer/bit-map/bit-map';
 
 export default class Move extends Command {
   name = 'move <from> <to>';
-  description = 'move files or directories of component(s)';
+  description = 'move files or directories of component(s)\n  https://docs.bitsrc.io/docs/cli-move.html';
   alias = 'mv';
   opts = [];
   loader = true;
