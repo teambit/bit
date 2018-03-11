@@ -244,7 +244,7 @@ describe('bit tag command', function () {
         output = err.message;
       }
       expect(output).to.have.string(
-        'error: component non/existing was not found on your local workspace.\nplease spceify a valid component ID or track the component using \'bit add\' (see \'bit add --help\' for more information)'
+        "error: component non/existing was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)"
       );
     });
     it.skip('should print warning if the a driver is not installed', () => {
