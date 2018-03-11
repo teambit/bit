@@ -318,7 +318,10 @@ export default class Component {
       }
       return Promise.resolve()
         .then(() => {
-          return compiler.compile(files, rootDistFolder, this.toObject());
+          const context: Object = {
+            componentObject: this.toObject()
+          };
+          return compiler.compile(files, rootDistFolder, context);
         })
         .catch((e) => {
           if (verbose) throw new BuildException(this.id.toString(), e.stack || e);
