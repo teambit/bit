@@ -373,7 +373,9 @@ describe('bit add command', function () {
         errMsg = err.message;
       }
       expect(errMsg).to.have.string(
-        'Command failed: bit-dev add bar/foo.js -i bar.f/foo\nerror: "bar.f/foo" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n'
+        `Command failed: ${
+          helper.bitBin
+        } add bar/foo.js -i bar.f/foo\nerror: "bar.f/foo" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
       );
     });
     it('Should prevent adding a file with invalid keys in ID', () => {
@@ -385,7 +387,9 @@ describe('bit add command', function () {
         errMsg = err.message;
       }
       expect(errMsg).to.have.string(
-        'Command failed: bit-dev add bar/foo.js -i bar/fo.o\nerror: "bar/fo.o" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n'
+        `Command failed: ${
+          helper.bitBin
+        } add bar/foo.js -i bar/fo.o\nerror: "bar/fo.o" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
       );
     });
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
