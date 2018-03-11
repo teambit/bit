@@ -1272,7 +1272,7 @@ export default class Scope {
     keep
   }: {
     bitId: BitId,
-    save?: boolean,
+    save?: ?boolean,
     consumer?: Consumer,
     verbose?: ?boolean,
     directory: ?string,
