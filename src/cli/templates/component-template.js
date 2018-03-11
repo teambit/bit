@@ -1,4 +1,4 @@
-// @flow
+/** @flow */
 import R from 'ramda';
 import c from 'chalk';
 import diff from 'object-diff';
@@ -11,6 +11,20 @@ import ConsumerComponent from '../../consumer/component/consumer-component';
 import paintDocumentation from './docs-template';
 
 const COLUMN_WIDTH = 50;
+const tableColumnConfig = {
+  columns: {
+    // $FlowFixMe
+    1: {
+      alignment: 'left',
+      width: COLUMN_WIDTH
+    },
+    // $FlowFixMe
+    2: {
+      alignment: 'left',
+      width: COLUMN_WIDTH
+    }
+  }
+};
 
 const fields = [
   'id',
@@ -59,7 +73,9 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
     version,
     docs
   } = component;
-  obj.id = isFromFs ? `${box}/${name}@${version} [file system]` : `${box}/${name}@${version}`;
+
+  const ver = version ? `@${version}` : '';
+  obj.id = isFromFs ? `${box}/${name}${ver} [file system]` : `${box}/${name}${ver}`;
   obj.compiler = compilerId ? compilerId.toString() : null;
   obj.language = lang || null;
   obj.tester = testerId ? testerId.toString() : null;
@@ -69,11 +85,11 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
   obj.peerDependencies = parsePackages(peerPackageDependencies);
 
   obj.files =
-    !R.isEmpty(files) && !R.isNil(files)
+    files && !R.isEmpty(files) && !R.isNil(files)
       ? files.filter(file => !file.test).map(file => normalize(file.relative))
       : null;
   obj.specs =
-    !R.isEmpty(files) && !R.isNil(files) && R.find(R.propEq('test', true))(files)
+    files && !R.isEmpty(files) && !R.isNil(files) && R.find(R.propEq('test', true))(files)
       ? files.filter(file => file.test).map(file => normalize(file.relative))
       : null;
   obj.deprecated = deprecated ? 'True' : null;
@@ -124,22 +140,14 @@ function generateDependenciesTable(component: ConsumerComponent, showRemoteVersi
   return dependenciesTable;
 }
 
-function calculatePadRightLength(str: string) {
-  const padRightCount = Math.ceil(str.length / COLUMN_WIDTH) * COLUMN_WIDTH;
-  return str.length > COLUMN_WIDTH ? rightpad(str, padRightCount, ' ') : rightpad(str, COLUMN_WIDTH, ' ');
+function calculatePadRightLength(str: string, columnWidth: number): string {
+  if (!str) return '';
+  const padRightCount = Math.ceil(str.length / columnWidth) * columnWidth;
+  return str.length > columnWidth ? rightpad(str, padRightCount, ' ') : rightpad(str, columnWidth, ' ');
 }
 
 function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: boolean) {
   const printableComponent = convertObjectToPrintable(component, false);
-
-  const config = {
-    columns: {
-      1: {
-        alignment: 'left',
-        width: 50
-      }
-    }
-  };
   const rows = fields
     .map((field) => {
       const arr = [];
@@ -154,7 +162,7 @@ function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: bo
         if (printableComponent[field] instanceof Array) {
           arr.push(
             printableComponent[field]
-              .map(str => calculatePadRightLength(str))
+              .map(str => calculatePadRightLength(str, COLUMN_WIDTH))
               .join(' ')
               .trim()
           );
@@ -164,7 +172,7 @@ function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: bo
     })
     .filter(x => x);
 
-  const componentTable = table(rows, config);
+  const componentTable = table(rows, tableColumnConfig);
   const dependenciesTableStr = showRemoteVersion ? generateDependenciesTable(component, showRemoteVersion) : '';
   return componentTable + dependenciesTableStr + paintDocumentation(component.docs);
 }
@@ -190,18 +198,32 @@ function paintWithCompare(
       const arr = [];
       if (!printableOriginalComponent[field] && !printableComponentToCompare[field]) return null;
       const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
-      arr.push(field in componentsDiffs && field !== 'id' ? [c.red(title)] : [c.cyan(title)]);
-      printableComponentToCompare[field] instanceof Array
-        ? arr.push(printableComponentToCompare[field].join(','))
-        : arr.push(printableComponentToCompare[field]);
-      printableOriginalComponent[field] instanceof Array
-        ? arr.push(printableOriginalComponent[field].join(','))
-        : arr.push(printableOriginalComponent[field]);
+      arr.push(field in componentsDiffs && field !== 'id' ? c.red(title) : c.cyan(title));
+      if (printableComponentToCompare[field] instanceof Array) {
+        arr.push(
+          printableComponentToCompare[field]
+            .map(str => calculatePadRightLength(str, COLUMN_WIDTH))
+            .join(' ')
+            .trim()
+        );
+      } else {
+        arr.push(printableComponentToCompare[field]);
+      }
+      if (printableOriginalComponent[field] instanceof Array) {
+        arr.push(
+          printableOriginalComponent[field]
+            .map(str => calculatePadRightLength(str, COLUMN_WIDTH))
+            .join(' ')
+            .trim()
+        );
+      } else {
+        arr.push(printableOriginalComponent[field]);
+      }
       return arr;
     })
     .filter(x => x);
 
-  const componentTable = table(rows);
+  const componentTable = table(rows, tableColumnConfig);
   const dependenciesTableStr = !componentToCompareTo
     ? generateDependenciesTable(originalComponent, showRemoteVersion)
     : '';
