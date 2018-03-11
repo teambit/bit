@@ -74,7 +74,7 @@ describe('bit show command', function () {
       });
 
       it('should render the id correctly', () => {
-        expect(output).to.have.string('ID', 'ID row is missing');
+        expect(output).to.have.string('Id', 'Id row is missing');
         expect(output).to.have.string('comp/comp', 'component id is wrong');
       });
 

@@ -118,7 +118,6 @@ src/scope/graph/graph.js
 src/consumer/bit-json/bit-json.js
 src/jsdoc/example-tag-parser.js
 src/scope/objects/raw-object.js
-src/cli/templates/component-template.js
 src/scope/models/version.js
 src/scope/repositories/sources.js
 src/cli/command-registrar.js
