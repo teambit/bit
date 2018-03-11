@@ -9,8 +9,9 @@ import { Consumer } from '../consumer';
 export async function installPackages(
   consumer: Consumer,
   dirs: string[],
-  verbose: boolean,
-  installRootPackageJson: boolean = false
+  verbose: boolean, // true shows all messages, false shows only a successful message
+  installRootPackageJson: boolean = false,
+  silentPackageManagerResult: boolean = false // don't shows packageManager results at all
 ) {
   const packageManager = consumer.bitJson.packageManager;
   const packageManagerArgs = consumer.packageManagerArgs.length
@@ -38,18 +39,22 @@ export async function installPackages(
   });
 
   loader.stop();
+
   if (!Array.isArray(results)) {
     results = [results];
   }
-  results.forEach((result) => {
-    if (result) npmClient.printResults(result);
-  });
+  if (!silentPackageManagerResult || verbose) {
+    results.forEach((result) => {
+      if (result) npmClient.printResults(result);
+    });
+  }
 }
 
 export async function installNpmPackagesForComponents(
   consumer: Consumer,
   componentsWithDependencies: ComponentWithDependencies[],
-  verbose: boolean = false
+  verbose: boolean = false,
+  silentPackageManagerResult: boolean = false
 ): Promise<*> {
   // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
   // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
@@ -62,5 +67,5 @@ export async function installNpmPackagesForComponents(
   );
 
   const componentDirs = componentsWithDependenciesFlatten.map(component => component.writtenPath);
-  return installPackages(consumer, componentDirs, verbose);
+  return installPackages(consumer, componentDirs, verbose, false, silentPackageManagerResult);
 }

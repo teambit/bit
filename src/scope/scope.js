@@ -3,6 +3,7 @@ import * as pathLib from 'path';
 import semver from 'semver';
 import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
+import chalk from 'chalk';
 import Toposort from 'toposort-class';
 import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
@@ -15,15 +16,7 @@ import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy, pathNormalizeToLinux } from '../utils';
-import {
-  BIT_HIDDEN_DIR,
-  LATEST,
-  OBJECTS_DIR,
-  BITS_DIRNAME,
-  BIT_VERSION,
-  DEFAULT_BIT_VERSION,
-  LATEST_BIT_VERSION
-} from '../constants';
+import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, BIT_VERSION, DEFAULT_BIT_VERSION } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import {
   ScopeNotFound,
@@ -59,9 +52,11 @@ import performCIOps from './ci-ops';
 import logger from '../logger/logger';
 import componentResolver from '../component-resolver';
 import ComponentsList from '../consumer/component/components-list';
-import { RemovedObjects } from './removed-components';
 import Component from '../consumer/component/consumer-component';
+import { RemovedObjects } from './removed-components';
 import DependencyGraph from './graph/graph';
+import RemoveModelComponents from './component-ops/remove-model-components';
+import { ComponentSpecsFailed } from '../consumer/exceptions';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -274,7 +269,7 @@ export default class Scope {
     releaseType,
     force,
     consumer,
-    verbose
+    verbose = false
   }: {
     consumerComponents: ConsumerComponent[],
     message: string,
@@ -282,13 +277,13 @@ export default class Scope {
     releaseType: string,
     force: ?boolean,
     consumer: Consumer,
-    verbose: ?boolean
+    verbose?: boolean
   }): Promise<ComponentWithDependencies> {
     // TODO: Change the return type
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
     const topSort = new Toposort();
     const allDependencies = new Map();
-    const consumerComponentsIdsMap = new Map();
+    const consumerComponentsIdsMap: Map<string, ConsumerComponent> = new Map();
     // Concat and unique all the dependencies from all the components so we will not import
     // the same dependency more then once, it's mainly for performance purpose
     consumerComponents.forEach((consumerComponent) => {
@@ -350,7 +345,21 @@ export default class Scope {
     await this.buildMultiple(componentsToBuild, consumer, verbose);
 
     logger.debug('scope.putMany: sequentially test all components');
-    const testsResults = await this.testMultiple(componentsToBuild, consumer, verbose, !force);
+    let testsResults = [];
+    try {
+      testsResults = await this.testMultiple({
+        components: componentsToBuild,
+        consumer,
+        verbose,
+        rejectOnFailure: !force
+      });
+    } catch (err) {
+      // if force is true, ignore the tests and continue
+      if (!force) {
+        if (!verbose) throw new ComponentSpecsFailed();
+        throw err;
+      }
+    }
 
     logger.debug('scope.putMany: sequentially persist all components');
     const persistComponentsP = sortedConsumerComponentsIds.map(consumerComponentId => async () => {
@@ -426,7 +435,7 @@ export default class Scope {
   async buildMultiple(
     components: Component[],
     consumer: Consumer,
-    verbose
+    verbose: boolean
   ): Promise<{ component: string, buildResults: Object }> {
     logger.debug('scope.buildMultiple: sequentially build multiple components');
     loader.start(BEFORE_RUNNING_BUILD);
@@ -443,15 +452,20 @@ export default class Scope {
    *
    * See the reason not to run them in parallel at @buildMultiple()
    */
-  async testMultiple(
+  async testMultiple({
+    components,
+    consumer,
+    verbose,
+    rejectOnFailure = false
+  }: {
     components: Component[],
     consumer: Consumer,
     verbose: boolean,
-    rejectOnFailure: boolean
-  ): Promise<{ component: Component, specsResults: Object }> {
+    rejectOnFailure?: boolean
+  }): Promise<Array<{ component: Component, specs: Object }>> {
     logger.debug('scope.testMultiple: sequentially test multiple components');
     loader.start(BEFORE_RUNNING_SPECS);
-    const test = async (component) => {
+    const test = async (component: Component) => {
       if (!component.testerId) {
         return { component, missingTester: true };
       }
@@ -821,63 +835,6 @@ export default class Scope {
     return Promise.all(versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects)));
   }
 
-  async removeComponent(id: BitId, componentList, removeRefs: boolean = false) {
-    const symlink = componentList.filter(
-      component => component instanceof Symlink && component.id() === id.toStringWithoutScopeAndVersion()
-    );
-    await this.sources.clean(id, removeRefs);
-    if (!R.isEmpty(symlink)) await this.objects.remove(symlink[0].hash());
-  }
-
-  async removeComponentsDependencies(
-    dependentBits,
-    componentList,
-    consumerComponentToRemove: ConsumerComponent,
-    bitId: BitId,
-    removeSameOrigin: boolean = false
-  ): Promise<BitId[]> {
-    const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (id) => {
-      const arr = dependentBits[id.toStringWithoutVersion()];
-      const name = bitId.version === LATEST_BIT_VERSION ? bitId.toStringWithoutVersion() : bitId.toString();
-      const depArr = R.reject(num => num === name || BitId.parse(num).scope !== id.scope, arr);
-      if (R.isEmpty(depArr) && (id.scope !== bitId.scope || removeSameOrigin)) {
-        await this.removeComponent(id, componentList, true);
-        return id;
-      }
-    });
-    return (await Promise.all(removedComponents)).filter(x => !R.isNil(x));
-  }
-
-  /**
-   * removeSingle - remove single component
-   * @param {BitId} bitId - list of remote component ids to delete
-   * @param {boolean} removeSameOrigin - remove component dependencies from same origin
-   */
-  async removeSingle(bitId: BitId, removeSameOrigin: boolean = false): Promise<Object> {
-    logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${removeSameOrigin.toString()}`);
-    const component = (await this.sources.get(bitId)).toComponentVersion();
-    const consumerComponentToRemove = await component.toConsumer(this.objects);
-    const componentList = await this.objects.listComponents();
-
-    const dependentBits = await this.findDependentBits(
-      consumerComponentToRemove.flattenedDependencies,
-      bitId.version !== LATEST_BIT_VERSION
-    );
-
-    const removedDependencies = await this.removeComponentsDependencies(
-      dependentBits,
-      componentList,
-      consumerComponentToRemove,
-      bitId,
-      removeSameOrigin
-    );
-
-    await this.removeComponent(bitId, componentList, false);
-    if (Object.keys(component.component.versions).length <= 1) bitId.version = LATEST_BIT_VERSION;
-
-    return { bitId, removedDependencies };
-  }
-
   async deprecateSingle(bitId: BitId): Promise<string> {
     const component = await this.sources.get(bitId);
     component.deprecated = true;
@@ -885,6 +842,17 @@ export default class Scope {
     await this.objects.persist();
     return bitId.toStringWithoutVersion();
   }
+
+  /**
+   * Remove components from scope
+   * @force Boolean  - remove component from scope even if other components use it
+   */
+  async removeMany(bitIds: BitIds, force: boolean, removeSameOrigin: boolean = false): Promise<RemovedObjects> {
+    logger.debug(`scope.removeMany ${bitIds} with force flag: ${force.toString()}`);
+    const removeComponents = new RemoveModelComponents(this, bitIds, force, removeSameOrigin);
+    return removeComponents.remove();
+  }
+
   /**
    * findDependentBits
    * foreach component in array find the componnet that uses that component
@@ -926,9 +894,11 @@ export default class Scope {
   /**
    * split bit array to found and missing components (incase user misspelled id)
    */
-  async filterFoundAndMissingComponents(bitIds: Array<BitId>) {
-    const missingComponents = [];
-    const foundComponents = [];
+  async filterFoundAndMissingComponents(
+    bitIds: Array<BitId>
+  ): Promise<{ missingComponents: BitIds, foundComponents: BitIds }> {
+    const missingComponents = new BitIds();
+    const foundComponents = new BitIds();
     const resultP = bitIds.map(async (id) => {
       const component = await this.sources.get(id);
       if (!component) missingComponents.push(id);
@@ -938,25 +908,6 @@ export default class Scope {
     return Promise.resolve({ missingComponents, foundComponents });
   }
 
-  /**
-   * Remove components from scope
-   * @force Boolean  - remove component from scope even if other components use it
-   */
-  async removeMany(bitIds: BitIds, force: boolean, removeSameOrigin: boolean = false): Promise<RemovedObjects> {
-    logger.debug(`scope.removeMany ${bitIds} with force flag: ${force.toString()}`);
-    const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
-    const dependentBits = await this.findDependentBits(foundComponents);
-    if (R.isEmpty(dependentBits) || force) {
-      // do not run this in parallel (promise.all), otherwise, it may throw an error when
-      // trying to delete the same file at the same time (happens when removing a component with
-      // a dependency and the dependency itself)
-      const removedComponents = await pMapSeries(foundComponents, bitId => this.removeSingle(bitId, removeSameOrigin));
-      const ids = removedComponents.map(x => x.bitId);
-      const removedDependencies = R.flatten(removedComponents.map(x => x.removedDependencies));
-      return new RemovedObjects({ removedComponentIds: ids, missingComponents, removedDependencies });
-    }
-    return new RemovedObjects({ missingComponents, dependentBits });
-  }
   /**
    * deprecate components from scope
    */
@@ -1174,7 +1125,15 @@ export default class Scope {
   }
 
   // TODO: Change name since it also used to install extension
-  async installEnvironment({ ids, verbose }: { ids: BitId[], verbose?: boolean }): Promise<any> {
+  async installEnvironment({
+    ids,
+    verbose,
+    dontPrintEnvMsg
+  }: {
+    ids: [{ componentId: BitId, type: string }],
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  }): Promise<any> {
     logger.debug(`scope.installEnvironment, ids: ${ids.join(', ')}`);
     const componentsDir = this.getComponentsPath();
     const isolateOpts = {
@@ -1184,25 +1143,28 @@ export default class Scope {
       dist: true,
       conf: true,
       override: false,
-      verbose
+      verbose,
+      silentPackageManagerResult: true
     };
     const idsWithoutNils = removeNils(ids);
-    const predicate = id => id.toString(); // TODO: should be moved to BitId class
+    const predicate = id => id.componentId.toString(); // TODO: should be moved to BitId class
     const uniqIds = R.uniqBy(predicate)(idsWithoutNils);
     const nonExistingEnvsIds = uniqIds.filter((id) => {
-      return !this.loadEnvironment(id, { pathOnly: true });
+      return !this.loadEnvironment(id.componentId, { pathOnly: true });
     });
 
     const importEnv = async (id) => {
-      let concreteId = id;
-      if (id.getVersion().latest) {
-        const concreteIds = await this.fetchRemoteVersions([id]);
+      let concreteId = id.componentId;
+      if (id.componentId.getVersion().latest) {
+        const concreteIds = await this.fetchRemoteVersions([id.componentId]);
         concreteId = concreteIds[0];
       }
       const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
       const env = new IsolatedEnvironment(this, dir);
       await env.create();
-      return env.isolateComponent(id, isolateOpts);
+      const isolatedComponent = await env.isolateComponent(id.componentId, isolateOpts);
+      if (!dontPrintEnvMsg) console.log(chalk.bold.green(`successfully installed the ${id.componentId} ${id.type}`));
+      return isolatedComponent;
     };
     return pMapSeries(nonExistingEnvsIds, importEnv);
   }

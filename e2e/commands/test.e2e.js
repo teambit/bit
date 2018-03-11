@@ -54,7 +54,6 @@ describe('bit test command', function () {
       expect(output).to.have.string('tests are not defined for component: utils/is-type');
     });
   });
-
   describe('when tests are passed', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
@@ -79,11 +78,12 @@ describe('bit test command', function () {
       helper.createFile('utils', 'is-type.spec.js', isTypeSpecFixture(false));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
-    it('should indicate that testes are failed', () => {
+    it('should indicate that tests are failed', () => {
       const output = helper.testComponent('utils/is-type');
       expect(output).to.have.string('tests failed');
+      expect(output).to.have.string('file: utils/is-type.spec.js');
     });
-    it('Should indicate that this component does not exist when testing a non existant component', () => {
+    it('should indicate that this component does not exist when testing a non exist component', () => {
       let output;
       try {
         helper.testComponent('bar/foo');
@@ -91,6 +91,67 @@ describe('bit test command', function () {
         output = err.message;
       }
       expect(output).to.have.string('fatal: the component bar/foo was not found in the .bitmap file');
+    });
+  });
+  describe('when an exception was thrown during the tests', () => {
+    before(() => {
+      helper.getClonedLocalScope(clonedScopePath);
+      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.spec.js', "throw new Error('exception occurred with this spec file');");
+      helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
+    });
+    it('should print the exception message when running bit test --verbose', () => {
+      let output;
+      try {
+        helper.testComponent('utils/is-type --verbose');
+      } catch (err) {
+        output = err.message;
+      }
+      expect(output).to.have.string('exception occurred with this spec file');
+    });
+    it('should print the exception message also when running bit test without --verbose flag', () => {
+      let output;
+      try {
+        helper.testComponent('utils/is-type');
+      } catch (err) {
+        output = err.message;
+      }
+      expect(output).to.have.string('exception occurred with this spec file');
+    });
+    describe('tagging the component without --force flag and without --verbose flag', () => {
+      let output;
+      before(() => {
+        try {
+          helper.tagAllWithoutMessage();
+        } catch (err) {
+          output = err.message;
+        }
+      });
+      it('should show a general message saying the specs does not pass', () => {
+        expect(output).to.have.string("component's specs does not pass, fix them and tag");
+      });
+    });
+    describe('tagging the component without --force flag and with --verbose flag', () => {
+      let output;
+      before(() => {
+        try {
+          helper.tagAllWithoutMessage('--verbose');
+        } catch (err) {
+          output = err.message;
+        }
+      });
+      it('should show the exact exception it caught', () => {
+        expect(output).to.have.string('exception occurred with this spec file');
+      });
+    });
+    describe('tagging the component with --force flag', () => {
+      let output;
+      before(() => {
+        output = helper.tagAllWithoutMessage('--force');
+      });
+      it('should tag the component successfully', () => {
+        expect(output).to.have.string('1 components tagged');
+      });
     });
   });
   describe('when there is before hook which fail', () => {
@@ -126,6 +187,7 @@ describe('bit test command', function () {
     });
   });
   describe('after importing a component with tests', () => {
+    let localScope;
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
       helper.createFile('utils', 'is-type.js', isTypeFixture);
@@ -141,14 +203,56 @@ describe('bit test command', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('utils/is-type');
+      localScope = helper.cloneLocalScope();
     });
-    it('should import the tester and run the tests successfully', () => {
-      const output = helper.testComponent('utils/is-type');
-      expect(output).to.have.string('tests passed');
+    describe('when running bit-test without --verbose flag', () => {
+      let output;
+      before(() => {
+        output = helper.testComponent('utils/is-type');
+      });
+      it('should import the tester and run the tests successfully', () => {
+        expect(output).to.have.string('tests passed');
+      });
+      it('should show success message of installing the environment', () => {
+        expect(output).to.have.string('successfully installed the bit.envs/testers/mocha');
+      });
+      it('should not show any npm output', () => {
+        expect(output).to.not.have.string('npm');
+      });
     });
-    it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
-      const output = helper.runCmd(`bit ci-update ${helper.remoteScope}/utils/is-type`, helper.remoteScopePath);
-      expect(output).to.have.string('tests passed');
+    describe('when running bit-test with --verbose flag', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        output = helper.testComponent('utils/is-type --verbose');
+      });
+      it('should import the tester and run the tests successfully', () => {
+        expect(output).to.have.string('tests passed');
+      });
+      it('should show success message of installing the environment', () => {
+        expect(output).to.have.string('successfully installed the bit.envs/testers/mocha');
+      });
+      it('should show success message of installing npm-packages', () => {
+        expect(output).to.have.string('successfully ran npm install at');
+      });
+      it('should show npm output', () => {
+        expect(output).to.have.string('npm WARN');
+      });
+    });
+    describe('when running bit ci-update', () => {
+      let output;
+      before(() => {
+        output = helper.runCmd(`bit ci-update ${helper.remoteScope}/utils/is-type`, helper.remoteScopePath);
+      });
+      it('should be able to run the tests on an isolated environment', () => {
+        expect(output).to.have.string('tests passed');
+      });
+      it('should show success message of installing npm-packages', () => {
+        expect(output).to.have.string('successfully ran npm install at');
+      });
+      it('should show npm warnings', () => {
+        expect(output).to.have.string('npm WARN');
+      });
     });
   });
   describe('bit component with es6 syntax without building before testing', () => {

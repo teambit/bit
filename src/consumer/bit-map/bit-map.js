@@ -19,6 +19,7 @@ import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } 
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import type { PathLinux, PathOsBased } from '../../utils/path';
+import type { BitIdStr } from '../../bit-id/bit-id';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -41,7 +42,7 @@ export default class BitMap {
     this.paths = {};
   }
 
-  static ensure(dirPath): Promise<ConsumerBitJson> {
+  static ensure(dirPath: string): Promise<BitMap> {
     return Promise.resolve(this.load(dirPath));
   }
 
@@ -76,6 +77,7 @@ export default class BitMap {
   getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): BitMapComponents {
     if (!origin) return this.components;
     const isOriginMatch = component => component.origin === origin;
+    // $FlowFixMe we know origin is an array in that case
     const isOriginMatchArray = component => origin.includes(component.origin);
     const filter = Array.isArray(origin) ? isOriginMatchArray : isOriginMatch;
     return R.filter(filter, this.components);
@@ -97,49 +99,43 @@ export default class BitMap {
     return path.relative(this.projectRoot, absolutePath);
   }
 
-  // todo - need to move to bit-javascript
-  _searchMainFile(baseMainFile: string, files: ComponentMapFile[], originalMainFile: string) {
-    let newBaseMainFile;
-    // Search the relativePath of the main file
-    let mainFileFromFiles = R.find(R.propEq('relativePath', baseMainFile))(files);
-    // Search the base name of the main file and transfer to relativePath
-    if (R.isNil(mainFileFromFiles)) {
-      const potentialMainFiles = files.filter(file => file.name === baseMainFile);
-      if (potentialMainFiles.length) {
-        // when there are several files that met the criteria, choose the closer to the root
-        const sortByNumOfDirs = (a, b) =>
-          a.relativePath.split(DEFAULT_SEPARATOR).length - b.relativePath.split(DEFAULT_SEPARATOR).length;
-        potentialMainFiles.sort(sortByNumOfDirs);
-        mainFileFromFiles = R.head(potentialMainFiles);
-      }
-      newBaseMainFile = mainFileFromFiles ? mainFileFromFiles.relativePath : baseMainFile;
-      return { mainFileFromFiles, baseMainFile: newBaseMainFile || baseMainFile };
-    }
-    return { mainFileFromFiles, baseMainFile: originalMainFile };
+  _searchMainFile(baseMainFile: string, files: ComponentMapFile[]): ?PathLinux {
+    // search for an exact relative-path
+    let mainFileFromFiles = files.find(file => file.relativePath === baseMainFile);
+    if (mainFileFromFiles) return baseMainFile;
+    // search for a file-name
+    const potentialMainFiles = files.filter(file => file.name === baseMainFile);
+    if (!potentialMainFiles.length) return null;
+    // when there are several files that met the criteria, choose the closer to the root
+    const sortByNumOfDirs = (a, b) =>
+      a.relativePath.split(DEFAULT_SEPARATOR).length - b.relativePath.split(DEFAULT_SEPARATOR).length;
+    potentialMainFiles.sort(sortByNumOfDirs);
+    mainFileFromFiles = R.head(potentialMainFiles);
+    return mainFileFromFiles.relativePath;
   }
 
-  _getMainFile(mainFile?: string, componentMap: ComponentMap) {
+  _getMainFile(mainFile?: PathLinux, componentMap: ComponentMap): PathLinux {
     const files = componentMap.files.filter(file => !file.test);
-    // Take the file path as main in case there is only one file
-    if (!mainFile && files.length === 1) return files[0].relativePath;
-    // search main file (index.js or index.ts) in case no main file was entered - move to bit-javascript
-    let searchResult = this._searchMainFile(mainFile, files, mainFile);
-    if (!searchResult.mainFileFromFiles) {
+    // scenario 1) user entered mainFile => search the mainFile in the files array
+    if (mainFile) {
+      const foundMainFile = this._searchMainFile(mainFile, files);
+      if (foundMainFile) return foundMainFile;
+      throw new MissingMainFile(mainFile, files.map(file => path.normalize(file.relativePath)));
+    }
+    // scenario 2) user didn't enter mainFile and the component has only one file => use that file as the main file.
+    if (files.length === 1) return files[0].relativePath;
+    // scenario 3) user didn't enter mainFile and the component has multiple files => search for default main files (such as index.js)
+    let searchResult;
+    DEFAULT_INDEX_EXTS.forEach((ext) => {
       // TODO: can be improved - stop loop if finding main file
-      DEFAULT_INDEX_EXTS.forEach((ext) => {
-        if (!searchResult.mainFileFromFiles) {
-          const mainFileNameToSearch = `${DEFAULT_INDEX_NAME}.${ext}`;
-          searchResult = this._searchMainFile(mainFileNameToSearch, files, mainFile);
-        }
-      });
-    }
-
-    // When there is more then one file and the main file not found there
-    if (R.isNil(searchResult.mainFileFromFiles)) {
-      const mainFileString = mainFile || `${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`;
-      throw new MissingMainFile(mainFileString, files.map(file => path.normalize(file.relativePath)));
-    }
-    return searchResult.baseMainFile;
+      if (!searchResult) {
+        const mainFileNameToSearch = `${DEFAULT_INDEX_NAME}.${ext}`;
+        searchResult = this._searchMainFile(mainFileNameToSearch, files);
+      }
+    });
+    if (searchResult) return searchResult;
+    const mainFileString = `${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`;
+    throw new MissingMainFile(mainFileString, files.map(file => path.normalize(file.relativePath)));
   }
 
   addDependencyToParent(parent: BitId, dependency: string): void {
@@ -159,6 +155,7 @@ export default class BitMap {
       this.components[parentId].dependencies = [dependency];
     }
     if (!this.components[parentId].dependencies.includes(dependency)) {
+      // $FlowFixMe at this stage we know that dependencies is not null
       this.components[parentId].dependencies.push(dependency);
     }
   }
@@ -178,7 +175,7 @@ export default class BitMap {
   /**
    * When the given id doesn't include scope-name, there might be a similar component in bit.map with scope-name
    */
-  getExistingComponentId(componentIdStr: string): ?string {
+  getExistingComponentId(componentIdStr: BitIdStr): ?BitIdStr {
     if (this.components[componentIdStr]) return componentIdStr;
     const parsedId = BitId.parse(componentIdStr);
     if (parsedId.scope && !parsedId.hasVersion()) {
@@ -198,6 +195,7 @@ export default class BitMap {
     origin,
     parent,
     rootDir,
+    trackDir,
     override,
     originallySharedDir
   }: {
@@ -207,6 +205,7 @@ export default class BitMap {
     origin: ComponentOrigin,
     parent?: BitId,
     rootDir?: string,
+    trackDir?: PathOsBased,
     override: boolean,
     originallySharedDir?: PathLinux
   }): ComponentMap {
@@ -237,6 +236,7 @@ export default class BitMap {
         );
       }
     } else {
+      // $FlowFixMe not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
       this.components[componentIdStr] = new ComponentMap({ files, origin });
       this.components[componentIdStr].mainFile = this._getMainFile(
         pathNormalizeToLinux(mainFile),
@@ -247,6 +247,10 @@ export default class BitMap {
       const root = this._makePathRelativeToProjectRoot(rootDir);
       this.components[componentIdStr].rootDir = root ? pathNormalizeToLinux(root) : root;
     }
+    if (trackDir) {
+      this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);
+    }
+    this.components[componentIdStr].removeTrackDirIfNeeded();
     if (originallySharedDir) {
       this.components[componentIdStr].originallySharedDir = originallySharedDir;
     }
@@ -255,10 +259,11 @@ export default class BitMap {
       this.deleteOlderVersionsOfComponent(componentId);
     }
 
+    this.components[componentIdStr].validate();
     return this.components[componentIdStr];
   }
 
-  _removeFromComponentsArray(componentId) {
+  _removeFromComponentsArray(componentId: BitIdStr) {
     const invalidateCache = () => {
       this.paths = {};
     };
@@ -269,7 +274,7 @@ export default class BitMap {
   removeComponent(id: string | BitId) {
     const bitId = id instanceof BitId ? id : BitId.parse(id);
     const bitmapComponent = this.getExistingComponentId(bitId.toStringWithoutScopeAndVersion());
-    this._removeFromComponentsArray(bitmapComponent);
+    if (bitmapComponent) this._removeFromComponentsArray(bitmapComponent);
     return bitmapComponent;
   }
   removeComponents(ids: BitIds) {
@@ -339,22 +344,18 @@ export default class BitMap {
     includeSearchByBoxAndNameOnly: boolean = false,
     ignoreVersion: boolean = false
   ): ComponentMap {
-    if (R.is(String, id)) {
-      id = BitId.parse(id);
-    }
-    // $FlowFixMe
-    if (!ignoreVersion && id.hasVersion()) {
-      if (!this.components[id] && shouldThrow) throw new MissingBitMapComponent(id);
-      return this.components[id];
+    const bitId: BitId = R.is(String, id) ? BitId.parse(id) : id;
+    if (!ignoreVersion && bitId.hasVersion()) {
+      if (!this.components[bitId] && shouldThrow) throw new MissingBitMapComponent(bitId);
+      return this.components[bitId];
     }
     const idWithVersion = Object.keys(this.components).find(
-      // $FlowFixMe
       componentId =>
-        BitId.parse(componentId).toStringWithoutVersion() === id.toStringWithoutVersion() ||
+        BitId.parse(componentId).toStringWithoutVersion() === bitId.toStringWithoutVersion() ||
         (includeSearchByBoxAndNameOnly &&
-          BitId.parse(componentId).toStringWithoutScopeAndVersion() === id.toStringWithoutScopeAndVersion())
+          BitId.parse(componentId).toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion())
     );
-    if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(id);
+    if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(bitId);
     // $FlowFixMe
     return this.components[idWithVersion];
   }

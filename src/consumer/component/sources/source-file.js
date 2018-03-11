@@ -39,4 +39,8 @@ export default class SourceFile extends AbstractVinyl {
     if (!arr) return;
     return arr.map(this.loadFromParsedString);
   }
+
+  clone() {
+    return new SourceFile(this);
+  }
 }

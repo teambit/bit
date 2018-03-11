@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.12.6",
+  "version": "0.12.8-dev.4",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
@@ -38,7 +38,7 @@
   "dependencies": {
     "array-difference": "^0.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "^0.10.11",
+    "bit-javascript": "^0.10.12-dev.1",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
     "chokidar": "^1.7.0",
@@ -60,7 +60,6 @@
     "is-glob": "^4.0.0",
     "jfs": "^0.2.6",
     "lodash.assignwith": "^4.2.0",
-    "lodash.find": "^4.6.0",
     "lodash.groupby": "^4.6.0",
     "lodash.includes": "^4.3.0",
     "lodash.maxby": "^4.6.0",
@@ -124,7 +123,7 @@
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-jsx-a11y": "5.1.1",
     "eslint-plugin-react": "^7.5.1",
-    "flow-bin": "^0.54.1",
+    "flow-bin": "^0.66.0",
     "flow-coverage-report": "^0.3.0",
     "husky": "^0.14.3",
     "lint-staged": "^4.1.3",

@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
-import { mkdirp, isString, pathNormalizeToLinux } from '../../utils';
+import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
 import BitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -43,6 +43,7 @@ import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
+import { paintSpecsResults } from '../../cli/chalk-box';
 
 export type ComponentProps = {
   name: string,
@@ -287,7 +288,6 @@ export default class Component {
 
   async buildIfNeeded({
     condition,
-    files,
     compiler,
     consumer,
     componentMap,
@@ -297,7 +297,6 @@ export default class Component {
     keep
   }: {
     condition?: ?boolean,
-    files: File[],
     compiler: any,
     consumer?: Consumer,
     componentMap?: ComponentMap,
@@ -309,6 +308,7 @@ export default class Component {
     if (!condition) {
       return Promise.resolve({ code: '' });
     }
+    const files = this.files.map(file => file.clone());
 
     const runBuild = async (componentRoot: string): Promise<any> => {
       let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
@@ -316,13 +316,17 @@ export default class Component {
         // $FlowFixMe
         rootDistFolder = this.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       }
-      try {
-        const result = await Promise.resolve(compiler.compile(files, rootDistFolder));
-        return Promise.resolve(result);
-      } catch (e) {
-        if (verbose) return Promise.reject(new BuildException(this.id.toString(), e.stack));
-        return Promise.reject(new BuildException(this.id.toString(), e.message));
-      }
+      return Promise.resolve()
+        .then(() => {
+          const context: Object = {
+            componentObject: this.toObject()
+          };
+          return compiler.compile(files, rootDistFolder, context);
+        })
+        .catch((e) => {
+          if (verbose) throw new BuildException(this.id.toString(), e.stack || e);
+          throw new BuildException(this.id.toString(), e.message || e);
+        });
     };
 
     if (!compiler.compile) {
@@ -561,7 +565,7 @@ export default class Component {
 
   async runSpecs({
     scope,
-    rejectOnFailure,
+    rejectOnFailure = false, // reject when some (or all) of the tests were failed. relevant when running tests during 'bit tag'
     consumer,
     save,
     verbose,
@@ -587,99 +591,90 @@ export default class Component {
     if (!testerFilePath) {
       loader.start(BEFORE_IMPORT_ENVIRONMENT);
       await scope.installEnvironment({
-        ids: [this.testerId],
+        ids: [{ componentId: this.testerId, type: 'tester' }],
         verbose
       });
       testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
     }
     logger.debug('Environment components are installed.');
 
+    const run = async (mainFile: PathOsBased, distTestFiles: Dist[], actualTesterFilePath: PathOsBased) => {
+      loader.start(BEFORE_RUNNING_SPECS);
+      const specsResultsP = distTestFiles.map(async (testFile) => {
+        return specsRunner.run({
+          scope,
+          testerFilePath: actualTesterFilePath,
+          testerId: this.testerId,
+          mainFile,
+          testFile
+        });
+      });
+      const specsResults: RawTestsResults[] = await Promise.all(specsResultsP);
+      this.specsResults = specsResults.map(specRes => SpecsResults.createFromRaw(specRes));
+
+      if (rejectOnFailure && !this.specsResults.every(element => element.pass)) {
+        // some or all the tests were failed.
+        loader.stop();
+        if (verbose) {
+          // $FlowFixMe this.specsResults is not null at this point
+          const specsResultsPretty = paintSpecsResults(this.specsResults).join('\n');
+          console.log(this.id.toString() + specsResultsPretty); // eslint-disable-line no-console
+        }
+        return Promise.reject(new ComponentSpecsFailed());
+      }
+
+      if (save) {
+        await scope.sources.modifySpecsResults({
+          source: this,
+          specsResults: this.specsResults
+        });
+      }
+
+      return this.specsResults;
+    };
+
+    if (!isolated && consumer) {
+      logger.debug('Building the component before running the tests');
+      await this.build({ scope, verbose, consumer });
+      await this.dists.writeDists(this, consumer);
+      const testDists = !this.dists.isEmpty()
+        ? this.dists.get().filter(dist => dist.test)
+        : this.files.filter(file => file.test);
+      return run(this.mainFile, testDists, testerFilePath);
+    }
+
+    const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
+
     try {
-      const run = async (mainFile: PathOsBased, distTestFiles: Dist[]) => {
-        loader.start(BEFORE_RUNNING_SPECS);
-        try {
-          const specsResultsP = distTestFiles.map(async (testFile) => {
-            return specsRunner.run({
-              scope,
-              testerFilePath,
-              testerId: this.testerId,
-              mainFile,
-              testFile
-            });
-          });
-          const specsResults: RawTestsResults[] = await Promise.all(specsResultsP);
-          this.specsResults = specsResults.map(specRes => SpecsResults.createFromRaw(specRes));
-          if (rejectOnFailure && !this.specsResults.every(element => element.pass)) {
-            return Promise.reject(new ComponentSpecsFailed());
-          }
-
-          if (save) {
-            await scope.sources.modifySpecsResults({
-              source: this,
-              specsResults: this.specsResults
-            });
-            return this.specsResults;
-          }
-
-          return this.specsResults;
-        } catch (err) {
-          // Put this condition in comment for now because we want to catch exceptions in the testers
-          // We can just pass the rejectOnFailure=true in the consumer.runComponentSpecs
-          // Because this will also affect the condition few lines above:
-          // if (rejectOnFailure && !this.specsResults.every(element => element.pass)) {
-          // in general there is some coupling with the test running between the params:
-          // rejectOnFailure / verbose and the initiator of the running (scope / consumer)
-          // We should make a better architecture for this
-
-          // if (rejectOnFailure) {
-          if (verbose) throw err;
-          throw new ComponentSpecsFailed();
-          // }
-          // return this.specsResults;
-        }
+      await isolatedEnvironment.create();
+      const isolateOpts = {
+        verbose,
+        dist: true,
+        installPackages: true,
+        noPackageJson: false
       };
+      const localTesterPath = path.join(isolatedEnvironment.getPath(), 'tester');
+      const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
 
-      if (!isolated && consumer) {
-        logger.debug('Building the component before running the tests');
-        await this.build({ scope, verbose, consumer });
-        await this.dists.writeDists(this, consumer);
-        const testDists = !this.dists.isEmpty()
-          ? this.dists.get().filter(dist => dist.test)
-          : this.files.filter(file => file.test);
-        return run(this.mainFile, testDists);
+      createSymlinkOrCopy(testerFilePath, localTesterPath);
+      const component = componentWithDependencies.component;
+      component.isolatedEnvironment = isolatedEnvironment;
+      logger.debug(`the component ${this.id.toString()} has been imported successfully into an isolated environment`);
+
+      await component.build({ scope, verbose });
+      if (!component.dists.isEmpty()) {
+        const specDistWrite = component.dists.get().map(file => file.write());
+        await Promise.all(specDistWrite);
       }
-
-      const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
-      try {
-        await isolatedEnvironment.create();
-        const isolateOpts = {
-          verbose,
-          dist: true,
-          installPackages: true,
-          noPackageJson: false
-        };
-        const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
-        const component = componentWithDependencies.component;
-        component.isolatedEnvironment = isolatedEnvironment;
-        logger.debug(`the component ${this.id.toString()} has been imported successfully into an isolated environment`);
-
-        await component.build({ scope, verbose });
-        if (!component.dists.isEmpty()) {
-          const specDistWrite = component.dists.get().map(file => file.write());
-          await Promise.all(specDistWrite);
-        }
-        const testFilesList = !component.dists.isEmpty()
-          ? component.dists.get().filter(dist => dist.test)
-          : component.files.filter(file => file.test);
-        const results = await run(component.mainFile, testFilesList);
-        if (!keep) await isolatedEnvironment.destroy();
-        return isCI ? { specResults: results, mainFile: this.dists.calculateMainDistFile(this.mainFile) } : results;
-      } catch (e) {
-        await isolatedEnvironment.destroy();
-        return Promise.reject(e);
-      }
-    } catch (err) {
-      return Promise.reject(err);
+      const testFilesList = !component.dists.isEmpty()
+        ? component.dists.get().filter(dist => dist.test)
+        : component.files.filter(file => file.test);
+      const results = await run(component.mainFile, testFilesList, localTesterPath);
+      if (!keep) await isolatedEnvironment.destroy();
+      return isCI ? { specResults: results, mainFile: this.dists.calculateMainDistFile(this.mainFile) } : results;
+    } catch (e) {
+      await isolatedEnvironment.destroy();
+      return Promise.reject(e);
     }
   }
 
@@ -696,10 +691,10 @@ export default class Component {
     save?: boolean,
     consumer?: Consumer,
     verbose?: boolean,
-    directory: ?string,
-    keep: ?boolean,
-    isCI: boolean
-  }): Promise<string> {
+    directory?: string,
+    keep?: boolean,
+    isCI?: boolean
+  }): Promise<?string> {
     logger.debug(`consumer-component.build ${this.id}`);
     // @TODO - write SourceMap Type
     if (!this.compilerId) {
@@ -721,7 +716,6 @@ export default class Component {
       const componentStatus = await consumer.getComponentStatusById(this.id);
       return componentStatus.modified;
     };
-
     const bitMap = consumer ? consumer.bitMap : undefined;
     const componentMap = bitMap && bitMap.getComponent(this.id.toString());
 
@@ -736,23 +730,21 @@ export default class Component {
 
       return isCI ? { mainFile: this.dists.calculateMainDistFile(this.mainFile), dists: this.dists.get() } : this.dists;
     }
-
     logger.debug('compilerId found, start building');
 
     let compiler = scope.loadEnvironment(this.compilerId);
     if (!compiler) {
       loader.start(BEFORE_IMPORT_ENVIRONMENT);
       await scope.installEnvironment({
-        ids: [this.compilerId],
-        verbose
+        ids: [{ componentId: this.compilerId, type: 'compiler' }],
+        verbose,
+        type: 'compiler'
       });
       compiler = scope.loadEnvironment(this.compilerId);
     }
-
     const builtFiles = await this.buildIfNeeded({
       condition: !!this.compilerId,
       compiler,
-      files: this.files,
       consumer,
       componentMap,
       scope,
@@ -766,13 +758,11 @@ export default class Component {
         throw new Error('builder interface has to return object with a code attribute that contains string');
       }
     });
-
     this.setDists(builtFiles.map(file => new Dist(file)));
 
     if (save) {
       await scope.sources.updateDist({ source: this });
     }
-
     return this.dists;
   }
 

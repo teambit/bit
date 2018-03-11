@@ -97,7 +97,10 @@ export default class ImportComponents {
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     if (this.options.withEnvironments) {
       const envComponents = await this.consumer.scope.installEnvironment({
-        ids: [this.consumer.testerId, this.consumer.compilerId],
+        ids: [
+          { componentId: this.consumer.testerId, type: 'tester' },
+          { componentId: this.consumer.compilerId, type: 'compiler' }
+        ],
         verbose: this.options.verbose
       });
       return {

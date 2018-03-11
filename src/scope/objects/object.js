@@ -20,7 +20,8 @@ export default class BitObject {
     throw new Error('id() was not implemented...');
   }
 
-  toBuffer(): Buffer {
+  // eslint-disable-next-line no-unused-vars
+  toBuffer(pretty?: boolean): Buffer {
     throw new Error('toBuffer() was not implemented...');
   }
 
@@ -112,6 +113,10 @@ export default class BitObject {
 
   serialize(): Buffer {
     return Buffer.concat([new Buffer(this.header), this.toBuffer()]);
+  }
+
+  validate(): void {
+    throw new Error('validate() was not implemented...');
   }
 
   static parseObject(fileContents: Buffer, types: { [string]: Function }): Promise<BitObject> {

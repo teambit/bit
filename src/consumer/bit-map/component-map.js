@@ -1,8 +1,8 @@
 /** @flow */
 import path from 'path';
 import logger from '../../logger/logger';
-import { COMPONENT_ORIGINS } from '../../constants';
-import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux } from '../../utils';
+import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
+import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } from '../../utils';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
@@ -16,11 +16,12 @@ export type ComponentMapFile = {
 export type ComponentMapData = {
   files: ComponentMapFile[],
   mainFile: PathLinux,
-  rootDir?: PathLinux, // needed to search for the component's bit.json. If it's undefined, the component probably don't have bit.json
+  rootDir?: PathLinux,
+  trackDir?: PathLinux,
   origin: ComponentOrigin,
-  dependencies: string[], // needed for the link process
-  mainDistFile?: PathLinux, // needed when there is a build process involved
-  originallySharedDir?: PathLinux // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
+  dependencies?: string[],
+  mainDistFile?: PathLinux,
+  originallySharedDir?: PathLinux
 };
 
 export type PathChange = { from: PathLinux, to: PathLinux };
@@ -28,15 +29,30 @@ export type PathChange = { from: PathLinux, to: PathLinux };
 export default class ComponentMap {
   files: ComponentMapFile[];
   mainFile: PathLinux;
-  rootDir: ?PathLinux;
+  rootDir: ?PathLinux; // always set for IMPORTED and NESTED.
+  // reason why trackDir and not re-use rootDir is because using rootDir requires all paths to be
+  // relative to rootDir for consistency, then, when saving into the model changing them back to
+  // be relative to consumer-root. (we can't save in the model relative to rootDir, otherwise the
+  // dependencies paths won't work).
+  trackDir: ?PathLinux; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
   origin: ComponentOrigin;
-  dependencies: string[];
-  mainDistFile: ?PathLinux;
-  originallySharedDir: ?PathLinux;
-  constructor({ files, mainFile, rootDir, origin, dependencies, mainDistFile, originallySharedDir }: ComponentMapData) {
+  dependencies: ?(string[]); // needed for the link process
+  mainDistFile: ?PathLinux; // needed when there is a build process involved
+  originallySharedDir: ?PathLinux; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
+  constructor({
+    files,
+    mainFile,
+    rootDir,
+    trackDir,
+    origin,
+    dependencies,
+    mainDistFile,
+    originallySharedDir
+  }: ComponentMapData) {
     this.files = files;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
+    this.trackDir = trackDir;
     this.origin = origin;
     this.dependencies = dependencies;
     this.mainDistFile = mainDistFile;
@@ -47,7 +63,7 @@ export default class ComponentMap {
     return new ComponentMap(componentMapObj);
   }
 
-  static getPathWithoutRootDir(rootDir, filePath): PathLinux {
+  static getPathWithoutRootDir(rootDir: PathLinux, filePath: PathLinux): PathLinux {
     const newPath = pathRelativeLinux(rootDir, filePath);
     if (newPath.startsWith('..')) {
       // this is forbidden for security reasons. Allowing files to be written outside the components directory may
@@ -57,7 +73,7 @@ export default class ComponentMap {
     return newPath;
   }
 
-  static changeFilesPathAccordingToItsRootDir(existingRootDir, files): PathChange[] {
+  static changeFilesPathAccordingToItsRootDir(existingRootDir: PathLinux, files: ComponentMapFile[]): PathChange[] {
     const changes = [];
     files.forEach((file) => {
       const newPath = this.getPathWithoutRootDir(existingRootDir, file.relativePath);
@@ -87,6 +103,7 @@ export default class ComponentMap {
       changes.push({ from: currentFile.relativePath, to: newLocation });
       currentFile.relativePath = newLocation;
     }
+    this.validate();
     return changes;
   }
 
@@ -95,10 +112,11 @@ export default class ComponentMap {
     dirTo = pathNormalizeToLinux(dirTo);
     const changes = [];
     if (this.rootDir && this.rootDir.startsWith(dirFrom)) {
-      const newRootDir = this.rootDir.replace(dirFrom, dirTo);
+      const rootDir = this.rootDir;
+      const newRootDir = rootDir.replace(dirFrom, dirTo);
       const newRootDirNormalized = pathNormalizeToLinux(newRootDir);
-      changes.push({ from: this.rootDir, to: newRootDirNormalized });
-      logger.debug(`updating rootDir location from ${this.rootDir} to ${newRootDirNormalized}`);
+      changes.push({ from: rootDir, to: newRootDirNormalized });
+      logger.debug(`updating rootDir location from ${rootDir} to ${newRootDirNormalized}`);
       this.rootDir = newRootDirNormalized;
       return changes;
     }
@@ -113,6 +131,10 @@ export default class ComponentMap {
         file.relativePath = newLocation;
       }
     });
+    if (this.origin === COMPONENT_ORIGINS.AUTHORED && this.trackDir && this.trackDir === dirFrom) {
+      this.trackDir = dirTo;
+    }
+    this.validate();
     return changes;
   }
 
@@ -122,7 +144,7 @@ export default class ComponentMap {
     });
   }
 
-  getFilesGroupedByBeingTests(): Object {
+  getFilesGroupedByBeingTests(): { allFiles: string[], nonTestsFiles: string[], testsFiles: string[] } {
     const allFiles = [];
     const nonTestsFiles = [];
     const testsFiles = [];
@@ -132,5 +154,55 @@ export default class ComponentMap {
       else nonTestsFiles.push(file.relativePath);
     });
     return { allFiles, nonTestsFiles, testsFiles };
+  }
+
+  /**
+   * if one of the added files is outside of the trackDir, remove the trackDir attribute
+   */
+  removeTrackDirIfNeeded(): void {
+    if (this.trackDir) {
+      for (const file of this.files) {
+        if (!file.relativePath.startsWith(this.trackDir)) {
+          this.trackDir = undefined;
+          return;
+        }
+      }
+    }
+  }
+
+  validate() {
+    const errorMessage = `failed adding a component-map record (to ${BIT_MAP} file).`;
+    if (!this.mainFile) throw new Error(`${errorMessage} mainFile attribute is missing`);
+    if (!isValidPath(this.mainFile)) {
+      throw new Error(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
+    }
+    // if it's an environment component (such as compiler) the rootDir is an empty string
+    if (this.rootDir === undefined && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
+      throw new Error(`${errorMessage} rootDir attribute is missing`);
+    }
+    // $FlowFixMe
+    if (this.rootDir && !isValidPath(this.rootDir)) {
+      throw new Error(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
+    }
+    if (this.rootDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
+      throw new Error(`${errorMessage} rootDir attribute should not be set for AUTHORED component`);
+    }
+    if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
+      throw new Error(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
+    }
+    if (!this.files || !this.files.length) throw new Error(`${errorMessage} files list is missing`);
+    this.files.forEach((file) => {
+      if (!isValidPath(file.relativePath)) {
+        throw new Error(`${errorMessage} file path ${file.relativePath} is invalid`);
+      }
+    });
+    if (this.trackDir) {
+      const trackDir = this.trackDir;
+      this.files.forEach((file) => {
+        if (!file.relativePath.startsWith(trackDir)) {
+          throw new Error(`${errorMessage} a file path ${file.relativePath} is not in the trackDir ${trackDir}`);
+        }
+      });
+    }
   }
 }

@@ -27,8 +27,7 @@ export default (async function getConsumerBit({
   if (compare) {
     try {
       const componentModel = await consumer.scope.loadRemoteComponent(component.id);
-      const componentMap = component.getComponentMap(consumer.bitMap);
-      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+      if (component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         componentModel.stripOriginallySharedDir(consumer.bitMap);
       }
       return { component, componentModel };

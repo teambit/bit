@@ -208,7 +208,7 @@ function paintWithCompare(
   return componentTable + dependenciesTableStr;
 }
 
-export default (component: ConsumerComponent, componentModel: ConsumerComponent, showRemoteVersion: boolean) => {
+export default (component: ConsumerComponent, componentModel?: ConsumerComponent, showRemoteVersion: boolean) => {
   return componentModel
     ? paintWithCompare(component, componentModel, showRemoteVersion)
     : paintWithoutCompare(component, showRemoteVersion);

@@ -6,7 +6,6 @@ import format from 'string-format';
 import assignwith from 'lodash.assignwith';
 import groupby from 'lodash.groupby';
 import unionBy from 'lodash.unionby';
-import find from 'lodash.find';
 import ignore from 'ignore';
 import arrayDiff from 'array-difference';
 import {
@@ -34,6 +33,7 @@ import DuplicateIds from './exceptions/duplicate-ids';
 import EmptyDirectory from './exceptions/empty-directory';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
+import ComponentMap from '../../bit-map/component-map';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 export type AddActionResults = { addedComponents: AddResult[], warnings: Object };
@@ -42,9 +42,9 @@ type PathsStats = { [string]: { isDir: boolean } };
 type AddedComponent = {
   componentId: BitId,
   files: ComponentMapFile[],
-  mainFile?: string
+  mainFile?: ?PathOsBased,
+  trackDir?: PathOsBased // set only when one directory is added by author
 };
-type ComponentIdAndFile = { componentId: BitId, file: ComponentMapFile };
 
 /**
  * validatePaths - validate if paths entered by user exist and if not throw an error
@@ -91,7 +91,7 @@ export default class AddComponents {
   consumer: Consumer;
   bitMap: BitMap;
   componentPaths: PathOsBased[];
-  id: ?string;
+  id: ?string; // id entered by the user
   main: ?PathOsBased;
   namespace: ?string;
   tests: PathOrDSL[];
@@ -124,11 +124,13 @@ export default class AddComponents {
       const filesListMatch = files.map(async (file) => {
         const fileInfo = calculateFileInfo(file);
         const generatedFile = format(dsl, fileInfo);
-        const matches = await glob(generatedFile, { ignore: this.ignoreList });
-        return matches.filter(match => fs.existsSync(match));
+        const matches = await glob(generatedFile);
+        const matchesAfterGitIgnore = this.gitIgnore.filter(matches);
+        return matchesAfterGitIgnore.filter(match => fs.existsSync(match));
       });
       return Promise.all(filesListMatch);
     });
+
     const filesListFlatten = R.flatten(await Promise.all(filesListAllMatches));
     const filesListUnique = R.uniq(filesListFlatten);
     return filesListUnique.map((file) => {
@@ -137,106 +139,66 @@ export default class AddComponents {
     });
   }
 
-  groupFilesByComponentId(componentId: BitId, files: ComponentMapFile[]): { [BitIdStr]: ComponentIdAndFile[] } {
-    const filesWithId = files.map((file: ComponentMapFile) => {
-      const foundComponentFromBitMap = this.bitMap.getComponentObjectOfFileByPath(file.relativePath);
-      const bitMapComponentId = !R.isEmpty(foundComponentFromBitMap)
-        ? Object.keys(foundComponentFromBitMap)[0]
-        : undefined;
-      return { componentId: bitMapComponentId || componentId, file };
-    });
-    const groupComponentIdsFile = R.groupBy(componentFromMap => componentFromMap.componentId);
-    return groupComponentIdsFile(filesWithId);
-  }
-
-  addToBitMap({ componentId, files, mainFile }: AddedComponent): AddResult {
-    this.bitMap.addComponent({
+  addToBitMap({ componentId, files, mainFile, trackDir }: AddedComponent): AddResult {
+    const componentMap: ComponentMap = this.bitMap.addComponent({
       componentId,
       files,
       mainFile,
+      trackDir,
       origin: COMPONENT_ORIGINS.AUTHORED,
       override: this.override
     });
-    return { id: componentId.toString(), files: this.bitMap.getComponent(componentId).files };
+    return { id: componentId.toString(), files: componentMap.files };
   }
 
   /**
-   * Add or update existing (imported and new) components according to bitmap
+   * Add or update existing (imported and new) component according to bitmap
+   * there are 3 options:
+   * 1. a user is adding a new component. there is no record for this component in bit.map
+   * 2. a user is updating an existing component. there is a record for this component in bit.map
+   * 3. some or all the files of this component were previously added as another component-id.
    */
-  addOrUpdateExistingComponentsInBitMap(component: AddedComponent): AddResult[] {
+  addOrUpdateComponentInBitMap(component: AddedComponent): ?AddResult {
     const consumerPath = this.consumer.getPath();
     const includeSearchByBoxAndNameOnly = true;
     const shouldThrow = false;
-    const groupedById = this.groupFilesByComponentId(component.componentId, component.files);
-    const addedComponents = Object.keys(groupedById)
-      .map((bitMapComponentId: BitIdStr) => {
-        const parsedBitId = BitId.parse(bitMapComponentId);
-        const files: ComponentMapFile[] = groupedById[bitMapComponentId].map(({ file }) => file);
-        const foundComponentFromBitMap = this.bitMap.getComponent(
-          bitMapComponentId,
-          shouldThrow,
-          includeSearchByBoxAndNameOnly
-        );
-        if (foundComponentFromBitMap) {
-          component.files = files
-            .map((file: ComponentMapFile) => {
-              // $FlowFixMe
-              if (isAutoGeneratedFile(path.join(consumerPath, file.relativePath))) return null;
-              if (bitMapComponentId && foundComponentFromBitMap.rootDir) {
-                // throw error in case user didnt add id to imported component or the id is incorrect
-                if (!this.id) throw new MissingComponentIdForImportedComponent(parsedBitId.toStringWithoutVersion());
-                if (
-                  parsedBitId.toStringWithoutScopeAndVersion() !== this.id &&
-                  parsedBitId.toStringWithoutVersion() !== this.id
-                ) {
-                  // $FlowFixMe
-                  throw new IncorrectIdForImportedComponent(parsedBitId.toStringWithoutVersion(), this.id);
-                }
-
-                const tempFile = path.relative(foundComponentFromBitMap.rootDir, file.relativePath);
-                const foundFile = find(
-                  foundComponentFromBitMap.files,
-                  fileObject => fileObject.relativePath === tempFile
-                );
-
-                if (foundFile) {
-                  foundFile.relativePath = path.join(foundComponentFromBitMap.rootDir, foundFile.relativePath);
-                  return foundFile;
-                }
-              }
-              // not imported component file but exists in bitmap
-              if (this.bitMap.getComponentIdByPath(file.relativePath) !== parsedBitId.toString()) {
-                if (this.warnings[bitMapComponentId]) this.warnings[bitMapComponentId].push(file.relativePath);
-                else this.warnings[bitMapComponentId] = [file.relativePath];
-              }
-              return file;
-            })
-            .filter(file => file);
-          const locatedIDFromBitMap = this.bitMap.getExistingComponentId(bitMapComponentId);
-          component.componentId = locatedIDFromBitMap
-            ? BitId.parse(locatedIDFromBitMap)
-            : BitId.parse(bitMapComponentId);
-          return this.addToBitMap(component);
+    const parsedBitId = component.componentId;
+    const files: ComponentMapFile[] = component.files;
+    const foundComponentFromBitMap = this.bitMap.getComponent(
+      component.componentId,
+      shouldThrow,
+      includeSearchByBoxAndNameOnly
+    );
+    component.files = files
+      .map((file: ComponentMapFile) => {
+        // $FlowFixMe null is removed later on
+        if (isAutoGeneratedFile(path.join(consumerPath, file.relativePath))) return null;
+        const existingIdOfFile = this.bitMap.getComponentIdByPath(file.relativePath);
+        const idOfFileIsDifferent = existingIdOfFile && existingIdOfFile !== parsedBitId.toString();
+        const existingComponentOfFile = existingIdOfFile ? this.bitMap.getComponent(existingIdOfFile) : undefined;
+        const isImported =
+          (foundComponentFromBitMap && foundComponentFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) ||
+          (existingComponentOfFile && existingComponentOfFile.origin === COMPONENT_ORIGINS.IMPORTED);
+        if (isImported) {
+          // throw error in case user didn't add id to imported component or the id is incorrect
+          if (!this.id) throw new MissingComponentIdForImportedComponent(parsedBitId.toStringWithoutVersion());
+          if (idOfFileIsDifferent) {
+            const existingIdWithoutVersion = BitId.parse(existingIdOfFile).toStringWithoutVersion();
+            // $FlowFixMe $this.id is not null at this point
+            throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id);
+          }
+        } else if (idOfFileIsDifferent) {
+          // not imported component file but exists in bitmap
+          if (this.warnings[existingIdOfFile]) this.warnings[existingIdOfFile].push(file.relativePath);
+          else this.warnings[existingIdOfFile] = [file.relativePath];
+          // $FlowFixMe null is removed later on
+          return null;
         }
-        // if id is not in bitmap check that files are not tracked by another component
-        component.files = files
-          .map((file) => {
-            const bitMapId = this.bitMap.getComponentIdByPath(file.relativePath);
-            if (bitMapId) {
-              if (this.warnings[bitMapComponentId]) this.warnings[bitMapId].push(file.relativePath);
-              else this.warnings[bitMapId] = [file.relativePath];
-              // $FlowFixMe
-              return null;
-            }
-            return file;
-          })
-          .filter(x => x);
-        // $FlowFixMe
-        if (R.isEmpty(component.files)) return null;
-        return this.addToBitMap(component);
+        return file;
       })
-      .filter(x => x);
-    return addedComponents;
+      .filter(file => file);
+    if (R.isEmpty(component.files)) return null;
+    return this.addToBitMap(component);
   }
 
   // remove excluded files from file list
@@ -244,7 +206,7 @@ export default class AddComponents {
     const files = R.flatten(componentsWithFiles.map(x => x.files.map(i => i.relativePath)));
     const resolvedExcludedFiles = await this.getFilesAccordingToDsl(files, this.exclude);
     componentsWithFiles.forEach((componentWithFiles: AddedComponent) => {
-      const mainFile = pathNormalizeToLinux(componentWithFiles.mainFile);
+      const mainFile = componentWithFiles.mainFile ? pathNormalizeToLinux(componentWithFiles.mainFile) : undefined;
       if (resolvedExcludedFiles.includes(mainFile)) {
         componentWithFiles.files = [];
       } else {
@@ -256,73 +218,80 @@ export default class AddComponents {
     });
   }
 
-  async addOneComponent(componentPathsStats: PathsStats): Promise<AddedComponent> {
-    // used for updating main file if exists or doesn't exists
-    const addMainFileToFiles = (files: ComponentMapFile[]): ?PathOsBased => {
-      let mainFile = this.main;
-      if (mainFile && mainFile.match(REGEX_PATTERN)) {
-        files.forEach((file) => {
-          const fileInfo = calculateFileInfo(file.relativePath);
-          const generatedFile = format(mainFile, fileInfo);
-          const foundFile = R.find(R.propEq('relativePath', generatedFile))(files);
-          if (foundFile) {
-            mainFile = foundFile.relativePath;
-          }
-          if (fs.existsSync(generatedFile) && !foundFile) {
-            files.push({ relativePath: generatedFile, test: false, name: path.basename(generatedFile) });
-            mainFile = generatedFile;
-          }
-        });
-      }
-      let resolvedMainFile;
-      if (mainFile) {
-        const mainPath = path.join(this.consumer.getPath(), this.consumer.getPathRelativeToConsumer(mainFile));
-        if (fs.existsSync(mainPath)) {
-          resolvedMainFile = this.consumer.getPathRelativeToConsumer(mainPath);
-        } else {
-          resolvedMainFile = mainFile;
-        }
-      }
-      mainFile = resolvedMainFile;
-      return resolvedMainFile;
-    };
-
-    let componentExists = false;
-    let parsedId: BitId;
-    let foundId;
-    const updateIdAccordingToExistingComponent = (currentId) => {
-      const existingComponentId = this.bitMap.getExistingComponentId(currentId);
-      componentExists = !!existingComponentId;
-      if (componentExists && this.bitMap.getComponent(existingComponentId).origin === COMPONENT_ORIGINS.NESTED) {
-        throw new Error(`One of your dependencies (${existingComponentId}) has already the same namespace and name.
-      If you're trying to add a new component, please choose a new namespace or name.
-      If you're trying to update a dependency component, please re-import it individually`);
-      }
-
-      if (componentExists) foundId = existingComponentId;
-      parsedId = existingComponentId ? BitId.parse(existingComponentId) : BitId.parse(currentId);
-    };
-
-    const idOrFoundID = foundId || this.id;
-
-    if (idOrFoundID) {
-      updateIdAccordingToExistingComponent(idOrFoundID);
+  /**
+   * if the id is already saved in bitmap file, it might have more data (such as scope, version)
+   * use that id instead.
+   */
+  _getIdAccordingToExistingComponent(currentId: BitIdStr): BitId {
+    const existingComponentId = this.bitMap.getExistingComponentId(currentId);
+    const componentExists = !!existingComponentId;
+    if (componentExists && this.bitMap.getComponent(existingComponentId).origin === COMPONENT_ORIGINS.NESTED) {
+      throw new Error(`One of your dependencies (${existingComponentId}) has already the same namespace and name.
+    If you're trying to add a new component, please choose a new namespace or name.
+    If you're trying to update a dependency component, please re-import it individually`);
     }
 
-    const mergeTestFilesWithFiles = async (files: ComponentMapFile[]): Promise<ComponentMapFile[]> => {
-      const testFilesArr = !R.isEmpty(this.tests)
-        ? await this.getFilesAccordingToDsl(files.map(file => file.relativePath), this.tests)
-        : [];
-      const resolvedTestFiles = testFilesArr.map(testFile => ({
-        relativePath: testFile,
-        test: true,
-        name: path.basename(testFile)
-      }));
+    return existingComponentId ? BitId.parse(existingComponentId) : BitId.parse(currentId);
+  }
 
-      return unionBy(resolvedTestFiles, files, 'relativePath');
-    };
+  /**
+   * used for updating main file if exists or doesn't exists
+   */
+  _addMainFileToFiles(files: ComponentMapFile[]): ?PathOsBased {
+    let mainFile = this.main;
+    if (mainFile && mainFile.match(REGEX_PATTERN)) {
+      files.forEach((file) => {
+        const fileInfo = calculateFileInfo(file.relativePath);
+        const generatedFile = format(mainFile, fileInfo);
+        const foundFile = R.find(R.propEq('relativePath', generatedFile))(files);
+        if (foundFile) {
+          mainFile = foundFile.relativePath;
+        }
+        if (fs.existsSync(generatedFile) && !foundFile) {
+          files.push({
+            relativePath: pathNormalizeToLinux(generatedFile),
+            test: false,
+            name: path.basename(generatedFile)
+          });
+          mainFile = generatedFile;
+        }
+      });
+    }
+    if (!mainFile) return undefined;
+    const mainFileRelativeToConsumer = this.consumer.getPathRelativeToConsumer(mainFile);
+    const mainPath = path.join(this.consumer.getPath(), mainFileRelativeToConsumer);
+    if (fs.existsSync(mainPath)) {
+      return mainFileRelativeToConsumer;
+    }
+    return mainFile;
+  }
 
-    const componentsWithFilesP = await Object.keys(componentPathsStats).map(async (componentPath) => {
+  async _mergeTestFilesWithFiles(files: ComponentMapFile[]): Promise<ComponentMapFile[]> {
+    const testFilesArr = !R.isEmpty(this.tests)
+      ? await this.getFilesAccordingToDsl(files.map(file => file.relativePath), this.tests)
+      : [];
+    const resolvedTestFiles = testFilesArr.map(testFile => ({
+      relativePath: testFile,
+      test: true,
+      name: path.basename(testFile)
+    }));
+
+    return unionBy(resolvedTestFiles, files, 'relativePath');
+  }
+
+  /**
+   * given the component paths, prepare the id, mainFile and files to be added later on to bitmap
+   * the id of the component is either entered by the user or, if not entered, concluded by the path.
+   * e.g. bar/foo.js, the id would be bar/foo.
+   * in case bitmap has already the same id, the complete id is taken from bitmap (see _getIdAccordingToExistingComponent)
+   */
+  async addOneComponent(componentPathsStats: PathsStats): Promise<AddedComponent> {
+    let finalBitId: BitId; // final id to use for bitmap file
+    if (this.id) {
+      finalBitId = this._getIdAccordingToExistingComponent(this.id);
+    }
+
+    const componentsWithFilesP = Object.keys(componentPathsStats).map(async (componentPath) => {
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
         const absoluteComponentPath = path.resolve(componentPath);
@@ -344,39 +313,40 @@ export default class AddComponents {
         });
 
         // merge test files with files
-        files = await mergeTestFilesWithFiles(files);
-        const resolvedMainFile = addMainFileToFiles(files);
+        files = await this._mergeTestFilesWithFiles(files);
+        const resolvedMainFile = this._addMainFileToFiles(files);
 
-        if (!parsedId) {
-          parsedId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
+        if (!finalBitId) {
+          const idFromPath = BitId.getValidBitId(nameSpaceOrDir, lastDir);
+          finalBitId = this._getIdAccordingToExistingComponent(idFromPath.toString());
         }
 
-        return { componentId: parsedId, files, mainFile: resolvedMainFile };
+        const trackDir = Object.keys(componentPathsStats).length === 1 ? relativeComponentPath : undefined;
+
+        return { componentId: finalBitId, files, mainFile: resolvedMainFile, trackDir };
       }
       // is file
       const resolvedPath = path.resolve(componentPath);
       const pathParsed = path.parse(resolvedPath);
       const relativeFilePath = this.consumer.getPathRelativeToConsumer(componentPath);
-      if (!parsedId) {
+      if (!finalBitId) {
         let dirName = pathParsed.dir;
         if (!dirName) {
           const absPath = path.resolve(componentPath);
           dirName = path.dirname(absPath);
         }
         const nameSpaceOrLastDir = this.namespace || R.last(dirName.split(path.sep));
-        parsedId = BitId.getValidBitId(nameSpaceOrLastDir, pathParsed.name);
-
-        updateIdAccordingToExistingComponent(parsedId.toString());
+        const idFromPath = BitId.getValidBitId(nameSpaceOrLastDir, pathParsed.name);
+        finalBitId = this._getIdAccordingToExistingComponent(idFromPath.toString());
       }
 
       let files = [
         { relativePath: pathNormalizeToLinux(relativeFilePath), test: false, name: path.basename(relativeFilePath) }
       ];
 
-      files = await mergeTestFilesWithFiles(files);
-      const resolvedMainFile = addMainFileToFiles(files);
-      // const mainFile = componentExists ? resolvedMainFile : relativeFilePath;
-      return { componentId: parsedId, files, mainFile: resolvedMainFile };
+      files = await this._mergeTestFilesWithFiles(files);
+      const resolvedMainFile = this._addMainFileToFiles(files);
+      return { componentId: finalBitId, files, mainFile: resolvedMainFile };
     });
 
     let componentsWithFiles: AddedComponent[] = await Promise.all(componentsWithFilesP);
@@ -384,7 +354,7 @@ export default class AddComponents {
     // remove files that are excluded
     if (!R.isEmpty(this.exclude)) await this.removeExcludedFiles(componentsWithFiles);
 
-    const componentId = componentsWithFiles[0].componentId;
+    const componentId = finalBitId;
     componentsWithFiles = componentsWithFiles.filter(componentWithFiles => componentWithFiles.files.length);
 
     if (componentsWithFiles.length === 0) return { componentId, files: [] };
@@ -397,7 +367,12 @@ export default class AddComponents {
     const uniqComponents = Object.keys(groupedComponents).map(key =>
       assignwith({}, ...groupedComponents[key], (val1, val2) => val1 || val2)
     );
-    return { componentId, files: uniqComponents, mainFile: R.head(componentsWithFiles).mainFile };
+    return {
+      componentId,
+      files: uniqComponents,
+      mainFile: R.head(componentsWithFiles).mainFile,
+      trackDir: R.head(componentsWithFiles).trackDir
+    };
   }
 
   getIgnoreList(): string[] {
@@ -445,7 +420,7 @@ export default class AddComponents {
     // if a user entered multiple paths and entered an id, he wants all these paths to be one component
     // conversely, if a user entered multiple paths without id, he wants each dir as an individual component
     const isMultipleComponents = Object.keys(componentPathsStats).length > 1 && !this.id;
-    const added: Array<AddResult[]> = [];
+    const addedComponents: AddResult[] = [];
     if (isMultipleComponents) {
       logger.debug('bit add - multiple components');
       const testToRemove = !R.isEmpty(this.tests)
@@ -457,30 +432,25 @@ export default class AddComponents {
         return this.addOneComponent(oneComponentPathStat);
       });
 
-      const addedComponents = await Promise.all(addedP);
-      validateNoDuplicateIds(addedComponents);
-      addedComponents.forEach((component) => {
+      const added = await Promise.all(addedP);
+      validateNoDuplicateIds(added);
+      added.forEach((component) => {
         if (!R.isEmpty(component.files)) {
-          const addedComponent = this.addOrUpdateExistingComponentsInBitMap(component);
-          added.push(addedComponent);
+          const addedComponent = this.addOrUpdateComponentInBitMap(component);
+          if (addedComponent) addedComponents.push(addedComponent);
         }
       });
     } else {
       logger.debug('bit add - one component');
       // when a user enters more than one directory, he would like to keep the directories names
       // so then when a component is imported, it will write the files into the original directories
-
       const addedOne = await this.addOneComponent(componentPathsStats);
       if (!R.isEmpty(addedOne.files)) {
-        const addedResult = this.addOrUpdateExistingComponentsInBitMap(addedOne);
-        added.push(addedResult);
+        const addedResult = this.addOrUpdateComponentInBitMap(addedOne);
+        if (addedResult) addedComponents.push(addedResult);
       }
     }
     await this.bitMap.write();
-    const addedFlatten: AddResult[] = R.flatten(added);
-    return {
-      addedComponents: addedFlatten.filter(component => !R.isEmpty(component.files)),
-      warnings: this.warnings
-    };
+    return { addedComponents, warnings: this.warnings };
   }
 }

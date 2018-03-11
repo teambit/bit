@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.8-dev.4] - 2018-03-11
+
+- prevent saving invalid components into the model
+- fix `bit tag` with `--force` flag to force tagging when exceptions occurred during test
+- fix `bit test` error message to display the actual exception if occurred
+- improve error message of `bit tag --verbose` when tests failed to include tests results
+
+## [0.12.8-dev.3] - 2018-03-08
+
+- merge process.env from the main process to tester process fork
+
+## [0.12.8-dev.2] - 2018-03-07
+
+- bug fix - tests files were ignored during bit add when they're weren't part of the files array and .gitignore contained a record with leading exclamation mark
+- improve handling of errors from compilers which return promises
+- symlink tester env in isolated envs
+
+## [0.12.8-dev.1] - 2018-03-05
+
+- send component's metadata to compiler
+
+## [0.12.7] - 2018-02-28
+
+- bug fix - specifying a component and its dependency as ids for bit remove was not working
+- bug fix - fix remove component
+
 ## [0.12.6] - 2018-02-27
 
 ### New

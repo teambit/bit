@@ -22,7 +22,8 @@ export type IsolateOptions = {
   excludeRegistryPrefix: ?boolean, // exclude the registry prefix from the component's name in the package.json
   dist: ?boolean, // Write dist files
   conf: ?boolean, // Write bit.json file
-  verbose: boolean // Print more logs
+  verbose: boolean, // Print more logs
+  silentClientResult: ?boolean // Print environment install result
 };
 
 const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';
@@ -38,7 +39,7 @@ export default class Environment {
     logger.debug(`creating a new isolated environment at ${this.path}`);
   }
 
-  async create(): Promise<> {
+  async create(): Promise<void> {
     await mkdirp(this.path);
     this.consumer = await Consumer.createWithExistingScope(this.path, this.scope, true);
   }
@@ -68,7 +69,8 @@ export default class Environment {
       installNpmPackages: !!opts.installPackages, // convert to boolean
       addToRootPackageJson: false,
       verbose: opts.verbose,
-      excludeRegistryPrefix: !!opts.excludeRegistryPrefix
+      excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
+      silentPackageManagerResult: opts.silentPackageManagerResult
     };
     await this.consumer.writeToComponentsDir(concreteOpts);
     await Environment.markEnvironmentAsInstalled(writeToPath);

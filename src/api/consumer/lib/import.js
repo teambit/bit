@@ -29,7 +29,7 @@ export default (async function importAction(
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
 
     // TODO - import environment on multiple environments
-    const envDependencies = await consumer.importEnvironment(importOptions.ids[0], importOptions.verbose);
+    const envDependencies = await consumer.importEnvironment(importOptions.ids[0], importOptions.verbose, true);
     const id = envDependencies[0].component.id.toString();
     function writeToBitJsonIfNeeded() {
       if (environmentOptions.compiler) {

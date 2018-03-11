@@ -46,12 +46,16 @@ export default class Symlink extends BitObject {
     };
   }
 
-  toBuffer(pretty: boolean) {
+  toBuffer(pretty?: boolean) {
     const args = getStringifyArgs(pretty);
     return new Buffer(JSON.stringify(this.toObject(), ...args));
   }
 
   static from(props: SymlinkProp) {
     return new Symlink(props);
+  }
+
+  validate(): void {
+    // @todo: implement
   }
 }

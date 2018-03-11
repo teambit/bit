@@ -69,7 +69,7 @@ describe('bit untag command', function () {
         const componentStatus = helper.runCmd('bit status');
         expect(componentStatus).to.have.string('staged components');
         expect(componentStatus).to.not.have.string('no staged components');
-        expect(componentStatus).to.have.string('bar/foo. versions: 0.0.1, 0.0.2... ok');
+        expect(componentStatus).to.have.string('bar/foo. versions: 0.0.1, 0.0.2 ... ok');
 
         helper.runCmd('bit untag bar/foo@0.0.2');
       });

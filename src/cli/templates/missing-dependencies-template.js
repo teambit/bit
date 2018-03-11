@@ -3,12 +3,12 @@ import chalk from 'chalk';
 import ConsumerComponent from '../../consumer/component/consumer-component';
 
 export const missingDependenciesLabels = {
-  untrackedDependencies: 'untracked file dependencies',
   missingPackagesDependenciesOnFs: 'missing packages dependencies',
-  missingLinks: 'missing bind links',
-  relativeComponents: 'relative components (should be absolute)',
+  missingComponents: 'missing components',
+  untrackedDependencies: 'untracked file dependencies',
   missingDependenciesOnFs: 'non-existing dependency files',
-  missingComponents: 'missing components'
+  missingLinks: 'missing bind links',
+  relativeComponents: 'relative components (should be absolute)'
 };
 
 export default function missingDepsTemplate(components: ConsumerComponent[]) {
@@ -23,7 +23,14 @@ export default function missingDepsTemplate(components: ConsumerComponent[]) {
 function formatMissing(missingComponent: Object) {
   function formatMissingStr(array, label) {
     if (!array || array.length === 0) return '';
-    return chalk.yellow(`${label}: `) + chalk.white(array.join(', '));
+    return (
+      chalk.yellow(`${label}: \n`) +
+      chalk.white(
+        Object.keys(array)
+          .map(key => `     ${key} -> ${array[key].join(', ')}`)
+          .join('\n')
+      )
+    );
   }
 
   const missingStr = Object.keys(missingDependenciesLabels)

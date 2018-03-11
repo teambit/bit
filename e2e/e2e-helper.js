@@ -26,8 +26,9 @@ export default class Helper {
   compilerCreated: boolean;
   cache: Object;
   clonedScopes: string[] = [];
+  keepEnvs: boolean;
   constructor() {
-    this.debugMode = !!process.env.npm_config_debug;
+    this.debugMode = !!process.env.npm_config_debug; // default = false
     this.remoteScope = `${generateRandomStr()}-remote`;
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
     this.setLocalScope();
@@ -36,6 +37,7 @@ export default class Helper {
     this.envScope = `${generateRandomStr()}-env`;
     this.envScopePath = path.join(this.e2eDir, this.envScope);
     this.compilerCreated = false;
+    this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
   }
 
   setLocalScope(localScope?: string) {
@@ -143,6 +145,7 @@ export default class Helper {
   }
 
   destroyEnv() {
+    if (this.keepEnvs) return;
     fs.removeSync(this.localScopePath);
     fs.removeSync(this.remoteScopePath);
     if (this.cache) {
@@ -465,11 +468,11 @@ export default class Helper {
     return fs.removeSync(path.join(this.localScopePath, relativePathToLocalScope));
   }
 
-  addComponent(filePaths: string = path.normalize('bar/foo.js'), cwd = this.localScopePath) {
+  addComponent(filePaths: string = path.normalize('bar/foo.js'), cwd: string = this.localScopePath) {
     return this.runCmd(`bit add ${filePaths}`, cwd);
   }
 
-  untrackComponent(id: string = '', cwd = this.localScopePath) {
+  untrackComponent(id: string = '', cwd: string = this.localScopePath) {
     return this.runCmd(`bit untrack ${id}`, cwd);
   }
 
@@ -477,7 +480,7 @@ export default class Helper {
     return path.join(__dirname, 'fixtures');
   }
 
-  copyFixtureComponents(dir: string = '', cwd = this.localScopePath) {
+  copyFixtureComponents(dir: string = '', cwd: string = this.localScopePath) {
     const sourceDir = path.join(__dirname, 'fixtures', 'components', dir);
     fs.copySync(sourceDir, cwd);
     // update with the correct remote-scope

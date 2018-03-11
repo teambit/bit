@@ -1,11 +1,10 @@
 /** @flow */
-import semver from 'semver';
 import Command from '../../command';
 import { commitAction, commitAllAction } from '../../../api/consumer';
 import Component from '../../../consumer/component';
 import { isString } from '../../../utils';
 import ModelComponent from '../../../scope/models/component';
-import { DEFAULT_BIT_VERSION, DEFAULT_BIT_RELEASE_TYPE } from '../../../constants';
+import { DEFAULT_BIT_RELEASE_TYPE } from '../../../constants';
 
 const chalk = require('chalk');
 
@@ -21,7 +20,7 @@ export default class Export extends Command {
     ['mi', 'minor', 'increment the minor version number'],
     ['ma', 'major', 'increment the major version number'],
     ['f', 'force', 'forcely tag even if tests are failing and even when component has not changed'],
-    ['v', 'verbose', 'show specs output on tag'],
+    ['v', 'verbose', 'show specs output on failure'],
     ['i', 'ignore-missing-dependencies', 'ignore missing dependencies (default = false)']
   ];
   loader = true;
@@ -119,11 +118,7 @@ export default class Export extends Command {
       return comps
         .map((comp) => {
           if (comp instanceof ModelComponent) return comp.id();
-          // Replace the @1 only if it ends with @1 to prevent id between 10-19 to shown wrong ->
-          // myId@10 will be myId0 which is wrong
-          return comp.id.toString().endsWith(DEFAULT_BIT_VERSION)
-            ? comp.id.toString().replace(`@${DEFAULT_BIT_VERSION}`, '')
-            : comp.id.toString();
+          return comp.id.toString();
         })
         .join(', ');
     }

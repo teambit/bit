@@ -308,12 +308,12 @@ export default class Consumer {
     return importComponents.importComponents();
   }
 
-  importEnvironment(rawId: ?string, verbose?: boolean) {
+  importEnvironment(rawId: ?string, verbose?: boolean, dontPrintEnvMsg: boolean) {
     if (!rawId) {
       throw new Error('you must specify bit id for importing');
     } // @TODO - make a normal error message
     const bitId = BitId.parse(rawId);
-    return this.scope.installEnvironment({ ids: [bitId], verbose });
+    return this.scope.installEnvironment({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
   }
 
   removeFromComponents(id: BitId, currentVersionOnly: boolean = false): Promise<any> {
@@ -339,6 +339,7 @@ export default class Consumer {
    * write them only once.
    */
   async writeToComponentsDir({
+    silentPackageManagerResult,
     componentsWithDependencies,
     writeToPath,
     force = true,
@@ -350,9 +351,10 @@ export default class Consumer {
     saveDependenciesAsComponents = false,
     installNpmPackages = true,
     addToRootPackageJson = true,
-    verbose = false,
+    verbose = false, // display the npm output
     excludeRegistryPrefix = false
   }: {
+    silentPackageManagerResult: boolean,
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
     force?: boolean,
@@ -469,7 +471,9 @@ export default class Consumer {
     );
 
     await this.bitMap.write();
-    if (installNpmPackages) await installNpmPackagesForComponents(this, componentsWithDependencies, verbose);
+    if (installNpmPackages) {
+      await installNpmPackagesForComponents(this, componentsWithDependencies, verbose, silentPackageManagerResult);
+    }
     if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents.map(c => c.id));
 
     return linkComponents(
@@ -802,7 +806,8 @@ export default class Consumer {
     scope: Scope,
     isolated: boolean = false
   ): Promise<Consumer> {
-    if (pathHasConsumer(consumerPath)) return Promise.reject(new ConsumerAlreadyExists());
+    // if it's an isolated environment, it's normal to have already the consumer
+    if (pathHasConsumer(consumerPath) && !isolated) return Promise.reject(new ConsumerAlreadyExists());
     const bitJson = await ConsumerBitJson.ensure(consumerPath);
     return new Consumer({
       projectPath: consumerPath,
@@ -972,7 +977,7 @@ export default class Consumer {
     const modifiedComponents = [];
     const regularComponents = [];
     const resolvedIDs = this.resolveLocalComponentIds(bitIds);
-    if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects({});
+    if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects();
     if (!force) {
       await Promise.all(
         resolvedIDs.map(async (id) => {
@@ -1006,8 +1011,8 @@ export default class Consumer {
       removedComponentIds,
       missingComponents,
       modifiedComponents,
-      dependentBits,
-      removedDependencies
+      removedDependencies,
+      dependentBits
     );
   }
 
