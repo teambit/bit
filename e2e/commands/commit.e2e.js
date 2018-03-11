@@ -119,7 +119,11 @@ describe('bit tag command', function () {
       it('Should throw error when the version already exists', () => {
         helper.commitComponent('components/exact 5.5.5', 'message', '-f');
         const tagWithExisting = () => helper.commitComponent('components/exact 5.5.5', 'message', '-f');
-        expect(tagWithExisting).to.throw('the version 5.5.5 already exists for components/exact');
+        expect(tagWithExisting).to.throw(
+          `Command failed: ${
+            helper.bitBin
+          } tag components/exact 5.5.5 -m message -f\nerror: version 5.5.5 already exists for components/exact\n`
+        );
       });
       it('Should print same output for flaged tag and non flaged tag', () => {
         helper.reInitLocalScope();
@@ -244,7 +248,9 @@ describe('bit tag command', function () {
         output = err.message;
       }
       expect(output).to.have.string(
-        "error: component non/existing was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)"
+        `Command failed: ${
+          helper.bitBin
+        } tag non/existing  \nerror: component "non/existing" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)\n`
       );
     });
     it.skip('should print warning if the a driver is not installed', () => {
@@ -783,7 +789,9 @@ describe('bit tag command', function () {
 
       const commitCmd = () => helper.commitAllComponents();
       expect(commitCmd).to.throw(
-        'component "bar/foo" is invalid as part or all of the component files were deleted. please use \'bit remove\' to resolve the issue'
+        `Command failed: ${
+          helper.bitBin
+        } tag  -a  -m commit-message \ncomponent bar/foo is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue\n`
       );
     });
   });
@@ -840,7 +848,11 @@ describe('bit tag command', function () {
           }
         });
         it('should throw an error', () => {
-          expect(output).to.have.string('the version 0.0.8 already exists for bar/foo');
+          expect(output).to.have.string(
+            `Error: Command failed: ${
+              helper.bitBin
+            } tag --scope 0.0.8 -a  -m msg \nerror: version 0.0.8 already exists for bar/foo\n`
+          );
         });
       });
       describe('when one of the components has a greater version', () => {

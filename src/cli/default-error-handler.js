@@ -178,7 +178,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     err =>
       `error: component "${chalk.bold(
         err.id
-      )}" was not found on your local workspace.\nplease spceify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
+      )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
   ],
   [PathsNotExist, err => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
   [
@@ -218,7 +218,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     InvalidVersion,
     err => `error: version ${chalk.bold(err.version)} is not a valid semantic version. learn more: https://semver.org`
   ],
-  [NothingToCompareTo, err => 'no previous versions to comapre'],
+  [NothingToCompareTo, err => 'no previous versions to compare'],
   [PromptCanceled, err => chalk.yellow('operation was aborted')],
   [
     AuthenticationFailed,

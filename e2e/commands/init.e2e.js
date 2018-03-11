@@ -35,7 +35,7 @@ describe('run bit init', function () {
     });
     it('should not tell you there is already a scope when running "bit init"', () => {
       const init = helper.initLocalScope();
-      expect(init).to.have.string('successfully initialized an empty bit scope');
+      expect(init).to.have.string('successfully initialized a bit workspace.');
     });
     it('should create bitmap"', () => {
       const bitmapPath = path.join(helper.localScopePath, '.bitmap');

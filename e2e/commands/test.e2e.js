@@ -90,7 +90,9 @@ describe('bit test command', function () {
       } catch (err) {
         output = err.message;
       }
-      expect(output).to.have.string('fatal: the component bar/foo was not found in the .bitmap file');
+      expect(output).to.have.string(
+        "error: component \"bar/foo\" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)\n"
+      );
     });
   });
   describe('when an exception was thrown during the tests', () => {
@@ -128,7 +130,7 @@ describe('bit test command', function () {
         }
       });
       it('should show a general message saying the specs does not pass', () => {
-        expect(output).to.have.string("component's specs does not pass, fix them and tag");
+        expect(output).to.have.string("component's tests has failed, please fix them before tagging\n");
       });
     });
     describe('tagging the component without --force flag and with --verbose flag', () => {

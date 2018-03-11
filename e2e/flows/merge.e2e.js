@@ -36,7 +36,11 @@ describe('merge functionality', function () {
       }
     });
     it('should throw merge-conflict error', () => {
-      expect(output).to.have.string('Merge conflict occurred when exporting the component');
+      expect(output).to.have.string(
+        `error: merge conflict occurred when exporting the component ${
+          helper.remoteScope
+        }/bar/foo.\nto resolve it, please import the latest version of the remote component, and apply your changes before exporting the component.\n`
+      );
     });
   });
 
