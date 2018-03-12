@@ -123,7 +123,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
   [UnexpectedNetworkError, () => 'error: unexpected network error has occurred'],
   [SSHInvalidResponse, () => 'error: received an invalid response from the remote SSH server'],
-  [ScopeNotFound, () => 'error: scope not found. to create a new scope, please use `bit init --bare`'],
+  [ScopeNotFound, () => 'error: workspace not found. to create a new workspace, please use `bit init`'],
   [ComponentSpecsFailed, () => "component's tests has failed, please fix them before tagging"],
   [
     BuildException,

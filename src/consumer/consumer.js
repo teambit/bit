@@ -707,7 +707,7 @@ export default class Consumer {
       ? withoutPrefix.substr(0, withoutPrefix.indexOf('/'))
       : withoutPrefix;
     const pathSplit = componentName.split(NODE_PATH_SEPARATOR);
-    if (pathSplit.length < 3) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
+    if (pathSplit.length < 3) throw new Error(`component has an invalid require statement: ${requirePath}`);
 
     const name = pathSplit[pathSplit.length - 1];
     const box = pathSplit[pathSplit.length - 2];

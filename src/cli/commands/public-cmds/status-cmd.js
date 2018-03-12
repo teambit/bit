@@ -8,6 +8,7 @@ import Component from '../../../consumer/component';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { missingDependenciesLabels } from '../../templates/missing-dependencies-template';
+import { formatNew } from '../../templates/status-templates';
 
 export default class Status extends Command {
   name = 'status';
@@ -68,49 +69,56 @@ export default class Status extends Command {
     }
 
     const importPendingWarning = importPendingComponents.length
-      ? chalk.yellow('Some of your components are not imported yet, please run "bit import" to import them\n\n')
+      ? chalk.yellow('some of your components are not imported yet, please use "bit import"\n\n')
       : '';
 
     const splitByMissing = R.groupBy((component) => {
       return component.includes('missing dependencies') ? 'missing' : 'nonMissing';
     });
     const { missing, nonMissing } = splitByMissing(newComponents.map(c => format(c)));
+
+    const newComponentDescription = '\n(use "bit tag --all [version]" to lock a version with all your changes)\n';
     const newComponentsTitle = newComponents.length
-      ? chalk.underline.white('new components')
-      : chalk.green('no new components');
+      ? chalk.underline.white('new components') + newComponentDescription
+      : '';
+
     const newComponentsOutput = [newComponentsTitle, ...(nonMissing || []), ...(missing || [])].join('\n');
 
     const modifiedComponentOutput = immutableUnshift(
       modifiedComponent.map(c => format(c)),
-      modifiedComponent.length ? chalk.underline.white('modified components') : chalk.green('no modified components')
+      modifiedComponent.length ? chalk.underline.white('modified components') + newComponentDescription : ''
     ).join('\n');
 
     const autoTagPendingOutput = immutableUnshift(
       autoTagPendingComponents.map(c => format(c)),
       autoTagPendingComponents.length
         ? chalk.underline.white('components pending to be tagged automatically (when their dependencies are tagged)')
-        : chalk.green('no auto-tag pending components')
+        : ''
     ).join('\n');
 
     const deletedComponentOutput = immutableUnshift(
       deletedComponents.map(c => format(c)),
-      deletedComponents.length ? chalk.underline.white('deleted components') : chalk.green('no deleted components')
+      deletedComponents.length ? chalk.underline.white('deleted components') : ''
     ).join('\n');
 
+    const stagedDesc = '\n(use "bit export <remote_scope> to push these components to a remote scope")\n';
     const stagedComponentsOutput = immutableUnshift(
       stagedComponents.map(c => format(c, true)),
-      stagedComponents.length ? chalk.underline.white('staged components') : chalk.green('no staged components')
+      stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
     return (
       importPendingWarning +
-      [
-        newComponentsOutput,
-        modifiedComponentOutput,
-        stagedComponentsOutput,
-        autoTagPendingOutput,
-        deletedComponentOutput
-      ].join(chalk.underline('\n                         \n') + chalk.white('\n'))
+        [
+          newComponentsOutput,
+          modifiedComponentOutput,
+          stagedComponentsOutput,
+          autoTagPendingOutput,
+          deletedComponentOutput
+        ]
+          .filter(x => x)
+          .join(chalk.underline('\n                         \n') + chalk.white('\n')) ||
+      chalk.yellow('nothing to tag or export (use "bit add [file...]" to track files or directories as components)')
     );
   }
 }
