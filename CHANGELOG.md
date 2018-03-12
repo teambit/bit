@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix environment import of latest version when an older version is imported
+
 ## [0.12.8] - 2018-03-12
 
 - send component's metadata to compilers
