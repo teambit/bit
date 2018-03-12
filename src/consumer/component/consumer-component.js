@@ -293,6 +293,7 @@ export default class Component {
     componentMap,
     scope,
     verbose,
+    directory,
     keep
   }: {
     condition?: ?boolean,
@@ -301,6 +302,7 @@ export default class Component {
     componentMap?: ComponentMap,
     scope: Scope,
     verbose: boolean,
+    directory: ?string,
     keep: ?boolean
   }): Promise<?{ code: string, mappings?: string }> {
     if (!condition) {
@@ -336,7 +338,7 @@ export default class Component {
     if (consumer) return runBuild(consumer.getPath());
     if (this.isolatedEnvironment) return runBuild(this.writtenPath);
 
-    const isolatedEnvironment = new IsolatedEnvironment(scope);
+    const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
     try {
       await isolatedEnvironment.create();
       const isolateOpts = {
@@ -568,6 +570,7 @@ export default class Component {
     save,
     verbose,
     isolated,
+    directory,
     keep
   }: {
     scope: Scope,
@@ -576,6 +579,7 @@ export default class Component {
     save?: boolean,
     verbose?: boolean,
     isolated?: boolean,
+    directory?: string,
     keep?: boolean
   }): Promise<?SpecsResults> {
     const testFiles = this.files.filter(file => file.test);
@@ -637,7 +641,7 @@ export default class Component {
       return run(this.mainFile, testDists, testerFilePath);
     }
 
-    const isolatedEnvironment = new IsolatedEnvironment(scope);
+    const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
 
     try {
       await isolatedEnvironment.create();
