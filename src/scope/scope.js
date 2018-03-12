@@ -1130,11 +1130,11 @@ export default class Scope {
     verbose,
     dontPrintEnvMsg
   }: {
-    ids: [{ componentId: BitId, type: string }],
+    ids: [{ componentId: BitId, type?: string }],
     verbose?: boolean,
     dontPrintEnvMsg?: boolean
-  }): Promise<any> {
-    logger.debug(`scope.installEnvironment, ids: ${ids.join(', ')}`);
+  }): Promise<ComponentWithDependencies[]> {
+    logger.debug(`scope.installEnvironment, ids: ${ids.map(id => id.componentId).join(', ')}`);
     const componentsDir = this.getComponentsPath();
     const isolateOpts = {
       writeBitDependencies: false,
@@ -1152,6 +1152,10 @@ export default class Scope {
     const nonExistingEnvsIds = uniqIds.filter((id) => {
       return !this.loadEnvironment(id.componentId, { pathOnly: true });
     });
+    if (!nonExistingEnvsIds.length) {
+      logger.debug('scope.installEnvironment, all environment were successfully loaded, nothing to install');
+      return [];
+    }
 
     const importEnv = async (id) => {
       let concreteId = id.componentId;
@@ -1162,8 +1166,8 @@ export default class Scope {
       const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
       const env = new IsolatedEnvironment(this, dir);
       await env.create();
-      const isolatedComponent = await env.isolateComponent(id.componentId, isolateOpts);
-      if (!dontPrintEnvMsg) console.log(chalk.bold.green(`successfully installed the ${id.componentId} ${id.type}`));
+      const isolatedComponent = await env.isolateComponent(concreteId, isolateOpts);
+      if (!dontPrintEnvMsg) { console.log(chalk.bold.green(`successfully installed the ${concreteId.toString()} ${id.type}`)); }
       return isolatedComponent;
     };
     return pMapSeries(nonExistingEnvsIds, importEnv);
