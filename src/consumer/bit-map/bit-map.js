@@ -188,6 +188,17 @@ export default class BitMap {
     });
   }
 
+  /**
+   * check if both arrays are equal according to their 'relativePath', regardless the order
+   */
+  _areFilesArraysEqual(filesA: ComponentMapFile[], filesB: ComponentMapFile[]): boolean {
+    if (filesA.length !== filesB.length) return false;
+    const cmp = (x, y) => x.relativePath === y.relativePath;
+    const diff = R.differenceWith(cmp, filesA, filesB);
+    if (!diff.length) return true;
+    return false;
+  }
+
   addComponent({
     componentId,
     files,
@@ -222,11 +233,12 @@ export default class BitMap {
       if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
       if (override) {
         this.components[componentIdStr].files = files;
-      } else {
+      } else if (!this._areFilesArraysEqual(this.components[componentIdStr].files, files)) {
+        // do not override existing files, only add new files
         this.components[componentIdStr].files = R.unionWith(
           R.eqBy(R.prop('relativePath')),
-          files,
-          this.components[componentIdStr].files
+          this.components[componentIdStr].files,
+          files
         );
       }
       if (mainFile) {

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- show a component as modified (bit status) in case a new file has added to its rootDir or one of the files has renamed
+- track directories for files changes and update .bitmap automatically
 - fix environment import of latest version when an older version is imported
 
 ## [0.12.8] - 2018-03-12

@@ -29,6 +29,7 @@
       "ignoreStrings": true,
       "ignoreTemplateLiterals": true
     }],
+    "max-lines": [2, 1000],
     "func-names": [0]
   },
   "env": {

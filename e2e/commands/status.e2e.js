@@ -78,7 +78,7 @@ describe('bit status command', function () {
     it('Should show missing dependencies', () => {
       output = helper.runCmd('bit status');
       expect(output).to.have.string('untracked file dependencies:');
-      expect(output).to.have.string(`${path.normalize('bar/foo2.js')} -> bar/foo.js`);
+      expect(output).to.have.string('bar/foo2.js -> bar/foo.js');
     });
   });
   describe('when a component is created and added without its package dependencies', () => {
@@ -423,8 +423,8 @@ describe('bit status command', function () {
       });
       it('should remove the files from bit.map', () => {
         const beforeRemoveBitMap = helper.readBitMap();
-        const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
-        expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+        const beforeRemoveBitMapFiles = beforeRemoveBitMap['bar/foo'].files;
+        expect(beforeRemoveBitMapFiles).to.be.ofSize(2);
         helper.runCmd('bit status');
         const bitMap = helper.readBitMap();
         const files = bitMap['bar/foo'].files;
@@ -432,12 +432,18 @@ describe('bit status command', function () {
         expect(files[0].name).to.equal('index.js');
       });
       it('Should show "non-existing dependency" when deleting a file that is required by other files', () => {
-        helper.createFile('bar', 'foo.js', 'var index = require("./index.js")');
+        helper.createFile('bar', 'foo1.js');
+        helper.createFile('bar', 'foo2.js', 'var index = require("./foo1.js")');
         helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
-        helper.deleteFile('bar/index.js');
+        helper.deleteFile('bar/foo1.js');
         const output = helper.runCmd('bit status');
         expect(output).to.have.string('non-existing dependency files:');
-        expect(output).to.have.string(`${path.normalize('bar/foo.js')} -> ./index.js`);
+        expect(output).to.have.string(`${path.normalize('bar/foo2.js')} -> ./foo1.js`);
+      });
+      it.skip('should show an error indicating the mainFile was deleting when deleting the mainFile', () => {
+        helper.deleteFile('bar/index.js');
+        const output = helper.runCmd('bit status');
+        expect(output).to.have.string(''); // @todo: implement
       });
     });
     describe('when all of the files were deleted', () => {

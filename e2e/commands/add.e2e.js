@@ -1,6 +1,5 @@
-// covers also init, create, commit, import and export commands
-
-import fs from 'fs';
+/* eslint-disable max-lines */
+import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
@@ -148,43 +147,6 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'testDir/test.spec.js', test: true, name: 'test.spec.js' });
     });
   });
-  describe('add a directory as authored', () => {
-    before(() => {
-      helper.reInitLocalScope();
-      helper.createFile('utils/bar', 'foo.js');
-      helper.addComponent('utils/bar');
-    });
-    it('should add the directory as trackDir in bitmap file', () => {
-      const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('utils/bar');
-      expect(bitMap['utils/bar'].trackDir).to.equal('utils/bar');
-    });
-    describe('tagging the component', () => {
-      before(() => {
-        helper.commitAllComponents();
-      });
-      it('should save the files with relativePaths relative to consumer root', () => {
-        const output = helper.catComponent('utils/bar@latest');
-        expect(output.files[0].relativePath).to.equal('utils/bar/foo.js');
-        expect(output.mainFile).to.equal('utils/bar/foo.js');
-      });
-    });
-    describe('then, add a file outside of that directory', () => {
-      let output;
-      before(() => {
-        helper.createFile('utils', 'a.js');
-        output = helper.addComponent('utils/a.js --id utils/bar');
-      });
-      it('should add the file successfully', () => {
-        expect(output).to.have.string('added utils/a.js');
-      });
-      it('should remove the trackDir property from bitmap file', () => {
-        const bitMap = helper.readBitMap();
-        expect(bitMap).to.have.property('utils/bar');
-        expect(bitMap['utils/bar']).to.not.have.property('trackDir');
-      });
-    });
-  });
   describe('add one component', () => {
     beforeEach(() => {
       helper.reInitLocalScope();
@@ -324,12 +286,13 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo');
       expect(files).to.be.ofSize(1);
       expect(files).to.deep.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
-      helper.addComponentWithOptions('bar/boo1.js', { i: 'bar/foo', o: true });
+      helper.addComponentWithOptions('bar/boo1.js', { i: 'bar/foo', o: true, m: 'bar/boo1.js' });
       const bitMap2 = helper.readBitMap();
-      const files2 = bitMap2['bar/foo'].files;
       expect(bitMap2).to.have.property('bar/foo');
+      const files2 = bitMap2['bar/foo'].files;
       expect(files2).to.be.ofSize(1);
       expect(files2).to.deep.include({ relativePath: 'bar/boo1.js', test: false, name: 'boo1.js' });
+      expect(bitMap2['bar/foo'].mainFile).to.equal('bar/boo1.js');
     });
     it('Should throw error when no index file is found', () => {
       const file1 = 'foo1.js';
@@ -343,7 +306,9 @@ describe('bit add command', function () {
       expect(addCmd).to.throw(
         `Command failed: ${
           helper.bitBin
-        } add bar -n test\nerror: a main file index.[js, ts, jsx, tsx, css, scss, less, sass] was not found among the component's files ${file1Path}, ${file2Path}. please use 'bit add' --main flag to specify a different main file`
+        } add bar -n test\nerror: a main file index.[js, ts, jsx, tsx, css, scss, less, sass] was not found among the component's files ${
+          file1Path
+        }, ${file2Path}. please use 'bit add' --main flag to specify a different main file`
       );
     });
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
@@ -842,9 +807,9 @@ describe('bit add command', function () {
       it('should throw an error', () => {
         const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${
-            helper.bitBin
-          } add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it's located outside the component root dir components/bar/foo\n`
+          `Command failed: ${helper.bitBin} add ${
+            barFoo2Path
+          } -i bar/foo\nunable to add file bar/foo2.js because it's located outside the component root dir components/bar/foo\n`
         );
       });
     });
