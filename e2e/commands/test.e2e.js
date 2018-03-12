@@ -3,16 +3,7 @@
 import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
-
-const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-const isTypeSpecFixture = testShouldPass => `const expect = require('chai').expect;
-const isType = require('./is-type.js');
-
-describe('isType', () => {
-  it('should display "got is-type"', () => {
-    expect(isType())${testShouldPass ? '' : '.not'}.to.equal('got is-type');
-  });
-});`;
+import * as fixtures from '../fixtures/fixtures';
 
 const isTypeBeforeFailSpecFixture = `const expect = require('chai').expect;
 const isType = require('./is-type.js');
@@ -46,7 +37,7 @@ describe('bit test command', function () {
   describe('when there are no tests', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.addComponent('utils/is-type.js');
     });
     it('should indicate that there are no tests', () => {
@@ -57,8 +48,8 @@ describe('bit test command', function () {
   describe('when tests are passed', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.createFile('utils', 'is-type.spec.js', isTypeSpecFixture(true));
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('should indicate that testes are passed', () => {
@@ -74,8 +65,8 @@ describe('bit test command', function () {
   describe('when tests are failed', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.createFile('utils', 'is-type.spec.js', isTypeSpecFixture(false));
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(false));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('should indicate that tests are failed', () => {
@@ -98,7 +89,7 @@ describe('bit test command', function () {
   describe('when an exception was thrown during the tests', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', "throw new Error('exception occurred with this spec file');");
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
@@ -161,8 +152,8 @@ describe('bit test command', function () {
     let outputLines;
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.createFile('utils', 'is-type.spec.js', isTypeSpecFixture(true));
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.createFile('utils', 'is-type-before-fail.spec.js', isTypeBeforeFailSpecFixture);
       helper.addComponentWithOptions('utils/is-type.js', {
         t: 'utils/is-type.spec.js,utils/is-type-before-fail.spec.js'
@@ -192,8 +183,8 @@ describe('bit test command', function () {
     let localScope;
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.createFile('utils', 'is-type.spec.js', isTypeSpecFixture(true));
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
       helper.addNpmPackage('chai', '4.1.2');
       helper.commitComponent('utils/is-type');
@@ -269,7 +260,7 @@ describe('bit test command', function () {
 
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', testWithEs6);
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
