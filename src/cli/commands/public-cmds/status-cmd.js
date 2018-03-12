@@ -118,7 +118,7 @@ export default class Status extends Command {
         ]
           .filter(x => x)
           .join(chalk.underline('\n                         \n') + chalk.white('\n')) ||
-      chalk.yellow('nothing to tag or export (use "bit add [file...]" to track files or directories as components)')
+      chalk.yellow('nothing to tag or export (use "bit add <file...>" to track files or directories as components)')
     );
   }
 }
