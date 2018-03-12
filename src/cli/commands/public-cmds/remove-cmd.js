@@ -8,7 +8,7 @@ import { removePrompt } from '../../../prompts';
 
 export default class Remove extends Command {
   name = 'remove <ids...>';
-  description = 'remove a component (local/remote)';
+  description = 'remove a component (local/remote)\n  https://docs.bitsrc.io/docs/removing-components.html';
   alias = 'rm';
   opts = [
     ['f', 'force [boolean]', 'force remove (default = false)'],

@@ -6,7 +6,7 @@ const chalk = require('chalk');
 
 export default class Untag extends Command {
   name = 'untag [id] [version]';
-  description = 'revert version(s) tagged for component(s)';
+  description = 'revert version(s) tagged for component(s)\n  https://docs.bitsrc.io/docs/cli-untag.html';
   alias = '';
   opts = [
     ['a', 'all', 'revert tag for all tagged components'],

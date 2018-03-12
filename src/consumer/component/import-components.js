@@ -12,7 +12,7 @@ import logger from '../../logger/logger';
 import { filterAsync } from '../../utils';
 
 export type ImportOptions = {
-  ids?: string[],
+  ids: string[], // array might be empty
   verbose: boolean, // default: false
   withEnvironments: boolean, // default: false
   writeToPath?: string,

@@ -8,7 +8,7 @@ import { BitId } from '../../../bit-id';
 
 export default class Show extends Command {
   name = 'show <id>';
-  description = 'show component overview.';
+  description = 'show component overview.\n https://docs.bitsrc.io/docs/cli-show.html';
   alias = '';
   opts = [
     ['j', 'json', 'return a json version of the component'],
@@ -35,15 +35,16 @@ export default class Show extends Command {
     }
 
     if (versions && (compare || outdated)) {
-      return Promise.reject("You can't use [compare] or [outdated] along with versions");
+      return Promise.reject('the [--compare] or [--outdated] flag cannot be used along with --versions');
     }
+
     if (versions) {
       return getBitComponent(versions).then(components => ({
         components,
         versions
       }));
     }
-    if (compare && outdated) return Promise.reject('You can use either [compare] or [outdated]');
+    if (compare && outdated) return Promise.reject('please make sure to use either [--compare] or [--outdated], alone');
     return getBitComponent().then(({ component, componentModel }) => ({
       component,
       componentModel,
@@ -71,6 +72,7 @@ export default class Show extends Command {
       if (R.isNil(components) || R.isEmpty(components)) {
         return 'could not find the requested component';
       }
+
       // $FlowFixMe
       return JSON.stringify(components.map(c => c.toObject()), null, '  ');
     }

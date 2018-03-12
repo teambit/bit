@@ -7,7 +7,7 @@ const chalk = require('chalk');
 
 export default class Build extends Command {
   name = 'build [id]';
-  description = 'build any set of components with configured compiler (component compiler or as defined in bit.json)';
+  description = 'build any set of components with a configured compiler (as defined in bit.json)\n  https://docs.bitsrc.io/docs/building-components.html';
   alias = '';
   opts = [['v', 'verbose [boolean]', 'showing npm verbose output for inspection']];
   loader = true;

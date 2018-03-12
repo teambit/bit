@@ -11,7 +11,7 @@ import { missingDependenciesLabels } from '../../templates/missing-dependencies-
 
 export default class Status extends Command {
   name = 'status';
-  description = 'show the working area component(s) status.';
+  description = 'show the working area component(s) status.\n  https://docs.bitsrc.io/docs/cli-status.html';
   alias = 's';
   opts = [];
   loader = true;

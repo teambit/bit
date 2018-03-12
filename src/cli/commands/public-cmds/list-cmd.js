@@ -10,7 +10,7 @@ import bareListTemplate from '../../templates/bare-list-template';
 
 export default class List extends Command {
   name = 'list [scope]';
-  description = 'list components on a local or a remote scope.';
+  description = 'list components on a local or a remote scope.\n  https://docs.bitsrc.io/docs/cli-link.html';
   alias = 'ls';
   opts = [
     ['ids', 'ids', 'components ids to list'],

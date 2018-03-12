@@ -5,7 +5,7 @@ import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box'
 
 export default class Test extends Command {
   name = 'test [id]';
-  description = 'test any set of components with configured tester (component tester or as defined in bit.json)';
+  description = 'test any set of components with configured tester (as defined in bit.json)\n  https://docs.bitsrc.io/docs/testing-components.html';
   alias = 't';
   opts = [['v', 'verbose', 'showing npm verbose output for inspection']];
   loader = true;

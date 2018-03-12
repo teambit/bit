@@ -10,7 +10,7 @@ import type { PathOsBased } from '../../../utils/path';
 
 export default class Add extends Command {
   name = 'add [path...]';
-  description = 'add any subset of files to be tracked as a component(s)';
+  description = 'add any subset of files to be tracked as a component(s)\n  https://docs.bitsrc.io/docs/isolating-and-tracking-components.html';
   alias = 'a';
   opts = [
     ['i', 'id <name>', 'component id, if not specified the name will be '],
@@ -42,7 +42,7 @@ export default class Add extends Command {
     }
   ): Promise<*> {
     if (namespace && id) {
-      return Promise.reject('You can use either [id] or [namespace] to add a particular component');
+      return Promise.reject('please use either [id] or [namespace] to add a particular component');
     }
 
     const normalizedPaths: PathOsBased[] = paths.map(p => path.normalize(p));

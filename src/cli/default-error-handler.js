@@ -56,89 +56,99 @@ import {
   MissingComponentIdForImportedComponent
 } from '../consumer/component/add-components/exceptions';
 
-const errorsMap: [[Error, (err: Error) => string]] = [
+const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     RemoteUndefined,
     () =>
       chalk.red(
-        'fatal: remote url must be defined. please use: `ssh://`, `file://` or `bit://` protocols to define remote access'
+        'error: remote url must be defined. please use: `ssh://`, `file://` or `bit://` protocols to define remote access'
       )
   ],
-  [AddTestsWithoutId, () => "you can't add test files without specifying the component ID"],
-  [ConsumerAlreadyExists, () => "there's already a scope"],
-  [VersionAlreadyExists, err => `the version ${err.version} already exists for ${err.componentId}`],
-  [ConsumerNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init`'],
   [
-    BitAlreadyExistExternaly,
-    err =>
-      `fatal: component "${err.bitName}" already exists in the external library try "bit modify ${
-        err.bitName
-      }" to modify the current component or "bit create -f ${err.bitName}"!`
+    AddTestsWithoutId,
+    () =>
+      chalk.yellow(
+        `please specify a component ID to add test files to an existing component. \n${chalk.bold(
+          'example: bit add --tests [test_file_path] --id [component_id]'
+        )}`
+      )
   ],
-  [
-    PluginNotFound,
-    err => `fatal: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
-  ],
-  [FileSourceNotFound, err => `fatal: the file "${err.path}" was not found!`],
+  [ConsumerAlreadyExists, () => 'workspace already exists'],
+  [VersionAlreadyExists, err => `error: version ${err.version} already exists for ${err.componentId}`],
+  [ConsumerNotFound, () => 'workspace not found. to initiate a new workspace, please use `bit init`'],
+  // [
+  //   PluginNotFound,
+  //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
+  // ],
+  [FileSourceNotFound, err => `file or directory "${err.path}" was not found`],
   [
     ProtocolNotSupported,
-    () => 'fatal: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'
+    () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'
   ],
-  [RemoteScopeNotFound, err => `fatal: remote scope "${chalk.bold(err.name)}" not found.`],
-  [InvalidBitId, () => 'fatal: component ID is invalid, please use the following format: [scope]/[box]/<name>'],
-  [ComponentNotFound, err => `fatal: component with id "${chalk.bold(err.id)}" was not found`],
+  [RemoteScopeNotFound, err => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
+  [InvalidBitId, () => 'error: component ID is invalid, please use the following format: [scope]/[namespace]/<name>'],
+  [ComponentNotFound, err => `error: component "${chalk.bold(err.id)}" was not found`],
   [
     CorruptedComponent,
     err =>
-      `fatal: the model representation of "${chalk.bold(err.id)}" is corrupted, the object of version ${
+      `error: the model representation of "${chalk.bold(err.id)}" is corrupted, the object of version ${
         err.version
-      } is missing`
+      } is missing. please report this issue on Github https://github.com/teambit/bit/issues`
   ],
-  [DependencyNotFound, err => `error: Dependency "${chalk.bold(err.id)}" not found.`],
+  [
+    DependencyNotFound,
+    err =>
+      `error: dependency "${chalk.bold(
+        err.id
+      )}" was not found. please track this component or use --ignore-missing-dependencies flag (not recommended)`
+  ],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
-  [ComponentNotFoundInPath, err => `fatal: component in path "${chalk.bold(err.path)}" was not found`],
+  [ComponentNotFoundInPath, err => `error: component in path "${chalk.bold(err.path)}" was not found`],
   [
     PermissionDenied,
     err =>
-      `fatal: permission to scope ${
+      `error: permission to scope ${
         err.scope
-      } was denied\ntroubleshoot it using https://docs.bitsrc.io/docs/authentication-issues.html`
+      } was denied\nsee troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html`
   ],
-  [RemoteNotFound, err => `fatal: remote "${chalk.bold(err.name)}" was not found`],
-  [NetworkError, err => `fatal: remote failed with error: "${chalk.bold(err.remoteErr)}"`],
+  [RemoteNotFound, err => `error: remote "${chalk.bold(err.name)}" was not found`],
+  [NetworkError, err => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
   [
     MergeConflict,
     err =>
-      `error: Merge conflict occurred when exporting the component ${
+      `error: merge conflict occurred when exporting the component ${
         err.id
-      }.\nTo resolve it, please import the latest version of the remote component, and only then export your changes.`
+      }.\nto resolve it, please import the latest version of the remote component, and apply your changes before exporting the component.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
-  [UnexpectedNetworkError, () => 'fatal: unexpected network error has occurred'],
-  [SSHInvalidResponse, () => 'fatal: received an invalid response from the remote SSH server'],
-  [ScopeNotFound, () => 'fatal: scope not found. to create a new scope, please use `bit init --bare`'],
-  [ComponentSpecsFailed, () => "component's specs does not pass, fix them and tag"],
+  [UnexpectedNetworkError, () => 'error: unexpected network error has occurred'],
+  [SSHInvalidResponse, () => 'error: received an invalid response from the remote SSH server'],
+  [ScopeNotFound, () => 'error: scope not found. to create a new scope, please use `bit init --bare`'],
+  [ComponentSpecsFailed, () => "component's tests has failed, please fix them before tagging"],
   [
     BuildException,
-    err => `error - bit failed to build ${err.id} with the following exception:\n ${err.message} \n ${err.stack || ''}`
+    err => `error: bit failed to build ${err.id} with the following exception:\n ${err.message} \n ${err.stack || ''}`
   ],
   [
     MissingDependencies,
     (err) => {
       const missingDepsColored = missingDepsTemplate(err.components);
-      return `fatal: issues found with the following component dependencies\n${missingDepsColored}`;
+      return `error: issues found with the following component dependencies\n${missingDepsColored}`;
     }
   ],
   [
     NothingToImport,
-    () => chalk.yellow('nothing to import. please use `bit import [componentId]` or configure components in bit.json')
+    () =>
+      chalk.yellow(
+        'nothing to import. please use `bit import [component_id]` or configure your dependencies in bit.json'
+      )
   ],
   [
     InvalidIdChunk,
     err =>
-      `invalid id part in "${chalk.bold(
+      `error: "${chalk.bold(
         err.id
-      )}", id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+      )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
   ],
   [InvalidBitJson, err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.`],
 
@@ -146,35 +156,44 @@ const errorsMap: [[Error, (err: Error) => string]] = [
   [
     DriverNotFound,
     err =>
-      `fatal: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(
+      `error: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(
         err.lang
       )} set in your bit.json file.`
   ],
   [
     MissingMainFile,
     err =>
-      `fatal: the main file ${chalk.bold(err.mainFile)} was not found in the files list ${chalk.bold(
+      `error: a main file ${chalk.bold(err.mainFile)} was not found among the component's files ${chalk.bold(
         err.files.join(', ')
-      )}`
+      )}. please use 'bit add' --main flag to specify a different main file`
   ],
   [
     MissingFilesFromComponent,
     (err) => {
-      return `invalid component ${
+      return `component ${
         err.id
-      }, all files were deleted, please remove the component using bit remove command`;
+      } is invalid as part or all of the component files were deleted. please use \'bit remove\' to resolve the issue`;
     }
   ],
-  [MissingBitMapComponent, err => `fatal: the component ${chalk.bold(err.id)} was not found in the .bitmap file`],
-  [PathsNotExist, err => `fatal: the file "${chalk.bold(err.paths.join(', '))}" was not found`],
+  [
+    MissingBitMapComponent,
+    err =>
+      `error: component "${chalk.bold(
+        err.id
+      )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
+  ],
+  [PathsNotExist, err => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
   [
     MissingComponentIdForImportedComponent,
-    err => `error - unable to add new files to the imported component "${chalk.bold(err.id)}" without specifying '--id`
+    err =>
+      `error: unable to add new files to the component "${chalk.bold(
+        err.id
+      )}" without specifying a component ID. please define the component ID using the --id flag.`
   ],
   [
     IncorrectIdForImportedComponent,
     err =>
-      `error - unable to add new files from the root directory of the imported component  "${chalk.bold(
+      `error: unable to add new files from the root directory of the component  "${chalk.bold(
         err.importedId
       )}" to "${chalk.bold(err.newId)}"`
   ],
@@ -182,7 +201,7 @@ const errorsMap: [[Error, (err: Error) => string]] = [
     NoFiles,
     err =>
       chalk.yellow('warning: no files to add') +
-      chalk.yellow(err.ignoredFiles ? `,the following files were ignored: ${chalk.bold(err.ignoredFiles)}` : '')
+      chalk.yellow(err.ignoredFiles ? `, the following files were ignored: ${chalk.bold(err.ignoredFiles)}` : '')
   ],
   [
     DuplicateIds,
@@ -191,19 +210,22 @@ const errorsMap: [[Error, (err: Error) => string]] = [
         .map((key) => {
           return `unable to add ${
             Object.keys(err.componentObject[key]).length
-          } components with the same id ${chalk.bold(key)} : ${err.componentObject[key]}\n`;
+          } components with the same ID: ${chalk.bold(key)} : ${err.componentObject[key]}\n`;
         })
         .join(' ')
   ],
 
+  [IdExportedAlready, err => `component ${chalk.bold(err.id)} has been already exported to ${chalk.bold(err.remote)}`],
   [
-    IdExportedAlready,
-    err => `error - the component ${chalk.bold(err.id)} has been already exported to ${chalk.bold(err.remote)}`
+    InvalidVersion,
+    err => `error: version ${chalk.bold(err.version)} is not a valid semantic version. learn more: https://semver.org`
   ],
-  [InvalidVersion, err => `error - The version ${chalk.bold(err.version)} is not a valid semantic version.`],
-  [NothingToCompareTo, err => 'error - nothing to compare no previous versions found'],
+  [NothingToCompareTo, err => 'no previous versions to compare'],
   [PromptCanceled, err => chalk.yellow('operation was aborted')],
-  [AuthenticationFailed, err => 'authentication failed']
+  [
+    AuthenticationFailed,
+    err => 'authentication failed. see troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html'
+  ]
 ];
 
 function formatUnhandled(err: Error): string {

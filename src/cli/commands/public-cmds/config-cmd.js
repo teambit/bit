@@ -6,7 +6,7 @@ const config = require('../../../api/consumer/lib/global-config');
 
 export default class Config extends Command {
   name = 'config';
-  description = 'global config management';
+  description = 'global config management.\n  https://docs.bitsrc.io/docs/conf-config.html';
   alias = '';
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
   opts = [];

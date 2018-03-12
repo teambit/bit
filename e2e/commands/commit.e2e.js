@@ -68,7 +68,9 @@ describe('bit tag command', function () {
         helper.addComponent('components/default.js');
         const version = 'invalidVersion';
         const tag = () => helper.tagWithoutMessage('components/default', version);
-        expect(tag).to.throw(`error - The version ${version} is not a valid semantic version.`);
+        expect(tag).to.throw(
+          `error: version ${version} is not a valid semantic version. learn more: https://semver.org`
+        );
       });
       it('Should set the version to default version in tag new component', () => {
         helper.createFile('components', 'default.js');
@@ -117,7 +119,11 @@ describe('bit tag command', function () {
       it('Should throw error when the version already exists', () => {
         helper.commitComponent('components/exact 5.5.5', 'message', '-f');
         const tagWithExisting = () => helper.commitComponent('components/exact 5.5.5', 'message', '-f');
-        expect(tagWithExisting).to.throw('the version 5.5.5 already exists for components/exact');
+        expect(tagWithExisting).to.throw(
+          `Command failed: ${
+            helper.bitBin
+          } tag components/exact 5.5.5 -m message -f\nerror: version 5.5.5 already exists for components/exact\n`
+        );
       });
       it('Should print same output for flaged tag and non flaged tag', () => {
         helper.reInitLocalScope();
@@ -144,7 +150,9 @@ describe('bit tag command', function () {
       it('Should not allow invalid semver', () => {
         const version = 'invalidVersion';
         const tag = () => helper.tagAllWithoutMessage(version);
-        expect(tag).to.throw(`error - The version ${version} is not a valid semantic version.`);
+        expect(tag).to.throw(
+          `error: version ${version} is not a valid semantic version. learn more: https://semver.org`
+        );
       });
       it('Should set the version to default version in tag new component', () => {
         helper.commitAllComponents();
@@ -213,7 +221,7 @@ describe('bit tag command', function () {
         helper.commitComponent('components/a 4.3.4', 'message');
         helper.createFile('components', 'a.js', 'v4.3.4 sss');
         const tagWithExisting = () => helper.commitAllComponents('message', '', '4.3.4');
-        expect(tagWithExisting).to.throw('the version 4.3.4 already exists for components/a');
+        expect(tagWithExisting).to.throw('error: version 4.3.4 already exists for components/a');
       });
     });
   });
@@ -239,7 +247,11 @@ describe('bit tag command', function () {
       } catch (err) {
         output = err.message;
       }
-      expect(output).to.have.string('fatal: the component non/existing was not found in the .bitmap file');
+      expect(output).to.have.string(
+        `Command failed: ${
+          helper.bitBin
+        } tag non/existing  \nerror: component "non/existing" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)\n`
+      );
     });
     it.skip('should print warning if the a driver is not installed', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
@@ -266,7 +278,7 @@ describe('bit tag command', function () {
         }
       });
       it('should throw a general error saying the tests failed', () => {
-        expect(output).to.have.string("component's specs does not pass, fix them and tag");
+        expect(output).to.have.string("component's tests has failed, please fix them before tagging");
       });
       it('should not display the tests results', () => {
         expect(output).to.not.have.string('failing test should fail');
@@ -293,7 +305,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('file: bar/foo.spec.js');
       });
       it('should also display a general error saying the tests failed', () => {
-        expect(output).to.have.string("component's specs does not pass, fix them and tag");
+        expect(output).to.have.string("component's tests has failed, please fix them before tagging");
       });
     });
     describe('tagging with --force flag', () => {
@@ -522,7 +534,7 @@ describe('bit tag command', function () {
       }
     });
     it('should not tag and throw an error regarding the relative syntax', () => {
-      expect(output).to.have.string('fatal: issues found with the following component dependencies');
+      expect(output).to.have.string('error: issues found with the following component dependencies');
       expect(output).to.have.string('relative components (should be absolute):');
       expect(output).to.have.string(`${helper.remoteScope}/utils/is-type@0.0.1`);
     });
@@ -567,7 +579,7 @@ describe('bit tag command', function () {
 
       // TODO: check why it's working on local and not on ci. i guess it's because we don't know to load the bit-js on CI
       it('Should print that there is missing dependencies', () => {
-        expect(output).to.have.string('fatal: issues found with the following component dependencies');
+        expect(output).to.have.string('error: issues found with the following component dependencies');
       });
 
       it('Should print the components name with missing dependencies', () => {
@@ -766,7 +778,7 @@ describe('bit tag command', function () {
         errMsg = err.message;
       }
       const output = helper.listLocalScope();
-      expect(errMsg).to.have.string('fatal: issues found with the following component dependencies');
+      expect(errMsg).to.have.string('error: issues found with the following component dependencies');
       expect(output).to.not.have.string('bar/foo');
     });
     it('Should throw error that all files were removed', () => {
@@ -778,7 +790,9 @@ describe('bit tag command', function () {
 
       const commitCmd = () => helper.commitAllComponents();
       expect(commitCmd).to.throw(
-        'invalid component bar/foo, all files were deleted, please remove the component using bit remove command\n'
+        `Command failed: ${
+          helper.bitBin
+        } tag  -a  -m commit-message \ncomponent bar/foo is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue\n`
       );
     });
   });
@@ -835,7 +849,11 @@ describe('bit tag command', function () {
           }
         });
         it('should throw an error', () => {
-          expect(output).to.have.string('the version 0.0.8 already exists for bar/foo');
+          expect(output).to.have.string(
+            `Error: Command failed: ${
+              helper.bitBin
+            } tag --scope 0.0.8 -a  -m msg \nerror: version 0.0.8 already exists for bar/foo\n`
+          );
         });
       });
       describe('when one of the components has a greater version', () => {

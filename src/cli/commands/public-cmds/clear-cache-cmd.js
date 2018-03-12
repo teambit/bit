@@ -8,7 +8,7 @@ const { MODULES_CACHE_DIR, MODULES_CACHE_FILENAME, BIT_VERSION } = require('../.
 
 export default class ClearCache extends Command {
   name = 'clear-cache';
-  description = "clears bit's cache from current working machine";
+  description = "clears bit's cache from current working machine\n  https://docs.bitsrc.io/docs/cli-clear-cache.html";
   alias = 'cc';
   opts = [];
   loader = false;

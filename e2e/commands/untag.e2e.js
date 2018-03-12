@@ -139,7 +139,11 @@ describe('bit untag command', function () {
         }
       });
       it('should show an descriptive error', () => {
-        expect(output).to.have.string('fatal: component with id "non-exist-scope/non-exist-comp" was not found');
+        expect(output).to.have.string(
+          `Command failed: ${
+            helper.bitBin
+          } untag non-exist-scope/non-exist-comp\nerror: component "non-exist-scope/non-exist-comp`
+        );
       });
     });
   });

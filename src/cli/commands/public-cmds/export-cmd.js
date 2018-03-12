@@ -8,7 +8,7 @@ const chalk = require('chalk');
 
 export default class Export extends Command {
   name = 'export <remote> [id...]';
-  description = 'export components to a remote scope.';
+  description = 'export components to a remote scope.\n  https://docs.bitsrc.io/docs/organizing-components-in-scopes.html';
   alias = 'e';
   opts = [
     ['f', 'forget', 'do not save to bit.json after export'],

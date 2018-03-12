@@ -74,7 +74,7 @@ describe('bit show command', function () {
       });
 
       it('should render the id correctly', () => {
-        expect(output).to.have.string('ID', 'ID row is missing');
+        expect(output).to.have.string('Id', 'Id row is missing');
         expect(output).to.have.string('comp/comp', 'component id is wrong');
       });
 
@@ -402,7 +402,7 @@ function add(a, b) {
 
       const showCmd = () => helper.showComponent('bar/foo');
       expect(showCmd).to.throw(
-        'invalid component bar/foo, all files were deleted, please remove the component using bit remove command\n'
+        "Command failed: bit show bar/foo\ncomponent bar/foo is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue\n"
       );
     });
   });
@@ -416,7 +416,7 @@ function add(a, b) {
     describe('when adding a component without committing it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {
         const showCmd = () => helper.showComponent('bar/foo --compare');
-        expect(showCmd).to.throw('error - nothing to compare no previous versions found');
+        expect(showCmd).to.throw('Command failed: bit show bar/foo --compare\nno previous versions to compare\n');
       });
     });
     describe('when the component is AUTHORED', () => {

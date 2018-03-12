@@ -6,7 +6,7 @@ import { paintLog } from '../../chalk-box';
 
 export default class Show extends Command {
   name = 'log <id>';
-  description = 'show components(s) commit history.';
+  description = 'show components(s) commit history.\n  https://docs.bitsrc.io/docs/cli-log.html';
   alias = '';
   opts = [];
   migration = true;

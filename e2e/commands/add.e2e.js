@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
-import { AUTO_GENERATED_MSG, DEFAULT_INDEX_EXTS } from '../../src/constants';
+import { AUTO_GENERATED_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -28,7 +28,7 @@ describe('bit add command', function () {
       } catch (err) {
         error = err.message;
       }
-      expect(error).to.have.string('fatal: scope not found. to create a new scope, please use `bit init');
+      expect(error).to.have.string('workspace not found. to initiate a new workspace, please use `bit init');
     });
   });
   describe('bit add without bitmap and .git/bit initialized', () => {
@@ -69,9 +69,9 @@ describe('bit add command', function () {
     it('Should throw error when trying to add files to imported component without specifying id', () => {
       const addCmd = () => helper.addComponent('.', path.join(helper.localScopePath, 'components', 'bar', 'foo'));
       expect(addCmd).to.throw(
-        `error - unable to add new files to the imported component "${
+        `error: unable to add new files to the component "${
           helper.remoteScope
-        }/bar/foo" without specifying '--id`
+        }/bar/foo" without specifying a component ID. please define the component ID using the --id flag.`
       );
     });
     it('Should throw error when trying to add files to imported component without specifying correct id', () => {
@@ -82,7 +82,7 @@ describe('bit add command', function () {
           path.join(helper.localScopePath, 'components', 'bar', 'foo')
         );
       expect(addCmd).to.throw(
-        `error - unable to add new files from the root directory of the imported component  "${
+        `error: unable to add new files from the root directory of the component  "${
           helper.remoteScope
         }/bar/foo" to "test/test`
       );
@@ -182,7 +182,11 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo2.spec.js');
       helper.addComponent(path.normalize('bar/foo2.js'));
       const addCmd = () => helper.addComponent(` -t ${path.normalize('bar/foo2.spec.js')}`);
-      expect(addCmd).to.throw("you can't add test files without specifying the component ID");
+      expect(addCmd).to.throw(
+        `Command failed: ${
+          helper.bitBin
+        } add  -t bar/foo2.spec.js\nplease specify a component ID to add test files to an existing component. \nexample: bit add --tests [test_file_path] --id [component_id]\n`
+      );
     });
 
     it('Should add component to bitmap with folder as default namespace', () => {
@@ -217,11 +221,11 @@ describe('bit add command', function () {
         'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
       );
     });
-    it('Should throw error when adding more than one component with same id ', () => {
+    it('Should throw error when adding more than one component with same ID ', () => {
       helper.createFile('bar', 'file.js');
       helper.createFile('bar', 'file.md');
       const addCmd = () => helper.addComponent(path.normalize('bar/*'));
-      expect(addCmd).to.throw('unable to add 2 components with the same id bar/file : bar/file.js,bar/file.md');
+      expect(addCmd).to.throw('unable to add 2 components with the same ID: bar/file : bar/file.js,bar/file.md');
     });
     it('Should trim testFiles spaces', () => {
       const osComponentName = path.normalize('bar/foo.js');
@@ -251,7 +255,7 @@ describe('bit add command', function () {
       const osFilePathName = path.normalize('bar/foo.spec.js');
       helper.createFile('bar', 'foo.js');
       const addCmd = () => helper.addComponentWithOptions(osComponentName, { t: `${osFilePathName}       ` });
-      expect(addCmd).to.throw(`fatal: the file "${osFilePathName}" was not found`);
+      expect(addCmd).to.throw(`error: file or directory "${osFilePathName}" was not found`);
     });
     it('Add component from subdir  ../someFile ', () => {
       const barPath = path.join(helper.localScopePath, 'bar/x');
@@ -300,19 +304,21 @@ describe('bit add command', function () {
 
       const addCmd = () => helper.addComponentWithOptions('bar', { n: 'test' });
       expect(addCmd).to.throw(
-        `Command failed: ${helper.bitBin} add bar -n test\nfatal: the main file index.[${DEFAULT_INDEX_EXTS.join(
-          ', '
-        )}] was not found in the files list ${file1Path}, ${file2Path}\n`
+        `Command failed: ${
+          helper.bitBin
+        } add bar -n test\nerror: a main file index.[js, ts, jsx, tsx, css, scss, less, sass] was not found among the component's files ${
+          file1Path
+        }, ${file2Path}. please use 'bit add' --main flag to specify a different main file`
       );
     });
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
       helper.createFile('bar', 'foo2.js');
       const addCmd = () => helper.addComponentWithOptions('bar/foo2.js', { n: 'test', i: 'jaja' });
-      expect(addCmd).to.throw('You can use either [id] or [namespace] to add a particular component');
+      expect(addCmd).to.throw('please use either [id] or [namespace] to add a particular component');
     });
     it('Should throw error msg if trying to add non existing file', () => {
       const addCmd = () => helper.addComponent('non-existing-file.js');
-      expect(addCmd).to.throw('fatal: the file "non-existing-file.js" was not found');
+      expect(addCmd).to.throw('error: file or directory "non-existing-file.js" was not found');
     });
     it.skip('Bitmap should contain multiple files for component with more than one file', () => {});
     it.skip('Bitmap should contain impl files and test files  in different fields', () => {});
@@ -332,7 +338,9 @@ describe('bit add command', function () {
         errMsg = err.message;
       }
       expect(errMsg).to.have.string(
-        'id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]'
+        `Command failed: ${
+          helper.bitBin
+        } add bar/foo.js -i bar.f/foo\nerror: "bar.f/foo" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
       );
     });
     it('Should prevent adding a file with invalid keys in ID', () => {
@@ -344,7 +352,9 @@ describe('bit add command', function () {
         errMsg = err.message;
       }
       expect(errMsg).to.have.string(
-        'id part can have only alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]'
+        `Command failed: ${
+          helper.bitBin
+        } add bar/foo.js -i bar/fo.o\nerror: "bar/fo.o" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
       );
     });
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
@@ -491,7 +501,7 @@ describe('bit add command', function () {
         errorMessage = err.message;
       }
 
-      expect(errorMessage).to.have.string('invalid id part in "Bar/Foo"');
+      expect(errorMessage).to.have.string('error: "Bar/Foo" is invalid, component IDs can only contain');
     });
     it('Should add component with global namespace if used parcial ID', () => {
       helper.createFile('bar', 'foo.js');
@@ -856,7 +866,7 @@ describe('bit add command', function () {
         errorMessage = err.message;
       }
       expect(errorMessage).to.contain(
-        `warning: no files to add,the following files were ignored: ${path.normalize('bar/foo2.js')}`
+        `warning: no files to add, the following files were ignored: ${path.normalize('bar/foo2.js')}`
       );
     });
     it('Should only add files that are not in  gitignore', () => {

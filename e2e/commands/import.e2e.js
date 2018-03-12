@@ -1370,9 +1370,13 @@ console.log(barFoo.default());`;
       }
     });
     it('should not allow tagging the component', () => {
-      expect(output).to.have.string('fatal: issues found with the following component dependencies');
-      expect(output).to.have.string('relative components (should be absolute)');
-      expect(output).to.have.string('utils/is-type');
+      expect(output).to.have.string(
+        `Error: Command failed: ${
+          helper.bitBin
+        } tag  -a  -m commit-message \nerror: issues found with the following component dependencies\n\n${
+          helper.remoteScope
+        }/utils/is-string@0.0.1\nrelative components (should be absolute): \n     is-string.js -> utils/is-type\n\n`
+      );
     });
   });
 
