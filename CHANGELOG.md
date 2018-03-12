@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.12] - 2018-03-12
+
 - insert dependency-resolutions packages code into this repo.
 
 ## [0.10.11] - 2018-02-27
