@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- introduce a new command `bit use` for switching between versions
 - test components candidates for auto-tag before tagging them
 - show a component as modified (bit status) in case a new file has added to its rootDir or one of the files has renamed
 - track directories for files changes and update .bitmap automatically

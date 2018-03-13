@@ -339,7 +339,7 @@ export default class Consumer {
     silentPackageManagerResult,
     componentsWithDependencies,
     writeToPath,
-    force = true,
+    force = true, // override files
     writePackageJson = true,
     writeBitJson = true,
     writeBitDependencies = false,

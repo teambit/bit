@@ -23,6 +23,7 @@ import untrack from './lib/untrack';
 import { unTagAction, unTagAllAction } from './lib/untag';
 import move from './lib/move';
 import link from './lib/link';
+import use from './lib/use';
 import migrate from './lib/migrate';
 
 export {
@@ -56,5 +57,6 @@ export {
   unTagAllAction,
   move,
   link,
+  use,
   migrate
 };

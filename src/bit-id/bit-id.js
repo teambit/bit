@@ -34,6 +34,12 @@ export default class BitId {
     return new BitId(this);
   }
 
+  cloneNoVersion(): BitId {
+    const bitId = this.clone();
+    bitId.version = null;
+    return bitId;
+  }
+
   changeScope(newScope: string): BitId {
     return new BitId({ scope: newScope, box: this.box, name: this.name, version: this.version });
   }
