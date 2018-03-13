@@ -8,6 +8,8 @@ import path from 'path';
  * 3) it can't point to a parent directory (`../`) or current directory (`./`)
  */
 export default function isValidPath(pathStr: string): boolean {
-  if (path.isAbsolute(pathStr) || pathStr.startsWith('./') || pathStr.startsWith('../') || pathStr.includes('\\')) { return false; }
+  if (path.isAbsolute(pathStr) || pathStr.startsWith('./') || pathStr.startsWith('../') || pathStr.includes('\\')) {
+    return false;
+  }
   return true;
 }

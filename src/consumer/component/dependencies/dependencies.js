@@ -113,10 +113,16 @@ export default class Dependencies {
     if (!Array.isArray(this.dependencies)) throw new Error('dependencies must be an array');
     this.dependencies.forEach((dependency) => {
       if (!dependency.id) throw new Error('one of the dependencies is missing ID');
-      if (!dependency.relativePaths) { throw new Error(`a dependency ${dependency.id.toString()} is missing relativePaths`); }
+      if (!dependency.relativePaths) {
+        throw new Error(`a dependency ${dependency.id.toString()} is missing relativePaths`);
+      }
       dependency.relativePaths.forEach((relativePath) => {
-        if (!relativePath.sourceRelativePath) { throw new Error(`a dependency ${dependency.id.toString()} is missing relativePaths.sourceRelativePath`); }
-        if (!relativePath.destinationRelativePath) { throw new Error(`a dependency ${dependency.id.toString()} is missing relativePaths.destinationRelativePath`); }
+        if (!relativePath.sourceRelativePath) {
+          throw new Error(`a dependency ${dependency.id.toString()} is missing relativePaths.sourceRelativePath`);
+        }
+        if (!relativePath.destinationRelativePath) {
+          throw new Error(`a dependency ${dependency.id.toString()} is missing relativePaths.destinationRelativePath`);
+        }
         if (!isValidPath(relativePath.sourceRelativePath)) {
           throw new Error(
             `a dependency ${dependency.id.toString()} has an invalid sourceRelativePath ${

@@ -1,9 +1,14 @@
 /** @flow */
+import R from 'ramda';
 import path from 'path';
 import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } from '../../utils';
 import type { PathLinux, PathOsBased } from '../../utils/path';
+import { Consumer } from '..';
+import { BitId } from '../../bit-id';
+import AddComponents from '../component/add-components';
+import { NoFiles, EmptyDirectory } from '../component/add-components/exceptions';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
@@ -170,8 +175,59 @@ export default class ComponentMap {
     }
   }
 
-  validate() {
-    const errorMessage = `failed adding a component-map record (to ${BIT_MAP} file).`;
+  /**
+   * directory to track for changes (such as files added/renamed)
+   */
+  getTrackDir(): ?PathLinux {
+    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
+    if (this.origin === COMPONENT_ORIGINS.IMPORTED) return this.rootDir;
+    // DO NOT track nested components!
+    return null;
+  }
+
+  /**
+   * in case new files were created in the track-dir directory, add them to the component-map
+   * so then they'll be tracked by bitmap
+   */
+  async trackDirectoryChanges(consumer: Consumer, id: BitId) {
+    const trackDir = this.getTrackDir();
+    if (trackDir) {
+      const addParams = {
+        componentPaths: [trackDir],
+        id: id.toString(),
+        override: false, // this makes sure to not override existing files of componentMap
+        writeToBitMap: false
+      };
+      const numOfFilesBefore = this.files.length;
+      const addComponents = new AddComponents(consumer, addParams);
+      try {
+        await addComponents.add();
+      } catch (err) {
+        if (err instanceof NoFiles || err instanceof EmptyDirectory) {
+          // it might happen that a component is imported and current .gitignore configuration
+          // are effectively removing all files from bitmap. we should ignore the error in that
+          // case
+        } else {
+          throw err;
+        }
+      }
+      if (this.files.length > numOfFilesBefore) {
+        logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
+        consumer.bitMap.hasChanged = true;
+      }
+    }
+  }
+
+  removeFiles(files: ComponentMapFile[]): void {
+    const relativePaths = files.map(file => file.relativePath);
+    this.files = this.files.reduce((accumulator, file) => {
+      return relativePaths.includes(file.relativePath) ? accumulator : accumulator.concat(file);
+    }, []);
+    this.validate();
+  }
+
+  validate(): void {
+    const errorMessage = `failed adding or updating a component-map record (of ${BIT_MAP} file).`;
     if (!this.mainFile) throw new Error(`${errorMessage} mainFile attribute is missing`);
     if (!isValidPath(this.mainFile)) {
       throw new Error(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
@@ -196,6 +252,10 @@ export default class ComponentMap {
         throw new Error(`${errorMessage} file path ${file.relativePath} is invalid`);
       }
     });
+    const foundMainFile = this.files.find(file => file.relativePath === this.mainFile);
+    if (!foundMainFile || R.isEmpty(foundMainFile)) {
+      throw new Error(`${errorMessage} mainFile ${this.mainFile} is not in the files list`);
+    }
     if (this.trackDir) {
       const trackDir = this.trackDir;
       this.files.forEach((file) => {

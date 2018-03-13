@@ -47,12 +47,14 @@ import logger from '../logger/logger';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
 import missingDepsTemplate from './templates/missing-dependencies-template';
-import MissingComponentIdForImportedComponent from '../consumer/component/add-components/exceptions/missing-id-imported-component';
-import EmptyDirectory from '../consumer/component/add-components/exceptions/empty-directory';
-import NoFiles from '../consumer/component/add-components/exceptions/no-files';
-import DuplicateIds from '../consumer/component/add-components/exceptions/duplicate-ids';
-import IncorrectIdForImportedComponent from '../consumer/component/add-components/exceptions/incorrect-id-imported-component';
-import PathsNotExist from '../consumer/component/add-components/exceptions/paths-not-exist';
+import {
+  PathsNotExist,
+  IncorrectIdForImportedComponent,
+  DuplicateIds,
+  NoFiles,
+  EmptyDirectory,
+  MissingComponentIdForImportedComponent
+} from '../consumer/component/add-components/exceptions';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [

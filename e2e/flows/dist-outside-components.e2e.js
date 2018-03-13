@@ -245,6 +245,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
+        helper.addRemoteEnvironment();
         helper.importComponent('bar/foo');
         clonedScope = helper.cloneLocalScope();
       });

@@ -308,10 +308,7 @@ export default class Consumer {
     return importComponents.importComponents();
   }
 
-  importEnvironment(rawId: ?string, verbose?: boolean, dontPrintEnvMsg: boolean) {
-    if (!rawId) {
-      throw new Error('you must specify bit id for importing');
-    } // @TODO - make a normal error message
+  importEnvironment(rawId: string, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
     const bitId = BitId.parse(rawId);
     return this.scope.installEnvironment({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
   }
