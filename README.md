@@ -13,19 +13,19 @@
 
 ## About
 
-Sharing code between repositories is essential to the development and maintenance of your codebase.
+**Bit works with Git and NPM to speed and improve the workflow of building multiple projects and applications with code components**.
 
-However, just to publish packages you'd normally have to split your codebase into more repositories or configuring multiple packages in a single repository. Even then, there is no simple way to make and sync changes between your projects.
+The same functionalities, modules and UI components can often be used as building blocks for more than one project or application and used by different people on your team.
 
-**Bit works with Git and NPM to make it easy to share code and sync changes between projects**.
+However, sharing these components between projects often comes with a loft of overhead when forcing you to split your repositories and struggle to sync changes between them.
 
-With Bit, managed code sharing becomes as simple as copy-pasting.
+Bit eliminates this overhead by helping you seamlessly isolate components directly from any repository, organize them for your team and keep them in sync across your entire codebase.
 
-Instead of creating new repositories for your packages or restructuring your project, Bit helps you easily isolate and make any part of your existing repository available with NPM - without splitting it or having to configure multiple packages.
+Any team member can easily share, discover and develop shared code from any of your projects without being coupled to repository ownerships and the overhead of making changes to multiple repositories packages.
 
-Instead of making changes to multiple repositories or directories, you can use Bit to easily change the code you share from any other project and sync the changes across your codebase.
+With Bit managed code sharing becomes as simple as copy-pasting.
 
-*Bit is a collaborative open source project, actively maintained by a venture-backed team and used by different organizations and OSS communities. You are welcome to join*.
+*Bit is a collaborative open source project, developed and actively maintained by a venture-backed team for internal usage, and now used by organizations and OSS communities. You are welcome to use it, contribute and suggest feedback*.  
 
 ## Contents
 
