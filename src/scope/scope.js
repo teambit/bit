@@ -304,8 +304,9 @@ export default class Scope {
 
     const componentsToTag = sortedConsumerComponentsIds.map(id => consumerComponentsIdsMap.get(id)).filter(c => c);
     const componentsToTagIds = componentsToTag.map(c => c.id);
-    const autoTagCandidates = await consumer.candidateComponentsForAutoTagging(componentsToTagIds);
-    const autoTagComponents = await this.bumpDependenciesVersions(autoTagCandidates, componentsToTagIds, false);
+    const componentsToTagIdsLatest = await this.latestVersions(componentsToTagIds);
+    const autoTagCandidates = await consumer.candidateComponentsForAutoTagging(componentsToTagIdsLatest);
+    const autoTagComponents = await this.bumpDependenciesVersions(autoTagCandidates, componentsToTagIdsLatest, false);
     // this.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
     const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.id()));
     const autoTagConsumerComponents = autoTagComponentsLoaded.components;
