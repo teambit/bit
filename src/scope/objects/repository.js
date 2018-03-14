@@ -149,9 +149,12 @@ export default class Repository {
     delete this._cache[ref.toString()];
   }
 
-  add(object: ?BitObject): Repository {
+  add(object: ?BitObject, skipValidation: boolean = false): Repository {
     if (!object) return this;
-    object.validate();
+    logger.debug('validating object: ', object.hash().hash);
+    if (!skipValidation) {
+      object.validate();
+    }
     // leave the following commented log message, it is very useful for debugging but too verbose when not needed.
     // logger.debug(`repository: adding object ${object.hash().toString()} which consist of the following id: ${object.id()}`);
     this.objects.push(object);
@@ -159,9 +162,9 @@ export default class Repository {
     return this;
   }
 
-  addMany(objects: BitObject[]): Repository {
+  addMany(objects: BitObject[], skipValidation: boolean = false): Repository {
     if (!objects || !objects.length) return this;
-    objects.forEach(obj => this.add(obj));
+    objects.forEach(obj => this.add(obj, skipValidation));
     return this;
   }
 

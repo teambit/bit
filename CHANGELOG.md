@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - track directories for files changes and update .bitmap automatically
 - fix environment import of latest version when an older version is imported
 
+## [0.12.9] - 2018-03-14
+
+- fix bug with exporting component to a very old scopes
+
 ## [0.12.8] - 2018-03-12
 
 - send component's metadata to compilers
