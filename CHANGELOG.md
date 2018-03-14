@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.9-hotfix.1] - 2018-03-14
+
+- fix bug with exporting component to a very old scopes
+
 ## [0.12.8] - 2018-03-12
 
 - send component's metadata to compilers
