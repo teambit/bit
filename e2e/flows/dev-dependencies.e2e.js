@@ -120,8 +120,7 @@ describe('foo', () => {
       });
       it('bit status should not show any component as modified', () => {
         const output = helper.runCmd('bit status');
-        expect(output).to.have.a.string('no new components');
-        expect(output).to.have.a.string('no modified components');
+        expect(output).to.have.a.string('staged components');
       });
       describe('export and import to a new scope', () => {
         before(() => {

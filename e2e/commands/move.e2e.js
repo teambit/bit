@@ -170,7 +170,6 @@ describe('bit move command', function () {
     });
     it('should recognize the component as modified', () => {
       const output = helper.runCmd('bit status');
-      expect(output.includes('no modified components')).to.be.false;
       expect(output.includes('modified components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });

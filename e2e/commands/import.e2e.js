@@ -1320,9 +1320,7 @@ console.log(barFoo.default());`;
     });
     it('should not show the component as modified or staged', () => {
       const statusOutput = helper.runCmd('bit status');
-      expect(statusOutput.includes('no new components')).to.be.true;
-      expect(statusOutput.includes('no modified components')).to.be.true;
-      expect(statusOutput.includes('no staged components')).to.be.true;
+      expect(statusOutput.includes('nothing to tag or export')).to.be.true;
     });
     describe('then importing v2', () => {
       before(() => {
@@ -1375,7 +1373,7 @@ console.log(barFoo.default());`;
           helper.bitBin
         } tag  -a  -m commit-message \nerror: issues found with the following component dependencies\n\n${
           helper.remoteScope
-        }/utils/is-string@0.0.1\nrelative components (should be absolute): \n     is-string.js -> utils/is-type\n\n`
+        }/utils/is-string@0.0.1\ncomponents with relative import statements (please use absolute paths for imported components): \n     is-string.js -> utils/is-type\n\n`
       );
     });
   });
@@ -1504,11 +1502,7 @@ console.log(barFoo.default());`;
         const output = helper.runCmd('bit status');
         expect(output).to.not.have.a.string('utils/is-string');
         expect(output).to.not.have.a.string('utils/is-type');
-        expect(output).to.have.a.string('no new components');
-        expect(output).to.have.a.string('no modified components');
-        expect(output).to.have.a.string('no staged components');
-        expect(output).to.have.a.string('no deleted components');
-        expect(output).to.have.a.string('no auto-tag pending components');
+        expect(output).to.have.a.string('nothing to tag or export');
       });
       it('should not break the is-string component', () => {
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
