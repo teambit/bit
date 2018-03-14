@@ -77,17 +77,19 @@ export default class SourceRepository {
       foundComponent = this.findComponent(Component.fromBitId(realComponentId));
     }
 
-    // This is to take care of case when the component is exists in the scope, but the requested version is missing
-    if (
-      foundComponent &&
-      !bitId.getVersion().latest &&
-      !R.contains(bitId.getVersion().versionNum, foundComponent.listVersions())
-    ) {
-      logger.debug(
-        `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum} was not found`
-      );
-      return null;
+    if (foundComponent && bitId.hasVersion()) {
+      const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
+      if (!foundComponent.versions[bitId.version]) {
+        logger.debug(`${msg} is not in the component versions array`);
+        return null;
+      }
+      const version = await this.objects().findOne(foundComponent.versions[bitId.version]);
+      if (!version) {
+        logger.debug(`${msg} object was not found on the filesystem`);
+        return null;
+      }
     }
+
     return foundComponent;
   }
 
