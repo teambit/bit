@@ -570,8 +570,7 @@ export default class Component {
     verbose,
     isolated,
     directory,
-    keep,
-    isCI = false
+    keep
   }: {
     scope: Scope,
     rejectOnFailure?: boolean,
@@ -580,8 +579,7 @@ export default class Component {
     verbose?: boolean,
     isolated?: boolean,
     directory?: string,
-    keep?: boolean,
-    isCI?: boolean
+    keep?: boolean
   }): Promise<?SpecsResults> {
     const testFiles = this.files.filter(file => file.test);
     if (!this.testerId || !testFiles || R.isEmpty(testFiles)) return null;
@@ -670,7 +668,7 @@ export default class Component {
         : component.files.filter(file => file.test);
       const results = await run(component.mainFile, testFilesList, localTesterPath);
       if (!keep) await isolatedEnvironment.destroy();
-      return isCI ? { specResults: results, mainFile: this.dists.calculateMainDistFile(this.mainFile) } : results;
+      return results;
     } catch (e) {
       await isolatedEnvironment.destroy();
       return Promise.reject(e);
@@ -682,18 +680,14 @@ export default class Component {
     save,
     consumer,
     verbose,
-    directory,
-    keep,
-    isCI = false
+    keep
   }: {
     scope: Scope,
     save?: boolean,
     consumer?: Consumer,
     verbose?: boolean,
-    directory?: string,
-    keep?: boolean,
-    isCI?: boolean
-  }): Promise<?string> {
+    keep?: boolean
+  }): Promise<?Dists> {
     logger.debug(`consumer-component.build ${this.id}`);
     // @TODO - write SourceMap Type
     if (!this.compilerId) {
@@ -727,7 +721,7 @@ export default class Component {
         // written, probably by this.dists.writeDists()
       }
 
-      return isCI ? { mainFile: this.dists.calculateMainDistFile(this.mainFile), dists: this.dists.get() } : this.dists;
+      return this.dists;
     }
     logger.debug('compilerId found, start building');
 
@@ -747,7 +741,6 @@ export default class Component {
       consumer,
       componentMap,
       scope,
-      directory,
       keep,
       verbose
     });
